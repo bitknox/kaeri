@@ -84,6 +84,7 @@ public sealed partial class PlayerView : UserControl
     public PlayerView()
     {
         InitializeComponent();
+        TitleArea.SizeChanged += (_, _) => FitEpisodeLine();
         Timeline.Spoken = () => T.PlayerPositionSpoken(SpokenClock(position), SpokenClock(duration));
         VolumeSlider.Spoken = () => T.PlayerVolumeSpoken((long)Math.Round(VolumeSlider.Value));
         ToolTips();
@@ -333,6 +334,7 @@ public sealed partial class PlayerView : UserControl
         statsUp = false;
         startingShown = skipShown = stallShown = upNextShown = false;
         EndStart();
+        ForgetRollOn();
         start = null;
         undo = null;
         upNext = null;
@@ -413,6 +415,13 @@ public sealed partial class PlayerView : UserControl
             {
                 case Event.PlayerUi ui:
                     Heard(ui.Ui);
+                    break;
+                case Event.Private:
+                    ShowPrivate();
+                    break;
+                case Event.AlwaysPrivate { Title: PrivateTitle.Show shown } flag when shown.Id == playingId:
+                    stagedAlways = flag.On;
+                    ShowPrivate();
                     break;
                 case Event.PlaybackStaged s when !Showing:
                     HeardStart(e);
@@ -680,6 +689,7 @@ public sealed partial class PlayerView : UserControl
     /// </summary>
     void Staged(Event.PlaybackStaged s)
     {
+        stagedAlways = s.AlwaysPrivateValue;
         closedWhileFinding = false;
         stagedAhead = false;
         Open();
@@ -689,8 +699,35 @@ public sealed partial class PlayerView : UserControl
         ShowTitle.Text = s.Title;
         EpisodeTitle.Text = Lines.EpisodeNamed(s.Episode, s.EpisodeTitle);
         playingEpisode = s.Episode;
+        ShowPrivate();
         var entry = ctx?.Known.Entry(s.Id);
         BeginStart(new PlayerUi.Starting(s.Id, s.Title, s.Episode, s.EpisodeTitle, entry?.CoverUrl, entry?.BannerUrl));
+    }
+
+    /// <summary>The staged show is always private on this device, as the engine said when it staged it.</summary>
+    bool stagedAlways;
+
+    /// <summary>
+    /// Private after the episode line, while the mode is on or the show is always private, as
+    /// the board has it. The episode line gives up width to it, so the label is never cut.
+    /// </summary>
+    void ShowPrivate()
+    {
+        var on = ctx is { } c && (c.Known.Private.On || stagedAlways || c.Known.Private.ShowAlways(playingId));
+        if (on == (PrivateLabel.Visibility == Visibility.Visible))
+            return;
+        PrivateLabel.Visibility = on ? Visibility.Visible : Visibility.Collapsed;
+        FitEpisodeLine();
+    }
+
+    /// <summary>The episode line's width: the title area's, less the label's while it shows.</summary>
+    void FitEpisodeLine()
+    {
+        if (TitleArea.ActualWidth <= 0)
+            return;
+        PrivateLabel.Measure(new global::Windows.Foundation.Size(double.PositiveInfinity, double.PositiveInfinity));
+        var label = PrivateLabel.Visibility == Visibility.Visible ? PrivateLabel.DesiredSize.Width + 12 : 0;
+        EpisodeTitle.MaxWidth = Math.Max(0, TitleArea.ActualWidth - label);
     }
 
     void Heard(PlayerUi ui)
@@ -1162,18 +1199,9 @@ public sealed partial class PlayerView : UserControl
 
     void ShowState(FfiPlayerState state)
     {
-        if (state.HasPicture && startingShown && !startingHeld)
-        {
-            // The first frame comes in under the starting screen, which leaves on the fade-in
-            // token (200 ms, decelerating), as the Mac's curtain does.
-            startingShown = false;
-            EndStart();
-            Motion.Cover(Starting, false, () =>
-            {
-                if (!startingShown)
-                    Motion.Set(Starting, false);
-            });
-        }
+        // The first frame comes in under the starting screen, which leaves for it.
+        if (state.HasPicture && startingShown && !startingHeld && !startLeaving)
+            FirstFrameUnderStart();
         if (state.HasPicture && !pictureSeen)
         {
             pictureSeen = true;
@@ -1625,6 +1653,19 @@ public sealed partial class PlayerView : UserControl
         c.Tv.Offer(new TvPlay(playingId, ShowTitle.Text, playingEpisode, position > 5 ? position : null, FromPlayer: true));
     }
 
+    /// <summary>
+    /// What plays here, with its second, for the title bar's cast button to carry to the TV it
+    /// connects to; the player pauses meanwhile and closes once the TV has it.
+    /// </summary>
+    internal TvPlay? PlayingOnTv()
+    {
+        if (playingId == 0 || playingEpisode.Length == 0)
+            return null;
+        if (!paused)
+            Send(new PlayerCommand.TogglePause());
+        return new TvPlay(playingId, ShowTitle.Text, playingEpisode, position > 5 ? position : null, FromPlayer: true);
+    }
+
     static string Skipped(SkipKind kind) => kind switch { SkipKind.Ending => T.PlayerSkippedEnding, SkipKind.Recap => T.PlayerSkippedRecap, _ => T.PlayerSkippedOpening };
 
     /// <summary>The buttons' tooltips, each with its key: "Episodes (E)".</summary>
@@ -1902,6 +1943,8 @@ public sealed partial class PlayerView : UserControl
                 PlayInRoom(card.Number);
             return;
         }
+        // The next play is a roll-on: its starting screen waits 600 ms.
+        AskedRollOn();
         if (auto && upNext is not { Sought: true })
         {
             movingOn = true;
@@ -1934,6 +1977,7 @@ public sealed partial class PlayerView : UserControl
     /// <summary>N and Shift+N, the media keys' Next and Previous: the next or previous episode in the player's list.</summary>
     void Step(int by)
     {
+        ForgetRollOn();
         if (!InParty)
         {
             SendControl(new PlayerCommand.Step(by));
@@ -1950,6 +1994,7 @@ public sealed partial class PlayerView : UserControl
     /// <summary>An episode picked in the Episodes panel.</summary>
     void ChooseEpisode(string number)
     {
+        ForgetRollOn();
         if (InParty)
             PlayInRoom(number);
         else
@@ -1971,6 +2016,7 @@ public sealed partial class PlayerView : UserControl
     {
         if (upNext is not null)
             upNext.Cancelled = true;
+        ForgetRollOn();
         ShowUpNext();
         SendControl(new PlayerCommand.CancelNext());
     }

@@ -221,7 +221,7 @@ private fun LibraryCell(tile: WorkTile, segment: LibrarySegmentRead, width: Dp) 
     var menu by remember { mutableStateOf(false) }
     var opened by remember { mutableStateOf(false) }
     Box {
-        ReadTile(tile, width, from = "read-library", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true; opened = true })
+        ReadTile(tile, width, from = "read-library", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true; opened = true }, actions = readTileActions(tile, current = segment))
         if (opened) ReadTileMenu(tile, menu, current = segment) { menu = false }
     }
 }

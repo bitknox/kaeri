@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } henüz { $episode }. bölüme sahip değil. 
 player-start-miss-failed = { $name } yanıt vermedi
 player-start-miss-timed-out = { $name } çok uzun sürdü
 player-start-miss-skipped = { $name } atlandı
-player-start-resting = Son hatalar nedeniyle atlandı
 player-start-from = { -source-cap }: { $name }
 player-start-no-video = İlki görüntü göstermedi
 player-start-stream-place = { $total } akıştan { $next }.

@@ -12,3 +12,6 @@ tui-together-not-a-link = Das ist kein { -watch-party }-Link und kein Code.
 tui-together-recent-alone = Folge { $episode } · { $when }
 tui-medium-read-change = Drücke { $key }, um zu ändern, wofür { -app-name } gedacht ist.
 tui-medium-settings-hint = { $key } zum Ändern
+report-player-log-save-here = Player-Protokoll speichern
+report-player-log-saved-to = Player-Protokoll gespeichert in { $path }
+report-player-log-failed-here = Das Protokoll konnte nicht in { $folder } gespeichert werden.

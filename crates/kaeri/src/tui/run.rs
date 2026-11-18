@@ -46,6 +46,7 @@ pub async fn run(
     config_problem: Option<kaeri_core::config::ConfigProblem>,
     set_aside: Option<std::path::PathBuf>,
     party: Option<kaeri_model::party::PartyTarget>,
+    private: bool,
 ) -> Result<()> {
     // The colour depth first: every colour the palette hands out is drawn at it.
     theme::set_depth(theme::detect_depth(|key| std::env::var(key).ok()));
@@ -93,6 +94,14 @@ pub async fn run(
     let (engine, mut from_engine) = Engine::start(options, host).await?;
     engine.send(network_at_launch());
     engine.send(medium_at_launch());
+    // What the system says of the connection, once it has said it: off the launch, so a slow
+    // or missing system bus never holds the first frame.
+    let mut network_rx = network_from_system();
+    // `--private`: the mode on from the first frame. The engine says so as it does for Ctrl+P,
+    // and the header's chip is the word; the notice is for a shortcut taken mid-session.
+    if private {
+        engine.send(Command::SetPrivate { on: true });
+    }
 
     // The settings as the engine starts on them, which it says again at launch.
     let settings = kaeri_model::settings::view(&config, &saved);
@@ -163,6 +172,8 @@ pub async fn run(
 
     // Painting on change rather than on every tick: see `Repaint`. `idle_tick` is whether
     // nothing but the ticker woke this pass, the one case that may skip it.
+    // Where Save player log in Report a bug writes: the logs folder in the cache.
+    let logs_dir = paths.cache_dir.join("logs");
     let mut repaint = tui::terminal::Repaint::default();
     let mut idle_tick = false;
     // Until when the screen waits on the engine's word: see `ENGINE_WAIT`.
@@ -176,6 +187,17 @@ pub async fn run(
         }
         for id in app.take_deleted_crashes() {
             kaeri_engine::crash::delete_saved(&id);
+        }
+        // Report a bug's Save player log row: its size when the pane opens, the file when asked.
+        if app.take_player_log_wanted() {
+            app.set_player_log_stats(kaeri_engine::player_log::stats(), shown(&logs_dir));
+        }
+        if let Some(report) = app.take_player_log_save() {
+            let saved = save_player_log(&logs_dir, &report);
+            if let Err(e) = &saved {
+                tracing::warn!(error = %e, "player log not saved");
+            }
+            app.player_log_saved(saved.ok().map(|path| shown(&path)));
         }
         let now = std::time::Instant::now();
         // A mark is the engine's to make: the table shows it once the engine has written it
@@ -290,6 +312,9 @@ pub async fn run(
             Some(decoded) = covers_rx.recv() => covers::hand_over(&mut app, decoded),
             Some(decoded) = pages_rx.recv() => tui::pages::hand_over(&mut app, decoded),
             Some(made) = made_rx.recv() => app.images.encoded(made),
+            Some(path) = network_rx.recv() => {
+                engine.send(path);
+            }
             // Asked to end from outside — a kill, the terminal closing — which leaves the way
             // Q does, so the player is closed rather than orphaned and playing on.
             signal = signals.recv() => {
@@ -454,9 +479,49 @@ fn restore_terminal(terminal: &mut Tui) -> Result<()> {
 
 /// What the terminal says of the network at launch: Wi-Fi. It has no network monitor, and a
 /// computer is rarely on a metered link. Until some front end says the network, the engine
-/// keeps what is kept to Wi-Fi waiting.
+/// keeps what is kept to Wi-Fi waiting. On Linux, NetworkManager may say otherwise a moment
+/// later: see [`network_from_system`].
 pub(crate) fn network_at_launch() -> Command {
     Command::NetworkPath { cellular: false, constrained: false, offline: false }
+}
+
+/// A metered connection as the engine is told it, as the Linux app tells it: constrained.
+#[cfg(target_os = "linux")]
+fn metered_network() -> Command {
+    Command::NetworkPath { cellular: false, constrained: true, offline: false }
+}
+
+/// The network path the system gives once asked, if it differs from [`network_at_launch`]:
+/// on Linux, a connection NetworkManager calls metered. Asked once, on the blocking pool;
+/// elsewhere, and with no NetworkManager, nothing comes.
+fn network_from_system() -> mpsc::UnboundedReceiver<Command> {
+    let (tx, rx) = mpsc::unbounded_channel();
+    #[cfg(target_os = "linux")]
+    tokio::task::spawn_blocking(move || {
+        if metered_now() {
+            let _ = tx.send(metered_network());
+        }
+    });
+    #[cfg(not(target_os = "linux"))]
+    drop(tx);
+    rx
+}
+
+/// Whether NetworkManager calls the connection metered, read from its `Metered` property: 1
+/// is yes and 3 a guessed yes; unknown, no and a guessed no stay Wi-Fi, as does any error.
+#[cfg(target_os = "linux")]
+fn metered_now() -> bool {
+    let ask = || -> zbus::Result<u32> {
+        let bus = zbus::blocking::Connection::system()?;
+        let manager = zbus::blocking::Proxy::new(
+            &bus,
+            "org.freedesktop.NetworkManager",
+            "/org/freedesktop/NetworkManager",
+            "org.freedesktop.NetworkManager",
+        )?;
+        manager.get_property("Metered")
+    };
+    matches!(ask(), Ok(1 | 3))
 }
 
 /// What the terminal asks the engine at launch, as the apps' stores do: what Kaeri is for on
@@ -465,6 +530,26 @@ pub(crate) fn network_at_launch() -> Command {
 /// from before reading.
 pub(crate) fn medium_at_launch() -> Command {
     Command::Medium(kaeri_model::medium::MediumCommand::Load)
+}
+
+/// Write the player log for `report` to a file of its own in `dir`, and say where it went.
+fn save_player_log(
+    dir: &std::path::Path,
+    report: &kaeri_model::bug_report::BugReport,
+) -> std::io::Result<std::path::PathBuf> {
+    std::fs::create_dir_all(dir)?;
+    let path = dir.join(kaeri_engine::player_log::stats().file_name);
+    std::fs::write(&path, kaeri_engine::player_log::text(report))?;
+    Ok(path)
+}
+
+/// `path` as the terminal shows it, with the home folder as `~`.
+fn shown(path: &std::path::Path) -> String {
+    let home = std::env::var_os("HOME").map(std::path::PathBuf::from);
+    match home.as_deref().and_then(|home| path.strip_prefix(home).ok()) {
+        Some(rest) => format!("~/{}", rest.display()),
+        None => path.display().to_string(),
+    }
 }
 
 #[cfg(test)]

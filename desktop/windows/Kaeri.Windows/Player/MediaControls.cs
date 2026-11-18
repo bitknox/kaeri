@@ -19,7 +19,9 @@ namespace Kaeri.Windows.Player;
 ///
 /// While a TV plays (Play on TV) and the player is closed, the same controls show what the TV
 /// plays and drive it: play or pause, the next episode and the timeline. The TV has no previous
-/// episode, so Previous is off then. The player opening takes them back.
+/// episode, so Previous is off then. A cast shows as video too, and its Previous and Next play the
+/// previous and next episode, as the Mac's media keys do; the remote keeps its 10 s steps. The
+/// player opening takes them back.
 /// </summary>
 sealed partial class MediaControls
 {
@@ -34,6 +36,7 @@ sealed partial class MediaControls
     readonly Art art;
     readonly DispatcherQueue ui;
     readonly Action<PlayerCommand> send;
+    readonly Privately privately;
     readonly SystemMediaTransportControls? smtc;
     readonly uint buttonCreated;
     readonly nint[] icons = new nint[4];
@@ -41,15 +44,27 @@ sealed partial class MediaControls
     bool open, paused, buttonsAdded;
     FfiNowCard? tvNow;
     Action<FfiTvCommand>? toTv;
-    bool OnTv => !open && tvNow is not null;
-    string show = "", episode = "", artUrl = "";
+    /// <summary>What the held TV plays, from the cast session, while the player is closed.</summary>
+    CastDrawn? castNow;
+    string? castPicture;
+    bool OnTv => !open && (tvNow is not null || castNow is not null);
+    bool OnCast => !open && castNow is not null;
+    string show = "", episode = "", artUrl = "", album = "";
+    /// <summary>The picture the show has, kept while the overlay shows none, so it comes back when private mode goes off.</summary>
+    string? pictureUrl;
+    /// <summary>The show playing here, and whether the engine staged it as always private.</summary>
+    uint playingId;
+    (uint Id, bool On) stagedAlways;
+    /// <summary>The overlay says only Playing in Kaeri now.</summary>
+    bool neutralWritten;
     double position, duration, writtenAt = double.NaN;
     bool writtenPaused;
     MediaPlaybackStatus? statusWritten;
     readonly System.Diagnostics.Stopwatch sinceWritten = new();
 
-    unsafe MediaControls(nint hwnd, Taskbar? taskbar, Art art, DispatcherQueue ui, Action<PlayerCommand> send)
+    unsafe MediaControls(nint hwnd, Taskbar? taskbar, Art art, DispatcherQueue ui, Action<PlayerCommand> send, Privately privately)
     {
+        this.privately = privately;
         this.hwnd = hwnd;
         this.taskbar = taskbar;
         this.art = art;
@@ -65,7 +80,9 @@ sealed partial class MediaControls
             smtc.ButtonPressed += (_, e) => ui.TryEnqueue(() => Pressed(e.Button));
             smtc.PlaybackPositionChangeRequested += (_, e) => ui.TryEnqueue(() =>
             {
-                if (OnTv)
+                if (OnCast)
+                    toCast?.Invoke(new FfiTvCommand.SeekTo(e.RequestedPlaybackPosition.TotalSeconds));
+                else if (OnTv)
                     toTv?.Invoke(new FfiTvCommand.SeekTo(e.RequestedPlaybackPosition.TotalSeconds));
                 else
                     send(new PlayerCommand.SeekTo(e.RequestedPlaybackPosition.TotalSeconds));
@@ -85,11 +102,29 @@ sealed partial class MediaControls
         AddButtons();
     }
 
-    public static MediaControls Start(nint hwnd, Taskbar? taskbar, Art art, DispatcherQueue ui, Action<PlayerCommand> send) =>
-        new(hwnd, taskbar, art, ui, send);
+    public static MediaControls Start(nint hwnd, Taskbar? taskbar, Art art, DispatcherQueue ui, Action<PlayerCommand> send, Privately privately) =>
+        new(hwnd, taskbar, art, ui, send, privately);
 
     void Pressed(SystemMediaTransportControlsButton button)
     {
+        // The cast: Previous and Next are the previous and next episode, as on the Mac.
+        if (OnCast)
+        {
+            switch (button)
+            {
+                case SystemMediaTransportControlsButton.Play when paused:
+                case SystemMediaTransportControlsButton.Pause when !paused:
+                    toCast?.Invoke(new FfiTvCommand.TogglePause());
+                    break;
+                case SystemMediaTransportControlsButton.Next:
+                    toCast?.Invoke(new FfiTvCommand.Next());
+                    break;
+                case SystemMediaTransportControlsButton.Previous:
+                    toCast?.Invoke(new FfiTvCommand.Previous());
+                    break;
+            }
+            return;
+        }
         if (OnTv)
         {
             switch (button)
@@ -143,7 +178,21 @@ sealed partial class MediaControls
         {
             switch (e)
             {
+                case Event.PlaybackStaged staged:
+                    stagedAlways = (staged.Id, staged.AlwaysPrivateValue);
+                    break;
+                case Event.AlwaysPrivate { Title: PrivateTitle.Show flagged } flag:
+                    if (flagged.Id == stagedAlways.Id)
+                        stagedAlways.On = flag.On;
+                    Rewrite();
+                    break;
+                case Event.Private:
+                    Rewrite();
+                    break;
                 case Event.PlayerUi { Ui: PlayerUi.Starting s }:
+                    playingId = s.Id;
+                    // Another show's picture never stands in for this one's.
+                    pictureUrl = null;
                     Open(true);
                     Now(s.Title, Lines.EpisodeNamed(s.EpisodeValue, s.EpisodeTitle), s.BannerUrl ?? s.CoverUrl);
                     break;
@@ -173,13 +222,16 @@ sealed partial class MediaControls
         }
         Buttons();
         // The player closed while a TV plays: the controls go back to the TV.
-        if (!on && tvNow is not null)
+        if (!on && castNow is not null)
+            ShowCast(castNow, wasOnTv: false);
+        else if (!on && tvNow is not null)
             ShowTv(tvNow, position, live: true, null, wasOnTv: false);
     }
 
     void Clear()
     {
-        show = episode = artUrl = "";
+        show = episode = artUrl = album = "";
+        pictureUrl = null;
         position = duration = 0;
         writtenAt = double.NaN;
     }
@@ -194,7 +246,8 @@ sealed partial class MediaControls
         var wasOnTv = OnTv;
         tvNow = now;
         toTv = drive;
-        if (open)
+        // A cast holds the controls while it plays; the TV running Kaeri has them after.
+        if (open || castNow is not null)
             return;
         if (now is null)
         {
@@ -216,6 +269,64 @@ sealed partial class MediaControls
         ShowTv(now, playhead, live, picture, wasOnTv);
     }
 
+    /// <summary>
+    /// What the held TV plays, from the cast session, or null once nothing does: the show, the
+    /// episode line and "Casting to Living room" in the system's media overlay, with play and
+    /// pause, the timeline, and back and forward 10 s, while the player is closed.
+    /// </summary>
+    public void Cast(CastDrawn? drawn, string line, string? picture, Action<FfiTvCommand> drive)
+    {
+        var wasOnTv = OnTv;
+        castNow = drawn;
+        album = drawn is null ? "" : album;
+        castPicture = picture;
+        toCast = drive;
+        if (open)
+            return;
+        if (drawn is null)
+        {
+            if (!wasOnTv)
+                return;
+            if (tvNow is not null)
+            {
+                Clear();
+                ShowTv(tvNow, position, live: true, null, wasOnTv: false);
+                return;
+            }
+            Clear();
+            paused = false;
+            if (smtc is not null)
+            {
+                smtc.IsEnabled = false;
+                smtc.PlaybackStatus = MediaPlaybackStatus.Closed;
+                statusWritten = null;
+                smtc.DisplayUpdater.ClearAll();
+            }
+            Buttons();
+            return;
+        }
+        castLine = line;
+        ShowCast(drawn, wasOnTv);
+    }
+
+    Action<FfiTvCommand>? toCast;
+    string castLine = "";
+
+    void ShowCast(CastDrawn drawn, bool wasOnTv)
+    {
+        if (smtc is not null && !wasOnTv)
+        {
+            smtc.IsEnabled = true;
+            smtc.IsPreviousEnabled = true;
+        }
+        Now(drawn.Title, drawn.EpisodeLine, castPicture, castLine);
+        var wasPaused = paused;
+        // While the connection is made again the TV's clock is not known to run: it holds.
+        Timeline(drawn.Paused || drawn.Dim || drawn.Line == CastLine.Reconnecting, drawn.Position, drawn.Duration);
+        if (!wasOnTv || wasPaused != paused)
+            Buttons();
+    }
+
     void ShowTv(FfiNowCard now, double playhead, bool live, string? picture, bool wasOnTv)
     {
         if (smtc is not null && !wasOnTv)
@@ -230,25 +341,66 @@ sealed partial class MediaControls
             Buttons();
     }
 
-    /// <summary>The episode and show, as the overlay names them, and the show's banner as its picture.</summary>
-    void Now(string showTitle, string episodeLine, string? picture)
+    /// <summary>
+    /// While private mode is on, or for a show always private, the overlay says only "Playing in
+    /// Kaeri", with no show, episode or picture, also while casting. The controls still work.
+    /// </summary>
+    bool Neutral => privately.Neutral(
+        OnCast ? castNow!.Id is { } castId && privately.ShowAlways(castId)
+        : OnTv ? privately.ShowAlways(tvNow!.Id)
+        : stagedAlways.Id == playingId && stagedAlways.On || privately.ShowAlways(playingId));
+
+    /// <summary>Private mode or a show's own flag turned over: the overlay follows at once.</summary>
+    void Rewrite()
     {
-        if (smtc is null || (showTitle == show && episodeLine == episode && (picture is null || picture == artUrl)))
+        if (smtc is not null && (open || OnTv) && (show.Length > 0 || episode.Length > 0) && Neutral != neutralWritten)
+            Now(show, episode, null, OnCast ? castLine : null, rewrite: true);
+    }
+
+    /// <summary>The episode and show, as the overlay names them, and the show's banner as its picture.</summary>
+    void Now(string showTitle, string episodeLine, string? picture, string? casting = null, bool rewrite = false)
+    {
+        // Another show's picture never stands in for this one's.
+        if (showTitle != show)
+            pictureUrl = null;
+        if (picture is { Length: > 0 })
+            pictureUrl = picture;
+        var neutral = Neutral;
+        if (smtc is null || (!rewrite && showTitle == show && episodeLine == episode && (casting ?? "") == album
+            && neutral == neutralWritten && (neutral || picture is null || picture == artUrl)))
             return;
         show = showTitle;
         episode = episodeLine;
+        album = casting ?? "";
+        neutralWritten = neutral;
         var display = smtc.DisplayUpdater;
+        var (title, subtitle, pictured) = Privately.NowPlaying(show, episode, neutral);
         display.Type = MediaPlaybackType.Video;
-        display.VideoProperties.Title = episode;
-        display.VideoProperties.Subtitle = show;
+        if (casting is not null)
+        {
+            // A cast, as video: the episode line, then the show and the TV it plays on. Private,
+            // only the neutral line and the TV.
+            display.VideoProperties.Title = neutral ? title : episode.Length > 0 ? episode : show;
+            display.VideoProperties.Subtitle = neutral || episode.Length == 0 ? casting : $"{subtitle} · {casting}";
+        }
+        else
+        {
+            display.VideoProperties.Title = title;
+            display.VideoProperties.Subtitle = subtitle;
+        }
+        if (!pictured)
+        {
+            display.Thumbnail = null;
+            artUrl = "";
+        }
         display.Update();
         writtenAt = double.NaN;
-        if (picture is not { Length: > 0 } url || url == artUrl)
+        if (!pictured || pictureUrl is not { Length: > 0 } url || url == artUrl)
             return;
         artUrl = url;
         art.Bytes(url, bytes => ui.TryEnqueue(async () =>
         {
-            if (artUrl != url || (!open && tvNow is null))
+            if (artUrl != url || (!open && !OnTv) || neutralWritten)
                 return;
             try
             {
@@ -358,7 +510,7 @@ sealed partial class MediaControls
             State = hidden ? Taskbar.ThumbButton.Hidden : Taskbar.ThumbButton.Enabled,
         };
         var previous = Button(PreviousId, Glyph.Previous, T.PlayerPreviousEpisode);
-        if (OnTv)
+        if (OnTv && !OnCast)
             previous.State = Taskbar.ThumbButton.Hidden;
         return
         [
@@ -382,6 +534,14 @@ sealed partial class MediaControls
             else if (message == WM_COMMAND && ((wparam >> 16) & 0xFFFF) == THBN_CLICKED)
             {
                 var button = (uint)(wparam & 0xFFFF);
+                if (controls.OnCast)
+                {
+                    if (button == PlayPauseId)
+                        controls.toCast?.Invoke(new FfiTvCommand.TogglePause());
+                    else
+                        controls.toCast?.Invoke(button == NextId ? new FfiTvCommand.Next() : new FfiTvCommand.Previous());
+                    return 0;
+                }
                 if (controls.OnTv)
                 {
                     if (button == PlayPauseId)

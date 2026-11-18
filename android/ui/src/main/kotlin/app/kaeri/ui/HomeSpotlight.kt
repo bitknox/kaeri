@@ -12,6 +12,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.material3.ButtonDefaults
@@ -131,7 +132,7 @@ internal fun SpotlightBlock(spot: Spotlight, h: HomeHandlers) {
     val line = app.kaeri.store.continueFromDeviceLine(context, spot.lastDevice, spot.episode.toInt(), spot.resume)
         ?: spot.line?.text(context) ?: spot.starts?.words()?.let { Strings.upNextStarts(context, it) }
     val art: @Composable (Modifier) -> Unit = { m ->
-        BannerArt(entry, m.aspectRatio(16f / 9f).shared(Shared.Art, id, "home-spotlight").shared(Shared.Player, id).clip(ArtShape.banner))
+        BannerArt(entry, m.aspectRatio(16f / 9f).shared(Shared.Art, id, "home-spotlight").shared(Shared.Player, id).clip(ArtShape.banner).border(1.dp, ArtEdge, ArtShape.banner))
     }
     val text: @Composable (Modifier) -> Unit = { m ->
         Column(m, verticalArrangement = Arrangement.spacedBy(4.dp)) {
@@ -278,18 +279,26 @@ private fun MainAction(spot: Spotlight, action: HomeAction, full: Modifier, heig
     // The planned line keeps the button's height, so nothing below moves when it swaps.
     Box(Modifier.heightIn(min = height), contentAlignment = Alignment.CenterStart) {
         when (action) {
-            HomeAction.RESUME, HomeAction.PLAY -> Button(
-                onClick = { h.actions.play(id, spot.episode.toString()) },
-                modifier = full.heightIn(min = height),
-            ) {
-                Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                Text(
-                    if (action == HomeAction.RESUME) Strings.homeResumeEpisode(context, episode) else Strings.homePlayEpisode(context, episode),
-                    style = MaterialTheme.typography.titleMedium.tabular(),
-                    maxLines = 2,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            HomeAction.RESUME, HomeAction.PLAY -> {
+                // While a TV is held the play goes there: the cast glyph leads, as on the title
+                // page, and the controller grows from this button.
+                val origin = rememberCastOrigin()
+                Button(
+                    onClick = {
+                        origin.mark()
+                        h.actions.play(id, spot.episode.toString())
+                    },
+                    modifier = full.heightIn(min = height).then(origin.modifier),
+                ) {
+                    CastPlayIcon()
+                    Spacer(Modifier.width(8.dp))
+                    Text(
+                        if (action == HomeAction.RESUME) Strings.homeResumeEpisode(context, episode) else Strings.homePlayEpisode(context, episode),
+                        style = MaterialTheme.typography.titleMedium.tabular(),
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
             }
             HomeAction.ADD_TO_PLANNING -> Button(
                 onClick = {

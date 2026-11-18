@@ -33,6 +33,15 @@ notice-cast-not-same-network = Perangkat ini tidak berada di jaringan yang sama 
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Koneksi ke { $name } terputus, jadi penayangan berhenti.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } berhenti menerima aliran: sumber tidak merespons untuk sebagian episode. Coba sumber lain.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } kehilangan aliran dari perangkat ini. Pastikan keduanya berada di jaringan yang sama.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Subtitel di { $name } tampil sebagai teks biasa. Subtitel bergaya terlalu berat untuk TV ini.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = TV itu sudah tidak ada di jaringan.
 
@@ -326,6 +335,12 @@ notice-player-failed-to-start = Tidak bisa memulai mpv. Pastikan mpv bisa berjal
 
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Tidak ada video dari aliran itu. Mencoba { $next } dari { $total }.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = Stream terputus. { $source } melanjutkan dari titik yang sama.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = Stream terputus. Stream lain dari { $source } melanjutkan dari titik yang sama.
 
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpv tidak bisa memutar ini. { $reason }
@@ -852,6 +867,9 @@ reading-row-queued = Antre
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = Antre · tunggu Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = Antre · tunggu ruang kosong
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Mengunduh · { $done } dari { $total } hal.
 
@@ -977,6 +995,12 @@ reading-dl-failed = Bab { $chapter } gagal diunduh
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Offline
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+       *[other] Ruang penuh. Diunduh begitu ada ruang kosong.
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Sekitar { $size }
@@ -2901,6 +2925,9 @@ episodes-release-dub = Berdubbing
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Pilihan saat ini
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Memeriksa sumber-sumber Anda…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Tampilkan tombol
 
@@ -3152,6 +3179,12 @@ keys-hint-stop = Berhenti
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Putar selanjutnya
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Periksa lagi
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Putar episode { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Episode
@@ -4306,6 +4339,9 @@ settings-label-fullscreen = Mulai dalam layar penuh
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Upscaling
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Muat awal saat terukur
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Antarmuka pemutar
 
@@ -4482,6 +4518,21 @@ settings-note-upload-limit = Membatasi semua unggahan torrent, agar seeding tida
 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Pakai --token-to-file untuk memindahkan token yang sudah ada.
+
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = pribadi
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = pribadi
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Mode pribadi
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Selalu pribadi untuk judul ini
+
+# Help for the --private flag.
+cli-private-help = Mulai dalam mode pribadi. Tidak ada yang disimpan atau disinkronkan sampai Kaeri ditutup.
 
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = Membaca dari { $source }
@@ -5557,6 +5608,15 @@ tui-medium-read-change = Tekan { $key } untuk mengubah fungsi Kaeri.
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
 tui-medium-settings-hint = { $key } untuk mengubah
 
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+report-player-log-save-here = Simpan log pemutar
+
+# That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved-to = Log pemutar disimpan ke { $path }
+
+# That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+report-player-log-failed-here = Log tidak bisa disimpan ke { $folder }.
+
 # Title of the about page.
 about-title = Tentang
 
@@ -5661,6 +5721,39 @@ report-crash-off = Laporan crash nonaktif, jadi tidak ada yang disertakan. Anda 
 
 # Link from that line to the crash report settings.
 report-crash-settings = Pengaturan laporan crash
+
+# Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+report-player-log = Log pemutar
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+report-player-log-detail =
+    { $playbacks ->
+       *[other] { $playbacks } pemutaran terakhir · { $size }
+    }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+report-player-log-empty = Belum ada pemutaran yang tercatat
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+report-player-log-save = Simpan log…
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = Lampirkan berkas ke isu setelah terbuka di GitHub.
+
+# Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved = Disimpan sebagai { $file }
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = Log tidak bisa disimpan. Coba folder lain.
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+report-sent-report = Laporan
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = Log pemutar disimpan
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = Menyimpan berkas untuk dilampirkan ke isu
 
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = Laporan crash
@@ -5857,6 +5950,36 @@ cast-stop = Hentikan casting
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Diatur di TV
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = Menghubungkan ke { $name }
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = Terhubung ke { $name }
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = Diputar di { $name }
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = Belum ada yang diputar
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = Dijeda di { $name }
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = Buka { $title }
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Tutup
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Membuka kontrol
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = Putar setelah ini di { $name }
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = Casting ke { $name }
+
 # Button that runs a failed action again.
 action-try-again = Coba lagi
 
@@ -6004,6 +6127,9 @@ action-check-now = Periksa sekarang
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Periksa lagi
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Memeriksa
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Buka pengaturan
 
@@ -6070,6 +6196,9 @@ time-minutes-left = { $minutes } mnt tersisa
 # A length in minutes, for an episode.
 time-minutes = { $minutes } mnt
 
+# A length in hours, inside time-ago.
+time-hours = { $hours } jam
+
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = sekarang
 
@@ -6126,6 +6255,9 @@ state-working = Sedang memproses
 
 # Short placeholder while something loads.
 state-loading = Memuat
+
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Tutup
 
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Pindah fokus
@@ -6363,6 +6495,15 @@ names-pair = { $first } dan { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Hentikan transmisi dan keluar?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } sedang diputar di { $name }. Keluar akan menghentikannya.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = Hentikan dan keluar
 
 # Menu item that opens an episode's discussion.
 discussion-open = Diskusi
@@ -8449,9 +8590,6 @@ player-start-miss-timed-out = { $name } terlalu lama
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = Kamu melewati { $name }
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = Dilewati karena gagal baru-baru ini
-
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = Dari { $name }
 
@@ -8983,6 +9121,54 @@ player-subs-bg-box = Kotak
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Selengkapnya di Pengaturan…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Mode pribadi
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Apa pun yang Anda tonton atau baca tidak disimpan atau disinkronkan sampai mode ini dimatikan atau Kaeri ditutup.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = sumber-sumber dan nonton bareng Anda tetap melihat apa yang Anda buka.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Mode pribadi aktif. Tidak ada yang disimpan atau disinkronkan sampai Kaeri ditutup.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Matikan
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Pintasan: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Pribadi
+
+# Screen reader label of the badge.
+private-badge-label = Mode pribadi aktif
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Tidak disimpan atau disinkronkan
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Posisi Anda diingat sampai Kaeri ditutup
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Selalu pribadi
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Tidak ada dari judul ini yang disimpan atau disinkronkan di perangkat ini. Yang sudah tersimpan tetap ada.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Tidak ada dari seri ini yang disimpan atau disinkronkan di perangkat ini. Yang sudah tersimpan tetap ada.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Diputar di Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Mode pribadi aktif
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Mode pribadi nonaktif
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Memuat halaman { $page }
@@ -10061,6 +10247,9 @@ read-search-source-kind-plugin = Plugin
 
 # The button of a source group with more than five hits.
 read-search-source-more = Tampilkan { $n } lagi
+
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = Tambahkan ke { $list }
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } dari { $total }
@@ -11379,6 +11568,21 @@ settings-auto-play = Putar episode berikutnya otomatis
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Hitung mundur berikutnya
 
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Muat awal video dengan data seluler
+
+# The same row on Windows and Linux.
+settings-preload-metered = Muat awal video di koneksi terukur
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Selama penutup, stream, subtitle, dan waktu lewati episode berikutnya dicari. Detik-detik pertamanya juga dimuat, dan di koneksi terukur hanya jika ini aktif.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Torrent memuat potongan pertamanya dengan cara yang sama.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Perlu "Putar episode berikutnya otomatis"
+
 # Row: skip the opening.
 settings-skip-opening = Lewati pembukaan otomatis
 
@@ -11919,6 +12123,15 @@ settings-opds-password = Kata sandi feed
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Port feed
 
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = Gambar dalam gambar saat keluar dari aplikasi
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Tampilkan orang yang diikuti
+
+# Note under that switch.
+settings-anilist-following-footer = Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Alamat
 
@@ -12163,6 +12376,30 @@ source-picker-automatic-detail = Setiap episode dari sumber pertama yang memilik
 source-picker-coverage =
     { $of ->
        *[other] { $covered } dari { $of } episode
+    }
+
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+       *[other] Episode { $first }–{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Episode { $first }–{ $last }. Belum ada { $missing }
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Episode { $first }–{ $last }. Tanpa { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } dan { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }–{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+       *[other] { $covered } dari { $of } episode. Tanpa { $missing }
     }
 
 # Under a source that is switched off in Settings.
@@ -13969,6 +14206,30 @@ more-followed-score = { $score }/10
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Serupa
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Tampilkan semua { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+       *[other] { $first }, { $second }, dan { $more } lainnya
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } dan { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names } menonton sampai sini.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Skor { $score } dari 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Menampilkan sampai mana masing-masing.
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }
 
@@ -14017,9 +14278,6 @@ title-fact-now = Sedang tayang
 # Value of the fact on a show with no announced start.
 title-fact-tba = Akan diumumkan
 
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-more-following-line = { $status } · { $score }/10
-
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 episode-go-to = Ke episode…
 
@@ -14040,6 +14298,42 @@ episode-go-to-none = Tidak ada episode { $number }. Serial ini punya { $last }.
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = Episode { $number } belum tayang. Yang terbaru adalah { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Episode { $episode } tayang { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Episode { $episode } tayang pada { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Sumber-sumber Anda belum memilikinya.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Sumber-sumber Anda masih belum memilikinya.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Sumber-sumber Anda tidak merespons.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri mencarinya lagi setiap { $minutes } menit.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Tidak ada sumber Anda yang memilikinya.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri akan mencarinya setelah Anda kembali daring.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Tayang { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Belum ada di sumber-sumber Anda
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Episode { $episode } kini ada di sumber-sumber Anda.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri juga mencarinya sendiri setiap { $minutes } menit selama { $hours } jam setelah episode tayang.
 
 # Title of the settings group and the screen.
 torrents-title = Torrent
@@ -14577,6 +14871,9 @@ tv-status-connecting = Menghubungkan ke { $name }
 
 # Status on the remote: connection lost, trying again.
 tv-status-reconnecting = Menghubungkan ulang ke { $name }
+
+# Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+tv-waiting-for = Menunggu { $name }
 
 # Status on the remote: connected.
 tv-status-connected = Terhubung

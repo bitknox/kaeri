@@ -33,6 +33,15 @@ notice-cast-not-same-network = Cet appareil n’est pas sur le même réseau que
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = { $name } ne répond plus, la diffusion s’est donc arrêtée.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } ne reçoit plus le flux : la source n’a pas répondu pour une partie de l’épisode. Essayez une autre source.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } a perdu le flux de cet appareil. Vérifiez que les deux sont sur le même réseau.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Les sous-titres sur { $name } s’affichent en texte simple. Les sous-titres mis en forme étaient trop lourds pour la TV.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = Cette télévision n’est plus sur le réseau.
 
@@ -332,6 +341,12 @@ notice-player-failed-to-start = Impossible de lancer mpv. Vérifiez qu'il démar
 
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Aucune image sur ce flux. Essai { $next } sur { $total }.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = Le flux s'est interrompu. { $source } a pris le relais au même endroit.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = Le flux s'est interrompu. Un autre flux de { $source } a pris le relais au même endroit.
 
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpv n'a pas pu lire ce fichier. { $reason }
@@ -878,6 +893,9 @@ reading-row-queued = En attente
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = En attente · Wi-Fi requis
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = En attente · espace requis
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Téléchargement · { $done } sur { $total } pages
 
@@ -1017,6 +1035,14 @@ reading-dl-failed = Le chapitre { $chapter } n'a pas pu être téléchargé
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Hors ligne
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+        [one] Plus d'espace. { $count } chapitre se télécharge dès qu'il y a de l'espace libre.
+        [many] Plus d'espace. Ils se téléchargent dès qu'il y a de l'espace libre.
+       *[other] Plus d'espace. Ils se téléchargent dès qu'il y a de l'espace libre.
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Environ { $size }
@@ -1247,7 +1273,7 @@ plugins-outdated =
 # Toast at launch when joined plugin stores offer newer versions of installed plugins.
 plugin-updates-ready =
     { $count ->
-        [one] Mise à jour prête : { $names }.
+        [one] { $count } mise à jour de plugin prête : { $names }.
         [many] Mises à jour prêtes : { $names }.
        *[other] Mises à jour prêtes : { $names }.
     }
@@ -3013,6 +3039,9 @@ episodes-release-dub = Doublé
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Choix actuel
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Vérification de vos sources…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Afficher les touches
 
@@ -3264,6 +3293,12 @@ keys-hint-stop = Arrêter
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Lire ensuite
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Vérifier à nouveau
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Lire l’épisode { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Épisodes
@@ -4430,6 +4465,9 @@ settings-label-fullscreen = Démarrer en plein écran
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Mise à l’échelle
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Précharger si limité
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Interface du lecteur
 
@@ -4606,6 +4644,21 @@ settings-note-upload-limit = Limite tout l’envoi des torrents, pour que le par
 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Utilisez --token-to-file pour déplacer un jeton existant.
+
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = privé
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = privé
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Mode privé
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Toujours privé pour cette série
+
+# Help for the --private flag.
+cli-private-help = Démarrer en mode privé. Rien n’est enregistré ni synchronisé jusqu’à la fermeture de Kaeri.
 
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = Lecture depuis { $source }
@@ -5703,6 +5756,15 @@ tui-medium-read-change = Appuyez sur { $key } pour changer ce à quoi sert Kaeri
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
 tui-medium-settings-hint = { $key } pour changer
 
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+report-player-log-save-here = Enregistrer le journal du lecteur
+
+# That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved-to = Journal du lecteur enregistré dans { $path }
+
+# That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+report-player-log-failed-here = Impossible d’enregistrer le journal dans { $folder }.
+
 # Title of the about page.
 about-title = À propos
 
@@ -5807,6 +5869,41 @@ report-crash-off = Les rapports de plantage sont désactivés, aucun n’est don
 
 # Link from that line to the crash report settings.
 report-crash-settings = Réglages des plantages
+
+# Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+report-player-log = Journal du lecteur
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+report-player-log-detail =
+    { $playbacks ->
+        [one] { $playbacks } lecture récente · { $size }
+        [many] Les { $playbacks } dernières lectures · { $size }
+       *[other] Les { $playbacks } dernières lectures · { $size }
+    }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+report-player-log-empty = Aucune lecture enregistrée pour l’instant
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+report-player-log-save = Exporter le journal…
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = Joignez le fichier au ticket une fois qu’il s’ouvre sur GitHub.
+
+# Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved = Enregistré sous { $file }
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = Impossible d’enregistrer le journal. Essayez un autre dossier.
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+report-sent-report = Rapport
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = Journal du lecteur enregistré
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = Enregistre un fichier à joindre au ticket
 
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = Rapports de plantage
@@ -6003,6 +6100,36 @@ cast-stop = Arrêter la diffusion
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Réglé sur la TV
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = Connexion à { $name }
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = Connecté à { $name }
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = Lecture sur { $name }
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = Rien en lecture pour l’instant
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = En pause sur { $name }
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = Ouvrir { $title }
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Fermer
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Ouvre les commandes
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = Lire ensuite sur { $name }
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = Diffusion sur { $name }
+
 # Button that runs a failed action again.
 action-try-again = Réessayer
 
@@ -6150,6 +6277,9 @@ action-check-now = Vérifier maintenant
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Vérifier à nouveau
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Vérification
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Ouvrir les réglages
 
@@ -6216,6 +6346,9 @@ time-minutes-left = { $minutes } min restantes
 # A length in minutes, for an episode.
 time-minutes = { $minutes } min
 
+# A length in hours, inside time-ago.
+time-hours = { $hours } h
+
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = maintenant
 
@@ -6272,6 +6405,9 @@ state-working = En cours
 
 # Short placeholder while something loads.
 state-loading = Chargement
+
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Ignorer
 
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Déplacer la sélection
@@ -6513,6 +6649,15 @@ names-pair = { $first } et { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Arrêter la diffusion et quitter ?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } est en lecture sur { $name }. Quitter arrête la lecture.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = Arrêter et quitter
 
 # Menu item that opens an episode's discussion.
 discussion-open = Discussion
@@ -8200,7 +8345,7 @@ together-forget-room = Retirer des salons récents
 # Line that says who is in a recent room now, after looking in. The names are already joined.
 together-someone-here =
     { $count ->
-        [one] { $names } est dans le salon
+        [one] { $count } personne dans le salon : { $names }
         [many] { $names } sont dans le salon
        *[other] { $names } sont dans le salon
     }
@@ -8636,9 +8781,6 @@ player-start-miss-timed-out = { $name } a mis trop de temps
 
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = Vous avez ignoré { $name }
-
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = Ignorée après des échecs récents
 
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = Depuis { $name }
@@ -9175,6 +9317,54 @@ player-subs-bg-box = Boîte
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Plus dans les paramètres…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Mode privé
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Rien de ce que vous regardez ou lisez n’est enregistré ni synchronisé tant que vous ne le désactivez pas ou ne quittez pas Kaeri.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = Vos sources et vos visionnages en groupe voient toujours ce que vous ouvrez.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Le mode privé est activé. Rien n’est enregistré ni synchronisé jusqu’à la fermeture de Kaeri.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Désactiver
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Raccourci : { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Privé
+
+# Screen reader label of the badge.
+private-badge-label = Mode privé activé
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Ni enregistré ni synchronisé
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Votre position est conservée jusqu’à la fermeture de Kaeri
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Toujours privé
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Rien de cette série n’est enregistré ni synchronisé sur cet appareil. Ce qui est déjà enregistré est conservé.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Rien de cette série n’est enregistré ni synchronisé sur cet appareil. Ce qui est déjà enregistré est conservé.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Lecture dans Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Mode privé activé
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Mode privé désactivé
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Chargement de la page { $page }
@@ -10302,6 +10492,9 @@ read-search-source-kind-plugin = Plugin
 # The button of a source group with more than five hits.
 read-search-source-more = Afficher { $n } de plus
 
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = Ajouter à la liste { $list }
+
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } sur { $total }
 
@@ -10404,7 +10597,7 @@ medium-update-line = Kaeri peut maintenant lire des mangas, webtoons et light no
 # Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
 medium-join-title-watch =
     { $n ->
-        [one] { $devices } est réglé sur regarder
+        [one] { $n } appareil réglé sur regarder : { $devices }
         [many] { $devices } sont réglés sur regarder
        *[other] { $devices } sont réglés sur regarder
     }
@@ -10412,7 +10605,7 @@ medium-join-title-watch =
 # Title of the sheet when the other devices answer Read.
 medium-join-title-read =
     { $n ->
-        [one] { $devices } est réglé sur lire
+        [one] { $n } appareil réglé sur lire : { $devices }
         [many] { $devices } sont réglés sur lire
        *[other] { $devices } sont réglés sur lire
     }
@@ -10420,7 +10613,7 @@ medium-join-title-read =
 # Title of the sheet when the other devices answer Both.
 medium-join-title-both =
     { $n ->
-        [one] { $devices } est réglé sur regarder et lire
+        [one] { $n } appareil réglé sur regarder et lire : { $devices }
         [many] { $devices } sont réglés sur regarder et lire
        *[other] { $devices } sont réglés sur regarder et lire
     }
@@ -11655,6 +11848,21 @@ settings-auto-play = Lecture automatique de la suite
 # Row: length of the Up next countdown.
 settings-up-next-countdown = À suivre : compte à rebours
 
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Précharger la vidéo en données mobiles
+
+# The same row on Windows and Linux.
+settings-preload-metered = Précharger la vidéo sur les connexions limitées
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Pendant le générique de fin, le flux, les sous-titres et les repères de saut de l’épisode suivant sont trouvés. Ses premières secondes se chargent aussi, et sur une connexion limitée seulement si ceci est activé.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Les torrents chargent leurs premiers morceaux de la même façon.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Nécessite « Lecture automatique de la suite »
+
 # Row: skip the opening.
 settings-skip-opening = Passer le générique d’ouverture automatiquement
 
@@ -12199,6 +12407,15 @@ settings-opds-password = Mot de passe du flux
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Port du flux
 
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = Picture-in-picture en quittant l'app
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Afficher les personnes que vous suivez
+
+# Note under that switch.
+settings-anilist-following-footer = Indique où en sont les personnes que vous suivez sur AniList dans une série, sur sa page et ses épisodes. Qui peut voir votre propre liste se règle sur AniList.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Adresse
 
@@ -12469,6 +12686,34 @@ source-picker-coverage =
         [one] { $covered } sur { $of } épisode
         [many] { $covered } sur { $of } épisodes
        *[other] { $covered } sur { $of } épisodes
+    }
+
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] { $count } épisode : { $first }
+        [many] Épisodes { $first } à { $last }
+       *[other] Épisodes { $first } à { $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Épisodes { $first } à { $last }. Pas encore { $missing }
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Épisodes { $first } à { $last }. Sans { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } et { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first } à { $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] { $covered } sur { $of } épisode. Sans { $missing }
+        [many] { $covered } sur { $of } épisodes. Sans { $missing }
+       *[other] { $covered } sur { $of } épisodes. Sans { $missing }
     }
 
 # Under a source that is switched off in Settings.
@@ -14297,6 +14542,32 @@ more-followed-score = { $score }/10
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Titres similaires
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Tout afficher ({ $count })
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+        [one] { $first }, { $second } et { $more } autre
+        [many] { $first }, { $second } et { $more } autres
+       *[other] { $first }, { $second } et { $more } autres
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } et { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names } a regardé jusqu’ici.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Note de { $score } sur 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Indique où en est chaque personne.
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }
 
@@ -14347,9 +14618,6 @@ title-fact-now = En cours
 # Value of the fact on a show with no announced start.
 title-fact-tba = À annoncer
 
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-more-following-line = { $status } · { $score }/10
-
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 episode-go-to = Aller à l’épisode…
 
@@ -14370,6 +14638,42 @@ episode-go-to-none = Pas d’épisode { $number }. Cette série en compte { $las
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = L’épisode { $number } n’est pas encore sorti. Le dernier est le { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = L’épisode { $episode } est sorti { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = L’épisode { $episode } est sorti le { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Vos sources ne l’ont pas encore.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Vos sources ne l’ont toujours pas.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Vos sources n’ont pas répondu.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri le cherche à nouveau toutes les { $minutes } min.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Aucune de vos sources ne l’a.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri le cherchera dès que vous serez de nouveau en ligne.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Sorti { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Pas encore dans vos sources
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = L’épisode { $episode } est maintenant dans vos sources.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri cherche aussi de lui-même toutes les { $minutes } min, pendant { $hours } h après la sortie d’un épisode.
 
 # Title of the settings group and the screen.
 torrents-title = Torrents
@@ -14909,6 +15213,9 @@ tv-status-connecting = Connexion à { $name }
 
 # Status on the remote: connection lost, trying again.
 tv-status-reconnecting = Reconnexion à { $name }
+
+# Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+tv-waiting-for = En attente de { $name }
 
 # Status on the remote: connected.
 tv-status-connected = Connectée

@@ -97,6 +97,17 @@ pub fn set_setting(
     if key == SettingKey::WhenTrackersDisagree {
         services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
     }
+    // Off means not asked: the next page leaves the people out, the cache lets go of them, and
+    // a page on screen is said again without them.
+    if key == SettingKey::ShowFollowing {
+        let on = engine.config.effective().meta.following;
+        services.meta.show_following(on);
+        if !on {
+            for said in engine.followed.hide() {
+                let _ = tx.send(said);
+            }
+        }
+    }
     // What the file now holds, put in effect: titles are named the new way from here.
     if key == SettingKey::Titles {
         let choice = engine.config.effective().meta.title_language;

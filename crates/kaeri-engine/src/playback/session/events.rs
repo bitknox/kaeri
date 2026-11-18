@@ -94,7 +94,7 @@ impl Run<'_> {
         // long as something is playing, and holding a socket open while idle would claim a
         // session that is not happening. `None` covers both "turned off" and "Discord is not
         // running", which need no distinction.
-        let mut rpc = Rpc::start(&settings.presence, context).await;
+        let mut rpc = Rpc::start(&settings.presence, context, settings.privacy.holds()).await;
         // Told to a media server, when this stream is one's.
         let mut report = settings.reports.open(stream);
 
@@ -127,6 +127,9 @@ impl Run<'_> {
         let mut stall_dismissed = false;
         let mut stall_tick = tokio::time::interval(Duration::from_secs(1));
         let mut still_fetch = self.still_fetch.take();
+        // The starting screen's Skip, heard until the first frame: with another stream to go to,
+        // in the pool or from the sources beyond it, the file is let go for it.
+        let mut skipping = self.skipping.take();
         // The picture: what the file is, and what the GPU is saying about the chain.
         let mut source: Option<shaders::Source> = None;
         let mut video_params = serde_json::Value::Null;
@@ -203,6 +206,9 @@ impl Run<'_> {
                         stopped,
                         quit: link.has_quit(),
                         no_frames: !ever_played,
+                        errored: false,
+                        at: tracker.position(),
+                        duration: tracker.duration(),
                     },
                 },
                 // Only armed until the first frame arrives, so this cannot fire mid-episode
@@ -218,6 +224,20 @@ impl Run<'_> {
                     // stop it.
                     warned = true;
                     self.servers.late();
+                    continue;
+                }
+                skipped = async { skipping.as_mut().expect("guarded").changed().await },
+                    if skipping.is_some() && !ever_played =>
+                {
+                    match skipped {
+                        // The engine has gone on to a newer playback: no skip is coming.
+                        Err(_) => skipping = None,
+                        Ok(()) if streams.len() > 1 || settings.further.beyond(streams) => {
+                            tracing::info!(provider = %stream.provider_id, "skipped before its first frame");
+                            break FileOutcome::Skipped;
+                        }
+                        Ok(()) => tracing::info!("a skip with no other stream to go to"),
+                    }
                     continue;
                 }
                 fetched = async { still_fetch.as_mut().expect("guarded").await },
@@ -367,7 +387,7 @@ impl Run<'_> {
                     match command {
                         Some(PlayerCommand::Handover(successor)) => {
                             // Flush what was watched before the window changes hands.
-                            self.record_actions(&mut tracker, &PlaybackEvent::Ended { complete: false }, stream, &mut committed, &mut ending).await;
+                            self.record_actions(&mut tracker, &PlaybackEvent::Ended { complete: false }, stream, ever_played, &mut committed, &mut ending).await;
                             let _ = tx.send(Event::EpisodeLeft {
                                 id: context.anilist_id,
                                 episode: context.episode.clone(),
@@ -637,13 +657,12 @@ impl Run<'_> {
                             stall_dismissed = true;
                             let _ = link.overlay(Overlay::StallCleared).await;
                         }
-                        ScriptEvent::StallSwitch if streams.len() > 1 => {
+                        // With no other stream in the pool, the sources beyond it are asked, and
+                        // with none of those, the same stream opens again where it was.
+                        ScriptEvent::StallSwitch => {
                             let stalled = ServerFailure::Stalled;
                             self.servers.failed(self.store, &streams[index], stalled);
-                            break FileOutcome::Switch {
-                                to: (index + 1) % streams.len(),
-                                at: tracker.position(),
-                            };
+                            break FileOutcome::Stalled { at: tracker.position() };
                         }
                         _ => {}
                     }
@@ -697,6 +716,9 @@ impl Run<'_> {
                 // Our own `loadfile` ending the file it replaced; nothing to record.
                 PlaybackEvent::Replaced => continue,
                 PlaybackEvent::Progress { position, duration } => {
+                    if let Some(next) = duration.and_then(|length| self.learn_length(length)) {
+                        let _ = link.overlay(next).await;
+                    }
                     self.maybe_prefetch(*position, *duration);
                     if let Some(length) = *duration {
                         // The tail is tapped once the length places it.
@@ -710,8 +732,24 @@ impl Run<'_> {
                     }
                     if !ever_played {
                         ever_played = true;
+                        // A skip from here on is not this file's: the screen offers none.
+                        if let Some(skipping) = skipping.as_mut() {
+                            skipping.mark_unchanged();
+                        }
                         let _ = link.overlay(Overlay::Playing).await;
                         self.servers.served(self.store, &streams[index]);
+                        // Beside the server's first frame, the time from the roll-on.
+                        self.settings.ahead.landed();
+                        // A stream that took over from one that broke off says so as it lands.
+                        if let Some(from) = self.failed_over_from.take() {
+                            let source = stream.provider_id.clone();
+                            let said = if from == source {
+                                Msg::NoticeFailedOverSameSource { source }
+                            } else {
+                                Msg::NoticeFailedOver { source }
+                            };
+                            let _ = tx.send(Event::Toast(Notice::info(said)));
+                        }
                     }
                     // Mirror position to the UI so Now Playing can render without querying mpv —
                     // but only when the rendered value would actually change. mpv reports
@@ -729,17 +767,19 @@ impl Run<'_> {
                         // Rides the same whole-second throttle, and the presence paces itself
                         // beyond it: Discord rate-limits updates, and a bar that is still right
                         // needs none.
-                        if let Some(report) = report.as_mut() {
+                        // Private, a media server is told nothing of it, as a tracker is not.
+                        let held = settings.privacy.holds();
+                        if let Some(report) = report.as_mut().filter(|_| !held) {
                             report.observe(*position, tracker.is_paused());
                         }
-                        rpc.observe(Playhead {
+                        let head = Playhead {
                             position: *position,
                             duration: *duration,
                             speed: tracker.speed(),
                             paused: tracker.is_paused(),
                             buffering,
-                        })
-                        .await;
+                        };
+                        rpc.observe(head, held).await;
                     }
                 }
                 _ => {}
@@ -769,6 +809,10 @@ impl Run<'_> {
                         let _ = link.overlay(Overlay::SkipCleared).await;
                         let _ = tx.send(Event::SkipCleared);
                     }
+                    // A file that never played says nothing of where the episode was left: a
+                    // cast stopped before it loaded would write its start over the position
+                    // kept.
+                    Action::Record { completed: false, .. } if !ever_played => {}
                     other => {
                         let watched_secs = tracker.watched_secs();
                         self.act(
@@ -820,14 +864,14 @@ impl Run<'_> {
                     | PlaybackEvent::Speed(_)
                     | PlaybackEvent::Buffering(_)
             ) {
-                rpc.observe(Playhead {
+                let head = Playhead {
                     position: tracker.position(),
                     duration: tracker.duration(),
                     speed: tracker.speed(),
                     paused: tracker.is_paused(),
                     buffering,
-                })
-                .await;
+                };
+                rpc.observe(head, settings.privacy.holds()).await;
             }
 
             // The file's own chapters arrive once it is playing, and outrank aniskip's times.
@@ -866,6 +910,9 @@ impl Run<'_> {
                     stopped,
                     quit: link.has_quit(),
                     no_frames: !ever_played,
+                    errored: link.ended_in_error(),
+                    at: tracker.position(),
+                    duration: tracker.duration(),
                 };
             }
         };
@@ -874,9 +921,10 @@ impl Run<'_> {
         // with it.
         self.still_fetch = still_fetch;
         self.seat = seat;
+        self.skipping = skipping;
         // Cleared before anything else, so quitting never leaves a stale "watching" up.
         rpc.finish().await;
-        if let Some(report) = report {
+        if let Some(report) = report.filter(|_| !settings.privacy.holds()) {
             report.finish(tracker.position());
         }
         let _ = link.overlay(Overlay::SkipCleared).await;

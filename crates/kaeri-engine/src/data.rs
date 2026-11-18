@@ -204,7 +204,15 @@ fn detail_from(
     TitleDetail {
         tags: ranked_tags(media),
         streaming_links: streaming_links(media),
-        following: media.following.iter().map(follower).collect(),
+        // A private entry never shows, whatever the answer carried: AniList withholds them, the
+        // client drops one if it does not, and so does this.
+        following: media
+            .following
+            .iter()
+            .flatten()
+            .filter(|entry| !entry.private)
+            .map(follower)
+            .collect(),
         schedule: media
             .air_times()
             .into_iter()
@@ -613,6 +621,8 @@ pub fn watched_in(
 }
 
 /// Where `episode` of `id` was left, and how far through it that is when its length is known.
+/// The length is the latest the episode's watches said: a position carried to a TV is written
+/// without one, and says nothing of how long the episode is.
 fn resume_point(
     store: &Store,
     id: kaeri_core::ids::AnilistId,
@@ -623,8 +633,8 @@ fn resume_point(
         .events_for(id, 50)
         .ok()?
         .into_iter()
-        .find(|e| e.episode == episode)
-        .and_then(|e| e.duration_secs);
+        .filter(|e| e.episode == episode)
+        .find_map(|e| e.duration_secs);
     Some(kaeri_model::catalog::ResumePoint {
         position,
         fraction: duration.filter(|d| *d > 0.0).map(|d| (position / d).clamp(0.0, 1.0)),
@@ -1181,6 +1191,7 @@ pub fn episode_rows_with_filler(
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             }
         })
         .collect()
@@ -1660,6 +1671,7 @@ mod tests {
 
         let mut media = title_with(serde_json::json!({}));
         media.following = serde_json::from_value(serde_json::json!([
+            {"status": "CURRENT", "progress": 4, "private": true, "user": {"name": "Hidden"}},
             {"status": "COMPLETED", "score": 90.0, "progress": 12,
              "user": {"name": "Mika", "avatar": {"medium": "https://img.example/a/mika.png"}}},
             {"status": "REPEATING", "score": 0, "progress": 3, "user": {"name": "Tomo"}},
@@ -1667,7 +1679,8 @@ mod tests {
         ]))
         .unwrap();
         let following = entry_with_detail(&media, None, None).detail.unwrap().following;
-        assert_eq!(following.len(), 3);
+        assert_eq!(following.len(), 3, "a private entry is dropped here too");
+        assert!(following.iter().all(|f| f.name != "Hidden"));
         assert_eq!(following[0].name, "Mika");
         assert_eq!(following[0].avatar_url.as_deref(), Some("https://img.example/a/mika.png"));
         assert_eq!(
@@ -1704,6 +1717,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         };
         let mut rows =
             vec![row("1", true), row("2", false), row("3", false), row("OVA", false)];
@@ -1749,6 +1763,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         mark_past_progress(&mut rows, &store, id);
@@ -1966,6 +1981,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         date_episodes(&mut rows, &[(1, 100), (2, 200)].into_iter().collect());
@@ -2073,6 +2089,22 @@ mod tests {
         let e = entry_from(&media(), Some(&store));
         assert_eq!(e.progress, Some(TitleProgress { done: 5, next: 8 }));
         assert_eq!(e.resume.map(|r| r.position), Some(510.0));
+    }
+
+    #[test]
+    fn a_position_carried_to_a_tv_keeps_how_far_through_the_episode_is() {
+        // Episode 8 left at 8:30 of 24:00, then carried to a TV at 10:24, which writes the
+        // position with no length: Continue still says how far through it is.
+        let store = Store::open_in_memory().unwrap();
+        watch(&store, "8", 510.0, false, 10);
+        let carried = kaeri_store::WatchEvent {
+            at: 11,
+            ..kaeri_store::WatchEvent::new(AnilistId::new(154_587), "8", 624.0)
+        };
+        store.record_event(&carried).unwrap();
+        let resume = entry_from(&media(), Some(&store)).resume.expect("a resume point");
+        assert_eq!(resume.position, 624.0);
+        assert_eq!(resume.fraction, Some(624.0 / 1440.0));
     }
 
     #[test]

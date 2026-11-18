@@ -167,6 +167,7 @@ async fn keep_next_queues_nothing_with_no_source_to_download_from() {
         episode_title: None,
         speed: 1.0,
         resume: None,
+        always_private: false,
     });
     h.settle().await;
     assert!(h.store().downloads().unwrap().is_empty(), "nothing queued");

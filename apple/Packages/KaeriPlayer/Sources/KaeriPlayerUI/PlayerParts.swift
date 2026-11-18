@@ -193,7 +193,20 @@ struct SourceList: View {
             .padding(.horizontal, 10)
             .padding(.vertical, 8)
             if let choices = model.sourceChoices {
-                if choices.isEmpty {
+                if choices.isEmpty, !model.sourceMisses.isEmpty {
+                    // What each source said, by the name it goes by: one that failed or was held
+                    // back is not one without the episode, and the line over them claims only what
+                    // the ones that answered said.
+                    let episode = model.startingEpisode ?? ""
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(PartyWords.noneLists(model.sourceMisses, episode: episode)).foregroundStyle(.haze)
+                        ForEach(model.sourceMisses, id: \.name) { missed in
+                            Text(PartyWords.missed(missed, episode: episode)).foregroundStyle(.silk)
+                        }
+                    }
+                    .font(.system(size: 13))
+                    .padding(10)
+                } else if choices.isEmpty {
                     Text(L.playerReleasesEmpty)
                         .font(.system(size: 13)).foregroundStyle(.haze)
                         .padding(10)
@@ -226,7 +239,7 @@ struct SourceList: View {
         if let label = candidate.label { parts.append(label) }
         if let size = candidate.size { parts.append(size) }
         if candidate.dubbed { parts.append(L.playerReleaseDub) } else if candidate.dualAudio { parts.append(L.playerReleaseDualAudio) }
-        parts.append(candidate.providerId)
+        parts.append(PartyWords.sourceName(candidate))
         return parts.joined(separator: " · ")
     }
 }

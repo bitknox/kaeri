@@ -5,6 +5,8 @@
 
 package app.kaeri.tv.screens
 
+import app.kaeri.engine.model.PrivateTitle
+import app.kaeri.tv.ui.PrivateTitleLine
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.R
@@ -62,7 +64,6 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import app.kaeri.i18n.Strings
@@ -120,6 +121,8 @@ import app.kaeri.tv.ui.EnterFocus
 import app.kaeri.tv.ui.FocusMemory
 import app.kaeri.tv.ui.HeldScroll
 import app.kaeri.tv.ui.HeroHeader
+import app.kaeri.store.MissingWords
+import androidx.compose.ui.graphics.graphicsLayer
 import app.kaeri.tv.ui.LocalActions
 import app.kaeri.tv.ui.LocalAppStore
 import app.kaeri.tv.ui.PosterCard
@@ -162,6 +165,8 @@ fun TitleScreen(
         store.loadDetail(id)
         store.loadEpisodesForPage(id)
         store.loadDub(id)
+        // Its own settings, which say whether it is always private on this device.
+        store.loadShowSettings(id)
     }
     val entries by store.titles.entries.collectAsStateWithLifecycle()
     val tables by store.titles.episodes.collectAsStateWithLifecycle()
@@ -338,6 +343,8 @@ private fun Header(
         val availability = store.licensed.availability.collectAsStateWithLifecycle().value[entry.id]
         val remoteHost = LocalRemoteHost.current
         val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+        val missing = rememberMissingView(entry, rows)
+        Announcer(missing.said)
         Row(verticalAlignment = Alignment.CenterVertically) {
             if (onService != null) {
                 AmberButton(
@@ -347,6 +354,15 @@ private fun Header(
                 ) { ButtonLabel(stringResource(R.string.title_watch_on, onService.service)) }
             } else if (noSources) {
                 AmberButton(onClick = onAddStore, icon = null, modifier = Modifier.firstFocus(memory, "play")) { ButtonLabel(stringResource(R.string.tv_add_store_to_play)) }
+            } else if (action.playable || missing.shown != null) {
+                // The next episode aired and no source lists it: Check again and the one before lead.
+                MissingLead(entry, missing, memory, onPlay = { onPlay(entry.id, it) }) {
+                    AmberButton(
+                        onClick = { onPlay(entry.id, action.episode) },
+                        enabled = action.playable,
+                        modifier = Modifier.firstFocus(memory, "play"),
+                    ) { ButtonLabel(action.label(context)) }
+                }
             } else {
                 AmberButton(
                     onClick = { onPlay(entry.id, action.episode) },
@@ -407,7 +423,39 @@ private fun Header(
                 SurprisePill(pick.pool, Modifier.remembered(memory, "another"), another = true)
             }
         }
+        if (onService == null && !noSources) MissingLine(missing)
+        // Private: under the actions, while private mode is on or the show is always private.
+        PrivateTitleLine(PrivateTitle.Show(entry.id))
         ServiceLine(availability, memory)
+        FollowingLine(entry, memory)
+    }
+}
+
+/**
+ * People you follow, a focus stop between the buttons and the episodes while anyone followed has
+ * the show. It comes after the page, so it opens on standard and fades in on the fade-in token,
+ * the episodes moving down with it; the switch going off fades it out over 0.3 s.
+ */
+@Composable
+private fun FollowingLine(entry: Entry, memory: FocusMemory) {
+    val actions = LocalActions.current
+    val context = LocalContext.current
+    val people = entry.detail?.following.orEmpty()
+    // The last people shown, kept while the row closes.
+    var kept by remember { mutableStateOf(people) }
+    if (people.isNotEmpty()) kept = people
+    AnimatedVisibility(
+        people.isNotEmpty(),
+        // Unclipped, so the focused row's growth to 1.05 is not cut at its edges.
+        enter = expandVertically(Motion.standard(), expandFrom = Alignment.Top, clip = false) + fadeIn(Motion.fadeIn()),
+        exit = shrinkVertically(Motion.standard(), shrinkTowards = Alignment.Top, clip = false) + fadeOut(Motion.fadeOut()),
+        label = "following", // i18n-skip
+    ) {
+        app.kaeri.tv.ui.FollowingRow(
+            kept,
+            onOpen = { actions?.open(app.kaeri.tv.ui.followingPanel(context, kept)) },
+            modifier = Modifier.padding(top = 14.dp).remembered(memory, "following"),
+        )
     }
 }
 
@@ -705,15 +753,27 @@ private fun EpisodeCard(
     var focused by remember { mutableStateOf(false) }
     val title = row.title?.takeIf { it.isNotBlank() } ?: Strings.episodeNumber(context, row.number.toInt())
     val aired = row.airsAt?.takeIf { it <= System.currentTimeMillis() / 1000 }?.let { airedDate(context, it) }
-    val facts = listOfNotNull(Strings.episodeLineDetail(context, row.number.toInt(), line ?: ""), aired)
-        .joinToString(" · ") // i18n-skip
-        .replace(Regex(" · $"), "")
+    // One that aired and no source lists yet says how long ago, turned on the minute: "Aired 25 min ago · Not in your sources yet".
+    val missing = if (row.unsourced) MissingWords.unsourcedLine(context, row.airsAt, rememberMinute()) else null
+    val facts = if (missing != null) {
+        Strings.episodeLineDetail(context, row.number.toInt(), missing)
+    } else {
+        listOfNotNull(Strings.episodeLineDetail(context, row.number.toInt(), line ?: ""), aired)
+            .joinToString(" · ") // i18n-skip
+            .replace(Regex(" · $"), "")
+    }
+    // Lifted to full strength when a source lists it, on the reveal token.
+    val strength by androidx.compose.animation.core.animateFloatAsState(if (row.unsourced) 0.45f else 1f, app.kaeri.design.Motion.reveal(), label = "sourced") // i18n-skip
+    val titleColor by androidx.compose.animation.animateColorAsState(if (row.unsourced) ObiSilk.Haze else ObiSilk.Silk, app.kaeri.design.Motion.reveal(), label = "sourced-title") // i18n-skip
     val synopsis = row.description?.takeIf { it.isNotBlank() && !covered }
     val hiddenWord = stringResource(R.string.episode_synopsis_hidden)
     // The card reads as one: number, title, facts, then the synopsis last, or that it is hidden.
     val base = cardLabel(context, title, facts, progress)
+    // Then who of the people followed stopped here, before the synopsis; never their scores.
+    val marked = row.followed.takeIf { it.isNotEmpty() }?.let { app.kaeri.store.FollowingWords.spoken(context, it) }
     val said = base.let { if (row.completed) Strings.tvCardLabelWatched(context, it) else it } +
-        (synopsis?.let { ". $it" } ?: if (covered) ". $hiddenWord" else "") // i18n-skip
+        (marked?.let { ". $it" } ?: "") + // i18n-skip
+        (synopsis?.let { (if (marked != null) " " else ". ") + it } ?: if (covered) (if (marked != null) " " else ". ") + hiddenWord else "") // i18n-skip
     Column(Modifier.width(EpisodeCardDims.Width).onFocusChanged { focused = it.hasFocus }) {
         ArtCard(onClick, EpisodeCardDims.Width, EpisodeCardDims.StillHeight, modifier, sheet, said) {
             // The show's banner stands in for a still the episode does not have, and is never blurred.
@@ -721,7 +781,7 @@ private fun EpisodeCard(
                 row.thumbnail ?: entry.bannerUrl,
                 CoverPlate.parse(entry.coverColor),
                 pixels(EpisodeCardDims.Width),
-                Modifier.fillMaxSize().alpha(if (row.unsourced) 0.45f else 1f),
+                Modifier.fillMaxSize().graphicsLayer { alpha = strength },
                 spoiler = spoiler,
             )
             // The eye struck through, as phones draw it, on a still spoiler protection covers.
@@ -737,24 +797,27 @@ private fun EpisodeCard(
                     Icon(TvIcons.Check, contentDescription = null, tint = ObiSilk.Water, modifier = Modifier.size(24.dp * 2 / 3))
                 }
             }
+            app.kaeri.tv.ui.StillMarks(row.followed, Modifier.align(Alignment.BottomEnd).padding(8.dp))
         }
         Spacer(Modifier.height(10.dp))
         Text(
             title,
             style = MaterialTheme.typography.titleSmall,
-            color = if (row.unsourced) ObiSilk.Haze else ObiSilk.Silk,
+            color = titleColor,
             maxLines = 1,
             overflow = TextOverflow.Ellipsis,
             modifier = Modifier.clearAndSetSemantics {},
         )
-        Text(
-            facts,
-            style = MaterialTheme.typography.bodySmall,
-            color = ObiSilk.Haze,
-            maxLines = 1,
-            overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 2.dp).clearAndSetSemantics {},
-        )
+        // A found episode's line crossfades to its length and date.
+        androidx.compose.animation.Crossfade(facts, Modifier.padding(top = 2.dp).clearAndSetSemantics {}, animationSpec = app.kaeri.design.Motion.reveal(), label = "facts") { words -> // i18n-skip
+            Text(
+                words,
+                style = MaterialTheme.typography.bodySmall,
+                color = ObiSilk.Haze,
+                maxLines = if (missing != null) 2 else 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
         if (band) {
             // The room for text: it fades in on the fade-in token, and the focused card's goes from haze to silk.
             val room = with(density) { (EpisodeCardDims.BodyLine * EpisodeCardDims.Lines).toDp() }
@@ -972,6 +1035,11 @@ fun titleSheet(context: Context, store: AppStore, entry: Entry, rows: List<Episo
         listOfNotNull(
             CardAction(Strings.showSettingsTitle(context), then = showSettingsSheet(context, store, entry.id, entry.title)),
             CardAction(sourcesLabel, then = sourcePickerSheet(store, entry, sourcesLabel)),
+            // Always private, a switch: the panel stays open as it turns.
+            CardAction(
+                Strings.titleAlwaysPrivate(context),
+                switch = { PrivateTitle.Show(entry.id) in store.privacy.always.collectAsStateWithLifecycle().value },
+            ) { store.setAlwaysPrivate(PrivateTitle.Show(entry.id), !store.privacy.isAlways(PrivateTitle.Show(entry.id))) },
             if (store.match.canFix(store.providers.rows.value)) {
                 CardAction(Strings.matchFix(context), then = matchPanel(context, store, entry, fromMenu = true, host = host))
             } else {

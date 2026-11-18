@@ -60,6 +60,31 @@ pub fn notice_cast_lost(name: &str) -> String {
     text("notice-cast-lost", &[("name", Arg::Text(name))])
 }
 
+/// The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.
+pub fn notice_cast_stopped_elsewhere(name: &str) -> String {
+    text("notice-cast-stopped-elsewhere", &[("name", Arg::Text(name))])
+}
+
+/// Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+pub fn notice_cast_segment(name: &str) -> String {
+    text("notice-cast-segment", &[("name", Arg::Text(name))])
+}
+
+/// The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+pub fn notice_cast_lost_stream(name: &str) -> String {
+    text("notice-cast-lost-stream", &[("name", Arg::Text(name))])
+}
+
+/// Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+pub fn notice_cast_subtitles_plain(name: &str) -> String {
+    text("notice-cast-subtitles-plain", &[("name", Arg::Text(name))])
+}
+
+/// Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.
+pub fn notice_cast_fallback(name: &str) -> String {
+    text("notice-cast-fallback", &[("name", Arg::Text(name))])
+}
+
 /// The TV picked to cast to has left the network.
 pub fn notice_cast_no_device() -> String {
     text("notice-cast-no-device", &[])
@@ -445,6 +470,16 @@ pub fn cause_sources_timed_out() -> String {
     text("cause-sources-timed-out", &[])
 }
 
+/// Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+pub fn cause_sources_unreached(names: &str) -> String {
+    text("cause-sources-unreached", &[("names", Arg::Text(names))])
+}
+
+/// Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+pub fn cause_sources_not_asked(count: i64, names: &str, episode: &str) -> String {
+    text("cause-sources-not-asked", &[("count", Arg::Int(count)), ("names", Arg::Text(names)), ("episode", Arg::Text(episode))])
+}
+
 /// Reason: every source matched the title but none has the episode. The detail is what each said.
 pub fn cause_no_source_has_episode(episode: &str, detail: &str) -> String {
     text("cause-no-source-has-episode", &[("episode", Arg::Text(episode)), ("detail", Arg::Text(detail))])
@@ -533,6 +568,16 @@ pub fn notice_player_failed_to_start(reason: &str) -> String {
 /// Toast when a stream never showed a frame and the next one is tried.
 pub fn notice_stream_no_video(next: i64, total: i64) -> String {
     text("notice-stream-no-video", &[("next", Arg::Int(next)), ("total", Arg::Int(total))])
+}
+
+/// Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+pub fn notice_failed_over(source: &str) -> String {
+    text("notice-failed-over", &[("source", Arg::Text(source))])
+}
+
+/// Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+pub fn notice_failed_over_same_source(source: &str) -> String {
+    text("notice-failed-over-same-source", &[("source", Arg::Text(source))])
 }
 
 /// Toast when mpv gave up on a file. The reason is mpv's own line.
@@ -1425,6 +1470,11 @@ pub fn reading_row_waits_wifi() -> String {
     text("reading-row-waits-wifi", &[])
 }
 
+/// A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+pub fn reading_row_waits_room() -> String {
+    text("reading-row-waits-room", &[])
+}
+
 /// A chapter row's state while it downloads.
 pub fn reading_row_downloading(done: i64, total: i64) -> String {
     text("reading-row-downloading", &[("done", Arg::Int(done)), ("total", Arg::Int(total))])
@@ -1653,6 +1703,11 @@ pub fn reading_dl_failed(chapter: &str) -> String {
 /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 pub fn reading_dl_offline() -> String {
     text("reading-dl-offline", &[])
+}
+
+/// After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+pub fn reading_dl_no_room(count: i64) -> String {
+    text("reading-dl-no-room", &[("count", Arg::Int(count))])
 }
 
 /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
@@ -4857,6 +4912,11 @@ pub fn episodes_release_current_pick() -> String {
     text("episodes-release-current-pick", &[])
 }
 
+/// Replaces the missing-episode status on the title page while a check runs.
+pub fn episode_missing_checking() -> String {
+    text("episode-missing-checking", &[])
+}
+
 /// Action label in the help overlay and the command palette.
 pub fn keys_action_show_keys() -> String {
     text("keys-action-show-keys", &[])
@@ -5275,6 +5335,16 @@ pub fn keys_hint_stop() -> String {
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 pub fn keys_hint_play_next() -> String {
     text("keys-hint-play-next", &[])
+}
+
+/// Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+pub fn keys_hint_check_again() -> String {
+    text("keys-hint-check-again", &[])
+}
+
+/// Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+pub fn keys_hint_play_episode(episode: i64) -> String {
+    text("keys-hint-play-episode", &[("episode", Arg::Plain(episode))])
 }
 
 /// Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
@@ -7175,6 +7245,11 @@ pub fn settings_label_upscaling() -> String {
     text("settings-label-upscaling", &[])
 }
 
+/// Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+pub fn settings_label_preload_metered() -> String {
+    text("settings-label-preload-metered", &[])
+}
+
 /// Settings row: which interface the player shows.
 pub fn settings_label_player_ui() -> String {
     text("settings-label-player-ui", &[])
@@ -7468,6 +7543,31 @@ pub fn settings_note_upload_limit() -> String {
 /// Note under the token storage row. The option is a command-line flag and is not translated.
 pub fn settings_note_token_storage() -> String {
     text("settings-note-token-storage", &[])
+}
+
+/// Header chip while private mode is on, in the state colour, lower case.
+pub fn tui_private_chip() -> String {
+    text("tui-private-chip", &[])
+}
+
+/// Footer hint for Ctrl+P, lower case to match the header chip.
+pub fn keys_hint_private() -> String {
+    text("keys-hint-private", &[])
+}
+
+/// Command palette entry that turns private mode on or off; its state shows beside it.
+pub fn palette_private_mode() -> String {
+    text("palette-private-mode", &[])
+}
+
+/// Command palette entry on a title page: keep the show private on this device.
+pub fn palette_always_private() -> String {
+    text("palette-always-private", &[])
+}
+
+/// Help for the --private flag.
+pub fn cli_private_help() -> String {
+    text("cli-private-help", &[])
 }
 
 /// Under a series' title on the terminal's series page: the source its chapters are read from.
@@ -9370,6 +9470,21 @@ pub fn tui_medium_settings_hint(key: &str) -> String {
     text("tui-medium-settings-hint", &[("key", Arg::Text(key))])
 }
 
+/// Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+pub fn report_player_log_save_here() -> String {
+    text("report-player-log-save-here", &[])
+}
+
+/// That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+pub fn report_player_log_saved_to(path: &str) -> String {
+    text("report-player-log-saved-to", &[("path", Arg::Text(path))])
+}
+
+/// That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+pub fn report_player_log_failed_here(folder: &str) -> String {
+    text("report-player-log-failed-here", &[("folder", Arg::Text(folder))])
+}
+
 /// Title of the about page.
 pub fn about_title() -> String {
     text("about-title", &[])
@@ -9543,6 +9658,56 @@ pub fn report_crash_off() -> String {
 /// Link from that line to the crash report settings.
 pub fn report_crash_settings() -> String {
     text("report-crash-settings", &[])
+}
+
+/// Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+pub fn report_player_log() -> String {
+    text("report-player-log", &[])
+}
+
+/// Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+pub fn report_player_log_detail(playbacks: i64, size: &str) -> String {
+    text("report-player-log-detail", &[("playbacks", Arg::Int(playbacks)), ("size", Arg::Text(size))])
+}
+
+/// Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+pub fn report_player_log_empty() -> String {
+    text("report-player-log-empty", &[])
+}
+
+/// Button under the ticked Player log item. Opens the system's save dialog for the log file.
+pub fn report_player_log_save() -> String {
+    text("report-player-log-save", &[])
+}
+
+/// Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+pub fn report_player_log_attach() -> String {
+    text("report-player-log-attach", &[])
+}
+
+/// Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+pub fn report_player_log_saved(file: &str) -> String {
+    text("report-player-log-saved", &[("file", Arg::Text(file))])
+}
+
+/// Shown beside the Save log button when the file could not be written.
+pub fn report_player_log_failed() -> String {
+    text("report-player-log-failed", &[])
+}
+
+/// First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+pub fn report_sent_report() -> String {
+    text("report-sent-report", &[])
+}
+
+/// Screen readers announce this once the player log file is written.
+pub fn report_player_log_a11y_saved() -> String {
+    text("report-player-log-a11y-saved", &[])
+}
+
+/// Screen reader hint on the Player log item.
+pub fn report_player_log_a11y_hint() -> String {
+    text("report-player-log-a11y-hint", &[])
 }
 
 /// Heading of the Crash reports group in Settings, About.
@@ -9870,6 +10035,56 @@ pub fn cast_volume_fixed() -> String {
     text("cast-volume-fixed", &[])
 }
 
+/// The cast button's spoken label while it connects to a TV. The name is the TV's.
+pub fn cast_button_connecting(name: &str) -> String {
+    text("cast-button-connecting", &[("name", Arg::Text(name))])
+}
+
+/// The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+pub fn cast_button_connected(name: &str) -> String {
+    text("cast-button-connected", &[("name", Arg::Text(name))])
+}
+
+/// Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+pub fn cast_plays_on(name: &str) -> String {
+    text("cast-plays-on", &[("name", Arg::Text(name))])
+}
+
+/// Row in the connected dialog while the TV has nothing loaded.
+pub fn cast_idle() -> String {
+    text("cast-idle", &[])
+}
+
+/// The casting controller's line while the episode is paused on the TV. The name is the TV's.
+pub fn cast_status_paused(name: &str) -> String {
+    text("cast-status-paused", &[("name", Arg::Text(name))])
+}
+
+/// Spoken label of the show's name in the casting controller: it opens the show's page.
+pub fn cast_open_show(title: &str) -> String {
+    text("cast-open-show", &[("title", Arg::Text(title))])
+}
+
+/// The chevron that puts the full controller back into the mini player.
+pub fn cast_controller_close() -> String {
+    text("cast-controller-close", &[])
+}
+
+/// Screen reader hint on the mini player over the navigation bar.
+pub fn cast_mini_opens() -> String {
+    text("cast-mini-opens", &[])
+}
+
+/// Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+pub fn cast_play_next_on(name: &str) -> String {
+    text("cast-play-next-on", &[("name", Arg::Text(name))])
+}
+
+/// The system's media notification and Now Playing: the line naming the TV that plays.
+pub fn cast_notification_line(name: &str) -> String {
+    text("cast-notification-line", &[("name", Arg::Text(name))])
+}
+
 /// Button that runs a failed action again.
 pub fn action_try_again() -> String {
     text("action-try-again", &[])
@@ -10115,6 +10330,11 @@ pub fn action_check_again() -> String {
     text("action-check-again", &[])
 }
 
+/// Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+pub fn action_checking() -> String {
+    text("action-checking", &[])
+}
+
 /// Button that opens the system's own settings for the app.
 pub fn action_open_settings() -> String {
     text("action-open-settings", &[])
@@ -10225,6 +10445,11 @@ pub fn time_minutes(minutes: i64) -> String {
     text("time-minutes", &[("minutes", Arg::Int(minutes))])
 }
 
+/// A length in hours, inside time-ago.
+pub fn time_hours(hours: i64) -> String {
+    text("time-hours", &[("hours", Arg::Int(hours))])
+}
+
 /// A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 pub fn time_now_inline() -> String {
     text("time-now-inline", &[])
@@ -10318,6 +10543,11 @@ pub fn state_working() -> String {
 /// Short placeholder while something loads.
 pub fn state_loading() -> String {
     text("state-loading", &[])
+}
+
+/// Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+pub fn notice_dismiss() -> String {
+    text("notice-dismiss", &[])
 }
 
 /// Controller help: the D-pad and left stick move focus between items.
@@ -10703,6 +10933,26 @@ pub fn names_pair(first: &str, last: &str) -> String {
 /// A list of names up to the last two, joined one by one: "Alpha, Brook".
 pub fn names_list(list: &str, next: &str) -> String {
     text("names-list", &[("list", Arg::Text(list)), ("next", Arg::Text(next))])
+}
+
+/// Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+pub fn cast_row_through_computer() -> String {
+    text("cast-row-through-computer", &[])
+}
+
+/// Title of the question asked on quitting while an episode plays on a TV.
+pub fn desktop_cast_quit_title() -> String {
+    text("desktop-cast-quit-title", &[])
+}
+
+/// Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+pub fn desktop_cast_quit_body(title: &str, name: &str) -> String {
+    text("desktop-cast-quit-body", &[("title", Arg::Text(title)), ("name", Arg::Text(name))])
+}
+
+/// Button of the question asked on quitting while casting: stops the cast and quits.
+pub fn desktop_cast_quit_action() -> String {
+    text("desktop-cast-quit-action", &[])
 }
 
 /// Menu item that opens an episode's discussion.
@@ -14085,9 +14335,24 @@ pub fn player_start_miss_skipped(name: &str) -> String {
     text("player-start-miss-skipped", &[("name", Arg::Text(name))])
 }
 
-/// Details row for sources passed over because they failed lately. The name goes before it.
-pub fn player_start_resting() -> String {
-    text("player-start-resting", &[])
+/// Details row for a source not asked while torrent playback is off. The name goes before it.
+pub fn player_start_row_held_torrents_off() -> String {
+    text("player-start-row-held-torrents-off", &[])
+}
+
+/// Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
+pub fn player_start_row_held_proxy() -> String {
+    text("player-start-row-held-proxy", &[])
+}
+
+/// Details row for a source not asked on cellular, where torrents are off. The name goes before it.
+pub fn player_start_row_held_cellular() -> String {
+    text("player-start-row-held-cellular", &[])
+}
+
+/// Details row for a source not asked because it says it can't be used right now. The name goes before it.
+pub fn player_start_row_held_other() -> String {
+    text("player-start-row-held-other", &[])
 }
 
 /// Detail line once the streams are found and the player opens one. The name is the source's.
@@ -14238,6 +14503,36 @@ pub fn player_start_row_skipped() -> String {
 /// Second clause of a failure: the sources that were asked, joined as a list by the app.
 pub fn player_start_asked(names: &str) -> String {
     text("player-start-asked", &[("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+pub fn player_start_lacking(count: i64, names: &str, episode: &str) -> String {
+    text("player-start-lacking", &[("count", Arg::Int(count)), ("names", Arg::Text(names)), ("episode", Arg::Text(episode))])
+}
+
+/// First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
+pub fn player_start_unreached(names: &str) -> String {
+    text("player-start-unreached", &[("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
+pub fn player_start_not_asked_torrents_off(count: i64, names: &str) -> String {
+    text("player-start-not-asked-torrents-off", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
+pub fn player_start_not_asked_proxy(count: i64, names: &str) -> String {
+    text("player-start-not-asked-proxy", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
+pub fn player_start_not_asked_cellular(count: i64, names: &str) -> String {
+    text("player-start-not-asked-cellular", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
+pub fn player_start_not_asked_other(count: i64, names: &str) -> String {
+    text("player-start-not-asked-other", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
 }
 
 /// Label of the switch in the Details list that plays the episode with its subtitles.
@@ -14897,6 +15192,36 @@ pub fn source_picker_empty() -> String {
     text("source-picker-empty", &[])
 }
 
+/// Line over the reasons when no source lists a release of the episode. The episode is its label.
+pub fn source_picker_none_lists(episode: &str) -> String {
+    text("source-picker-none-lists", &[("episode", Arg::Text(episode))])
+}
+
+/// Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+pub fn source_picker_none_answered_lists(episode: &str) -> String {
+    text("source-picker-none-answered-lists", &[("episode", Arg::Text(episode))])
+}
+
+/// Line of the picker for a source not asked while torrent playback is off.
+pub fn source_picker_held_torrents_off(name: &str) -> String {
+    text("source-picker-held-torrents-off", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
+pub fn source_picker_held_proxy(name: &str) -> String {
+    text("source-picker-held-proxy", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source not asked on cellular, where torrents are off.
+pub fn source_picker_held_cellular(name: &str) -> String {
+    text("source-picker-held-cellular", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source that says it can't be used right now.
+pub fn source_picker_held_other(name: &str) -> String {
+    text("source-picker-held-other", &[("name", Arg::Text(name))])
+}
+
 /// Title of the picker sheet in the player.
 pub fn player_sources() -> String {
     text("player-sources", &[])
@@ -14980,6 +15305,86 @@ pub fn player_subs_bg_box() -> String {
 /// Button in the subtitles panel that opens Settings.
 pub fn player_subs_more() -> String {
     text("player-subs-more", &[])
+}
+
+/// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+pub fn private_mode() -> String {
+    text("private-mode", &[])
+}
+
+/// The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+pub fn private_mode_detail() -> String {
+    text("private-mode-detail", &[])
+}
+
+/// Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+pub fn private_mode_limits() -> String {
+    text("private-mode-limits", &[])
+}
+
+/// Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+pub fn private_mode_on_notice() -> String {
+    text("private-mode-on-notice", &[])
+}
+
+/// Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+pub fn action_turn_off() -> String {
+    text("action-turn-off", &[])
+}
+
+/// Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+pub fn private_mode_shortcut_hint(keys: &str) -> String {
+    text("private-mode-shortcut-hint", &[("keys", Arg::Text(keys))])
+}
+
+/// The badge while private mode is on, the player label, and the head of the title page line.
+pub fn private_badge() -> String {
+    text("private-badge", &[])
+}
+
+/// Screen reader label of the badge.
+pub fn private_badge_label() -> String {
+    text("private-badge-label", &[])
+}
+
+/// Line under a title or series page's main action, after "Private" or "Always private".
+pub fn private_line_not_saved() -> String {
+    text("private-line-not-saved", &[])
+}
+
+/// Line under a title or series page's main action when a place is held in memory, after "Private".
+pub fn private_line_kept() -> String {
+    text("private-line-kept", &[])
+}
+
+/// A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+pub fn title_always_private() -> String {
+    text("title-always-private", &[])
+}
+
+/// Under the Always private switch in a show's settings.
+pub fn show_always_private_detail() -> String {
+    text("show-always-private-detail", &[])
+}
+
+/// Under the Always private switch in a series page's settings.
+pub fn series_always_private_detail() -> String {
+    text("series-always-private-detail", &[])
+}
+
+/// What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+pub fn now_playing_private() -> String {
+    text("now-playing-private", &[])
+}
+
+/// Announced to screen readers once when private mode turns on.
+pub fn private_mode_on_announcement() -> String {
+    text("private-mode-on-announcement", &[])
+}
+
+/// Announced to screen readers once when private mode turns off.
+pub fn private_mode_off_announcement() -> String {
+    text("private-mode-off-announcement", &[])
 }
 
 /// Under a page that is still loading after four seconds.
@@ -17245,6 +17650,11 @@ pub fn read_tile_add_planning() -> String {
     text("read-tile-add-planning", &[])
 }
 
+/// Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+pub fn read_tile_add_to(list: &str) -> String {
+    text("read-tile-add-to", &[("list", Arg::Text(list))])
+}
+
 /// Said once by screen readers when Your sources only turns on.
 pub fn read_search_anilist_hidden() -> String {
     text("read-search-anilist-hidden", &[])
@@ -19410,6 +19820,31 @@ pub fn settings_up_next_countdown() -> String {
     text("settings-up-next-countdown", &[])
 }
 
+/// Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+pub fn settings_preload_cellular() -> String {
+    text("settings-preload-cellular", &[])
+}
+
+/// The same row on Windows and Linux.
+pub fn settings_preload_metered() -> String {
+    text("settings-preload-metered", &[])
+}
+
+/// Line under the row on Windows and Linux, and the note under the terminal's settings list.
+pub fn settings_preload_detail_metered() -> String {
+    text("settings-preload-detail-metered", &[])
+}
+
+/// Sentence added after the line under the row while torrent playback is on.
+pub fn settings_preload_torrents() -> String {
+    text("settings-preload-torrents", &[])
+}
+
+/// Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+pub fn settings_preload_a11y_dimmed() -> String {
+    text("settings-preload-a11y-dimmed", &[])
+}
+
 /// Row: skip the opening.
 pub fn settings_skip_opening() -> String {
     text("settings-skip-opening", &[])
@@ -20310,6 +20745,21 @@ pub fn settings_opds_port() -> String {
     text("settings-opds-port", &[])
 }
 
+/// Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+pub fn settings_label_picture_in_picture_on_leave() -> String {
+    text("settings-label-picture-in-picture-on-leave", &[])
+}
+
+/// Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+pub fn settings_anilist_following() -> String {
+    text("settings-anilist-following", &[])
+}
+
+/// Note under that switch.
+pub fn settings_anilist_following_footer() -> String {
+    text("settings-anilist-following-footer", &[])
+}
+
 /// Label of the address field in the Add a server sheet.
 pub fn book_server_address() -> String {
     text("book-server-address", &[])
@@ -20673,6 +21123,36 @@ pub fn source_picker_automatic_detail() -> String {
 /// Under a source: how many of the title's released episodes it lists.
 pub fn source_picker_coverage(covered: i64, of: i64) -> String {
     text("source-picker-coverage", &[("covered", Arg::Int(covered)), ("of", Arg::Int(of))])
+}
+
+/// Under a source that lists every episode that is out.
+pub fn source_picker_episodes(count: i64, first: i64, last: i64) -> String {
+    text("source-picker-episodes", &[("count", Arg::Int(count)), ("first", Arg::Plain(first)), ("last", Arg::Plain(last))])
+}
+
+/// Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+pub fn source_picker_episodes_not_yet(first: i64, last: i64, missing: &str) -> String {
+    text("source-picker-episodes-not-yet", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last)), ("missing", Arg::Text(missing))])
+}
+
+/// The same, more than a week after the episodes aired.
+pub fn source_picker_episodes_not(first: i64, last: i64, missing: &str) -> String {
+    text("source-picker-episodes-not", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last)), ("missing", Arg::Text(missing))])
+}
+
+/// Two episodes a source lacks, inside the missing part of a source's line.
+pub fn source_picker_missing_pair(a: i64, b: i64) -> String {
+    text("source-picker-missing-pair", &[("a", Arg::Plain(a)), ("b", Arg::Plain(b))])
+}
+
+/// Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+pub fn source_picker_missing_range(first: i64, last: i64) -> String {
+    text("source-picker-missing-range", &[("first", Arg::Plain(first)), ("last", Arg::Plain(last))])
+}
+
+/// Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+pub fn source_picker_coverage_missing(covered: i64, of: i64, missing: &str) -> String {
+    text("source-picker-coverage-missing", &[("covered", Arg::Int(covered)), ("of", Arg::Int(of)), ("missing", Arg::Text(missing))])
 }
 
 /// Under a source that is switched off in Settings.
@@ -23641,6 +24121,41 @@ pub fn more_like_this() -> String {
     text("more-like-this", &[])
 }
 
+/// Button after the first five people followed, on wide screens. It shows the rest in place.
+pub fn following_show_all(count: i64) -> String {
+    text("following-show-all", &[("count", Arg::Int(count))])
+}
+
+/// Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+pub fn following_names(first: &str, second: &str, more: i64) -> String {
+    text("following-names", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("more", Arg::Int(more))])
+}
+
+/// Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+pub fn following_names_two(first: &str, second: &str) -> String {
+    text("following-names-two", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+pub fn following_mark_more(count: i64) -> String {
+    text("following-mark-more", &[("count", Arg::Int(count))])
+}
+
+/// Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+pub fn following_mark_spoken(names: &str) -> String {
+    text("following-mark-spoken", &[("names", Arg::Text(names))])
+}
+
+/// What a screen reader says in place of a score such as 8/10 beside a person followed.
+pub fn following_score_spoken(score: i64) -> String {
+    text("following-score-spoken", &[("score", Arg::Int(score))])
+}
+
+/// Hint of the People you follow row on phones and the TV, which opens the full list.
+pub fn following_open_help() -> String {
+    text("following-open-help", &[])
+}
+
 /// Line of a followed person's list entry: their status and how far they are. Both are already worded.
 pub fn more_followed_progress(status: &str, progress: &str) -> String {
     text("more-followed-progress", &[("status", Arg::Text(status)), ("progress", Arg::Text(progress))])
@@ -23716,11 +24231,6 @@ pub fn title_fact_tba() -> String {
     text("title-fact-tba", &[])
 }
 
-/// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-pub fn more_following_line(status: &str, score: i64) -> String {
-    text("more-following-line", &[("status", Arg::Text(status)), ("score", Arg::Int(score))])
-}
-
 /// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 pub fn episode_go_to() -> String {
     text("episode-go-to", &[])
@@ -23754,6 +24264,66 @@ pub fn episode_go_to_none(number: i64, last: i64) -> String {
 /// Shown when the number typed is an episode with no date that has not come out.
 pub fn episode_go_to_not_out(number: i64, latest: i64) -> String {
     text("episode-go-to-not-out", &[("number", Arg::Plain(number)), ("latest", Arg::Plain(latest))])
+}
+
+/// Status, first sentence, within a day of the episode airing.
+pub fn episode_missing_aired(episode: i64, ago: &str) -> String {
+    text("episode-missing-aired", &[("episode", Arg::Plain(episode)), ("ago", Arg::Text(ago))])
+}
+
+/// Status, first sentence, a day or more after the episode aired.
+pub fn episode_missing_aired_on(episode: i64, date: &str) -> String {
+    text("episode-missing-aired-on", &[("episode", Arg::Plain(episode)), ("date", Arg::Text(date))])
+}
+
+/// Status, second sentence, until a check the person asked for comes back empty.
+pub fn episode_missing_not_yet() -> String {
+    text("episode-missing-not-yet", &[])
+}
+
+/// Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+pub fn episode_missing_still() -> String {
+    text("episode-missing-still", &[])
+}
+
+/// Status, second sentence, after a check where none of the person's sources answered.
+pub fn episode_missing_no_answer() -> String {
+    text("episode-missing-no-answer", &[])
+}
+
+/// Status, last sentence, during the hours Kaeri looks for the episode by itself.
+pub fn episode_missing_looks_again(minutes: i64) -> String {
+    text("episode-missing-looks-again", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Status a week after the episode aired, when no source has listed it.
+pub fn episode_missing_none() -> String {
+    text("episode-missing-none", &[])
+}
+
+/// Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+pub fn episode_missing_offline() -> String {
+    text("episode-missing-offline", &[])
+}
+
+/// Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+pub fn episode_row_aired_ago(ago: &str) -> String {
+    text("episode-row-aired-ago", &[("ago", Arg::Text(ago))])
+}
+
+/// Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+pub fn episode_unsourced_yet() -> String {
+    text("episode-unsourced-yet", &[])
+}
+
+/// Announced once to screen readers when a check finds the missing episode while its page is open.
+pub fn episode_found_announcement(episode: i64) -> String {
+    text("episode-found-announcement", &[("episode", Arg::Plain(episode))])
+}
+
+/// Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+pub fn episode_check_again_help(minutes: i64, hours: i64) -> String {
+    text("episode-check-again-help", &[("minutes", Arg::Int(minutes)), ("hours", Arg::Int(hours))])
 }
 
 /// Title of the settings group and the screen.
@@ -24606,6 +25176,11 @@ pub fn tv_paired() -> String {
     text("tv-paired", &[])
 }
 
+/// Line under a paired TV running the app, in the Play on TV list.
+pub fn tv_row_kaeri() -> String {
+    text("tv-row-kaeri", &[])
+}
+
 /// Line with the address.
 pub fn tv_connected_at(address: &str) -> String {
     text("tv-connected-at", &[("address", Arg::Text(address))])
@@ -24644,6 +25219,11 @@ pub fn tv_status_connecting(name: &str) -> String {
 /// Status on the remote: connection lost, trying again.
 pub fn tv_status_reconnecting(name: &str) -> String {
     text("tv-status-reconnecting", &[("name", Arg::Text(name))])
+}
+
+/// Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+pub fn tv_waiting_for(name: &str) -> String {
+    text("tv-waiting-for", &[("name", Arg::Text(name))])
 }
 
 /// Status on the remote: connected.

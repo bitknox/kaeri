@@ -85,3 +85,4 @@ episodes-matched = { $title }に一致させました。
 episodes-release-dual = { -subbed-cap }と{ -dubbed }
 episodes-release-dub = { -dubbed-cap }
 episodes-release-current-pick = 現在の選択
+episode-missing-checking = { -source-pl }を確認しています…

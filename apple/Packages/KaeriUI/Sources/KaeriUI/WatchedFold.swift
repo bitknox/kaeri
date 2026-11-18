@@ -54,14 +54,20 @@ extension Navigator {
 }
 
 /// The row that opens and closes the fold: plain text and a chevron, in the list's own rhythm,
-/// starting where the rows' stills do.
+/// starting where the rows' stills do. On a phone it has its line to itself, under the Episodes
+/// heading, and a hairline ends it as one ends each row.
 struct WatchedFoldRow: View {
     let fold: WatchedFold
     let shown: Bool
     let phone: Bool
     /// The title's dub line, where the page has no Episodes header to carry it: on this row's own
-    /// line, so its arrival moves nothing.
+    /// line, so its arrival moves nothing. The phone's heading carries it.
     var dub: String?
+    /// The marks of the folded rows, in the column the rows keep for theirs; nil when the table
+    /// has none. Open, the rows carry their own.
+    var marks: [FollowedMark]? = nil
+    /// How far the rows' marks column stands from their trailing edge.
+    var marksTrailing: CGFloat = 0
     let toggle: () -> Void
 
     var body: some View {
@@ -78,18 +84,26 @@ struct WatchedFoldRow: View {
                         .padding(.trailing, 16)
                         .transition(.opacity.animation(.fadeIn))
                 }
+                if let marks {
+                    FollowedMarks(marks: shown ? [] : marks)
+                        .padding(.trailing, marksTrailing)
+                }
             }
             .animation(.fadeIn, value: dub)
             .font(phone ? .ui(15) : .mac(13))
             .foregroundStyle(.haze)
-            // Where the stills start: the number's column and the gap after it.
-            .padding(.leading, phone ? 34 : 44)
+            // Where the stills start: on the Mac and the iPad, after the number's column and the
+            // gap after it; on a phone, which has no number column, at the list's edge.
+            .padding(.leading, phone ? 0 : 44)
             .frame(minHeight: phone ? 44 : 36)
+            .overlay(alignment: .bottom) {
+                if phone { Rectangle().fill(.faintRule).frame(height: EpisodeMetrics.rule) }
+            }
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
         .pointerHover()
-        .accessibilityValue(shown ? L.stateExpanded : L.stateCollapsed)
+        .accessibilityValue(([shown ? L.stateExpanded : L.stateCollapsed] + (shown ? [] : FollowWords.marked(marks ?? []).map { [$0] } ?? [])).joined(separator: ", "))
     }
 }
 
@@ -101,6 +115,8 @@ struct WatchedFoldSection<Rows: View>: View {
     let shown: Bool
     let phone: Bool
     var dub: String?
+    var marks: [FollowedMark]? = nil
+    var marksTrailing: CGFloat = 0
     let toggle: () -> Void
     @ViewBuilder let rows: () -> Rows
     /// Set by a tap, so only the change it makes moves the page: not the rows' own changes, nor
@@ -116,7 +132,7 @@ struct WatchedFoldSection<Rows: View>: View {
             armed = false
             nudge?.by(new - old)
         }
-        WatchedFoldRow(fold: fold, shown: shown, phone: phone, dub: dub) {
+        WatchedFoldRow(fold: fold, shown: shown, phone: phone, dub: dub, marks: marks, marksTrailing: marksTrailing) {
             armed = true
             toggle()
         }

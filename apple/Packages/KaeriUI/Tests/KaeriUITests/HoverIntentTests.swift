@@ -315,4 +315,32 @@ struct HoverIntentTests {
         #expect(CoverFillMode.of(pixels: 280, source: 460) == .crop)
         #expect(CoverFillMode.of(pixels: 768, source: nil) == .crop)
     }
+
+    @Test func aCardOnATouchScreenCropsUpToOnePointSixTimes() {
+        // The iPhone's 260 pt Continue card: a 460 px cover asks 1.7 times at 3x, so it blurs;
+        // at 2x it asks 1.13 times and crops.
+        #expect(CoverFillMode.limit(points: 260, touch: true) == 1.6)
+        #expect(CoverFillMode.of(pixels: 780, source: 460, points: 260, touch: true) == .blur)
+        #expect(CoverFillMode.of(pixels: 520, source: 460, points: 260, touch: true) == .crop)
+        // Within 1.6 times a card crops, past it it blurs.
+        #expect(CoverFillMode.of(pixels: 736, source: 460, points: 245, touch: true) == .crop)
+        #expect(CoverFillMode.of(pixels: 737, source: 460, points: 245, touch: true) == .blur)
+        // A small cover blurs in a card.
+        #expect(CoverFillMode.of(pixels: 520, source: 230, points: 260, touch: true) == .blur)
+        // Wider than a card, the wide limit: the iPhone's spotlight blurs a full-size cover.
+        #expect(CoverFillMode.limit(points: 301, touch: true) == CoverFillMode.largest)
+        #expect(CoverFillMode.of(pixels: 1083, source: 460, points: 361, touch: true) == .blur)
+        // The Mac keeps its one limit at every width.
+        #expect(CoverFillMode.limit(points: 260, touch: false) == CoverFillMode.largest)
+        #expect(CoverFillMode.of(pixels: 780, source: 460, points: 260, touch: false) == .crop)
+    }
+
+    @MainActor @Test func aFrameWithNoCoverCarriesTheTitleWhereItFits() {
+        // A card's plate takes the row's show type, a frame taller than a card the page's.
+        #expect(TitlePlate.type(for: CGSize(width: 260, height: 146))! == (16, 24))
+        #expect(TitlePlate.type(for: CGSize(width: 361, height: 203))! == (22, 28))
+        // The party bar's thumbnail is too small for words: the plate alone.
+        #expect(TitlePlate.type(for: CGSize(width: 48, height: 27)) == nil)
+        #expect(TitlePlate.type(for: CGSize(width: 96, height: 54)) == nil)
+    }
 }

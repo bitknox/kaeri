@@ -35,6 +35,7 @@ public sealed partial class SeriesPage : Page
     readonly StackPanel side = new() { Spacing = 0 };
     readonly StackPanel chapters = new() { Spacing = 0 };
     readonly SendStatusRows sends;
+    readonly StackPanel privateLine = PrivateLineFor();
     readonly Grid chooseBar = new() { Padding = new Thickness(32, 10, 32, 12), ColumnSpacing = 8, Visibility = Visibility.Collapsed };
     readonly TextBlock estimate = Ui.Text("", "HazeCaptionStyle", wrap: false);
     readonly Button chooseMark, chooseSend, chooseDownload;
@@ -143,7 +144,12 @@ public sealed partial class SeriesPage : Page
         ctx.Known.Reading.Changed += OnReading;
         ctx.Known.Books.Changed += OnBooks;
         ctx.Known.Medium.Changed += OnMedium;
-        ctx.Hear(this, _ => { }, () =>
+        // Private mode turning over, or this series' own flag: the line under the main action follows.
+        ctx.Hear(this, batch =>
+        {
+            if (batch.Any(e => e is Event.Private || e is Event.AlwaysPrivate { Title: PrivateTitle.Series shown } && shown.Work == work))
+                DrawPrivate();
+        }, () =>
         {
             ctx.Known.Reading.Changed -= OnReading;
             ctx.Known.Books.Changed -= OnBooks;
@@ -248,6 +254,7 @@ public sealed partial class SeriesPage : Page
 
     void DrawHead(SeriesView series)
     {
+        DrawPrivate();
         var print = Drawn.Fingerprint((wide, series.Titles, series.Cover, series.Facts, series.Synopsis, series.Action, series.List, series.Score, Volumes().Select(v => (v.Volume, v.Chapters.Count(c => c.Downloadable()))).ToList(), Downloaded().Count, Volumes().HasDownloads()));
         if (print == drawnHead)
             return;
@@ -272,6 +279,9 @@ public sealed partial class SeriesPage : Page
         if (series.Synopsis is { Length: > 0 } synopsis)
             words.Children.Add(Synopsis(synopsis));
         words.Children.Add(Actions(series));
+        // The private line is kept across redraws, as the send rows are, so it fades only when it changes.
+        drawnWords?.Children.Remove(privateLine);
+        words.Children.Add(privateLine);
         // The send rows are kept across redraws: they leave the old words for the new.
         // Parent can read null while they still sit in the old words, so the old words are kept.
         drawnWords?.Children.Remove(sends);
@@ -481,7 +491,22 @@ public sealed partial class SeriesPage : Page
         return menu;
     }
 
-    /// <summary>More: the trackers, Read from, and Read again from the start.</summary>
+    /// <summary>The line's place, closer to the actions than the words' spacing, so 10 px under them as on a show's page.</summary>
+    static StackPanel PrivateLineFor()
+    {
+        var line = PrivateUi.Line();
+        line.Margin = new Thickness(0, 2, 0, 0);
+        return line;
+    }
+
+    /// <summary>"Private · Not saved or synced" under the main action while reading here is private.</summary>
+    void DrawPrivate()
+    {
+        if (Series is { } series)
+            PrivateUi.Draw(privateLine, ctx.Known.Private.SeriesLine(series));
+    }
+
+    /// <summary>More: the trackers, Read from, Read again from the start, and Always private.</summary>
     MenuFlyout MoreMenu(SeriesView series)
     {
         var menu = new MenuFlyout();
@@ -489,6 +514,12 @@ public sealed partial class SeriesPage : Page
         menu.Items.Add(SeriesWords.Item(T.SeriesReadFromMenu, () => _ = SeriesDialogs.ReadFrom(ctx, XamlRoot, work)));
         menu.Items.Add(new MenuFlyoutSeparator());
         menu.Items.Add(SeriesWords.Item(T.SeriesReadAgainMenu, () => _ = SeriesDialogs.ReadAgain(ctx, XamlRoot, series)));
+        // Always private last, as the board has it; Windows has no series settings to put it in.
+        menu.Items.Add(new MenuFlyoutSeparator());
+        var always = new ToggleMenuFlyoutItem { Text = T.TitleAlwaysPrivate };
+        always.Click += (_, _) => ctx.Send(new Command.SetAlwaysPrivate(new PrivateTitle.Series(work), always.IsChecked));
+        menu.Opening += (_, _) => always.IsChecked = ctx.Known.Private.SeriesAlways(work);
+        menu.Items.Add(always);
         return menu;
     }
 

@@ -18,7 +18,6 @@ player-start-pin-missed = { $name } har inte avsnitt { $episode } än. Spelar fr
 player-start-miss-failed = { $name } svarade inte
 player-start-miss-timed-out = { $name } tog för lång tid
 player-start-miss-skipped = Du hoppade över { $name }
-player-start-resting = Hoppades över efter senaste fel
 player-start-from = Från { $name }
 player-start-no-video = Den första visade ingen video
 player-start-stream-place = Ström { $next } av { $total }

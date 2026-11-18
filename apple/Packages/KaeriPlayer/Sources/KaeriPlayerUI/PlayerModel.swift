@@ -107,6 +107,8 @@ public final class PlayerModel {
             configuration.shaderCache = shaderCache
         }
         configuration.options = options
+        // mpv's lines from info up, for the player log (see `handle`).
+        configuration.logLevel = "info"
         // The demuxer's audio tap for finding skip times: the engine's callback, on this core.
         configuration.audioTap = audioTapCallback()
         return MpvClient(configuration: configuration)
@@ -162,6 +164,16 @@ public final class PlayerModel {
     public private(set) var walk: StartingWalk?
     /// The task that shows the step line waiting out its hold.
     @ObservationIgnored private var holdRelease: Task<Void, Never>?
+    /// On a roll-on, the starting screen keeps to the ground until 600 ms from the roll-on, so a
+    /// warmed next episode goes from the ground straight to its picture.
+    public private(set) var startingQuiet = false
+    /// A roll-on's starting screen that showed stays up its 0.6 s past the first frame.
+    public private(set) var startingHeld = false
+    /// When the app sent Play next or the engine rolled on by itself, until a playback is staged.
+    @ObservationIgnored private var rollOnAt: ContinuousClock.Instant?
+    /// When the staged roll-on's starting screen may show, until its first frame.
+    @ObservationIgnored private var rollOnShowsAt: ContinuousClock.Instant?
+    @ObservationIgnored private var rollOnTimer: Task<Void, Never>?
     public private(set) var episode: EpisodeOnScreen?
     public private(set) var menus: PlayerMenus?
     public private(set) var skip: SkipOffer?
@@ -196,6 +208,8 @@ public final class PlayerModel {
     /// The viewer asked for the episode's releases; `sourceChoices` is nil until they come.
     public private(set) var choosingSource = false
     public private(set) var sourceChoices: [SourceCandidate]?
+    /// With no release listed, what each source said, by the name it goes by.
+    public private(set) var sourceMisses: [MissedListing] = []
     /// The player closed before a frame: waiting for the engine to say whether it failed.
     @ObservationIgnored private var verdictPending = false
     /// A party play found no source: the party's sheet says so, and the player closes.
@@ -393,12 +407,13 @@ public final class PlayerModel {
             for op in ops { apply(op, for: playback) }
         case .playerUi(let playback, let ui):
             apply(ui, for: playback)
-        case .playbackStaged(let id, let title, let episode, let episodeTitle, _, let resume):
+        case .playbackStaged(let id, let title, let episode, let episodeTitle, _, let resume, let alwaysPrivate):
             since = time.now()
             // Said again for the same play (idempotent), it keeps what the start has told.
             if walk?.id != id || walk?.episode != episode {
                 walk = StartingWalk(id: id, episode: episode, resume: resume, at: since ?? time.now())
                 holdRelease?.cancel()
+                stagedRollOn(at: since ?? time.now())
             }
             closedByViewer = false
             stagedAhead = true
@@ -407,7 +422,8 @@ public final class PlayerModel {
             sourceChoices = nil
             verdictPending = false
             partySaysWhy = false
-            staged = StagedPlayback(id: id, title: title, episode: episode, episodeTitle: episodeTitle)
+            staged = StagedPlayback(
+                id: id, title: title, episode: episode, episodeTitle: episodeTitle, alwaysPrivate: alwaysPrivate)
             present()
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
@@ -417,11 +433,12 @@ public final class PlayerModel {
             if rollingOn {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)
+                rolledOn(at: time.now())
             } else if backend == nil, ending == .failed, isPresented, !partySaysWhy, let episode = startingEpisode {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
                 verdictPending = false
-                failure = PlaybackFailure(id: staged?.id, episode: episode, view: said.map { StartFailureView(why: $0.why, text: $0.text, asked: $0.asked) } ?? StartFailureView())
+                failure = PlaybackFailure(id: staged?.id, episode: episode, view: said.map { StartFailureView(why: $0.why, text: $0.text, episode: episode, asked: $0.asked, unreached: $0.unreached, heldBack: $0.heldBack) } ?? StartFailureView())
                 Self.note(.warn, "couldn't play episode \(episode)")
             } else if backend == nil {
                 // Nothing was opened for it, or it played elsewhere, or it is simply over.
@@ -432,10 +449,11 @@ public final class PlayerModel {
             // The party's own sheet says why nothing plays and offers its sources: the player's
             // failure would say it twice, under it.
             partySaysWhy = true
-        case .sources(let id, let episode, let candidates):
+        case .sources(let id, let episode, let candidates, let missed):
             guard choosingSource else { return }
             Self.note(.info, "\(candidates.count) sources for \(id) episode \(episode)")
             sourceChoices = candidates
+            sourceMisses = missed
         case .playbackKept:
             // The playback staged found nothing; the one before plays on.
             starting = nil
@@ -459,10 +477,23 @@ public final class PlayerModel {
         case .clipboard(let text):
             copy(text)
             statsCopiedAt = time.now()
+        case .private(let on):
+            privateOn = on
+            nowPlaying.update()
+        case .alwaysPrivate(.show(let id), let on):
+            guard staged?.id == id else { return }
+            staged?.alwaysPrivate = on
+            nowPlaying.update()
         default:
             break
         }
     }
+
+    /// Whether private mode is on, as the engine last said it.
+    public private(set) var privateOn = false
+    /// Whether what plays is private: the mode is on, or the show is always private. Now Playing
+    /// then says only "Playing in Kaeri", with no art, and no Live Activity or Handoff names it.
+    public var isPrivate: Bool { privateOn || staged?.alwaysPrivate == true }
 
     func apply(_ op: PlayerOp, for playback: PlaybackId) {
         guard accepts(playback) else {
@@ -810,14 +841,19 @@ public final class PlayerModel {
     }
     #endif
 
-    /// Stop what the engine is finding for this player: aimed at the playback on screen, unless
-    /// one has been staged since that has said nothing yet. Aimed at the one before, a Stop would
-    /// miss it, so it goes to whatever plays, which is the one staged last.
+    /// Stop what the engine is finding for this player.
     private func stopFinding() {
+        startCommand(.stop)
+    }
+
+    /// A command for the start under way: aimed at the playback on screen, unless one has been
+    /// staged since that has said nothing yet. Aimed at the one before, the engine would let it
+    /// go, so it goes to whatever plays, which is the one staged last.
+    private func startCommand(_ command: PlayerCommand) {
         if stagedAhead || playback == nil {
-            send(.player(.stop))
+            send(.player(command))
         } else {
-            control(.stop)
+            control(command)
         }
     }
 
@@ -909,6 +945,11 @@ public final class PlayerModel {
         starting = nil
         walk = nil
         holdRelease?.cancel()
+        rollOnAt = nil
+        rollOnShowsAt = nil
+        rollOnTimer?.cancel()
+        startingQuiet = false
+        startingHeld = false
         episode = nil
         menus = nil
         skip = nil
@@ -955,6 +996,8 @@ public final class PlayerModel {
 
     private func handle(_ event: MpvEvent, from backend: any PlayerBackend) {
         guard backend === self.backend else { return }
+        // Every line from info up goes to the player log, which keeps them by playback.
+        if case .log(let line) = event { AppLog.mpv(level: line.level, module: line.prefix, line.text) }
         switch event {
         case .startFile(let entry):
             mpvSaid = []
@@ -1026,6 +1069,7 @@ public final class PlayerModel {
         if let starting, current.map({ $0 >= starting.playback }) ?? true {
             self.starting = nil
         }
+        rollOnPictured(at: time.now())
         if stillWatchingAfter > 0, rolledOn >= stillWatchingAfter, !stillWatching {
             stillWatching = true
             if !paused { control(.togglePause) }
@@ -1103,6 +1147,7 @@ public final class PlayerModel {
             // Asked for by someone there when they sought into the ending: not one in a row
             // with nobody watching.
             rollPending = !card.sought
+            rolledOn(at: time.now())
             control(.playNext)
         }
         if var note = undo {
@@ -1481,7 +1526,7 @@ public final class PlayerModel {
     /// Skip the source (or stream) being tried: the walk moves on to the next.
     public func skipSource() {
         input()
-        control(.skipSource)
+        startCommand(.skipSource)
     }
 
     /// Begin the episode at 0 in place of where it was left. The sources are not asked again;
@@ -1490,7 +1535,7 @@ public final class PlayerModel {
         input()
         guard walk?.fromBeginning == false else { return }
         walk?.fromBeginning = true
-        control(.playFromBeginning)
+        startCommand(.playFromBeginning)
     }
 
     /// Start the episode again, asking the same sources.
@@ -1514,6 +1559,64 @@ public final class PlayerModel {
             send(.play(id: id, episode: episode, fromStart: false))
         }
         walk?.choseTranslation(translation)
+    }
+
+    // MARK: Rolling on
+
+    /// A roll-on began: the end of Up next's countdown or Play now, or the engine's own at the end.
+    private func rolledOn(at now: ContinuousClock.Instant) {
+        if let at = rollOnAt, now - at < PlayerTiming.rollOnLapses { return }
+        rollOnAt = now
+    }
+
+    /// A playback was staged: after a roll-on the starting screen waits out the quiet from the
+    /// roll-on, and any other start shows it at once.
+    private func stagedRollOn(at now: ContinuousClock.Instant) {
+        rollOnTimer?.cancel()
+        startingHeld = false
+        defer { rollOnAt = nil }
+        guard let at = rollOnAt, now - at < PlayerTiming.rollOnLapses else {
+            rollOnShowsAt = nil
+            startingQuiet = false
+            return
+        }
+        let showsAt = max(at + PlayerTiming.rollOnQuiet, now)
+        rollOnShowsAt = showsAt
+        startingQuiet = showsAt > now
+        guard startingQuiet else { return }
+        rollOnTimer = Task { @MainActor [weak self, time] in
+            let wait = showsAt - time.now()
+            if wait > .zero { try? await time.sleep(wait) }
+            guard !Task.isCancelled, let self else { return }
+            self.startingQuiet = false
+        }
+    }
+
+    /// The rolled-on episode's first frame. Inside the quiet the ground goes straight to the
+    /// picture; once the starting screen has shown it stays up its 0.6 s.
+    private func rollOnPictured(at now: ContinuousClock.Instant) {
+        guard let showsAt = rollOnShowsAt else { return }
+        rollOnShowsAt = nil
+        rollOnTimer?.cancel()
+        if startingQuiet {
+            // It stays quiet while the ground fades to the picture, then a later start, such as
+            // a change of source, shows its starting screen at once again.
+            rollOnTimer = Task { @MainActor [weak self, time] in
+                try? await time.sleep(PlayerTiming.rollOnPictureFades)
+                guard !Task.isCancelled, let self else { return }
+                self.startingQuiet = false
+            }
+            return
+        }
+        let until = showsAt + PlayerTiming.rollOnScreenHolds
+        guard until > now else { return }
+        startingHeld = true
+        rollOnTimer = Task { @MainActor [weak self, time] in
+            let wait = until - time.now()
+            if wait > .zero { try? await time.sleep(wait) }
+            guard !Task.isCancelled, let self else { return }
+            self.startingHeld = false
+        }
     }
 
     /// Give the step line its turn once its hold is over.
@@ -1808,6 +1911,7 @@ public final class PlayerModel {
         guard var card = upNext, !card.played else { return }
         card.played = true
         upNext = card
+        rolledOn(at: time.now())
         control(.playNext)
     }
 

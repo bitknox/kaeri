@@ -305,9 +305,14 @@ try {
 	await say({ type: 'hello', version: 1, language: 'en-US', device: 'iphone' });
 	await sleep(400);
 	expect((await sent()).filter((m) => m.body.type === 'ready').length === readies + 1, 'hello is answered with ready');
-	expect((await shown()).join() === 'ready', 'Ready shows the wordmark and its line only');
+	expect((await shown()).join() === 'city,ready', 'Ready shows the city, the name and its line only');
 	expect((await textOf('ready-line')) === 'Ready. Choose an episode on the iPhone.', 'Ready names the iPhone');
-	expect(await js<boolean>(`getComputedStyle(document.getElementById('ready')).animationName === 'drift'`), 'Ready drifts against burn-in');
+	expect(await js<boolean>(`/^translate\\(-?\\d+px, -?\\d+px\\)$/.test(document.getElementById('ready').style.transform)`), 'Ready drifts against burn-in, a whole pixel at a time');
+	expect(await js<boolean>(`__receiver.city.visible && __receiver.city.draws > 0 && __receiver.city.pixels === 1280`), 'the city is drawn at the scene\'s 1280 px, light enough for the TV to take in a frame');
+	expect(await js<boolean>(`__receiver.city.offThread`), 'the city is drawn in a worker, off the main thread');
+	// Only the city's short crossfades every few seconds; nothing that runs on and on.
+	const running = await js<string[]>(`document.getAnimations().filter((a) => a.playState === 'running' && (a.effect.getTiming().iterations === Infinity || Number(a.effect.getTiming().duration) > 1500)).map((a) => (a.animationName ?? a.transitionProperty ?? 'animation') + ' on ' + (a.effect?.target?.id || a.effect?.target?.className || a.effect?.target?.tagName))`);
+	expect(running.length === 0, `Ready runs no long or endless animation (${running.join(', ')})`);
 	await shot('01-ready');
 	await say({ type: 'hello', version: 1, language: 'ja', device: 'mac' });
 	await until(`document.getElementById('ready-line').textContent.includes('Mac')`, 'Ready in Japanese');
@@ -317,9 +322,11 @@ try {
 
 	// Starting
 	await load(episode(), false);
-	await sleep(900);
+	await sleep(250);
+	expect((await shown()).includes('ready') && !(await shown()).includes('ov'), 'Ready holds for the first 600 ms of a load');
+	await sleep(650);
 	expect((await phase()) === 'loading', 'a load starts with Starting');
-	expect((await textOf('starting-text')) === 'Starting' && (await shown()).includes('art'), 'Starting over the art');
+	expect((await textOf('starting-text')) === 'Starting' && (await shown()).includes('art') && !(await shown()).includes('city'), 'Starting over the art, the city gone');
 	expect((await textOf('ov-show')) === 'Lanterns of the Quiet Harbor' && (await textOf('ov-episode')) === 'Episode 3 · The Ferry at Dawn', 'Starting names the show and the episode');
 	await shot('02-starting');
 
@@ -328,7 +335,13 @@ try {
 	await until(`document.getElementById('ui').dataset.phase === 'playing'`, 'the episode plays');
 	await sleep(1200);
 	expect((await shown()).includes('ov'), 'the overlay shows when playing starts');
-	expect(/^0:0\d$/.test(await textOf('ov-at')) && (await textOf('ov-left')).startsWith('−0:3'), 'the overlay times');
+	// The 40 s episode reads −0:40 until its clock moves, and headless Chrome can take over a
+	// second to start it, so the times are read once it has played half a second and the overlay
+	// has redrawn (every 250 ms).
+	await until(`document.getElementById('video').currentTime >= 0.5`, 'the episode clock moves', 5000);
+	await sleep(300);
+	const times = [await textOf('ov-at'), await textOf('ov-left')];
+	expect(/^0:0\d$/.test(times[0]) && times[1].startsWith('−0:3'), `the overlay times ${JSON.stringify(times)}`);
 	await shot('03-overlay');
 	await js('__caf.editTracks([1])');
 	await until(`__receiver.typeset.active && document.documentElement.classList.contains('typeset')`, 'typeset subtitles start', 10_000);
@@ -347,11 +360,11 @@ try {
 
 	// Waiting for the stream
 	await js('__caf.buffering(true)');
-	await until(`document.getElementById('spin').classList.contains('on')`, 'the spinner after 600 ms', 3000);
+	await until(`document.getElementById('waiting').classList.contains('on')`, 'the lights after 600 ms', 3000);
 	const early = await js<number>('performance.now() - __receiver.S.bufferingAt');
-	expect(early >= 600 && !(await shown()).includes('waiting'), `the spinner first, the count not yet (${Math.round(early)} ms)`);
+	expect(early >= 600 && !(await js<boolean>(`document.getElementById('waiting-text').classList.contains('on')`)), `the lights first, the count not yet (${Math.round(early)} ms)`);
 	await sleep(4300 - early);
-	expect((await shown()).includes('waiting') && /^Waiting for the stream · [45] s$/.test(await textOf('waiting')), 'then the count');
+	expect((await js<boolean>(`document.getElementById('waiting-text').classList.contains('on')`)) && /^Waiting for the stream · [45] s$/.test(await textOf('waiting-text')), 'then the count');
 	await shot('06-waiting');
 	await js('__caf.buffering(false)');
 	await sleep(400);
@@ -389,6 +402,10 @@ try {
 	expect(await js<boolean>(`[...document.getElementById('video').textTracks].some((t) => t.mode === 'showing')`), 'the WebVTT twin is on');
 	expect(await upNextClear(), 'Up next stands clear of WebVTT subtitles');
 	await shotBoth('09b-up-next-webvtt');
+	await js(`document.getElementById('video').currentTime = 2.5`);
+	await sleep(700);
+	expect(await js<boolean>(`[...document.getElementById('video').textTracks].filter((t) => t.mode === 'showing').every((t) => [...(t.activeCues ?? [])].every((c) => typeof c.line === 'number' && c.line <= 59))`), 'plain subtitles lift above the overlay band');
+	await shot('09c-subtitles-lifted');
 	await say({ type: 'up-next', version: 1 });
 	await sleep(300);
 
@@ -433,6 +450,7 @@ try {
 	await until(`document.getElementById('ui').dataset.phase === 'error'`, "Couldn't play");
 	expect((await textOf('error-title')) === "Couldn't play episode 3", "Couldn't play episode 3");
 	expect((await textOf('error-hint')) === 'Choose another source on the iPhone.', 'the error hint');
+	expect((await textOf('error-reason')) === '', 'no codec line without a reported codec');
 	const failed = await lastSent('error');
 	expect(failed?.version === 1 && ['part', 'detail', 'position'].every((k) => k in failed), 'the error carries part and detail');
 	await shot('11-error');
@@ -440,6 +458,8 @@ try {
 	await until(`document.getElementById('ui').dataset.phase === 'error'`, "Couldn't play again");
 	const refusedAudio = await lastSent('error');
 	expect(refusedAudio?.part === 'audio' && refusedAudio.codec === 'truehd', 'an audio codec the TV refuses is an audio error, never video');
+	expect((await textOf('error-reason')) === "This TV can't play Dolby TrueHD audio.", 'the codec line names Dolby TrueHD');
+	await shot('11a-error-codec');
 	await say({ type: 'hello', version: 1, language: 'de', device: 'tablet' });
 	await until(`document.documentElement.lang === 'de'`, 'German');
 	await shot('11b-error-de');
@@ -460,9 +480,22 @@ try {
 	expect((await textOf('finished-line')) === 'Finished episode 3', 'Finished episode 3');
 	await shot('12-finished');
 
+	// Finished gives way to Ready after 10 s; the last 30 s say when the TV closes.
+	await js(`__receiver.S.since = performance.now() - 10_500`);
+	await until(`document.getElementById('ui').dataset.phase === 'idle' && __receiver.city.visible`, 'Finished gives way to Ready', 3000);
+	await js(`__receiver.S.since = performance.now() - 575_000`);
+	await sleep(500);
+	expect(/^Closing in 2[45] s\. Choose an episode on the iPhone to stay\.$/.test(await textOf('closing-line')) && (await js<boolean>(`document.getElementById('closing-line').classList.contains('on') && !document.getElementById('ready-line').classList.contains('on')`)), 'the closing line counts down in the last 30 s');
+	await shot('13-closing');
+
 	// Ten minutes with nothing to play
 	await js(`__receiver.S.since = performance.now() - 600_001; __receiver.S.phase = 'idle'`);
 	await sleep(1300);
+	expect(await js<boolean>(`document.getElementById('black').classList.contains('on')`), 'the page fades to black before it closes');
+	await shot('14-black');
+	const stats = spawnSync('ffmpeg', ['-hide_banner', '-i', join(shots, '14-black.png'), '-vf', 'signalstats,metadata=print:key=lavfi.signalstats.YMAX', '-f', 'null', '-'], { encoding: 'utf8' });
+	const ymax = Number(/YMAX=(\d+)/.exec(stats.stderr + stats.stdout)?.[1] ?? 255);
+	expect(ymax <= 20, `nothing shows through the black, the city's canvases included (brightest ${ymax})`);
 	expect(await js<boolean>('__caf.context.stopped'), 'the receiver closes after ten idle minutes');
 } catch (e) {
 	failures.push(String(e));

@@ -442,6 +442,7 @@ mod tests {
             episode_title: None,
             speed: 1.0,
             resume: None,
+            always_private: false,
         }
     }
 
@@ -504,6 +505,7 @@ mod tests {
             episode_title: None,
             speed: 1.0,
             resume: None,
+            always_private: false,
         });
         folder.event(&Event::PlaybackKept);
         assert_eq!(folder.state().now_playing.as_ref().unwrap().id, AnilistId::new(42));

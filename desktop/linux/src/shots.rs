@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 111] = [
+pub const ALL: [&str; 118] = [
     "home",
     "welcome",
     "offline",
@@ -87,6 +87,8 @@ pub const ALL: [&str; 111] = [
     "join-group",
     "join-ended",
     "settings",
+    "settings-preload-off",
+    "settings-preload-torrents",
     "settings-general",
     "settings-language",
     "settings-integrations",
@@ -111,6 +113,11 @@ pub const ALL: [&str; 111] = [
     "first-play-subtitles",
     "first-play-crashes",
     "first-play-report",
+    "report-log",
+    "report-log-sent",
+    "report-log-saved",
+    "report-log-failed",
+    "report-log-empty",
     "settings-updates",
     "update-ready",
     "update-saved",
@@ -136,7 +143,7 @@ pub const ALL: [&str; 111] = [
 /// The watch party's shots, apart from the rest: each holds a party on the scene's own server,
 /// and they take long enough that a run of every shot would not fit its time. `--shot party`
 /// takes them all.
-pub const PARTY: [&str; 32] = [
+pub const PARTY: [&str; 33] = [
     "party-form",
     "party-joining",
     "party-refused",
@@ -160,6 +167,7 @@ pub const PARTY: [&str; 32] = [
     "party-close",
     "party-nosource",
     "party-choose",
+    "party-choose-missed",
     "party-unaired",
     "party-nosources",
     "party-title-menu",
@@ -326,6 +334,10 @@ pub const STATS: [&str; 5] = [
 
 /// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit.
 pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
+    #[cfg(feature = "fixtures")]
+    crate::shots_missing::saving_to(dir.clone());
+    #[cfg(feature = "fixtures")]
+    FRAMES.with(|f| f.replace(Some(dir.clone())));
     glib::spawn_future_local(async move {
         // The first page, its lists and their covers.
         wait(4.0).await;
@@ -378,6 +390,22 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     }
     #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_prelaunch::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_following::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_missing::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_private::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_cast_states::stage(shell, shot) {
         return settle;
     }
     let window = &shell.ctx.window;
@@ -706,6 +734,8 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     progress: Some(kaeri_model::progress::TitleProgress { done: 12, next: 1 }),
                     resume: None,
                     episodes: Vec::new(),
+                    private: None,
+                    kept: false,
                 }]);
             });
             4.0
@@ -790,6 +820,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                     media: kaeri_core::ids::AnilistId::new(TITLE),
                     episode: 1,
                     comments: 214,
+                    url: "https://talk.example/thread/1".into(),
                 }]);
             });
             4.0
@@ -951,6 +982,19 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             crate::pages::report::open(&shell.ctx);
             1.5
         }
+        // Report a bug with the player log: three made-up playbacks, or none before anything
+        // has played, then the row in the shot's state.
+        #[cfg(feature = "fixtures")]
+        "report-log" | "report-log-sent" | "report-log-saved" | "report-log-failed"
+        | "report-log-empty" => {
+            kaeri_engine::player_log::seed_fixture(u32::from(shot != "report-log-empty") * 3);
+            crate::pages::report::open(&shell.ctx);
+            let state = shot.strip_prefix("report-log-").unwrap_or("ticked").to_owned();
+            glib::timeout_add_local_once(Duration::from_millis(400), move || {
+                crate::pages::report::stage(&state);
+            });
+            2.0
+        }
         "provider" => {
             shell.go(Dest::Providers);
             crate::pages::plugin::push_provider(&shell.ctx, "mukashi-archive");
@@ -996,6 +1040,18 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             2.0
         }
         "settings" => {
+            shell.settings_pane("playback");
+            1.5
+        }
+        // Preload video on metered connections dimmed with Up next countdown, Auto-play next off.
+        "settings-preload-off" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::AutoNext, false);
+            shell.settings_pane("playback");
+            1.5
+        }
+        // The torrent sentence joins the row's line while torrent playback is on.
+        "settings-preload-torrents" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::Torrents, true);
             shell.settings_pane("playback");
             1.5
         }
@@ -1370,6 +1426,7 @@ fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f6
         "offline-timed-out" => S::OfflineTimedOut,
         "failed-no-episode" => S::FailedNoEpisode,
         "failed-no-match" => S::FailedNoMatch,
+        "failed-unreached" => S::FailedUnreached,
         "failed-no-sources" => S::FailedNoSources,
         "failed-not-aired" => S::FailedNotAired,
         _ => return None,
@@ -1386,6 +1443,14 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
     crate::shots_reading_credits::unstage(shell, shot);
     #[cfg(feature = "fixtures")]
     crate::shots_prelaunch::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_following::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_missing::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_private::unstage(shell, shot);
+    #[cfg(feature = "fixtures")]
+    crate::shots_cast_states::unstage(shell, shot);
     if shot.starts_with("start-") {
         shell.player.close();
     }
@@ -1433,6 +1498,8 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
         "about" | "join" | "join-link" | "join-group" | "join-ended" | "welcome"
         | "first-play-welcome" | "first-play-demo" | "first-play-report" | "accounts-kitsu"
         | "torrents-setup" => close_dialogs(&shell.ctx.window),
+        "report-log" | "report-log-sent" | "report-log-saved" | "report-log-failed"
+        | "report-log-empty" => close_dialogs(&shell.ctx.window),
         #[cfg(feature = "fixtures")]
         "search-failed" | "search-paging" => {
             crate::showcase::set_mood(crate::showcase::Mood::Usual);
@@ -1492,6 +1559,12 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             if let Some(nav) = shell.ctx.nav() {
                 nav.pop();
             }
+        }
+        "settings-preload-off" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::AutoNext, true);
+        }
+        "settings-preload-torrents" => {
+            set_switch(shell, kaeri_model::settings::SettingKey::Torrents, false);
         }
         #[cfg(feature = "fixtures")]
         owner if owner.starts_with("store-") => {
@@ -1590,6 +1663,14 @@ fn offer_update(shell: &Rc<Shell>) {
         }),
         notify: true,
     })]);
+}
+
+/// Turn a switch setting on or off, as its row would.
+fn set_switch(shell: &Rc<Shell>, key: kaeri_model::settings::SettingKey, on: bool) {
+    shell
+        .ctx
+        .hub
+        .send(Command::SetSetting { key, value: kaeri_core::settings::SettingValue::Bool(on) });
 }
 
 /// Set upscaling, which the fixture scene keeps off for the player shots.
@@ -1967,7 +2048,55 @@ fn join(shell: &Rc<Shell>) {
     crate::pages::join::open(&shell.ctx, None);
 }
 
-fn close_dialogs(window: &adw::ApplicationWindow) {
+#[cfg(feature = "fixtures")]
+thread_local! {
+    /// Where a run saves its shots, for a motion's frames to go beside them.
+    static FRAMES: std::cell::RefCell<Option<PathBuf>> = const { std::cell::RefCell::new(None) };
+}
+
+/// A motion as frames: the window drawn on each frame it paints, `count` of them, into
+/// `<shots>/<name>/<ms>.png` by the frame clock's time since the first.
+#[cfg(feature = "fixtures")]
+pub(crate) fn frames(window: &adw::ApplicationWindow, name: &'static str, count: u32) {
+    let Some(dir) = FRAMES.with(|f| f.borrow().clone()) else { return };
+    let taken = std::cell::Cell::new(0u32);
+    let held = std::cell::RefCell::new(Vec::<(i64, gtk::gdk::Texture)>::new());
+    // Named by the wall clock from the call: an idle window's first tick can carry a stale
+    // frame time.
+    let start = glib::monotonic_time();
+    window.add_tick_callback(move |window, _clock| {
+        let ms = (glib::monotonic_time() - start) / 1000;
+        // Drawn now and saved once the motion is over, so saving never holds a frame up.
+        if let Some(texture) = render(window) {
+            held.borrow_mut().push((ms, texture));
+        }
+        taken.set(taken.get() + 1);
+        if taken.get() < count {
+            return glib::ControlFlow::Continue;
+        }
+        for (ms, texture) in held.take() {
+            let path = dir.join(name).join(format!("{ms:04}.png"));
+            if let Err(error) = save_png(&texture, &path) {
+                tracing::warn!(%error, "a frame did not save");
+            }
+        }
+        glib::ControlFlow::Break
+    });
+}
+
+/// The window drawn into a texture, for a motion's frames.
+#[cfg(feature = "fixtures")]
+fn render(window: &adw::ApplicationWindow) -> Option<gtk::gdk::Texture> {
+    let (width, height) = (window.width(), window.height());
+    let paintable = gtk::WidgetPaintable::new(Some(window));
+    let snapshot = gtk::Snapshot::new();
+    paintable.snapshot(&snapshot, f64::from(width), f64::from(height));
+    let node = snapshot.to_node()?;
+    let bounds = gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
+    Some(window.renderer()?.render_texture(&node, Some(&bounds)))
+}
+
+pub(crate) fn close_dialogs(window: &adw::ApplicationWindow) {
     if let Some(dialog) = window.visible_dialog() {
         dialog.force_close();
     }
@@ -2024,6 +2153,10 @@ fn capture(
     let renderer = window.renderer().ok_or("no renderer")?;
     let bounds = gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
     let texture = renderer.render_texture(&node, Some(&bounds));
+    save_png(&texture, path)
+}
+
+fn save_png(texture: &gtk::gdk::Texture, path: &std::path::Path) -> Result<(), String> {
     if let Some(dir) = path.parent() {
         std::fs::create_dir_all(dir).map_err(|e| e.to_string())?;
     }
@@ -2065,6 +2198,14 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                 | "read-chapters-list"
                 | "read-chapters-long"
                 | "read-novel-paper" => open_popover(&window),
+                #[cfg(feature = "fixtures")]
+                private if crate::shots_private::POPOVERS.contains(&private) => {
+                    open_popover(&window)
+                }
+                #[cfg(feature = "fixtures")]
+                cast if crate::shots_cast_states::POPOVERS.contains(&cast) => {
+                    open_popover(&window)
+                }
                 #[cfg(feature = "fixtures")]
                 "read-disc-poster-menu" | "read-disc-poster-menu-own" => context_menu(&window),
                 #[cfg(feature = "fixtures")]
@@ -2123,6 +2264,14 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "tv" => TV.iter().map(|p| (*p).to_owned()).collect(),
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
+                "cast-states" => {
+                    crate::shots_cast_states::STILLS.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "cast-states-clips" => {
+                    crate::shots_cast_states::CLIPS.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
                 "sync" => crate::sync::shots::NAMES.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
                 "reading" => {
@@ -2142,8 +2291,24 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                     crate::shots_prelaunch::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 #[cfg(feature = "fixtures")]
+                "following" => {
+                    crate::shots_following::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "following-slow" => {
+                    crate::shots_following::SLOW.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "missing" => {
+                    crate::shots_missing::NAMES.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
                 "prelaunch-demo" => {
                     crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()
+                }
+                #[cfg(feature = "fixtures")]
+                "private" => {
+                    crate::shots_private::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
                 "match" => MATCH.iter().map(|p| (*p).to_owned()).collect(),
                 one => vec![one.to_owned()],
@@ -2444,7 +2609,7 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }
             3.5
         }
-        "party-nosource" | "party-nosources" | "party-choose" => {
+        "party-nosource" | "party-nosources" | "party-choose" | "party-choose-missed" => {
             let Some(server) = serve(None) else { return 0.0 };
             ctx.hub.send(Command::PartyJoin {
                 server,
@@ -2475,6 +2640,15 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                         NoSourceWhy::NotFound,
                         "could not match this title: sample-source has no episode 7",
                     ),
+                    "party-choose-missed" => {
+                        source::rehearse_choose(&ctx, title, "7");
+                        ctx.hub.take(vec![kaeri_model::event::Event::Sources {
+                            id: title,
+                            episode: "7".into(),
+                            candidates: Vec::new(),
+                            missed: missed(),
+                        }]);
+                    }
                     _ => {
                         source::rehearse_choose(&ctx, title, "7");
                         // Before the engine's own answer, which has no sources to give.
@@ -2482,6 +2656,7 @@ fn party_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                             id: title,
                             episode: "7".into(),
                             candidates: choices(),
+                            missed: Vec::new(),
                         }]);
                     }
                 }
@@ -2723,7 +2898,10 @@ fn party_unstage(shell: &Rc<Shell>, shot: &str) {
     if shell.is_player() {
         shell.player.close();
     }
-    if !matches!(shot, "party-nosource" | "party-nosources" | "party-choose") {
+    if !matches!(
+        shot,
+        "party-nosource" | "party-nosources" | "party-choose" | "party-choose-missed"
+    ) {
         let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
     }
     shell.player.hold_up_next.set(false);
@@ -2744,6 +2922,7 @@ fn choices() -> Vec<kaeri_core::traits::SourceCandidate> {
         |id: &str, title: &str, quality, size: &str, seeders: u32, auto_pick| SourceCandidate {
             id: id.into(),
             provider_id: "sample-source".into(),
+            provider_name: "Sample Source".into(),
             title: title.into(),
             quality: Some(quality),
             label: Some(format!("{seeders} seeders")),
@@ -2756,6 +2935,21 @@ fn choices() -> Vec<kaeri_core::traits::SourceCandidate> {
         choice("a", "Stardust Wayfarer - 07 (1080p)", 1080, "1.4 GiB", 42, true),
         choice("b", "Stardust Wayfarer - 07 (720p)", 720, "690 MiB", 18, false),
         choice("c", "Stardust Wayfarer - 07 (480p)", 480, "310 MiB", 5, false),
+    ]
+}
+
+/// What each source said when none listed episode 7: one failed, one is held back while
+/// torrent playback is off, and one lacks the episode.
+#[cfg(feature = "fixtures")]
+fn missed() -> Vec<kaeri_model::starting::MissedListing> {
+    use kaeri_model::starting::{ListingMiss, MissedListing, SourceHold};
+    vec![
+        MissedListing { name: "Alpha".into(), miss: ListingMiss::Failed },
+        MissedListing { name: "Brook".into(), miss: ListingMiss::NoEpisode },
+        MissedListing {
+            name: "Harbor".into(),
+            miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
+        },
     ]
 }
 
@@ -3172,9 +3366,56 @@ fn cast_stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             scene.cast(LIVING_ROOM, plays("fixed"));
             open();
             pick(LIVING_ROOM, 1800);
-            let window = shell.ctx.window.clone();
-            later(9500, Box::new(move || close_dialogs(&window)));
+            let tv = Rc::clone(&tv);
+            later(9500, Box::new(move || tv.sheet_closed()));
             11.0
+        }
+        // The bar grows into the controls and shrinks back, as frames: with Reduce Animation
+        // too for the `-reduced` shot.
+        "cast-morph" | "cast-morph-reduced" => {
+            if shot == "cast-morph-reduced"
+                && let Some(settings) = gtk::Settings::default()
+            {
+                settings.set_gtk_enable_animations(false);
+            }
+            scene.cast(LIVING_ROOM, plays("fixed"));
+            open();
+            pick(LIVING_ROOM, 1800);
+            let closing = Rc::clone(&tv);
+            let window = shell.ctx.window.clone();
+            // The first launch's question and the picker go first: only the bar is left.
+            later(
+                9500,
+                Box::new(move || {
+                    close_dialogs(&window);
+                    closing.sheet_closed();
+                    close_dialogs(&window);
+                }),
+            );
+            let (open_name, close_name) = if shot == "cast-morph" {
+                ("cast-morph/open", "cast-morph/close")
+            } else {
+                ("cast-morph-reduced/open", "cast-morph-reduced/close")
+            };
+            let window = shell.ctx.window.clone();
+            let opening = Rc::clone(&tv);
+            later(
+                11_000,
+                Box::new(move || {
+                    frames(&window, open_name, 45);
+                    opening.open_remote();
+                }),
+            );
+            let window = shell.ctx.window.clone();
+            let shutting = Rc::clone(&tv);
+            later(
+                14_000,
+                Box::new(move || {
+                    frames(&window, close_name, 45);
+                    shutting.sheet_closed();
+                }),
+            );
+            17.0
         }
         "cast-stopped" => {
             scene.cast(LIVING_ROOM, plays("fixed"));
@@ -3442,6 +3683,7 @@ fn source_options(
         |id: &str, title: &str, quality, seeders: u32, size: &str| SourceCandidate {
             id: id.into(),
             provider_id: "torrent".into(),
+            provider_name: String::new(),
             title: title.into(),
             quality: Some(quality),
             label: Some(format!("{seeders} seeders")),
@@ -3459,6 +3701,10 @@ fn source_options(
         note,
         releases,
         pinned_release: release.filter(|_| pinned == Some(id)).map(str::to_owned),
+        first: None,
+        last: None,
+        lacking: Vec::new(),
+        lacking_since: None,
     };
     vec![
         option("hotaru-open-archive", "Hotaru Open Archive", 13, None, Vec::new()),

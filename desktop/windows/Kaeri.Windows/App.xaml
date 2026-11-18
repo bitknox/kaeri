@@ -734,6 +734,8 @@
               <SolidColorBrush x:Key="EdgeBrush" Color="#727892" />
               <!-- The trailing pane's fill, one step above the ground. -->
               <SolidColorBrush x:Key="SidebarBrush" Color="#1C2034" />
+              <!-- The cast controller over the page pane, between the ground and the sidebar. -->
+              <SolidColorBrush x:Key="CastPaneBrush" Color="#191D33" />
               <!-- The bar over a spoiler, Raised selected. -->
               <SolidColorBrush x:Key="SpoilerBarBrush" Color="#343A57" />
               <!-- The selected fill: a dialog's default button where amber would be a second amber. -->
@@ -769,6 +771,7 @@
               <SolidColorBrush x:Key="GroundBrush" Color="{ThemeResource SystemColorWindowColor}" />
               <SolidColorBrush x:Key="RaisedBrush" Color="{ThemeResource SystemColorWindowColor}" />
               <SolidColorBrush x:Key="SidebarBrush" Color="{ThemeResource SystemColorWindowColor}" />
+              <SolidColorBrush x:Key="CastPaneBrush" Color="{ThemeResource SystemColorWindowColor}" />
               <SolidColorBrush x:Key="SpoilerBarBrush" Color="{ThemeResource SystemColorWindowColor}" />
               <SolidColorBrush x:Key="SelectedFillBrush" Color="{ThemeResource SystemColorButtonFaceColor}" />
               <SolidColorBrush x:Key="CapsuleBrush" Color="{ThemeResource SystemColorWindowColor}" />

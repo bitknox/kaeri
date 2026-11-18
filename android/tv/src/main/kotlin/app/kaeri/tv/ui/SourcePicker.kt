@@ -6,6 +6,8 @@
 package app.kaeri.tv.ui
 
 import app.kaeri.store.plainReason
+import app.kaeri.store.AppClock
+import app.kaeri.store.MissingWords
 import android.content.Context
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -166,9 +168,13 @@ private fun LoadingRow() {
 
 /** What a picker row says under its name. */
 object SourceWords {
-    /** A source's coverage ("6 of 13 episodes"), or why it has none. A failure is the source's own words. */
+    /**
+     * What a source has of the title ("Episodes 1 to 5. Not 6 yet", "6 of 13 episodes"), or why
+     * it has none. A failure is the source's own words.
+     */
     fun detail(context: Context, option: SourceOption): String = when (val note = option.note) {
-        null -> Strings.sourcePickerCoverage(context, option.covered.toInt(), option.of.toInt())
+        null -> MissingWords.coverage(context, option, AppClock.now().epochSecond)
+            ?: Strings.sourcePickerCoverage(context, option.covered.toInt(), option.of.toInt())
         SourceNote.Off -> Strings.sourceNoteOff(context)
         SourceNote.Resting -> Strings.sourceNoteResting(context)
         SourceNote.Gone -> Strings.sourceNoteGone(context)

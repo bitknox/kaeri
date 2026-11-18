@@ -422,6 +422,23 @@ public class SettingsCatalogTests
         Assert.Empty(SettingsCatalog.Needs(SettingKey.Presence));
     }
 
+    [Fact]
+    public void PreloadIsASwitchThatWaitsOnAutoPlayNextWithUpNextCountdown()
+    {
+        Assert.True(SettingsCatalog.IsSwitch(SettingKey.PreloadMetered));
+        Assert.Equal(SettingControl.Switch, SettingsCatalog.ControlFor(Row(SettingKey.PreloadMetered, "off")));
+        Assert.Equal([SettingKey.AutoNext], SettingsCatalog.Needs(SettingKey.PreloadMetered));
+        Assert.Equal([SettingKey.AutoNext], SettingsCatalog.Needs(SettingKey.UpNextCountdown));
+        Assert.Empty(SettingsCatalog.Needs(SettingKey.AutoNext));
+    }
+
+    [Fact]
+    public void PreloadsLineAddsTheTorrentSentenceWhileTorrentsAreOn()
+    {
+        Assert.Equal(T.SettingsPreloadDetailMetered, SettingsCatalog.PreloadLine(torrents: false));
+        Assert.Equal($"{T.SettingsPreloadDetailMetered} {T.SettingsPreloadTorrents}", SettingsCatalog.PreloadLine(torrents: true));
+    }
+
     static SettingRow Row(SettingKey key, string value, SettingChange? change = null) =>
         new(key, value, change ?? new SettingChange.Steps(true, true));
 
@@ -820,6 +837,7 @@ public class SceneTests
                 SettingKey.Quality, SettingKey.CommitThreshold, SettingKey.Upscaling, SettingKey.UpNextCountdown,
                 SettingKey.DownloadQuality, SettingKey.KeepNextEpisodes, SettingKey.Titles, SettingKey.AutoNext,
                 SettingKey.NightMode, SettingKey.Trailers, SettingKey.SeedHours, SettingKey.UploadLimit, SettingKey.SeedRatio,
+                SettingKey.PreloadMetered,
             ];
             foreach (var key in keys)
             {

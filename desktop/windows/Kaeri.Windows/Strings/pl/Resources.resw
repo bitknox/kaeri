@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Utracono połączenie z {name}, więc przesyłanie zostało przerwane.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} przestał odbierać strumień: źródło nie odpowiedziało dla części odcinka. Wypróbuj inne źródło.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} utracił strumień. Sprawdź, czy to urządzenie i telewizor są w tej samej sieci.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Napisy na {name} są wyświetlane jako zwykły tekst. Napisy ze stylami były dla telewizora zbyt wymagające.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Ten telewizor nie jest już w sieci.</value>
   </data>
@@ -379,6 +388,12 @@
   </data>
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Brak obrazu z tego strumienia. Sprawdzany jest strumień {next} z {total}.</value>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Strumień się przerwał. {source} przejmuje od tego samego miejsca.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Strumień się przerwał. Inny strumień z {source} przejmuje od tego samego miejsca.</value>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv nie mógł tego odtworzyć. {reason}</value>
@@ -965,6 +980,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>W kolejce · czeka na Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>W kolejce · czeka na miejsce</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Pobieranie · {done} z {total} stron</value>
   </data>
@@ -1132,6 +1150,18 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Brak miejsca. Pobierze się, gdy zwolni się miejsce.</value>
+  </data>
+  <data name="ReadingDlNoRoom_few" xml:space="preserve">
+    <value>Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</value>
+  </data>
+  <data name="ReadingDlNoRoom_many" xml:space="preserve">
+    <value>Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Brak miejsca. Pobiorą się, gdy zwolni się miejsce.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Około {size}</value>
@@ -2765,9 +2795,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>Czekanie na telewizor</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>Czekanie na {name}</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
   </data>
@@ -3014,6 +3041,45 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Ustawienia raportów awarii</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Dziennik odtwarzacza</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Ostatnie odtworzenie · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_few" xml:space="preserve">
+    <value>Ostatnie {playbacks} odtworzenia · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_many" xml:space="preserve">
+    <value>Ostatnie {playbacks} odtworzeń · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Ostatnie {playbacks} odtworzenia · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Nie zapisano jeszcze żadnego odtworzenia</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Zapisz dziennik…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Dołącz plik do zgłoszenia, gdy otworzy się na GitHubie.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Zapisano jako {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Nie udało się zapisać dziennika. Wybierz inny folder.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Zgłoszenie</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Dziennik odtwarzacza zapisany</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Zapisuje plik do dołączenia do zgłoszenia</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Raporty awarii</value>
   </data>
@@ -3209,6 +3275,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Ustawiane na telewizorze</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Łączenie z {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Połączono z {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Odtwarzanie w {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Nic jeszcze nie jest odtwarzane</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Wstrzymano w {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Otwórz {title}</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Zamknij</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Otwiera sterowanie</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Odtwórz jako następne w {name}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Przesyłanie do {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Spróbuj ponownie</value>
   </data>
@@ -3356,6 +3452,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Sprawdź ponownie</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Sprawdzanie</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Otwórz ustawienia systemu</value>
   </data>
@@ -3422,6 +3521,9 @@
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} min</value>
   </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} godz.</value>
+  </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>teraz</value>
   </data>
@@ -3478,6 +3580,9 @@
   </data>
   <data name="StateLoading" xml:space="preserve">
     <value>Wczytywanie</value>
+  </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Odrzuć</value>
   </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Przesuwanie fokusu</value>
@@ -3727,6 +3832,15 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Zatrzymać przesyłanie i zakończyć?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>Trwa odtwarzanie {title} na {name}. Zakończenie je zatrzyma.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Zatrzymaj i zakończ</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Dyskusja</value>
@@ -5924,9 +6038,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Pominięto: {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Pominięte po niedawnych błędach</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Z: {name}</value>
   </data>
@@ -6493,6 +6604,54 @@
   </data>
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Więcej w Ustawieniach…</value>
+  </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Tryb prywatny</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Nic, co oglądasz lub czytasz, nie jest zapisywane ani synchronizowane, dopóki go nie wyłączysz lub nie zamkniesz Kaeri.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>Twoje źródła i wspólne oglądania nadal widzą, co otwierasz.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Tryb prywatny jest włączony. Nic nie jest zapisywane ani synchronizowane do zamknięcia Kaeri.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Wyłącz</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Skrót: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Prywatnie</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Tryb prywatny jest włączony</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Nie jest zapisywane ani synchronizowane</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Miejsce jest pamiętane do zamknięcia Kaeri</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Zawsze prywatnie</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>To urządzenie nie zapisuje ani nie synchronizuje niczego z tego tytułu. To, co już zapisane, zostaje.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>To urządzenie nie zapisuje ani nie synchronizuje niczego z tej serii. To, co już zapisane, zostaje.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Odtwarzanie w Kaeri</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Tryb prywatny włączony</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Tryb prywatny wyłączony</value>
   </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Wczytywanie strony {page}</value>
@@ -7717,6 +7876,9 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Pokaż jeszcze {n}</value>
+  </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Dodaj do: {list}</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} z {total}</value>
@@ -9143,6 +9305,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Następny: czas odliczania</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Wczytuj wideo z wyprzedzeniem przez dane komórkowe</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Wczytuj wideo z wyprzedzeniem przez połączenia taryfowe</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Podczas zakończenia wyszukiwane są strumień, napisy i czasy pominięć następnego odcinka. Jego pierwsze sekundy też się wczytują, a przez połączenie taryfowe tylko wtedy, gdy to jest włączone.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrenty wczytują swoje pierwsze części tak samo.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Wymaga opcji „Automatycznie odtwarzaj następny odcinek”</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Automatycznie pomijaj czołówkę</value>
   </data>
@@ -9695,6 +9872,15 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Port kanału</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Obraz w obrazie po wyjściu z aplikacji</value>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Pokazuj obserwowane osoby</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Pokazuje, gdzie w serii są osoby obserwowane na AniList, na jej stronie i przy odcinkach. Kto widzi Twoją listę, ustawiasz na AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
   </data>
@@ -10018,6 +10204,42 @@
   </data>
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} z {of} odcinków</value>
+  </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Odcinek {first}</value>
+  </data>
+  <data name="SourcePickerEpisodes_few" xml:space="preserve">
+    <value>Odcinki {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodes_many" xml:space="preserve">
+    <value>Odcinki {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Odcinki {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Odcinki {first}–{last}. Jeszcze bez {missing}</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Odcinki {first}–{last}. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} i {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} z {of} odcinka. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_few" xml:space="preserve">
+    <value>{covered} z {of} odcinków. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_many" xml:space="preserve">
+    <value>{covered} z {of} odcinków. Bez {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} z {of} odcinka. Bez {missing}</value>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Wyłączone</value>
@@ -11897,6 +12119,36 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Podobne</value>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Pokaż wszystkie {count}</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} i {more} inna osoba</value>
+  </data>
+  <data name="FollowingNames_few" xml:space="preserve">
+    <value>{first}, {second} i {more} inne osoby</value>
+  </data>
+  <data name="FollowingNames_many" xml:space="preserve">
+    <value>{first}, {second} i {more} innych osób</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} i {more} innej osoby</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} i {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names}: obejrzane do tego miejsca.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Ocena {score} na 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Pokazuje, gdzie jest każda z tych osób.</value>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
   </data>
@@ -11951,9 +12203,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Do ogłoszenia</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Przejdź do odcinka…</value>
   </data>
@@ -11974,6 +12223,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Odcinek {number} jeszcze nie wyszedł. Najnowszy to {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Odcinek {episode} ukazał się {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Odcinek {episode} ukazał się {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Twoje źródła jeszcze go nie mają.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Twoje źródła nadal go nie mają.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Twoje źródła nie odpowiedziały.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri szuka go ponownie co {minutes} min.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Twoje źródła go nie mają.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri poszuka go po powrocie połączenia.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Ukazał się {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Źródła jeszcze go nie mają</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Twoje źródła mają już odcinek {episode}.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri sam też szuka co {minutes} min przez {hours} godz. po emisji odcinka.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrenty</value>
@@ -12517,6 +12802,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>Ponowne łączenie z {name}</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>Czekanie na {name}</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Połączono</value>

@@ -8,12 +8,20 @@ Kaeri                                                                  plugins �
   ↓  Downloads              │
   ◇  Sources                │  ───────────────────────────────────────────────────────────────────────────────────────
 ▌ ◎  Accounts               │
-  ≡  Settings               │  Tracker         State             Queued    Token
-  ⇄  Together               │  ───────────────────────────────────────────────────────────────────────────────────────
+  ≡  Settings               │    Private mode  [off]
+  ⇄  Together               │    Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.
+                            │    Your sources and watch parties still see what you open.
+                            │
+                            │  Tracker         State             Queued    Token
+                            │  ───────────────────────────────────────────────────────────────────────────────────────
                             │    AniList       ● Connected       2         OS keychain
                             │    Kitsu         ○ Not connected   0         0600 file
                             │  ▌ MyAnimeList   ✕ Sign in again   0         OS keychain
                             │                  Fetching your list failed at 19:24: the token was refused
+                            │
+                            │    [x] Show people you follow
+                            │        Shows where people you follow on AniList are in a show, on its page
+                            │        and its episodes. Who can see your own list is set on AniList.
                             │
                             │    Tokens are stored in files with 0600 permissions because the OS keychain is
                             │    unavailable.
@@ -22,16 +30,8 @@ Kaeri                                                                  plugins �
                             │
                             │
                             │
-                            │
-                            │
-                            │
-                            │
-                            │
-                            │
-                            │
-                            │
 ────────────────────────────────────────────────────── ▌ MyAnimeList needs signing in again. Press 8 to open Accounts. ─
-plugins · Subbed · 1080p                                                                              ↵ sign in   ? keys
+plugins · Subbed · 1080p                                                             ↵ sign in   ctrl+p private   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -80,49 +80,56 @@ r09 c28-28 fg=rule
 r10 c02-02 fg=text-dim
 r10 c05-12 fg=text-dim
 r10 c28-28 fg=rule
-r10 c31-37 fg=text-dim
+r10 c33-44 fg=text
 r10 c47-51 fg=text-dim
-r10 c65-70 fg=text-dim
-r10 c75-79 fg=text-dim
 r11 c02-02 fg=text-dim
 r11 c05-12 fg=text-dim
 r11 c28-28 fg=rule
-r11 c31-117 fg=rule
+r11 c33-113 fg=text-dim
 r12 c28-28 fg=rule
-r12 c33-39 fg=text
-r12 c47-57 fg=state
-r12 c65-65 fg=state
-r12 c75-85 fg=text-dim
+r12 c33-87 fg=text-dim
 r13 c28-28 fg=rule
-r13 c33-37 fg=text
-r13 c47-61 fg=text-dim
-r13 c65-65 fg=text-dim
-r13 c75-83 fg=text-dim
 r14 c28-28 fg=rule
-r14 c31-31 fg=obi
-r14 c33-43 fg=text mod=BOLD
-r14 c47-61 fg=alert
-r14 c65-65 fg=text-dim
-r14 c75-85 fg=text-dim
+r14 c31-37 fg=text-dim
+r14 c47-51 fg=text-dim
+r14 c65-70 fg=text-dim
+r14 c75-79 fg=text-dim
 r15 c28-28 fg=rule
-r15 c47-103 fg=alert
+r15 c31-117 fg=rule
 r16 c28-28 fg=rule
+r16 c33-39 fg=text
+r16 c47-57 fg=state
+r16 c65-65 fg=state
+r16 c75-85 fg=text-dim
 r17 c28-28 fg=rule
-r17 c33-107 fg=text-dim
+r17 c33-37 fg=text
+r17 c47-61 fg=text-dim
+r17 c65-65 fg=text-dim
+r17 c75-83 fg=text-dim
 r18 c28-28 fg=rule
-r18 c33-44 fg=text-dim
+r18 c31-31 fg=obi
+r18 c33-43 fg=text mod=BOLD
+r18 c47-61 fg=alert
+r18 c65-65 fg=text-dim
+r18 c75-85 fg=text-dim
 r19 c28-28 fg=rule
-r19 c31-117 fg=rule
+r19 c47-103 fg=alert
 r20 c28-28 fg=rule
-r20 c33-41 fg=text-dim
 r21 c28-28 fg=rule
+r21 c33-58 fg=text
 r22 c28-28 fg=rule
+r22 c37-103 fg=text-dim
 r23 c28-28 fg=rule
+r23 c37-98 fg=text-dim
 r24 c28-28 fg=rule
 r25 c28-28 fg=rule
+r25 c33-107 fg=text-dim
 r26 c28-28 fg=rule
+r26 c33-44 fg=text-dim
 r27 c28-28 fg=rule
+r27 c31-117 fg=rule
 r28 c28-28 fg=rule
+r28 c33-41 fg=text-dim
 r29 c28-28 fg=rule
 r30 c28-28 fg=rule
 r31 c28-28 fg=rule
@@ -132,7 +139,9 @@ r32 c55-55 fg=alert
 r32 c56-118 fg=text
 r32 c119-119 fg=rule
 r33 c00-23 fg=text-dim
-r33 c102-102 fg=text
+r33 c85-85 fg=text
+r33 c86-96 fg=text-dim
+r33 c97-102 fg=text
 r33 c103-113 fg=text-dim
 r33 c114-114 fg=text
 r33 c115-119 fg=text-dim

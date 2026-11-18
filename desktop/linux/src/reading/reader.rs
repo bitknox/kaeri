@@ -240,6 +240,8 @@ pub struct Reader {
     title: gtk::Label,
     group_title: gtk::Label,
     line: gtk::Label,
+    /// "· Private" after the line, while the mode or the series' own flag holds what is read.
+    private: gtk::Box,
     scrub: gtk::Scale,
     scrub_at: gtk::Label,
     scrub_total: gtk::Label,
@@ -482,10 +484,19 @@ impl Reader {
             label.set_max_width_chars(1);
             label.set_hexpand(true);
         }
+        // The line takes its own width, so "Private" follows it rather than the far edge.
+        line.set_hexpand(false);
+        line.set_max_width_chars(-1);
+        line.set_xalign(0.0);
+        let private = crate::private::reader_label();
+        let line_row = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        line_row.set_hexpand(true);
+        line_row.append(&line);
+        line_row.append(&private);
         let names = gtk::Box::new(gtk::Orientation::Vertical, 0);
         names.set_valign(gtk::Align::Center);
         names.append(&group_title);
-        names.append(&line);
+        names.append(&line_row);
         let sheet = gtk::Popover::new();
         sheet.add_css_class("reader-sheet");
         sheet.set_has_arrow(false);
@@ -602,6 +613,7 @@ impl Reader {
         widget.add_overlay(&part_tip);
         widget.set_focusable(true);
         widget.add_css_class("reader");
+        name_page(&widget, &t::linux_reader_opening());
         let this = Rc::new_cyclic(|weak: &std::rc::Weak<Self>| {
             let go_on: Rc<dyn Fn()> = Rc::new({
                 let weak = weak.clone();
@@ -698,6 +710,7 @@ impl Reader {
                 title,
                 group_title,
                 line,
+                private,
                 scrub,
                 scrub_at,
                 scrub_total,
@@ -888,6 +901,9 @@ impl Reader {
             let this = Rc::downgrade(&this);
             move |event| {
                 let Some(this) = this.upgrade() else { return };
+                if crate::private::changes(event) {
+                    this.follow_private();
+                }
                 match event {
                     Event::Reader(event) => this.take(event),
                     Event::Reading(ReadingEvent::Failed {
@@ -1571,6 +1587,20 @@ impl Reader {
         self.state.borrow().mode.is_some_and(ReaderMode::flows)
     }
 
+    /// "Private" after the line while the mode or the series' own flag holds what is read.
+    fn follow_private(&self) {
+        let Some(ctx) = self.ctx.upgrade() else { return };
+        let held = {
+            let known = ctx.hub.known.borrow();
+            let work = self.state.borrow().work.clone();
+            known.private
+                || work.is_some_and(|work| {
+                    known.always(&kaeri_model::private::PrivateTitle::Series { work })
+                })
+        };
+        self.private.set_visible(held);
+    }
+
     fn opened(self: &Rc<Self>, view: &ReaderView) {
         // Left before the chapter opened: the reader had no session to close then, so the
         // session that opened late is closed now, and nothing is built in a hidden reader.
@@ -1624,6 +1654,7 @@ impl Reader {
             state.index = 0;
             state.held_page = None;
         }
+        self.follow_private();
         // The open went out before the reader's first layout; its own size may be known now.
         self.surface_settled();
         self.forget_credits();
@@ -3310,6 +3341,7 @@ impl Reader {
             .part_said(at)
             .unwrap_or_else(|| t::linux_reader_page_of(at as i64, total as i64));
         self.scrub.update_property(&[gtk::accessible::Property::ValueText(&said)]);
+        name_page(&self.widget, &said);
         self.go_to_field.set_range(1.0, total as f64);
         let hint = t::linux_reader_go_to_page_field(total as i64);
         self.go_to_field.set_tooltip_text(Some(&hint));
@@ -3715,6 +3747,18 @@ impl Reader {
         true
     }
 }
+
+/// Name the reader's page for a screen reader: where the place is, and the keys that turn, as
+/// GTK has no custom actions to offer Next page, Previous page and Show controls.
+fn name_page(page: &impl IsA<gtk::Accessible>, said: &str) {
+    page.update_property(&[
+        gtk::accessible::Property::Label(said),
+        gtk::accessible::Property::KeyShortcuts(PAGE_KEYS_SPOKEN),
+    ]);
+}
+
+/// Next page, Previous page and the way into the controls, as ARIA writes keys.
+const PAGE_KEYS_SPOKEN: &str = "PageDown PageUp Tab"; // i18n-skip
 
 /// The part of `texture` that `crop` names, in the texture's pixels, as a picture that size.
 fn cropped(texture: &gdk::Texture, crop: kaeri_model::reader::PixelRect) -> gdk::Paintable {

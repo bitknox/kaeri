@@ -65,7 +65,7 @@ struct HomeSpotlightView: View {
                         .titleSource(source)
                         .frame(width: width, height: width * 9 / 16, alignment: .center)
                 } else {
-                    HeroArtView(art: store.heroArt(entry), entry: entry)
+                    HeroArtView(art: store.heroArt(entry, fills: !layout.wide), entry: entry)
                         .frame(width: width, height: width * 9 / 16)
                         .clipShape(.rect(cornerRadius: ArtShape.bannerRadius))
                         .titleSource(source)
@@ -80,9 +80,10 @@ struct HomeSpotlightView: View {
     }
 
     /// The spotlight's art, which the title's page grows out of from anywhere on the spotlight:
-    /// a banner, or the cover where there is no wide art.
+    /// a banner, or the cover where there is no wide art. On a phone the frame stays wide, the
+    /// cover filling it.
     private func spotSource(_ entry: Entry) -> TitleSource {
-        TitleSource(entry.id, .spotlight, art: store.heroArt(entry).isCompact ? .poster : .banner)
+        TitleSource(entry.id, .spotlight, art: store.heroArt(entry, fills: !layout.wide).isCompact ? .poster : .banner)
     }
 
     // MARK: Text and actions
@@ -289,6 +290,10 @@ struct HomeMain {
         }
     }
 
+    /// Whether the button leads with the cast glyph: it plays, and a TV is held, so the play
+    /// goes there.
+    func casts(held: Bool) -> Bool { held && (action == .resume || action == .play) }
+
     var symbol: String? {
         switch action {
         case .addToPlanning: "plus"
@@ -319,7 +324,7 @@ struct HomeMainButton: View {
                 store.send(.setStatus(id: entry.id, status: .planning))
             case .details:
                 navigator.openTitle(entry.id, from: TitleSource(entry.id, .spotlight,
-                                                                art: store.heroArt(entry).isCompact ? .poster : .banner))
+                                                                art: store.heroArt(entry, fills: !layout.wide).isCompact ? .poster : .banner))
             case .nothing:
                 break
             }
@@ -327,6 +332,10 @@ struct HomeMainButton: View {
             HStack(spacing: 8) {
                 if adding {
                     ProgressView().controlSize(.small).tint(Palette.ground)
+                } else if main.casts(held: store.tv.cast.connected) {
+                    // While a TV is held the play goes there: the cast glyph in place of play, as
+                    // on the title page.
+                    CastButtonGlyph(look: .connected, size: layout.button.font, color: Palette.ground)
                 } else if let symbol = main.symbol {
                     Image(systemName: symbol).font(.ui(layout.button.font < 15 ? 11 : 14))
                 }

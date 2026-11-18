@@ -12,3 +12,6 @@ tui-together-not-a-link = Isso não é um link ou código de sessão.
 tui-together-recent-alone = Episódio { $episode } · { $when }
 tui-medium-read-change = Pressione { $key } para mudar para que o { -app-name } serve.
 tui-medium-settings-hint = { $key } para mudar
+report-player-log-save-here = Salvar log do player
+report-player-log-saved-to = Log do player salvo em { $path }
+report-player-log-failed-here = Não foi possível salvar o log em { $folder }.

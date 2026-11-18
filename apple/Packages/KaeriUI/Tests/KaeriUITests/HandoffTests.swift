@@ -85,4 +85,9 @@ struct HandoffTests {
         #expect(!TitleHandoff.offers(page, onScreen: 900_002))
         #expect(!TitleHandoff.offers(entry { $0.title = "" }, onScreen: page.id))
     }
+
+    @Test func aPrivateTitlePageIsNeverOffered() {
+        let page = entry { _ in }
+        #expect(!TitleHandoff.offers(page, onScreen: page.id, held: true))
+    }
 }

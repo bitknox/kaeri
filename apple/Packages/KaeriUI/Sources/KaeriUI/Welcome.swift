@@ -90,7 +90,7 @@ struct AiringToday: View {
                     .lineLimit(1)
                     .padding(.top, 8)
                 HStack(spacing: 8) {
-                    Text(L.welcomeBroadcast(episode: L.episodeNumberString(number: String(broadcast.episode)) + broadcast.markSuffix, clock: broadcast.clock)).monospacedDigit()
+                    Text(L.welcomeBroadcast(episode: L.episodeNumberString(number: String(broadcast.episode)) + broadcast.welcomeMark, clock: broadcast.clock)).monospacedDigit()
                     Spacer(minLength: 0)
                     let seconds = Int64(broadcast.airs.timeIntervalSince(now))
                     if seconds <= 0 {
@@ -162,5 +162,14 @@ struct ThisSeason: View {
                 }
             }
         }
+    }
+}
+
+private extension Broadcast {
+    /// The mark after a bare episode number: " · Dubbed", or nothing. The spaces don't break, so
+    /// the mark stays with the number. Only here: `line(now:)`, `episodeLong` and `episodeShort`
+    /// carry the mark already.
+    var welcomeMark: String {
+        dubbed ? "\u{00A0}·\u{00A0}\(L.audioDubbed)" : ""
     }
 }

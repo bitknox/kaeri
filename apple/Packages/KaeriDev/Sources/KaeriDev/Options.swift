@@ -88,6 +88,9 @@ struct Options {
     /// Where to click before the snapshot, in points from the window's top left, to open a menu
     /// the snapshot then shows over the window.
     var openMenu: CGPoint?
+    /// Where to pop the app's own menu (the Kaeri menu of the menu bar) up over the window, in
+    /// points from its top left, for a snapshot of its items without the menu bar.
+    var appMenu: CGPoint?
     /// How badly the fake serves the art: every second image fails this many times before it is
     /// served, and each waits the delay.
     var artTrouble: (failFirst: Int, delay: Duration)?
@@ -115,6 +118,7 @@ struct Options {
                             [--media <file>] [--full-screen <times>] [--art-trouble <fails>[,<ms>]]
                             [--art-cache <MB>] [--episodes-delay <ms>] [--search-delay <ms>]
                             [--detail-delay <ms>] [--list-delay <ms>] [--visit <id>,…] [--open-menu <x>,<y>]
+                            [--app-menu <x>,<y>]
                             [--frames <ms>,… [--scroll-path <ms>:<points>,…]]
                             [--reduce-motion]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
@@ -162,6 +166,11 @@ struct Options {
                 let parts = at.split(separator: ",").compactMap { Double($0) }
                 guard parts.count == 2 else { throw Problem.bad(flag, at) }
                 openMenu = CGPoint(x: parts[0], y: parts[1])
+            case "--app-menu":
+                let at = try value(flag)
+                let parts = at.split(separator: ",").compactMap { Double($0) }
+                guard parts.count == 2 else { throw Problem.bad(flag, at) }
+                appMenu = CGPoint(x: parts[0], y: parts[1])
             case "--frames":
                 let list = try value(flag)
                 frames = list.split(separator: ",").compactMap { Int($0) }

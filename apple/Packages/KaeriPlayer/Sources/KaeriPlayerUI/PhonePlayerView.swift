@@ -67,7 +67,8 @@ public struct PhonePlayerView: View {
     }
 
     private var visible: Bool { (model.controlsVisible || sheet != nil) && !model.stillWatching && model.failure == nil && !curtain }
-    private var curtain: Bool { model.starting != nil || !model.hasPicture || model.holdsCurtain }
+    /// Up from the playback staged to its first frame, and a roll-on's starting screen its 0.6 s.
+    private var curtain: Bool { model.starting != nil || !model.hasPicture || model.holdsCurtain || model.startingHeld }
     /// How far the swipe down has gone toward closing, 0 to 1.
     private var pull: CGFloat { min(drag / 120, 1) }
 
@@ -271,10 +272,17 @@ public struct PhonePlayerView: View {
                 Text(model.showTitle)
                     .font(.showTitle(size: 15))
                     .fixedLineHeight(20)
-                Text(model.episodeLine)
-                    .font(.system(size: 13))
-                    .contentTransition(.opacity)
-                    .animation(.standard, value: model.episodeLine)
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(model.episodeLine)
+                        .font(.system(size: 13))
+                        .contentTransition(.opacity)
+                        .animation(.standard, value: model.episodeLine)
+                    if model.isPrivate {
+                        PlayerPrivateLabel(size: 13)
+                            .transition(.opacity)
+                    }
+                }
+                .animation(.fadeIn, value: model.isPrivate)
             }
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)

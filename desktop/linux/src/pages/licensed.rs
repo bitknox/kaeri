@@ -239,19 +239,60 @@ pub fn names(links: &[ServiceLink]) -> String {
     links.iter().map(|l| l.service.as_str()).collect::<Vec<_>>().join(", ") // i18n-skip
 }
 
+/// A link under a title's buttons that opens a service: "Also on Hikari Library", with the
+/// external-link glyph.
+pub fn external_link(label: &str) -> gtk::Button {
+    let button = gtk::Button::new();
+    let inside = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+    inside.append(&gtk::Label::new(Some(label)));
+    inside.append(&gtk::Image::from_icon_name("adw-external-link-symbolic"));
+    button.set_child(Some(&inside));
+    button.add_css_class("flat");
+    button.add_css_class("link");
+    button.set_halign(gtk::Align::Start);
+    button
+}
+
+/// The line that names the services a title is listed on, when no source has it.
+pub fn listed_line(text: &str) -> gtk::Box {
+    let line = gtk::Box::new(gtk::Orientation::Vertical, 2);
+    line.append(&widgets::haze(text, ""));
+    line
+}
+
+/// Choose your services, as a link under a title's buttons.
+pub fn choose_link(label: &str) -> gtk::Button {
+    let choose = gtk::Button::with_label(label);
+    choose.add_css_class("flat");
+    choose.add_css_class("link");
+    choose.set_halign(gtk::Align::Start);
+    choose
+}
+
+/// The lines' shapes with nothing in them, for the room they take while the answer is on its
+/// way: "Listed on" and the Choose your services link under it when no source has the title, or
+/// else one service link. Never focused, read or a target.
+pub fn shapes(not_in_sources: bool) -> Vec<gtk::Widget> {
+    let shapes: Vec<gtk::Widget> = if not_in_sources {
+        vec![listed_line("").upcast(), choose_link("").upcast()]
+    } else {
+        vec![external_link("").upcast()]
+    };
+    for shape in &shapes {
+        shape.set_can_focus(false);
+        shape.set_can_target(false);
+        shape.set_opacity(0.0);
+        shape.update_state(&[gtk::accessible::State::Hidden(true)]);
+    }
+    shapes
+}
+
 /// The quiet lines under a title's buttons, for the case the engine worked out. Empty when
 /// there is nothing to say.
 pub fn lines(ctx: &Rc<Ctx>, availability: &TitleAvailability) -> Vec<gtk::Widget> {
     let mut out: Vec<gtk::Widget> = Vec::new();
     let external = |link: &ServiceLink, label: String, id: AnilistId| {
-        let button = gtk::Button::new();
-        let inside = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        inside.append(&gtk::Label::new(Some(&label)));
-        inside.append(&gtk::Image::from_icon_name("adw-external-link-symbolic"));
-        button.set_child(Some(&inside));
-        button.add_css_class("flat");
-        button.add_css_class("link");
-        button.set_halign(gtk::Align::Start);
+        let button = external_link(&label);
         button.set_action_target_value(Some(&target(id, &link.service, &link.url, None)));
         button.set_action_name(Some("win.licensed-open"));
         button.upcast::<gtk::Widget>()
@@ -277,18 +318,13 @@ pub fn lines(ctx: &Rc<Ctx>, availability: &TitleAvailability) -> Vec<gtk::Widget
         }
         AvailabilityCase::NotInSources => {
             if !availability.others.is_empty() {
-                let line = gtk::Box::new(gtk::Orientation::Vertical, 2);
-                line.append(&widgets::haze(
+                let line = listed_line(
                     &t::title_listed_on(&availability.others.join(", ")), // i18n-skip
-                    "",
-                ));
+                );
                 out.push(line.upcast());
             }
             if availability.choose_services || !availability.others.is_empty() {
-                let choose = gtk::Button::with_label(&t::title_choose_services());
-                choose.add_css_class("flat");
-                choose.add_css_class("link");
-                choose.set_halign(gtk::Align::Start);
+                let choose = choose_link(&t::title_choose_services());
                 let weak = Rc::downgrade(ctx);
                 choose.connect_clicked(move |_| {
                     if let Some(ctx) = weak.upgrade() {

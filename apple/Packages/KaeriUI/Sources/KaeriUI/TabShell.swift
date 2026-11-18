@@ -37,10 +37,11 @@ struct TabShell: View {
             if now == .compact { narrowed() } else { widened() }
         }
         // At the foot, above the tab bar on iPhone and in a narrow window (Notices).
+        // Over the cast's mini while it shows; the cast's controller, open, shows them itself.
         .overlay(alignment: .bottom) {
-            NoticeCapsule(here: navigator.phoneSettings == nil)
+            NoticeCapsule(here: navigator.phoneSettings == nil && !store.tv.cast.expanded)
                 .padding(.horizontal, 16)
-                .padding(.bottom, sizeClass == .compact ? 64 : 16)
+                .padding(.bottom, (sizeClass == .compact ? 64 : 16) + (store.tv.cast.miniShown ? 50 : 0))
         }
         .sheet(isPresented: $navigator.messagesShown) {
             MessagesView()
@@ -211,6 +212,7 @@ struct PadTitleToolbar: ToolbarContent {
     var body: some ToolbarContent {
         // The list's menu is in the page's header, beside Resume (PadTitleMeta): a narrow
         // window's bar, with the tabs in it, folded it away.
+        CastToolbarItem()
         ToolbarItem(placement: .topBarTrailing) {
             AnotherButton(id: id)
         }
@@ -308,8 +310,13 @@ struct TabStack<Screen: View>: View {
         )) {
             screen()
                 .toolbar {
-                    if store.tv.connected != nil {
-                        ToolbarItem(placement: .topBarLeading) { TVNowPlayingButton() }
+                    CastToolbarItem()
+                    // While private mode is on: on iPhone at the leading edge of Home and
+                    // Library, opposite the account; on iPad at the trailing edge of each place.
+                    if store.privacy.on, sizeClass == .regular || [.home, .read, .library].contains(section) {
+                        ToolbarItem(placement: sizeClass == .regular ? .topBarTrailing : .topBarLeading) {
+                            PrivateToolbarBadge()
+                        }
                     }
                 }
                 .navigationTitle(section.title)

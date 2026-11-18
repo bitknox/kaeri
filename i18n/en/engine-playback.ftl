@@ -61,6 +61,19 @@ cause-release-failed = Couldn't start that { -release }: { $detail }
 # Reason: a play waited too long for its sources to give it a stream, and gave up.
 cause-sources-timed-out = The { -source-pl } took too long to answer. Try again, or choose another { -source }.
 
+# Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+# @arg names: text
+cause-sources-unreached = Couldn't reach { $names }. Try again, or choose another { -source }.
+
+# Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+# @arg count: int
+# @arg names: text
+# @arg episode: text
+cause-sources-not-asked = { $count ->
+    [one] No { -source } that was asked has episode { $episode }. { $names } wasn't asked.
+   *[other] No { -source } that was asked has episode { $episode }. { $names } weren't asked.
+ }
+
 # Reason: every source matched the title but none has the episode. The detail is what each said.
 # @arg episode: text
 # @arg detail: text
@@ -130,6 +143,14 @@ notice-player-failed-to-start = Couldn't start mpv. Check that it runs on its ow
 # @arg next: int
 # @arg total: int
 notice-stream-no-video = No video from that stream. Trying { $next } of { $total }.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+# @arg source: text
+notice-failed-over = The stream broke off. { $source } took over at the same point.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+# @arg source: text
+notice-failed-over-same-source = The stream broke off. Another stream from { $source } took over at the same point.
 
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 # @arg reason: text

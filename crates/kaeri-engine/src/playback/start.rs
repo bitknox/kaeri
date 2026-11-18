@@ -22,9 +22,11 @@ use crate::{
     playback::{
         self,
         autonext::{Follow, Staged},
+        further::{Further, Lookup},
         handoff::{Handoff, successor, take_controls},
         link::{PlayerOpener, PlayerTarget, opener},
-        resolve::{Pick, Resolved, Unplayable, resolve_for_playback},
+        prefetch::Warm,
+        resolve::{Pick, Unplayable, resolve_for_playback},
         shaders::shader_dir,
         slot::PlayerSlot,
         starting::Starting,
@@ -72,6 +74,11 @@ pub(crate) fn opener_for(
     {
         return Some(Arc::clone(cast) as Arc<dyn PlayerOpener>);
     }
+    // A cast session holds a TV: every play goes to it.
+    #[cfg(feature = "cast")]
+    if let Some(device) = services.casts.session_device() {
+        return Some(Arc::new(cast_opener(services, device)) as Arc<dyn PlayerOpener>);
+    }
     let hosted = services.hosted_player.then(|| -> Arc<dyn PlayerOpener> {
         Arc::clone(&services.hosted) as Arc<dyn PlayerOpener>
     });
@@ -116,8 +123,6 @@ pub fn cast_to(
     services: &Services,
     tx: &Outbox,
 ) {
-    use crate::playback::link::cast::CastOpener;
-
     let hub = &services.casts;
     let Some(device) = hub.device(device) else {
         let _ = tx.send(Event::Toast(Notice::alert(kaeri_model::Msg::NoticeCastNoDevice)));
@@ -135,14 +140,23 @@ pub fn cast_to(
         Some(_) => true,
         None => false,
     };
+    hub.begin(device.clone());
+    hub.asked(id, episode.clone());
+    engine.casting = Some(Arc::new(cast_opener(services, device)));
+    play(id, episode, from_start, job, engine, services, tx);
+}
+
+/// What opens a cast to `device`, with its scratch files in the runtime directory.
+#[cfg(feature = "cast")]
+fn cast_opener(
+    services: &Services,
+    device: kaeri_cast::CastDevice,
+) -> crate::playback::link::cast::CastOpener {
     let scratch = services.paths.runtime_dir().join("cast");
     if let Err(e) = std::fs::create_dir_all(&scratch) {
         tracing::warn!(error = %e, "couldn't make the cast's scratch directory");
     }
-    hub.begin(device.clone());
-    hub.asked(id, episode.clone());
-    engine.casting = Some(Arc::new(CastOpener::new(Arc::clone(hub), device, scratch)));
-    play(id, episode, from_start, job, engine, services, tx);
+    crate::playback::link::cast::CastOpener::new(Arc::clone(&services.casts), device, scratch)
 }
 
 /// A position closer to the start than this is not carried over to a cast: it starts from the
@@ -154,7 +168,11 @@ const CARRY_FROM: f64 = 5.0;
 /// open on this device again.
 #[cfg(feature = "cast")]
 pub fn stop_casting(engine: &mut EngineState, services: &Services) {
-    if engine.casting.take().is_none() && !services.casts.casting() {
+    // A cast session ends with it: the receiver closes, and nothing is left for a later launch
+    // to join, after a lost or taken-over cast too.
+    let held = services.casts.disconnect();
+    services.casts.forget_left();
+    if engine.casting.take().is_none() && !services.casts.casting() && !held {
         return;
     }
     services.casts.end();
@@ -219,8 +237,11 @@ fn stage(
     resume: Option<f64>,
     opener: &dyn PlayerOpener,
     engine: &mut EngineState,
+    private: bool,
 ) -> Event {
     engine.cache.announce(played.id, title.clone());
+    // The player log's lines go under this playback from now on; a private one keeps none.
+    crate::player_log::begin(&played.episode, &title, episode_title.as_deref(), private);
     engine.staging.staged(Staged {
         serial: played.serial,
         id: played.id,
@@ -232,17 +253,29 @@ fn stage(
     // What the player starts at when it remembers a speed, and Now Playing until it says.
     let speed = engine.config.effective().playback.carried_speed().unwrap_or(1.0);
     match opener.target() {
-        PlayerTarget::Local => {
-            Event::PlaybackStaged { id, title, episode, episode_title, speed, resume }
-        }
+        PlayerTarget::Local => Event::PlaybackStaged {
+            id,
+            title,
+            episode,
+            episode_title,
+            speed,
+            resume,
+            always_private: false,
+        },
         PlayerTarget::Cast(_) => Event::CastStaged { id, title, episode, episode_title, speed },
     }
 }
 
 /// Where `episode` of title `id` was left, when it was: best-effort, as every read of the
 /// resume point is, since a database hiccup must not stop an episode from playing.
-fn resume_of(store: &kaeri_store::Store, id: AnilistId, episode: &str) -> Option<f64> {
-    store
+///
+/// A place a private play held in memory comes first: it is the newer.
+fn resume_of(services: &Services, id: AnilistId, episode: &str) -> Option<f64> {
+    if let Some(kept) = services.privacy.resume_kept(id, episode) {
+        return Some(kept);
+    }
+    services
+        .store
         .resume_position(id, episode)
         .inspect_err(|e| tracing::warn!(error = %e, "could not read resume position"))
         .unwrap_or(None)
@@ -353,9 +386,10 @@ fn play_staged(
     // Where the episode was left, for the starting screen to say it resumes there. Not for a
     // play from the beginning, or one that records nothing.
     let resume = (!from_start && id != kaeri_model::opened::UNTRACKED)
-        .then(|| resume_of(store, id, &episode))
+        .then(|| resume_of(services, id, &episode))
         .flatten();
-    let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine);
+    let private = services.privacy.holds_show(played.id);
+    let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine, private);
     // What the show sets for itself, over the config in effect: sub or dub, quality, what is
     // skipped.
     let for_show = show_settings::for_show(engine.config.effective(), store, id);
@@ -375,6 +409,8 @@ fn play_staged(
         None => prefetch.take(id, &episode, config.playback.translation),
         Some(_) => None,
     };
+    // A roll-on handed over to this play: its first frame says how long that took.
+    let rolled_at = prefetch.handover_for(id, &episode);
     // Tracker ids rather than trackers: playback only needs to know which queues to
     // append to, and passing the set would couple the player to the sync layer.
     let tracker_ids = signed_in_tracker_ids(sync);
@@ -399,7 +435,7 @@ fn play_staged(
         tracker_ids,
         hints,
         write_shaders(config, paths),
-        prefetched,
+        (prefetched, rolled_at),
         job,
         &tx.for_playback(played),
     );
@@ -451,8 +487,10 @@ pub fn play_local(
         engine.cache.hints(id, &episode, for_show.playback.skip_filler, PlayKind::Staged);
     // Named by the download it plays: the Downloads screen says what its rows are called.
     let episode_title = engine.cache.episode_title(id, &episode);
-    let resume = resume_of(store, id, &episode);
-    let staged = stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine);
+    let resume = resume_of(services, id, &episode);
+    let private = services.privacy.holds_show(played.id);
+    let staged =
+        stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine, private);
     let _ = tx.send(staged);
     let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     // Nothing to find: it opens at once, and a Stop is its session's from the start.
@@ -549,6 +587,7 @@ fn machine(opener: Arc<dyn PlayerOpener>, services: &Services) -> playback::Mach
         host: services.host.clone(),
         power: services.power.clone(),
         offline: services.offline.clone(),
+        sources: Some(services.registry.clone()),
     }
 }
 
@@ -569,7 +608,8 @@ pub fn control_player(command: PlayerCommand, engine: &EngineState) {
     {
         finding.send_replace(true);
     }
-    // Heard by the walk through the sources while one is under way, and by nothing after.
+    // Heard by the walk through the sources while one is under way, and by the playback until
+    // its first frame.
     if command == PlayerCommand::SkipSource {
         if let Some(skipping) = skipping.as_ref().filter(|skipping| !skipping.is_closed()) {
             skipping.send_modify(|count| *count += 1);
@@ -700,8 +740,9 @@ fn spawn_playback(
     hints: PlayHints,
     // The shaders being written for it, while it looks for its streams.
     shaders: JoinHandle<Option<std::path::PathBuf>>,
-    // This episode's streams, found ahead while the previous one's ending played.
-    prefetched: Option<Resolved>,
+    // This episode as it was made ready while the previous one's ending played, and when the
+    // roll-on handed over to it.
+    (prefetched, rolled_at): (Option<Warm>, Option<std::time::Instant>),
     job: Option<JobGuard>,
     tx: &Outbox,
 ) {
@@ -717,24 +758,24 @@ fn spawn_playback(
     } else {
         services.registry.clone()
     };
-    let prefetched = if no_torrents {
-        prefetched
-            .map(|(streams, context)| {
-                let streams: Vec<_> = streams
-                    .into_iter()
-                    .filter(|s| s.kind != kaeri_core::stream::StreamKind::TorrentHttp)
-                    .collect();
-                (streams, context)
-            })
-            .filter(|(streams, _)| !streams.is_empty())
-    } else {
-        prefetched
+    let prefetched =
+        if no_torrents { prefetched.and_then(Warm::without_torrents) } else { prefetched };
+    // From here the playback owns what was started ahead: the proxy its first attempt adopts.
+    let (prefetched, proxy) = match prefetched.map(Warm::into_parts) {
+        Some((resolved, proxy)) => (Some(resolved), proxy),
+        None => (None, None),
     };
+    let ahead =
+        crate::playback::prefetch::Ahead::new(rolled_at, proxy, services.prefetch.clone());
     let reports = services.servers.reports();
-    // An untracked play is of no show whose episodes could be compared.
-    let find = !untracked && services.skip_find.runs(config);
+    // An untracked play is of no show whose episodes could be compared, and a private one keeps
+    // no prints of what it played.
+    let find =
+        !untracked && !services.privacy.holds_show(id) && services.skip_find.runs(config);
+    let privacy = services.privacy.clone();
     let mut link = services.connection.subscribe();
     let torrents = services.registry.torrents().clone();
+    let unreached = services.unreached.clone();
     let (config, meta, store, registry, http, machine, slot, tx) = (
         config.clone(),
         services.meta.clone(),
@@ -748,7 +789,29 @@ fn spawn_playback(
 
     tokio::spawn(async move {
         let playback = config.playback.clone();
+        // The skip as the playback hears it once its streams are found, beside the walk's.
+        let skips = skip.clone();
         let starting = Starting::new(&tx, id, &episode, Some(skip));
+        // Try again: what the last failed start of this episode couldn't reach is asked anew.
+        unreached.retry(id, &episode, &registry);
+        // A torrent looked up ahead on a limited network starts now, as it would have had it
+        // been found now. One that does not start sends the play looking again.
+        let prefetched = match prefetched {
+            Some((streams, context))
+                if streams
+                    .iter()
+                    .any(|s| s.kind == kaeri_core::stream::StreamKind::Torrent) =>
+            {
+                match torrents.start_first(streams, &episode).await {
+                    Ok(streams) => Some((streams, context)),
+                    Err(error) => {
+                        tracing::info!(%error, "the torrent looked up ahead did not start");
+                        None
+                    }
+                }
+            }
+            prefetched => prefetched,
+        };
         let resolving = async {
             match prefetched {
                 Some(found) => {
@@ -815,7 +878,11 @@ fn spawn_playback(
                 return;
             }
         };
-        let context = match resolved {
+        // Try again gives what this start couldn't reach another chance.
+        let context = resolved.inspect_err(|reason| {
+            unreached.note(id, &episode, reason.unreached.clone());
+        });
+        let context = match context {
             Ok(pair) => pair,
             // The episode being watched carries on, and the window with it: only the lookup
             // failed, and closing what was playing over it would punish the viewer for asking.
@@ -846,6 +913,14 @@ fn spawn_playback(
                     why: reason.why,
                     text: reason.text.clone(),
                     asked: starting.asked(),
+                    unreached: reason
+                        .unreached
+                        .iter()
+                        .map(|provider_id| {
+                            crate::playback::resolve::display_name(&registry, provider_id)
+                        })
+                        .collect(),
+                    held_back: starting.held_back(),
                 };
                 if party {
                     let _ = tx.send(Event::PartyNoSource {
@@ -867,6 +942,23 @@ fn spawn_playback(
             }
         };
         let (streams, mut context) = context;
+        // A skip, or Switch source on a stall, with no stream of these left goes on to the
+        // sources after the one that answered, as the walk would have. Not past a release the
+        // viewer picked or a link they opened: those are the stream they asked for.
+        let further = if pick.is_none() {
+            let onward = Onward {
+                meta: meta.clone(),
+                store: store.clone(),
+                registry: registry.clone(),
+                id,
+                episode: episode.clone(),
+                playback: playback.clone(),
+                starting: starting.clone(),
+            };
+            Further::new(skips, Arc::new(onward))
+        } else {
+            Further::skips_only(skips)
+        };
         // Streams from a source, not a link the viewer opened: a miss Home kept is a find now.
         if from_sources && !streams.is_empty() {
             crate::catalog::probe::listed(&store, &tx, id);
@@ -890,6 +982,9 @@ fn spawn_playback(
         // says it resumed, and the history it writes as it plays is where it is left next.
         if from_start {
             context.resume_at = None;
+        } else if let Some(kept) = privacy.resume_kept(id, &context.episode) {
+            // Where a private play left it, held in memory: newer than any row.
+            context.resume_at = Some(kept);
         }
         let PlayHints { next, episodes, cover_url, banner_url, episode_total, .. } = hints;
         (context.next, context.episodes) = (next, episodes);
@@ -914,6 +1009,9 @@ fn spawn_playback(
             find_skip_times: find,
             swarm: crate::playback::starting::Swarm::of(torrents),
             begin,
+            ahead,
+            privacy: privacy.gate(id),
+            further,
             ..play_settings(&config, tracker_ids, hub)
         };
         let settings = if untracked { settings.untracked() } else { settings };
@@ -933,6 +1031,108 @@ fn spawn_playback(
         drop(stopped);
         playback::play(streams, context, store, http, machine, settings, tx, commands).await;
     });
+}
+
+/// The sources a playback asks once the viewer has moved on from every stream it found: the
+/// same lookup its start made, past the sources it has already asked or played from.
+struct Onward {
+    meta: kaeri_meta::Meta,
+    store: kaeri_store::Store,
+    registry: kaeri_providers::ProviderRegistry,
+    id: AnilistId,
+    episode: String,
+    playback: kaeri_core::config::PlaybackConfig,
+    starting: Starting,
+}
+
+impl Onward {
+    /// The sources passed over: those `streams` came from, and those already asked.
+    fn passed(&self, streams: &[kaeri_core::stream::Stream]) -> Vec<String> {
+        let asked = self.starting.asked();
+        let mut passed: Vec<String> = streams.iter().map(|s| s.provider_id.clone()).collect();
+        passed.extend(self.registry.ids().into_iter().filter(|id| {
+            self.registry
+                .get(id)
+                .is_some_and(|source| asked.contains(&source.manifest().display_name))
+        }));
+        passed
+    }
+
+    /// A source by the name it goes by on screen.
+    fn name(&self, provider_id: &str) -> String {
+        self.registry
+            .get(provider_id)
+            .map_or_else(|| provider_id.to_owned(), |s| s.manifest().display_name.clone())
+    }
+}
+
+#[async_trait::async_trait]
+impl Lookup for Onward {
+    fn beyond(&self, streams: &[kaeri_core::stream::Stream]) -> bool {
+        !self.registry.without(&self.passed(streams)).usable_ids().is_empty()
+    }
+
+    async fn after(
+        &self,
+        streams: &[kaeri_core::stream::Stream],
+        skipped: Option<&str>,
+    ) -> Result<Vec<kaeri_core::stream::Stream>, kaeri_model::starting::StartFailure> {
+        use kaeri_model::starting::{SourceMiss, StartStep};
+        if let Some(skipped) = skipped {
+            let name = self.name(skipped);
+            self.starting
+                .step(StartStep::SourceMissed { name, miss: SourceMiss::Skipped }, None);
+        }
+        let registry = self.registry.without(&self.passed(streams));
+        tracing::info!(sources = ?registry.usable_ids(), "asking the sources after the streams passed");
+        let found = resolve_for_playback(
+            &self.meta,
+            &self.store,
+            &registry,
+            self.id,
+            &self.episode,
+            None,
+            &self.playback,
+            None,
+            Some(&self.starting),
+        )
+        .await;
+        match found {
+            Ok((streams, context)) if !streams.is_empty() => {
+                let first = &streams[0];
+                self.starting.step(
+                    StartStep::Found {
+                        count: u32::try_from(streams.len()).unwrap_or(u32::MAX),
+                        source: Some(self.name(&first.provider_id)),
+                        quality: first.quality,
+                        translation: context.translation,
+                    },
+                    Some(Msg::StartOpeningStream),
+                );
+                Ok(streams)
+            }
+            Ok(_) => Err(kaeri_model::starting::StartFailure {
+                why: kaeri_model::party::NoSourceWhy::NotFound,
+                text: crate::playback::resolve::explained(kaeri_model::Cause::NoSources),
+                asked: self.starting.asked(),
+                unreached: Vec::new(),
+                held_back: self.starting.held_back(),
+            }),
+            Err(reason) => Err(kaeri_model::starting::StartFailure {
+                why: reason.why,
+                text: reason.text,
+                asked: self.starting.asked(),
+                unreached: reason
+                    .unreached
+                    .iter()
+                    .map(|provider_id| {
+                        crate::playback::resolve::display_name(&self.registry, provider_id)
+                    })
+                    .collect(),
+                held_back: self.starting.held_back(),
+            }),
+        }
+    }
 }
 
 /// What one playback runs under, from the config as it stands now.
@@ -971,6 +1171,9 @@ pub fn play_settings(
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
+        privacy: Default::default(),
+        further: Default::default(),
     }
 }
 
@@ -1039,6 +1242,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
             })
             .collect();
         assert_eq!(following(&rows, "1").as_deref(), Some("2"));

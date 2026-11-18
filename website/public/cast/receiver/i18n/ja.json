@@ -1,11 +1,54 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。コンピュータでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-ipad": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。iPadでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-iphone": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。iPhoneでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-mac": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。Macでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-phone": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。スマートフォンでエピソードを選ぶと閉じません。"
+    ],
+    "receiver-closing-tablet": [
+      {
+        "arg": "seconds"
+      },
+      "秒後に閉じます。タブレットでエピソードを選ぶと閉じません。"
+    ],
     "receiver-error": [
       "エピソード",
       {
         "arg": "episode"
       },
       "を再生できませんでした"
+    ],
+    "receiver-error-audio-codec": [
+      "このTVでは",
+      {
+        "arg": "codec"
+      },
+      "の音声を再生できません。"
     ],
     "receiver-error-hint-computer": [
       "コンピュータで別のソースを選んでください。"
@@ -27,6 +70,13 @@
     ],
     "receiver-error-unnumbered": [
       "このエピソードを再生できませんでした"
+    ],
+    "receiver-error-video-codec": [
+      "このTVでは",
+      {
+        "arg": "codec"
+      },
+      "の映像を再生できません。"
     ],
     "receiver-finished": [
       "エピソード",

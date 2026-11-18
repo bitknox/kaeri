@@ -961,11 +961,15 @@ pub struct CastConfig {
     /// List TVs with Chromecast built in in the TV picker. On unless switched off; off, the
     /// picker doesn't look for them.
     pub show_tvs: bool,
+    /// The Cast receiver app to launch in place of Kaeri's own, by its app ID. Unset, Kaeri's
+    /// own; the Default Media Receiver plays whenever the one launched fails.
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub receiver: Option<String>,
 }
 
 impl Default for CastConfig {
     fn default() -> Self {
-        Self { show_tvs: true }
+        Self { show_tvs: true, receiver: None }
     }
 }
 
@@ -1011,6 +1015,11 @@ pub struct MetaConfig {
     /// service, one request per title you open (`api.ani.zip`, asked the title's AniList id).
     /// On unless switched off.
     pub episode_text: bool,
+    /// Show where the people the signed-in AniList viewer follows are in a show, on its page and
+    /// its episodes. This device's alone, never synced: a TV in a shared room can hide the names
+    /// while a laptop shows them. Off, a title page's request leaves them out. On unless
+    /// switched off.
+    pub following: bool,
 }
 
 impl Default for MetaConfig {
@@ -1023,6 +1032,7 @@ impl Default for MetaConfig {
             discussion_images: false,
             calendar_mine: false,
             episode_text: true,
+            following: true,
         }
     }
 }
@@ -1172,6 +1182,10 @@ pub struct PlaybackConfig {
     /// it seen and push progress to a tracker.
     pub commit_threshold: f64,
     pub auto_next: bool,
+    /// On a limited network (cellular, Low Data Mode, metered), load the next episode's first
+    /// seconds of video during the ending as on Wi-Fi. Off by default: there only its streams,
+    /// subtitles and skip times are found ahead. Nothing is fetched ahead with `auto_next` off.
+    pub preload_metered: bool,
     /// Carry playback speed and audio/subtitle track choice to the next episode.
     pub persist_speed: bool,
     /// The speed last chosen in the player, carried to the next episode.
@@ -1214,6 +1228,11 @@ pub struct PlaybackConfig {
     /// default, and a show can say otherwise. The native apps draw it; the terminal shows no
     /// stills.
     pub spoiler_protection: bool,
+    /// Open the system's floating window when the person leaves the app while an episode
+    /// plays: on iPhone, iPad and Android on leaving, on the Mac on minimising or hiding. On by
+    /// default. This device's own: it never syncs. The terminal, the TV and the desktop apps
+    /// have no floating window and show no row.
+    pub picture_in_picture: bool,
     /// Put the opening and ending on the seek bar as chapter markers, where the stream carries
     /// no chapters of its own.
     ///
@@ -1276,6 +1295,7 @@ impl Default for PlaybackConfig {
             subtitle_language: "eng".into(),
             commit_threshold: 0.85,
             auto_next: true,
+            preload_metered: false,
             persist_speed: true,
             persisted_speed: None,
             persist_volume: true,
@@ -1294,6 +1314,7 @@ impl Default for PlaybackConfig {
             skip_filler: false,
             up_next_countdown: 10,
             spoiler_protection: true,
+            picture_in_picture: true,
             fullscreen: false,
             players: vec!["mpv".into(), "external".into()],
             mpv_binary: "mpv".into(),
@@ -1792,6 +1813,13 @@ mod tests {
     }
 
     #[test]
+    fn people_followed_show_until_the_file_turns_them_off() {
+        assert!(Config::default().meta.following);
+        let cfg = Config::from_toml("[meta]\nfollowing = false").unwrap();
+        assert!(!cfg.meta.following);
+    }
+
+    #[test]
     fn hover_cards_are_on_until_the_file_turns_them_off() {
         assert!(Config::default().theme.hover_cards);
         let cfg = Config::from_toml("[theme]\nhover_cards = false").unwrap();
@@ -1828,6 +1856,7 @@ mod tests {
         let cfg = Config::default();
         assert_eq!(cfg.playback.up_next_countdown, 10, "Up Next counts down from ten");
         assert!(cfg.playback.spoiler_protection, "on by default");
+        assert!(cfg.playback.picture_in_picture, "floats on leaving by default");
         assert_eq!(cfg.downloads.quality, DownloadQuality::Standard);
         assert_eq!(cfg.downloads.keep_next, 0, "nothing kept unasked");
         assert!(!cfg.downloads.on_cellular && !cfg.providers.torrent.on_cellular);

@@ -126,3 +126,6 @@ settings-trailers-row = Riproduci i trailer
 settings-trailers-note-apple = I trailer vengono riprodotti senza audio da YouTube, che vede il tuo indirizzo IP. Non partono con la Modalità dati ridotti, con Riduci movimento attivo o in Modalità risparmio energia.
 language-restart = Riavvia
 language-next-open-note = { -app-name } userà la nuova lingua alla prossima apertura.
+settings-picture-in-picture-on-leave-apple = Picture in Picture all'uscita dall'app
+settings-picture-in-picture-on-leave-mac = Si avvia quando la finestra è ridotta a icona o { -app-name } è nascosta.
+settings-picture-in-picture-on-leave-ios = Serve anche Avvia PiP automaticamente in Impostazioni > Generali > Picture in Picture.

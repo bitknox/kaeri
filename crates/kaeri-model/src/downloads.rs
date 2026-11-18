@@ -28,6 +28,10 @@ pub struct DownloadRow {
     /// for: the row says "Downloaded ahead". One the viewer asks for again is theirs.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub ahead: bool,
+    /// Started while private mode was on, or of an always-private show: a notice of it names
+    /// no title and shows no art ("Downloading in Kaeri").
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub private: bool,
 }
 
 /// Where a download is in its life, as its row has it.

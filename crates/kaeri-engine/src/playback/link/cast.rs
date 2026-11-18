@@ -9,13 +9,17 @@
 
 use std::{
     path::{Path, PathBuf},
-    sync::{Arc, Mutex, PoisonError},
+    sync::{
+        Arc, Mutex, PoisonError,
+        atomic::{AtomicBool, Ordering},
+    },
+    time::Duration,
 };
 
 use async_trait::async_trait;
 use kaeri_cast::{
     CastDevice, CastFailure, CastLoad, CastPlayer, CastSetup, CastSource, CastSubtitle,
-    Metadata, SourceKind, Uncastable,
+    JoinCard, Metadata, SourceKind, Uncastable,
 };
 use kaeri_core::{
     stream::{Stream, StreamKind},
@@ -57,8 +61,32 @@ impl CastOpener {
 #[async_trait]
 impl PlayerOpener for CastOpener {
     /// Connect to the TV and open the relay it will read from. Nothing shows on the TV until the
-    /// first file loads, so a stream it can't play never takes it over.
+    /// first file loads, so a stream it can't play never takes it over. A TV a cast session
+    /// holds is already connected, its receiver up: the playback takes it over as it is.
     async fn open(&self, request: &PlaybackRequest) -> Result<Opened, LinkError> {
+        if self.hub.session_device().is_some_and(|d| d.id == self.device.id) {
+            // A play asked for while the TV connects goes to it once it is up.
+            self.hub.connecting(SESSION_CONNECT).await;
+        }
+        if let Some(player) = self.hub.held(&self.device.id) {
+            let events = player.events();
+            if !self.hub.attached(&player) {
+                self.hub.attach(&player);
+            }
+            if let Some(speed) = request.speed.filter(|s| (*s - 1.0).abs() > f64::EPSILON) {
+                let _ = player.set_rate(speed).await;
+            }
+            let link = CastLink {
+                player,
+                device: self.device.id.clone(),
+                name: self.device.name.clone(),
+                hub: Arc::clone(&self.hub),
+                file: Mutex::new(None),
+                held: Some(self.hub.claim()),
+                quit: AtomicBool::new(false),
+            };
+            return Ok((Box::new(link), events));
+        }
         // A TV this cast couldn't reach isn't tried again for the play's next stream.
         if let Some(failure) = lock(&self.unreached).clone() {
             return Err(LinkError(failure.to_string()));
@@ -70,6 +98,7 @@ impl PlayerOpener for CastOpener {
             encoder: self.hub.encoder(),
             timings: self.hub.timings(),
         };
+        let opening = self.hub.opening();
         let (player, events) = match CastPlayer::connect(setup).await {
             Ok(opened) => opened,
             Err(failure) => {
@@ -80,8 +109,11 @@ impl PlayerOpener for CastOpener {
                 return Err(LinkError(failure.to_string()));
             }
         };
+        // The receiver `cast.receiver` names, as a held session uses.
+        player.use_receiver(self.hub.receiver());
         let player = Arc::new(player);
         self.hub.attach(&player);
+        drop(opening);
         if let Some(speed) = request.speed.filter(|s| (*s - 1.0).abs() > f64::EPSILON) {
             let _ = player.set_rate(speed).await;
         }
@@ -91,6 +123,8 @@ impl PlayerOpener for CastOpener {
             name: self.device.name.clone(),
             hub: Arc::clone(&self.hub),
             file: Mutex::new(None),
+            held: None,
+            quit: AtomicBool::new(false),
         };
         Ok((Box::new(link), events))
     }
@@ -108,6 +142,9 @@ impl PlayerOpener for CastOpener {
     }
 }
 
+/// How long a play waits for a cast session that is still connecting.
+const SESSION_CONNECT: Duration = Duration::from_secs(30);
+
 /// The session's link to a cast.
 pub struct CastLink {
     player: Arc<CastPlayer>,
@@ -118,6 +155,11 @@ pub struct CastLink {
     hub: Arc<CastHub>,
     /// What the next load plays, from [`PlayerLink::prepare`].
     file: Mutex<Option<FileFacts>>,
+    /// On a player a cast session holds: this link's turn on it, from [`CastHub::claim`]. A
+    /// stop then stops the file and leaves the receiver up for the next play.
+    held: Option<u64>,
+    /// The viewer stopped this link's playback on a held player.
+    quit: AtomicBool,
 }
 
 impl CastLink {
@@ -143,6 +185,9 @@ pub fn notice(failure: &CastFailure, name: &str) -> Msg {
         CastFailure::TakenOver => Msg::NoticeCastTakenOver { name },
         CastFailure::NotSameNetwork => Msg::NoticeCastNotSameNetwork { name },
         CastFailure::Lost(_) => Msg::NoticeCastLost { name },
+        CastFailure::StoppedElsewhere => Msg::NoticeCastStoppedElsewhere { name },
+        CastFailure::Segment => Msg::NoticeCastSegment { name },
+        CastFailure::LostStream => Msg::NoticeCastLostStream { name },
     }
 }
 
@@ -192,6 +237,18 @@ fn episode_line(file: &FileFacts, language: Option<&str>) -> String {
         Some(tag) => line.text_in(tag),
         None => line.english(),
     }
+}
+
+/// What a phone that joins this cast opens its card by: the show and the episode, never the
+/// source. A show of the person's own making has an id only this device knows, so it goes
+/// without.
+fn join_card(file: &FileFacts) -> Option<JoinCard> {
+    (!file.id.is_own() && !file.episode.is_empty()).then(|| JoinCard {
+        id: file.id.get(),
+        episode: file.episode.clone(),
+        title: file.title.clone(),
+        episode_title: file.episode_title.clone().filter(|t| !t.is_empty()),
+    })
 }
 
 /// The resume point from mpv's per-file options.
@@ -247,6 +304,8 @@ impl PlayerLink for CastLink {
                         Some("ja".to_owned())
                     },
                     audio_track: None,
+                    audio_memory: file.audio_memory.clone(),
+                    card: join_card(&file),
                 }
             }
             // Not told what it is: played as a stream from its address alone.
@@ -260,6 +319,8 @@ impl PlayerLink for CastLink {
                 subtitle: None,
                 audio_language: None,
                 audio_track: None,
+                audio_memory: None,
+                card: None,
             },
         };
         self.player.load(load);
@@ -381,15 +442,28 @@ impl PlayerLink for CastLink {
     }
 
     async fn quit(&self) -> Result<(), LinkError> {
+        if let Some(turn) = self.held
+            && self.hub.holds(&self.player)
+        {
+            // The session goes on: the file stops, the receiver stays for the next play.
+            self.quit.store(true, Ordering::Relaxed);
+            if self.hub.owns(turn) {
+                let stopped = self.player.stop().await.map_err(failed);
+                self.player.detach();
+                self.hub.played_out();
+                return stopped;
+            }
+            return Ok(());
+        }
         self.player.quit().await.map_err(failed)
     }
 
     fn is_alive(&self) -> bool {
-        self.player.is_alive()
+        !self.quit.load(Ordering::Relaxed) && self.player.is_alive()
     }
 
     fn has_quit(&self) -> bool {
-        self.player.has_quit()
+        self.quit.load(Ordering::Relaxed) || self.player.has_quit()
     }
 
     async fn diagnostics(&self) -> Option<String> {
@@ -397,6 +471,22 @@ impl PlayerLink for CastLink {
     }
 
     async fn shutdown(self: Box<Self>) {
+        if let Some(turn) = self.held
+            && self.hub.holds(&self.player)
+        {
+            // The playback is over and the session isn't: the receiver stays up, showing its
+            // idle screen, for whatever plays next.
+            if self.hub.owns(turn) {
+                if !self.quit.load(Ordering::Relaxed)
+                    && let Err(e) = self.player.stop().await
+                {
+                    tracing::debug!(error = %e, "the TV didn't take the stop");
+                }
+                self.player.detach();
+                self.hub.played_out();
+            }
+            return;
+        }
         if let Err(e) = self.player.quit().await {
             tracing::debug!(error = %e, "the TV didn't take the stop");
         }
@@ -406,7 +496,10 @@ impl PlayerLink for CastLink {
         if self.player.failure().is_some_and(|f| {
             matches!(
                 f,
-                CastFailure::TakenOver | CastFailure::Lost(_) | CastFailure::NotSameNetwork
+                CastFailure::TakenOver
+                    | CastFailure::Lost(_)
+                    | CastFailure::StoppedElsewhere
+                    | CastFailure::NotSameNetwork
             )
         }) {
             self.hub.end();
@@ -481,12 +574,14 @@ mod tests {
         let mut file = FileFacts {
             source: stream.clone(),
             played: stream,
+            id: kaeri_core::ids::AnilistId::new(900_001),
             title: "Harbour Lights".into(),
             episode: "4".into(),
             episode_title: None,
             image: None,
             subtitle_language: None,
             dub: false,
+            audio_memory: None,
         };
         assert_eq!(episode_line(&file, None), "Episode 4");
         file.episode_title = Some(String::new());
@@ -542,6 +637,8 @@ mod tests {
             name: "Living room".into(),
             hub,
             file: Mutex::new(None),
+            held: None,
+            quit: AtomicBool::new(false),
         };
         let levels = || -> Vec<f64> {
             receiver
@@ -611,6 +708,8 @@ mod tests {
                     name: "Living room".into(),
                     hub,
                     file: Mutex::new(None),
+                    held: None,
+                    quit: AtomicBool::new(false),
                 })
             }
         };
@@ -685,6 +784,10 @@ mod tests {
             "Lost Living room, so casting stopped."
         );
         assert_eq!(
+            notice(&CastFailure::StoppedElsewhere, "Living room").english(),
+            "Living room stopped the cast."
+        );
+        assert_eq!(
             notice(&CastFailure::NeverFetches, "Living room").english(),
             "Living room didn't start reading the stream. A VPN or a firewall on this device \
              may be in the way."
@@ -705,15 +808,44 @@ mod tests {
         let file = FileFacts {
             source: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
             played: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
+            id: kaeri_core::ids::AnilistId::new(900_002),
             title: "Stardust Wayfarer".into(),
             episode: "3".into(),
             episode_title: Some("Low Tide".into()),
             image: None,
             subtitle_language: None,
             dub: false,
+            audio_memory: None,
         };
         assert_eq!(episode_line(&file, None), "Episode 3 · Low Tide");
         // A language the build lacks reads as English rather than failing.
         assert_eq!(episode_line(&file, Some("xx")), "Episode 3 · Low Tide");
+    }
+
+    #[test]
+    fn the_card_a_joined_phone_opens_names_the_show_and_never_one_of_its_own() {
+        let mut file = FileFacts {
+            source: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
+            played: Stream::new("https://cdn.example/1.m3u8", StreamKind::Hls),
+            id: kaeri_core::ids::AnilistId::new(900_002),
+            title: "Stardust Wayfarer".into(),
+            episode: "3".into(),
+            episode_title: Some(String::new()),
+            image: None,
+            subtitle_language: None,
+            dub: false,
+            audio_memory: None,
+        };
+        let card = join_card(&file).expect("a card");
+        assert_eq!((card.id, card.episode.as_str()), (900_002, "3"));
+        assert_eq!(card.title, "Stardust Wayfarer");
+        assert_eq!(card.episode_title, None, "an empty title is none");
+        let sent = serde_json::to_value(&card).unwrap();
+        let mut keys: Vec<_> = sent.as_object().unwrap().keys().cloned().collect();
+        keys.sort();
+        assert_eq!(keys, ["episode", "id", "title"], "nothing of the source or the person");
+        // A show of the person's own making is known only on this device.
+        file.id = kaeri_core::ids::AnilistId::own(4);
+        assert_eq!(join_card(&file), None);
     }
 }

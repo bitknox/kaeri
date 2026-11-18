@@ -115,6 +115,9 @@ tv-paired-on = Paired { $when }
 # Short word: paired, no date known.
 tv-paired = Paired
 
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = { -app-name } on Android TV
+
 # Line with the address.
 # @arg address: text
 tv-connected-at = Connected · { $address }
@@ -147,6 +150,12 @@ tv-status-connecting = Connecting to { $name }
 # Status on the remote: connection lost, trying again.
 # @arg name: text
 tv-status-reconnecting = Reconnecting to { $name }
+
+# Status on the remote and the cast mini player while the TV waits: for the stream, or
+# while the app learns why the TV stopped the cast. On Windows also while pairing, until
+# the named TV answers.
+# @arg name: text
+tv-waiting-for = Waiting for { $name }
 
 # Status on the remote: connected.
 tv-status-connected = Connected

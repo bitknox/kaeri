@@ -1,0 +1,17 @@
+private-mode = Приватный режим
+private-mode-detail = Ничего из того, что вы смотрите или читаете, не сохраняется и не синхронизируется, пока вы не выключите режим или не закроете { -app-name }.
+private-mode-limits = Ваши { -source-pl } и { -watch-party-pl } по-прежнему видят, что вы открываете.
+private-mode-on-notice = Приватный режим включён. Ничего не сохраняется и не синхронизируется до закрытия { -app-name }.
+action-turn-off = Выключить
+private-mode-shortcut-hint = Сочетание клавиш: { $keys }
+private-badge = Приватно
+private-badge-label = Приватный режим включён
+private-line-not-saved = Не сохраняется и не синхронизируется
+private-line-kept = Место запоминается до закрытия { -app-name }
+title-always-private = Всегда приватно
+show-always-private-detail = Это { -device } ничего не сохраняет и не синхронизирует из этого тайтла. Уже сохранённое остаётся.
+series-always-private-detail = Это { -device } ничего не сохраняет и не синхронизирует из этой серии. Уже сохранённое остаётся.
+now-playing-private = Воспроизводится в { -app-name }
+private-download-line = Загрузка в { -app-name }
+private-mode-on-announcement = Приватный режим включён
+private-mode-off-announcement = Приватный режим выключен

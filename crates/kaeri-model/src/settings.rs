@@ -40,6 +40,11 @@ pub enum SettingKey {
     Subtitles,
     CommitThreshold,
     AutoNext,
+    /// Whether the next episode's first seconds of video load during the ending on a limited
+    /// network (cellular, Low Data Mode, metered) too. Off by default: there only its streams,
+    /// subtitles and skip times are found ahead. Means nothing while [`Self::AutoNext`] is off,
+    /// so each app dims its row then, as it does Up next countdown's.
+    PreloadMetered,
     SkipOpening,
     /// Skip a recap by itself. Off by default, apart from the opening's own switch.
     SkipRecap,
@@ -94,6 +99,10 @@ pub enum SettingKey {
     UpNextCountdown,
     /// Blur the stills of unwatched episodes after the next one.
     SpoilerProtection,
+    /// Open the system's floating window when the person leaves the app while an episode
+    /// plays. On by default, this device's own. A row on the Mac, iPhone, iPad and Android
+    /// phone only: the terminal, the TV, Windows and Linux have no floating window.
+    PictureInPictureOnLeave,
     /// Which version of an episode a download takes: standard or higher.
     DownloadQuality,
     /// How many of a show's next episodes downloads keep, `0` for none.
@@ -166,6 +175,10 @@ pub enum SettingKey {
     /// Episode discussions: an episode's AniList forum thread, looked up once it counts as
     /// watched. On by default.
     EpisodeDiscussions,
+    /// Whether a title page shows where the people the signed-in AniList viewer follows are in
+    /// the show, and its episodes mark where each stopped. On by default, and this device's
+    /// alone: under the AniList account. Off, the page's request leaves them out.
+    ShowFollowing,
     /// Whether images in discussion comments load inline rather than as a line that opens them
     /// in the browser. Off by default; shown while discussions are on.
     CommentImages,
@@ -215,7 +228,7 @@ impl SettingKey {
     /// The Settings screen's rows, in display order. Grouped by [`Self::category`] — the
     /// renderer draws a heading each time the category changes, so rows of one category must
     /// be contiguous here.
-    pub const ROWS: [Self; 50] = [
+    pub const ROWS: [Self; 51] = [
         Self::Theme,
         Self::Motion,
         Self::Titles,
@@ -225,6 +238,7 @@ impl SettingKey {
         Self::Subtitles,
         Self::CommitThreshold,
         Self::AutoNext,
+        Self::PreloadMetered,
         Self::SkipOpening,
         Self::SkipRecap,
         Self::AskWasOpening,
@@ -271,9 +285,10 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 32] = [
+    pub const NATIVE_ROWS: [Self; 34] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
+        Self::PictureInPictureOnLeave,
         Self::DownloadQuality,
         Self::KeepNextEpisodes,
         Self::DownloadsOnCellular,
@@ -282,6 +297,7 @@ impl SettingKey {
         Self::MpvOptions,
         Self::AdultTitles,
         Self::EpisodeDiscussions,
+        Self::ShowFollowing,
         Self::CommentImages,
         Self::ControllerInput,
         Self::SwapFaceButtons,
@@ -318,6 +334,7 @@ impl SettingKey {
             Self::Trailers => (&["theme"], "trailers"),
             Self::AdultTitles => (&["meta"], "adult"),
             Self::EpisodeDiscussions => (&["meta"], "discussions"),
+            Self::ShowFollowing => (&["meta"], "following"),
             Self::CommentImages => (&["meta"], "discussion_images"),
             Self::ControllerInput => (&["controller"], "enabled"),
             Self::SwapFaceButtons => (&["controller"], "swap_face"),
@@ -342,6 +359,7 @@ impl SettingKey {
             Self::Subtitles => (&["playback"], "subtitle_language"),
             Self::CommitThreshold => (&["playback"], "commit_threshold"),
             Self::AutoNext => (&["playback"], "auto_next"),
+            Self::PreloadMetered => (&["playback"], "preload_metered"),
             Self::SkipOpening => (&["playback"], "skip_opening"),
             Self::SkipRecap => (&["playback"], "skip_recap_auto"),
             Self::AskWasOpening => (&["playback"], "ask_was_opening"),
@@ -373,6 +391,7 @@ impl SettingKey {
             Self::SourceOrder => (&["providers"], "order"),
             Self::UpNextCountdown => (&["playback"], "up_next_countdown"),
             Self::SpoilerProtection => (&["playback"], "spoiler_protection"),
+            Self::PictureInPictureOnLeave => (&["playback"], "picture_in_picture"),
             Self::DownloadQuality => (&["downloads"], "quality"),
             Self::KeepNextEpisodes => (&["downloads"], "keep_next"),
             Self::DownloadsOnCellular => (&["downloads"], "on_cellular"),
@@ -441,6 +460,7 @@ impl SettingKey {
             Self::Subtitles => dst.subtitle_language.clone_from(&src.subtitle_language),
             Self::CommitThreshold => dst.commit_threshold = src.commit_threshold,
             Self::AutoNext => dst.auto_next = src.auto_next,
+            Self::PreloadMetered => dst.preload_metered = src.preload_metered,
             Self::SkipOpening => dst.skip_opening = src.skip_opening,
             Self::SkipRecap => dst.skip_recap_auto = src.skip_recap_auto,
             Self::AskWasOpening => dst.ask_was_opening = src.ask_was_opening,
@@ -482,6 +502,7 @@ impl SettingKey {
             Self::UpdateBeta => to.updates.beta = from.updates.beta,
             Self::AdultTitles => to.meta.adult = from.meta.adult,
             Self::EpisodeDiscussions => to.meta.discussions = from.meta.discussions,
+            Self::ShowFollowing => to.meta.following = from.meta.following,
             Self::CommentImages => to.meta.discussion_images = from.meta.discussion_images,
             Self::ControllerInput => to.controller.enabled = from.controller.enabled,
             Self::SwapFaceButtons => to.controller.swap_face = from.controller.swap_face,
@@ -512,6 +533,7 @@ impl SettingKey {
             Self::SourceOrder => to.providers.order.clone_from(&from.providers.order),
             Self::UpNextCountdown => dst.up_next_countdown = src.up_next_countdown,
             Self::SpoilerProtection => dst.spoiler_protection = src.spoiler_protection,
+            Self::PictureInPictureOnLeave => dst.picture_in_picture = src.picture_in_picture,
             Self::DownloadQuality => to.downloads.quality = from.downloads.quality,
             Self::KeepNextEpisodes => to.downloads.keep_next = from.downloads.keep_next,
             Self::DownloadsOnCellular => to.downloads.on_cellular = from.downloads.on_cellular,
@@ -584,6 +606,7 @@ impl SettingKey {
             | Self::Subtitles
             | Self::CommitThreshold
             | Self::AutoNext
+            | Self::PreloadMetered
             | Self::SkipOpening
             | Self::SkipRecap
             | Self::AskWasOpening
@@ -607,7 +630,8 @@ impl SettingKey {
             | Self::StyledSubtitles
             | Self::FollowSystemCaptions
             | Self::UpNextCountdown
-            | Self::SpoilerProtection => "playback",
+            | Self::SpoilerProtection
+            | Self::PictureInPictureOnLeave => "playback",
             Self::DownloadDir
             | Self::MergeSubtitles
             | Self::KeepSeeding
@@ -644,6 +668,7 @@ impl SettingKey {
             | Self::UpdateCheck
             | Self::UpdateBeta
             | Self::EpisodeDiscussions
+            | Self::ShowFollowing
             | Self::CommentImages
             | Self::CastTvs => "integrations",
             Self::EpisodeNotifications
@@ -665,6 +690,7 @@ impl SettingKey {
             Self::Subtitles => "subtitles",
             Self::CommitThreshold => "counts as watched at",
             Self::AutoNext => "auto-play next",
+            Self::PreloadMetered => "preload on metered",
             // With this on, the opening is skipped, not proposed. mpv shows
             // a note on its own OSD as it happens, which is a courtesy, not a prompt.
             Self::SkipOpening => "skip opening automatically",
@@ -700,6 +726,7 @@ impl SettingKey {
             Self::SourceOrder => "source order",
             Self::UpNextCountdown => "up next countdown",
             Self::SpoilerProtection => "spoiler protection",
+            Self::PictureInPictureOnLeave => "picture in picture when leaving the app",
             // Not "quality", which is playback's: the toast that says it was saved would not
             // say which.
             Self::DownloadQuality => "download quality",
@@ -725,6 +752,7 @@ impl SettingKey {
             Self::TorrentsOnCellular => "torrents on cellular",
             Self::AdultTitles => "adult titles",
             Self::EpisodeDiscussions => "episode discussions",
+            Self::ShowFollowing => "show people you follow",
             Self::CommentImages => "load images in comments",
             Self::ControllerInput => "use a controller",
             Self::SwapFaceButtons => "swap a and b",
@@ -1015,6 +1043,7 @@ pub fn step(
             V::Float(f64::from(step_through(&LADDER, current, delta)) / 100.0)
         }
         SettingKey::AutoNext => V::Bool(!playback.auto_next),
+        SettingKey::PreloadMetered => V::Bool(!playback.preload_metered),
         SettingKey::Upscaling => {
             const LADDER: [Upscaling; 3] =
                 [Upscaling::Off, Upscaling::Natural, Upscaling::Sharp];
@@ -1066,6 +1095,7 @@ pub fn step(
             V::Int(i64::from(step_through(&LADDER, playback.up_next_countdown, delta)))
         }
         SettingKey::SpoilerProtection => V::Bool(!playback.spoiler_protection),
+        SettingKey::PictureInPictureOnLeave => V::Bool(!playback.picture_in_picture),
         SettingKey::DownloadQuality => V::Str(
             match effective.downloads.quality {
                 DownloadQuality::Standard => "higher",
@@ -1119,6 +1149,7 @@ pub fn step(
         SettingKey::EpisodeNotifications => V::Bool(!effective.notifications.episodes),
         SettingKey::AdultTitles => V::Bool(!effective.meta.adult),
         SettingKey::EpisodeDiscussions => V::Bool(!effective.meta.discussions),
+        SettingKey::ShowFollowing => V::Bool(!effective.meta.following),
         SettingKey::CommentImages => V::Bool(!effective.meta.discussion_images),
         SettingKey::ControllerInput => V::Bool(!effective.controller.enabled),
         SettingKey::SwapFaceButtons => V::Bool(!effective.controller.swap_face),
@@ -1226,6 +1257,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             playback.commit_threshold = *threshold;
         }
         (SettingKey::AutoNext, V::Bool(on)) => playback.auto_next = *on,
+        (SettingKey::PreloadMetered, V::Bool(on)) => playback.preload_metered = *on,
         (SettingKey::SkipOpening, V::Bool(on)) => playback.skip_opening = *on,
         (SettingKey::SkipRecap, V::Bool(on)) => playback.skip_recap_auto = *on,
         (SettingKey::AskWasOpening, V::Bool(on)) => playback.ask_was_opening = *on,
@@ -1301,6 +1333,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             playback.up_next_countdown = seconds;
         }
         (SettingKey::SpoilerProtection, V::Bool(on)) => playback.spoiler_protection = *on,
+        (SettingKey::PictureInPictureOnLeave, V::Bool(on)) => playback.picture_in_picture = *on,
         (SettingKey::DownloadQuality, V::Str(name)) => {
             config.downloads.quality = match name.as_str() {
                 "standard" => DownloadQuality::Standard,
@@ -1374,6 +1407,7 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         (SettingKey::EpisodeNotifications, V::Bool(on)) => config.notifications.episodes = *on,
         (SettingKey::AdultTitles, V::Bool(on)) => config.meta.adult = *on,
         (SettingKey::EpisodeDiscussions, V::Bool(on)) => config.meta.discussions = *on,
+        (SettingKey::ShowFollowing, V::Bool(on)) => config.meta.following = *on,
         (SettingKey::CommentImages, V::Bool(on)) => config.meta.discussion_images = *on,
         (SettingKey::ControllerInput, V::Bool(on)) => config.controller.enabled = *on,
         (SettingKey::SwapFaceButtons, V::Bool(on)) => config.controller.swap_face = *on,
@@ -1477,6 +1511,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             format!("{}%", (playback.commit_threshold * 100.0).round())
         }
         SettingKey::AutoNext => on_off(playback.auto_next),
+        SettingKey::PreloadMetered => on_off(playback.preload_metered),
         SettingKey::SkipOpening => on_off(playback.skip_opening),
         SettingKey::SkipRecap => on_off(playback.skip_recap_auto),
         SettingKey::AskWasOpening => on_off(playback.ask_was_opening),
@@ -1541,6 +1576,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
             seconds => format!("{seconds} s"),
         },
         SettingKey::SpoilerProtection => on_off(playback.spoiler_protection),
+        SettingKey::PictureInPictureOnLeave => on_off(playback.picture_in_picture),
         SettingKey::DownloadQuality => match effective.downloads.quality {
             DownloadQuality::Standard => "standard",
             DownloadQuality::Higher => "higher",
@@ -1584,6 +1620,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::EpisodeNotifications => on_off(effective.notifications.episodes),
         SettingKey::AdultTitles => on_off(effective.meta.adult),
         SettingKey::EpisodeDiscussions => on_off(effective.meta.discussions),
+        SettingKey::ShowFollowing => on_off(effective.meta.following),
         SettingKey::CommentImages => on_off(effective.meta.discussion_images),
         SettingKey::ControllerInput => on_off(effective.controller.enabled),
         SettingKey::SwapFaceButtons => on_off(effective.controller.swap_face),
@@ -1661,6 +1698,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::PlayerUi => c.playback.player_ui == PlayerUi::Mpv,
         S::Motion => c.theme.motion,
         S::AutoNext => c.playback.auto_next,
+        S::PreloadMetered => c.playback.preload_metered,
         S::SkipOpening => c.playback.skip_opening,
         S::SkipRecap => c.playback.skip_recap_auto,
         S::AskWasOpening => c.playback.ask_was_opening,
@@ -1681,6 +1719,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::UpdateCheck => c.updates.check,
         S::UpdateBeta => c.updates.beta,
         S::SpoilerProtection => c.playback.spoiler_protection,
+        S::PictureInPictureOnLeave => c.playback.picture_in_picture,
         S::DownloadQuality => {
             c.downloads.quality == kaeri_core::config::DownloadQuality::Higher
         }
@@ -1698,6 +1737,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::EpisodeNotifications => c.notifications.episodes,
         S::AdultTitles => c.meta.adult,
         S::EpisodeDiscussions => c.meta.discussions,
+        S::ShowFollowing => c.meta.following,
         S::CommentImages => c.meta.discussion_images,
         S::ControllerInput => c.controller.enabled,
         S::SwapFaceButtons => c.controller.swap_face,
@@ -1954,6 +1994,30 @@ mod tests {
     }
 
     #[test]
+    fn picture_in_picture_on_leave_is_a_playback_switch_kept_on_this_device() {
+        let default = Config::default();
+        let key = SettingKey::PictureInPictureOnLeave;
+        assert_eq!(value(&default, &default, key), "on");
+        assert_eq!(SettingKey::at(&["playback"], "picture_in_picture"), Some(key));
+        assert_eq!(key.category(), "playback");
+        assert!(!SettingKey::ROWS.contains(&key), "the terminal shows no row");
+        assert_eq!(step(&default, &default, key, 1), Some(SettingValue::Bool(false)));
+
+        let mut off = Config::default();
+        assert!(put(&mut off, key, &SettingValue::Bool(false)));
+        assert!(!off.playback.picture_in_picture);
+        assert_eq!(value(&off, &off, key), "off");
+        assert!(
+            !kaeri_core::shared_settings::is_shared(&["playback"], "picture_in_picture"),
+            "a device's own: it never follows the person to another device"
+        );
+
+        let mut copied = Config::default();
+        key.copy(&off, &mut copied);
+        assert!(!copied.playback.picture_in_picture);
+    }
+
+    #[test]
     fn trailers_step_from_always_to_wifi_only_to_off_under_the_titles_row() {
         let default = Config::default();
         let trailers = |config: &Config| value(config, config, SettingKey::Trailers);
@@ -2032,6 +2096,7 @@ mod tests {
             [
                 (SettingKey::UpNextCountdown, "10 s"),
                 (SettingKey::SpoilerProtection, "on"),
+                (SettingKey::PictureInPictureOnLeave, "on"),
                 (SettingKey::DownloadQuality, "standard"),
                 (SettingKey::KeepNextEpisodes, "off"),
                 (SettingKey::DownloadsOnCellular, "off"),
@@ -2040,6 +2105,7 @@ mod tests {
                 (SettingKey::MpvOptions, "none"),
                 (SettingKey::AdultTitles, "off"),
                 (SettingKey::EpisodeDiscussions, "on"),
+                (SettingKey::ShowFollowing, "on"),
                 (SettingKey::CommentImages, "off"),
                 (SettingKey::ControllerInput, "on"),
                 (SettingKey::SwapFaceButtons, "off"),

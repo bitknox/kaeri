@@ -3,6 +3,7 @@
 import KaeriKit
 import KaeriPlayerUI
 import KaeriStore
+import KaeriStrings
 import KaeriUI
 import Foundation
 import Observation
@@ -33,10 +34,9 @@ final class AppDelegate: NSObject {
     private var temporary: URL?
     /// The episode playing, handed off to your other devices; it pauses here when one takes it.
     private let playing: PlayingActivity
-    #if os(macOS)
-    /// Now Playing and the media keys for a TV this Mac drives, while its own player is down.
+    /// Now Playing and the remote commands for a TV this device casts to or drives, while its own
+    /// player is down: the media keys on the Mac, the Lock Screen on iPhone and iPad.
     private let tvNowPlaying: TVNowPlaying
-    #endif
 
     override init() {
         let store = AppStore()
@@ -53,9 +53,16 @@ final class AppDelegate: NSObject {
             downloading: { [weak store] in store?.continued.stage == .running })
         device = DeviceWatch(send: { [weak store] command in store?.send(command) })
         playing = player.playingActivity { [weak store] id in store?.titles[id]?.showTitle }
-        #if os(macOS)
-        tvNowPlaying = TVNowPlaying(tv: store.tv, player: player)
-        #endif
+        // The art: the episode's still, else the show's banner or cover, as the cast's mini has it.
+        let art = NowPlayingArt(
+            url: { [weak store] id, still in
+                still ?? id.flatMap { store?.titles[$0] }.flatMap { $0.bannerUrl ?? $0.coverUrl }
+            },
+            image: { [weak store] url in store?.artwork?.image(url) },
+            fetch: { [weak store] url in await store?.artwork?.show(url, maxPixelSize: 1024) })
+        tvNowPlaying = TVNowPlaying(tv: store.tv, player: player, art: art) { [weak store] in
+            store?.privacy.holds(show: $0) ?? false
+        }
         super.init()
         player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
         #if FIXTURES
@@ -313,6 +320,8 @@ final class AppDelegate: NSObject {
         if let scene = SyncScene.named() {
             ready = await store.sync.stage(scene, store: store) && ready
         }
+        // A screenshot of private mode: on, with its notice, or a title always private.
+        if let scene = PrivateScene.named() { await store.stage(scene) }
         // A screenshot of a prelaunch state: what came in, the demo, or the first-run join.
         if let scene = PrelaunchScene.named() {
             store.cameIn.stage(scene)
@@ -333,6 +342,8 @@ final class AppDelegate: NSObject {
         if let scene = TogetherScene.named() {
             ready = await store.party.stage(scene, store: store) && ready
         }
+        // A screenshot of a missing episode: Check again pressed, and its answer in.
+        ready = await store.stageCheckAgain() && ready
         #endif
         if ready {
             print("KAERI_READY")
@@ -445,6 +456,20 @@ extension AppDelegate: NSApplicationDelegate {
     /// Quitting in a watch party leaves it: asked first, with Stay the default.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
         if store.party.asksBeforeQuitting() { return .terminateCancel }
+        if store.tv.cast.connected {
+            // This Mac serves the episode: quitting ends it on the TV, so it asks first.
+            let name = store.tv.cast.heldName
+            let alert = NSAlert()
+            alert.messageText = L.castQuitTitle(name: name)
+            alert.informativeText = L.castQuitBody(name: name)
+            alert.addButton(withTitle: L.castQuitAction)
+            alert.addButton(withTitle: L.actionCancel)
+            // Quit from the Dock leaves another app in front: the question comes forward with
+            // the app, rather than waiting unseen behind it.
+            NSApp.activate()
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            store.tv.cast.disconnect()
+        }
         guard store.hasEngine else { return .terminateNow }
         // The windows go first and the engine winds down off the main thread, for at most four
         // seconds, so quitting does not look like a hang.

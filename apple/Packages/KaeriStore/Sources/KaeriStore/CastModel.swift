@@ -67,22 +67,75 @@ public final class CastModel {
     public private(set) var request: TVPlayRequest?
     /// The row picked, for Try again.
     public private(set) var key: String?
-    public private(set) var tvName = ""
+    public internal(set) var tvName = ""
     /// The TV has played something in this cast.
     public private(set) var played = false
     /// Where the TV last was, and in what episode, for Play here once the cast has ended.
     public private(set) var lastPosition: Double?
     /// Something the picker has to say about a pick that didn't start.
-    public private(set) var problem: String?
+    public internal(set) var problem: String?
 
     /// The cast's card closed by itself: someone else took the TV.
     @ObservationIgnored var closed: (@MainActor () -> Void)?
-    /// Post a notice: someone else took the TV.
+    /// Post a notice: the cast ended by itself, or a note while it plays.
     @ObservationIgnored public var say: (@MainActor (Notice) -> Void)?
+    /// Keep a notice in Messages without putting it up: the controller says it already.
+    @ObservationIgnored public var keep: (@MainActor (Notice) -> Void)?
+    /// Take that notice down again, if it still shows: a new cast started.
+    @ObservationIgnored public var unsay: (@MainActor (Notice) -> Void)?
+    /// The notice said when the cast ended by itself, until a new cast starts.
+    @ObservationIgnored private var offerNotice: Notice?
     /// Play an episode here, from a position when there is one: Play here.
     @ObservationIgnored public var playLocally: (@MainActor (AnilistId, String, Double?) -> Void)?
     /// What a pick starts, on the engine's sender; the Fixtures app scripts it instead.
     @ObservationIgnored var opener: (@MainActor (String, TVPlayRequest) throws -> any FfiCastSessionProtocol)?
+
+    // MARK: The session
+
+    /// The cast session as the engine last drew it: the TV held, and what plays there. Nil
+    /// while no TV is held.
+    public internal(set) var held: FfiCastSessionView?
+    /// The cast button, as the engine draws it: hidden while no TV is found.
+    public internal(set) var button: FfiCastButton = .hidden
+    /// The session joins one left running on the TV, rather than one this device asked for:
+    /// the mini says Reconnecting until it has.
+    public internal(set) var rejoining = false
+    /// What the TV last played, kept across launches, for the mini while it joins again.
+    public internal(set) var lastItem: CastLastItem?
+    /// What the TV last played and where, for Play here once it dropped off.
+    @ObservationIgnored var lastPlayed: TVPlayRequest?
+    /// The chooser, the connected dialog and the expanded controller, as the button and the
+    /// mini open them.
+    public var chooserShown = false
+    public var dialogShown = false
+    public var expanded = false {
+        didSet {
+            // A cast that doesn't say what it plays has no remote: the mini's controls drive it.
+            if expanded, !opensRemote {
+                expanded = false
+                return
+            }
+            if oldValue, !expanded { controllerClosed() }
+        }
+    }
+    /// The TV has waited 600 ms for the stream, or while a stop on the TV is heard: the line says
+    /// Waiting for, and the controls dim. A shorter wait shows nothing.
+    public internal(set) var waitingShown = false
+    @ObservationIgnored var waitingSoon: Task<Void, Never>?
+    /// When `held` last changed, for the playhead to move on from.
+    public internal(set) var heldAt = Date.now
+    /// The engine's side of the session; the Fixtures app scripts one.
+    @ObservationIgnored public internal(set) var link: (any CastSessionLink)?
+    @ObservationIgnored var watching: Task<Void, Never>?
+    /// This device asked for the connect under way: it is not a session joined again.
+    @ObservationIgnored var asked = false
+    /// Open the controller when the next play starts on the TV.
+    @ObservationIgnored var expandOnPlay = false
+    /// iPhone and iPad: the app is in the background, the cast's audio session runs, and the
+    /// engine was told the app is away. See `scene(active:)`.
+    @ObservationIgnored var inBackground = false
+    @ObservationIgnored var audioRunning = false
+    @ObservationIgnored var sentAway = false
 
     @ObservationIgnored private var cards: Task<Void, Never>?
     @ObservationIgnored private var leaving: [String: Task<Void, Never>] = [:]
@@ -103,6 +156,11 @@ public final class CastModel {
             try sender.cast(key: key, id: request.id, episode: request.episode, position: request.from)
         }
         if let running = sender.castSession() { follow(running, request: nil) }
+        if let watch = sender.castWatch() {
+            // The receiver's own lines name this device: Waiting for the iPhone.
+            sender.castSetDevice(word: TVRemoteModel.deviceWord)
+            hold(EngineCastLink(sender: sender, watch: watch))
+        }
     }
 
     /// The browse started or stopped. Stopping forgets what it found at once, with no row
@@ -164,13 +222,20 @@ public final class CastModel {
     }
 
     /// Read `session`'s cards until it ends.
-    private func follow(_ session: any FfiCastSessionProtocol, request: TVPlayRequest?) {
+    func follow(_ session: any FfiCastSessionProtocol, request: TVPlayRequest?) {
         cards?.cancel()
+        // What the TV was taken from is over: its notice and Play here go.
+        offered = nil
+        if let said = offerNotice {
+            offerNotice = nil
+            unsay?(said)
+        }
         self.session = session
         self.request = request
         if tvName.isEmpty || request == nil { tvName = session.deviceName() }
         played = false
         lastPosition = request?.from
+        cardNote = nil
         take(session.card())
         keepAwake(true)
         cards = Task { [weak self, session] in
@@ -181,8 +246,10 @@ public final class CastModel {
         }
     }
 
-    /// The card the engine read. Someone else taking the TV closes it, with a notice that
-    /// offers to play on here.
+    /// The card the engine read. A cast that ends by itself (someone else took the TV, the TV
+    /// was lost, or it was stopped on the TV) closes its card, with a notice that offers to play
+    /// on here. With the controller open, the controller says so instead, Messages keeps it,
+    /// and the card closes with the controller.
     func take(_ next: FfiCastCard) {
         let before = stage
         let same = card.map { $0.card.now?.position == next.card.now?.position && $0.card.now?.paused == next.card.now?.paused } ?? false
@@ -192,17 +259,54 @@ public final class CastModel {
         let after = stage
         if after == .playing { played = true }
         if after != before, after == .stopped || after == .failed { keepAwake(false) }
-        if after == .stopped, let notice = next.notice, case .noticeCastTakenOver = notice {
-            let carried = endedPlay
-            end()
-            closed?()
-            say?(Notice(kind: .info, text: notice.text, hint: nil, msg: notice))
-            takenOver = carried
+        if let note = next.note, note != cardNote, !sessionNotes {
+            // A cast from Play on TV holds no session, so its card carries the note: the TV plays
+            // it in its own player. A held session says it itself.
+            say?(Notice(kind: .info, text: note.text, hint: nil, msg: note))
+        }
+        cardNote = next.note
+        guard after == .stopped, before != .stopped, let notice = next.notice, Self.offersPlayHere(notice) else { return }
+        let said = Notice(kind: .info, text: notice.text, hint: nil, msg: notice)
+        if expanded, !Self.takenOver(notice) {
+            keep?(said)
+            return
+        }
+        let carried = endedPlay
+        end()
+        closed?()
+        say?(said)
+        offerNotice = said
+        offered = carried
+    }
+
+    /// The note the cast's last card carried, for saying a new one once as it first reads.
+    @ObservationIgnored private var cardNote: Msg?
+
+    /// The session's view carries the note, as it does while it plays or is connected.
+    private var sessionNotes: Bool { held?.state == .playing || held?.state == .connected }
+
+    /// Whether `notice` ends a cast that played by itself, and offers Play here: someone else
+    /// took the TV, the TV was lost, or the cast was stopped on the TV.
+    public static func offersPlayHere(_ notice: Msg?) -> Bool {
+        switch notice {
+        case .noticeCastTakenOver?, .noticeCastLost?, .noticeCastStoppedElsewhere?: true
+        default: false
         }
     }
 
-    /// What Play here plays once someone else took the TV: offered by the notice.
-    public private(set) var takenOver: TVPlayRequest?
+    private static func takenOver(_ notice: Msg) -> Bool {
+        if case .noticeCastTakenOver = notice { return true }
+        return false
+    }
+
+    /// The controller closed on a cast that ended by itself: the card goes with it.
+    func controllerClosed() {
+        guard active, stage == .stopped, Self.offersPlayHere(card?.notice) else { return }
+        end()
+    }
+
+    /// What Play here plays once the cast ended by itself: offered by the notice.
+    public private(set) var offered: TVPlayRequest?
 
     /// What the cast plays, from where the TV is: for another TV.
     public var carried: TVPlayRequest? {
@@ -226,11 +330,13 @@ public final class CastModel {
     }
 
     /// The card's line: while an episode starts, the engine's phase line, which counts the
-    /// seconds from four on; playing; or why it ended.
+    /// seconds from four on; playing or paused, as the mini's line says; or why it ended.
     public var line: String {
         switch stage {
         case .playing:
-            return L.tvStatusPlaying(name: tvName)
+            if card?.reconnecting == true { return L.tvStatusReconnecting(name: tvName) }
+            let paused = item.map(\.paused) ?? card?.card.now?.paused ?? false
+            return paused ? L.castStatusPaused(name: tvName) : L.tvStatusPlaying(name: tvName)
         case .failed:
             return L.castCouldntStart(name: tvName)
         case .stopped:
@@ -278,15 +384,18 @@ public final class CastModel {
     /// The card's controls reach the TV: it plays this cast.
     public var live: Bool { stage == .playing }
 
-    /// Whether the TV's volume is its own, with mute alone here.
-    public var fixedVolume: Bool { card?.volumeControl == .muteOnly }
-    public var muted: Bool { card?.muted ?? false }
+    /// Whether the TV's volume is its own: no level is set from here.
+    public var fixedVolume: Bool { card?.volumeControl == .fixed }
+    /// Whether a mute reaches the TV's sound: not where the TV's own volume is in charge, nor once
+    /// the TV refused one.
+    public var canMute: Bool { card?.canMute ?? true }
+    public var muted: Bool { canMute && card?.muted == true }
 
     /// Where the TV's playhead is now: moved on from the card on this device's clock while it
     /// plays.
     public func playhead(at date: Date = .now) -> Double? {
         guard let now = card?.card.now, !now.loading else { return nil }
-        guard live else { return now.position }
+        guard live, card?.reconnecting != true else { return now.position }
         return tvPlayhead(now: now, elapsed: max(0, date.timeIntervalSince(cardAt)))
     }
 
@@ -304,10 +413,10 @@ public final class CastModel {
         playLocally?(play.id, play.episode, position ?? play.from)
     }
 
-    /// Play here, from the notice that said someone else took the TV.
-    public func playHereAfterTakeOver() {
-        guard let play = takenOver else { return }
-        takenOver = nil
+    /// Play here, from the notice that said the cast ended by itself.
+    public func playHereFromNotice() {
+        guard let play = offered else { return }
+        offered = nil
         playLocally?(play.id, play.episode, play.from)
     }
 
@@ -343,7 +452,7 @@ public final class CastModel {
         stop()
     }
 
-    private func end() {
+    func end() {
         cards?.cancel()
         cards = nil
         session = nil

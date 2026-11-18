@@ -33,6 +33,21 @@ notice-cast-not-same-network = [Ţĥîš ðéṽîçé îšñ'ţ öñ ţĥé ñ�
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = [Ļöšţ { $name }, šö çàšţîñĝ šţöþþéð.~~~~~~~~~]
 
+# The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.
+notice-cast-stopped-elsewhere = [{ $name } šţöþþéð ţĥé çàšţ.~~~~~~~]
+
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = [{ $name } šţöþþéð ĝéţţîñĝ ţĥé šţŕéàɱ: ţĥé šöüŕçé ðîðñ'ţ àñšŵéŕ ƒöŕ þàŕţ öƒ ţĥé éþîšöðé. Ţŕý àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = [{ $name } ļöšţ ţĥé šţŕéàɱ ƒŕöɱ ţĥîš ðéṽîçé. Çĥéçķ ţĥàţ ƀöţĥ àŕé öñ ţĥé šàɱé ñéţŵöŕķ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = [Šüƀţîţļéš öñ { $name } šĥöŵ àš þļàîñ ţéẋţ. Ţýþéšéţ šüƀţîţļéš ŵéŕé ţöö ɱüçĥ ƒöŕ îţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.
+notice-cast-fallback = [{ $name } þļàýš ţĥîš îñ îţš öŵñ þļàýéŕ. Šüƀţîţļéš šĥöŵ àš þļàîñ ţéẋţ.~~~~~~~~~~~~~~~~~~~]
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = [Ţĥàţ ŢṼ îš ñö ļöñĝéŕ öñ ţĥé ñéţŵöŕķ.~~~~~~~~~~~]
 
@@ -268,6 +283,16 @@ cause-release-failed = [Çöüļðñ'ţ šţàŕţ ţĥàţ ŕéļéàšé: { $d
 # Reason: a play waited too long for its sources to give it a stream, and gave up.
 cause-sources-timed-out = [Ţĥé šöüŕçéš ţööķ ţöö ļöñĝ ţö àñšŵéŕ. Ţŕý àĝàîñ, öŕ çĥööšé àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~~~~]
 
+# Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+cause-sources-unreached = [Çöüļðñ'ţ ŕéàçĥ { $names }. Ţŕý àĝàîñ, öŕ çĥööšé àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~]
+
+# Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+cause-sources-not-asked =
+    { $count ->
+        [one] [Ñö šöüŕçé ţĥàţ ŵàš àšķéð ĥàš éþîšöðé { $episode }. { $names } ŵàšñ'ţ àšķéð.~~~~~~~~~~~~~~~~~~]
+       *[other] [Ñö šöüŕçé ţĥàţ ŵàš àšķéð ĥàš éþîšöðé { $episode }. { $names } ŵéŕéñ'ţ àšķéð.~~~~~~~~~~~~~~~~~~]
+    }
+
 # Reason: every source matched the title but none has the episode. The detail is what each said.
 cause-no-source-has-episode = [Ñö šöüŕçé ĥàš éþîšöðé { $episode }: { $detail }~~~~~~~~~]
 
@@ -329,6 +354,12 @@ notice-player-failed-to-start = [Çöüļðñ'ţ šţàŕţ ɱþṽ. Çĥéçķ 
 
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = [Ñö ṽîðéö ƒŕöɱ ţĥàţ šţŕéàɱ. Ţŕýîñĝ { $next } öƒ { $total }.~~~~~~~~~~~~~~]
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = [Ţĥé šţŕéàɱ ƀŕöķé öƒƒ. { $source } ţööķ öṽéŕ àţ ţĥé šàɱé þöîñţ.~~~~~~~~~~~~~~~~~]
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = [Ţĥé šţŕéàɱ ƀŕöķé öƒƒ. Åñöţĥéŕ šţŕéàɱ ƒŕöɱ { $source } ţööķ öṽéŕ àţ ţĥé šàɱé þöîñţ.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = [ɱþṽ çöüļðñ'ţ þļàý ţĥîš. { $reason }~~~~~~~~~]
@@ -904,6 +935,9 @@ reading-row-queued = [Ǫüéüéð~~]
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = [Ǫüéüéð · ŵàîţš ƒöŕ Ŵî-Ƒî~~~~~~~~]
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = [Ǫüéüéð · ŵàîţš ƒöŕ ŕööɱ~~~~~~~]
+
 # A chapter row's state while it downloads.
 reading-row-downloading = [Ðöŵñļöàðîñĝ · { $done } öƒ { $total } þàĝéš~~~~~~~~~]
 
@@ -1081,6 +1115,13 @@ reading-dl-failed = [Çĥàþţéŕ { $chapter } çöüļðñ'ţ ðöŵñļöà�
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = [Öƒƒļîñé~~~]
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+        [one] [Ñö ŕööɱ ļéƒţ. Îţ ðöŵñļöàðš öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~]
+       *[other] [Ñö ŕööɱ ļéƒţ. Ţĥéý ðöŵñļöàð öñçé šöɱé šþàçé îš ƒŕéé.~~~~~~~~~~~~~~~~]
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = [Åƀöüţ { $size }~~~]
@@ -3144,6 +3185,9 @@ episodes-release-dub = [Ðüƀƀéð~~]
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = [Çüŕŕéñţ þîçķ~~~~]
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = [Çĥéçķîñĝ ýöüŕ šöüŕçéš…~~~~~~~]
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = [Šĥöŵ ķéýš~~~]
 
@@ -3395,6 +3439,12 @@ keys-hint-stop = [Šţöþ~~]
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = [Þļàý ñéẋţ~~~]
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = [Çĥéçķ àĝàîñ~~~~]
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = [Þļàý éþîšöðé { $episode }~~~~~]
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = [Éþîšöðéš~~~]
@@ -4558,6 +4608,9 @@ settings-label-fullscreen = [Šţàŕţ îñ ƒüļļ šçŕééñ~~~~~~]
 # Settings row: the video upscaling mode.
 settings-label-upscaling = [Ûþšçàļîñĝ~~~]
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = [Þŕéļöàð öñ ɱéţéŕéð~~~~~~]
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = [Þļàýéŕ îñţéŕƒàçé~~~~~]
 
@@ -4734,6 +4787,21 @@ settings-note-upload-limit = [Çàþš àļļ ţöŕŕéñţ üþļöàð, šö 
 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = [Ûšé --ţöķéñ-ţö-ƒîļé ţö ɱöṽé àñ éẋîšţîñĝ ţöķéñ.~~~~~~~~~~~~~~]
+
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = [þŕîṽàţé~~~]
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = [þŕîṽàţé~~~]
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = [Þŕîṽàţé ɱöðé~~~~]
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = [Åļŵàýš þŕîṽàţé ƒöŕ ţĥîš šĥöŵ~~~~~~~~~]
+
+# Help for the --private flag.
+cli-private-help = [Šţàŕţ îñ þŕîṽàţé ɱöðé. Ñöţĥîñĝ îš šàṽéð öŕ šýñçéð üñţîļ Ķàéŕî ƣüîţš.~~~~~~~~~~~~~~~~~~~~~]
 
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = [Ŕéàðîñĝ ƒŕöɱ { $source }~~~~~]
@@ -5923,6 +5991,15 @@ tui-medium-read-change = [Þŕéšš { $key } ţö çĥàñĝé ŵĥàţ Ķàé�
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
 tui-medium-settings-hint = [{ $key } ţö çĥàñĝé~~~~]
 
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+report-player-log-save-here = [Šàṽé þļàýéŕ ļöĝ~~~~~]
+
+# That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved-to = [Þļàýéŕ ļöĝ šàṽéð ţö { $path }~~~~~~~]
+
+# That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+report-player-log-failed-here = [Çöüļðñ'ţ šàṽé ţĥé ļöĝ ţö { $folder }.~~~~~~~~~]
+
 # Title of the about page.
 about-title = [Åƀöüţ~~]
 
@@ -6027,6 +6104,40 @@ report-crash-off = [Çŕàšĥ ŕéþöŕţš àŕé öƒƒ, šö ñöñé îš 
 
 # Link from that line to the crash report settings.
 report-crash-settings = [Çŕàšĥ ŕéþöŕţ šéţţîñĝš~~~~~~~]
+
+# Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+report-player-log = [Þļàýéŕ ļöĝ~~~]
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+report-player-log-detail =
+    { $playbacks ->
+        [one] [Ţĥé ļàšţ þļàýƀàçķ · { $size }~~~~~~~]
+       *[other] [Ţĥé ļàšţ { $playbacks } þļàýƀàçķš · { $size }~~~~~~~~~]
+    }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+report-player-log-empty = [Ñö þļàýƀàçķ ļöĝĝéð ýéţ~~~~~~~]
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+report-player-log-save = [Šàṽé ļöĝ…~~~]
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = [Åţţàçĥ ţĥé ƒîļé ţö ţĥé îššüé öñçé îţ öþéñš öñ ĜîţĤüƀ.~~~~~~~~~~~~~~~~]
+
+# Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved = [Šàṽéð àš { $file }~~~~]
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = [Çöüļðñ'ţ šàṽé ţĥé ļöĝ. Ţŕý àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~]
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+report-sent-report = [Ŕéþöŕţ~~]
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = [Þļàýéŕ ļöĝ šàṽéð~~~~~]
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = [Šàṽéš à ƒîļé ţö àţţàçĥ ţö ţĥé îššüé~~~~~~~~~~~]
 
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = [Çŕàšĥ ŕéþöŕţš~~~~]
@@ -6223,6 +6334,36 @@ cast-stop = [Šţöþ çàšţîñĝ~~~~]
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = [Šéţ öñ ţĥé ŢṼ~~~~]
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = [Çöññéçţîñĝ ţö { $name }~~~~~~]
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = [Çöññéçţéð ţö { $name }~~~~~]
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = [Þļàýš öñ { $name }~~~~]
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = [Ñöţĥîñĝ þļàýîñĝ ýéţ~~~~~~]
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = [Þàüšéð öñ { $name }~~~~]
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = [Öþéñ { $title }~~~]
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = [Çļöšé~~]
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = [Öþéñš ţĥé çöñţŕöļš~~~~~~]
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = [Þļàý ñéẋţ öñ { $name }~~~~~]
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = [Çàšţîñĝ ţö { $name }~~~~~]
+
 # Button that runs a failed action again.
 action-try-again = [Ţŕý àĝàîñ~~~]
 
@@ -6370,6 +6511,9 @@ action-check-now = [Çĥéçķ ñöŵ~~~]
 # Button that checks a { -source } again after it did not answer.
 action-check-again = [Çĥéçķ àĝàîñ~~~~]
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = [Çĥéçķîñĝ~~~]
+
 # Button that opens the system's own settings for the app.
 action-open-settings = [Öþéñ šéţţîñĝš~~~~]
 
@@ -6436,6 +6580,9 @@ time-minutes-left = [{ $minutes } ɱîñ ļéƒţ~~~~]
 # A length in minutes, for an episode.
 time-minutes = [{ $minutes } ɱîñ~~~]
 
+# A length in hours, inside time-ago.
+time-hours = [{ $hours } ĥ~~]
+
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = [ñöŵ~]
 
@@ -6492,6 +6639,9 @@ state-working = [Ŵöŕķîñĝ~~~]
 
 # Short placeholder while something loads.
 state-loading = [Ļöàðîñĝ~~~]
+
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = [Ðîšɱîšš~~~]
 
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = [Ṁöṽé ƒöçüš~~~]
@@ -6731,6 +6881,18 @@ names-pair = [{ $first } àñð { $last }~~~~]
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = [{ $list }, { $next }~~~]
+
+# Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+cast-row-through-computer = [Þļàýš ţĥŕöüĝĥ ţĥîš çöɱþüţéŕ~~~~~~~~~]
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = [Šţöþ çàšţîñĝ àñð ƣüîţ?~~~~~~~]
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = [{ $title } îš þļàýîñĝ öñ { $name }. Ǫüîţţîñĝ šţöþš îţ.~~~~~~~~~~~~~]
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = [Šţöþ àñð ƣüîţ~~~~]
 
 # Menu item that opens an episode's discussion.
 discussion-open = [Ðîšçüššîöñ~~~]
@@ -8836,8 +8998,17 @@ player-start-miss-timed-out = [{ $name } ţööķ ţöö ļöñĝ~~~~~~]
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = [Ýöü šķîþþéð { $name }~~~~~]
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = [Šķîþþéð àƒţéŕ ŕéçéñţ ƒàîļüŕéš~~~~~~~~~]
+# Details row for a source not asked while torrent playback is off. The name goes before it.
+player-start-row-held-torrents-off = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~]
+
+# Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
+player-start-row-held-proxy = [Ñöţ àšķéð · Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~~~~]
+
+# Details row for a source not asked on cellular, where torrents are off. The name goes before it.
+player-start-row-held-cellular = [Ñöţ àšķéð · Ţöŕŕéñţš àŕé öƒƒ öñ çéļļüļàŕ~~~~~~~~~~~~]
+
+# Details row for a source not asked because it says it can't be used right now. The name goes before it.
+player-start-row-held-other = [Ñöţ àšķéð · Ñöţ àṽàîļàƀļé ŕîĝĥţ ñöŵ~~~~~~~~~~~]
 
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = [Ƒŕöɱ { $name }~~~]
@@ -8932,6 +9103,44 @@ player-start-row-skipped = [Šķîþþéð~~~]
 
 # Second clause of a failure: the sources that were asked, joined as a list by the app.
 player-start-asked = [{ $names } ŵéŕé àšķéð.~~~~~]
+
+# Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+player-start-lacking =
+    { $count ->
+        [one] [{ $names } ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }.~~~~~~~~~]
+       *[other] [{ $names } ðöñ'ţ ĥàṽé éþîšöðé { $episode }.~~~~~~~~~]
+    }
+
+# First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
+player-start-unreached = [Çöüļðñ'ţ ŕéàçĥ { $names }.~~~~~~]
+
+# Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
+player-start-not-asked-torrents-off =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
+player-start-not-asked-proxy =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
+player-start-not-asked-cellular =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð öñ çéļļüļàŕ.~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð öñ çéļļüļàŕ.~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
+player-start-not-asked-other =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àṽàîļàƀļé ŕîĝĥţ ñöŵ.~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àṽàîļàƀļé ŕîĝĥţ ñöŵ.~~~~~~~~~~]
+    }
 
 # Label of the switch in the Details list that plays the episode with its subtitles.
 player-start-subtitled = [Šüƀţîţļéð~~~]
@@ -9322,6 +9531,24 @@ source-picker-finding = [Ƒîñðîñĝ šöüŕçéš…~~~~~]
 # Line when the picker found no stream for the episode.
 source-picker-empty = [Ñö šöüŕçé ĥàš à šţŕéàɱ ƒöŕ ţĥîš éþîšöðé.~~~~~~~~~~~~]
 
+# Line over the reasons when no source lists a release of the episode. The episode is its label.
+source-picker-none-lists = [Ñö šöüŕçé ļîšţš éþîšöðé { $episode }.~~~~~~~~~]
+
+# Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+source-picker-none-answered-lists = [Ñö šöüŕçé ţĥàţ àñšŵéŕéð ļîšţš éþîšöðé { $episode }.~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked while torrent playback is off.
+source-picker-held-torrents-off = [{ $name } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
+source-picker-held-proxy = [{ $name } îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš~~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked on cellular, where torrents are off.
+source-picker-held-cellular = [{ $name } îšñ'ţ àšķéð öñ çéļļüļàŕ~~~~~~~~~]
+
+# Line of the picker for a source that says it can't be used right now.
+source-picker-held-other = [{ $name } îšñ'ţ àṽàîļàƀļé ŕîĝĥţ ñöŵ~~~~~~~~~]
+
 # Title of the picker sheet in the player.
 player-sources = [Šöüŕçéš~~~]
 
@@ -9372,6 +9599,54 @@ player-subs-bg-box = [Ɓöẋ~]
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = [Ṁöŕé îñ Šéţţîñĝš…~~~~~~]
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = [Þŕîṽàţé ɱöðé~~~~]
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = [Ñöţĥîñĝ ýöü ŵàţçĥ öŕ ŕéàð îš šàṽéð öŕ šýñçéð üñţîļ ýöü ţüŕñ îţ öƒƒ öŕ ƣüîţ Ķàéŕî.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = [Ýöüŕ šöüŕçéš àñð ŵàţçĥ þàŕţîéš šţîļļ šéé ŵĥàţ ýöü öþéñ.~~~~~~~~~~~~~~~~~]
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = [Þŕîṽàţé ɱöðé îš öñ. Ñöţĥîñĝ îš šàṽéð öŕ šýñçéð üñţîļ Ķàéŕî ƣüîţš.~~~~~~~~~~~~~~~~~~~~]
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = [Ţüŕñ öƒƒ~~~]
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = [Šĥöŕţçüţ: { $keys }~~~~]
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = [Þŕîṽàţé~~~]
+
+# Screen reader label of the badge.
+private-badge-label = [Þŕîṽàţé ɱöðé îš öñ~~~~~~]
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = [Ñöţ šàṽéð öŕ šýñçéð~~~~~~]
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = [Ýöüŕ þļàçé îš ķéþţ üñţîļ Ķàéŕî ƣüîţš~~~~~~~~~~~]
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = [Åļŵàýš þŕîṽàţé~~~~~]
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = [Ñöţĥîñĝ ƒŕöɱ ţĥîš šĥöŵ îš šàṽéð öŕ šýñçéð öñ ţĥîš ðéṽîçé. Ŵĥàţ îš àļŕéàðý šàṽéð šţàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = [Ñöţĥîñĝ ƒŕöɱ ţĥîš šéŕîéš îš šàṽéð öŕ šýñçéð öñ ţĥîš ðéṽîçé. Ŵĥàţ îš àļŕéàðý šàṽéð šţàýš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = [Þļàýîñĝ îñ Ķàéŕî~~~~~]
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = [Þŕîṽàţé ɱöðé öñ~~~~~]
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = [Þŕîṽàţé ɱöðé öƒƒ~~~~~]
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = [Ļöàðîñĝ þàĝé { $page }~~~~~]
@@ -10834,6 +11109,9 @@ read-home-row-loading = [{ $row }, ļöàðîñĝ~~~~]
 # Screen readers: the custom action on a discovery cover that puts the series on Planning.
 read-tile-add-planning = [Åðð ţö Þļàññîñĝ~~~~~]
 
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = [Åðð ţö { $list }~~~]
+
 # Said once by screen readers when Your sources only turns on.
 read-search-anilist-hidden = [ÅñîĻîšţ'š ŕéšüļţš àŕé ĥîððéñ.~~~~~~~~~]
 
@@ -12213,6 +12491,21 @@ settings-auto-play = [Åüţö-þļàý ñéẋţ~~~~~]
 # Row: length of the Up next countdown.
 settings-up-next-countdown = [Ûþ ñéẋţ çöüñţðöŵñ~~~~~~]
 
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = [Þŕéļöàð ṽîðéö öñ ɱöƀîļé ðàţà~~~~~~~~~]
+
+# The same row on Windows and Linux.
+settings-preload-metered = [Þŕéļöàð ṽîðéö öñ ɱéţéŕéð çöññéçţîöñš~~~~~~~~~~~]
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = [Ðüŕîñĝ ţĥé éñðîñĝ, ţĥé ñéẋţ éþîšöðé'š šţŕéàɱ, šüƀţîţļéš àñð šķîþ ţîɱéš àŕé ƒöüñð. Îţš ƒîŕšţ šéçöñðš ļöàð ţöö, àñð öñ à ɱéţéŕéð çöññéçţîöñ öñļý ŵĥéñ ţĥîš îš öñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = [Ţöŕŕéñţš ļöàð ţĥéîŕ ƒîŕšţ þîéçéš ţĥé šàɱé ŵàý.~~~~~~~~~~~~~~]
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = [Ñééðš Åüţö-þļàý ñéẋţ~~~~~~]
+
 # Row: skip the opening.
 settings-skip-opening = [Šķîþ öþéñîñĝ àüţöɱàţîçàļļý~~~~~~~~]
 
@@ -12765,6 +13058,15 @@ settings-opds-password = [Ƒééð þàššŵöŕð~~~~]
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = [Ƒééð þöŕţ~~~]
 
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = [Þîçţüŕé îñ þîçţüŕé ŵĥéñ ļéàṽîñĝ ţĥé àþþ~~~~~~~~~~~~]
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = [Šĥöŵ þéöþļé ýöü ƒöļļöŵ~~~~~~~]
+
+# Note under that switch.
+settings-anilist-following-footer = [Šĥöŵš ŵĥéŕé þéöþļé ýöü ƒöļļöŵ öñ ÅñîĻîšţ àŕé îñ à šĥöŵ, öñ îţš þàĝé àñð îţš éþîšöðéš. Ŵĥö çàñ šéé ýöüŕ öŵñ ļîšţ îš šéţ öñ ÅñîĻîšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Label of the address field in the Add a server sheet.
 book-server-address = [Åððŕéšš~~~]
 
@@ -13038,6 +13340,32 @@ source-picker-coverage =
     { $of ->
         [one] [{ $covered } öƒ { $of } éþîšöðé~~~~~~]
        *[other] [{ $covered } öƒ { $of } éþîšöðéš~~~~~~]
+    }
+
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] [Éþîšöðé { $first }~~~~]
+       *[other] [Éþîšöðéš { $first } ţö { $last }~~~~~~]
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = [Éþîšöðéš { $first } ţö { $last }. Ñöţ { $missing } ýéţ~~~~~~~~~~]
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = [Éþîšöðéš { $first } ţö { $last }. Ñöţ { $missing }~~~~~~~~~]
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = [{ $a } öŕ { $b }~~~]
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = [{ $first } ţö { $last }~~~]
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] [{ $covered } öƒ { $of } éþîšöðé. Ñöţ { $missing }~~~~~~~~~]
+       *[other] [{ $covered } öƒ { $of } éþîšöðéš. Ñöţ { $missing }~~~~~~~~~]
     }
 
 # Under a source that is switched off in Settings.
@@ -14860,6 +15188,30 @@ more-followed-score = [{ $score }/10~~]
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = [Ṁöŕé ļîķé ţĥîš~~~~~]
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = [Šĥöŵ àļļ { $count }~~~~]
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+       *[other] [{ $first }, { $second } àñð { $more } ɱöŕé~~~~~~~]
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = [{ $first } àñð { $second }~~~~]
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = [+{ $count }~~]
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = [{ $names } ŵàţçĥéð üþ ţö ĥéŕé.~~~~~~~]
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = [Šçöŕé { $score } öüţ öƒ 10~~~~~~]
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = [Šĥöŵš ŵĥéŕé éàçĥ öƒ ţĥéɱ îš.~~~~~~~~~]
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = [{ $status } · { $progress }~~~]
 
@@ -14909,9 +15261,6 @@ title-fact-now = [Ñöŵ~]
 # Value of the fact on a show with no announced start.
 title-fact-tba = [Ţö ƀé àññöüñçéð~~~~~]
 
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-more-following-line = [{ $status } · { $score }/10~~~~]
-
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 episode-go-to = [Ĝö ţö éþîšöðé…~~~~~]
 
@@ -14932,6 +15281,42 @@ episode-go-to-none = [Ñö éþîšöðé { $number }. Ţĥîš šĥöŵ ĥàš 
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = [Éþîšöðé { $number } îšñ'ţ öüţ ýéţ. Ţĥé ļàţéšţ îš { $latest }.~~~~~~~~~~~~~~]
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = [Éþîšöðé { $episode } àîŕéð { $ago }.~~~~~~~]
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = [Éþîšöðé { $episode } àîŕéð öñ { $date }.~~~~~~~~]
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = [Ýöüŕ šöüŕçéš ðöñ'ţ ĥàṽé îţ ýéţ.~~~~~~~~~~]
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = [Ýöüŕ šöüŕçéš šţîļļ ðöñ'ţ ĥàṽé îţ.~~~~~~~~~~]
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = [Ýöüŕ šöüŕçéš ðîðñ'ţ àñšŵéŕ.~~~~~~~~~]
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = [Ķàéŕî ļööķš àĝàîñ éṽéŕý { $minutes } ɱîñüţéš.~~~~~~~~~~~]
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = [Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš îţ.~~~~~~~~~]
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = [Ķàéŕî ļööķš ƒöŕ îţ ŵĥéñ ýöü'ŕé ƀàçķ öñļîñé.~~~~~~~~~~~~~]
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = [Åîŕéð { $ago }~~~]
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = [Ñöţ îñ ýöüŕ šöüŕçéš ýéţ~~~~~~~]
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = [Éþîšöðé { $episode } îš îñ ýöüŕ šöüŕçéš ñöŵ.~~~~~~~~~~~]
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = [Ķàéŕî àļšö ļööķš ƀý îţšéļƒ éṽéŕý { $minutes } ɱîñüţéš ƒöŕ { $hours } ĥöüŕš àƒţéŕ àñ éþîšöðé àîŕš.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Title of the settings group and the screen.
 torrents-title = [Ţöŕŕéñţš~~~]
@@ -15447,6 +15832,9 @@ tv-paired-on = [Þàîŕéð { $when }~~~]
 # Short word: paired, no date known.
 tv-paired = [Þàîŕéð~~]
 
+# Line under a paired TV running the app, in the Play on TV list.
+tv-row-kaeri = [Ķàéŕî öñ Åñðŕöîð ŢṼ~~~~~~]
+
 # Line with the address.
 tv-connected-at = [Çöññéçţéð · { $address }~~~~~]
 
@@ -15470,6 +15858,9 @@ tv-status-connecting = [Çöññéçţîñĝ ţö { $name }~~~~~~]
 
 # Status on the remote: connection lost, trying again.
 tv-status-reconnecting = [Ŕéçöññéçţîñĝ ţö { $name }~~~~~~]
+
+# Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+tv-waiting-for = [Ŵàîţîñĝ ƒöŕ { $name }~~~~~]
 
 # Status on the remote: connected.
 tv-status-connected = [Çöññéçţéð~~~]

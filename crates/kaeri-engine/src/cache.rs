@@ -85,6 +85,10 @@ pub struct TitleCache {
     /// Each playback started, by its number: where it last said it was. Kept once it has
     /// ended, a few bytes each, so that what it says after is known for a straggler.
     playbacks: HashMap<PlaybackId, Playhead>,
+    /// Private mode and the titles kept private: what a private play says moves nothing here,
+    /// as it writes nothing. Its place is held in memory and put on what is said of the title
+    /// on its way out (see [`crate::private::Privacy::overlay`]).
+    privacy: Option<std::sync::Arc<crate::private::Privacy>>,
 }
 
 /// One title, as the record holds it.
@@ -111,6 +115,9 @@ struct Playhead {
     duration: Option<f64>,
     /// It has said how it ended, and what it says after is a straggler.
     ended: bool,
+    /// It has played: said a position. One that never did, a cast stopped before it loaded,
+    /// leaves the episode where it was.
+    played: bool,
 }
 
 impl TitleCache {
@@ -175,10 +182,15 @@ impl TitleCache {
             }
             Event::Playback { position, duration, .. } => {
                 let played = played?;
+                let held = self.held(played.id);
                 let playhead = self.playing(played)?;
                 playhead.position = *position;
+                playhead.played = true;
                 if duration.is_some() {
                     playhead.duration = *duration;
+                }
+                if held {
+                    return None;
                 }
                 // Keeps the table honest while detached: `q` leaves mpv running and drops the
                 // viewer back on the episode list, which would otherwise sit frozen at the
@@ -200,8 +212,16 @@ impl TitleCache {
             // The window changed hands mid-episode: a watch like an ending, by what the
             // playback says of where it was.
             Event::EpisodeLeft { id, episode, position, duration, watched } => {
+                let mut never = false;
                 if let Some(playhead) = played.and_then(|played| self.playing(played)) {
                     playhead.ended = true;
+                    never = !playhead.played;
+                }
+                if self.held(*id) {
+                    return Some(*id);
+                }
+                if never && !watched {
+                    return None;
                 }
                 let watch = Watch {
                     episode: episode.clone(),
@@ -213,8 +233,15 @@ impl TitleCache {
             }
             Event::PlaybackEnded { watched, .. } => {
                 let played = played?;
+                let held = self.held(played.id);
                 let playhead = self.playing(played)?;
                 playhead.ended = true;
+                if held {
+                    return Some(played.id);
+                }
+                if !playhead.played && !watched {
+                    return None;
+                }
                 let watch = Watch {
                     episode: played.episode.clone(),
                     position: playhead.position,
@@ -225,6 +252,16 @@ impl TitleCache {
             }
             _ => None,
         }
+    }
+
+    /// Read private mode and the titles kept private from `privacy`: see [`Self::privacy`].
+    pub(crate) fn use_privacy(&mut self, privacy: std::sync::Arc<crate::private::Privacy>) {
+        self.privacy = Some(privacy);
+    }
+
+    /// Whether what a play of `id` says is held now.
+    fn held(&self, id: AnilistId) -> bool {
+        self.privacy.as_ref().is_some_and(|privacy| privacy.holds_show(id))
     }
 
     /// A playback is starting: what it says is taken in from now until it says it ended.
@@ -358,7 +395,7 @@ impl TitleCache {
                     && episode.number.trim().parse::<u32>().is_ok_and(|n| n > next);
             }
         }
-        Event::Progress { id, progress, resume, episodes }
+        Event::Progress { id, progress, resume, episodes, private: None, kept: false }
     }
 
     /// How many episodes of a title are done, as its page or a list last said: `None` for a
@@ -579,6 +616,7 @@ fn as_rows(episodes: &[EpisodeProgress]) -> Vec<EpisodeRow> {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         })
         .collect()
 }
@@ -621,6 +659,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         }
     }
 
@@ -1076,6 +1115,34 @@ mod tests {
     }
 
     #[test]
+    fn a_play_that_never_played_leaves_the_resume_point_where_it_was() {
+        // A cast stopped on the TV while its file loaded ends having said no position: its
+        // ending must not read as a quit at the start and lose where the episode was left.
+        let mut cache = at_episodes(Some((0, 1)), &[]);
+        let played = play(&mut cache, "1");
+        say(&mut cache, &played, tick(600.0, 1_200.0));
+        say(&mut cache, &played, ended(false, kaeri_model::playback::Ending::Closed));
+        for ending in
+            [kaeri_model::playback::Ending::Failed, kaeri_model::playback::Ending::Stopped]
+        {
+            let again = play(&mut cache, "1");
+            assert!(say(&mut cache, &again, ended(false, ending)).is_none(), "nothing moved");
+            let resume = standing(&cache, SHOW).1.expect("a resume point");
+            assert_eq!(resume.position, 600.0);
+        }
+        let left = play(&mut cache, "1");
+        let handed = Event::EpisodeLeft {
+            id: SHOW,
+            episode: "1".into(),
+            position: 0.0,
+            duration: None,
+            watched: false,
+        };
+        assert!(say(&mut cache, &left, handed).is_none(), "nothing moved");
+        assert_eq!(standing(&cache, SHOW).1.expect("a resume point").position, 600.0);
+    }
+
+    #[test]
     fn finishing_an_episode_updates_the_table_without_a_reload() {
         // The episode table shows the new state as soon as an episode finishes.
         let mut cache = at_episodes(None, &[]);
@@ -1146,6 +1213,7 @@ mod tests {
     fn a_window_handed_over_is_a_watch_by_what_it_said() {
         let mut cache = at_episodes(Some((0, 1)), &[]);
         let played = play(&mut cache, "1");
+        say(&mut cache, &played, tick(120.0, 1_200.0));
         let left = Event::EpisodeLeft {
             id: SHOW,
             episode: "1".into(),

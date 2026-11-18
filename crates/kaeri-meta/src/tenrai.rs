@@ -128,13 +128,10 @@ impl Tenrai {
     /// One attempt. `Ok(None)` means "refused for rate, and the wait has been served".
     async fn send(&self, path: &str) -> Result<Option<serde_json::Value>> {
         self.limiter.acquire().await;
-        let response = self
-            .http
-            .plain()
-            .get(format!("{}{path}", self.api))
-            .send()
-            .await
-            .map_err(|e| TenraiError::Network(e.to_string()))?;
+        let url = format!("{}{path}", self.api);
+        let sent = self.http.plain().get(&url).send().await;
+        self.http.reach().note(&url, sent.is_ok());
+        let response = sent.map_err(|e| TenraiError::Network(e.to_string()))?;
         if response.status().as_u16() == 404 {
             return Err(TenraiError::NotFound);
         }
@@ -297,7 +294,7 @@ impl Tenrai {
             rankings: Vec::new(),
             characters: Default::default(),
             staff: Default::default(),
-            following: Vec::new(),
+            following: None,
             country_of_origin: None,
         })
     }

@@ -29,6 +29,7 @@ pub mod mapping;
 pub mod outbox;
 pub mod party_room;
 pub mod preference;
+pub mod private_title;
 pub mod profile;
 pub mod reading;
 pub mod schema;

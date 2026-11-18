@@ -41,6 +41,7 @@ fun SeasonalScreen() {
     LaunchedEffect(Unit) { store.loadSeasonal() }
     ScreenFrame(
         title = stringResource(R.string.nav_seasonal),
+        cast = true,
         subtitle = caption?.let(::seasonName),
         actions = {
             // The season as a search, to narrow by genre, format or anything else.

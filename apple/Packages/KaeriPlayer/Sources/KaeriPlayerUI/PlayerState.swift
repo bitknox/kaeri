@@ -41,6 +41,15 @@ public enum PlayerTiming {
     public static let statsWaitingLine: Duration = .seconds(4)
     /// "Copied" stands in for Copy stats this long.
     public static let statsCopied: Duration = .milliseconds(1500)
+    /// On a roll-on to the next episode the ground alone shows this long from the roll-on: a
+    /// first frame inside it goes straight to the picture, with no starting screen at all.
+    public static let rollOnQuiet: Duration = .milliseconds(600)
+    /// A roll-on's starting screen, once it shows, stays up at least this long.
+    public static let rollOnScreenHolds: Duration = .milliseconds(600)
+    /// The ground fading to the picture after a quiet roll-on, a little longer than the fade.
+    public static let rollOnPictureFades: Duration = .milliseconds(300)
+    /// A roll-on this old by the time a playback is staged was not for it.
+    public static let rollOnLapses: Duration = .seconds(10)
 
     /// Whether the buffering line shows: mpv has waited on its cache since `since` for
     /// `bufferingLineAfter` by `now`, and the starting screen, which has a line of its own, is
@@ -59,6 +68,8 @@ public struct StagedPlayback: Equatable, Sendable {
     public var title: String
     public var episode: String
     public var episodeTitle: String?
+    /// The show is always private on this device: Now Playing names nothing of it.
+    public var alwaysPrivate = false
 }
 
 /// The starting screen: what is being found or opened, since when.

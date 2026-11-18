@@ -33,6 +33,15 @@ notice-cast-not-same-network = このデバイスは{ $name }と同じネット�
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = { $name }との接続が切れたため、キャストを終了しました。
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name }がストリームを受け取れなくなりました。ソースがエピソードの一部に応答しませんでした。別のソースをお試しください。
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name }がこのデバイスからのストリームを失いました。両方が同じネットワークにあるか確認してください。
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = { $name }の字幕はプレーンテキストで表示されます。装飾付きの字幕はこのテレビには重すぎました。
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = キャスト先のテレビがネットワーク上にもうありません。
 
@@ -326,6 +335,12 @@ notice-player-failed-to-start = mpvを起動できませんでした。mpvが単
 
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = そのストリームから映像が届きませんでした。{ $total }件中{ $next }件目を試しています。
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = ストリームが途切れました。{ $source }が同じ位置から引き継ぎました。
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = ストリームが途切れました。{ $source }の別のストリームが同じ位置から引き継ぎました。
 
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpvでこのファイルを再生できませんでした。{ $reason }
@@ -852,6 +867,9 @@ reading-row-queued = 待機中
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = 待機中 · Wi-Fi待ち
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = 待機中 · 空き容量待ち
+
 # A chapter row's state while it downloads.
 reading-row-downloading = ダウンロード中 · { $done }/{ $total }ページ
 
@@ -977,6 +995,12 @@ reading-dl-failed = 第{ $chapter }話をダウンロードできませんでし
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = オフライン
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+       *[other] 空き容量がありません。容量が空くとダウンロードされます。
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = 約{ $size }
@@ -2901,6 +2925,9 @@ episodes-release-dub = 吹替版
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = 現在の選択
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = ソースを確認しています…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = キーを表示
 
@@ -3152,6 +3179,12 @@ keys-hint-stop = 停止
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = 次を再生
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = 再確認
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = エピソード { $episode } を再生
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = エピソード
@@ -4306,6 +4339,9 @@ settings-label-fullscreen = 全画面で開始
 # Settings row: the video upscaling mode.
 settings-label-upscaling = アップスケーリング
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = 従量制でも先読み
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = プレーヤーのインターフェース
 
@@ -4482,6 +4518,21 @@ settings-note-upload-limit = すべてのトレントのアップロードを制
 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = 既存のトークンを移す場合は --token-to-file を使ってください。
+
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = プライベート
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = プライベート
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = プライベートモード
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = この作品を常にプライベートにする
+
+# Help for the --private flag.
+cli-private-help = プライベートモードで起動します。Kaeriが終了するまで、保存も同期もされません。
 
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = { $source }から読んでいます
@@ -5557,6 +5608,15 @@ tui-medium-read-change = { $key }を押すと、Kaeriの用途を変更できま
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
 tui-medium-settings-hint = { $key }で変更
 
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+report-player-log-save-here = プレーヤーログを保存
+
+# That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved-to = プレーヤーログを { $path } に保存しました
+
+# That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+report-player-log-failed-here = { $folder } にログを保存できませんでした。
+
 # Title of the about page.
 about-title = 概要
 
@@ -5661,6 +5721,39 @@ report-crash-off = クラッシュレポートがオフのため、含まれて�
 
 # Link from that line to the crash report settings.
 report-crash-settings = クラッシュレポートの設定
+
+# Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+report-player-log = プレーヤーログ
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+report-player-log-detail =
+    { $playbacks ->
+       *[other] 直近{ $playbacks }回の再生 · { $size }
+    }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+report-player-log-empty = まだ再生の記録はありません
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+report-player-log-save = ログを保存…
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = GitHubでissueが開いたら、このファイルを添付してください。
+
+# Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved = { $file } として保存しました
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = ログを保存できませんでした。別のフォルダを試してください。
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+report-sent-report = レポート
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = プレーヤーログを保存しました
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = issueに添付するファイルを保存します
 
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = クラッシュレポート
@@ -5857,6 +5950,36 @@ cast-stop = キャストを停止
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = テレビ側で設定
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = { $name }に接続中
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = { $name }に接続済み
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = { $name }で再生
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = まだ何も再生していません
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = { $name }で一時停止中
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = { $title }を開く
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = 閉じる
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = 操作画面を開きます
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = { $name }で次に再生
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = { $name }にキャスト中
+
 # Button that runs a failed action again.
 action-try-again = 再試行
 
@@ -6004,6 +6127,9 @@ action-check-now = 今すぐ確認
 # Button that checks a { -source } again after it did not answer.
 action-check-again = 再確認
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = 確認中
+
 # Button that opens the system's own settings for the app.
 action-open-settings = 設定を開く
 
@@ -6070,6 +6196,9 @@ time-minutes-left = 残り{ $minutes }分
 # A length in minutes, for an episode.
 time-minutes = { $minutes }分
 
+# A length in hours, inside time-ago.
+time-hours = { $hours }時間
+
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = 今
 
@@ -6126,6 +6255,9 @@ state-working = 処理中
 
 # Short placeholder while something loads.
 state-loading = 読み込み中
+
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = 消去
 
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = フォーカスを移動
@@ -6363,6 +6495,15 @@ names-pair = { $first }と{ $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }、{ $next }
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = キャストを停止して終了しますか？
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } を { $name } で再生中です。終了すると停止します。
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = 停止して終了
 
 # Menu item that opens an episode's discussion.
 discussion-open = ディスカッション
@@ -8449,9 +8590,6 @@ player-start-miss-timed-out = { $name }の応答に時間がかかりすぎま�
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = { $name }をスキップしました
 
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = 最近の失敗によりスキップ
-
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = { $name }から
 
@@ -8983,6 +9121,54 @@ player-subs-bg-box = ボックス
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = 設定でさらに表示…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = プライベートモード
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = オフにするかKaeriを終了するまで、視聴や閲覧の記録は保存も同期もされません。
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = ソースや同時視聴には、開いたものが引き続き見えます。
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = プライベートモードがオンです。Kaeriが終了するまで、保存も同期もされません。
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = オフにする
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = ショートカット: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = プライベート
+
+# Screen reader label of the badge.
+private-badge-label = プライベートモードがオンです
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = 保存も同期もされません
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Kaeriが終了するまで位置を保持します
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = 常にプライベート
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = この作品の記録は、このデバイスでは保存も同期もされません。保存済みの記録はそのまま残ります。
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = このシリーズの記録は、このデバイスでは保存も同期もされません。保存済みの記録はそのまま残ります。
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Kaeriで再生中
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = プライベートモードオン
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = プライベートモードオフ
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = { $page }ページを読み込み中
@@ -10061,6 +10247,9 @@ read-search-source-kind-plugin = プラグイン
 
 # The button of a source group with more than five hits.
 read-search-source-more = さらに{ $n }件を表示
+
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = { $list }に追加
 
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step }/{ $total }
@@ -11379,6 +11568,21 @@ settings-auto-play = 次のエピソードを自動再生
 # Row: length of the Up next countdown.
 settings-up-next-countdown = 次のエピソードのカウントダウン
 
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = モバイルデータ通信でビデオを先読み
+
+# The same row on Windows and Linux.
+settings-preload-metered = 従量制課金接続でビデオを先読み
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = トレントも同じように最初のピースを読み込みます。
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = 「次のエピソードを自動再生」が必要です
+
 # Row: skip the opening.
 settings-skip-opening = オープニングを自動でスキップ
 
@@ -11919,6 +12123,15 @@ settings-opds-password = フィードのパスワード
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = フィードのポート
 
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = アプリを離れるときにピクチャー イン ピクチャー
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = フォロー中の人を表示
+
+# Note under that switch.
+settings-anilist-following-footer = AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。
+
 # Label of the address field in the Add a server sheet.
 book-server-address = アドレス
 
@@ -12163,6 +12376,30 @@ source-picker-automatic-detail = 各エピソードを、配信している最�
 source-picker-coverage =
     { $of ->
        *[other] { $covered } / { $of }エピソード
+    }
+
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+       *[other] エピソード { $first }–{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = エピソード { $first }–{ $last }。{ $missing }はまだありません
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = エピソード { $first }–{ $last }。{ $missing }はありません
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a }と{ $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }–{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+       *[other] { $covered } / { $of }エピソード。{ $missing }はありません
     }
 
 # Under a source that is switched off in Settings.
@@ -13969,6 +14206,30 @@ more-followed-score = { $score }/10
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = 似た作品
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = { $count }人すべて表示
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+       *[other] { $first }、{ $second }、ほか{ $more }人
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first }、{ $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names }はここまで視聴しました。
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = スコア { $score }/10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = それぞれの視聴状況を表示します。
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }
 
@@ -14017,9 +14278,6 @@ title-fact-now = 放送中
 # Value of the fact on a show with no announced start.
 title-fact-tba = 未定
 
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-more-following-line = { $status } · { $score }/10
-
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 episode-go-to = エピソードへ移動…
 
@@ -14040,6 +14298,42 @@ episode-go-to-none = エピソード{ $number }はありません。この作品
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = エピソード{ $number }はまだ公開されていません。最新は{ $latest }です。
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = エピソード { $episode } は{ $ago }に公開されました。
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = エピソード { $episode } は{ $date }に公開されました。
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = ソースにはまだありません。
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = ソースには今もありません。
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = ソースから応答がありませんでした。
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeriが{ $minutes }分ごとに探し直します。
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = どのソースにもありません。
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = オンラインに戻るとKaeriが探します。
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = { $ago }に公開
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = まだソースにありません
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = エピソード { $episode } がソースで見つかりました。
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = エピソードの公開後{ $hours }時間は、Kaeriも{ $minutes }分ごとに自動で探します。
 
 # Title of the settings group and the screen.
 torrents-title = トレント
@@ -14577,6 +14871,9 @@ tv-status-connecting = { $name }に接続中
 
 # Status on the remote: connection lost, trying again.
 tv-status-reconnecting = { $name }に再接続中
+
+# Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+tv-waiting-for = { $name }の応答を待っています
 
 # Status on the remote: connected.
 tv-status-connected = 接続済み

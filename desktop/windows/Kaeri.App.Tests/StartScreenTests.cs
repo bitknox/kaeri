@@ -164,7 +164,7 @@ public class StartScreenTests
         start.Fail(new StartFailure(
             NoSourceWhy.NotFound,
             new Msg.NoticeReason(new Cause.NoSourceHasEpisode("7", "alpha: not found, brook: not found")),
-            ["Alpha", "Brook"]));
+            ["Alpha", "Brook"], [], []));
         var frame = start.Frame(Ms(3000));
         Assert.Equal("Couldn't play episode 7", frame.Failure?.Title);
         Assert.Equal("No source has episode 7. Alpha and Brook were asked.", frame.Failure?.Reason);
@@ -172,10 +172,48 @@ public class StartScreenTests
     }
 
     [Fact]
+    public void ASourceThatFailedIsOneNotReachedAHeldBackOneIsNotAskedAndTryAgainLeads()
+    {
+        var start = Start();
+        start.Step(new StartStep.SourcesHeldBack(["Harbor"], SourceHold.TorrentsOff), null, Ms(100));
+        start.Fail(new StartFailure(
+            NoSourceWhy.NotFound,
+            new Msg.NoticeReason(new Cause.SourcesUnreached("Alpha")),
+            ["Alpha", "Brook"],
+            ["Alpha"],
+            [new HeldSources(Names: ["Harbor"], Why: SourceHold.TorrentsOff)]));
+        var frame = start.Frame(Ms(3000));
+        Assert.Equal(
+            "Couldn't reach Alpha. Brook doesn't have episode 7. Harbor isn't asked while torrent playback is off.",
+            frame.Failure?.Reason);
+        Assert.DoesNotContain("No source has", frame.Failure?.Reason);
+        Assert.Equal([StartAction.TryAgain, StartAction.ChooseAnother, StartAction.Details, StartAction.Close], Actions(frame));
+        var row = Assert.Single(frame.Rows, r => r.Name == "Harbor");
+        Assert.Equal(StartMark.Rest, row.Mark);
+        Assert.Equal("Not asked · Torrent playback is off", row.Note);
+        Assert.Equal("", row.Time);
+    }
+
+    [Fact]
+    public void AHeldBackSourceAloneIsNeverSaidAsNotReached()
+    {
+        var start = Start();
+        start.Fail(new StartFailure(
+            NoSourceWhy.NotFound,
+            new Msg.NoticeReason(new Cause.SourcesNotAsked(1, "Harbor", "7")),
+            ["Brook"],
+            [],
+            [new HeldSources(Names: ["Harbor"], Why: SourceHold.TorrentsOff)]));
+        var reason = start.Frame(Ms(3000)).Failure?.Reason;
+        Assert.Equal("Brook doesn't have episode 7. Harbor isn't asked while torrent playback is off.", reason);
+        Assert.DoesNotContain("Couldn't reach", reason);
+    }
+
+    [Fact]
     public void AFailureOnAHalfEpisodeNamesItAndNoSourcesOffersNoTryAgain()
     {
         var start = new StartScreen(1, "7.5", null);
-        start.Fail(new StartFailure(NoSourceWhy.NoSources, new Msg.NoticeReason(new Cause.NoSources()), []));
+        start.Fail(new StartFailure(NoSourceWhy.NoSources, new Msg.NoticeReason(new Cause.NoSources()), [], [], []));
         var frame = start.Frame(Ms(500));
         Assert.Equal("Couldn't play episode 7.5", frame.Failure?.Title);
         Assert.DoesNotContain("Add one", frame.Failure?.Reason);
@@ -189,7 +227,7 @@ public class StartScreenTests
         start.Fail(new StartFailure(
             NoSourceWhy.NotFound,
             new Msg.NoticeReason(new Cause.TitleNoMatch("alpha: no match")),
-            ["Alpha"]));
+            ["Alpha"], [], []));
         var frame = start.Frame(Ms(2000));
         Assert.Equal(StartAction.FixMatch, frame.Buttons[0].Action);
         Assert.Equal(StartLook.Primary, frame.Buttons[0].Look);
@@ -205,7 +243,7 @@ public class StartScreenTests
         start.Fail(new StartFailure(
             NoSourceWhy.NotAired,
             new Msg.NoticeNotAired(7, new Cause.AirsTomorrow("18:30")),
-            []));
+            [], [], []));
         var frame = start.Frame(Ms(700));
         Assert.Equal("Episode 7 airs tomorrow at 18:30.", frame.Failure?.Reason);
         Assert.Equal([StartAction.Close], Actions(frame));
@@ -236,7 +274,7 @@ public class StartScreenTests
     {
         var start = Start();
         start.Step(new StartStep.WaitingForConnection(), null, Ms(0));
-        start.Fail(new StartFailure(NoSourceWhy.NoConnection, new Msg.NoticeReason(new Cause.NoConnection()), []));
+        start.Fail(new StartFailure(NoSourceWhy.NoConnection, new Msg.NoticeReason(new Cause.NoConnection()), [], [], []));
         var frame = start.Frame(Ms(120_000));
         Assert.Equal("No connection.", frame.Failure?.Reason);
         Assert.Equal([StartAction.TryAgain, StartAction.ShowDownloads, StartAction.Close], Actions(frame));
@@ -304,5 +342,37 @@ public class StartScreenTests
         byte[] Field(byte value) => Enumerable.Repeat(value, 64 * 64 * 4).ToArray();
         Assert.Equal(StartGround.Deep, StartGround.For(StartGround.Luminance(Field(240), 64, 64)));
         Assert.Equal(StartGround.Normal, StartGround.For(StartGround.Luminance(Field(20), 64, 64)));
+    }
+
+    [Fact]
+    public void ARollOnWarmedInTimeGoesFromTheGroundStraightToThePicture()
+    {
+        var hold = new RollOnHold();
+        Assert.False(hold.Due(Ms(300), failed: false));
+        // The first frame at 450 ms: nothing showed, so the ground leaves at once.
+        Assert.Equal(Ms(450), hold.LeavesAt(Ms(450)));
+        Assert.False(hold.Shown);
+    }
+
+    [Fact]
+    public void ARollOnsScreenShowsAt600MsAndStandsItsHold()
+    {
+        var hold = new RollOnHold();
+        Assert.False(hold.Due(Ms(599), failed: false));
+        Assert.True(hold.Due(Ms(600), failed: false));
+        Assert.False(hold.Due(Ms(700), failed: false));
+        Assert.True(hold.Shown);
+        // A first frame at 0.7 s waits for the screen's 0.6 s: the picture shows at 1.2 s.
+        Assert.Equal(Ms(1200), hold.LeavesAt(Ms(700)));
+        // A slow one leaves as it comes.
+        Assert.Equal(Ms(1500), hold.LeavesAt(Ms(1500)));
+    }
+
+    [Fact]
+    public void ARollOnThatFailsShowsItsScreenAtOnce()
+    {
+        var hold = new RollOnHold();
+        Assert.True(hold.Due(Ms(200), failed: true));
+        Assert.Equal(Ms(800), hold.LeavesAt(Ms(300)));
     }
 }

@@ -12,3 +12,6 @@ tui-together-not-a-link = To nie jest link ani kod pokoju.
 tui-together-recent-alone = Odcinek { $episode } · { $when }
 tui-medium-read-change = Naciśnij { $key }, aby zmienić, do czego służy { -app-name }.
 tui-medium-settings-hint = { $key }: zmień
+report-player-log-save-here = Zapisz dziennik odtwarzacza
+report-player-log-saved-to = Dziennik odtwarzacza zapisano w { $path }
+report-player-log-failed-here = Nie udało się zapisać dziennika w { $folder }.

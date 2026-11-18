@@ -19,6 +19,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -29,7 +31,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
@@ -66,11 +67,13 @@ import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.res.stringResource
 import app.kaeri.i18n.R
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.AvailabilityCase
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
@@ -94,6 +97,7 @@ import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.zIndex
+import app.kaeri.store.FollowingWords
 import app.kaeri.store.text
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlin.math.roundToInt
@@ -122,8 +126,8 @@ import app.kaeri.store.HeroArt
 import app.kaeri.store.LibraryModel
 import app.kaeri.store.label
 import app.kaeri.store.line
-import app.kaeri.store.TvPlayRequest
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.platform.LocalResources
 
 /** What a page shows before its title has arrived. */
@@ -460,6 +464,22 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
     val onLift = remember(id) { { lifts.value() } }
     val onAbout = remember(id) { { aboutOpen = true } }
     val onScreenPage = base.longValue.toUInt()
+    // The top bar fills as the page on top scrolls its banner out from under it, read as the bar
+    // draws, so a scroll recomposes nothing.
+    val barRanges = remember(id) { TitleBarRanges() }
+    val instantBar = app.kaeri.design.rememberAnimationsRemoved()
+    val density = LocalDensity.current
+    val barFill: () -> Float = remember(id, instantBar, density) {
+        {
+            val list = lists[top.longValue.toUInt()]
+            if (list == null) {
+                0f
+            } else {
+                (barRanges[list] ?: TitleBarFillRange.overBanner(PhoneBannerHeight, PhoneBannerParallax))
+                    .fill(list.firstVisibleItemIndex, list.firstVisibleItemScrollOffset.toFloat(), density, instantBar)
+            }
+        }
+    }
     Box(Modifier.fillMaxSize().shared(Shared.Page, id, ground = MaterialTheme.colorScheme.surface)) {
         for (season in composed) {
             key(season) {
@@ -471,12 +491,14 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
                         lists.remove(season)
                         ready.remove(season)
                         grown.remove(season)
+                        barRanges.remove(list)
                     }
                 }
                 LaunchedEffect(list) {
                     kotlinx.coroutines.delay(COMPOSE_AHEAD)
                     grown += season
                 }
+                androidx.compose.runtime.CompositionLocalProvider(LocalTitleBarRanges provides barRanges) {
                 PageSlot(
                     season = season,
                     opened = id,
@@ -502,9 +524,10 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
                     onLift = onLift,
                     onAbout = onAbout,
                 )
+                }
             }
         }
-        TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, modifier = Modifier.padding(top = inset).zIndex(3f))
+        TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, inset = inset, fill = barFill, modifier = Modifier.zIndex(3f))
     }
     if (aboutOpen) {
         MoreAboutSheet(entry, onDismiss = { aboutOpen = false }) { other ->
@@ -684,8 +707,25 @@ private fun HeldRows(
 /** The season picker's key in a page's list. */
 private const val SEASONS = "seasons"
 
-/** Where the season picker stands in [entry]'s page: after the head, the actions, the synopsis if any, the facts and More about. */
-private fun seasonsIndex(entry: Entry): Int = if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) 5 else 4
+/**
+ * Where the season picker stands in [entry]'s page: after the head, the actions, People you follow
+ * if anyone has it, the synopsis if any, the facts and More about.
+ */
+private fun seasonsIndex(entry: Entry): Int =
+    4 + (if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) 1 else 0) + (if (entry.detail?.following.isNullOrEmpty()) 0 else 1)
+
+/**
+ * People you follow, under the list button, while anyone followed has the show: it fades in on
+ * the fade-in token as the people arrive, the items under it gliding on standard to make room,
+ * and fades out over 0.3 s when the switch goes off.
+ */
+private fun LazyListScope.followingItem(entry: Entry) {
+    val people = entry.detail?.following.orEmpty()
+    if (people.isEmpty()) return
+    item(key = "following", contentType = "following") {
+        FollowingRow(people, Modifier.animateItem(fadeInSpec = Motion.fadeIn(), placementSpec = Motion.standard(), fadeOutSpec = Motion.fadeOut()))
+    }
+}
 
 /**
  * A page's prefetch: the lazy list's own while it scrolls, and, while the page waits off screen,
@@ -770,6 +810,14 @@ private fun SeasonPage(
     val context = LocalContext.current
     val failedIds by store.titles.failed.collectAsStateWithLifecycle()
     val failed = !loaded && entry.id in failedIds
+    // The page opened from a list has the list's row at once: its head and its actions. What
+    // only its page brings (people you follow, the tags, the picker, Related) would land between
+    // the rest and push it down, so the rest waits for the page under placeholders in its layout,
+    // and the page replaces them in one crossfade, every item below the actions at once. They
+    // show with the page from the first frame and go the moment it lands, with no 600 ms wait and
+    // no hold (T8's title page exception). A page that does not come lets the list's row stand.
+    val whole = rememberSettled(!loaded || entry.detail?.partial == false || entry.id in failedIds)
+    val held = loaded && !whole
     val jumpFade = app.kaeri.design.rememberStillFade()
     val synopses = rememberSynopsisPage(entry, episodes, jumpFade)
     // Go to episode: once the row's range is on screen, the list scrolls to put it at the top.
@@ -804,9 +852,9 @@ private fun SeasonPage(
         }
     }
     androidx.compose.runtime.CompositionLocalProvider(LocalUserMarks provides marks) {
-        // Every item moves as one when another comes or goes, as the title's details arrive: the
-        // synopsis, the facts and Related fade in above the episodes as they make room, and the
-        // placeholders of a season that had not arrived crossfade with what replaces them (T8).
+        // Every item moves as one when another comes or goes, as a mark or a fold changes the
+        // rows. The placeholders of a page that had not arrived crossfade with what replaces them
+        // where they stand (T8), every item below the actions at once, so nothing glides.
         // Its ground hides the season it fades in over.
         LazyColumn(state = list, modifier = modifier.pageGround(MaterialTheme.colorScheme.surface).let { if (removed || synopses.asking || goal != null) it.stillFade(jumpFade) else it }, contentPadding = PaddingValues(bottom = 24.dp)) {
             CountingScope(this).run {
@@ -826,9 +874,18 @@ private fun SeasonPage(
                     ) { TitleHead(it, headEpisodes(it.id), list, inset, shared) }
                 }
             }
-            if (loaded) {
+            if (held) {
+                item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true) } }
+                // Keys of their own, so the page fades in over them rather than moving them.
+                if (synopsisWithoutSpoilers(entry.synopsis).isNotEmpty()) {
+                    item(key = "held-synopsis", contentType = "synopsis-placeholder") { Box(itemMotion()) { SynopsisPlaceholder() } }
+                }
+                item(key = "held-facts", contentType = "facts-placeholder") { Box(itemMotion()) { FactsPlaceholder() } }
+                item(key = "held-more-about", contentType = "more-about-placeholder") { Box(itemMotion()) { MoreAboutPlaceholder() } }
+            } else if (loaded) {
                 val unlisted = episodes?.firstOrNull()?.metadataOnly == true
                 item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, unlisted) } }
+                followingItem(entry)
                 val synopsis = synopsisWithoutSpoilers(entry.synopsis)
                 if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
                 if (entry.isDemo) item(key = "demo-credit", contentType = "demo-credit") { Box(itemMotion()) { DemoCredit(Modifier.padding(horizontal = 16.dp, vertical = 8.dp)) } }
@@ -845,39 +902,41 @@ private fun SeasonPage(
                     }
                 }
             } else {
-                // In the layout of what replaces them, so the picker stands where it will: at once
-                // on a page composed ahead, and after 600 ms on the one on screen (T8). A head that
-                // came ahead of the page brings its synopsis, in its place among them.
+                // In the layout of what replaces them, so the picker stands where it will, from the
+                // first frame (T8's title page exception). A head that came ahead of the page
+                // brings its synopsis, in its place among them.
                 // A season whose head is here has its buttons from it, as the page will: hold state,
                 // never blank. Play says the season's own episode, and crossfades if the page
                 // says another. Only a season with no head yet has the buttons' places.
                 if (entry.detail != null) {
                     item(key = "actions", contentType = "actions") { Box(itemMotion()) { TitleActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true) } }
                 } else {
-                    item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { ActionsPlaceholder() } } }
+                    item(key = "actions-placeholder", contentType = "actions-placeholder") { Box(itemMotion()) { ActionsPlaceholder() } }
                 }
                 val synopsis = synopsisWithoutSpoilers(entry.synopsis)
                 if (synopsis.isNotEmpty()) item(key = "synopsis", contentType = "synopsis") { Box(itemMotion()) { Synopsis(synopsis) } }
-                item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { FactsPlaceholder() } } }
-                item(key = "more-about-placeholder", contentType = "more-about-placeholder") { Box(itemMotion()) { WaitFor(!ahead) { MoreAboutPlaceholder() } } }
+                item(key = "facts-placeholder", contentType = "facts-placeholder") { Box(itemMotion()) { FactsPlaceholder() } }
+                item(key = "more-about-placeholder", contentType = "more-about-placeholder") { Box(itemMotion()) { MoreAboutPlaceholder() } }
             }
-            if (hasSeasons) item(key = SEASONS, contentType = SEASONS) {
+            if (hasSeasons && !held) item(key = SEASONS, contentType = SEASONS) {
                 val picked = chosen.longValue.toUInt()
                 val pickedEntry by remember(picked) { derivedStateOf { titles.value[picked] } }
                 Seasons(picked, pickedEntry, family.value, geometry, pickerScroll, onPick, itemMotion(), onPress = onPress, onLift = onLift)
             }
-            val related = entry.relatedCards()
+            val related = if (held) emptyList() else entry.relatedCards()
             if (related.isNotEmpty()) item(key = "related", contentType = "related") { Box(itemMotion()) { RelatedRail(related) } }
-            episodeRows(list, inset + 64.dp, count, entry, episodes, actions, unfolded = entry.id in unfolded, onFold = fold, wait = !ahead, dub = dubs[entry.id]?.line(context), page = synopses)
+            // The rows wait with the rest, so nothing lands above them once they are in. The
+            // placeholders that wait for the page have keys of their own, so the page crossfades
+            // with them where they stand, rather than pushing them down.
+            episodeRows(
+                list, inset + 64.dp, count, entry, if (held) null else episodes, actions,
+                unfolded = entry.id in unfolded, onFold = fold,
+                placeholders = if (loaded && !held) "placeholder" else "held-placeholder",
+                dub = dubs[entry.id]?.line(context), page = synopses,
+            )
         }
         }
     }
-}
-
-/** [content] after 600 ms when [wait], else at once. */
-@Composable
-private fun WaitFor(wait: Boolean, content: @Composable () -> Unit) {
-    if (wait) AfterWait(content) else content()
 }
 
 /** The actions' places while a season's title is on its way: the main button's, then the list's and the trailer's. */
@@ -893,19 +952,36 @@ private fun ActionsPlaceholder() {
     }
 }
 
-/** The facts' two lines while a season's title is on its way. */
+/** The synopsis's two lines while its page is on its way, in [Synopsis]'s own frame. */
 @Composable
-private fun FactsPlaceholder() {
-    Column(Modifier.padding(horizontal = 16.dp).padding(top = 4.dp)) {
-        TextPlaceholder(0.62f, 20.dp)
-        TextPlaceholder(0.4f, 20.dp)
+private fun SynopsisPlaceholder() {
+    val line = with(LocalDensity.current) { MaterialTheme.typography.bodyMedium.lineHeight.toDp() }
+    Column(Modifier.padding(horizontal = 16.dp).padding(top = 4.dp).fillMaxWidth().heightIn(min = 48.dp).padding(vertical = 4.dp)) {
+        TextPlaceholder(0.92f, line)
+        TextPlaceholder(0.7f, line)
     }
 }
+
+/** The facts' two lines while a season's title is on its way, a line of [FactsLines] each. */
+@Composable
+private fun FactsPlaceholder() {
+    val line = with(LocalDensity.current) { MaterialTheme.typography.bodyMedium.lineHeight.toDp() }
+    Column(Modifier.padding(horizontal = 16.dp).padding(top = 4.dp)) {
+        TextPlaceholder(0.62f, line)
+        TextPlaceholder(0.4f, line)
+    }
+}
+
+/** The tag a title page's placeholders carry, so a test can find them at its first frame. */
+internal const val TITLE_PLACEHOLDER = "title-placeholder" // i18n-skip
+
+/** The services line's placeholder, one of the title page's, told apart for the geometry tests. */
+internal const val SERVICES_PLACEHOLDER = "services-placeholder" // i18n-skip
 
 /** More about this show's row while a season's title is on its way: its place, its words as a bar. */
 @Composable
 private fun MoreAboutPlaceholder() {
-    Box(Modifier.padding(top = 4.dp).fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
+    Box(Modifier.testTag(TITLE_PLACEHOLDER).padding(top = 4.dp).fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 16.dp), contentAlignment = Alignment.CenterStart) {
         TextPlaceholder(0.42f, 20.dp)
     }
 }
@@ -1003,6 +1079,13 @@ private fun artWaited(id: UInt): Boolean {
 @Composable
 private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListState, inset: Dp, shared: Boolean) {
     val art = HeroArt.of(entry, episodes, artWaited(entry.id))
+    val headerTop = if (art == HeroArt.Compact) 64.dp else PhoneHeaderTop
+    // The top bar is solid once the banner has gone up from under it, or with no banner, once the
+    // header has passed under it.
+    val barRanges = LocalTitleBarRanges.current
+    SideEffect {
+        barRanges?.set(list, if (art == HeroArt.Compact) TitleBarFillRange.compact(headerTop) else TitleBarFillRange.overBanner(PhoneBannerHeight, PhoneBannerParallax))
+    }
     Box {
         if (art != HeroArt.Compact) {
             ArtworkImage(
@@ -1011,11 +1094,11 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
                 maxPixelSize = pixels(412.dp),
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(inset + 156.dp)
+                    .height(inset + PhoneBannerHeight)
                     // The banner scrolls at half the page's speed (T1's parallax), read as the
                     // layer draws, so a scroll never recomposes the head.
                     .graphicsLayer {
-                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * 0.5f
+                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * PhoneBannerParallax
                     }
                     // The player grows out of the banner and closes back into it (T2, T3); only
                     // the page on screen takes part, not one waiting off screen.
@@ -1025,13 +1108,13 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
             BannerScrim(
                 Modifier
                     .fillMaxWidth()
-                    .height(inset + 156.dp)
+                    .height(inset + PhoneBannerHeight)
                     .graphicsLayer {
-                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * 0.5f
+                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * PhoneBannerParallax
                     },
             )
         }
-        TitleHeader(entry, shared, Modifier.padding(top = inset + if (art == HeroArt.Compact) 64.dp else 112.dp))
+        TitleHeader(entry, shared, Modifier.padding(top = inset + headerTop))
     }
 }
 
@@ -1208,31 +1291,39 @@ internal fun titleAction(entry: Entry): TitleAction {
     return TitleAction.of(entry, rows = all[entry.id])
 }
 
-/** Back and More, each a 40 circle on surfaceContainer in a 48 target, over the banner. */
+/**
+ * Back and More, each a 40 circle on surfaceContainer in a 48 target, over the banner. As the head
+ * scrolls under it, the bar [fill]s with the page's ground behind the status bar and the buttons,
+ * the circles give way to plain icons, and the show's name comes in beside Back: Material's
+ * collapsing top bar, tied to the scroll. The name is not a heading; the page's own title is.
+ */
 @Composable
-private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, modifier: Modifier = Modifier) {
+private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, inset: Dp, fill: () -> Float, modifier: Modifier = Modifier) {
     val store = LocalAppStore.current
     var more by remember { mutableStateOf(false) }
     var showSettings by rememberSaveable(entry.id) { mutableStateOf(false) }
     if (showSettings) ShowSettingsSheet(entry) { showSettings = false }
     var showSources by rememberSaveable(entry.id) { mutableStateOf(false) }
     if (showSources) SourcePickerSheet(entry) { showSources = false }
+    val ground = MaterialTheme.colorScheme.surface
+    val circle = remember(fill) { { 1f - fill() } }
     Row(
-        modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp),
+        modifier
+            .fillMaxWidth()
+            .drawBehind { drawRect(ground.copy(alpha = ground.alpha * fill())) }
+            .padding(top = inset)
+            .height(TitleBarHeight)
+            .padding(horizontal = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
-        CircleIconButton(Icons.Back, stringResource(R.string.action_back), onBack)
-        Spacer(Modifier.weight(1f))
+        CircleIconButton(Icons.Back, stringResource(R.string.action_back), onBack, circle)
+        BarName(entry.showTitle, fill, Modifier.weight(1f))
         // A picked title's Another, while the pool has more to pick: a text button, so Surprise me's word stays.
         if (pick != null && pick.more) AnotherButton(pick)
         val action = titleAction(entry)
-        if (store.tv.available && action.playable) {
-            CircleIconButton(Icons.Tv, stringResource(R.string.tv_play_on), {
-                store.tv.offer(TvPlayRequest(entry.id, entry.showTitle, action.episode.toString(), action.resume?.position))
-            })
-        }
+        if (action.playable) CastButton(circle = true, circleAlpha = circle)
         Box {
-            CircleIconButton(Icons.More, stringResource(R.string.action_more), { more = true })
+            CircleIconButton(Icons.More, stringResource(R.string.action_more), { more = true }, circle)
             Menu(expanded = more, onDismissRequest = { more = false }) {
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.show_settings_title)) },
@@ -1242,6 +1333,7 @@ private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, m
                         showSettings = true
                     },
                 )
+                AlwaysPrivateItem(PrivateTitle.Show(entry.id)) { more = false }
                 DropdownMenuItem(
                     text = { Text(stringResource(R.string.source_picker_title)) },
                     leadingIcon = { Icon(Icons.Providers, null) },
@@ -1281,11 +1373,32 @@ private fun TitleTopBar(entry: Entry, pick: SurprisePick?, onBack: () -> Unit, m
     }
 }
 
+/**
+ * The show's name in the filled bar: one line, cut at the end, coming in with the fill. Said by
+ * TalkBack only while it shows, as plain text, so the page keeps one heading.
+ */
 @Composable
-private fun CircleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit) {
+private fun BarName(name: String, fill: () -> Float, modifier: Modifier = Modifier) {
+    val shown by remember(fill) { derivedStateOf { fill() >= 0.5f } }
+    Text(
+        name,
+        style = MaterialTheme.typography.titleLarge,
+        maxLines = 1,
+        overflow = TextOverflow.Ellipsis,
+        modifier = modifier
+            .padding(horizontal = 4.dp)
+            .graphicsLayer { alpha = titleBarNameAlpha(fill()) }
+            .then(if (shown) Modifier else Modifier.clearAndSetSemantics {}),
+    )
+}
+
+/** A 40 circle on surfaceContainer in a 48 target, the circle drawn at [circle]'s strength. */
+@Composable
+private fun CircleIconButton(icon: androidx.compose.ui.graphics.vector.ImageVector, label: String, onClick: () -> Unit, circle: () -> Float = { 1f }) {
+    val container = MaterialTheme.colorScheme.surfaceContainer
     IconButton(onClick = onClick, modifier = Modifier.semantics { contentDescription = label }) {
         Box(
-            Modifier.size(40.dp).background(MaterialTheme.colorScheme.surfaceContainer, CircleShape),
+            Modifier.size(40.dp).drawBehind { drawCircle(container.copy(alpha = container.alpha * circle())) },
             contentAlignment = Alignment.Center,
         ) { Icon(icon, contentDescription = null) }
     }
@@ -1303,29 +1416,41 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
     val asking = store.match.state.collectAsStateWithLifecycle().value.asks(entry.id)
     val availability = availabilityOf(entry.id, playsHere = !unlisted)
     val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+    // The next episode aired and no source lists it: its status in the action's slot.
+    val (missing, said) = rememberMissingView(entry)
+    val missed = missing.shown != null && !unlisted
     Column(Modifier.padding(horizontal = 16.dp).padding(top = 16.dp)) {
+        Announcer(said)
         if (onService != null) {
             WatchOnButton(entry, onService, Modifier.fillMaxWidth().heightIn(min = 56.dp))
         } else if (action.playable && asking) {
             ChooseMatchButton(entry.id, Modifier.fillMaxWidth().heightIn(min = 56.dp))
         } else if (action.playable && unlisted) {
             AddSourceButton(Modifier.fillMaxWidth().heightIn(min = 56.dp))
-        } else if (action.playable) {
-            Button(
-                onClick = { actions.play(entry.id, action.episode.toString()) },
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
-            ) {
-                Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                // What it plays crossfades as an episode is marked (T9).
-                Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
-                    Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+        } else if (action.playable || missed) {
+            MissingSlot(entry, missing, actions, Modifier.fillMaxWidth()) {
+                val origin = rememberCastOrigin()
+                Button(
+                    onClick = {
+                        origin.mark()
+                        actions.play(entry.id, action.episode.toString())
+                    },
+                    modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp).then(origin.modifier),
+                ) {
+                    CastPlayIcon()
+                    Spacer(Modifier.width(8.dp))
+                    // What it plays crossfades as an episode is marked (T9).
+                    Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
+                        Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+                    }
                 }
             }
         } else {
             // Caught up: when the next one airs, in the action's place, and no amber on the page.
             CaughtUp(action, Modifier.heightIn(min = 56.dp))
         }
+        // Private: under the main action, while private mode is on or the show is always private.
+        PrivatePageLine(privateLine(PrivateTitle.Show(entry.id)))
         Row(Modifier.padding(top = 4.dp).heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             var open by remember { mutableStateOf(false) }
             Box(Modifier.weight(1f)) {
@@ -1366,6 +1491,7 @@ private fun TitleActions(entry: Entry, actions: AppActions, unlisted: Boolean) {
                 }
             }
         }
+        if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
         ServiceLines(availability, entry)
         if (asking) MatchUncertainLine(entry.id, Modifier.padding(top = 12.dp))
     }
@@ -1770,17 +1896,20 @@ private fun LazyListScope.episodeRows(
     actions: AppActions,
     unfolded: Boolean,
     onFold: (anchor: String) -> Unit,
-    /** Whether the placeholders wait 600 ms first (T8): not on a page composed ahead, off screen. */
-    wait: Boolean = true,
-    /** How far the dub goes: on the fold row's own line, or a row of its own without a fold. */
+    /** The placeholders' keys: another set crossfades with this one rather than moving it. */
+    placeholders: String = "placeholder",
+    /** How far the dub goes, beside the list's heading. */
     dub: String? = null,
     /** The page's synopsis state: the text outlook, the ranges and the reveals. */
     page: SynopsisPage,
 ) {
+    // "Episodes" over the list as every other part of the app has a heading, with the dub line
+    // beside it, so the fold row has its line to itself. It stands while the table loads too.
+    item(key = "episodes-heading", contentType = "episodes-heading") { EpisodesHeading(dub, itemMotion()) }
     if (episodes == null) {
         // Crossfading with the rows as they arrive (T8), as every item comes and goes.
-        items(4, key = { "placeholder-$it" }, contentType = { "placeholder" }) {
-            Box(itemMotion()) { if (wait) AfterWait { EpisodePlaceholder() } else EpisodePlaceholder() }
+        items(4, key = { "$placeholders-$it" }, contentType = { "placeholder" }) {
+            Box(itemMotion()) { EpisodePlaceholder() }
         }
         return
     }
@@ -1794,35 +1923,26 @@ private fun LazyListScope.episodeRows(
     val ranged = page.ranges.isNotEmpty()
     val inRange = page.rows
     val folded = page.folded(entry)
-    val rangeDub = if (ranged) null else dub
+    // The range row is declared after the heading.
+    val rangeAt = headerAt + 1
     if (ranged) {
         // The range row pins under the floating bar while the rows of its range scroll, so the
         // chip stays in view after Go to lands far into a range.
         stickyHeader(key = "range-row", contentType = "range-row") {
             // Pinned from the first pixel it scrolls past the top, wherever the list was left: the
             // pinned row is not among the visible items, so the index it was declared at says.
-            val stuck by remember(list, headerAt) {
-                derivedStateOf { list.firstVisibleItemIndex > headerAt || (list.firstVisibleItemIndex == headerAt && list.firstVisibleItemScrollOffset > 0) }
+            val stuck by remember(list, rangeAt) {
+                derivedStateOf { list.firstVisibleItemIndex > rangeAt || (list.firstVisibleItemIndex == rangeAt && list.firstVisibleItemScrollOffset > 0) }
             }
             Column(Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surface)) {
                 if (stuck) Spacer(Modifier.height(pinnedBelow))
-                Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, dub, onGoTo = page.openGoTo) }
+                Box(itemMotion()) { RangeRow(listed, page.ranges, page.selected, page.pick, null, onGoTo = page.openGoTo) }
             }
         }
     }
     if (folded.isNotEmpty()) {
         val anchor = page.key(entry.id, inRange[folded.size])
-        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), dub = rangeDub) { onFold(anchor) } }
-    }
-    if (folded.isEmpty() && rangeDub != null) {
-        item(key = "dub-line", contentType = "dub-line") {
-            Text(
-                rangeDub,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = itemMotion().fillMaxWidth().heightIn(min = 56.dp).wrapContentHeight(Alignment.CenterVertically).padding(horizontal = 16.dp),
-            )
-        }
+        item(key = watchedFold(entry.id), contentType = "fold") { WatchedFoldRow(folded, unfolded, itemMotion().padding(horizontal = 16.dp), marked = page.marked, ruled = true) { onFold(anchor) } }
     }
     val shown = if (folded.isNotEmpty() && !unfolded) inRange.drop(folded.size) else inRange
     // The line where protection starts goes over the first row it hides; after Show it stays,
@@ -1835,7 +1955,7 @@ private fun LazyListScope.episodeRows(
     val protection: androidx.compose.foundation.lazy.LazyListScope.() -> Unit = {
         val episode = protectionStart(listed, shown[line]) ?: next.toInt()
         item(key = "protection-${entry.id}", contentType = "protection") {
-            Box(itemMotion()) { ProtectionLine(episode, page.reveals.everything, page.reveals::showAll, page.reveals::hideAll) }
+            Box(itemMotion()) { ProtectionLine(episode, page.reveals.everything, page.reveals::showAll, page.reveals::hideAll, ruled = true) }
         }
     }
     if (line >= 0) {
@@ -1897,6 +2017,11 @@ internal class SynopsisPage(
     val arrived: () -> Unit = {},
     /** Whether the Go to episode dialog is open, so the page is recorded for the crossfade after it. */
     val asking: Boolean = false,
+    /**
+     * Whether the rows keep a column for the marks: once anyone followed stopped at one of the
+     * episodes, for as long as the page is open, so marks leaving fade out and move nothing.
+     */
+    val marked: Boolean = false,
 ) {
     /** The rows shown: the selected range's, or all of a short series. */
     val rows: List<EpisodeRow> = if (ranges.isEmpty()) listed else rangeRows(listed, ranges[selected])
@@ -1966,7 +2091,9 @@ private fun rememberSynopsisPage(entry: Entry, episodes: List<EpisodeRow>?, befo
             }
         })
     }
-    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking)
+    var marked by remember(entry.id) { mutableStateOf(false) }
+    if (!marked && listed.any { it.followed.isNotEmpty() }) marked = true
+    return SynopsisPage(listed, ranges, selected, { picked = it; landed = null }, outlook, protect, reveals, foldCount, { asking = true }, landed, goal, { goal = null }, asking, marked)
 }
 
 /**
@@ -2046,7 +2173,20 @@ private fun rememberEpisodeFold(id: AnilistId, grid: androidx.compose.foundation
  * quiet one-line row with a chevron, not a button.
  */
 @Composable
-private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier: Modifier = Modifier, dub: String? = null, onToggle: () -> Unit) {
+private fun WatchedFoldRow(
+    folded: List<EpisodeRow>,
+    unfolded: Boolean,
+    modifier: Modifier = Modifier,
+    dub: String? = null,
+    /** Whether the table's rows keep the marks' column, so this row keeps it too. */
+    marked: Boolean = false,
+    /**
+     * The phone's row: a faint rule at its foot as the rows below have, and the folded episodes'
+     * marks at their own width before the chevron, since the phone's rows carry theirs on the still.
+     */
+    ruled: Boolean = false,
+    onToggle: () -> Unit,
+) {
     val colors = MaterialTheme.colorScheme
     val turn by androidx.compose.animation.core.animateFloatAsState(if (unfolded) 180f else 0f, Motion.quick(), label = "fold") // i18n-skip
     val hide = stringResource(R.string.title_hide_watched)
@@ -2058,7 +2198,9 @@ private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier
             .fillMaxWidth()
             .heightIn(min = 56.dp)
             .clickable(onClickLabel = if (unfolded) hide else show, onClick = onToggle)
+            .then(if (ruled) Modifier.endRule() else Modifier)
             .semantics { stateDescription = if (unfolded) expanded else collapsed },
+        horizontalArrangement = if (ruled) Arrangement.spacedBy(8.dp) else Arrangement.Start,
         verticalAlignment = Alignment.CenterVertically,
     ) {
         Text(
@@ -2071,6 +2213,13 @@ private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier
         androidx.compose.animation.AnimatedVisibility(dub != null, enter = fadeIn(Motion.fadeIn()), exit = ExitTransition.None) {
             Text(dub.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, modifier = Modifier.padding(end = 12.dp))
         }
+        // Folded, the row carries the marks of the episodes inside it; unfolded, those rows carry their own.
+        val marks = if (unfolded) emptyList() else FollowingWords.folded(folded)
+        if (marked && ruled) {
+            Box(spokenMarks(marks)) { MarksFading(marks) { FollowedStack(it, MarkPicture, colors.surface) } }
+        } else if (marked) {
+            MarkSlot(marks, Modifier.padding(end = 8.dp))
+        }
         Icon(Icons.Down, contentDescription = null, tint = colors.onSurfaceVariant, modifier = Modifier.graphicsLayer { rotationZ = turn })
     }
 }
@@ -2078,7 +2227,7 @@ private fun WatchedFoldRow(folded: List<EpisodeRow>, unfolded: Boolean, modifier
 @Composable
 private fun EpisodePlaceholder() {
     Row(
-        Modifier.fillMaxWidth().height(72.dp).padding(start = 16.dp, end = 24.dp),
+        Modifier.testTag(TITLE_PLACEHOLDER).fillMaxWidth().height(72.dp).padding(start = 16.dp, end = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp),
         verticalAlignment = Alignment.CenterVertically,
     ) {
@@ -2126,12 +2275,15 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
                 current = current,
                 unaired = unaired,
                 hidden = hidden,
-                form = rowForm(page.outlook, hidden, unaired),
+                form = rowForm(page.outlook, hidden, unaired, textless = textless(row)),
                 onPlay = play,
                 onMenu = { sheet = true },
                 onShow = { reveals.show(row.number) },
                 opensService = link != null && !unaired,
                 beside = beside,
+                followed = if (page.marked) row.followed else null,
+                // A watched episode's thread line goes under its row, and the rule under that.
+                ruled = comments == null,
             )
         } else {
             EpisodeLine(
@@ -2149,7 +2301,37 @@ private fun EpisodeRowView(entry: Entry, row: EpisodeRow, next: UInt, actions: A
             EpisodeSheet(entry, row, hidden = hidden, onShow = { reveals.show(row.number) }, onDismiss = { sheet = false }, actions = actions, current = current)
         }
         // The quiet line under a watched episode that has a thread.
-        if (comments != null) DiscussionRow(entry, row, comments)
+        if (comments != null) {
+            DiscussionRow(entry, row, comments)
+            if (page != null && !beside) Spacer(Modifier.fillMaxWidth().height(RowDims.Rule).endRule(inset = 16.dp))
+        }
+    }
+}
+
+/**
+ * "Episodes" in the section style over the phone's list, with how far the dub goes beside it as
+ * secondary words, the way Home sets a count beside Continue. The dub line fades in when it comes.
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun EpisodesHeading(dub: String?, modifier: Modifier = Modifier) {
+    val colors = MaterialTheme.colorScheme
+    // The last dub line shown, kept while it fades.
+    var kept by remember { mutableStateOf(dub) }
+    if (dub != null) kept = dub
+    FlowRow(
+        modifier.fillMaxWidth().heightIn(min = 48.dp).padding(top = 12.dp, start = 16.dp, end = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        Text(
+            stringResource(R.string.title_episodes),
+            style = MaterialTheme.typography.titleMedium,
+            color = colors.onSurface,
+            modifier = Modifier.alignByBaseline().semantics { heading() },
+        )
+        androidx.compose.animation.AnimatedVisibility(dub != null, Modifier.alignByBaseline(), enter = fadeIn(Motion.fadeIn()), exit = ExitTransition.None) {
+            Text(kept.orEmpty(), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+        }
     }
 }
 
@@ -2180,6 +2362,23 @@ private fun TabletTitle(
     val unfolded by store.episodeFolds.unfolded.collectAsStateWithLifecycle()
     val grid = androidx.compose.foundation.lazy.grid.rememberLazyGridState()
     val fold = rememberEpisodeFold(entry.id, grid)
+    // The top bar fills as the banner leaves it, solid once the banner has gone up from under it;
+    // a head with no banner starts at once.
+    val barRange = remember { androidx.compose.runtime.mutableStateOf(TitleBarFillRange.overBanner(TabletBannerHeight)) }
+    val instantBar = app.kaeri.design.rememberAnimationsRemoved()
+    val density = LocalDensity.current
+    val barFill: () -> Float = remember(grid, instantBar, density) {
+        {
+            barRange.value.fill(grid.firstVisibleItemIndex, grid.firstVisibleItemScrollOffset.toFloat(), density, instantBar)
+        }
+    }
+    // As on a phone (SeasonPage): what only the page brings (Also on, the tags, people you follow,
+    // the picker, Related) would push the rest down as it lands, so the facts, the family and the
+    // episodes wait for it under placeholders that keep their room from the first frame, and the
+    // page replaces them in one crossfade the moment it lands, with no wait and no hold.
+    val failedIds by store.titles.failed.collectAsStateWithLifecycle()
+    val held = !rememberSettled(entry.detail?.partial == false || entry.id in failedIds, key = entry.id)
+    val heldId = if (held) entry.id else null
     LaunchedEffect(page.goal, page.selected) {
         val row = page.rows.firstOrNull { it.number == page.goal } ?: return@LaunchedEffect
         grid.landOn(page.key(entry.id, row))
@@ -2199,20 +2398,21 @@ private fun TabletTitle(
                 fullWidth("head") {
                   SeasonFade(entry) { entry ->
                     val art = HeroArt.of(entry, allEpisodes[entry.id], artWaited(entry.id))
+                    SideEffect { barRange.value = if (art == HeroArt.Compact) TitleBarFillRange.compact(64.dp) else TitleBarFillRange.overBanner(TabletBannerHeight) }
                     Box {
                         if (art != HeroArt.Compact) {
                             ArtworkImage(
                                 art.url,
                                 plate = null,
                                 maxPixelSize = 1600,
-                                modifier = Modifier.fillMaxWidth().height(inset + 208.dp).shared(Shared.Art, entry.id),
+                                modifier = Modifier.fillMaxWidth().height(inset + TabletBannerHeight).shared(Shared.Art, entry.id),
                             )
-                            BannerScrim(Modifier.fillMaxWidth().height(inset + 208.dp))
+                            BannerScrim(Modifier.fillMaxWidth().height(inset + TabletBannerHeight))
                         }
                         // The cover overlaps the banner's foot, the title block sits level with
                         // the cover's foot, and the details column starts below the banner, so it
                         // grows down the page and never up over the art.
-                        val below = if (art == HeroArt.Compact) 0.dp else 208.dp - 135.dp + 24.dp
+                        val below = if (art == HeroArt.Compact) 0.dp else TabletBannerHeight - 135.dp + 24.dp
                         Row(
                             Modifier.padding(top = inset + if (art == HeroArt.Compact) 64.dp else 135.dp).padding(start = 16.dp),
                             horizontalArrangement = Arrangement.spacedBy(24.dp),
@@ -2244,22 +2444,31 @@ private fun TabletTitle(
                                 TabletActions(entry, actions, episodes?.firstOrNull()?.metadataOnly == true, Modifier.padding(top = 4.dp))
                             }
                           }
-                            if (!aboutOpen) TitleFacts(entry, Modifier.padding(top = below).width(376.dp)) { aboutOpen = true }
+                            if (!aboutOpen) {
+                                Crossfade(entry.id == heldId, Modifier.padding(top = below).width(376.dp), animationSpec = Motion.standard(), label = "facts") { waiting -> // i18n-skip
+                                    if (waiting) TitleFactsPlaceholder(entry) else TitleFacts(entry) { aboutOpen = true }
+                                }
+                            }
                         }
                     }
                   }
                 }
-                if (family.seasons.isNotEmpty() || family.related.isNotEmpty()) {
+                if (!held && (family.seasons.isNotEmpty() || family.related.isNotEmpty())) {
                     fullWidth("family") {
                         if (family.seasons.isNotEmpty()) TabletSeasons(entry, family, onPick) else Spacer(Modifier.height(24.dp))
                     }
                 }
-                if (entry.relatedCards().isNotEmpty()) {
+                if (!held && entry.relatedCards().isNotEmpty()) {
                     fullWidth("related") { SeasonFade(entry, itemMotion()) { RelatedRail(it.relatedCards()) } }
                 }
-                fullWidth("gap") { Spacer(Modifier.height(16.dp)) }
-                if (episodes == null) {
-                    items(4) { Box { Box(Modifier.widthIn(max = BesideDims.MaxWidth)) { AfterWait { EpisodePlaceholder() } } } }
+                // Keys of their own while the page is on its way, so it crossfades with them where
+                // they stand rather than moving them.
+                val phase = if (held) "held-" else ""
+                fullWidth("${phase}gap") { Spacer(itemMotion().height(16.dp)) }
+                if (held || episodes == null) {
+                    items(4, key = { "${phase}placeholder-$it" }) {
+                        Box(itemMotion()) { Box(Modifier.widthIn(max = BesideDims.MaxWidth)) { EpisodePlaceholder() } }
+                    }
                 } else {
                     val listed = page.listed
                     if (listed.isEmpty()) fullWidth("no-episodes") { NoEpisodes(entry.id, itemMotion().padding(start = 16.dp)) }
@@ -2273,7 +2482,7 @@ private fun TabletTitle(
                         val anchor = page.key(entry.id, page.rows[folded.size])
                         fullWidth(watchedFold(entry.id)) {
                             // In a Box, which lets the row be narrower than the grid's cell.
-                            Box(itemMotion()) { WatchedFoldRow(folded, entry.id in unfolded, Modifier.widthIn(max = BesideDims.MaxWidth).padding(start = 16.dp)) { fold(anchor) } }
+                            Box(itemMotion()) { WatchedFoldRow(folded, entry.id in unfolded, Modifier.widthIn(max = BesideDims.MaxWidth).padding(start = 16.dp), marked = page.marked) { fold(anchor) } }
                         }
                     }
                     val shown = if (folded.isNotEmpty() && entry.id !in unfolded) page.rows.drop(folded.size) else page.rows
@@ -2299,7 +2508,7 @@ private fun TabletTitle(
                     }
                 }
             }
-            TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, modifier = Modifier.padding(top = inset))
+            TitleTopBar(entry, pick = surprisePick(id), onBack = navigator::back, inset = inset, fill = barFill)
         }
         if (aboutOpen) {
             AboutPane(entry, onClose = { aboutOpen = false }) { other ->
@@ -2375,7 +2584,12 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
     val asking = store.match.state.collectAsStateWithLifecycle().value.asks(entry.id)
     val availability = availabilityOf(entry.id, playsHere = !unlisted)
     val onService = availability?.main?.takeIf { availability.case == AvailabilityCase.ON_SERVICE }
+    // The next episode aired and no source lists it: its status over the row, its buttons in the action's place.
+    val (missing, said) = rememberMissingView(entry)
+    val missed = missing.shown != null && !unlisted && onService == null
     Column(modifier) {
+    Announcer(said)
+    MissingAbove(missing, missed, Modifier.padding(bottom = 12.dp))
     Row(Modifier.heightIn(min = 56.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
         if (onService != null) {
             WatchOnButton(entry, onService, Modifier.heightIn(min = 56.dp))
@@ -2383,12 +2597,22 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
             ChooseMatchButton(entry.id, Modifier.heightIn(min = 56.dp))
         } else if (action.playable && unlisted) {
             AddSourceButton(Modifier.heightIn(min = 56.dp))
-        } else if (action.playable) {
-            Button(onClick = { actions.play(entry.id, action.episode.toString()) }, modifier = Modifier.heightIn(min = 56.dp), contentPadding = PaddingValues(horizontal = 24.dp)) {
-                Icon(Icons.Play, contentDescription = null, modifier = Modifier.size(24.dp))
-                Spacer(Modifier.width(8.dp))
-                Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
-                    Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+        } else if (action.playable || missed) {
+            MissingLead(entry, missing, actions) {
+                val origin = rememberCastOrigin()
+                Button(
+                    onClick = {
+                        origin.mark()
+                        actions.play(entry.id, action.episode.toString())
+                    },
+                    modifier = Modifier.heightIn(min = 56.dp).then(origin.modifier),
+                    contentPadding = PaddingValues(horizontal = 24.dp),
+                ) {
+                    CastPlayIcon()
+                    Spacer(Modifier.width(8.dp))
+                    Crossfade(action.label(LocalContext.current), animationSpec = Motion.standard(), label = "action") { // i18n-skip
+                        Text(it, style = MaterialTheme.typography.titleMedium.tabular(), maxLines = 1)
+                    }
                 }
             }
         } else {
@@ -2431,7 +2655,39 @@ private fun TabletActions(entry: Entry, actions: AppActions, unlisted: Boolean, 
             }
         }
     }
+    if (action.playable && onService == null && !asking && !unlisted) CastPlaysOn(Modifier.padding(top = 8.dp))
+    PrivatePageLine(privateLine(PrivateTitle.Show(entry.id)))
     ServiceLines(availability, entry)
+    }
+}
+
+/**
+ * The details column while the page is on its way: the synopsis the list brought, then the facts'
+ * row, the tags and More about as placeholders in [TitleFacts]' own frame.
+ */
+@Composable
+private fun TitleFactsPlaceholder(entry: Entry) {
+    val type = MaterialTheme.typography
+    val density = LocalDensity.current
+    val label = with(density) { type.labelSmall.lineHeight.toDp() }
+    val line = with(density) { type.bodyMedium.lineHeight.toDp() }
+    Column {
+        val synopsis = synopsisWithoutSpoilers(entry.synopsis)
+        if (synopsis.isNotEmpty()) {
+            Text(synopsis, style = type.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 4, overflow = TextOverflow.Ellipsis)
+        }
+        Column {
+            Row(Modifier.padding(top = 20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                repeat(3) {
+                    Column(Modifier.weight(1f)) {
+                        TextPlaceholder(0.5f, label)
+                        TextPlaceholder(0.8f, line)
+                    }
+                }
+            }
+            TextPlaceholder(0.6f, line, Modifier.padding(top = 12.dp))
+            Box(Modifier.testTag(TITLE_PLACEHOLDER).padding(top = 12.dp).size(168.dp, 40.dp).clip(CircleShape).background(MaterialTheme.colorScheme.surfaceContainer))
+        }
     }
 }
 
@@ -2475,5 +2731,16 @@ private fun TitleFacts(entry: Entry, modifier: Modifier = Modifier, onMore: () -
             Text(it, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 12.dp))
         }
         FilledTonalButton(onClick = onMore, modifier = Modifier.padding(top = 12.dp)) { Text(stringResource(R.string.title_more_about)) }
+        // People you follow, after More about as wide screens place them: the phone's row and
+        // sheet, fading in as they arrive while the column grows on standard.
+        val people = entry.detail?.following.orEmpty()
+        var kept by remember { mutableStateOf(people) }
+        if (people.isNotEmpty()) kept = people
+        androidx.compose.animation.AnimatedVisibility(
+            people.isNotEmpty(),
+            enter = fadeIn(Motion.fadeIn()) + androidx.compose.animation.expandVertically(Motion.standard()),
+            exit = androidx.compose.animation.fadeOut(Motion.fadeOut()) + androidx.compose.animation.shrinkVertically(Motion.standard()),
+            label = "following", // i18n-skip
+        ) { FollowingRow(kept, inset = 0.dp) }
     }
 }

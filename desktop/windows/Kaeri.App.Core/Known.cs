@@ -55,6 +55,9 @@ public sealed class Known
         Reading.Sending.Send = send;
     }
 
+    /// <summary>Private mode, the titles kept always private and the places held in memory.</summary>
+    public Privately Private { get; } = new();
+
     /// <summary>Each show's own settings sheet, as the engine last sent it, by AniList id.</summary>
     public Dictionary<uint, ShowSettingsView> ShowSheets { get; } = [];
 
@@ -127,6 +130,9 @@ public sealed class Known
 
     /// <summary>The source picker's listings per title, and which pins have been said to be unavailable.</summary>
     public SourceChoices SourceChoices { get; } = new();
+
+    /// <summary>What the checks of a missing episode the viewer asked for came to.</summary>
+    public MissingChecks MissingChecks { get; } = new();
 
     /// <summary>The match picker's state per title: the questions sources asked, searches by hand and what each title is matched to.</summary>
     public MatchBook Matches { get; } = new();
@@ -370,6 +376,7 @@ public sealed class Known
     public void Take(Event e)
     {
         Jobs.Take(e, DateTimeOffset.UtcNow);
+        Private.Take(e);
         switch (e)
         {
             case Event.Medium medium:
@@ -452,6 +459,9 @@ public sealed class Known
                 break;
             case Event.SourceOptions:
                 SourceChoices.Take(e);
+                break;
+            case Event.EpisodeChecked:
+                MissingChecks.Take(e);
                 break;
             case Event.MatchChoices or Event.MatchSearchFailed or Event.MatchFixFailed or Event.TitleMatch:
                 Matches.Take(e);

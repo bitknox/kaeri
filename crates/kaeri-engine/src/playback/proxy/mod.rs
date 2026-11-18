@@ -6,12 +6,21 @@
 //! through a host's rate limit rather than letting ffmpeg skip segments, and keeps what it fetched
 //! so the seek bar's thumbnailer can read from memory.
 //!
-//! **What it changes.** Only the URIs in a playlist, so the player's next requests come back
-//! here, and a playlist is served from its `#EXTM3U` on and labelled as one: a playlist may
-//! carry leading bytes before the tag, and a host may give it any content type. Every other
-//! byte is served as the host sent it: segments, keys and initialisation
+//! **What it changes.** The URIs in a playlist, so the player's next requests come back here,
+//! and what the stream's plugin transforms (below). A playlist is served from its `#EXTM3U` on
+//! and labelled as one: a playlist may carry leading bytes before the tag, and a host may give
+//! it any content type. Every other byte is served as the host sent it: segments, keys and
+//! initialisation
 //! segments pass through unchanged, and an `#EXT-X-KEY` is proxied verbatim, so encrypted HLS
 //! keeps working exactly as it did. Nothing here decrypts anything.
+//!
+//! **Plugin transforms.** A plugin may transform the keys or segments of the streams it
+//! resolved, by the `relay` interface of its world and a capability per part: see
+//! [`Provider::stream_transforms`]. The proxy learns which URLs are keys and which segments from
+//! the playlists it serves, passes the bytes of each covered part to the plugin once, and serves
+//! and keeps what the plugin answers, for both players. The proxy reads nothing into those bytes;
+//! the plugin decides what to do with them. A ranged slice is relayed as the host sent it, and a
+//! transform that fails fails that one request.
 //!
 //! **Two players read through it.** The seek bar's thumbnailer is a second mpv opening the
 //! same stream, and left to itself it fetched whole segments at every hover — twice, since
@@ -33,6 +42,7 @@ use std::{
     time::Instant,
 };
 
+use kaeri_core::traits::{Provider, StreamPart, StreamTransforms};
 use kaeri_net::HttpClient;
 use tokio::{
     io::{AsyncRead, AsyncReadExt, AsyncWriteExt, BufReader},
@@ -42,11 +52,13 @@ use tokio::{
 mod playlist;
 mod thumbnail;
 mod upstream;
+mod warm;
 
 pub use playlist::{resolve_url, rewrite_playlist};
+pub use warm::Release;
 
 use kaeri_playback::hls::PLAYLIST_TYPE;
-use playlist::playlist_body;
+use playlist::{looks_like_playlist, playlist_body};
 use upstream::{Cache, send, send_once};
 
 /// The largest response body the proxy will hold in memory.
@@ -66,6 +78,10 @@ const CACHE_BYTES: usize = 200 * 1024 * 1024;
 pub struct ProxyServer {
     url: String,
     thumbnail_url: String,
+    /// The stream's own URL, which `url` fronts.
+    origin: String,
+    /// The segments fetched ahead, before the player asked: see [`ProxyServer::warm`].
+    warmed: Vec<String>,
     upstream: Arc<Upstream>,
     /// The listener and its accept loop, which a phone's app binds again on the same port when
     /// it comes back from the background: see `kaeri_net::loopback`.
@@ -127,10 +143,16 @@ struct Fetched {
 /// One fetch, awaited by every request that wants the same resource while it runs.
 type InFlight = Arc<tokio::sync::OnceCell<Result<Arc<Fetched>, String>>>;
 
-/// Everything one proxied stream needs: the client to fetch with, and the headers to fetch with.
+/// Everything one proxied stream needs: the client to fetch with, the headers to fetch with,
+/// and the source that transforms its parts, if it does.
 struct Upstream {
     http: HttpClient,
     headers: Vec<(String, String)>,
+    /// The source the stream came from, when it transforms some part of it, with the parts.
+    source: Option<(Arc<dyn Provider>, StreamTransforms)>,
+    /// The keys and segments the playlists served so far name, by URL: which part each is,
+    /// for the source's transform. Kept only when there is a source to ask.
+    parts: Mutex<HashMap<String, StreamPart>>,
     token: String,
     port: u16,
     /// No upstream request before this instant. Shared, because a rate limit is per client
@@ -165,10 +187,22 @@ struct Upstream {
 }
 
 impl Upstream {
-    fn new(http: HttpClient, headers: Vec<(String, String)>, token: &str, port: u16) -> Self {
+    fn new(
+        http: HttpClient,
+        headers: Vec<(String, String)>,
+        source: Option<Arc<dyn Provider>>,
+        token: &str,
+        port: u16,
+    ) -> Self {
+        let source = source.and_then(|source| {
+            let parts = source.stream_transforms();
+            parts.any().then_some((source, parts))
+        });
         Self {
             http,
             headers,
+            source,
+            parts: Mutex::new(HashMap::new()),
             token: token.to_owned(),
             port,
             cooldown: Mutex::new(None),
@@ -200,6 +234,40 @@ impl Upstream {
             known.extend(playlist::segment_urls(body, base));
         }
         known.extend(playlist::subtitle_uris(body, base));
+    }
+
+    /// Remember which URLs a playlist names as keys and segments, when the stream's source
+    /// transforms either. A subtitle playlist's segments are subtitles, and are left out.
+    fn note_parts(&self, body: &str, base: &str) {
+        let Some((_, transforms)) = &self.source else { return };
+        if lock(&self.subtitles).contains(base) {
+            return;
+        }
+        let named = playlist::part_uris(body, base);
+        lock(&self.parts).extend(
+            named
+                .into_iter()
+                .filter_map(|(part, url)| transforms.covers(part).then_some((url, part))),
+        );
+    }
+
+    /// `fetched` as the stream's source transforms it, when it is a part the source covers;
+    /// otherwise as it came. A playlist is never passed on, whatever URL it came from.
+    async fn transformed(&self, url: &str, fetched: Fetched) -> Result<Fetched, String> {
+        let Some((source, _)) = &self.source else { return Ok(fetched) };
+        let Some(part) = lock(&self.parts).get(url).copied() else { return Ok(fetched) };
+        if looks_like_playlist(&fetched.content_type, &fetched.body) {
+            return Ok(fetched);
+        }
+        let Fetched { content_type, body } = fetched;
+        let size = body.len();
+        match source.transform(part, url, &self.headers, body).await {
+            Ok(body) => {
+                tracing::debug!(url = %url, part = part.as_str(), from = size, to = body.len(), "part transformed by its source");
+                Ok(Fetched { content_type, body })
+            }
+            Err(e) => Err(format!("the source's {} transform failed: {e}", part.as_str())),
+        }
     }
 
     /// `fetched` as playback should get it: a WebVTT file listed as a subtitle by a playlist,
@@ -283,6 +351,18 @@ pub async fn serve(
     headers: Vec<(String, String)>,
     token: &str,
 ) -> std::io::Result<ProxyServer> {
+    serve_for(http, url, headers, None, token).await
+}
+
+/// [`serve`], for a stream from `source`, which transforms the parts of it that it
+/// [covers](Provider::stream_transforms).
+pub async fn serve_for(
+    http: HttpClient,
+    url: &str,
+    headers: Vec<(String, String)>,
+    source: Option<Arc<dyn Provider>>,
+    token: &str,
+) -> std::io::Result<ProxyServer> {
     // Loopback only, like every other server this app runs. The proxy is told its port once it
     // has one, for the URLs it rewrites a playlist with.
     let upstream: Arc<std::sync::OnceLock<Arc<Upstream>>> = Arc::default();
@@ -308,7 +388,7 @@ pub async fn serve(
         })
         .await?
     };
-    let proxy = Arc::new(Upstream::new(http, headers, token, listener.port()));
+    let proxy = Arc::new(Upstream::new(http, headers, source, token, listener.port()));
     let entry = proxy.proxied(url, Class::Playback);
     let thumbnail_entry = proxy.proxied(url, Class::Thumbnail);
     let _ = upstream.set(Arc::clone(&proxy));
@@ -317,6 +397,8 @@ pub async fn serve(
     Ok(ProxyServer {
         url: entry,
         thumbnail_url: thumbnail_entry,
+        origin: url.to_owned(),
+        warmed: Vec::new(),
         upstream: proxy,
         _listener: listener,
     })
@@ -388,6 +470,7 @@ async fn handle_connection(socket: TcpStream, upstream: Arc<Upstream>) -> std::i
                     let text = String::from_utf8_lossy(playlist);
                     upstream.learn_order(&text, &url);
                     upstream.note_subtitles(&text, &url);
+                    upstream.note_parts(&text, &url);
                     let proxy = |u: &str| upstream.proxied(u, class);
                     (PLAYLIST_TYPE, rewrite_playlist(&text, &url, &proxy).into_bytes())
                 }
@@ -556,14 +639,18 @@ impl Proxies {
     ///
     /// Failure to start one is not fatal — the original URL is returned and playback proceeds
     /// exactly as it would have. A proxy that cannot start must not cost you the episode.
+    ///
+    /// `source` is the provider the stream came from, asked to transform the parts of it that
+    /// it covers.
     pub async fn route(
         &mut self,
         http: &HttpClient,
         url: &str,
         headers: &[(String, String)],
+        source: Option<Arc<dyn Provider>>,
         token: &str,
     ) -> String {
-        match serve(http.clone(), url, headers.to_vec(), token).await {
+        match serve_for(http.clone(), url, headers.to_vec(), source, token).await {
             Ok(server) => {
                 let proxied = server.url().to_owned();
                 self.0.insert(url.to_owned(), server);
@@ -574,6 +661,14 @@ impl Proxies {
                 url.to_owned()
             }
         }
+    }
+
+    /// Keep `server`, started ahead for `url` (see [`ProxyServer::warm`]), as the proxy
+    /// fronting it, and return the URL to play instead.
+    pub fn adopt(&mut self, url: &str, server: ProxyServer) -> String {
+        let proxied = server.url().to_owned();
+        self.0.insert(url.to_owned(), server);
+        proxied
     }
 
     /// The thumbnailer's entry to the proxy fronting `url`, when one is running.
@@ -839,6 +934,14 @@ mod tests {
     /// A host on loopback answering each path with its file, and `404` otherwise; the proxy
     /// fronting its `/master.m3u8`.
     async fn serve_files(files: Vec<(&'static str, String)>) -> (ProxyServer, String) {
+        serve_files_for(files, None).await
+    }
+
+    /// [`serve_files`], for a stream from `source`.
+    async fn serve_files_for(
+        files: Vec<(&'static str, String)>,
+        source: Option<Arc<dyn Provider>>,
+    ) -> (ProxyServer, String) {
         let host = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
         let address = host.local_addr().unwrap();
         tokio::spawn(async move {
@@ -865,9 +968,226 @@ mod tests {
         });
         let http = HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
         let origin = format!("http://{address}");
-        let server =
-            serve(http, &format!("{origin}/master.m3u8"), Vec::new(), "tok").await.unwrap();
+        let headers = vec![("referer".to_owned(), "https://media.example/".to_owned())];
+        let server = serve_for(http, &format!("{origin}/master.m3u8"), headers, source, "tok")
+            .await
+            .unwrap();
         (server, origin)
+    }
+
+    /// The status line and body of a `GET` of `url` on the proxy, through either entry.
+    async fn answer(url: &str) -> (String, String) {
+        let authority = url.trim_start_matches("http://").split('/').next().unwrap().to_owned();
+        let path = &url["http://".len() + authority.len()..];
+        let mut socket = TcpStream::connect(&authority).await.unwrap();
+        socket
+            .write_all(format!("GET {path} HTTP/1.1\r\nHost: {authority}\r\n\r\n").as_bytes())
+            .await
+            .unwrap();
+        let mut raw = Vec::new();
+        socket.read_to_end(&mut raw).await.unwrap();
+        let raw = String::from_utf8_lossy(&raw).into_owned();
+        let (head, body) = raw.split_once("\r\n\r\n").unwrap();
+        (head.lines().next().unwrap().to_owned(), body.to_owned())
+    }
+
+    /// A source that transforms the parts `transforms` names: a key gains the prefix `k:`, and a
+    /// segment the prefix `s:`, or fails when `failing`. Counts the transforms it was asked for.
+    struct Prefixing {
+        manifest: kaeri_core::traits::ProviderManifest,
+        transforms: StreamTransforms,
+        failing: bool,
+        asked: std::sync::atomic::AtomicUsize,
+        headers: Mutex<Vec<(String, String)>>,
+    }
+
+    impl Prefixing {
+        fn new(transforms: StreamTransforms, failing: bool) -> Arc<Self> {
+            Arc::new(Self {
+                manifest: kaeri_core::traits::ProviderManifest {
+                    id: "prefixing".into(),
+                    display_name: "Prefixing".into(),
+                    version: "0.1.0".into(),
+                    kind: kaeri_core::traits::ProviderKind::Plugin,
+                    allowed_hosts: vec!["media.example".into()],
+                    translations: Vec::new(),
+                    torrents: false,
+                },
+                transforms,
+                failing,
+                asked: Default::default(),
+                headers: Mutex::default(),
+            })
+        }
+
+        fn asked(&self) -> usize {
+            self.asked.load(std::sync::atomic::Ordering::SeqCst)
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl Provider for Prefixing {
+        fn manifest(&self) -> &kaeri_core::traits::ProviderManifest {
+            &self.manifest
+        }
+
+        async fn search(
+            &self,
+            _: &str,
+            _: kaeri_core::media::Translation,
+            _: &kaeri_core::media::TitleHints,
+        ) -> Result<Vec<kaeri_core::media::SearchHit>, kaeri_core::ProviderError> {
+            Ok(Vec::new())
+        }
+
+        async fn episodes(
+            &self,
+            _: &kaeri_core::ids::ProviderKey,
+            _: kaeri_core::media::Translation,
+            _: &kaeri_core::media::TitleHints,
+        ) -> Result<Vec<kaeri_core::media::Episode>, kaeri_core::ProviderError> {
+            Ok(Vec::new())
+        }
+
+        async fn resolve(
+            &self,
+            _: &kaeri_core::ids::ProviderKey,
+            _: &str,
+            _: kaeri_core::media::Translation,
+            _: &kaeri_core::media::TitleHints,
+        ) -> Result<Vec<kaeri_core::Stream>, kaeri_core::ProviderError> {
+            Ok(Vec::new())
+        }
+
+        fn stream_transforms(&self) -> StreamTransforms {
+            self.transforms
+        }
+
+        async fn transform(
+            &self,
+            part: StreamPart,
+            _url: &str,
+            headers: &[(String, String)],
+            body: Vec<u8>,
+        ) -> Result<Vec<u8>, kaeri_core::ProviderError> {
+            self.asked.fetch_add(1, std::sync::atomic::Ordering::SeqCst);
+            *lock(&self.headers) = headers.to_vec();
+            let prefix: &[u8] = match part {
+                StreamPart::Key => b"k:",
+                StreamPart::Segment if self.failing => {
+                    return Err(kaeri_core::ProviderError::Parse("no".into()));
+                }
+                StreamPart::Segment => b"s:",
+            };
+            Ok([prefix, &body].concat())
+        }
+    }
+
+    /// A master playlist with a subtitle rendition, and the variant it names with a key, an
+    /// initialisation segment and two segments.
+    fn transformed_stream() -> Vec<(&'static str, String)> {
+        vec![
+            (
+                "/master.m3u8",
+                "#EXTM3U\n\
+                 #EXT-X-MEDIA:TYPE=SUBTITLES,GROUP-ID=\"s\",NAME=\"English\",URI=\"subs.m3u8\"\n\
+                 #EXT-X-STREAM-INF:BANDWIDTH=1,SUBTITLES=\"s\"\n\
+                 720.m3u8\n"
+                    .into(),
+            ),
+            (
+                "/720.m3u8",
+                "#EXTM3U\n\
+                 #EXT-X-KEY:METHOD=EXAMPLE,URI=\"key.bin\"\n\
+                 #EXT-X-MAP:URI=\"init.mp4\"\n\
+                 #EXTINF:4.0,\nseg-1.m4s\n\
+                 #EXTINF:4.0,\nseg-2.m4s\n\
+                 #EXT-X-ENDLIST\n"
+                    .into(),
+            ),
+            ("/subs.m3u8", "#EXTM3U\n#EXTINF:8.0,\nen.vtt\n#EXT-X-ENDLIST\n".into()),
+            ("/en.vtt", "WEBVTT\n\n00:00.000 --> 00:01.000\nhello\n".into()),
+            ("/key.bin", "KEY".into()),
+            ("/init.mp4", "INIT".into()),
+            ("/seg-1.m4s", "SEG-1".into()),
+            ("/seg-2.m4s", "SEG-2".into()),
+        ]
+    }
+
+    #[tokio::test]
+    async fn the_parts_a_source_transforms_reach_the_player_as_it_answers_them() {
+        let both = StreamTransforms { keys: true, segments: true };
+        let source = Prefixing::new(both, false);
+        let (server, _) = serve_files_for(transformed_stream(), Some(source.clone())).await;
+
+        let master = get(server.url()).await;
+        assert!(master.starts_with("#EXTM3U"), "a playlist is never passed on: {master}");
+        let variant = get(&proxied_ending(&master, "/720.m3u8")).await;
+        assert!(variant.starts_with("#EXTM3U"), "{variant}");
+        let subs = get(&proxied_ending(&master, "/subs.m3u8")).await;
+
+        assert_eq!(get(&proxied_ending(&variant, "/key.bin")).await, "k:KEY");
+        assert_eq!(get(&proxied_ending(&variant, "/init.mp4")).await, "s:INIT");
+        assert_eq!(get(&proxied_ending(&variant, "/seg-1.m4s")).await, "s:SEG-1");
+        let subtitle = get(&proxied_ending(&subs, "/en.vtt")).await;
+        assert!(subtitle.starts_with("WEBVTT"), "a subtitle is not a segment: {subtitle}");
+        assert_eq!(source.asked(), 3);
+        // The source sees the request as the proxy made it, with the stream's own headers.
+        assert_eq!(
+            *lock(&source.headers),
+            [("referer".to_owned(), "https://media.example/".to_owned())]
+        );
+    }
+
+    #[tokio::test]
+    async fn a_part_is_transformed_once_for_both_players() {
+        let both = StreamTransforms { keys: true, segments: true };
+        let source = Prefixing::new(both, false);
+        let (server, _) = serve_files_for(transformed_stream(), Some(source.clone())).await;
+
+        let master = get(server.url()).await;
+        let variant = get(&proxied_ending(&master, "/720.m3u8")).await;
+        assert_eq!(get(&proxied_ending(&variant, "/seg-2.m4s")).await, "s:SEG-2");
+
+        let thumbnails = answer(server.thumbnail_url()).await.1;
+        let variant = answer(&proxied_ending(&thumbnails, "/720.m3u8")).await.1;
+        let (status, body) = answer(&proxied_ending(&variant, "/seg-2.m4s")).await;
+        assert!(status.starts_with("HTTP/1.1 200"), "{status}");
+        assert_eq!(body, "s:SEG-2", "the thumbnailer reads what playback was served");
+        assert_eq!(source.asked(), 1, "kept, not transformed again");
+    }
+
+    #[tokio::test]
+    async fn only_the_parts_a_source_declares_are_passed_to_it() {
+        let keys = StreamTransforms { keys: true, segments: false };
+        let source = Prefixing::new(keys, false);
+        let (server, _) = serve_files_for(transformed_stream(), Some(source.clone())).await;
+        let master = get(server.url()).await;
+        let variant = get(&proxied_ending(&master, "/720.m3u8")).await;
+        assert_eq!(get(&proxied_ending(&variant, "/key.bin")).await, "k:KEY");
+        assert_eq!(get(&proxied_ending(&variant, "/seg-1.m4s")).await, "SEG-1");
+        assert_eq!(get(&proxied_ending(&variant, "/init.mp4")).await, "INIT");
+        assert_eq!(source.asked(), 1);
+
+        // A source that declares no part is never asked at all.
+        let none = Prefixing::new(StreamTransforms::default(), false);
+        let (server, _) = serve_files_for(transformed_stream(), Some(none.clone())).await;
+        let master = get(server.url()).await;
+        let variant = get(&proxied_ending(&master, "/720.m3u8")).await;
+        assert_eq!(get(&proxied_ending(&variant, "/key.bin")).await, "KEY");
+        assert_eq!(none.asked(), 0);
+    }
+
+    #[tokio::test]
+    async fn a_transform_that_fails_fails_that_one_request() {
+        let both = StreamTransforms { keys: true, segments: true };
+        let source = Prefixing::new(both, true);
+        let (server, _) = serve_files_for(transformed_stream(), Some(source)).await;
+        let master = get(server.url()).await;
+        let variant = get(&proxied_ending(&master, "/720.m3u8")).await;
+        let (status, _) = answer(&proxied_ending(&variant, "/seg-1.m4s")).await;
+        assert!(status.starts_with("HTTP/1.1 502"), "{status}");
+        assert_eq!(get(&proxied_ending(&variant, "/key.bin")).await, "k:KEY");
     }
 
     /// The body of a `GET` of `url` on the proxy.

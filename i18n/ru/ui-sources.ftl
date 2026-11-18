@@ -10,6 +10,22 @@ source-picker-coverage = { $of ->
     [many] { $covered } из { $of } эпизодов
    *[other] { $covered } из { $of } эпизода
  }
+source-picker-episodes = { $count ->
+    [one] { $count } эпизод: { $first }–{ $last }
+    [few] { $count } эпизода: { $first }–{ $last }
+    [many] { $count } эпизодов: { $first }–{ $last }
+   *[other] { $count } эпизода: { $first }–{ $last }
+ }
+source-picker-episodes-not-yet = Эпизоды { $first }–{ $last }. Пока нет { $missing }
+source-picker-episodes-not = Эпизоды { $first }–{ $last }. Нет { $missing }
+source-picker-missing-pair = { $a } и { $b }
+source-picker-missing-range = { $first }–{ $last }
+source-picker-coverage-missing = { $of ->
+    [one] { $covered } из { $of } эпизода. Нет { $missing }
+    [few] { $covered } из { $of } эпизодов. Нет { $missing }
+    [many] { $covered } из { $of } эпизодов. Нет { $missing }
+   *[other] { $covered } из { $of } эпизода. Нет { $missing }
+ }
 source-note-off = Выключен
 source-note-resting = Не отвечает, скоро попробуем снова
 source-note-gone = Не установлен

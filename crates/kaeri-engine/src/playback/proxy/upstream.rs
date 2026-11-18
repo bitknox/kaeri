@@ -49,6 +49,13 @@ impl Cache {
         })
     }
 
+    /// Let go of `url`, if it is kept.
+    pub(super) fn remove(&mut self, url: &str) {
+        if let Some((fetched, _)) = self.entries.remove(url) {
+            self.bytes -= fetched.body.len();
+        }
+    }
+
     fn insert(&mut self, url: &str, fetched: Arc<Fetched>, limit: usize) {
         let size = fetched.body.len();
         if size > CACHE_ENTRY_LIMIT || size > limit || self.entries.contains_key(url) {
@@ -199,13 +206,13 @@ fn parse_retry_after(value: &str) -> Option<Duration> {
 async fn fetch(upstream: &Upstream, url: &str) -> Result<Fetched, String> {
     let response = send(upstream, url, None).await?;
     upstream.answered(response.status().as_u16());
-    read_body(response).await
+    upstream.transformed(url, read_body(response).await?).await
 }
 
 /// Fetch one upstream URL for the thumbnailer: a single request, never held. A `429` starts
 /// the thumbnail cooldown, and only that one.
 pub(super) async fn fetch_once(upstream: &Upstream, url: &str) -> Result<Fetched, String> {
-    read_body(send_once(upstream, url, None).await?).await
+    upstream.transformed(url, read_body(send_once(upstream, url, None).await?).await?).await
 }
 
 /// One upstream request, for the thumbnailer. See [`fetch_once`].

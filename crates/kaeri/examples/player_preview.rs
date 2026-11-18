@@ -89,6 +89,7 @@ async fn main() -> anyhow::Result<()> {
             episode_total: None,
         };
         let settings = PlaySettings {
+            privacy: Default::default(),
             threshold: config.playback.commit_threshold,
             auto_skip: false,
             auto_skip_recap: false,
@@ -114,6 +115,8 @@ async fn main() -> anyhow::Result<()> {
             untracked: false,
             swarm: Default::default(),
             begin: Default::default(),
+            ahead: Default::default(),
+            further: Default::default(),
         };
         let stream = Stream {
             provider_id: "preview".into(),

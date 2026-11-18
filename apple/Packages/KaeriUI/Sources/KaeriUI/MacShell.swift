@@ -109,12 +109,10 @@ struct MacShell: View {
                     if navigator.seriesOnMac == nil, navigator.bookSourcePage == nil {
                         SectionToolbar(section: navigator.section)
                     }
-                    if store.tv.connected != nil {
-                        ToolbarItem(placement: .primaryAction) { TVNowPlayingButton() }
-                    }
                     ToolbarItem(placement: .primaryAction) {
                         SyncCapsule { navigator.openSettings(.accounts) }
                     }
+                    CastToolbarItem()
                 }
             }
             // A page over the section clears the toolbar's own background. Left automatic, macOS
@@ -132,13 +130,18 @@ struct MacShell: View {
             .modifier(ReadSearchTyping())
         }
         .containerBackground(Palette.ground, for: .window)
+        // While casting: the mini in the sidebar's foot, growing into its panel over the content.
+        .overlay { MacCastMorph() }
         .overlay {
             if navigator.paletteShown {
                 PaletteOverlay()
             }
         }
+        // With the cast's panel open, in the room beside it.
         .overlay(alignment: .bottom) {
-            NoticeCapsule().padding(.bottom, 16)
+            NoticeCapsule()
+                .padding(.leading, MacCastMetrics.panelOpen(store.tv.cast) ? MacCastMetrics.panelLeading + MacCastMetrics.panelWidth : 0)
+                .padding(.bottom, 16)
         }
         // Messages, the show's settings, More about and the source picker lose nothing to a click
         // outside, so they are cards over the window (Light dismiss).
@@ -388,7 +391,12 @@ struct Sidebar: View {
             Spacer(minLength: 0)
             if store.sync.hasProfiles, let profile = store.sync.activeProfile { account(profile) }
             row(.settings)
+            // The cast's mini sits in the foot, drawn over the window (MacCastMorph).
+            if store.tv.cast.miniShown {
+                Color.clear.frame(height: MacCastMetrics.sidebarRoom).transition(.identity)
+            }
         }
+        .animation(.standard, value: store.tv.cast.miniShown)
         .padding(EdgeInsets(top: 0, leading: 10, bottom: 12, trailing: 10))
         .focusable()
         .focused($focused)

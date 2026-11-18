@@ -21,7 +21,12 @@
 //   tv        a Play on TV scene, on the two fake TVs: paired, picker, code or remote (TvScene)
 //   cast      a casting scene, on Bedroom and the made-up TVs with Chromecast built in: picker,
 //             searching, none, blocked, starting, preparing, fixed, level, failed, never, network, codec,
-//             deeplink, upnext, undo, audio, lost, taken or bar (CastScene)
+//             deeplink, upnext, undo, audio, lost, taken or bar; and on the cast session: chooser,
+//             connecting, connected, dialog, opening, playing, paused, waiting, mini or joining; and the
+//             cast states: reconnecting, reconnectingmini, rejoin, giveup, giveupmini, fallback,
+//             fallbackopen, stopwait, stopwaitopen, stopped, stoppedopen or dialogplaying (CastScene)
+//   castat    milliseconds after episode 7 plays that a cast states scene runs its steps, for a
+//             recording to start first; the scene counts as reached once episode 7 plays
 //   discussion an episode number of the first fixture whose discussion opens in its sheet
 //   sheet     a sheet to open: torrent, join, kitsu, update or show (from A2); match, match-fix,
 //             match-found or match-empty open the match picker on the first fixture (unsure scene)
@@ -179,6 +184,7 @@ internal object Flavour {
         chapterWait = intent.getStringExtra("chapterwait")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         openWait = intent.getStringExtra("openwait")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
+        FixtureCasts.stepsAfter = intent.getStringExtra("castat")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
         return EngineLaunch.fixtures(scene, context.cacheDir)
             .copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
@@ -278,6 +284,10 @@ internal object Flavour {
 
     /** The made-up TVs with Chromecast built in, which no network is asked for. */
     fun castBrowser(context: Context): FfiCastBrowser = FixtureCasts.browser()
+
+    /** The scripted cast session, in the engine's place: it holds a made-up TV and plays on a scripted one. */
+    fun castSession(context: Context, store: AppStore, scope: kotlinx.coroutines.CoroutineScope): app.kaeri.store.CastSessionSource =
+        FixtureCasts.session(context, store, scope)
 
     /**
      * The TV scene the `tv` extra names, set up once Play on TV is, and true once it is on

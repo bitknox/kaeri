@@ -57,4 +57,24 @@ class HeroArtTest {
         assertEquals(HeroArt.Still("s1"), HeroArt.of(entry(), rows))
         assertEquals(HeroArt.Compact, HeroArt.of(entry(), listOf(row(1, null), row(2, null))))
     }
+
+    @Test
+    fun a_card_takes_the_banner_then_the_sent_still_then_the_cover_then_its_plate() {
+        val cover = entry().copy(coverUrl = "c")
+        assertEquals(HeroArt.Banner("b"), HeroArt.card(cover.copy(bannerUrl = "b", seenStill = "s")))
+        assertEquals(HeroArt.Still("s"), HeroArt.card(cover.copy(seenStill = "s")))
+        assertEquals(HeroArt.Cover("c"), HeroArt.card(cover))
+        // No cover at all: the plate in the cover's colour, with the title on it.
+        assertEquals(HeroArt.Compact, HeroArt.card(entry()))
+        // Home loads no episode tables, so a card never waits on its plate for one.
+        assertEquals(HeroArt.Waiting, HeroArt.of(cover, null, coverFills = true))
+    }
+
+    @Test
+    fun the_title_page_keeps_the_cover_beside_the_title() {
+        val cover = entry().copy(coverUrl = "c")
+        assertEquals(HeroArt.Compact, HeroArt.of(cover, emptyList()))
+        assertEquals(HeroArt.Cover("c"), HeroArt.of(cover, emptyList(), coverFills = true))
+        assertEquals(null, HeroArt.Cover("c").url)
+    }
 }

@@ -342,6 +342,13 @@ mod tests {
         assert!(waiting.waiting && waiting.rows.iter().all(|r| r.value == "–"));
         let local = player_stats_fixture(StatsFixture::Local);
         assert!(local.rows.iter().all(|r| r.label != "Network"));
+        let torrent = player_stats_fixture(StatsFixture::Torrent);
+        assert!(
+            torrent
+                .rows
+                .iter()
+                .any(|r| r.label == "Peers" && r.value == "12 connected · 48 found")
+        );
         let asking = starting_fixture(kaeri_model::starting::StartingFixture::AskingPinned);
         assert!(asking.iter().any(|e| matches!(
             e.event,

@@ -81,10 +81,11 @@ public final class BackgroundEngine: Sendable {
     public let answers: EngineAnswers
 
     /// No launch work at all: no sweeping, no update check, no digest, no datasets, no sync
-    /// timers, no plugin stores, no player check, no keep next.
+    /// timers, no plugin stores, no player check, no keep next, and no reaching for a TV a cast
+    /// was left running on.
     public static let quiet = FfiBackground(
         prune: false, updateCheck: false, digest: false, datasets: false, syncLoops: false,
-        storeRefresh: false, playerCheck: false, keepNext: false)
+        storeRefresh: false, playerCheck: false, keepNext: false, rejoinCast: false)
 
     /// Start `launch`'s engine with no background work of its own. Blocks while it opens its
     /// files, so call it off the main thread.

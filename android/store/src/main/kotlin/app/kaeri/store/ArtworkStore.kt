@@ -24,6 +24,9 @@ class Artwork(
 ) {
     val longSide: Int get() = maxOf(image.width, image.height)
 
+    /** The width of the image in the file, from its long side and this decode's shape. */
+    val sourceWidth: Int get() = (sourceLongSide.toLong() * image.width / longSide.coerceAtLeast(1)).toInt()
+
     /** Whether this decode is enough for [size] pixels: decoded for that many, or all there is. */
     fun covers(size: Int): Boolean = decodedFor >= size || longSide >= sourceLongSide
 

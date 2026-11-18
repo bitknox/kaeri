@@ -68,6 +68,7 @@ pub(super) fn episode(
         past_progress: false,
         spoiler_ahead: false,
         synopsis_pending: false,
+        followed: Vec::new(),
         thumbnail: None,
         description: None,
     }
@@ -150,5 +151,6 @@ pub(super) fn download(
         error: None,
         path: None,
         ahead: false,
+        private: false,
     }
 }

@@ -157,8 +157,11 @@ pub(super) fn settings() -> PlaySettings {
         up_next_countdown: 10,
         mpv_options: Vec::new(),
         untracked: false,
+        privacy: Default::default(),
+        further: Default::default(),
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
     }
 }
 
@@ -225,6 +228,7 @@ impl Rig {
             host: self.links.clone(),
             power: self.power.clone(),
             offline: Default::default(),
+            sources: None,
         };
         let (tx, mut rx) = mpsc::unbounded_channel();
         let playing = play(
@@ -341,6 +345,24 @@ async fn a_resume_point_opens_the_file_there_unless_the_viewer_asked_to_begin_at
 }
 
 #[tokio::test]
+async fn a_file_that_ends_before_it_plays_keeps_where_the_episode_was_left() {
+    // A cast stopped on the TV while its file loaded: the player says it ended, never having
+    // said a position. Where the episode was left stays the resume point.
+    let id = AnilistId::new(900_001);
+    let rig = Rig::new(vec![vec![PlaybackEvent::Ended { complete: false }]]);
+    let kept = kaeri_store::WatchEvent {
+        duration_secs: Some(1_435.0),
+        ..kaeri_store::WatchEvent::new(id, "1", 606.0)
+    };
+    rig.store.record_event(&kept).unwrap();
+    let resuming = PlaybackContext { resume_at: Some(606.0), ..context("1", None) };
+    let events = rig.play(stream(StreamKind::Mp4), resuming, settings()).await;
+    assert_eq!(ending(&events), Some(Ending::Failed), "{events:?}");
+    assert_eq!(rig.store.resume_position(id, "1").unwrap(), Some(606.0));
+    assert!(rig.store.completed_episodes(id).unwrap().is_empty());
+}
+
+#[tokio::test]
 async fn a_playback_without_tracking_plays_to_its_end_and_writes_nothing_down() {
     let rig = Rig::new(vec![file(&[("Opening", 0.0), ("Part A", 30.0)], (1920, 1080))]);
     let settings =
@@ -453,6 +475,62 @@ async fn the_next_episode_plays_in_the_window_the_last_one_left() {
     assert_eq!(opened, 1, "one window for both episodes");
     assert_eq!(calls.iter().filter(|c| matches!(c, Call::Load { .. })).count(), 2);
     assert_eq!(calls.last(), Some(&Call::Shutdown));
+}
+
+/// An ending early in the episode, such as an ending theme over a first episode's cold open,
+/// is only a segment to skip. Up Next waits for the ending in the last part of the episode, and
+/// so does the look-ahead for the next one, here and on a TV, which takes the same card.
+#[tokio::test]
+async fn an_early_ending_neither_starts_up_next_nor_finds_the_next_episode() {
+    const LENGTH: f64 = 1541.0;
+    // The early interval as aniskip's types would say it, and the closing one as the other.
+    for (early, late) in [("ed", "mixed-ed"), ("mixed-ed", "ed")] {
+        let mut events = opening(&[]);
+        events.extend((0..=300).map(|s| PlaybackEvent::Progress {
+            position: f64::from(s),
+            duration: Some(LENGTH),
+        }));
+        events.push(PlaybackEvent::Ended { complete: false });
+        let rig = Rig::new(vec![events]);
+        let mark = |kind: &str, start_ms, end_ms| kaeri_store::SkipMark {
+            anilist_id: AnilistId::new(900_001),
+            episode: "1".into(),
+            kind: kind.into(),
+            start_ms,
+            end_ms,
+            length_ms: 1_541_000,
+            marked_at: 1,
+            skip_id: None,
+        };
+        for (kind, start_ms, end_ms) in [
+            ("recap", 0, 20_000),
+            ("op", 20_800, 137_400),
+            (early, 24_000, 137_000),
+            (late, 1_400_000, 1_490_000),
+        ] {
+            rig.store.put_skip_mark(&mark(kind, start_ms, end_ms)).unwrap();
+        }
+        let said = rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings()).await;
+
+        let placed: Vec<Option<f64>> = rig
+            .opener
+            .calls()
+            .iter()
+            .filter_map(|call| match call {
+                Call::Overlay(Overlay::Next { card: Some(card), .. }) => Some(card.at),
+                _ => None,
+            })
+            .collect();
+        assert!(
+            placed.iter().flatten().all(|at| *at == 1400.0),
+            "{early}: Up Next only at the closing ending: {placed:?}"
+        );
+        assert_eq!(placed.last(), Some(&Some(1400.0)), "{early}: {placed:?}");
+        assert!(
+            !said.iter().any(|event| matches!(event, Event::PrefetchNext { .. })),
+            "{early}: nothing found ahead 300 s into a 1541 s episode"
+        );
+    }
 }
 
 #[tokio::test]
@@ -1534,4 +1612,522 @@ async fn undo_after_a_found_skip_takes_the_trust_back() {
     let found = rig.store.found_skips(show, "2").unwrap();
     assert_eq!(found[0].state, kaeri_store::skip_found::state::REJECTED);
     assert!(prompts(&rig.opener.calls()).is_empty(), "no card after an Undo");
+}
+
+/// How long the files of the failover tests run: long enough that a stream breaking off is
+/// well short of the credits.
+const EPISODE: f64 = 1440.0;
+
+fn at_second(position: f64) -> PlaybackEvent {
+    PlaybackEvent::Progress { position, duration: Some(EPISODE) }
+}
+
+/// A stream from `source` at `quality`, served from `host`.
+fn from(source: &str, host: &str, quality: u32) -> Stream {
+    Stream { provider_id: source.into(), ..served_from(host) }.with_quality(quality)
+}
+
+/// A rig whose files at `failing`, counted in the order they load, end in an error.
+fn failing_rig(files: Vec<Vec<PlaybackEvent>>, failing: &[usize]) -> Rig {
+    let scratch = tempfile::tempdir().unwrap();
+    let opener = ScriptedOpener::new(scratch.path(), files).failing(failing);
+    Rig::with(Arc::new(opener), scratch)
+}
+
+/// The loads in `calls`, by where they are and what they opened.
+fn loads(calls: &[Call]) -> Vec<(usize, String, Option<String>)> {
+    calls
+        .iter()
+        .enumerate()
+        .filter_map(|(i, call)| match call {
+            Call::Load { url, options } => {
+                let start = options.iter().find(|(k, _)| k == "start").map(|(_, v)| v.clone());
+                Some((i, url.clone(), start))
+            }
+            _ => None,
+        })
+        .collect()
+}
+
+/// The stream that takes over: another release, whose player picks the Japanese audio and
+/// the full subtitles by itself, under its own track numbers, and plays from where it opened to
+/// its end.
+fn taking_over(from: f64) -> Vec<PlaybackEvent> {
+    let mut events = vec![
+        PlaybackEvent::Loaded,
+        PlaybackEvent::TrackList(json!([
+            { "type": "video", "id": 1, "selected": true },
+            { "type": "audio", "id": 1, "lang": "jpn", "selected": true },
+            { "type": "audio", "id": 2, "lang": "eng" },
+            { "type": "sub", "id": 1, "lang": "eng", "title": "Full", "selected": true },
+        ])),
+    ];
+    events.extend((0..5).map(|s| at_second(from + f64::from(s))));
+    events.push(PlaybackEvent::Ended { complete: true });
+    events
+}
+
+/// The first stream plays from 600 s, the viewer turns to the English audio and turns the
+/// subtitles off, and then the stream ends as `end` has it: what the playback said and did.
+async fn choices_then(end: Vec<PlaybackEvent>, failing: &[usize]) -> (Rig, Vec<Event>) {
+    let mut next = taking_over(612.0);
+    if !end.iter().any(|event| matches!(event, PlaybackEvent::Ended { .. })) {
+        // A file that never ended is ended by the `loadfile` that replaces it, as mpv does.
+        next.insert(0, PlaybackEvent::Replaced);
+    }
+    let rig = failing_rig(vec![opening(&[]), next], failing);
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        window.send(at_second(600.0)).unwrap();
+        until_called(&rig, |call| *call == Call::Overlay(Overlay::Playing)).await;
+        let audio = kaeri_model::hosted::TrackKind::Audio;
+        let subtitles = kaeri_model::hosted::TrackKind::Subtitle;
+        controls.send(PlayerCommand::ChooseTrack { kind: audio, id: Some(1) }).unwrap();
+        controls.send(PlayerCommand::ChooseTrack { kind: subtitles, id: None }).unwrap();
+        until_called(&rig, |call| *call == Call::Set { property: "sid", value: json!("no") })
+            .await;
+        window.send(at_second(612.0)).unwrap();
+        for event in end {
+            window.send(event).unwrap();
+        }
+    };
+    let streams =
+        vec![from("yamabiko", "cdn-a.example", 1080), from("kodama", "cdn-b.example", 1080)];
+    let (events, ()) = tokio::join!(
+        rig.play_steered(streams, context("1", None), settings(), commands),
+        driving
+    );
+    drop(controls);
+    (rig, events)
+}
+
+/// What the stream that took over was told after it loaded: the viewer's audio and no
+/// subtitles, in its own track numbers.
+fn carried_over(calls: &[Call]) -> bool {
+    let Some((second, ..)) = loads(calls).get(1).cloned() else { return false };
+    let after = &calls[second..];
+    after.contains(&Call::Set { property: "aid", value: json!(2) })
+        && after.contains(&Call::Set { property: "sid", value: json!("no") })
+}
+
+#[tokio::test]
+async fn a_stream_that_breaks_off_fails_over_at_the_same_second_with_the_viewers_tracks() {
+    let (rig, events) =
+        choices_then(vec![PlaybackEvent::Ended { complete: false }], &[0]).await;
+    let calls = rig.opener.calls();
+
+    // The other source's stream opens where the first broke off, in the same window.
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert_eq!(loads[1].2.as_deref(), Some("612"));
+    assert_eq!(calls.iter().filter(|c| matches!(c, Call::Open { .. })).count(), 1);
+    // With the English audio and no subtitles, though nothing is remembered for the series.
+    assert!(carried_over(&calls), "{calls:#?}");
+    let kept = rig.store.track_memory(AnilistId::new(900_001), Translation::Sub).unwrap();
+    assert_eq!(kept, None, "Remember tracks is off, so nothing is written");
+
+    // The step line says it, and once the new stream shows a frame, a quiet notice names it.
+    assert!(events.iter().any(|e| matches!(
+        e,
+        Event::StartingStep {
+            step: kaeri_model::starting::StartStep::TryingAnotherStream { .. },
+            ..
+        }
+    )));
+    assert_eq!(toasts(&events), ["The stream broke off. kodama took over at the same point."]);
+    assert!(events.iter().any(|e| matches!(
+        e,
+        Event::Toast(n) if n.kind == kaeri_model::notice::NoticeKind::Info
+    )));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+
+    // The server that broke off is written down for the next play to rank.
+    let a = server(&rig, "cdn-a.example").expect("a record");
+    assert_eq!(a.last_failure, Some(ServerFailure::BrokeOff));
+}
+
+#[tokio::test]
+async fn a_stall_switched_away_from_keeps_the_viewers_tracks() {
+    let stall =
+        vec![PlaybackEvent::Buffering(true), PlaybackEvent::Script(ScriptEvent::StallSwitch)];
+    let (rig, events) = choices_then(stall, &[]).await;
+    let calls = rig.opener.calls();
+    assert_eq!(loads(&calls).len(), 2, "{calls:#?}");
+    assert!(carried_over(&calls), "{calls:#?}");
+    assert!(toasts(&events).is_empty(), "the viewer asked for it: {:?}", toasts(&events));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn an_ending_that_was_no_error_does_not_fail_over() {
+    // The window stayed, and the player gave no error: as before, the episode ends there.
+    let (rig, events) = choices_then(vec![PlaybackEvent::Ended { complete: false }], &[]).await;
+    assert_eq!(loads(&rig.opener.calls()).len(), 1);
+    assert_eq!(ending(&events), Some(Ending::Failed));
+}
+
+/// The opening of a file, and its playhead over `seconds`, from `start`.
+fn plays(start: f64, seconds: u32) -> Vec<PlaybackEvent> {
+    let mut events = opening(&[]);
+    events.extend((0..seconds).map(|s| at_second(start + f64::from(s))));
+    events
+}
+
+#[tokio::test]
+async fn a_stream_picked_by_hand_fails_over_to_another_of_its_quality_first() {
+    // The viewer picks the 720p stream from the sources menu; it breaks off, and the other
+    // source's 720p takes over ahead of the 1080p streams the pool ranks first.
+    let picked = [
+        plays(0.0, 3),
+        vec![PlaybackEvent::Script(ScriptEvent::Choose(kaeri_playback::Choice::Source(
+            "1".into(),
+        )))],
+    ]
+    .concat();
+    let broke = [plays(3.0, 3), vec![PlaybackEvent::Ended { complete: false }]].concat();
+    let rig = failing_rig(vec![picked, broke, taking_over(6.0)], &[1]);
+    let streams = vec![
+        from("yamabiko", "cdn-a.example", 1080),
+        from("yamabiko", "cdn-b.example", 720),
+        from("kodama", "cdn-c.example", 1080),
+        from("kodama", "cdn-d.example", 720),
+    ];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+    let hosts: Vec<String> = loads(&rig.opener.calls()).into_iter().map(|l| l.1).collect();
+    assert_eq!(hosts.len(), 3, "{hosts:?}");
+    assert!(
+        hosts[1].contains("cdn-b.example") && hosts[2].contains("cdn-d.example"),
+        "{hosts:?}"
+    );
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn a_pool_of_one_ends_as_before_when_its_stream_breaks_off() {
+    let broke = [plays(600.0, 3), vec![PlaybackEvent::Ended { complete: false }]].concat();
+    let rig = failing_rig(vec![broke], &[0]);
+    let events = rig
+        .play_all(vec![from("yamabiko", "cdn-a.example", 1080)], context("1", None), settings())
+        .await;
+    assert_eq!(loads(&rig.opener.calls()).len(), 1);
+    assert_eq!(ending(&events), Some(Ending::Failed));
+    assert!(toasts(&events).is_empty(), "{:?}", toasts(&events));
+    let a = server(&rig, "cdn-a.example").expect("a record");
+    assert_eq!(a.last_failure, Some(ServerFailure::BrokeOff));
+}
+
+#[tokio::test]
+async fn a_stream_that_breaks_off_in_the_credits_is_let_go() {
+    let broke =
+        [plays(EPISODE - 60.0, 3), vec![PlaybackEvent::Ended { complete: false }]].concat();
+    let rig = failing_rig(vec![broke, taking_over(EPISODE - 57.0)], &[0]);
+    let streams =
+        vec![from("yamabiko", "cdn-a.example", 1080), from("kodama", "cdn-b.example", 1080)];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+    assert_eq!(loads(&rig.opener.calls()).len(), 1);
+    assert_eq!(ending(&events), Some(Ending::Failed));
+}
+
+/// A play while private: it plays as any other, and Kaeri keeps nothing of it but its place in
+/// memory. No history, no resume point, no tracker progress, no track memory, and the window
+/// names no show.
+#[tokio::test]
+async fn a_private_play_keeps_its_place_in_memory_and_writes_nothing_down() {
+    let rig = Rig::new(vec![file(&[("Opening", 0.0), ("Part A", 30.0)], (1920, 1080))]);
+    let privacy = Arc::new(crate::private::Privacy::default());
+    privacy.set(true);
+    let id = AnilistId::new(900_001);
+    let settings = PlaySettings {
+        tracker_ids: vec!["anilist".into()],
+        remember_tracks: true,
+        share_skip_times: Some(true),
+        privacy: privacy.gate(id),
+        ..settings()
+    };
+    let events = rig.play(stream(StreamKind::Mp4), context("1", None), settings).await;
+
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+    let calls = rig.opener.calls();
+    let options = calls.iter().find_map(|c| match c {
+        Call::Load { options, .. } => Some(options.clone()),
+        _ => None,
+    });
+    let title = options.unwrap_or_default().into_iter().find(|(k, _)| k == "force-media-title");
+    assert_eq!(title.map(|(_, v)| v), Some(kaeri_i18n::t::now_playing_private()));
+    assert!(rig.store.completed_episodes(id).unwrap().is_empty(), "no history");
+    assert_eq!(rig.store.resume_position(id, "1").unwrap(), None, "no resume point");
+    assert_eq!(rig.store.outbox_depth(None).unwrap(), 0, "no tracker progress");
+    assert_eq!(rig.store.track_memory(id, Translation::Sub).unwrap(), None, "no track memory");
+    let kept = privacy.watch_kept(id).expect("the place is kept in memory");
+    assert!(kept.completed && kept.episode == "1");
+    assert!(!events.iter().any(|e| matches!(e, Event::ProgressQueued)), "no tracker is told");
+}
+
+/// An always-private show is held with the mode off, and recorded again once it is not.
+#[tokio::test]
+async fn an_always_private_show_is_held_with_the_mode_off() {
+    let privacy = Arc::new(crate::private::Privacy::default());
+    let id = AnilistId::new(900_001);
+    let title = kaeri_model::private::PrivateTitle::Show { id };
+    let flags = Store::open_in_memory().unwrap();
+    privacy.set_always(&flags, &title, true).unwrap();
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let held = PlaySettings { privacy: privacy.gate(id), ..settings() };
+    rig.play(stream(StreamKind::Mp4), context("1", None), held).await;
+    assert!(rig.store.completed_episodes(id).unwrap().is_empty(), "no history");
+    assert!(privacy.watch_kept(id).is_some());
+
+    privacy.set_always(&flags, &title, false).unwrap();
+    let rig = Rig::new(vec![file(&[("Opening", 0.0)], (1920, 1080))]);
+    let free = PlaySettings { privacy: privacy.gate(id), ..settings() };
+    rig.play(stream(StreamKind::Mp4), context("1", None), free).await;
+    assert_eq!(rig.store.completed_episodes(id).unwrap(), ["1"], "recorded again");
+}
+
+/// The sources after the pool, as a test has them: `more` for the first ask, then nothing.
+/// What each ask passed over and skipped is written down.
+#[derive(Default)]
+struct Onward {
+    more: Mutex<Option<Vec<Stream>>>,
+    asks: Mutex<Vec<(Vec<String>, Option<String>)>>,
+}
+
+#[async_trait::async_trait]
+impl crate::playback::further::Lookup for Onward {
+    fn beyond(&self, _: &[Stream]) -> bool {
+        self.more.lock().unwrap().is_some()
+    }
+
+    async fn after(
+        &self,
+        streams: &[Stream],
+        skipped: Option<&str>,
+    ) -> Result<Vec<Stream>, kaeri_model::starting::StartFailure> {
+        let passed = streams.iter().map(|s| s.provider_id.clone()).collect();
+        self.asks.lock().unwrap().push((passed, skipped.map(str::to_owned)));
+        self.more.lock().unwrap().take().filter(|more| !more.is_empty()).ok_or_else(|| {
+            kaeri_model::starting::StartFailure {
+                why: kaeri_model::party::NoSourceWhy::NotFound,
+                text: kaeri_model::Msg::verbatim("No source has episode 1."),
+                asked: vec!["kodama".into()],
+                unreached: Vec::new(),
+                held_back: Vec::new(),
+            }
+        })
+    }
+}
+
+/// A playback's further sources, `more` for the first ask, and the starting screen's Skip as
+/// the test presses it.
+fn onward(
+    more: Option<Vec<Stream>>,
+) -> (Arc<Onward>, tokio::sync::watch::Sender<u64>, crate::playback::further::Further) {
+    let onward = Arc::new(Onward { more: Mutex::new(more), ..Default::default() });
+    let (skip, skips) = tokio::sync::watch::channel(0);
+    let further = crate::playback::further::Further::new(skips, onward.clone());
+    (onward, skip, further)
+}
+
+#[tokio::test]
+async fn switch_source_on_a_stall_with_a_pool_of_one_plays_on_from_the_next_source() {
+    // The only stream found plays, then holds for data until the viewer presses Switch source.
+    let stalling = vec![
+        PlaybackEvent::Loaded,
+        at_second(600.0),
+        PlaybackEvent::Buffering(true),
+        PlaybackEvent::Script(ScriptEvent::StallSwitch),
+    ];
+    let rig = Rig::new(vec![stalling, taking_over(600.0)]);
+    let (onward, _skip, further) = onward(Some(vec![from("kodama", "cdn-b.example", 1080)]));
+    let settings = PlaySettings { further, ..settings() };
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = rig.play_all(streams, context("1", None), settings).await;
+
+    // The source after it was asked, past the one that stalled, and its stream opened where
+    // the stall was, in the same window, once the stalled one had stopped.
+    assert_eq!(*onward.asks.lock().unwrap(), [(vec!["yamabiko".to_owned()], None)]);
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert_eq!(loads[1].2.as_deref(), Some("600"));
+    let stopped = position(&calls, |c| *c == Call::Stop).expect("the stalled stream stopped");
+    assert!(stopped < loads[1].0);
+    assert_eq!(calls.iter().filter(|c| matches!(c, Call::Open { .. })).count(), 1);
+    assert!(toasts(&events).is_empty(), "the viewer asked for it: {:?}", toasts(&events));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn switch_source_on_a_stall_with_nothing_further_opens_the_stream_again_where_it_was() {
+    let stalling = vec![
+        PlaybackEvent::Loaded,
+        at_second(600.0),
+        PlaybackEvent::Buffering(true),
+        PlaybackEvent::Script(ScriptEvent::StallSwitch),
+    ];
+    let rig = Rig::new(vec![stalling, taking_over(600.0)]);
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+
+    let loads = loads(&rig.opener.calls());
+    assert_eq!(loads.len(), 2, "{loads:?}");
+    assert!(loads[1].1.contains("cdn-a.example"), "{loads:?}");
+    assert_eq!(loads[1].2.as_deref(), Some("600"));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+/// Plays `streams` with `further`, pressing Skip once the first file has loaded and before it
+/// shows a frame.
+async fn skipped_before_a_frame(
+    rig: &Rig,
+    streams: Vec<Stream>,
+    skip: tokio::sync::watch::Sender<u64>,
+    further: crate::playback::further::Further,
+) -> Vec<Event> {
+    let settings = PlaySettings { further, ..settings() };
+    let pressing = async {
+        until_called(rig, |call| matches!(call, Call::Load { .. })).await;
+        skip.send_modify(|count| *count += 1);
+    };
+    let (events, ()) =
+        tokio::join!(rig.play_all(streams, context("1", None), settings), pressing);
+    events
+}
+
+#[tokio::test]
+async fn skip_before_the_first_frame_opens_the_next_stream_at_once() {
+    // The first stream only loads; nothing would come of it.
+    let rig = Rig::new(vec![vec![PlaybackEvent::Loaded], file(&[], (1920, 1080))]);
+    let (onward, skip, further) = onward(None);
+    let streams =
+        vec![from("yamabiko", "cdn-a.example", 1080), from("yamabiko", "cdn-b.example", 1080)];
+    let events = skipped_before_a_frame(&rig, streams, skip, further).await;
+
+    let loads = loads(&rig.opener.calls());
+    assert_eq!(loads.len(), 2, "{loads:?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert!(onward.asks.lock().unwrap().is_empty(), "the pool had another stream");
+    // The starting screen counts the stream it opens now.
+    assert!(events.iter().any(|e| matches!(
+        e,
+        Event::StartingStep {
+            step: kaeri_model::starting::StartStep::OpeningStream { attempt: 2, total: 2 },
+            ..
+        }
+    )));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+    // The viewer moved on: nothing is held against the server it skipped.
+    assert!(server(&rig, "cdn-a.example").is_none_or(|a| a.failures == 0));
+}
+
+#[tokio::test]
+async fn skip_before_the_first_frame_with_a_pool_of_one_asks_the_next_source() {
+    let rig = Rig::new(vec![vec![PlaybackEvent::Loaded], file(&[], (1920, 1080))]);
+    let (onward, skip, further) = onward(Some(vec![from("kodama", "cdn-b.example", 1080)]));
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = skipped_before_a_frame(&rig, streams, skip, further).await;
+
+    assert_eq!(
+        *onward.asks.lock().unwrap(),
+        [(vec!["yamabiko".to_owned()], Some("yamabiko".to_owned()))]
+    );
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert_eq!(loads[1].2, None, "it opens where the episode was to start");
+    assert!(position(&calls, |c| *c == Call::Stop).is_some_and(|stop| stop < loads[1].0));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn skip_past_the_last_source_fails_the_start_as_the_walk_would() {
+    let rig = Rig::new(vec![vec![PlaybackEvent::Loaded]]);
+    let (_, skip, further) = onward(Some(Vec::new()));
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let events = skipped_before_a_frame(&rig, streams, skip, further).await;
+
+    assert_eq!(loads(&rig.opener.calls()).len(), 1);
+    assert_eq!(toasts(&events), ["No source has episode 1."]);
+    let failure = events.iter().rev().find_map(|event| match event {
+        Event::PlaybackEnded { ending: Ending::Failed, failure, .. } => failure.clone(),
+        _ => None,
+    });
+    assert_eq!(failure.map(|f| f.asked), Some(vec!["kodama".to_owned()]));
+}
+
+/// A torrent's open Stats for nerds says the swarm after the buffer, asked of the swarm rather
+/// than read from mpv's pace on the loopback server, and says nothing of the release.
+#[tokio::test]
+async fn a_torrent_s_stats_say_the_swarm() {
+    use crate::playback::starting::{Held, Pace, Swarm};
+    use kaeri_model::hosted::PlayerStats;
+
+    let rig = Rig::new(vec![opening(&[])]);
+    let (controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let said = |call: &Call| match call {
+        Call::Overlay(Overlay::Stats(stats @ PlayerStats { waiting: false, .. }))
+            if stats.rows.iter().any(|r| r.label == "Peers") =>
+        {
+            Some(stats.clone())
+        }
+        _ => None,
+    };
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        window.send(playing((1920, 1080))[0].clone()).unwrap();
+        window
+            .send(PlaybackEvent::Progress { position: 5.0, duration: Some(RUNTIME) })
+            .unwrap();
+        controls.send(PlayerCommand::Stats(true)).unwrap();
+        until_called(&rig, |call| matches!(call, Call::Sample(_))).await;
+        // mpv's read of the loopback server, which the swarm's pace stands in for.
+        let sampled = |name: &str, value| PlaybackEvent::Sampled { name: name.into(), value };
+        window.send(sampled("cache-speed", json!(90_000_000))).unwrap();
+        window.send(sampled("demuxer-cache-duration", json!(30.0))).unwrap();
+        until_called(&rig, |call| said(call).is_some()).await;
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let swarm = Swarm::fixed(Pace {
+        peers: 7,
+        bytes_per_second: 1_200_000,
+        found: 31,
+        upload_bytes_per_second: 64_000,
+        uploaded_bytes: 5_500_000,
+        pieces: Some(Held { held: 250, total: 1000, ahead: Some(14) }),
+    });
+    let torrent = Stream {
+        provider_id: "yamabiko".into(),
+        ..Stream::new("http://127.0.0.1:9/s/0f3a", StreamKind::TorrentHttp)
+    };
+    tokio::join!(
+        rig.play_steered(
+            vec![torrent],
+            context("1", None),
+            PlaySettings { swarm, ..settings() },
+            commands
+        ),
+        driving
+    );
+    let stats = rig.opener.calls().iter().find_map(said).expect("the swarm said");
+    let rows: Vec<_> =
+        stats.rows.iter().map(|r| (r.label.as_str(), r.value.as_str())).collect();
+    let at = rows.iter().position(|(label, _)| *label == "Network").expect("a network row");
+    assert_eq!(
+        rows[at..at + 4],
+        [
+            ("Network", "1.2 MB/s down · 64 kB/s up"),
+            ("Peers", "7 connected · 31 found"),
+            ("Pieces", "25% held · 14 ahead"),
+            ("Uploaded", "5.5 MB"),
+        ]
+    );
+    assert_eq!(rows[at - 1].0, "Buffer");
+    // The TV's summary has no swarm line.
+    assert!(stats.summary.iter().all(|line| !line.contains("connected")));
 }

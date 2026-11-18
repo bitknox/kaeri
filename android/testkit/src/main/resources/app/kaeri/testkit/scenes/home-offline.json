@@ -560,6 +560,15 @@
       }
      },
      {
+      "key": "SHOW_FOLLOWING",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "COMMENT_IMAGES",
       "value": "off",
       "change": {
@@ -777,6 +786,10 @@
     },
     "skipFindPaused": null
    }
+  },
+  {
+   "@type": "Private",
+   "v1": false
   },
   {
    "@type": "Autoplay",
@@ -1837,7 +1850,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -1949,7 +1963,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -2061,7 +2076,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -2173,7 +2189,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -2285,7 +2302,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {
@@ -2397,7 +2415,8 @@
      }
     ],
     "remembered": [],
-    "source": null
+    "source": null,
+    "alwaysPrivate": false
    }
   },
   {

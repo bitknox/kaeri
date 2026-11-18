@@ -1,5 +1,9 @@
 package app.kaeri.player
 
+import app.kaeri.engine.model.StatsFixture
+
+import app.kaeri.engine.ffi.playerStatsFixture
+
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.CompositionLocalProvider
@@ -144,6 +148,29 @@ class PlayerShots {
     @Test fun phone_start_offline_timed_out() = starting("phone-start-offline-timed-out", StartingFixture.OFFLINE_TIMED_OUT, extra = 1_500)
     @Test fun phone_start_failed_no_episode() = starting("phone-start-failed-no-episode", StartingFixture.FAILED_NO_EPISODE, extra = 1_500)
     @Test fun phone_start_failed_no_match() = starting("phone-start-failed-no-match", StartingFixture.FAILED_NO_MATCH, extra = 1_500)
+    @Test fun phone_start_failed_unreached() = starting("phone-start-failed-unreached", StartingFixture.FAILED_UNREACHED, extra = 1_500)
+    /** The failed start's sources sheet when no source lists anything: each one's reason, by its name. */
+    @Test fun phone_start_failed_unreached_sources() {
+        val events = startingFixture(StartingFixture.FAILED_UNREACHED)
+        shoot("phone-start-failed-unreached-sources", picture = false, fixture = events, after = {
+            compose.onNodeWithText("Choose another source").performClick()
+            compose.waitForIdle()
+            compose.runOnUiThread {
+                model.apply(Event.Sources(900_001u, "7", emptyList(), listOf(
+                    app.kaeri.engine.model.MissedListing("Alpha", app.kaeri.engine.model.ListingMiss.Failed), // i18n-skip
+                    app.kaeri.engine.model.MissedListing("Brook", app.kaeri.engine.model.ListingMiss.NoEpisode), // i18n-skip
+                    app.kaeri.engine.model.MissedListing( // i18n-skip
+                        "Harbor", app.kaeri.engine.model.ListingMiss.HeldBack(app.kaeri.engine.model.SourceHold.TORRENTS_OFF), // i18n-skip
+                    ),
+                )))
+            }
+        }) { model, _ ->
+            time = (events.lastOrNull()?.atMs ?: 0u).toLong() + 1_500
+            model.poke()
+        }
+        // The sheet names the source that failed, apart from the start's own line.
+        compose.onNodeWithText("Alpha didn't answer").assertExists() // i18n-skip
+    }
     @Test fun phone_start_failed_no_sources() = starting("phone-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, extra = 1_500)
     @Test fun phone_start_failed_not_aired() = starting("phone-start-failed-not-aired", StartingFixture.FAILED_NOT_AIRED, extra = 1_500)
 
@@ -217,6 +244,104 @@ class PlayerShots {
         check(kotlin.math.abs(bounds.width / density - 360f) < 1f) { "the side sheet is 360 dp wide: ${bounds.width / density}" }
         check(bounds.right >= screen.right - 1f) { "the side sheet sits on the end edge" }
         check(bounds.height >= screen.height - 1f) { "the side sheet is as tall as the screen" }
+    }
+
+    /** Stats for nerds on a phone held sideways, the controls up: compact, under the top bar's buttons, ending above the subtitles. */
+    @Test
+    fun phone_player_stats() = shoot("phone-player-stats") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.PLAYING))
+    }.also {
+        compose.onNodeWithText("Stats for nerds").assertExists()
+        compose.onNodeWithText("Copy stats").assertExists()
+    }
+
+    /** The controls hidden: the panel stays, 16 dp from the top, and the buffer amber while starved. */
+    @Test
+    fun phone_player_stats_hidden() = shoot("phone-player-stats-buffering") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.BUFFERING))
+        model.hideControls()
+    }
+
+    /** Opened before the file: dashes, and "Waiting for the stream" once 4 s have passed, Copy stats dimmed. */
+    @Test
+    fun phone_player_stats_waiting() = shoot("phone-player-stats-waiting") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(0.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.WAITING), waited = 5_000)
+    }.also {
+        compose.onNodeWithText("Waiting for the stream").assertExists()
+    }
+
+    /** "Copied" in Copy stats' place. */
+    @Test
+    fun phone_player_stats_copied() = shoot("phone-player-stats-copied") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.PLAYING), copied = true)
+    }.also {
+        compose.onNodeWithText("Copied").assertExists()
+    }
+
+    /** A torrent playing: the swarm's Network, Peers, Pieces and Uploaded rows after Buffer, the panel scrolling as before. */
+    @Test
+    fun phone_player_stats_torrent() = shoot("phone-player-stats-torrent") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.TORRENT))
+    }.also {
+        compose.onNodeWithText("Peers").assertExists()
+        // The value is drawn with no-break spaces; its description reads as the engine said it.
+        compose.onNodeWithContentDescription("Peers, 12 connected · 48 found").assertExists()
+    }
+
+    /** A torrent on a tablet sideways, where every row fits. */
+    @Test
+    @Config(sdk = [36], qualifiers = "w1280dp-h800dp-land-320dpi")
+    fun tablet_player_stats_torrent() = shoot("tablet-player-stats-torrent") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.TORRENT))
+    }
+
+    /** A window held upright: the panel under the picture, at the full width less 16 dp each side, Copy stats under the rows. */
+    @Test
+    @Config(sdk = [36], qualifiers = PHONE_PORTRAIT)
+    fun phone_player_stats_portrait() = shoot("phone-player-stats-portrait") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.PLAYING))
+    }
+
+    /** A tablet sideways, tall enough for the panel as the iPad has it: 400 dp wide, Copy stats under the rows. */
+    @Test
+    @Config(sdk = [36], qualifiers = "w1280dp-h800dp-land-320dpi")
+    fun tablet_player_stats() = shoot("tablet-player-stats") { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.DROPPING))
+    }
+
+    /** The More menu with Stats for nerds after Skip times, checked while the panel is up. */
+    @Test
+    fun phone_player_more_menu_stats() = shoot("phone-player-more-menu-stats", after = {
+        compose.onNodeWithContentDescription("More").performClick()
+    }) { model, mpv ->
+        mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0)))
+        model.stageStats(playerStatsFixture(StatsFixture.PLAYING))
+    }
+
+    @Test
+    fun the_more_menus_stats_for_nerds_shows_and_hides_the_panel() {
+        shoot("phone-player-stats-toggle") { _, mpv -> mpv.emit(MpvEvent.property("time-pos", MpvValue.Real(612.0))) }
+        compose.onNodeWithContentDescription("More").performClick()
+        compose.waitForIdle()
+        compose.onNodeWithText("Stats for nerds").performClick()
+        compose.waitForIdle()
+        check(model.statsShown) { "Stats for nerds is up" }
+        check(sent.any { (it as? app.kaeri.engine.model.Command.Control)?.command == app.kaeri.engine.model.PlayerCommand.Stats(true) }) { "the engine was asked for the rows" }
+        compose.onNodeWithContentDescription("Close stats for nerds").assertDoesNotExist()
+        compose.runOnUiThread { model.stageStats(playerStatsFixture(StatsFixture.PLAYING)) }
+        compose.mainClock.advanceTimeBy(400)
+        compose.waitForIdle()
+        compose.onNodeWithContentDescription("Close stats for nerds").performClick()
+        compose.waitForIdle()
+        check(!model.statsShown) { "the close button hides the panel" }
     }
 
     /** The same panel held upright stays the bottom sheet. */

@@ -29,4 +29,11 @@ public class NoticeTimeTests
         Assert.Null(NoticeTime.Stays("Skipped opening", alert: false, hasAction: true, screenReader: false));
         Assert.Null(NoticeTime.Stays("Skipped opening", alert: true, hasAction: true, screenReader: true));
     }
+
+    [Fact]
+    public void ATimedNoticeWithAButtonStillGoesByItself()
+    {
+        Assert.Equal(TimeSpan.FromSeconds(8), NoticeTime.Timed("Someone else is using the TV now", screenReader: false));
+        Assert.Equal(TimeSpan.FromSeconds(16), NoticeTime.Timed("Someone else is using the TV now", screenReader: true));
+    }
 }

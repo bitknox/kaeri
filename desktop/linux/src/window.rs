@@ -64,6 +64,8 @@ pub struct Ctx {
     pub updater: Rc<crate::updater::Updater>,
     /// Play on TV and the TV's remote.
     pub tv: Rc<crate::tv::Tv>,
+    /// Around the pages: a cast's bar along the bottom, and its controls grown from it.
+    pub cast_sheet: adw::BottomSheet,
     size: Cell<Size>,
     sized: RefCell<Vec<OnSize>>,
     /// Pushes a page on the destination on screen.
@@ -91,6 +93,8 @@ pub struct Ctx {
     pub read_view_all_from: RefCell<Option<glib::WeakRef<gtk::Widget>>>,
     /// Reading's Search field open with the caret in it, as the shows' `SearchPage::focus`.
     pub read_search_focus: RefCell<Option<Rc<dyn Fn()>>>,
+    /// Private mode's notice and what a screen reader last heard of it.
+    pub private: crate::private::Private,
 }
 
 /// Opens reading's Search on a query.
@@ -109,6 +113,38 @@ pub struct Pick {
 type Claim = Rc<dyn Fn(&kaeri_model::Msg, &str) -> bool>;
 
 impl Ctx {
+    /// A window's context with no engine behind its hub, for tests that build a page.
+    #[cfg(test)]
+    pub fn for_tests(runtime: &tokio::runtime::Handle, dir: &std::path::Path) -> Rc<Self> {
+        let toasts = adw::ToastOverlay::new();
+        Rc::new(Ctx {
+            hub: Hub::new(std::sync::Weak::new()),
+            window: adw::ApplicationWindow::builder().build(),
+            split: adw::OverlaySplitView::new(),
+            cast_sheet: adw::BottomSheet::new(),
+            notices: crate::notices::Notices::new(&toasts),
+            prefs: Rc::new(Prefs::open(dir.join("prefs.ini"))),
+            updater: crate::updater::Updater::new(dir, true),
+            tv: crate::tv::Tv::new(runtime.clone(), dir, None, None),
+            size: Cell::new(Size::Wide),
+            sized: RefCell::default(),
+            navs: RefCell::default(),
+            stack: gtk::Stack::new(),
+            claims: RefCell::default(),
+            next_claim: Cell::new(0),
+            controller_mode: Cell::new(false),
+            controller_device: RefCell::default(),
+            content_focus: RefCell::default(),
+            main_menu: RefCell::default(),
+            pick: RefCell::default(),
+            read_view_all: RefCell::default(),
+            read_view_all_from: RefCell::default(),
+            read_search_focus: RefCell::default(),
+            read_from_home: Cell::new(false),
+            private: crate::private::Private::default(),
+        })
+    }
+
     pub fn size(&self) -> Size {
         self.size.get()
     }
@@ -161,12 +197,18 @@ impl Ctx {
 
     /// A notice of the app's own: information, for 4 s or longer as its words run on.
     pub fn toast(&self, text: &str) {
-        self.show_notice(text, false, None);
+        self.show_notice(text, false, None, None);
+    }
+
+    /// A notice of the app's own for `seconds`, twice that while a screen reader runs: a cast's
+    /// information notice, timed by its board.
+    pub fn toast_for(&self, text: &str, seconds: u32) -> adw::Toast {
+        self.show_notice(text, false, None, Some(seconds))
     }
 
     /// A notice of the app's own that something went wrong: it stays 8 s.
     pub fn alert(&self, text: &str) {
-        self.show_notice(text, true, None);
+        self.show_notice(text, true, None, None);
     }
 
     /// One of the engine's notices: an alert stays 8 s, its hint is the button, and clicking
@@ -200,7 +242,7 @@ impl Ctx {
         });
         let button =
             button.as_ref().map(|(label, action, target)| (label.as_str(), *action, *target));
-        self.show_notice(&text, matches!(notice.kind, NoticeKind::Alert), button);
+        self.show_notice(&text, matches!(notice.kind, NoticeKind::Alert), button, None);
     }
 
     /// Have the engine's alerts go to `claim` first, until [`Ctx::release_alerts`]: for a dialog
@@ -221,12 +263,24 @@ impl Ctx {
 
     /// A notice of the app's own with a button: `label`, running the window's `action`.
     pub fn toast_with(&self, text: &str, label: &str, action: &str) -> adw::Toast {
-        self.show_notice(text, false, Some((label, action, None)))
+        self.show_notice(text, false, Some((label, action, None)), None)
     }
 
     /// A notice of the app's own with a button running the window's `action` on `target`.
     pub fn toast_to(&self, text: &str, label: &str, action: &str, target: &str) -> adw::Toast {
-        self.show_notice(text, false, Some((label, action, Some(target))))
+        self.show_notice(text, false, Some((label, action, Some(target))), None)
+    }
+
+    /// A notice with a button that still goes by itself after `seconds`, twice that while a
+    /// screen reader runs: the private mode notice, timed by the board.
+    pub fn toast_held(
+        &self,
+        text: &str,
+        label: &str,
+        action: &str,
+        seconds: u32,
+    ) -> adw::Toast {
+        self.show_notice(text, false, Some((label, action, None)), Some(seconds))
     }
 
     fn show_notice(
@@ -234,6 +288,7 @@ impl Ctx {
         text: &str,
         alert: bool,
         button: Option<(&str, &str, Option<&str>)>,
+        held: Option<u32>,
     ) -> adw::Toast {
         let toast = adw::Toast::new(text);
         // The words as the toast's own title, so a click on them dismisses it.
@@ -281,12 +336,11 @@ impl Ctx {
         if alert {
             toast.set_priority(adw::ToastPriority::High);
         }
-        toast.set_timeout(say::notice_seconds(
-            text,
-            alert,
-            button.is_some(),
-            screen_reader_running(),
-        ));
+        toast.set_timeout(match held {
+            Some(seconds) if screen_reader_running() => seconds * 2,
+            Some(seconds) => seconds,
+            None => say::notice_seconds(text, alert, button.is_some(), screen_reader_running()),
+        });
         self.notices.add(&toast);
         // The custom title may not reach a screen reader as the toast's text, so say it too.
         self.notices.overlay().upcast_ref::<gtk::Widget>().announce(
@@ -324,6 +378,8 @@ pub struct Shell {
     pub in_party: Cell<bool>,
     /// The viewer chose to leave the party to close, so the close goes on without asking again.
     party_asked: Cell<bool>,
+    /// Stop and quit was chosen for the cast running: the close goes on.
+    cast_asked: Cell<bool>,
 }
 
 /// The size for a first launch: 80% of the monitor under the pointer (else the first monitor),
@@ -389,6 +445,7 @@ impl Shell {
             hub: Rc::clone(&hub),
             window: window.clone(),
             split: split.clone(),
+            cast_sheet: adw::BottomSheet::new(),
             notices: crate::notices::Notices::new(&toasts),
             prefs,
             updater,
@@ -408,6 +465,7 @@ impl Shell {
             read_view_all_from: RefCell::default(),
             read_search_focus: RefCell::default(),
             read_from_home: Cell::new(false),
+            private: crate::private::Private::default(),
         });
 
         // The monitor that says where the network stands is not watched under fixtures. The
@@ -456,7 +514,9 @@ impl Shell {
 
         let (sidebar_page, sidebar, foot) = sidebar(&ctx);
         split.set_sidebar(Some(&sidebar_page));
-        split.set_content(Some(&stack));
+        ctx.cast_sheet.set_content(Some(&stack));
+        ctx.cast_sheet.set_reveal_bottom_bar(false);
+        split.set_content(Some(&ctx.cast_sheet));
 
         let player = PlayerView::new(&ctx, player);
         let top = gtk::Stack::new();
@@ -492,6 +552,7 @@ impl Shell {
             welcome_checked: Cell::new(false),
             in_party: Cell::new(false),
             party_asked: Cell::new(false),
+            cast_asked: Cell::new(false),
         });
         shell.player.attach(Rc::downgrade(&shell));
         let _ = shell.pad.set(crate::pad::Pad::attach(&shell));
@@ -922,12 +983,12 @@ impl Shell {
         add("tv-remote", None, Box::new(|s, _| s.ctx.tv.open_remote()));
         // The session button's menu: the cast ends and Play on TV opens on the same episode.
         add("tv-choose-another", None, Box::new(|s, _| s.ctx.tv.cast_choose_another()));
-        // The notice for a TV someone else took: carry on here.
+        // The notice of a cast that ended from afar: carry on here.
         add(
             "tv-play-here",
             None,
             Box::new(|s, _| {
-                if let Some((id, episode)) = s.ctx.tv.take_taken() {
+                if let Some((id, episode)) = s.ctx.tv.take_ended() {
                     s.ctx.hub.send(Command::play(id, episode));
                 }
             }),
@@ -1256,6 +1317,15 @@ impl Shell {
             }),
         );
         add("sync", None, Box::new(|s, _| s.ctx.hub.send(Command::SyncNow)));
+        // The main menu's check item and Ctrl+Shift+N: the state follows the engine's word.
+        let private = gio::SimpleAction::new_stateful(
+            "private",
+            None,
+            &self.ctx.hub.known.borrow().private.to_variant(),
+        );
+        private.connect_activate(with(Box::new(|s, _| crate::private::toggle(&s.ctx))));
+        window.add_action(&private);
+        add("private-off", None, Box::new(|s, _| crate::private::set(&s.ctx, false)));
         add("about", None, Box::new(|s, _| pages::settings::about(&s.ctx)));
         add(
             "release-page",
@@ -1406,6 +1476,7 @@ impl Shell {
         app.set_accels_for_action("win.go::settings", &["<Control>comma"]);
         app.set_accels_for_action("win.search", &["<Control>f"]);
         app.set_accels_for_action("win.sync", &["<Control>r"]);
+        app.set_accels_for_action("win.private", &[crate::private::ACCEL]);
         app.set_accels_for_action("win.back", &["<Alt>Left"]);
         app.set_accels_for_action("win.shortcuts", &["<Control>question"]);
         app.set_accels_for_action("win.close", &["<Control>w"]);
@@ -1507,6 +1578,7 @@ impl Shell {
             if let Event::Update(status) = event {
                 shell.ctx.updater.heard(status);
             }
+            crate::private::heard(&shell.ctx, event);
             match event {
                 // The starting screen says why a start failed, and what it is doing instead
                 // of a notice over it.
@@ -1750,6 +1822,10 @@ impl Shell {
             {
                 return glib::Propagation::Stop;
             }
+            // Quitting stops a cast: asked first, unless already answered.
+            if !shell.cast_asked.get() && ask_before_stopping_cast(&shell) {
+                return glib::Propagation::Stop;
+            }
             let (downloading, seeding) = shell.ctx.hub.known.borrow().running();
             let running = downloading + seeding > 0;
             if shell.closing.get() || !running {
@@ -1933,6 +2009,7 @@ fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     let menu = gio::Menu::new();
     let first = gio::Menu::new();
     first.append(Some(&t::accounts_sync_now()), Some("win.sync"));
+    first.append(Some(&t::private_mode()), Some("win.private"));
     first.append(Some(&t::opened_open()), Some("win.open-link"));
     first.append(Some(&t::stores_join_menu()), Some("win.join-store"));
     menu.append_section(None, &first);
@@ -1953,6 +2030,37 @@ fn sidebar(ctx: &Rc<Ctx>) -> (adw::NavigationPage, gtk::ListBox, gtk::ListBox) {
     header.pack_end(&primary);
     let page = widgets::page("Kaeri", &header, &column); // i18n-skip
     (page, list, foot)
+}
+
+/// A cast running when the window closes: "Stop casting and quit?", with Cancel the default.
+/// Stop and quit stops the TV and closes; the close goes on asking of downloads as any close
+/// does. Returns whether it asked.
+fn ask_before_stopping_cast(shell: &Rc<Shell>) -> bool {
+    let tv = &shell.ctx.tv;
+    let Some(view) = tv.cast_view().filter(|v| !v.stage.ended()) else { return false };
+    let title = view.now.as_ref().map(|n| n.title.clone()).unwrap_or_default();
+    let dialog = adw::AlertDialog::new(
+        Some(&t::desktop_cast_quit_title()),
+        Some(&t::desktop_cast_quit_body(&title, &view.name)),
+    );
+    dialog.add_responses(&[
+        ("cancel", &t::action_cancel()),
+        ("stop", &t::desktop_cast_quit_action()),
+    ]);
+    dialog.set_response_appearance("stop", adw::ResponseAppearance::Destructive);
+    dialog.set_default_response(Some("cancel"));
+    dialog.set_close_response("cancel");
+    let weak = Rc::downgrade(shell);
+    dialog.connect_response(None, move |_, response| {
+        let Some(shell) = weak.upgrade() else { return };
+        if response == "stop" {
+            shell.ctx.tv.cast_stop();
+            shell.cast_asked.set(true);
+            shell.ctx.window.close();
+        }
+    });
+    dialog.present(Some(&shell.ctx.window));
+    true
 }
 
 /// The way back to the remote while a TV is driven, over the sidebar's foot: "Playing on Living
@@ -2394,5 +2502,31 @@ mod first_size_tests {
         assert_eq!(fit(3840, 1280), 3072);
         assert_eq!(fit(1440, 1280), 1280);
         assert_eq!(fit(1024, 1280), 1024);
+    }
+}
+
+#[cfg(test)]
+mod reader_page_tests {
+    use super::*;
+    use crate::gtk_test::run;
+
+    /// Orca hears the reader's page by its place and the keys that turn it, the stand-ins for
+    /// the page's Next page, Previous page and Show controls, as GTK has no custom actions.
+    #[test]
+    fn the_page_is_named_with_its_place_and_keys() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = Ctx::for_tests(runtime.handle(), dir.path());
+            let reader = crate::reading::reader::Reader::new(&ctx, Rc::new(|_: bool| {}));
+            for property in
+                [gtk::AccessibleProperty::Label, gtk::AccessibleProperty::KeyShortcuts]
+            {
+                assert!(
+                    gtk::test_accessible_has_property(&reader.widget, property),
+                    "{property:?}"
+                );
+            }
+        });
     }
 }

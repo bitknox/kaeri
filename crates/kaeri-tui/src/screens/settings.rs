@@ -139,7 +139,7 @@ pub(super) fn render_settings(buf: &mut Buffer, app: &App, area: Rect) {
                     area.left() + 2,
                     y,
                     truncate(&row.label, label_room),
-                    if selected {
+                    if selected && !row.dimmed {
                         app.palette.style(Role::Text)
                     } else {
                         app.palette.style(Role::TextDim)
@@ -148,7 +148,7 @@ pub(super) fn render_settings(buf: &mut Buffer, app: &App, area: Rect) {
 
                 // A read-only row is dimmed rather than shown in the text role: the value is
                 // still legible, but it no longer looks like something an arrow will change.
-                let value_style = match (row.editable, selected) {
+                let value_style = match (row.editable && !row.dimmed, selected) {
                     (false, _) => app.palette.style(Role::TextDim),
                     (true, true) => app.palette.style(Role::Text).add_modifier(Modifier::BOLD),
                     (true, false) => app.palette.style(Role::Text),

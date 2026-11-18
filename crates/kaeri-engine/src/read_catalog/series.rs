@@ -348,6 +348,9 @@ pub(crate) fn finish(
     // The person's folders list files already on this device: nothing to download there.
     let kept = super::rows::kept_by(edition.map(|e| e.source_id.as_str()));
     super::rows::fill(volumes, kept, medium, now, &kit.clock.zone());
+    if kit.sources.downloads.waits_room() {
+        super::rows::fill_waits_room(volumes);
+    }
 }
 
 /// How many versions each chapter has across the person's editions.
@@ -420,7 +423,9 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
         (None, Some(demo)) => demo.medium(),
         (None, None) => local_medium(kit, work),
     };
-    let action = tiles::action(&kit.store, &kit.sources, work, medium, &kit.plugins);
+    let memory = kit.privacy.read_kept(work.as_str());
+    let action =
+        tiles::action(&kit.store, &kit.sources, work, medium, &kit.plugins, memory.as_ref());
     let mut view = SeriesView {
         work: work.clone(),
         medium,
@@ -463,6 +468,8 @@ pub(crate) fn view(kit: &Kit, ask: Ask, work: &WorkId, partial: bool) -> SeriesV
         partial,
         demo: None,
         demo_other: None,
+        private: kit.privacy.series_mode(work.as_str()),
+        place_kept: memory.is_some(),
     };
     if let Some(kept) = kept {
         fill(kit, ask, &mut view, &kept);

@@ -13,6 +13,8 @@ cargo run -p i18n-tool -- generate
 
 1. Pick the file in `i18n/en/` by screen (`ui-library.ftl`, `ui-settings.ftl`, and so on). Strings
    that only one platform shows go in `platform-<name>.ftl` (or `platform-<name>-<screen>.ftl`). Engine notices go in `engine.ftl`.
+   The Cast receiver page's strings go in `receiver-*.ftl`; they reach only the website, as JSON
+   in `website/public/cast/receiver/i18n/`.
 2. Write the message. The id is kebab-case and names what the text is, not where it sits.
 
    ```
@@ -40,7 +42,10 @@ cargo run -p i18n-tool -- generate
 4. Run `generate`, then `lint` and `check`. Commit the catalogue and the generated files together.
 
 The subset of Fluent in use is checked by the loader: no functions, no message references, one
-plural select per message.
+plural select per message. It also checks that a plural form shows its count when the form stands
+for more than one number in that language: a "zero", "one" or "two" form always does (Russian "one"
+is 1, 21, 31 and on, French and Portuguese "one" is 0 and 1), and any such form does when the English
+shows the count. English "one" is only 1, so it may spell the number out.
 
 ## Use a key
 

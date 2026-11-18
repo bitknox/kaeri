@@ -36,10 +36,10 @@ plugins-outdated = { $count ->
    *[other] { -plugin-cap-pl }, собранные для старой версии { -app-name }, нужно обновить ({ $count }): { $names }.
  }
 plugin-updates-ready = { $count ->
-    [one] { -plugin-cap }: готово обновление. { $names }.
-    [few] { -plugin-cap-pl }: готовы обновления. { $names }.
-    [many] { -plugin-cap-pl }: готовы обновления. { $names }.
-   *[other] { -plugin-cap-pl }: готовы обновления. { $names }.
+    [one] { -plugin-cap-pl }: готово { $count } обновление. { $names }.
+    [few] { -plugin-cap-pl }: готовы { $count } обновления. { $names }.
+    [many] { -plugin-cap-pl }: готово { $count } обновлений. { $names }.
+   *[other] { -plugin-cap-pl }: готово { $count } обновления. { $names }.
  }
 plugins-load-failed = Не удалось загрузить { -plugin-pl }. { $reason }
 store-token-missing = { -device } не сохранило токен для { $store }. Подключитесь ещё раз с новым приглашением.

@@ -65,6 +65,9 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case statsPaused = "stats-paused"
     /// Just after Copy stats: "Copied" in its place.
     case statsCopied = "stats-copied"
+    /// A torrent playing well, from the fixture: the swarm's Network, Peers, Pieces and
+    /// Uploaded rows after Buffer.
+    case statsTorrent = "stats-torrent"
 
     /// Skip intro (skip-intro-and-invites board): the marking bar at each step and with each
     /// line, drawn from the engine's fixture views over the playing episode.
@@ -185,7 +188,7 @@ extension PlayerModel {
             "another-stream": .anotherStream, "buffering-torrent": .bufferingTorrent,
             "buffering-direct": .bufferingDirect, "offline": .offline, "offline-timed-out": .offlineTimedOut,
             "failed-no-episode": .failedNoEpisode,
-            "failed-no-match": .failedNoMatch, "failed-no-sources": .failedNoSources, "failed-not-aired": .failedNotAired,
+            "failed-no-match": .failedNoMatch, "failed-unreached": .failedUnreached, "failed-no-sources": .failedNoSources, "failed-not-aired": .failedNotAired,
         ]
         guard let state = Self.startParameter("state").flatMap({ states[$0] }) else { return false }
         let hold = Self.startParameter("at").flatMap(Double.init) ?? 2
@@ -345,13 +348,14 @@ extension PlayerModel {
             if shot == .stats { pinnedControls = true } else { hideControls() }
         case .statsWaiting:
             stageStats(playerStatsFixture(state: .waiting), waited: .seconds(5))
-        case .statsStream, .statsBuffering, .statsHdr, .statsPaused, .statsCopied:
+        case .statsStream, .statsBuffering, .statsHdr, .statsPaused, .statsCopied, .statsTorrent:
             seek(to: 31)
             there = await waited(10) { self.position >= 31.5 }
             let fixture: StatsFixture = switch shot {
             case .statsBuffering: .buffering
             case .statsHdr: .hdr
             case .statsPaused: .paused
+            case .statsTorrent: .torrent
             default: .playing
             }
             if shot == .statsPaused {

@@ -41,17 +41,19 @@ struct HandoffRoutes: ViewModifier {
 
 struct TitleHandoff: ViewModifier {
     @Environment(Navigator.self) private var navigator
+    @Environment(AppStore.self) private var store
     let entry: Entry
 
     /// Whether the title page is offered. It does not follow the player opening and closing:
     /// SwiftUI keeps a cycle of closures for every flip of `isActive`. The playing activity
     /// becomes current when it starts, so it takes the offer over by itself.
-    static func offers(_ entry: Entry, onScreen: AnilistId?) -> Bool {
-        !entry.title.isEmpty && onScreen == entry.id
+    /// Never while it is private: the mode is on, or the title is always private.
+    static func offers(_ entry: Entry, onScreen: AnilistId?, held: Bool = false) -> Bool {
+        !held && !entry.title.isEmpty && onScreen == entry.id
     }
 
     func body(content: Content) -> some View {
-        let active = Self.offers(entry, onScreen: navigator.titleOnScreen)
+        let active = Self.offers(entry, onScreen: navigator.titleOnScreen, held: store.privacy.holds(show: entry.id))
         content.userActivity(HandoffTypes.app.title, isActive: active) { activity in
             Handoff.title(entry.id).describe(activity, title: entry.showTitle)
         }

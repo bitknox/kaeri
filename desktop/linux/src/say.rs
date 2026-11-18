@@ -714,6 +714,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
                 unsourced: n >= 4,
                 source: None,
             })
@@ -723,6 +724,42 @@ mod tests {
         assert_eq!(item.action, "No source has this episode");
         assert_eq!(item.waiting.as_deref(), Some("No source has this episode"));
         assert_eq!(item.button, None);
+    }
+
+    #[test]
+    fn an_episode_a_source_lists_plays_while_the_schedule_still_names_it_next() {
+        let mut e = entry(3);
+        e.progress = Some(TitleProgress { done: 5, next: 6 });
+        e.last_aired = Some(Aired { episode: 5, ago: 6 * 86_400 });
+        e.next_episode = Some(6);
+        e.next_airing_in = Some(600);
+        let rows: Vec<EpisodeRow> = (1..=6)
+            .map(|n| EpisodeRow {
+                number: n.to_string(),
+                title: None,
+                thumbnail: None,
+                description: None,
+                duration_secs: None,
+                watched: 0.0,
+                completed: n < 6,
+                kind: None,
+                skippable: false,
+                airs_at: None,
+                delayed_from: None,
+                metadata_only: false,
+                followed: Vec::new(),
+                past_progress: false,
+                spoiler_ahead: false,
+                synopsis_pending: false,
+                unsourced: false,
+                source: None,
+            })
+            .collect();
+        assert!(!queue_item(&e, Some(&rows[..5])).playable);
+        let item = queue_item(&e, Some(&rows));
+        assert!(item.playable);
+        assert_eq!(item.button.as_deref(), Some("Play episode 6"));
+        assert_eq!(item.waiting, None);
     }
 
     #[test]

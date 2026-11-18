@@ -91,6 +91,7 @@ reader-end-series = Retour à la série
 reader-end-again = Relire depuis le début
 reader-opening-chapter = Ouverture du chapitre { $chapter }
 reader-failed-chapter = Impossible d'ouvrir le chapitre { $chapter }
+reader-failed-chapter-plain = Impossible d'ouvrir ce chapitre
 reader-sheet-series = Cette série
 reader-sheet-all-manga = Tous les mangas
 reader-sheet-all-webtoons = Tous les webtoons

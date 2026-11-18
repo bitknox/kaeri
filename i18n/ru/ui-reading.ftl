@@ -315,6 +315,7 @@ read-search-source-kind-server = Сервер
 read-search-source-kind-folder = Папка
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Показать ещё { $n }
+read-tile-add-to = Добавить в «{ $list }»
 onboarding-step = { $step } из { $total }
 onboarding-welcome-line = Следите за тем, что смотрите и читаете. { -source-cap-pl } вы добавляете сами.
 onboarding-welcome-note = Ваши списки и прогресс остаются при вас. { -tracker-cap-pl } и { -source-pl } вы добавляете сами.
@@ -349,22 +350,22 @@ medium-choice-position = { $n } из { $total }
 medium-change-later = Это можно изменить в настройках.
 medium-update-line = { -app-name } теперь умеет читать мангу, вебтуны и ранобэ из ваших { -source-pl }. Выберите, для чего нужен { -app-name } на { $device }.
 medium-join-title-watch = { $n ->
-    [one] На { $devices } выбран просмотр
-    [few] На { $devices } выбран просмотр
-    [many] На { $devices } выбран просмотр
-   *[other] На { $devices } выбран просмотр
+    [one] Просмотр выбран на { $n } устройстве: { $devices }
+    [few] Просмотр выбран на { $n } устройствах: { $devices }
+    [many] Просмотр выбран на { $n } устройствах: { $devices }
+   *[other] Просмотр выбран на { $n } устройствах: { $devices }
  }
 medium-join-title-read = { $n ->
-    [one] На { $devices } выбрано чтение
-    [few] На { $devices } выбрано чтение
-    [many] На { $devices } выбрано чтение
-   *[other] На { $devices } выбрано чтение
+    [one] Чтение выбрано на { $n } устройстве: { $devices }
+    [few] Чтение выбрано на { $n } устройствах: { $devices }
+    [many] Чтение выбрано на { $n } устройствах: { $devices }
+   *[other] Чтение выбрано на { $n } устройствах: { $devices }
  }
 medium-join-title-both = { $n ->
-    [one] На { $devices } выбраны просмотр и чтение
-    [few] На { $devices } выбраны просмотр и чтение
-    [many] На { $devices } выбраны просмотр и чтение
-   *[other] На { $devices } выбраны просмотр и чтение
+    [one] Просмотр и чтение выбраны на { $n } устройстве: { $devices }
+    [few] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
+    [many] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
+   *[other] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
  }
 medium-join-line = Выберите, для чего нужен { -app-name } на { $device }. Каждое { -device } хранит свой выбор.
 medium-off-title-watch = Отключить просмотр?

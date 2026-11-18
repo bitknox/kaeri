@@ -8,6 +8,8 @@ import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ProcessLifecycleOwner
 import androidx.compose.runtime.snapshotFlow
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import app.kaeri.player.PlayerModel
 import app.kaeri.store.AppPhases
@@ -19,16 +21,26 @@ import app.kaeri.store.AppStore
  * one started, so it is the foreground.
  *
  * In the background the player turns its video track off and plays the audio on, and the engine is
- * told, with whether an episode plays, so torrents wait but for it; and told again whenever that
- * changes there, paused or played on from the notification, or ended. Back in the foreground the
- * video comes back, and the engine checks the connection again, binds its loopback servers again
- * and reopens what plays.
+ * told, with whether an episode plays, here or on a TV through this device, so torrents wait but
+ * for it; and told again whenever that changes there, paused or played on from the notification,
+ * or ended. While the download job or service runs ([downloading]), it is a background where
+ * downloads go on, so chapters and torrents keep downloading as episodes over HTTP do. Back in the
+ * foreground the video comes back, and the engine checks the connection again, binds its loopback
+ * servers again and reopens what plays.
  */
-class SystemPhases(private val store: AppStore, private val player: PlayerModel, private val scope: CoroutineScope) {
+class SystemPhases(
+    private val store: AppStore,
+    private val player: PlayerModel,
+    private val scope: CoroutineScope,
+    private val downloading: StateFlow<Boolean>,
+) {
     private val phases = AppPhases(store::send)
 
-    /** Whether an episode plays: the player up, its picture shown, and not paused. */
-    private fun playing(): Boolean = player.isPresented && player.hasPicture && !player.paused
+    /** Whether an episode plays here: the player up, its picture shown, and not paused. */
+    private fun playingHere(): Boolean = player.isPresented && player.hasPicture && !player.paused
+
+    /** Whether an episode plays here, or on a TV with the stream going out through this device. */
+    private fun playing(): Boolean = playingHere() || store.cast.casting.value
 
     fun start() {
         ProcessLifecycleOwner.get().lifecycle.addObserver(object : DefaultLifecycleObserver {
@@ -45,7 +57,11 @@ class SystemPhases(private val store: AppStore, private val player: PlayerModel,
         // The player's state is Compose state, which the screens' snapshot manager says the
         // changes of, as long as the process: read here as it changes, on the main thread.
         scope.launch {
-            snapshotFlow(::playing).collect(phases::playing)
+            combine(snapshotFlow(::playingHere), store.cast.casting) { here, casting -> here || casting }
+                .collect(phases::playing)
+        }
+        scope.launch {
+            downloading.collect(phases::downloading)
         }
     }
 }

@@ -88,6 +88,8 @@ import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.setProgress
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.toggleableState
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -177,21 +179,40 @@ private fun TopBar(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            // Into the next episode, the line crossfades on standard (T5).
-            androidx.compose.animation.AnimatedContent(
-                model.episodeLine(LocalContext.current),
-                transitionSpec = {
-                    androidx.compose.animation.fadeIn(Motion.standard()) togetherWith androidx.compose.animation.fadeOut(Motion.standard())
-                },
-                label = "episode line", // i18n-skip
-            ) { line ->
-                Text(
-                    line,
-                    style = MaterialTheme.typography.bodyMedium.copy(shadow = ControlShadow),
-                    color = ObiSilk.Silk,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                // Into the next episode, the line crossfades on standard (T5).
+                androidx.compose.animation.AnimatedContent(
+                    model.episodeLine(LocalContext.current),
+                    transitionSpec = {
+                        androidx.compose.animation.fadeIn(Motion.standard()) togetherWith androidx.compose.animation.fadeOut(Motion.standard())
+                    },
+                    label = "episode line", // i18n-skip
+                    modifier = Modifier.weight(1f, fill = false),
+                ) { line ->
+                    Text(
+                        line,
+                        style = MaterialTheme.typography.bodyMedium.copy(shadow = ControlShadow),
+                        color = ObiSilk.Silk,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                }
+                // Private, beside the episode: this playback is not saved or synced.
+                androidx.compose.animation.AnimatedVisibility(
+                    model.playsPrivately,
+                    enter = androidx.compose.animation.fadeIn(Motion.fadeIn()),
+                    exit = androidx.compose.animation.fadeOut(Motion.fadeOut()),
+                ) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(app.kaeri.design.PrivateGlyph.EyeSlash, contentDescription = null, tint = ObiSilk.HazeHighContrast, modifier = Modifier.size(16.dp))
+                        Text(
+                            stringResource(R.string.private_badge),
+                            style = MaterialTheme.typography.bodyMedium.copy(shadow = ControlShadow),
+                            color = ObiSilk.HazeHighContrast,
+                            maxLines = 1,
+                        )
+                    }
+                }
             }
         }
         onPlayOnTv?.let { ControlButton(PlayerIcons.Tv, stringResource(R.string.tv_play_on), onClick = it) }
@@ -229,6 +250,20 @@ private fun MoreMenu(model: PlayerModel, discussion: DiscussionEntry?, onSkipTim
                 onClick = {
                     open = false
                     onSkipTimes()
+                },
+            )
+            // Checked while the panel is up; choosing it shows or hides the panel, and the menu closes.
+            val stats = model.statsShown
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.player_stats)) },
+                trailingIcon = { if (stats) Icon(PlayerIcons.Check, contentDescription = null) },
+                modifier = Modifier.semantics {
+                    role = androidx.compose.ui.semantics.Role.Checkbox
+                    toggleableState = androidx.compose.ui.state.ToggleableState(stats)
+                },
+                onClick = {
+                    open = false
+                    model.toggleStats()
                 },
             )
             if (discussion != null) DropdownMenuItem(

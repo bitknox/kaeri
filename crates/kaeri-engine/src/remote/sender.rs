@@ -36,8 +36,8 @@ use tokio::{sync::watch, task::JoinHandle, time::Instant};
 mod cast;
 #[cfg(feature = "cast")]
 pub use cast::{
-    CastBrowser, CastCard, CastRouteHint, CastRow, CastSession, CastSink, CastUndo, CastUpNext,
-    FoundCast,
+    CastBrowser, CastCard, CastFrom, CastRouteHint, CastRow, CastSession, CastSink, CastUndo,
+    CastUpNext, FoundCast,
 };
 
 /// How long Play on TV waits for the TV to start the episode before it gives up carrying the
@@ -785,10 +785,7 @@ impl NowCard {
             id: now.id,
             title: now.title.clone(),
             episode: now.episode.clone(),
-            episode_line: match now.episode_title.as_deref().filter(|t| !t.is_empty()) {
-                Some(title) => format!("Episode {} · {title}", now.episode),
-                None => format!("Episode {}", now.episode),
-            },
+            episode_line: episode_line(&now.episode, now.episode_title.as_deref()),
             loading: now.loading,
             position: now.position,
             duration: now.duration,
@@ -816,6 +813,14 @@ impl NowCard {
         }
         let moved = self.position + elapsed.max(0.0) * self.speed;
         self.duration.map_or(moved, |duration| moved.min(duration))
+    }
+}
+
+/// "Episode 3 · Low Tide", or "Episode 3" for an episode without a title.
+pub(crate) fn episode_line(episode: &str, title: Option<&str>) -> String {
+    match title.filter(|t| !t.is_empty()) {
+        Some(title) => format!("Episode {episode} · {title}"),
+        None => format!("Episode {episode}"),
     }
 }
 

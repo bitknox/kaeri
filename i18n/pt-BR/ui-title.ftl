@@ -81,6 +81,17 @@ more-following = Pessoas que você segue
 more-following-note = Da AniList
 more-followed-score = { $score }/10
 more-like-this = Quem gostou também viu
+following-show-all = Mostrar todos os { $count }
+following-names = { $more ->
+    [one] { $first }, { $second } e mais { $more }
+    [many] { $first }, { $second } e mais { $more }
+   *[other] { $first }, { $second } e mais { $more }
+ }
+following-names-two = { $first } e { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names } assistiu até aqui.
+following-score-spoken = Nota { $score } de 10
+following-open-help = Mostra onde cada pessoa está.
 more-followed-progress = { $status } · { $progress }
 more-empty = A AniList ainda não tem elenco, equipe nem recomendações para esta série.
 more-spoiler = Spoiler
@@ -100,7 +111,6 @@ title-fact-range = { $from } a { $to }
 title-fact-after = Após o episódio { $episode }
 title-fact-now = Em exibição
 title-fact-tba = A anunciar
-more-following-line = { $status } · { $score }/10
 episode-go-to = Ir para o episódio…
 episode-go-to-title = Ir para o episódio
 episode-go-to-go = Ir
@@ -108,3 +118,15 @@ episode-go-to-hint = { $first } a { $last }
 episode-go-to-label = Episódio, de { $first } a { $last }
 episode-go-to-none = Não existe o episódio { $number }. Esta série tem { $last }.
 episode-go-to-not-out = O episódio { $number } ainda não foi lançado. O mais recente é o { $latest }.
+episode-missing-aired = O episódio { $episode } foi ao ar { $ago }.
+episode-missing-aired-on = O episódio { $episode } foi ao ar em { $date }.
+episode-missing-not-yet = Suas { -source-pl } ainda não têm o episódio.
+episode-missing-still = Suas { -source-pl } continuam sem o episódio.
+episode-missing-no-answer = Suas { -source-pl } não responderam.
+episode-missing-looks-again = { -app-name } procura de novo a cada { $minutes } min.
+episode-missing-none = Nenhuma das suas { -source-pl } tem o episódio.
+episode-missing-offline = { -app-name } vai procurar quando a conexão voltar.
+episode-row-aired-ago = Foi ao ar { $ago }
+episode-unsourced-yet = Ainda não está nas suas { -source-pl }
+episode-found-announcement = O episódio { $episode } já está nas suas { -source-pl }.
+episode-check-again-help = { -app-name } também procura sozinho a cada { $minutes } min, por { $hours } h depois que um episódio vai ao ar.

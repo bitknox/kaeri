@@ -29,8 +29,11 @@ pub enum Miss {
 /// One step of a walk.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Step {
-    /// Sources passed over because they are resting after failures. Said once, first.
-    Resting { names: Vec<String> },
+    /// Sources not asked because local policy holds them back right now, all for the same
+    /// `reason`, the hold's own words: torrent playback is off, or the proxy check has not passed.
+    /// Said before the first source is asked, once for each reason. A source held back is never
+    /// said as [`Step::Asking`].
+    HeldBack { names: Vec<String>, reason: String },
     /// One source is asked. `place` counts from 1 among `total`.
     Asking { name: String, place: usize, total: usize, pinned: bool },
     /// A source came up empty.
@@ -68,7 +71,8 @@ impl Walk {
         self
     }
 
-    pub(crate) fn say(&self, step: Step) {
+    /// Tell the observer a step, as the walk through the sources does.
+    pub fn say(&self, step: Step) {
         if let Some(observer) = &self.observer {
             observer(step);
         }

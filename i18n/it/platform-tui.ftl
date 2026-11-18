@@ -12,3 +12,6 @@ tui-together-not-a-link = Non è un link o un codice di una { -watch-party }.
 tui-together-recent-alone = Episodio { $episode } · { $when }
 tui-medium-read-change = Premi { $key } per cambiare a cosa serve { -app-name }.
 tui-medium-settings-hint = { $key } per cambiare
+report-player-log-save-here = Salva registro del player
+report-player-log-saved-to = Registro del player salvato in { $path }
+report-player-log-failed-here = Impossibile salvare il registro in { $folder }.

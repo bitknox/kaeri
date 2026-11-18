@@ -69,6 +69,8 @@ pub struct FileFacts {
     pub source: kaeri_core::stream::Stream,
     /// The stream as the player opens it, with its subtitles on disk.
     pub played: kaeri_core::stream::Stream,
+    /// The show, for a phone that joins the cast to open its card by.
+    pub id: AnilistId,
     pub title: String,
     pub episode: String,
     pub episode_title: Option<String>,
@@ -76,6 +78,9 @@ pub struct FileFacts {
     pub image: Option<String>,
     pub subtitle_language: Option<String>,
     pub dub: bool,
+    /// The audio track the series remembers, for a player that picks the audio itself, as a
+    /// TV does from an HLS master's renditions.
+    pub audio_memory: Option<kaeri_playback::tracks::TrackPrint>,
 }
 
 /// What the session does to the player a playback runs in.
@@ -110,6 +115,13 @@ pub trait PlayerLink: Send + Sync {
     /// player that knows better.
     fn failure_notice(&self) -> Option<kaeri_model::Msg> {
         None
+    }
+
+    /// Whether the player ended the file it ended last with an error, rather than at its end,
+    /// on a quit or for the next file. A file that broke off mid-episode this way fails over to
+    /// another stream. `false` for a player that cannot tell.
+    fn ended_in_error(&self) -> bool {
+        false
     }
 
     /// Open `url` in place of whatever is playing, with `options` that belong to that file

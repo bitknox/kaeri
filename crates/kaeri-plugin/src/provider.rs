@@ -18,7 +18,9 @@ use kaeri_core::{
     ids::ProviderKey,
     media::{Episode, MediaFormat, SearchHit, Translation},
     stream::{Stream, StreamKind, Subtitle},
-    traits::{Provider, ProviderKind, ProviderManifest, SourceCandidate},
+    traits::{
+        Provider, ProviderKind, ProviderManifest, SourceCandidate, StreamPart, StreamTransforms,
+    },
 };
 
 use crate::engine::{self, GuestError, LoadedPlugin, PluginError};
@@ -27,6 +29,7 @@ use crate::engine::{self, GuestError, LoadedPlugin, PluginError};
 pub struct WasmProvider {
     plugin: LoadedPlugin,
     manifest: ProviderManifest,
+    transforms: StreamTransforms,
 }
 
 impl WasmProvider {
@@ -45,7 +48,19 @@ impl WasmProvider {
                 .collect(),
             torrents: guest.capabilities.iter().any(|c| c.trim() == TORRENTS),
         };
-        Self { plugin, manifest }
+        let declares =
+            |capability: &str| guest.capabilities.iter().any(|c| c.trim() == capability);
+        let declared = StreamTransforms {
+            keys: declares(TRANSFORM_KEYS),
+            segments: declares(TRANSFORM_SEGMENTS),
+        };
+        // Both halves or nothing: a capability with no `relay` to answer it, or a `relay` with
+        // no part declared, transforms nothing.
+        let transforms = if plugin.relays() { declared } else { StreamTransforms::default() };
+        if declared.any() && !plugin.relays() {
+            tracing::warn!(plugin = %manifest.id, "declares a transform but was not built with `relay`; its streams are served unchanged");
+        }
+        Self { plugin, manifest, transforms }
     }
 
     pub fn plugin(&self) -> &LoadedPlugin {
@@ -98,6 +113,14 @@ impl WasmProvider {
         })
     }
 }
+
+/// The capability a plugin built for `plugin-with-relay` declares to transform the keys of its
+/// HLS streams.
+pub const TRANSFORM_KEYS: &str = "transform-keys";
+
+/// The capability a plugin built for `plugin-with-relay` declares to transform the media and
+/// initialisation segments of its HLS streams.
+pub const TRANSFORM_SEGMENTS: &str = "transform-segments";
 
 /// The capability a plugin declares to return `torrent` streams.
 pub const TORRENTS: &str = "torrents";
@@ -286,6 +309,7 @@ impl Provider for WasmProvider {
                 // Stamped by the host for the same reason as on streams: a pick is routed back
                 // by this id, and a guest must not be able to route it to another provider.
                 provider_id: self.manifest.id.clone(),
+                provider_name: String::new(),
                 title: candidate.title,
                 quality: candidate.quality,
                 label: candidate.label,
@@ -312,6 +336,27 @@ impl Provider for WasmProvider {
                 .await,
         )?;
         Ok(streams.into_iter().filter_map(|stream| self.stream_from(stream)).collect())
+    }
+
+    fn stream_transforms(&self) -> StreamTransforms {
+        self.transforms
+    }
+
+    async fn transform(
+        &self,
+        part: StreamPart,
+        url: &str,
+        headers: &[(String, String)],
+        body: Vec<u8>,
+    ) -> Result<Vec<u8>, ProviderError> {
+        if !self.transforms.covers(part) {
+            return Ok(body);
+        }
+        match self.plugin.transform(part.as_str(), url, headers, body).await {
+            Ok(Ok(body)) => Ok(body),
+            Ok(Err(reason)) => Err(ProviderError::Parse(reason)),
+            Err(e) => Err(e.as_provider_error()),
+        }
     }
 
     async fn health_check(&self) -> Result<(), ProviderError> {

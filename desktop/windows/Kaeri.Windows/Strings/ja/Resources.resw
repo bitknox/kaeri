@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name}との接続が切れたため、キャストを終了しました。</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name}がストリームを受け取れなくなりました。ソースがエピソードの一部に応答しませんでした。別のソースをお試しください。</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name}がこのデバイスからのストリームを失いました。両方が同じネットワークにあるか確認してください。</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>{name}の字幕はプレーンテキストで表示されます。装飾付きの字幕はこのテレビには重すぎました。</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>キャスト先のテレビがネットワーク上にもうありません。</value>
   </data>
@@ -352,6 +361,12 @@
   </data>
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>そのストリームから映像が届きませんでした。{total}件中{next}件目を試しています。</value>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>ストリームが途切れました。{source}が同じ位置から引き継ぎました。</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>ストリームが途切れました。{source}の別のストリームが同じ位置から引き継ぎました。</value>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpvでこのファイルを再生できませんでした。{reason}</value>
@@ -848,6 +863,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>待機中 · Wi-Fi待ち</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>待機中 · 空き容量待ち</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>ダウンロード中 · {done}/{total}ページ</value>
   </data>
@@ -952,6 +970,9 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>オフライン</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>空き容量がありません。容量が空くとダウンロードされます。</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>約{size}</value>
@@ -2360,9 +2381,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>テレビの応答を待っています</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>{name}の応答を待っています</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}、{detail}</value>
   </data>
@@ -2591,6 +2609,36 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>クラッシュレポートの設定</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>プレーヤーログ</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>直近{playbacks}回の再生 · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>まだ再生の記録はありません</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>ログを保存…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>GitHubでissueが開いたら、このファイルを添付してください。</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>{file} として保存しました</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>ログを保存できませんでした。別のフォルダを試してください。</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>レポート</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>プレーヤーログを保存しました</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>issueに添付するファイルを保存します</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>クラッシュレポート</value>
   </data>
@@ -2786,6 +2834,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>テレビ側で設定</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>{name}に接続中</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>{name}に接続済み</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>{name}で再生</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>まだ何も再生していません</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>{name}で一時停止中</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>{title}を開く</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>閉じる</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>操作画面を開きます</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>{name}で次に再生</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>{name}にキャスト中</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>再試行</value>
   </data>
@@ -2933,6 +3011,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>再確認</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>確認中</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>設定を開く</value>
   </data>
@@ -2999,6 +3080,9 @@
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes}分</value>
   </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours}時間</value>
+  </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>今</value>
   </data>
@@ -3055,6 +3139,9 @@
   </data>
   <data name="StateLoading" xml:space="preserve">
     <value>読み込み中</value>
+  </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>消去</value>
   </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>フォーカスを移動</value>
@@ -3286,6 +3373,15 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}、{next}</value>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>キャストを停止して終了しますか？</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} を {name} で再生中です。終了すると停止します。</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>停止して終了</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>ディスカッション</value>
@@ -5312,9 +5408,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>{name}をスキップしました</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>最近の失敗によりスキップ</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>{name}から</value>
   </data>
@@ -5863,6 +5956,54 @@
   </data>
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>設定でさらに表示…</value>
+  </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>プライベートモード</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>オフにするかKaeriを終了するまで、視聴や閲覧の記録は保存も同期もされません。</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>ソースや同時視聴には、開いたものが引き続き見えます。</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>プライベートモードがオンです。Kaeriが終了するまで、保存も同期もされません。</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>オフにする</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>ショートカット: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>プライベート</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>プライベートモードがオンです</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>保存も同期もされません</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Kaeriが終了するまで位置を保持します</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>常にプライベート</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>この作品の記録は、このデバイスでは保存も同期もされません。保存済みの記録はそのまま残ります。</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>このシリーズの記録は、このデバイスでは保存も同期もされません。保存済みの記録はそのまま残ります。</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Kaeriで再生中</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>プライベートモードオン</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>プライベートモードオフ</value>
   </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>{page}ページを読み込み中</value>
@@ -6871,6 +7012,9 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>さらに{n}件を表示</value>
+  </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>{list}に追加</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step}/{total}</value>
@@ -8135,6 +8279,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>次のエピソードのカウントダウン</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>モバイルデータ通信でビデオを先読み</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>従量制課金接続でビデオを先読み</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>エンディング中に、次のエピソードのストリーム、字幕、スキップ位置を探します。最初の数秒も読み込みますが、従量制課金接続ではこれがオンのときだけです。</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>トレントも同じように最初のピースを読み込みます。</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>「次のエピソードを自動再生」が必要です</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>オープニングを自動でスキップ</value>
   </data>
@@ -8669,6 +8828,15 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>フィードのポート</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>アプリを離れるときにピクチャー イン ピクチャー</value>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>フォロー中の人を表示</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>アドレス</value>
   </data>
@@ -8875,6 +9043,24 @@
   </data>
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} / {of}エピソード</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>エピソード {first}–{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>エピソード {first}–{last}。{missing}はまだありません</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>エピソード {first}–{last}。{missing}はありません</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a}と{b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}–{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} / {of}エピソード。{missing}はありません</value>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>オフになっています</value>
@@ -10655,6 +10841,27 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>似た作品</value>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>{count}人すべて表示</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}、{second}、ほか{more}人</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first}、{second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names}はここまで視聴しました。</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>スコア {score}/10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>それぞれの視聴状況を表示します。</value>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
   </data>
@@ -10700,9 +10907,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>未定</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>エピソードへ移動…</value>
   </data>
@@ -10723,6 +10927,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>エピソード{number}はまだ公開されていません。最新は{latest}です。</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>エピソード {episode} は{ago}に公開されました。</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>エピソード {episode} は{date}に公開されました。</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>ソースにはまだありません。</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>ソースには今もありません。</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>ソースから応答がありませんでした。</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeriが{minutes}分ごとに探し直します。</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>どのソースにもありません。</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>オンラインに戻るとKaeriが探します。</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>{ago}に公開</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>まだソースにありません</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>エピソード {episode} がソースで見つかりました。</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>エピソードの公開後{hours}時間は、Kaeriも{minutes}分ごとに自動で探します。</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>トレント</value>
@@ -11257,6 +11497,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>{name}に再接続中</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>{name}の応答を待っています</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>接続済み</value>

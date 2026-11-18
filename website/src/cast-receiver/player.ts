@@ -2,6 +2,7 @@
 // of the receiver's CAF setup is here, so the screens (main.ts) only see the hooks below and the
 // few calls on `Player`. Playing more formats (feat/cast-receiver-formats) extends this module.
 
+import type { Formats } from './formats/receiver';
 import { NAMESPACE } from './protocol';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,6 +30,8 @@ export interface Hooks {
 	tracksChanged(): void;
 	senderMessage(data: unknown, senderId: string): void;
 	senderConnected(senderId: string, userAgent: string | undefined): void;
+	/** The last sender left on its own word; return true to keep the receiver up. */
+	lastSenderLeft(): boolean;
 }
 
 export interface Player {
@@ -42,11 +45,23 @@ export interface Player {
 	switchAudio(language: string, name?: string): boolean;
 	/** Sends on Kaeri's namespace; to every sender when `to` is left out. */
 	send(body: Record<string, unknown>, to?: string): void;
+	/** How many senders are connected now. */
+	senders(): number;
 	/** Closes the receiver; the TV goes back to its own screen. */
 	close(): void;
 }
 
-export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
+/** `formats` unpacks loads on the receiver itself (formats/receiver.ts); without it CAF plays every load. */
+/**
+ * Whether the receiver stays up once its last sender has left: while an episode is loaded or
+ * plays, and through Finished, it does, and the idle close in main.ts ends it once nothing plays.
+ * At Ready or after an error it closes, as CAF would.
+ */
+export function staysWithoutSenders(phase: string): boolean {
+	return phase === 'loading' || phase === 'playing' || phase === 'gone' || phase === 'finished';
+}
+
+export function startPlayer(video: HTMLVideoElement, hooks: Hooks, formats?: Formats): Player {
 	const fw = cast.framework;
 	const context = fw.CastReceiverContext.getInstance();
 	const manager = context.getPlayerManager();
@@ -62,7 +77,15 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
 	const E = fw.events.EventType;
 	const M = fw.messages.MessageType;
 	const ended = fw.events.EndedReason ?? {};
-	manager.setMessageInterceptor(M.LOAD, (request: unknown) => hooks.load(request));
+	manager.setMessageInterceptor(M.LOAD, async (request: unknown) => {
+		const r = hooks.load(request);
+		if (!formats) return r;
+		const out = await formats.load(r);
+		if (out !== null) return out;
+		// The receiver already sent `error {part: video}`; CAF answers the LOAD as failed, so nothing
+		// plays the sound without the picture.
+		return new fw.messages.ErrorData(fw.messages.ErrorType.LOAD_FAILED);
+	});
 	manager.setMessageInterceptor(M.EDIT_TRACKS_INFO, (request: unknown) => {
 		setTimeout(() => hooks.tracksChanged(), 200);
 		return request;
@@ -110,6 +133,16 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
 		hooks.senderConnected(e.senderId, e.userAgent),
 	);
 
+	// CAF closes the receiver when its last sender leaves on its own word: Play services' Cast
+	// card leaving, or Kaeri's sender ended by the system. The handler takes CAF's place, so an
+	// episode plays on and the sender joins it again when it comes back; nothing on screen closes
+	// as CAF would.
+	if (typeof context.setLastSenderDisconnectedHandler === 'function') {
+		context.setLastSenderDisconnectedHandler(() => {
+			if (!hooks.lastSenderLeft()) context.stop();
+		});
+	}
+
 	const options = new fw.CastReceiverOptions();
 	options.customNamespaces = { [NAMESPACE]: fw.system.MessageType.JSON };
 	// The receiver closes itself after ten minutes with nothing to play (main.ts).
@@ -133,6 +166,8 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
 		activeTextTracks: () => safe(() => manager.getTextTracksManager().getActiveIds(), [] as number[]),
 		switchAudio: (language, name) =>
 			safe(() => {
+				const inside = formats?.switchAudio(language, name);
+				if (inside != null) return inside;
 				const atm = manager.getAudioTracksManager();
 				const tracks: { trackId: number; language?: string; name?: string }[] = atm.getTracks() ?? [];
 				const pick =
@@ -149,6 +184,7 @@ export function startPlayer(video: HTMLVideoElement, hooks: Hooks): Player {
 				console.warn('send', body.type, e);
 			}
 		},
+		senders: () => safe(() => (context.getSenders() ?? []).length, 0),
 		close: () => context.stop(),
 	};
 }

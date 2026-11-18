@@ -115,6 +115,7 @@ settings-label-mark-chapters = Tandai pembukaan dan penutup
 settings-label-skip-button = Tampilkan tombol lewati
 settings-label-fullscreen = Mulai dalam layar penuh
 settings-label-upscaling = Upscaling
+settings-label-preload-metered = Muat awal saat terukur
 settings-label-player-ui = Antarmuka pemutar
 settings-label-night-mode = Mode malam
 settings-label-download-dir = Folder unduhan

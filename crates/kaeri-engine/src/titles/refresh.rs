@@ -53,6 +53,12 @@ impl Ticket {
         true
     }
 
+    /// A ticket that is never current: a listing that says nothing, such as a quiet recheck of a
+    /// title nobody has open.
+    pub fn muted(id: AnilistId) -> Self {
+        Self { id, n: 0, generations: Generations::default() }
+    }
+
     /// A ticket that is always current, for a caller with no newer listing to lose to.
     #[cfg(test)]
     pub fn standalone(id: AnilistId) -> Self {
@@ -93,6 +99,12 @@ impl Listed {
         self.0.contains(&id)
     }
 
+    /// Title `id` was listed at some point since the engine started, not only lately: a front
+    /// end may hold its table.
+    pub fn ever(&self, id: AnilistId) -> bool {
+        self.1.0.lock().unwrap().contains_key(&id)
+    }
+
     pub fn ids(&self) -> Vec<AnilistId> {
         self.0.clone()
     }
@@ -108,6 +120,19 @@ pub fn sources_changed(engine: &mut EngineState, services: &Services, tx: &Outbo
         relist(id, false, engine, services, tx);
     }
     dispatch::home_after_sources(engine, services, tx);
+}
+
+/// Title `id` was pinned to a source or one of its releases, or given back to automatic. A
+/// native app keeps the table of every title it loaded, not only the last few the engine
+/// counts as on screen, and opens a page on the table it holds. So a title listed at any time
+/// before is listed again now and counted among the recent ones, and its page shows the pick
+/// as a fresh opening would. One never listed has no table to bring up to date and finds the
+/// pick when it is asked for.
+pub fn pinned(id: AnilistId, engine: &mut EngineState, services: &Services, tx: &Outbox) {
+    if engine.listed.ever(id) {
+        engine.listed.note(id);
+    }
+    relist(id, true, engine, services, tx);
 }
 
 /// Title `id` is listed again, with its dub and episode names asked afresh, when the viewer
@@ -145,8 +170,10 @@ mod tests {
         assert!(pinned.current());
         assert!(listed.ticket(AnilistId::new(2)).current());
         assert!(pinned.current(), "another title's listing is no one's to supersede");
+        assert!(listed.ever(id) && !listed.ever(AnilistId::new(3)), "listed at any time");
         // Options listings are counted apart from episode listings.
         let options = listed.options_ticket(id);
         assert!(pinned.current() && options.current());
+        assert!(!Ticket::muted(id).current(), "a muted listing never speaks");
     }
 }

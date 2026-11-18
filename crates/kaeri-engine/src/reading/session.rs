@@ -267,6 +267,8 @@ pub struct Session {
     source: SourceWord,
     /// Said on close, for the pages still coming from a source into the session's folder.
     gone: crate::reading::feed::Gone,
+    /// Held while a private series is open: its addresses stay out of the log.
+    _private_log: Option<crate::private::redact::Open<'static>>,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -659,6 +661,8 @@ impl Reader {
             .filter(|(source, _)| source == kaeri_core::demo::DEMO_SOURCE_ID)
             .and_then(|(_, series)| kaeri_core::reading_demo::work(&series))
             .map(kaeri_model::sources::DemoWorkInfo::of);
+        let private_log =
+            cx.services.privacy.holds_series(work.as_str()).then(crate::private::redact::open);
         let mut session = Session {
             demo,
             source,
@@ -718,6 +722,7 @@ impl Reader {
                 &cx.services.paths.cache_dir,
                 id,
             )),
+            _private_log: private_log,
         };
         let pages = self.pages(cx);
         session.lay_out(cx, &pages, page);
@@ -929,7 +934,19 @@ fn start_of(
     let index_of = |id: &ChapterId| chapters.iter().position(|c| &c.id == id);
     // The kept place of an unfinished chapter: its page, and in a long strip how far into that
     // page's image. A strip read partway down its first image is a place too.
+    // A place a private read held in memory comes first: it is the newer.
+    let memory = cx.services.privacy.read_kept(work.as_str());
     let left_at = |id: &ChapterId| {
+        if let Some(m) = memory.as_ref().filter(|m| m.chapter == id.as_str() && !m.completed) {
+            let strip = m.strip_image.zip(m.strip_offset).map(|(image, offset)| StripPos {
+                image,
+                offset: (offset as f32).clamp(0.0, 1.0),
+            });
+            let page = m.page.or(strip.map(|s| s.image)).unwrap_or(0);
+            let strip = strip.filter(|s| s.image == page);
+            return (page > 0 || strip.is_some_and(|s| s.offset > 0.0))
+                .then_some((page, strip, m.of_pages));
+        }
         let k = kept.iter().find(|k| k.chapter == id.as_str() && !k.read)?;
         let strip = k
             .strip_image
@@ -957,16 +974,28 @@ fn start_of(
             let index = match asked()? {
                 Some(index) => index,
                 None => {
-                    let last = store
-                        .read_work(work.as_str())
-                        .ok()
-                        .flatten()
-                        .and_then(|w| w.last_chapter)
+                    let last = memory
+                        .as_ref()
+                        .map(|m| m.chapter.clone())
+                        .or_else(|| {
+                            store
+                                .read_work(work.as_str())
+                                .ok()
+                                .flatten()
+                                .and_then(|w| w.last_chapter)
+                        })
                         .map(|c| folds.whole_of(&c).unwrap_or(c))
                         .and_then(|c| index_of(&ChapterId::new(c)));
+                    let finished_here = |i: usize| {
+                        memory.as_ref().is_some_and(|m| {
+                            m.completed && m.chapter.as_str() == chapters[i].id.as_str()
+                        })
+                    };
                     match last {
                         // Finished: the next chapter, from its start.
-                        Some(i) if marks.is_read(chapters[i].id.as_str()) => {
+                        Some(i)
+                            if finished_here(i) || marks.is_read(chapters[i].id.as_str()) =>
+                        {
                             (i + 1).min(chapters.len() - 1)
                         }
                         Some(i) => i,
@@ -1851,6 +1880,16 @@ impl Session {
             Some((_, trackers)) if send_now => trackers,
             _ => Vec::new(),
         };
+        // Private: the finished chapter is held in memory as where the series continues, and
+        // nothing is written, queued for a tracker or told to a book server.
+        if cx.services.privacy.holds_series(self.work.as_str()) {
+            cx.services.privacy.keep_read(event);
+            self.dirty = false;
+            let (work, trackers) = (self.work.clone(), Vec::new());
+            cx.send(ReaderEvent::ChapterRead { work, chapter, trackers });
+            self.downloads_follow(cx, true);
+            return;
+        }
         if let Err(e) = cx.services.store.record_read(&event, told) {
             cx.tx.not_kept("a read chapter", &e);
         }
@@ -1960,6 +1999,11 @@ impl Session {
         event.strip_offset = here.strip.map(|s| f64::from(s.offset));
         event.novel_pos = here.novel.as_ref().map(NovelPos::encode);
         event.source_id = Some("local".into());
+        // Private: held in memory until the app quits, and never written.
+        if cx.services.privacy.holds_series(self.work.as_str()) {
+            cx.services.privacy.keep_read(event);
+            return;
+        }
         if let Err(e) = cx.services.store.record_read(&event, Vec::new()) {
             cx.tx.not_kept("the reading place", &e);
         }

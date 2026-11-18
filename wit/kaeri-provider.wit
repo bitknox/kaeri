@@ -24,6 +24,10 @@
 // and anything a future host wants to switch on is a declared capability rather than a new
 // function. Removing an import is a major bump too: the host refuses plugins built for another
 // major.
+//
+// A plugin may also opt in to an interface of its own beside `provider`, which plugins without
+// it never export and hosts without it never call: `relay`, built with `plugin-with-relay`. A
+// host that predates it links such a plugin as a plain `plugin` and serves its streams unchanged.
 
 package kaeri:provider@3.0.0;
 
@@ -100,6 +104,9 @@ interface provider {
         /// `torrents`: this plugin returns `torrent` streams for the host to play. The host plays
         /// them only while the person has torrent playback on and its protection check passes,
         /// and drops torrent streams from a plugin that does not declare it.
+        ///
+        /// `transform-keys`, `transform-segments`: this plugin is built for `plugin-with-relay`
+        /// and transforms that part of its HLS streams on the way to the player. See `relay`.
         capabilities: list<string>,
     }
 
@@ -259,4 +266,34 @@ interface provider {
 world plugin {
     import host;
     export provider;
+}
+
+/// Transforms of the parts of a plugin's HLS streams that the host's stream proxy relays to the
+/// player. Optional: only a plugin built for `plugin-with-relay` exports it, and the host asks
+/// only for the parts the plugin declares as capabilities (`transform-keys`,
+/// `transform-segments`). Every other part, and every part of a plugin without `relay`, is
+/// served as the stream's host sent it.
+interface relay {
+    /// One response the proxy fetched for a stream this plugin resolved.
+    record relayed {
+        /// `key` for a file an `#EXT-X-KEY` names, `segment` for a media segment or the
+        /// initialisation segment an `#EXT-X-MAP` names. An open set: answer a part this plugin
+        /// does not know with `body` unchanged.
+        part: string,
+        /// The URL it was fetched from, as the playlist named it.
+        url: string,
+        /// The request headers it was fetched with: the stream's own.
+        headers: list<tuple<string, string>>,
+        /// The response body, whole.
+        body: list<u8>,
+    }
+
+    /// The bytes the player gets in place of `relayed.body`. Asked once per fetched part, under
+    /// the same limits as every other call; an error fails that one request.
+    transform: func(relayed: relayed) -> result<list<u8>, string>;
+}
+
+world plugin-with-relay {
+    include plugin;
+    export relay;
 }

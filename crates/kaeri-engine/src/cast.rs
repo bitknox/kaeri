@@ -7,6 +7,13 @@
 //! share: the sender's picker reads its devices, [`Command::CastTo`] opens a cast through it,
 //! and the card reads the cast's status and the engine's events off it.
 //!
+//! A cast session ([`CastHub::connect`]) holds a TV the way the big apps do: connecting
+//! launches the receiver and holds it, every play goes to the TV while it lasts, a playback that
+//! ends leaves the receiver up for the next one, and only a disconnect, the TV or the network
+//! ends it. [`CastHub::session`] is what the apps draw of it. A session this device left running
+//! is joined again when the browse finds its TV ([`CastHub::rejoin`]), and at launch, quietly,
+//! from the record the run before kept of it ([`CastHub::resume_left`]).
+//!
 //! [`CastLink`]: crate::playback::link::cast::CastLink
 //! [`Command::CastTo`]: kaeri_model::command::Command::CastTo
 
@@ -25,15 +32,16 @@ use async_trait::async_trait;
 use futures::StreamExt;
 pub use kaeri_cast as protocol;
 use kaeri_cast::{
-    AacEncoder, CastDevice, CastFailure, CastMemory, CastPlayer, CastState, CastStatus,
-    NoEncoder, PlainHttp, Timings, Upstream, UpstreamResponse, formats::is_loopback_url,
+    AacEncoder, CastDevice, CastFailure, CastMemory, CastPlayer, CastSetup, CastState,
+    CastStatus, DEFAULT_MEDIA_RECEIVER, FromReceiver, NoEncoder, PlainHttp, Timings,
+    UpNextCard, Upstream, UpstreamResponse, VolumeControl, formats::is_loopback_url,
 };
 use kaeri_core::ids::AnilistId;
 use kaeri_model::{event::Event, playback::SkipKind};
 use kaeri_net::HttpClient;
 use kaeri_playback::{PlaybackEvent, ScriptEvent};
 use kaeri_remote::state::{RemoteState, StateFolder};
-use tokio::sync::watch;
+use tokio::sync::{broadcast, watch};
 
 fn lock<T>(mutex: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
     mutex.lock().unwrap_or_else(PoisonError::into_inner)
@@ -56,6 +64,286 @@ pub struct CastHub {
     show_tvs: AtomicBool,
     /// The language the front end speaks, for the TV's episode lines.
     language: Mutex<Option<String>>,
+    /// What Kaeri's receiver calls this device: `iphone`, `phone`, `mac`, ...
+    device_word: Mutex<Option<String>>,
+    /// The player whose receiver's messages are followed.
+    listening: Mutex<Weak<CastPlayer>>,
+    /// What Kaeri's receiver says, for the sender's parts that act on it.
+    heard: broadcast::Sender<FromReceiver>,
+    /// The cast session: the TV this device holds.
+    session: Mutex<Session>,
+    /// The receiver app the config names in place of Kaeri's own.
+    receiver: Mutex<Option<String>>,
+    /// The session left running, to join again: in `cast-session.json` beside `cast-tvs.json`.
+    left: Mutex<Option<Option<Left>>>,
+    /// Counts the cast links opened on a held player: only the latest stops its media.
+    links: std::sync::atomic::AtomicU64,
+    /// The player whose fall back to the TV's own player was last said, so it is said once.
+    told_fallback: Mutex<Weak<CastPlayer>>,
+    /// The runtime the hub was made on, for work a platform thread starts (a browse's find).
+    runtime: Option<tokio::runtime::Handle>,
+    /// Casts connecting to a TV outside the session, until their player is attached.
+    opening: Arc<std::sync::atomic::AtomicUsize>,
+    /// The launch's look for the cast left running is under way.
+    resuming: Arc<AtomicBool>,
+    /// Disconnects telling their TV to close, for the app's exit to wait on.
+    quits: Mutex<Vec<tokio::task::JoinHandle<()>>>,
+}
+
+/// A cast connecting to a TV outside the session: the hub joins nothing meanwhile.
+pub(crate) struct Opening(Arc<std::sync::atomic::AtomicUsize>);
+
+impl Drop for Opening {
+    fn drop(&mut self) {
+        self.0.fetch_sub(1, Ordering::Relaxed);
+    }
+}
+
+/// The TV this device holds, from connect until disconnect, or until the TV ends it.
+#[derive(Default)]
+struct Session {
+    device: Option<CastDevice>,
+    player: Option<Arc<CastPlayer>>,
+    connecting: bool,
+    /// Why the session ended, when the TV or the network ended it.
+    failure: Option<CastFailure>,
+    /// Counts connects and disconnects, so a connect that lands after a newer one is dropped.
+    generation: u64,
+    /// The link that plays on the held player now.
+    link: u64,
+    /// What played when the TV or the network ended the session, for Play here.
+    ended: Option<SessionItem>,
+    /// A cast left running, joined at launch: never shown as connecting.
+    quiet: bool,
+}
+
+/// A session this device left running on a TV: its TXT `id` and the receiver app's session.
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
+struct Left {
+    device: String,
+    session: String,
+    /// The title and episode the receiver played when the connection to it was lost mid-way:
+    /// it may have played on, so a cast of that episode again carries on from where the TV is.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    playing: Option<(AnilistId, String)>,
+    /// Where in it the engine last knew the receiver to be: its last time, run on for as long
+    /// as it was known to play. A cast of it again that finds nothing to join loads from here.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    at: Option<f64>,
+    /// The TV as it was found, with its address: a later launch reaches it without a browse.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    tv: Option<CastDevice>,
+    /// The title and episode on the TV, as its receiver says them. None while nothing plays.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    card: Option<(AnilistId, String)>,
+    /// Unix seconds until which the receiver may still run without this device: a record past
+    /// it, or without it, is dropped when it is read at launch.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    until: Option<i64>,
+}
+
+/// What a cast that was lost mid-episode had left playing, for a cast of it again.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) struct LeftPlaying {
+    /// Where the engine last knew the TV to be in it.
+    pub at: Option<f64>,
+}
+
+const LEFT_FILE: &str = "cast-session.json";
+
+/// How long a receiver left with nothing playing, or paused, may still run: Kaeri's receiver
+/// closes after 10 minutes of that, and the 5 over cover the time between the record's updates.
+const LEFT_IDLE: i64 = 15 * 60;
+
+/// The most of an episode still to play that a record counts on, for a duration that is wrong.
+const LEFT_LONGEST: f64 = 4.0 * 3600.0;
+
+/// How far the record's `until` may move before it is written again.
+const LEFT_REWRITE: i64 = 60;
+
+/// How long a launch tries the TV a cast was left running on.
+const RESUME_WINDOW: Duration = Duration::from_secs(10);
+
+/// Between tries at the TV while a launch looks for it.
+const RESUME_RETRY: Duration = Duration::from_secs(1);
+
+fn unix_now() -> i64 {
+    std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .map_or(0, |since| i64::try_from(since.as_secs()).unwrap_or(i64::MAX))
+}
+
+/// The title and episode the receiver says it plays or holds, from the card sent with it.
+fn card_of(status: &CastStatus) -> Option<(AnilistId, String)> {
+    status
+        .card
+        .as_ref()
+        .filter(|_| {
+            matches!(
+                status.state,
+                CastState::Playing | CastState::Paused | CastState::Buffering
+            )
+        })
+        .map(|card| (AnilistId::new(card.id), card.episode.clone()))
+}
+
+/// Until when a receiver last heard as `status` says may run on without this device: to the
+/// end of what plays, then the receiver's own idle close.
+fn until_of(status: &CastStatus) -> i64 {
+    let remaining = match (status.state, status.duration) {
+        (CastState::Playing | CastState::Buffering, Some(duration)) => {
+            (duration - status.position).clamp(0.0, LEFT_LONGEST)
+        }
+        _ => 0.0,
+    };
+    #[allow(clippy::cast_possible_truncation)]
+    let remaining = remaining.ceil() as i64;
+    unix_now() + LEFT_IDLE + remaining
+}
+
+/// Clears the hub's look at launch when it ends, however it ends.
+struct Resuming(Arc<AtomicBool>);
+
+impl Drop for Resuming {
+    fn drop(&mut self) {
+        self.0.store(false, Ordering::Relaxed);
+    }
+}
+
+/// What an attached cast last noted of its receiver.
+#[derive(Default)]
+struct Noted {
+    /// The receiver session noted as left running.
+    session: Option<String>,
+    /// Whether something played or loaded at the last status before it ended.
+    busy: bool,
+    /// The receiver's last time, while it played or held still: when it was heard while
+    /// playing, and how long the file runs.
+    heard: Option<(f64, Option<Instant>, Option<f64>)>,
+    /// When the connection to the receiver dropped: it is not known to play on from then.
+    dropped: Option<Instant>,
+}
+
+impl Noted {
+    /// Where the receiver was last known to be, run on while it was known to play.
+    fn known_at(&self) -> Option<f64> {
+        let (position, since, duration) = self.heard?;
+        let ran = since.map_or(0.0, |since| {
+            self.dropped
+                .unwrap_or_else(Instant::now)
+                .saturating_duration_since(since)
+                .as_secs_f64()
+        });
+        let at = position + ran;
+        Some(duration.map_or(at, |duration| at.min(duration)))
+    }
+
+    /// Follow where the receiver is from a status before it ended.
+    fn hear(&mut self, status: &CastStatus) {
+        if status.reconnecting {
+            self.dropped.get_or_insert_with(Instant::now);
+            return;
+        }
+        self.dropped = None;
+        self.heard = match status.state {
+            CastState::Playing => {
+                let since = match self.heard {
+                    Some((position, Some(since), _)) if position == status.position => since,
+                    _ => Instant::now(),
+                };
+                Some((status.position, Some(since), status.duration))
+            }
+            CastState::Paused | CastState::Buffering => {
+                Some((status.position, None, status.duration))
+            }
+            _ => None,
+        };
+    }
+}
+
+/// Where a cast session is, as the apps' cast button and its sheet draw it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum SessionState {
+    /// No TV is held.
+    #[default]
+    Idle,
+    /// Connecting to the TV and launching the receiver.
+    Connecting,
+    /// The receiver is up and nothing plays.
+    Connected,
+    /// Something plays on the TV, or is starting, paused or buffering.
+    Playing,
+    /// The TV or the network ended the session: `failure` says why.
+    Error,
+}
+
+/// What the cast button shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CastButton {
+    /// No TV found, or TVs are off in Settings: no button.
+    #[default]
+    Hidden,
+    /// TVs are found and none is held: the outline button opens the chooser.
+    Available,
+    Connecting,
+    /// A TV is held, playing or not.
+    Connected,
+}
+
+/// What plays on the TV, or comes next.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct SessionItem {
+    /// The title, when Kaeri plays it; `None` for what the receiver plays from elsewhere.
+    pub id: Option<AnilistId>,
+    /// The show.
+    pub title: String,
+    pub episode: Option<String>,
+    pub episode_title: Option<String>,
+    /// The art the TV shows, by URL.
+    pub image: Option<String>,
+    pub position: f64,
+    pub duration: Option<f64>,
+    pub paused: bool,
+    /// The TV waits for the stream in the middle of the file: whole seconds since it began,
+    /// `Some(0)` at once. Never set while it starts or reloads, which `loading` says.
+    pub waiting: Option<u32>,
+    /// The TV is still opening it, or this device is still finding its streams, or the file
+    /// loads again for another audio track.
+    pub loading: bool,
+}
+
+/// The cast session as the apps draw it.
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct SessionView {
+    pub state: SessionState,
+    pub button: CastButton,
+    /// Counts up with every change to the cast: a control holds what it shows until a view
+    /// with a higher `rev` arrives.
+    pub rev: u64,
+    pub device: Option<CastDevice>,
+    pub item: Option<SessionItem>,
+    /// What plays next: Up Next's episode, once the playback has said it.
+    pub queue: Vec<SessionItem>,
+    pub failure: Option<CastFailure>,
+    /// Why the session ended, in the engine's words, naming the TV.
+    pub notice: Option<kaeri_model::Msg>,
+    /// A note while a TV is held, for a toast: shown when it first reads differently. The TV
+    /// shows plain subtitles, or plays this cast in its own player as Kaeri's receiver didn't
+    /// start.
+    pub note: Option<kaeri_model::Msg>,
+    /// The receiver's volume, 0 to 1.
+    pub level: Option<f64>,
+    pub muted: Option<bool>,
+    /// Whether a level can be set: not where the TV's own volume is in charge.
+    pub volume: VolumeControl,
+    /// Whether Mute is offered: not where the TV's own volume is in charge, or the TV refused a
+    /// mute.
+    pub can_mute: bool,
+    /// Kaeri's own receiver runs, rather than the Default Media Receiver.
+    pub own_receiver: bool,
+    /// The connection to the TV closed and is being made again: `state` stays what it was until
+    /// it joins again, or the tries run out and the session ends.
+    pub reconnecting: bool,
 }
 
 /// How long Up Next counts down without an ending to start it, when the setting says none:
@@ -165,6 +453,22 @@ struct Current {
     undo: Option<Undo>,
     /// The title and episode the cast was last asked to play, for Try again.
     asked: Option<(AnilistId, String)>,
+    /// A note while it plays, said once: the TV shows plain subtitles, or plays this cast in its
+    /// own player.
+    note: Option<kaeri_model::Msg>,
+    /// The episode that started on the TV first since the note was said: the note is that
+    /// episode's, and another's start lets it go.
+    note_for: Option<(AnilistId, String)>,
+    /// Kaeri's receiver was told to show Up Next's card.
+    told_next: bool,
+}
+
+impl Current {
+    /// Say `note`: it stays through the start of the file it was said for.
+    fn say(&mut self, note: kaeri_model::Msg) {
+        self.note = Some(note);
+        self.note_for = None;
+    }
 }
 
 /// The cast as the card reads it.
@@ -184,6 +488,8 @@ pub struct CastView {
     pub undo: Option<Undo>,
     /// The title and episode the cast was last asked to play.
     pub asked: Option<(AnilistId, String)>,
+    /// A note while it plays, said once.
+    pub note: Option<kaeri_model::Msg>,
 }
 
 impl CastHub {
@@ -212,7 +518,802 @@ impl CastHub {
             changes,
             show_tvs: AtomicBool::new(true),
             language: Mutex::new(None),
+            device_word: Mutex::new(None),
+            listening: Mutex::new(Weak::new()),
+            heard: broadcast::channel(16).0,
+            session: Mutex::new(Session::default()),
+            receiver: Mutex::new(None),
+            left: Mutex::new(None),
+            links: std::sync::atomic::AtomicU64::new(0),
+            told_fallback: Mutex::new(Weak::new()),
+            runtime: tokio::runtime::Handle::try_current().ok(),
+            opening: Arc::default(),
+            resuming: Arc::default(),
+            quits: Mutex::default(),
         }
+    }
+
+    /// Run `task` on the runtime this is called on, or the hub's own from a platform thread.
+    pub(crate) fn spawn(&self, task: impl std::future::Future<Output = ()> + Send + 'static) {
+        match tokio::runtime::Handle::try_current().ok().or_else(|| self.runtime.clone()) {
+            Some(runtime) => drop(runtime.spawn(task)),
+            None => tracing::warn!("no runtime to run casting's work on"),
+        }
+    }
+
+    /// The receiver app the config names in place of Kaeri's own: `cast.receiver`.
+    pub fn set_receiver(&self, receiver: Option<String>) {
+        *lock(&self.receiver) = receiver.filter(|r| !r.trim().is_empty());
+    }
+
+    /// The receiver app to launch in place of Kaeri's own: `KAERI_CAST_RECEIVER_APP` in a
+    /// build that honours it ([`dev_receiver`]), else the config's `cast.receiver`.
+    pub fn receiver(&self) -> Option<String> {
+        dev_receiver().or_else(|| lock(&self.receiver).clone())
+    }
+
+    /// What a cast to `device` is set up with.
+    pub fn setup(&self, device: CastDevice) -> CastSetup {
+        CastSetup {
+            device,
+            memory: self.memory(),
+            upstream: self.upstream(),
+            encoder: self.encoder(),
+            timings: self.timings,
+        }
+    }
+
+    /// Connect to `device` and hold it: the receiver launches, and every play goes to the TV
+    /// until [`Self::disconnect`]. A receiver this device left running there and that still
+    /// runs is joined instead, as it plays, never launched again. A session held on another TV
+    /// is let go first; one on this TV already is kept. Returns at once: [`Self::session`]
+    /// follows it.
+    pub fn connect(self: &Arc<Self>, device: CastDevice) {
+        self.connect_then(device, |_, _| {});
+    }
+
+    /// [`Self::connect`], then `then` with the player held and whether it joined the receiver
+    /// left running rather than launching one. Not called when the connect fails or a newer
+    /// one came first.
+    pub(crate) fn connect_then(
+        self: &Arc<Self>,
+        device: CastDevice,
+        then: impl FnOnce(&Arc<CastPlayer>, bool) + Send + 'static,
+    ) {
+        let (generation, old) = {
+            let mut session = lock(&self.session);
+            let same = session.device.as_ref().is_some_and(|d| d.id == device.id);
+            let alive = session.player.as_ref().is_some_and(|p| p.is_alive());
+            if same && (session.connecting || alive) {
+                return;
+            }
+            let generation = session.generation + 1;
+            let old = std::mem::take(&mut *session).player;
+            *session = Session {
+                device: Some(device.clone()),
+                connecting: true,
+                generation,
+                ..Session::default()
+            };
+            (generation, old)
+        };
+        if let Some(old) = old {
+            self.spawn(async move {
+                let _ = old.quit().await;
+            });
+        }
+        // The card is for this TV from now, with nothing starting on it yet.
+        *lock(&self.cast) = Current { device: Some(device.clone()), ..Current::default() };
+        self.bump();
+        let left = self.left().filter(|left| left.device == device.id);
+        let hub = Arc::clone(self);
+        self.spawn(async move {
+            if let Some(left) = left {
+                match CastPlayer::join(hub.setup(device.clone()), &left.session).await {
+                    Ok(Some((player, _events))) => {
+                        player.use_receiver(hub.receiver());
+                        tracing::info!("joined the receiver this device left running");
+                        let player = Arc::new(player);
+                        if hub.connected(generation, Ok(Arc::clone(&player))) {
+                            then(&player, true);
+                        }
+                        return;
+                    }
+                    // The receiver closed meanwhile: a new one launches.
+                    Ok(None) => {}
+                    Err(failure) => {
+                        hub.connected(generation, Err(failure));
+                        return;
+                    }
+                }
+            }
+            let connected = async {
+                let (player, _events) = CastPlayer::connect(hub.setup(device)).await?;
+                player.use_receiver(hub.receiver());
+                player.launch().await?;
+                Ok::<_, CastFailure>(Arc::new(player))
+            }
+            .await;
+            if let Ok(player) = &connected {
+                if hub.connected(generation, Ok(Arc::clone(player))) {
+                    then(player, false);
+                }
+            } else {
+                hub.connected(generation, connected);
+            }
+        });
+    }
+
+    /// A connect finished: the session holds the player, or says why it couldn't. Whether it
+    /// holds it.
+    fn connected(
+        self: &Arc<Self>,
+        generation: u64,
+        connected: Result<Arc<CastPlayer>, CastFailure>,
+    ) -> bool {
+        {
+            let mut session = lock(&self.session);
+            if session.generation != generation {
+                // A disconnect or another connect came first.
+                drop(session);
+                if let Ok(player) = connected {
+                    self.spawn(async move {
+                        let _ = player.quit().await;
+                    });
+                }
+                return false;
+            }
+            match &connected {
+                // Still connecting until the receiver is noted, so a run that reads the session
+                // as connected finds the note.
+                Ok(player) => session.player = Some(Arc::clone(player)),
+                Err(failure) => {
+                    session.connecting = false;
+                    session.failure = Some(failure.clone());
+                }
+            }
+        }
+        match connected {
+            Ok(player) => {
+                tracing::info!(device = %player.device().name, "cast session connected");
+                self.attach(&player);
+                self.follow(&player);
+                self.leave(&player);
+                let held = {
+                    let mut session = lock(&self.session);
+                    let held = session.generation == generation;
+                    if held {
+                        session.connecting = false;
+                    }
+                    held
+                };
+                if !held {
+                    // Let go meanwhile: the note just written goes too.
+                    let receiver = player.receiver().map(|app| app.session_id);
+                    if self.left().is_some_and(|left| Some(left.session) == receiver) {
+                        self.forget_left();
+                    }
+                    self.bump();
+                    return false;
+                }
+            }
+            Err(failure) => {
+                tracing::warn!(%failure, "couldn't connect to the TV");
+                self.failed(failure);
+                self.bump();
+                return false;
+            }
+        }
+        self.bump();
+        true
+    }
+
+    /// Watch the held player for the TV ending the session by itself.
+    fn follow(self: &Arc<Self>, player: &Arc<CastPlayer>) {
+        let mut status = player.status();
+        let hub = Arc::downgrade(self);
+        let held = Arc::downgrade(player);
+        tokio::spawn(async move {
+            // Whether something played when it ended: a receiver that closes itself while idle
+            // ends the session quietly.
+            let mut busy = false;
+            // The episode last seen playing, for Play here once the playback has let it go.
+            let mut seen: Option<SessionItem> = None;
+            loop {
+                let now = status.borrow_and_update().clone();
+                if now.state == CastState::Ended {
+                    if let (Some(hub), Some(player)) = (hub.upgrade(), held.upgrade()) {
+                        let lost = matches!(now.failure, Some(CastFailure::Lost(_)));
+                        // Kaeri's receiver closes itself after a while with nothing playing,
+                        // which reads as a stop on the TV: idle, either ends quietly.
+                        let quiet =
+                            lost || matches!(now.failure, Some(CastFailure::StoppedElsewhere));
+                        let failure = now.failure.filter(|_| busy || !quiet);
+                        hub.session_ended(&player, failure, lost, busy, seen);
+                    }
+                    return;
+                }
+                if let Some(hub) = hub.upgrade()
+                    && let Some(item) =
+                        Self::item(&hub.view(), Some(&now)).filter(|item| item.id.is_some())
+                {
+                    seen = Some(item);
+                }
+                busy = now.step.is_some()
+                    || matches!(
+                        now.state,
+                        CastState::Playing | CastState::Paused | CastState::Buffering
+                    );
+                if status.changed().await.is_err() {
+                    return;
+                }
+            }
+        });
+    }
+
+    /// The TV ended the session `player` held: closed the receiver, went away, or someone else
+    /// took it over. A connection `lost` mid-episode, after the player's own tries to connect
+    /// again, may have left the receiver playing, so the TV found again joins it; an idle one is
+    /// let go.
+    fn session_ended(
+        &self,
+        player: &Arc<CastPlayer>,
+        failure: Option<CastFailure>,
+        lost: bool,
+        busy: bool,
+        seen: Option<SessionItem>,
+    ) {
+        let item = Self::item(&self.view(), Some(&player.current()))
+            .filter(|item| item.id.is_some())
+            .or(seen);
+        {
+            let mut session = lock(&self.session);
+            if !session.player.as_ref().is_some_and(|p| Arc::ptr_eq(p, player)) {
+                return;
+            }
+            tracing::info!(?failure, "the TV ended the cast session");
+            session.player = None;
+            session.ended = item.filter(|_| failure.is_some());
+            if failure.is_none() {
+                session.device = None;
+            }
+            session.failure = failure;
+        }
+        if !lost || !busy {
+            self.forget_left();
+        }
+        self.end();
+    }
+
+    /// Let the held TV go: the receiver closes and the TV goes back to what it showed. Whether
+    /// a session was held or connecting.
+    pub fn disconnect(&self) -> bool {
+        let (player, held) = {
+            let mut session = lock(&self.session);
+            let held = session.device.is_some();
+            let generation = session.generation + 1;
+            let player = std::mem::take(&mut *session).player;
+            session.generation = generation;
+            (player, held)
+        };
+        if let Some(player) = player {
+            let quit = async move {
+                if let Err(e) = player.quit().await {
+                    tracing::debug!(error = %e, "the TV didn't take the disconnect");
+                }
+            };
+            match tokio::runtime::Handle::try_current().ok().or_else(|| self.runtime.clone()) {
+                Some(runtime) => {
+                    let mut quits = lock(&self.quits);
+                    quits.retain(|q| !q.is_finished());
+                    quits.push(runtime.spawn(quit));
+                }
+                None => tracing::warn!("no runtime to run casting's work on"),
+            }
+        }
+        if held {
+            self.forget_left();
+            self.bump();
+        }
+        held
+    }
+
+    /// Wait for the disconnects under way to reach their TV: an app quitting after Stop
+    /// casting closes the TV before it goes.
+    pub(crate) async fn quits_sent(&self) {
+        let quits = std::mem::take(&mut *lock(&self.quits));
+        for quit in quits {
+            let _ = quit.await;
+        }
+    }
+
+    /// The held player, when it is for the TV with this TXT `id` and still up.
+    pub fn held(&self, device: &str) -> Option<Arc<CastPlayer>> {
+        let session = lock(&self.session);
+        session.player.clone().filter(|p| p.device().id == device && p.is_alive())
+    }
+
+    /// The TV a session holds or is connecting to, which every play goes to.
+    pub fn session_device(&self) -> Option<CastDevice> {
+        let session = lock(&self.session);
+        session.device.clone().filter(|_| {
+            session.connecting || session.player.as_ref().is_some_and(|p| p.is_alive())
+        })
+    }
+
+    /// Whether `player` is the session's.
+    pub(crate) fn holds(&self, player: &Arc<CastPlayer>) -> bool {
+        lock(&self.session).player.as_ref().is_some_and(|p| Arc::ptr_eq(p, player))
+    }
+
+    /// A cast connects to a TV outside the session, until the guard drops once its player is
+    /// attached or the connect failed.
+    pub(crate) fn opening(&self) -> Opening {
+        self.opening.fetch_add(1, Ordering::Relaxed);
+        Opening(Arc::clone(&self.opening))
+    }
+
+    /// A link opens on the held player: it is the one that plays there now.
+    pub(crate) fn claim(&self) -> u64 {
+        let link = self.links.fetch_add(1, Ordering::Relaxed) + 1;
+        lock(&self.session).link = link;
+        link
+    }
+
+    /// Whether the link `link` is the one that plays on the held player.
+    pub(crate) fn owns(&self, link: u64) -> bool {
+        lock(&self.session).link == link
+    }
+
+    /// A playback on the held TV ended: the receiver stays up, and nothing is starting.
+    pub(crate) fn played_out(&self) {
+        {
+            let mut cast = lock(&self.cast);
+            cast.starting = None;
+            cast.loading = false;
+            cast.next = None;
+            cast.skip = None;
+            cast.undo = None;
+        }
+        self.bump();
+    }
+
+    /// Wait for a connect to finish, up to `wait`: a play asked for while the TV connects goes
+    /// to it once it is up.
+    pub async fn connecting(&self, wait: Duration) {
+        let deadline = tokio::time::Instant::now() + wait;
+        let mut changes = self.changes();
+        while lock(&self.session).connecting {
+            if tokio::time::timeout_at(deadline, changes.changed()).await.is_err() {
+                return;
+            }
+        }
+    }
+
+    /// The cast session as the apps draw it.
+    pub fn session(&self) -> SessionView {
+        let (device, player, connecting, failure) = {
+            let session = lock(&self.session);
+            (
+                session.device.clone(),
+                session.player.clone(),
+                // A cast joined quietly at launch reads as what it plays from the start.
+                session.connecting && !session.quiet,
+                session.failure.clone(),
+            )
+        };
+        let view = self.view();
+        let status = player.as_ref().map(|p| p.current());
+        let item = Self::item(&view, status.as_ref());
+        let state = if device.is_none() {
+            SessionState::Idle
+        } else if connecting {
+            SessionState::Connecting
+        } else if player.as_ref().is_some_and(|p| p.is_alive()) {
+            if item.is_some() || view.starting.is_some() {
+                SessionState::Playing
+            } else {
+                SessionState::Connected
+            }
+        } else if failure.is_some() {
+            SessionState::Error
+        } else {
+            SessionState::Idle
+        };
+        let queue = view
+            .next
+            .iter()
+            .filter(|_| state == SessionState::Playing)
+            .map(|next| SessionItem {
+                id: item.as_ref().and_then(|i| i.id),
+                title: item.as_ref().map(|i| i.title.clone()).unwrap_or_default(),
+                episode: Some(next.number.clone()),
+                episode_title: next.title.clone(),
+                image: next.still.clone(),
+                ..SessionItem::default()
+            })
+            .collect();
+        let button = match state {
+            SessionState::Connecting => CastButton::Connecting,
+            SessionState::Connected | SessionState::Playing => CastButton::Connected,
+            SessionState::Idle | SessionState::Error
+                if self.shows_tvs() && !lock(&self.devices).is_empty() =>
+            {
+                CastButton::Available
+            }
+            SessionState::Idle | SessionState::Error => CastButton::Hidden,
+        };
+        SessionView {
+            state,
+            button,
+            rev: self.rev(),
+            device: device.clone().filter(|_| state != SessionState::Idle),
+            item: item.filter(|_| state == SessionState::Playing),
+            queue,
+            notice: failure.as_ref().filter(|_| state == SessionState::Error).and_then(|f| {
+                let name = device.as_ref()?.name.clone();
+                Some(crate::playback::link::cast::notice(f, &name))
+            }),
+            note: view
+                .note
+                .filter(|_| matches!(state, SessionState::Playing | SessionState::Connected)),
+            failure: failure.filter(|_| state == SessionState::Error),
+            level: status.as_ref().and_then(|s| s.level),
+            muted: status.as_ref().and_then(|s| s.muted),
+            volume: status.as_ref().map_or(VolumeControl::Level, |s| s.volume),
+            can_mute: status.as_ref().is_none_or(|s| s.can_mute),
+            own_receiver: status
+                .as_ref()
+                .and_then(|s| s.receiver.as_deref())
+                .is_some_and(|r| r != DEFAULT_MEDIA_RECEIVER),
+            reconnecting: status.as_ref().is_some_and(|s| s.reconnecting)
+                && matches!(state, SessionState::Playing | SessionState::Connected),
+        }
+    }
+
+    /// What plays on the TV: what this device started, or what a joined receiver plays.
+    fn item(view: &CastView, status: Option<&CastStatus>) -> Option<SessionItem> {
+        let now = view.state.as_ref().and_then(|s| s.now_playing.clone());
+        match (&now, status) {
+            (Some(now), status) => Some(SessionItem {
+                id: Some(now.id),
+                title: now.title.clone(),
+                episode: Some(now.episode.clone()),
+                episode_title: now.episode_title.clone(),
+                image: status.and_then(|s| s.metadata.as_ref()?.image.clone()),
+                position: status.map_or(now.position, |s| s.position),
+                duration: status.and_then(|s| s.duration).or(now.duration),
+                paused: status.map_or(now.paused, |s| s.state == CastState::Paused),
+                waiting: status.and_then(waited),
+                loading: now.loading
+                    || status.is_none_or(|s| {
+                        s.step.is_some() || s.plan.is_none() && s.metadata.is_none()
+                    }),
+            }),
+            // What the receiver plays that this device didn't start: a session joined again.
+            (None, Some(status))
+                if matches!(
+                    status.state,
+                    CastState::Playing | CastState::Paused | CastState::Buffering
+                ) =>
+            {
+                // Another Kaeri device's cast says what it plays, so its card can open here.
+                if let Some(card) = &status.card {
+                    return Some(SessionItem {
+                        id: Some(AnilistId::new(card.id)),
+                        title: card.title.clone(),
+                        episode: Some(card.episode.clone()),
+                        episode_title: card.episode_title.clone(),
+                        image: status.metadata.as_ref().and_then(|m| m.image.clone()),
+                        position: status.position,
+                        duration: status.duration,
+                        paused: status.state == CastState::Paused,
+                        waiting: waited(status),
+                        loading: false,
+                    });
+                }
+                status.metadata.as_ref().map(|metadata| SessionItem {
+                    id: None,
+                    title: metadata.series.clone(),
+                    episode: None,
+                    episode_title: Some(metadata.title.clone()).filter(|t| !t.is_empty()),
+                    image: metadata.image.clone(),
+                    position: status.position,
+                    duration: status.duration,
+                    paused: status.state == CastState::Paused,
+                    waiting: waited(status),
+                    loading: false,
+                })
+            }
+            _ => None,
+        }
+    }
+
+    /// What played when the TV or the network ended the session: Play here plays it on.
+    pub fn ended_item(&self) -> Option<SessionItem> {
+        lock(&self.session).ended.clone()
+    }
+
+    /// Note the receiver `player` launched, so a later run joins it again.
+    fn leave(&self, player: &CastPlayer) {
+        let Some(app) = player.receiver() else { return };
+        let device = player.device().id.clone();
+        // The same receiver joined again keeps what it was left playing.
+        let (playing, at) = self
+            .left()
+            .filter(|left| left.device == device && left.session == app.session_id)
+            .map_or((None, None), |left| (left.playing, left.at));
+        let status = player.current();
+        self.write_left(Some(Left {
+            device,
+            session: app.session_id,
+            playing,
+            at,
+            tv: Some(player.device().clone()),
+            card: card_of(&status),
+            until: Some(until_of(&status)),
+        }));
+    }
+
+    /// The record follows the receiver the note names as it moves on: the episode it plays,
+    /// and how long it may run on without this device.
+    fn follow_left(&self, session: &str, status: &CastStatus) {
+        let Some(left) = self.left().filter(|left| left.session == session) else { return };
+        // While the next episode loads, the record keeps the one before.
+        let card = if status.step.is_some() { left.card.clone() } else { card_of(status) };
+        let until = until_of(status);
+        let moved = left.until.is_none_or(|was| (until - was).abs() > LEFT_REWRITE);
+        if card != left.card || moved {
+            self.write_left(Some(Left { card, until: Some(until), ..left }));
+        }
+    }
+
+    pub(crate) fn forget_left(&self) {
+        self.write_left(None);
+    }
+
+    /// Whether the TV `device` was left playing `episode` of `id` when the connection to it was
+    /// lost mid-way, so its receiver may have played on: a cast of that episode carries on from
+    /// where the TV is. Asked as such a cast starts, and the note of the episode goes with it.
+    pub(crate) fn take_left_playing(
+        &self,
+        device: &str,
+        id: AnilistId,
+        episode: &str,
+    ) -> Option<LeftPlaying> {
+        let left = self.left().filter(|left| left.device == device)?;
+        let (was, number) = left.playing.clone()?;
+        let at = left.at;
+        self.write_left(Some(Left { playing: None, at: None, ..left }));
+        (was == id && number == episode).then_some(LeftPlaying { at })
+    }
+
+    /// An episode starts on the TV: what it was left playing no longer stands.
+    fn forget_left_playing(&self) {
+        if let Some(left) = self.left().filter(|left| left.playing.is_some()) {
+            self.write_left(Some(Left { playing: None, at: None, ..left }));
+        }
+    }
+
+    fn write_left(&self, left: Option<Left>) {
+        if let Some(dir) = &self.dir {
+            let path = dir.join(LEFT_FILE);
+            // Written beside it and moved into place, so a run reading it at the same moment
+            // finds the old note or the new one, never an empty file.
+            let temp = dir.join(format!("{LEFT_FILE}.tmp"));
+            let written = match &left {
+                Some(left) => serde_json::to_vec(left)
+                    .map_err(io::Error::other)
+                    .and_then(|bytes| std::fs::write(&temp, bytes))
+                    .and_then(|()| std::fs::rename(&temp, &path)),
+                None => match std::fs::remove_file(&path) {
+                    Err(e) if e.kind() == io::ErrorKind::NotFound => Ok(()),
+                    other => other,
+                },
+            };
+            if let Err(e) = written {
+                tracing::debug!(error = %e, "couldn't note the cast session");
+            }
+        }
+        *lock(&self.left) = Some(left);
+    }
+
+    /// The session left running, read the first time it is needed. A record past its `until`,
+    /// or one without it, can name no receiver still running, and is deleted.
+    fn left(&self) -> Option<Left> {
+        let mut left = lock(&self.left);
+        left.get_or_insert_with(|| {
+            let path = self.dir.as_ref()?.join(LEFT_FILE);
+            let bytes = std::fs::read(&path).ok()?;
+            let read = serde_json::from_slice::<Left>(&bytes)
+                .ok()
+                .filter(|left| left.until.is_some_and(|until| until > unix_now()));
+            if read.is_none()
+                && let Err(e) = std::fs::remove_file(&path)
+            {
+                tracing::debug!(error = %e, "couldn't drop the stale cast record");
+            }
+            read
+        })
+        .clone()
+    }
+
+    /// The TXT `id` of the TV a session was left running on, for the app to browse for at
+    /// launch: once found, the session is joined again. Nothing while a cast connects or plays:
+    /// the note is then that cast's own, kept for a later run, and nothing waits to be joined.
+    /// Nothing while the launch looks for it itself.
+    pub fn left_on(&self) -> Option<String> {
+        if self.resuming.load(Ordering::Relaxed) {
+            return None;
+        }
+        self.left().filter(|_| !self.casting_now()).map(|left| left.device)
+    }
+
+    /// The TXT `id` the note of a session left running names, whatever casts now.
+    #[cfg(test)]
+    pub(crate) fn noted_on(&self) -> Option<String> {
+        self.left().map(|left| left.device)
+    }
+
+    /// The episode the note says the TV was left playing, whatever casts now.
+    #[cfg(test)]
+    pub(crate) fn noted_playing(&self) -> Option<(AnilistId, String)> {
+        self.left().and_then(|left| left.playing)
+    }
+
+    /// A cast connects outside the session, or the card follows a player that is up.
+    fn casting_now(&self) -> bool {
+        self.opening.load(Ordering::Relaxed) > 0
+            || self.player().is_some_and(|player| player.is_alive())
+    }
+
+    /// Join the session left running on `device`, when its receiver still runs and no session
+    /// is held, one that ended lost included: the browse found that TV again. Nothing otherwise,
+    /// and nothing while a cast connects or plays: one begun from Play on TV or a play sent to a
+    /// TV holds no session, and joining beside it would start its card over and hold the TV twice.
+    pub fn rejoin(self: &Arc<Self>, device: &CastDevice) {
+        let Some(left) = self.left().filter(|left| left.device == device.id) else { return };
+        if self.casting_now() || self.resuming.load(Ordering::Relaxed) {
+            return;
+        }
+        let generation = {
+            let mut session = lock(&self.session);
+            if session.connecting || session.player.is_some() {
+                return;
+            }
+            let generation = session.generation + 1;
+            *session = Session {
+                device: Some(device.clone()),
+                connecting: true,
+                generation,
+                ..Session::default()
+            };
+            generation
+        };
+        *lock(&self.cast) = Current { device: Some(device.clone()), ..Current::default() };
+        self.bump();
+        let hub = Arc::clone(self);
+        let device = device.clone();
+        self.spawn(async move {
+            let joined = CastPlayer::join(hub.setup(device), &left.session).await;
+            match joined {
+                Ok(Some((player, _events))) => {
+                    player.use_receiver(hub.receiver());
+                    tracing::info!("joined the cast session left running");
+                    hub.connected(generation, Ok(Arc::new(player)));
+                }
+                // The receiver closed meanwhile, or the TV can't be reached: nothing to join,
+                // and nothing to say. One out of reach may still play it, so its note stays for
+                // the next time the TV is found or cast to.
+                unjoined => {
+                    if matches!(unjoined, Ok(None)) {
+                        hub.forget_left();
+                    }
+                    let ours = {
+                        let mut session = lock(&hub.session);
+                        let ours = session.generation == generation;
+                        if ours {
+                            *session = Session { generation, ..Session::default() };
+                        }
+                        ours
+                    };
+                    if ours {
+                        *lock(&hub.cast) = Current::default();
+                        hub.bump();
+                    }
+                }
+            }
+        });
+    }
+
+    /// At launch: join the cast the run before this one left running, quietly, when its record
+    /// still counts and the TV's receiver still runs that session with the same episode. The TV
+    /// is tried at its last address for a few seconds; no browse runs. Anything else drops the
+    /// record with nothing said. Whether the TV is being tried.
+    pub fn resume_left(self: &Arc<Self>) -> bool {
+        self.resume_within(RESUME_WINDOW)
+    }
+
+    /// [`Self::resume_left`], trying the TV for `window`.
+    pub(crate) fn resume_within(self: &Arc<Self>, window: Duration) -> bool {
+        let Some(left) = self.left() else { return false };
+        let tv = left.tv.clone().filter(|tv| tv.id == left.device && self.shows_tvs());
+        let Some(tv) = tv else {
+            self.forget_left();
+            return false;
+        };
+        if self.casting_now() || lock(&self.session).device.is_some() {
+            return false;
+        }
+        if self.resuming.swap(true, Ordering::Relaxed) {
+            return false;
+        }
+        let guard = Resuming(Arc::clone(&self.resuming));
+        let hub = Arc::clone(self);
+        self.spawn(async move {
+            let _guard = guard;
+            let deadline = tokio::time::Instant::now() + window;
+            let joined = loop {
+                let setup = hub.setup(tv.clone());
+                match tokio::time::timeout_at(deadline, CastPlayer::join(setup, &left.session))
+                    .await
+                {
+                    Ok(Ok(joined)) => break joined.map(|(player, _events)| player),
+                    Ok(Err(e)) => {
+                        tracing::debug!(error = %e, "the TV a cast was left on didn't answer");
+                        if tokio::time::Instant::now() + RESUME_RETRY >= deadline {
+                            break None;
+                        }
+                        tokio::time::sleep(RESUME_RETRY).await;
+                    }
+                    Err(_) => break None,
+                }
+            };
+            // The same episode, or nothing playing when nothing did: the cast as it was left.
+            let same = joined.filter(|player| card_of(&player.current()) == left.card);
+            if let Some(player) = same {
+                player.use_receiver(hub.receiver());
+                if hub.adopt(&tv, Arc::new(player)) {
+                    tracing::info!("joined the cast left running at launch");
+                }
+                return;
+            }
+            // Another episode, another app, no session or no answer: dropped, with nothing said,
+            // unless a cast begun meanwhile holds the record now. A joined player is let go
+            // without a word to the TV, so what plays there plays on.
+            let ours = hub.left().is_some_and(|now| now.session == left.session);
+            if ours && !hub.casting_now() && lock(&hub.session).device.is_none() {
+                tracing::info!("the cast left running is gone; its record is dropped");
+                hub.forget_left();
+            }
+        });
+        true
+    }
+
+    /// Hold `player`, joined at launch on the receiver a cast was left running on, as the
+    /// session, with no connecting state. Not when anything else began meanwhile.
+    fn adopt(self: &Arc<Self>, device: &CastDevice, player: Arc<CastPlayer>) -> bool {
+        if self.casting_now() {
+            return false;
+        }
+        let generation = {
+            let mut session = lock(&self.session);
+            if session.device.is_some() || session.connecting || session.player.is_some() {
+                return false;
+            }
+            let generation = session.generation + 1;
+            *session = Session {
+                device: Some(device.clone()),
+                player: Some(Arc::clone(&player)),
+                connecting: true,
+                quiet: true,
+                generation,
+                ..Session::default()
+            };
+            generation
+        };
+        *lock(&self.cast) = Current { device: Some(device.clone()), ..Current::default() };
+        self.connected(generation, Ok(player))
     }
 
     /// Whether the TV picker lists TVs with Chromecast built in, from Settings.
@@ -232,10 +1333,69 @@ impl CastHub {
     /// The language the front end speaks, as a tag, for what the TV shows.
     pub fn set_language(&self, language: Option<String>) {
         *lock(&self.language) = language;
+        if let Some(player) = self.player() {
+            player.set_greeting(self.language(), self.device_word());
+        }
     }
 
     pub fn language(&self) -> Option<String> {
         lock(&self.language).clone()
+    }
+
+    /// What Kaeri's receiver calls this device in its own strings ("Waiting for the iPhone"):
+    /// `iphone`, `ipad`, `phone`, `tablet`, `mac` or `computer`.
+    pub fn set_device_word(&self, word: Option<String>) {
+        *lock(&self.device_word) = word;
+        if let Some(player) = self.player() {
+            player.set_greeting(self.language(), self.device_word());
+        }
+    }
+
+    pub fn device_word(&self) -> Option<String> {
+        lock(&self.device_word).clone()
+    }
+
+    /// What Kaeri's receiver says from now on, past the hub's own handling.
+    pub fn heard(&self) -> broadcast::Receiver<FromReceiver> {
+        self.heard.subscribe()
+    }
+
+    /// Follow what `player`'s receiver says, once per player.
+    fn listen(self: &Arc<Self>, player: &Arc<CastPlayer>) {
+        {
+            let mut listening = lock(&self.listening);
+            if Weak::ptr_eq(&listening, &Arc::downgrade(player)) {
+                return;
+            }
+            *listening = Arc::downgrade(player);
+        }
+        player.set_greeting(self.language(), self.device_word());
+        let mut heard = player.heard();
+        let hub = Arc::downgrade(self);
+        let tv = player.device().clone();
+        tokio::spawn(async move {
+            loop {
+                let said = match heard.recv().await {
+                    Ok(said) => said,
+                    Err(broadcast::error::RecvError::Lagged(_)) => continue,
+                    Err(broadcast::error::RecvError::Closed) => return,
+                };
+                let Some(hub) = hub.upgrade() else { return };
+                if said == FromReceiver::SubtitlesPlain {
+                    match hub.memory().told_subtitles_plain(&tv.id) {
+                        Ok(true) => {
+                            lock(&hub.cast).say(kaeri_model::Msg::NoticeCastSubtitlesPlain {
+                                name: tv.name.clone(),
+                            });
+                            hub.bump();
+                        }
+                        Ok(false) => {}
+                        Err(e) => tracing::warn!(error = %e, "couldn't note the TV"),
+                    }
+                }
+                let _ = hub.heard.send(said);
+            }
+        });
     }
 
     /// What the engine has learned of each TV, read the first time it is needed.
@@ -365,24 +1525,117 @@ impl CastHub {
         self.bump();
     }
 
-    /// Whether a cast was asked for and has not ended.
+    /// Whether a cast was asked for and has not ended, or a session holds a TV.
     pub fn casting(&self) -> bool {
         let cast = lock(&self.cast);
-        cast.device.is_some() && !cast.over
+        (cast.device.is_some() && !cast.over) || {
+            drop(cast);
+            self.session_device().is_some()
+        }
+    }
+
+    /// Whether the card follows `player`.
+    pub(crate) fn attached(&self, player: &Arc<CastPlayer>) -> bool {
+        Weak::ptr_eq(&lock(&self.cast).player, &Arc::downgrade(player))
     }
 
     /// The player a cast opened, which the card's volume and mute go to.
     pub(crate) fn attach(self: &Arc<Self>, player: &Arc<CastPlayer>) {
+        self.listen(player);
         let mut status = player.status();
         lock(&self.cast).player = Arc::downgrade(player);
-        self.set_status(status.borrow_and_update().clone());
+        let mut noted = Noted::default();
+        let device = player.device().id.clone();
+        let now = status.borrow_and_update().clone();
+        self.note_left(&device, Some(player), &now, &mut noted);
+        self.note_fallback(player, &now);
+        self.set_status(now);
         let hub = Arc::downgrade(self);
+        let held = Arc::downgrade(player);
         tokio::spawn(async move {
             while status.changed().await.is_ok() {
                 let Some(hub) = hub.upgrade() else { return };
-                hub.set_status(status.borrow_and_update().clone());
+                // Read before the player: one let go as its cast ended still says how it ended,
+                // so a lost one is noted as left playing.
+                let now = status.borrow_and_update().clone();
+                let player = held.upgrade();
+                hub.note_left(&device, player.as_deref(), &now, &mut noted);
+                let Some(player) = player else { return };
+                hub.note_fallback(&player, &now);
+                hub.set_status(now);
             }
         });
+    }
+
+    /// Kaeri's receiver didn't start on `player`'s cast, so the TV plays it in its own player:
+    /// the note says so once for each time it happens, however often the card is opened again.
+    fn note_fallback(&self, player: &Arc<CastPlayer>, status: &CastStatus) {
+        if !status.fallen_back {
+            return;
+        }
+        {
+            let mut told = lock(&self.told_fallback);
+            if Weak::ptr_eq(&told, &Arc::downgrade(player)) {
+                return;
+            }
+            *told = Arc::downgrade(player);
+        }
+        tracing::info!("the TV plays this cast in its own player");
+        lock(&self.cast)
+            .say(kaeri_model::Msg::NoticeCastFallback { name: player.device().name.clone() });
+    }
+
+    /// Keep the note of the receiver a cast plays on, a cast begun from Play on TV included, so a
+    /// run the system ended joins it again once the TV is found: noted as the receiver comes up,
+    /// let go as the cast ends, unless the connection was lost mid-episode.
+    fn note_left(
+        &self,
+        device: &str,
+        player: Option<&CastPlayer>,
+        status: &CastStatus,
+        noted: &mut Noted,
+    ) {
+        if status.state == CastState::Ended {
+            let lost = matches!(status.failure, Some(CastFailure::Lost(_)));
+            let Some(left) = noted
+                .session
+                .take()
+                .and_then(|session| self.left().filter(|left| left.session == session))
+            else {
+                return;
+            };
+            if !(lost && noted.busy) {
+                self.forget_left();
+                return;
+            }
+            // Lost mid-episode: the receiver may play it on, and a cast of it again carries on
+            // from where the TV is.
+            let playing = {
+                let cast = lock(&self.cast);
+                cast.asked
+                    .clone()
+                    .filter(|_| cast.device.as_ref().is_some_and(|d| d.id == device))
+            };
+            if playing.is_some() {
+                self.write_left(Some(Left { playing, at: noted.known_at(), ..left }));
+            }
+            return;
+        }
+        noted.hear(status);
+        let Some(player) = player else { return };
+        noted.busy = status.step.is_some()
+            || matches!(
+                status.state,
+                CastState::Playing | CastState::Paused | CastState::Buffering
+            );
+        if let Some(app) = player.receiver()
+            && noted.session.as_deref() != Some(app.session_id.as_str())
+        {
+            self.leave(player);
+            noted.session = Some(app.session_id);
+        } else if let Some(session) = &noted.session {
+            self.follow_left(session, status);
+        }
     }
 
     pub(crate) fn set_status(&self, status: CastStatus) {
@@ -417,8 +1670,25 @@ impl CastHub {
             if ran_out && let Some(next) = cast.next.as_mut() {
                 next.played = true;
             }
+            // Kaeri's receiver draws Up Next's card on the TV too, while this one shows it.
+            let shown = cast.next.as_ref().filter(|next| next.shown(position, duration));
+            let tell = (shown.is_some() != cast.told_next).then(|| {
+                shown.map(|next| UpNextCard {
+                    number: Some(next.number.clone()),
+                    title: next.title.clone(),
+                    still: next.still.clone(),
+                    seconds: next.remaining(position, duration).map_or(0, |r| r.ceil() as u32),
+                })
+            });
+            if tell.is_some() {
+                cast.told_next = !cast.told_next;
+            }
             cast.status = Some(status);
-            ran_out.then(|| cast.player.upgrade()).flatten()
+            let player = cast.player.upgrade();
+            if let (Some(tell), Some(player)) = (tell, player.as_ref()) {
+                player.tell_up_next(tell);
+            }
+            ran_out.then_some(player).flatten()
         };
         if let Some(player) = play_next {
             tracing::info!("Up Next's count ended on the cast; playing the next episode");
@@ -431,6 +1701,9 @@ impl CastHub {
     /// the skip on offer and the Undo note, and that the next episode is starting.
     pub(crate) fn overlay(&self, overlay: &crate::playback::link::Overlay) {
         use crate::playback::{link::Overlay, offered};
+        use kaeri_model::playback::SkipKind;
+        let mut skipped = None;
+        let mut starting = false;
         {
             let mut cast = lock(&self.cast);
             match overlay {
@@ -453,6 +1726,12 @@ impl CastHub {
                 Overlay::SkipOffer { kind, to } => cast.skip = Some((offered(*kind), *to)),
                 Overlay::SkipCleared => cast.skip = None,
                 Overlay::Skipped { kind, from, .. } => {
+                    // Kaeri's receiver shows the skip on the TV too.
+                    skipped = match offered(*kind) {
+                        SkipKind::Opening => Some("opening"),
+                        SkipKind::Ending => Some("ending"),
+                        SkipKind::Recap => None,
+                    };
                     cast.undo = Some(Undo {
                         kind: offered(*kind),
                         to: *from,
@@ -469,9 +1748,26 @@ impl CastHub {
                     }
                     cast.skip = None;
                     cast.undo = None;
+                    // A note said as the cast came up is its first episode's, and stays while
+                    // that episode starts, another stream of it included; the next episode's
+                    // start lets it go.
+                    match &cast.note_for {
+                        None => cast.note_for = Some((*id, episode.clone())),
+                        Some((was, of)) if was != id || of != episode => cast.note = None,
+                        Some(_) => {}
+                    }
+                    starting = true;
                 }
                 _ => return,
             }
+        }
+        if starting {
+            self.forget_left_playing();
+        }
+        if let Some(part) = skipped
+            && let Some(player) = self.player()
+        {
+            player.tell_skipped(part);
         }
         self.bump();
     }
@@ -517,6 +1813,21 @@ impl CastHub {
         lock(&self.cast).player.upgrade()
     }
 
+    /// The device moved to another network, or back to one: a connection to the TV being made
+    /// again tries at once on the new one.
+    pub fn network_changed(&self) {
+        let held = lock(&self.session).player.clone();
+        let casting = self.player();
+        if let Some(player) = &held {
+            player.network_changed();
+        }
+        if let Some(player) =
+            casting.filter(|p| !held.as_ref().is_some_and(|h| Arc::ptr_eq(h, p)))
+        {
+            player.network_changed();
+        }
+    }
+
     /// An engine event on its way to the front end, for the card's title, episode and skips.
     pub fn observe(&self, event: &Event) {
         let changed = {
@@ -548,6 +1859,7 @@ impl CastHub {
             skip: cast.skip,
             undo: cast.undo.clone(),
             asked: cast.asked.clone(),
+            note: cast.note.clone(),
         }
     }
 
@@ -556,9 +1868,20 @@ impl CastHub {
         self.changes.subscribe()
     }
 
+    /// How many times the cast has changed: a card's `rev`.
+    pub fn rev(&self) -> u64 {
+        *self.changes.borrow()
+    }
+
     fn bump(&self) {
         self.changes.send_modify(|n| *n += 1);
     }
+}
+
+/// Whole seconds the TV has waited for the stream, while it waits.
+pub(crate) fn waited(status: &CastStatus) -> Option<u32> {
+    let since = status.waiting_since.filter(|_| status.state == CastState::Buffering)?;
+    Some(u32::try_from(since.elapsed().as_secs()).unwrap_or(u32::MAX))
 }
 
 /// What the relay fetches upstream with: the sources client for the source's own hosts, with
@@ -594,5 +1917,54 @@ impl Upstream for HttpUpstream {
             .bytes_stream()
             .map(|chunk| chunk.map(|bytes| bytes.to_vec()).map_err(io::Error::other));
         Ok(UpstreamResponse { status, headers, body: Box::pin(body), url: landed })
+    }
+}
+
+/// The environment variable that names a development receiver app (the "Kaeri test" receiver on
+/// the tunnel) in place of Kaeri's own.
+pub const DEV_RECEIVER_ENV: &str = "KAERI_CAST_RECEIVER_APP";
+
+/// `KAERI_CAST_RECEIVER_APP`, in the builds that honour it: the engine's tests and the Fixtures
+/// and QA apps (`testing`), and the terminal (`dev-receiver`). A release app build never reads
+/// it, so nothing on a viewer's machine can point their TV at another page.
+#[cfg(any(feature = "testing", feature = "dev-receiver"))]
+pub fn dev_receiver() -> Option<String> {
+    dev_receiver_from(std::env::var(DEV_RECEIVER_ENV).ok())
+}
+
+/// Release app builds: never.
+#[cfg(not(any(feature = "testing", feature = "dev-receiver")))]
+pub fn dev_receiver() -> Option<String> {
+    None
+}
+
+/// A Cast app ID as the variable gives it: eight hex digits, upper case. Anything else is
+/// ignored, with a warning, so a typo falls back to Kaeri's own receiver.
+#[cfg_attr(not(any(test, feature = "testing", feature = "dev-receiver")), allow(dead_code))]
+fn dev_receiver_from(value: Option<String>) -> Option<String> {
+    let value = value?.trim().to_ascii_uppercase();
+    if value.is_empty() {
+        return None;
+    }
+    if value.len() == 8 && value.chars().all(|c| c.is_ascii_hexdigit()) {
+        tracing::info!(receiver = %value, "launching the receiver {DEV_RECEIVER_ENV} names");
+        Some(value)
+    } else {
+        tracing::warn!("{DEV_RECEIVER_ENV} is no Cast app ID; Kaeri's own receiver launches");
+        None
+    }
+}
+
+#[cfg(test)]
+mod dev_receiver_tests {
+    use super::dev_receiver_from;
+
+    #[test]
+    fn takes_an_app_id_and_ignores_anything_else() {
+        assert_eq!(dev_receiver_from(Some(" 0a1b2c3d ".into())).as_deref(), Some("0A1B2C3D"));
+        assert_eq!(dev_receiver_from(None), None);
+        assert_eq!(dev_receiver_from(Some(String::new())), None);
+        assert_eq!(dev_receiver_from(Some("https://receiver.example/".into())), None);
+        assert_eq!(dev_receiver_from(Some("0A1B2C3".into())), None);
     }
 }

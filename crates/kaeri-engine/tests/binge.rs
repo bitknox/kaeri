@@ -114,6 +114,8 @@ fn context(episode: &str, next: Option<&str>) -> PlaybackContext {
 
 fn settings(auto_next: bool) -> PlaySettings {
     PlaySettings {
+        privacy: Default::default(),
+        further: Default::default(),
         threshold: 0.85,
         auto_skip: false,
         auto_skip_recap: false,
@@ -139,6 +141,7 @@ fn settings(auto_next: bool) -> PlaySettings {
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
     }
 }
 
@@ -470,6 +473,7 @@ fn row(number: &str) -> kaeri_model::episodes::EpisodeRow {
         past_progress: false,
         spoiler_ahead: false,
         synopsis_pending: false,
+        followed: Vec::new(),
     }
 }
 

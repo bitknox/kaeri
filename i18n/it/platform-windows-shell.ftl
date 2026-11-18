@@ -62,3 +62,4 @@ titlebar-open-devices = Apri { -device-cap-pl }
 messages-title = Messaggi
 messages-none = Ancora nessun messaggio
 messages-alert = Problema
+tv-on-this-network = Su questa rete

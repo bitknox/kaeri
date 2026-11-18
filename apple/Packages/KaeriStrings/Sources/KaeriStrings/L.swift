@@ -58,6 +58,31 @@ public enum L {
         Self.format("notice-cast-lost", fallback: "Lost %1$@, so casting stopped.", name)
     }
 
+    /// The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.
+    public static func noticeCastStoppedElsewhere(name: String) -> String {
+        Self.format("notice-cast-stopped-elsewhere", fallback: "%1$@ stopped the cast.", name)
+    }
+
+    /// Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+    public static func noticeCastSegment(name: String) -> String {
+        Self.format("notice-cast-segment", fallback: "%1$@ stopped getting the stream: the source didn't answer for part of the episode. Try another source.", name)
+    }
+
+    /// The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+    public static func noticeCastLostStream(name: String) -> String {
+        Self.format("notice-cast-lost-stream", fallback: "%1$@ lost the stream from this device. Check that both are on the same network.", name)
+    }
+
+    /// Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+    public static func noticeCastSubtitlesPlain(name: String) -> String {
+        Self.format("notice-cast-subtitles-plain", fallback: "Subtitles on %1$@ show as plain text. Typeset subtitles were too much for it.", name)
+    }
+
+    /// Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.
+    public static func noticeCastFallback(name: String) -> String {
+        Self.format("notice-cast-fallback", fallback: "%1$@ plays this in its own player. Subtitles show as plain text.", name)
+    }
+
     /// The TV picked to cast to has left the network.
     public static var noticeCastNoDevice: String { string("notice-cast-no-device", fallback: "That TV is no longer on the network.") }
 
@@ -351,6 +376,16 @@ public enum L {
     /// Reason: a play waited too long for its sources to give it a stream, and gave up.
     public static var causeSourcesTimedOut: String { string("cause-sources-timed-out", fallback: "The sources took too long to answer. Try again, or choose another source.") }
 
+    /// Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+    public static func causeSourcesUnreached(names: String) -> String {
+        Self.format("cause-sources-unreached", fallback: "Couldn't reach %1$@. Try again, or choose another source.", names)
+    }
+
+    /// Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+    public static func causeSourcesNotAsked(count: Int, names: String, episode: String) -> String {
+        Self.format("cause-sources-not-asked", fallback: "No source that was asked has episode %3$@. %2$@ weren't asked.", count, names, episode)
+    }
+
     /// Reason: every source matched the title but none has the episode. The detail is what each said.
     public static func causeNoSourceHasEpisode(episode: String, detail: String) -> String {
         Self.format("cause-no-source-has-episode", fallback: "No source has episode %1$@: %2$@", episode, detail)
@@ -419,6 +454,16 @@ public enum L {
     /// Toast when a stream never showed a frame and the next one is tried.
     public static func noticeStreamNoVideo(next: Int, total: Int) -> String {
         Self.format("notice-stream-no-video", fallback: "No video from that stream. Trying %1$lld of %2$lld.", next, total)
+    }
+
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+    public static func noticeFailedOver(source: String) -> String {
+        Self.format("notice-failed-over", fallback: "The stream broke off. %1$@ took over at the same point.", source)
+    }
+
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+    public static func noticeFailedOverSameSource(source: String) -> String {
+        Self.format("notice-failed-over-same-source", fallback: "The stream broke off. Another stream from %1$@ took over at the same point.", source)
     }
 
     /// Toast when mpv gave up on a file. The reason is mpv's own line.
@@ -1145,6 +1190,9 @@ public enum L {
     /// A chapter row's state: it waits to download until the device is on Wi-Fi.
     public static var readingRowWaitsWifi: String { string("reading-row-waits-wifi", fallback: "Queued · waits for Wi-Fi") }
 
+    /// A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+    public static var readingRowWaitsRoom: String { string("reading-row-waits-room", fallback: "Queued · waits for room") }
+
     /// A chapter row's state while it downloads.
     public static func readingRowDownloading(done: Int, total: Int) -> String {
         Self.format("reading-row-downloading", fallback: "Downloading · %1$lld of %2$lld pages", done, total)
@@ -1350,6 +1398,11 @@ public enum L {
 
     /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
     public static var readingDlOffline: String { string("reading-dl-offline", fallback: "Offline") }
+
+    /// After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+    public static func readingDlNoRoom(count: Int) -> String {
+        Self.format("reading-dl-no-room", fallback: "No room left. They download once some space is free.", count)
+    }
 
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     public static func readingEstimateSize(size: String) -> String {
@@ -2299,6 +2352,17 @@ public enum L {
         Self.format("downloads-continued-left", fallback: "%1$lld episodes left", count)
     }
 
+    /// Title of that window while only chapters download.
+    public static var downloadsContinuedChaptersTitle: String { string("downloads-continued-chapters-title", fallback: "Downloading chapters") }
+
+    /// Title of that window while episodes and chapters download together.
+    public static var downloadsContinuedBothTitle: String { string("downloads-continued-both-title", fallback: "Downloading episodes and chapters") }
+
+    /// Line in that window: how many chapters are still to finish. Beside the episodes' line when both download, as "2 episodes left · 3 chapters left".
+    public static func downloadsContinuedChaptersLeft(count: Int) -> String {
+        Self.format("downloads-continued-chapters-left", fallback: "%1$lld chapters left", count)
+    }
+
     /// Line on the title page and in a Continue preview: where else the show streams. The places are already joined, such as "Lantern Library and Hikari Library".
     public static func titleAlsoOn(places: String) -> String {
         Self.format("title-also-on", fallback: "Also on %1$@", places)
@@ -2396,10 +2460,18 @@ public enum L {
         Self.format("cast-row-through", fallback: "Plays through this %1$@", device)
     }
 
-    /// Note on the iPhone and iPad casting card: the cast stops when the app leaves the screen. The device is iPhone or iPad; the name is the TV's.
-    public static func castKeepOpen(device: String, name: String) -> String {
-        Self.format("cast-keep-open", fallback: "Keep Kaeri open on this %1$@ while %2$@ plays.", device, name)
+    /// Title of the Mac's confirmation when the app quits while it casts. The name is the TV's.
+    public static func castQuitTitle(name: String) -> String {
+        Self.format("cast-quit-title", fallback: "Stop casting to %1$@?", name)
     }
+
+    /// Line in that confirmation: the Mac serves the episode, so quitting ends it on the TV.
+    public static func castQuitBody(name: String) -> String {
+        Self.format("cast-quit-body", fallback: "Quitting Kaeri stops the episode on %1$@.", name)
+    }
+
+    /// The confirmation's button that stops casting and quits.
+    public static var castQuitAction: String { string("cast-quit-action", fallback: "Stop and quit") }
 
     /// Line under the header while AniList's request budget is spent. The placeholders stay.
     public static func discussionAppleWaiting(time: String) -> String {
@@ -2499,9 +2571,6 @@ public enum L {
 
     /// What the system shows under a group of new-episode notifications. The system fills in the count at %u.
     public static var noticeSummary: String { string("notice-summary", fallback: "%u more new episodes") }
-
-    /// VoiceOver action of a notice that dismisses it.
-    public static var noticeDismiss: String { string("notice-dismiss", fallback: "Dismiss") }
 
     /// Line of the device sign-in sheet when the code ran out.
     public static func accountsCodeExpiredDetail(tracker: String) -> String {
@@ -2714,6 +2783,12 @@ public enum L {
 
     /// Playback menu item that opens the chat field in a watch party. Key C.
     public static var menuSaySomething: String { string("menu-say-something", fallback: "Say Something…") }
+
+    /// Mac Kaeri menu item, ⇧⌘N, with a check while private mode is on. Title case like the rest of the menu bar.
+    public static var menuPrivateMode: String { string("menu-private-mode", fallback: "Private Mode") }
+
+    /// Mac Episode menu, show section: a check item for keeping the show private on this device.
+    public static var menuAlwaysPrivate: String { string("menu-always-private", fallback: "Always Private") }
 
     /// Button in the reader's control group that opens the reader's settings. Aa is the glyph.
     public static var readerSettingsOpen: String { string("reader-settings-open", fallback: "Reader settings") }
@@ -3558,6 +3633,15 @@ public enum L {
     /// Note under the app language row on iPhone and iPad after a new language is picked. The app can't restart itself there, so the language changes once it has been closed and opened again.
     public static var languageNextOpenNote: String { string("language-next-open-note", fallback: "Kaeri uses the new language the next time it opens.") }
 
+    /// Settings row on the Mac, iPhone and iPad: whether leaving the app while an episode plays opens Picture in Picture. "Picture in Picture" in the system's own capitals.
+    public static var settingsPictureInPictureOnLeaveApple: String { string("settings-picture-in-picture-on-leave-apple", fallback: "Picture in Picture when leaving the app") }
+
+    /// Note under that row on the Mac: when the Mac counts as leaving.
+    public static var settingsPictureInPictureOnLeaveMac: String { string("settings-picture-in-picture-on-leave-mac", fallback: "Starts when the window is minimised or Kaeri is hidden.") }
+
+    /// Footnote under the iPhone and iPad group that holds that row: the system's own switch, which wins over the app's. Name the switch and the path as iOS names them in this language.
+    public static var settingsPictureInPictureOnLeaveIos: String { string("settings-picture-in-picture-on-leave-ios", fallback: "Also needs Start PiP Automatically in Settings > General > Picture in Picture.") }
+
     /// Mac menu bar item that opens Settings.
     public static var menuSettings: String { string("menu-settings", fallback: "Settings…") }
 
@@ -3593,6 +3677,9 @@ public enum L {
 
     /// Mac menu bar item that syncs with the tracker accounts now.
     public static var menuSyncNow: String { string("menu-sync-now", fallback: "Sync Now") }
+
+    /// Mac and iPad menu bar item that takes Sync Now's place while a title page says its next episode aired and no source has it yet: it asks the sources again, as the page's Check again button does. Everywhere else it is action-check-again.
+    public static var menuCheckAgain: String { string("menu-check-again", fallback: "Check Again") }
 
     /// Mac menu bar item that pauses every download.
     public static var menuPauseAllDownloads: String { string("menu-pause-all-downloads", fallback: "Pause All Downloads") }
@@ -4555,6 +4642,40 @@ public enum L {
     /// Link from that line to the crash report settings.
     public static var reportCrashSettings: String { string("report-crash-settings", fallback: "Crash report settings") }
 
+    /// Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+    public static var reportPlayerLog: String { string("report-player-log", fallback: "Player log") }
+
+    /// Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+    public static func reportPlayerLogDetail(playbacks: Int, size: String) -> String {
+        Self.format("report-player-log-detail", fallback: "The last %1$lld playbacks · %2$@", playbacks, size)
+    }
+
+    /// Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+    public static var reportPlayerLogEmpty: String { string("report-player-log-empty", fallback: "No playback logged yet") }
+
+    /// Button under the ticked Player log item. Opens the system's save dialog for the log file.
+    public static var reportPlayerLogSave: String { string("report-player-log-save", fallback: "Save log…") }
+
+    /// Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+    public static var reportPlayerLogAttach: String { string("report-player-log-attach", fallback: "Attach the file to the issue once it opens on GitHub.") }
+
+    /// Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+    public static func reportPlayerLogSaved(file: String) -> String {
+        Self.format("report-player-log-saved", fallback: "Saved as %1$@", file)
+    }
+
+    /// Shown beside the Save log button when the file could not be written.
+    public static var reportPlayerLogFailed: String { string("report-player-log-failed", fallback: "Couldn't save the log. Try another folder.") }
+
+    /// First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+    public static var reportSentReport: String { string("report-sent-report", fallback: "Report") }
+
+    /// Screen readers announce this once the player log file is written.
+    public static var reportPlayerLogA11ySaved: String { string("report-player-log-a11y-saved", fallback: "Player log saved") }
+
+    /// Screen reader hint on the Player log item.
+    public static var reportPlayerLogA11yHint: String { string("report-player-log-a11y-hint", fallback: "Saves a file to attach to the issue") }
+
     /// Heading of the Crash reports group in Settings, About.
     public static var settingsGroupCrashes: String { string("settings-group-crashes", fallback: "Crash reports") }
 
@@ -4782,6 +4903,50 @@ public enum L {
     /// Line under TV volume on the card, for a TV whose volume only its own remote sets.
     public static var castVolumeFixed: String { string("cast-volume-fixed", fallback: "Set on the TV") }
 
+    /// The cast button's spoken label while it connects to a TV. The name is the TV's.
+    public static func castButtonConnecting(name: String) -> String {
+        Self.format("cast-button-connecting", fallback: "Connecting to %1$@", name)
+    }
+
+    /// The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+    public static func castButtonConnected(name: String) -> String {
+        Self.format("cast-button-connected", fallback: "Connected to %1$@", name)
+    }
+
+    /// Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+    public static func castPlaysOn(name: String) -> String {
+        Self.format("cast-plays-on", fallback: "Plays on %1$@", name)
+    }
+
+    /// Row in the connected dialog while the TV has nothing loaded.
+    public static var castIdle: String { string("cast-idle", fallback: "Nothing playing yet") }
+
+    /// The casting controller's line while the episode is paused on the TV. The name is the TV's.
+    public static func castStatusPaused(name: String) -> String {
+        Self.format("cast-status-paused", fallback: "Paused on %1$@", name)
+    }
+
+    /// Spoken label of the show's name in the casting controller: it opens the show's page.
+    public static func castOpenShow(title: String) -> String {
+        Self.format("cast-open-show", fallback: "Open %1$@", title)
+    }
+
+    /// The chevron that puts the full controller back into the mini player.
+    public static var castControllerClose: String { string("cast-controller-close", fallback: "Close") }
+
+    /// Screen reader hint on the mini player over the navigation bar.
+    public static var castMiniOpens: String { string("cast-mini-opens", fallback: "Opens the controls") }
+
+    /// Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+    public static func castPlayNextOn(name: String) -> String {
+        Self.format("cast-play-next-on", fallback: "Play next on %1$@", name)
+    }
+
+    /// The system's media notification and Now Playing: the line naming the TV that plays.
+    public static func castNotificationLine(name: String) -> String {
+        Self.format("cast-notification-line", fallback: "Casting to %1$@", name)
+    }
+
     /// Button that runs a failed action again.
     public static var actionTryAgain: String { string("action-try-again", fallback: "Try again") }
 
@@ -4949,6 +5114,9 @@ public enum L {
     /// Button that checks a { -source } again after it did not answer.
     public static var actionCheckAgain: String { string("action-check-again", fallback: "Check again") }
 
+    /// Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+    public static var actionChecking: String { string("action-checking", fallback: "Checking") }
+
     /// Button that opens the system's own settings for the app.
     public static var actionOpenSettings: String { string("action-open-settings", fallback: "Open settings") }
 
@@ -5027,6 +5195,11 @@ public enum L {
         Self.format("time-minutes", fallback: "%1$lld min", minutes)
     }
 
+    /// A length in hours, inside time-ago.
+    public static func timeHours(hours: Int) -> String {
+        Self.format("time-hours", fallback: "%1$lld h", hours)
+    }
+
     /// A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
     public static var timeNowInline: String { string("time-now-inline", fallback: "now") }
 
@@ -5093,6 +5266,9 @@ public enum L {
 
     /// Short placeholder while something loads.
     public static var stateLoading: String { string("state-loading", fallback: "Loading") }
+
+    /// Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+    public static var noticeDismiss: String { string("notice-dismiss", fallback: "Dismiss") }
 
     /// Controller help: the D-pad and left stick move focus between items.
     public static var padHelpMove: String { string("pad-help-move", fallback: "Move focus") }
@@ -5338,6 +5514,20 @@ public enum L {
     public static func namesList(list: String, next: String) -> String {
         Self.format("names-list", fallback: "%1$@, %2$@", list, next)
     }
+
+    /// Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.
+    public static var castRowThroughComputer: String { string("cast-row-through-computer", fallback: "Plays through this computer") }
+
+    /// Title of the question asked on quitting while an episode plays on a TV.
+    public static var desktopCastQuitTitle: String { string("desktop-cast-quit-title", fallback: "Stop casting and quit?") }
+
+    /// Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+    public static func desktopCastQuitBody(title: String, name: String) -> String {
+        Self.format("desktop-cast-quit-body", fallback: "%1$@ is playing on %2$@. Quitting stops it.", title, name)
+    }
+
+    /// Button of the question asked on quitting while casting: stops the cast and quits.
+    public static var desktopCastQuitAction: String { string("desktop-cast-quit-action", fallback: "Stop and quit") }
 
     /// Menu item that opens an episode's discussion.
     public static var discussionOpen: String { string("discussion-open", fallback: "Discussion") }
@@ -7772,8 +7962,17 @@ public enum L {
         Self.format("player-start-miss-skipped", fallback: "You skipped %1$@", name)
     }
 
-    /// Details row for sources passed over because they failed lately. The name goes before it.
-    public static var playerStartResting: String { string("player-start-resting", fallback: "Skipped after recent failures") }
+    /// Details row for a source not asked while torrent playback is off. The name goes before it.
+    public static var playerStartRowHeldTorrentsOff: String { string("player-start-row-held-torrents-off", fallback: "Not asked · Torrent playback is off") }
+
+    /// Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
+    public static var playerStartRowHeldProxy: String { string("player-start-row-held-proxy", fallback: "Not asked · Waiting for the proxy check") }
+
+    /// Details row for a source not asked on cellular, where torrents are off. The name goes before it.
+    public static var playerStartRowHeldCellular: String { string("player-start-row-held-cellular", fallback: "Not asked · Torrents are off on cellular") }
+
+    /// Details row for a source not asked because it says it can't be used right now. The name goes before it.
+    public static var playerStartRowHeldOther: String { string("player-start-row-held-other", fallback: "Not asked · Not available right now") }
 
     /// Detail line once the streams are found and the player opens one. The name is the source's.
     public static func playerStartFrom(name: String) -> String {
@@ -7893,6 +8092,36 @@ public enum L {
     /// Second clause of a failure: the sources that were asked, joined as a list by the app.
     public static func playerStartAsked(names: String) -> String {
         Self.format("player-start-asked", fallback: "%1$@ were asked.", names)
+    }
+
+    /// Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.
+    public static func playerStartLacking(count: Int, names: String, episode: String) -> String {
+        Self.format("player-start-lacking", fallback: "%2$@ don't have episode %3$@.", count, names, episode)
+    }
+
+    /// First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.
+    public static func playerStartUnreached(names: String) -> String {
+        Self.format("player-start-unreached", fallback: "Couldn't reach %1$@.", names)
+    }
+
+    /// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
+    public static func playerStartNotAskedTorrentsOff(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-torrents-off", fallback: "%2$@ aren't asked while torrent playback is off.", count, names)
+    }
+
+    /// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
+    public static func playerStartNotAskedProxy(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-proxy", fallback: "%2$@ aren't asked until the proxy check passes.", count, names)
+    }
+
+    /// Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.
+    public static func playerStartNotAskedCellular(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-cellular", fallback: "%2$@ aren't asked on cellular.", count, names)
+    }
+
+    /// Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.
+    public static func playerStartNotAskedOther(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-other", fallback: "%2$@ aren't available right now.", count, names)
     }
 
     /// Label of the switch in the Details list that plays the episode with its subtitles.
@@ -8320,6 +8549,36 @@ public enum L {
     /// Line when the picker found no stream for the episode.
     public static var sourcePickerEmpty: String { string("source-picker-empty", fallback: "No source has a stream for this episode.") }
 
+    /// Line over the reasons when no source lists a release of the episode. The episode is its label.
+    public static func sourcePickerNoneLists(episode: String) -> String {
+        Self.format("source-picker-none-lists", fallback: "No source lists episode %1$@.", episode)
+    }
+
+    /// Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.
+    public static func sourcePickerNoneAnsweredLists(episode: String) -> String {
+        Self.format("source-picker-none-answered-lists", fallback: "No source that answered lists episode %1$@.", episode)
+    }
+
+    /// Line of the picker for a source not asked while torrent playback is off.
+    public static func sourcePickerHeldTorrentsOff(name: String) -> String {
+        Self.format("source-picker-held-torrents-off", fallback: "%1$@ isn't asked while torrent playback is off", name)
+    }
+
+    /// Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
+    public static func sourcePickerHeldProxy(name: String) -> String {
+        Self.format("source-picker-held-proxy", fallback: "%1$@ isn't asked until the proxy check passes", name)
+    }
+
+    /// Line of the picker for a source not asked on cellular, where torrents are off.
+    public static func sourcePickerHeldCellular(name: String) -> String {
+        Self.format("source-picker-held-cellular", fallback: "%1$@ isn't asked on cellular", name)
+    }
+
+    /// Line of the picker for a source that says it can't be used right now.
+    public static func sourcePickerHeldOther(name: String) -> String {
+        Self.format("source-picker-held-other", fallback: "%1$@ isn't available right now", name)
+    }
+
     /// Title of the picker sheet in the player.
     public static var playerSources: String { string("player-sources", fallback: "Sources") }
 
@@ -8378,6 +8637,56 @@ public enum L {
 
     /// Button in the subtitles panel that opens Settings.
     public static var playerSubsMore: String { string("player-subs-more", fallback: "More in Settings…") }
+
+    /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+    public static var privateMode: String { string("private-mode", fallback: "Private mode") }
+
+    /// The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+    public static var privateModeDetail: String { string("private-mode-detail", fallback: "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.") }
+
+    /// Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+    public static var privateModeLimits: String { string("private-mode-limits", fallback: "Your sources and watch parties still see what you open.") }
+
+    /// Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+    public static var privateModeOnNotice: String { string("private-mode-on-notice", fallback: "Private mode is on. Nothing is saved or synced until Kaeri quits.") }
+
+    /// Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+    public static var actionTurnOff: String { string("action-turn-off", fallback: "Turn off") }
+
+    /// Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+    public static func privateModeShortcutHint(keys: String) -> String {
+        Self.format("private-mode-shortcut-hint", fallback: "Shortcut: %1$@", keys)
+    }
+
+    /// The badge while private mode is on, the player label, and the head of the title page line.
+    public static var privateBadge: String { string("private-badge", fallback: "Private") }
+
+    /// Screen reader label of the badge.
+    public static var privateBadgeLabel: String { string("private-badge-label", fallback: "Private mode is on") }
+
+    /// Line under a title or series page's main action, after "Private" or "Always private".
+    public static var privateLineNotSaved: String { string("private-line-not-saved", fallback: "Not saved or synced") }
+
+    /// Line under a title or series page's main action when a place is held in memory, after "Private".
+    public static var privateLineKept: String { string("private-line-kept", fallback: "Your place is kept until Kaeri quits") }
+
+    /// A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+    public static var titleAlwaysPrivate: String { string("title-always-private", fallback: "Always private") }
+
+    /// Under the Always private switch in a show's settings.
+    public static var showAlwaysPrivateDetail: String { string("show-always-private-detail", fallback: "Nothing from this show is saved or synced on this device. What is already saved stays.") }
+
+    /// Under the Always private switch in a series page's settings.
+    public static var seriesAlwaysPrivateDetail: String { string("series-always-private-detail", fallback: "Nothing from this series is saved or synced on this device. What is already saved stays.") }
+
+    /// What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+    public static var nowPlayingPrivate: String { string("now-playing-private", fallback: "Playing in Kaeri") }
+
+    /// Announced to screen readers once when private mode turns on.
+    public static var privateModeOnAnnouncement: String { string("private-mode-on-announcement", fallback: "Private mode on") }
+
+    /// Announced to screen readers once when private mode turns off.
+    public static var privateModeOffAnnouncement: String { string("private-mode-off-announcement", fallback: "Private mode off") }
 
     /// Under a page that is still loading after four seconds.
     public static func readerPageLoading(page: Int) -> String {
@@ -10024,6 +10333,11 @@ public enum L {
     /// Screen readers: the custom action on a discovery cover that puts the series on Planning.
     public static var readTileAddPlanning: String { string("read-tile-add-planning", fallback: "Add to Planning") }
 
+    /// Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+    public static func readTileAddTo(list: String) -> String {
+        Self.format("read-tile-add-to", fallback: "Add to %1$@", list)
+    }
+
     /// Said once by screen readers when Your sources only turns on.
     public static var readSearchAnilistHidden: String { string("read-search-anilist-hidden", fallback: "AniList's results are hidden.") }
 
@@ -11531,6 +11845,30 @@ public enum L {
     /// Row: length of the Up next countdown.
     public static var settingsUpNextCountdown: String { string("settings-up-next-countdown", fallback: "Up next countdown") }
 
+    /// Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+    public static var settingsPreloadCellular: String { string("settings-preload-cellular", fallback: "Preload video on mobile data") }
+
+    /// The same row on the Mac and a Wi-Fi iPad. Low Data Mode is Apple's name for the system setting.
+    public static var settingsPreloadLowData: String { string("settings-preload-low-data", fallback: "Preload video in Low Data Mode") }
+
+    /// The same row on Windows and Linux.
+    public static var settingsPreloadMetered: String { string("settings-preload-metered", fallback: "Preload video on metered connections") }
+
+    /// Line under the row on iPhone and a cellular iPad. Low Data Mode is Apple's name for the system setting.
+    public static var settingsPreloadDetailApplePhone: String { string("settings-preload-detail-apple-phone", fallback: "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on mobile data or in Low Data Mode only when this is on.") }
+
+    /// Line under the row on the Mac and a Wi-Fi iPad. Low Data Mode and Personal Hotspot are Apple's names.
+    public static var settingsPreloadDetailLowData: String { string("settings-preload-detail-low-data", fallback: "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and in Low Data Mode or on Personal Hotspot only when this is on.") }
+
+    /// Line under the row on Windows and Linux, and the note under the terminal's settings list.
+    public static var settingsPreloadDetailMetered: String { string("settings-preload-detail-metered", fallback: "During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.") }
+
+    /// Sentence added after the line under the row while torrent playback is on.
+    public static var settingsPreloadTorrents: String { string("settings-preload-torrents", fallback: "Torrents load their first pieces the same way.") }
+
+    /// Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+    public static var settingsPreloadA11yDimmed: String { string("settings-preload-a11y-dimmed", fallback: "Needs Auto-play next") }
+
     /// Row: skip the opening.
     public static var settingsSkipOpening: String { string("settings-skip-opening", fallback: "Skip opening automatically") }
 
@@ -12097,6 +12435,15 @@ public enum L {
     /// Row: the port the shared catalogue listens on. Empty picks a free one.
     public static var settingsOpdsPort: String { string("settings-opds-port", fallback: "Feed port") }
 
+    /// Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+    public static var settingsLabelPictureInPictureOnLeave: String { string("settings-label-picture-in-picture-on-leave", fallback: "Picture in picture when leaving the app") }
+
+    /// Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+    public static var settingsAnilistFollowing: String { string("settings-anilist-following", fallback: "Show people you follow") }
+
+    /// Note under that switch.
+    public static var settingsAnilistFollowingFooter: String { string("settings-anilist-following-footer", fallback: "Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.") }
+
     /// Label of the address field in the Add a server sheet.
     public static var bookServerAddress: String { string("book-server-address", fallback: "Address") }
 
@@ -12396,6 +12743,36 @@ public enum L {
     /// Under a source: how many of the title's released episodes it lists.
     public static func sourcePickerCoverage(covered: Int, of: Int) -> String {
         Self.format("source-picker-coverage", fallback: "%1$lld of %2$lld episodes", covered, of)
+    }
+
+    /// Under a source that lists every episode that is out.
+    public static func sourcePickerEpisodes(count: Int, first: Int, last: Int) -> String {
+        Self.format("source-picker-episodes", fallback: "Episodes %2$@ to %3$@", count, String(first), String(last))
+    }
+
+    /// Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+    public static func sourcePickerEpisodesNotYet(first: Int, last: Int, missing: String) -> String {
+        Self.format("source-picker-episodes-not-yet", fallback: "Episodes %1$@ to %2$@. Not %3$@ yet", String(first), String(last), missing)
+    }
+
+    /// The same, more than a week after the episodes aired.
+    public static func sourcePickerEpisodesNot(first: Int, last: Int, missing: String) -> String {
+        Self.format("source-picker-episodes-not", fallback: "Episodes %1$@ to %2$@. Not %3$@", String(first), String(last), missing)
+    }
+
+    /// Two episodes a source lacks, inside the missing part of a source's line.
+    public static func sourcePickerMissingPair(a: Int, b: Int) -> String {
+        Self.format("source-picker-missing-pair", fallback: "%1$@ or %2$@", String(a), String(b))
+    }
+
+    /// Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+    public static func sourcePickerMissingRange(first: Int, last: Int) -> String {
+        Self.format("source-picker-missing-range", fallback: "%1$@ to %2$@", String(first), String(last))
+    }
+
+    /// Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+    public static func sourcePickerCoverageMissing(covered: Int, of: Int, missing: String) -> String {
+        Self.format("source-picker-coverage-missing", fallback: "%1$lld of %2$lld episodes. Not %3$@", covered, of, missing)
     }
 
     /// Under a source that is switched off in Settings.
@@ -14512,6 +14889,39 @@ public enum L {
     /// Heading of the list of titles people who liked this one also liked.
     public static var moreLikeThis: String { string("more-like-this", fallback: "More like this") }
 
+    /// Button after the first five people followed, on wide screens. It shows the rest in place.
+    public static func followingShowAll(count: Int) -> String {
+        Self.format("following-show-all", fallback: "Show all %1$lld", count)
+    }
+
+    /// Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+    public static func followingNames(first: String, second: String, more: Int) -> String {
+        Self.format("following-names", fallback: "%1$@, %2$@ and %3$lld more", first, second, more)
+    }
+
+    /// Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+    public static func followingNamesTwo(first: String, second: String) -> String {
+        Self.format("following-names-two", fallback: "%1$@ and %2$@", first, second)
+    }
+
+    /// After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+    public static func followingMarkMore(count: Int) -> String {
+        Self.format("following-mark-more", fallback: "+%1$lld", count)
+    }
+
+    /// Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+    public static func followingMarkSpoken(names: String) -> String {
+        Self.format("following-mark-spoken", fallback: "%1$@ watched up to here.", names)
+    }
+
+    /// What a screen reader says in place of a score such as 8/10 beside a person followed.
+    public static func followingScoreSpoken(score: Int) -> String {
+        Self.format("following-score-spoken", fallback: "Score %1$lld out of 10", score)
+    }
+
+    /// Hint of the People you follow row on phones and the TV, which opens the full list.
+    public static var followingOpenHelp: String { string("following-open-help", fallback: "Shows where each of them is.") }
+
     /// Line of a followed person's list entry: their status and how far they are. Both are already worded.
     public static func moreFollowedProgress(status: String, progress: String) -> String {
         Self.format("more-followed-progress", fallback: "%1$@ · %2$@", status, progress)
@@ -14571,11 +14981,6 @@ public enum L {
     /// Value of the fact on a show with no announced start.
     public static var titleFactTba: String { string("title-fact-tba", fallback: "To be announced") }
 
-    /// A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-    public static func moreFollowingLine(status: String, score: Int) -> String {
-        Self.format("more-following-line", fallback: "%1$@ · %2$lld/10", status, score)
-    }
-
     /// Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
     public static var episodeGoTo: String { string("episode-go-to", fallback: "Go to episode…") }
 
@@ -14603,6 +15008,54 @@ public enum L {
     /// Shown when the number typed is an episode with no date that has not come out.
     public static func episodeGoToNotOut(number: Int, latest: Int) -> String {
         Self.format("episode-go-to-not-out", fallback: "Episode %1$@ isn't out yet. The latest is %2$@.", String(number), String(latest))
+    }
+
+    /// Status, first sentence, within a day of the episode airing.
+    public static func episodeMissingAired(episode: Int, ago: String) -> String {
+        Self.format("episode-missing-aired", fallback: "Episode %1$@ aired %2$@.", String(episode), ago)
+    }
+
+    /// Status, first sentence, a day or more after the episode aired.
+    public static func episodeMissingAiredOn(episode: Int, date: String) -> String {
+        Self.format("episode-missing-aired-on", fallback: "Episode %1$@ aired on %2$@.", String(episode), date)
+    }
+
+    /// Status, second sentence, until a check the person asked for comes back empty.
+    public static var episodeMissingNotYet: String { string("episode-missing-not-yet", fallback: "Your sources don't have it yet.") }
+
+    /// Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+    public static var episodeMissingStill: String { string("episode-missing-still", fallback: "Your sources still don't have it.") }
+
+    /// Status, second sentence, after a check where none of the person's sources answered.
+    public static var episodeMissingNoAnswer: String { string("episode-missing-no-answer", fallback: "Your sources didn't answer.") }
+
+    /// Status, last sentence, during the hours Kaeri looks for the episode by itself.
+    public static func episodeMissingLooksAgain(minutes: Int) -> String {
+        Self.format("episode-missing-looks-again", fallback: "Kaeri looks again every %1$lld minutes.", minutes)
+    }
+
+    /// Status a week after the episode aired, when no source has listed it.
+    public static var episodeMissingNone: String { string("episode-missing-none", fallback: "None of your sources has it.") }
+
+    /// Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+    public static var episodeMissingOffline: String { string("episode-missing-offline", fallback: "Kaeri looks for it when you're back online.") }
+
+    /// Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+    public static func episodeRowAiredAgo(ago: String) -> String {
+        Self.format("episode-row-aired-ago", fallback: "Aired %1$@", ago)
+    }
+
+    /// Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+    public static var episodeUnsourcedYet: String { string("episode-unsourced-yet", fallback: "Not in your sources yet") }
+
+    /// Announced once to screen readers when a check finds the missing episode while its page is open.
+    public static func episodeFoundAnnouncement(episode: Int) -> String {
+        Self.format("episode-found-announcement", fallback: "Episode %1$@ is in your sources now.", String(episode))
+    }
+
+    /// Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+    public static func episodeCheckAgainHelp(minutes: Int, hours: Int) -> String {
+        Self.format("episode-check-again-help", fallback: "Kaeri also looks by itself every %1$lld minutes for %2$lld hours after an episode airs.", minutes, hours)
     }
 
     /// Title of the settings group and the screen.
@@ -15217,6 +15670,9 @@ public enum L {
     /// Short word: paired, no date known.
     public static var tvPaired: String { string("tv-paired", fallback: "Paired") }
 
+    /// Line under a paired TV running the app, in the Play on TV list.
+    public static var tvRowKaeri: String { string("tv-row-kaeri", fallback: "Kaeri on Android TV") }
+
     /// Line with the address.
     public static func tvConnectedAt(address: String) -> String {
         Self.format("tv-connected-at", fallback: "Connected · %1$@", address)
@@ -15253,6 +15709,11 @@ public enum L {
     /// Status on the remote: connection lost, trying again.
     public static func tvStatusReconnecting(name: String) -> String {
         Self.format("tv-status-reconnecting", fallback: "Reconnecting to %1$@", name)
+    }
+
+    /// Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+    public static func tvWaitingFor(name: String) -> String {
+        Self.format("tv-waiting-for", fallback: "Waiting for %1$@", name)
     }
 
     /// Status on the remote: connected.

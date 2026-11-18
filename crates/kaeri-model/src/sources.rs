@@ -162,6 +162,21 @@ pub struct SourceOption {
     /// The id of the release pinned within this source, when one is.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub pinned_release: Option<String>,
+    /// The first episode out that it lists, in AniList's numbers. `None` when it lists none,
+    /// or when its numbers cannot be lined up with AniList's.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub first: Option<u32>,
+    /// The last episode out that it lists, in AniList's numbers.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub last: Option<u32>,
+    /// The episodes out, in AniList's numbers, that it does not list: the 6 of "Not 6 yet".
+    /// [`crate::missing::coverage_line`] words the three together.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub lacking: Vec<u32>,
+    /// When the newest of `lacking` aired, in Unix seconds, when the schedule says: within a
+    /// week of it the line says "yet", as for "Not 5 or 6 yet" the day episode 6 aired.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub lacking_since: Option<i64>,
 }
 
 /// Why a source has no episode count in the source picker. The front end words it.

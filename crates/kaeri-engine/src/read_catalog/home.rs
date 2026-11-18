@@ -1091,7 +1091,7 @@ impl Home {
     /// Where Continue opens a series: the chapter in progress, or the next one.
     fn series_action(&self, book: &Book) -> SeriesAction {
         let work = tiles::work_of(book.id);
-        tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins)
+        tiles::action(&self.store, &self.sources, &work, book.medium(), &self.plugins, None)
     }
 
     /// The button a series in Continue gets: none with nothing to read it on, or nothing left.
@@ -1254,6 +1254,7 @@ mod tests {
             plugins: crate::book_plugins::BookPlugins::default(),
             clock: crate::clock::Clock::in_zone(zone),
             offline: Arc::new(AtomicBool::new(false)),
+            privacy: Default::default(),
         }
     }
 

@@ -47,6 +47,20 @@ public sealed partial class PlayerView
     double startColumnHeight;
     /// <summary>A screenshot run's: the screen frozen at this moment.</summary>
     TimeSpan? startFrozen;
+    /// <summary>
+    /// When the next episode was asked for by Up next (Play now or the countdown) or the engine
+    /// said it rolls on: the start that follows is a roll-on, whose screen waits 600 ms.
+    /// </summary>
+    long? rollOnAsked;
+    /// <summary>When the roll-on's play was staged: its 600 ms count from here.</summary>
+    long? rollOnFrom;
+    /// <summary>The roll-on's wait and hold while its start is on screen; none for any other start.</summary>
+    RollOnHold? rollOn;
+    long rollOnBegan;
+    /// <summary>The first frame came while the roll-on's screen still had its 0.6 s to stand.</summary>
+    bool startLeaving;
+    DispatcherQueueTimer? rollOnClock;
+    Action? rollOnNext;
 
     /// <summary>Whether a start is on screen: its alert is the failure screen's to say.</summary>
     internal bool IsStarting => startingShown && start is not null;
@@ -61,6 +75,8 @@ public sealed partial class PlayerView
         {
             case Event.PlaybackStaged st:
                 staged = (st.Id, st.Episode, st.Resume);
+                if (RollOnAsked)
+                    rollOnFrom ??= Stopwatch.GetTimestamp();
                 if (start is { } open && open.Id == st.Id && open.Episode == st.Episode)
                 {
                     // The screen can open before the engine says where it resumes: the row then
@@ -84,13 +100,42 @@ public sealed partial class PlayerView
                 s.Fail(failure);
                 RefreshStart();
                 break;
+            case Event.PlaybackEnded { RollingOn: true }:
+                // The engine rolls on by itself at the end: its next play is a roll-on.
+                AskedRollOn();
+                break;
         }
     }
+
+    /// <summary>The next episode was asked for by Up next, or the engine rolls on to it.</summary>
+    void AskedRollOn()
+    {
+        // Up next's PlayNext and the engine's word for it are the same roll-on: the first counts.
+        if (RollOnAsked)
+            return;
+        rollOnAsked = Stopwatch.GetTimestamp();
+        rollOnFrom = null;
+    }
+
+    /// <summary>A play since asked for in another way (an episode picked, N, Cancel) is no roll-on.</summary>
+    void ForgetRollOn() => rollOnAsked = rollOnFrom = null;
+
+    /// <summary>A roll-on was asked for lately: its play is the next one staged.</summary>
+    bool RollOnAsked => rollOnAsked is { } asked && Stopwatch.GetElapsedTime(asked) < TimeSpan.FromSeconds(10);
 
     // The screen opens.
 
     void BeginStart(PlayerUi.Starting s)
     {
+        // A roll-on's screen waits 600 ms on the ground: a warmed next episode goes straight to
+        // its picture. Every other start shows its screen at once.
+        var rolling = RollOnAsked;
+        rollOnBegan = rollOnFrom ?? Stopwatch.GetTimestamp();
+        ForgetRollOn();
+        rollOnClock?.Stop();
+        startLeaving = false;
+        rollOn = rolling ? new RollOnHold() : null;
+        Motion.Set(StartingContent, !rolling);
         var resume = staged is { } st && st.Id == s.Id && st.Episode == s.EpisodeValue ? st.Resume : null;
         start = new StartScreen(s.Id, s.EpisodeValue, resume) { DetailsOpen = DetailsRemembered() };
         startingEpisode = s.EpisodeValue;
@@ -132,10 +177,81 @@ public sealed partial class PlayerView
         stepText.Reset(frame.Step);
         detailText.Reset(frame.Detail);
         ShowFrame(frame);
-        PlaceStartColumn(measure: true);
-        Say(T.PlayerStartAnnounce(start.Episode, s.Title), assertive: false);
+        if (rolling)
+        {
+            // Placed once it shows, when the column can be measured.
+            startColumnHeight = 0;
+            RollOnLater(RollOnHold.Wait, RefreshStart);
+        }
+        else
+        {
+            PlaceStartColumn(measure: true);
+            Say(T.PlayerStartAnnounce(start.Episode, s.Title), assertive: false);
+        }
         startTick ??= MakeStartTick();
         startTick.Start();
+    }
+
+    TimeSpan RollOnElapsed => Stopwatch.GetElapsedTime(rollOnBegan);
+
+    /// <summary>Runs <paramref name="then"/> once the roll-on is <paramref name="at"/> old.</summary>
+    void RollOnLater(TimeSpan at, Action then)
+    {
+        if (rollOnClock is null)
+        {
+            rollOnClock = DispatcherQueue.GetForCurrentThread().CreateTimer();
+            rollOnClock.IsRepeating = false;
+            rollOnClock.Tick += (_, _) => rollOnNext?.Invoke();
+        }
+        rollOnClock.Stop();
+        rollOnNext = then;
+        var wait = at - RollOnElapsed;
+        rollOnClock.Interval = wait > TimeSpan.Zero ? wait : TimeSpan.FromMilliseconds(1);
+        rollOnClock.Start();
+    }
+
+    /// <summary>The roll-on's wait is over, or its start failed: the screen fades in over the ground.</summary>
+    void RevealStart(StartScreen s)
+    {
+        StartingContent.Opacity = 0;
+        StartingContent.Visibility = Visibility.Visible;
+        PlaceStartColumn(measure: true);
+        Motion.FadeIn(StartingContent, Motion.FadeInTime);
+        Say(T.PlayerStartAnnounce(s.Episode, StartingShow.Text), assertive: false);
+    }
+
+    /// <summary>
+    /// The first frame came in under the starting screen. A roll-on's screen that showed stays
+    /// its 0.6 s first; one that never showed leaves the ground for the picture at once.
+    /// </summary>
+    void FirstFrameUnderStart()
+    {
+        if (rollOn is { } hold)
+        {
+            var now = RollOnElapsed;
+            var leaves = hold.LeavesAt(now);
+            if (leaves > now)
+            {
+                startLeaving = true;
+                RollOnLater(leaves, LeaveStart);
+                return;
+            }
+        }
+        LeaveStart();
+    }
+
+    /// <summary>The screen leaves on the fade-in token (200 ms, decelerating), as the Mac's curtain does.</summary>
+    void LeaveStart()
+    {
+        if (!startingShown)
+            return;
+        startingShown = false;
+        EndStart();
+        Motion.Cover(Starting, false, () =>
+        {
+            if (!startingShown)
+                Motion.Set(Starting, false);
+        });
     }
 
     DispatcherQueueTimer MakeStartTick()
@@ -189,6 +305,9 @@ public sealed partial class PlayerView
     void EndStart()
     {
         startTick?.Stop();
+        rollOnClock?.Stop();
+        rollOn = null;
+        startLeaving = false;
         loaderMode = "";
         StopLoader();
     }
@@ -254,6 +373,9 @@ public sealed partial class PlayerView
     {
         if (start is not { } s || !startingShown)
             return;
+        // A roll-on's screen shows once its wait is over, or at once for a failure.
+        if (rollOn is { Shown: false } hold && hold.Due(RollOnElapsed, s.Failed))
+            RevealStart(s);
         var at = StartElapsed;
         s.Tick(at);
         ShowFrame(s.Frame(at));
@@ -885,6 +1007,7 @@ public sealed partial class PlayerView
             "offline-timed-out" => StartingFixture.OfflineTimedOut,
             "failed-no-episode" => StartingFixture.FailedNoEpisode,
             "failed-no-match" => StartingFixture.FailedNoMatch,
+            "failed-unreached" => StartingFixture.FailedUnreached,
             "failed-no-sources" => StartingFixture.FailedNoSources,
             "failed-not-aired" => StartingFixture.FailedNotAired,
             _ => null,

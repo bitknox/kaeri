@@ -98,7 +98,7 @@ together-recent-empty = Les dix derniers salons que vous rejoignez apparaissent 
 together-rejoin = Revenir
 together-forget-room = Retirer des salons récents
 together-someone-here = { $count ->
-    [one] { $names } est dans le salon
+    [one] { $count } personne dans le salon : { $names }
     [many] { $names } sont dans le salon
    *[other] { $names } sont dans le salon
  }

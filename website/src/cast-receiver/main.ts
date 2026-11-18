@@ -1,11 +1,13 @@
 // Kaeri's Cast receiver, on Google's Cast Application Framework. It plays what the sender loads
-// on its own video element and draws Kaeri's screens over it: Ready, Starting, the overlay,
-// Paused, Waiting for the stream, Up next, Skipped, Waiting for the device, Couldn't play and
-// Finished. It never fetches media of its own; the sender's relay or the source serves every byte.
+// on its own video element and draws Kaeri's screens over it: Ready with its city at dusk,
+// Starting, the overlay, Paused, Waiting for the stream, Up next, Skipped, Waiting for the device,
+// Couldn't play, Finished and the closing line. It never fetches media of its own; the sender's
+// relay or the source serves every byte.
 
-import { classify, refusedOf, type Report } from './errors';
+import { City, CLOSING, drift } from './city';
+import { classify, codecLabel, refusedOf, type Report } from './errors';
 import { loadStrings, type Strings } from './i18n';
-import { startPlayer, type ErrorEventLike, type Player } from './player';
+import { staysWithoutSenders, startPlayer, type ErrorEventLike, type Player } from './player';
 import {
 	asDevice,
 	deviceFromAgent,
@@ -15,7 +17,9 @@ import {
 	type Device,
 	type LoadExtras,
 } from './protocol';
-import { SilentPicture } from './silent';
+import { Formats } from './formats/receiver';
+import { DebugStatusLine, debugOn, devLog, forwardErrors, logSupport } from './debug';
+import { ShownFrames, SilentPicture } from './silent';
 import { Typeset, canTypeset, type Failure } from './typeset';
 
 declare const __BUILD__: string;
@@ -30,6 +34,12 @@ const T = {
 	plain: 4000,
 	backToReady: 10_000,
 	close: 600_000,
+	/** The page fades to black this long before it closes. */
+	black: 400,
+	/** Paused this long, the overlay starts drifting and the dim deepens. */
+	pausedDrift: 300_000,
+	/** The launch's own timings: the name follows the sky, the windows light one by one. */
+	launch: 2500,
 	hello: 1500,
 	fatal: 500,
 };
@@ -43,10 +53,14 @@ const $ = <E extends HTMLElement = HTMLElement>(id: string) => document.getEleme
 const S = {
 	phase: 'idle' as Phase,
 	since: now(),
+	/** The phase before, shown for the first 600 ms of a load from Ready. */
+	prev: 'idle' as Phase,
+	prevSince: now(),
 	paused: false,
+	pausedAt: 0,
 	bufferingAt: null as number | null,
 	overlayUntil: 0,
-	upNext: null as null | { number?: string | number; title?: string; still?: string; endsAt: number },
+	upNext: null as null | { number?: string | number; title?: string; still?: string; startedAt: number; endsAt: number },
 	skipped: null as null | { part: 'opening' | 'ending'; until: number },
 	plainUntil: 0,
 	plainSaid: false,
@@ -61,6 +75,11 @@ const S = {
 	tracksEdited: false,
 	fatalSent: false,
 	language: navigator.language as string | null,
+	/** Reduce Motion, from the sender's hello or the page's own setting. */
+	still: typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches,
+	/** The city has shown once; only the first Ready lights its windows one by one. */
+	launched: false,
+	closing: false,
 };
 
 let strings: Strings | null = null;
@@ -68,13 +87,21 @@ let player: Player | null = null;
 const video = $<HTMLVideoElement>('video');
 const typeset = new Typeset(video, base);
 const silent = new SilentPicture();
+const city = new City($('city'), now, new URL('city.js', base).href);
+let shown: ShownFrames | null = null;
+let debug: DebugStatusLine | null = null;
+// Files and playlists unpacked on the receiver; their errors count like the player's own.
+const formats = new Formats(video, base, () => (canTypeset() && !S.plainSubs ? typeset : null), (r) => unpackError(r));
 
 const t = (id: string, args?: Record<string, string | number>) => strings?.t(id, args) ?? '';
 
 function setPhase(phase: Phase) {
 	if (S.phase === phase) return;
+	S.prev = S.phase;
+	S.prevSince = S.since;
 	S.phase = phase;
 	S.since = now();
+	if (phase === 'loading') setTimeout(render, T.starting + 20);
 	render();
 }
 
@@ -108,8 +135,9 @@ function sendError(r: Report) {
 	send(
 		message('error', {
 			part: r.part,
-			// As the receiver names it (`hev1`, `ec-3`, or the engine's own word); left out when unknown.
-			...(r.codec ? { codec: r.codec.split('.')[0] } : {}),
+			// Whole, as the receiver names it (`hev1.1.6.L93.B0`, `ec-3`) or the engine's own word
+			// (`video:h.264 high 10`); left out when unknown.
+			...(r.codec ? { codec: r.codec } : {}),
 			detail: r.detail,
 			fetched: r.fetched,
 			status: r.status,
@@ -188,23 +216,99 @@ function episodeLine(episode: string | number | null | undefined, title: string 
 	return title ?? '';
 }
 
+function place(el: HTMLElement, seconds: number | null) {
+	const v = seconds == null ? '' : `translate(${drift(seconds).join('px, ')}px)`;
+	if (el.style.transform !== v) el.style.transform = v;
+}
+
+/** The rows a plain cue takes on the TV, counting a wrap after about 64 characters. */
+function rows(text: string): number {
+	return text.split('\n').reduce((n, l) => n + Math.max(1, Math.ceil(l.replace(/<[^>]*>/g, '').length / 64)), 0);
+}
+
+/** Plain subtitles (WebVTT, SRT, the receiver's own text) lift above the overlay's band. */
+const lifted = new WeakSet<TextTrackCue>();
+let lift = false;
+function liftSubtitles(up: boolean) {
+	if (up === lift && !up) return;
+	lift = up;
+	let tracks: TextTrack[] = [];
+	try {
+		tracks = [...video.textTracks].filter((tr) => tr.mode === 'showing');
+	} catch {
+		return;
+	}
+	for (const tr of tracks) {
+		const cues = up ? tr.activeCues : tr.cues;
+		if (!cues) continue;
+		for (const c of [...cues]) {
+			if (!(c instanceof VTTCue)) continue;
+			if (up && !lifted.has(c) && c.line === 'auto') {
+				lifted.add(c);
+				// Chromium places the cue's top edge at the line and ignores lineAlign, so the cue
+				// starts one line height (5 %) per row above the band's top at 67 %.
+				c.snapToLines = false;
+				c.line = 64 - 5 * rows(c.text);
+			} else if (!up && lifted.has(c)) {
+				lifted.delete(c);
+				c.snapToLines = true;
+				c.line = 'auto';
+			}
+		}
+	}
+}
+
+/** A line naming the codec this TV can't play, when the receiver reported one it can name. */
+function reasonLine(r: Report | null): string {
+	if (!r || (r.part !== 'video' && r.part !== 'audio')) return '';
+	const name = codecLabel(r.codec);
+	return name ? t(`receiver-error-${r.part}-codec`, { codec: name }) : '';
+}
+
 function render() {
-	const p = S.phase;
 	const at = now();
+	// A load from Ready keeps Ready for 600 ms; most loads that fail fast fail in that time.
+	const hold = S.phase === 'loading' && S.prev !== 'playing' && S.prev !== 'loading' && at - S.since < T.starting;
+	const p = hold ? S.prev : S.phase;
+	const since = hold ? S.prevSince : S.since;
 	const ui = $('ui');
-	ui.dataset.phase = p;
+	ui.dataset.phase = S.phase;
 
 	const playing = p === 'playing';
 	const buffering = playing && !S.paused && S.bufferingAt != null;
 	const spin = buffering && at - S.bufferingAt! >= T.spinner;
 	const count = buffering && at - S.bufferingAt! >= T.count;
+	const pausedLong = playing && S.paused && at - S.pausedAt >= T.pausedDrift;
 
 	$('stage').classList.toggle('on', p === 'loading' || p === 'playing' || p === 'gone');
 
-	// Ready
-	on('ready', p === 'idle');
+	// Ready: the city at dusk, the name and one line; the closing line in the last 30 s.
+	const idle = p === 'idle';
+	const idleFor = (at - since) / 1000;
+	if (idle) {
+		city.show(idleFor, S.still, !S.launched);
+		S.launched = true;
+	} else city.hide();
+	on('city', idle);
+	on('ready', idle);
+	if (idle) place($('ready'), idleFor);
+	const closing = idle && idleFor >= CLOSING;
 	text('ready-line', t(`receiver-ready-${S.device}`));
-	$('ready-line').classList.toggle('on', S.deviceKnown || at - S.startedAt >= T.hello);
+	$('ready-line').classList.toggle('on', !closing && (S.deviceKnown || at - S.startedAt >= T.hello));
+	$('closing-line').classList.toggle('on', closing);
+	// The closing line is set from the start of Ready, so its first showing has nothing new to
+	// format or lay out.
+	if (idle) text('closing-line', t(`receiver-closing-${S.device}`, { seconds: closing ? Math.max(0, Math.ceil(T.close / 1000 - idleFor)) : 30 }));
+
+	// Ten minutes with nothing to play: the page fades to black, then closes.
+	const resting = p === 'idle' || p === 'error' || p === 'gone';
+	const restingFor = at - (p === 'gone' ? S.goneAt : since);
+	const black = resting && !hold && restingFor >= T.close - T.black;
+	on('black', black);
+	if (black && !S.closing) {
+		S.closing = true;
+		setTimeout(() => player?.close(), Math.max(0, T.close - restingFor));
+	}
 
 	// Art behind Starting and Couldn't play
 	const art = S.media.art || S.media.still;
@@ -212,8 +316,8 @@ function render() {
 	on('art', !!art && (p === 'loading' || p === 'error'));
 	ui.style.setProperty('--art', p === 'error' ? '0.25' : '0.4');
 
-	// Dim: paused 45%, waiting 25%, the device gone 62%
-	const dim = p === 'gone' ? 0.62 : playing && S.paused ? 0.45 : spin ? 0.25 : 0;
+	// Dim: paused 45 %, deeper after 5 min; waiting 25 %; the device gone and errors 70 %.
+	const dim = p === 'gone' || p === 'error' ? 0.7 : playing && S.paused ? (pausedLong ? 0.62 : 0.45) : spin ? 0.25 : 0;
 	on('dim', dim > 0);
 	if (dim) ui.style.setProperty('--dim', String(dim));
 
@@ -225,31 +329,46 @@ function render() {
 	text('ov-episode', line);
 	$('ov-episode').hidden = !line;
 	text('starting-text', t('receiver-starting'));
-	$('starting').classList.toggle('on', p === 'loading' && at - S.since >= T.starting);
+	$('starting').classList.toggle('on', p === 'loading');
 	if (playing) {
 		const pos = player?.position() ?? 0;
 		const dur = player?.duration() ?? 0;
-		const bar = $('ov-bar').firstElementChild as HTMLElement;
-		bar.style.width = dur > 0 ? `${Math.min(100, (100 * pos) / dur).toFixed(2)}%` : '0';
+		const bar = $('ov-bar').querySelector('i') as HTMLElement;
+		const v = `scaleX(${dur > 0 ? Math.min(1, pos / dur).toFixed(4) : 0})`;
+		if (bar.style.transform !== v) bar.style.transform = v;
 		text('ov-at', clock(pos));
 		text('ov-left', dur > 0 ? `−${clock(dur - pos)}` : '');
 	}
+	// Paused for 5 min, the overlay drifts too. It holds where it is until it fades.
+	const ovText = $('ov').querySelector('.ov') as HTMLElement;
+	if (pausedLong) {
+		const d = (at - S.pausedAt - T.pausedDrift) / 1000;
+		place(ovText, d);
+		place($('paused'), d);
+	} else if (!overlay) {
+		place(ovText, null);
+		place($('paused'), null);
+	}
+	liftSubtitles(playing && overlay);
 
 	on('paused', playing && S.paused);
 	text('paused-text', t('receiver-paused'));
 
-	on('spin', spin);
-	on('waiting', count);
-	if (count) text('waiting', t('receiver-waiting', { seconds: Math.floor((at - S.bufferingAt!) / 1000) }));
+	// Waiting for the stream: the lights after 600 ms, the count after 4 s.
+	on('waiting', spin);
+	$('waiting-text').classList.toggle('on', count);
+	if (count) text('waiting-text', t('receiver-waiting', { seconds: Math.floor((at - S.bufferingAt!) / 1000) }));
 
 	// Up next. While subtitles show, the card sits above them instead of over them.
 	const next = playing ? S.upNext : null;
 	on('upnext', !!next);
 	$('upnext').classList.toggle('over-subs', !!next && subtitlesShow());
+	$('upnext').classList.toggle('over-band', !!next && overlay);
 	if (next) {
 		img('#upnext img', next.still ?? '');
 		text('upnext-count', t('receiver-up-next', { seconds: Math.max(0, Math.ceil((next.endsAt - at) / 1000)) }));
 		text('upnext-title', episodeLine(next.number, next.title));
+		countDown(next, at);
 	}
 
 	const skipped = playing && S.skipped && at < S.skipped.until ? S.skipped : null;
@@ -261,13 +380,16 @@ function render() {
 
 	// The device stopped answering
 	on('gone', p === 'gone');
+	if (p === 'gone') place($('gone'), (at - S.goneAt) / 1000);
 	text('gone-title', t(`receiver-sender-gone-${S.device}`));
 	text('gone-hint', t(`receiver-sender-gone-hint-${S.device}`));
 
 	// Couldn't play
 	on('error', p === 'error');
+	if (p === 'error') place($('error'), (at - since) / 1000);
 	text('error-title', S.media.episode ? t('receiver-error', { episode: S.media.episode }) : t('receiver-error-unnumbered'));
 	text('error-show', S.media.show);
+	text('error-reason', reasonLine(S.error));
 	text('error-hint', t(`receiver-error-hint-${S.device}`));
 
 	// Finished
@@ -278,6 +400,20 @@ function render() {
 		'finished-line',
 		S.media.episode ? t('receiver-finished', { episode: S.media.episode }) : t('receiver-finished-unnumbered'),
 	);
+}
+
+/** The amber line under Up next's still fills as it counts down, on the compositor. */
+function countDown(next: { startedAt: number; endsAt: number }, at: number) {
+	const fill = $('upnext').querySelector('.track i') as HTMLElement;
+	const key = `${next.startedAt}:${next.endsAt}`;
+	if (fill.dataset.key === key) return;
+	fill.dataset.key = key;
+	const span = Math.max(1, next.endsAt - next.startedAt);
+	fill.style.transition = 'none';
+	fill.style.transform = `scaleX(${Math.min(1, Math.max(0, (at - next.startedAt) / span)).toFixed(4)})`;
+	void fill.offsetWidth;
+	fill.style.transition = `transform ${Math.max(0, next.endsAt - at)}ms linear`;
+	fill.style.transform = 'scaleX(1)';
 }
 
 function fit() {
@@ -308,9 +444,11 @@ function releasePicture() {
 // ---------- Typeset subtitles ----------
 
 function plainSubtitles(reason: 'slow' | Failure) {
+	devLog(`plain subtitles: ${reason}`);
 	S.plainSubs = true;
 	document.documentElement.classList.remove('typeset');
 	void typeset.hide();
+	formats.plainText();
 	if (reason === 'slow' || reason === 'renderer') {
 		if (!S.plainSaid) {
 			S.plainSaid = true;
@@ -337,6 +475,12 @@ async function applyTypeset() {
 	let active = player?.activeTextTracks() ?? [];
 	// Until the sender changes tracks, the load's own pick counts when CAF hasn't turned it on.
 	if (!S.tracksEdited && !active.length && S.extras.subtitle != null) active = [S.extras.subtitle];
+	// A track inside the file, or a PGS file: the receiver draws it.
+	const entry = (S.extras.subtitles ?? []).find((s) => active.includes(s.id)) ?? null;
+	if (await formats.showSubtitle(entry)) {
+		document.documentElement.classList.remove('typeset');
+		return;
+	}
 	const twin = typesetFiles(S.extras).find((s) => active.includes(s.trackId));
 	if (!twin || S.plainSubs || !canTypeset()) {
 		document.documentElement.classList.remove('typeset');
@@ -374,6 +518,25 @@ function fatal(report: Report) {
 	} else {
 		setPhase('error');
 	}
+}
+
+/** An error from the receiver's own unpacking. Subtitles keep playing; the rest ends the episode. */
+function unpackError(report: Report) {
+	console.warn('unpacking', report.part, report.detail);
+	if (report.part === 'subtitles') {
+		sendError(report);
+		return;
+	}
+	S.error = report;
+	fatal(report);
+}
+
+/** Whether this load has a picture to watch for: the file has a video track, or the sender says so. */
+function hasVideo(): boolean {
+	const u = formats.current;
+	if (u?.tracks.some((t) => t.kind === 'video')) return true;
+	if (S.extras.video != null) return true;
+	return !u && /^video\//i.test(S.media.type);
 }
 
 function silentPicture() {
@@ -460,6 +623,10 @@ function onSenderMessage(data: unknown, senderId: string) {
 	const m = data as Record<string, unknown>;
 	switch (m.type) {
 		case 'hello': {
+			if (m.motion === 'reduce' || m.motion === 'full') {
+				S.still = m.motion === 'reduce';
+				document.documentElement.classList.toggle('still', S.still);
+			}
 			useDevice(m.device);
 			void useLanguage(typeof m.language === 'string' ? m.language : null);
 			ready(senderId);
@@ -488,6 +655,7 @@ function onSenderMessage(data: unknown, senderId: string) {
 						number: m.number as string | number | undefined,
 						title: m.title as string | undefined,
 						still: m.still as string | undefined,
+						startedAt: now(),
 						endsAt: now() + seconds * 1000,
 					}
 				: null;
@@ -544,37 +712,60 @@ function everySecond() {
 	const at = now();
 	const playing = S.phase === 'playing' && !S.paused && S.bufferingAt == null && !video.seeking;
 	if (typeset.active && typeset.tick(playing)) plainSubtitles('slow');
-	if (S.phase === 'playing') {
+	if ((S.phase === 'playing' || S.phase === 'loading') && hasVideo()) {
+		// The element's own clock, not CAF's state: with no picture CAF can stay in BUFFERING
+		// while the sound plays.
 		const quality = typeof video.getVideoPlaybackQuality === 'function' ? video.getVideoPlaybackQuality() : null;
 		if (
 			silent.check({
 				time: video.currentTime,
 				videoWidth: video.videoWidth,
-				frames: quality ? quality.totalVideoFrames : null,
-				playing,
+				frames: quality ? quality.totalVideoFrames - quality.droppedVideoFrames : null,
+				presented: shown?.count ?? null,
+				playing: !video.paused && !video.seeking && !video.ended,
 			})
 		)
 			void silentPicture();
 	}
 	if (S.phase === 'finished' && at - S.since >= T.backToReady) setPhase('idle');
 	const resting = S.phase === 'idle' || S.phase === 'error' || S.phase === 'gone';
-	if (resting && at - (S.phase === 'gone' ? S.goneAt : S.since) >= T.close) {
+	if (resting && !S.closing && at - (S.phase === 'gone' ? S.goneAt : S.since) >= T.close) {
 		// Ten minutes with nothing to play: the TV goes back to its own screen.
 		player?.close();
 	}
+	// Paused with no sender left, nothing will play it on: it closes as an idle TV does.
+	const pausedAlone = S.phase === 'playing' && S.paused && (player?.senders() ?? 1) === 0;
+	if (pausedAlone && !S.closing && at - S.pausedAt >= T.close) {
+		S.closing = true;
+		player?.close();
+	}
+	if (!resting && !pausedAlone) S.closing = false;
 }
 
 // ---------- Start ----------
 
 async function start() {
 	fit();
+	document.documentElement.classList.add('launch');
+	document.documentElement.classList.toggle('still', S.still);
+	setTimeout(() => document.documentElement.classList.remove('launch'), T.launch);
+	shown = new ShownFrames(video);
+	if (debugOn()) {
+		forwardErrors();
+		logSupport();
+		debug = new DebugStatusLine(video, formats, () => shown?.count ?? null);
+		(window as unknown as Record<string, unknown>).__kaeriDebug = () => debug?.status ?? null;
+	}
 	addEventListener('resize', fit);
 	addEventListener('keydown', onKey);
-	player = startPlayer(video, {
+	player = startPlayer(
+		video,
+		{
 		load: onLoad,
 		playing: onPlaying,
 		paused: () => {
 			if (S.phase !== 'playing') return;
+			if (!S.paused) S.pausedAt = now();
 			S.paused = true;
 			render();
 		},
@@ -598,8 +789,12 @@ async function start() {
 			if (!S.deviceKnown) S.device = deviceFromAgent(userAgent);
 			ready(senderId);
 		},
-	});
+		lastSenderLeft: () => staysWithoutSenders(S.phase),
+		},
+		formats,
+	);
 
+	render(); // the sky first, while the strings load
 	await useLanguage(S.language);
 	setInterval(render, 250);
 	setInterval(everySecond, 1000);
@@ -608,7 +803,7 @@ async function start() {
 	ready();
 
 	if ((window as unknown as { __cafStub?: boolean }).__cafStub)
-		(window as unknown as Record<string, unknown>).__receiver = { S, render, typeset, plainSubtitles, silent };
+		(window as unknown as Record<string, unknown>).__receiver = { S, render, typeset, plainSubtitles, silent, formats, city, get debug() { return debug?.status ?? null; } };
 }
 
 void start();

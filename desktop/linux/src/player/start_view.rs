@@ -459,6 +459,8 @@ const WAITING: [Action; 5] = [
 pub struct StartView {
     pub root: gtk::Box,
     pub art: gtk::Picture,
+    /// The art, its ground and the column: clear while a roll-on's screen is held back.
+    stack: gtk::Overlay,
     ground: gtk::Box,
     column: gtk::Box,
     /// Where the column's top is, for the size it was placed at.
@@ -622,6 +624,7 @@ impl StartView {
         let view = Rc::new(Self {
             root,
             art,
+            stack: stack.clone(),
             ground,
             column,
             anchor: Cell::new(None),
@@ -748,6 +751,21 @@ impl StartView {
 
     /// A new start: the show and episode, and the room made ready for every line and button it
     /// can show. `resumes` keeps the room of Play from the beginning.
+    /// A roll-on's screen held back: only the root's ground shows, the art and lines are clear.
+    pub fn hold(&self) {
+        self.stack.set_opacity(0.0);
+    }
+
+    /// The held screen comes in over its ground on the fade-in token.
+    pub fn reveal(&self) {
+        crate::motion::fade_in(&self.stack);
+    }
+
+    /// The screen whole at once, as every start that is not a roll-on shows it.
+    pub fn unhold(&self) {
+        self.stack.set_opacity(1.0);
+    }
+
     pub fn begin(&self, show: &str, episode_line: &str, demo: bool, resumes: bool) {
         self.title.set_label(show);
         self.episode.set_label(episode_line);

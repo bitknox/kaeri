@@ -7,6 +7,7 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 
 use crate::{
     app::{App, Field, FrameReport},
+    keymap::Action,
     layout::{self, Frame},
     nav::Overlay,
     theme::{
@@ -446,11 +447,25 @@ pub(super) fn render_overlay(
         let is_scope_heading =
             matches!(overlay, Overlay::Help) && key.is_empty() && !label.starts_with(' ');
         let tone = body.as_ref().and_then(|body| body.tones.get(i));
+        // Report a bug's Save player log row has a colour of its own when saved, failed or
+        // empty, and dim words after it.
+        let log_row = (matches!(overlay, Overlay::BugReport) && i == crate::app::LOG_ROW)
+            .then(|| player_log_row(app));
+        let role = log_row.as_ref().and_then(|row| row.2);
+        let drawn = truncate(label, label_room);
+        if let Some(tail) = log_row.as_ref().and_then(|row| row.1.as_ref()) {
+            let room = label_room.saturating_sub(drawn.cells());
+            let tail_x = x + drawn.cells() as u16;
+            buf.set_string(tail_x, y, truncate(tail, room), app.palette.style(Role::TextDim));
+        }
         buf.set_string(
             x,
             y,
-            truncate(label, label_room),
-            if let Some(tone) = tone {
+            drawn,
+            if let Some(role) = role {
+                let style = app.palette.style(role);
+                if is_selected { style.add_modifier(Modifier::BOLD) } else { style }
+            } else if let Some(tone) = tone {
                 tone_style(app, *tone, is_selected)
             } else if is_selected || i < emphasised {
                 app.palette.style(Role::Text).add_modifier(Modifier::BOLD)
@@ -510,7 +525,7 @@ pub(super) fn field_text(app: &App, field: Field) -> String {
 }
 
 fn help_rows(app: &App) -> Vec<(String, String)> {
-    use crate::keymap::{Action, Scope};
+    use crate::keymap::Scope;
     let mut rows = Vec::new();
     // A series page's own keys first.
     if app.series_here().is_some() {
@@ -581,9 +596,23 @@ fn help_rows(app: &App) -> Vec<(String, String)> {
 fn palette_rows(app: &App) -> Vec<(String, String)> {
     // Through `palette_matches` so what is drawn and what Enter runs come from one list. Two
     // independent `take(12)` calls is exactly how a palette ends up launching the wrong entry.
+    // The two private switches say where they stand beside their key, as a switch does.
+    let state = |on: bool| if on { t::tui_read_on() } else { t::tui_read_off() };
     app.palette_matches()
         .into_iter()
-        .map(|(action, key)| (key, action.label().to_string()))
+        .map(|(action, key)| {
+            let on = match action {
+                Action::TogglePrivate => Some(app.private_on()),
+                Action::ToggleAlwaysPrivate => app.always_private_here(),
+                _ => None,
+            };
+            let key = match on.map(state) {
+                Some(state) if key.is_empty() => state,
+                Some(state) => [state.as_str(), "  ", key.as_str()].concat(),
+                None => key,
+            };
+            (key, action.label().to_string())
+        })
         .collect()
 }
 
@@ -601,9 +630,11 @@ fn go_to_reach(app: &App) -> String {
 ///
 /// Newest first rather than chronological: the band clips at whatever height the stage has, and
 /// a log viewer that clips the *newest* lines is answering a question nobody asked.
-/// The Report a bug pane: the report alone, then one row per saved crash, then what is sent.
+/// The Report a bug pane: the report alone, Save player log, one row per saved crash, then what
+/// is sent, and once the log is saved, how it goes with the issue.
 fn bug_report_rows(app: &App) -> Vec<(String, String)> {
     let mut rows = vec![(String::new(), t::report_open_github())];
+    rows.push((String::new(), player_log_row(app).0));
     for crash in &app.crashes {
         let item = t::report_crash_item(
             &kaeri_model::crash::when_text(crash.at_ms),
@@ -613,7 +644,40 @@ fn bug_report_rows(app: &App) -> Vec<(String, String)> {
     }
     rows.push((String::new(), String::new()));
     rows.push((String::new(), t::report_privacy()));
+    if app.player_log.saved.is_some() {
+        rows.push((String::new(), String::new()));
+        rows.push((String::new(), t::report_player_log_attach()));
+    }
     rows
+}
+
+/// How Report a bug's Save player log row reads: its words, the dim words after them, and its
+/// colour when that is not the usual one.
+fn player_log_row(app: &App) -> (String, Option<String>, Option<Role>) {
+    let log = &app.player_log;
+    if log.stats.playbacks == 0 {
+        let empty = format!(
+            "{}  ·  {}",
+            t::report_player_log_save_here(),
+            t::report_player_log_empty()
+        );
+        return (empty, None, Some(Role::TextDim));
+    }
+    if log.failed {
+        return (t::report_player_log_failed_here(&log.folder), None, Some(Role::Alert));
+    }
+    if let Some(path) = &log.saved {
+        return (t::report_player_log_saved_to(path), None, Some(Role::State));
+    }
+    let detail = t::report_player_log_detail(
+        i64::from(log.stats.playbacks),
+        &kaeri_model::wording::human_bytes(log.stats.bytes),
+    );
+    // A tail of the line, so it starts in lower case: "· the last 3 playbacks".
+    let mut chars = detail.chars();
+    let detail: String =
+        chars.next().into_iter().flat_map(char::to_lowercase).chain(chars).collect();
+    (t::report_player_log_save_here(), Some(format!("  ·  {detail}")), None) // i18n-skip: layout
 }
 
 fn log_rows(app: &App) -> Vec<(String, String)> {
@@ -769,6 +833,50 @@ mod tests {
         assert_eq!(
             draw(&app),
             FrameReport { overlay_offset: Some(0), window, ..FrameReport::default() }
+        );
+    }
+
+    #[test]
+    fn report_a_bug_offers_the_player_log_under_open_on_github() {
+        use kaeri_model::bug_report::PlayerLogStats;
+        let mut app = app_with(ContentList::Entries(vec![]));
+        app.nav.open_overlay(Overlay::BugReport);
+        let text = text_of(&render_to_buffer(&mut app, 120, 40));
+        assert!(text.contains("Save player log  ·  No playback logged yet"), "{text}");
+
+        app.set_player_log_stats(
+            PlayerLogStats { playbacks: 3, bytes: 412_000, file_name: "f.txt".into() },
+            "~/.cache/kaeri/logs".into(),
+        );
+        let text = text_of(&render_to_buffer(&mut app, 120, 40));
+        let github = text.find("Open on GitHub").expect("Open on GitHub");
+        let log =
+            text.find("Save player log  ·  the last 3 playbacks · 412 kB").expect("{text}");
+        assert!(github < log, "the log row is under Open on GitHub");
+        assert!(!text.contains("Attach the file"), "{text}");
+
+        app.player_log_saved(Some("~/.cache/kaeri/logs/f.txt".into()));
+        let text = text_of(&render_to_buffer(&mut app, 120, 40));
+        assert!(text.contains("Player log saved to ~/.cache/kaeri/logs/f.txt"), "{text}");
+        assert!(
+            text.contains("Attach the file to the issue once it opens on GitHub."),
+            "{text}"
+        );
+
+        app.player_log.saved = None;
+        app.player_log_saved(None);
+        let buffer = render_to_buffer(&mut app, 120, 40);
+        let text = text_of(&buffer);
+        let failed = "Couldn't save the log to ~/.cache/kaeri/logs.";
+        assert!(text.contains(failed), "{text}");
+        let (y, line) =
+            text.lines().enumerate().find(|(_, line)| line.contains(failed)).expect("the row");
+        let x = line[..line.find(failed).expect("the words")].chars().count();
+        let cell = &buffer[(x as u16, y as u16)];
+        assert_eq!(
+            Some(cell.fg),
+            app.palette.style(Role::Alert).fg,
+            "said in the alert colour"
         );
     }
 

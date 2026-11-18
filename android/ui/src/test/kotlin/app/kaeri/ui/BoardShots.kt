@@ -14,12 +14,14 @@ import androidx.compose.ui.test.assert
 import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.hasAnyDescendant
 import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasScrollToKeyAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.captureToImage
+import androidx.compose.ui.graphics.toPixelMap
 import androidx.compose.ui.test.onFirst
 import androidx.compose.ui.test.onLast
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -52,6 +54,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Before
 import org.junit.Rule
@@ -237,6 +240,15 @@ class BoardShots {
     @Config(qualifiers = PHONE)
     fun phone_home_fresh() = shoot("phone-home-fresh", FRESH)
 
+    /** With a TV held, Home's Play leads with the cast glyph, as the title page's does: it plays there. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_home_cast_held() {
+        shoot("phone-home-cast-held", HOME_WATCHING, before = { it.cast.sessions = HeldTv })
+        val play = compose.onAllNodes(hasClickAction() and hasAnyDescendant(hasTestTag(CAST_PLAY_GLYPH)), useUnmergedTree = true)
+        assertTrue("Home's Play carries the cast glyph", play.fetchSemanticsNodes().isNotEmpty())
+    }
+
     @Test
     @Config(qualifiers = TABLET)
     fun tablet_home() = shoot("tablet-home", HOME_WATCHING)
@@ -318,6 +330,57 @@ class BoardShots {
     @Config(qualifiers = PHONE)
     fun phone_title() = shoot("phone-title", WATCHING, title = 900001u)
 
+    // People you follow: the row under the list button, its sheet, the marks on the episodes,
+    // and the switch under the AniList account.
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_following() = shoot("phone-title-following", FOLLOWING, title = 900001u)
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_following_sheet() = shoot("phone-following-sheet", FOLLOWING, title = 900001u, screen = true) {
+        compose.onNodeWithContentDescription("People you follow", substring = true).performClick()
+    }
+
+    /** The marks on the episodes, and what a screen reader hears of them: names, never scores. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_following_episodes() = shoot("phone-title-following-episodes", FOLLOWING, title = 900001u) {
+        toEpisodes()
+        // The row as TalkBack reads it: its descendants merged into it.
+        val row = compose.onNode(hasClickAction() and hasText("E8 \u00b7", substring = true))
+        row.assert(SemanticsMatcher("says who stopped here") { node ->
+            val said = node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().joinToString(" ")
+            "watched up to here." in said && "Lumi" in said && "Score" !in said
+        })
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_settings_following() = shoot("phone-settings-following", FOLLOWING, page = "settings/accounts", screen = true)
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_following() = shoot("tablet-title-following", FOLLOWING, title = 900001u)
+
+    /** With the switch off the page is today's: no row and no marks. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun following_off_leaves_the_page_as_it_was() = shoot("phone-title-following-off", FOLLOWING, title = 900001u) { store ->
+        val entry = checkNotNull(store.titles[900001u])
+        val rows = checkNotNull(store.titles.episodes.value[900001u])
+        compose.runOnUiThread {
+            store.apply(listOf(Event.Detail(entry.copy(detail = entry.detail?.copy(following = emptyList())))))
+            store.apply(listOf(Event.Episodes(900001u, rows.map { it.copy(followed = emptyList()) })))
+        }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        compose.onAllNodes(SemanticsMatcher("People you follow") { node ->
+            node.config.getOrNull(SemanticsProperties.ContentDescription).orEmpty().any { "People you follow" in it || "watched up to here" in it }
+        }).assertCountEquals(0)
+    }
+
     @Test
     @Config(qualifiers = PHONE)
     fun phone_calendar() = shoot("phone-calendar", WATCHING, start = Destination.Calendar)
@@ -395,7 +458,10 @@ class BoardShots {
         }
         compose.waitForIdle()
         toEpisodes()
-        compose.onAllNodesWithText("E8 \u00b7 No source has this episode", substring = true).assertCountEquals(1)
+        // An aired episode no source lists says when it aired and that no source has it yet.
+        val eighth = rows.first { it.number == "8" }
+        val line = checkNotNull(app.kaeri.store.MissingWords.unsourcedLine(RuntimeEnvironment.getApplication(), eighth.airsAt, app.kaeri.store.AppClock.now().epochSecond))
+        compose.onAllNodesWithText(line, substring = true).onFirst().assertExists()
     }
 
     private fun openPicker(store: AppStore, pinned: Boolean) {
@@ -413,9 +479,9 @@ class BoardShots {
         SourceOption(
             "torrents", "Torrent playback", 12u, 13u, pinned, null,
             listOf(
-                SourceCandidate("batch-1080", "torrents", "Stardust Wayfarer complete batch", 1080u, "From a trusted uploader", "14.2 GiB", true, false, true),
-                SourceCandidate("single-1080", "torrents", "Stardust Wayfarer 01", 1080u, null, "1.1 GiB", false, false, false),
-                SourceCandidate("single-720", "torrents", "Stardust Wayfarer 01", 720u, null, "480 MiB", false, false, false),
+                SourceCandidate(id = "batch-1080", providerId = "torrents", title = "Stardust Wayfarer complete batch", quality = 1080u, label = "From a trusted uploader", size = "14.2 GiB", dualAudio = true, dubbed = false, autoPick = true),
+                SourceCandidate(id = "single-1080", providerId = "torrents", title = "Stardust Wayfarer 01", quality = 1080u, size = "1.1 GiB", dualAudio = false, dubbed = false, autoPick = false),
+                SourceCandidate(id = "single-720", providerId = "torrents", title = "Stardust Wayfarer 01", quality = 720u, size = "480 MiB", dualAudio = false, dubbed = false, autoPick = false),
             ),
             "batch-1080".takeIf { pinned },
         ),
@@ -552,6 +618,65 @@ class BoardShots {
     @Test
     @Config(qualifiers = TABLET)
     fun tablet_title_episodes_unfolded() = shoot("tablet-title-episodes-unfolded", WATCHING, title = 900001u) { unfoldInPlace() }
+
+    // The top bar over the title page: clear over the banner at the top, filled with the page's
+    // ground and the show's name once the banner has gone up from under it.
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_bar_clear() = titleBar("phone-title-bar-clear", scrolled = false)
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_bar_filled() = titleBar("phone-title-bar-filled", scrolled = true)
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_bar_clear() = titleBar("tablet-title-bar-clear", scrolled = false)
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_title_bar_filled() = titleBar("tablet-title-bar-filled", scrolled = true)
+
+    /** With Remove animations on, the bar is solid once scrolled, as without it. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_title_bar_filled_removed() = titleBar("phone-title-bar-filled-removed", scrolled = true, removed = true)
+
+    /**
+     * 900001's page, at its top or [scrolled] to its episodes: the strip under the status bar's
+     * icons is the page's ground only when scrolled (the banner's art at the top), and the show's
+     * name stands in the bar only then, as plain text beside the page's one heading.
+     */
+    private fun titleBar(name: String, scrolled: Boolean, removed: Boolean = false) {
+        var title = ""
+        shoot(name, WATCHING, title = 900001u, removed = removed) { store ->
+            title = checkNotNull(store.titles[900001u]).showTitle
+            if (scrolled) toEpisodes()
+        }
+        val density = compose.activity.resources.displayMetrics.density
+        val pixels = compose.onRoot().captureToImage().toPixelMap()
+        // Under the status bar, between Back and More, above the name's letters.
+        val bar = pixels[pixels.width / 2, (4 * density).roundToInt()]
+        // The page's ground, at the left edge low on the page, beside the rows.
+        val ground = pixels[(2 * density).roundToInt(), pixels.height * 3 / 4]
+        if (scrolled) assertEquals("the bar is the page's ground", ground, bar)
+        else org.junit.Assert.assertNotEquals("the bar is clear over the art", ground, bar)
+        // The bar's bottom: the 24 dp status bar and the 64 dp row.
+        val barBottom = 88 * density
+        val named = compose.onAllNodesWithText(title, useUnmergedTree = true).fetchSemanticsNodes()
+        // On screen and in the bar's band: not a row kept composed above the list's top.
+        val inBar = named.filter { it.boundsInRoot.top < barBottom && it.boundsInRoot.bottom > 0f }
+        val seen = named.joinToString { "${it.boundsInRoot} heading=${it.config.getOrNull(SemanticsProperties.Heading) != null}" }
+        if (scrolled) {
+            assertEquals("the show's name in the bar, of: $seen", 1, inBar.size)
+            assertEquals("the bar's name is no heading", null, inBar.single().config.getOrNull(SemanticsProperties.Heading))
+            val headings = compose.onAllNodes(SemanticsMatcher.keyIsDefined(SemanticsProperties.Heading) and hasText(title), useUnmergedTree = true).fetchSemanticsNodes()
+            org.junit.Assert.assertTrue("no second heading of the show in the bar, of: $seen", headings.none { it.boundsInRoot.top < barBottom && it.boundsInRoot.bottom > 0f })
+        } else {
+            assertEquals("no name in the clear bar, of: $seen", 0, inBar.size)
+        }
+    }
 
     // A long franchise's picker: twelve seasons of Cloudcutter Airship, more than fit across, so
     // it scrolls, the season on screen in the middle.
@@ -875,6 +1000,46 @@ class BoardShots {
     @Test
     @Config(qualifiers = PHONE)
     fun phone_title_synopsis() = shoot("phone-title", WATCHING, title = 900001u, episodes = SynopsisFixtures::withSynopses, party = protectionOff) { toEpisodes() }
+
+    // The phone episodes board, direction A: the "Episodes" heading with the dub line beside it,
+    // the fold row on its own line, a faint rule ending each row, the follower on the still and
+    // filler in the facts.
+
+    /** Episode 8 as filler, over the synopses. */
+    private val fillerEight: (AnilistId, List<EpisodeRow>) -> List<EpisodeRow> = { id, rows ->
+        SynopsisFixtures.withSynopses(id, rows).map { if (it.number == "8") it.copy(kind = app.kaeri.engine.model.EpisodeKind.FILLER) else it }
+    }
+
+    /** 900001 dubbed to episode 6. */
+    private val dubbedToSix: List<Event> = listOf(Event.TitleDub(900001u, app.kaeri.engine.model.DubExtent(through = 6u, complete = false)))
+
+    /** The title page scrolled so the list's heading stands at the top. */
+    private fun toHeading() {
+        compose.onNode(hasScrollToKeyAction() and hasAnyDescendant(hasText("More about this show")))
+            .performScrollToKey("episodes-heading")
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_episodes_dub() = shoot("phone-board-episodes-dub", FOLLOWING, title = 900001u, episodes = fillerEight, party = protectionOff + dubbedToSix) { toHeading() }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_episodes() = shoot("phone-board-episodes", FOLLOWING, title = 900001u, episodes = fillerEight, party = protectionOff) { toHeading() }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_unfolded() = shoot("phone-board-unfolded", FOLLOWING, title = 900001u, episodes = fillerEight, party = protectionOff + dubbedToSix) {
+        toHeading()
+        // The rows open under the fold, so the heading stays at the top.
+        compose.onNodeWithText("watched", substring = true).performClick()
+        compose.waitForIdle()
+    }
+
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_board_spoiler() = shoot("phone-board-spoiler", FOLLOWING, title = 900001u, episodes = fillerEight, party = dubbedToSix) { toProtection() }
 
     /** Protection on: facts and a blurred still after the next episode, under the line where it starts. */
     @Test
@@ -1309,6 +1474,27 @@ class BoardShots {
         ViewCompat.dispatchApplyWindowInsets(content, insets)
     }
 
+    /** A TV with Chromecast built in, held with nothing playing on it, as the cast button's Connected. */
+    private object HeldTv : app.kaeri.store.CastSessionSource {
+        private val held = app.kaeri.store.CastSession.IDLE.copy(
+            state = app.kaeri.store.CastSessionState.Connected,
+            button = app.kaeri.store.CastButtonState.Connected,
+            deviceKey = "living-room", // i18n-skip
+            deviceName = "Living room", // i18n-skip
+        )
+        override fun state() = held
+        override suspend fun next(): app.kaeri.store.CastSession? = kotlinx.coroutines.awaitCancellation()
+        override fun connect(key: String, from: app.kaeri.store.CastFrom?) = Unit
+        override fun disconnect() = Unit
+        override fun command(command: app.kaeri.engine.ffi.FfiTvCommand) = Unit
+        override fun play(request: app.kaeri.store.TvPlayRequest) = Unit
+        override val queues = false
+        override fun playNext(id: AnilistId, episode: String) = false
+        override fun playHere(): app.kaeri.store.CastFrom? = null
+        override fun leftOn(): String? = null
+        override fun card(): app.kaeri.store.CastLink? = null
+    }
+
     private companion object {
         /** The phone boards: 412 × 915 dp at 420 dpi, as the emulator's phone. */
         const val PHONE = "w412dp-h915dp-port-420dpi"
@@ -1331,6 +1517,9 @@ class BoardShots {
         fun seasonalList(event: Event) = event is Event.Content && event.view == ContentFor.Seasonal
 
         const val WATCHING = "watching"
+
+        /** Watching, signed in, with people followed on 900001 and 900002. */
+        const val FOLLOWING = "following"
         const val BROWSING = "browsing"
 
         const val HOME_WATCHING = "home-watching"

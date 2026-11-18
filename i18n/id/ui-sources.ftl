@@ -7,6 +7,16 @@ source-picker-automatic-detail = Setiap episode dari { -source } pertama yang me
 source-picker-coverage = { $of ->
    *[other] { $covered } dari { $of } episode
  }
+source-picker-episodes = { $count ->
+   *[other] Episode { $first }–{ $last }
+ }
+source-picker-episodes-not-yet = Episode { $first }–{ $last }. Belum ada { $missing }
+source-picker-episodes-not = Episode { $first }–{ $last }. Tanpa { $missing }
+source-picker-missing-pair = { $a } dan { $b }
+source-picker-missing-range = { $first }–{ $last }
+source-picker-coverage-missing = { $of ->
+   *[other] { $covered } dari { $of } episode. Tanpa { $missing }
+ }
 source-note-off = Dimatikan
 source-note-resting = Tidak merespons, akan dicoba lagi segera
 source-note-gone = Tidak terpasang

@@ -69,6 +69,15 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
                 .keyboardShortcut(",", modifiers: .command)
                 .disabled(covered)
         }
+        // Kaeri › Private Mode, ⇧⌘N, with a check while it is on. Turned on from here, the notice
+        // says what it means, since no description is in view.
+        CommandGroup(after: .appSettings) {
+            Toggle(L.menuPrivateMode, isOn: Binding(
+                get: { store.privacy.on },
+                set: { store.setPrivate($0, notice: true) }
+            ))
+            .keyboardShortcut("n", modifiers: [.command, .shift])
+        }
 
         // File.
         CommandGroup(replacing: .newItem) {
@@ -119,9 +128,16 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             }
             .keyboardShortcut(reading ? nil : KeyboardShortcut("[", modifiers: .command))
             .disabled(!navigator.canGoBack && playerBack?.isUp() != true)
-            Button(L.menuSyncNow) { store.send(.syncNow) }
-                .keyboardShortcut("r", modifiers: .command)
-                .disabled(store.accounts.summary.state == .signedOut)
+            // On a page whose next episode aired and no source has yet, ⌘R asks the sources
+            // again, as the page's Check again does.
+            if let here = navigator.checkAgainHere {
+                Button(L.menuCheckAgain) { store.missing.checkAgain(here.id, episode: here.episode) }
+                    .keyboardShortcut("r", modifiers: .command)
+            } else {
+                Button(L.menuSyncNow) { store.send(.syncNow) }
+                    .keyboardShortcut("r", modifiers: .command)
+                    .disabled(store.accounts.summary.state == .signedOut)
+            }
             Divider()
             Button(L.menuPauseAllDownloads) { store.pauseAllDownloads() }
                 .disabled(!store.downloads.rows.contains { $0.state == .active || $0.state == .queued })
@@ -413,6 +429,11 @@ struct EpisodeCommands: View {
                 if let entry { navigator.fixMatch(entry.id, store: store) }
             }
             .disabled(entry == nil || !store.match.canFix(store.providers))
+            Toggle(L.menuAlwaysPrivate, isOn: Binding(
+                get: { entry.map { store.privacy.isAlways(show: $0.id) } ?? false },
+                set: { on in if let entry { store.setAlwaysPrivate(show: entry.id, on) } }
+            ))
+            .disabled(entry == nil)
         }
         Divider()
         Button(L.menuShowSettings) {

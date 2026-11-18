@@ -73,10 +73,12 @@ import app.kaeri.store.ReadingModel
 import app.kaeri.store.Wording
 import app.kaeri.store.text
 import app.kaeri.ui.ArtworkImage
+import app.kaeri.ui.Destination
 import app.kaeri.ui.Icons
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigator
 import app.kaeri.ui.LocalSnackbars
+import app.kaeri.ui.Navigator
 import app.kaeri.ui.Shared
 import app.kaeri.ui.SilkMeter
 import app.kaeri.ui.WaterDot
@@ -155,8 +157,8 @@ internal fun ReadTile(
     onLongClick: (() -> Unit)? = null,
     /** Keeps [lines] lines under the title even when the line is shorter, so tiles in a row line up. */
     reserveLine: Boolean = false,
-    /** Offers Add to Planning as a screen reader's custom action, as discovery's covers do. */
-    planning: Boolean = false,
+    /** The long-press menu's items as a screen reader's custom actions, from [readTileActions]. */
+    actions: List<CustomAccessibilityAction> = emptyList(),
     /** A third line in silk under the facts: "In Home library" on a joined search result. */
     extra: String? = null,
     /** The line under the title in place of the tile's own: Search's "Manga · Japan", a hit's "2 volumes". */
@@ -169,8 +171,6 @@ internal fun ReadTile(
     titleMax: Int? = null,
 ) {
     val navigator = LocalNavigator.current
-    val store = app.kaeri.ui.LocalAppStore.current
-    val planningWord = Strings.readTileAddPlanning(context = LocalContext.current)
     val context = LocalContext.current
     val haptics = LocalHapticFeedback.current
     val colors = MaterialTheme.colorScheme
@@ -186,14 +186,7 @@ internal fun ReadTile(
             contentDescription = said
             // The water dot is colour alone; the state says it too.
             if (tile.newChapter) stateDescription = newWord
-            if (planning) {
-                customActions = listOf(
-                    CustomAccessibilityAction(planningWord) {
-                        store.reading.setStatus(tile.work, LibrarySegmentRead.PLANNING)
-                        true
-                    },
-                )
-            }
+            if (actions.isNotEmpty()) customActions = actions
         }
         .combinedClickable(
             onClickLabel = stringResource(R.string.title_open),
@@ -612,6 +605,15 @@ internal object ReadPlaces {
         libraryReading = true
     }
 
+    /**
+     * Switch to Library at [segment], at its start: a series page left open on Library last time
+     * is closed, so the list shows.
+     */
+    fun openList(navigator: Navigator, segment: LibrarySegmentRead) {
+        showList(segment)
+        navigator.goToStart(Destination.Library)
+    }
+
     /** Search on reading's side, running [query]. */
     fun search(reading: ReadingModel, query: ReadSearchQuery) {
         searchReading = true
@@ -639,6 +641,26 @@ internal fun ScopeControl(reading: Boolean, modifier: Modifier = Modifier, onCha
                 shape = androidx.compose.material3.SegmentedButtonDefaults.itemShape(index, choices.size),
                 label = { Text(words, maxLines = 1) },
             )
+        }
+    }
+}
+
+/**
+ * [ReadTileMenu]'s items as a screen reader's custom actions: Details, then "Add to Completed"
+ * for each list but [current]. Actions have no submenus, so each list is an action of its own.
+ */
+@Composable
+internal fun readTileActions(tile: WorkTile, current: LibrarySegmentRead?, lists: Boolean = true): List<CustomAccessibilityAction> {
+    val store = app.kaeri.ui.LocalAppStore.current
+    val context = LocalContext.current
+    val navigator = LocalNavigator.current
+    return buildList {
+        add(CustomAccessibilityAction(Strings.homeDetails(context)) { navigator.openSeries(tile.work, "read-menu"); true })
+        if (lists) {
+            for (list in READ_STATUSES) {
+                if (list == current) continue
+                add(CustomAccessibilityAction(Strings.readTileAddTo(context, listWords(context, list))) { store.reading.setStatus(tile.work, list); true })
+            }
         }
     }
 }

@@ -85,6 +85,10 @@ const SETTLE: Duration = Duration::from_secs(2);
 
 /// How long the controls stay up with nothing happening.
 const IDLE: Duration = Duration::from_secs(2);
+/// How long after a roll-on its start still counts as one: the engine stages the next episode
+/// at once, so a roll-on older than this never led to a start.
+const ROLL_ON_FRESH: Duration = Duration::from_secs(10);
+
 /// The controls' fades, in and out: the fade-in and fade-out tokens.
 const FADE_IN_MS: u32 = 200;
 const FADE_OUT_MS: u32 = 300;
@@ -156,6 +160,19 @@ pub struct PlayerView {
     start: RefCell<Option<start_model::Start>>,
     start_since: Cell<Option<Instant>>,
     start_tick: RefCell<Option<glib::SourceId>>,
+    /// When the app or the engine rolled on to the next episode, until that start begins.
+    roll_on: Cell<Option<Instant>>,
+    /// The roll-on the start on screen came from: its screen waits 600 ms before it shows.
+    start_roll: Cell<Option<Instant>>,
+    /// Whether that screen is still held back, only its ground showing.
+    start_held: Cell<bool>,
+    /// When the held screen showed, for its 0.6 s hold.
+    start_shown: Cell<Option<Instant>>,
+    /// The last frame and Up next fading to the ground.
+    start_ground: RefCell<Option<adw::TimedAnimation>>,
+    /// The wait before the held screen shows, and a first frame's wait for the screen's hold.
+    start_reveal: RefCell<Option<glib::SourceId>>,
+    start_leave: RefCell<Option<glib::SourceId>>,
     /// Where the playback resumed, while "Resumed at" shows: it goes 6 s of playback later.
     resumed_from: Cell<Option<f64>>,
     /// The last automatic skip, while Undo is offered for it.
@@ -258,6 +275,8 @@ struct Ui {
     stage: gtk::Overlay,
     show: gtk::Label,
     episode: gtk::Label,
+    /// "Private" after the episode line, while the mode or the show's own flag holds it.
+    private: gtk::Box,
     play: gtk::Button,
     timeline: gtk::Scale,
     marked: Marked,
@@ -402,6 +421,13 @@ impl PlayerView {
             start: RefCell::default(),
             start_since: Cell::new(None),
             start_tick: RefCell::default(),
+            roll_on: Cell::new(None),
+            start_roll: Cell::new(None),
+            start_held: Cell::new(false),
+            start_shown: Cell::new(None),
+            start_ground: RefCell::default(),
+            start_reveal: RefCell::default(),
+            start_leave: RefCell::default(),
             resumed_from: Cell::new(None),
             undo: Cell::new(None),
             skip_since: Cell::new(None),
@@ -477,7 +503,8 @@ impl PlayerView {
     /// player on this computer.
     fn tv_drives(&self) -> bool {
         let tv = &self.ctx.tv;
-        tv.live() && tv.now().is_some() && !self.shell().is_some_and(|s| s.is_player())
+        (tv.cast_media().is_some() || (tv.live() && tv.now().is_some()))
+            && !self.shell().is_some_and(|s| s.is_player())
     }
 
     /// Show the TV's episode to the media controls, or nothing once the TV has stopped.
@@ -487,7 +514,15 @@ impl PlayerView {
             return;
         }
         let tv = &self.ctx.tv;
-        let Some(now) = tv.now().filter(|_| tv.connected().is_some()) else {
+        // A cast running is what the controls show; else a TV running Kaeri, driven from here.
+        let cast = tv.cast_media();
+        let playhead = match &cast {
+            Some((_, at)) => Some(*at),
+            None => tv.playhead(),
+        };
+        let Some(now) =
+            cast.map(|(now, _)| now).or_else(|| tv.now().filter(|_| tv.connected().is_some()))
+        else {
             media.stopped();
             return;
         };
@@ -497,12 +532,13 @@ impl PlayerView {
             Some(entry) => entry.title.clone(),
             None => String::new(),
         };
+        media.private(self.ctx.hub.known.borrow().holds_show(now.id));
         media.track(Track {
             show,
             title: now.episode_line.clone(),
             art: entry.and_then(|e| e.banner_url.or(e.cover_url)),
         });
-        media.state(now.paused, tv.playhead().or(Some(now.position)), now.duration);
+        media.state(now.paused, playhead.or(Some(now.position)), now.duration);
         media.neighbours(true, false);
     }
 
@@ -510,11 +546,17 @@ impl PlayerView {
     fn tv_media_control(&self, action: MediaAction) {
         use kaeri_engine::remote::protocol::command::RemoteCommand;
         let tv = &self.ctx.tv;
-        let paused = tv.now().is_some_and(|n| n.paused);
+        let cast = tv.cast_media().map(|(now, _)| now);
+        let paused = cast.as_ref().or(tv.now().as_ref()).is_some_and(|n| n.paused);
         let command = match action {
             MediaAction::Raise => {
                 self.ctx.window.present();
                 tv.open_remote();
+                return;
+            }
+            // Stop on a cast stops casting, as Stop casting does.
+            MediaAction::Stop if cast.is_some() => {
+                tv.cast_stop();
                 return;
             }
             MediaAction::PlayPause => RemoteCommand::TogglePause,
@@ -524,7 +566,8 @@ impl PlayerView {
             MediaAction::SeekBy(by) => RemoteCommand::Seek { by },
             MediaAction::SeekTo(position) => RemoteCommand::SeekTo { position },
             MediaAction::Volume(level) => {
-                let now = tv.now().and_then(|n| n.volume).unwrap_or(100.0);
+                let now =
+                    cast.as_ref().or(tv.now().as_ref()).and_then(|n| n.volume).unwrap_or(100.0);
                 RemoteCommand::Volume { step: level * 100.0 - now }
             }
             // The TV has no episode before, nor speeds, and Stop leaves it playing.
@@ -534,7 +577,11 @@ impl PlayerView {
             | MediaAction::Stop
             | MediaAction::Rate(_) => return,
         };
-        tv.send(command);
+        if cast.is_some() {
+            tv.cast_send(command);
+        } else {
+            tv.send(command);
+        }
     }
 
     /// What GNOME's media controls, the lock screen or a media key asked.
@@ -567,6 +614,36 @@ impl PlayerView {
                     .unwrap_or(100.0);
                 self.send(PlayerCommand::Volume(level * 100.0 - now));
             }
+        }
+    }
+
+    /// "Private" in the bar and the neutral media controls, while the mode or the playing
+    /// show's own flag holds what plays. A link played with no title behind it follows the mode.
+    fn follow_private(&self) {
+        let held = {
+            let known = self.ctx.hub.known.borrow();
+            match self.title_id.get() {
+                Some(id) => known.holds_show(id),
+                None => known.private,
+            }
+        };
+        self.ui.private.set_visible(held);
+        if self.tv_drives() {
+            return;
+        }
+        if let Some(media) = self.media() {
+            media.private(held);
+        }
+    }
+
+    /// While the TV's episode is on the media controls, they follow its show.
+    fn tv_media_private(&self) {
+        if !self.tv_drives() {
+            return;
+        }
+        let Some(now) = self.ctx.tv.now() else { return };
+        if let Some(media) = self.media() {
+            media.private(self.ctx.hub.known.borrow().holds_show(now.id));
         }
     }
 
@@ -633,6 +710,11 @@ impl PlayerView {
         }
         self.tv_media();
         self.end_start();
+        self.roll_on.set(None);
+        if let Some(ground) = self.start_ground.take() {
+            ground.pause();
+        }
+        self.ui.start.unhold();
         self.ui.starting.set_visible(true);
         self.ui.starting.set_opacity(1.0);
     }
@@ -647,6 +729,10 @@ impl PlayerView {
 
     /// What the engine said, as the player hears it.
     pub fn engine_event(&self, event: &Event) {
+        if crate::private::changes(event) {
+            self.follow_private();
+            self.tv_media_private();
+        }
         match event {
             Event::PlayerOps { playback, ops } => {
                 if ops.iter().any(|op| matches!(op, PlayerOp::Open { .. })) {
@@ -753,6 +839,8 @@ impl PlayerView {
             Event::PlaybackEnded { failure: Some(failure), rolling_on: false, .. } => {
                 self.start_failed(failure);
             }
+            // The engine rolled on by itself: the next episode's start is a roll-on.
+            Event::PlaybackEnded { rolling_on: true, .. } => self.rolled_on(),
             _ => {}
         }
     }
@@ -778,6 +866,104 @@ impl PlayerView {
             self.start_chrome(false);
         }
         self.start_since.set(None);
+        self.stop_start_timers();
+        self.start_roll.set(None);
+        self.start_held.set(false);
+        self.start_shown.set(None);
+    }
+
+    fn stop_start_timers(&self) {
+        for timer in [&self.start_reveal, &self.start_leave] {
+            if let Some(source) = timer.borrow_mut().take() {
+                source.remove();
+            }
+        }
+    }
+
+    /// A roll-on began: Up next's countdown ended, Play now, or the engine rolled on.
+    fn rolled_on(&self) {
+        if self.roll_on.get().is_none_or(|at| at.elapsed() >= ROLL_ON_FRESH) {
+            self.roll_on.set(Some(Instant::now()));
+        }
+    }
+
+    /// A roll-on's start: the last frame and Up next fade to the ground (ease-in, 0.25 s), and
+    /// the starting screen shows over it only when the picture has not come 600 ms after the
+    /// roll-on. A start begun again for the same episode (`carried`) keeps where it had got to.
+    fn hold_start(&self, at: Instant, carried: bool) {
+        self.start_roll.set(Some(at));
+        if carried && !self.start_held.get() {
+            // Its screen showed already, and keeps its hold.
+            self.ui.starting.set_opacity(1.0);
+            return;
+        }
+        if !carried {
+            self.start_shown.set(None);
+            self.start_held.set(true);
+            self.ui.start.hold();
+            self.ui.starting.set_opacity(0.0);
+            let ground = crate::motion::timed(
+                &self.ui.starting,
+                0.0,
+                1.0,
+                250,
+                crate::motion::opacity(&self.ui.starting),
+            );
+            ground.set_easing(adw::Easing::EaseInCubic);
+            ground.play();
+            self.start_ground.replace(Some(ground));
+        }
+        let wait = start_model::ROLL_ON_WAIT.saturating_sub(at.elapsed());
+        let me = self.me.clone();
+        let source = glib::timeout_add_local_once(wait, move || {
+            let Some(view) = me.upgrade() else { return };
+            view.start_reveal.borrow_mut().take();
+            view.reveal_start();
+        });
+        self.start_reveal.replace(Some(source));
+    }
+
+    /// The held screen shows over its ground: the wait ran out, or the start failed.
+    fn reveal_start(&self) {
+        if let Some(source) = self.start_reveal.borrow_mut().take() {
+            source.remove();
+        }
+        if !self.start_held.replace(false) || self.start.borrow().is_none() {
+            return;
+        }
+        self.start_shown.set(Some(Instant::now()));
+        self.ui.start.reveal();
+    }
+
+    /// The first frame came: the starting screen fades to the picture, at once or, for a
+    /// roll-on's screen that showed, once it has held for its 0.6 s.
+    fn leave_start(&self) {
+        let wait = self.start_roll.get().map_or(Duration::ZERO, |roll| {
+            let picture = roll.elapsed();
+            let shown = self.start_shown.get().map(|shown| shown.duration_since(roll));
+            start_model::roll_on_leaves(shown, picture).saturating_sub(picture)
+        });
+        if wait.is_zero() {
+            self.start_gone();
+            return;
+        }
+        let me = self.me.clone();
+        let source = glib::timeout_add_local_once(wait, move || {
+            let Some(view) = me.upgrade() else { return };
+            view.start_leave.borrow_mut().take();
+            if view.ui.starting.is_visible() {
+                view.start_gone();
+            }
+        });
+        self.start_leave.replace(Some(source));
+    }
+
+    fn start_gone(&self) {
+        if let Some(ground) = self.start_ground.take() {
+            ground.pause();
+        }
+        fade(&self.ui.starting, false);
+        self.end_start();
     }
 
     fn start_elapsed(&self) -> Duration {
@@ -817,6 +1003,13 @@ impl PlayerView {
         if let Some(tick) = self.start_tick.borrow_mut().take() {
             tick.remove();
         }
+        // A roll-on's screen is held back. The same start begun again (staged, then opened)
+        // keeps the hold it had.
+        let again =
+            self.start.borrow().as_ref().is_some_and(|s| s.id == id && s.episode == episode);
+        let carried = self.start_roll.get().filter(|_| again);
+        let rolled = self.roll_on.take().filter(|at| at.elapsed() < ROLL_ON_FRESH);
+        self.stop_start_timers();
         self.start.replace(Some(start_model::Start::new(id, episode, resume)));
         self.start_chrome(true);
         if let Some(start) = self.start.borrow_mut().as_mut() {
@@ -836,8 +1029,28 @@ impl PlayerView {
         let resumes = self.start.borrow().as_ref().is_some_and(start_model::Start::resumes);
         self.ui.start.begin(title, &line, demo, resumes);
         self.ui.starting.set_visible(true);
-        self.ui.starting.set_opacity(1.0);
-        self.clear_cards();
+        match (rolled, carried) {
+            (Some(at), _) => self.hold_start(at, false),
+            (None, Some(at)) => self.hold_start(at, true),
+            (None, None) => {
+                self.start_roll.set(None);
+                self.start_held.set(false);
+                self.start_shown.set(None);
+                self.ui.start.unhold();
+                self.ui.starting.set_opacity(1.0);
+            }
+        }
+        if self.start_roll.get().is_some() {
+            // Up next fades with the last frame rather than vanish under the ground.
+            self.ui.up_next.set(false);
+            self.coming.replace(None);
+            for card in [&self.ui.skip, &self.ui.undo, &self.ui.stall] {
+                card.hide_now();
+            }
+            self.stall_over();
+        } else {
+            self.clear_cards();
+        }
         self.resumed_done();
         self.announce(&t::player_start_announce(episode, title));
         self.show_start();
@@ -901,6 +1114,8 @@ impl PlayerView {
         if let Some(start) = self.start.borrow_mut().as_mut() {
             start.fail(failure.clone());
         }
+        // A failure shows at once, whatever a roll-on's wait has left.
+        self.reveal_start();
         self.show_start();
         let frame = self.start.borrow().as_ref().map(|s| s.frame(self.start_elapsed()));
         if let Some(Some((title, reason))) = frame.map(|f| f.failure) {
@@ -1037,6 +1252,8 @@ impl PlayerView {
                     translation,
                 ));
                 let line = self.show_episode_line();
+                // Held or not before the controls hear of it, so its name never reaches them.
+                self.follow_private();
                 if let Some(media) = self.media() {
                     media.track(Track {
                         show: title.clone(),
@@ -1058,7 +1275,9 @@ impl PlayerView {
                     self.begin_start(*id, title, episode, episode_title.as_deref(), None);
                 }
                 self.ui.starting.set_visible(true);
-                self.ui.starting.set_opacity(1.0);
+                if self.start_roll.get().is_none() {
+                    self.ui.starting.set_opacity(1.0);
+                }
                 let art = banner_url.as_deref().or(cover_url.as_deref());
                 self.ctx.hub.art(&self.ui.start.art, art);
                 self.open();
@@ -1256,6 +1475,7 @@ impl PlayerView {
             if let Some(plan) = self.coming.borrow_mut().as_mut() {
                 plan.played = true;
             }
+            self.rolled_on();
             self.send(PlayerCommand::PlayNext);
         }
     }
@@ -1285,6 +1505,7 @@ impl PlayerView {
         if let Some(plan) = self.coming.borrow_mut().as_mut() {
             plan.played = true;
         }
+        self.rolled_on();
         self.send(PlayerCommand::PlayNext);
     }
 
@@ -1520,9 +1741,9 @@ impl PlayerView {
                 }
             }
         }
-        if state.has_picture && ui.starting.is_visible() {
-            fade(&ui.starting, false);
-            self.end_start();
+        if state.has_picture && ui.starting.is_visible() && self.start_leave.borrow().is_none()
+        {
+            self.leave_start();
         }
         // Six seconds of playback on, or a seek back past it, and "Resumed at" goes.
         if let (Some(from), Some(position)) = (self.resumed_from.get(), state.position)
@@ -2981,7 +3202,13 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     let titles = gtk::Box::new(gtk::Orientation::Vertical, 0);
     titles.set_valign(gtk::Align::Center);
     titles.append(&show);
-    titles.append(&episode);
+    // The episode line, and after it "Private" while what plays is held.
+    let private = crate::private::player_label();
+    let episode_row = gtk::Box::new(gtk::Orientation::Horizontal, 10);
+    episode_row.set_halign(gtk::Align::Center);
+    episode_row.append(&episode);
+    episode_row.append(&private);
+    titles.append(&episode_row);
     let episodes = gtk::MenuButton::builder()
         .icon_name("view-list-symbolic")
         .tooltip_text(t::player_episodes())
@@ -3350,6 +3577,7 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
         stage,
         show,
         episode,
+        private,
         play,
         timeline,
         marked,

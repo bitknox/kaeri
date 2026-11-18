@@ -171,3 +171,26 @@ fun Modifier.stillFade(fade: StillFade): Modifier {
         fade.still?.let { drawImage(it, alpha = fade.alpha.value) }
     }
 }
+
+/**
+ * Shows [content] while [value] is there, fading in on [Motion.fadeIn] and out on
+ * [Motion.fadeOut]. With Remove animations the fades still run, at full speed, as an overlay that
+ * only appears keeps its fade (native-ux, Reduce Motion). While it fades out, [content] is drawn
+ * with the last value it had.
+ */
+@Composable
+fun <T : Any> KeptFade(value: T?, modifier: Modifier = Modifier, content: @Composable (T) -> Unit) {
+    val removed = rememberAnimationsRemoved()
+    var last by remember { mutableStateOf(value) }
+    if (value != null) last = value
+    val alpha = remember { Animatable(0f) }
+    val shown = value != null
+    LaunchedEffect(shown) {
+        val spec: FiniteAnimationSpec<Float> = if (shown) Motion.fadeIn() else Motion.fadeOut()
+        val target = if (shown) 1f else 0f
+        if (removed) atFullSpeed { alpha.animateTo(target, spec) } else alpha.animateTo(target, spec)
+        if (!shown) last = null
+    }
+    val drawn = last ?: return
+    Box(modifier.graphicsLayer { this.alpha = alpha.value }) { content(drawn) }
+}

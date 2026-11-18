@@ -503,3 +503,13 @@ updates-unknown-sources-path = Settings › Apps › Security & restrictions ›
 # @only android
 # @max 24
 tv-remote-default-name = { -app-name } TV
+
+# Row in the TV player's Info panel, under the Stats for nerds lines: puts the full stats over the picture, updated once a second.
+# @only android
+# @max 32
+player-stats-show-live = Show live stats
+
+# The same row while the live stats are up.
+# @only android
+# @max 32
+player-stats-hide-live = Hide live stats

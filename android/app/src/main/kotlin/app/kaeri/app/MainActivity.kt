@@ -476,6 +476,11 @@ class MainActivity : ComponentActivity() {
      */
     override fun onKeyDown(keyCode: Int, event: KeyEvent): Boolean {
         val step = volumeStep(keyCode) ?: return super.onKeyDown(keyCode, event)
+        // A held Cast TV takes them while connected, a level in steps or Mute on a fixed volume.
+        if (castingVolume()) {
+            app.store.cast.stepVolume(up = step > 0)
+            return true
+        }
         if (!drivingTv()) return super.onKeyDown(keyCode, event)
         app.store.tv.send(FfiTvCommand.Volume(step))
         return true
@@ -483,8 +488,14 @@ class MainActivity : ComponentActivity() {
 
     /** The key-up of a volume press [onKeyDown] took, so the system does not also act on it. */
     override fun onKeyUp(keyCode: Int, event: KeyEvent): Boolean {
-        if (volumeStep(keyCode) == null || !drivingTv()) return super.onKeyUp(keyCode, event)
+        if (volumeStep(keyCode) == null || !(drivingTv() || castingVolume())) return super.onKeyUp(keyCode, event)
         return true
+    }
+
+    /** A Cast TV that takes a level is held, and no player plays here. */
+    private fun castingVolume(): Boolean {
+        val session = app.store.cast.session.value
+        return session.held && session.levelControl && !app.player.isPresented
     }
 
     private fun volumeStep(keyCode: Int): Double? = when (keyCode) {
@@ -501,8 +512,10 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        // Back a moment after Play: the engine has not opened the player yet, and must not.
-        if (isFinishing) app.player.hostFinished()
+        // Back a moment after Play: the engine has not opened the player yet, and must not. A
+        // cast plays on the TV with the window gone, as from the recent apps: the notification
+        // drives it.
+        if (isFinishing && !app.store.cast.casting.value) app.player.hostFinished()
         super.onDestroy()
     }
 

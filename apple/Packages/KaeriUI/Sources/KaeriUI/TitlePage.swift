@@ -187,6 +187,15 @@ struct TitlePage: View {
         // A related title shown as its card knows no seasons and no related titles of its own:
         // the row it was picked from stays until its page says what is in it.
         let kin = Self.kin(of: entry, last: familyOf, in: store)
+        // Opened from a list, the page has the list's row: its hero and its actions. What only
+        // its page brings (the seasons, Related, the facts, the tags, people you follow) waits
+        // under placeholders that show with the page from the first frame, and the page replaces
+        // them the moment it lands, with no wait and no hold (T8's title page exception).
+        let held = Self.held(entry.id, in: store)
+        // With no row standing in for its seasons and Related, the page's own row would land
+        // above the rest and push it down: everything below the hero changes in one crossfade
+        // instead, so nothing glides.
+        let block = held && kin.id == entry.id ? "held" : "page" // i18n-skip
         // What the title picked shows with, asked for while the last one's page stays.
         let picked = ready ? nil : store.titles.page(id)
         let coming = Coming(cover: picked?.coverUrl, wide: picked.flatMap { store.heroArt($0).url })
@@ -204,19 +213,26 @@ struct TitlePage: View {
                         .opacity(underFlyer ? 0 : 1)
                         .animation(.fadeIn, value: underFlyer)
                     let family = TitleFamily(kin, this: id)
-                    if !family.seasons.isEmpty || !family.related.isEmpty {
-                        TitleFamilyRow(entry: kin, family: family)
-                            .padding(.top, 20)
+                    // The held block and the page's in one place, one crossfading into the other.
+                    ZStack(alignment: .topLeading) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            if block == "page", !family.seasons.isEmpty || !family.related.isEmpty {
+                                TitleFamilyRow(entry: kin, family: family)
+                                    .padding(.top, 20)
+                            }
+                            HStack(alignment: .top, spacing: 32) {
+                                EpisodeList(entry: entry, rotor: rotor, scroller: scroller, held: held)
+                                TitleDetails(entry: entry, held: held)
+                                    .frame(width: 260)
+                            }
+                            .padding(.top, 24)
+                            // On the ground, so Related cards dissolving as the episodes move up go
+                            // under them rather than through their words.
+                            .background(.ground)
+                        }
+                        .id(block)
+                        .transition(.opacity)
                     }
-                    HStack(alignment: .top, spacing: 32) {
-                        EpisodeList(entry: entry, rotor: rotor, scroller: scroller)
-                        TitleDetails(entry: entry)
-                            .frame(width: 260)
-                    }
-                    .padding(.top, 24)
-                    // On the ground, so Related cards dissolving as the episodes move up go under
-                    // them rather than through their words.
-                    .background(.ground)
                 }
                 .padding(EdgeInsets(top: 0, leading: 24, bottom: 20, trailing: 28))
                 // On the Mac a season picked on the page changes the page that is open, in the
@@ -230,6 +246,8 @@ struct TitlePage: View {
                 // own page comes. When the row changes then, or with a season's header, the episodes
                 // move to their place with it as its cards dissolve, rather than jumping under them.
                 .animation(.quick, value: kin.id)
+                // The page landing on its placeholders: one crossfade where they stand.
+                .animation(.standard, value: held)
                 // With Reduce Motion a season picked changes the page at once: the selection, the
                 // words, the episodes and Related, each without its own animation.
                 .transaction(value: [id, entry.id, kin.id]) { if navigator.motionReduced { $0.disablesAnimations = true } }
@@ -326,6 +344,13 @@ struct TitlePage: View {
             || store.titles.headed.contains(id)
     }
 
+    /// Whether `id`'s page holds what only its page brings under placeholders: neither its page
+    /// nor a season's kept header is here, and its fetch has not ended without it. A page that
+    /// did not come lets the list's row stand.
+    static func held(_ id: AnilistId, in store: AppStore) -> Bool {
+        !store.titles.headerHere(id) && !store.titles.failed.contains(id)
+    }
+
     /// How many seasons either side of the one shown have their art decoded ahead, at the sizes
     /// the page shows them, so a season picked near it has its banner and cover whole on the
     /// click. Farther ones are asked when the pointer rests on them.
@@ -366,7 +391,7 @@ struct TitlePage: View {
     static func artReady(_ key: ArtKey, in store: AppStore) -> Bool {
         guard store.titles[key.id] != nil else { return false }
         switch key.art {
-        case .compact: return true
+        case .compact, .plate: return true
         case .waiting: return false
         case .banner(let url), .still(let url), .cover(let url): return store.artwork.image(url) != nil
         }
@@ -448,7 +473,12 @@ struct TitleHero: View {
                 action.play(entry.id, store: store, navigator: navigator)
             } label: {
                 HStack(spacing: 8) {
-                    Image(systemName: "play.fill").font(.mac(10))
+                    // While a TV is held the play goes there: the cast glyph in place of play.
+                    if store.tv.cast.connected {
+                        CastButtonGlyph(look: .connected, size: Self.pad ? 17 : 13, color: Palette.ground)
+                    } else {
+                        Image(systemName: "play.fill").font(.mac(10))
+                    }
                     Text(Self.pad ? action.sentence : action.title)
                 }
             }
@@ -473,7 +503,8 @@ struct TitleHero: View {
         // Whether a source lists the title is known once its episodes are. Until then Play on TV
         // stays as it was, so a season shown from its header keeps the button it will have, or
         // goes without it, rather than changing twice.
-        let playsOnTV = action.playable && store.tv.available
+        // The cast button in the bar takes Play on TV's place once a TV is found.
+        let playsOnTV = action.playable && store.tv.available && store.tv.castButton == .hidden
             && (store.titles.episodes[entry.id] != nil ? !store.titles.unlisted(entry.id) : tvShown)
         HStack(alignment: .bottom, spacing: 28) {
             // Across a season switch the last season's cover stays until the next one's lands.
@@ -499,13 +530,19 @@ struct TitleHero: View {
                     .groupHeaderStyle()
                     .macLineHeight(14)
                     .padding(.top, 4)
-                HStack(spacing: 10) {
+                // An aired episode no source lists says so in the main action's place, with
+                // Check again (MissingSlot).
+                MissingSlot(
+                    entry: entry, action: action, metrics: Self.pad ? .pad : .mac,
+                    allowed: serviceMain == nil && held == nil
+                ) {
                     mainAction(action, held: held)
                         .opacity(offersHeld ? 0 : 1)
                         .disabled(offersHeld)
                         .allowsHitTesting(held == nil)
                         .accessibilityHidden(offersHeld)
                         .animation(.fadeIn, value: offersHeld)
+                } trailing: {
                     if entry.trailerUrl != nil {
                         Button(L.titleTrailer) {
                             navigator.playTrailer(entry, store: store)
@@ -537,6 +574,11 @@ struct TitleHero: View {
                 }
                 .animation(.fadeIn, value: playsOnTV)
                 .padding(.top, Self.pad ? 16 : 12)
+                // While private: why, and what it means. The main button is as it would be.
+                PrivateLineSlot(line: store.privacy.line(show: entry.id))
+                CastPlaysOnLine(touch: Self.pad)
+                    .padding(.top, 10)
+                    .animation(.fadeIn, value: store.tv.cast.connected)
                 LicensedLines(id: entry.id, font: Self.pad ? .ui(15) : .mac(13))
                 MatchUncertainLine(id: entry.id, font: Self.pad ? .ui(15) : .mac(13), top: 10)
             }
@@ -902,6 +944,8 @@ struct EpisodeList: View {
     let rotor: Namespace.ID
     /// The page's scroll view, which a range switch brings the pickers back into.
     var scroller: ScrollViewProxy?
+    /// Whether the page holds its rows under placeholders until it lands (`TitlePage.held`).
+    var held = false
 
     /// The id of the line that holds the pickers, which a range switch scrolls to.
     static let pickers = "episode-pickers"
@@ -952,7 +996,7 @@ struct EpisodeList: View {
             .animation(.fadeIn, value: store.titles.dubLines[entry.id])
             .id(Self.pickers)
             .onGeometryChange(for: CGFloat.self) { $0.frame(in: .scrollView).minY } action: { [pickers] top in pickers.top = top }
-            let loaded = store.titles.episodes[entry.id] != nil
+            let loaded = !held && store.titles.episodes[entry.id] != nil
             // The placeholders and the rows in one place, one crossfading into the other (T8), and
             // another season's rows into this one's as one block: none slides or comes in alone.
             ZStack(alignment: .topLeading) {
@@ -968,15 +1012,20 @@ struct EpisodeList: View {
                             let fold = unwatchedOnly && plan.ranges.isEmpty ? nil : plan.fold
                             let spoilers = store.spoilerProtection(for: entry.id)
                             let protectedFrom = EpisodeProtection.start(plan.shown, spoilers: spoilers)
+                            // The marks' column, kept on every row while any row has marks.
+                            let marked = plan.shown.contains { !$0.followed.isEmpty }
                             if let fold {
                                 WatchedFoldSection(
                                     fold: fold, shown: navigator.watchedShown(entry.id), phone: false,
+                                    marks: marked ? FollowWords.union(plan.shown.prefix(fold.count)) : nil,
+                                    // The rows' padding, and the check's column and gap where text is beside.
+                                    marksTrailing: metrics.text == .beside ? 8 + 14 + 14 : 8,
                                     toggle: { navigator.toggleWatched(entry.id) }
                                 ) {
-                                    ForEach(plan.shown.prefix(fold.count), id: \.number) { row($0, protectedFrom: protectedFrom) }
+                                    ForEach(plan.shown.prefix(fold.count), id: \.number) { row($0, protectedFrom: protectedFrom, marked: marked) }
                                 }
                             }
-                            ForEach(plan.shown.dropFirst(fold?.count ?? 0), id: \.number) { row($0, protectedFrom: protectedFrom) }
+                            ForEach(plan.shown.dropFirst(fold?.count ?? 0), id: \.number) { row($0, protectedFrom: protectedFrom, marked: marked) }
                         }
                         // A range switch crossfades in place.
                         .id(plan.index)
@@ -1101,7 +1150,7 @@ struct EpisodeList: View {
         navigator.jumpToTyped(title: entry.id, rows: rows)
     }
 
-    private func row(_ row: EpisodeRow, protectedFrom: (row: String, after: Int)?) -> some View {
+    private func row(_ row: EpisodeRow, protectedFrom: (row: String, after: Int)?, marked: Bool) -> some View {
         VStack(spacing: 0) {
             if row.number == protectedFrom?.row {
                 let shown = navigator.synopsisAllShown.contains(entry.id)
@@ -1111,7 +1160,7 @@ struct EpisodeList: View {
             }
             EpisodeRowView(
                 entry: entry, row: row, spoilers: store.spoilerProtection(for: entry.id),
-                metrics: metrics, room: room.room
+                metrics: metrics, room: room.room, marked: marked
             )
         }
         .accessibilityRotorEntry(id: row.number, in: rotor)
@@ -1135,6 +1184,8 @@ struct EpisodeRowView: View {
     let metrics: EpisodeMetrics
     /// Whether the table keeps room for text.
     let room: Bool
+    /// Whether the table keeps a column for the marks of people followed.
+    var marked = false
 
     private var next: UInt32 { entry.progress?.next ?? 1 }
 
@@ -1151,7 +1202,9 @@ struct EpisodeRowView: View {
             UnairedEpisodeRow(entry: entry, row: row, airs: date, metrics: metrics, textInset: textInset)
         } else {
             VStack(spacing: 0) {
-                airedRow
+                // Once a source lists the episode, the row lifts: the two crossfade in place.
+                ZStack { airedRow }
+                    .animation(.reveal, value: row.unsourced)
                     #if os(macOS)
                     // A synopsis cut at three lines is whole here, as a cut title is.
                     .tooltip(helpText)
@@ -1242,7 +1295,8 @@ struct EpisodeRowView: View {
     private func rowLabel(current: Bool, external: Bool = false) -> some View {
         EpisodeRowLabel(
             entry: entry, row: row, metrics: metrics, room: room, hidden: hidden, current: current,
-            numberColumn: true, asked: navigator.synopsisIsShown(entry.id, row.number), external: external
+            numberColumn: true, asked: navigator.synopsisIsShown(entry.id, row.number), external: external,
+            marks: marked ? row.followed : nil
         )
         .opacity(row.unsourced && store.licensed.episodeLink(entry.id, UInt32(row.number) ?? 0) == nil ? 0.55 : 1)
         .background(current ? Palette.selection : landed ? Palette.raisedSelected : .clear, in: .rect(cornerRadius: 8))
@@ -1337,6 +1391,8 @@ struct EpisodePlaceholderRow: View {
 /// Mac, three lines on iPad with "More" to show the rest in place.
 struct TitleDetails: View {
     let entry: Entry
+    /// Whether the page holds its facts under placeholders until it lands (`TitlePage.held`).
+    var held = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
@@ -1351,14 +1407,55 @@ struct TitleDetails: View {
                 #endif
             }
             if entry.isDemo { DemoCredit() }
-            MetaFactsGrid(entry: entry)
-            MoreAboutButton(entry: entry)
-                .padding(.top, 4)
+            // The facts' placeholders and the facts in one place, one crossfading into the other.
+            ZStack(alignment: .topLeading) {
+                if held {
+                    TitleFactsPlaceholder()
+                        .transition(.opacity)
+                } else {
+                    VStack(alignment: .leading, spacing: 18) {
+                        MetaFactsGrid(entry: entry)
+                        MoreAboutButton(entry: entry)
+                            .padding(.top, 4)
+                        // At the column's end, so its arrival moves nothing below it.
+                        FollowingSection(entry: entry)
+                    }
+                    .transition(.opacity)
+                }
+            }
+            .animation(.standard, value: held)
         }
         // Another season's synopsis and facts swap in place, by one short fade.
         .contentTransition(.opacity)
         .animation(.quick, value: entry.id)
         .padding(.top, 4)
+    }
+}
+
+/// The facts and More About This Show while the page is on its way, in their own frames: four
+/// facts redacted, and the button's capsule.
+struct TitleFactsPlaceholder: View {
+    var body: some View {
+        #if os(macOS)
+        let button: CGFloat = 28
+        #else
+        let button: CGFloat = 44
+        #endif
+        VStack(alignment: .leading, spacing: 18) {
+            Grid(alignment: .leading, horizontalSpacing: 12, verticalSpacing: 10) {
+                ForEach(0..<4, id: \.self) { _ in
+                    GridRow {
+                        Text("Studio").foregroundStyle(.haze).frame(width: 124, alignment: .leading) // i18n-skip
+                        Text("Lantern Works").foregroundStyle(.silk) // i18n-skip
+                    }
+                }
+            }
+            .font(.mac(12))
+            Capsule().fill(.raised).frame(width: 190, height: button)
+                .padding(.top, 4)
+        }
+        .redacted(reason: .placeholder)
+        .accessibilityHidden(true)
     }
 }
 
@@ -1395,5 +1492,15 @@ struct TitleToolbar: ToolbarContent {
                 Label(L.actionMore, systemImage: "ellipsis")
             }
         }
+        CastToolbarItem()
+    }
+}
+
+extension TitlePage {
+    /// Whether the list already says the row above an iPhone page's episodes will be there: the
+    /// watched run folds away from three episodes watched. The dub line and a long series' range
+    /// menu sit in the episodes heading, so they add no row.
+    static func rowAboveEpisodes(_ entry: Entry) -> Bool {
+        (entry.progress?.done ?? 0) >= 3
     }
 }

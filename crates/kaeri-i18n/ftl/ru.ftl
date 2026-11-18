@@ -33,6 +33,15 @@ notice-cast-not-same-network = Это устройство не в той же �
 # The TV stopped answering mid-cast. The name is the TV's own.
 notice-cast-lost = Связь с { $name } потеряна, трансляция остановлена.
 
+# Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+notice-cast-segment = { $name } перестал получать поток: источник не ответил для части серии. Попробуйте другой источник.
+
+# The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+notice-cast-lost-stream = { $name } потерял поток. Проверьте, что это устройство и телевизор в одной сети.
+
+# Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+notice-cast-subtitles-plain = Субтитры на { $name } показываются простым текстом. Оформленные субтитры оказались слишком тяжёлыми для телевизора.
+
 # The TV picked to cast to has left the network.
 notice-cast-no-device = Этот телевизор больше не в сети.
 
@@ -335,6 +344,12 @@ notice-player-failed-to-start = Не удалось запустить mpv. Пр
 
 # Toast when a stream never showed a frame and the next one is tried.
 notice-stream-no-video = Из этого потока не пришёл ни один кадр. Пробуем поток { $next } из { $total }.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over = Поток оборвался. { $source } продолжает с того же места.
+
+# Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+notice-failed-over-same-source = Поток оборвался. Другой поток из { $source } продолжает с того же места.
 
 # Toast when mpv gave up on a file. The reason is mpv's own line.
 notice-player-could-not-play = mpv не смог воспроизвести это. { $reason }
@@ -891,6 +906,9 @@ reading-row-queued = В очереди
 # A chapter row's state: it waits to download until the device is on Wi-Fi.
 reading-row-waits-wifi = В очереди · ждёт Wi-Fi
 
+# A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+reading-row-waits-room = В очереди · ждёт места
+
 # A chapter row's state while it downloads.
 reading-row-downloading = Скачивание · { $done } из { $total } стр.
 
@@ -1037,6 +1055,15 @@ reading-dl-failed = Не удалось скачать главу { $chapter }
 
 # After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
 reading-dl-offline = Нет сети
+
+# After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+reading-dl-no-room =
+    { $count ->
+        [one] Нет места. { $count } глава загрузится, когда освободится место.
+        [few] Нет места. { $count } главы загрузятся, когда освободится место.
+        [many] Нет места. { $count } глав загрузятся, когда освободится место.
+       *[other] Нет места. { $count } главы загрузятся, когда освободится место.
+    }
 
 # How much the chosen chapters will take, from their pages and the size of pages downloaded before.
 reading-estimate-size = Около { $size }
@@ -1275,10 +1302,10 @@ plugins-outdated =
 # Toast at launch when joined plugin stores offer newer versions of installed plugins.
 plugin-updates-ready =
     { $count ->
-        [one] Плагин: готово обновление. { $names }.
-        [few] Плагины: готовы обновления. { $names }.
-        [many] Плагины: готовы обновления. { $names }.
-       *[other] Плагины: готовы обновления. { $names }.
+        [one] Плагины: готово { $count } обновление. { $names }.
+        [few] Плагины: готовы { $count } обновления. { $names }.
+        [many] Плагины: готово { $count } обновлений. { $names }.
+       *[other] Плагины: готово { $count } обновления. { $names }.
     }
 
 # Note on the sources screen when the plugins could not be loaded. The reason comes from the plugin host.
@@ -3069,6 +3096,9 @@ episodes-release-dub = С дубляжом
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 episodes-release-current-pick = Текущий выбор
 
+# Replaces the missing-episode status on the title page while a check runs.
+episode-missing-checking = Проверяются ваши источники…
+
 # Action label in the help overlay and the command palette.
 keys-action-show-keys = Показать клавиши
 
@@ -3320,6 +3350,12 @@ keys-hint-stop = Стоп
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-play-next = Следующая серия
+
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+keys-hint-check-again = Проверить снова
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+keys-hint-play-episode = Смотреть эпизод { $episode }
 
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 keys-hint-episodes = Эпизоды
@@ -4492,6 +4528,9 @@ settings-label-fullscreen = Запускать на весь экран
 # Settings row: the video upscaling mode.
 settings-label-upscaling = Апскейлинг
 
+# Settings row under Auto-play next: whether the next episode's first seconds load during the ending on a metered connection. The column is 26 cells wide.
+settings-label-preload-metered = Предзагрузка при лимите
+
 # Settings row: which interface the player shows.
 settings-label-player-ui = Интерфейс плеера
 
@@ -4668,6 +4707,21 @@ settings-note-upload-limit = Ограничивает всю отдачу тор
 
 # Note under the token storage row. The option is a command-line flag and is not translated.
 settings-note-token-storage = Чтобы перенести существующий токен, используйте --token-to-file.
+
+# Header chip while private mode is on, in the state colour, lower case.
+tui-private-chip = приватно
+
+# Footer hint for Ctrl+P, lower case to match the header chip.
+keys-hint-private = приватно
+
+# Command palette entry that turns private mode on or off; its state shows beside it.
+palette-private-mode = Приватный режим
+
+# Command palette entry on a title page: keep the show private on this device.
+palette-always-private = Всегда приватно для этого тайтла
+
+# Help for the --private flag.
+cli-private-help = Запустить в приватном режиме. Ничего не сохраняется и не синхронизируется до закрытия Kaeri.
 
 # Under a series' title on the terminal's series page: the source its chapters are read from.
 tui-read-series-from = Чтение: { $source }
@@ -5776,6 +5830,15 @@ tui-medium-read-change = Нажмите { $key }, чтобы выбрать, д�
 # Hint beside the Kaeri is for line on the Settings screen. The key is the one bound to it, as the key map draws it.
 tui-medium-settings-hint = { $key }: изменить
 
+# Row in the terminal's Report a bug band, under Open on GitHub: Enter writes the player log file beside the terminal's own logs. Lower-cased, the same words are the key hint for it.
+report-player-log-save-here = Сохранить журнал плеера
+
+# That row once the file is written, and the notice in the status line. Path is where the file is, such as ~/.cache/kaeri/logs/kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved-to = Журнал плеера сохранён в { $path }
+
+# That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
+report-player-log-failed-here = Не удалось сохранить журнал в { $folder }.
+
 # Title of the about page.
 about-title = О программе
 
@@ -5880,6 +5943,42 @@ report-crash-off = Отчёты о сбоях выключены, поэтому
 
 # Link from that line to the crash report settings.
 report-crash-settings = Настройки отчётов о сбоях
+
+# Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.
+report-player-log = Журнал плеера
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.
+report-player-log-detail =
+    { $playbacks ->
+        [one] Последние воспроизведения: { $playbacks } · { $size }
+        [few] Последние воспроизведения: { $playbacks } · { $size }
+        [many] Последние воспроизведения: { $playbacks } · { $size }
+       *[other] Последние воспроизведения: { $playbacks } · { $size }
+    }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.
+report-player-log-empty = Воспроизведений пока не было
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+report-player-log-save = Сохранить журнал…
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = Приложите файл к задаче, когда она откроется на GitHub.
+
+# Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.
+report-player-log-saved = Сохранено как { $file }
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = Не удалось сохранить журнал. Выберите другую папку.
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.
+report-sent-report = Отчёт
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = Журнал плеера сохранён
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = Сохраняет файл, который можно приложить к задаче
 
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = Отчёты о сбоях
@@ -6076,6 +6175,36 @@ cast-stop = Остановить трансляцию
 # Line under TV volume on the card, for a TV whose volume only its own remote sets.
 cast-volume-fixed = Задаётся на ТВ
 
+# The cast button's spoken label while it connects to a TV. The name is the TV's.
+cast-button-connecting = Подключаемся к { $name }
+
+# The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.
+cast-button-connected = Подключено к { $name }
+
+# Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.
+cast-plays-on = Воспроизводится на { $name }
+
+# Row in the connected dialog while the TV has nothing loaded.
+cast-idle = Пока ничего не воспроизводится
+
+# The casting controller's line while the episode is paused on the TV. The name is the TV's.
+cast-status-paused = Пауза на { $name }
+
+# Spoken label of the show's name in the casting controller: it opens the show's page.
+cast-open-show = Открыть { $title }
+
+# The chevron that puts the full controller back into the mini player.
+cast-controller-close = Закрыть
+
+# Screen reader hint on the mini player over the navigation bar.
+cast-mini-opens = Открывает управление
+
+# Long-press menu of an episode while a TV plays: queues the episode after the one playing.
+cast-play-next-on = Воспроизвести следующим на { $name }
+
+# The system's media notification and Now Playing: the line naming the TV that plays.
+cast-notification-line = Трансляция на { $name }
+
 # Button that runs a failed action again.
 action-try-again = Попробовать снова
 
@@ -6223,6 +6352,9 @@ action-check-now = Проверить сейчас
 # Button that checks a { -source } again after it did not answer.
 action-check-again = Проверить снова
 
+# Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.
+action-checking = Проверка
+
 # Button that opens the system's own settings for the app.
 action-open-settings = Открыть настройки
 
@@ -6289,6 +6421,9 @@ time-minutes-left = осталось { $minutes } мин
 # A length in minutes, for an episode.
 time-minutes = { $minutes } мин
 
+# A length in hours, inside time-ago.
+time-hours = { $hours } ч
+
 # A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.
 time-now-inline = сейчас
 
@@ -6345,6 +6480,9 @@ state-working = Выполняется
 
 # Short placeholder while something loads.
 state-loading = Загрузка
+
+# Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).
+notice-dismiss = Закрыть
 
 # Controller help: the D-pad and left stick move focus between items.
 pad-help-move = Перемещение фокуса
@@ -6588,6 +6726,15 @@ names-pair = { $first } и { $last }
 
 # A list of names up to the last two, joined one by one: "Alpha, Brook".
 names-list = { $list }, { $next }
+
+# Title of the question asked on quitting while an episode plays on a TV.
+desktop-cast-quit-title = Остановить трансляцию и выйти?
+
+# Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.
+desktop-cast-quit-body = { $title } воспроизводится на { $name }. При выходе воспроизведение остановится.
+
+# Button of the question asked on quitting while casting: stops the cast and quits.
+desktop-cast-quit-action = Остановить и выйти
 
 # Menu item that opens an episode's discussion.
 discussion-open = Обсуждение
@@ -8290,10 +8437,10 @@ together-forget-room = Убрать из недавних комнат
 # Line that says who is in a recent room now, after looking in. The names are already joined.
 together-someone-here =
     { $count ->
-        [one] В комнате: { $names }
-        [few] В комнате: { $names }
-        [many] В комнате: { $names }
-       *[other] В комнате: { $names }
+        [one] В комнате { $count } человек: { $names }
+        [few] В комнате { $count } человека: { $names }
+        [many] В комнате { $count } человек: { $names }
+       *[other] В комнате { $count } человека: { $names }
     }
 
 # Line that says a recent room has nobody in it now.
@@ -8730,9 +8877,6 @@ player-start-miss-timed-out = { $name } отвечал слишком долго
 
 # Detail line after the viewer skipped the source being asked.
 player-start-miss-skipped = Вы пропустили { $name }
-
-# Details row for sources passed over because they failed lately. The name goes before it.
-player-start-resting = Пропущены после недавних сбоев
 
 # Detail line once the streams are found and the player opens one. The name is the source's.
 player-start-from = Из { $name }
@@ -9271,6 +9415,54 @@ player-subs-bg-box = Рамка
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = Больше в настройках…
+
+# The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
+private-mode = Приватный режим
+
+# The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.
+private-mode-detail = Ничего из того, что вы смотрите или читаете, не сохраняется и не синхронизируется, пока вы не выключите режим или не закроете Kaeri.
+
+# Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.
+private-mode-limits = Ваши источники и совместные просмотры по-прежнему видят, что вы открываете.
+
+# Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.
+private-mode-on-notice = Приватный режим включён. Ничего не сохраняется и не синхронизируется до закрытия Kaeri.
+
+# Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.
+action-turn-off = Выключить
+
+# Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.
+private-mode-shortcut-hint = Сочетание клавиш: { $keys }
+
+# The badge while private mode is on, the player label, and the head of the title page line.
+private-badge = Приватно
+
+# Screen reader label of the badge.
+private-badge-label = Приватный режим включён
+
+# Line under a title or series page's main action, after "Private" or "Always private".
+private-line-not-saved = Не сохраняется и не синхронизируется
+
+# Line under a title or series page's main action when a place is held in memory, after "Private".
+private-line-kept = Место запоминается до закрытия Kaeri
+
+# A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.
+title-always-private = Всегда приватно
+
+# Under the Always private switch in a show's settings.
+show-always-private-detail = Это устройство ничего не сохраняет и не синхронизирует из этого тайтла. Уже сохранённое остаётся.
+
+# Under the Always private switch in a series page's settings.
+series-always-private-detail = Это устройство ничего не сохраняет и не синхронизирует из этой серии. Уже сохранённое остаётся.
+
+# What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.
+now-playing-private = Воспроизводится в Kaeri
+
+# Announced to screen readers once when private mode turns on.
+private-mode-on-announcement = Приватный режим включён
+
+# Announced to screen readers once when private mode turns off.
+private-mode-off-announcement = Приватный режим выключен
 
 # Under a page that is still loading after four seconds.
 reader-page-loading = Загрузка страницы { $page }
@@ -10422,6 +10614,9 @@ read-search-source-kind-plugin = Плагин
 # The button of a source group with more than five hits.
 read-search-source-more = Показать ещё { $n }
 
+# Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".
+read-tile-add-to = Добавить в «{ $list }»
+
 # Over a first-run page's title: which page of how many.
 onboarding-step = { $step } из { $total }
 
@@ -10524,28 +10719,28 @@ medium-update-line = Kaeri теперь умеет читать мангу, ве
 # Title of the sheet when the other devices answer Watch. The devices are their names, joined; n is how many there are.
 medium-join-title-watch =
     { $n ->
-        [one] На { $devices } выбран просмотр
-        [few] На { $devices } выбран просмотр
-        [many] На { $devices } выбран просмотр
-       *[other] На { $devices } выбран просмотр
+        [one] Просмотр выбран на { $n } устройстве: { $devices }
+        [few] Просмотр выбран на { $n } устройствах: { $devices }
+        [many] Просмотр выбран на { $n } устройствах: { $devices }
+       *[other] Просмотр выбран на { $n } устройствах: { $devices }
     }
 
 # Title of the sheet when the other devices answer Read.
 medium-join-title-read =
     { $n ->
-        [one] На { $devices } выбрано чтение
-        [few] На { $devices } выбрано чтение
-        [many] На { $devices } выбрано чтение
-       *[other] На { $devices } выбрано чтение
+        [one] Чтение выбрано на { $n } устройстве: { $devices }
+        [few] Чтение выбрано на { $n } устройствах: { $devices }
+        [many] Чтение выбрано на { $n } устройствах: { $devices }
+       *[other] Чтение выбрано на { $n } устройствах: { $devices }
     }
 
 # Title of the sheet when the other devices answer Both.
 medium-join-title-both =
     { $n ->
-        [one] На { $devices } выбраны просмотр и чтение
-        [few] На { $devices } выбраны просмотр и чтение
-        [many] На { $devices } выбраны просмотр и чтение
-       *[other] На { $devices } выбраны просмотр и чтение
+        [one] Просмотр и чтение выбраны на { $n } устройстве: { $devices }
+        [few] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
+        [many] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
+       *[other] Просмотр и чтение выбраны на { $n } устройствах: { $devices }
     }
 
 # Line of the sheet on joining.
@@ -11793,6 +11988,21 @@ settings-auto-play = Автоматически включать следующ�
 # Row: length of the Up next countdown.
 settings-up-next-countdown = Отсчёт блока «Далее»
 
+# Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.
+settings-preload-cellular = Предзагружать видео по мобильной сети
+
+# The same row on Windows and Linux.
+settings-preload-metered = Предзагружать видео по лимитным подключениям
+
+# Line under the row on Windows and Linux, and the note under the terminal's settings list.
+settings-preload-detail-metered = Во время эндинга находятся поток, субтитры и моменты пропуска следующей серии. Её первые секунды тоже загружаются, а по лимитному подключению только когда это включено.
+
+# Sentence added after the line under the row while torrent playback is on.
+settings-preload-torrents = Торренты так же загружают первые части.
+
+# Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.
+settings-preload-a11y-dimmed = Нужно включить «Автоматически включать следующую серию»
+
 # Row: skip the opening.
 settings-skip-opening = Пропускать опенинг автоматически
 
@@ -12339,6 +12549,15 @@ settings-opds-password = Пароль ленты
 # Row: the port the shared catalogue listens on. Empty picks a free one.
 settings-opds-port = Порт ленты
 
+# Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.
+settings-label-picture-in-picture-on-leave = «Картинка в картинке» при выходе из приложения
+
+# Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.
+settings-anilist-following = Показывать тех, на кого вы подписаны
+
+# Note under that switch.
+settings-anilist-following-footer = Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.
+
 # Label of the address field in the Add a server sheet.
 book-server-address = Адрес
 
@@ -12622,6 +12841,36 @@ source-picker-coverage =
         [few] { $covered } из { $of } эпизода
         [many] { $covered } из { $of } эпизодов
        *[other] { $covered } из { $of } эпизода
+    }
+
+# Under a source that lists every episode that is out.
+source-picker-episodes =
+    { $count ->
+        [one] { $count } эпизод: { $first }–{ $last }
+        [few] { $count } эпизода: { $first }–{ $last }
+        [many] { $count } эпизодов: { $first }–{ $last }
+       *[other] { $count } эпизода: { $first }–{ $last }
+    }
+
+# Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.
+source-picker-episodes-not-yet = Эпизоды { $first }–{ $last }. Пока нет { $missing }
+
+# The same, more than a week after the episodes aired.
+source-picker-episodes-not = Эпизоды { $first }–{ $last }. Нет { $missing }
+
+# Two episodes a source lacks, inside the missing part of a source's line.
+source-picker-missing-pair = { $a } и { $b }
+
+# Three or more episodes in a row a source lacks, inside the missing part of a source's line.
+source-picker-missing-range = { $first }–{ $last }
+
+# Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".
+source-picker-coverage-missing =
+    { $of ->
+        [one] { $covered } из { $of } эпизода. Нет { $missing }
+        [few] { $covered } из { $of } эпизодов. Нет { $missing }
+        [many] { $covered } из { $of } эпизодов. Нет { $missing }
+       *[other] { $covered } из { $of } эпизода. Нет { $missing }
     }
 
 # Under a source that is switched off in Settings.
@@ -14461,6 +14710,33 @@ more-followed-score = { $score }/10
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = Похожие тайтлы
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+following-show-all = Показать все { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+following-names =
+    { $more ->
+        [one] { $first }, { $second } и ещё { $more }
+        [few] { $first }, { $second } и ещё { $more }
+        [many] { $first }, { $second } и ещё { $more }
+       *[other] { $first }, { $second } и ещё { $more }
+    }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+following-names-two = { $first } и { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+following-mark-spoken = { $names }: просмотрено до этого места.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+following-score-spoken = Оценка { $score } из 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Показывает, где сейчас каждый.
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 more-followed-progress = { $status } · { $progress }
 
@@ -14512,9 +14788,6 @@ title-fact-now = Сейчас
 # Value of the fact on a show with no announced start.
 title-fact-tba = Дата не объявлена
 
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-more-following-line = { $status } · { $score }/10
-
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
 episode-go-to = Перейти к эпизоду…
 
@@ -14535,6 +14808,42 @@ episode-go-to-none = Эпизода { $number } нет. В этом сериал
 
 # Shown when the number typed is an episode with no date that has not come out.
 episode-go-to-not-out = Эпизод { $number } ещё не вышел. Последний: { $latest }.
+
+# Status, first sentence, within a day of the episode airing.
+episode-missing-aired = Эпизод { $episode } вышел { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+episode-missing-aired-on = Эпизод { $episode } вышел { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Ваши источники его пока не нашли.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Ваши источники всё ещё его не нашли.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Ваши источники не ответили.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+episode-missing-looks-again = Kaeri ищет его снова каждые { $minutes } мин.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = Ваши источники так и не нашли его.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = Kaeri поищет его, когда снова появится сеть.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+episode-row-aired-ago = Вышел { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+episode-unsourced-yet = Ваши источники пока не нашли
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+episode-found-announcement = Ваши источники нашли эпизод { $episode }.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+episode-check-again-help = Kaeri также сам ищет эпизод каждые { $minutes } мин в течение { $hours } ч после его выхода.
 
 # Title of the settings group and the screen.
 torrents-title = Торренты
@@ -15075,6 +15384,9 @@ tv-status-connecting = Подключаемся к { $name }
 
 # Status on the remote: connection lost, trying again.
 tv-status-reconnecting = Переподключаемся к { $name }
+
+# Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.
+tv-waiting-for = Ожидание { $name }
 
 # Status on the remote: connected.
 tv-status-connected = Подключено

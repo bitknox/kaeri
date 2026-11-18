@@ -92,4 +92,30 @@ class StartProgressTest {
         assertEquals(42, p.determinate(100))
         assertNull(start().heard(asking(), Msg.StartGettingSourcesReady, 0).determinate(100))
     }
+
+    @Test
+    fun aSourceThatFailedOrWasHeldBackPutsTryAgainFirst() {
+        val unreached = app.kaeri.engine.model.Cause.SourcesUnreached("Alpha")
+        val failure = PlaybackFailure(
+            1u, "7", msg = Msg.NoticeReason(unreached), why = app.kaeri.engine.model.NoSourceWhy.NOT_FOUND,
+            asked = listOf("Alpha", "Brook"), unreached = listOf("Alpha"),
+            heldBack = listOf(app.kaeri.engine.model.HeldSources(listOf("Harbor"), app.kaeri.engine.model.SourceHold.TORRENTS_OFF)),
+        )
+        val actions = startActions(null, failure, offline = false, now = 0, canFix = true, hasDetails = true)
+        assertEquals(listOf(StartAction.TryAgain, StartAction.Choose, StartAction.Details, StartAction.Close), actions)
+        // Every source asked said no: another source leads.
+        val missing = failure.copy(
+            msg = Msg.NoticeReason(app.kaeri.engine.model.Cause.NoSourceHasEpisode("7", "")),
+            unreached = emptyList(), heldBack = emptyList(),
+        )
+        assertEquals(StartAction.Choose, startActions(null, missing, offline = false, now = 0, canFix = true, hasDetails = true).first())
+    }
+
+    @Test
+    fun aHeldBackSourceIsNeverCountedAsAsked() {
+        val p = start()
+            .heard(StartStep.SourcesHeldBack(listOf("Harbor"), app.kaeri.engine.model.SourceHold.TORRENTS_OFF), null, 0)
+            .heard(asking(1u, 1u), null, 100)
+        assertFalse(p.trail.any { (it.step as? StartStep.AskingSource)?.name == "Harbor" })
+    }
 }

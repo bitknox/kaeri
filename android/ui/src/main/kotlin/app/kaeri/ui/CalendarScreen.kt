@@ -313,6 +313,7 @@ fun CalendarScreen() {
 
     ScreenFrame(
         title = stringResource(R.string.nav_calendar),
+        cast = true,
         actions = {
             // Fades in as the last of today leaves the screen, and out as any of it returns.
             AnimatedVisibility(away.value, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {

@@ -60,6 +60,8 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.SYNC_CLOUD -> FfiScene.SyncCloud
     FixtureScene.SYNC_TV_PHONE_SIGN_IN -> FfiScene.SyncTvPhoneSignIn
     FixtureScene.PROFILES -> FfiScene.Profiles
+    FixtureScene.FOLLOWING -> FfiScene.Following
+    FixtureScene.FOLLOWING_SLOW -> FfiScene.FollowingSlow
     FixtureScene.READING_FIRST_RUN -> FfiScene.ReadingFirstRun
     FixtureScene.READING_DEMO -> FfiScene.ReadingDemo
     FixtureScene.READING_UPDATE_SHEET -> FfiScene.ReadingUpdateSheet
@@ -76,6 +78,7 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.EINK_KALEIDO_UNSURE -> FfiScene.EinkKaleidoUnsure
     FixtureScene.EINK_LONG -> FfiScene.EinkLong
     FixtureScene.READING_DARK -> FfiScene.ReadingDark
+    FixtureScene.MISSING_EPISODE -> FfiScene.MissingEpisode
 }
 
 /** What the Playing scene streams, and Watching's when set: the fixtures' `media` extra, set at launch. */

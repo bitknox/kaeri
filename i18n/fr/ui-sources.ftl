@@ -9,6 +9,20 @@ source-picker-coverage = { $of ->
     [many] { $covered } sur { $of } épisodes
    *[other] { $covered } sur { $of } épisodes
  }
+source-picker-episodes = { $count ->
+    [one] { $count } épisode : { $first }
+    [many] Épisodes { $first } à { $last }
+   *[other] Épisodes { $first } à { $last }
+ }
+source-picker-episodes-not-yet = Épisodes { $first } à { $last }. Pas encore { $missing }
+source-picker-episodes-not = Épisodes { $first } à { $last }. Sans { $missing }
+source-picker-missing-pair = { $a } et { $b }
+source-picker-missing-range = { $first } à { $last }
+source-picker-coverage-missing = { $of ->
+    [one] { $covered } sur { $of } épisode. Sans { $missing }
+    [many] { $covered } sur { $of } épisodes. Sans { $missing }
+   *[other] { $covered } sur { $of } épisodes. Sans { $missing }
+ }
 source-note-off = Désactivée
 source-note-resting = Ne répond pas, nouvel essai bientôt
 source-note-gone = Non installée

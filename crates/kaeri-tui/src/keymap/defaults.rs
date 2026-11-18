@@ -38,6 +38,9 @@ impl Keymap {
             bind(Binding::plain(Char('W')), A::SwitchMedium);
             bind(Binding::plain(Char('/')), A::FocusSearch);
             bind(Binding::ctrl(Char('f')), A::FilterSearch);
+            // Private mode, from anywhere and mid-search too: a modified key, so the search box
+            // never takes it as a letter.
+            bind(Binding::ctrl(Char('p')), A::TogglePrivate);
             // Surprise me, on Search's browse and on Planning, and Another on the page it opened.
             // Search's field has the letters while it is typed in.
             bind(Binding::plain(Char('z')), A::Surprise);

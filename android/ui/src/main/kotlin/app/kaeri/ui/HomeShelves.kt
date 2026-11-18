@@ -6,6 +6,7 @@ package app.kaeri.ui
 import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
@@ -232,7 +233,7 @@ private fun ContinueCard(item: HomeItem, width: Dp, h: HomeHandlers) {
                     onClick = open,
                 ),
         ) {
-            BannerArt(entry, Modifier.size(width, width * 9 / 16).shared(Shared.Art, id, "home-continue").clip(ArtShape.banner))
+            BannerArt(entry, Modifier.size(width, width * 9 / 16).shared(Shared.Art, id, "home-continue").clip(ArtShape.banner).border(1.dp, ArtEdge, ArtShape.banner))
             Box(Modifier.padding(top = 8.dp).height(4.dp)) { item.progress?.let { SilkMeter(it) } }
             Text(entry.showTitle, style = ShowTitle.row, maxLines = largeTextLines(), overflow = TextOverflow.Ellipsis, modifier = Modifier.padding(top = 4.dp))
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -248,7 +249,7 @@ private fun ContinueCard(item: HomeItem, width: Dp, h: HomeHandlers) {
             }
         }
         Menu(expanded = menu, onDismissRequest = { menu = false }) {
-            DropdownMenuItem(text = { Text(playLabel) }, leadingIcon = { Icon(Icons.Play, null) }, enabled = play != null, onClick = { menu = false; play?.invoke() })
+            DropdownMenuItem(text = { Text(playLabel) }, leadingIcon = { CastPlayIcon() }, enabled = play != null, onClick = { menu = false; play?.invoke() })
             DropdownMenuItem(text = { Text(markLabel) }, leadingIcon = { Icon(Icons.Check, null) }, onClick = { menu = false; mark() })
             DropdownMenuItem(text = { Text(Strings.homeDetails(context)) }, leadingIcon = { Icon(Icons.External, null) }, onClick = { menu = false; open() })
             HorizontalDivider(Modifier.padding(vertical = 8.dp), color = colors.outlineVariant)

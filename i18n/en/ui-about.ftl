@@ -122,6 +122,51 @@ report-crash-off = Crash reports are off, so none is included. You can turn them
 # @max 32
 report-crash-settings = Crash report settings
 
+# Report item, the last row under Included: a file of what the player did in the last few
+# playbacks, saved by hand and attached to the issue. Also the name of the second tab in the
+# report's preview, beside Report.
+# @max 24
+report-player-log = Player log
+
+# Line under the Player log item: how many playbacks the log holds and the size of the file. The
+# size is already formatted, such as 412 KB.
+# @arg playbacks: int
+# @arg size: bytes
+report-player-log-detail = { $playbacks ->
+    [one] The last playback
+   *[other] The last { $playbacks } playbacks
+} · { $size }
+
+# Line under the Player log item while nothing has played since the app started. The item cannot
+# be ticked then.
+report-player-log-empty = No playback logged yet
+
+# Button under the ticked Player log item. Opens the system's save dialog for the log file.
+# @max 20
+report-player-log-save = Save log…
+
+# Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.
+report-player-log-attach = Attach the file to the issue once it opens on GitHub.
+
+# Replaces the Save log button once the file is written. File is the file's name, such as
+# kaeri-player-log-2026-11-15-1432.txt.
+# @arg file: text
+report-player-log-saved = Saved as { $file }
+
+# Shown beside the Save log button when the file could not be written.
+report-player-log-failed = Couldn't save the log. Try another folder.
+
+# First tab of the report's preview, beside Player log: the text of the report itself. Shown only
+# while Player log is ticked.
+# @max 16
+report-sent-report = Report
+
+# Screen readers announce this once the player log file is written.
+report-player-log-a11y-saved = Player log saved
+
+# Screen reader hint on the Player log item.
+report-player-log-a11y-hint = Saves a file to attach to the issue
+
 # Heading of the Crash reports group in Settings, About.
 settings-group-crashes = Crash reports
 

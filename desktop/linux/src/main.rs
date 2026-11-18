@@ -22,6 +22,7 @@ mod flags;
 mod gtk_test;
 mod hub;
 mod matching;
+mod missing;
 mod motion;
 mod mpris;
 mod nagare;
@@ -32,11 +33,20 @@ mod party;
 mod player;
 mod portal;
 mod prefs;
+mod private;
 mod reading;
 mod say;
 mod shots;
 #[cfg(feature = "fixtures")]
+mod shots_cast_states;
+#[cfg(feature = "fixtures")]
+mod shots_following;
+#[cfg(feature = "fixtures")]
+mod shots_missing;
+#[cfg(feature = "fixtures")]
 mod shots_prelaunch;
+#[cfg(feature = "fixtures")]
+mod shots_private;
 #[cfg(feature = "fixtures")]
 mod shots_read_discovery;
 #[cfg(feature = "fixtures")]
@@ -133,13 +143,23 @@ fn main() -> glib::ExitCode {
         println!("Kaeri {}", kaeri_engine::updates::CURRENT); // i18n-skip
         return glib::ExitCode::SUCCESS;
     }
-    tracing_subscriber::fmt()
-        .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env()
-                .unwrap_or_else(|_| "info,kaeri_engine=warn".into()),
-        )
-        .with_writer(std::io::stderr)
-        .init();
+    {
+        use tracing_subscriber::{Layer, layer::SubscriberExt, util::SubscriberInitExt};
+        // Each layer filters for itself: the player log for Report a bug keeps the engine's
+        // playback lines and mpv's at info, where stderr has only their warnings. The engine
+        // mirrors the log to the cache once it starts.
+        // What is private is taken out of each stderr line: see `kaeri_engine::private::redact`.
+        let stderr = tracing_subscriber::fmt::layer()
+            .with_writer(|| kaeri_engine::private::redact::Redacting(std::io::stderr()))
+            .with_filter(
+                tracing_subscriber::EnvFilter::try_from_default_env()
+                    .unwrap_or_else(|_| "info,kaeri_engine=warn,mpv=warn".into()),
+            );
+        tracing_subscriber::registry()
+            .with(stderr)
+            .with(kaeri_engine::player_log::layer())
+            .init();
+    }
     let args = args();
     // The language chosen in Settings (the config's own key, the one the terminal app reads),
     // else the system's. `KAERI_LANG` still wins over both.
@@ -210,6 +230,9 @@ fn main() -> glib::ExitCode {
         hwdec: args.hwdec.clone().unwrap_or_else(|| "auto-safe".into()),
         cache_dir: Some(cache_dir.join("mpv").display().to_string()),
         audio_output: args.audio_output.clone(),
+        // mpv's lines at info, for the player log in Report a bug: the layer keeps them while a
+        // playback runs, and stderr still shows only mpv's warnings.
+        log_level: "info".into(),
         ..PlayerOptions::default()
     };
     crash_signal::set_dir(paths.data_dir.clone());

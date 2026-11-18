@@ -612,25 +612,40 @@ private struct SeriesActions: View {
         Group {
             if series.demo != nil {
                 // The demo is for trying the reader: no lists, tracking or downloads.
-                main
+                mainAndLine
             } else if stretch, type.isAccessibilitySize {
                 // At the largest sizes each action has the width to itself.
                 VStack(spacing: 12) {
-                    main
+                    mainAndLine
                     statusMenu
                     downloadMenu
                 }
             } else if stretch {
                 VStack(spacing: 12) {
-                    main
+                    mainAndLine
                     HStack(spacing: 12) {
                         statusMenu
                         downloadMenu
                     }
                 }
             } else {
-                row
+                VStack(alignment: .leading, spacing: 0) {
+                    row
+                    privateLine
+                }
             }
+        }
+    }
+
+    /// While private: why, and what it means, under the main action.
+    private var privateLine: some View {
+        PrivateLineSlot(line: store.privacy.line(series: series))
+    }
+
+    private var mainAndLine: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            main
+            privateLine
         }
     }
 
@@ -878,6 +893,11 @@ private struct SeriesMoreMenu: View {
             Button(L.seriesReadFromMenu) { navigator.seriesSheet = .source(series.work) }
             Divider()
             Button(L.seriesReadAgainMenu) { navigator.seriesSheet = .readAgain(series.work) }
+            Divider()
+            // Per device and never synced: what was saved before stays.
+            Toggle(isOn: store.alwaysPrivate(series: series.work)) {
+                Label(L.titleAlwaysPrivate, systemImage: "eye.slash")
+            }
         } label: {
             if let circle {
                 Image(systemName: "ellipsis")

@@ -13,6 +13,8 @@ import SwiftUI
 struct SettingsGroup<Content: View>: View {
     var title: String?
     var footnote: String?
+    /// A second paragraph under the footnote, about a row the group gained.
+    var more: String?
     @ViewBuilder let content: Content
 
     var body: some View {
@@ -38,6 +40,9 @@ struct SettingsGroup<Content: View>: View {
             .background(.raised, in: .rect(cornerRadius: 12))
             if let footnote {
                 SettingsFootnote(footnote)
+            }
+            if let more {
+                SettingsFootnote(more)
             }
         }
     }
@@ -131,9 +136,11 @@ extension SettingsRow where Accessory == EmptyView {
 struct SettingSwitch: View {
     @Environment(AppStore.self) private var store
     let key: SettingKey
+    /// In place of the setting's own name, where the row words it for this device.
+    var title: String?
 
     var body: some View {
-        Toggle(key.title, isOn: Binding(
+        Toggle(title ?? key.title, isOn: Binding(
             get: { store.settings.isOn(key) },
             set: { store.setSwitch(key, on: $0) }
         ))
@@ -247,8 +254,11 @@ extension SettingKey {
         case .trailers: L.settingsTrailersRow
         case .adultTitles: L.settingsAdult
         case .upNextCountdown: L.settingsUpNextCountdown
+        case .preloadMetered: PreloadWords.title(cellular: !Device.isMac && !Device.isPad)
         case .spoilerProtection: L.settingsSpoiler
+        case .pictureInPictureOnLeave: L.settingsPictureInPictureOnLeaveApple
         case .episodeDiscussions: L.settingsAppleDiscussions
+        case .showFollowing: L.settingsAnilistFollowing
         case .hoverCards: L.settingsLabelHoverCards
         case .commentImages: L.settingsAppleCommentImages
         case .downloadQuality: L.settingsQuality

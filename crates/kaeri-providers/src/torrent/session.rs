@@ -26,7 +26,7 @@ use crate::{
             Range, ReadySource, SeekableRead, StreamServer, StreamSource, serve,
             serve_with_thumbnails,
         },
-        pieces::{HavePieces, PieceLayout},
+        pieces::{HavePieces, Held, PieceLayout},
     },
 };
 
@@ -107,6 +107,9 @@ pub struct ActiveStream {
     pub torrent_id: TorrentIdOrHash,
     /// librqbit's torrent id and the file's index: what makes two streams the same stream.
     key: (usize, usize),
+    /// The file's place in the piece grid, for Stats for nerds' Pieces row; `None` when the
+    /// file could not be located, as for thumbnails.
+    verified: Option<VerifiedFile>,
 }
 
 impl ActiveStream {
@@ -179,6 +182,7 @@ impl StreamSource for TorrentFileSource {
 ///   bytes are final and visible to any reader. It is opened read-only, per request; a file
 ///   that has gone — or a download folder whose path is not UTF-8, which that API reports
 ///   lossily — fails to open and is answered as nothing on hand.
+#[derive(Clone)]
 struct VerifiedFile {
     api: librqbit::Api,
     torrent: TorrentIdOrHash,
@@ -261,13 +265,22 @@ fn fresh_token() -> String {
     format!("{:016x}{:016x}", half(nanos), half(!nanos))
 }
 
-/// How a playing torrent stream is doing, as the starting screen shows it.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+/// How a playing torrent stream is doing, as the starting screen and Stats for nerds show it.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct Pace {
     /// Peers connected now.
     pub peers: u32,
     /// What is arriving, in bytes a second.
     pub bytes_per_second: u64,
+    /// Peers the swarm has named, connected or not.
+    pub found: u32,
+    /// What is going out, in bytes a second.
+    pub upload_bytes_per_second: u64,
+    /// What this torrent has sent to others since it was added.
+    pub uploaded_bytes: u64,
+    /// How much of the playing file is held, when asked for and known: see
+    /// [`PieceLayout::held`].
+    pub pieces: Option<Held>,
 }
 
 /// Owns the librqbit session and the streams built from it.
@@ -609,9 +622,11 @@ impl TorrentSession {
             name: file.name.clone(),
         };
         // Thumbnails are a nicety: a torrent whose file cannot be located still streams.
-        let served = match VerifiedFile::new(&self.session, &handle, file.index) {
+        let verified = VerifiedFile::new(&self.session, &handle, file.index);
+        let served = match &verified {
             Ok(verified) => {
-                serve_with_thumbnails(source, &self.token, verified, &fresh_token()).await
+                serve_with_thumbnails(source, &self.token, verified.clone(), &fresh_token())
+                    .await
             }
             Err(e) => {
                 tracing::warn!(error = %e, "serving without thumbnails");
@@ -626,6 +641,7 @@ impl TorrentSession {
             key: (handle.id(), file.index),
             file,
             torrent_id: TorrentIdOrHash::Id(handle.id()),
+            verified: verified.ok(),
         });
 
         // A stream beyond the kept window drops its server, freeing the port and stopping work
@@ -732,18 +748,19 @@ impl TorrentSession {
         Ok(DownloadHandle { id: handle.id(), name: file.name.clone(), total: file.length })
     }
 
-    /// How the stream served at `url` is doing: its live peers and its download speed. `None`
-    /// when no stream here is served at `url`, or the torrent is not live yet.
-    pub fn pace_of(&self, url: &str) -> Option<Pace> {
-        let id = self
-            .active
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .iter()
-            .find(|active| active.url() == url)?
-            .key
-            .0;
-        self.session.with_torrents(|torrents| {
+    /// How the stream served at `url` is doing: its peers, its speeds and what it has sent,
+    /// and with `pieces` how much of the file is held, which reads librqbit's have-bitfield.
+    /// `None` when no stream here is served at `url`, or the torrent is not live yet.
+    pub fn pace_of(&self, url: &str, pieces: bool) -> Option<Pace> {
+        let active = Arc::clone(
+            self.active
+                .lock()
+                .unwrap_or_else(|e| e.into_inner())
+                .iter()
+                .find(|active| active.url() == url)?,
+        );
+        let id = active.key.0;
+        let mut pace = self.session.with_torrents(|torrents| {
             for (tid, handle) in torrents {
                 if tid != id {
                     continue;
@@ -751,18 +768,31 @@ impl TorrentSession {
                 let stats = handle.stats();
                 let live = stats.live.as_ref()?;
                 // librqbit counts the speed in mebibytes a second.
-                let bytes = live.download_speed.mbps * 1024.0 * 1024.0;
+                let rate = |mbps: f64| {
+                    let bytes = mbps * 1024.0 * 1024.0;
+                    if bytes.is_finite() && bytes > 0.0 { bytes as u64 } else { 0 }
+                };
+                let count = |n: usize| u32::try_from(n).unwrap_or(u32::MAX);
+                let peers = &live.snapshot.peer_stats;
                 return Some(Pace {
-                    peers: u32::try_from(live.snapshot.peer_stats.live).unwrap_or(u32::MAX),
-                    bytes_per_second: if bytes.is_finite() && bytes > 0.0 {
-                        bytes as u64
-                    } else {
-                        0
-                    },
+                    peers: count(peers.live),
+                    bytes_per_second: rate(live.download_speed.mbps),
+                    found: count(peers.seen),
+                    upload_bytes_per_second: rate(live.upload_speed.mbps),
+                    uploaded_bytes: stats.uploaded_bytes,
+                    pieces: None,
                 });
             }
             None
-        })
+        })?;
+        if pieces && let Some(verified) = &active.verified {
+            let have = verified.have();
+            pace.pieces = have.and_then(|have| {
+                let read = active.server.read_position();
+                verified.layout.held(active.file.length, read, |piece| have.has(piece))
+            });
+        }
+        Some(pace)
     }
 
     /// Progress for one torrent by id, or `None` if the session has forgotten it.
@@ -915,6 +945,26 @@ impl TorrentSession {
             .delete(TorrentIdOrHash::Id(id), delete_files)
             .await
             .map_err(|e| ProviderError::Transport(format!("removing torrent {id}: {e}")))
+    }
+
+    /// Let go of the stream served at `url`, which nothing played: its server, and the torrent
+    /// with what it fetched, unless another stream serves from the same torrent or the download
+    /// queue owns it.
+    pub async fn drop_stream(&self, url: &str) {
+        let (id, shared) = {
+            let mut servers = self.active.lock().unwrap_or_else(|e| e.into_inner());
+            let Some(at) = servers.iter().position(|active| active.url() == url) else {
+                return;
+            };
+            let Some(dropped) = servers.remove(at) else { return };
+            let id = dropped.key.0;
+            (id, servers.iter().any(|active| active.key.0 == id))
+        };
+        if shared {
+            return;
+        }
+        tracing::info!(id, "a torrent started ahead was let go unplayed");
+        self.discard(id).await;
     }
 
     /// Whether the download queue owns this torrent, and so whether its files are the user's.

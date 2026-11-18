@@ -11,6 +11,7 @@ use std::{
     sync::{
         Arc,
         atomic::{AtomicBool, Ordering},
+        mpsc,
     },
     thread,
     time::{Duration, Instant},
@@ -60,7 +61,8 @@ fn wanted() -> Vec<Event> {
 }
 
 /// The terminal: once the queries have come, it types the keys on time and, when it answers,
-/// answers after `answer_after`. It keeps reading what is written to it until told to stop.
+/// answers after `answer_after`, and never before every key due earlier has been typed. It keeps
+/// reading what is written to it until told to stop.
 fn terminal(
     far: File,
     answer_after: Option<Duration>,
@@ -77,6 +79,7 @@ fn terminal(
             seen.extend_from_slice(&buf[..n]);
         }
         let start = Instant::now();
+        let (typed, written) = mpsc::channel();
         let typist = {
             let mut writer = writer.try_clone().unwrap();
             thread::spawn(move || {
@@ -84,11 +87,18 @@ fn terminal(
                     let due = start + Duration::from_millis(*at);
                     thread::sleep(due.saturating_duration_since(Instant::now()));
                     writer.write_all(bytes).unwrap();
+                    typed.send(()).unwrap();
                 }
             })
         };
         if let Some(after) = answer_after {
-            thread::sleep(after);
+            // A busy machine can run the typist late, so the answers wait for the keys due
+            // before them as well as for the time.
+            let due = TYPED.iter().filter(|(at, _)| Duration::from_millis(*at) < after).count();
+            for _ in 0..due {
+                written.recv().unwrap();
+            }
+            thread::sleep((start + after).saturating_duration_since(Instant::now()));
             writer.write_all(ANSWERS).unwrap();
         }
         typist.join().unwrap();

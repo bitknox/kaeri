@@ -12,12 +12,19 @@ public struct NoticeItem: Identifiable, Equatable, Sendable {
     public let at: Date
     /// A button the app gave the notice, such as Undo, beside the engine's own hint.
     public let action: NoticeButton?
+    /// A symbol before the words, such as the private mode eye.
+    public let glyph: String?
+    /// Whether a screen reader hears the words when it comes up: off for a notice that comes
+    /// with its own shorter announcement.
+    public let spoken: Bool
 
-    init(id: Int, notice: Notice, at: Date, action: NoticeButton? = nil) {
+    init(id: Int, notice: Notice, at: Date, action: NoticeButton? = nil, glyph: String? = nil, spoken: Bool = true) {
         self.id = id
         self.notice = notice
         self.at = at
         self.action = action
+        self.glyph = glyph
+        self.spoken = spoken
     }
 
     public var isAlert: Bool { notice.kind == .alert }
@@ -63,9 +70,9 @@ public final class NoticesModel {
         self.clock = clock
     }
 
-    func post(_ notice: Notice, action: NoticeButton? = nil) {
+    func post(_ notice: Notice, action: NoticeButton? = nil, glyph: String? = nil, spoken: Bool = true) {
         count += 1
-        let item = NoticeItem(id: count, notice: notice, at: clock(), action: action)
+        let item = NoticeItem(id: count, notice: notice, at: clock(), action: action, glyph: glyph, spoken: spoken)
         current = item
         log.insert(item, at: 0)
         if log.count > Self.kept { log.removeLast(log.count - Self.kept) }
@@ -82,5 +89,10 @@ public final class NoticesModel {
     /// Take the capsule down, if it still shows `item`.
     public func dismiss(_ item: NoticeItem) {
         if current?.id == item.id { current = nil }
+    }
+
+    /// Take the capsule down, if it still shows `notice`. Messages keeps it.
+    func withdraw(_ notice: Notice) {
+        if current?.notice == notice { current = nil }
     }
 }

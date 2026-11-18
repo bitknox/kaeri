@@ -145,6 +145,7 @@ async fn main() -> anyhow::Result<()> {
         episode_total: None,
     };
     let settings = PlaySettings {
+        privacy: Default::default(),
         threshold: config.playback.commit_threshold,
         auto_skip: false,
         auto_skip_recap: false,
@@ -170,6 +171,8 @@ async fn main() -> anyhow::Result<()> {
         untracked: false,
         swarm: Default::default(),
         begin: Default::default(),
+        ahead: Default::default(),
+        further: Default::default(),
     };
     // Three ways to the same file, as a library server, a folder and a plugin would offer it.
     let streams = [("jellyfin", 1080), ("local files", 1080), ("example-rust", 720)]

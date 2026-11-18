@@ -293,6 +293,38 @@ more-followed-score = { $score }/10
 # Heading of the list of titles people who liked this one also liked.
 more-like-this = More like this
 
+# Button after the first five people followed, on wide screens. It shows the rest in place.
+# @arg count: int
+following-show-all = Show all { $count }
+
+# Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.
+# @arg first: text
+# @arg second: text
+# @arg more: int
+following-names = { $more ->
+   *[other] { $first }, { $second } and { $more } more
+ }
+
+# Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.
+# @arg first: text
+# @arg second: text
+following-names-two = { $first } and { $second }
+
+# After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.
+# @arg count: int
+following-mark-more = +{ $count }
+
+# Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.
+# @arg names: text
+following-mark-spoken = { $names } watched up to here.
+
+# What a screen reader says in place of a score such as 8/10 beside a person followed.
+# @arg score: int
+following-score-spoken = Score { $score } out of 10
+
+# Hint of the People you follow row on phones and the TV, which opens the full list.
+following-open-help = Shows where each of them is.
+
 # Line of a followed person's list entry: their status and how far they are. Both are already worded.
 # @arg status: text
 # @arg progress: text
@@ -357,13 +389,6 @@ title-fact-now = Now
 # Value of the fact on a show with no announced start.
 title-fact-tba = To be announced
 
-## More about this show, the sheet
-
-# A followed person's status and score, such as "Completed · 9/10". The status is already worded.
-# @arg status: text
-# @arg score: int
-more-following-line = { $status } · { $score }/10
-
 ## Go to episode
 
 # Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.
@@ -397,3 +422,52 @@ episode-go-to-none = No episode { $number }. This show has { $last }.
 # @arg number: plain
 # @arg latest: plain
 episode-go-to-not-out = Episode { $number } isn't out yet. The latest is { $latest }.
+
+## The next episode to watch has aired and no source lists it yet. The title page says so in
+## the main action's place, as a head sentence and a tail sentence the app joins with a space.
+
+# Status, first sentence, within a day of the episode airing.
+# @arg episode: plain
+# @arg ago: text
+episode-missing-aired = Episode { $episode } aired { $ago }.
+
+# Status, first sentence, a day or more after the episode aired.
+# @arg episode: plain
+# @arg date: text
+episode-missing-aired-on = Episode { $episode } aired on { $date }.
+
+# Status, second sentence, until a check the person asked for comes back empty.
+episode-missing-not-yet = Your { -source-pl } don't have it yet.
+
+# Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.
+episode-missing-still = Your { -source-pl } still don't have it.
+
+# Status, second sentence, after a check where none of the person's sources answered.
+episode-missing-no-answer = Your { -source-pl } didn't answer.
+
+# Status, last sentence, during the hours Kaeri looks for the episode by itself.
+# @arg minutes: int
+episode-missing-looks-again = { -app-name } looks again every { $minutes } minutes.
+
+# Status a week after the episode aired, when no source has listed it.
+episode-missing-none = None of your { -source-pl } has it.
+
+# Status, last sentence, while the device is offline during the hours Kaeri looks by itself.
+episode-missing-offline = { -app-name } looks for it when you're back online.
+
+# Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").
+# @arg ago: text
+episode-row-aired-ago = Aired { $ago }
+
+# Row note beside when it aired, for an episode that aired in the last week and no source lists yet.
+# @max 36
+episode-unsourced-yet = Not in your { -source-pl } yet
+
+# Announced once to screen readers when a check finds the missing episode while its page is open.
+# @arg episode: plain
+episode-found-announcement = Episode { $episode } is in your { -source-pl } now.
+
+# Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.
+# @arg minutes: int
+# @arg hours: int
+episode-check-again-help = { -app-name } also looks by itself every { $minutes } minutes for { $hours } hours after an episode airs.

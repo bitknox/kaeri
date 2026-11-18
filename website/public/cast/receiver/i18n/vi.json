@@ -1,10 +1,59 @@
 {
   "messages": {
+    "receiver-closing-computer": [
+      "Đóng sau ",
+      {
+        "arg": "seconds"
+      },
+      " giây. Chọn một tập trên máy tính để không bị đóng."
+    ],
+    "receiver-closing-ipad": [
+      "Đóng sau ",
+      {
+        "arg": "seconds"
+      },
+      " giây. Chọn một tập trên iPad để không bị đóng."
+    ],
+    "receiver-closing-iphone": [
+      "Đóng sau ",
+      {
+        "arg": "seconds"
+      },
+      " giây. Chọn một tập trên iPhone để không bị đóng."
+    ],
+    "receiver-closing-mac": [
+      "Đóng sau ",
+      {
+        "arg": "seconds"
+      },
+      " giây. Chọn một tập trên Mac để không bị đóng."
+    ],
+    "receiver-closing-phone": [
+      "Đóng sau ",
+      {
+        "arg": "seconds"
+      },
+      " giây. Chọn một tập trên điện thoại để không bị đóng."
+    ],
+    "receiver-closing-tablet": [
+      "Đóng sau ",
+      {
+        "arg": "seconds"
+      },
+      " giây. Chọn một tập trên máy tính bảng để không bị đóng."
+    ],
     "receiver-error": [
       "Không phát được tập ",
       {
         "arg": "episode"
       }
+    ],
+    "receiver-error-audio-codec": [
+      "TV này không phát được âm thanh ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-error-hint-computer": [
       "Hãy chọn nguồn khác trên máy tính."
@@ -26,6 +75,13 @@
     ],
     "receiver-error-unnumbered": [
       "Không phát được tập này"
+    ],
+    "receiver-error-video-codec": [
+      "TV này không phát được video ",
+      {
+        "arg": "codec"
+      },
+      "."
     ],
     "receiver-finished": [
       "Đã xem xong tập ",

@@ -33,4 +33,28 @@ struct PlaybackHookTests {
             .playbackEnded(watched: true, ending: .complete(next: nil), rollingOn: false),
         ])
     }
+
+    @Test func aFailedPlaybackIsTheLastProblemUntilAnotherStarts() throws {
+        let store = AppStore()
+        store.apply([
+            .playbackStaged(id: 900_001, title: "Stardust Wayfarer", episode: "7", episodeTitle: nil, speed: 1),
+            .playbackEnded(watched: false, ending: .failed, rollingOn: false),
+        ])
+        let failure = try #require(store.playbackFailure)
+        #expect(failure.context.kind == "playback")
+        #expect(failure.context.title == "Stardust Wayfarer")
+        #expect(!failure.context.message.isEmpty)
+        store.apply([.playbackStaged(id: 900_001, title: "Stardust Wayfarer", episode: "8", episodeTitle: nil, speed: 1)])
+        #expect(store.playbackFailure == nil)
+    }
+
+    @Test func anEndingThatRollsOnOrCompletesIsNoFailure() {
+        let store = AppStore()
+        store.apply([
+            .playbackStaged(id: 900_001, title: "Stardust Wayfarer", episode: "7", episodeTitle: nil, speed: 1),
+            .playbackEnded(watched: true, ending: .complete(next: nil), rollingOn: false),
+            .playbackEnded(watched: false, ending: .failed, rollingOn: true),
+        ])
+        #expect(store.playbackFailure == nil)
+    }
 }

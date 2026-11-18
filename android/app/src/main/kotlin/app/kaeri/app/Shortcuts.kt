@@ -5,6 +5,7 @@
 
 package app.kaeri.app
 
+import app.kaeri.engine.model.PrivateTitle
 import android.content.Context
 import android.content.Intent
 import android.util.Log
@@ -110,9 +111,14 @@ class ContinueShortcut(private val context: Context) {
          * out, or `null` when there is none. Nothing while the queue is not known.
          */
         fun targets(store: AppStore): Flow<Target?> =
-            combine(store.continuing.list.state, store.continuing.hidden, store.titles.entries, store.titles.episodes) { state, _, titles, tables ->
+            combine(store.continuing.list.state, store.continuing.hidden, store.titles.entries, store.titles.episodes, store.privacy.on) { state, _, titles, tables, privately ->
+                // While private mode is on, or when the show up next is private, the shortcut stays as it was.
+                if (privately) return@combine null
                 when (state) {
-                    is ListState.Loaded -> Wanted(store.continuing.queue(titles, tables).nextUp?.let { Target(it.id, it.entry.showTitle, it.episode) })
+                    is ListState.Loaded -> {
+                        val next = store.continuing.queue(titles, tables).nextUp
+                        if (next != null && store.privacy.holds(PrivateTitle.Show(next.id))) null else Wanted(next?.let { Target(it.id, it.entry.showTitle, it.episode) })
+                    }
                     ListState.Empty -> Wanted(null)
                     else -> null
                 }

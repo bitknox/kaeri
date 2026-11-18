@@ -45,6 +45,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.derivedStateOf
@@ -93,6 +94,13 @@ class StripStep {
     private var left = 0f
     private var caught = 0f
 
+    /** Ends a step still moving, with nothing of it kept, for a jump that takes the strip elsewhere. */
+    fun stop() {
+        job?.cancel()
+        left = 0f
+        caught = 0f
+    }
+
     /** At a touch's landing: true when a step moves the strip, keeping what is left of it for the touch. */
     fun catch(): Boolean {
         val moving = job?.isActive == true
@@ -104,12 +112,12 @@ class StripStep {
      * Scroll [list] by [by] pixels and what is left of a step, gliding by [spec] when [smooth]. A
      * [touch] carries on the step its landing stopped; a screen reader's action has no landing.
      */
-    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>, touch: Boolean) {
+    fun go(scope: CoroutineScope, list: LazyListState, by: Float, smooth: Boolean, spec: AnimationSpec<Float>, touch: Boolean): Job {
         val total = (if (job?.isActive == true) left else if (touch) caught else 0f) + by
         caught = 0f
         job?.cancel()
         left = total
-        job = scope.launch {
+        return scope.launch {
             // The touch that stopped a step lets go of the list as it lifts: the step waits for that.
             withFrameNanos { }
             if (smooth) {
@@ -124,7 +132,7 @@ class StripStep {
                 list.scrollBy(total)
             }
             left = 0f
-        }
+        }.also { job = it }
     }
 }
 
@@ -202,6 +210,10 @@ fun StripReader(
      * sat before, and after the last image once those at the end are shown.
      */
     credits: (@Composable (chapter: ChapterId, pages: List<CreditPage>) -> Unit)? = null,
+    /** In the room under a divider while that chapter is on its way: the wait it is on, as a first open says it. */
+    room: @Composable () -> Unit = {},
+    /** Kept up to date with where the chapter's images sit, for Home and End. */
+    keys: StripKeys? = null,
 ) {
     val story = state.leaves.filter { !it.endPage }
     val end = state.leaves.lastOrNull()?.takeIf { it.endPage }
@@ -213,6 +225,10 @@ fun StripReader(
     // The chapter kept above and the divider into this one come first.
     val first = if (previous != null) above.size + 1 else 0
     val last = first + story.size - 1
+    SideEffect {
+        keys?.first = first
+        keys?.last = last
+    }
     // A chapter counts as passed only with its images in: one still loading is short, so its
     // divider or foot could come into view with nothing read. Its foot is the end only once the
     // last image is there, and it flows on only while every image of it on screen landed or failed.
@@ -239,6 +255,44 @@ fun StripReader(
         val into = ((jump.strip?.offset ?: 0f) * size).toInt()
         if (into > 0) list.scrollToItem(index, into)
         onJumped(jump.id)
+    }
+    // The image at the top changes only by a scroll or a jump. The list keeps its top row and the
+    // pixels into it, so a new width (a fold, a smaller window) would leave the strip higher or
+    // lower in that image, or run on past it once it is shorter than those pixels; a layout that
+    // makes it shorter does the same. The image and the spot in it come back instead, and are
+    // kept again from there.
+    LaunchedEffect(list, first, state.chapter) {
+        var kept: StripKept? = null
+        var keyMoves = -1
+        snapshotFlow {
+            StripSeen(
+                list.stripPos(first, placed.first.size),
+                list.layoutInfo.viewportSize.width,
+                list.isScrollInProgress || now.jump != null || keys?.moving == true,
+                keys?.moves ?: 0,
+            )
+        }
+            .collect { seen ->
+                val images = placed.first
+                val at = seen.at
+                val image = at?.let { images.getOrNull(it.image.toInt())?.parts?.firstOrNull()?.page }
+                val held = kept
+                val row = held?.let { images.indexOfFirst { leaf -> leaf.parts.any { it.page == held.page } } } ?: -1
+                // A key's move that ended since: where it left the strip is kept, as a scroll's is.
+                val keyed = seen.keyMoves != keyMoves
+                keyMoves = seen.keyMoves
+                when {
+                    at == null || image == null || seen.moving -> kept = null
+                    keyed || held == null || row < 0 || held.page == image && held.width == seen.width -> kept = StripKept(image, at.offset, seen.width)
+                    else -> {
+                        kept = null
+                        list.scrollToItem(first + row)
+                        val size = list.layoutInfo.visibleItemsInfo.firstOrNull { it.index == first + row }?.size ?: 0
+                        val into = (held.offset * size).toInt()
+                        if (into > 0) list.scrollToItem(first + row, into)
+                    }
+                }
+            }
     }
     // The place, each time a scroll comes to rest once the jump to the start place is done, short
     // scrolls included; again with each layout, which a chapter opened again from above it gets
@@ -288,9 +342,15 @@ fun StripReader(
     }
 
     // A screen reader rests on the strip as on a paged page, by its page: the moves are its actions.
+    // The image at the top of the screen, in the chapter kept above or the open one; on the divider
+    // or the room under it, none, and the divider's own words are read.
     val context = LocalContext.current
-    val shown by remember(list, first, story.size) { derivedStateOf { list.stripPos(first, story.size)?.image?.toInt() ?: 0 } }
-    val words = story.getOrNull(shown)?.let { describe(context, it, state) }.orEmpty()
+    val shown by remember(list, first, story.size, above.size) {
+        derivedStateOf { list.layoutInfo.visibleItemsInfo.firstNotNullOfOrNull { stripImageAt(it.index, above.size, first, story.size) } }
+    }
+    val words = shown?.let { (inAbove, image) ->
+        if (inAbove) previous?.let { above.getOrNull(image)?.let { leaf -> describe(context, leaf, it) } } else story.getOrNull(image)?.let { describe(context, it, state) }
+    }.orEmpty()
     val tapped by rememberUpdatedState(onTap)
     val stepped by rememberUpdatedState(stepping)
     BoxWithConstraints(
@@ -346,7 +406,7 @@ fun StripReader(
                 // It is keyed by the chapter it waits for, as the room under that chapter's divider
                 // was before the flow, so once the images come they take its place: under one key
                 // with the room after them, a scroll resting in it would follow it to the end.
-                if (story.isEmpty()) item(key = roomKey(into)) { Box(Modifier.fillMaxWidth().height(screen)) }
+                if (story.isEmpty()) item(key = roomKey(into)) { Box(Modifier.fillMaxWidth().height(screen)) { room() } }
             }
             images(state, story, images, onMissing, onRetry, maxWidth, waiting, failed, state, credits, top = previous == null || into == null)
             when {
@@ -355,7 +415,9 @@ fun StripReader(
                     item(key = dividerKey(next)) {
                         Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(StripDividerHeight)) { divider(next) }
                     }
-                    item(key = roomKey(next)) { Box(Modifier.fillMaxWidth().height(screen)) }
+                    item(key = roomKey(next)) {
+                        Box(Modifier.fillMaxWidth().height(screen)) { if (state.asking?.chapter == next.id) room() }
+                    }
                 }
                 end != null -> item(key = "end") {
                     Box(Modifier.widthIn(max = maxWidth).fillMaxWidth().height(screen)) { footer(end) }
@@ -363,6 +425,23 @@ fun StripReader(
             }
         }
     }
+}
+
+/** What the strip shows at a layout: its place, its width, and whether a scroll or a jump moves it. */
+private data class StripSeen(val at: StripPos?, val width: Int, val moving: Boolean, val keyMoves: Int)
+
+/** The page at the top of a strip standing still, how far into it, and at what width. */
+private data class StripKept(val page: UInt, val offset: Float, val width: Int)
+
+/**
+ * The strip item at [index] as an image: whether it is in the chapter kept above ([aboveCount]
+ * images from the top) and its image there, or in the open chapter's [count] from [first]. Null
+ * for a divider or the room under one.
+ */
+internal fun stripImageAt(index: Int, aboveCount: Int, first: Int, count: Int): Pair<Boolean, Int>? = when {
+    first > 0 && index < aboveCount -> true to index
+    index >= first && index - first < count -> false to index - first
+    else -> null
 }
 
 /** The room under the divider into [chapter]. */

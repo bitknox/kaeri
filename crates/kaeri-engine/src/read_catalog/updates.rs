@@ -110,6 +110,9 @@ pub(crate) fn view(kit: &Kit, ask: Ask) -> UpdatesView {
                 ask.now,
                 &zone,
             );
+            if kit.sources.downloads.waits_room() {
+                super::rows::waits_room(&mut chapter_row.line);
+            }
             let row = UpdateRow {
                 tile: tile.clone(),
                 chapter: chapter_row,
@@ -498,6 +501,7 @@ mod tests {
             plugins: crate::book_plugins::BookPlugins::default(),
             clock: crate::clock::Clock::default(),
             offline: Arc::new(AtomicBool::new(false)),
+            privacy: Default::default(),
         }
     }
 

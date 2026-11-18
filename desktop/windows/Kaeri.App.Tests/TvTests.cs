@@ -70,11 +70,11 @@ public class TvWordsTests
         Assert.Equal("Pair again with Living room", TvWords.BarLine(Card(FfiLinkPhase.Unpaired), playing: true));
     }
 
-    static FfiCastCard Cast(FfiLinkPhase phase, FfiNowCard? now, Msg? notice = null, string? phaseLine = null) =>
+    internal static FfiCastCard Cast(FfiLinkPhase phase, FfiNowCard? now, Msg? notice = null, string? phaseLine = null) =>
         new(new FfiRemoteCard("Living room", phase, phaseLine, new FfiScreen.Home(), now, 1, Over: notice is not null, Reached: false),
-            FfiVolumeControl.MuteOnly, false, notice);
+            FfiVolumeControl.Fixed, false, notice);
 
-    static FfiNowCard Now(bool loading) => new(900_001, "The Lantern Road", "7", "Episode 7 · The Lantern Road", loading,
+    internal static FfiNowCard Now(bool loading) => new(900_001, "The Lantern Road", "7", "Episode 7 · The Lantern Road", loading,
         492, loading ? null : 1420, false, 1, null, [], [], false, null);
 
     [Fact]
@@ -276,6 +276,59 @@ public class TvRemoteTests
         SceneTests.DeleteRoot(root);
     }
 
+    [Fact]
+    public void APlayOnTvCastsNoteIsTheCastsNoticeWhileItRuns()
+    {
+        var remote = new TvRemote();
+        Assert.Null(remote.CastNote);
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(loading: false)));
+        Assert.Null(remote.CastNote);
+        var fallback = new Msg.NoticeCastFallback("Living room");
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(loading: false)) with { Note = fallback });
+        Assert.Equal(fallback, remote.CastNote);
+        Assert.Equal("Living room plays this in its own player. Subtitles show as plain text.", remote.CastNote?.Text());
+        // An ended cast's card says its ending, not the note.
+        remote.TakeCast(TvWordsTests.Cast(FfiLinkPhase.Connected, TvWordsTests.Now(false), new Msg.NoticeCastLost("Living room")) with { Note = fallback });
+        Assert.Null(remote.CastNote);
+    }
+
+    [Fact(Timeout = 90_000)]
+    public async Task APlayOnTvCastToATvWithoutKaerisReceiverSaysItFellBack()
+    {
+        HomeGuard.Check();
+        var root = AppDirs.NewScratchRoot("cs-cast-note");
+        var engine = FfiEngine.StartScene(AppDirs.Under(root), new QuietHost(), new FfiScene.Fresh(), EngineSession.AppStart());
+        var living = engine.StartFakeCast("Living room", new FfiFakeCastOptions(FixedVolume: true, Fetches: true, Refuses: false, LaunchMs: 0, OwnReceiverFails: true));
+        _ = Task.Run(async () =>
+        {
+            while ((await engine.NextEvents()).Any())
+            {
+            }
+        });
+        try
+        {
+            var remote = new TvRemote();
+            remote.Attach(engine.TvSender("PC", "kaeri-windows/test"), new NoTvs(), new FakeCastBrowse(living));
+            remote.Offer(new TvPlay(900_001, "", "3", null, FromPlayer: true));
+            remote.StartBrowsing();
+            await Until(() => remote.CastRows.Any(r => r.Name == "Living room"), "the Chromecast row");
+
+            remote.Cast(remote.CastRows.Single(r => r.Name == "Living room"));
+            await Until(() => remote.CastNote is Msg.NoticeCastFallback, "the fallback note", () => remote.CastCard);
+            Assert.False(remote.SessionHeld);
+            remote.PlayHere();
+            Assert.Null(remote.CastNote);
+            remote.StopBrowsing();
+        }
+        finally
+        {
+            living.Stop();
+            engine.Shutdown();
+            engine.Dispose();
+        }
+        SceneTests.DeleteRoot(root);
+    }
+
     [Fact(Timeout = 90_000)]
     public async Task CastingPlaysOnTheTvThenPlayHereHandsTheEpisodeBack()
     {
@@ -306,14 +359,15 @@ public class TvRemoteTests
             Assert.Equal(TvSheet.Cast, remote.Sheet);
             Assert.True(remote.Casting);
             Assert.Null(remote.Request);
-            await Until(() => remote.Stage == CastStage.Playing, "the cast playing", () => remote.CastCard);
+            // The card reads Playing a moment before the same TakeCast says it was served and handed
+            // off: here the cast's cards come in on a pool thread, with no window to bring them back.
+            await Until(() => remote.Stage == CastStage.Playing && served > 0 && handedOff > 0, "the cast playing", () => remote.CastCard);
             Assert.Equal(1, served);
             Assert.True(remote.CastServed);
             Assert.Equal(1, handedOff);
-            Assert.Equal(FfiVolumeControl.MuteOnly, remote.CastCard!.VolumeControl);
-
-            remote.SendCast(new FfiTvCommand.Mute(true));
-            await Until(() => remote.CastCard?.Muted == true, "the TV muted");
+            // The fake TV's own volume is in charge, so the card offers neither a level nor Mute.
+            Assert.Equal(FfiVolumeControl.Fixed, remote.CastCard!.VolumeControl);
+            Assert.False(remote.CastCard!.CanMute);
 
             // Play here ends the cast and hands back what it played.
             var here = remote.PlayHere();
@@ -321,6 +375,49 @@ public class TvRemoteTests
             Assert.Equal("3", here?.Episode);
             Assert.False(remote.Casting);
             Assert.Null(remote.Sheet);
+            remote.StopBrowsing();
+        }
+        finally
+        {
+            living.Stop();
+            engine.Shutdown();
+            engine.Dispose();
+        }
+        SceneTests.DeleteRoot(root);
+    }
+
+    [Fact(Timeout = 90_000)]
+    public async Task TheCastButtonHoldsATvUntilItIsLetGo()
+    {
+        HomeGuard.Check();
+        var root = AppDirs.NewScratchRoot("cs-session");
+        var engine = FfiEngine.StartScene(AppDirs.Under(root), new QuietHost(), new FfiScene.Fresh(), EngineSession.AppStart());
+        var living = engine.StartFakeCast("Living room", new FfiFakeCastOptions(FixedVolume: false, Fetches: true, Refuses: false, LaunchMs: 0));
+        _ = Task.Run(async () =>
+        {
+            while ((await engine.NextEvents()).Any())
+            {
+            }
+        });
+        try
+        {
+            var remote = new TvRemote();
+            remote.Attach(engine.TvSender("PC", "kaeri-windows/test"), new NoTvs(), new FakeCastBrowse(living));
+            // No TV found yet: no button.
+            Assert.Equal(CastButtonState.Hidden, remote.Button);
+            remote.StartBrowsing();
+            await Until(() => remote.Button == CastButtonState.Available, "the button", () => remote.Session);
+
+            remote.ConnectCast(remote.CastRows.Single(r => r.Name == "Living room"));
+            await Until(() => remote.Session?.State == FfiCastSessionState.Connected, "the TV held", () => remote.Session);
+            Assert.Equal(CastButtonState.Connected, remote.Button);
+            Assert.Equal("Living room", remote.SessionName);
+            // Held with nothing on it: no mini.
+            Assert.False(remote.SessionLoaded);
+            Assert.Null(remote.Drawn());
+
+            remote.DisconnectCast();
+            await Until(() => remote.Button == CastButtonState.Available, "the TV let go", () => remote.Session);
             remote.StopBrowsing();
         }
         finally

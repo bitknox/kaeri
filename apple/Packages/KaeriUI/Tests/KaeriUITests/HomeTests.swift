@@ -28,6 +28,14 @@ struct HomeTests {
         #expect(HomeMain(action: .details, episode: 5)?.symbol == nil)
     }
 
+    @Test func whileATVIsHeldPlayLeadsWithTheCastGlyph() {
+        #expect(HomeMain(action: .resume, episode: 3)?.casts(held: true) == true)
+        #expect(HomeMain(action: .play, episode: 1)?.casts(held: true) == true)
+        #expect(HomeMain(action: .play, episode: 1)?.casts(held: false) == false, "the play glyph with no TV held")
+        #expect(HomeMain(action: .addToPlanning, episode: 1)?.casts(held: true) == false, "Add to Planning plays nothing")
+        #expect(HomeMain(action: .details, episode: 5)?.casts(held: true) == false)
+    }
+
     @Test func aStartDateIsWordedByItsPrecision() {
         #expect(HomeWords.starts(nil) == nil)
         #expect(HomeWords.starts(FuzzyDate(year: 2027, month: nil, day: nil)) == "2027")

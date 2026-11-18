@@ -24,10 +24,13 @@ import UIKit
 /// or failed with nothing saved; and `trailer`, 900001 and 900002 with a trailer on record, played
 /// by a stand-in page; `held`, AniList synced, Kitsu with three changes it has no match for and
 /// Trakt's credential rejected with fourteen behind it, and `stuck`, the same queue as the engine
-/// told it before it said held changes and a rejection apart. `all` leaves these out too.
+/// told it before it said held changes and a rejection apart; `cards`, the wide art's every step
+/// on Home's Continue cards: 900001's banner, 900005's seen still, 900002 with a cover large
+/// enough to crop, 900006's full-size cover, which a 3x phone blurs, and 900004 with no cover at
+/// all. `all` leaves these out too.
 public enum Showcase: String, CaseIterable, Sendable {
     case sources, stores, downloads, invite, update, pale, trailer, offline, stranded, failed, messages, calendar,
-         signin, expired, proxy, checking, unsaved, picker, held, stuck, all
+         signin, expired, proxy, checking, unsaved, picker, held, stuck, cards, all
 
     /// The one the launch arguments name.
     public static func from(arguments: [String]) -> Showcase? {
@@ -77,6 +80,21 @@ public enum Showcase: String, CaseIterable, Sendable {
                 if let bytes = Self.paleBanner, let title = entry(Self.paleTitle) {
                     events.append(.artworkReady(url: Self.paleBannerUrl, bytes: bytes))
                     events.append(.detail(Self.pale(title)))
+                }
+            case .cards:
+                // The large cover first, so the card finds it here and never asks the engine.
+                if let bytes = Self.largeCover, var crop = entry(Self.cropTitle) {
+                    events.append(.artworkReady(url: Self.largeCoverUrl, bytes: bytes))
+                    crop.bannerUrl = nil
+                    crop.seenStill = nil
+                    crop.coverUrl = Self.largeCoverUrl
+                    events.append(.detail(crop))
+                }
+                if var bare = entry(Self.plateTitle) {
+                    bare.bannerUrl = nil
+                    bare.seenStill = nil
+                    bare.coverUrl = nil
+                    events.append(.detail(bare))
                 }
             case .trailer:
                 // 900001 and 900002 with a trailer on record, which the Fixtures app plays as a
@@ -362,6 +380,44 @@ public enum Showcase: String, CaseIterable, Sendable {
             context.setFillColor(color)
             context.fillEllipse(in: rect)
         }
+        guard let image = context.makeImage() else { return nil }
+        let data = NSMutableData()
+        guard let png = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else { return nil }
+        CGImageDestinationAddImage(png, image, nil)
+        return CGImageDestinationFinalize(png) ? data as Data : nil
+    }()
+
+    /// The titles `cards` restyles: one given a cover large enough to crop in a 3x phone's card,
+    /// and one with no cover at all.
+    static let cropTitle: AnilistId = 900_002
+    static let plateTitle: AnilistId = 900_004
+    static let largeCoverUrl = "https://img.example/cover/large.png"
+
+    /// A 960 x 1440 cover as PNG, twice AniList's largest: a dusk sky over hills with a tower and a
+    /// moon, its focus in the upper third. Drawn here, as no fixture cover is that large.
+    static let largeCover: Data? = {
+        let (width, height) = (960, 1440)
+        guard let space = CGColorSpace(name: CGColorSpace.sRGB),
+              let context = CGContext(
+                  data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0, space: space,
+                  bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)
+        else { return nil }
+        // Core Graphics draws from the bottom left: the sky's top is at `height`.
+        let sky = [CGColor(srgbRed: 0.93, green: 0.62, blue: 0.45, alpha: 1), CGColor(srgbRed: 0.24, green: 0.27, blue: 0.52, alpha: 1)]
+        if let wash = CGGradient(colorsSpace: space, colors: sky as CFArray, locations: [0, 1]) {
+            context.drawLinearGradient(wash, start: CGPoint(x: 0, y: 380), end: CGPoint(x: 0, y: height), options: [])
+        }
+        context.setFillColor(CGColor(srgbRed: 0.98, green: 0.94, blue: 0.82, alpha: 1))
+        context.fillEllipse(in: CGRect(x: 560, y: 1000, width: 200, height: 200))
+        context.setFillColor(CGColor(srgbRed: 0.16, green: 0.17, blue: 0.30, alpha: 1))
+        context.fill(CGRect(x: 300, y: 380, width: 120, height: 640))
+        context.fill(CGRect(x: 270, y: 1000, width: 180, height: 60))
+        context.setFillColor(CGColor(srgbRed: 0.99, green: 0.84, blue: 0.48, alpha: 1))
+        context.fill(CGRect(x: 335, y: 900, width: 50, height: 70))
+        context.setFillColor(CGColor(srgbRed: 0.20, green: 0.33, blue: 0.36, alpha: 1))
+        context.fillEllipse(in: CGRect(x: -300, y: -200, width: 1100, height: 700))
+        context.setFillColor(CGColor(srgbRed: 0.14, green: 0.25, blue: 0.29, alpha: 1))
+        context.fillEllipse(in: CGRect(x: 300, y: -300, width: 1000, height: 640))
         guard let image = context.makeImage() else { return nil }
         let data = NSMutableData()
         guard let png = CGImageDestinationCreateWithData(data, "public.png" as CFString, 1, nil) else { return nil }

@@ -72,6 +72,9 @@ object TvIcons {
     val Update = icon("Update", listOf("M12 4 V15 M7.5 10.5 L12 15 L16.5 10.5 M5 19.5 H19"))
     val Check = icon("Check", listOf("M5 12.5 L10 17.5 L19 7"))
 
+    /** Check again: a circle turning back on itself, its arrow at the top right. */
+    val Redo = icon("Redo", listOf("M19.5 5.25 V10.5 H14.25", "M18.9 10.5 A7.5 7.5 0 1 0 19.5 14.25"))
+
     /** The eye struck through: a still spoiler protection covers. */
     val Hidden = icon(
         "Hidden",

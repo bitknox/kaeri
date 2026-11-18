@@ -307,6 +307,17 @@ class ReducerTest {
     }
 
     @Test
+    fun a_further_page_that_names_a_title_twice_lists_it_once() {
+        val browse = SearchQuery(genres = listOf("Fantasy"))
+        store.search(browse)
+        store.apply(Event.SearchPaging(browse, hasNext = true))
+        store.apply(Event.Content(ContentFor.Search(browse), ContentList.Entries(listOf(entry(900001u, "Hoshi")))))
+        store.searchMore()
+        store.apply(Event.SearchMore(browse, 2u, listOf(entry(900002u, "Kumo"), entry(900002u, "Kumo")), hasNext = false))
+        assertEquals(listOf(900001u, 900002u), store.search.list.state.value.ids)
+    }
+
+    @Test
     fun the_rails_bring_their_titles_and_the_start_its_recents() {
         store.loadSearchStart()
         assertEquals(listOf(Command.LoadBrowse, Command.LoadSearchFacets, Command.LoadRecentSearches), store.waiting)

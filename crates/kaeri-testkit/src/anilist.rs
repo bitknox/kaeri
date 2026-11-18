@@ -144,7 +144,8 @@ impl Operation {
             Self::SaveEntry
         } else if has("MediaListCollection") {
             Self::Library
-        } else if has("Viewer") {
+        } else if has("Viewer") && !has("Media(id:") {
+            // The title page asks the viewer's id beside the people they follow.
             Self::Viewer
         } else if has("Media(id:") {
             Self::Detail
@@ -205,7 +206,8 @@ pub struct Request {
 
 /// A failure the fake answers with instead of the fixtures, for the failure paths.
 ///
-/// Applies to GraphQL requests only: the empty Tenrai keeps answering, so a test of the
+/// Applies to GraphQL requests only, unless [`FakeAniList::fail_operation`] names
+/// [`Operation::Tenrai`]: the empty Tenrai keeps answering, so a test of the
 /// fallback ladder can fail AniList and watch the rungs below it.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum Failure {
@@ -1003,6 +1005,9 @@ fn answer(state: &Mutex<State>, head: &Head, body: &[u8]) -> Reply {
             at: std::time::Instant::now(),
             refused: false,
         });
+        if let Some(failure) = lock(state).failing.get(&Operation::Tenrai).cloned() {
+            return fail(failure);
+        }
         return tenrai(rest);
     }
 
@@ -1469,6 +1474,11 @@ fn respond(
                             .cloned()
                             .unwrap_or_default();
                         data["following"] = json!({ "mediaList": entries });
+                        // The viewer's id, asked beside them; a test's own viewer goes on it
+                        // with the rest of the answer.
+                        if document.contains("Viewer {") {
+                            data["Viewer"] = json!({ "id": fixtures::library_viewer_id() });
+                        }
                     }
                     Reply::ok(data)
                 }
@@ -1662,7 +1672,8 @@ fn catalogue_order(asked: &[AnilistId], catalogue: Catalogue<'_>) -> Vec<Anilist
 }
 
 /// One entry of the people the viewer follows, as AniList answers it: for
-/// [`FakeAniList::set_following`].
+/// [`FakeAniList::set_following`]. Each name has its own user id, never the fixture viewer's:
+/// [`viewer_following_entry`] is the viewer's own, which AniList answers among them.
 pub fn following_entry(
     name: &str,
     status: &str,
@@ -1670,13 +1681,31 @@ pub fn following_entry(
     progress: u32,
     private: bool,
 ) -> Value {
+    let id = 10_000
+        + name.bytes().fold(7_u32, |h, b| h.wrapping_mul(31).wrapping_add(u32::from(b)))
+            % 900_000;
     json!({
         "status": status,
         "score": score.unwrap_or(0),
         "progress": progress,
         "private": private,
-        "user": { "name": name, "avatar": { "medium": format!("https://img.example/avatar/{name}.png") } },
+        "user": { "id": id, "name": name, "avatar": { "medium": format!("https://img.example/avatar/{name}.png") } },
     })
+}
+
+/// The signed-in viewer's own entry, which AniList's `isFollowing` answers beside the people
+/// they follow: the fixture viewer's id and name.
+pub fn viewer_following_entry(status: &str, progress: u32) -> Value {
+    let viewer = &fixtures::library_wire()["viewer"];
+    let mut entry = following_entry(
+        viewer["name"].as_str().unwrap_or_default(),
+        status,
+        None,
+        progress,
+        false,
+    );
+    entry["user"]["id"] = viewer["id"].clone();
+    entry
 }
 
 /// The single-title answer, as AniList shapes it: the title, and beside it the broadcasts

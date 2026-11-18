@@ -115,6 +115,7 @@ settings-label-mark-chapters = オープニングとエンディングに印を�
 settings-label-skip-button = スキップボタンを表示
 settings-label-fullscreen = 全画面で開始
 settings-label-upscaling = アップスケーリング
+settings-label-preload-metered = 従量制でも先読み
 settings-label-player-ui = プレーヤーのインターフェース
 settings-label-night-mode = ナイトモード
 settings-label-download-dir = ダウンロードフォルダ

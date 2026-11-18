@@ -89,3 +89,4 @@ episodes-matched = Associé à { $title }.
 episodes-release-dual = { -subbed-cap } et { -dubbed }
 episodes-release-dub = { -dubbed-cap }
 episodes-release-current-pick = Choix actuel
+episode-missing-checking = Vérification de vos { -source-pl }…

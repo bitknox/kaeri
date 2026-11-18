@@ -13,6 +13,7 @@ use kaeri_model::{
     notice::Notice,
     progress::{EpisodeProgress, TitleProgress},
     sources::{MatchCandidate, MatchQuestion},
+    starting::{ListingMiss, MissedListing, SourceHold},
 };
 
 use super::{App, Cursor, Field, info};
@@ -170,16 +171,30 @@ impl App {
         id: AnilistId,
         episode: String,
         candidates: Vec<SourceCandidate>,
+        missed: &[MissedListing],
     ) {
         // A stale answer — the user has navigated away since asking, or asked about
         // another episode — is not a question worth interrupting them with, and offering
         // one episode's releases under another's context would play the wrong one.
-        if self.source_context.as_ref() != Some(&(id, episode)) {
+        if self.source_context.as_ref() != Some(&(id, episode.clone())) {
             return;
         }
         if candidates.is_empty() {
             self.source_context = None;
-            self.push_toast(info(t::episodes_no_releases()));
+            // What each source said, when one said something: a source that failed is not one
+            // without the episode.
+            if missed.is_empty() {
+                self.push_toast(info(t::episodes_no_releases()));
+            } else {
+                let reasons: Vec<String> =
+                    missed.iter().map(|m| missed_line(m, &episode)).collect();
+                let line = format!(
+                    "{} {}.",
+                    t::source_picker_none_lists(&episode),
+                    reasons.join(". ")
+                );
+                self.push_toast(Notice::alert(Msg::verbatim(line)));
+            }
             return;
         }
         self.sources = candidates;
@@ -611,7 +626,24 @@ impl App {
     pub fn sources_here(&self, candidates: Vec<SourceCandidate>) -> Event {
         let (id, episode) =
             self.source_context.clone().unwrap_or((AnilistId::new(0), String::new()));
-        Event::Sources { id, episode, candidates }
+        Event::Sources { id, episode, candidates, missed: Vec::new() }
+    }
+}
+
+/// Why one source listed no release, in the picker's words: its name once, as it goes by.
+fn missed_line(missed: &MissedListing, episode: &str) -> String {
+    let name = missed.name.as_str();
+    match &missed.miss {
+        ListingMiss::NoMatch => t::player_start_miss_no_match(name),
+        ListingMiss::NoEpisode => t::player_start_miss_no_episode(name, episode),
+        ListingMiss::Failed => t::player_start_miss_failed(name),
+        ListingMiss::TimedOut => t::player_start_miss_timed_out(name),
+        ListingMiss::HeldBack { why } => match why {
+            SourceHold::TorrentsOff => t::source_picker_held_torrents_off(name),
+            SourceHold::ProxyCheck => t::source_picker_held_proxy(name),
+            SourceHold::Cellular => t::source_picker_held_cellular(name),
+            SourceHold::Other => t::source_picker_held_other(name),
+        },
     }
 }
 
@@ -652,6 +684,8 @@ mod tests {
                     spoiler_ahead: r.spoiler_ahead,
                 })
                 .collect(),
+            kept: false,
+            private: Default::default(),
         });
         task
     }
@@ -673,6 +707,8 @@ mod tests {
                     spoiler_ahead: false,
                 })
                 .collect(),
+            kept: false,
+            private: Default::default(),
         }
     }
 
@@ -708,6 +744,7 @@ mod tests {
         SourceCandidate {
             id: format!("https://indexer.example/view/{title}"),
             provider_id: "torrent".into(),
+            provider_name: String::new(),
             title: title.into(),
             quality: Some(1080),
             label: Some("120 peers".into()),
@@ -801,6 +838,8 @@ mod tests {
             progress: Some(TitleProgress { done: 3, next: 4 }),
             resume: None,
             episodes: Vec::new(),
+            kept: false,
+            private: Default::default(),
         });
         let (three, two) = (
             Some(TitleProgress { done: 3, next: 4 }),
@@ -1171,6 +1210,30 @@ mod tests {
     }
 
     #[test]
+    fn open_in_browser_on_an_episode_with_a_found_thread_opens_the_thread() {
+        let mut a = app_at_episodes();
+        a.set_episode_cursor(2);
+        let title = Some(Command::OpenExternal { url: "https://anilist.co/anime/1".into() });
+        assert_eq!(a.handle(Action::OpenInBrowser, 5), title, "no thread known yet");
+
+        a.apply(Event::DiscussionFound {
+            media: AnilistId::new(1),
+            episode: 3,
+            comments: 214,
+            url: "https://anilist.co/forum/thread/9003".into(),
+        });
+        assert_eq!(
+            a.handle(Action::OpenInBrowser, 5),
+            Some(Command::OpenExternal { url: "https://anilist.co/forum/thread/9003".into() })
+        );
+
+        a.set_episode_cursor(3);
+        assert_eq!(a.handle(Action::OpenInBrowser, 5), title, "the next episode has none");
+        a.handle(Action::Back, 5);
+        assert_eq!(a.handle(Action::OpenInBrowser, 5), title, "the title page opens the title");
+    }
+
+    #[test]
     fn the_filter_keeps_the_same_episode_under_the_cursor() {
         let mut a = app_at_episodes();
         for n in ["1", "2", "3"] {
@@ -1221,6 +1284,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
                 thumbnail: None,
                 description: None,
             },
@@ -1240,6 +1304,7 @@ mod tests {
                 past_progress: false,
                 spoiler_ahead: false,
                 synopsis_pending: false,
+                followed: Vec::new(),
                 thumbnail: None,
                 description: None,
             },
@@ -1303,6 +1368,7 @@ mod tests {
                         past_progress: false,
                         spoiler_ahead: false,
                         synopsis_pending: false,
+                        followed: Vec::new(),
                         thumbnail: None,
                         description: None,
                     })
@@ -1446,6 +1512,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
             thumbnail: None,
             description: None,
         }]));
@@ -1500,6 +1567,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
             thumbnail: None,
             description: None,
         };
@@ -1529,6 +1597,30 @@ mod tests {
     }
 
     #[test]
+    fn a_source_that_failed_to_list_says_so_rather_than_lacking_the_episode() {
+        let mut a = app_at_episodes();
+        a.handle(Action::ShowSources, 20);
+        let (id, episode) = a.source_context.clone().expect("a pending question");
+        a.apply(Event::Sources {
+            id,
+            episode: episode.clone(),
+            candidates: Vec::new(),
+            missed: vec![
+                MissedListing { name: "Alpha".into(), miss: ListingMiss::Failed },
+                MissedListing {
+                    name: "Harbor".into(),
+                    miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
+                },
+            ],
+        });
+        let said: Vec<&str> = a.toasts.iter().map(|t| t.notice.text.as_str()).collect();
+        let said = said.join("\n");
+        assert!(said.contains(&t::player_start_miss_failed("Alpha")), "{said}");
+        assert!(said.contains(&t::source_picker_held_torrents_off("Harbor")), "{said}");
+        assert!(!said.contains("alpha"), "a raw id: {said}");
+    }
+
+    #[test]
     fn releases_for_another_episode_are_not_offered_against_this_one() {
         let mut a = app_at_episodes();
         a.handle(Action::ShowSources, 20);
@@ -1537,6 +1629,7 @@ mod tests {
             id,
             episode: format!("{asked}0"),
             candidates: vec![source("[A] Show - 10 (1080p)", true)],
+            missed: Vec::new(),
         });
         assert_ne!(
             a.nav.overlay(),

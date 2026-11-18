@@ -12,3 +12,6 @@ tui-together-not-a-link = Это не ссылка и не код комнаты
 tui-together-recent-alone = Эпизод { $episode } · { $when }
 tui-medium-read-change = Нажмите { $key }, чтобы выбрать, для чего нужен { -app-name }.
 tui-medium-settings-hint = { $key }: изменить
+report-player-log-save-here = Сохранить журнал плеера
+report-player-log-saved-to = Журнал плеера сохранён в { $path }
+report-player-log-failed-here = Не удалось сохранить журнал в { $folder }.

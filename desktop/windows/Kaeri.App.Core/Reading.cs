@@ -240,7 +240,16 @@ public sealed class ReadingStore
         Ask(new ReadingCommand.LoadChapters(work, InUse(work)));
     }
 
-    public void HideFromContinue(string work) => Ask(new ReadingCommand.HideFromContinue(work));
+    /// <summary>Take a series off Continue: the cover goes at once, nothing else on Home moves, and the engine keeps it hidden.</summary>
+    public void HideFromContinue(string work)
+    {
+        if (Home is { } home)
+        {
+            Home = KaeriModelMethods.ReadHomeWithoutContinue(home, work);
+            Changed?.Invoke(ReadingPart.Home);
+        }
+        Ask(new ReadingCommand.HideFromContinue(work));
+    }
     public void SetStatus(string work, LibrarySegmentRead status) => Ask(new ReadingCommand.SetStatus(work, status));
 
     /// <summary>Takes the series off every signed-in tracker's reading list; Kaeri keeps the place.</summary>

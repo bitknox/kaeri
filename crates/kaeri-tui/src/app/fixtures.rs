@@ -121,6 +121,7 @@ pub(super) fn staged(
         episode_title: episode_title.map(Into::into),
         speed: 1.0,
         resume: None,
+        always_private: false,
     }
 }
 
@@ -148,6 +149,7 @@ pub(super) fn app_at_episodes() -> App {
                     past_progress: false,
                     spoiler_ahead: false,
                     synopsis_pending: false,
+                    followed: Vec::new(),
                     thumbnail: None,
                     description: None,
                 })

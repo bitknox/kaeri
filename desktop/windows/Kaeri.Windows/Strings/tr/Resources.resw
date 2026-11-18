@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>{name} ile bağlantı koptu, bu yüzden yayınlama durdu.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} yayını alamaz oldu: kaynak, bölümün bir kısmı için yanıt vermedi. Başka bir kaynak deneyin.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name}, bu cihazdan gelen yayını kaybetti. İkisinin de aynı ağda olduğundan emin olun.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>{name} üzerinde altyazılar düz metin olarak gösteriliyor. Biçimli altyazılar bu TV için fazla ağır geldi.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Seçilen TV artık ağda değil.</value>
   </data>
@@ -361,6 +370,12 @@
   </data>
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Bu akıştan görüntü gelmedi. Bir sonraki akış deneniyor ({next}/{total}).</value>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Akış kesildi. {source} aynı yerden devraldı.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Akış kesildi. {source} üzerinden başka bir akış aynı yerden devraldı.</value>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv bunu oynatamadı. {reason}</value>
@@ -887,6 +902,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>Sırada · Wi-Fi bekliyor</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Sırada · boş alan bekliyor</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>İndiriliyor · {done} / {total} sayfa</value>
   </data>
@@ -1012,6 +1030,12 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Çevrimdışı</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Yer kalmadı. Boş alan açılınca indirilir.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Yer kalmadı. Boş alan açılınca indirilirler.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Yaklaşık {size}</value>
@@ -2495,9 +2519,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>TV yanıtı bekleniyor</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>{name} yanıtı bekleniyor</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
   </data>
@@ -2732,6 +2753,39 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Çökme raporu ayarları</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Oynatıcı günlüğü</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Son oynatma · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>Son {playbacks} oynatma · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Henüz kaydedilmiş oynatma yok</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Günlüğü kaydet…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Kayıt GitHub'da açıldığında dosyayı ekleyin.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>{file} olarak kaydedildi</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Günlük kaydedilemedi. Başka bir klasör deneyin.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Rapor</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Oynatıcı günlüğü kaydedildi</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Kayda eklenecek bir dosya kaydeder</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Çökme raporları</value>
   </data>
@@ -2927,6 +2981,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>TV'den ayarlanır</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>{name} cihazına bağlanılıyor</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>{name} cihazına bağlı</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>{name} üzerinde oynatılır</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Henüz bir şey oynatılmıyor</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>{name} üzerinde duraklatıldı</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>{title} aç</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Kontrolleri açar</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>{name} üzerinde sırada oynat</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>{name} cihazına yayınlanıyor</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Yeniden dene</value>
   </data>
@@ -3074,6 +3158,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Yeniden denetle</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Denetleniyor</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Ayarları aç</value>
   </data>
@@ -3140,6 +3227,9 @@
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} dk</value>
   </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} sa</value>
+  </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>şimdi</value>
   </data>
@@ -3196,6 +3286,9 @@
   </data>
   <data name="StateLoading" xml:space="preserve">
     <value>Yükleniyor</value>
+  </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Bildirimi kapat</value>
   </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Odağı taşı</value>
@@ -3433,6 +3526,15 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Yayın durdurulup çıkılsın mı?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title}, {name} üzerinde oynatılıyor. Çıkmak oynatmayı durdurur.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Durdur ve çık</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Tartışma</value>
@@ -5516,9 +5618,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>{name} atlandı</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Son hatalar nedeniyle atlandı</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Kaynak: {name}</value>
   </data>
@@ -6073,6 +6172,54 @@
   </data>
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Ayarlar'da daha fazlası…</value>
+  </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Gizli mod</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>İzlediğiniz veya okuduğunuz hiçbir şey, modu kapatana ya da Kaeri uygulamasından çıkana kadar kaydedilmez veya eşitlenmez.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>kaynaklarınız ve birlikte izlemeleriniz açtığınız şeyleri yine de görür.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Gizli mod açık. Kaeri kapanana kadar hiçbir şey kaydedilmez veya eşitlenmez.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Kapat</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Kısayol: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Gizli</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Gizli mod açık</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Kaydedilmez veya eşitlenmez</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Kaldığınız yer, Kaeri kapanana kadar hatırlanır</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Her zaman gizli</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Bu diziden hiçbir şey bu cihazda kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Bu seriden hiçbir şey bu cihazda kaydedilmez veya eşitlenmez. Önceden kaydedilenler kalır.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Kaeri içinde oynatılıyor</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Gizli mod açık</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Gizli mod kapalı</value>
   </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Sayfa {page} yükleniyor</value>
@@ -7153,6 +7300,9 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>{n} tane daha göster</value>
+  </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>{list} listesine ekle</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} / {total}</value>
@@ -8471,6 +8621,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Sıradaki geri sayımı</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Mobil veride videoyu önceden yükle</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Tarifeli bağlantılarda videoyu önceden yükle</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Bitiş sırasında sonraki bölümün yayını, altyazıları ve atlama zamanları bulunur. İlk saniyeleri de yüklenir; tarifeli bir bağlantıda yalnızca bu açıkken.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrentler ilk parçalarını aynı şekilde yükler.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>"Sonrakini otomatik oynat" gerekli</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Açılışı otomatik atla</value>
   </data>
@@ -9011,6 +9176,15 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Akış portu</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Uygulamadan çıkarken pencere içinde pencere</value>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Takip ettiklerini göster</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>AniList'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList'te ayarlanır.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
   </data>
@@ -9256,6 +9430,30 @@
   </data>
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} / {of} bölüm</value>
+  </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Bölüm {first}</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Bölüm {first}-{last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Bölüm {first}-{last}. {missing} henüz yok</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Bölüm {first}-{last}. {missing} yok</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} ve {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first}-{last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} / {of} bölüm. {missing} yok</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} / {of} bölüm. {missing} yok</value>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Kapalı</value>
@@ -11069,6 +11267,30 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Buna benzer</value>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>{count} kişinin tümünü göster</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} ve {more} kişi daha</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} ve {more} kişi daha</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} ve {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} buraya kadar izledi.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Puan {score}/10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Her birinin nerede olduğunu gösterir.</value>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
   </data>
@@ -11117,9 +11339,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Açıklanacak</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Bölüme git…</value>
   </data>
@@ -11140,6 +11359,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>{number}. bölüm henüz çıkmadı. En son bölüm {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Bölüm {episode} {ago} yayınlandı.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Bölüm {episode} {date} tarihinde yayınlandı.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Kaynaklarınızda henüz yok.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Kaynaklarınızda hâlâ yok.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Kaynaklarınız yanıt vermedi.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri her {minutes} dakikada bir yeniden bakıyor.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Kaynaklarınızın hiçbirinde yok.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri, yeniden çevrimiçi olduğunuzda bakacak.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>{ago} yayınlandı</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Henüz kaynaklarınızda yok</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Bölüm {episode} artık kaynaklarınızda.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri, bir bölüm yayınlandıktan sonra {hours} saat boyunca her {minutes} dakikada bir kendisi de bakar.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrentler</value>
@@ -11677,6 +11932,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>{name} ile yeniden bağlanılıyor</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>{name} yanıtı bekleniyor</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Bağlı</value>

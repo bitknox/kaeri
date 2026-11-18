@@ -256,6 +256,17 @@ keys-hint-stop = Stop
 # @max 20
 keys-hint-play-next = Play next
 
+# Hint for the Refresh key on a title page whose next episode no source has yet. Keep it to a word or two.
+# @max 20
+# @only tui
+keys-hint-check-again = Check again
+
+# Hint for the play key on a title page whose next episode no source has yet: it plays the one before.
+# @arg episode: plain
+# @max 24
+# @only tui
+keys-hint-play-episode = Play episode { $episode }
+
 # Short form of an action for the status line's hints, drawn beside its key. Room is tight, so keep it to a word or two.
 # @max 20
 keys-hint-episodes = Episodes

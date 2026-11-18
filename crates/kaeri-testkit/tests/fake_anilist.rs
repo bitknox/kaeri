@@ -7,7 +7,7 @@ use kaeri_testkit::{
     fixtures::{
         self, AIRING, AIRING_NO_MAL, FINISHED, FIXTURE_NOW, MISSING, MOVIE, ONA, SEQUEL,
     },
-    following_entry,
+    following_entry, viewer_following_entry,
 };
 
 use std::time::Duration;
@@ -186,11 +186,16 @@ async fn signed_out_the_title_page_asks_for_nobody_the_viewer_follows() {
     kit.server
         .set_following(FINISHED, [following_entry("Mika", "COMPLETED", Some(90), 12, false)]);
     let media = kit.meta.media(FINISHED).await.unwrap();
-    assert!(media.following.is_empty());
+    assert_eq!(media.following, None, "not asked");
     let asked = kit.server.requests_for(Operation::Detail);
     assert_eq!(asked.len(), 1);
     assert!(!asked[0].query.contains("mediaList"), "nothing is asked for: {}", asked[0].query);
     assert_eq!(asked[0].authorization, None);
+}
+
+/// The names of the people `media` came with, `None` when they were not asked after.
+fn followed(media: &kaeri_meta::Media) -> Option<Vec<&str>> {
+    media.following.as_ref().map(|f| f.iter().map(|f| f.user.name.as_str()).collect())
 }
 
 #[tokio::test]
@@ -206,12 +211,12 @@ async fn signed_in_the_people_followed_ride_the_same_request() {
         ],
     );
     let media = kit.meta.media(FINISHED).await.unwrap();
-    let names: Vec<_> = media.following.iter().map(|f| f.user.name.as_str()).collect();
-    assert_eq!(names, ["Mika", "Tomo"], "a private entry is left out");
-    assert_eq!(media.following[0].score, Some(90.0));
-    assert_eq!(media.following[1].progress, Some(7));
+    assert_eq!(followed(&media), Some(vec!["Mika", "Tomo"]), "a private entry is left out");
+    let following = media.following.as_ref().unwrap();
+    assert_eq!(following[0].score, Some(90.0));
+    assert_eq!(following[1].progress, Some(7));
     assert_eq!(
-        media.following[0].user.avatar.medium.as_deref(),
+        following[0].user.avatar.medium.as_deref(),
         Some("https://img.example/avatar/Mika.png")
     );
 
@@ -220,9 +225,130 @@ async fn signed_in_the_people_followed_ride_the_same_request() {
     assert_eq!(all[0].operation, Operation::Detail);
     assert_eq!(all[0].authorization.as_deref(), Some("Bearer tok"));
     assert!(all[0].query.contains("isFollowing: true"));
-    // Nothing of them reaches the disk cache.
+    // Kept with the cached page, for offline, and only the ones shown.
     let cached = kit.store.cached_media(FINISHED).unwrap().unwrap().0;
-    assert!(!cached.contains("Mika") && !cached.contains("following"), "{cached}");
+    assert!(cached.contains("Mika") && !cached.contains("Hidden"), "{cached}");
+}
+
+#[tokio::test]
+async fn the_viewer_is_never_among_the_people_they_follow() {
+    let kit = MetaKit::start().await;
+    kit.meta.anilist().set_token(Some("tok".into()));
+    // AniList's `isFollowing` answers the viewer's own entry too, here the newest.
+    kit.server.set_following(
+        FINISHED,
+        [
+            viewer_following_entry("CURRENT", 9),
+            following_entry("Mika", "COMPLETED", Some(90), 12, false),
+            following_entry("Tomo", "CURRENT", None, 7, false),
+        ],
+    );
+    assert_eq!(followed(&kit.meta.media(FINISHED).await.unwrap()), Some(vec!["Mika", "Tomo"]));
+    let cached = kit.store.cached_media(FINISHED).unwrap().unwrap().0;
+    assert!(!cached.contains("fixture-viewer"), "nor kept for offline: {cached}");
+
+    // Told apart by the id AniList answers for the token, not by a name or a kept id.
+    let mika = following_entry("Mika", "COMPLETED", Some(90), 12, false);
+    kit.server.answer_as_viewer(mika["user"]["id"].as_u64().unwrap());
+    kit.server.set_following(AIRING, [mika, viewer_following_entry("CURRENT", 2)]);
+    assert_eq!(followed(&kit.meta.media(AIRING).await.unwrap()), Some(vec!["fixture-viewer"]));
+}
+
+#[tokio::test]
+async fn a_page_cached_before_the_viewer_was_told_apart_shows_nobody_offline() {
+    let kit = MetaKit::start().await;
+    kit.meta.anilist().set_token(Some("tok".into()));
+    kit.server.set_following(
+        FINISHED,
+        [
+            viewer_following_entry("CURRENT", 9),
+            following_entry("Mika", "CURRENT", None, 4, false),
+        ],
+    );
+    kit.meta.media(FINISHED).await.unwrap();
+    // The page as an earlier build kept it: the people without their ids, the viewer among them.
+    let (payload, _) = kit.store.cached_media(FINISHED).unwrap().unwrap();
+    let mut page: serde_json::Value = serde_json::from_str(&payload).unwrap();
+    page["following"] = serde_json::json!([
+        { "status": "CURRENT", "progress": 9, "private": false,
+          "user": { "name": "fixture-viewer", "avatar": { "medium": null } } },
+        { "status": "CURRENT", "progress": 4, "private": false,
+          "user": { "name": "Mika", "avatar": { "medium": null } } },
+    ]);
+    kit.store.cache_media(FINISHED, &page.to_string(), kaeri_store::now()).unwrap();
+
+    // Another launch, with AniList out of reach: the cache answers, and knows nobody.
+    kit.server.fail_operation(Operation::Detail, Failure::Status(500));
+    let later = kit.server.meta(&kit.store);
+    later.anilist().set_token(Some("tok".into()));
+    assert_eq!(followed(&later.media(FINISHED).await.unwrap()), None);
+}
+
+#[tokio::test]
+async fn the_page_asks_as_the_trackers_viewer_and_everything_else_anonymously() {
+    let kit = MetaKit::start().await;
+    let tracker = kit.server.anilist(&kaeri_testkit::http());
+    kit.meta.anilist().follows_as(&tracker);
+    kit.server.set_following(FINISHED, [following_entry("Mika", "CURRENT", None, 4, false)]);
+    assert_eq!(
+        followed(&kit.meta.media(FINISHED).await.unwrap()),
+        None,
+        "nobody signed in yet"
+    );
+
+    tracker.set_token(Some("viewer".into()));
+    assert_eq!(followed(&kit.meta.media(AIRING).await.unwrap()), Some(vec![]), "nobody has it");
+    kit.meta.search("hoshikuzu", &BrowseFilter::default(), 1, 20).await.unwrap();
+    let details = kit.server.requests_for(Operation::Detail);
+    assert_eq!(details[1].authorization.as_deref(), Some("Bearer viewer"));
+    assert_eq!(
+        kit.server.requests_for(Operation::Search)[0].authorization,
+        None,
+        "a list asks as nobody"
+    );
+}
+
+#[tokio::test]
+async fn switched_off_the_people_followed_are_not_asked_and_leave_the_cache() {
+    let kit = MetaKit::start().await;
+    kit.meta.anilist().set_token(Some("tok".into()));
+    kit.server.set_following(FINISHED, [following_entry("Mika", "CURRENT", None, 4, false)]);
+    assert_eq!(followed(&kit.meta.media(FINISHED).await.unwrap()), Some(vec!["Mika"]));
+
+    kit.meta.show_following(false);
+    assert!(!kit.meta.anilist().asks_following());
+    let cached = kit.store.cached_media(FINISHED).unwrap().unwrap().0;
+    assert!(!cached.contains("Mika"), "the cache let go of them: {cached}");
+    // Not the answer of a moment ago: a new ask, without them.
+    assert_eq!(followed(&kit.meta.media(FINISHED).await.unwrap()), None);
+    let details = kit.server.requests_for(Operation::Detail);
+    assert_eq!(details.len(), 2);
+    assert!(!details[1].query.contains("isFollowing"), "off means not asked");
+
+    kit.meta.show_following(true);
+    assert_eq!(followed(&kit.meta.media(FINISHED).await.unwrap()), Some(vec!["Mika"]));
+}
+
+#[tokio::test]
+async fn offline_the_page_shows_the_people_it_last_had_until_a_sign_out() {
+    let kit = MetaKit::start().await;
+    kit.meta.anilist().set_token(Some("tok".into()));
+    kit.server.set_following(FINISHED, [following_entry("Mika", "CURRENT", None, 4, false)]);
+    kit.meta.media(FINISHED).await.unwrap();
+    // A list's answer after it, which asks nobody's follows, keeps them in the cache.
+    kit.meta.search("hoshikuzu", &BrowseFilter::default(), 1, 20).await.unwrap();
+
+    // Another launch, with AniList out of reach: the cache answers.
+    kit.server.fail_operation(Operation::Detail, Failure::Status(500));
+    let later = kit.server.meta(&kit.store);
+    later.anilist().set_token(Some("tok".into()));
+    assert_eq!(followed(&later.media(FINISHED).await.unwrap()), Some(vec!["Mika"]));
+
+    // Signed out, they are not shown, and gone once the sign-out takes them out.
+    let signed_out = kit.server.meta(&kit.store);
+    assert_eq!(followed(&signed_out.media(FINISHED).await.unwrap()), None);
+    signed_out.forget_following();
+    assert!(!kit.store.cached_media(FINISHED).unwrap().unwrap().0.contains("Mika"));
 }
 
 #[tokio::test]
@@ -230,13 +356,17 @@ async fn an_answer_with_the_people_followed_is_not_reused_after_a_sign_out_or_a_
     let kit = MetaKit::start().await;
     kit.server
         .set_following(FINISHED, [following_entry("Mika", "COMPLETED", Some(90), 12, false)]);
-    assert!(kit.meta.media(FINISHED).await.unwrap().following.is_empty());
+    assert_eq!(kit.meta.media(FINISHED).await.unwrap().following, None);
 
     kit.meta.anilist().set_token(Some("tok".into()));
-    assert_eq!(kit.meta.media(FINISHED).await.unwrap().following.len(), 1, "a new ask");
+    assert_eq!(
+        followed(&kit.meta.media(FINISHED).await.unwrap()),
+        Some(vec!["Mika"]),
+        "a new ask"
+    );
 
     kit.meta.anilist().set_token(None);
-    assert!(kit.meta.media(FINISHED).await.unwrap().following.is_empty(), "and another");
+    assert_eq!(kit.meta.media(FINISHED).await.unwrap().following, None, "and another");
     assert_eq!(kit.server.requests_for(Operation::Detail).len(), 3);
 }
 
@@ -503,7 +633,7 @@ async fn a_status_and_a_hang_up_fail_as_their_own_kinds() {
     server.fail_next(Failure::Status(500));
     server.fail_next(Failure::Disconnect);
     let status = anilist.media(FINISHED).await;
-    assert!(matches!(status, Err(AniListError::Api(ref m)) if m.contains("500")), "{status:?}");
+    assert!(matches!(status, Err(AniListError::Server { status: 500, .. })), "{status:?}");
     let hang_up = anilist.media(FINISHED).await;
     assert!(matches!(hang_up, Err(AniListError::Network(_))), "{hang_up:?}");
     assert!(anilist.media(FINISHED).await.is_ok(), "both were one request each");

@@ -175,7 +175,8 @@ pub enum FfiScene {
     SubtitleStyled,
     /// A first launch with crash reports off, as they are until turned on.
     CrashOff,
-    /// Crash reports on, with one saved report in the list.
+    /// Crash reports on, with one saved report in the list, a crash in the player, and three
+    /// playbacks in the player log.
     CrashSaved,
     /// Crash reports on, turned on a day ago. The app offers its system's own records from the
     /// week before; the scene has none of its own.
@@ -212,6 +213,14 @@ pub enum FfiScene {
     /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
     /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
     Profiles,
+    /// [`Self::Watching`] with the people the viewer follows on AniList
+    /// ([`fixtures::following`]): ten on Stardust Wayfarer, whose page shows five and Show all
+    /// 10, four of them on episode 8 for a row of three pictures and a count, and five on the
+    /// airing title. Every other title has nobody, so its page leaves the section out.
+    Following,
+    /// [`Self::Following`] with AniList slow to answer a title page, after
+    /// [`FOLLOWING_SLOW_ANSWER`]: the placeholders show, then the people take their place.
+    FollowingSlow,
     /// Reading on, a first launch: Watch, read or both is asked on page 2 of the first run,
     /// nothing chosen.
     ReadingFirstRun,
@@ -270,7 +279,21 @@ pub enum FfiScene {
     /// Reading as release builds have it: off, whatever the start says, with Both kept from a
     /// Fixtures build. The medium is Watch and every reading command is refused.
     ReadingDark,
+    /// Signed in, with Kumo no Ue no Toshokan's episodes 1 to 5 watched and episode 6 aired
+    /// [`MISSING_AIRED_AGO`] seconds before the scene's now, which no source lists yet: its page
+    /// says the episode aired and offers Check again and Play episode 5. The fixture source lists
+    /// episode 6 from its third listing of the show on, each listing after the first taking
+    /// [`MISSING_CHECK_TAKES`], so the first Check again shows Checking and comes back empty and
+    /// the second finds it. A second source, Yamabiko, lists episodes 1 to 4, and a third, Minato,
+    /// finds no match, for the lines in Source for this title.
+    MissingEpisode,
 }
+
+/// How long before [`FfiScene::MissingEpisode`]'s now its missing episode aired: 25 minutes.
+pub const MISSING_AIRED_AGO: i64 = 25 * 60;
+/// How long each check of [`FfiScene::MissingEpisode`]'s fixture source takes after the first:
+/// past the 600 ms an app waits before it shows Checking.
+pub const MISSING_CHECK_TAKES: std::time::Duration = std::time::Duration::from_millis(1_400);
 
 /// The works the reading scenes use, made up like every fixture.
 pub const READING_MANGA: &str = "a:900301";
@@ -360,6 +383,10 @@ pub fn testing_certificate_check() -> kaeri_model::servers::CertificateCheck {
 /// waits for an answer.
 pub const SLOW_ANSWER: std::time::Duration = std::time::Duration::from_millis(4_500);
 
+/// How long [`FfiScene::FollowingSlow`]'s fake AniList holds a title page: past the 600 ms after
+/// which the people's placeholders show, well within the time the client waits.
+pub const FOLLOWING_SLOW_ANSWER: std::time::Duration = std::time::Duration::from_millis(2_000);
+
 /// What Home asks AniList for beyond its queue's titles and their broadcasts: the season's
 /// lists, the genre shelf, recommendations and the season walk. [`FfiScene::Slow`] and
 /// [`FfiScene::Failed`] hold these up.
@@ -395,6 +422,8 @@ impl FfiScene {
                 | Self::SyncCloud
                 | Self::SyncTvPhoneSignIn
                 | Self::Profiles
+                | Self::Following
+                | Self::FollowingSlow
         )
     }
 
@@ -403,6 +432,7 @@ impl FfiScene {
         matches!(
             self,
             Self::Watching
+                | Self::MissingEpisode
                 | Self::Browsing
                 | Self::Servers
                 | Self::Library
@@ -423,6 +453,8 @@ impl FfiScene {
                 | Self::SyncCloud
                 | Self::SyncTvPhoneSignIn
                 | Self::Profiles
+                | Self::Following
+                | Self::FollowingSlow
         )
     }
 
@@ -579,6 +611,13 @@ impl FfiEngine {
         let started = runtime.block_on(async {
             let server = FakeAniList::start().await;
             server.set_now(now);
+            if scene == FfiScene::MissingEpisode {
+                // The broadcasts moved back so that episode 6 aired a moment ago, the fake's
+                // clock left at now.
+                let back = missing_episode_shift();
+                server.set_now(now - back);
+                server.advance(back);
+            }
             // The long franchise beside the six, for a season picker of twelve: a page opens on
             // it by id, as no list has it.
             server.add_titles(fixtures::long_franchise());
@@ -614,6 +653,14 @@ impl FfiEngine {
                 FfiScene::Failed => {
                     for operation in DISCOVERY {
                         server.fail_operation(operation, Failure::Status(500));
+                    }
+                }
+                FfiScene::Following | FfiScene::FollowingSlow => {
+                    for id in [fixtures::FINISHED, fixtures::AIRING] {
+                        server.set_following(id, fixtures::following(id));
+                    }
+                    if scene == FfiScene::FollowingSlow {
+                        server.answer_slowly(Operation::Detail, FOLLOWING_SLOW_ANSWER);
                     }
                 }
                 FfiScene::ReadingAnilistFailed => {
@@ -790,6 +837,9 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
     if matches!(scene, FfiScene::Sourceless | FfiScene::Licensed) {
         return ProviderRegistry::new(Vec::new());
     }
+    if *scene == FfiScene::MissingEpisode {
+        return missing_episode_sources(art);
+    }
     if *scene == FfiScene::NotFound {
         // A source that answers every search with nothing: a miss for every title.
         return ProviderRegistry::new(vec![
@@ -847,6 +897,43 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
         provider = provider.with_streams_for(sources::key(id), vec![stream.clone()]);
     }
     ProviderRegistry::new(vec![provider.arc()])
+}
+
+/// How far [`FfiScene::MissingEpisode`] moves the fake's broadcasts back: from the fixtures'
+/// now to [`MISSING_AIRED_AGO`] after Kumo no Ue no Toshokan's episode 6 airs.
+fn missing_episode_shift() -> i64 {
+    let next = fixtures::media(AIRING).next_airing_episode.map_or(0, |n| n.airing_at);
+    next - fixtures::FIXTURE_NOW + MISSING_AIRED_AGO
+}
+
+/// [`FfiScene::MissingEpisode`]'s sources: the fixture source, whose listings of Kumo no Ue no
+/// Toshokan find episode 6 from the third on; Yamabiko, with episodes 1 to 4 of it; and Minato,
+/// which matches nothing.
+fn missing_episode_sources(art: &str) -> ProviderRegistry {
+    let key = sources::key(AIRING);
+    let listed = sources::episodes(AIRING);
+    let mut found = listed.clone();
+    found.push(Episode { duration: listed.last().and_then(|e| e.duration), ..Episode::new(6) });
+    let fixture = sources::provider_with_art(art)
+        .with_listing_turns(
+            key.clone(),
+            vec![
+                (std::time::Duration::ZERO, listed.clone()),
+                (MISSING_CHECK_TAKES, listed.clone()),
+                (MISSING_CHECK_TAKES, found),
+            ],
+        )
+        .with_streams_for(key.clone(), vec![sources::episode_clip()]);
+    let hit = sources::hits().into_iter().find(|hit| hit.key == key);
+    let short = MockProvider::new("fixture-yamabiko")
+        .named("Yamabiko")
+        .with_hits(
+            hit.iter().map(|hit| SearchHit { episode_count: Some(4), ..hit.clone() }).collect(),
+        )
+        .with_episodes_for(key.clone(), listed.into_iter().take(4).collect())
+        .with_streams_for(key, vec![sources::episode_clip()]);
+    let none = MockProvider::new("fixture-minato").named("Minato").with_hits(Vec::new());
+    ProviderRegistry::new(vec![fixture.arc(), short.arc(), none.arc()])
 }
 
 /// The source [`FfiScene::Unsure`] puts first: an invented archive that lists four titles for
@@ -980,12 +1067,15 @@ fn crash_config(since: i64) -> String {
     )
 }
 
-/// The one saved report of [`FfiScene::CrashSaved`], in the crash store of the scene's data.
+/// The one saved report of [`FfiScene::CrashSaved`], in the crash store of the scene's data, and
+/// three playbacks in the player log.
 fn seed_crashes(data_dir: &std::path::Path, scene: &FfiScene, now: i64) {
     use kaeri_model::crash::{CrashFrame, CrashPlace, CrashRecord};
     if *scene != FfiScene::CrashSaved {
         return;
     }
+    // A crash in the player, after three playbacks: Report opens with the log ticked.
+    kaeri_engine::player_log::seed_fixture(3);
     let record = CrashRecord {
         id: "scene-1".into(),
         at_ms: (now - 2 * 3_600) * 1_000,
@@ -1048,6 +1138,7 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
     const HOUR: i64 = 3_600;
     const DAY: i64 = 24 * HOUR;
     match scene {
+        FfiScene::MissingEpisode => seed::watched(store, AIRING, 5, now - DAY),
         FfiScene::Fresh
         | FfiScene::NotFound
         | FfiScene::Offline
@@ -1117,6 +1208,8 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::SyncCloud
         | FfiScene::SyncTvPhoneSignIn
         | FfiScene::Profiles
+        | FfiScene::Following
+        | FfiScene::FollowingSlow
         | FfiScene::Browsing
         | FfiScene::LinkOpened => {
             // Oldest first, since each watch moves its title to the top.

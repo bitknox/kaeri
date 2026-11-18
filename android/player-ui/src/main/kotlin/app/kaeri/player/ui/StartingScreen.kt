@@ -99,6 +99,7 @@ import app.kaeri.player.startingAnnouncement
 import app.kaeri.player.startingWords
 import app.kaeri.player.startWaiting
 import app.kaeri.player.label
+import app.kaeri.player.rememberStartingShown
 import app.kaeri.player.primaryAction
 import app.kaeri.player.startActions
 import app.kaeri.player.StartDetailsMemory
@@ -116,13 +117,16 @@ private val COLUMN = 520.dp
 /**
  * The starting screen, in the player at full size: the ground, the title's wide art cropped to the
  * video rect under a ground of 55 % (80 % over bright art), and the column, until the first frame
- * lifts it on the fade-in curve (T2).
+ * lifts it on the fade-in curve (T2). On a roll-on the ground comes first and the art and column
+ * only after 600 ms, so a next episode that was warmed goes from the ground to its picture.
  */
 @Composable
 internal fun StartingLayer(model: PlayerModel, rect: VideoRect, art: Boolean, onChooseSource: () -> Unit) {
     val up = model.isPresented && (model.starting != null || !model.hasPicture || model.failure != null)
+    val content = rememberStartingShown(model, up)
     val reduced = rememberSystemReducedMotion()
-    val shown by animateFloatAsState(if (up) 1f else 0f, if (reduced) snap() else Motion.fadeIn(), label = "starting") // i18n-skip
+    val shown by animateFloatAsState(if (up || content) 1f else 0f, if (reduced) snap() else Motion.fadeIn(), label = "starting") // i18n-skip
+    val filled by animateFloatAsState(if (content) 1f else 0f, if (reduced) snap() else Motion.fadeIn(), label = "starting art") // i18n-skip
     if (shown == 0f) return
     val store = LocalAppStore.current
     val entries by store.titles.entries.collectAsStateWithLifecycle()
@@ -131,9 +135,11 @@ internal fun StartingLayer(model: PlayerModel, rect: VideoRect, art: Boolean, on
     // The hero-art rule, as the title page has it: the banner, else a still already seen.
     val wide = if (!art) null else id?.let { entries[it] }?.let { HeroArt.of(it, tables[id]).url } ?: model.starting?.bannerUrl ?: model.bannerUrl
     Box(Modifier.fillMaxSize().graphicsLayer { alpha = shown }.background(ObiSilk.Ground)) {
-        Box(Modifier.offset(rect.x, rect.y).size(rect.width, rect.height)) {
-            StartingArt(wide, Modifier.fillMaxSize())
-            StartingColumn(model, reduced, onChooseSource, Modifier.fillMaxSize())
+        if (filled > 0f) {
+            Box(Modifier.offset(rect.x, rect.y).size(rect.width, rect.height).graphicsLayer { alpha = filled }) {
+                StartingArt(wide, Modifier.fillMaxSize())
+                StartingColumn(model, reduced, onChooseSource, Modifier.fillMaxSize())
+            }
         }
     }
 }

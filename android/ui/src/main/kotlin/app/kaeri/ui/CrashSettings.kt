@@ -7,6 +7,9 @@ package app.kaeri.ui
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.net.Uri
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
@@ -35,6 +38,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -52,8 +56,11 @@ import app.kaeri.engine.model.CrashPlace
 import app.kaeri.engine.model.CrashSummary
 import app.kaeri.engine.model.SettingKey
 import app.kaeri.i18n.R
-import app.kaeri.store.bugReportText
-import app.kaeri.store.bugReportUrl
+import app.kaeri.store.BugReports
+import app.kaeri.store.bugReport
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 /** "30 October, 21:14", in the viewer's language. */
 internal fun crashWhen(atMs: Long): String {
@@ -159,7 +166,9 @@ internal fun CrashReportsGroup() {
 
 /**
  * Report a bug: what is included, the exact text, and Open on GitHub. Crashes from the last
- * seven days are ticked only when the dialog opened from the crash notice.
+ * seven days are ticked only when the dialog opened from the crash notice. Player log is the last
+ * row of Included: ticked, it is saved as a file through the system's picker, for the reporter to
+ * attach on GitHub; Open on GitHub saves it first.
  */
 @Composable
 internal fun ReportBugDialog() {
@@ -174,12 +183,53 @@ internal fun ReportBugDialog() {
     var error by rememberSaveable(asked) { mutableStateOf(true) }
     var ticked by remember(asked) { mutableStateOf(asked.ticked) }
     var shown by rememberSaveable(asked) { mutableStateOf(false) }
-    var copied by remember(asked, ticked, error) { mutableStateOf(false) }
     val navigator = LocalNavigator.current
     val device = remember { bugReportDevice(context) }
     val problem = if (error) asked.problem else null
     val ids = recent.map { it.id }.filter { it in ticked }
-    val text = remember(problem, ids) { store.bugReportText(device, problem, ids) }
+    val log = remember(asked) { PlayerLogState() }
+    // What the log holds, and whether it starts ticked: from a playback error or with a crash in
+    // the player. The engine may read the log's file for it, so off the main thread.
+    LaunchedEffect(asked) {
+        val opening = store.bugReport(device, asked.problem, asked.ticked.toList())
+        val (stats, starts) = withContext(Dispatchers.IO) {
+            val stats = BugReports.playerLogStats()
+            stats to (stats.playbacks > 0u && BugReports.playerLogStartsTicked(opening))
+        }
+        log.stats = stats
+        if (starts) log.ticked = true
+    }
+    val report = remember(problem, ids, log.ticked) { store.bugReport(device, problem, ids, log.ticked) }
+    val text = remember(report) { BugReports.text(report) }
+    var copied by remember(asked, ticked, error, log.ticked) { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
+    val open = {
+        openIssue(context, BugReports.url(report))
+        store.crashes.closeReport()
+    }
+    val saveLog = rememberLauncherForActivityResult(ActivityResultContracts.CreateDocument("text/plain")) { uri: Uri? ->
+        if (uri == null) {
+            // Cancelled: nothing is written, and GitHub does not open.
+            log.openAfterSave = false
+            return@rememberLauncherForActivityResult
+        }
+        scope.launch {
+            val name = withContext(Dispatchers.IO) { writePlayerLog(context, uri, report) }
+            if (name == null) {
+                log.failed = true
+                log.openAfterSave = false
+                return@launch
+            }
+            log.failed = false
+            log.saved = name.ifEmpty { log.stats?.fileName.orEmpty() }
+            if (log.openAfterSave) {
+                log.openAfterSave = false
+                openIssue(context, BugReports.url(store.bugReport(device, problem, ids, playerLog = true)))
+                store.crashes.closeReport()
+            }
+        }
+    }
+    val save: () -> Unit = { log.stats?.fileName?.let { saveLog.launch(it) } }
     Dialog(onDismissRequest = store.crashes::closeReport, properties = DialogProperties(usePlatformDefaultWidth = false)) {
         androidx.compose.material3.Surface(Modifier.fillMaxSize(), color = MaterialTheme.colorScheme.surface) {
             Column(
@@ -189,25 +239,28 @@ internal fun ReportBugDialog() {
                 Text(stringResource(R.string.report_title), style = MaterialTheme.typography.headlineSmall)
                 Text(stringResource(R.string.report_detail), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                 Text(stringResource(R.string.report_included), style = MaterialTheme.typography.titleMedium)
-                IncludedRow(stringResource(R.string.report_versions), checked = true, enabled = false) {}
-                if (asked.problem != null) IncludedRow(stringResource(R.string.report_last_error), error) { error = it }
-                if (saving) {
-                    recent.forEach { crash ->
-                        IncludedRow(
-                            stringResource(R.string.report_crash_item, crashWhen(crash.atMs), crashPlaceWords(crash.place)),
-                            crash.id in ticked,
-                        ) { on -> ticked = if (on) ticked + crash.id else ticked - crash.id }
+                Column {
+                    IncludedRow(stringResource(R.string.report_versions), checked = true, enabled = false) {}
+                    if (asked.problem != null) IncludedRow(stringResource(R.string.report_last_error), error) { error = it }
+                    if (saving) {
+                        recent.forEach { crash ->
+                            IncludedRow(
+                                stringResource(R.string.report_crash_item, crashWhen(crash.atMs), crashPlaceWords(crash.place)),
+                                crash.id in ticked,
+                            ) { on -> ticked = if (on) ticked + crash.id else ticked - crash.id }
+                        }
+                    } else {
+                        Text(stringResource(R.string.report_crash_off), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        TextButton(onClick = {
+                            store.crashes.closeReport()
+                            navigator.openSettings(SettingsPane.About)
+                        }) { Text(stringResource(R.string.report_crash_settings), color = MaterialTheme.colorScheme.onSurface) }
                     }
-                } else {
-                    Text(stringResource(R.string.report_crash_off), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    TextButton(onClick = {
-                        store.crashes.closeReport()
-                        navigator.openSettings(SettingsPane.About)
-                    }) { Text(stringResource(R.string.report_crash_settings), color = MaterialTheme.colorScheme.onSurface) }
+                    PlayerLogRow(log, onSave = save)
                 }
                 TextButton(onClick = { shown = !shown }) { Text(stringResource(if (shown) R.string.report_hide_sent else R.string.report_show_sent), color = MaterialTheme.colorScheme.onSurface) }
                 AnimatedVisibility(shown, enter = expandVertically(Motion.standard()) + fadeIn(Motion.fadeIn()), exit = shrinkVertically(Motion.standard()) + fadeOut(Motion.fadeOut())) {
-                    SelectionContainer { Text(text, fontFamily = FontFamily.Monospace, style = MaterialTheme.typography.bodySmall) }
+                    WhatIsSent(text, report, log.ticked)
                 }
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
                     OutlinedButton(onClick = {
@@ -216,8 +269,13 @@ internal fun ReportBugDialog() {
                     }) { Text(stringResource(if (copied) R.string.report_copied else R.string.report_copy)) }
                     TextButton(onClick = store.crashes::closeReport) { Text(stringResource(R.string.action_cancel), color = MaterialTheme.colorScheme.onSurface) }
                     Button(onClick = {
-                        openIssue(context, store.bugReportUrl(device, problem, ids))
-                        store.crashes.closeReport()
+                        // A ticked log not saved yet is saved first; GitHub opens once it is.
+                        if (log.ticked && log.saved == null) {
+                            log.openAfterSave = true
+                            save()
+                        } else {
+                            open()
+                        }
                     }) { Text(stringResource(R.string.report_open_github)) }
                 }
                 Text(stringResource(R.string.report_privacy), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)

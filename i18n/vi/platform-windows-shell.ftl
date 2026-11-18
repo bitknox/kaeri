@@ -56,3 +56,4 @@ titlebar-open-devices = Mở { -device-cap-pl }
 messages-title = Thông điệp
 messages-none = Chưa có thông điệp nào
 messages-alert = Sự cố
+tv-on-this-network = Trên mạng này

@@ -72,7 +72,10 @@ public struct StartingWalk: Equatable, Sendable {
     var activeSince: ContinuousClock.Instant
     var asked: Asked?
     var missed: Missed?
-    var resting: [String] = []
+    /// The sources held back by a setting or a check, never asked, by why.
+    var held: [HeldSources] = []
+    /// Their Details rows, after the asked ones.
+    var heldRows: [StartRow] = []
     var from: String?
     /// The pinned source that did not have the episode, once another source answered.
     var pinMissed: String?
@@ -131,9 +134,16 @@ public struct StartingWalk: Equatable, Sendable {
             finish(.missed, title: Self.missLine(name: name, miss: miss, episode: episode), at: now)
         case .pinMissed(let name):
             pinMissed = name
-        case .sourcesResting(let names):
-            resting = names
-            add(.resting, title: L.playerStartResting.prefixed(by: names.joined(separator: ", ")), at: now)
+        case .sourcesHeldBack(let names, let why):
+            if let i = held.firstIndex(where: { $0.why == why }) {
+                held[i].names += names
+            } else {
+                held.append(HeldSources(names: names, why: why))
+            }
+            for name in names {
+                heldRows.append(StartRow(id: nextRow, kind: .resting, title: Self.heldNote(why).prefixed(by: name), began: now, took: nil))
+                nextRow += 1
+            }
         case .findingPeers(let name):
             closeLookup(at: now)
             phase = .peers(name)
@@ -250,8 +260,19 @@ public struct StartingWalk: Equatable, Sendable {
         rows[0].took = now - rows[0].began
     }
 
-    /// Details rows to show: the steps so far, the one under way last.
-    public var detailRows: [StartRow] { rows }
+    /// Details rows to show: the steps so far, the one under way last, then the sources held
+    /// back, which were never asked.
+    public var detailRows: [StartRow] { rows + heldRows }
+
+    /// A held-back source's row note: not asked, and why.
+    static func heldNote(_ why: SourceHold) -> String {
+        switch why {
+        case .torrentsOff: L.playerStartRowHeldTorrentsOff
+        case .proxyCheck: L.playerStartRowHeldProxy
+        case .cellular: L.playerStartRowHeldCellular
+        case .other: L.playerStartRowHeldOther
+        }
+    }
 
     // MARK: What the screen reads
 
@@ -393,12 +414,20 @@ private extension String {
 public struct StartFailureView: Equatable, Sendable {
     public enum Lead: Equatable, Sendable { case chooseSource, tryAgain, fixMatch, addStore, offline, close }
     public var reason: String
-    /// "Alpha and Brook were asked.", when any source was.
+    /// "Alpha and Brook were asked.", when every source asked lacks the episode and any was asked.
     public var asked: String?
+    /// "Brook doesn't have episode 7.", the sources asked that answered without it, when others
+    /// couldn't be reached or weren't asked.
+    public var lacking: String?
+    /// "Harbor isn't asked while torrent playback is off.", one sentence for each cause a source
+    /// was held back by.
+    public var notAsked: [String] = []
     public var lead: Lead
 
-    /// The reason and who was asked, as the second line reads and VoiceOver says it.
-    public var detail: String { [reason, asked].compactMap { $0 }.joined(separator: " ") }
+    /// The reason, then source by source what each did, as the second line reads and VoiceOver says it.
+    public var detail: String {
+        ([reason, asked, lacking].compactMap { $0 }.filter { !$0.isEmpty } + notAsked).joined(separator: " ")
+    }
 
     /// The cause as a sentence of its own: what it has of the sources' answers left out, and the
     /// hint after it, which the buttons give. Taken from the cause itself, not cut from its text.
@@ -422,13 +451,42 @@ public struct StartFailureView: Equatable, Sendable {
         return first
     }
 
-    public init(why: NoSourceWhy, text: Msg, asked: [String] = []) {
-        reason = Self.reason(of: text)
-        self.asked = asked.isEmpty ? nil : L.playerStartAsked(names: asked.formatted(.list(type: .and)))
+    /// When every source asked lacks the episode: why, and who was asked. Otherwise source by
+    /// source as the rows say it: the ones asked that couldn't be reached, the ones asked that
+    /// don't have the episode, and the ones held back and why. A source held back was never
+    /// asked, so it is never one the start couldn't reach. Try again leads.
+    public init(why: NoSourceWhy, text: Msg, episode: String = "", asked: [String] = [], unreached: [String] = [], heldBack: [HeldSources] = []) {
+        let held = heldBack.contains { !$0.names.isEmpty }
+        if unreached.isEmpty && !held {
+            reason = Self.reason(of: text)
+            self.asked = asked.isEmpty ? nil : L.playerStartAsked(names: asked.formatted(.list(type: .and)))
+        } else {
+            let answered = asked.filter { !unreached.contains($0) }
+            let lacking = answered.isEmpty
+                ? nil
+                : L.playerStartLacking(count: answered.count, names: answered.formatted(.list(type: .and)), episode: episode)
+            if unreached.isEmpty {
+                reason = lacking ?? ""
+            } else {
+                reason = L.playerStartUnreached(names: unreached.formatted(.list(type: .and)))
+                self.lacking = lacking
+            }
+        }
+        notAsked = heldBack.filter { !$0.names.isEmpty }.map { group in
+            let names = group.names.formatted(.list(type: .and))
+            let count = group.names.count
+            switch group.why {
+            case .torrentsOff: return L.playerStartNotAskedTorrentsOff(count: count, names: names)
+            case .proxyCheck: return L.playerStartNotAskedProxy(count: count, names: names)
+            case .cellular: return L.playerStartNotAskedCellular(count: count, names: names)
+            case .other: return L.playerStartNotAskedOther(count: count, names: names)
+            }
+        }
         switch why {
         case .notAired: lead = .close
         case .noSources: lead = .addStore
         case .noConnection: lead = .offline
+        case .notFound where !unreached.isEmpty || !heldBack.isEmpty: lead = .tryAgain
         case .notFound:
             switch text {
             case .noticeReason(.titleNoMatch): lead = .fixMatch

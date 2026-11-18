@@ -4,8 +4,8 @@
 //! player. Its rows come from mpv's own figures, which the hosted player reports: the few it
 //! observes from the start, and the rest read with `PlayerOp::Sample` once a second while the
 //! panel is open ([`SAMPLED`]). The engine adds what only it knows: the display as the player
-//! said it, the upscaling chain and why it is what it is, the source's label, and whether the
-//! device is offline.
+//! said it, the upscaling chain and why it is what it is, the source's label, whether the
+//! device is offline, and for a torrent the swarm: its speeds, peers, pieces and what it sent.
 //!
 //! [`stats`] is pure: [`Figures`] in, the rows, the TV's summary lines and whether the stream is
 //! still awaited out. [`copy_text`] is Copy stats' text, and [`fixture`] the made-up panels the
@@ -23,6 +23,7 @@ use serde_json::{Value, json};
 use crate::playback::{
     picture::{self, HdrKind},
     shaders::{self, Budget, Display, Look, Source},
+    starting::{Held, Pace},
 };
 
 /// What the panel reads beyond what the player observes from the start, once a second while it
@@ -92,6 +93,11 @@ pub struct Figures {
     pub buffering: bool,
     /// Frames were dropped in the last ten seconds: see [`Drops`].
     pub drops_rising: bool,
+    /// The stream is a torrent's, served from the engine's loopback server: the swarm rows
+    /// show, and Network is the swarm's pace rather than the loopback read's.
+    pub torrent: bool,
+    /// How the torrent is doing, once its swarm answers.
+    pub swarm: Option<Pace>,
 }
 
 /// The dropped frames over the last ten seconds, to tell frames dropping now from a count
@@ -135,13 +141,16 @@ pub fn rows(f: &Figures) -> Vec<DetailRow> {
         if !f.local {
             labels.push("Network");
         }
+        if f.torrent {
+            labels.extend(["Peers", "Pieces", "Uploaded"]);
+        }
         labels.extend(["Audio", "Subtitles", "Source", "A/V sync"]);
         return labels
             .into_iter()
             .map(|label| DetailRow { label: label.into(), value: DASH.into(), warn: false })
             .collect();
     }
-    let lines: [(&str, Option<(String, bool)>); 12] = [
+    let lines: [(&str, Option<(String, bool)>); 15] = [
         ("Video", video(f).map(fine)),
         ("Decoding", decoding(f).map(fine)),
         ("Display", f.screen.as_ref().map(display).map(fine)),
@@ -150,6 +159,9 @@ pub fn rows(f: &Figures) -> Vec<DetailRow> {
         ("Dropped frames", dropped(f)),
         ("Buffer", buffer(f)),
         ("Network", network(f).map(fine)),
+        ("Peers", peers(f)),
+        ("Pieces", pieces(f).map(fine)),
+        ("Uploaded", uploaded(f).map(fine)),
         ("Audio", audio(f).map(fine)),
         ("Subtitles", subtitles(f).map(fine)),
         ("Source", f.source.clone().map(fine)),
@@ -431,7 +443,9 @@ fn buffer(f: &Figures) -> Option<(String, bool)> {
     Some((value, !f.paused && !f.local && ahead < LOW_BUFFER && !to_the_end))
 }
 
-/// "2.4 MB/s", "Offline", nothing for a file on the device.
+/// "2.4 MB/s", "Offline", nothing for a file on the device. A torrent's is the swarm's:
+/// "3.4 MB/s down · 220 kB/s up", a dash until it answers. mpv's `cache-speed` there is only
+/// how fast it reads the loopback server.
 fn network(f: &Figures) -> Option<String> {
     if f.local {
         return None;
@@ -439,8 +453,63 @@ fn network(f: &Figures) -> Option<String> {
     if f.offline {
         return Some("Offline".into());
     }
+    if f.torrent {
+        return Some(match &f.swarm {
+            Some(pace) => format!(
+                "{} down · {} up",
+                per_second(pace.bytes_per_second),
+                per_second(pace.upload_bytes_per_second)
+            ),
+            None => DASH.into(),
+        });
+    }
     let speed = number(f, "cache-speed")?;
-    Some(format!("{}/s", human_bytes(speed.max(0.0) as u64)))
+    Some(per_second(speed.max(0.0) as u64))
+}
+
+fn per_second(bytes: u64) -> String {
+    format!("{}/s", human_bytes(bytes))
+}
+
+/// "12 connected · 48 found", a dash until the swarm answers. In amber with none connected
+/// while playing and some of the file still to come: it can only stall from there.
+fn peers(f: &Figures) -> Option<(String, bool)> {
+    if !f.torrent {
+        return None;
+    }
+    let Some(pace) = &f.swarm else {
+        return Some(fine(DASH.into()));
+    };
+    let value = format!("{} connected · {} found", pace.peers, pace.found);
+    let all_held = pace.pieces.is_some_and(|p| p.total > 0 && p.held >= p.total);
+    Some((value, pace.peers == 0 && !all_held && !f.paused))
+}
+
+/// "41% held · 9 ahead": the share of the playing file's pieces held, and the whole pieces held
+/// in a row from where the player reads. A dash until the swarm answers, and left out when the
+/// pieces are not known.
+fn pieces(f: &Figures) -> Option<String> {
+    if !f.torrent {
+        return None;
+    }
+    let Some(pace) = &f.swarm else {
+        return Some(DASH.into());
+    };
+    let held = pace.pieces.filter(|held| held.total > 0)?;
+    // Rounded down, so 100% is only ever all of it.
+    let percent = u64::from(held.held.min(held.total)) * 100 / u64::from(held.total);
+    Some(match held.ahead {
+        Some(ahead) => format!("{percent}% held · {ahead} ahead"),
+        None => format!("{percent}% held"),
+    })
+}
+
+/// "120 MB": what the torrent has sent to others, a dash until the swarm answers.
+fn uploaded(f: &Figures) -> Option<String> {
+    if !f.torrent {
+        return None;
+    }
+    Some(f.swarm.as_ref().map_or_else(|| DASH.into(), |pace| human_bytes(pace.uploaded_bytes)))
 }
 
 /// "AAC stereo 48 kHz · Japanese".
@@ -680,6 +749,17 @@ fn fixture_figures(state: StatsFixture) -> Figures {
             set(&mut f, "frame-drop-count", json!(38));
             f.drops_rising = true;
             f.upscaling = Some("ArtCNN C4F16, eased after dropped frames".into());
+        }
+        StatsFixture::Torrent => {
+            f.torrent = true;
+            f.swarm = Some(Pace {
+                peers: 12,
+                bytes_per_second: 3_400_000,
+                found: 48,
+                upload_bytes_per_second: 220_000,
+                uploaded_bytes: 120_000_000,
+                pieces: Some(Held { held: 410, total: 1000, ahead: Some(9) }),
+            });
         }
     }
     f
@@ -946,6 +1026,133 @@ mod tests {
         assert_eq!(upscaling(&native), "Chroma only: the source fills the display");
         assert_eq!(upscaling(&Upscale { look: Look::Off, ..up }), "Off");
         assert_eq!(upscaling(&Upscale { shaders: false, ..up }), "Off");
+    }
+
+    #[test]
+    fn a_torrent_adds_the_swarm_after_the_buffer() {
+        let stats = fixture(StatsFixture::Torrent);
+        let labels: Vec<_> = stats.rows.iter().map(|r| r.label.as_str()).collect();
+        assert_eq!(
+            labels[5..10],
+            ["Buffer", "Network", "Peers", "Pieces", "Uploaded"],
+            "the delivery rows together"
+        );
+        assert_eq!(value(&stats, "Network").unwrap(), "3.4 MB/s down · 220 kB/s up");
+        assert_eq!(value(&stats, "Peers").unwrap(), "12 connected · 48 found");
+        assert_eq!(value(&stats, "Pieces").unwrap(), "41% held · 9 ahead");
+        assert_eq!(value(&stats, "Uploaded").unwrap(), "120 MB");
+        assert!(stats.rows.iter().all(|r| !r.warn), "nothing wrong");
+        // Another stream has none of them, and its Network is mpv's read.
+        let playing = fixture(StatsFixture::Playing);
+        for label in ["Peers", "Pieces", "Uploaded"] {
+            assert_eq!(row(&playing, label), None, "{label}");
+        }
+    }
+
+    #[test]
+    fn the_swarm_s_speeds_read_in_the_panel_s_units() {
+        let mut f = figures_of(StatsFixture::Torrent);
+        let pace = f.swarm.as_mut().unwrap();
+        pace.bytes_per_second = 0;
+        pace.upload_bytes_per_second = 950;
+        pace.uploaded_bytes = 12_400_000_000;
+        let stats = stats_of(&f);
+        assert_eq!(value(&stats, "Network").unwrap(), "0 B/s down · 950 B/s up");
+        assert_eq!(value(&stats, "Uploaded").unwrap(), "12 GB");
+        let pace = f.swarm.as_mut().unwrap();
+        pace.bytes_per_second = 12_345_678;
+        pace.uploaded_bytes = 0;
+        let stats = stats_of(&f);
+        assert_eq!(value(&stats, "Network").unwrap(), "12 MB/s down · 950 B/s up");
+        assert_eq!(value(&stats, "Uploaded").unwrap(), "0 B");
+        // mpv's read of the loopback server never shows for a torrent.
+        f.swarm = None;
+        assert_eq!(value(&stats_of(&f), "Network").unwrap(), DASH);
+        f.offline = true;
+        assert_eq!(value(&stats_of(&f), "Network").unwrap(), "Offline");
+    }
+
+    #[test]
+    fn no_peers_is_a_problem_only_while_more_of_the_file_is_to_come() {
+        let mut f = figures_of(StatsFixture::Torrent);
+        let pace = f.swarm.as_mut().unwrap();
+        pace.peers = 0;
+        pace.found = 0;
+        let stats = stats_of(&f);
+        let peers = row(&stats, "Peers").unwrap();
+        assert_eq!(peers.value, "0 connected · 0 found");
+        assert!(peers.warn);
+        // Paused, nothing is a problem.
+        f.paused = true;
+        assert!(!row(&stats_of(&f), "Peers").unwrap().warn);
+        f.paused = false;
+        // Held waiting: the buffer says so first, and only it is amber.
+        f.buffering = true;
+        let warned: Vec<_> =
+            stats_of(&f).rows.iter().filter(|r| r.warn).map(|r| r.label.clone()).collect();
+        assert_eq!(warned, ["Buffer"]);
+        f.buffering = false;
+        // The whole file held: playback needs nobody.
+        f.swarm.as_mut().unwrap().pieces =
+            Some(Held { held: 1000, total: 1000, ahead: Some(0) });
+        let all = stats_of(&f);
+        assert!(!row(&all, "Peers").unwrap().warn);
+        assert_eq!(value(&all, "Pieces").unwrap(), "100% held · 0 ahead");
+    }
+
+    #[test]
+    fn pieces_round_down_and_unknowns_are_left_out() {
+        let mut f = figures_of(StatsFixture::Torrent);
+        let mut held = |pieces| {
+            f.swarm.as_mut().unwrap().pieces = pieces;
+            value(&stats_of(&f), "Pieces")
+        };
+        assert_eq!(
+            held(Some(Held { held: 999, total: 1000, ahead: Some(3) })).unwrap(),
+            "99% held · 3 ahead",
+            "never 100% short of the whole file"
+        );
+        assert_eq!(
+            held(Some(Held { held: 7, total: 700, ahead: None })).unwrap(),
+            "1% held",
+            "not read yet: nothing ahead to say"
+        );
+        assert_eq!(held(Some(Held { held: 0, total: 0, ahead: Some(0) })), None);
+        assert_eq!(held(None), None, "a bitfield that did not parse");
+        // The other swarm rows stay.
+        let stats = stats_of(&f);
+        assert!(row(&stats, "Peers").is_some() && row(&stats, "Uploaded").is_some());
+    }
+
+    #[test]
+    fn before_the_swarm_answers_its_rows_are_dashes() {
+        let mut f = figures_of(StatsFixture::Torrent);
+        f.swarm = None;
+        let stats = stats_of(&f);
+        for label in ["Network", "Peers", "Pieces", "Uploaded"] {
+            assert_eq!(value(&stats, label).unwrap(), DASH, "{label}");
+        }
+        assert!(stats.rows.iter().all(|r| !r.warn));
+        // Opened before the file has: the torrent's rows wait with the rest.
+        let waiting = Figures { torrent: true, ..Figures::default() };
+        let labels: Vec<_> = rows(&waiting).into_iter().map(|r| r.label).collect();
+        assert_eq!(labels[5..10], ["Buffer", "Network", "Peers", "Pieces", "Uploaded"]);
+    }
+
+    #[test]
+    fn copy_stats_carries_the_swarm_rows_and_no_names() {
+        let stats = fixture(StatsFixture::Torrent);
+        let about = StatsAbout {
+            app_version: "0.5.0".into(),
+            system: "Android 16".into(),
+            device: String::new(),
+        };
+        let text = copy_text(&stats.rows, &about);
+        assert!(text.contains("\nPeers: 12 connected · 48 found\n"), "{text}");
+        assert!(text.contains("\nPieces: 41% held · 9 ahead\n"), "{text}");
+        for absent in ["://", "magnet", "Route", "SOCKS", ".mkv", "Seed"] {
+            assert!(!text.contains(absent), "{absent} in {text}");
+        }
     }
 
     fn figures_of(state: StatsFixture) -> Figures {

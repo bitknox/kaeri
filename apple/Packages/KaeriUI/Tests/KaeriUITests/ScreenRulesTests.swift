@@ -22,6 +22,17 @@ struct ScreenRulesTests {
         #expect(Broadcast(entry: e, episode: 8, airs: aired.airs).watched)
     }
 
+    @Test func aDubbedBroadcastSaysDubbedOnce() {
+        let now = Date(timeIntervalSince1970: 1_800_000_000)
+        let e = entry { $0.airingDubbed = true }
+        let aired = Broadcast(entry: e, episode: 6, airs: now.addingTimeInterval(-45 * 3600))
+        let coming = Broadcast(entry: e, episode: 7, airs: now.addingTimeInterval(90 * 60))
+        #expect(aired.line(now: now) == "E6 out 1 d 21 h ago · Dubbed")
+        for words in [aired.line(now: now), coming.line(now: now), aired.episodeLong, aired.episodeShort] {
+            #expect(words.lowercased().components(separatedBy: "dubbed").count == 2, "\(words)")
+        }
+    }
+
     @Test func aWeekRunsMondayToSunday() {
         // Wednesday 21 October 2026, at noon where the test runs.
         var calendar = Calendar(identifier: .gregorian)

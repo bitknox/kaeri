@@ -82,6 +82,18 @@ more-following = Obserwowane osoby
 more-following-note = Z AniList
 more-followed-score = { $score }/10
 more-like-this = Podobne
+following-show-all = Pokaż wszystkie { $count }
+following-names = { $more ->
+    [one] { $first }, { $second } i { $more } inna osoba
+    [few] { $first }, { $second } i { $more } inne osoby
+    [many] { $first }, { $second } i { $more } innych osób
+   *[other] { $first }, { $second } i { $more } innej osoby
+ }
+following-names-two = { $first } i { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names }: obejrzane do tego miejsca.
+following-score-spoken = Ocena { $score } na 10
+following-open-help = Pokazuje, gdzie jest każda z tych osób.
 more-followed-progress = { $status } · { $progress }
 more-empty = AniList nie ma jeszcze obsady, twórców ani polecanych tytułów dla tego tytułu.
 more-spoiler = Spoiler
@@ -102,7 +114,6 @@ title-fact-range = { $from } do { $to }
 title-fact-after = Po odcinku { $episode }
 title-fact-now = Trwa
 title-fact-tba = Do ogłoszenia
-more-following-line = { $status } · { $score }/10
 episode-go-to = Przejdź do odcinka…
 episode-go-to-title = Przejdź do odcinka
 episode-go-to-go = Idź
@@ -110,3 +121,15 @@ episode-go-to-hint = { $first } do { $last }
 episode-go-to-label = Odcinek, od { $first } do { $last }
 episode-go-to-none = Nie ma odcinka { $number }. Ten serial ma ich { $last }.
 episode-go-to-not-out = Odcinek { $number } jeszcze nie wyszedł. Najnowszy to { $latest }.
+episode-missing-aired = Odcinek { $episode } ukazał się { $ago }.
+episode-missing-aired-on = Odcinek { $episode } ukazał się { $date }.
+episode-missing-not-yet = Twoje { -source-pl } jeszcze go nie mają.
+episode-missing-still = Twoje { -source-pl } nadal go nie mają.
+episode-missing-no-answer = Twoje { -source-pl } nie odpowiedziały.
+episode-missing-looks-again = { -app-name } szuka go ponownie co { $minutes } min.
+episode-missing-none = Twoje { -source-pl } go nie mają.
+episode-missing-offline = { -app-name } poszuka go po powrocie połączenia.
+episode-row-aired-ago = Ukazał się { $ago }
+episode-unsourced-yet = { -source-cap-pl } jeszcze go nie mają
+episode-found-announcement = Twoje { -source-pl } mają już odcinek { $episode }.
+episode-check-again-help = { -app-name } sam też szuka co { $minutes } min przez { $hours } godz. po emisji odcinka.

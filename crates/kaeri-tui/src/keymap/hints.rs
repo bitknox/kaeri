@@ -166,6 +166,24 @@ fn hint_use() -> &'static str {
     said(t::keys_hint_use())
 }
 
+/// A title page's keys while its next episode is missing: Refresh checks for it again until a
+/// week on, and Space plays the episode before it when a source has one.
+fn missing_hints(
+    missing: &kaeri_model::missing::MissingEpisode,
+) -> Vec<(Action, &'static str)> {
+    [
+        missing.checkable().then(|| (Action::Refresh, said(t::keys_hint_check_again()))),
+        missing.previous.map(|previous| {
+            (Action::PlayNext, said(t::keys_hint_play_episode(i64::from(previous))))
+        }),
+        Some((Action::Open, Action::ShowEpisodes.hint())),
+        Some((Action::Back, Action::Back.hint())),
+    ]
+    .into_iter()
+    .flatten()
+    .collect()
+}
+
 /// The two or three contextual hints shown at the right of the status line.
 ///
 /// Deliberately short. A full footer of bindings is the templated look this design avoids;
@@ -224,6 +242,7 @@ pub(crate) fn status_hints_paged(
         Some(pair(&key(Action::Left)?, &key(Action::Right)?))
     };
     let in_stage = app.nav.focus() == crate::nav::Focus::Stage;
+    let missing = app.missing_here().filter(|_| app.playing.is_none());
     let wanted: Vec<(Action, &'static str)> = match app.nav.current() {
         // The reader draws its own status line, with the keys for the open state.
         V::Reader(_) => return crate::app::reader_hints(app, usize::MAX),
@@ -265,6 +284,11 @@ pub(crate) fn status_hints_paged(
         ],
         // Enter on a title page goes one deeper, into its episodes. Space is play next only
         // while nothing plays; then it pauses the player, as on every other screen.
+        // While the next episode is missing, Refresh checks for it again and Space plays the one
+        // before it, when a source has one: each named only where it does that.
+        V::Title(_) if missing.is_some() => {
+            missing.as_ref().map(missing_hints).unwrap_or_default()
+        }
         V::Title(id) => [
             // Another, on the page Surprise me opened, while its pool has one to pick.
             app.surprised_here()
@@ -332,6 +356,8 @@ pub(crate) fn status_hints_paged(
             hints
         }
         V::Section(Section::Home) => vec![
+            // Private mode first, so a narrow line drops it before the keys for the row.
+            (Action::TogglePrivate, Action::TogglePrivate.hint()),
             // A part-watched row resumes on Enter rather than opening.
             (Action::Open, if app.resumes_on_enter() { hint_play() } else { hint_open() }),
             (Action::ShowEpisodes, Action::ShowEpisodes.hint()),
@@ -435,14 +461,17 @@ pub(crate) fn status_hints_paged(
             });
             hints
         }
-        // Enter signs the highlighted tracker in or out, so it is named for which.
-        V::Section(Section::Accounts) => match app.sync.get(app.cursors.accounts.selected) {
-            Some(tracker) if tracker.connected && !tracker.needs_reauth => {
-                vec![(Action::Open, hint_sign_out())]
-            }
-            Some(_) => vec![(Action::Open, hint_sign_in())],
-            None => Vec::new(),
-        },
+        // Enter turns the private mode switch over on the first row, and signs the highlighted
+        // tracker in or out after it, so it is named for which. The
+        // following switch after the trackers changes, as a setting does.
+        V::Section(Section::Accounts) => {
+            let enter = match app.account_tracker() {
+                Some(tracker) if tracker.connected && !tracker.needs_reauth => hint_sign_out(),
+                Some(_) => hint_sign_in(),
+                None => hint_change(),
+            };
+            vec![(Action::Open, enter), (Action::TogglePrivate, Action::TogglePrivate.hint())]
+        }
         // Settings has nothing to open and no episodes, so offering those keys would be a lie.
         // Left and Right are what actually do something here.
         // `d` leads to Devices, first so a narrow line drops it before the arrows.
@@ -608,13 +637,24 @@ fn overlay_hints(
         O::MediumOff => {
             vec![hint("↑↓", hint_move()), hint("↵", hint_choose()), hint(ESC, hint_cancel())]
         }
-        O::BugReport => vec![
-            hint("↑↓", hint_move()),
-            hint("↵", super::said(kaeri_i18n::t::report_open_github())),
-            hint("C", super::said(kaeri_i18n::t::report_copy())),
-            hint("E", super::said(kaeri_i18n::t::settings_crash_delete())),
-            hint(ESC, hint_close()),
-        ],
+        O::BugReport => {
+            // On Save player log, Enter saves it; once saved there is nothing more for it to do.
+            let open = if app.cursors.overlay.selected != crate::app::LOG_ROW {
+                Some(kaeri_i18n::t::report_open_github())
+            } else if app.player_log.saved.is_none() && app.player_log.stats.playbacks > 0 {
+                Some(kaeri_i18n::t::report_player_log_save_here())
+            } else {
+                None
+            };
+            let mut hints = vec![hint("↑↓", hint_move())];
+            hints.extend(open.map(|open| hint("↵", super::said(open))));
+            hints.extend([
+                hint("C", super::said(kaeri_i18n::t::report_copy())),
+                hint("E", super::said(kaeri_i18n::t::settings_crash_delete())),
+                hint(ESC, hint_close()),
+            ]);
+            hints
+        }
         O::Logs if app.logs.is_empty() => vec![hint(ESC, hint_close())],
         O::Logs => vec![hint("↑↓", hint_move()), hint(ESC, hint_close())],
         O::SearchFilters => {

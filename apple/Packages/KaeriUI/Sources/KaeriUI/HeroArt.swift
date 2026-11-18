@@ -8,8 +8,8 @@ import SwiftUI
 
 /// The wide art itself: the banner or the still filling the frame, faded in over the cover's
 /// colour once it arrives (T8), or that colour alone while the episodes load, a moment at most.
-/// With neither, the cover fills it (`CoverFill`). Nothing for `.compact`; the screen leaves the
-/// frame out.
+/// With neither, the cover fills it (`CoverFill`), and with no cover either, a titled plate
+/// (`TitlePlate`). Nothing for `.compact`; the screen leaves the frame out.
 ///
 /// A still landing after the cover filled the frame fades in over the cover, which stays whole
 /// beneath: one crossfade, never through the plate.
@@ -49,11 +49,16 @@ struct HeroArtView: View {
                         holds: holds
                     )
                     .transition(.opacity)
+                case .plate:
+                    TitlePlate(entry: entry)
+                        .transition(.opacity)
                 case .cover, .compact:
                     EmptyView()
                 }
             }
             .animation(.fadeIn, value: art.url)
+            // The titled plate comes in over the cover's colour that waited for a still.
+            .animation(.fadeIn, value: art == .plate)
         }
         .onChange(of: art, initial: true) { _, art in
             if art.isCover { coverShown = true }

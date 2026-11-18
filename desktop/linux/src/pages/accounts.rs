@@ -9,14 +9,16 @@ use std::{cell::RefCell, rc::Rc};
 use adw::prelude::*;
 use kaeri_model::{
     command::Command,
+    settings::SettingKey,
     stores::Secret,
     sync::{DeviceCodePrompt, SyncState},
 };
 
 use gtk::glib;
+use kaeri_core::settings::SettingValue;
 use kaeri_i18n::t;
 
-use crate::{hub::SignIn, say, widgets, window::Ctx};
+use crate::{catalog, hub::SignIn, say, widgets, window::Ctx};
 
 /// The trackers below AniList, in the order the other apps list them.
 const OTHERS: [&str; 4] = ["mal", "kitsu", "simkl", "trakt"];
@@ -50,8 +52,20 @@ pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage, rebuild: Rc<dyn Fn()>) {
         let shown =
             Shown { tracker, state, signing, checking, offline, syncing: known.syncing() };
         let row = row(ctx, &shown, &rebuild);
-        if tracker == "anilist" { anilist.add(&row) } else { others.add(&row) }
+        if tracker == "anilist" {
+            anilist.add(&row)
+        } else {
+            others.add(&row)
+        }
+        // Show people you follow sits under the account, only while it is signed in.
+        if tracker == "anilist" && shown.stand() == Stand::SignedIn {
+            let on =
+                known.setting(SettingKey::ShowFollowing).is_none_or(|r| catalog::is_on(&r));
+            anilist.add(&following_switch(ctx, on));
+        }
     }
+    // Private mode first, as it sits with the account on every platform.
+    page.add(&crate::private::settings_group(ctx));
     page.add(&anilist);
     page.add(&others);
 
@@ -59,6 +73,29 @@ pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage, rebuild: Rc<dyn Fn()>) {
         let group = adw::PreferencesGroup::builder().description(note).build();
         page.add(&group);
     }
+}
+
+/// The switch for people followed on AniList, on this device only, with what it shows under it.
+fn following_switch(ctx: &Rc<Ctx>, on: bool) -> adw::SwitchRow {
+    let row = adw::SwitchRow::builder()
+        .title(t::settings_anilist_following())
+        .subtitle(t::settings_anilist_following_footer())
+        .subtitle_lines(0)
+        .active(on)
+        .build();
+    let hub = Rc::downgrade(&ctx.hub);
+    row.connect_active_notify(move |row| {
+        let Some(hub) = hub.upgrade() else { return };
+        let now =
+            hub.known.borrow().setting(SettingKey::ShowFollowing).map(|r| catalog::is_on(&r));
+        if now != Some(row.is_active()) {
+            hub.send(Command::SetSetting {
+                key: SettingKey::ShowFollowing,
+                value: SettingValue::Bool(row.is_active()),
+            });
+        }
+    });
+    row
 }
 
 /// One tracker as the row shows it.

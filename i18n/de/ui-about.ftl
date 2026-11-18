@@ -33,6 +33,19 @@ report-privacy = Nichts verlässt dieses { -device }, bis du den Bericht auf Git
 report-tv-scan = Scanne den Code, um den Bericht auf deinem Smartphone zu öffnen.
 report-crash-off = Absturzberichte sind aus, daher ist keiner enthalten. Du kannst sie unter Einstellungen, Über einschalten.
 report-crash-settings = Absturzbericht-Einstellungen
+report-player-log = Player-Protokoll
+report-player-log-detail = { $playbacks ->
+    [one] Die letzte Wiedergabe · { $size }
+   *[other] Die letzten { $playbacks } Wiedergaben · { $size }
+ }
+report-player-log-empty = Noch keine Wiedergabe protokolliert
+report-player-log-save = Protokoll speichern…
+report-player-log-attach = Hänge die Datei an das Issue an, sobald es sich auf GitHub öffnet.
+report-player-log-saved = Gespeichert als { $file }
+report-player-log-failed = Das Protokoll konnte nicht gespeichert werden. Versuche einen anderen Ordner.
+report-sent-report = Bericht
+report-player-log-a11y-saved = Player-Protokoll gespeichert
+report-player-log-a11y-hint = Speichert eine Datei, die du an das Issue anhängst
 settings-group-crashes = Absturzberichte
 settings-crash-save = Absturzberichte auf diesem { -device } speichern
 settings-crash-save-detail = { -app-name } speichert zu jedem Absturz eine kurze Aufzeichnung auf diesem { -device } für „Fehler melden“, ohne Titel, Adressen und Namen. Es wird nichts von selbst gesendet.

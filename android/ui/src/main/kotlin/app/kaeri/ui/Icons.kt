@@ -182,6 +182,9 @@ internal object Icons {
     }.build()
     val Down = stroked("Down", "M7 10 L12 15 L17 10")
 
+    /** Check again: a circle turning back on itself, its arrow at the top right. */
+    val Redo = stroked("Redo", "M19.5 5.25 V10.5 H14.25", "M18.9 10.5 A7.5 7.5 0 1 0 19.5 14.25")
+
     /** A menu's own arrow, the filled triangle a dropdown row ends with; tinted like the rest. */
     val MenuArrow = ImageVector.Builder(
         name = "MenuArrow", defaultWidth = 24.dp, defaultHeight = 24.dp, viewportWidth = 24f, viewportHeight = 24f,

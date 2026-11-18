@@ -20,11 +20,15 @@ struct HomeSectionView: View {
             header
             switch section.kind {
             case .continue:
-                HomeShelf(spacing: layout.cardGap) {
-                    ForEach(items, id: \.entry.id) { item in
-                        HomeContinueCard(item: item).transition(.opacity)
+                ScrollViewReader { reader in
+                    HomeShelf(spacing: layout.cardGap) {
+                        ForEach(items, id: \.entry.id) { item in
+                            HomeContinueCard(item: item).transition(.opacity)
+                        }
                     }
+                    .task(id: items.count) { await launchScroll(reader) }
                 }
+                .id(HomeScreen.continueShelf)
             case .thisWeek:
                 HomeWeek(items: items)
             default:
@@ -36,6 +40,17 @@ struct HomeSectionView: View {
             }
         }
         .animation(.standard, value: items.map(\.entry.id))
+    }
+
+    /// A screenshot's `-KaeriScroll <n>` on a phone's Home: the Continue shelf scrolled to its
+    /// card n, counted from 0, so each card's art can be shot, as Home brings the shelf into view.
+    /// A title page over Home keeps the scroll for itself.
+    private func launchScroll(_ reader: ScrollViewProxy) async {
+        guard !layout.wide, navigator.section == .home, navigator.paths[.home]?.isEmpty ?? true,
+              let card = navigator.launchScroll, items.indices.contains(card) else { return }
+        navigator.launchScroll = nil
+        try? await Task.sleep(for: .milliseconds(800))
+        reader.scrollTo(items[card].entry.id, anchor: .center)
     }
 
     // MARK: Heading
@@ -219,7 +234,9 @@ struct HomeContinueCard: View {
     var body: some View {
         let entry = store.titles[item.entry.id] ?? item.entry
         let size = layout.card
-        let art = store.heroArt(entry)
+        // On a phone the card stays one wide picture whatever the title has: the cover fills it,
+        // and with no cover a plate in its colour carries the title.
+        let art = store.heroArt(entry, fills: !layout.wide)
         let source = TitleSource.shelf(entry.id, .continue, art: art.isCompact ? .poster : .banner)
         Button {
             navigator.openTitle(entry.id, from: source)
@@ -234,6 +251,14 @@ struct HomeContinueCard: View {
                         HeroArtView(art: art, entry: entry)
                             .frame(width: size.width, height: size.height)
                             .clipShape(.rect(cornerRadius: layout.cardRadius))
+                            // On a phone a hairline edge, so a light picture keeps its own edge
+                            // against a light neighbour.
+                            .overlay {
+                                if !layout.wide {
+                                    RoundedRectangle(cornerRadius: layout.cardRadius)
+                                        .strokeBorder(Palette.glassEdge, lineWidth: 1)
+                                }
+                            }
                             .titleSource(source)
                     }
                 }
@@ -372,6 +397,7 @@ enum HomeCardLine {
 struct HomeCardMenu: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
+    @Environment(\.homeLayout) private var layout
     let item: HomeItem
     let kind: SectionKind
 
@@ -401,7 +427,7 @@ struct HomeCardMenu: View {
         Divider()
         Button(L.titleOpen) {
             // From the card the menu is on, as a click on it opens.
-            let wide = kind == .continue && !store.heroArt(store.titles[entry.id] ?? entry).isCompact
+            let wide = kind == .continue && !store.heroArt(store.titles[entry.id] ?? entry, fills: !layout.wide).isCompact
             navigator.openTitle(entry.id, from: .shelf(entry.id, kind, art: wide ? .banner : .poster))
         }
         Divider()

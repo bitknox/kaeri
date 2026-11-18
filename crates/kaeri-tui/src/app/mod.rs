@@ -48,9 +48,11 @@ mod home;
 mod input;
 mod lists;
 pub mod medium;
+mod missing;
 mod notices;
 mod overlays;
 mod playback;
+mod private;
 mod providers;
 mod reader;
 mod reader_novel;
@@ -65,6 +67,7 @@ mod title;
 mod together;
 
 pub(crate) use self::lists::air_date;
+pub(crate) use self::notices::LOG_ROW;
 use self::title::TitleFrame;
 pub use self::{
     accounts::sync_badge,
@@ -77,9 +80,14 @@ pub use self::{
     lists::{
         cycle_search_filter, search_filter_labels, search_filter_summary, search_filter_value,
     },
-    notices::{ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, Toast, alert, info, say, worded},
+    missing::{CHECKING_AFTER, CHECKING_HELD, MissingStatus},
+    notices::{
+        ACTIVITY_DELAY, Job, LOG_CAPACITY, LogRow, PlayerLogRow, Toast, alert, info, say,
+        worded,
+    },
     overlays::{FrameReport, PALETTE_ROWS},
     playback::NowPlaying,
+    private::PrivateLine,
     providers::proxy_badge,
     reader::{
         CHROME_ROWS, EndFacts, MIN_COLUMNS, MIN_ROWS, PLATE_AFTER, PageJob, PartKey, Reader,
@@ -225,6 +233,10 @@ pub struct App {
     pub crashes: Vec<kaeri_model::crash::CrashRecord>,
     /// Crash reports the person deleted in Report a bug, for the host to remove from disk.
     deleted_crashes: Vec<String>,
+    /// Report a bug's Save player log row: what the host said of the log and where a save went.
+    pub player_log: PlayerLogRow,
+    /// The last playback could not play, so a report opened now is about a playback error.
+    playback_failed: bool,
     /// The metadata ladder's rungs, for the Providers screen and the header chip.
     pub meta_status: Vec<MetaSourceRow>,
     /// The source pinned for the title on screen. `None` means automatic.
@@ -259,6 +271,10 @@ pub struct App {
     /// Not only on the rows, which every reload rebuilds: Home reloaded, and `a` opened at the
     /// top of the picker rather than on the status just given.
     statuses_set: std::collections::HashMap<AnilistId, LibrarySegment>,
+    /// Each episode's discussion thread on AniList, by title and episode number, as the engine
+    /// found them once the episode counted as watched. Open in browser on that episode's row
+    /// opens its thread; the terminal neither reads nor posts in it.
+    pub(crate) threads: std::collections::HashMap<(AnilistId, u32), String>,
     /// The help overlay's page. Its own field because Help opens on top of a picker, and paging
     /// through it must not move the picker's selection underneath.
     pub help_page: usize,
@@ -339,6 +355,8 @@ pub struct App {
     /// title the moment one is opened, while the rows stay the last title's until its own load
     /// answers, and asked by `detail` they spoke for a show they were never part of.
     episodes_for: Option<AnilistId>,
+    /// The checks of a missing episode the title page asked for, and what they came to.
+    checks: missing::Checks,
     /// How far a title's dub goes, as the engine last said for it: the Episodes screen's
     /// "Dub to episode 6", for the title it names alone.
     pub dub: Option<(AnilistId, DubExtent)>,
@@ -428,6 +446,8 @@ pub struct App {
     pub window: Option<(u16, u16)>,
     /// The engine says the computer is offline.
     pub offline: bool,
+    /// Private watching and reading: the mode, the titles kept private, and the notice.
+    pub(crate) private: private::Private,
 }
 
 impl App {
@@ -477,6 +497,7 @@ impl App {
             sync: Vec::new(),
             conflicts: Vec::new(),
             statuses_set: std::collections::HashMap::new(),
+            threads: std::collections::HashMap::new(),
             help_page: 0,
             help_pages: 1,
             pulse: 0,
@@ -517,6 +538,8 @@ impl App {
             medium_asked: None,
             crashes: Vec::new(),
             deleted_crashes: Vec::new(),
+            player_log: PlayerLogRow::default(),
+            playback_failed: false,
             meta_status: Vec::new(),
             provider_preference: None,
             source_options: Vec::new(),
@@ -526,6 +549,7 @@ impl App {
             episodes_all: Vec::new(),
             dub: None,
             episodes_for: None,
+            checks: missing::Checks::default(),
             episode_filter: EpisodeFilter::default(),
             go_count: String::new(),
             go_error: None,
@@ -568,6 +592,7 @@ impl App {
             blocks_owed: false,
             window: None,
             offline: false,
+            private: private::Private::default(),
         }
     }
 
@@ -618,6 +643,8 @@ impl App {
             | Event::Browse(_)
             | Event::Facets(_)
             | Event::RecentSearches(_) => {}
+            Event::Private(on) => self.apply_private(on),
+            Event::AlwaysPrivate { title, on } => self.apply_always_private(&title, on),
             // The periods' rail is the native apps'; the terminal has them in the Sort row.
             Event::Trending { .. } => {}
             Event::Surprise { pool, outcome } => self.apply_surprise(pool, outcome),
@@ -652,7 +679,10 @@ impl App {
             Event::HiddenTitles(_) => {}
             // Every way into a title sets a stand-in `detail` for it before the fetch goes out, so
             // a full record for any other id answers a title the user has already left.
-            Event::Detail(entry) => self.apply_detail(entry),
+            Event::Detail(entry) => {
+                self.apply_detail(entry);
+                self.list_if_missing();
+            }
             // The terminal has no hover cards.
             Event::Cards(cards) => self.apply_note_titles(&cards),
             // The engine names every title as the setting says; nothing here asks the viewer's.
@@ -664,8 +694,16 @@ impl App {
             // A native app's notifications and widgets, which the terminal never asks for: what
             // aired while it was closed is the digest's to say, at launch.
             Event::NewEpisodes(_) | Event::WidgetSnapshot(_) | Event::UpcomingNotices(_) => {}
-            // The native apps' discussion sheet; the terminal opens a thread in the browser.
-            Event::DiscussionFound { .. } | Event::Discussion(_) => {}
+            // The terminal reads no thread: Open in browser on the episode's row opens it.
+            Event::DiscussionFound { media, episode, url, .. } => {
+                if !url.is_empty() {
+                    self.threads.insert((media, episode), url);
+                }
+            }
+            // The native apps' discussion sheet.
+            Event::Discussion(_) => {}
+            // What a check for a missing episode came to, for the title page's status line.
+            Event::EpisodeChecked(check) => self.apply_check(check),
             // What the update check found, for an app's Settings: the terminal's own notice
             // comes as a toast, naming `kaeri --update`.
             Event::Update(_) => {}
@@ -759,8 +797,8 @@ impl App {
             Event::PinUnavailable { name, .. } => {
                 self.push_toast(info(t::pin_unavailable(&name)))
             }
-            Event::Sources { id, episode, candidates } => {
-                self.apply_sources(id, episode, candidates)
+            Event::Sources { id, episode, candidates, missed } => {
+                self.apply_sources(id, episode, candidates, &missed)
             }
             Event::MatchChoices { id, provider_id, candidates, answers, .. } => {
                 self.apply_match_choices(id, provider_id, candidates, answers)
@@ -784,7 +822,17 @@ impl App {
             Event::PlaybackSpeed(speed) => self.apply_playback_speed(speed),
             Event::ActiveProvider(provider) => self.active_provider = Some(provider),
             Event::PlaybackKept => self.apply_playback_kept(),
-            Event::PlaybackStaged { id, title, episode, episode_title, speed, .. } => {
+            Event::PlaybackStaged {
+                id,
+                title,
+                episode,
+                episode_title,
+                speed,
+                always_private,
+                ..
+            } => {
+                self.private.take_flag(id, always_private);
+                self.playback_failed = false;
                 self.take_staged(id, title, episode, episode_title, speed);
             }
             // The terminal has no starting screen; it keeps the notice a stream with no video
@@ -849,7 +897,10 @@ impl App {
             // the next episode, so the two cannot disagree into a window left waiting for an
             // episode nobody starts.
             Event::PlaybackEnded { rolling_on: true, .. } => self.rolling = true,
-            Event::PlaybackEnded { ending, .. } => self.apply_playback_ended(ending),
+            Event::PlaybackEnded { ending, .. } => {
+                self.playback_failed = ending == kaeri_model::playback::Ending::Failed;
+                self.apply_playback_ended(ending)
+            }
             Event::Sync(state) => self.apply_sync(*state),
             Event::JobStarted { job, activity } => self.start_job(job, activity),
             Event::JobNote { job, note, wait } => self.apply_job_note(job, say(&note), wait),
@@ -859,7 +910,8 @@ impl App {
             Event::Resumed { position } => self.apply_resumed(position),
             Event::TorrentProxy(status) => self.apply_proxy(status),
             Event::Episodes { id, rows, .. } => self.apply_episodes(id, rows),
-            Event::Progress { id, progress, resume, episodes } => {
+            Event::Progress { id, progress, resume, episodes, private, kept } => {
+                self.private.take_standing(id, private, kept);
                 self.apply_progress(id, progress, resume, episodes)
             }
             Event::SyncPairFailed { problem, device } => {

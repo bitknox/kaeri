@@ -204,10 +204,14 @@ private fun PickerLine(
     }
 }
 
-/** A source's coverage ("6 of 13 episodes"), or why it has none. A failure is the source's own words. */
+/**
+ * What a source has of the title ("Episodes 1 to 5. Not 6 yet", "6 of 13 episodes"), or why it
+ * has none. A failure is the source's own words.
+ */
 @Composable
 internal fun sourceDetail(option: SourceOption): String = when (val note = option.note) {
-    null -> pluralStringResource(R.plurals.source_picker_coverage, option.of.toInt(), option.covered.toInt(), option.of.toInt())
+    null -> app.kaeri.store.MissingWords.coverage(androidx.compose.ui.platform.LocalContext.current, option, app.kaeri.store.AppClock.now().epochSecond)
+        ?: pluralStringResource(R.plurals.source_picker_coverage, option.of.toInt(), option.covered.toInt(), option.of.toInt())
     SourceNote.Off -> stringResource(R.string.source_note_off)
     SourceNote.Resting -> stringResource(R.string.source_note_resting)
     SourceNote.Gone -> stringResource(R.string.source_note_gone)

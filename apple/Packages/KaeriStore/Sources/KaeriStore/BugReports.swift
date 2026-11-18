@@ -63,31 +63,76 @@ public struct BugContext: Equatable, Sendable {
 
 extension AppStore {
     /// The address of a new issue for this device, with `context` as its last error and the saved
-    /// crashes `crashes` in it.
-    public func bugReportURL(context: BugContext? = nil, crashes: [String] = [], device: BugReportDevice = .current()) -> URL {
-        BugReports.url(device: device, providers: providers.rows, context: context, crashes: crashes)
+    /// crashes `crashes` in it. `playerLog` adds the line that says the log is attached by hand.
+    public func bugReportURL(
+        context: BugContext? = nil, crashes: [String] = [], playerLog: Bool = false, device: BugReportDevice = .current()
+    ) -> URL {
+        BugReports.url(device: device, providers: providers.rows, context: context, crashes: crashes, playerLog: playerLog)
     }
 
     /// The whole report as the view shows it and Copy report puts it on the clipboard.
-    public func bugReportText(context: BugContext? = nil, crashes: [String] = [], device: BugReportDevice = .current()) -> String {
-        reportText(report: BugReports.report(device: device, providers: providers.rows, context: context, crashes: crashes))
+    public func bugReportText(
+        context: BugContext? = nil, crashes: [String] = [], playerLog: Bool = false, device: BugReportDevice = .current()
+    ) -> String {
+        reportText(report: bugReport(context: context, crashes: crashes, playerLog: playerLog, device: device))
+    }
+
+    /// The report itself, for the calls that read it.
+    public func bugReport(
+        context: BugContext? = nil, crashes: [String] = [], playerLog: Bool = false, device: BugReportDevice = .current()
+    ) -> BugReport {
+        BugReports.report(device: device, providers: providers.rows, context: context, crashes: crashes, playerLog: playerLog)
     }
 }
 
 public enum BugReports {
-    public static func report(device: BugReportDevice, providers: [ProviderRow], context: BugContext?, crashes: [String]) -> BugReport {
+    public static func report(
+        device: BugReportDevice, providers: [ProviderRow], context: BugContext?, crashes: [String], playerLog: Bool = false
+    ) -> BugReport {
         BugReport(
             appVersion: device.appVersion, platform: device.platform, osVersion: device.osVersion,
             device: device.device, build: device.build, providers: providers,
             error: context.map { BugError(kind: $0.kind, message: $0.message) },
-            private: context?.title.map { [$0] } ?? [], crashes: crashes
+            private: context?.title.map { [$0] } ?? [], crashes: crashes, playerLog: playerLog
         )
     }
 
     /// The address for `device`, the engine's sources, an optional error and the crashes named.
-    public static func url(device: BugReportDevice, providers: [ProviderRow], context: BugContext?, crashes: [String] = []) -> URL {
-        let report = report(device: device, providers: providers, context: context, crashes: crashes)
+    public static func url(
+        device: BugReportDevice, providers: [ProviderRow], context: BugContext?, crashes: [String] = [], playerLog: Bool = false
+    ) -> URL {
+        let report = report(device: device, providers: providers, context: context, crashes: crashes, playerLog: playerLog)
         // The engine's address is always well formed; the project's tracker is the fallback.
         return URL(string: bugReportUrl(report: report)) ?? URL(string: "https://github.com/bitknox/kaeri/issues/new")!
+    }
+
+    /// The kind of error a failed playback gives a report: Player log starts ticked for it.
+    public static let playbackError = "playback"
+
+    /// What the player log holds now, for the Player log row. Cached by the engine until the log
+    /// changes, so it is cheap when Report opens.
+    public static func playerLogStats() -> PlayerLogStats { KaeriKit.playerLogStats() }
+
+    /// Whether Player log starts ticked: the report starts from a playback error, or carries a
+    /// crash in the player.
+    public static func playerLogStartsTicked(_ report: BugReport) -> Bool {
+        KaeriKit.playerLogStartsTicked(report: report)
+    }
+
+    /// The player log's file text, redacted. Up to a megabyte goes through the redaction, so this
+    /// runs off the main actor.
+    @concurrent public static func playerLogText(_ report: BugReport) async -> String {
+        KaeriKit.playerLog(report: report)
+    }
+
+    /// Writes `text` to `url` off the main actor: whether it was written.
+    @concurrent public static func write(_ text: String, to url: URL) async -> Bool {
+        do {
+            try Data(text.utf8).write(to: url, options: .atomic)
+            return true
+        } catch {
+            AppLog.warn("report", "couldn't save the player log: error \((error as NSError).domain) \((error as NSError).code)")
+            return false
+        }
     }
 }

@@ -91,3 +91,4 @@ episodes-matched = Dopasowano do: { $title }.
 episodes-release-dual = { -subbed-cap } i { -dubbed }
 episodes-release-dub = { -dubbed-cap }
 episodes-release-current-pick = Obecny wybór
+episode-missing-checking = Twoje { -source-pl } są sprawdzane…

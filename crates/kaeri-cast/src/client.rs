@@ -12,6 +12,19 @@ use crate::channel::{CastError, Channel, Incoming, NS_MEDIA, NS_RECEIVER, RECEIV
 /// MP4 through the Cast web player.
 pub const DEFAULT_MEDIA_RECEIVER: &str = "CC1AD845";
 
+/// Kaeri's own messages between this device and Kaeri's receiver: `ready`, `hello`, `error`
+/// and the rest, as JSON with a `type`. Each side ignores a type it doesn't know.
+pub const NS_KAERI: &str = "urn:x-cast:app.kaeri.cast";
+
+/// The version of Kaeri's messages this side speaks.
+pub const KAERI_PROTOCOL: u32 = 1;
+
+/// Kaeri's own receiver, served from the website's `/cast/receiver/`. The config's
+/// `cast.receiver` names another in its place. The Default Media Receiver plays instead whenever
+/// it doesn't launch (a TV it isn't published to refuses it), never says `ready`, or closes;
+/// closed mid-episode, the episode loads again on the Default Media Receiver where it was.
+pub const KAERI_RECEIVER: Option<&str> = Some("A7A6DDE4");
+
 /// A connected receiver, through its platform receiver. Cheap to clone.
 #[derive(Clone)]
 pub struct Device {
@@ -30,11 +43,21 @@ pub struct App {
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum VolumeControl {
-    /// `attenuation` or `master`: the level can be set.
+    /// `attenuation` or `master`: the level can be set, and mute works.
     #[default]
     Level,
-    /// `fixed`: the TV's own volume is in charge, and only mute works.
-    MuteOnly,
+    /// `fixed`: the TV's own volume is in charge, often over HDMI-CEC. Such a receiver takes a
+    /// `SET_VOLUME` and says the new level and mute in its status, but the sound stays as the TV
+    /// has it, so neither is offered.
+    #[serde(alias = "mute_only")]
+    Fixed,
+}
+
+impl VolumeControl {
+    /// Whether a mute sent to the receiver silences the TV.
+    pub fn mutes(self) -> bool {
+        self == Self::Level
+    }
 }
 
 /// The parts of a `RECEIVER_STATUS` a sender needs.
@@ -53,7 +76,7 @@ impl ReceiverStatus {
         let volume = &status["volume"];
         Some(Self {
             volume: match volume["controlType"].as_str() {
-                Some("fixed") => VolumeControl::MuteOnly,
+                Some("fixed") => VolumeControl::Fixed,
                 _ => VolumeControl::Level,
             },
             level: volume["level"].as_f64(),
@@ -70,6 +93,16 @@ impl Device {
         silence: Duration,
     ) -> Result<(Self, mpsc::UnboundedReceiver<Incoming>), CastError> {
         let (channel, events) = Channel::connect(address, silence).await?;
+        Ok((Self { channel }, events))
+    }
+
+    /// [`Self::connect`], giving up on a TCP connection or TLS handshake not made `within`.
+    pub async fn connect_within(
+        address: SocketAddr,
+        silence: Duration,
+        within: Duration,
+    ) -> Result<(Self, mpsc::UnboundedReceiver<Incoming>), CastError> {
+        let (channel, events) = Channel::connect_within(address, silence, within).await?;
         Ok((Self { channel }, events))
     }
 
@@ -194,6 +227,34 @@ pub struct Metadata {
     pub image: Option<String>,
 }
 
+/// The key under the media's `customData` that carries a [`JoinCard`].
+pub const JOIN_CARD: &str = "kaeriCard";
+
+/// What a Kaeri sender says of the episode it casts, beside the media, so another Kaeri device
+/// that joins the cast draws the same card: AniList's id, the episode, and the names the card
+/// shows. Nothing of where the stream comes from or of who casts it. A receiver says the media's
+/// `customData` back to every sender with the media, the Default Media Receiver and Kaeri's
+/// alike, so a device that joins reads it from the media status.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct JoinCard {
+    /// The title's AniList id.
+    pub id: u32,
+    pub episode: String,
+    /// The show, as the card names it.
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub episode_title: Option<String>,
+}
+
+impl JoinCard {
+    /// The card a media description carries, when it carries a whole one.
+    fn read(media: &Value) -> Option<Self> {
+        let card: Self = serde_json::from_value(media["customData"][JOIN_CARD].clone()).ok()?;
+        (!card.episode.is_empty()).then_some(card)
+    }
+}
+
 /// What to load, as the `LOAD` message's media.
 #[derive(Debug, Clone, Default, PartialEq)]
 pub struct Load {
@@ -207,6 +268,11 @@ pub struct Load {
     pub active_tracks: Vec<u32>,
     pub style: Option<TextStyle>,
     pub autoplay: bool,
+    /// What Kaeri's receiver reads beside the media, under `customData.kaeri`.
+    pub kaeri: Option<Value>,
+    /// What another Kaeri device that joins reads beside the media, under
+    /// `customData.kaeriCard`: for every receiver, which says it back.
+    pub card: Option<JoinCard>,
 }
 
 impl Load {
@@ -226,6 +292,12 @@ impl Load {
             "contentType": self.content_type,
             "metadata": metadata,
         });
+        if let Some(kaeri) = &self.kaeri {
+            media["customData"]["kaeri"] = kaeri.clone();
+        }
+        if let Some(card) = &self.card {
+            media["customData"][JOIN_CARD] = json!(card);
+        }
         if let Some(format) = &self.hls_segment_format {
             media["hlsSegmentFormat"] = json!(format);
             media["hlsVideoSegmentFormat"] =
@@ -339,6 +411,15 @@ impl Media {
         self.command("EDIT_TRACKS_INFO", json!({"activeTrackIds": ids})).await
     }
 
+    /// Ask for the media status and wait for it: what a joined receiver plays, if anything. The
+    /// media session it names is the one later commands go to.
+    pub async fn status(&mut self) -> Result<Option<MediaStatus>, CastError> {
+        let status = MediaStatus::first(&self.ask(json!({"type": "GET_STATUS"})).await?);
+        self.media_session_id =
+            status.as_ref().filter(|s| s.idle_reason.is_none()).map(|s| s.media_session_id);
+        Ok(status)
+    }
+
     /// Ask for the media status without waiting for it: the answer comes back with every other
     /// status the receiver sends. The Default Media Receiver reports on changes only, so this is
     /// what keeps the position moving.
@@ -370,6 +451,14 @@ pub struct MediaStatus {
     pub muted: Option<bool>,
     /// The media the receiver plays, by the URL it was loaded with.
     pub content: Option<String>,
+    /// What the receiver shows of the media: the show, the episode line and the art.
+    pub metadata: Option<Metadata>,
+    /// Whether the status carried the media's description. A receiver sends it only when it
+    /// changed and in answer to `GET_STATUS`, so the statuses that follow a pause, a seek or a
+    /// buffering spell come without it: the duration and the title are the last ones heard.
+    pub has_media: bool,
+    /// The card a Kaeri sender loaded the media with: none from another app or an older Kaeri.
+    pub card: Option<JoinCard>,
 }
 
 impl MediaStatus {
@@ -394,7 +483,43 @@ impl MediaStatus {
             volume: status["volume"]["level"].as_f64(),
             muted: status["volume"]["muted"].as_bool(),
             content: status["media"]["contentId"].as_str().map(str::to_owned),
+            metadata: status["media"]["metadata"].as_object().map(|m| Metadata {
+                series: m
+                    .get("seriesTitle")
+                    .and_then(Value::as_str)
+                    .unwrap_or_default()
+                    .to_owned(),
+                title: m.get("title").and_then(Value::as_str).unwrap_or_default().to_owned(),
+                image: m.get("images").and_then(|i| i[0]["url"].as_str()).map(str::to_owned),
+            }),
+            has_media: status["media"].is_object(),
+            card: JoinCard::read(&status["media"]),
         })
+    }
+
+    /// Fill in what a status without the media's description leaves out from `earlier`, a
+    /// status of the same media session: its duration, address and title stand until the
+    /// receiver describes the media again.
+    pub fn fill_from(&mut self, earlier: &MediaStatus) {
+        if self.media_session_id != earlier.media_session_id {
+            return;
+        }
+        // A receiver that describes the media without its metadata hasn't changed the title.
+        if self.metadata.is_none() {
+            self.metadata.clone_from(&earlier.metadata);
+        }
+        // Nor the card, which goes with the media session.
+        if self.card.is_none() {
+            self.card.clone_from(&earlier.card);
+        }
+        if self.has_media {
+            return;
+        }
+        self.duration = self.duration.or(earlier.duration);
+        if self.content.is_none() {
+            self.content.clone_from(&earlier.content);
+        }
+        self.has_media = earlier.has_media;
     }
 
     /// Whether the message says the media session is gone without a status for it: an empty
@@ -430,6 +555,8 @@ mod tests {
             active_tracks: vec![1],
             style: None,
             autoplay: true,
+            kaeri: None,
+            card: None,
         };
         let message = load.message("s");
         assert_eq!(message["currentTime"], 42.0);
@@ -446,6 +573,103 @@ mod tests {
     }
 
     #[test]
+    fn a_status_without_the_media_keeps_the_duration_and_title_heard_before() {
+        let full = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PLAYING", "currentTime": 10.0,
+            "media": {"contentId": "http://192.0.2.1/a", "duration": 1420.0,
+                      "metadata": {"seriesTitle": "A Made-up Show", "title": "Episode 2"}},
+        }]});
+        let earlier = MediaStatus::first(&full).unwrap();
+        assert!(earlier.has_media);
+        // What a receiver sends after a pause: the state and the time alone.
+        let paused = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PAUSED", "currentTime": 12.5,
+        }]});
+        let mut status = MediaStatus::first(&paused).unwrap();
+        assert_eq!(status.duration, None);
+        status.fill_from(&earlier);
+        assert_eq!(status.duration, Some(1420.0));
+        assert_eq!(status.position, 12.5);
+        assert_eq!(status.state, "PAUSED");
+        assert_eq!(status.metadata.as_ref().map(|m| m.title.as_str()), Some("Episode 2"));
+        // Another media session's description is never borrowed.
+        let mut other = MediaStatus::first(&paused).unwrap();
+        other.media_session_id = 4;
+        other.fill_from(&earlier);
+        assert_eq!(other.duration, None);
+        // A description without the metadata, as a GET_STATUS answer can be, keeps the title.
+        let described = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PLAYING", "currentTime": 14.0,
+            "media": {"contentId": "http://192.0.2.1/a", "duration": 1420.0},
+        }]});
+        let mut status = MediaStatus::first(&described).unwrap();
+        status.fill_from(&earlier);
+        assert_eq!(status.metadata.map(|m| m.series).as_deref(), Some("A Made-up Show"));
+    }
+
+    #[test]
+    fn the_card_goes_beside_the_media_and_comes_back_with_its_status() {
+        let card = JoinCard {
+            id: 900_002,
+            episode: "7".into(),
+            title: "A Made-up Show".into(),
+            episode_title: Some("Low Tide".into()),
+        };
+        let load = Load {
+            url: "http://192.0.2.1:1/t/x/r/episode.mp4".into(),
+            content_type: "video/mp4".into(),
+            kaeri: Some(json!({"version": 1, "container": "mp4"})),
+            card: Some(card.clone()),
+            ..Load::default()
+        };
+        let message = load.message("s");
+        let custom = &message["media"]["customData"];
+        assert_eq!(custom["kaeri"]["container"], "mp4", "Kaeri's receiver still reads its own");
+        assert_eq!(
+            custom["kaeriCard"],
+            json!({"id": 900_002, "episode": "7", "title": "A Made-up Show",
+                   "episodeTitle": "Low Tide"})
+        );
+        // Without Kaeri's part, as for the Default Media Receiver, the card goes alone.
+        let plain = Load { kaeri: None, ..load.clone() }.message("s");
+        assert_eq!(plain["media"]["customData"], json!({"kaeriCard": custom["kaeriCard"]}));
+        // And none at all without a card.
+        let bare = Load { kaeri: None, card: None, ..load }.message("s");
+        assert!(bare["media"].get("customData").is_none(), "{bare}");
+
+        // A receiver says the media back with its customData.
+        let full = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PLAYING", "currentTime": 10.0,
+            "media": message["media"].clone(),
+        }]});
+        let earlier = MediaStatus::first(&full).unwrap();
+        assert_eq!(earlier.card.as_ref(), Some(&card));
+        // A status after a pause leaves the media out: the card stands, for that media only.
+        let paused = json!({"type": "MEDIA_STATUS", "status": [{
+            "mediaSessionId": 3, "playerState": "PAUSED", "currentTime": 12.5,
+        }]});
+        let mut status = MediaStatus::first(&paused).unwrap();
+        assert_eq!(status.card, None);
+        status.fill_from(&earlier);
+        assert_eq!(status.card.as_ref(), Some(&card));
+        let mut other = MediaStatus::first(&paused).unwrap();
+        other.media_session_id = 4;
+        other.fill_from(&earlier);
+        assert_eq!(other.card, None);
+        // Another app's media, or a card missing its episode, carries none.
+        for media in [
+            json!({"contentId": "x", "customData": {"theirs": 1}}),
+            json!({"contentId": "x", "customData": {"kaeriCard": {"id": 1, "title": "x"}}}),
+            json!({"contentId": "x", "customData": {"kaeriCard": {"id": 1, "episode": "", "title": "x"}}}),
+        ] {
+            let status = json!({"type": "MEDIA_STATUS", "status": [{
+                "mediaSessionId": 5, "playerState": "PLAYING", "media": media,
+            }]});
+            assert_eq!(MediaStatus::first(&status).unwrap().card, None, "{status}");
+        }
+    }
+
+    #[test]
     fn a_finished_status_reads_as_finished() {
         let payload = json!({"type": "MEDIA_STATUS", "status": [{
             "mediaSessionId": 3, "playerState": "IDLE", "idleReason": "FINISHED",
@@ -457,15 +681,17 @@ mod tests {
     }
 
     #[test]
-    fn a_fixed_volume_receiver_offers_mute_alone() {
+    fn a_fixed_volume_receiver_offers_neither_a_level_nor_mute() {
         let payload = json!({"type": "RECEIVER_STATUS", "status": {
             "volume": {"controlType": "fixed", "level": 1.0, "muted": false},
             "applications": [{"appId": "E8C28D3C", "isIdleScreen": true, "sessionId": "a",
                               "transportId": "a"}]}});
         let status = ReceiverStatus::read(&payload).unwrap();
-        assert_eq!(status.volume, VolumeControl::MuteOnly);
+        assert_eq!(status.volume, VolumeControl::Fixed);
+        assert!(!status.volume.mutes(), "the TV's own volume and mute are in charge");
         assert_eq!(status.app, None, "the idle screen is not an app");
         let master = json!({"status": {"volume": {"controlType": "master", "level": 0.3}}});
         assert_eq!(ReceiverStatus::read(&master).unwrap().volume, VolumeControl::Level);
+        assert!(VolumeControl::Level.mutes());
     }
 }

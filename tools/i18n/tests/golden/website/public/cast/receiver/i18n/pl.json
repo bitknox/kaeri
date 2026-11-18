@@ -1,0 +1,12 @@
+{
+  "messages": {
+    "receiver-waiting": [
+      "Czekanie na strumień · ",
+      {
+        "arg": "seconds"
+      },
+      " s"
+    ]
+  },
+  "tag": "pl"
+}

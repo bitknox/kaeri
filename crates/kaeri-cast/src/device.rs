@@ -8,8 +8,9 @@ const VIDEO_OUT: u64 = 1;
 /// What the model of a speaker group says, which plays audio across its members only.
 const GROUP_MODEL: &str = "Google Cast Group";
 
-/// A Cast receiver, as its DNS-SD record describes it.
-#[derive(Debug, Clone, PartialEq, Eq)]
+/// A Cast receiver, as its DNS-SD record describes it. Serialised in the engine's record of a
+/// cast left running, so a later launch reaches the TV at its last address without a browse.
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize, serde::Deserialize)]
 pub struct CastDevice {
     /// The service instance name, `Chromecast-…`.
     pub instance: String,

@@ -1,5 +1,6 @@
 // Loading to content (T8): nothing for 600 ms, then static placeholders held at least 0.3 s, then
-// the content in one crossfade. Never a shimmer, a pulse or a stagger.
+// the content in one crossfade. Never a shimmer, a pulse or a stagger. The title page is the
+// exception: its placeholders show from the first frame and are replaced the moment it lands.
 
 package app.kaeri.ui
 
@@ -138,4 +139,16 @@ fun AfterWait(content: @Composable () -> Unit) {
         shown = true
     }
     AnimatedVisibility(shown, enter = fadeIn(Motion.fadeIn()), exit = ExitTransition.None) { content() }
+}
+
+/**
+ * Whether what [ready] says has come may replace a title page's placeholders: at once, and true for
+ * good from then on, a new answer for each [key]. The title page is T8's exception: its
+ * placeholders take their room from the first frame, so they show with it and are never held.
+ */
+@Composable
+fun rememberSettled(ready: Boolean, key: Any? = null): Boolean {
+    var done by remember(key) { mutableStateOf(ready) }
+    if (!done && ready) done = true
+    return done
 }

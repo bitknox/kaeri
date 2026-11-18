@@ -13,12 +13,12 @@ downloads-live-waiting = En attente
 settings-seed-ratio-until = Jusqu’à un ratio de { $ratio }
 settings-upload-rate = { $size }/s
 settings-coming-up-dubbed = { $count ->
-    [one] { $names } prévient quand le doublage sort.
+    [one] { $count } série prévient quand son doublage sort : { $names }.
     [many] { $names } préviennent quand leurs doublages sortent.
    *[other] { $names } préviennent quand leurs doublages sortent.
  }
 settings-coming-up-switched-off = { $count ->
-    [one] { $names } est désactivé dans ses propres réglages.
+    [one] { $count } série désactivée dans ses propres réglages : { $names }.
     [many] { $names } sont désactivés dans leurs propres réglages.
    *[other] { $names } sont désactivés dans leurs propres réglages.
  }

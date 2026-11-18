@@ -47,7 +47,8 @@ pub struct EngineState {
     /// that opens at once.
     pub finding: Option<tokio::sync::watch::Sender<bool>>,
     /// The same playback's skip of the source being asked: each `SkipSource` moves the count,
-    /// which the walk through the sources watches. Set where `finding` is.
+    /// which the walk through the sources watches, and the playback until its first frame. Set
+    /// where `finding` is.
     pub skipping: Option<tokio::sync::watch::Sender<u64>>,
     /// Whether the viewer asked this playback to begin at 0 (`PlayFromBeginning`). Set where
     /// `finding` is.
@@ -111,6 +112,9 @@ pub struct EngineState {
     /// Keep next: whether it runs, and the top-up asked for while one runs. See
     /// [`crate::downloads::ahead`].
     pub ahead: crate::downloads::ahead::Ahead,
+    /// The people the viewer follows, put on the episode rows on their way out: see
+    /// [`crate::followed`].
+    pub followed: crate::followed::Followed,
     /// Search's kept answers and the search waiting or running: see
     /// [`crate::catalog::search::Searches`].
     pub search: crate::catalog::search::Searches,
@@ -127,6 +131,9 @@ pub struct EngineState {
     /// The titles whose episodes were listed lately, for listing them again when the sources
     /// change: see [`crate::titles::refresh`].
     pub listed: crate::titles::refresh::Listed,
+    /// The quiet rechecks of episodes that aired and no source lists: see
+    /// [`crate::titles::recheck`].
+    pub rechecks: crate::titles::recheck::Rechecks,
     /// The episode discussion open, and the episodes whose threads were looked up: see
     /// [`crate::discussion`].
     pub discussion: crate::discussion::Discussions,
@@ -182,12 +189,14 @@ impl EngineState {
             gated: None,
             episode_check: Arc::default(),
             ahead: Default::default(),
+            followed: Default::default(),
             search: Default::default(),
             dubs: Default::default(),
             picks: Default::default(),
             calendar: Default::default(),
             names: Default::default(),
             listed: Default::default(),
+            rechecks: Default::default(),
             discussion: Default::default(),
             #[cfg(feature = "party")]
             party: None,

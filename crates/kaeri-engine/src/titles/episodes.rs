@@ -383,8 +383,12 @@ pub(crate) async fn dub_answer(
     crate::sources::arrived(registry, || ()).await;
     // A title that has not started has no dub to speak of yet, and no source is asked.
     if coverage::unstarted(media, now) {
-        let answer =
-            kaeri_providers::Answer::Unanswered { reasons: Vec::new(), matched: false };
+        let answer = kaeri_providers::Answer::Unanswered {
+            reasons: Vec::new(),
+            matched: false,
+            unreached: Vec::new(),
+            held: Vec::new(),
+        };
         return DubAnswer { answer, none: false };
     }
     let registry = &chain_for(store, registry, id);
@@ -427,7 +431,7 @@ pub(crate) async fn dub_answer(
     .await;
     let none = match &answer {
         // One reason for each source tried: each was matched and listed, and found nothing.
-        kaeri_providers::Answer::Unanswered { reasons, matched: true } => {
+        kaeri_providers::Answer::Unanswered { reasons, matched: true, .. } => {
             !reasons.is_empty()
                 && asked.load(Ordering::SeqCst) == reasons.len()
                 && nothing.load(Ordering::SeqCst)
@@ -444,14 +448,16 @@ pub(crate) async fn dub_answer(
 /// Only the newest listing of a title speaks: `ticket` is checked before anything is sent, so a
 /// slow earlier load cannot land over a newer table. `announce` is whether a pin on a source
 /// that is not available is said (a load the viewer asked for, or a pin just set), not on every
-/// quiet relist.
+/// quiet relist. `partial` sends a table short of the season as it comes, while slower sources
+/// are still asked.
 pub(crate) async fn list_episodes(
     lent: Lent,
     id: AnilistId,
     naming: names::Naming,
     ticket: super::refresh::Ticket,
     announce: bool,
-) {
+    partial: bool,
+) -> Listing {
     let Lent { meta, store, registry, tx, .. } = lent;
     // A source still compiling is not an unavailable one: wait for those on their way.
     crate::sources::arrived(&registry, || ()).await;
@@ -463,7 +469,12 @@ pub(crate) async fn list_episodes(
     }
     // A table that is short of the season is shown as it comes, and the sources still being
     // asked fill in the rest.
+    // Not for a check of a missing episode: a short table there would take away episodes the
+    // page already plays while the slower sources answer.
     let mut early = |rows| {
+        if !partial {
+            return;
+        }
         for event in said(id, Ok(EpisodeLoad::Rows(rows)), Asked::Looking) {
             ticket.send(&tx, event);
         }
@@ -477,17 +488,35 @@ pub(crate) async fn list_episodes(
         Ok(listed) => current_match(&store, &registry, id, listed.main.as_deref()),
         Err(_) => None,
     };
+    let listing = match &listed {
+        Ok(Listed { load: EpisodeLoad::Rows(rows), .. }) => Listing::Rows(rows.clone()),
+        Ok(Listed { load: EpisodeLoad::Unlisted { .. }, .. }) | Err(_) => Listing::Unanswered,
+        Ok(Listed { load: EpisodeLoad::Choose { .. }, .. }) => Listing::Unsure,
+    };
     let load = match listed {
         Ok(Listed { load: EpisodeLoad::Rows(_), unnamed: Some(unnamed), .. }) => {
             naming.say(id, unnamed, &store, &registry, &tx, &ticket);
             ticket.send(&tx, Event::TitleMatch { id, current });
-            return;
+            return listing;
         }
         listed => listed.map(|listed| listed.load),
     };
     for event in said_matched(id, load, current, Asked::Looking) {
         ticket.send(&tx, event);
     }
+    listing
+}
+
+/// What [`list_episodes`] came to, for a check of one episode: see
+/// [`crate::titles::recheck`].
+#[derive(Debug, Clone, PartialEq)]
+pub(crate) enum Listing {
+    /// The sources listed the title: its table, as sent.
+    Rows(Vec<EpisodeRow>),
+    /// No source answered, or the title could not be loaded to ask them.
+    Unanswered,
+    /// A source could not tell which title this is.
+    Unsure,
 }
 
 /// Mark episodes watched, or take back that they were: in local history, and on the signed-in

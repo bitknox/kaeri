@@ -46,6 +46,9 @@ pub struct ProviderRegistry {
     /// chain: see [`TorrentBridge`]. One for the chain and all its views, filled in and emptied
     /// as torrent playback comes and goes.
     torrents: TorrentPlayback,
+    /// Whether this view asks a source that is resting after failures, as a walk does once
+    /// every other source is asked: see [`Self::even_resting`].
+    resting_too: bool,
 }
 
 impl std::fmt::Debug for ProviderRegistry {
@@ -136,6 +139,7 @@ impl ProviderRegistry {
             disabled: Arc::default(),
             arriving: Arc::new(tokio::sync::watch::Sender::new(false)),
             torrents,
+            resting_too: false,
         }
     }
 
@@ -335,6 +339,7 @@ impl ProviderRegistry {
             disabled: self.disabled.clone(),
             arriving: Arc::clone(&self.arriving),
             torrents: self.torrents.clone(),
+            resting_too: self.resting_too,
         })
     }
 
@@ -356,6 +361,7 @@ impl ProviderRegistry {
             disabled: self.disabled.clone(),
             arriving: Arc::clone(&self.arriving),
             torrents: self.torrents.clone(),
+            resting_too: self.resting_too,
         }
     }
 
@@ -371,6 +377,26 @@ impl ProviderRegistry {
             disabled: self.disabled.clone(),
             arriving: Arc::clone(&self.arriving),
             torrents: self.torrents.clone(),
+            resting_too: self.resting_too,
+        }
+    }
+
+    /// The same registry without the sources `ids` names, as a view like [`Self::pinned`] that
+    /// shares the health record: the sources a playback walks on to once the viewer has moved
+    /// on from the ones it asked.
+    pub fn without(&self, ids: &[String]) -> Self {
+        let providers = self
+            .snapshot()
+            .into_iter()
+            .filter(|p| !ids.iter().any(|id| *id == p.manifest().id))
+            .collect();
+        Self {
+            providers: Arc::new(std::sync::RwLock::new(providers)),
+            health: self.health.clone(),
+            disabled: self.disabled.clone(),
+            arriving: Arc::clone(&self.arriving),
+            torrents: self.torrents.clone(),
+            resting_too: self.resting_too,
         }
     }
 
@@ -380,18 +406,54 @@ impl ProviderRegistry {
         self.health.reset_down();
     }
 
+    /// The same view, asking a source that is resting after failures as well: for a walk that
+    /// has asked every other source and comes to the resting ones last.
+    pub fn even_resting(mut self) -> Self {
+        self.resting_too = true;
+        self
+    }
+
     /// The ids of the sources worth trying right now, in preference order.
     pub fn usable_ids(&self) -> Vec<String> {
         self.candidates().iter().map(|p| p.manifest().id.clone()).collect()
     }
 
-    /// Providers that are worth trying right now, in preference order: none switched off.
+    /// The ids of the sources resting after failures, in preference order: switched on, and
+    /// left out of [`Self::usable_ids`] until their rest is over.
+    pub fn resting_ids(&self) -> Vec<String> {
+        let usable = self.health.usable(&self.ids());
+        self.ids()
+            .into_iter()
+            .filter(|id| !usable.contains(id) && !self.is_disabled(id))
+            .collect()
+    }
+
+    /// Why local policy holds the source `id` back right now, when it does: torrent playback
+    /// is off, or the proxy check has not passed. Asked live, as the walk asks it, and kept on
+    /// the source's health row the same way. `None` for a source free to ask, or not in the chain.
+    pub fn hold(&self, id: &str, now: i64) -> Option<ProviderError> {
+        let provider = self.get(id)?;
+        match provider.is_available() {
+            Err(reason) => {
+                self.health.record_failure(id, &reason, now);
+                Some(reason)
+            }
+            Ok(()) => {
+                self.health.release(id);
+                None
+            }
+        }
+    }
+
+    /// Providers that are worth trying right now, in preference order: none switched off, and
+    /// none resting unless this view asks those too.
     fn candidates(&self) -> Vec<Arc<dyn Provider>> {
         let usable = self.health.usable(&self.ids());
         self.snapshot()
             .into_iter()
             .filter(|p| {
-                usable.contains(&p.manifest().id) && !self.is_disabled(&p.manifest().id)
+                (self.resting_too || usable.contains(&p.manifest().id))
+                    && !self.is_disabled(&p.manifest().id)
             })
             .collect()
     }
@@ -491,23 +553,52 @@ impl ProviderRegistry {
         // the picker waits for the slowest source instead of the sum of them all.
         let listings = self.candidates().into_iter().map(|provider| async move {
             let id = provider.manifest().id.clone();
-            if provider.is_available().is_err() {
-                return Vec::new();
-            }
-            let started = kaeri_store::instant_now();
-            match provider.sources(key, episode, translation).await {
-                Ok(candidates) => {
-                    self.health.record_success(&id, kaeri_store::elapsed(started), now);
-                    candidates
-                }
-                Err(error) => {
-                    self.health.record_failure(&id, &error, now);
+            self.listed(provider, key, episode, translation, now).await.unwrap_or_else(
+                |error| {
                     tracing::debug!(provider = %id, %error, "sources listing failed");
                     Vec::new()
-                }
-            }
+                },
+            )
         });
         futures::future::join_all(listings).await.concat()
+    }
+
+    /// The releases the first source of this view lists for an episode, or why it listed none:
+    /// held back, failed, or not in the view at all (not found). For a picker that says what
+    /// each source answered, asked one view at a time ([`Self::pinned`]).
+    pub async fn listing(
+        &self,
+        key: &ProviderKey,
+        episode: &str,
+        translation: Translation,
+        now: i64,
+    ) -> Result<Vec<SourceCandidate>, ProviderError> {
+        let provider = self.candidates().into_iter().next().ok_or(ProviderError::NotFound)?;
+        self.listed(provider, key, episode, translation, now).await
+    }
+
+    /// What `provider` lists for an episode, with its health kept.
+    async fn listed(
+        &self,
+        provider: Arc<dyn Provider>,
+        key: &ProviderKey,
+        episode: &str,
+        translation: Translation,
+        now: i64,
+    ) -> Result<Vec<SourceCandidate>, ProviderError> {
+        let id = provider.manifest().id.clone();
+        provider.is_available()?;
+        let started = kaeri_store::instant_now();
+        match provider.sources(key, episode, translation).await {
+            Ok(candidates) => {
+                self.health.record_success(&id, kaeri_store::elapsed(started), now);
+                Ok(candidates)
+            }
+            Err(error) => {
+                self.health.record_failure(&id, &error, now);
+                Err(error)
+            }
+        }
     }
 
     /// Resolve a specific pick from [`Self::sources`] on the provider that offered it.
@@ -639,6 +730,7 @@ mod tests {
                 .with_sources(vec![SourceCandidate {
                     id: format!("{id}-release"),
                     provider_id: id.into(),
+                    provider_name: String::new(),
                     title: id.into(),
                     quality: None,
                     label: None,
@@ -733,6 +825,20 @@ mod tests {
             .await;
         assert_eq!(attempt.provider.as_deref(), Some("site"));
         r.set_disabled(["site".to_owned()]);
+        assert!(view.usable_ids().is_empty(), "switched off in the view too");
+    }
+
+    #[test]
+    fn a_view_without_some_sources_keeps_the_rest_in_order() {
+        let r = registry(vec![
+            MockProvider::new("a").arc(),
+            MockProvider::new("b").arc(),
+            MockProvider::new("c").arc(),
+        ]);
+        let view = r.without(&["a".to_owned(), "b".to_owned()]);
+        assert_eq!(view.ids(), ["c"]);
+        assert_eq!(r.ids(), ["a", "b", "c"], "the registry itself keeps them");
+        r.set_disabled(["c".to_owned()]);
         assert!(view.usable_ids().is_empty(), "switched off in the view too");
     }
 

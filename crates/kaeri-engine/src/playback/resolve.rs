@@ -4,7 +4,7 @@
 use kaeri_core::ids::AnilistId;
 use kaeri_meta::Meta;
 use kaeri_model::StoreMsg;
-use kaeri_model::starting::StartStep;
+use kaeri_model::starting::{ListingMiss, MissedListing, SourceHold, StartStep};
 use kaeri_model::{Cause, Msg};
 use kaeri_model::{event::Event, notice::Notice, party::NoSourceWhy};
 use kaeri_providers::{ProviderRegistry, walk};
@@ -73,29 +73,37 @@ fn not_aired_in(
 pub struct Unplayable {
     pub why: NoSourceWhy,
     pub text: Msg,
+    /// The ids of the sources asked that gave no real answer: failed, took too long or skipped.
+    /// A source held back was never asked and is not among them. What a new start of the same
+    /// episode gives a fresh chance.
+    pub unreached: Vec<String>,
 }
 
 impl Unplayable {
     /// The device stayed offline while the start waited for a connection.
     pub(crate) fn no_connection() -> Self {
-        Self { why: NoSourceWhy::NoConnection, text: explained(Cause::NoConnection) }
+        Self::of(NoSourceWhy::NoConnection, explained(Cause::NoConnection))
     }
 
     /// No source is set up to ask: [`no_sources`].
     pub(crate) fn no_sources() -> Self {
-        Self { why: NoSourceWhy::NoSources, text: explained(no_sources()) }
+        Self::of(NoSourceWhy::NoSources, explained(no_sources()))
     }
 
     /// The schedule rules the episode out: [`not_aired`]'s words.
     pub(crate) fn not_aired(text: Msg) -> Self {
-        Self { why: NoSourceWhy::NotAired, text }
+        Self::of(NoSourceWhy::NotAired, text)
+    }
+
+    fn of(why: NoSourceWhy, text: Msg) -> Self {
+        Self { why, text, unreached: Vec::new() }
     }
 }
 
 /// Any other failure: the sources were asked, and none of them played it.
 impl From<Cause> for Unplayable {
     fn from(cause: Cause) -> Self {
-        Self { why: NoSourceWhy::NotFound, text: explained(cause) }
+        Self::of(NoSourceWhy::NotFound, explained(cause))
     }
 }
 
@@ -170,10 +178,9 @@ async fn opened_stream(
 /// Why an opened link could not start: torrent playback off, or the torrent itself failing.
 fn link_failed(error: kaeri_core::error::ProviderError) -> Unplayable {
     match error {
-        kaeri_core::error::ProviderError::Unavailable(_) => Unplayable {
-            why: NoSourceWhy::NotFound,
-            text: Msg::Store(StoreMsg::TorrentLinkPlaybackOff),
-        },
+        kaeri_core::error::ProviderError::Unavailable(_) => {
+            Unplayable::of(NoSourceWhy::NotFound, Msg::Store(StoreMsg::TorrentLinkPlaybackOff))
+        }
         e => Cause::ReleaseFailed { detail: e.to_string() }.into(),
     }
 }
@@ -401,10 +408,22 @@ pub async fn resolve_for_playback(
                         kaeri_providers::Answer::Ambiguous { .. } => {
                             return Err(Cause::TitleNoMatch { detail: answer.explain() }.into());
                         }
-                        kaeri_providers::Answer::Unanswered { matched, .. } => {
-                            return Err(
-                                no_source_has(episode, matched, &answer.explain()).into()
+                        kaeri_providers::Answer::Unanswered {
+                            matched,
+                            ref unreached,
+                            ref held,
+                            ..
+                        } => {
+                            let unreached = unreached.clone();
+                            let cause = no_source_has(
+                                registry,
+                                episode,
+                                matched,
+                                &unreached,
+                                held,
+                                &answer.explain(),
                             );
+                            return Err(Unplayable { unreached, ..cause.into() });
                         }
                     }
                 }
@@ -588,20 +607,51 @@ async fn pinned_release(
     }
 }
 
-/// What a play says when no source gave the episode: that none has it, when each source matched
-/// the title and lacked the episode, and otherwise what each source said.
-fn no_source_has(episode: &str, matched: bool, reasons: &str) -> Cause {
-    if matched {
+/// What a play says when no source gave the episode. That none has it only when every source
+/// said so: when any asked gave no real answer (`unreached`: failed, took too long or skipped),
+/// the ones it couldn't reach, since any of them may have it. A source held back (`held`) was
+/// never asked, so it is never one it couldn't reach: it is named as not asked. Otherwise that
+/// none has the episode, when one matched the title, and that none could match the title when
+/// none did.
+fn no_source_has(
+    registry: &ProviderRegistry,
+    episode: &str,
+    matched: bool,
+    unreached: &[String],
+    held: &[String],
+    reasons: &str,
+) -> Cause {
+    let named = |ids: &[String]| -> Vec<String> {
+        ids.iter().map(|id| display_name(registry, id)).collect()
+    };
+    if !unreached.is_empty() {
+        Cause::SourcesUnreached { names: named(unreached).join(", ") }
+    } else if !held.is_empty() {
+        Cause::SourcesNotAsked {
+            count: held.len() as i64,
+            names: named(held).join(", "),
+            episode: episode.to_owned(),
+        }
+    } else if matched {
         Cause::NoSourceHasEpisode { episode: episode.to_owned(), detail: reasons.to_owned() }
     } else {
-        Cause::verbatim(reasons)
+        Cause::TitleNoMatch { detail: reasons.to_owned() }
     }
 }
 
-/// The selectable releases for one episode, across every usable provider.
+/// A source by the name it goes by on screen, and by its id when it is not in the chain.
+pub(crate) fn display_name(registry: &ProviderRegistry, provider_id: &str) -> String {
+    registry
+        .get(provider_id)
+        .map_or_else(|| provider_id.to_owned(), |source| source.manifest().display_name.clone())
+}
+
+/// The selectable releases for one episode, across every source, and what each source that
+/// listed none said.
 ///
 /// Shares the title-matching rung with playback: the slate is only meaningful for the
-/// provider key the ladder would actually use.
+/// provider key the ladder would actually use. Sources resting after failures are asked last,
+/// and a source local policy holds back is not asked at all, as in a play.
 async fn source_slate(
     meta: &Meta,
     store: &Store,
@@ -609,7 +659,7 @@ async fn source_slate(
     id: kaeri_core::ids::AnilistId,
     episode: &str,
     translation: kaeri_core::media::Translation,
-) -> std::result::Result<Vec<kaeri_core::traits::SourceCandidate>, Msg> {
+) -> std::result::Result<(Vec<kaeri_core::traits::SourceCandidate>, Vec<MissedListing>), Msg> {
     if registry.is_empty() && !registry.is_arriving() {
         return Err(explained(no_sources()));
     }
@@ -626,20 +676,74 @@ async fn source_slate(
     // Each provider's releases under its own key: one provider's key means nothing to another.
     // A provider that cannot match the title has nothing to offer here, and the rest still do.
     let mut slate = Vec::new();
-    let mut reasons = Vec::new();
-    for provider_id in registry.usable_ids() {
-        let Some(source) = registry.pinned(&provider_id) else { continue };
-        let resolution =
-            kaeri_providers::resolve(store, &source, id, &target, translation, now).await;
-        match resolution.key() {
-            Some(key) => slate.extend(source.sources(key, episode, translation, now).await),
-            None => reasons.push(format!("{provider_id}: {}", resolution.explain())),
+    let mut missed = Vec::new();
+    for provider_id in registry.usable_ids().into_iter().chain(registry.resting_ids()) {
+        let Some(source) = registry.pinned(&provider_id).map(ProviderRegistry::even_resting)
+        else {
+            continue;
+        };
+        let name = display_name(registry, &provider_id);
+        let miss = match registry.hold(&provider_id, now) {
+            Some(reason) => Some(ListingMiss::HeldBack { why: hold_of_error(&reason) }),
+            None => {
+                match kaeri_providers::resolve(store, &source, id, &target, translation, now)
+                    .await
+                {
+                    kaeri_providers::Resolution::Resolved { key, .. } => {
+                        match source.listing(&key, episode, translation, now).await {
+                            Ok(listed) if listed.is_empty() => Some(ListingMiss::NoEpisode),
+                            Ok(listed) => {
+                                slate.extend(listed.into_iter().map(|candidate| {
+                                    kaeri_core::traits::SourceCandidate {
+                                        provider_name: name.clone(),
+                                        ..candidate
+                                    }
+                                }));
+                                None
+                            }
+                            Err(error) => Some(listing_failed(&error)),
+                        }
+                    }
+                    // Candidates and none sure: the picker has no release to offer from it.
+                    kaeri_providers::Resolution::Ambiguous { .. } => Some(ListingMiss::NoMatch),
+                    kaeri_providers::Resolution::NotFound { miss, .. } => Some(match miss {
+                        walk::Miss::TimedOut => ListingMiss::TimedOut,
+                        walk::Miss::Failed | walk::Miss::Skipped => ListingMiss::Failed,
+                        walk::Miss::NoMatch | walk::Miss::NoEpisode => ListingMiss::NoMatch,
+                    }),
+                }
+            }
+        };
+        if let Some(miss) = miss {
+            tracing::info!(provider = %provider_id, ?miss, "listed no release");
+            missed.push(MissedListing { name, miss });
         }
     }
-    if slate.is_empty() && !reasons.is_empty() {
-        return Err(explained(Cause::TitleNoMatch { detail: reasons.join(", ") }));
+    Ok((slate, missed))
+}
+
+/// Why a source that failed to list said nothing: it took too long, or it failed.
+fn listing_failed(error: &kaeri_core::error::ProviderError) -> ListingMiss {
+    match error {
+        kaeri_core::error::ProviderError::NotFound => ListingMiss::NoEpisode,
+        kaeri_core::error::ProviderError::Unavailable(reason) => {
+            ListingMiss::HeldBack { why: crate::playback::starting::hold_of(reason) }
+        }
+        error if error.to_string().to_ascii_lowercase().contains("timed out") => {
+            ListingMiss::TimedOut
+        }
+        _ => ListingMiss::Failed,
     }
-    Ok(slate)
+}
+
+/// Why a source is held back, from the error its hold gave.
+fn hold_of_error(error: &kaeri_core::error::ProviderError) -> SourceHold {
+    match error {
+        kaeri_core::error::ProviderError::Unavailable(reason) => {
+            crate::playback::starting::hold_of(reason)
+        }
+        _ => SourceHold::Other,
+    }
 }
 
 /// The releases an episode can be played from, for the Sources overlay.
@@ -660,7 +764,11 @@ pub fn load_sources(
         let _job = job;
         let update =
             match source_slate(&meta, &store, &registry, id, &episode, translation).await {
-                Ok(candidates) => Event::Sources { id, episode, candidates },
+                // With no release, what each source said; with some, the releases alone.
+                Ok((candidates, missed)) => {
+                    let missed = if candidates.is_empty() { missed } else { Vec::new() };
+                    Event::Sources { id, episode, candidates, missed }
+                }
                 Err(msg) => Event::Toast(Notice::alert(msg)),
             };
         let _ = tx.send(update);
@@ -801,6 +909,138 @@ mod tests {
             missing.text.english().contains("sample"),
             "the source's answer, not the title's lookup: {}",
             missing.text.english()
+        );
+    }
+
+    /// A source sure of the show that lists no stream for any episode of it.
+    fn lacking(id: &str) -> MockProvider {
+        use kaeri_core::media::{MediaFormat, SearchHit};
+        MockProvider::new(id).with_hits(vec![SearchHit {
+            episode_count: Some(12),
+            format: Some(MediaFormat::Tv),
+            ..SearchHit::new(
+                kaeri_core::ids::ProviderKey::new(format!("{id}-show")),
+                "The Hidden Star",
+            )
+        }])
+    }
+
+    fn transport() -> kaeri_core::error::ProviderError {
+        kaeri_core::error::ProviderError::Transport("connection reset".into())
+    }
+
+    #[tokio::test]
+    async fn one_source_failing_makes_the_failure_one_not_reached_never_a_missing_episode() {
+        let sources = vec![
+            lacking("alpha").named("Alpha").failing(transport()),
+            lacking("brook").named("Brook"),
+        ];
+        let failed = failure(show(false), "3", sources).await;
+        assert_eq!(failed.unreached, ["alpha"]);
+        assert_eq!(
+            failed.text,
+            explained(Cause::SourcesUnreached { names: "Alpha".into() }),
+            "{}",
+            failed.text.english()
+        );
+        assert!(!failed.text.english().contains("No source has"), "{}", failed.text.english());
+    }
+
+    #[tokio::test]
+    async fn a_held_back_source_is_not_asked_never_unreached() {
+        let sources = vec![
+            lacking("harbor")
+                .named("Harbor")
+                .unavailable(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
+            lacking("brook").named("Brook"),
+        ];
+        let failed = failure(show(false), "3", sources).await;
+        assert!(failed.unreached.is_empty(), "Harbor was never asked, so never unreached");
+        assert_eq!(
+            failed.text,
+            explained(Cause::SourcesNotAsked {
+                count: 1,
+                names: "Harbor".into(),
+                episode: "3".into()
+            }),
+        );
+        assert!(!failed.text.english().contains("Couldn't reach"), "{}", failed.text.english());
+    }
+
+    #[tokio::test]
+    async fn no_source_has_the_episode_only_when_every_source_said_so() {
+        let failed = failure(show(false), "3", vec![lacking("alpha"), lacking("brook")]).await;
+        assert!(failed.unreached.is_empty());
+        assert!(
+            matches!(
+                &failed.text,
+                Msg::NoticeReason { reason: Cause::NoSourceHasEpisode { .. } }
+            ),
+            "{:?}",
+            failed.text
+        );
+    }
+
+    /// What the picker lists for episode 3 of the cached show against `sources`, offline.
+    async fn slate(
+        sources: Vec<MockProvider>,
+    ) -> (Vec<kaeri_core::traits::SourceCandidate>, Vec<MissedListing>) {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
+            .unwrap();
+        let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store.clone());
+        let registry =
+            ProviderRegistry::new(sources.into_iter().map(MockProvider::arc).collect());
+        source_slate(
+            &meta,
+            &store,
+            &registry,
+            AnilistId::new(900_201),
+            "3",
+            kaeri_core::media::Translation::Sub,
+        )
+        .await
+        .expect("a slate")
+    }
+
+    #[tokio::test]
+    async fn the_picker_says_why_each_source_listed_nothing_by_its_name() {
+        let release = kaeri_core::traits::SourceCandidate {
+            id: "r1".into(),
+            provider_id: "brook".into(),
+            provider_name: String::new(),
+            title: "The Hidden Star - 03 (1080p)".into(),
+            quality: Some(1080),
+            label: None,
+            size: None,
+            dual_audio: false,
+            dubbed: false,
+            auto_pick: true,
+        };
+        let (listed, missed) = slate(vec![
+            lacking("alpha").named("Alpha").failing(transport()),
+            lacking("harbor")
+                .named("Harbor")
+                .unavailable(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
+            lacking("cove").named("Cove"),
+            lacking("brook").named("Brook").with_sources(vec![release]),
+        ])
+        .await;
+        // A release names its source as it goes by, not by its id.
+        let names: Vec<_> = listed.iter().map(|c| c.provider_name.as_str()).collect();
+        assert_eq!(names, ["Brook"]);
+        assert_eq!(
+            missed,
+            [
+                MissedListing { name: "Alpha".into(), miss: ListingMiss::Failed },
+                MissedListing {
+                    name: "Harbor".into(),
+                    miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
+                },
+                MissedListing { name: "Cove".into(), miss: ListingMiss::NoEpisode },
+            ]
         );
     }
 

@@ -53,7 +53,7 @@ enum CastWords {
     @MainActor static func barLine(_ cast: CastModel) -> String {
         switch cast.stage {
         case .starting: L.tvStartingOn(name: cast.tvName)
-        case .playing: L.tvStatusPlaying(name: cast.tvName)
+        case .playing: cast.line
         case .failed: L.castCouldntStart(name: cast.tvName)
         case .stopped: L.castStopped
         }
@@ -302,8 +302,9 @@ struct CastUndoNote: View {
     }
 }
 
-/// The TV's volume: on a TV that keeps its own, the line saying so and Mute; on one that takes
-/// a level, a slider sending steps as it moves, set again by each of the TV's reports.
+/// The TV's volume: on a TV that keeps its own, the line saying so, with Mute only where a mute
+/// reaches its sound; on one that takes a level, a slider sending steps as it moves, set again by
+/// each of the TV's reports.
 struct CastVolumeRow: View {
     @Environment(AppStore.self) private var store
     let touch: Bool
@@ -362,16 +363,18 @@ struct CastVolumeRow: View {
                             .contentTransition(.opacity)
                     }
                     Spacer(minLength: 8)
-                    Button {
-                        cast.send(.mute(muted: !cast.muted))
-                    } label: {
-                        if cast.muted {
-                            Text(L.playerUnmute)
-                        } else {
-                            Label(L.playerMute, systemImage: "speaker.slash")
+                    if cast.canMute {
+                        Button {
+                            cast.send(.mute(muted: !cast.muted))
+                        } label: {
+                            if cast.muted {
+                                Text(L.playerUnmute)
+                            } else {
+                                Label(L.playerMute, systemImage: "speaker.slash")
+                            }
                         }
+                        .buttonStyle(SecondaryCapsuleStyle(height: touch ? 34 : 24, fontSize: touch ? 15 : 12))
                     }
-                    .buttonStyle(SecondaryCapsuleStyle(height: touch ? 34 : 24, fontSize: touch ? 15 : 12))
                 }
                 .padding(.leading, touch ? 16 : 14)
                 .padding(.trailing, touch ? 12 : 10)
@@ -567,8 +570,8 @@ struct CastToolbarButton: View {
 #if os(iOS)
 // MARK: - iPhone and iPad's card
 
-/// The TV sheet while a cast is up: the line and Done, the note to keep the app open, the
-/// episode, the seek line and transport, the tracks and the TV's volume, and what else to do.
+/// The TV sheet while a cast is up: the line and Done, the episode, the seek line and transport,
+/// the tracks and the TV's volume, and what else to do.
 /// On iPad a form sheet, with those buttons in a row. The screen stays awake while it is up.
 struct PhoneCastCard: View {
     @Environment(AppStore.self) private var store
@@ -592,19 +595,6 @@ struct PhoneCastCard: View {
                         .foregroundStyle(.silk)
                 }
                 .padding(.top, 4)
-                if running {
-                    HStack(alignment: .firstTextBaseline, spacing: 10) {
-                        Image(systemName: "info.circle")
-                            .font(.ui(15))
-                            .foregroundStyle(.water)
-                            .accessibilityHidden(true)
-                        Text(L.castKeepOpen(device: TVRemoteModel.deviceName, name: cast.tvName))
-                            .font(.ui(13))
-                            .foregroundStyle(.haze)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .transition(.opacity)
-                }
                 if let now = cast.now {
                     HStack(spacing: 14) {
                         if let entry = store.titles[now.id] { CoverArt(entry: entry, width: 72) }

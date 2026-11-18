@@ -26,6 +26,16 @@ struct EpisodeMetrics: Equatable {
     /// The row's height where it holds none: a protected row, and a show with no synopses coming.
     /// The same as `tall` where the text sits beside the still, which is as tall either way.
     let short: CGFloat
+    /// Whether a hairline ends each row, `pad` under its text and `pad` over the next still, so
+    /// each episode reads as one unit where the text sits under the still. The heights include
+    /// the rule.
+    var ruled = false
+
+    /// The room over the still, and under the text of a ruled row.
+    var pad: CGFloat { ruled ? 16 : 8 }
+
+    /// The hairline's own height.
+    static let rule: CGFloat = 1
 
     /// The Mac with a list 560 pt wide or more: a 178 x 100 still, three lines beside it.
     static let macWide = EpisodeMetrics(text: .beside, still: CGSize(width: 178, height: 100), tall: 120, short: 120)
@@ -33,8 +43,11 @@ struct EpisodeMetrics: Equatable {
     static let macNarrow = EpisodeMetrics(text: .under, still: CGSize(width: 144, height: 81), tall: 164, short: 100)
     /// An iPad at regular width: the Mac's row at touch sizes, a 192 x 108 still.
     static let pad = EpisodeMetrics(text: .beside, still: CGSize(width: 192, height: 108), tall: 128, short: 128)
-    /// An iPhone, and an iPad at compact width.
-    static let phone = EpisodeMetrics(text: .under, still: CGSize(width: 144, height: 81), tall: 172, short: 100)
+    /// An iPhone, and an iPad at compact width: 16 over the still, the still, three lines of
+    /// text, 16 under them and the rule (182), or the still alone between them (114).
+    static let phone = EpisodeMetrics(
+        text: .under, still: CGSize(width: 144, height: 81), tall: 182, short: 114, ruled: true
+    )
 
     /// The Mac's list is wide enough for text beside the still from this width.
     static let wideFrom: CGFloat = 560
@@ -47,6 +60,21 @@ struct EpisodeMetrics: Equatable {
     /// The row's height: tall where the table has room kept for text and this row can show it.
     func height(room: Bool, protected: Bool) -> CGFloat {
         room && !protected ? tall : short
+    }
+
+    /// The least a row is laid out at. A ruled row keeps `height`'s room only while a lookup may
+    /// still bring its text (`pending`), so nothing moves as the details load; once they are
+    /// known it fits what it holds: `short` for the still, title and facts, and the synopsis's own
+    /// lines under them, up to `tall`'s three. Other rows keep `height` either way.
+    func least(room: Bool, protected: Bool, pending: Bool) -> CGFloat {
+        ruled && !pending ? short : height(room: room, protected: protected)
+    }
+
+    /// Whether a row lays out its synopsis's place: where it has room, and on a ruled row only
+    /// while text may still come or once it has, so a row with none ends at its facts.
+    func holdsText(room: Bool, protected: Bool, pending: Bool, text: String?) -> Bool {
+        guard room && !protected else { return false }
+        return !ruled || pending || !(text ?? "").isEmpty
     }
 }
 
@@ -114,7 +142,11 @@ enum EpisodeFacts {
     /// length, or what is left of it or Watched, then when it aired, then what marks it. On phones
     /// the episode's number leads it ("E7 · 14 min left"), where the row has no column for it, unless
     /// the row has no title of its own and its title is the number already.
-    static func line(_ row: EpisodeRow, current: Bool, minutesLeft: Int?, leadsWithNumber: Bool) -> String {
+    ///
+    /// An aired episode no source lists says so after its date: within a day of airing the date
+    /// is the time since ("Aired 25 min ago · Not in your sources yet"), for a week "Not in your
+    /// sources yet", then "No source has this episode".
+    static func line(_ row: EpisodeRow, current: Bool, minutesLeft: Int?, leadsWithNumber: Bool, now: Date = .now) -> String {
         var parts: [String] = []
         if leadsWithNumber, row.title != nil { parts.append(L.episodeShort(episode: Int(episode: row.number))) }
         if row.completed {
@@ -125,12 +157,30 @@ enum EpisodeFacts {
             parts.append(L.episodeFactsLength(minutes: max(1, Int((Double(seconds) / 60).rounded()))))
         }
         // The length and the date read as one part: the first part and then Aired.
-        if let aired = row.airsDate, !row.isUnaired() { parts.append(L.episodeAired(date: day(aired))) }
+        if let aired = row.airsDate, !row.isUnaired(now: now) {
+            parts.append(row.unsourced ? airedAgo(row, aired: aired, now: now) : L.episodeAired(date: day(aired)))
+        }
         if row.kind == .filler { parts.append(L.episodeFiller) }
-        if row.unsourced { parts.append(L.episodeUnsourced) }
+        if row.unsourced { parts.append(unsourced(row, now: now)) }
         guard var line = parts.first else { return "" }
         for part in parts.dropFirst() { line = L.episodeFactsJoin(first: line, second: part) }
         return line
+    }
+
+    /// When an unsourced episode aired: "Aired 25 min ago", "Aired 3 h ago", then the date.
+    static func airedAgo(_ row: EpisodeRow, aired: Date, now: Date) -> String {
+        guard let at = row.airsAt else { return L.episodeAired(date: day(aired)) }
+        switch KaeriKit.airedAgo(airedAt: at, now: MissingWords.unix(now)) {
+        case .minutes(let minutes): return L.episodeRowAiredAgo(ago: L.timeAgo(span: L.timeMinutes(minutes: Int(minutes))))
+        case .hours(let hours): return L.episodeRowAiredAgo(ago: L.timeAgo(span: L.timeHours(hours: Int(hours))))
+        case .onDate: return L.episodeAired(date: day(aired))
+        }
+    }
+
+    /// "Not in your sources yet" for a week after airing, "No source has this episode" after it
+    /// or with no airing time.
+    static func unsourced(_ row: EpisodeRow, now: Date) -> String {
+        unsourcedYet(airedAt: row.airsAt, now: MissingWords.unix(now)) ? L.episodeUnsourcedYet : L.episodeUnsourced
     }
 
     /// "21 May 2014", in the person's language.

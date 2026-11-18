@@ -4,7 +4,7 @@ namespace Kaeri.App;
 /// How long a notice stays. Windows has no timeout setting of its own that the app can read, so
 /// the rule is the app's: 4 seconds for information and 8 for an alert, a second more for every ten
 /// words past twelve, and twice as long while a screen reader runs. A notice with a button stays
-/// until it is dismissed or acted on.
+/// until it is dismissed or acted on, unless it is timed.
 /// </summary>
 public static class NoticeTime
 {
@@ -17,6 +17,13 @@ public static class NoticeTime
         var seconds = (alert ? 8 : 4) + Math.Max(0, words - 12) / 10;
         return TimeSpan.FromSeconds(seconds * Scale(screenReader));
     }
+
+    /// <summary>
+    /// The time a notice with a button stays when it still goes by itself, as the cast's notice that
+    /// someone else took the TV does: an alert's time, by its length and the screen reader.
+    /// </summary>
+    public static TimeSpan Timed(string text, bool screenReader) =>
+        Stays(text, alert: true, hasAction: false, screenReader) ?? TimeSpan.FromSeconds(8);
 
     /// <summary>What a timer is multiplied by: 2 while a screen reader runs, else 1.</summary>
     public static int Scale(bool screenReader) => screenReader ? 2 : 1;

@@ -68,6 +68,15 @@
   <data name="NoticeCastLost" xml:space="preserve">
     <value>Tappade kontakten med {name}, så castingen avbröts.</value>
   </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} slutade få strömmen: källan svarade inte för en del av avsnittet. Prova en annan källa.</value>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} tappade strömmen från den här enheten. Kontrollera att båda är på samma nätverk.</value>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Undertexter på {name} visas som vanlig text. Formaterade undertexter blev för mycket för tv:n.</value>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>Den TV:n finns inte längre på nätverket.</value>
   </data>
@@ -361,6 +370,12 @@
   </data>
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>Ingen bild från strömmen. Provar {next} av {total}.</value>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>Strömmen bröts. {source} tog över på samma ställe.</value>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>Strömmen bröts. En annan ström från {source} tog över på samma ställe.</value>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv kunde inte spela upp det här. {reason}</value>
@@ -887,6 +902,9 @@
   <data name="ReadingRowWaitsWifi" xml:space="preserve">
     <value>I kö · väntar på Wi-Fi</value>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>I kö · väntar på ledigt utrymme</value>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Laddar ner · {done} av {total} sidor</value>
   </data>
@@ -1012,6 +1030,12 @@
   </data>
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.</value>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.</value>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>Cirka {size}</value>
@@ -2495,9 +2519,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>Väntar på TV:n</value>
   </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>Väntar på {name}</value>
-  </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
   </data>
@@ -2732,6 +2753,39 @@
   <data name="ReportCrashSettings" xml:space="preserve">
     <value>Kraschrapportinställningar</value>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Spelarlogg</value>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>Den senaste uppspelningen · {size}</value>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>De senaste {playbacks} uppspelningarna · {size}</value>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>Ingen uppspelning loggad än</value>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Spara logg…</value>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Bifoga filen i ärendet när det öppnas på GitHub.</value>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Sparad som {file}</value>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Loggen kunde inte sparas. Prova en annan mapp.</value>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Rapport</value>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Spelarloggen sparades</value>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Sparar en fil att bifoga i ärendet</value>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Kraschrapporter</value>
   </data>
@@ -2927,6 +2981,36 @@
   <data name="CastVolumeFixed" xml:space="preserve">
     <value>Ställs in på TV:n</value>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Ansluter till {name}</value>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Ansluten till {name}</value>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Spelas på {name}</value>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Inget spelas än</value>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Pausad på {name}</value>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Öppna {title}</value>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Stäng</value>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Öppnar kontrollerna</value>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Spela härnäst på {name}</value>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Castar till {name}</value>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Försök igen</value>
   </data>
@@ -3074,6 +3158,9 @@
   <data name="ActionCheckAgain" xml:space="preserve">
     <value>Kontrollera igen</value>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Kontrollerar</value>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Öppna inställningarna</value>
   </data>
@@ -3140,6 +3227,9 @@
   <data name="TimeMinutes" xml:space="preserve">
     <value>{minutes} min</value>
   </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} tim</value>
+  </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>nu</value>
   </data>
@@ -3196,6 +3286,9 @@
   </data>
   <data name="StateLoading" xml:space="preserve">
     <value>Läser in</value>
+  </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Avfärda</value>
   </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Flytta fokus</value>
@@ -3433,6 +3526,15 @@
   </data>
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Stoppa strömningen och avsluta?</value>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} spelas upp på {name}. Uppspelningen stoppas vid avslut.</value>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Stoppa och avsluta</value>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Diskussion</value>
@@ -5516,9 +5618,6 @@
   <data name="PlayerStartMissSkipped" xml:space="preserve">
     <value>Du hoppade över {name}</value>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Hoppades över efter senaste fel</value>
-  </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>Från {name}</value>
   </data>
@@ -6073,6 +6172,54 @@
   </data>
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Mer i Inställningar…</value>
+  </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Privat läge</value>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Inget du tittar på eller läser sparas eller synkas förrän du stänger av det eller avslutar Kaeri.</value>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>Dina källor och watch partyn ser fortfarande vad du öppnar.</value>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Privat läge är på. Inget sparas eller synkas förrän Kaeri avslutas.</value>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Stäng av</value>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Kortkommando: {keys}</value>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Privat</value>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Privat läge är på</value>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Sparas inte och synkas inte</value>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Din plats finns kvar tills Kaeri avslutas</value>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Alltid privat</value>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Inget från den här serien sparas eller synkas på den här enheten. Det som redan är sparat finns kvar.</value>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Inget från den här serien sparas eller synkas på den här enheten. Det som redan är sparat finns kvar.</value>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Spelas i Kaeri</value>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Privat läge på</value>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Privat läge av</value>
   </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Laddar sida {page}</value>
@@ -7153,6 +7300,9 @@
   </data>
   <data name="ReadSearchSourceMore" xml:space="preserve">
     <value>Visa {n} till</value>
+  </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Lägg till i {list}</value>
   </data>
   <data name="OnboardingStep" xml:space="preserve">
     <value>{step} av {total}</value>
@@ -8471,6 +8621,21 @@
   <data name="SettingsUpNextCountdown" xml:space="preserve">
     <value>Nedräkning för Nästa</value>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Förladda video via mobildata</value>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Förladda video på anslutningar med datapriser</value>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på.</value>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrenter laddar sina första delar på samma sätt.</value>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Kräver ”Spela nästa automatiskt”</value>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Hoppa över öppningen automatiskt</value>
   </data>
@@ -9011,6 +9176,15 @@
   <data name="SettingsOpdsPort" xml:space="preserve">
     <value>Flödesport</value>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Bild-i-bild när du lämnar appen</value>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Visa personer du följer</value>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adress</value>
   </data>
@@ -9256,6 +9430,30 @@
   </data>
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} av {of} avsnitt</value>
+  </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Avsnitt {first}</value>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Avsnitt {first} till {last}</value>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Avsnitt {first} till {last}. Inte {missing} än</value>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Avsnitt {first} till {last}. Inte {missing}</value>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} eller {b}</value>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first} till {last}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} av {of} avsnitt. Inte {missing}</value>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} av {of} avsnitt. Inte {missing}</value>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Avstängd</value>
@@ -11069,6 +11267,30 @@
   <data name="MoreLikeThis" xml:space="preserve">
     <value>Liknande</value>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Visa alla {count}</value>
+  </data>
+  <data name="FollowingNames_one" xml:space="preserve">
+    <value>{first}, {second} och {more} till</value>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} och {more} till</value>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} och {second}</value>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} har tittat hit.</value>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Betyg {score} av 10</value>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Visar var var och en är.</value>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
   </data>
@@ -11117,9 +11339,6 @@
   <data name="TitleFactTba" xml:space="preserve">
     <value>Datum tillkännages</value>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Gå till avsnitt…</value>
   </data>
@@ -11140,6 +11359,42 @@
   </data>
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Avsnitt {number} är inte ute än. Det senaste är {latest}.</value>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Avsnitt {episode} sändes {ago}.</value>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Avsnitt {episode} sändes den {date}.</value>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Dina källor har det inte än.</value>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Dina källor har det fortfarande inte.</value>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Dina källor svarade inte.</value>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri letar igen med {minutes} min mellanrum.</value>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>Ingen av dina källor har det.</value>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri letar efter det när du är online igen.</value>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Sändes {ago}</value>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Inte i dina källor än</value>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Avsnitt {episode} finns nu i dina källor.</value>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri letar också själv med {minutes} min mellanrum i {hours} tim efter att ett avsnitt har sänts.</value>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrenter</value>
@@ -11677,6 +11932,9 @@
   </data>
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>Ansluter om till {name}</value>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>Väntar på {name}</value>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Ansluten</value>

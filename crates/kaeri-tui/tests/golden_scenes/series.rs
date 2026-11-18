@@ -110,6 +110,8 @@ fn view(work: &WorkId) -> SeriesView {
         partial: false,
         demo: None,
         demo_other: None,
+        private: None,
+        place_kept: false,
     }
 }
 

@@ -186,18 +186,40 @@ public sealed partial class MainWindow
         ApplyMedium();
         if (ctx.Known.Medium.Asking is not { } ask || ask is MediumAsk.FirstRun || askingMedium || welcoming is not null)
             return;
+#if KAERI_TESTING
+        // A cast scene's shots show the cast, not the question.
+        if (options.Show?.StartsWith("cast-", StringComparison.Ordinal) == true)
+            return;
+#endif
         askingMedium = true;
         ui.TryEnqueue(DispatcherQueuePriority.Low, async () =>
         {
             try
             {
-                await MediumDialogs.Ask(ctx, Root.XamlRoot, ask);
+                // Heard from the window's start, before its content may have loaded: a dialog
+                // with no XamlRoot is refused, and the question would be lost.
+                await MediumDialogs.Ask(ctx, await LoadedRoot(), ask);
             }
             finally
             {
                 askingMedium = false;
             }
         });
+    }
+
+    /// <summary>The window's XamlRoot once its content has loaded, for a dialog asked for at the start.</summary>
+    Task<XamlRoot> LoadedRoot()
+    {
+        if (Root.XamlRoot is { } root)
+            return Task.FromResult(root);
+        var ready = new TaskCompletionSource<XamlRoot>();
+        void Loaded(object sender, RoutedEventArgs e)
+        {
+            Root.Loaded -= Loaded;
+            ready.TrySetResult(Root.XamlRoot);
+        }
+        Root.Loaded += Loaded;
+        return ready.Task;
     }
 
     /// <summary>Reading's start: the medium.</summary>

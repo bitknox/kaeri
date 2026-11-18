@@ -70,6 +70,9 @@ const FRESH: u8 = 0;
 const TENRAI: u8 = 1;
 const CACHE: u8 = 2;
 
+/// What [`CACHE`] says, when the ladder steps down to it.
+const CACHED_NOTICE: &str = "no metadata source answered — showing what was last cached";
+
 /// One rung's condition, for the Providers screen.
 #[derive(Debug, Clone)]
 pub struct SourceHealth {
@@ -128,10 +131,10 @@ struct Answered {
     /// answer from the fallback or the cache is for an outage, and the next ask should find
     /// out whether it is over.
     fresh: bool,
-    /// Whether someone was signed in to AniList when it was asked, and so whether the people they
-    /// follow were asked after. An answer is not reused across a sign-in or a sign-out: the one
-    /// would miss them, the other would keep them.
-    signed_in: bool,
+    /// Whether the people the viewer follows were asked after: someone was signed in to AniList
+    /// and Show people you follow was on. An answer is not reused across a sign-in or a
+    /// sign-out, or the switch turned: the one would miss them, the other would keep them.
+    following: bool,
 }
 
 impl Answered {
@@ -139,13 +142,13 @@ impl Answered {
     ///
     /// Not once an episode has aired since: the next one and its countdown have moved, and
     /// the episode count with them.
-    fn serves(&self, now: Instant, reuse_for: Duration, signed_in: bool) -> bool {
+    fn serves(&self, now: Instant, reuse_for: Duration, following: bool) -> bool {
         let age = now.saturating_duration_since(self.at);
         let Ok(media) = &self.outcome else { return false };
         let aired = media.next_airing_episode.as_ref().is_some_and(|next| {
             next.time_until_airing <= i64::try_from(age.as_secs()).unwrap_or(i64::MAX)
         });
-        self.fresh && age < reuse_for && !aired && self.signed_in == signed_in
+        self.fresh && age < reuse_for && !aired && self.following == following
     }
 
     /// The answer as of `now`, its countdown run on by the time since.
@@ -238,9 +241,30 @@ struct Breakers {
     tenrai: Breaker,
 }
 
+/// What a skipped request says instead of asking, after the source's name.
+const SKIPPED: &str = "skipped after repeated failures";
+
 /// What a skipped request says instead of asking.
 fn skipped(source: &str, wait: Duration) -> String {
-    format!("{source} skipped after repeated failures; next try in {}s", wait.as_secs().max(1))
+    format!("{source} {SKIPPED}; next try in {}s", wait.as_secs().max(1))
+}
+
+/// AniList's latest failure to be reached, and whose it was: see [`Meta::anilists_fault`].
+#[derive(Debug, Clone, Copy)]
+struct Fault {
+    /// Just before the request that failed went out: what the other hosts did after it is
+    /// the evidence.
+    since: kaeri_net::reach::Mark,
+    blame: Option<Blame>,
+}
+
+/// Who a failure to reach AniList is down to.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Blame {
+    /// The device lost its path: the platform said so, or every host failed together.
+    Device,
+    /// AniList alone: another host answered meanwhile, or AniList answered with its own error.
+    Anilist,
 }
 
 /// The metadata source the application talks to, in place of any one service.
@@ -258,6 +282,8 @@ pub struct Meta {
     notice: std::sync::Arc<Mutex<Option<String>>>,
     weather: std::sync::Arc<Mutex<Weather>>,
     breakers: std::sync::Arc<Mutex<Breakers>>,
+    /// AniList's latest failure to be reached, until it answers again.
+    fault: Arc<Mutex<Option<Fault>>>,
     recent: Arc<Mutex<Recent>>,
     /// How long one of AniList's answers for a title is used again: [`REUSE_FOR`].
     reuse_for: Duration,
@@ -360,6 +386,7 @@ impl Meta {
             notice: std::sync::Arc::new(Mutex::new(None)),
             weather: std::sync::Arc::new(Mutex::new(Weather::default())),
             breakers: std::sync::Arc::new(Mutex::new(Breakers::default())),
+            fault: Arc::default(),
             recent: Arc::default(),
             reuse_for: REUSE_FOR,
             relations: Arc::default(),
@@ -517,23 +544,106 @@ impl Meta {
         if let Some(wait) = self.skip("anilist") {
             return Err(AniListError::Network(skipped("anilist", wait)));
         }
+        let since = self.anilist.reach().0.mark();
         let result = call.await;
         match &result {
-            // Over the limit is AniList asking for patience, not failing: no strike for the
-            // breaker, so it is never skipped for it. This call falls to what is kept.
-            Err(AniListError::RateLimited { .. }) => {}
-            Err(e) if Self::descends(e) => {
+            Err(e) if Self::outage(e) => {
                 self.note_anilist(Some(e.to_string()));
                 self.trip("anilist");
+                self.faulted(since, e);
             }
             Ok(_) => {
                 self.note_anilist(None);
                 self.reset("anilist");
+                self.reached();
             }
-            // An answer about the title, which says the service is up.
-            Err(_) => self.reset("anilist"),
+            // Over the limit is AniList asking for patience, not failing: no strike for the
+            // breaker, so it is never skipped for it. This call falls to what is kept.
+            Err(AniListError::RateLimited { .. }) => {}
+            // An answer: not found, or GraphQL refusing this request. Either says the service
+            // is up.
+            Err(_) => {
+                self.reset("anilist");
+                self.reached();
+            }
         }
         result
+    }
+
+    /// AniList answered: no failure is left to weigh.
+    fn reached(&self) {
+        if let Ok(mut fault) = self.fault.lock() {
+            *fault = None;
+        }
+    }
+
+    /// AniList could not be reached by the request that went out at `since`. Whose that is
+    /// down to is weighed now, with what the other hosts did meanwhile, and again when the
+    /// ladder falls ([`Self::anilists_fault`]), by when the rung below has been asked too.
+    fn faulted(&self, since: kaeri_net::reach::Mark, error: &AniListError) {
+        let blame = match error {
+            AniListError::Network(said) if said.starts_with(kaeri_core::error::NO_NETWORK) => {
+                Some(Blame::Device)
+            }
+            AniListError::Network(_) => self.judge(since, false),
+            _ => Some(Blame::Anilist),
+        };
+        if let Ok(mut fault) = self.fault.lock() {
+            // With no other host asked meanwhile, the failure before it stands: AniList has not
+            // answered since, so the path is as it was found then.
+            let blame = blame.or(fault.and_then(|before| before.blame));
+            *fault = Some(Fault { since, blame });
+        }
+    }
+
+    /// Whose a failure to reach AniList after `since` is, from what the platform says of the
+    /// path and what the other hosts did after it, or `None` with no other host asked. With
+    /// `first`, only the first of them counts: weighed long after, what came later may be the
+    /// path coming back.
+    fn judge(&self, since: kaeri_net::reach::Mark, first: bool) -> Option<Blame> {
+        let (ledger, anilist) = self.anilist.reach();
+        if ledger.offline() {
+            return Some(Blame::Device);
+        }
+        let others = ledger.others(anilist, since);
+        let answered = if first {
+            others.first_answered?
+        } else if others.answered || others.failed {
+            others.answered
+        } else {
+            return None;
+        };
+        Some(if answered { Blame::Anilist } else { Blame::Device })
+    }
+
+    /// Whether a failure to reach AniList (`cause`) is AniList's, rather than the device's: a
+    /// device that lost its path (the platform says so, or every host failed together) is not
+    /// AniList being down, and the app's offline state says that instead.
+    ///
+    /// AniList's own errors are its own. A fresh failure is weighed with everything the other
+    /// hosts did since it went out, the rung below included. A skip is weighed as the failure
+    /// that last reached the network was, or, never weighed, by the first host asked after it.
+    /// With nothing to go on it is AniList's, as it always was.
+    fn anilists_fault(&self, cause: &AniListError) -> bool {
+        let AniListError::Network(said) = cause else { return true };
+        if said.starts_with(kaeri_core::error::NO_NETWORK) || self.anilist.reach().0.offline() {
+            return false;
+        }
+        let skip = said.starts_with("anilist ") && said.contains(SKIPPED);
+        let Ok(mut fault) = self.fault.lock() else { return true };
+        let Some(fault) = fault.as_mut() else { return true };
+        if !skip {
+            fault.blame = self.judge(fault.since, false).or(fault.blame);
+        } else if fault.blame.is_none() {
+            fault.blame = self.judge(fault.since, true);
+        }
+        if fault.blame == Some(Blame::Device) {
+            tracing::debug!(
+                "anilist and the other hosts failed together; the connection is down"
+            );
+            return false;
+        }
+        true
     }
 
     /// Ask Tenrai, on the same terms as [`Self::ask_anilist`]. Its weather is noted by the
@@ -593,6 +703,12 @@ impl Meta {
         MetaError::Exhausted { anilist, fallback }
     }
 
+    /// The platform says whether it has a usable path, each time that changes. While it has
+    /// none, AniList failing is not said to be AniList's: see [`Self::anilists_fault`].
+    pub fn path(&self, offline: bool) {
+        self.anilist.reach().0.path(offline);
+    }
+
     /// The AniList client itself, for the calls that have no fallback semantics.
     pub fn anilist(&self) -> &AniList {
         &self.anilist
@@ -614,6 +730,32 @@ impl Meta {
         self.notice.lock().ok()?.take()
     }
 
+    /// A rung below AniList answered, because AniList failed with `cause`. Said only when it is
+    /// true, and to someone looking.
+    ///
+    /// A rate limit or GraphQL's own refusal is an answer from a live AniList, so the ladder
+    /// stays where it stands and nothing is said: "no source answered" would be false. Work
+    /// nobody is looking at ([`crate::in_background`]) says nothing either, while the screens'
+    /// own asks are answered, unless AniList keeps failing long enough to be skipped. A
+    /// background request's failure is not what the screen shows, and the ladder is one for
+    /// every lane: moved by it, the next screen answer would move it back, a toast each way.
+    ///
+    /// A device without a path fails every host together, and that is not AniList being down:
+    /// the app's offline state says it, and the ladder stays and says nothing, so nothing has to
+    /// be taken back once the path returns. See [`Self::anilists_fault`].
+    fn fell(&self, rung: u8, cause: &AniListError) {
+        if !Self::outage(cause) || !self.anilists_fault(cause) {
+            return;
+        }
+        if crate::anilist::is_background() && !self.resting("anilist") {
+            return;
+        }
+        self.went(rung);
+    }
+
+    /// Stand on `rung`, with a notice when that moves the ladder. AniList's answer comes here
+    /// directly ([`FRESH`]), from any lane, so a recovery is said once; the rungs below come
+    /// through [`Self::fell`].
     fn went(&self, rung: u8) {
         let was = self.rung.swap(rung, Ordering::Relaxed);
         if was == rung {
@@ -621,7 +763,7 @@ impl Meta {
         }
         let message = match rung {
             TENRAI => "anilist is unreachable — fresh data via tenrai for now",
-            CACHE => "no metadata source answered — showing what was last cached",
+            CACHE => CACHED_NOTICE,
             _ => "anilist is back",
         };
         if let Ok(mut slot) = self.notice.lock() {
@@ -635,12 +777,18 @@ impl Meta {
     /// re-ask a question that was already answered. Unauthenticated cannot happen on
     /// these unauthenticated reads, but if it ever does, another source is not the fix.
     fn descends(error: &AniListError) -> bool {
+        Self::outage(error)
+            || matches!(error, AniListError::Api(_) | AniListError::RateLimited { .. })
+    }
+
+    /// Whether this failure says AniList is down, rather than answering: unreachable, its own
+    /// trouble (a `5xx`), or a body that could not be read (a gateway's error page). Only these
+    /// count towards the breaker and move the ladder's notice. A breaker's skip comes as
+    /// `Network`, and only outages open it.
+    fn outage(error: &AniListError) -> bool {
         matches!(
             error,
-            AniListError::Network(_)
-                | AniListError::Api(_)
-                | AniListError::Decode(_)
-                | AniListError::RateLimited { .. }
+            AniListError::Network(_) | AniListError::Server { .. } | AniListError::Decode(_)
         )
     }
 
@@ -651,12 +799,17 @@ impl Meta {
     /// lists that show it, for the wide art Home draws where there is no banner.
     fn remember(&self, media: &Media) {
         let kept;
-        let media = match self.cached_listings(media) {
-            Some(listings) => {
-                kept = Media { streaming_episodes: listings, ..media.clone() };
-                &kept
-            }
-            None => media,
+        let (listings, following) = self.cached_extras(media);
+        let media = if listings.is_some() || following.is_some() {
+            kept = Media {
+                streaming_episodes: listings
+                    .unwrap_or_else(|| media.streaming_episodes.clone()),
+                following: following.or_else(|| media.following.clone()),
+                ..media.clone()
+            };
+            &kept
+        } else {
+            media
         };
         let Ok(payload) = serde_json::to_string(media) else { return };
         if let Err(e) = self.store.cache_media(media.id, &payload, kaeri_store::now()) {
@@ -664,21 +817,61 @@ impl Meta {
         }
     }
 
-    /// The listings cached for `media`, when it comes with none and the cache holds some.
-    fn cached_listings(&self, media: &Media) -> Option<Vec<StreamingEpisode>> {
-        /// The one field read back, so the rest of the payload is not decoded.
+    /// What the cache holds for `media` that its answer leaves out: the listings, when it comes
+    /// with none, and the people the viewer follows, when they were not asked after (a list's
+    /// answer, or the fallback's), so the page keeps them for offline.
+    fn cached_extras(
+        &self,
+        media: &Media,
+    ) -> (Option<Vec<StreamingEpisode>>, Option<Vec<crate::anilist::model::Follower>>) {
+        /// The fields read back, so the rest of the payload is not decoded.
         #[derive(serde::Deserialize)]
         #[serde(rename_all = "camelCase")]
-        struct Listings {
+        struct Extras {
             #[serde(default)]
             streaming_episodes: Vec<StreamingEpisode>,
+            #[serde(default)]
+            following: Option<Vec<crate::anilist::model::Follower>>,
         }
-        if !media.streaming_episodes.is_empty() {
+        let wants_listings = media.streaming_episodes.is_empty();
+        let wants_following = media.following.is_none();
+        if !wants_listings && !wants_following {
+            return (None, None);
+        }
+        let Some((payload, _)) = self.store.cached_media(media.id).ok().flatten() else {
+            return (None, None);
+        };
+        let Ok(cached) = serde_json::from_str::<Extras>(&payload) else { return (None, None) };
+        let listings = Some(cached.streaming_episodes)
+            .filter(|listings| wants_listings && !listings.is_empty());
+        let following = crate::anilist::model::Follower::told_apart(cached.following);
+        (listings, following.filter(|_| wants_following))
+    }
+
+    /// The people the viewer follows as the cache last had them for `id`, for a page answered
+    /// by the fallback; `None` while they are not asked after.
+    fn cached_following(&self, id: AnilistId) -> Option<Vec<crate::anilist::model::Follower>> {
+        if !self.anilist.asks_following() {
             return None;
         }
-        let (payload, _) = self.store.cached_media(media.id).ok().flatten()?;
-        let cached: Listings = serde_json::from_str(&payload).ok()?;
-        Some(cached.streaming_episodes).filter(|listings| !listings.is_empty())
+        self.recall(id)?.following
+    }
+
+    /// Show people you follow, this device's switch, put in effect: off, title pages stop asking
+    /// after them and the cache lets go of what it kept of them.
+    pub fn show_following(&self, on: bool) {
+        self.anilist.show_following(on);
+        if !on {
+            self.forget_following();
+        }
+    }
+
+    /// Let go of every cached page's people followed: the viewer signed out of AniList, or the
+    /// switch was turned off.
+    pub fn forget_following(&self) {
+        if let Err(e) = self.store.forget_following() {
+            tracing::warn!(error = %e, "could not take the people followed out of the cache");
+        }
     }
 
     fn remember_page(&self, page: &Page<Media>) {
@@ -691,6 +884,12 @@ impl Meta {
     fn recall(&self, id: AnilistId) -> Option<Media> {
         let (payload, _) = self.store.cached_media(id).ok().flatten()?;
         let mut media: Media = serde_json::from_str(&payload).ok()?;
+        // Only while they would be asked after: never past a sign-out or the switch turned off,
+        // even before the cache has let go of them.
+        if !self.anilist.asks_following() {
+            media.following = None;
+        }
+        media.following = crate::anilist::model::Follower::told_apart(media.following.take());
         // The stored countdown froze at fetch time; the air date did not move.
         if let Some(next) = &mut media.next_airing_episode {
             next.time_until_airing = next.airing_at - kaeri_store::now();
@@ -711,12 +910,12 @@ impl Meta {
     pub async fn media_answered(&self, id: AnilistId) -> Result<(Media, bool)> {
         let flight = self.flight(id);
         let lane = self.flight_lane(id);
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         let answered = flight
             .get_or_init(|| {
                 lane.run(async {
                     let (outcome, fresh) = self.ask_media(id).await;
-                    Answered { at: kaeri_store::instant_now(), outcome, fresh, signed_in }
+                    Answered { at: kaeri_store::instant_now(), outcome, fresh, following }
                 })
             })
             .await;
@@ -842,12 +1041,12 @@ impl Meta {
     /// Whether an ask for title `id`'s page is under way, or its answer still serves.
     fn detail_under_way(&self, id: AnilistId) -> bool {
         let now = kaeri_store::instant_now();
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         self.recent.lock().is_ok_and(|recent| {
             recent.titles.get(&id).is_some_and(|flight| {
                 flight
                     .get()
-                    .is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
+                    .is_none_or(|answered| answered.serves(now, self.reuse_for, following))
             })
         })
     }
@@ -988,13 +1187,13 @@ impl Meta {
     /// Whether AniList's answer for title `id`'s page is in and still serves.
     fn answered(&self, id: AnilistId) -> bool {
         let now = kaeri_store::instant_now();
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         self.recent.lock().is_ok_and(|recent| {
             recent
                 .titles
                 .get(&id)
                 .and_then(|flight| flight.get())
-                .is_some_and(|answered| answered.serves(now, self.reuse_for, signed_in))
+                .is_some_and(|answered| answered.serves(now, self.reuse_for, following))
         })
     }
 
@@ -1002,10 +1201,10 @@ impl Meta {
     /// new one. Answers that serve no longer are let go on the way.
     fn flight(&self, id: AnilistId) -> Flight {
         let now = kaeri_store::instant_now();
-        let signed_in = self.anilist.is_authenticated();
+        let following = self.anilist.asks_following();
         let Ok(mut recent) = self.recent.lock() else { return Flight::default() };
         recent.titles.retain(|_, flight| {
-            flight.get().is_none_or(|answered| answered.serves(now, self.reuse_for, signed_in))
+            flight.get().is_none_or(|answered| answered.serves(now, self.reuse_for, following))
         });
         let Recent { titles, lanes } = &mut *recent;
         lanes.retain(|id, _| titles.get(id).is_some_and(|flight| !flight.initialized()));
@@ -1045,10 +1244,12 @@ impl Meta {
         let patient = matches!(primary, AniListError::RateLimited { .. });
         if let Some(tenrai) = self.tenrai.as_ref().filter(|_| !patient) {
             match self.ask_tenrai(tenrai.media(id)).await {
-                Ok(media) => {
+                Ok(mut media) => {
                     self.note_tenrai(None);
-                    self.went(TENRAI);
+                    self.fell(TENRAI, &primary);
                     self.remember(&media);
+                    // The fallback knows nobody's follows: the page keeps the ones it last had.
+                    media.following = self.cached_following(id);
                     return (Ok(media), false);
                 }
                 Err(e) => {
@@ -1059,7 +1260,7 @@ impl Meta {
             }
         }
         if let Some(media) = self.recall(id) {
-            self.went(CACHE);
+            self.fell(CACHE, &primary);
             return (Ok(media), false);
         }
         (Err(self.exhausted(primary, tenrai_error)), false)
@@ -1193,7 +1394,7 @@ impl Meta {
         if assembled.is_empty() && !ids.is_empty() {
             return Err(self.exhausted(primary, tenrai_error));
         }
-        self.went(rung);
+        self.fell(rung, &primary);
         Ok(assembled)
     }
 
@@ -1338,7 +1539,7 @@ impl Meta {
             {
                 Ok(found) => {
                     self.note_tenrai(None);
-                    self.went(TENRAI);
+                    self.fell(TENRAI, &primary);
                     self.remember_page(&found.page);
                     return Ok(found);
                 }
@@ -1777,7 +1978,7 @@ mod tests {
     fn an_answer_serves_for_its_minutes_and_not_past_a_broadcast() {
         let at = Instant::now();
         let answered =
-            |media: Media, fresh| Answered { at, outcome: Ok(media), fresh, signed_in: false };
+            |media: Media, fresh| Answered { at, outcome: Ok(media), fresh, following: false };
         let minute = Duration::from_secs(60);
 
         let hour_away = answered(airing(3_600), true);
@@ -1802,14 +2003,14 @@ mod tests {
             at,
             outcome: Err(MetaError::Anilist(AniListError::NotFound)),
             fresh: true,
-            signed_in: false,
+            following: false,
         };
         assert!(!failed.serves(at, REUSE_FOR, false));
 
         // A sign-in or a sign-out is another answer: the people the viewer follows come with one
         // and must not outlast the other.
         assert!(!hour_away.serves(at, REUSE_FOR, true), "not after a sign-in");
-        let signed_in = Answered { signed_in: true, ..answered(airing(3_600), true) };
+        let signed_in = Answered { following: true, ..answered(airing(3_600), true) };
         assert!(signed_in.serves(at, REUSE_FOR, true));
         assert!(!signed_in.serves(at, REUSE_FOR, false), "nor after a sign-out");
     }
@@ -1913,7 +2114,42 @@ mod tests {
         assert!(Meta::descends(&AniListError::Network("timed out".into())));
         assert!(Meta::descends(&AniListError::Api("internal error".into())));
         assert!(Meta::descends(&AniListError::Decode("shape changed".into())));
+        assert!(Meta::descends(&AniListError::Server { status: 502, message: String::new() }));
         assert!(!Meta::descends(&AniListError::NotFound));
         assert!(!Meta::descends(&AniListError::Unauthenticated));
+    }
+
+    #[test]
+    fn only_a_down_anilist_is_an_outage() {
+        assert!(Meta::outage(&AniListError::Network("timed out".into())));
+        assert!(Meta::outage(&AniListError::Server { status: 503, message: String::new() }));
+        assert!(Meta::outage(&AniListError::Decode("a gateway's page".into())));
+        // Answers from a live AniList: what is kept stands in, and nothing claims it is down.
+        assert!(!Meta::outage(&AniListError::Api("Max query complexity exceeded".into())));
+        assert!(!Meta::outage(&AniListError::RateLimited { retry_in_secs: 30 }));
+        assert!(!Meta::outage(&AniListError::NotFound));
+    }
+
+    #[tokio::test]
+    async fn graphql_refusing_a_request_never_trips_the_breaker() {
+        let meta = meta();
+        for _ in 0..BREAKER_THRESHOLD * 3 {
+            let answer = meta
+                .ask_anilist(async { Err::<(), _>(AniListError::Api("Validation".into())) })
+                .await;
+            assert!(matches!(answer, Err(AniListError::Api(_))));
+        }
+        assert!(meta.skip("anilist").is_none(), "AniList is still asked after many refusals");
+        assert!(meta.health()[0].healthy, "{:?}", meta.health()[0]);
+    }
+
+    #[test]
+    fn a_fall_for_an_answer_from_anilist_says_nothing() {
+        let meta = meta();
+        meta.fell(CACHE, &AniListError::RateLimited { retry_in_secs: 5 });
+        meta.fell(TENRAI, &AniListError::Api("Validation".into()));
+        assert_eq!(meta.take_notice(), None);
+        meta.fell(CACHE, &AniListError::Network("timed out".into()));
+        assert_eq!(meta.take_notice().as_deref(), Some(CACHED_NOTICE));
     }
 }

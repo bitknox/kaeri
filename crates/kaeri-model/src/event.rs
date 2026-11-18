@@ -181,6 +181,13 @@ pub enum Event {
     Medium(crate::medium::MediumView),
     /// The recent searches, newest first: at launch when asked, and after each change.
     RecentSearches(Vec<SearchQuery>),
+    // Whether private mode is on: at launch and on every change. See `crate::private`.
+    Private(bool),
+    // A show or series made always private on this device, or not.
+    AlwaysPrivate {
+        title: crate::private::PrivateTitle,
+        on: bool,
+    },
     Detail(Box<Entry>),
     /// The titles a [`Command::LoadCards`](crate::command::Command::LoadCards) asked for, as a
     /// list row has them (synopsis, trailer, airing facts) and without a page's fields. A front
@@ -265,10 +272,15 @@ pub enum Event {
     },
     /// The selectable releases for the episode the user asked about, named so an answer for
     /// an episode whose picker has since closed is not offered against the next one.
+    ///
+    /// With no candidates, `missed` says what each source answered instead, in the viewer's
+    /// order: the picker's "No source lists episode 5" and one line for each source under it.
     Sources {
         id: AnilistId,
         episode: String,
         candidates: Vec<SourceCandidate>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        missed: Vec<crate::starting::MissedListing>,
     },
     /// The sources that could serve a title, each with how much of the title's episodes it has,
     /// in the order they are tried, for a source picker: the answer to
@@ -393,6 +405,10 @@ pub enum Event {
         /// for an episode played from the beginning or never watched.
         #[cfg_attr(feature = "ffi", uniffi(default))]
         resume: Option<f64>,
+        // The title is always private: Now Playing says only "Playing in Kaeri", with no art,
+        // as it does for every play while private mode is on.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        always_private: bool,
     },
     // A step of a start the engine is making, as the starting screen shows it: which source
     // is being asked, one coming up empty, a torrent finding peers, the streams found, the
@@ -562,6 +578,12 @@ pub enum Event {
         progress: Option<TitleProgress>,
         resume: Option<ResumePoint>,
         episodes: Vec<EpisodeProgress>,
+        // Private when sent: see `crate::private`. `kept` says `progress.next` and `resume`
+        // come from a place held in memory until the app quits.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        private: Option<crate::private::PrivateMode>,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        kept: bool,
     },
     /// The torrent proxy's check changed, or `None`: torrent playback is off.
     TorrentProxy(Option<ProxyStatus>),
@@ -624,6 +646,10 @@ pub enum Event {
         episode: u32,
         /// Every comment in the thread, replies included.
         comments: u32,
+        /// The thread on AniList's site, for a front end that hands it to the browser rather
+        /// than opening it: the terminal.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        url: String,
     },
     /// The discussion [`Command::OpenDiscussion`] opened, whole, on every change until
     /// [`Command::CloseDiscussion`].
@@ -698,6 +724,8 @@ pub enum Event {
     SetupFrom(crate::group::JoinedSetup),
     /// What came in after adding a store, a book server or a folder, or why nothing did.
     CameIn(crate::came_in::CameIn),
+    // What a check of a missing episode came to: see `crate::missing`.
+    EpisodeChecked(crate::missing::EpisodeCheck),
     /// What a pasted invite link leads to, or why it leads nowhere.
     StorePreview(InvitePreview),
     /// A store was joined. The view moves into it if the user is still on the store list.

@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">En annan enhet startade något på %1$s, så castingen avbröts.</string>
     <string name="notice_cast_not_same_network">Den här enheten är inte på samma nätverk som %1$s, eller når det via ett VPN. Anslut båda till samma nätverk för att casta.</string>
     <string name="notice_cast_lost">Tappade kontakten med %1$s, så castingen avbröts.</string>
+    <string name="notice_cast_segment">%1$s slutade få strömmen: källan svarade inte för en del av avsnittet. Prova en annan källa.</string>
+    <string name="notice_cast_lost_stream">%1$s tappade strömmen från den här enheten. Kontrollera att båda är på samma nätverk.</string>
+    <string name="notice_cast_subtitles_plain">Undertexter på %1$s visas som vanlig text. Formaterade undertexter blev för mycket för tv:n.</string>
     <string name="notice_cast_no_device">Den TV:n finns inte längre på nätverket.</string>
     <string name="notice_cast_unavailable">Den här versionen av Kaeri kan inte skicka till TV:ar.</string>
     <string name="cast_phase_starting">Startar på %1$s</string>
@@ -117,6 +120,8 @@
     <string name="status_searching_sources">Söker i källor efter avsnitt %1$s…</string>
     <string name="notice_player_failed_to_start">Det gick inte att starta mpv. Kontrollera att den startar på egen hand. (%1$s)</string>
     <string name="notice_stream_no_video">Ingen bild från strömmen. Provar %1$,d av %2$,d.</string>
+    <string name="notice_failed_over">Strömmen bröts. %1$s tog över på samma ställe.</string>
+    <string name="notice_failed_over_same_source">Strömmen bröts. En annan ström från %1$s tog över på samma ställe.</string>
     <string name="notice_player_could_not_play">mpv kunde inte spela upp det här. %1$s</string>
     <string name="notice_player_exited_silently">mpv stängdes utan att spela något och utan att säga varför. Prova en annan källa.</string>
     <string name="notice_player_not_playing">mpv har inte börjat spela efter %1$,d s. Den här källan kan sakna data. Kontrollera att mpv spelar upp en fil på egen hand.</string>
@@ -312,6 +317,7 @@
     <string name="reading_row_on_device">På den här enheten</string>
     <string name="reading_row_queued">I kö</string>
     <string name="reading_row_waits_wifi">I kö · väntar på Wi-Fi</string>
+    <string name="reading_row_waits_room">I kö · väntar på ledigt utrymme</string>
     <string name="reading_row_downloading">Laddar ner · %1$,d av %2$,d sidor</string>
     <string name="reading_row_failed">Kunde inte laddas ner</string>
     <string name="reading_row_page_of">Sida %1$d av %2$d</string>
@@ -368,6 +374,10 @@
     <string name="reading_dl_waits_wifi">väntar på Wi-Fi</string>
     <string name="reading_dl_failed">Kapitel %1$s kunde inte laddas ner</string>
     <string name="reading_dl_offline">Offline</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">Inget utrymme kvar. Den laddas ner när det finns ledigt utrymme.</item>
+        <item quantity="other">Inget utrymme kvar. De laddas ner när det finns ledigt utrymme.</item>
+    </plurals>
     <string name="reading_estimate_size">Cirka %1$s</string>
     <string name="reading_estimate_wifi">via Wi-Fi</string>
     <string name="reading_estimate_mobile">via mobildata</string>
@@ -745,6 +755,7 @@
     <string name="reader_end_again">Läs igen från början</string>
     <string name="reader_opening_chapter">Öppnar kapitel %1$s</string>
     <string name="reader_failed_chapter">Kunde inte öppna kapitel %1$s</string>
+    <string name="reader_failed_chapter_plain">Kunde inte öppna kapitlet</string>
     <string name="reader_sheet_series">Den här serien</string>
     <string name="reader_sheet_all_manga">All manga</string>
     <string name="reader_sheet_all_webtoons">Alla webtoons</string>
@@ -997,6 +1008,8 @@
     <string name="tv_discussion_select_spoiler">Välj för att visa spoilern</string>
     <string name="updates_unknown_sources_path">Inställningar › Appar › Säkerhet och begränsningar › Okända källor</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Visa livestatistik</string>
+    <string name="player_stats_hide_live">Dölj livestatistik</string>
     <string name="episode_short_dubbed">E%1$d · Dubbat</string>
     <string name="episode_long_dubbed">Avsnitt %1$d · Dubbat</string>
     <plurals name="downloads_live_paused">
@@ -1244,6 +1257,7 @@
     <string name="engine_down_title">Kaeri har stannat</string>
     <string name="engine_down_stopped">Inget nytt laddas förrän den startar igen. Försök igen, eller avsluta och öppna appen en gång till.</string>
     <string name="engine_down_quit">Avsluta</string>
+    <string name="settings_picture_in_picture_system_off">Av i Android-inställningarna</string>
     <string name="about_title">Om</string>
     <string name="about_title_app">Om Kaeri</string>
     <string name="about_version">Version %1$s</string>
@@ -1279,6 +1293,19 @@
     <string name="report_tv_scan">Skanna koden för att öppna rapporten på din telefon.</string>
     <string name="report_crash_off">Kraschrapporter är avstängda, så ingen ingår. Du kan slå på dem under Inställningar, Om.</string>
     <string name="report_crash_settings">Kraschrapportinställningar</string>
+    <string name="report_player_log">Spelarlogg</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="one">Den senaste uppspelningen · %2$s</item>
+        <item quantity="other">De senaste %1$,d uppspelningarna · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Ingen uppspelning loggad än</string>
+    <string name="report_player_log_save">Spara logg…</string>
+    <string name="report_player_log_attach">Bifoga filen i ärendet när det öppnas på GitHub.</string>
+    <string name="report_player_log_saved">Sparad som %1$s</string>
+    <string name="report_player_log_failed">Loggen kunde inte sparas. Prova en annan mapp.</string>
+    <string name="report_sent_report">Rapport</string>
+    <string name="report_player_log_a11y_saved">Spelarloggen sparades</string>
+    <string name="report_player_log_a11y_hint">Sparar en fil att bifoga i ärendet</string>
     <string name="settings_group_crashes">Kraschrapporter</string>
     <string name="settings_crash_save">Spara kraschrapporter på den här enheten</string>
     <string name="settings_crash_save_detail">Kaeri sparar en kort logg över varje krasch på den här enheten för Rapportera ett fel, utan titlar, adresser och namn. Inget skickas av sig självt.</string>
@@ -1344,6 +1371,16 @@
     <string name="cast_play_here">Spela här</string>
     <string name="cast_stop">Sluta casta</string>
     <string name="cast_volume_fixed">Ställs in på TV:n</string>
+    <string name="cast_button_connecting">Ansluter till %1$s</string>
+    <string name="cast_button_connected">Ansluten till %1$s</string>
+    <string name="cast_plays_on">Spelas på %1$s</string>
+    <string name="cast_idle">Inget spelas än</string>
+    <string name="cast_status_paused">Pausad på %1$s</string>
+    <string name="cast_open_show">Öppna %1$s</string>
+    <string name="cast_controller_close">Stäng</string>
+    <string name="cast_mini_opens">Öppnar kontrollerna</string>
+    <string name="cast_play_next_on">Spela härnäst på %1$s</string>
+    <string name="cast_notification_line">Castar till %1$s</string>
     <string name="action_try_again">Försök igen</string>
     <string name="action_cancel">Avbryt</string>
     <string name="action_go">Gå</string>
@@ -1393,6 +1430,7 @@
     <string name="action_disable">Inaktivera</string>
     <string name="action_check_now">Kontrollera nu</string>
     <string name="action_check_again">Kontrollera igen</string>
+    <string name="action_checking">Kontrollerar</string>
     <string name="action_open_settings">Öppna inställningarna</string>
     <string name="action_report">Rapportera</string>
     <string name="action_play_now">Spela upp nu</string>
@@ -1415,6 +1453,7 @@
     <string name="time_in">om %1$s</string>
     <string name="time_minutes_left">%1$,d min kvar</string>
     <string name="time_minutes">%1$,d min</string>
+    <string name="time_hours">%1$,d tim</string>
     <string name="time_now_inline">nu</string>
     <string name="time_just_now_inline">precis nyss</string>
     <string name="when_today">idag %1$s</string>
@@ -1434,6 +1473,7 @@
     <string name="error_label">Problem</string>
     <string name="state_working">Arbetar</string>
     <string name="state_loading">Läser in</string>
+    <string name="notice_dismiss">Avfärda</string>
     <string name="pad_help_move">Flytta fokus</string>
     <string name="pad_help_select">Välj</string>
     <string name="pad_help_back">Tillbaka</string>
@@ -1517,6 +1557,9 @@
     <string name="player_position_spoken">%1$s av %2$s</string>
     <string name="names_pair">%1$s och %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Stoppa strömningen och avsluta?</string>
+    <string name="desktop_cast_quit_body">%1$s spelas upp på %2$s. Uppspelningen stoppas vid avslut.</string>
+    <string name="desktop_cast_quit_action">Stoppa och avsluta</string>
     <string name="discussion_open">Diskussion</string>
     <string name="discussion_title_episode">Diskussion om avsnitt %1$d</string>
     <plurals name="discussion_row">
@@ -2250,7 +2293,6 @@
     <string name="player_start_miss_failed">%1$s svarade inte</string>
     <string name="player_start_miss_timed_out">%1$s tog för lång tid</string>
     <string name="player_start_miss_skipped">Du hoppade över %1$s</string>
-    <string name="player_start_resting">Hoppades över efter senaste fel</string>
     <string name="player_start_from">Från %1$s</string>
     <string name="player_start_no_video">Den första visade ingen video</string>
     <string name="player_start_stream_place">Ström %1$,d av %2$,d</string>
@@ -2440,6 +2482,23 @@
     <string name="player_subs_bg_shadow">Skugga</string>
     <string name="player_subs_bg_box">Ruta</string>
     <string name="player_subs_more">Mer i Inställningar…</string>
+    <string name="private_mode">Privat läge</string>
+    <string name="private_mode_detail">Inget du tittar på eller läser sparas eller synkas förrän du stänger av det eller avslutar Kaeri.</string>
+    <string name="private_mode_limits">Dina källor och watch partyn ser fortfarande vad du öppnar.</string>
+    <string name="private_mode_on_notice">Privat läge är på. Inget sparas eller synkas förrän Kaeri avslutas.</string>
+    <string name="action_turn_off">Stäng av</string>
+    <string name="private_mode_shortcut_hint">Kortkommando: %1$s</string>
+    <string name="private_badge">Privat</string>
+    <string name="private_badge_label">Privat läge är på</string>
+    <string name="private_line_not_saved">Sparas inte och synkas inte</string>
+    <string name="private_line_kept">Din plats finns kvar tills Kaeri avslutas</string>
+    <string name="title_always_private">Alltid privat</string>
+    <string name="show_always_private_detail">Inget från den här serien sparas eller synkas på den här enheten. Det som redan är sparat finns kvar.</string>
+    <string name="series_always_private_detail">Inget från den här serien sparas eller synkas på den här enheten. Det som redan är sparat finns kvar.</string>
+    <string name="now_playing_private">Spelas i Kaeri</string>
+    <string name="private_download_line">Laddar ner i Kaeri</string>
+    <string name="private_mode_on_announcement">Privat läge på</string>
+    <string name="private_mode_off_announcement">Privat läge av</string>
     <string name="reader_page_loading">Laddar sida %1$d</string>
     <string name="reader_page_plate">Sida %1$d</string>
     <string name="reader_image_plate">Bild %1$d</string>
@@ -2848,6 +2907,7 @@
     <string name="read_search_source_kind_folder">Mapp</string>
     <string name="read_search_source_kind_plugin">Tillägg</string>
     <string name="read_search_source_more">Visa %1$,d till</string>
+    <string name="read_tile_add_to">Lägg till i %1$s</string>
     <string name="onboarding_step">%1$,d av %2$,d</string>
     <string name="onboarding_welcome_line">Håll koll på vad du tittar på och läser, från dina egna källor.</string>
     <string name="onboarding_welcome_note">Dina listor och ditt förlopp stannar på dina enheter. Trackers och källor lägger du till själv.</string>
@@ -3323,6 +3383,12 @@
     <string name="settings_quality">Kvalitet</string>
     <string name="settings_auto_play">Spela nästa automatiskt</string>
     <string name="settings_up_next_countdown">Nedräkning för Nästa</string>
+    <string name="settings_preload_cellular">Förladda video via mobildata</string>
+    <string name="settings_preload_metered">Förladda video på anslutningar med datapriser</string>
+    <string name="settings_preload_detail_android">Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och via mobildata eller Wi-Fi med datapriser bara när det här är på.</string>
+    <string name="settings_preload_detail_metered">Under avslutningen hittas nästa avsnitts ström, undertexter och hopptider. Dess första sekunder laddas också, och på en anslutning med datapriser bara när det här är på.</string>
+    <string name="settings_preload_torrents">Torrenter laddar sina första delar på samma sätt.</string>
+    <string name="settings_preload_a11y_dimmed">Kräver ”Spela nästa automatiskt”</string>
     <string name="settings_skip_opening">Hoppa över öppningen automatiskt</string>
     <string name="settings_skip_recap">Hoppa över återblickar automatiskt</string>
     <string name="settings_find_skips">Hitta hopptider i ljudet</string>
@@ -3507,6 +3573,9 @@
     <string name="settings_opds_feed">Dela i det här nätverket</string>
     <string name="settings_opds_password">Flödeslösenord</string>
     <string name="settings_opds_port">Flödesport</string>
+    <string name="settings_label_picture_in_picture_on_leave">Bild-i-bild när du lämnar appen</string>
+    <string name="settings_anilist_following">Visa personer du följer</string>
+    <string name="settings_anilist_following_footer">Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.</string>
     <string name="book_server_address">Adress</string>
     <string name="book_server_address_hint">En adress, eller hela OPDS-länken från Kavita.</string>
     <string name="book_server_kavita_key">Det här är en OPDS-länk från Kavita. Nyckeln loggar in dig, så inget lösenord behövs.</string>
@@ -3614,6 +3683,18 @@
     <plurals name="source_picker_coverage">
         <item quantity="one">%1$,d av %2$,d avsnitt</item>
         <item quantity="other">%1$,d av %2$,d avsnitt</item>
+    </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Avsnitt %2$d</item>
+        <item quantity="other">Avsnitt %2$d till %3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Avsnitt %1$d till %2$d. Inte %3$s än</string>
+    <string name="source_picker_episodes_not">Avsnitt %1$d till %2$d. Inte %3$s</string>
+    <string name="source_picker_missing_pair">%1$d eller %2$d</string>
+    <string name="source_picker_missing_range">%1$d till %2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d av %2$,d avsnitt. Inte %3$s</item>
+        <item quantity="other">%1$,d av %2$,d avsnitt. Inte %3$s</item>
     </plurals>
     <string name="source_note_off">Avstängd</string>
     <string name="source_note_resting">Svarar inte, provar igen snart</string>
@@ -4242,6 +4323,16 @@
     <string name="more_following_note">Från AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Liknande</string>
+    <string name="following_show_all">Visa alla %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="one">%1$s, %2$s och %3$,d till</item>
+        <item quantity="other">%1$s, %2$s och %3$,d till</item>
+    </plurals>
+    <string name="following_names_two">%1$s och %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s har tittat hit.</string>
+    <string name="following_score_spoken">Betyg %1$,d av 10</string>
+    <string name="following_open_help">Visar var var och en är.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList har inga roller, medarbetare eller rekommendationer för den här titeln än.</string>
     <string name="more_spoiler">Spoiler</string>
@@ -4260,7 +4351,6 @@
     <string name="title_fact_after">Efter avsnitt %1$d</string>
     <string name="title_fact_now">Nu</string>
     <string name="title_fact_tba">Datum tillkännages</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Gå till avsnitt…</string>
     <string name="episode_go_to_title">Gå till avsnitt</string>
     <string name="episode_go_to_go">Gå</string>
@@ -4268,6 +4358,18 @@
     <string name="episode_go_to_label">Avsnitt, %1$d till %2$d</string>
     <string name="episode_go_to_none">Inget avsnitt %1$d. Den här serien har %2$d.</string>
     <string name="episode_go_to_not_out">Avsnitt %1$d är inte ute än. Det senaste är %2$d.</string>
+    <string name="episode_missing_aired">Avsnitt %1$d sändes %2$s.</string>
+    <string name="episode_missing_aired_on">Avsnitt %1$d sändes den %2$s.</string>
+    <string name="episode_missing_not_yet">Dina källor har det inte än.</string>
+    <string name="episode_missing_still">Dina källor har det fortfarande inte.</string>
+    <string name="episode_missing_no_answer">Dina källor svarade inte.</string>
+    <string name="episode_missing_looks_again">Kaeri letar igen med %1$,d min mellanrum.</string>
+    <string name="episode_missing_none">Ingen av dina källor har det.</string>
+    <string name="episode_missing_offline">Kaeri letar efter det när du är online igen.</string>
+    <string name="episode_row_aired_ago">Sändes %1$s</string>
+    <string name="episode_unsourced_yet">Inte i dina källor än</string>
+    <string name="episode_found_announcement">Avsnitt %1$d finns nu i dina källor.</string>
+    <string name="episode_check_again_help">Kaeri letar också själv med %1$,d min mellanrum i %2$,d tim efter att ett avsnitt har sänts.</string>
     <string name="torrents_title">Torrenter</string>
     <string name="torrents_on">Torrenter är på</string>
     <string name="torrents_off_detail">Av som standard. Torrenter ansluter direkt om du inte skickar dem via en proxy.</string>
@@ -4449,6 +4551,7 @@
     <string name="tv_status_playing">Spelar på %1$s</string>
     <string name="tv_status_connecting">Ansluter till %1$s</string>
     <string name="tv_status_reconnecting">Ansluter om till %1$s</string>
+    <string name="tv_waiting_for">Väntar på %1$s</string>
     <string name="tv_status_connected">Ansluten</string>
     <string name="tv_search_on_tv">Sök på TV:n</string>
     <string name="tv_type_search">Skriv en sökning</string>

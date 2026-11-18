@@ -921,12 +921,24 @@ mod tests {
             std::fs::write(dir.path().join("prepared.cbz"), vec![7_u8; 512 * 1024]).unwrap();
             std::fs::create_dir(dir.path().join("folder")).unwrap();
             let module = module_path!().split_once("::").map_or("", |(_, rest)| rest);
-            let status = std::process::Command::new(std::env::current_exe().unwrap())
-                .args(["--exact", &format!("{module}::{NAME}"), "--test-threads=1"])
+            // Through pipes: the cap holds for every file the child writes, so a log file past
+            // 64 KiB as its output would fail the child's own report.
+            let out = std::process::Command::new(std::env::current_exe().unwrap())
+                .args([
+                    "--exact",
+                    &format!("{module}::{NAME}"),
+                    "--test-threads=1",
+                    "--nocapture",
+                ])
                 .env(CHILD, dir.path())
-                .status()
+                .output()
                 .unwrap();
-            assert!(status.success(), "the capped save left something behind");
+            assert!(
+                out.status.success(),
+                "the capped save left something behind:\n{}{}",
+                String::from_utf8_lossy(&out.stdout),
+                String::from_utf8_lossy(&out.stderr)
+            );
             return;
         };
         // In the child: at most 64 KiB to any one file, with the signal that would end the

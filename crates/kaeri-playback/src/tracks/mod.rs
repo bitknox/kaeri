@@ -48,6 +48,7 @@ mod language;
 mod memory;
 mod track;
 
+pub use choice::choose_audio;
 pub use language::language_matches;
 pub use track::{Track, TrackKind, parse_track_id, parse_track_list};
 
@@ -209,6 +210,19 @@ impl TrackPolicy {
     /// The series' memory as it stands, including choices made this session.
     pub fn memory(&self) -> &TrackMemory {
         &self.memory
+    }
+
+    /// The choices to carry into another file of the same episode, such as another stream
+    /// after a failover: the memory as it stands, with a delay the viewer is still moving taken
+    /// as it is now.
+    ///
+    /// Hand the memory to [`Self::prepare`] for the next file, so it starts from what the viewer
+    /// chose in this one whether or not the series keeps it. The actions are what is owed to the
+    /// series for the delay; store them as any [`TrackAction::Remember`].
+    pub fn carried(&mut self) -> (TrackMemory, Vec<TrackAction>) {
+        let mut actions = Vec::new();
+        self.flush_delay(None, &mut actions);
+        (self.memory.clone(), actions)
     }
 
     /// Feed an input, and get back what to do. `now` is any monotonic reading; only the

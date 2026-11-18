@@ -11,7 +11,7 @@ use kaeri_model::{
         CastRole, FuzzyDate, RankingKind, RelationKind, Season, SourceMaterial, TitleLanguage,
     },
     command::Command,
-    episodes::DubExtent,
+    episodes::{DubExtent, EpisodeRow},
     event::Event,
     search::SearchQuery,
     settings::SettingKey,
@@ -518,6 +518,7 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let release = SourceCandidate {
         id: "release-1".into(),
         provider_id: sources::PROVIDER_ID.into(),
+        provider_name: String::new(),
         title: "Stardust Wayfarer - 01 (1080p)".into(),
         quality: Some(1080),
         label: None,
@@ -532,7 +533,10 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let updates = h.settle().await;
 
     assert_eq!(names(&updates), ["Sources", "JobDone"]);
-    let Event::Sources { id, episode, candidates } = &updates[0] else { unreachable!() };
+    let Event::Sources { id, episode, candidates, missed } = &updates[0] else {
+        unreachable!()
+    };
+    assert!(missed.is_empty(), "with releases listed, no source's miss is said");
     assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
     let listed: Vec<_> = candidates.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(listed, ["release-1"]);
@@ -540,7 +544,7 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
 }
 
 #[tokio::test]
-async fn releases_that_cannot_be_listed_are_a_toast() {
+async fn releases_that_cannot_be_listed_say_why() {
     let mut h = harness(ProviderRegistry::new(Vec::new())).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
@@ -551,11 +555,16 @@ async fn releases_that_cannot_be_listed_are_a_toast() {
     );
     ends(&updates, job);
 
+    // A source that can't tell which title it is lists nothing, and the picker says so by its
+    // name rather than as an alert.
     let mut h = harness(unsure()).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
-    assert_eq!(names(&updates), ["Toast", "JobDone"]);
-    assert!(toasts(&updates)[0].starts_with("alert: Couldn't match this title: "));
+    assert_eq!(names(&updates), ["Sources", "JobDone"]);
+    let Event::Sources { candidates, missed, .. } = &updates[0] else { unreachable!() };
+    assert!(candidates.is_empty());
+    let said: Vec<_> = missed.iter().map(|m| (m.name.as_str(), m.miss)).collect();
+    assert_eq!(said, [(sources::PROVIDER_ID, kaeri_model::starting::ListingMiss::NoMatch)]);
     ends(&updates, job);
 }
 
@@ -792,6 +801,75 @@ async fn a_pinned_source_serves_its_episodes_and_the_others_fill_the_rest() {
     assert!(rows.iter().all(|r| r.source.is_none()));
 }
 
+/// The tables an app holds for titles it looked at a while ago, as a native app keeps one for
+/// every title it loaded: [`FINISHED`]'s first, then three more, from covers' stills.
+async fn held_behind_three_others(h: &mut Harness) {
+    h.send(Command::LoadEpisodes(FINISHED));
+    h.settle().await;
+    three_others(h).await;
+}
+
+/// Three titles' stills, as a shelf of covers asks for them.
+async fn three_others(h: &mut Harness) {
+    for other in [AIRING, fixtures::MOVIE, fixtures::ONA] {
+        h.send(Command::LoadStills(other));
+        h.settle().await;
+    }
+}
+
+/// The table said for `id` among `updates`, the last one when there are several.
+fn table_for(updates: &[Event], id: AnilistId) -> Option<Vec<EpisodeRow>> {
+    updates.iter().rev().find_map(|u| match u {
+        Event::Episodes { id: said, rows, failed: None } if *said == id => Some(rows.clone()),
+        _ => None,
+    })
+}
+
+#[tokio::test]
+async fn a_pin_brings_a_held_table_up_to_date_however_long_ago_it_was_listed() {
+    let mut h = harness(with_alt()).await;
+    held_behind_three_others(&mut h).await;
+
+    // Picked from a cover's menu: the app holds the table, so it is said again at once, as
+    // opening the page afresh would list it.
+    h.send(Command::SetProviderPreference { id: FINISHED, provider: Some("alt".into()) });
+    let rows = table_for(&h.settle().await, FINISHED).expect("the held table said again");
+    assert_eq!(rows.len(), 12, "alt's three, then the rest from the fixture source");
+    assert!(rows[..3].iter().all(|r| r.source.is_none()), "the pinned source's own rows");
+    assert!(rows[3..].iter().all(|r| r.source.is_some()));
+
+    // Back to automatic, the same.
+    three_others(&mut h).await;
+    h.send(Command::SetProviderPreference { id: FINISHED, provider: None });
+    let rows = table_for(&h.settle().await, FINISHED).expect("the held table said again");
+    assert!(rows.iter().all(|r| r.source.is_none()), "the first source in the chain again");
+}
+
+#[tokio::test]
+async fn a_pinned_release_brings_a_held_table_up_to_date_however_long_ago_it_was_listed() {
+    let mut h = harness(with_alt()).await;
+    held_behind_three_others(&mut h).await;
+
+    h.send(Command::PinRelease {
+        id: FINISHED,
+        provider_id: "alt".into(),
+        release_id: "season".into(),
+        title: "Season one".into(),
+    });
+    let rows = table_for(&h.settle().await, FINISHED).expect("the held table said again");
+    assert!(rows[..3].iter().all(|r| r.source.is_none()), "the pinned source's own rows");
+    assert!(rows[3..].iter().all(|r| r.source.is_some()));
+}
+
+#[tokio::test]
+async fn a_pin_lists_nothing_for_a_title_never_listed() {
+    let mut h = harness(with_alt()).await;
+    three_others(&mut h).await;
+    h.send(Command::SetProviderPreference { id: FINISHED, provider: Some("alt".into()) });
+    let updates = h.settle().await;
+    assert_eq!(table_for(&updates, FINISHED), None, "no table held, none to bring up to date");
+}
+
 #[tokio::test]
 async fn a_pin_survives_a_restart_and_the_source_options_count_episodes() {
     let mut h = harness(with_alt()).await;
@@ -809,9 +887,14 @@ async fn a_pin_survives_a_restart_and_the_source_options_count_episodes() {
     let alt = options.iter().find(|o| o.provider_id == "alt").unwrap();
     assert!(alt.pinned);
     assert_eq!(alt.covered, 3);
+    // Its range, and the episodes out that it lacks, for "Episodes 1 to 3. Not 4 to 12".
+    assert_eq!((alt.first, alt.last), (Some(1), Some(3)));
+    assert_eq!(alt.lacking, (4..=12).collect::<Vec<u32>>());
     let main = options.iter().find(|o| o.provider_id == sources::PROVIDER_ID).unwrap();
     assert!(!main.pinned);
     assert_eq!(main.covered, 12);
+    assert_eq!((main.first, main.last), (Some(1), Some(12)));
+    assert!(main.lacking.is_empty());
 
     let pin = h.store().provider_preference(FINISHED).unwrap();
     assert_eq!(pin.as_deref(), Some("alt"));

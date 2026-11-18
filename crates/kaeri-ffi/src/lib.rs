@@ -80,10 +80,11 @@ pub use player::{
 #[cfg(feature = "remote")]
 pub use remote::{FfiAdvert, FfiLinkSent, FfiPairedPhone, FfiScreen, FfiTvRemote, FfiTxtPair};
 #[cfg(feature = "testing")]
-pub use scenes::{FIXTURE_OPENED_LINK, FfiScene, fixture_opened_link};
+pub use scenes::{FIXTURE_OPENED_LINK, FfiScene, MISSING_AIRED_AGO, fixture_opened_link};
 #[cfg(feature = "remote")]
 pub use sender::{
-    FfiCastBrowser, FfiCastCard, FfiCastRouteHint, FfiCastRow, FfiCastSession, FfiCastSink,
+    FfiCastBrowser, FfiCastCard, FfiCastItem, FfiCastRouteHint, FfiCastRow, FfiCastSession,
+    FfiCastSessionState, FfiCastSessionView, FfiCastSessionWatch, FfiCastSink,
     FfiVolumeControl,
 };
 #[cfg(feature = "remote")]
@@ -1663,6 +1664,7 @@ mod tests {
             past_progress: false,
             spoiler_ahead: false,
             synopsis_pending: false,
+            followed: Vec::new(),
         };
         assert_eq!(crossed(row.clone()), row);
         let dub = DubExtent { through: 6, complete: false };
@@ -1903,7 +1905,12 @@ mod tests {
             signed_in: true,
             load_images: false,
         }));
-        crosses_intact(Event::DiscussionFound { media, episode: 3, comments: 140 });
+        crosses_intact(Event::DiscussionFound {
+            media,
+            episode: 3,
+            comments: 140,
+            url: "https://anilist.co/forum/thread/60000".into(),
+        });
         let commands = [
             Command::OpenDiscussion { media, episode: 3 },
             Command::MoreComments,

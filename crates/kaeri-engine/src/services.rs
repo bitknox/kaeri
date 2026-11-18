@@ -73,6 +73,8 @@ pub struct Services {
     pub every_play_a_party: bool,
     /// The next episode's streams, found while the current one's ending plays.
     pub prefetch: Prefetch,
+    /// The sources the last failed start couldn't reach, for Try again to give another chance.
+    pub unreached: crate::playback::starting::Unreached,
     /// Every token store the device keeps, under the bare names: the profiles' tracker tokens
     /// are `p-<id>/` ones beside them, moved and removed through this.
     pub tokens: TokenStore,
@@ -112,6 +114,9 @@ pub struct Services {
     /// Casting's devices, memory and the cast running now.
     #[cfg(feature = "cast")]
     pub casts: Arc<crate::cast::CastHub>,
+    /// Private mode, the titles kept always private and the places held in memory: see
+    /// [`crate::private`].
+    pub privacy: Arc<crate::private::Privacy>,
 }
 
 impl Services {
@@ -152,6 +157,8 @@ impl Services {
             .on_budget_of(meta.anilist())
             .with_titles(meta.titles().clone());
         let (power, hosted) = players(&paths);
+        let privacy = crate::private::Privacy::default();
+        privacy.load(&store);
         #[cfg(feature = "cast")]
         let casts =
             Arc::new(crate::cast::CastHub::new(paths.data_dir.join("remote"), http.clone()));
@@ -173,6 +180,7 @@ impl Services {
             hosted_player: !cfg!(feature = "desktop"),
             every_play_a_party: false,
             prefetch: Prefetch::default(),
+            unreached: Default::default(),
             tokens,
             syncing: Default::default(),
             artwork: Default::default(),
@@ -186,6 +194,7 @@ impl Services {
             book_plugins: Default::default(),
             novels: Default::default(),
             book_sources,
+            privacy: Arc::new(privacy),
             #[cfg(feature = "testing")]
             windows: None,
             #[cfg(feature = "cast")]

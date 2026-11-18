@@ -13,6 +13,9 @@
     <string name="notice_cast_taken_over">Một thiết bị khác vừa bắt đầu phát trên %1$s, nên việc chiếu đã dừng.</string>
     <string name="notice_cast_not_same_network">Thiết bị này không ở cùng mạng với %1$s, hoặc đang kết nối qua VPN. Hãy kết nối cả hai vào cùng một mạng để chiếu.</string>
     <string name="notice_cast_lost">Mất kết nối với %1$s, nên việc chiếu đã dừng.</string>
+    <string name="notice_cast_segment">%1$s không còn nhận được luồng phát: nguồn không phản hồi cho một phần của tập. Hãy thử nguồn khác.</string>
+    <string name="notice_cast_lost_stream">%1$s mất luồng phát từ thiết bị này. Hãy kiểm tra cả hai có cùng một mạng không.</string>
+    <string name="notice_cast_subtitles_plain">Phụ đề trên %1$s hiển thị dạng văn bản thường. Phụ đề có định dạng quá nặng với TV này.</string>
     <string name="notice_cast_no_device">TV đã chọn không còn trong mạng nữa.</string>
     <string name="notice_cast_unavailable">Phiên bản Kaeri này không hỗ trợ chiếu lên TV.</string>
     <string name="cast_phase_starting">Đang bắt đầu trên %1$s</string>
@@ -114,6 +117,8 @@
     <string name="status_searching_sources">Đang tìm trong các nguồn tập %1$s…</string>
     <string name="notice_player_failed_to_start">Không khởi chạy được mpv. Hãy kiểm tra mpv chạy được khi mở riêng. (%1$s)</string>
     <string name="notice_stream_no_video">Luồng này không có hình. Đang thử %1$,d trên %2$,d.</string>
+    <string name="notice_failed_over">Luồng bị ngắt. %1$s đã tiếp quản tại cùng vị trí.</string>
+    <string name="notice_failed_over_same_source">Luồng bị ngắt. Một luồng khác từ %1$s đã tiếp quản tại cùng vị trí.</string>
     <string name="notice_player_could_not_play">mpv không phát được tệp này. %1$s</string>
     <string name="notice_player_exited_silently">mpv đã đóng mà không phát gì và không nêu lý do. Hãy thử nguồn khác.</string>
     <string name="notice_player_not_playing">mpv chưa bắt đầu phát sau %1$,d giây. Nguồn có thể không có dữ liệu. Hãy kiểm tra mpv có phát được một tệp khi chạy riêng không.</string>
@@ -299,6 +304,7 @@
     <string name="reading_row_on_device">Trên thiết bị này</string>
     <string name="reading_row_queued">Đang chờ</string>
     <string name="reading_row_waits_wifi">Đang chờ · cần Wi-Fi</string>
+    <string name="reading_row_waits_room">Đang chờ · cần dung lượng trống</string>
     <string name="reading_row_downloading">Đang tải · %1$,d/%2$,d trang</string>
     <string name="reading_row_failed">Không tải được</string>
     <string name="reading_row_page_of">Trang %1$d/%2$d</string>
@@ -348,6 +354,9 @@
     <string name="reading_dl_waits_wifi">chờ Wi-Fi</string>
     <string name="reading_dl_failed">Chương %1$s không tải được</string>
     <string name="reading_dl_offline">Ngoại tuyến</string>
+    <plurals name="reading_dl_no_room">
+        <item quantity="other">Hết dung lượng. Sẽ tải khi có dung lượng trống.</item>
+    </plurals>
     <string name="reading_estimate_size">Khoảng %1$s</string>
     <string name="reading_estimate_wifi">qua Wi-Fi</string>
     <string name="reading_estimate_mobile">qua dữ liệu di động</string>
@@ -707,6 +716,7 @@
     <string name="reader_end_again">Đọc lại từ đầu</string>
     <string name="reader_opening_chapter">Đang mở chương %1$s</string>
     <string name="reader_failed_chapter">Không mở được chương %1$s</string>
+    <string name="reader_failed_chapter_plain">Không mở được chương này</string>
     <string name="reader_sheet_series">Bộ truyện này</string>
     <string name="reader_sheet_all_manga">Mọi manga</string>
     <string name="reader_sheet_all_webtoons">Mọi webtoon</string>
@@ -947,6 +957,8 @@
     <string name="tv_discussion_select_spoiler">Chọn để hiện nội dung tiết lộ</string>
     <string name="updates_unknown_sources_path">Cài đặt › Ứng dụng › Bảo mật &amp; hạn chế › Nguồn không xác định</string>
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <string name="player_stats_show_live">Hiện số liệu trực tiếp</string>
+    <string name="player_stats_hide_live">Ẩn số liệu trực tiếp</string>
     <string name="episode_short_dubbed">E%1$d · Lồng tiếng</string>
     <string name="episode_long_dubbed">Tập %1$d · Lồng tiếng</string>
     <plurals name="downloads_live_paused">
@@ -1180,6 +1192,7 @@
     <string name="engine_down_title">Kaeri đã dừng</string>
     <string name="engine_down_stopped">Sẽ không tải thêm gì mới cho đến khi nó chạy lại. Hãy thử lại, hoặc thoát rồi mở lại ứng dụng.</string>
     <string name="engine_down_quit">Thoát</string>
+    <string name="settings_picture_in_picture_system_off">Đã tắt trong cài đặt Android</string>
     <string name="about_title">Giới thiệu</string>
     <string name="about_title_app">Giới thiệu về Kaeri</string>
     <string name="about_version">Phiên bản %1$s</string>
@@ -1215,6 +1228,18 @@
     <string name="report_tv_scan">Quét mã để mở báo cáo trên điện thoại của bạn.</string>
     <string name="report_crash_off">Báo cáo sự cố đang tắt nên không có gì được đính kèm. Bạn có thể bật trong Cài đặt, Giới thiệu.</string>
     <string name="report_crash_settings">Cài đặt báo cáo sự cố</string>
+    <string name="report_player_log">Nhật ký trình phát</string>
+    <plurals name="report_player_log_detail">
+        <item quantity="other">%1$,d lượt phát gần nhất · %2$s</item>
+    </plurals>
+    <string name="report_player_log_empty">Chưa có lượt phát nào được ghi lại</string>
+    <string name="report_player_log_save">Lưu nhật ký…</string>
+    <string name="report_player_log_attach">Đính kèm tệp vào issue khi issue mở trên GitHub.</string>
+    <string name="report_player_log_saved">Đã lưu thành %1$s</string>
+    <string name="report_player_log_failed">Không lưu được nhật ký. Hãy thử thư mục khác.</string>
+    <string name="report_sent_report">Báo cáo</string>
+    <string name="report_player_log_a11y_saved">Đã lưu nhật ký trình phát</string>
+    <string name="report_player_log_a11y_hint">Lưu một tệp để đính kèm vào issue</string>
     <string name="settings_group_crashes">Báo cáo sự cố</string>
     <string name="settings_crash_save">Lưu báo cáo sự cố trên thiết bị này</string>
     <string name="settings_crash_save_detail">Kaeri giữ một bản ghi ngắn về mỗi sự cố trên thiết bị này để dùng cho Báo lỗi, đã xóa tựa, địa chỉ và tên. Không có gì tự động được gửi đi.</string>
@@ -1280,6 +1305,16 @@
     <string name="cast_play_here">Phát tại đây</string>
     <string name="cast_stop">Dừng chiếu</string>
     <string name="cast_volume_fixed">Đặt trên TV</string>
+    <string name="cast_button_connecting">Đang kết nối tới %1$s</string>
+    <string name="cast_button_connected">Đã kết nối tới %1$s</string>
+    <string name="cast_plays_on">Phát trên %1$s</string>
+    <string name="cast_idle">Chưa phát gì</string>
+    <string name="cast_status_paused">Đã tạm dừng trên %1$s</string>
+    <string name="cast_open_show">Mở %1$s</string>
+    <string name="cast_controller_close">Đóng</string>
+    <string name="cast_mini_opens">Mở bảng điều khiển</string>
+    <string name="cast_play_next_on">Phát sau tập này trên %1$s</string>
+    <string name="cast_notification_line">Đang chiếu tới %1$s</string>
     <string name="action_try_again">Thử lại</string>
     <string name="action_cancel">Hủy</string>
     <string name="action_go">Đi</string>
@@ -1329,6 +1364,7 @@
     <string name="action_disable">Tắt</string>
     <string name="action_check_now">Kiểm tra ngay</string>
     <string name="action_check_again">Kiểm tra lại</string>
+    <string name="action_checking">Đang kiểm tra</string>
     <string name="action_open_settings">Mở cài đặt</string>
     <string name="action_report">Báo lỗi</string>
     <string name="action_play_now">Phát ngay</string>
@@ -1351,6 +1387,7 @@
     <string name="time_in">sau %1$s</string>
     <string name="time_minutes_left">còn %1$,d phút</string>
     <string name="time_minutes">%1$,d phút</string>
+    <string name="time_hours">%1$,d giờ</string>
     <string name="time_now_inline">bây giờ</string>
     <string name="time_just_now_inline">vừa xong</string>
     <string name="when_today">hôm nay lúc %1$s</string>
@@ -1370,6 +1407,7 @@
     <string name="error_label">Lỗi</string>
     <string name="state_working">Đang xử lý</string>
     <string name="state_loading">Đang tải</string>
+    <string name="notice_dismiss">Bỏ qua</string>
     <string name="pad_help_move">Di chuyển tiêu điểm</string>
     <string name="pad_help_select">Chọn</string>
     <string name="pad_help_back">Quay lại</string>
@@ -1451,6 +1489,9 @@
     <string name="player_position_spoken">%1$s trên %2$s</string>
     <string name="names_pair">%1$s và %2$s</string>
     <string name="names_list">%1$s, %2$s</string>
+    <string name="desktop_cast_quit_title">Dừng truyền và thoát?</string>
+    <string name="desktop_cast_quit_body">%1$s đang phát trên %2$s. Thoát sẽ dừng phát.</string>
+    <string name="desktop_cast_quit_action">Dừng và thoát</string>
     <string name="discussion_open">Thảo luận</string>
     <string name="discussion_title_episode">Thảo luận tập %1$d</string>
     <plurals name="discussion_row">
@@ -2165,7 +2206,6 @@
     <string name="player_start_miss_failed">%1$s không phản hồi</string>
     <string name="player_start_miss_timed_out">%1$s mất quá nhiều thời gian</string>
     <string name="player_start_miss_skipped">Bạn đã bỏ qua %1$s</string>
-    <string name="player_start_resting">Đã bỏ qua do lỗi gần đây</string>
     <string name="player_start_from">Từ %1$s</string>
     <string name="player_start_no_video">Luồng đầu tiên không có hình</string>
     <string name="player_start_stream_place">Luồng %1$,d trên %2$,d</string>
@@ -2353,6 +2393,23 @@
     <string name="player_subs_bg_shadow">Bóng đổ</string>
     <string name="player_subs_bg_box">Khung</string>
     <string name="player_subs_more">Thêm trong Cài đặt…</string>
+    <string name="private_mode">Chế độ riêng tư</string>
+    <string name="private_mode_detail">Những gì bạn xem hoặc đọc sẽ không được lưu hay đồng bộ cho đến khi bạn tắt chế độ này hoặc thoát Kaeri.</string>
+    <string name="private_mode_limits">các nguồn và các buổi xem chung của bạn vẫn thấy những gì bạn mở.</string>
+    <string name="private_mode_on_notice">Chế độ riêng tư đang bật. Không có gì được lưu hay đồng bộ cho đến khi Kaeri thoát.</string>
+    <string name="action_turn_off">Tắt</string>
+    <string name="private_mode_shortcut_hint">Phím tắt: %1$s</string>
+    <string name="private_badge">Riêng tư</string>
+    <string name="private_badge_label">Chế độ riêng tư đang bật</string>
+    <string name="private_line_not_saved">Không lưu hay đồng bộ</string>
+    <string name="private_line_kept">Vị trí của bạn được giữ cho đến khi Kaeri thoát</string>
+    <string name="title_always_private">Luôn riêng tư</string>
+    <string name="show_always_private_detail">Không có gì từ bộ phim này được lưu hay đồng bộ trên thiết bị này. Những gì đã lưu vẫn được giữ.</string>
+    <string name="series_always_private_detail">Không có gì từ bộ truyện này được lưu hay đồng bộ trên thiết bị này. Những gì đã lưu vẫn được giữ.</string>
+    <string name="now_playing_private">Đang phát trong Kaeri</string>
+    <string name="private_download_line">Đang tải về trong Kaeri</string>
+    <string name="private_mode_on_announcement">Đã bật chế độ riêng tư</string>
+    <string name="private_mode_off_announcement">Đã tắt chế độ riêng tư</string>
     <string name="reader_page_loading">Đang tải trang %1$d</string>
     <string name="reader_page_plate">Trang %1$d</string>
     <string name="reader_image_plate">Ảnh %1$d</string>
@@ -2737,6 +2794,7 @@
     <string name="read_search_source_kind_folder">Thư mục</string>
     <string name="read_search_source_kind_plugin">Plugin</string>
     <string name="read_search_source_more">Hiện thêm %1$,d</string>
+    <string name="read_tile_add_to">Thêm vào %1$s</string>
     <string name="onboarding_step">%1$,d/%2$,d</string>
     <string name="onboarding_welcome_line">Theo dõi những gì bạn xem và đọc, từ các nguồn của riêng bạn.</string>
     <string name="onboarding_welcome_note">Danh sách và tiến độ của bạn nằm trên các thiết bị của bạn. Bạn tự thêm các dịch vụ theo dõi và các nguồn.</string>
@@ -3194,6 +3252,12 @@
     <string name="settings_quality">Chất lượng</string>
     <string name="settings_auto_play">Tự động phát tập tiếp</string>
     <string name="settings_up_next_countdown">Đếm ngược Tiếp theo</string>
+    <string name="settings_preload_cellular">Tải trước video khi dùng dữ liệu di động</string>
+    <string name="settings_preload_metered">Tải trước video trên kết nối có đo lưu lượng</string>
+    <string name="settings_preload_detail_android">Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và khi dùng dữ liệu di động hoặc Wi-Fi có đo lưu lượng thì chỉ khi mục này bật.</string>
+    <string name="settings_preload_detail_metered">Trong phần kết thúc, luồng phát, phụ đề và mốc bỏ qua của tập tiếp theo được tìm sẵn. Vài giây đầu của tập cũng được tải, và trên kết nối có đo lưu lượng thì chỉ khi mục này bật.</string>
+    <string name="settings_preload_torrents">Torrent cũng tải các mảnh đầu tiên như vậy.</string>
+    <string name="settings_preload_a11y_dimmed">Cần bật \"Tự động phát tập tiếp\"</string>
     <string name="settings_skip_opening">Tự động bỏ qua phần mở đầu</string>
     <string name="settings_skip_recap">Tự động bỏ qua phần tóm tắt</string>
     <string name="settings_find_skips">Tìm mốc bỏ qua từ âm thanh</string>
@@ -3376,6 +3440,9 @@
     <string name="settings_opds_feed">Chia sẻ trong mạng này</string>
     <string name="settings_opds_password">Mật khẩu của feed</string>
     <string name="settings_opds_port">Cổng của feed</string>
+    <string name="settings_label_picture_in_picture_on_leave">Hình trong hình khi rời ứng dụng</string>
+    <string name="settings_anilist_following">Hiện người bạn theo dõi</string>
+    <string name="settings_anilist_following_footer">Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.</string>
     <string name="book_server_address">Địa chỉ</string>
     <string name="book_server_address_hint">Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.</string>
     <string name="book_server_kavita_key">Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.</string>
@@ -3470,6 +3537,16 @@
     <string name="source_picker_automatic_detail">Mỗi tập lấy từ nguồn đầu tiên có tập đó</string>
     <plurals name="source_picker_coverage">
         <item quantity="other">%1$,d trên %2$,d tập</item>
+    </plurals>
+    <plurals name="source_picker_episodes">
+        <item quantity="other">Tập %2$d–%3$d</item>
+    </plurals>
+    <string name="source_picker_episodes_not_yet">Tập %1$d–%2$d. Chưa có %3$s</string>
+    <string name="source_picker_episodes_not">Tập %1$d–%2$d. Không có %3$s</string>
+    <string name="source_picker_missing_pair">%1$d và %2$d</string>
+    <string name="source_picker_missing_range">%1$d–%2$d</string>
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="other">%1$,d trên %2$,d tập. Không có %3$s</item>
     </plurals>
     <string name="source_note_off">Đã tắt</string>
     <string name="source_note_resting">Không phản hồi, sẽ thử lại sớm</string>
@@ -4087,6 +4164,15 @@
     <string name="more_following_note">Từ AniList</string>
     <string name="more_followed_score">%1$,d/10</string>
     <string name="more_like_this">Tác phẩm tương tự</string>
+    <string name="following_show_all">Hiện cả %1$,d</string>
+    <plurals name="following_names">
+        <item quantity="other">%1$s, %2$s và %3$,d người khác</item>
+    </plurals>
+    <string name="following_names_two">%1$s và %2$s</string>
+    <string name="following_mark_more">+%1$,d</string>
+    <string name="following_mark_spoken">%1$s đã xem đến đây.</string>
+    <string name="following_score_spoken">Điểm %1$,d/10</string>
+    <string name="following_open_help">Cho biết mỗi người đang xem đến đâu.</string>
     <string name="more_followed_progress">%1$s · %2$s</string>
     <string name="more_empty">AniList chưa có diễn viên, đội ngũ sản xuất hay đề xuất cho tác phẩm này.</string>
     <string name="more_spoiler">Tiết lộ</string>
@@ -4104,7 +4190,6 @@
     <string name="title_fact_after">Sau tập %1$d</string>
     <string name="title_fact_now">Đang phát sóng</string>
     <string name="title_fact_tba">Chưa công bố</string>
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <string name="episode_go_to">Đến tập…</string>
     <string name="episode_go_to_title">Đến tập</string>
     <string name="episode_go_to_go">Đi</string>
@@ -4112,6 +4197,18 @@
     <string name="episode_go_to_label">Tập, từ %1$d đến %2$d</string>
     <string name="episode_go_to_none">Không có tập %1$d. Phim này có %2$d tập.</string>
     <string name="episode_go_to_not_out">Tập %1$d chưa ra mắt. Tập mới nhất là %2$d.</string>
+    <string name="episode_missing_aired">Tập %1$d đã phát sóng %2$s.</string>
+    <string name="episode_missing_aired_on">Tập %1$d đã phát sóng vào %2$s.</string>
+    <string name="episode_missing_not_yet">Các nguồn của bạn chưa có tập này.</string>
+    <string name="episode_missing_still">Các nguồn của bạn vẫn chưa có tập này.</string>
+    <string name="episode_missing_no_answer">Các nguồn của bạn không phản hồi.</string>
+    <string name="episode_missing_looks_again">Kaeri tìm lại sau mỗi %1$,d phút.</string>
+    <string name="episode_missing_none">Không nguồn nào của bạn có tập này.</string>
+    <string name="episode_missing_offline">Kaeri sẽ tìm khi bạn có mạng trở lại.</string>
+    <string name="episode_row_aired_ago">Đã phát sóng %1$s</string>
+    <string name="episode_unsourced_yet">Chưa có trong các nguồn của bạn</string>
+    <string name="episode_found_announcement">Tập %1$d đã có trong các nguồn của bạn.</string>
+    <string name="episode_check_again_help">Kaeri cũng tự tìm sau mỗi %1$,d phút, trong %2$,d giờ sau khi một tập phát sóng.</string>
     <string name="torrents_title">Torrent</string>
     <string name="torrents_on">Đang bật</string>
     <string name="torrents_off_detail">Mặc định tắt. Torrent kết nối trực tiếp trừ khi bạn đưa chúng qua proxy.</string>
@@ -4292,6 +4389,7 @@
     <string name="tv_status_playing">Đang phát trên %1$s</string>
     <string name="tv_status_connecting">Đang kết nối tới %1$s</string>
     <string name="tv_status_reconnecting">Đang kết nối lại tới %1$s</string>
+    <string name="tv_waiting_for">Đang chờ %1$s</string>
     <string name="tv_status_connected">Đã kết nối</string>
     <string name="tv_search_on_tv">Tìm kiếm trên TV</string>
     <string name="tv_type_search">Nhập từ khóa tìm kiếm</string>

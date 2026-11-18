@@ -22,12 +22,12 @@ Kaeri                                                                           
     Go to section                1–0    Surprise me                    z
     Search                         /  Sources
     Recent messages                !    Move source up                 K
-    Copy the bug report            C    Move source down               J
-    Delete the crash report        E    Play the demo                  B
-  Movement                              Remove or add the demo         Y
+    Private mode              ctrl+p    Move source down               J
+    Copy the bug report            C    Play the demo                  B
+    Delete the crash report        E    Remove or add the demo         Y
+  Movement
     Move up                    k / ↑
 
-                            │
                             │
                             │
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
@@ -203,17 +203,17 @@ r23 c54-70 fg=rule bg=ground
 r23 c71-71 fg=text bg=ground
 r23 c72-119 fg=rule bg=ground
 r24 c00-01 fg=rule bg=ground
-r24 c02-22 fg=text-dim bg=ground
-r24 c23-34 fg=rule bg=ground
-r24 c35-35 fg=text bg=ground
+r24 c02-15 fg=text-dim bg=ground
+r24 c16-29 fg=rule bg=ground
+r24 c30-35 fg=text bg=ground
 r24 c36-37 fg=rule bg=ground
 r24 c38-55 fg=text-dim bg=ground
 r24 c56-70 fg=rule bg=ground
 r24 c71-71 fg=text bg=ground
 r24 c72-119 fg=rule bg=ground
 r25 c00-01 fg=rule bg=ground
-r25 c02-26 fg=text-dim bg=ground
-r25 c27-34 fg=rule bg=ground
+r25 c02-22 fg=text-dim bg=ground
+r25 c23-34 fg=rule bg=ground
 r25 c35-35 fg=text bg=ground
 r25 c36-37 fg=rule bg=ground
 r25 c38-52 fg=text-dim bg=ground
@@ -221,19 +221,23 @@ r25 c53-70 fg=rule bg=ground
 r25 c71-71 fg=text bg=ground
 r25 c72-119 fg=rule bg=ground
 r26 c00-01 fg=rule bg=ground
-r26 c02-09 fg=text bg=ground
-r26 c10-37 fg=rule bg=ground
+r26 c02-26 fg=text-dim bg=ground
+r26 c27-34 fg=rule bg=ground
+r26 c35-35 fg=text bg=ground
+r26 c36-37 fg=rule bg=ground
 r26 c38-61 fg=text-dim bg=ground
 r26 c62-70 fg=rule bg=ground
 r26 c71-71 fg=text bg=ground
 r26 c72-119 fg=rule bg=ground
 r27 c00-01 fg=rule bg=ground
-r27 c02-10 fg=text-dim bg=ground
-r27 c11-30 fg=rule bg=ground
-r27 c31-35 fg=text bg=ground
-r27 c36-119 fg=rule bg=ground
-r28 c00-119 fg=rule bg=ground
-r29 c00-119 fg=rule
+r27 c02-09 fg=text bg=ground
+r27 c10-119 fg=rule bg=ground
+r28 c00-01 fg=rule bg=ground
+r28 c02-10 fg=text-dim bg=ground
+r28 c11-30 fg=rule bg=ground
+r28 c31-35 fg=text bg=ground
+r28 c36-119 fg=rule bg=ground
+r29 c00-119 fg=rule bg=ground
 r30 c00-119 fg=rule
 r31 c00-119 fg=rule
 r32 c00-119 fg=rule

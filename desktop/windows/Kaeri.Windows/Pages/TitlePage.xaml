@@ -58,7 +58,34 @@
                   <ColumnDefinition Width="Auto" />
                   <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
-                <Button x:Name="PrimaryAction" Style="{StaticResource PrimaryActionStyle}" Click="OnPrimary" />
+                <!-- The lead: the amber action, or while the next episode has aired and no source lists it,
+                     Check again and the episode before it, both secondary. When the episode is found the
+                     two crossfade to the amber Play in place while the lead's width settles. -->
+                <Grid x:Name="Lead" HorizontalAlignment="Left">
+                  <Button x:Name="PrimaryAction" Style="{StaticResource PrimaryActionStyle}" Click="OnPrimary" />
+                  <StackPanel x:Name="MissingButtons" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                    <Button x:Name="CheckAgain" MinHeight="40" Padding="16,0" Click="OnCheckAgain">
+                      <!-- Both faces stand in one cell, so the button keeps its width while it checks. -->
+                      <Grid>
+                        <StackPanel x:Name="CheckFace" Orientation="Horizontal" Spacing="8">
+                          <FontIcon Glyph="&#xE72C;" FontSize="14" AutomationProperties.AccessibilityView="Raw" />
+                          <TextBlock Text="{x:Bind s:T.ActionCheckAgain}" />
+                        </StackPanel>
+                        <StackPanel x:Name="CheckingFace" Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center" Opacity="0">
+                          <ProgressRing x:Name="CheckingRing" Width="14" Height="14" MinWidth="14" MinHeight="14" IsActive="False"
+                                        AutomationProperties.AccessibilityView="Raw" />
+                          <TextBlock Text="{x:Bind s:T.ActionChecking}" />
+                        </StackPanel>
+                      </Grid>
+                    </Button>
+                    <Button x:Name="PlayPrevious" MinHeight="40" Padding="16,0" Click="OnPlayPrevious">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <FontIcon Glyph="&#xE768;" FontSize="12" AutomationProperties.AccessibilityView="Raw" />
+                        <TextBlock x:Name="PlayPreviousText" />
+                      </StackPanel>
+                    </Button>
+                  </StackPanel>
+                </Grid>
                 <!-- Play on TV: the episode the primary action plays, on a TV with kaeri. -->
                 <Button x:Name="TvAction" Grid.Column="1" HorizontalAlignment="Left" Height="40" Width="40" Padding="0" Visibility="Collapsed" Click="OnPlayOnTv"
                         ToolTipService.ToolTip="{x:Bind s:T.TitlePlayOnTvTooltip}" AutomationProperties.Name="{x:Bind s:T.TvPlayOn}">
@@ -76,6 +103,8 @@
                       <MenuFlyoutItem Text="{x:Bind s:T.TitleShowSettingsMenu}" Click="OnShowSettings" KeyboardAcceleratorTextOverride="Ctrl+I">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE713;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
+                      <!-- Nothing from this show is saved or synced on this device, checked while it is so. -->
+                      <ToggleMenuFlyoutItem x:Name="AlwaysPrivateItem" Text="{x:Bind s:T.TitleAlwaysPrivate}" Click="OnAlwaysPrivate" />
                       <MenuFlyoutItem x:Name="DownloadItem" Text="{x:Bind s:T.TitleDownloadMenu}" Click="OnDownloadRange">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE896;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
@@ -102,16 +131,47 @@
                   </Button.Flyout>
                 </Button>
               </Grid>
+              <!-- Private · Not saved or synced, under the main action while what plays here is private. -->
+              <ContentPresenter x:Name="PrivateSlot" />
               <TextBlock x:Name="WaitingLine" Style="{StaticResource HazeBodyStyle}" Visibility="Collapsed" />
-              <!-- Services that have the title: Also on, or Listed on with a way to choose yours. -->
-              <StackPanel x:Name="AvailLine" Orientation="Horizontal" Spacing="2" Margin="0,6,0,0" Visibility="Collapsed" />
+              <!-- The missing episode's status, under the buttons where the waiting line stands: a water dot,
+                   the head in silk and the tail in haze, read by Narrator as one line. -->
+              <Grid x:Name="MissingLine" ColumnSpacing="8" Margin="0,4,0,0" Visibility="Collapsed">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto" />
+                  <ColumnDefinition Width="*" />
+                </Grid.ColumnDefinitions>
+                <Ellipse x:Name="MissingDot" Width="6" Height="6" VerticalAlignment="Top" Margin="0,7,0,0" Fill="{ThemeResource WaterBrush}"
+                         AutomationProperties.AccessibilityView="Raw" />
+                <TextBlock x:Name="MissingText" Grid.Column="1" Style="{StaticResource HazeBodyStyle}" TextWrapping="WrapWholeWords" MaxWidth="560"
+                           HorizontalAlignment="Left">
+                  <Run x:Name="MissingHead" FontWeight="SemiBold" Foreground="{ThemeResource SilkBrush}" /><Run x:Name="MissingTail" />
+                </TextBlock>
+              </Grid>
+              <!-- While a TV is held: the play goes there, said under the actions with the water dot. -->
+              <StackPanel x:Name="CastLineRow" Orientation="Horizontal" Spacing="8" Visibility="Collapsed">
+                <Ellipse Width="7" Height="7" Fill="{ThemeResource WaterBrush}" VerticalAlignment="Center" />
+                <TextBlock x:Name="CastLineText" Style="{StaticResource HazeBodyStyle}" TextTrimming="CharacterEllipsis" />
+              </StackPanel>
+              <!-- Services that have the title: Also on, or Listed on with a way to choose yours. Until the
+                   sources answer, a placeholder line keeps its room, and the line crossfades over it where
+                   it stands, or the room closes in the same crossfade when the answer has no line. -->
+              <Grid x:Name="AvailRoom" Padding="0,6,0,0" Visibility="Collapsed">
+                <StackPanel x:Name="AvailLine" Orientation="Horizontal" Spacing="2" Visibility="Collapsed" />
+                <Border x:Name="AvailHeld" VerticalAlignment="Top" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+              </Grid>
             </StackPanel>
           </Grid>
 
           <StackPanel>
-            <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
-                       TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
-                       IsTextTrimmedChanged="OnSynopsisTrimmed" />
+            <!-- The synopsis, and its room as plates while only the title's own page brings it: the
+                 two share a cell, so the text crossfades over them where they stand. -->
+            <Grid>
+              <TextBlock x:Name="Synopsis" Style="{StaticResource BodyTextBlockStyle}" TextWrapping="WrapWholeWords" MaxLines="8"
+                         TextTrimming="WordEllipsis" MaxWidth="720" HorizontalAlignment="Left"
+                         IsTextTrimmedChanged="OnSynopsisTrimmed" />
+              <Border x:Name="SynopsisHeld" Visibility="Collapsed" AutomationProperties.AccessibilityView="Raw" />
+            </Grid>
             <HyperlinkButton x:Name="SynopsisMore" Style="{StaticResource SilkLinkLeadingStyle}" Visibility="Collapsed" Click="OnSynopsisMore"
                              Content="{x:Bind s:T.ActionMore}" AutomationProperties.Name="{x:Bind s:T.TitleSynopsisMore}" />
             <!-- The demo's credit block, wherever the work shows as a title. -->
@@ -164,8 +224,10 @@
                                 Visibility="{x:Bind LineShown}" AutomationProperties.AccessibilityView="Raw" />
                       <TextBlock Grid.Column="1" Text="{x:Bind Line, Mode=OneWay}" Style="{StaticResource HazeCaptionStyle}" TextWrapping="Wrap"
                                  VerticalAlignment="Center" Visibility="{x:Bind LineShown}" />
+                      <!-- A fold carries the marks of the watched rows inside it, before its action. -->
+                      <local:FollowMarks Grid.Column="1" Set="{x:Bind Marks, Mode=OneWay}" Height="36" HorizontalAlignment="Right" VerticalAlignment="Center" />
                       <HyperlinkButton Grid.Column="2" Content="{x:Bind Action, Mode=OneWay}" Click="OnNote" Tag="{x:Bind}" Style="{StaticResource SilkLinkStyle}"
-                                       VerticalAlignment="Center" Padding="8,4" />
+                                       AutomationProperties.Name="{x:Bind Spoken, Mode=OneWay}" VerticalAlignment="Center" Padding="8,4" />
                     </Grid>
                   </DataTemplate>
                   <DataTemplate x:Key="EpisodeTemplate" x:DataType="local:EpisodeItem">
@@ -240,6 +302,9 @@
                         </TextBlock.OpacityTransition>
                       </TextBlock>
                       <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="4" VerticalAlignment="Top">
+                      <!-- Who of the people followed stopped here: three pictures, then +N. Its tooltip says
+                           every name; the row's name says it to Narrator. No slot while no row has marks. -->
+                      <local:FollowMarks Set="{x:Bind Marks, Mode=OneWay}" Height="36" Margin="0,0,8,0" />
                       <!-- The episode's download: Download on hover or focus, then how far, then a check.
                            The cell keeps its width in every state, so the row never moves. -->
                       <Button Width="36" Height="36" Padding="0" Style="{StaticResource SubtleButtonStyle}"

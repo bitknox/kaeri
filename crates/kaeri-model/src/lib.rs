@@ -61,6 +61,7 @@ pub mod jobs;
 pub mod licensed;
 pub mod local;
 pub mod medium;
+pub mod missing;
 pub mod servers;
 #[rustfmt::skip]
 mod msg;
@@ -71,6 +72,7 @@ pub mod opened;
 pub mod party;
 pub mod playback;
 pub mod present;
+pub mod private;
 pub mod profiles;
 pub mod progress;
 pub mod proxy;

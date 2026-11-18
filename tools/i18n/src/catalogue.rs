@@ -20,9 +20,13 @@ pub enum Platform {
     Windows,
     Linux,
     Tui,
+    /// The Cast receiver page on the website. Its messages live in `receiver-*.ftl` and reach no
+    /// app.
+    Receiver,
 }
 
 impl Platform {
+    /// The apps, whose code `lint-code` scans.
     pub const ALL: [Platform; 5] =
         [Platform::Apple, Platform::Android, Platform::Windows, Platform::Linux, Platform::Tui];
 
@@ -33,11 +37,12 @@ impl Platform {
             Platform::Windows => "windows",
             Platform::Linux => "linux",
             Platform::Tui => "tui",
+            Platform::Receiver => "receiver",
         }
     }
 
     pub fn parse(text: &str) -> Option<Platform> {
-        Platform::ALL.into_iter().find(|p| p.name() == text)
+        Platform::ALL.into_iter().chain([Platform::Receiver]).find(|p| p.name() == text)
     }
 }
 
@@ -431,6 +436,7 @@ impl Catalogue {
                     m.group, m.id
                 ));
             }
+            check_counts(&self.config.source, &self.config.source, m, m, &mut problems);
         }
         for (tag, lang) in &self.langs {
             // Every term resolves in every language, and in the source.
@@ -496,6 +502,7 @@ impl Catalogue {
                 if let Some(missing) = source_vars.difference(&vars).next() {
                     problems.push(format!("{tag}: {} leaves out ${missing}", m.id));
                 }
+                check_counts(&self.config.source, tag, src, m, problems);
                 match plural::categories(tag) {
                     Ok(want) => {
                         let have: Vec<&str> =
@@ -523,6 +530,56 @@ impl Catalogue {
             (Body::Plain(_), Body::Plural { .. }) => {
                 problems.push(format!("{tag}: {} is plural here but not in English", m.id))
             }
+        }
+    }
+}
+
+/// A plural form shows the count when its category takes more than one whole number (0 to 200) in
+/// `tag` and either names a quantity ("zero", "one", "two") or the English shows the count.
+/// Russian "one" is 1, 21, 31 and on, so "Одна серия" would also say 21, and French and Portuguese
+/// "one" is 0 and 1. A category of one number (English "one", a "zero" that is only 0) may spell
+/// it out instead, and "few", "many" and "other" may keep the count to grammar where the English
+/// does ("are").
+fn check_counts(
+    source: &str,
+    tag: &str,
+    src: &Message,
+    m: &Message,
+    problems: &mut Vec<String>,
+) {
+    let (Body::Plural { selector, variants }, Body::Plural { variants: english, .. }) =
+        (&m.body, &src.body)
+    else {
+        return;
+    };
+    let shows =
+        |parts: &[Part]| parts.iter().any(|p| matches!(p, Part::Var(n) if n == selector));
+    let numbers = |tag: &str| {
+        plural::numbers(tag).map_err(|e| format!("{tag}: {e}")).map(|numbers| {
+            move |category: &str| {
+                numbers.iter().find(|(c, _)| c == category).map(|(_, ns)| ns.clone())
+            }
+        })
+    };
+    let (in_source, here) = match (numbers(source), numbers(tag)) {
+        (Ok(a), Ok(b)) => (a, b),
+        (Err(e), _) | (_, Err(e)) => return problems.push(e),
+    };
+    let counted = english
+        .iter()
+        .any(|v| shows(&v.parts) && in_source(&v.category).is_some_and(|ns| ns.len() > 1));
+    for v in variants {
+        let Some(ns) = here(&v.category) else { continue };
+        let names_one = matches!(v.category.as_str(), "zero" | "one" | "two");
+        if ns.len() > 1 && (counted || names_one) && !shows(&v.parts) {
+            let examples: Vec<String> = ns.iter().take(3).map(u64::to_string).collect();
+            problems.push(format!(
+                "{tag}: {} [{}] leaves out ${selector}, but {} also covers {}",
+                m.id,
+                v.category,
+                v.category,
+                examples.join(", ")
+            ));
         }
     }
 }
@@ -566,7 +623,9 @@ pub fn parse_file(
         // `platform-tui.ftl`, or `platform-tui-stores.ftl` when one platform's strings are split by screen.
         .map(|p| p.split('-').next().unwrap_or(p))
         .map(|p| Platform::parse(p).ok_or_else(|| anyhow!("{group}.ftl: no platform {p}")))
-        .transpose()?;
+        .transpose()?
+        // `receiver-cast.ftl`: the Cast receiver page's strings, which no app shows.
+        .or_else(|| group.starts_with("receiver-").then_some(Platform::Receiver));
     for entry in &resource.body {
         match entry {
             ast::Entry::Message(m) => {

@@ -230,6 +230,10 @@ impl App {
             }
             _ => {}
         }
+        if *overlay == Overlay::BugReport {
+            let down = matches!(action, Action::Down | Action::PageDown | Action::Bottom);
+            self.step_off_empty_log(down);
+        }
         None
     }
 
@@ -316,7 +320,7 @@ impl App {
             Some(Overlay::Recommendations) => self.target().map_or(0, |e| e.recommended.len()),
             Some(Overlay::PluginAction) => self.plugin_choices().len(),
             Some(Overlay::PublishPick) => self.local_plugins.len(),
-            Some(Overlay::BugReport) => 1 + self.crashes.len(),
+            Some(Overlay::BugReport) => super::notices::FIRST_CRASH_ROW + self.crashes.len(),
             Some(Overlay::Medium) => super::medium::CHOICES.len(),
             Some(Overlay::MediumOff) => 2,
             Some(overlay) if overlay.is_devices() => self.devices_overlay_len(overlay),
@@ -333,10 +337,13 @@ impl App {
         let context = self.screen_context();
         // A novel has no pages to number.
         let novel = self.reads_novel();
+        // A title's own switch is listed on its page, where "this show" has one meaning.
+        let on_a_title = self.title_on_screen().is_some();
         self.keymap
             .palette_entries(self.text(Field::Palette), context)
             .into_iter()
             .filter(|(action, _)| !(novel && *action == Action::ReaderGoToPage))
+            .filter(|(action, _)| on_a_title || *action != Action::ToggleAlwaysPrivate)
             .take(PALETTE_ROWS)
             .collect()
     }

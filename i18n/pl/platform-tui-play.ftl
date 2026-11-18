@@ -121,6 +121,7 @@ settings-label-mark-chapters = Zaznacz czołówkę i zakończenie
 settings-label-skip-button = Pokaż przycisk pomijania
 settings-label-fullscreen = Uruchamiaj na pełnym ekranie
 settings-label-upscaling = Skalowanie obrazu
+settings-label-preload-metered = Wczytuj przy taryfowym
 settings-label-player-ui = Interfejs odtwarzacza
 settings-label-night-mode = Tryb nocny
 settings-label-download-dir = Folder pobierania

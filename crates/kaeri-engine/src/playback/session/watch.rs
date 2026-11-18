@@ -15,7 +15,8 @@ impl Run<'_> {
     pub(super) async fn apply_track(&self, action: TrackAction, link: &dyn PlayerLink) {
         if let TrackAction::Remember(memory) = action {
             let key = (self.context.anilist_id, self.context.translation);
-            remember_tracks(self.store, self.settings.remember_tracks, key, memory).await;
+            let enabled = self.settings.remember_tracks && !self.settings.privacy.holds();
+            remember_tracks(self.store, enabled, key, memory).await;
             return;
         }
         if let Some((name, value)) = action.property() {
@@ -91,17 +92,22 @@ impl Run<'_> {
         }
     }
 
-    /// Feed one event through the tracker purely for its bookkeeping.
+    /// Feed one event through the tracker purely for its bookkeeping. A file that never
+    /// `played` writes no position, only a finish.
     pub(super) async fn record_actions(
         &self,
         tracker: &mut PlaybackTracker,
         event: &PlaybackEvent,
         stream: &Stream,
+        played: bool,
         committed: &mut bool,
         ending: &mut Option<bool>,
     ) {
         for action in tracker.observe(event) {
             if let Action::Record { position, duration, completed } = action {
+                if !played && !completed {
+                    continue;
+                }
                 let watch = WatchEvent {
                     duration_secs: duration,
                     watched_secs: tracker.watched_secs(),
@@ -124,6 +130,11 @@ impl Run<'_> {
     async fn record(&self, watch: WatchEvent, completed: bool, committed: &mut bool) {
         // Played without tracking: nothing is written, here or for a tracker.
         if self.settings.untracked {
+            return;
+        }
+        // Private: held in memory until the app quits, for the title page and the next play to
+        // resume from, and never written or sent.
+        if self.settings.privacy.keep(&watch) {
             return;
         }
         if self.in_party && !completed {

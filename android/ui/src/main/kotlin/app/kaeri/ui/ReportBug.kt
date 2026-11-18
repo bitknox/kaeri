@@ -26,6 +26,7 @@ import app.kaeri.engine.model.DeviceClass
 import app.kaeri.store.AppStore
 import app.kaeri.store.BugContext
 import app.kaeri.store.BugReportDevice
+import app.kaeri.store.alertProblem
 import app.kaeri.store.bugReportUrl
 
 /** What a report says of this device: the app's version, the system's, the screen's class and the build. */
@@ -48,7 +49,7 @@ internal fun bugReportDevice(context: Context): BugReportDevice {
 
 /** The newest problem the app has told of this session, for a report started from About. */
 internal fun lastProblem(context: Context, store: AppStore): BugContext? =
-    store.notices.log.value.firstOrNull { it.isAlert }?.let { BugContext("message", it.notice.text(context)) }
+    store.notices.log.value.firstOrNull { it.isAlert }?.let { store.alertProblem(it.notice.text(context)) }
 
 /** Open Report a bug, the sheet, with [problem] as its last error, or the newest problem. */
 internal fun openBugReport(context: Context, store: AppStore, problem: BugContext? = null, ticked: Set<String> = emptySet()) {

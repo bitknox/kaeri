@@ -696,6 +696,8 @@ pub enum Command {
     LoadDownloads,
     /// A link the viewer opened: see [`crate::opened`].
     Opened(crate::opened::OpenedCommand),
+    // An aired episode no source lists: see `crate::missing`.
+    Missing(crate::missing::MissingCommand),
     // More sync commands; see `SyncCommand`.
     SyncGroup(crate::group::SyncCommand),
     /// Play a file already on disk — with the identity that lets it record history,
@@ -722,6 +724,18 @@ pub enum Command {
     SetSetting {
         key: SettingKey,
         value: kaeri_core::settings::SettingValue,
+    },
+    /// Private mode on or off, at once, for what has not been written yet. Never written to the
+    /// config: a new launch starts with it off. Answered with
+    /// [`Event::Private`](crate::event::Event::Private).
+    SetPrivate {
+        on: bool,
+    },
+    /// A show or series always private on this device, or not. Never synced; what was saved
+    /// before stays. Answered with [`Event::AlwaysPrivate`](crate::event::Event::AlwaysPrivate).
+    SetAlwaysPrivate {
+        title: crate::private::PrivateTitle,
+        on: bool,
     },
     /// Sub or dub for this session only: put in effect at once and not written, so the next
     /// launch goes by the saved choice. Answered with
@@ -1135,8 +1149,9 @@ pub enum PlayerCommand {
     /// A pick in the player's menus.
     Choose(PlayerChoice),
     /// Skip the source being asked while a play looks for its stream: the walk moves on to the
-    /// next source in the viewer's order. Heard only while the stream is being found; once the
-    /// player opens, it does nothing.
+    /// next source in the viewer's order. Heard until the first frame: once the player opens,
+    /// the next stream found plays in its place, or with none left, the walk goes on to the
+    /// sources after the one that answered. Once a frame shows, it does nothing.
     SkipSource,
     /// Begin the episode being started at 0, in place of its resume point, without asking the
     /// sources again. Heard while the walk runs (the file opens at 0), and once the file has

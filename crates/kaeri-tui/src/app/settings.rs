@@ -30,6 +30,8 @@ pub struct SettingLine {
     pub key: SettingKey,
     /// `false` for rows that are shown but not editable here.
     pub editable: bool,
+    /// Shown but waiting on another row, which drawn dim, label and value alike.
+    pub dimmed: bool,
     /// Why a row is read-only, or what a change will not do until restart.
     pub note: Option<String>,
 }
@@ -134,12 +136,25 @@ impl App {
             .map(|row| SettingLine {
                 label: label_text(row.key),
                 category: category_text(row.key.category()),
-                editable: row.change.editable(),
+                editable: row.change.editable() && !self.waits_on_auto_next(row.key),
+                dimmed: self.waits_on_auto_next(row.key),
                 note: self.setting_note(row.key),
                 key: row.key,
                 value: value_text(row.key, &row.value),
             })
             .collect()
+    }
+
+    /// Whether a row only means something while Auto-play next is on, and it is off. Preloading
+    /// the next episode happens only on the way to it.
+    fn waits_on_auto_next(&self, key: SettingKey) -> bool {
+        key == SettingKey::PreloadMetered
+            && self.shown_value(SettingKey::AutoNext) == Some("off") // i18n-skip: a raw value
+    }
+
+    /// A row's raw value as the engine last sent it.
+    fn shown_value(&self, key: SettingKey) -> Option<&str> {
+        self.settings.rows.iter().find(|row| row.key == key).map(|row| row.value.as_str())
     }
 
     /// What the terminal says under a Settings row: how it is changed here, why it is not, or
@@ -185,6 +200,17 @@ impl App {
             S::SeedHours => t::settings_note_seed_hours(),
             S::UploadLimit => t::settings_note_upload_limit(),
             S::TokenStorage => t::settings_note_token_storage(),
+            // The warm-up reaches torrents too, which is worth saying only while they play.
+            S::PreloadMetered => {
+                let mut note = t::settings_preload_detail_metered();
+                if self.shown_value(S::Torrents) == Some("on") {
+                    note = format!("{note} {}", t::settings_preload_torrents()); // i18n-skip: joins two lines
+                }
+                if self.waits_on_auto_next(key) {
+                    note = format!("{}. {note}", t::settings_preload_a11y_dimmed()); // i18n-skip: joins two lines
+                }
+                note
+            }
             S::Theme
             | S::Motion
             | S::Translation
@@ -200,6 +226,7 @@ impl App {
             // The native apps' own rows, which this screen does not draw.
             S::UpNextCountdown
             | S::SpoilerProtection
+            | S::PictureInPictureOnLeave
             | S::DownloadQuality
             | S::KeepNextEpisodes
             | S::DownloadsOnCellular
@@ -225,6 +252,7 @@ impl App {
             | S::MpvOptions
             | S::AdultTitles
             | S::EpisodeDiscussions
+            | S::ShowFollowing
             | S::CommentImages
             | S::ControllerInput
             | S::SwapFaceButtons
@@ -314,6 +342,7 @@ fn label_text(key: SettingKey) -> String {
         S::Subtitles => t::settings_label_subtitles(),
         S::CommitThreshold => t::settings_label_commit_threshold(),
         S::AutoNext => t::settings_label_auto_next(),
+        S::PreloadMetered => t::settings_label_preload_metered(),
         S::SkipOpening => t::settings_label_skip_opening(),
         S::SkipRecap => t::settings_label_skip_recap(),
         S::AskWasOpening => t::settings_label_ask_was_opening(),
@@ -346,6 +375,7 @@ fn label_text(key: SettingKey) -> String {
         S::SourceOrder => t::settings_label_source_order(),
         S::UpNextCountdown => t::settings_label_up_next_countdown(),
         S::SpoilerProtection => t::settings_label_spoiler_protection(),
+        S::PictureInPictureOnLeave => t::settings_label_picture_in_picture_on_leave(),
         S::DownloadQuality => t::settings_label_download_quality(),
         S::KeepNextEpisodes => t::settings_label_keep_next_episodes(),
         S::DownloadsOnCellular => t::settings_label_downloads_on_cellular(),
@@ -371,6 +401,7 @@ fn label_text(key: SettingKey) -> String {
         S::MpvOptions => t::settings_label_mpv_options(),
         S::AdultTitles => t::settings_label_adult_titles(),
         S::EpisodeDiscussions => t::settings_label_episode_discussions(),
+        S::ShowFollowing => t::settings_anilist_following(),
         S::CommentImages => t::settings_label_comment_images(),
         S::ControllerInput => t::settings_label_controller_input(),
         S::SwapFaceButtons => t::settings_label_swap_face_buttons(),
@@ -799,5 +830,21 @@ mod tests {
         Owner::new(Config::default()).answer(&mut a, task);
         assert_ne!(a.settings.translation, before);
         assert!(a.toasts[0].notice.text.contains("dub"));
+    }
+
+    #[test]
+    fn the_preload_note_names_torrents_while_torrent_playback_is_on() {
+        let note = |config: &Config| {
+            let rows = app_on(config).setting_rows();
+            let row = rows.into_iter().find(|row| row.key == SettingKey::PreloadMetered);
+            row.and_then(|row| row.note).expect("the Preload row's note")
+        };
+        let off = note(&Config::default());
+        assert!(!off.contains("Torrents"), "{off}");
+
+        let mut config = Config::default();
+        config.providers.torrent.enabled = true;
+        let on = note(&config);
+        assert!(on.ends_with(" Torrents load their first pieces the same way."), "{on}");
     }
 }

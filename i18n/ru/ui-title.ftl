@@ -82,6 +82,18 @@ more-following = Люди, которых вы отслеживаете
 more-following-note = Из AniList
 more-followed-score = { $score }/10
 more-like-this = Похожие тайтлы
+following-show-all = Показать все { $count }
+following-names = { $more ->
+    [one] { $first }, { $second } и ещё { $more }
+    [few] { $first }, { $second } и ещё { $more }
+    [many] { $first }, { $second } и ещё { $more }
+   *[other] { $first }, { $second } и ещё { $more }
+ }
+following-names-two = { $first } и { $second }
+following-mark-more = +{ $count }
+following-mark-spoken = { $names }: просмотрено до этого места.
+following-score-spoken = Оценка { $score } из 10
+following-open-help = Показывает, где сейчас каждый.
 more-followed-progress = { $status } · { $progress }
 more-empty = У AniList пока нет актёров, создателей и рекомендаций для этого тайтла.
 more-spoiler = Спойлер
@@ -102,7 +114,6 @@ title-fact-range = с { $from } по { $to }
 title-fact-after = После серии { $episode }
 title-fact-now = Сейчас
 title-fact-tba = Дата не объявлена
-more-following-line = { $status } · { $score }/10
 episode-go-to = Перейти к эпизоду…
 episode-go-to-title = Перейти к эпизоду
 episode-go-to-go = Перейти
@@ -110,3 +121,15 @@ episode-go-to-hint = С { $first } по { $last }
 episode-go-to-label = Эпизод, с { $first } по { $last }
 episode-go-to-none = Эпизода { $number } нет. В этом сериале их { $last }.
 episode-go-to-not-out = Эпизод { $number } ещё не вышел. Последний: { $latest }.
+episode-missing-aired = Эпизод { $episode } вышел { $ago }.
+episode-missing-aired-on = Эпизод { $episode } вышел { $date }.
+episode-missing-not-yet = Ваши { -source-pl } его пока не нашли.
+episode-missing-still = Ваши { -source-pl } всё ещё его не нашли.
+episode-missing-no-answer = Ваши { -source-pl } не ответили.
+episode-missing-looks-again = { -app-name } ищет его снова каждые { $minutes } мин.
+episode-missing-none = Ваши { -source-pl } так и не нашли его.
+episode-missing-offline = { -app-name } поищет его, когда снова появится сеть.
+episode-row-aired-ago = Вышел { $ago }
+episode-unsourced-yet = Ваши { -source-pl } пока не нашли
+episode-found-announcement = Ваши { -source-pl } нашли эпизод { $episode }.
+episode-check-again-help = { -app-name } также сам ищет эпизод каждые { $minutes } мин в течение { $hours } ч после его выхода.

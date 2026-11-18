@@ -110,6 +110,8 @@ public final class PlaybackActivityFeed {
 extension AppStore {
     /// The player changed: the playback's Live Activity shows what plays, or ends with `nil`.
     public func playbackChanged(_ playing: PlaybackActivityFeed.Playing?) {
-        playbackActivity.show(playing, titles: titles, artwork: artwork)
+        // No Live Activity names what plays while it is private.
+        let shown = playing.flatMap { privacy.holds(show: $0.id) ? nil : $0 }
+        playbackActivity.show(shown, titles: titles, artwork: artwork)
     }
 }

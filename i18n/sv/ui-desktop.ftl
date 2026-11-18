@@ -29,3 +29,7 @@ tv-problem-unpaired = TV:n känner inte längre igen den här { -device }en. Par
 player-position-spoken = { $position } av { $duration }
 names-pair = { $first } och { $last }
 names-list = { $list }, { $next }
+cast-row-through-computer = Spelas upp via den här datorn
+desktop-cast-quit-title = Stoppa strömningen och avsluta?
+desktop-cast-quit-body = { $title } spelas upp på { $name }. Uppspelningen stoppas vid avslut.
+desktop-cast-quit-action = Stoppa och avsluta

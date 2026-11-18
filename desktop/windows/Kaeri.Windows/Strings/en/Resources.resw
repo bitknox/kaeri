@@ -79,6 +79,26 @@
     <value>Lost {name}, so casting stopped.</value>
     <comment>The TV stopped answering mid-cast. The name is the TV's own.</comment>
   </data>
+  <data name="NoticeCastStoppedElsewhere" xml:space="preserve">
+    <value>{name} stopped the cast.</value>
+    <comment>The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.</comment>
+  </data>
+  <data name="NoticeCastSegment" xml:space="preserve">
+    <value>{name} stopped getting the stream: the source didn't answer for part of the episode. Try another source.</value>
+    <comment>Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.</comment>
+  </data>
+  <data name="NoticeCastLostStream" xml:space="preserve">
+    <value>{name} lost the stream from this device. Check that both are on the same network.</value>
+    <comment>The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.</comment>
+  </data>
+  <data name="NoticeCastSubtitlesPlain" xml:space="preserve">
+    <value>Subtitles on {name} show as plain text. Typeset subtitles were too much for it.</value>
+    <comment>Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.</comment>
+  </data>
+  <data name="NoticeCastFallback" xml:space="preserve">
+    <value>{name} plays this in its own player. Subtitles show as plain text.</value>
+    <comment>Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.</comment>
+  </data>
   <data name="NoticeCastNoDevice" xml:space="preserve">
     <value>That TV is no longer on the network.</value>
     <comment>The TV picked to cast to has left the network.</comment>
@@ -391,6 +411,18 @@
     <value>The sources took too long to answer. Try again, or choose another source.</value>
     <comment>Reason: a play waited too long for its sources to give it a stream, and gave up.</comment>
   </data>
+  <data name="CauseSourcesUnreached" xml:space="preserve">
+    <value>Couldn't reach {names}. Try again, or choose another source.</value>
+    <comment>Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.</comment>
+  </data>
+  <data name="CauseSourcesNotAsked_one" xml:space="preserve">
+    <value>No source that was asked has episode {episode}. {names} wasn't asked.</value>
+    <comment>Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.</comment>
+  </data>
+  <data name="CauseSourcesNotAsked_other" xml:space="preserve">
+    <value>No source that was asked has episode {episode}. {names} weren't asked.</value>
+    <comment>Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.</comment>
+  </data>
   <data name="CauseNoSourceHasEpisode" xml:space="preserve">
     <value>No source has episode {episode}: {detail}</value>
     <comment>Reason: every source matched the title but none has the episode. The detail is what each said.</comment>
@@ -470,6 +502,14 @@
   <data name="NoticeStreamNoVideo" xml:space="preserve">
     <value>No video from that stream. Trying {next} of {total}.</value>
     <comment>Toast when a stream never showed a frame and the next one is tried.</comment>
+  </data>
+  <data name="NoticeFailedOver" xml:space="preserve">
+    <value>The stream broke off. {source} took over at the same point.</value>
+    <comment>Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.</comment>
+  </data>
+  <data name="NoticeFailedOverSameSource" xml:space="preserve">
+    <value>The stream broke off. Another stream from {source} took over at the same point.</value>
+    <comment>Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.</comment>
   </data>
   <data name="NoticePlayerCouldNotPlay" xml:space="preserve">
     <value>mpv couldn't play this. {reason}</value>
@@ -1223,6 +1263,10 @@
     <value>Queued · waits for Wi-Fi</value>
     <comment>A chapter row's state: it waits to download until the device is on Wi-Fi.</comment>
   </data>
+  <data name="ReadingRowWaitsRoom" xml:space="preserve">
+    <value>Queued · waits for room</value>
+    <comment>A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.</comment>
+  </data>
   <data name="ReadingRowDownloading" xml:space="preserve">
     <value>Downloading · {done} of {total} pages</value>
     <comment>A chapter row's state while it downloads.</comment>
@@ -1446,6 +1490,14 @@
   <data name="ReadingDlOffline" xml:space="preserve">
     <value>Offline</value>
     <comment>After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.</comment>
+  </data>
+  <data name="ReadingDlNoRoom_one" xml:space="preserve">
+    <value>No room left. It downloads once some space is free.</value>
+    <comment>After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.</comment>
+  </data>
+  <data name="ReadingDlNoRoom_other" xml:space="preserve">
+    <value>No room left. They download once some space is free.</value>
+    <comment>After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.</comment>
   </data>
   <data name="ReadingEstimateSize" xml:space="preserve">
     <value>About {size}</value>
@@ -3469,6 +3521,10 @@
     <value>Problem</value>
     <comment>Name of the dot before a notice that was an alert, for Narrator.</comment>
   </data>
+  <data name="TvOnThisNetwork" xml:space="preserve">
+    <value>On this network</value>
+    <comment>The heading over the TVs running Kaeri in the title bar's Play on TV menu, under the TVs with Chromecast built in.</comment>
+  </data>
   <data name="TvPickerEpisodeOf" xml:space="preserve">
     <value>{title}, episode {episode}</value>
     <comment>Under the TV picker's title: the episode about to play on the TV, with its show's title.</comment>
@@ -3500,10 +3556,6 @@
   <data name="TvWaiting" xml:space="preserve">
     <value>Waiting for the TV</value>
     <comment>While pairing, until the TV answers and before its name is known.</comment>
-  </data>
-  <data name="TvWaitingFor" xml:space="preserve">
-    <value>Waiting for {name}</value>
-    <comment>While pairing, until the named TV answers.</comment>
   </data>
   <data name="TvRowName" xml:space="preserve">
     <value>{name}, {detail}</value>
@@ -3817,6 +3869,50 @@
     <value>Crash report settings</value>
     <comment>Link from that line to the crash report settings.</comment>
   </data>
+  <data name="ReportPlayerLog" xml:space="preserve">
+    <value>Player log</value>
+    <comment>Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report.</comment>
+  </data>
+  <data name="ReportPlayerLogDetail_one" xml:space="preserve">
+    <value>The last playback · {size}</value>
+    <comment>Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.</comment>
+  </data>
+  <data name="ReportPlayerLogDetail_other" xml:space="preserve">
+    <value>The last {playbacks} playbacks · {size}</value>
+    <comment>Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB.</comment>
+  </data>
+  <data name="ReportPlayerLogEmpty" xml:space="preserve">
+    <value>No playback logged yet</value>
+    <comment>Line under the Player log item while nothing has played since the app started. The item cannot be ticked then.</comment>
+  </data>
+  <data name="ReportPlayerLogSave" xml:space="preserve">
+    <value>Save log…</value>
+    <comment>Button under the ticked Player log item. Opens the system's save dialog for the log file.</comment>
+  </data>
+  <data name="ReportPlayerLogAttach" xml:space="preserve">
+    <value>Attach the file to the issue once it opens on GitHub.</value>
+    <comment>Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub.</comment>
+  </data>
+  <data name="ReportPlayerLogSaved" xml:space="preserve">
+    <value>Saved as {file}</value>
+    <comment>Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt.</comment>
+  </data>
+  <data name="ReportPlayerLogFailed" xml:space="preserve">
+    <value>Couldn't save the log. Try another folder.</value>
+    <comment>Shown beside the Save log button when the file could not be written.</comment>
+  </data>
+  <data name="ReportSentReport" xml:space="preserve">
+    <value>Report</value>
+    <comment>First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked.</comment>
+  </data>
+  <data name="ReportPlayerLogA11ySaved" xml:space="preserve">
+    <value>Player log saved</value>
+    <comment>Screen readers announce this once the player log file is written.</comment>
+  </data>
+  <data name="ReportPlayerLogA11yHint" xml:space="preserve">
+    <value>Saves a file to attach to the issue</value>
+    <comment>Screen reader hint on the Player log item.</comment>
+  </data>
   <data name="SettingsGroupCrashes" xml:space="preserve">
     <value>Crash reports</value>
     <comment>Heading of the Crash reports group in Settings, About.</comment>
@@ -4077,6 +4173,46 @@
     <value>Set on the TV</value>
     <comment>Line under TV volume on the card, for a TV whose volume only its own remote sets.</comment>
   </data>
+  <data name="CastButtonConnecting" xml:space="preserve">
+    <value>Connecting to {name}</value>
+    <comment>The cast button's spoken label while it connects to a TV. The name is the TV's.</comment>
+  </data>
+  <data name="CastButtonConnected" xml:space="preserve">
+    <value>Connected to {name}</value>
+    <comment>The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's.</comment>
+  </data>
+  <data name="CastPlaysOn" xml:space="preserve">
+    <value>Plays on {name}</value>
+    <comment>Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's.</comment>
+  </data>
+  <data name="CastIdle" xml:space="preserve">
+    <value>Nothing playing yet</value>
+    <comment>Row in the connected dialog while the TV has nothing loaded.</comment>
+  </data>
+  <data name="CastStatusPaused" xml:space="preserve">
+    <value>Paused on {name}</value>
+    <comment>The casting controller's line while the episode is paused on the TV. The name is the TV's.</comment>
+  </data>
+  <data name="CastOpenShow" xml:space="preserve">
+    <value>Open {title}</value>
+    <comment>Spoken label of the show's name in the casting controller: it opens the show's page.</comment>
+  </data>
+  <data name="CastControllerClose" xml:space="preserve">
+    <value>Close</value>
+    <comment>The chevron that puts the full controller back into the mini player.</comment>
+  </data>
+  <data name="CastMiniOpens" xml:space="preserve">
+    <value>Opens the controls</value>
+    <comment>Screen reader hint on the mini player over the navigation bar.</comment>
+  </data>
+  <data name="CastPlayNextOn" xml:space="preserve">
+    <value>Play next on {name}</value>
+    <comment>Long-press menu of an episode while a TV plays: queues the episode after the one playing.</comment>
+  </data>
+  <data name="CastNotificationLine" xml:space="preserve">
+    <value>Casting to {name}</value>
+    <comment>The system's media notification and Now Playing: the line naming the TV that plays.</comment>
+  </data>
   <data name="ActionTryAgain" xml:space="preserve">
     <value>Try again</value>
     <comment>Button that runs a failed action again.</comment>
@@ -4273,6 +4409,10 @@
     <value>Check again</value>
     <comment>Button that checks a { -source } again after it did not answer.</comment>
   </data>
+  <data name="ActionChecking" xml:space="preserve">
+    <value>Checking</value>
+    <comment>Check again while the check runs. Keep it about as short as "Check again": the button keeps its width.</comment>
+  </data>
   <data name="ActionOpenSettings" xml:space="preserve">
     <value>Open settings</value>
     <comment>Button that opens the system's own settings for the app.</comment>
@@ -4361,6 +4501,10 @@
     <value>{minutes} min</value>
     <comment>A length in minutes, for an episode.</comment>
   </data>
+  <data name="TimeHours" xml:space="preserve">
+    <value>{hours} h</value>
+    <comment>A length in hours, inside time-ago.</comment>
+  </data>
   <data name="TimeNowInline" xml:space="preserve">
     <value>now</value>
     <comment>A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line.</comment>
@@ -4436,6 +4580,10 @@
   <data name="StateLoading" xml:space="preserve">
     <value>Loading</value>
     <comment>Short placeholder while something loads.</comment>
+  </data>
+  <data name="NoticeDismiss" xml:space="preserve">
+    <value>Dismiss</value>
+    <comment>Accessibility action of a notice that dismisses it (VoiceOver, TalkBack).</comment>
   </data>
   <data name="PadHelpMove" xml:space="preserve">
     <value>Move focus</value>
@@ -4752,6 +4900,22 @@
   <data name="NamesList" xml:space="preserve">
     <value>{list}, {next}</value>
     <comment>A list of names up to the last two, joined one by one: "Alpha, Brook".</comment>
+  </data>
+  <data name="CastRowThroughComputer" xml:space="preserve">
+    <value>Plays through this computer</value>
+    <comment>Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays.</comment>
+  </data>
+  <data name="DesktopCastQuitTitle" xml:space="preserve">
+    <value>Stop casting and quit?</value>
+    <comment>Title of the question asked on quitting while an episode plays on a TV.</comment>
+  </data>
+  <data name="DesktopCastQuitBody" xml:space="preserve">
+    <value>{title} is playing on {name}. Quitting stops it.</value>
+    <comment>Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's.</comment>
+  </data>
+  <data name="DesktopCastQuitAction" xml:space="preserve">
+    <value>Stop and quit</value>
+    <comment>Button of the question asked on quitting while casting: stops the cast and quits.</comment>
   </data>
   <data name="DiscussionOpen" xml:space="preserve">
     <value>Discussion</value>
@@ -7529,9 +7693,21 @@
     <value>You skipped {name}</value>
     <comment>Detail line after the viewer skipped the source being asked.</comment>
   </data>
-  <data name="PlayerStartResting" xml:space="preserve">
-    <value>Skipped after recent failures</value>
-    <comment>Details row for sources passed over because they failed lately. The name goes before it.</comment>
+  <data name="PlayerStartRowHeldTorrentsOff" xml:space="preserve">
+    <value>Not asked · Torrent playback is off</value>
+    <comment>Details row for a source not asked while torrent playback is off. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldProxy" xml:space="preserve">
+    <value>Not asked · Waiting for the proxy check</value>
+    <comment>Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldCellular" xml:space="preserve">
+    <value>Not asked · Torrents are off on cellular</value>
+    <comment>Details row for a source not asked on cellular, where torrents are off. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldOther" xml:space="preserve">
+    <value>Not asked · Not available right now</value>
+    <comment>Details row for a source not asked because it says it can't be used right now. The name goes before it.</comment>
   </data>
   <data name="PlayerStartFrom" xml:space="preserve">
     <value>From {name}</value>
@@ -7656,6 +7832,50 @@
   <data name="PlayerStartAsked" xml:space="preserve">
     <value>{names} were asked.</value>
     <comment>Second clause of a failure: the sources that were asked, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartLacking_one" xml:space="preserve">
+    <value>{names} doesn't have episode {episode}.</value>
+    <comment>Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartLacking_other" xml:space="preserve">
+    <value>{names} don't have episode {episode}.</value>
+    <comment>Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label.</comment>
+  </data>
+  <data name="PlayerStartUnreached" xml:space="preserve">
+    <value>Couldn't reach {names}.</value>
+    <comment>First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsOff_one" xml:space="preserve">
+    <value>{names} isn't asked while torrent playback is off.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsOff_other" xml:space="preserve">
+    <value>{names} aren't asked while torrent playback is off.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedProxy_one" xml:space="preserve">
+    <value>{names} isn't asked until the proxy check passes.</value>
+    <comment>Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedProxy_other" xml:space="preserve">
+    <value>{names} aren't asked until the proxy check passes.</value>
+    <comment>Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedCellular_one" xml:space="preserve">
+    <value>{names} isn't asked on cellular.</value>
+    <comment>Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedCellular_other" xml:space="preserve">
+    <value>{names} aren't asked on cellular.</value>
+    <comment>Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedOther_one" xml:space="preserve">
+    <value>{names} isn't available right now.</value>
+    <comment>Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedOther_other" xml:space="preserve">
+    <value>{names} aren't available right now.</value>
+    <comment>Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app.</comment>
   </data>
   <data name="PlayerStartSubtitled" xml:space="preserve">
     <value>Subtitled</value>
@@ -8182,6 +8402,30 @@
     <value>No source has a stream for this episode.</value>
     <comment>Line when the picker found no stream for the episode.</comment>
   </data>
+  <data name="SourcePickerNoneLists" xml:space="preserve">
+    <value>No source lists episode {episode}.</value>
+    <comment>Line over the reasons when no source lists a release of the episode. The episode is its label.</comment>
+  </data>
+  <data name="SourcePickerNoneAnsweredLists" xml:space="preserve">
+    <value>No source that answered lists episode {episode}.</value>
+    <comment>Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label.</comment>
+  </data>
+  <data name="SourcePickerHeldTorrentsOff" xml:space="preserve">
+    <value>{name} isn't asked while torrent playback is off</value>
+    <comment>Line of the picker for a source not asked while torrent playback is off.</comment>
+  </data>
+  <data name="SourcePickerHeldProxy" xml:space="preserve">
+    <value>{name} isn't asked until the proxy check passes</value>
+    <comment>Line of the picker for a source not asked while the proxy check for torrents hasn't passed.</comment>
+  </data>
+  <data name="SourcePickerHeldCellular" xml:space="preserve">
+    <value>{name} isn't asked on cellular</value>
+    <comment>Line of the picker for a source not asked on cellular, where torrents are off.</comment>
+  </data>
+  <data name="SourcePickerHeldOther" xml:space="preserve">
+    <value>{name} isn't available right now</value>
+    <comment>Line of the picker for a source that says it can't be used right now.</comment>
+  </data>
   <data name="PlayerSources" xml:space="preserve">
     <value>Sources</value>
     <comment>Title of the picker sheet in the player.</comment>
@@ -8249,6 +8493,70 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>More in Settings…</value>
     <comment>Button in the subtitles panel that opens Settings.</comment>
+  </data>
+  <data name="PrivateMode" xml:space="preserve">
+    <value>Private mode</value>
+    <comment>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</comment>
+  </data>
+  <data name="PrivateModeDetail" xml:space="preserve">
+    <value>Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.</value>
+    <comment>The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux.</comment>
+  </data>
+  <data name="PrivateModeLimits" xml:space="preserve">
+    <value>Your sources and watch parties still see what you open.</value>
+    <comment>Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else.</comment>
+  </data>
+  <data name="PrivateModeOnNotice" xml:space="preserve">
+    <value>Private mode is on. Nothing is saved or synced until Kaeri quits.</value>
+    <comment>Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint.</comment>
+  </data>
+  <data name="ActionTurnOff" xml:space="preserve">
+    <value>Turn off</value>
+    <comment>Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off.</comment>
+  </data>
+  <data name="PrivateModeShortcutHint" xml:space="preserve">
+    <value>Shortcut: {keys}</value>
+    <comment>Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux.</comment>
+  </data>
+  <data name="PrivateBadge" xml:space="preserve">
+    <value>Private</value>
+    <comment>The badge while private mode is on, the player label, and the head of the title page line.</comment>
+  </data>
+  <data name="PrivateBadgeLabel" xml:space="preserve">
+    <value>Private mode is on</value>
+    <comment>Screen reader label of the badge.</comment>
+  </data>
+  <data name="PrivateLineNotSaved" xml:space="preserve">
+    <value>Not saved or synced</value>
+    <comment>Line under a title or series page's main action, after "Private" or "Always private".</comment>
+  </data>
+  <data name="PrivateLineKept" xml:space="preserve">
+    <value>Your place is kept until Kaeri quits</value>
+    <comment>Line under a title or series page's main action when a place is held in memory, after "Private".</comment>
+  </data>
+  <data name="TitleAlwaysPrivate" xml:space="preserve">
+    <value>Always private</value>
+    <comment>A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line.</comment>
+  </data>
+  <data name="ShowAlwaysPrivateDetail" xml:space="preserve">
+    <value>Nothing from this show is saved or synced on this device. What is already saved stays.</value>
+    <comment>Under the Always private switch in a show's settings.</comment>
+  </data>
+  <data name="SeriesAlwaysPrivateDetail" xml:space="preserve">
+    <value>Nothing from this series is saved or synced on this device. What is already saved stays.</value>
+    <comment>Under the Always private switch in a series page's settings.</comment>
+  </data>
+  <data name="NowPlayingPrivate" xml:space="preserve">
+    <value>Playing in Kaeri</value>
+    <comment>What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork.</comment>
+  </data>
+  <data name="PrivateModeOnAnnouncement" xml:space="preserve">
+    <value>Private mode on</value>
+    <comment>Announced to screen readers once when private mode turns on.</comment>
+  </data>
+  <data name="PrivateModeOffAnnouncement" xml:space="preserve">
+    <value>Private mode off</value>
+    <comment>Announced to screen readers once when private mode turns off.</comment>
   </data>
   <data name="ReaderPageLoading" xml:space="preserve">
     <value>Loading page {page}</value>
@@ -10164,6 +10472,10 @@
     <value>Add to Planning</value>
     <comment>Screen readers: the custom action on a discovery cover that puts the series on Planning.</comment>
   </data>
+  <data name="ReadTileAddTo" xml:space="preserve">
+    <value>Add to {list}</value>
+    <comment>Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed".</comment>
+  </data>
   <data name="ReadSearchAnilistHidden" xml:space="preserve">
     <value>AniList's results are hidden.</value>
     <comment>Said once by screen readers when Your sources only turns on.</comment>
@@ -11976,6 +12288,26 @@
     <value>Up next countdown</value>
     <comment>Row: length of the Up next countdown.</comment>
   </data>
+  <data name="SettingsPreloadCellular" xml:space="preserve">
+    <value>Preload video on mobile data</value>
+    <comment>Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default.</comment>
+  </data>
+  <data name="SettingsPreloadMetered" xml:space="preserve">
+    <value>Preload video on metered connections</value>
+    <comment>The same row on Windows and Linux.</comment>
+  </data>
+  <data name="SettingsPreloadDetailMetered" xml:space="preserve">
+    <value>During the ending, the next episode's stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.</value>
+    <comment>Line under the row on Windows and Linux, and the note under the terminal's settings list.</comment>
+  </data>
+  <data name="SettingsPreloadTorrents" xml:space="preserve">
+    <value>Torrents load their first pieces the same way.</value>
+    <comment>Sentence added after the line under the row while torrent playback is on.</comment>
+  </data>
+  <data name="SettingsPreloadA11yDimmed" xml:space="preserve">
+    <value>Needs Auto-play next</value>
+    <comment>Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note.</comment>
+  </data>
   <data name="SettingsSkipOpening" xml:space="preserve">
     <value>Skip opening automatically</value>
     <comment>Row: skip the opening.</comment>
@@ -12708,6 +13040,18 @@
     <value>Feed port</value>
     <comment>Row: the port the shared catalogue listens on. Empty picks a free one.</comment>
   </data>
+  <data name="SettingsLabelPictureInPictureOnLeave" xml:space="preserve">
+    <value>Picture in picture when leaving the app</value>
+    <comment>Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it.</comment>
+  </data>
+  <data name="SettingsAnilistFollowing" xml:space="preserve">
+    <value>Show people you follow</value>
+    <comment>Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList.</comment>
+  </data>
+  <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
+    <value>Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</value>
+    <comment>Note under that switch.</comment>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Address</value>
     <comment>Label of the address field in the Add a server sheet.</comment>
@@ -13055,6 +13399,38 @@
   <data name="SourcePickerCoverage_other" xml:space="preserve">
     <value>{covered} of {of} episodes</value>
     <comment>Under a source: how many of the title's released episodes it lists.</comment>
+  </data>
+  <data name="SourcePickerEpisodes_one" xml:space="preserve">
+    <value>Episode {first}</value>
+    <comment>Under a source that lists every episode that is out.</comment>
+  </data>
+  <data name="SourcePickerEpisodes_other" xml:space="preserve">
+    <value>Episodes {first} to {last}</value>
+    <comment>Under a source that lists every episode that is out.</comment>
+  </data>
+  <data name="SourcePickerEpisodesNotYet" xml:space="preserve">
+    <value>Episodes {first} to {last}. Not {missing} yet</value>
+    <comment>Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range.</comment>
+  </data>
+  <data name="SourcePickerEpisodesNot" xml:space="preserve">
+    <value>Episodes {first} to {last}. Not {missing}</value>
+    <comment>The same, more than a week after the episodes aired.</comment>
+  </data>
+  <data name="SourcePickerMissingPair" xml:space="preserve">
+    <value>{a} or {b}</value>
+    <comment>Two episodes a source lacks, inside the missing part of a source's line.</comment>
+  </data>
+  <data name="SourcePickerMissingRange" xml:space="preserve">
+    <value>{first} to {last}</value>
+    <comment>Three or more episodes in a row a source lacks, inside the missing part of a source's line.</comment>
+  </data>
+  <data name="SourcePickerCoverageMissing_one" xml:space="preserve">
+    <value>{covered} of {of} episode. Not {missing}</value>
+    <comment>Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".</comment>
+  </data>
+  <data name="SourcePickerCoverageMissing_other" xml:space="preserve">
+    <value>{covered} of {of} episodes. Not {missing}</value>
+    <comment>Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3".</comment>
   </data>
   <data name="SourceNoteOff" xml:space="preserve">
     <value>Switched off</value>
@@ -15471,6 +15847,34 @@
     <value>More like this</value>
     <comment>Heading of the list of titles people who liked this one also liked.</comment>
   </data>
+  <data name="FollowingShowAll" xml:space="preserve">
+    <value>Show all {count}</value>
+    <comment>Button after the first five people followed, on wide screens. It shows the rest in place.</comment>
+  </data>
+  <data name="FollowingNames_other" xml:space="preserve">
+    <value>{first}, {second} and {more} more</value>
+    <comment>Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList.</comment>
+  </data>
+  <data name="FollowingNamesTwo" xml:space="preserve">
+    <value>{first} and {second}</value>
+    <comment>Second line of the People you follow row on phones and the TV, with two people. The names come from AniList.</comment>
+  </data>
+  <data name="FollowingMarkMore" xml:space="preserve">
+    <value>+{count}</value>
+    <comment>After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there.</comment>
+  </data>
+  <data name="FollowingMarkSpoken" xml:space="preserve">
+    <value>{names} watched up to here.</value>
+    <comment>Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined.</comment>
+  </data>
+  <data name="FollowingScoreSpoken" xml:space="preserve">
+    <value>Score {score} out of 10</value>
+    <comment>What a screen reader says in place of a score such as 8/10 beside a person followed.</comment>
+  </data>
+  <data name="FollowingOpenHelp" xml:space="preserve">
+    <value>Shows where each of them is.</value>
+    <comment>Hint of the People you follow row on phones and the TV, which opens the full list.</comment>
+  </data>
   <data name="MoreFollowedProgress" xml:space="preserve">
     <value>{status} · {progress}</value>
     <comment>Line of a followed person's list entry: their status and how far they are. Both are already worded.</comment>
@@ -15535,10 +15939,6 @@
     <value>To be announced</value>
     <comment>Value of the fact on a show with no announced start.</comment>
   </data>
-  <data name="MoreFollowingLine" xml:space="preserve">
-    <value>{status} · {score}/10</value>
-    <comment>A followed person's status and score, such as "Completed · 9/10". The status is already worded.</comment>
-  </data>
   <data name="EpisodeGoTo" xml:space="preserve">
     <value>Go to episode…</value>
     <comment>Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number.</comment>
@@ -15566,6 +15966,54 @@
   <data name="EpisodeGoToNotOut" xml:space="preserve">
     <value>Episode {number} isn't out yet. The latest is {latest}.</value>
     <comment>Shown when the number typed is an episode with no date that has not come out.</comment>
+  </data>
+  <data name="EpisodeMissingAired" xml:space="preserve">
+    <value>Episode {episode} aired {ago}.</value>
+    <comment>Status, first sentence, within a day of the episode airing.</comment>
+  </data>
+  <data name="EpisodeMissingAiredOn" xml:space="preserve">
+    <value>Episode {episode} aired on {date}.</value>
+    <comment>Status, first sentence, a day or more after the episode aired.</comment>
+  </data>
+  <data name="EpisodeMissingNotYet" xml:space="preserve">
+    <value>Your sources don't have it yet.</value>
+    <comment>Status, second sentence, until a check the person asked for comes back empty.</comment>
+  </data>
+  <data name="EpisodeMissingStill" xml:space="preserve">
+    <value>Your sources still don't have it.</value>
+    <comment>Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself.</comment>
+  </data>
+  <data name="EpisodeMissingNoAnswer" xml:space="preserve">
+    <value>Your sources didn't answer.</value>
+    <comment>Status, second sentence, after a check where none of the person's sources answered.</comment>
+  </data>
+  <data name="EpisodeMissingLooksAgain" xml:space="preserve">
+    <value>Kaeri looks again every {minutes} minutes.</value>
+    <comment>Status, last sentence, during the hours Kaeri looks for the episode by itself.</comment>
+  </data>
+  <data name="EpisodeMissingNone" xml:space="preserve">
+    <value>None of your sources has it.</value>
+    <comment>Status a week after the episode aired, when no source has listed it.</comment>
+  </data>
+  <data name="EpisodeMissingOffline" xml:space="preserve">
+    <value>Kaeri looks for it when you're back online.</value>
+    <comment>Status, last sentence, while the device is offline during the hours Kaeri looks by itself.</comment>
+  </data>
+  <data name="EpisodeRowAiredAgo" xml:space="preserve">
+    <value>Aired {ago}</value>
+    <comment>Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h").</comment>
+  </data>
+  <data name="EpisodeUnsourcedYet" xml:space="preserve">
+    <value>Not in your sources yet</value>
+    <comment>Row note beside when it aired, for an episode that aired in the last week and no source lists yet.</comment>
+  </data>
+  <data name="EpisodeFoundAnnouncement" xml:space="preserve">
+    <value>Episode {episode} is in your sources now.</value>
+    <comment>Announced once to screen readers when a check finds the missing episode while its page is open.</comment>
+  </data>
+  <data name="EpisodeCheckAgainHelp" xml:space="preserve">
+    <value>Kaeri also looks by itself every {minutes} minutes for {hours} hours after an episode airs.</value>
+    <comment>Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself.</comment>
   </data>
   <data name="TorrentsTitle" xml:space="preserve">
     <value>Torrents</value>
@@ -16251,6 +16699,10 @@
     <value>Paired</value>
     <comment>Short word: paired, no date known.</comment>
   </data>
+  <data name="TvRowKaeri" xml:space="preserve">
+    <value>Kaeri on Android TV</value>
+    <comment>Line under a paired TV running the app, in the Play on TV list.</comment>
+  </data>
   <data name="TvConnectedAt" xml:space="preserve">
     <value>Connected · {address}</value>
     <comment>Line with the address.</comment>
@@ -16282,6 +16734,10 @@
   <data name="TvStatusReconnecting" xml:space="preserve">
     <value>Reconnecting to {name}</value>
     <comment>Status on the remote: connection lost, trying again.</comment>
+  </data>
+  <data name="TvWaitingFor" xml:space="preserve">
+    <value>Waiting for {name}</value>
+    <comment>Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers.</comment>
   </data>
   <data name="TvStatusConnected" xml:space="preserve">
     <value>Connected</value>

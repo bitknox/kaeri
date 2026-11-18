@@ -131,3 +131,6 @@ settings-trailers-row = Показывать трейлеры
 settings-trailers-note-apple = Трейлеры без звука идут с YouTube, который видит ваш IP-адрес. Не воспроизводятся в режиме низкого объёма данных, при включённом уменьшении движения и в режиме энергосбережения.
 language-restart = Перезапустить
 language-next-open-note = { -app-name } применит новый язык при следующем запуске.
+settings-picture-in-picture-on-leave-apple = «Картинка в картинке» при выходе из приложения
+settings-picture-in-picture-on-leave-mac = Включается, когда окно свёрнуто или { -app-name } скрыт.
+settings-picture-in-picture-on-leave-ios = Также нужен параметр «Запускать PiP автоматически» в Настройки > Основные > Картинка в картинке.

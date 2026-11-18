@@ -15,10 +15,14 @@ const starlightKeys = Object.keys(JSON.parse(starlightSource.slice(starlightSour
 /** The other languages' files; the generated pseudo locale is checked only when it exists. */
 const others = readdirSync(i18nDir).filter((f) => f.endsWith('.json') && f !== 'en.json');
 
+// Folders left out of the scan. The Cast receiver reads its own catalogue
+// (public/cast/receiver/i18n), which its own tests check.
+const notScanned = new Set(['content', 'assets', 'cast-receiver']);
+
 function sources(dir: string): string[] {
 	return readdirSync(dir).flatMap((name) => {
 		const path = join(dir, name);
-		if (statSync(path).isDirectory()) return name === 'content' || name === 'assets' ? [] : sources(path);
+		if (statSync(path).isDirectory()) return notScanned.has(name) ? [] : sources(path);
 		return /\.(astro|ts|mjs)$/.test(name) && !name.endsWith('.test.ts') ? [path] : [];
 	});
 }

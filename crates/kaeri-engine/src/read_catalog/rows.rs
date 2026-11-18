@@ -36,6 +36,22 @@ pub fn fill(
     }
 }
 
+/// A queued row's line while a full device stopped the downloads: it says it waits for room.
+pub fn waits_room(line: &mut [Msg]) {
+    for part in line.iter_mut() {
+        if *part == Msg::Reading(ReadingMsg::ReadingRowQueued) {
+            *part = Msg::Reading(ReadingMsg::ReadingRowWaitsRoom);
+        }
+    }
+}
+
+/// Every queued row's line in `volumes`, as [`waits_room`] says it.
+pub fn fill_waits_room(volumes: &mut [VolumeGroup]) {
+    for row in volumes.iter_mut().flat_map(|v| v.chapters.iter_mut()) {
+        waits_room(&mut row.line);
+    }
+}
+
 /// Where the rows of `source`'s edition are read from: the person's folders are files on this
 /// device, every other source is read from the source.
 pub fn kept_by(source: Option<&str>) -> Kept {

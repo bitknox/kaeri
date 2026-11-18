@@ -12,3 +12,6 @@ tui-together-not-a-link = { -watch-party }のリンクまたはコードでは�
 tui-together-recent-alone = エピソード { $episode } · { $when }
 tui-medium-read-change = { $key }を押すと、{ -app-name }の用途を変更できます。
 tui-medium-settings-hint = { $key }で変更
+report-player-log-save-here = プレーヤーログを保存
+report-player-log-saved-to = プレーヤーログを { $path } に保存しました
+report-player-log-failed-here = { $folder } にログを保存できませんでした。

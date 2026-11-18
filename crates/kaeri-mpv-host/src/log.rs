@@ -3,49 +3,16 @@
 //! The Android app's `MpvLog`, in Rust.
 
 /// `https://cdn.example`, from `https://cdn.example/a/b.m3u8?token=...`: the scheme, the host and
-/// the port, never the credentials, the path or the query.
+/// the port, never the credentials, the path or the query. The model's, which the player log
+/// cuts its lines with too.
 pub fn address(url: &str) -> String {
-    let Some((scheme, rest)) = url.split_once("://").filter(|(s, _)| !s.is_empty()) else {
-        return if url.starts_with('/') { "a local file".into() } else { "an address".into() };
-    };
-    let authority = rest.split(['/', '?', '#']).next().unwrap_or_default();
-    let host = authority.rsplit('@').next().unwrap_or_default();
-    format!("{scheme}://{host}")
+    kaeri_model::bug_report::cut_address(url)
 }
 
 /// `text` with every address in it said as [`address`] says one. An address is a scheme and
 /// `://`, and everything up to a space or a quote.
 pub fn redacting(text: &str) -> String {
-    let mut out = String::with_capacity(text.len());
-    let mut rest = text;
-    while let Some(at) = rest.find("://") {
-        // The scheme runs back from `://` over letters, digits, `+`, `.` and `-`, and starts
-        // with a letter.
-        let before = &rest[..at];
-        let start = before
-            .char_indices()
-            .rev()
-            .take_while(|(_, c)| c.is_ascii_alphanumeric() || matches!(c, '+' | '.' | '-'))
-            .last()
-            .map_or(at, |(i, _)| i);
-        let start = before[start..]
-            .char_indices()
-            .find(|(_, c)| c.is_ascii_alphabetic())
-            .map_or(at, |(i, _)| start + i);
-        if start == at {
-            out.push_str(&rest[..at + 3]);
-            rest = &rest[at + 3..];
-            continue;
-        }
-        let end = rest[at + 3..]
-            .find(|c: char| c.is_whitespace() || matches!(c, '"' | '\'' | '<' | '>'))
-            .map_or(rest.len(), |i| at + 3 + i);
-        out.push_str(&rest[..start]);
-        out.push_str(&address(&rest[start..end]));
-        rest = &rest[end..];
-    }
-    out.push_str(rest);
-    out
+    kaeri_model::bug_report::cut_addresses(text)
 }
 
 /// What libplacebo says when it gives up on a shader hook, as the engine's `HookDisabled`

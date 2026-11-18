@@ -235,7 +235,7 @@ async fn crossing_the_watched_point_looks_the_thread_up_and_opens_it() {
     let found: Vec<&Event> =
         events.iter().filter(|e| matches!(e, Event::DiscussionFound { .. })).collect();
     assert!(
-        matches!(found[..], [Event::DiscussionFound { media, episode: 3, comments: 4 }] if *media == FINISHED),
+        matches!(found[..], [Event::DiscussionFound { media, episode: 3, comments: 4, url }] if *media == FINISHED && url.starts_with("https://anilist.co/forum/thread/")),
         "{found:?}"
     );
     assert_eq!(asked(&h, Operation::ThreadComments), 0, "the comments wait to be opened");

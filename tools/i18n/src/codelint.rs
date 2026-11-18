@@ -137,6 +137,16 @@ fn rules(platform: Platform) -> Rules {
             every_literal: true,
             names_are_code: false,
         },
+        // The receiver page is a website script; its strings are all in i18n/ already.
+        Platform::Receiver => Rules {
+            roots: &[],
+            extensions: &[],
+            skip: COMMON_SKIP,
+            patterns: Vec::new(),
+            stop_at_tests: false,
+            every_literal: false,
+            names_are_code: false,
+        },
     }
 }
 

@@ -33,7 +33,7 @@ plugins-outdated = { $count ->
    *[other] { $count } { -plugin-pl } ont été conçus pour une version plus ancienne de { -app-name } et doivent être mis à jour : { $names }.
  }
 plugin-updates-ready = { $count ->
-    [one] Mise à jour prête : { $names }.
+    [one] { $count } mise à jour de { -plugin } prête : { $names }.
     [many] Mises à jour prêtes : { $names }.
    *[other] Mises à jour prêtes : { $names }.
  }

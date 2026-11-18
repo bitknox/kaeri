@@ -36,7 +36,7 @@ use tokio_rustls::{
 
 use crate::{
     channel::{NS_CONNECTION, NS_HEARTBEAT, NS_MEDIA, NS_RECEIVER},
-    client::DEFAULT_MEDIA_RECEIVER,
+    client::{DEFAULT_MEDIA_RECEIVER, NS_KAERI},
     fetch::{PlainHttp, Upstream},
     probe::RECEIVER_ORIGIN,
     proto::{CastMessage, Payload},
@@ -45,6 +45,10 @@ use crate::{
 
 const CERT: &[u8] = include_bytes!("cert.der");
 const KEY: &[u8] = include_bytes!("key.der");
+
+/// How long a TV shows nothing running between one sender's app closing and another's coming
+/// up, when the other sender takes over.
+const TAKEOVER_GAP: Duration = Duration::from_millis(300);
 
 /// How the fake turns down what it can't play.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -71,6 +75,43 @@ pub struct Refuse {
     pub sound_alone: bool,
     /// HLS whose picture is taller than this is `LOAD_FAILED`: the Nest Hub stops at 720 lines.
     pub hls_taller_than: Option<u32>,
+    /// What Kaeri's receiver says on its namespace as it refuses: `error {part, codec}`.
+    pub says: Option<Value>,
+}
+
+/// What the fake does when asked to launch an app other than the Default Media Receiver: Kaeri's
+/// own receiver.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum CustomReceiver {
+    /// Launches it, and it plays as the Default Media Receiver does: a TV it is published to.
+    #[default]
+    Runs,
+    /// Answers `LAUNCH_ERROR`, as a TV does for an app ID that isn't published to it.
+    Unknown,
+    /// Launches it, and its connection closes at its first `LOAD` while the TV still lists it,
+    /// as a receiver page that fails does.
+    ClosesAtLoad,
+    /// Launches it, and it is stopped on the TV at its first `LOAD`, from the TV's remote or
+    /// another phone's Cast card: its connection closes and no app runs afterwards.
+    StoppedAtLoad,
+    /// Launches it, and at its first `LOAD` it reports the file loading at 0 s, before it seeks
+    /// to where the load starts, and is then stopped on the TV.
+    StoppedWhileLoading,
+    /// Launches it, and it never says `ready` nor answers a `LOAD`: a receiver page that
+    /// didn't load.
+    Silent,
+}
+
+/// How the fake answers a command (pause, seek, a buffering spell) with its status.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
+pub enum Echo {
+    /// Without the `media` object, as real receivers do.
+    #[default]
+    Partial,
+    /// With the `media` object every time.
+    Full,
+    /// Without the `media` object, and only after this long: a TV slow to answer.
+    Late(Duration),
 }
 
 /// How the fake is set up.
@@ -81,8 +122,14 @@ pub struct FakeOptions {
     /// Every file's length unless its HLS playlist says.
     pub duration: f64,
     pub refuse: Refuse,
-    /// The volume's `controlType`: `attenuation` or `fixed`.
+    /// The volume's `controlType`: `attenuation` or `fixed`. A `fixed` TV, like a Chromecast
+    /// with Google TV that leaves the volume to the TV over HDMI-CEC, takes `SET_VOLUME` and says
+    /// the new level and mute in its status, but its sound doesn't change.
     pub control: &'static str,
+    /// Answers a `SET_VOLUME` with a level by `INVALID_REQUEST`.
+    pub refuses_level: bool,
+    /// Answers a `SET_VOLUME` with a mute by `INVALID_REQUEST`.
+    pub refuses_mute: bool,
     /// Whether it fetches at all: a TV behind a firewall doesn't, and a `LOAD` then hangs.
     pub fetches: bool,
     /// How long the receiver app takes to come up after `LAUNCH`: 3 to 6.5 s on a real TV.
@@ -90,6 +137,25 @@ pub struct FakeOptions {
     /// Plays a stream it can't fetch as though it had read it, for `duration`: for an app's
     /// fixtures, whose episodes are test patterns only mpv draws (`av://lavfi:…`).
     pub plays_unfetched: bool,
+    /// What an app other than the Default Media Receiver does.
+    pub custom: CustomReceiver,
+    /// Keeps the receiver app, what it plays and the volume from one sender connection to the
+    /// next, as a TV does: for a sender that comes back to a cast it left running. A launch of
+    /// the app that runs then joins it, as it does on a TV.
+    pub remembers: bool,
+    /// How statuses after commands come.
+    pub echo: Echo,
+}
+
+/// What a TV that [`FakeOptions::remembers`] keeps between sender connections.
+#[derive(Debug, Clone)]
+struct Kept {
+    transport: String,
+    app: Option<(String, String)>,
+    playing: Option<Playing>,
+    next_session: i64,
+    level: f64,
+    muted: bool,
 }
 
 impl Default for FakeOptions {
@@ -99,9 +165,14 @@ impl Default for FakeOptions {
             duration: 20.0,
             refuse: Refuse::default(),
             control: "attenuation",
+            refuses_level: false,
+            refuses_mute: false,
             fetches: true,
             launch: Duration::ZERO,
             plays_unfetched: false,
+            custom: CustomReceiver::default(),
+            remembers: false,
+            echo: Echo::default(),
         }
     }
 }
@@ -138,7 +209,23 @@ pub struct FakeReceiver {
 enum Control {
     TakeOver,
     Silence,
+    /// This connection only: the TV goes on and answers the next.
+    Drop,
+    /// This connection is closed, and the TV goes on and answers the next.
+    Close,
+    /// The receiver app is stopped on the TV.
+    StopApp,
+    /// Another sender stops casting: what plays stops, then the app.
+    StopElsewhere,
+    /// Another sender loads its own file on the same receiver session, with this `customData`
+    /// beside the media.
+    LoadElsewhere(Value),
     Buffering(bool),
+    Say(Value),
+    /// Each connection from now waits this long before it is answered.
+    AnswerAfter(Duration),
+    /// Connections made in the next while are never answered, and those after are.
+    Unreachable(Duration),
 }
 
 impl Drop for FakeReceiver {
@@ -164,6 +251,10 @@ struct Playing {
     stalled: bool,
     /// Waiting for data, as [`FakeReceiver::buffer`] says.
     buffering: bool,
+    /// The LOAD's metadata, said back with the media as a receiver does.
+    metadata: Value,
+    /// The LOAD's media `customData`, said back with the media to every sender as CAF does.
+    custom: Value,
 }
 
 impl Playing {
@@ -174,7 +265,14 @@ impl Playing {
         self.since = Instant::now();
     }
 
+    /// The status as a receiver sends it, with the media's description when `describe`: a
+    /// receiver includes it in the answer to a `LOAD` or a `GET_STATUS`, and leaves it out of the
+    /// statuses that follow a pause, a seek or a change in buffering.
     fn status(&self, idle_reason: Option<&str>, volume: &Value) -> Value {
+        self.status_of(idle_reason, volume, true)
+    }
+
+    fn status_of(&self, idle_reason: Option<&str>, volume: &Value, describe: bool) -> Value {
         let playing = if self.buffering { "BUFFERING" } else { self.state };
         let mut status = json!({
             "mediaSessionId": self.session,
@@ -186,10 +284,17 @@ impl Playing {
             "supportedMediaCommands": 12303,
             "volume": volume,
             "activeTrackIds": self.tracks,
-            "media": {"contentId": self.url, "duration": self.duration, "streamType": "BUFFERED"},
+            "media": {"contentId": self.url, "duration": self.duration, "streamType": "BUFFERED",
+                      "metadata": self.metadata},
         });
+        if !self.custom.is_null() {
+            status["media"]["customData"] = self.custom.clone();
+        }
         if let Some(reason) = idle_reason {
             status["idleReason"] = json!(reason);
+        }
+        if !describe && let Some(status) = status.as_object_mut() {
+            status.remove("media");
         }
         status
     }
@@ -213,31 +318,57 @@ impl FakeReceiver {
         let heard: Arc<Mutex<Vec<(String, Value)>>> = Arc::default();
         let fetched: Arc<Mutex<Vec<Fetched>>> = Arc::default();
         let (control, mut controls) = mpsc::unbounded_channel();
+        let kept: Arc<Mutex<Option<Kept>>> = Arc::default();
         let task = {
             let (heard, fetched) = (Arc::clone(&heard), Arc::clone(&fetched));
             tokio::spawn(async move {
                 // One sender at a time, as the tests have it; the next connection takes over.
                 let mut current: Option<JoinHandle<()>> = None;
                 let mut forward: Option<mpsc::UnboundedSender<Control>> = None;
+                // Gone silent, the TV answers no connection again: the socket is held unread.
+                let mut gone = false;
+                let mut held = Vec::new();
+                let mut answer_after = Duration::ZERO;
+                let mut unreachable_until: Option<tokio::time::Instant> = None;
                 loop {
                     tokio::select! {
                         accepted = listener.accept() => {
                             let Ok((socket, _)) = accepted else { return };
+                            let unreachable = unreachable_until
+                                .is_some_and(|until| tokio::time::Instant::now() < until);
+                            if gone || unreachable {
+                                held.push(socket);
+                                continue;
+                            }
                             let acceptor = acceptor.clone();
-                            let (heard, fetched, options) =
-                                (Arc::clone(&heard), Arc::clone(&fetched), options.clone());
+                            let (heard, fetched, options, kept) = (
+                                Arc::clone(&heard),
+                                Arc::clone(&fetched),
+                                options.clone(),
+                                Arc::clone(&kept),
+                            );
                             let (tx, rx) = mpsc::unbounded_channel();
                             forward = Some(tx);
                             if let Some(previous) = current.take() {
                                 previous.abort();
                             }
                             current = Some(tokio::spawn(async move {
+                                tokio::time::sleep(answer_after).await;
                                 if let Ok(tls) = acceptor.accept(socket).await {
-                                    let _ = serve(tls, heard, fetched, options, rx).await;
+                                    let _ = serve(tls, heard, fetched, options, rx, kept).await;
                                 }
                             }));
                         }
                         Some(control) = controls.recv() => {
+                            if let Control::AnswerAfter(after) = control {
+                                answer_after = after;
+                                continue;
+                            }
+                            if let Control::Unreachable(span) = control {
+                                unreachable_until = Some(tokio::time::Instant::now() + span);
+                                continue;
+                            }
+                            gone |= matches!(control, Control::Silence);
                             if let Some(forward) = &forward {
                                 let _ = forward.send(control);
                             }
@@ -262,21 +393,76 @@ impl FakeReceiver {
         lock(&self.fetched).clone()
     }
 
-    /// Another sender launches its own app, as when someone casts from their phone.
+    /// Another sender launches its own app, as when someone casts from their phone. As a TV
+    /// does, the app running closes first, with nothing running for a moment, before the other
+    /// app is up.
     pub fn take_over(&self) {
         let _ = self.control.send(Control::TakeOver);
     }
 
+    /// Another sender loads its own file on the receiver session this one plays on.
+    pub fn load_elsewhere(&self) {
+        let _ = self.control.send(Control::LoadElsewhere(Value::Null));
+    }
+
+    /// Another sender stops casting, as the sender that started what plays does with Stop
+    /// casting: the media ends as cancelled, then the receiver app is stopped and nothing runs.
+    pub fn stop_elsewhere(&self) {
+        let _ = self.control.send(Control::StopElsewhere);
+    }
+
+    /// Another sender loads its own file on the receiver session this one plays on, with
+    /// `custom` as the media's `customData`: another Kaeri device casting its next episode.
+    pub fn load_elsewhere_with(&self, custom: Value) {
+        let _ = self.control.send(Control::LoadElsewhere(custom));
+    }
+
     /// Say nothing more and read nothing more, with the connection left open: a TV switched
-    /// off at the wall, or gone from the Wi-Fi, which sends no FIN.
+    /// off at the wall, or gone from the Wi-Fi, which sends no FIN. It answers no connection again.
     pub fn go_silent(&self) {
         let _ = self.control.send(Control::Silence);
+    }
+
+    /// The connection this sender holds goes dead, unanswered and with no FIN, while the TV plays
+    /// on and answers the next one: a phone whose Wi-Fi naps with the screen off.
+    pub fn drop_connection(&self) {
+        let _ = self.control.send(Control::Drop);
+    }
+
+    /// Answer each connection from now only after `delay`: a TV slow to take a sender back, so
+    /// the time between a dropped connection and the next one can be seen.
+    pub fn answer_after(&self, delay: Duration) {
+        let _ = self.control.send(Control::AnswerAfter(delay));
+    }
+
+    /// Leave every connection made in the next `span` unanswered, held open with nothing said,
+    /// and answer those made after: the phone off the TV's network for a while, its tries going
+    /// nowhere, then back on it.
+    pub fn unreachable_for(&self, span: Duration) {
+        let _ = self.control.send(Control::Unreachable(span));
+    }
+
+    /// The receiver app is stopped on the TV, with its remote or from another phone's Cast card:
+    /// no app runs afterwards.
+    pub fn stop_app(&self) {
+        let _ = self.control.send(Control::StopApp);
+    }
+
+    /// The TV closes the connection this sender holds, with a FIN, and plays on and answers the
+    /// next one: a TV that drops its senders when its Wi-Fi roams.
+    pub fn close_connection(&self) {
+        let _ = self.control.send(Control::Close);
     }
 
     /// Wait for data, or stop waiting, and say so as the receiver's Shaka player does:
     /// `BUFFERING` with a `playbackRate` of 0, then the rate it plays at again.
     pub fn buffer(&self, waiting: bool) {
         let _ = self.control.send(Control::Buffering(waiting));
+    }
+
+    /// Say `message` on Kaeri's namespace from the receiver app, as Kaeri's receiver does.
+    pub fn say(&self, message: Value) {
+        let _ = self.control.send(Control::Say(message));
     }
 }
 
@@ -287,6 +473,7 @@ async fn serve(
     fetched: Arc<Mutex<Vec<Fetched>>>,
     options: FakeOptions,
     mut controls: mpsc::UnboundedReceiver<Control>,
+    kept: Arc<Mutex<Option<Kept>>>,
 ) -> std::io::Result<()> {
     let (mut read, mut write) = tokio::io::split(tls);
     let (tx, mut rx) = mpsc::unbounded_channel::<CastMessage>();
@@ -297,8 +484,8 @@ async fn serve(
             }
         }
     });
-    let transport = "web-1".to_owned();
-    let mut app: Option<(String, &'static str)> = None;
+    let mut transport = "web-1".to_owned();
+    let mut app: Option<(String, String)> = None;
     let mut playing: Option<Playing> = None;
     let mut next_session = 1;
     let mut level = 0.4;
@@ -308,26 +495,46 @@ async fn serve(
         let _ = tx.send(CastMessage::text(source, destination, namespace, payload.to_string()));
     };
     let volume = |level: f64, muted: bool| json!({"level": level, "muted": muted, "controlType": options.control, "stepInterval": 0.05});
-    let receiver_status = |app: &Option<(String, &'static str)>, request: u64, level, muted| {
+    // A media status carries the stream's own volume, never the TV's: a TV muted at the receiver
+    // still says its stream plays unmuted.
+    let stream = json!({"level": 1.0, "muted": false});
+    let receiver_status = |app: &Option<(String, String)>, request: u64, level, muted| {
         let applications: Vec<Value> = app
             .iter()
             .map(|(session, id)| {
                 json!({"appId": id, "displayName": "Receiver", "sessionId": session,
-                       "transportId": if *id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" },
+                       "transportId": if id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" },
                        "isIdleScreen": false, "namespaces": [{"name": NS_MEDIA}]})
             })
             .collect();
         json!({"type": "RECEIVER_STATUS", "requestId": request, "status": {
             "applications": applications, "volume": volume(level, muted)}})
     };
+    if options.remembers
+        && let Some(was) = lock(&kept).clone()
+    {
+        (transport, app, playing, next_session, level, muted) =
+            (was.transport, was.app, was.playing, was.next_session, was.level, was.muted);
+    }
     let mut sender = String::from("*");
     loop {
+        // Kept before each wait: a connection ends only there, when the next one takes over.
+        if options.remembers {
+            *lock(&kept) = Some(Kept {
+                transport: transport.clone(),
+                app: app.clone(),
+                playing: playing.clone(),
+                next_session,
+                level,
+                muted,
+            });
+        }
         tokio::select! {
             _ = ticker.tick() => {
                 if let Some(p) = playing.as_mut() {
                     p.advance(options.speed);
                     if p.position >= p.duration {
-                        let done = p.status(Some("FINISHED"), &volume(level, muted));
+                        let done = p.status(Some("FINISHED"), &stream);
                         playing = None;
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0, "status": [done]}));
                     }
@@ -335,23 +542,69 @@ async fn serve(
             }
             Some(control) = controls.recv() => match control {
                 Control::TakeOver => {
-                    app = Some(("someone-else".into(), "E0000000"));
+                    if app.take().is_some() {
+                        send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                        send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                        tokio::time::sleep(TAKEOVER_GAP).await;
+                    }
+                    app = Some(("someone-else".into(), "E0000000".into()));
                     playing = None;
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
                 }
-                Control::Silence => {
+                Control::Silence | Control::Drop => {
                     // Holding the socket, the writer and all, and never touching it again.
                     let _held = (&read, &tx);
                     std::future::pending::<()>().await;
+                }
+                // Kept above, so the next connection finds the TV as it was.
+                Control::Close => return Ok(()),
+                Control::StopApp => {
+                    // The app's connection closes first, then the status says nothing runs.
+                    if app.take().is_some() {
+                        send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                    }
+                    playing = None;
+                    send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                }
+                Control::StopElsewhere => {
+                    if let Some(old) = playing.take() {
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [old.status(Some("CANCELLED"), &stream)]}));
+                    }
+                    if app.take().is_some() {
+                        send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                    }
+                    send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                }
+                Control::LoadElsewhere(custom) => {
+                    if let Some(old) = playing.take() {
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [old.status(Some("INTERRUPTED"), &stream)]}));
+                        let theirs = Playing {
+                            session: next_session,
+                            url: "http://elsewhere.example/theirs.mp4".into(),
+                            position: 0.0,
+                            since: Instant::now(),
+                            custom,
+                            ..old
+                        };
+                        next_session += 1;
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [theirs.status(None, &stream)]}));
+                        playing = Some(theirs);
+                    }
                 }
                 Control::Buffering(waiting) => {
                     if let Some(p) = playing.as_mut() {
                         p.advance(options.speed);
                         p.buffering = waiting;
                         send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                            "status": [p.status(None, &volume(level, muted))]}));
+                            "status": [p.status_of(None, &stream, options.echo == Echo::Full)]}));
                     }
                 }
+                Control::Say(message) => send(&transport, "*", NS_KAERI, message),
+                // Taken by the listener, never sent to a connection.
+                Control::AnswerAfter(_) | Control::Unreachable(_) => {}
             },
             frame = read_frame(&mut read) => {
                 let Some(message) = frame? else { return Ok(()) };
@@ -367,18 +620,46 @@ async fn serve(
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
                     }
                     (NS_RECEIVER, "SET_VOLUME") => {
-                        if options.control != "fixed" && let Some(l) = payload["volume"]["level"].as_f64() {
+                        let asked = &payload["volume"];
+                        if (options.refuses_level && asked.get("level").is_some())
+                            || (options.refuses_mute && asked.get("muted").is_some())
+                        {
+                            send("receiver-0", &sender, NS_RECEIVER, json!({"type": "INVALID_REQUEST", "requestId": request, "reason": "INVALID_COMMAND"}));
+                            continue;
+                        }
+                        if let Some(l) = asked["level"].as_f64() {
                             level = l;
                         }
-                        if let Some(m) = payload["volume"]["muted"].as_bool() {
+                        if let Some(m) = asked["muted"].as_bool() {
                             muted = m;
                         }
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
                     }
                     (NS_RECEIVER, "LAUNCH") => {
                         tokio::time::sleep(options.launch).await;
-                        app = Some((format!("session-{request}"), DEFAULT_MEDIA_RECEIVER));
+                        let id = payload["appId"].as_str().unwrap_or(DEFAULT_MEDIA_RECEIVER).to_owned();
+                        if id != DEFAULT_MEDIA_RECEIVER && options.custom == CustomReceiver::Unknown {
+                            send("receiver-0", &sender, NS_RECEIVER, json!({
+                                "type": "LAUNCH_ERROR", "requestId": request, "reason": "NOT_FOUND"}));
+                            continue;
+                        }
+                        // A TV that keeps its app between senders joins the one that runs when
+                        // it is launched again, with what it plays.
+                        let running = options.remembers
+                            && app.as_ref().is_some_and(|(_, running)| *running == id);
+                        if !running {
+                            transport = if id == DEFAULT_MEDIA_RECEIVER { "web-1" } else { "web-9" }.to_owned();
+                            playing = None;
+                            app = Some((format!("session-{request}"), id));
+                        }
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
+                    }
+                    (NS_KAERI, "hello") => {
+                        let custom = app.as_ref().is_some_and(|(_, id)| id != DEFAULT_MEDIA_RECEIVER);
+                        if custom && options.custom != CustomReceiver::Silent {
+                            send(&transport, &sender, NS_KAERI, json!({"type": "ready", "version": 1,
+                                "build": "fake", "caps": {"typeset": true, "audioSwitch": true}}));
+                        }
                     }
                     (NS_RECEIVER, "STOP") => {
                         app = None;
@@ -387,6 +668,39 @@ async fn serve(
                         send("receiver-0", &sender, NS_RECEIVER, receiver_status(&app, request, level, muted));
                     }
                     (NS_MEDIA, "LOAD") => {
+                        let custom = app.as_ref().is_some_and(|(_, id)| id != DEFAULT_MEDIA_RECEIVER);
+                        if custom && options.custom == CustomReceiver::Silent {
+                            continue;
+                        }
+                        if custom && options.custom == CustomReceiver::ClosesAtLoad {
+                            // The receiver page failed: its connection closes, the load goes
+                            // unanswered, and the TV lists the app still.
+                            playing = None;
+                            send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                            continue;
+                        }
+                        if custom && options.custom == CustomReceiver::StoppedAtLoad {
+                            app = None;
+                            playing = None;
+                            send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                            send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                            continue;
+                        }
+                        if custom && options.custom == CustomReceiver::StoppedWhileLoading {
+                            let session = next_session;
+                            next_session += 1;
+                            send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                                "status": [{"mediaSessionId": session, "playbackRate": 1.0, "playerState": "LOADING",
+                                    "currentTime": 0.0, "supportedMediaCommands": 12303, "volume": stream,
+                                    "media": {"contentId": payload["media"]["contentId"], "duration": options.duration,
+                                        "streamType": "BUFFERED"}}]}));
+                            tokio::time::sleep(Duration::from_millis(200)).await;
+                            app = None;
+                            playing = None;
+                            send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
+                            send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                            continue;
+                        }
                         if !options.fetches {
                             // A TV that can't reach the sender: the load hangs.
                             continue;
@@ -415,6 +729,9 @@ async fn serve(
                                 .filter(|_| options.refuse.content_types.contains(&content_type)),
                             Err(_) => Some(Refusal::LoadFailed),
                         };
+                        if let Some(said) = options.refuse.says.clone().filter(|_| custom && refused.is_some()) {
+                            send(&transport, "*", NS_KAERI, said);
+                        }
                         if refused == Some(Refusal::LoadFailed) {
                             send(&transport, &sender, NS_MEDIA, json!({
                                 "type": "LOAD_FAILED", "requestId": request, "detailedErrorCode": 104}));
@@ -425,7 +742,7 @@ async fn serve(
                         next_session += 1;
                         if let Some(old) = playing.take() {
                             send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                                "status": [old.status(Some("INTERRUPTED"), &volume(level, muted))]}));
+                                "status": [old.status(Some("INTERRUPTED"), &stream)]}));
                         }
                         let p = Playing {
                             session,
@@ -438,15 +755,17 @@ async fn serve(
                             since: Instant::now(),
                             stalled: refused == Some(Refusal::Stall),
                             buffering: false,
+                            metadata: payload["media"]["metadata"].clone(),
+                            custom: payload["media"]["customData"].clone(),
                         };
-                        send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &volume(level, muted))]}));
+                        send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [p.status(None, &stream)]}));
                         if refused == Some(Refusal::Error) {
                             send(&transport, "*", NS_MEDIA, json!({"type": "ERROR", "requestId": 0, "detailedErrorCode": 100}));
                             continue;
                         }
                         if refused == Some(Refusal::IdleError) {
                             send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
-                                "status": [p.status(Some("ERROR"), &volume(level, muted))]}));
+                                "status": [p.status(Some("ERROR"), &stream)]}));
                         } else {
                             playing = Some(p);
                         }
@@ -467,9 +786,12 @@ async fn serve(
                             "STOP" => idle = Some("CANCELLED"),
                             _ => {}
                         }
-                        let status = p.status(idle, &volume(level, muted));
+                        let status = p.status_of(idle, &stream, kind == "GET_STATUS" || options.echo == Echo::Full);
                         if idle.is_some() {
                             playing = None;
+                        }
+                        if let Echo::Late(late) = options.echo {
+                            tokio::time::sleep(late).await;
                         }
                         send(&transport, &sender, NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": request, "status": [status]}));
                     }
@@ -542,6 +864,17 @@ async fn fetch_like_a_receiver(
     }
     let mut url = url.to_owned();
     let mut text = String::from_utf8_lossy(&body).into_owned();
+    // The audio rendition its player plays: the default one, as a receiver with nothing else
+    // to go by picks.
+    if let Some(audio) = text.lines().find_map(|l| {
+        let at = l.find("URI=\"")? + 5;
+        (l.starts_with("#EXT-X-MEDIA:")
+            && l.contains("TYPE=AUDIO")
+            && l.contains("DEFAULT=YES"))
+        .then(|| l[at..].split('"').next().map(str::to_owned))?
+    }) {
+        note(get(resolve(&url, &audio)).await?, false)?;
+    }
     if let Some(variant) = text
         .lines()
         .skip_while(|l| !l.starts_with("#EXT-X-STREAM-INF"))

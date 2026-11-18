@@ -57,8 +57,11 @@ public sealed class Jobs
     public void Clear() => running.Clear();
 }
 
-/// <summary>A notice as Messages keeps it: when it was said, its words, and whether it was an alert.</summary>
-public sealed record Said(DateTimeOffset At, string Text, bool Alert);
+/// <summary>
+/// A notice as Messages keeps it: when it was said, its words, whether it was an alert, and
+/// whether a playback was starting or under way then, so its Report starts with the player log.
+/// </summary>
+public sealed record Said(DateTimeOffset At, string Text, bool Alert, bool Playback = false);
 
 /// <summary>
 /// Every notice this run, newest first, the last 200: the TUI's recent messages and the Mac's
@@ -76,11 +79,11 @@ public sealed class NoticeLog
     /// <summary>Raised with each notice kept.</summary>
     public event Action<Said>? Added;
 
-    public void Add(string text, bool alert, DateTimeOffset at)
+    public void Add(string text, bool alert, DateTimeOffset at, bool playback = false)
     {
         if (text.Length == 0)
             return;
-        var item = new Said(at, text, alert);
+        var item = new Said(at, text, alert, playback);
         said.Insert(0, item);
         if (said.Count > Kept)
             said.RemoveRange(Kept, said.Count - Kept);

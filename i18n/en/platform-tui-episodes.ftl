@@ -376,3 +376,7 @@ episodes-release-dub = { -dubbed-cap }
 # After a { -release } in the picker: it is the one Kaeri would play on its own.
 # @only tui
 episodes-release-current-pick = Current pick
+
+# Replaces the missing-episode status on the title page while a check runs.
+# @only tui
+episode-missing-checking = Checking your { -source-pl }…

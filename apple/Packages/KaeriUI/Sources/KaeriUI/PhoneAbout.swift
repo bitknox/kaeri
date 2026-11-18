@@ -43,7 +43,7 @@ struct PhoneAboutPage: View {
                         .buttonStyle(SecondaryCapsuleStyle(height: 44, fontSize: 17))
                 }
                 .padding(.top, 28)
-                Button(L.aboutReportBug) { ReportBugAction(store: store, navigator: navigator)() }
+                Button(L.aboutReportBug) { ReportBugAction(store: store, navigator: navigator).fromSettings() }
                     .buttonStyle(SecondaryCapsuleStyle(height: 44, fontSize: 17))
                     .padding(.top, 10)
                 Text(L.aboutReportBugDetail)

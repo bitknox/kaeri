@@ -54,7 +54,14 @@ struct Started {
 
 fn start() -> Started {
     let root = tempfile::tempdir().expect("a temporary directory");
-    let dir = |name: &str| root.path().join(name).display().to_string();
+    let started = start_in(root.path());
+    Started { _root: root, ..started }
+}
+
+/// A testing engine over the folders in `root`, which outlive it: what an app opened again
+/// finds.
+fn start_in(root: &std::path::Path) -> Started {
+    let dir = |name: &str| root.join(name).display().to_string();
     let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
     let engine =
         FfiEngine::start_testing(dirs, Arc::new(Keychain::default()), FfiStart::default())
@@ -74,7 +81,7 @@ fn start() -> Started {
             }
         }
     });
-    Started { engine, events, _root: root }
+    Started { engine, events, _root: tempfile::tempdir().expect("a temporary directory") }
 }
 
 impl Started {
@@ -305,6 +312,10 @@ fn fake_cast_options() -> kaeri_ffi::FfiFakeCastOptions {
         fetches: true,
         refuses: false,
         launch_ms: 0,
+        full_statuses: false,
+        answer_late_ms: None,
+        remembers: false,
+        own_receiver_fails: false,
     }
 }
 
@@ -356,10 +367,11 @@ fn a_fixtures_cast_plays_on_a_fake_tv_and_one_that_refuses_says_why() {
     let card = until("the cast playing", || {
         Some(cast.card()).filter(|c| c.card.now.as_ref().is_some_and(|n| !n.loading))
     });
-    assert_eq!(card.volume_control, kaeri_ffi::FfiVolumeControl::MuteOnly);
+    // The fake TV's volume is fixed: the TV's own remote sets it, so the card offers no mute.
+    assert_eq!(card.volume_control, kaeri_ffi::FfiVolumeControl::Fixed);
+    assert!(!card.can_mute);
+    assert!(!sender.cast_state().can_mute);
     assert!(card.notice.is_none());
-    cast.command(FfiTvCommand::Mute { muted: true });
-    until("muted", || Some(cast.card()).filter(|c| c.muted == Some(true)));
     cast.stop();
     until("stopped", || Some(cast.card()).filter(|c| c.card.over));
 
@@ -373,4 +385,154 @@ fn a_fixtures_cast_plays_on_a_fake_tv_and_one_that_refuses_says_why() {
     living.stop();
     kitchen.stop();
     phone.engine.shutdown();
+}
+
+/// A phone casting to a fake TV: the TV's engine, the TV, the phone's engine, its sender and
+/// where the record of the cast is.
+struct Casting {
+    tv: Started,
+    living: Arc<kaeri_ffi::FfiFakeCast>,
+    phone: Started,
+    sender: Arc<kaeri_ffi::FfiTvSender>,
+    path: std::path::PathBuf,
+}
+
+/// A phone casting episode 3 to a fake "Living room" from an engine over `root`, once the
+/// record of the cast names it.
+fn casting_from(root: &std::path::Path) -> Casting {
+    let tv = start();
+    let living = tv
+        .engine
+        .start_fake_cast(
+            "Living room".into(),
+            kaeri_ffi::FfiFakeCastOptions { remembers: true, ..fake_cast_options() },
+        )
+        .unwrap();
+    let phone = start_in(root);
+    let sender = phone.engine.tv_sender("Mika's laptop".into(), "kaeri-test/0".into()).unwrap();
+    sender.browse_cast(Arc::new(CastBrowse(vec![living.clone()])));
+    let rows =
+        until("the TV listed", || Some(sender.cast_rows()).filter(|rows| rows.len() == 1));
+    let cast = sender.cast(rows[0].key.clone(), fixtures::FINISHED, "3".into(), None).unwrap();
+    until("the cast playing", || {
+        Some(cast.card()).filter(|c| c.card.now.as_ref().is_some_and(|n| !n.loading))
+    });
+    let path = root.join("data").join("remote").join("cast-session.json");
+    // Kept with the episode on the TV once it plays.
+    let record = until("the record names the episode", || {
+        std::fs::read(&path).ok().filter(|bytes| {
+            serde_json::from_slice::<serde_json::Value>(bytes)
+                .is_ok_and(|r| r["card"] == serde_json::json!([fixtures::FINISHED.get(), "3"]))
+        })
+    });
+    let record: serde_json::Value = serde_json::from_slice(&record).unwrap();
+    assert!(record["tv"]["address"].is_string(), "{record}");
+    drop(cast);
+    Casting { tv, living, phone, sender, path }
+}
+
+/// The app opened again over `root` joins the TV quietly, never as connecting.
+fn joined_again(root: &std::path::Path) -> Started {
+    let again = start_in(root);
+    let sender = again.engine.tv_sender("Mika's laptop".into(), "kaeri-test/0".into()).unwrap();
+    let view = until("joined at launch", || {
+        let view = sender.cast_state();
+        assert_ne!(view.state, kaeri_ffi::FfiCastSessionState::Connecting, "{view:?}");
+        Some(view).filter(|v| v.state == kaeri_ffi::FfiCastSessionState::Playing)
+    });
+    assert_eq!(view.device_name.as_deref(), Some("Living room"));
+    again
+}
+
+/// The cast an app leaves running is joined again when it is opened: the testing engine keeps
+/// the record in its data folder as the app's engine does, and the next launch over that folder
+/// joins the TV quietly. Here the system ends the app, with no winding down.
+#[test]
+fn a_cast_left_running_is_joined_again_by_the_next_launch_over_the_same_folders() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let Casting { tv, living, phone, sender, .. } = casting_from(root.path());
+    drop(sender);
+    phone.engine.end_abruptly();
+    drop(phone);
+
+    let again = joined_again(root.path());
+    living.stop();
+    again.engine.shutdown();
+    tv.engine.shutdown();
+}
+
+/// An engine started for a background task over the app's folders, as a scheduled refresh or a
+/// notification's action starts one with every switch off, neither reaches for the TV a cast
+/// was left running on nor touches its record. The app opened after it still joins the cast.
+#[test]
+fn a_background_engine_leaves_the_cast_and_its_record_alone() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let Casting { tv, living, phone, sender, path } = casting_from(root.path());
+    drop(sender);
+    phone.engine.end_abruptly();
+    drop(phone);
+    let record = std::fs::read(&path).unwrap();
+    let connects = living.heard("CONNECT");
+
+    let dir = |name: &str| root.path().join(name).display().to_string();
+    let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
+    let quiet = kaeri_ffi::FfiBackground {
+        prune: false,
+        update_check: false,
+        digest: false,
+        datasets: false,
+        sync_loops: false,
+        store_refresh: false,
+        player_check: false,
+        keep_next: false,
+        rejoin_cast: false,
+    };
+    let background =
+        FfiEngine::start_testing_in_background(dirs, Arc::new(Keychain::default()), quiet)
+            .expect("the engine starts");
+    thread::sleep(Duration::from_secs(2));
+    background.shutdown();
+    assert_eq!(living.heard("CONNECT"), connects, "the TV was not reached");
+    assert_eq!(std::fs::read(&path).ok(), Some(record), "the record is untouched");
+
+    let again = joined_again(root.path());
+    living.stop();
+    again.engine.shutdown();
+    tv.engine.shutdown();
+}
+
+/// Quitting the app, as an iPhone swiped away or a desktop app closed with no question, leaves
+/// the TV playing and its record kept: the next launch joins it.
+#[test]
+fn quitting_the_app_leaves_the_cast_playing_for_the_next_launch_to_join() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let Casting { tv, living, phone, sender, path } = casting_from(root.path());
+    let stops = living.heard("STOP");
+    drop(sender);
+    phone.engine.shutdown();
+    drop(phone);
+    assert_eq!(living.heard("STOP"), stops, "the TV was told nothing");
+    assert!(path.exists(), "the record stays");
+
+    let again = joined_again(root.path());
+    living.stop();
+    again.engine.shutdown();
+    tv.engine.shutdown();
+}
+
+/// Stop casting sent just ahead of the quit, as a desktop's quit question does, stops the TV
+/// before the app goes, and leaves nothing for the next launch to join.
+#[test]
+fn stop_casting_then_quitting_stops_the_tv_before_the_app_goes() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let Casting { tv, living, phone, sender, path } = casting_from(root.path());
+    let stops = living.heard("STOP");
+    sender.cast_disconnect();
+    phone.engine.shutdown();
+    drop(sender);
+    drop(phone);
+    assert!(living.heard("STOP") > stops, "the TV was told to stop");
+    assert!(!path.exists(), "no record is left");
+    living.stop();
+    tv.engine.shutdown();
 }

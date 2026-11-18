@@ -300,6 +300,7 @@ read-search-source-kind-server = Serveur
 read-search-source-kind-folder = Dossier
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Afficher { $n } de plus
+read-tile-add-to = Ajouter à la liste { $list }
 onboarding-step = { $step } sur { $total }
 onboarding-welcome-line = Suivez ce que vous regardez et lisez, depuis vos propres { -source-pl }.
 onboarding-welcome-note = Vos listes et votre progression restent sur vos { -device-pl }. Les { -tracker-cap-pl } et les { -source-pl } sont à vous d'ajouter.
@@ -334,17 +335,17 @@ medium-choice-position = { $n } sur { $total }
 medium-change-later = Vous pouvez le changer dans Réglages.
 medium-update-line = { -app-name } peut maintenant lire des mangas, webtoons et light novels de vos { -source-pl }. Choisissez à quoi sert { -app-name } sur { $device }.
 medium-join-title-watch = { $n ->
-    [one] { $devices } est réglé sur regarder
+    [one] { $n } { -device } réglé sur regarder : { $devices }
     [many] { $devices } sont réglés sur regarder
    *[other] { $devices } sont réglés sur regarder
  }
 medium-join-title-read = { $n ->
-    [one] { $devices } est réglé sur lire
+    [one] { $n } { -device } réglé sur lire : { $devices }
     [many] { $devices } sont réglés sur lire
    *[other] { $devices } sont réglés sur lire
  }
 medium-join-title-both = { $n ->
-    [one] { $devices } est réglé sur regarder et lire
+    [one] { $n } { -device } réglé sur regarder et lire : { $devices }
     [many] { $devices } sont réglés sur regarder et lire
    *[other] { $devices } sont réglés sur regarder et lire
  }

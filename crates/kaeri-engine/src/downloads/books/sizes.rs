@@ -78,7 +78,7 @@ pub(crate) struct Kept {
 pub(crate) fn series(
     store: &Store,
     rows: &[BookDownload],
-    wifi: bool,
+    (wifi, room): (bool, bool),
     form: kaeri_store::shelf::TitleForm,
 ) -> (Vec<BookDownloadSeries>, u64, Kept) {
     let mut kept_all = Kept::default();
@@ -156,6 +156,9 @@ pub(crate) fn series(
                 line.push(r(ReadingMsg::ReadingDlQueued { count: count(waiting) }));
                 if wifi {
                     line.push(r(ReadingMsg::ReadingDlWaitsWifi));
+                } else if room {
+                    // Paused for a full device: they go on once there is room.
+                    line.push(r(ReadingMsg::ReadingDlNoRoom { count: count(waiting) }));
                 }
             }
         }

@@ -186,6 +186,7 @@ pub fn join_with(
         tx: tx.clone(),
         internal,
         terminal: services.every_play_a_party,
+        privacy: services.privacy.clone(),
     };
     let view = PartyView {
         server: address.clone(),
@@ -533,6 +534,8 @@ struct Env {
     internal: mpsc::UnboundedSender<Internal>,
     /// The terminal, which has no lobby to go back to: closing its player leaves the party.
     terminal: bool,
+    /// While private, or for an always-private show, the room is not kept among the recent ones.
+    privacy: std::sync::Arc<crate::private::Privacy>,
 }
 
 /// The two episodes a room is set to: the one it watches and the one after it.
@@ -1024,6 +1027,9 @@ impl Task {
     fn remember(&self) {
         let Some(room) = &self.view.room_episode else { return };
         let Some(id) = room.id else { return };
+        if self.env.privacy.holds_show(id) {
+            return;
+        }
         let kept = PartyRoom {
             server: self.view.server.clone(),
             room: self.view.room.clone(),

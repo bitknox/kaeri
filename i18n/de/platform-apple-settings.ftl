@@ -121,3 +121,6 @@ settings-trailers-row = Trailer abspielen
 settings-trailers-note-apple = Trailer laufen stumm über YouTube, das deine IP-Adresse sieht. Sie spielen nicht im Modus für geringe Datenmenge, bei aktivierter Option „Bewegung reduzieren“ oder im Energiesparmodus.
 language-restart = Neu starten
 language-next-open-note = { -app-name } nutzt die neue Sprache beim nächsten Öffnen.
+settings-picture-in-picture-on-leave-apple = Bild-in-Bild beim Verlassen der App
+settings-picture-in-picture-on-leave-mac = Startet, wenn das Fenster minimiert oder { -app-name } ausgeblendet wird.
+settings-picture-in-picture-on-leave-ios = Braucht auch „PiP automatisch starten“ unter Einstellungen > Allgemein > Bild-in-Bild.

@@ -4,12 +4,19 @@
 //! The terminal writes `kaeri.log.<date>`; the app writes `app.log.<date>` next to it, so the
 //! two never interleave and either can be read on its own. `KAERI_LOG` sets the filter, as
 //! for the terminal; the default is `info`.
+//!
+//! Beside the file, the engine's player log keeps the last few playbacks for Report a bug
+//! ([`kaeri_engine::player_log`]), whatever `KAERI_LOG` says, mirrored to its own file in the same
+//! folder. A hosted player feeds it mpv's lines at info level with
+//! `log_line(Info, "mpv", line)` while a playback runs.
 
 use std::path::Path;
 use std::sync::OnceLock;
 
 use tracing_appender::non_blocking::WorkerGuard;
-use tracing_subscriber::{EnvFilter, fmt};
+use tracing_subscriber::{
+    EnvFilter, Layer, fmt, layer::SubscriberExt, util::SubscriberInitExt,
+};
 
 /// Keeps the log's writer thread for the life of the process: lines are written off the
 /// engine's threads and the app's main thread, and flushed as the process exits.
@@ -38,16 +45,23 @@ pub fn start_log(cache: String) -> bool {
     }
     let (writer, guard) =
         tracing_appender::non_blocking(tracing_appender::rolling::daily(&dir, "app.log"));
-    let started = fmt()
-        .with_writer(writer)
+    // What is private is taken out of each file line: see `kaeri_engine::private::redact`.
+    // Each layer filters for itself: `KAERI_LOG` is the file's, and the player log keeps the
+    // player's info lines whatever it says.
+    let file = fmt::layer()
+        .with_writer(move || kaeri_engine::private::redact::Redacting(writer.clone()))
         .with_ansi(false)
-        .with_env_filter(
+        .with_filter(
             EnvFilter::try_from_env("KAERI_LOG").unwrap_or_else(|_| EnvFilter::new("info")),
-        )
+        );
+    let started = tracing_subscriber::registry()
+        .with(file)
+        .with(kaeri_engine::player_log::layer())
         .try_init()
         .is_ok();
     if started {
         let _ = WRITER.set(guard);
+        kaeri_engine::player_log::mirror_to(&dir);
         log_panics();
     }
     started
@@ -72,6 +86,11 @@ fn log_panics() {
 }
 
 /// One line from the app, under `source` (`player`, `store`), into the same log.
+///
+/// Lines under source `player` or `mpv` at info level and above also go into the player log,
+/// under the playback under way: a hosted player sends each of mpv's info lines as
+/// `log_line(Info, "mpv", "[cplayer] Playing: ...")`, its prefix in brackets as mpv names it.
+/// Addresses in them are cut to their host as they come in.
 #[uniffi::export]
 pub fn log_line(level: FfiLogLevel, source: String, message: String) {
     match level {
@@ -98,9 +117,11 @@ mod tests {
         log_line(FfiLogLevel::Info, "player".into(), "opened in 12 ms".into());
         // The writer is a thread of its own: give it the line.
         std::thread::sleep(std::time::Duration::from_millis(200));
+        // The player log's mirror sits beside it, made the first time a line comes in.
         let written: Vec<_> = std::fs::read_dir(dir.path().join("logs"))
             .expect("the logs directory")
             .map(|entry| entry.expect("an entry").file_name().to_string_lossy().into_owned())
+            .filter(|name| name != kaeri_engine::player_log::FILE)
             .collect();
         assert_eq!(written.len(), 1, "{written:?}");
         assert!(written[0].starts_with("app.log."), "{written:?}");

@@ -9,6 +9,8 @@
 //! - the paired TVs, for Settings.
 
 pub(crate) mod avahi;
+pub mod bar;
+pub mod button;
 pub mod cast;
 #[cfg(feature = "fixtures")]
 pub mod fixture;
@@ -100,9 +102,9 @@ pub struct Tv {
     cast: RefCell<Option<cast::CastRun>>,
     /// Counts up with each cast, so a card from one let go is not taken.
     cast_turn: Cell<u64>,
-    /// The episode of a cast someone else took the TV from, for the notice's Play here.
+    /// The episode of a cast that ended from afar, for the notice's Play here.
     taken: RefCell<Option<(AnilistId, String)>>,
-    on_taken_over: RefCell<Option<Notice>>,
+    on_ended_away: RefCell<Option<Notice>>,
     paired: RefCell<Vec<KnownTv>>,
     browsers: Cell<u32>,
     request: RefCell<Option<Request>>,
@@ -129,6 +131,12 @@ pub struct Tv {
     next_listener: Cell<u64>,
     /// Run once a hand-over from the player has reached the TV: the player closes.
     handed_off: RefCell<Option<Box<dyn Fn()>>>,
+    /// Runs when a cast starts: the notice of one taken over goes.
+    cast_started: RefCell<Option<Box<dyn Fn()>>>,
+    /// The engine's note on the TV held, as last said: the TV plays in its own player, or shows
+    /// plain subtitles. Said once each time it reads differently.
+    cast_noted: RefCell<Option<kaeri_model::Msg>>,
+    on_cast_note: RefCell<Option<Notice>>,
 }
 
 impl Tv {
@@ -166,7 +174,7 @@ impl Tv {
             cast: RefCell::default(),
             cast_turn: Cell::new(0),
             taken: RefCell::default(),
-            on_taken_over: RefCell::default(),
+            on_ended_away: RefCell::default(),
             paired: RefCell::default(),
             browsers: Cell::new(0),
             request: RefCell::default(),
@@ -186,6 +194,9 @@ impl Tv {
             listeners: RefCell::default(),
             next_listener: Cell::new(0),
             handed_off: RefCell::default(),
+            cast_started: RefCell::default(),
+            cast_noted: RefCell::default(),
+            on_cast_note: RefCell::default(),
         });
         tv.refresh();
         tv.follow_changes();
@@ -212,6 +223,11 @@ impl Tv {
     /// What closes the player once a hand-over reached the TV.
     pub fn on_handed_off(&self, f: impl Fn() + 'static) {
         self.handed_off.replace(Some(Box::new(f)));
+    }
+
+    /// Run `f` whenever a cast starts.
+    pub fn on_cast_started(&self, f: impl Fn() + 'static) {
+        self.cast_started.replace(Some(Box::new(f)));
     }
 
     fn changed(&self) {
@@ -250,6 +266,25 @@ impl Tv {
                 while rx.try_recv().is_ok() {}
                 let Some(tv) = me.upgrade() else { return };
                 tv.refresh();
+            }
+        });
+        // The cast session, for the header's button: connecting, connected, nothing playing.
+        let Some(mut cast) = sender.cast_changes() else { return };
+        let (tx, rx) = async_channel::unbounded::<()>();
+        self.handle.spawn(async move {
+            while cast.changed().await.is_ok() {
+                if tx.send(()).await.is_err() {
+                    return;
+                }
+            }
+        });
+        let me = self.me.clone();
+        glib::spawn_future_local(async move {
+            while rx.recv().await.is_ok() {
+                while rx.try_recv().is_ok() {}
+                let Some(tv) = me.upgrade() else { return };
+                tv.say_cast_note();
+                tv.changed();
             }
         });
     }
@@ -370,8 +405,17 @@ impl Tv {
         }
         self.problem.replace(None);
         self.request.replace(Some(request));
-        match self.connected() {
-            Some(tv) if self.live() => self.play_on(tv),
+        let held = self.cast_held();
+        match (self.connected(), held) {
+            (Some(tv), _) if self.live() => self.play_on(tv),
+            // Connected first from the header's button: the episode goes to that TV.
+            (_, Some(key)) => {
+                let request = self.request.take();
+                if let Some(request) = request {
+                    self.start_cast(key, request);
+                }
+                return;
+            }
             _ => self.sheet.set(Some(Sheet::Picker)),
         }
         self.changed();
@@ -390,7 +434,8 @@ impl Tv {
 
     /// The card of the TV driven, or the picker when there is none.
     pub fn open_remote(&self) {
-        if self.casting() {
+        // A cast another device started and this computer joined has the same remote.
+        if self.casting() || self.join_cast() {
             self.cast_reopened();
             self.sheet.set(Some(Sheet::Remote));
             self.changed();

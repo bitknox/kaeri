@@ -12,3 +12,6 @@ tui-together-not-a-link = Itu bukan tautan atau kode { -watch-party }.
 tui-together-recent-alone = Episode { $episode } · { $when }
 tui-medium-read-change = Tekan { $key } untuk mengubah fungsi { -app-name }.
 tui-medium-settings-hint = { $key } untuk mengubah
+report-player-log-save-here = Simpan log pemutar
+report-player-log-saved-to = Log pemutar disimpan ke { $path }
+report-player-log-failed-here = Log tidak bisa disimpan ke { $folder }.

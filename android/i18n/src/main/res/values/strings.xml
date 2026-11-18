@@ -24,6 +24,16 @@
     <string name="notice_cast_not_same_network">This device isn\'t on the network %1$s is on, or reaches it through a VPN. Connect both to the same network to cast.</string>
     <!-- The TV stopped answering mid-cast. The name is the TV's own. -->
     <string name="notice_cast_lost">Lost %1$s, so casting stopped.</string>
+    <!-- The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own. -->
+    <string name="notice_cast_stopped_elsewhere">%1$s stopped the cast.</string>
+    <!-- Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own. -->
+    <string name="notice_cast_segment">%1$s stopped getting the stream: the source didn\'t answer for part of the episode. Try another source.</string>
+    <!-- The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own. -->
+    <string name="notice_cast_lost_stream">%1$s lost the stream from this device. Check that both are on the same network.</string>
+    <!-- Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own. -->
+    <string name="notice_cast_subtitles_plain">Subtitles on %1$s show as plain text. Typeset subtitles were too much for it.</string>
+    <!-- Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own. -->
+    <string name="notice_cast_fallback">%1$s plays this in its own player. Subtitles show as plain text.</string>
     <!-- The TV picked to cast to has left the network. -->
     <string name="notice_cast_no_device">That TV is no longer on the network.</string>
     <!-- This build of the app has no casting. -->
@@ -181,6 +191,13 @@
     <string name="cause_release_failed">Couldn\'t start that release: %1$s</string>
     <!-- Reason: a play waited too long for its sources to give it a stream, and gave up. -->
     <string name="cause_sources_timed_out">The sources took too long to answer. Try again, or choose another source.</string>
+    <!-- Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas. -->
+    <string name="cause_sources_unreached">Couldn\'t reach %1$s. Try again, or choose another source.</string>
+    <!-- Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label. -->
+    <plurals name="cause_sources_not_asked">
+        <item quantity="one">No source that was asked has episode %3$s. %2$s wasn\'t asked.</item>
+        <item quantity="other">No source that was asked has episode %3$s. %2$s weren\'t asked.</item>
+    </plurals>
     <!-- Reason: every source matched the title but none has the episode. The detail is what each said. -->
     <string name="cause_no_source_has_episode">No source has episode %1$s: %2$s</string>
     <!-- Reason: the source streams episodes but only torrents can be downloaded. -->
@@ -223,6 +240,10 @@
     <string name="notice_player_failed_to_start">Couldn\'t start mpv. Check that it runs on its own. (%1$s)</string>
     <!-- Toast when a stream never showed a frame and the next one is tried. -->
     <string name="notice_stream_no_video">No video from that stream. Trying %1$,d of %2$,d.</string>
+    <!-- Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name. -->
+    <string name="notice_failed_over">The stream broke off. %1$s took over at the same point.</string>
+    <!-- Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name. -->
+    <string name="notice_failed_over_same_source">The stream broke off. Another stream from %1$s took over at the same point.</string>
     <!-- Toast when mpv gave up on a file. The reason is mpv's own line. -->
     <string name="notice_player_could_not_play">mpv couldn\'t play this. %1$s</string>
     <!-- Toast when mpv closed without playing and without saying why. -->
@@ -609,6 +630,8 @@
     <string name="reading_row_queued">Queued</string>
     <!-- A chapter row's state: it waits to download until the device is on Wi-Fi. -->
     <string name="reading_row_waits_wifi">Queued · waits for Wi-Fi</string>
+    <!-- A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room. -->
+    <string name="reading_row_waits_room">Queued · waits for room</string>
     <!-- A chapter row's state while it downloads. -->
     <string name="reading_row_downloading">Downloading · %1$,d of %2$,d pages</string>
     <!-- A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count. -->
@@ -731,6 +754,11 @@
     <string name="reading_dl_failed">Chapter %1$s couldn\'t download</string>
     <!-- After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest. -->
     <string name="reading_dl_offline">Offline</string>
+    <!-- After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters. -->
+    <plurals name="reading_dl_no_room">
+        <item quantity="one">No room left. It downloads once some space is free.</item>
+        <item quantity="other">No room left. They download once some space is free.</item>
+    </plurals>
     <!-- How much the chosen chapters will take, from their pages and the size of pages downloaded before. -->
     <string name="reading_estimate_size">About %1$s</string>
     <!-- The chapters download only on Wi-Fi, as the settings say. -->
@@ -1497,6 +1525,8 @@
     <string name="reader_opening_chapter">Opening chapter %1$s</string>
     <!-- Heading when a chapter could not open. The chapter is its number, such as 13. -->
     <string name="reader_failed_chapter">Couldn\'t open chapter %1$s</string>
+    <!-- Heading when a chapter could not open before the reader learned which chapter it was, as when Continue asked for the next chapter and the source did not answer. -->
+    <string name="reader_failed_chapter_plain">Couldn\'t open this chapter</string>
     <!-- Heading in the reader's settings above the choices that belong to this series only. -->
     <string name="reader_sheet_series">This series</string>
     <!-- Heading in the reader's settings above the choices every manga shares. -->
@@ -1895,6 +1925,11 @@
         <item quantity="one">One downloaded chapter still opens.</item>
         <item quantity="other">%1$,d downloaded chapters still open.</item>
     </plurals>
+    <!-- On a series page whose source failed because the device is offline, under the cause: one sentence that says so and how many chapters downloaded before still open. -->
+    <plurals name="read_series_offline_downloaded_open">
+        <item quantity="one">You\'re offline. One downloaded chapter still opens.</item>
+        <item quantity="other">You\'re offline. %1$,d downloaded chapters still open.</item>
+    </plurals>
     <!-- The head of the group menu on a large screen, over its choices: the source the groups are in. -->
     <string name="group_menu_in">Group in %1$s</string>
     <!-- What TalkBack says the Group row does, after "Double-tap to": an imperative, as Android's click labels are. -->
@@ -2174,6 +2209,10 @@
     <string name="updates_unknown_sources_path">Settings › Apps › Security &amp; restrictions › Unknown sources</string>
     <!-- Name a TV gives itself to phones when the system has none set. -->
     <string name="tv_remote_default_name">Kaeri TV</string>
+    <!-- Row in the TV player's Info panel, under the Stats for nerds lines: puts the full stats over the picture, updated once a second. -->
+    <string name="player_stats_show_live">Show live stats</string>
+    <!-- The same row while the live stats are up. -->
+    <string name="player_stats_hide_live">Hide live stats</string>
     <!-- The episode in a short form for a title last watched dubbed. -->
     <string name="episode_short_dubbed">E%1$d · Dubbed</string>
     <!-- The episode in its long form for a title last watched dubbed. -->
@@ -2631,6 +2670,8 @@
     <string name="engine_down_stopped">Nothing new will load until it starts again. Try again, or quit and open the app once more.</string>
     <!-- Button on that screen that closes the app. -->
     <string name="engine_down_quit">Quit</string>
+    <!-- Words in place of the Picture in picture when leaving the app switch, when Android's own per-app Picture in picture permission is off. An Open settings button sits beside it. -->
+    <string name="settings_picture_in_picture_system_off">Off in Android settings</string>
     <!-- Title of the about page. -->
     <string name="about_title">About</string>
     <!-- Title of the about page on desktop. -->
@@ -2701,6 +2742,29 @@
     <string name="report_crash_off">Crash reports are off, so none is included. You can turn them on in Settings, About.</string>
     <!-- Link from that line to the crash report settings. -->
     <string name="report_crash_settings">Crash report settings</string>
+    <!-- Report item, the last row under Included: a file of what the player did in the last few playbacks, saved by hand and attached to the issue. Also the name of the second tab in the report's preview, beside Report. -->
+    <string name="report_player_log">Player log</string>
+    <!-- Line under the Player log item: how many playbacks the log holds and the size of the file. The size is already formatted, such as 412 KB. -->
+    <plurals name="report_player_log_detail">
+        <item quantity="one">The last playback · %2$s</item>
+        <item quantity="other">The last %1$,d playbacks · %2$s</item>
+    </plurals>
+    <!-- Line under the Player log item while nothing has played since the app started. The item cannot be ticked then. -->
+    <string name="report_player_log_empty">No playback logged yet</string>
+    <!-- Button under the ticked Player log item. Opens the system's save dialog for the log file. -->
+    <string name="report_player_log_save">Save log…</string>
+    <!-- Line under the Save log button: the file is not sent by itself, the person attaches it on GitHub. -->
+    <string name="report_player_log_attach">Attach the file to the issue once it opens on GitHub.</string>
+    <!-- Replaces the Save log button once the file is written. File is the file's name, such as kaeri-player-log-2026-11-15-1432.txt. -->
+    <string name="report_player_log_saved">Saved as %1$s</string>
+    <!-- Shown beside the Save log button when the file could not be written. -->
+    <string name="report_player_log_failed">Couldn\'t save the log. Try another folder.</string>
+    <!-- First tab of the report's preview, beside Player log: the text of the report itself. Shown only while Player log is ticked. -->
+    <string name="report_sent_report">Report</string>
+    <!-- Screen readers announce this once the player log file is written. -->
+    <string name="report_player_log_a11y_saved">Player log saved</string>
+    <!-- Screen reader hint on the Player log item. -->
+    <string name="report_player_log_a11y_hint">Saves a file to attach to the issue</string>
     <!-- Heading of the Crash reports group in Settings, About. -->
     <string name="settings_group_crashes">Crash reports</string>
     <!-- Switch that turns saving crash reports on this device on or off. -->
@@ -2831,6 +2895,26 @@
     <string name="cast_stop">Stop casting</string>
     <!-- Line under TV volume on the card, for a TV whose volume only its own remote sets. -->
     <string name="cast_volume_fixed">Set on the TV</string>
+    <!-- The cast button's spoken label while it connects to a TV. The name is the TV's. -->
+    <string name="cast_button_connecting">Connecting to %1$s</string>
+    <!-- The cast button's spoken label once a TV is connected, and the title of the dialog it opens. The name is the TV's. -->
+    <string name="cast_button_connected">Connected to %1$s</string>
+    <!-- Line on a title page under its buttons while a TV is connected: what is played goes to it. The name is the TV's. -->
+    <string name="cast_plays_on">Plays on %1$s</string>
+    <!-- Row in the connected dialog while the TV has nothing loaded. -->
+    <string name="cast_idle">Nothing playing yet</string>
+    <!-- The casting controller's line while the episode is paused on the TV. The name is the TV's. -->
+    <string name="cast_status_paused">Paused on %1$s</string>
+    <!-- Spoken label of the show's name in the casting controller: it opens the show's page. -->
+    <string name="cast_open_show">Open %1$s</string>
+    <!-- The chevron that puts the full controller back into the mini player. -->
+    <string name="cast_controller_close">Close</string>
+    <!-- Screen reader hint on the mini player over the navigation bar. -->
+    <string name="cast_mini_opens">Opens the controls</string>
+    <!-- Long-press menu of an episode while a TV plays: queues the episode after the one playing. -->
+    <string name="cast_play_next_on">Play next on %1$s</string>
+    <!-- The system's media notification and Now Playing: the line naming the TV that plays. -->
+    <string name="cast_notification_line">Casting to %1$s</string>
     <!-- Button that runs a failed action again. -->
     <string name="action_try_again">Try again</string>
     <!-- Button that closes a dialog without doing what it offered. -->
@@ -2929,6 +3013,8 @@
     <string name="action_check_now">Check now</string>
     <!-- Button that checks a { -source } again after it did not answer. -->
     <string name="action_check_again">Check again</string>
+    <!-- Check again while the check runs. Keep it about as short as "Check again": the button keeps its width. -->
+    <string name="action_checking">Checking</string>
     <!-- Button that opens the system's own settings for the app. -->
     <string name="action_open_settings">Open settings</string>
     <!-- Button that reports an error as a bug. -->
@@ -2973,6 +3059,8 @@
     <string name="time_minutes_left">%1$,d min left</string>
     <!-- A length in minutes, for an episode. -->
     <string name="time_minutes">%1$,d min</string>
+    <!-- A length in hours, inside time-ago. -->
+    <string name="time_hours">%1$,d h</string>
     <!-- A countdown that has run out: the thing is happening now. Lower case, as it stands inside a line. -->
     <string name="time_now_inline">now</string>
     <!-- How long ago, under a minute. Lower case, as it stands inside a line. -->
@@ -3011,6 +3099,8 @@
     <string name="state_working">Working</string>
     <!-- Short placeholder while something loads. -->
     <string name="state_loading">Loading</string>
+    <!-- Accessibility action of a notice that dismisses it (VoiceOver, TalkBack). -->
+    <string name="notice_dismiss">Dismiss</string>
     <!-- Controller help: the D-pad and left stick move focus between items. -->
     <string name="pad_help_move">Move focus</string>
     <!-- Controller help: the A button on a list, a button or a switch. -->
@@ -3171,6 +3261,14 @@
     <string name="names_pair">%1$s and %2$s</string>
     <!-- A list of names up to the last two, joined one by one: "Alpha, Brook". -->
     <string name="names_list">%1$s, %2$s</string>
+    <!-- Line under a TV with Chromecast built in, in the Play on TV list: this computer serves the episode to it while it plays. -->
+    <string name="cast_row_through_computer">Plays through this computer</string>
+    <!-- Title of the question asked on quitting while an episode plays on a TV. -->
+    <string name="desktop_cast_quit_title">Stop casting and quit?</string>
+    <!-- Body of the question asked on quitting while an episode plays on a TV. The title is the show's, the name is the TV's. -->
+    <string name="desktop_cast_quit_body">%1$s is playing on %2$s. Quitting stops it.</string>
+    <!-- Button of the question asked on quitting while casting: stops the cast and quits. -->
+    <string name="desktop_cast_quit_action">Stop and quit</string>
     <!-- Menu item that opens an episode's discussion. -->
     <string name="discussion_open">Discussion</string>
     <!-- Title of the discussion window or sheet when the thread has no title yet. -->
@@ -4580,8 +4678,14 @@
     <string name="player_start_miss_timed_out">%1$s took too long</string>
     <!-- Detail line after the viewer skipped the source being asked. -->
     <string name="player_start_miss_skipped">You skipped %1$s</string>
-    <!-- Details row for sources passed over because they failed lately. The name goes before it. -->
-    <string name="player_start_resting">Skipped after recent failures</string>
+    <!-- Details row for a source not asked while torrent playback is off. The name goes before it. -->
+    <string name="player_start_row_held_torrents_off">Not asked · Torrent playback is off</string>
+    <!-- Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it. -->
+    <string name="player_start_row_held_proxy">Not asked · Waiting for the proxy check</string>
+    <!-- Details row for a source not asked on cellular, where torrents are off. The name goes before it. -->
+    <string name="player_start_row_held_cellular">Not asked · Torrents are off on cellular</string>
+    <!-- Details row for a source not asked because it says it can't be used right now. The name goes before it. -->
+    <string name="player_start_row_held_other">Not asked · Not available right now</string>
     <!-- Detail line once the streams are found and the player opens one. The name is the source's. -->
     <string name="player_start_from">From %1$s</string>
     <!-- Detail line when a stream showed no video and another opens. -->
@@ -4645,6 +4749,33 @@
     <string name="player_start_row_skipped">Skipped</string>
     <!-- Second clause of a failure: the sources that were asked, joined as a list by the app. -->
     <string name="player_start_asked">%1$s were asked.</string>
+    <!-- Sentence of a failure naming the sources asked that answered without the episode, while others couldn't be reached or weren't asked. The names are joined as a list by the app. The episode is its label. -->
+    <plurals name="player_start_lacking">
+        <item quantity="one">%2$s doesn\'t have episode %3$s.</item>
+        <item quantity="other">%2$s don\'t have episode %3$s.</item>
+    </plurals>
+    <!-- First sentence of a failure when some sources asked gave no real answer: they failed, took too long or were skipped. A source not asked is never among them. The names are joined as a list by the app. -->
+    <string name="player_start_unreached">Couldn\'t reach %1$s.</string>
+    <!-- Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app. -->
+    <plurals name="player_start_not_asked_torrents_off">
+        <item quantity="one">%2$s isn\'t asked while torrent playback is off.</item>
+        <item quantity="other">%2$s aren\'t asked while torrent playback is off.</item>
+    </plurals>
+    <!-- Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app. -->
+    <plurals name="player_start_not_asked_proxy">
+        <item quantity="one">%2$s isn\'t asked until the proxy check passes.</item>
+        <item quantity="other">%2$s aren\'t asked until the proxy check passes.</item>
+    </plurals>
+    <!-- Sentence of a failure naming the sources not asked on cellular, where torrents are off, joined as a list by the app. -->
+    <plurals name="player_start_not_asked_cellular">
+        <item quantity="one">%2$s isn\'t asked on cellular.</item>
+        <item quantity="other">%2$s aren\'t asked on cellular.</item>
+    </plurals>
+    <!-- Sentence of a failure naming the sources not asked because they say they can't be used right now, joined as a list by the app. -->
+    <plurals name="player_start_not_asked_other">
+        <item quantity="one">%2$s isn\'t available right now.</item>
+        <item quantity="other">%2$s aren\'t available right now.</item>
+    </plurals>
     <!-- Label of the switch in the Details list that plays the episode with its subtitles. -->
     <string name="player_start_subtitled">Subtitled</string>
     <!-- Title of the stall card. The seconds count up. -->
@@ -4897,6 +5028,18 @@
     <string name="source_picker_finding">Finding sources…</string>
     <!-- Line when the picker found no stream for the episode. -->
     <string name="source_picker_empty">No source has a stream for this episode.</string>
+    <!-- Line over the reasons when no source lists a release of the episode. The episode is its label. -->
+    <string name="source_picker_none_lists">No source lists episode %1$s.</string>
+    <!-- Line over the reasons when no source lists a release of the episode and some sources failed or weren't asked. The episode is its label. -->
+    <string name="source_picker_none_answered_lists">No source that answered lists episode %1$s.</string>
+    <!-- Line of the picker for a source not asked while torrent playback is off. -->
+    <string name="source_picker_held_torrents_off">%1$s isn\'t asked while torrent playback is off</string>
+    <!-- Line of the picker for a source not asked while the proxy check for torrents hasn't passed. -->
+    <string name="source_picker_held_proxy">%1$s isn\'t asked until the proxy check passes</string>
+    <!-- Line of the picker for a source not asked on cellular, where torrents are off. -->
+    <string name="source_picker_held_cellular">%1$s isn\'t asked on cellular</string>
+    <!-- Line of the picker for a source that says it can't be used right now. -->
+    <string name="source_picker_held_other">%1$s isn\'t available right now</string>
     <!-- Title of the picker sheet in the player. -->
     <string name="player_sources">Sources</string>
     <!-- Heading of the starting screen when nothing played. The episode's number is text, because it may be "7.5". -->
@@ -4931,6 +5074,40 @@
     <string name="player_subs_bg_box">Box</string>
     <!-- Button in the subtitles panel that opens Settings. -->
     <string name="player_subs_more">More in Settings…</string>
+    <!-- The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. -->
+    <string name="private_mode">Private mode</string>
+    <!-- The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux. -->
+    <string name="private_mode_detail">Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.</string>
+    <!-- Second line under the switch. Private mode only stops what the app keeps; it hides nothing from anyone else. -->
+    <string name="private_mode_limits">Your sources and watch parties still see what you open.</string>
+    <!-- Notice after the menu item or the shortcut turns private mode on, and the words of the badge's popover, flyout and TV dialog. Also the badge's screen reader hint. -->
+    <string name="private_mode_on_notice">Private mode is on. Nothing is saved or synced until Kaeri quits.</string>
+    <!-- Button in the notice, the badge's popover and flyout, and the TV dialog: turns private mode off. -->
+    <string name="action_turn_off">Turn off</string>
+    <!-- Under the switch on the desktops. The keys are the platform's own: ⇧⌘N on the Mac, Ctrl+Shift+N on Windows and Linux. -->
+    <string name="private_mode_shortcut_hint">Shortcut: %1$s</string>
+    <!-- The badge while private mode is on, the player label, and the head of the title page line. -->
+    <string name="private_badge">Private</string>
+    <!-- Screen reader label of the badge. -->
+    <string name="private_badge_label">Private mode is on</string>
+    <!-- Line under a title or series page's main action, after "Private" or "Always private". -->
+    <string name="private_line_not_saved">Not saved or synced</string>
+    <!-- Line under a title or series page's main action when a place is held in memory, after "Private". -->
+    <string name="private_line_kept">Your place is kept until Kaeri quits</string>
+    <!-- A title kept private on this device: the More menu item with a check, the switch in the show's settings, and the head of the title page line. -->
+    <string name="title_always_private">Always private</string>
+    <!-- Under the Always private switch in a show's settings. -->
+    <string name="show_always_private_detail">Nothing from this show is saved or synced on this device. What is already saved stays.</string>
+    <!-- Under the Always private switch in a series page's settings. -->
+    <string name="series_always_private_detail">Nothing from this series is saved or synced on this device. What is already saved stays.</string>
+    <!-- What the system's media controls, the lock screen, the media card and the player window show while private: no show, episode, artist or artwork. -->
+    <string name="now_playing_private">Playing in Kaeri</string>
+    <!-- Android's required download notification for a download started while private. No title or art. -->
+    <string name="private_download_line">Downloading in Kaeri</string>
+    <!-- Announced to screen readers once when private mode turns on. -->
+    <string name="private_mode_on_announcement">Private mode on</string>
+    <!-- Announced to screen readers once when private mode turns off. -->
+    <string name="private_mode_off_announcement">Private mode off</string>
     <!-- Under a page that is still loading after four seconds. -->
     <string name="reader_page_loading">Loading page %1$d</string>
     <!-- On the plate of a page that is still loading. -->
@@ -5917,6 +6094,8 @@
     <string name="read_home_row_loading">%1$s, loading</string>
     <!-- Screen readers: the custom action on a discovery cover that puts the series on Planning. -->
     <string name="read_tile_add_planning">Add to Planning</string>
+    <!-- Screen readers: a custom action on a reading cover that puts the series on one of the lists, one action for each list the cover's menu offers under Add to list. The list is its name as the menu shows it, such as "Completed". -->
+    <string name="read_tile_add_to">Add to %1$s</string>
     <!-- Said once by screen readers when Your sources only turns on. -->
     <string name="read_search_anilist_hidden">AniList\'s results are hidden.</string>
     <!-- Said once by screen readers when every part of a search has answered: how many series AniList found. The sources' count and any source that didn't answer follow. -->
@@ -6853,6 +7032,18 @@
     <string name="settings_auto_play">Auto-play next</string>
     <!-- Row: length of the Up next countdown. -->
     <string name="settings_up_next_countdown">Up next countdown</string>
+    <!-- Row under Up next countdown on iPhone, a cellular iPad and Android phones: whether the next episode's first seconds of video load during the ending while on mobile data. Off by default. -->
+    <string name="settings_preload_cellular">Preload video on mobile data</string>
+    <!-- The same row on Windows and Linux. -->
+    <string name="settings_preload_metered">Preload video on metered connections</string>
+    <!-- Line under the row on Android phones. -->
+    <string name="settings_preload_detail_android">During the ending, the next episode\'s stream, subtitles and skip times are found. Its first seconds load too, and on mobile data or metered Wi-Fi only when this is on.</string>
+    <!-- Line under the row on Windows and Linux, and the note under the terminal's settings list. -->
+    <string name="settings_preload_detail_metered">During the ending, the next episode\'s stream, subtitles and skip times are found. Its first seconds load too, and on a metered connection only when this is on.</string>
+    <!-- Sentence added after the line under the row while torrent playback is on. -->
+    <string name="settings_preload_torrents">Torrents load their first pieces the same way.</string>
+    <!-- Screen reader hint on the preload row while it is dimmed because Auto-play next is off. The terminal shows it at the start of the note. -->
+    <string name="settings_preload_a11y_dimmed">Needs Auto-play next</string>
     <!-- Row: skip the opening. -->
     <string name="settings_skip_opening">Skip opening automatically</string>
     <!-- Settings, Playback: whether recaps are skipped without asking. -->
@@ -7222,6 +7413,12 @@
     <string name="settings_opds_password">Feed password</string>
     <!-- Row: the port the shared catalogue listens on. Empty picks a free one. -->
     <string name="settings_opds_port">Feed port</string>
+    <!-- Settings row: whether leaving the app while an episode plays opens the system's floating window. The engine's label, and the Android row's. Sentence case, as Android writes it. -->
+    <string name="settings_label_picture_in_picture_on_leave">Picture in picture when leaving the app</string>
+    <!-- Switch under the AniList account, on by default, for this device only: whether title pages show the people followed on AniList. -->
+    <string name="settings_anilist_following">Show people you follow</string>
+    <!-- Note under that switch. -->
+    <string name="settings_anilist_following_footer">Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</string>
     <!-- Label of the address field in the Add a server sheet. -->
     <string name="book_server_address">Address</string>
     <!-- Note under the empty address field. -->
@@ -7409,6 +7606,24 @@
     <plurals name="source_picker_coverage">
         <item quantity="one">%1$,d of %2$,d episode</item>
         <item quantity="other">%1$,d of %2$,d episodes</item>
+    </plurals>
+    <!-- Under a source that lists every episode that is out. -->
+    <plurals name="source_picker_episodes">
+        <item quantity="one">Episode %2$d</item>
+        <item quantity="other">Episodes %2$d to %3$d</item>
+    </plurals>
+    <!-- Under a source that lacks the newest episodes, within a week of them airing. $missing is one number, source-picker-missing-pair or source-picker-missing-range. -->
+    <string name="source_picker_episodes_not_yet">Episodes %1$d to %2$d. Not %3$s yet</string>
+    <!-- The same, more than a week after the episodes aired. -->
+    <string name="source_picker_episodes_not">Episodes %1$d to %2$d. Not %3$s</string>
+    <!-- Two episodes a source lacks, inside the missing part of a source's line. -->
+    <string name="source_picker_missing_pair">%1$d or %2$d</string>
+    <!-- Three or more episodes in a row a source lacks, inside the missing part of a source's line. -->
+    <string name="source_picker_missing_range">%1$d to %2$d</string>
+    <!-- Under a source with a gap in the middle, such as "5 of 6 episodes. Not 3". -->
+    <plurals name="source_picker_coverage_missing">
+        <item quantity="one">%1$,d of %2$,d episode. Not %3$s</item>
+        <item quantity="other">%1$,d of %2$,d episodes. Not %3$s</item>
     </plurals>
     <!-- Under a source that is switched off in Settings. -->
     <string name="source_note_off">Switched off</string>
@@ -8628,6 +8843,22 @@
     <string name="more_followed_score">%1$,d/10</string>
     <!-- Heading of the list of titles people who liked this one also liked. -->
     <string name="more_like_this">More like this</string>
+    <!-- Button after the first five people followed, on wide screens. It shows the rest in place. -->
+    <string name="following_show_all">Show all %1$,d</string>
+    <!-- Second line of the People you follow row on phones and the TV, with three or more people: two names, then how many more. The names come from AniList. -->
+    <plurals name="following_names">
+        <item quantity="other">%1$s, %2$s and %3$,d more</item>
+    </plurals>
+    <!-- Second line of the People you follow row on phones and the TV, with two people. The names come from AniList. -->
+    <string name="following_names_two">%1$s and %2$s</string>
+    <!-- After three pictures on an episode's mark, and after three names in the terminal: how many more people stopped there. -->
+    <string name="following_mark_more">+%1$,d</string>
+    <!-- Tooltip on an episode's mark, and the sentence a screen reader adds to the episode row: who stopped at this episode. The names are already joined. -->
+    <string name="following_mark_spoken">%1$s watched up to here.</string>
+    <!-- What a screen reader says in place of a score such as 8/10 beside a person followed. -->
+    <string name="following_score_spoken">Score %1$,d out of 10</string>
+    <!-- Hint of the People you follow row on phones and the TV, which opens the full list. -->
+    <string name="following_open_help">Shows where each of them is.</string>
     <!-- Line of a followed person's list entry: their status and how far they are. Both are already worded. -->
     <string name="more_followed_progress">%1$s · %2$s</string>
     <!-- Line when AniList has no cast, staff or recommendations for a show. -->
@@ -8661,8 +8892,6 @@
     <string name="title_fact_now">Now</string>
     <!-- Value of the fact on a show with no announced start. -->
     <string name="title_fact_tba">To be announced</string>
-    <!-- A followed person's status and score, such as "Completed · 9/10". The status is already worded. -->
-    <string name="more_following_line">%1$s · %2$,d/10</string>
     <!-- Item of the episode range menu, and the title of its number field. The ellipsis marks that it asks for a number. -->
     <string name="episode_go_to">Go to episode…</string>
     <!-- Title of the Go to episode field. -->
@@ -8677,6 +8906,30 @@
     <string name="episode_go_to_none">No episode %1$d. This show has %2$d.</string>
     <!-- Shown when the number typed is an episode with no date that has not come out. -->
     <string name="episode_go_to_not_out">Episode %1$d isn\'t out yet. The latest is %2$d.</string>
+    <!-- Status, first sentence, within a day of the episode airing. -->
+    <string name="episode_missing_aired">Episode %1$d aired %2$s.</string>
+    <!-- Status, first sentence, a day or more after the episode aired. -->
+    <string name="episode_missing_aired_on">Episode %1$d aired on %2$s.</string>
+    <!-- Status, second sentence, until a check the person asked for comes back empty. -->
+    <string name="episode_missing_not_yet">Your sources don\'t have it yet.</string>
+    <!-- Status, second sentence, after a check the person asked for came back empty, and once Kaeri has stopped looking by itself. -->
+    <string name="episode_missing_still">Your sources still don\'t have it.</string>
+    <!-- Status, second sentence, after a check where none of the person's sources answered. -->
+    <string name="episode_missing_no_answer">Your sources didn\'t answer.</string>
+    <!-- Status, last sentence, during the hours Kaeri looks for the episode by itself. -->
+    <string name="episode_missing_looks_again">Kaeri looks again every %1$,d minutes.</string>
+    <!-- Status a week after the episode aired, when no source has listed it. -->
+    <string name="episode_missing_none">None of your sources has it.</string>
+    <!-- Status, last sentence, while the device is offline during the hours Kaeri looks by itself. -->
+    <string name="episode_missing_offline">Kaeri looks for it when you\'re back online.</string>
+    <!-- Row note of an episode that aired within the last day. The span is already worded ("25 min", "3 h"). -->
+    <string name="episode_row_aired_ago">Aired %1$s</string>
+    <!-- Row note beside when it aired, for an episode that aired in the last week and no source lists yet. -->
+    <string name="episode_unsourced_yet">Not in your sources yet</string>
+    <!-- Announced once to screen readers when a check finds the missing episode while its page is open. -->
+    <string name="episode_found_announcement">Episode %1$d is in your sources now.</string>
+    <!-- Tooltip and screen reader hint of Check again, while Kaeri looks for the episode by itself. -->
+    <string name="episode_check_again_help">Kaeri also looks by itself every %1$,d minutes for %2$,d hours after an episode airs.</string>
     <!-- Title of the settings group and the screen. -->
     <string name="torrents_title">Torrents</string>
     <!-- Label and short value for the switch. -->
@@ -9020,6 +9273,8 @@
     <string name="tv_paired_on">Paired %1$s</string>
     <!-- Short word: paired, no date known. -->
     <string name="tv_paired">Paired</string>
+    <!-- Line under a paired TV running the app, in the Play on TV list. -->
+    <string name="tv_row_kaeri">Kaeri on Android TV</string>
     <!-- Line with the address. -->
     <string name="tv_connected_at">Connected · %1$s</string>
     <!-- Title of the confirmation that forgets a TV. -->
@@ -9036,6 +9291,8 @@
     <string name="tv_status_connecting">Connecting to %1$s</string>
     <!-- Status on the remote: connection lost, trying again. -->
     <string name="tv_status_reconnecting">Reconnecting to %1$s</string>
+    <!-- Status on the remote and the cast mini player while the TV waits: for the stream, or while the app learns why the TV stopped the cast. On Windows also while pairing, until the named TV answers. -->
+    <string name="tv_waiting_for">Waiting for %1$s</string>
     <!-- Status on the remote: connected. -->
     <string name="tv_status_connected">Connected</string>
     <!-- Label of the search field on the remote. -->

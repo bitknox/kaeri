@@ -285,6 +285,7 @@ read-search-source-kind-server = Server
 read-search-source-kind-folder = Mapp
 read-search-source-kind-plugin = { -plugin-cap }
 read-search-source-more = Visa { $n } till
+read-tile-add-to = Lägg till i { $list }
 onboarding-step = { $step } av { $total }
 onboarding-welcome-line = Håll koll på vad du tittar på och läser, från dina egna { -source-pl }.
 onboarding-welcome-note = Dina listor och ditt förlopp stannar på dina { -device-pl }. { -tracker-cap-pl } och { -source-pl } lägger du till själv.

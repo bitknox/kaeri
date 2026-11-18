@@ -34,6 +34,7 @@ use kaeri_store::Store;
 
 pub use anilist::{
     COMPLEXITY_LIMIT, Failure, FakeAniList, Operation, Request, complexity, following_entry,
+    viewer_following_entry,
 };
 pub use golden::{BLESS_VAR, assert_golden, check_golden};
 

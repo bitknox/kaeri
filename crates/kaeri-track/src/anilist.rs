@@ -142,6 +142,11 @@ impl AniListTracker {
         }
     }
 
+    /// The client this tracker asks AniList with, signed in as its viewer while it is.
+    pub fn client(&self) -> &AniList {
+        &self.client
+    }
+
     /// The viewer's id as kept from an earlier launch.
     fn remembered(&self) -> Option<u32> {
         let store = self.store.as_ref()?;
@@ -378,6 +383,9 @@ impl Tracker for AniListTracker {
 
     async fn forget_credentials(&self) {
         self.signed_out.store(true, std::sync::atomic::Ordering::Relaxed);
+        // The token goes too: a client that asks as this viewer, such as the title page's ask
+        // after the people they follow, must stop at the sign-out.
+        self.client.set_token(None);
         // Drop the cached viewer id too, so signing into a *different* account cannot inherit the
         // previous one's list.
         *self.wait_for(&self.viewer).await = None;

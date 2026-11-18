@@ -6,6 +6,7 @@
 
 package app.kaeri.ui.reading
 
+import android.content.Context
 import androidx.activity.compose.BackHandler
 import app.kaeri.ui.synopsisCut
 import app.kaeri.ui.SynopsisCuts
@@ -93,11 +94,15 @@ import app.kaeri.design.SwapFade
 import app.kaeri.engine.core.ChapterId
 import app.kaeri.engine.core.Medium
 import app.kaeri.engine.core.WorkId
+import app.kaeri.ui.AlwaysPrivateItem
+import app.kaeri.ui.PrivatePageLine
+import app.kaeri.ui.privateLine
 import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterReadState
 import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.DownloadPick
 import app.kaeri.engine.model.KaeriIsFor
+import app.kaeri.engine.model.PrivateTitle
 import app.kaeri.engine.model.ReadingAbout
 import app.kaeri.engine.model.ReadingFailure
 import app.kaeri.engine.model.SeriesAction
@@ -242,6 +247,7 @@ internal fun SeriesScreen(work: WorkId, actions: AppActions) {
                             sheet = SeriesSheet.ReadAgain
                         })
                     }
+                    AlwaysPrivateItem(PrivateTitle.Series(work)) { moreOpen = false }
                 }
             }
         }
@@ -654,6 +660,8 @@ private fun SeriesActions(
                 modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp),
             ) { Text(words, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold, textAlign = TextAlign.Center) }
         }
+        // Private: under the main action, while private mode is on or the series is always private.
+        PrivatePageLine(privateLine(PrivateTitle.Series(series.work)), top = 2.dp)
         if (!failed && (words != null || asking)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Box(Modifier.weight(1f)) {
@@ -1124,14 +1132,22 @@ private fun ChaptersFailed(series: SeriesView, failure: ReadingFailure, download
         Icon(Icons.Problem, contentDescription = null, tint = ObiSilk.Vermilion, modifier = Modifier.padding(top = 2.dp).size(20.dp))
         Column(Modifier.weight(1f)) {
             Text(Strings.seriesChaptersFailed(context, source), style = MaterialTheme.typography.bodyLarge)
-            val line = listOfNotNull(
-                failureWords(context, failure),
-                if (downloaded > 0) Strings.readSeriesDownloadedOpen(context, downloaded) else null,
-            ).joinToString(" ") // i18n-skip
-            Text(line, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
+            Text(chaptersFailedLine(context, failure, downloaded), style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.padding(top = 4.dp))
             FilledTonalButton(onClick = onRetry, modifier = Modifier.padding(top = 12.dp)) { Text(Strings.actionTryAgain(context)) }
         }
     }
+}
+
+/**
+ * The line under a failed source's heading: why, and how many downloaded chapters still open.
+ * Offline it is one sentence, since the offline words already say downloaded chapters open.
+ */
+internal fun chaptersFailedLine(context: Context, failure: ReadingFailure, downloaded: Int): String = when {
+    failure is ReadingFailure.Offline && downloaded > 0 -> Strings.readSeriesOfflineDownloadedOpen(context, downloaded)
+    else -> listOfNotNull(
+        failureWords(context, failure),
+        if (downloaded > 0) Strings.readSeriesDownloadedOpen(context, downloaded) else null,
+    ).joinToString(" ") // i18n-skip
 }
 
 /** More like this: the engine's recommendations as covers to open. */

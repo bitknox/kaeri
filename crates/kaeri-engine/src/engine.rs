@@ -292,14 +292,21 @@ impl Engine {
         let services = match parts {
             Some(parts) => {
                 let (power, hosted) = crate::services::players(&paths);
+                // In the data folder as the app's engine keeps it, so what a cast leaves for
+                // the next launch to join is there for the Fixtures apps too.
                 #[cfg(feature = "cast")]
-                let casts = Arc::new(crate::cast::CastHub::in_memory(http.clone()));
+                let casts = Arc::new(crate::cast::CastHub::new(
+                    paths.data_dir.join("remote"),
+                    http.clone(),
+                ));
                 let servers = crate::servers::Servers::new(
                     kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
                     store.clone(),
                     http.clone(),
                 );
                 let local = crate::local::Local::new(store.clone());
+                let privacy = Arc::new(crate::private::Privacy::default());
+                privacy.load(&store);
                 let book_sources = crate::read_sources::BookSources::new(
                     store.clone(),
                     kaeri_track::TokenStore::over(crate::host::file_secrets(&paths)),
@@ -327,6 +334,7 @@ impl Engine {
                     offline: Default::default(),
                     connection: Arc::new(tokio::sync::watch::channel(false).0),
                     prefetch: Default::default(),
+                    unreached: Default::default(),
                     artwork: Default::default(),
                     player_theme,
                     app_clients: Default::default(),
@@ -340,6 +348,7 @@ impl Engine {
                     windows: parts.windows,
                     #[cfg(feature = "cast")]
                     casts,
+                    privacy,
                 }
             }
             None => Services::build(&tracked, paths, http, store, registry, player_theme, host)
@@ -396,6 +405,7 @@ impl Engine {
             state.config.use_overlay(Some(overlay), &services.paths);
         }
         state.config.set_sync(services.store.clone());
+        state.cache.use_privacy(services.privacy.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
         state.config.set_handheld(handheld);
         state.config.set_phone(phone);
@@ -421,6 +431,8 @@ impl Engine {
             services.book_sources.put_demo(services.clock.now());
         }
         crate::crash::arm_from(&services.paths.data_dir, state.config.effective());
+        // Where the player log is mirrored: read back only when it is first written or asked for.
+        crate::player_log::mirror_to(&services.paths.cache_dir.join("logs"));
         services.syncing.set_language(language.clone());
         // The terminal sets the process's language and passes none.
         let tag = language.clone().unwrap_or_else(|| kaeri_i18n::language().to_owned());
@@ -430,6 +442,13 @@ impl Engine {
         {
             casts.set_language(language);
             casts.set_show_tvs(state.config.effective().cast.show_tvs);
+            casts.set_receiver(state.config.effective().cast.receiver.clone());
+            // A cast the last run left running on a TV is joined again, quietly. Without a
+            // record of one, nothing on the network is looked at, and an engine started for a
+            // background task leaves the TV and the record alone.
+            if background.rejoin_cast {
+                casts.resume_left();
+            }
         }
         #[cfg(not(feature = "cast"))]
         let _ = language;
@@ -444,6 +463,8 @@ impl Engine {
         // The settings first: everything after is drawn under the config they say.
         state.config.set_skip_find_paused(services.skip_find.paused(state.config.effective()));
         launch.push_back(Event::Settings(state.config.view()));
+        // Private mode starts off on every launch: it is never kept.
+        launch.push_back(Event::Private(services.privacy.is_on()));
         // Whether trailers may start, on that config, before the front end says anything.
         launch.push_back(crate::autoplay::at_launch(&mut state));
         // A database found damaged was moved aside and this one is new: why the history is empty.
@@ -519,6 +540,12 @@ impl Engine {
         }
         // Home's first screen goes first: AniList's background work waits for it.
         services.meta.anilist().launching();
+        // A title page asks after the people the viewer follows as the tracker's viewer, while
+        // this device's switch is on.
+        if let Some(anilist) = services.sync.anilist.as_ref() {
+            services.meta.anilist().follows_as(anilist.client());
+        }
+        services.meta.anilist().show_following(state.config.effective().meta.following);
         // How titles are named: the setting, and under `anilist` the signed-in viewer's own
         // choice, which comes with the viewer lookup the library pull makes anyway.
         services.meta.titles().choose(state.config.effective().meta.title_language);
@@ -532,6 +559,11 @@ impl Engine {
         if background.sync_loops {
             tracking::spawn_loops(
                 services.sync.clone(),
+                services.meta.anilist().clone(),
+                inbox.sender(),
+            );
+            // Episodes that aired and no source lists are looked for again, quietly.
+            crate::titles::recheck::spawn_ticks(
                 services.meta.anilist().clone(),
                 inbox.sender(),
             );
@@ -628,6 +660,9 @@ impl Engine {
             #[cfg(feature = "testing")]
             sent: AtomicU64::new(0),
         };
+        for event in &launch {
+            crate::player_log::note(event);
+        }
         Ok((engine, EventStream { launch, checking, live }))
     }
 
@@ -1110,6 +1145,7 @@ impl Actor {
         if self.state.network.offline {
             self.state.missed.note(&command);
         }
+        crate::private::note_command(&self.services.privacy, &command);
         let job = job.map(|(id, activity)| JobGuard::announce(id, activity, &tx));
         dispatch(command, job, &mut self.state, &self.services, &tx);
         for again in self.state.missed.take_due() {
@@ -1208,6 +1244,9 @@ impl Actor {
     fn forward(&mut self, mut event: Event, played: Option<Played>) {
         // Named as the titles are shown now, before the record takes the names in.
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
+        // Where the people the viewer follows stopped, on the episode rows; a table marked again
+        // when its page brings them after it, said right after the page.
+        let marked = self.state.followed.pass(&mut event);
         // A show whose episode starts, or is finished: keep next tops that show up.
         let kept = match &event {
             Event::PlaybackStaged { id, .. } | Event::CastStaged { id, .. } => Some(*id),
@@ -1215,6 +1254,8 @@ impl Actor {
                 played.as_ref().filter(|_| crate::downloads::ahead::after(&event)).map(|p| p.id)
             }
         };
+        // Private: downloading the next episodes ahead would say what is being watched.
+        let kept = kept.filter(|id| !self.services.privacy.holds_show(*id));
         // Where a viewer is in a show: what the Continue queue is made of.
         let queue_moves = matches!(
             event,
@@ -1243,6 +1284,7 @@ impl Actor {
         let watched = played.clone().filter(|_| matches!(event, Event::ProgressQueued));
         let after = self.follow(&mut event, played.as_ref());
         self.pass_on(event);
+        marked.into_iter().for_each(|said| self.pass_on(said));
         after.into_iter().for_each(|said| self.pass_on(said));
         // An episode counted as watched: its discussion opens from now on, and is looked up.
         if let Some(played) = watched.as_ref() {
@@ -1308,7 +1350,14 @@ impl Actor {
             &self.state.cache,
             skip_filler,
         );
-        let Some(follow) = follow else { return said };
+        let Some(follow) = follow else {
+            // The player closed, or the episode ended with nothing to roll on to: what was
+            // made ready for the next episode will not be played.
+            if matches!(event, Event::PlaybackEnded { .. }) {
+                self.services.prefetch.clear();
+            }
+            return said;
+        };
         said.extend(self.roll_on(follow, event));
         said
     }
@@ -1322,6 +1371,17 @@ impl Actor {
         let opener = opener_for(&self.state, &self.services)?;
         if let Event::PlaybackEnded { rolling_on, .. } = event {
             *rolling_on = true;
+        }
+        // The hand-over to the next episode: the end of the ending, or of Up next's countdown,
+        // or its Play now. Its first frame says how long the episode took to show from here.
+        let prefetch = &self.services.prefetch;
+        let handover = match event {
+            Event::PlaybackEnded { .. } => true,
+            Event::PlayerPlayEpisode { .. } => prefetch.is_next(follow.id, &follow.episode),
+            _ => false,
+        };
+        if handover {
+            prefetch.handed_over(follow.id, &follow.episode);
         }
         let tx = self.inbox.sender();
         let play = Command::play(follow.id, follow.episode.clone());
@@ -1382,16 +1442,59 @@ impl Actor {
 
     fn pass_on(&self, mut event: Event) {
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
+        self.services.privacy.overlay(&mut event);
+        crate::player_log::note(&event);
         let _ = self.out.send(Out::Event(event));
     }
 
     /// Everything the app does on its way out: the playback's last record, then the commands
     /// queued before the quit for [`EXIT_DRAIN`], then the torrents.
+    ///
+    /// A cast plays on without the app: its TV is not told to stop, and the record of it stays
+    /// for the next launch to join. Only a Stop casting the viewer asked for, as a desktop's
+    /// quit question sends ahead of the quit, ends it, and that is waited on as a stop here is.
     async fn stop(&mut self) {
         let playing = self.under_way();
-        self.flush_playback(playing).await;
+        let on_tv = self.on_tv();
+        if !on_tv {
+            self.flush_playback(playing).await;
+        }
         self.drain_commands();
+        if on_tv {
+            self.stopped_casting(playing).await;
+        }
         self.close_torrents().await;
+    }
+
+    /// Whether a TV is held or what plays is cast: what the exit leaves running.
+    fn on_tv(&self) -> bool {
+        #[cfg(feature = "cast")]
+        return self.state.casting.is_some() || self.services.casts.casting();
+        #[cfg(not(feature = "cast"))]
+        false
+    }
+
+    /// The cast the queue stopped on the way out, waited on within [`EXIT_FLUSH`]: its
+    /// playback recording where it ended, and the receiver told to close.
+    async fn stopped_casting(&mut self, playing: bool) {
+        #[cfg(feature = "cast")]
+        {
+            if self.on_tv() {
+                return;
+            }
+            let casts = Arc::clone(&self.services.casts);
+            let wait = async {
+                if playing {
+                    self.playback_ended().await;
+                }
+                casts.quits_sent().await;
+            };
+            if tokio::time::timeout(EXIT_FLUSH, wait).await.is_err() {
+                tracing::warn!("the TV did not take the stop in time");
+            }
+        }
+        #[cfg(not(feature = "cast"))]
+        let _ = playing;
     }
 
     /// Route what is queued, in order, until the queue is empty or [`EXIT_DRAIN`] is up. A
@@ -1429,22 +1532,25 @@ impl Actor {
         if controls.send(PlayerCommand::Stop).is_err() {
             return;
         }
-        let ended = async {
-            while let Some(envelope) = self.inbox.recv().await {
-                let (Envelope::Event(event) | Envelope::Played(_, event)) = envelope else {
-                    continue;
-                };
-                match event {
-                    Event::PlaybackEnded { .. } => break,
-                    Event::PlayerOps { .. } | Event::PlayerUi { .. } => {
-                        let _ = self.out.send(Out::Event(event));
-                    }
-                    _ => {}
-                }
-            }
-        };
-        if tokio::time::timeout(EXIT_FLUSH, ended).await.is_err() {
+        if tokio::time::timeout(EXIT_FLUSH, self.playback_ended()).await.is_err() {
             tracing::warn!("the player did not stop in time; its last position may be lost");
+        }
+    }
+
+    /// Read the inbox until the playback says it ended, letting the rest go but what a hosted
+    /// player is told.
+    async fn playback_ended(&mut self) {
+        while let Some(envelope) = self.inbox.recv().await {
+            let (Envelope::Event(event) | Envelope::Played(_, event)) = envelope else {
+                continue;
+            };
+            match event {
+                Event::PlaybackEnded { .. } => break,
+                Event::PlayerOps { .. } | Event::PlayerUi { .. } => {
+                    let _ = self.out.send(Out::Event(event));
+                }
+                _ => {}
+            }
         }
     }
 }
@@ -1731,6 +1837,7 @@ mod tests {
             .iter()
             .map(|event| match event {
                 Event::Settings(_) => "settings",
+                Event::Private(false) => "private",
                 Event::Autoplay(view) if view.trailers => "autoplay",
                 Event::Stores(_) => "stores",
                 Event::Providers(_) => "providers",
@@ -1741,7 +1848,11 @@ mod tests {
             .collect();
         // Kitsu is the one tracker the defaults build.
         // Trailers may start until the front end says otherwise: Always is the default.
-        assert_eq!(launch, ["settings", "autoplay", "stores", "providers", "demo", "sync"]);
+        // Private mode is never kept, so every launch says it is off.
+        assert_eq!(
+            launch,
+            ["settings", "private", "autoplay", "stores", "providers", "demo", "sync"]
+        );
         assert!(events.launch().await.is_empty(), "taken once");
     }
 

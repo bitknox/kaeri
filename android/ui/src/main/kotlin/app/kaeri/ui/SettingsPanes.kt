@@ -122,7 +122,7 @@ internal fun SettingMenu(
 
 /** A setting that is on or off, with how many shows set it for themselves under it. */
 @Composable
-internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: String? = null, enabled: Boolean = true, extra: String? = null) {
+internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: String? = null, enabled: Boolean = true, extra: String? = null, hint: String? = null) {
     val store = LocalAppStore.current
     val view by store.settings.view.collectAsStateWithLifecycle()
     val row = store.settings.row(key, view)
@@ -133,6 +133,7 @@ internal fun SettingSwitch(place: Place, key: SettingKey, title: String, note: S
         note = listOfNotNull(store.settings.overridden(LocalContext.current, key, view), note).joinToString("\n").ifEmpty { null }, // i18n-skip
         enabled = enabled && SettingsCatalog.editable(row),
         extra = extra,
+        hint = hint,
     ) { store.setSetting(key, SettingValue.Bool(it)) }
 }
 
@@ -319,6 +320,7 @@ internal fun PlaybackPane() {
             rows = listOf(
                 { place -> SettingSwitch(place, SettingKey.AUTO_NEXT, stringResource(R.string.settings_auto_play)) },
                 { place -> SettingMenu(place, SettingKey.UP_NEXT_COUNTDOWN, stringResource(R.string.settings_up_next_countdown), enabled = autoNext) },
+                { place -> PreloadRow(place, autoNext, torrents = store.settings.isOn(SettingKey.TORRENTS, view)) },
                 { place -> SettingSwitch(place, SettingKey.SKIP_OPENING, stringResource(R.string.settings_skip_opening)) },
                 { place -> SettingSwitch(place, SettingKey.SKIP_RECAP, stringResource(R.string.settings_skip_recap)) },
                 { place -> SettingSwitch(place, SettingKey.SKIP_FILLER, stringResource(R.string.settings_skip_filler)) },
@@ -336,11 +338,14 @@ internal fun PlaybackPane() {
                 { place -> SettingSwitch(place, SettingKey.SPOILER_PROTECTION, stringResource(R.string.settings_spoiler), note = stringResource(R.string.settings_spoiler_detail)) },
             ),
         )
+        // Picture in picture when leaving the app, last, on devices that have the floating window.
+        val floating = remember(context) { PictureInPictureAccess.supported(context) }
         SettingsGroup(
             title = stringResource(R.string.player_picture_and_sound),
-            rows = listOf(
+            rows = listOfNotNull<@Composable (Place) -> Unit>(
                 { place -> SettingMenu(place, SettingKey.UPSCALING, stringResource(R.string.player_upscaling), focus = FOCUS_UPSCALING) },
                 { place -> SettingSwitch(place, SettingKey.NIGHT_MODE, stringResource(R.string.player_night_mode), note = stringResource(R.string.player_night_mode_detail)) },
+                if (floating) ({ place -> PictureInPictureRow(place) }) else null,
             ),
         )
         // Hide chat is this device's own: the engine always sends the room's words.
@@ -353,6 +358,24 @@ internal fun PlaybackPane() {
             ),
         )
     }
+}
+
+/**
+ * Preload video on mobile data, under Up next countdown: what loads during the ending, and the
+ * torrent sentence while torrents play. Nothing preloads without Auto-play next, so it dims and
+ * stops taking touches with Up next countdown then, and says so to a screen reader.
+ */
+@Composable
+private fun PreloadRow(place: Place, autoNext: Boolean, torrents: Boolean) {
+    val line = stringResource(R.string.settings_preload_detail_android)
+    SettingSwitch(
+        place,
+        SettingKey.PRELOAD_METERED,
+        stringResource(R.string.settings_preload_cellular),
+        note = if (torrents) line + " " + stringResource(R.string.settings_preload_torrents) else line, // i18n-skip
+        enabled = autoNext,
+        hint = stringResource(R.string.settings_preload_a11y_dimmed),
+    )
 }
 
 /** The three forms a title can be named in, as the settings file names them. */
@@ -632,7 +655,15 @@ internal fun SourcesPane(actions: AppActions) {
     // Reading alone: the book sources are the pane.
     if (!answer.watches) {
         var adding by rememberSaveable { mutableStateOf(false) }
-        Pane { app.kaeri.ui.reading.BookSourcesList(onAdd = { adding = true }) }
+        val books by LocalAppStore.current.bookSources.view.collectAsStateWithLifecycle()
+        Pane {
+            // Add a source leads the pane once a source is there, as the Book sources page's top
+            // bar has it; with none, the empty state's own button is the one Add.
+            if (!app.kaeri.ui.reading.bookSourcesEmpty(books)) {
+                SettingsGroup(rows = listOf { place -> ActionRow(place, stringResource(R.string.sources_add_title)) { adding = true } })
+            }
+            app.kaeri.ui.reading.BookSourcesList(onAdd = { adding = true })
+        }
         if (adding) app.kaeri.ui.reading.AddSourceSheet { adding = false }
         return
     }
@@ -840,6 +871,13 @@ internal fun AccountsPane(actions: AppActions) {
                     )
                 })
             },
+        )
+        // People you follow, per device, only while AniList is signed in; the footer says the
+        // viewer's own list is set on AniList.
+        if (anilist?.connected == true) SettingsGroup(
+            rows = listOf(
+                { place -> SettingSwitch(place, SettingKey.SHOW_FOLLOWING, stringResource(R.string.settings_anilist_following), note = stringResource(R.string.settings_anilist_following_footer)) },
+            ),
         )
         // Discussions are about episodes: with reading alone they are gone.
         if (answer.watches) SettingsGroup(

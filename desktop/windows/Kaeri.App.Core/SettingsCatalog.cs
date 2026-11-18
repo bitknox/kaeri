@@ -23,7 +23,7 @@ public static class SettingsCatalog
 {
     static readonly HashSet<SettingKey> Switches =
     [
-        SettingKey.Motion, SettingKey.AutoNext, SettingKey.SkipOpening, SettingKey.SkipRecap, SettingKey.SkipFiller, SettingKey.FindSkipTimes, SettingKey.AskWasOpening, SettingKey.ShareSkipTimes,
+        SettingKey.Motion, SettingKey.AutoNext, SettingKey.PreloadMetered, SettingKey.SkipOpening, SettingKey.SkipRecap, SettingKey.SkipFiller, SettingKey.FindSkipTimes, SettingKey.AskWasOpening, SettingKey.ShareSkipTimes,
         SettingKey.MarkChapters, SettingKey.SkipButton, SettingKey.Fullscreen, SettingKey.NightMode,
         SettingKey.MergeSubtitles, SettingKey.KeepSeeding, SettingKey.Presence, SettingKey.PresenceTitle,
         SettingKey.PresenceRich,
@@ -32,15 +32,18 @@ public static class SettingsCatalog
         SettingKey.ChapterDownloadsOnCellular, SettingKey.KeepChaptersReady, SettingKey.DeleteAfterReading, SettingKey.ShowVolumes, SettingKey.OpdsFeed,
         SettingKey.SeriesChoicesFollow, SettingKey.LookFollows, SettingKey.ChapterNotifications, SettingKey.DownloadsFinished,
         SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting, SettingKey.AdultTitles,
+        SettingKey.ShowFollowing,
     ];
 
     /// <summary>
     /// The switches a row waits on, each to be on before the row means anything: the party's
-    /// server and room on Watch party, the title on Discord, rich presence on the title too.
-    /// The Mac's integrations pane greys the same rows.
+    /// server and room on Watch party, the title on Discord, rich presence on the title too, and
+    /// Up next countdown and Preload on Auto-play next, since nothing counts down or warms
+    /// without it. The Mac greys the same rows.
     /// </summary>
     public static IReadOnlyList<SettingKey> Needs(SettingKey key) => key switch
     {
+        SettingKey.UpNextCountdown or SettingKey.PreloadMetered => [SettingKey.AutoNext],
         SettingKey.SyncplayServer or SettingKey.SyncplayRoom => [SettingKey.Syncplay],
         SettingKey.PresenceTitle => [SettingKey.Presence],
         SettingKey.CommentImages => [SettingKey.EpisodeDiscussions],
@@ -107,6 +110,13 @@ public static class SettingsCatalog
         _ when IsSwitch(key) => [new(new SettingValue.Bool(false), "off", T.ValueOff), new(new SettingValue.Bool(true), "on", T.ValueOn)],
         _ => [],
     };
+
+    /// <summary>
+    /// The line under Preload video on metered connections: what warms during the ending, and,
+    /// while torrent playback is on, that torrents load their first pieces the same way.
+    /// </summary>
+    public static string PreloadLine(bool torrents) =>
+        torrents ? $"{T.SettingsPreloadDetailMetered} {T.SettingsPreloadTorrents}" : T.SettingsPreloadDetailMetered;
 
     /// <summary>An upload cap in the engine's words, "unlimited" or "524 kB/s", to match its row: <c>upload_label</c>.</summary>
     public static string UploadLabel(ulong kib) =>

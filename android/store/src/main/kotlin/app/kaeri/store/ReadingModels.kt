@@ -15,6 +15,7 @@ import app.kaeri.engine.model.BookServerRow
 import app.kaeri.engine.model.BookSourceCommand
 import app.kaeri.engine.model.BookSourceEvent
 import app.kaeri.engine.model.BookSourcesView
+import app.kaeri.engine.model.ChapterRow
 import app.kaeri.engine.model.ChapterVersion
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.DownloadEstimate
@@ -60,6 +61,7 @@ import app.kaeri.engine.model.TrackerReadRow
 import app.kaeri.engine.model.UpdatesView
 import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.engine.model.WorkTile
+import app.kaeri.engine.model.readHomeWithoutContinue
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -189,12 +191,17 @@ data class ReadSearchState(
     val words: Boolean get() = query.text.isNotBlank()
 }
 
-/** [this] with a page of AniList's answer in: the first page replaces, a later one adds. */
+/**
+ * [this] with a page of AniList's answer in: the first page replaces, a later one adds. AniList's
+ * pages can overlap when a work moves down a place between two asks, and the grids key by work,
+ * so each work is kept once, where it first came.
+ */
 private fun ReadSearchState.answered(event: ReadingEvent.Search): ReadSearchState {
     val first = event.page == 0u
+    val pageOne = if (first) event.tiles.distinctBy { it.work } else null
     return copy(
-        tiles = if (first) event.tiles else tiles + event.tiles,
-        firstPage = if (first) event.tiles.size else firstPage,
+        tiles = pageOne ?: (tiles + event.tiles).distinctBy { it.work },
+        firstPage = pageOne?.size ?: firstPage,
         page = event.page,
         hasMore = event.hasMore,
         otherScope = event.otherScope,
@@ -368,6 +375,15 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reading(ReadingCommand.Search(query))
     }
 
+    /**
+     * [query] back on Search with nothing asked yet, as the screen had it before the process went
+     * away; Search asks it as it shows. Only over a search that has not started.
+     */
+    fun restoreQuery(query: ReadSearchQuery) {
+        val now = _search.value
+        if (now.query == EMPTY_QUERY && now.tiles.isEmpty() && !now.loading) _search.value = ReadSearchState(query = query)
+    }
+
     /** Search back at its start, with nothing asked: no words, no filters and no order chosen. */
     fun searchStart() {
         _search.value = ReadSearchState()
@@ -487,7 +503,11 @@ class ReadingModel(private val send: (Command) -> Unit) {
         reloadChapters(work)
     }
 
-    fun hideFromContinue(work: WorkId) = reading(ReadingCommand.HideFromContinue(work))
+    /** Take a series off Continue: the cover goes at once, nothing else on Home moves, and the engine keeps it hidden. */
+    fun hideFromContinue(work: WorkId) {
+        _home.update { home -> home?.let { readHomeWithoutContinue(it, work) } }
+        reading(ReadingCommand.HideFromContinue(work))
+    }
 
     fun setStatus(work: WorkId, status: LibrarySegmentRead) {
         reading(ReadingCommand.SetStatus(work, status))
@@ -567,6 +587,17 @@ class ReadingModel(private val send: (Command) -> Unit) {
 
     /** The reader closed on [work]: its page and lists show where reading got to. */
     fun readerClosed(work: WorkId) = refreshSeries(work)
+
+    /**
+     * [chapter] of [work] as a screen already lists it: its series' chapters, Updates or
+     * Downloads. The reader names it while it opens, and if it fails to, before the engine does.
+     */
+    fun chapterRow(work: WorkId, chapter: ChapterId?): ChapterRow? {
+        if (chapter == null) return null
+        _chapters.value[work]?.volumes?.firstNotNullOfOrNull { group -> group.chapters.firstOrNull { it.id == chapter } }?.let { return it }
+        _updates.value?.days?.firstNotNullOfOrNull { day -> day.rows.firstOrNull { it.tile.work == work && it.chapter.id == chapter } }?.let { return it.chapter }
+        return _downloads.value?.rows?.firstOrNull { it.work == work && it.chapter.id == chapter }?.chapter
+    }
 
     private fun refreshSeries(work: WorkId) {
         if (_series.value[work] != null || _chapters.value[work] != null) {

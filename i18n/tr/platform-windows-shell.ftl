@@ -59,3 +59,4 @@ titlebar-open-devices = { -device-cap-pl } sayfasını aç
 messages-title = Mesajlar
 messages-none = Henüz mesaj yok
 messages-alert = Sorun
+tv-on-this-network = Bu ağda

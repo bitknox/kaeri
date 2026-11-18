@@ -119,19 +119,39 @@ struct TogetherMemberRow: View {
     }
 }
 
-/// The room's still: the title's wide art, or its cover's colour.
+/// The room's still: the title's wide art, or its cover's colour. On iPhone, and an iPad at
+/// compact width, by the wide art's rule (`HeroArt`): its banner, a seen still, the cover filling
+/// the frame, or a plate with the title.
 struct TogetherStill: View {
     @Environment(AppStore.self) private var store
     @Environment(\.displayScale) private var scale
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
     let id: AnilistId?
     let width: CGFloat
     let height: CGFloat
     var radius: CGFloat = 10
 
+    /// Whether the frame fills by the wide art's rule.
+    private var fills: Bool {
+        #if os(iOS)
+        sizeClass == .compact
+        #else
+        false
+        #endif
+    }
+
     var body: some View {
         let entry = id.flatMap { store.titles[$0] }
-        ArtworkView(url: entry?.bannerUrl ?? entry?.coverUrl, color: entry?.plateColor,
-                    maxPixelSize: Int(width * scale))
+        Group {
+            if fills, let entry {
+                HeroArtView(art: store.heroArt(entry, fills: true), entry: entry)
+            } else {
+                ArtworkView(url: entry?.bannerUrl ?? entry?.coverUrl, color: entry?.plateColor,
+                            maxPixelSize: Int(width * scale))
+            }
+        }
             .frame(width: width, height: height)
             .clipShape(.rect(cornerRadius: radius))
             .accessibilityHidden(true)

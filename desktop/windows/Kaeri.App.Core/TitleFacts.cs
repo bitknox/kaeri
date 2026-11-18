@@ -71,11 +71,4 @@ public static class TitleFacts
         var label = ranking.Kind == RankingKind.Rated ? T.RankingHighestRated(scope) : T.RankingMostPopular(scope);
         return T.RankingLine(ranking.Rank, label);
     }
-
-    /// <summary>A person's status and score on the show: "Completed · 9/10", or the status alone.</summary>
-    public static string Follow(FollowedEntry follow, Func<LibrarySegment, string> status)
-    {
-        var name = follow.Status is { } s ? status(s) : "";
-        return follow.Score is { } score and > 0 && name.Length > 0 ? T.MoreFollowingLine(name, (long)Math.Round(score / 10.0)) : name;
-    }
 }

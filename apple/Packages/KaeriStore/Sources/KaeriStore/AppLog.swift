@@ -28,6 +28,20 @@ public enum AppLog {
         }
     }
 
+    /// One of mpv's lines, for the player log: at info and above, under source `mpv`, prefixed
+    /// with mpv's module in brackets, its addresses cut as `redacting(_:)` cuts them. Only the
+    /// engine's log takes it; mpv's lines below info, and the unified log, never see it.
+    public static func mpv(level: String, module: String, _ text: String) {
+        let ffi: FfiLogLevel
+        switch level {
+        case "fatal", "error": ffi = .error
+        case "warn": ffi = .warn
+        case "info": ffi = .info
+        default: return
+        }
+        logLine(level: ffi, source: "mpv", message: "[\(module)] \(redacting(text))")
+    }
+
     /// Milliseconds from `start` to now, for timings in the log.
     public static func ms(since start: ContinuousClock.Instant) -> Int {
         let elapsed = ContinuousClock.now - start

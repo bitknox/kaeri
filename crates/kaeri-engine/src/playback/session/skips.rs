@@ -254,6 +254,25 @@ pub const fn timeline_mark(skip: &SkipInterval) -> kaeri_model::playback::Timeli
     }
 }
 
+/// How far into an episode its own ending may start at the earliest, as a share of its length:
+/// the last third, where the marking bar guesses an ending too.
+const CLOSING_FROM: f64 = 2.0 / 3.0;
+
+/// Where the episode's own ending starts, which Up Next and the look-ahead for the next episode
+/// wait for: the first ending that starts in the last third of an episode `length` long.
+///
+/// An ending earlier than that, such as an ending theme over a first episode's cold open or
+/// times taken against another cut, is only a segment to skip. Without a length no ending is
+/// placed, and Up Next waits for the end.
+pub(super) fn closing_ending(skips: &[SkipInterval], length: Option<f64>) -> Option<f64> {
+    let from = length.filter(|l| *l > 0.0)? * CLOSING_FROM;
+    skips
+        .iter()
+        .filter(|s| s.kind == SkipKind::Ending && s.start >= from)
+        .map(|s| s.start)
+        .min_by(f64::total_cmp)
+}
+
 /// How far short of the end a skip lands when its segment runs to the end of the file.
 ///
 /// An ending cut as the file's last chapter ends exactly at the runtime, and aniskip's times,
@@ -405,5 +424,30 @@ mod tests {
         // Anything short of the end, or a length not known yet, is the segment's own end.
         assert_eq!(skip_target(93.2, Some(1420.0)), 93.2);
         assert_eq!(skip_target(1507.0, None), 1507.0);
+    }
+
+    fn interval(kind: SkipKind, start: f64, end: f64) -> SkipInterval {
+        SkipInterval { kind, start, end, origin: SkipOrigin::AniSkip }
+    }
+
+    #[test]
+    fn only_an_ending_in_the_last_third_is_the_episodes_own() {
+        // Four times for a 1541 s episode: an ending from 24 to 137 s over the cold open, the
+        // opening, the real ending and its credits over the last scene.
+        let skips = [
+            interval(SkipKind::Opening, 20.8, 137.4),
+            interval(SkipKind::Ending, 24.0, 137.0),
+            interval(SkipKind::Ending, 1400.0, 1490.0),
+            interval(SkipKind::Ending, 1420.0, 1500.0),
+        ];
+        assert_eq!(closing_ending(&skips, Some(1541.0)), Some(1400.0));
+        // An early ending alone places nothing, and neither does an unknown length.
+        assert_eq!(closing_ending(&skips[..2], Some(1541.0)), None);
+        assert_eq!(closing_ending(&skips, None), None);
+        // An ending that closes the file, and one past its end from a longer cut, both count.
+        assert_eq!(
+            closing_ending(&[interval(SkipKind::Ending, 1417.0, 1507.0)], Some(1420.0)),
+            Some(1417.0)
+        );
     }
 }

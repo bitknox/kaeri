@@ -1084,6 +1084,7 @@ mod tests {
             plugins: crate::book_plugins::BookPlugins::default(),
             clock: crate::clock::Clock::in_zone(TimeZone::UTC),
             offline: Arc::new(AtomicBool::new(false)),
+            privacy: Default::default(),
         }
     }
 

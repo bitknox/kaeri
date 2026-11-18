@@ -33,6 +33,16 @@ pub enum Msg {
     NoticeCastNotSameNetwork { name: String },
     /// The TV stopped answering mid-cast. The name is the TV's own.
     NoticeCastLost { name: String },
+    /// The cast was stopped on the TV while it still answered: with the TV's own remote, another phone's cast controls or the system's. The card closes and this shows for 8 seconds with Play here. The name is the TV's own.
+    NoticeCastStoppedElsewhere { name: String },
+    /// Kaeri's receiver on the TV couldn't get part of the episode from the source mid-play, so the cast stopped. The card offers Choose source and Play here. The name is the TV's own.
+    NoticeCastSegment { name: String },
+    /// The TV stopped reaching this device, which hands it the stream, mid-episode. The card offers Try again and Play here. The name is the TV's own.
+    NoticeCastLostStream { name: String },
+    /// Shown once per TV, the first time it can't keep up with styled subtitles and switches to plain ones. Nothing else changes and the episode plays on. The name is the TV's own.
+    NoticeCastSubtitlesPlain { name: String },
+    /// Kaeri's receiver on the TV didn't start for this cast, so the TV's own player plays the episode instead. Shown each time it happens; the episode plays on. The name is the TV's own.
+    NoticeCastFallback { name: String },
     /// The TV picked to cast to has left the network.
     NoticeCastNoDevice,
     /// This build of the app has no casting.
@@ -189,6 +199,10 @@ pub enum Msg {
     NoticePlayerFailedToStart { reason: String },
     /// Toast when a stream never showed a frame and the next one is tried.
     NoticeStreamNoVideo { next: i64, total: i64 },
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and a stream from another source took over at the same second, with the same audio and subtitles. The source is its own name.
+    NoticeFailedOver { source: String },
+    /// Quiet toast in the player when the stream playing broke off with an error mid-episode and another stream from the same source took over at the same second, with the same audio and subtitles. The source is its own name.
+    NoticeFailedOverSameSource { source: String },
     /// Toast when mpv gave up on a file. The reason is mpv's own line.
     NoticePlayerCouldNotPlay { reason: String },
     /// Toast when mpv closed without playing and without saying why.
@@ -480,6 +494,11 @@ impl Msg {
             Self::NoticeCastTakenOver { .. } => "notice-cast-taken-over",
             Self::NoticeCastNotSameNetwork { .. } => "notice-cast-not-same-network",
             Self::NoticeCastLost { .. } => "notice-cast-lost",
+            Self::NoticeCastStoppedElsewhere { .. } => "notice-cast-stopped-elsewhere",
+            Self::NoticeCastSegment { .. } => "notice-cast-segment",
+            Self::NoticeCastLostStream { .. } => "notice-cast-lost-stream",
+            Self::NoticeCastSubtitlesPlain { .. } => "notice-cast-subtitles-plain",
+            Self::NoticeCastFallback { .. } => "notice-cast-fallback",
             Self::NoticeCastNoDevice => "notice-cast-no-device",
             Self::NoticeCastUnavailable => "notice-cast-unavailable",
             Self::CastPhaseStarting { .. } => "cast-phase-starting",
@@ -558,6 +577,8 @@ impl Msg {
             Self::StatusSearchingSources { .. } => "status-searching-sources",
             Self::NoticePlayerFailedToStart { .. } => "notice-player-failed-to-start",
             Self::NoticeStreamNoVideo { .. } => "notice-stream-no-video",
+            Self::NoticeFailedOver { .. } => "notice-failed-over",
+            Self::NoticeFailedOverSameSource { .. } => "notice-failed-over-same-source",
             Self::NoticePlayerCouldNotPlay { .. } => "notice-player-could-not-play",
             Self::NoticePlayerExitedSilently => "notice-player-exited-silently",
             Self::NoticePlayerNotPlaying { .. } => "notice-player-not-playing",
@@ -712,6 +733,11 @@ impl Msg {
             Self::NoticeCastTakenOver { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastNotSameNetwork { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastLost { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastStoppedElsewhere { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastSegment { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastLostStream { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastSubtitlesPlain { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeCastFallback { name } => vec![("name", Value::Text(name.clone()))],
             Self::NoticeCastNoDevice => Vec::new(),
             Self::NoticeCastUnavailable => Vec::new(),
             Self::CastPhaseStarting { name } => vec![("name", Value::Text(name.clone()))],
@@ -790,6 +816,8 @@ impl Msg {
             Self::StatusSearchingSources { episode } => vec![("episode", Value::Text(episode.clone()))],
             Self::NoticePlayerFailedToStart { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticeStreamNoVideo { next, total } => vec![("next", Value::Int(*next)), ("total", Value::Int(*total))],
+            Self::NoticeFailedOver { source } => vec![("source", Value::Text(source.clone()))],
+            Self::NoticeFailedOverSameSource { source } => vec![("source", Value::Text(source.clone()))],
             Self::NoticePlayerCouldNotPlay { reason } => vec![("reason", Value::Text(reason.clone()))],
             Self::NoticePlayerExitedSilently => Vec::new(),
             Self::NoticePlayerNotPlaying { seconds } => vec![("seconds", Value::Int(*seconds))],
@@ -1499,6 +1527,8 @@ pub enum ReadingMsg {
     ReadingRowQueued,
     /// A chapter row's state: it waits to download until the device is on Wi-Fi.
     ReadingRowWaitsWifi,
+    /// A chapter row's state: it waits to download until the device has free space again. A full device paused the downloads; they go on by themselves once there is room.
+    ReadingRowWaitsRoom,
     /// A chapter row's state while it downloads.
     ReadingRowDownloading { done: i64, total: i64 },
     /// A chapter row's state while it downloads, before its page count is known, and throughout for a novel's chapter, which has no pages to count.
@@ -1591,6 +1621,8 @@ pub enum ReadingMsg {
     ReadingDlFailed { chapter: String },
     /// After "Chapter 2 couldn't download" when there was no network: the downloads banner says the rest.
     ReadingDlOffline,
+    /// After "3 queued" on a series' Downloads row when a full device paused the downloads. They go on by themselves once some space is free; the count is the queued chapters.
+    ReadingDlNoRoom { count: i64 },
     /// How much the chosen chapters will take, from their pages and the size of pages downloaded before.
     ReadingEstimateSize { size: Size },
     /// The chapters download only on Wi-Fi, as the settings say.
@@ -1813,6 +1845,7 @@ impl ReadingMsg {
             Self::ReadingRowOnDevice => "reading-row-on-device",
             Self::ReadingRowQueued => "reading-row-queued",
             Self::ReadingRowWaitsWifi => "reading-row-waits-wifi",
+            Self::ReadingRowWaitsRoom => "reading-row-waits-room",
             Self::ReadingRowDownloading { .. } => "reading-row-downloading",
             Self::ReadingRowDownloadingPlain => "reading-row-downloading-plain",
             Self::ReadingRowFailed => "reading-row-failed",
@@ -1859,6 +1892,7 @@ impl ReadingMsg {
             Self::ReadingDlWaitsWifi => "reading-dl-waits-wifi",
             Self::ReadingDlFailed { .. } => "reading-dl-failed",
             Self::ReadingDlOffline => "reading-dl-offline",
+            Self::ReadingDlNoRoom { .. } => "reading-dl-no-room",
             Self::ReadingEstimateSize { .. } => "reading-estimate-size",
             Self::ReadingEstimateWifi => "reading-estimate-wifi",
             Self::ReadingEstimateMobile => "reading-estimate-mobile",
@@ -2029,6 +2063,7 @@ impl ReadingMsg {
             Self::ReadingRowOnDevice => Vec::new(),
             Self::ReadingRowQueued => Vec::new(),
             Self::ReadingRowWaitsWifi => Vec::new(),
+            Self::ReadingRowWaitsRoom => Vec::new(),
             Self::ReadingRowDownloading { done, total } => vec![("done", Value::Int(*done)), ("total", Value::Int(*total))],
             Self::ReadingRowDownloadingPlain => Vec::new(),
             Self::ReadingRowFailed => Vec::new(),
@@ -2075,6 +2110,7 @@ impl ReadingMsg {
             Self::ReadingDlWaitsWifi => Vec::new(),
             Self::ReadingDlFailed { chapter } => vec![("chapter", Value::Text(chapter.clone()))],
             Self::ReadingDlOffline => Vec::new(),
+            Self::ReadingDlNoRoom { count } => vec![("count", Value::Int(*count))],
             Self::ReadingEstimateSize { size } => vec![("size", Value::Size(*size))],
             Self::ReadingEstimateWifi => Vec::new(),
             Self::ReadingEstimateMobile => Vec::new(),
@@ -2157,6 +2193,10 @@ pub enum Cause {
     ReleaseFailed { detail: String },
     /// Reason: a play waited too long for its sources to give it a stream, and gave up.
     SourcesTimedOut,
+    /// Reason: some sources asked gave no real answer for the episode: they failed, took too long or were skipped, and the rest don't have it. The names are joined with commas.
+    SourcesUnreached { names: String },
+    /// Reason: every source asked lacks the episode, and some sources weren't asked while local settings hold them back. The names are joined with commas. The episode is its label.
+    SourcesNotAsked { count: i64, names: String, episode: String },
     /// Reason: every source matched the title but none has the episode. The detail is what each said.
     NoSourceHasEpisode { episode: String, detail: String },
     /// Reason: the source streams episodes but only torrents can be downloaded.
@@ -2194,6 +2234,8 @@ impl Cause {
             Self::SourceGone { .. } => "cause-source-gone",
             Self::ReleaseFailed { .. } => "cause-release-failed",
             Self::SourcesTimedOut => "cause-sources-timed-out",
+            Self::SourcesUnreached { .. } => "cause-sources-unreached",
+            Self::SourcesNotAsked { .. } => "cause-sources-not-asked",
             Self::NoSourceHasEpisode { .. } => "cause-no-source-has-episode",
             Self::SourceCannotDownload => "cause-source-cannot-download",
             Self::NoSourceCouldListShow => "cause-no-source-could-list-show",
@@ -2221,6 +2263,8 @@ impl Cause {
             Self::SourceGone { source } => vec![("source", Value::Text(source.clone()))],
             Self::ReleaseFailed { detail } => vec![("detail", Value::Text(detail.clone()))],
             Self::SourcesTimedOut => Vec::new(),
+            Self::SourcesUnreached { names } => vec![("names", Value::Text(names.clone()))],
+            Self::SourcesNotAsked { count, names, episode } => vec![("count", Value::Int(*count)), ("names", Value::Text(names.clone())), ("episode", Value::Text(episode.clone()))],
             Self::NoSourceHasEpisode { episode, detail } => vec![("episode", Value::Text(episode.clone())), ("detail", Value::Text(detail.clone()))],
             Self::SourceCannotDownload => Vec::new(),
             Self::NoSourceCouldListShow => Vec::new(),

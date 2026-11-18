@@ -2,12 +2,15 @@
 // with the file's own fonts from the sender's relay. JASSUB and its WebAssembly are separate files
 // under vendor/jassub/, loaded only when an episode has typeset subtitles.
 
+import { devLog } from './debug';
 import { FrameClock } from './frame-clock';
+import type { TypesetSink } from './formats/subs';
 
 export type Failure = 'subtitle' | 'font' | 'renderer';
 
 interface Jassub {
 	debug: unknown;
+	renderer?: { processChunk(data: string, timecode: number, duration: number): Promise<void> | void };
 	destroy(): Promise<void>;
 	ready: Promise<void>;
 }
@@ -44,7 +47,7 @@ async function bytes(url: string): Promise<Uint8Array> {
 	return new Uint8Array(await r.arrayBuffer());
 }
 
-export class Typeset {
+export class Typeset implements TypesetSink {
 	private jassub: Jassub | null = null;
 	private clock: FrameClock | null = null;
 	private token = 0;
@@ -65,7 +68,6 @@ export class Typeset {
 	async show(ass: string, fonts: string[]): Promise<void> {
 		await this.hide();
 		const token = ++this.token;
-		const v = vendor(this.base);
 		let content: string;
 		try {
 			const r = await fetch(ass);
@@ -81,6 +83,26 @@ export class Typeset {
 			throw 'font' as Failure;
 		}
 		if (token !== this.token) return;
+		await this.run(token, content, fontData);
+	}
+
+	/** Starts the renderer with an ASS track's header and the file's fonts; events come by `chunk`. */
+	async start(header: string, fonts: Uint8Array[]): Promise<void> {
+		await this.hide();
+		await this.run(++this.token, header, fonts);
+	}
+
+	/** One event of the track: "ReadOrder, Layer, Style, ..., Text", times in seconds. */
+	chunk(text: string, start: number, duration: number) {
+		void Promise.resolve(this.jassub?.renderer?.processChunk(text, Math.round(start * 1000), Math.round(duration * 1000))).catch(() => {});
+	}
+
+	stop() {
+		void this.hide();
+	}
+
+	private async run(token: number, content: string, fontData: Uint8Array[]) {
+		const v = vendor(this.base);
 		try {
 			loaded ??= import(/* @vite-ignore */ v.script).then((m) => m.default as JassubClass);
 			const JASSUB = await loaded;
@@ -104,6 +126,10 @@ export class Typeset {
 			this.clock = clock;
 			await jassub.ready;
 		} catch (e) {
+			// A newer show or hide replaced this renderer while it started (its worker answers the
+			// destroy with an error): not a failure, and the newer renderer stays.
+			devLog(`typeset ${token === this.token ? 'failed' : 'replaced'}: ${e}`);
+			if (token !== this.token) return;
 			console.warn('typeset subtitles', e);
 			await this.hide();
 			throw 'renderer' as Failure;

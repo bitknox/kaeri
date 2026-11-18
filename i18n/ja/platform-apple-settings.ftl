@@ -116,3 +116,6 @@ settings-trailers-row = 予告編を再生
 settings-trailers-note-apple = 予告編はYouTubeからミュートで再生され、YouTubeにIPアドレスが送られます。低データモード、「視差効果を減らす」の設定、低電力モードでは再生されません。
 language-restart = 再起動
 language-next-open-note = 新しい言語は、{ -app-name }を次に開いたときから使われます。
+settings-picture-in-picture-on-leave-apple = アプリを離れるときにピクチャ・イン・ピクチャ
+settings-picture-in-picture-on-leave-mac = ウインドウをしまうか、{ -app-name }を非表示にすると開始します。
+settings-picture-in-picture-on-leave-ios = 「設定」>「一般」>「ピクチャ・イン・ピクチャ」の「PiPを自動的に開始」もオンにする必要があります。

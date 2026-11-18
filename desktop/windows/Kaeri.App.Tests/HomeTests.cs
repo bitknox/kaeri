@@ -56,6 +56,17 @@ public class HomeTests
     }
 
     [Fact]
+    public void WhileATvIsHeldPlayLeadsWithTheCastGlyph()
+    {
+        Assert.True(HomeWording.Casts(HomeAction.Resume, held: true));
+        Assert.True(HomeWording.Casts(HomeAction.Play, held: true));
+        Assert.False(HomeWording.Casts(HomeAction.Play, held: false));
+        // Add to Planning and Details play nothing.
+        Assert.False(HomeWording.Casts(HomeAction.AddToPlanning, held: true));
+        Assert.False(HomeWording.Casts(HomeAction.Details, held: true));
+    }
+
+    [Fact]
     public void APosterSaysItsShortReasonAndTheNameCarriesTheFullOne()
     {
         var item = Item(reason: UpNextReason.Recommended, because: "Tourou Doori");

@@ -7,7 +7,8 @@
 //! tone. The opt-in catalogue's eight titles ([`crate::fixtures::catalogue`]) are drawn the same
 //! way, a lighthouse, a koi pond, paper lanterns and so on, and Home's world's 36 as the Home
 //! design board draws them. The SVG each PNG was rendered from is
-//! under `fixtures/art/src/`. [`FakeAniList::serve_art`](crate::FakeAniList::serve_art) serves them at the paths the
+//! under `fixtures/art/src/`. The people the viewer follows ([`crate::fixtures::following`]) have
+//! a 128 × 128 picture each, drawn as that board draws them, at `avatar/<name>.png`. [`FakeAniList::serve_art`](crate::FakeAniList::serve_art) serves them at the paths the
 //! fixtures' own image URLs name.
 
 use crate::fixtures::{AIRING, AIRING_NO_MAL, CATALOGUE, FINISHED, MOVIE, ONA, SEQUEL};
@@ -116,13 +117,32 @@ fn of(id: u32) -> Option<&'static Art> {
     })
 }
 
+/// The people with a picture, as [`crate::fixtures::following`] names them, and their pictures.
+const AVATARS: [(&str, &[u8]); 10] = [
+    ("ines", include_bytes!("../fixtures/art/avatar-ines.png")),
+    ("lumi", include_bytes!("../fixtures/art/avatar-lumi.png")),
+    ("dario", include_bytes!("../fixtures/art/avatar-dario.png")),
+    ("rowanpaper", include_bytes!("../fixtures/art/avatar-rowanpaper.png")),
+    ("oskar", include_bytes!("../fixtures/art/avatar-oskar.png")),
+    ("teovale", include_bytes!("../fixtures/art/avatar-teovale.png")),
+    ("petrakite", include_bytes!("../fixtures/art/avatar-petrakite.png")),
+    ("kofi", include_bytes!("../fixtures/art/avatar-kofi.png")),
+    ("yunami", include_bytes!("../fixtures/art/avatar-yunami.png")),
+    ("halden", include_bytes!("../fixtures/art/avatar-halden.png")),
+];
+
 /// The PNG for an image path under [`crate::fixtures::ART_HOST`], or `None` for a path the
 /// fixtures do not name: `cover/900001-xl.jpg` and `cover/900001.jpg` are the poster,
-/// `banner/900001.jpg` and an episode's still, `ep/900001/3.jpg`, the wide drawing.
+/// `banner/900001.jpg` and an episode's still, `ep/900001/3.jpg`, the wide drawing, and
+/// `avatar/Ines.png` a person's picture.
 pub fn png(path: &str) -> Option<&'static [u8]> {
     let mut parts = path.trim_start_matches('/').split('/');
     let kind = parts.next()?;
     let id = parts.next()?;
+    if kind == "avatar" {
+        let name = id.strip_suffix(".png")?.to_lowercase();
+        return AVATARS.iter().find(|(n, _)| *n == name).map(|(_, png)| *png);
+    }
     let id: u32 = id.split(['-', '.']).next()?.parse().ok()?;
     let art = of(id)?;
     match kind {
@@ -175,6 +195,8 @@ mod tests {
         assert!(png("cover/900999.jpg").is_none());
         assert!(png("cover/950037.jpg").is_none());
         assert!(png("avatar/900001.jpg").is_none());
+        assert!(png("avatar/SannaQ.png").is_none(), "SannaQ has no picture");
+        assert!(png("avatar/Ines.png").is_some_and(|bytes| bytes.starts_with(PNG)));
         assert!(png("cover").is_none());
     }
 }

@@ -52,6 +52,9 @@ impl ProxyState {
     }
 }
 
+/// What [`ProviderError::Unavailable`] says while the torrent sources wait for the proxy check.
+pub const CHECK_PENDING: &str = "The proxy check failed";
+
 /// Where torrent traffic goes, shared with the torrent session and the interface: directly, or
 /// through the proxy, with the check's latest answer.
 #[derive(Clone)]
@@ -127,7 +130,7 @@ impl TorrentRoute {
         if state.is_ready() {
             return Ok(());
         }
-        Err(ProviderError::Unavailable("The proxy check failed".to_owned()))
+        Err(ProviderError::Unavailable(CHECK_PENDING.to_owned()))
     }
 
     /// Check the proxy and keep what it found. Directly, there is nothing to check.

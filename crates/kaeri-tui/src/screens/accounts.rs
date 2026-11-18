@@ -108,6 +108,11 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
         }
     }
 
+    y = render_private_switch(buf, app, area, y);
+    if y + 2 >= area.bottom() {
+        return;
+    }
+
     buf.set_string(
         area.left(),
         y,
@@ -148,7 +153,8 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
         if y >= area.bottom().saturating_sub(2) {
             break;
         }
-        let selected = i == app.cursors.accounts.selected;
+        // The private mode switch is the first row.
+        let selected = i + 1 == app.cursors.accounts.selected;
         if selected {
             mark_selected(buf, app, area.left(), y, focused);
         }
@@ -225,6 +231,37 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
         }
     }
 
+    // Show people you follow, after the trackers while AniList is signed in: this device's
+    // switch, its words under it.
+    if app.following_row() && y + 1 < area.bottom().saturating_sub(2) {
+        y += 1;
+        let selected = app.cursors.accounts.selected == app.sync.len() + 1;
+        if selected {
+            mark_selected(buf, app, area.left(), y, focused);
+        }
+        let check = if app.shows_following() { "[x]" } else { "[ ]" };
+        let label = format!("{check} {}", t::settings_anilist_following()); // i18n-skip: joins a box and its label
+        buf.set_string(
+            area.left() + 2,
+            y,
+            truncate(&label, area.width.saturating_sub(3) as usize),
+            if selected {
+                app.palette.style(Role::Text).add_modifier(Modifier::BOLD)
+            } else {
+                app.palette.style(Role::Text)
+            },
+        );
+        y += 1;
+        let width = area.width.saturating_sub(7).min(70) as usize;
+        for text in wrap(&t::settings_anilist_following_footer(), width, 3) {
+            if y >= area.bottom().saturating_sub(2) {
+                break;
+            }
+            buf.set_string(area.left() + 6, y, text, app.palette.style(Role::TextDim));
+            y += 1;
+        }
+    }
+
     // File-stored tokens are worth knowing about on a shared machine, but they are a working
     // state, not an error — so the fact is stated once, quietly, rather than a salmon cell
     // per row that reads as three failures.
@@ -247,7 +284,7 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
 
     // What Enter will do to the selected row, spelled out — signing out is destructive enough that
     // it should never be a surprise.
-    let action = app.sync.get(app.cursors.accounts.selected).map(|s| {
+    let action = app.account_tracker().map(|s| {
         if s.connected && !s.needs_reauth {
             t::accounts_enter_sign_out()
         } else {
@@ -265,6 +302,42 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
             app.palette.style(Role::TextDim),
         );
     }
+}
+
+/// The private mode switch, the first row, with what it keeps and what it cannot hide under it.
+/// Returns the line after it.
+fn render_private_switch(buf: &mut Buffer, app: &App, area: Rect, mut y: u16) -> u16 {
+    let selected = app.cursors.accounts.selected == 0;
+    if selected {
+        mark_selected(buf, app, area.left(), y, app.nav.focus() == crate::nav::Focus::Stage);
+    }
+    let bold = app.palette.style(Role::Text).add_modifier(Modifier::BOLD);
+    buf.set_string(
+        area.left() + 2,
+        y,
+        truncate(&t::private_mode(), (COL_STATE - 3) as usize),
+        if selected { bold } else { app.palette.style(Role::Text) },
+    );
+    let (value, style) = if app.private_on() {
+        (t::tui_read_on(), app.palette.style(Role::State).add_modifier(Modifier::BOLD))
+    } else {
+        (t::tui_read_off(), app.palette.style(Role::TextDim))
+    };
+    buf.set_string(area.left() + COL_STATE, y, ["[", value.as_str(), "]"].concat(), style);
+    y += 1;
+    let width = area.width.saturating_sub(4) as usize;
+    for text in wrap(&t::private_mode_detail(), width, 2).into_iter().chain(wrap(
+        &t::private_mode_limits(),
+        width,
+        2,
+    )) {
+        if y >= area.bottom() {
+            return y;
+        }
+        buf.set_string(area.left() + 2, y, text, app.palette.style(Role::TextDim));
+        y += 1;
+    }
+    y + 1
 }
 
 /// Tracker accounts and what sync is doing.

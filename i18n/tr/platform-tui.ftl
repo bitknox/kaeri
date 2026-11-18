@@ -12,3 +12,6 @@ tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
 tui-together-recent-alone = { $episode }. bölüm · { $when }
 tui-medium-read-change = { -app-name } uygulamasının ne için kullanılacağını değiştirmek için { $key } tuşuna basın.
 tui-medium-settings-hint = Değiştirmek için { $key }
+report-player-log-save-here = Oynatıcı günlüğünü kaydet
+report-player-log-saved-to = Oynatıcı günlüğü { $path } konumuna kaydedildi
+report-player-log-failed-here = Günlük { $folder } klasörüne kaydedilemedi.

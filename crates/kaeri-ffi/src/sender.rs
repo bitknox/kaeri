@@ -16,6 +16,7 @@ use kaeri_core::ids::AnilistId;
 use kaeri_engine::cast::protocol::{
     AacEncoder, AacStream, AacUnit, AudioCodec, AudioTrackInfo, EncodeError, VolumeControl,
 };
+use kaeri_engine::cast::{CastButton, SessionItem, SessionState, SessionView};
 use kaeri_engine::remote::{
     protocol::{
         client::Hello,
@@ -26,9 +27,9 @@ use kaeri_engine::remote::{
         state::{Screen, TrackInfo},
     },
     sender::{
-        CastBrowser, CastCard, CastRouteHint, CastRow, CastSession, CastSink, CastUndo,
-        CastUpNext, FoundCast, LinkPhase, NowCard, Pairing, Problem, RemoteCard, TvLink, TvRow,
-        TvRowKind, TvSender,
+        CastBrowser, CastCard, CastFrom, CastRouteHint, CastRow, CastSession, CastSink,
+        CastUndo, CastUpNext, FoundCast, LinkPhase, NowCard, Pairing, Problem, RemoteCard,
+        TvLink, TvRow, TvRowKind, TvSender,
     },
 };
 use kaeri_model::{Msg, playback::SkipKind};
@@ -944,7 +945,9 @@ pub use fake_cast::{FfiFakeCast, FfiFakeCastOptions};
 mod fake_cast {
     use std::time::Duration;
 
-    use kaeri_cast::fake::{FakeOptions, FakeReceiver, Refusal, Refuse, advert_txt};
+    use kaeri_cast::fake::{
+        CustomReceiver, Echo, FakeOptions, FakeReceiver, Refusal, Refuse, advert_txt,
+    };
 
     use super::*;
     use crate::remote::FfiAdvert;
@@ -960,6 +963,21 @@ mod fake_cast {
         pub refuses: bool,
         /// How long the receiver takes to come up on the TV.
         pub launch_ms: u32,
+        /// Statuses after pause, seek or waiting carry the media's description, as no real
+        /// receiver's do.
+        #[uniffi(default)]
+        pub full_statuses: bool,
+        /// The TV answers each control this many milliseconds late.
+        #[uniffi(default)]
+        pub answer_late_ms: Option<u32>,
+        /// Keeps the receiver and what it plays from one connection to the next, as a TV does,
+        /// so a connection made again joins the cast still playing.
+        #[uniffi(default)]
+        pub remembers: bool,
+        /// Kaeri's own receiver doesn't launch on this TV, so the cast falls back to the TV's own
+        /// player.
+        #[uniffi(default)]
+        pub own_receiver_fails: bool,
     }
 
     #[derive(uniffi::Object)]
@@ -1003,6 +1021,17 @@ mod fake_cast {
                 control: if options.fixed_volume { "fixed" } else { "attenuation" },
                 launch: Duration::from_millis(u64::from(options.launch_ms)),
                 refuse,
+                echo: match (options.full_statuses, options.answer_late_ms) {
+                    (true, _) => Echo::Full,
+                    (false, Some(late)) => Echo::Late(Duration::from_millis(u64::from(late))),
+                    (false, None) => Echo::Partial,
+                },
+                remembers: options.remembers,
+                custom: if options.own_receiver_fails {
+                    CustomReceiver::Unknown
+                } else {
+                    CustomReceiver::Runs
+                },
                 ..FakeOptions::default()
             };
             let handle = self.runtime_handle();
@@ -1025,6 +1054,12 @@ mod fake_cast {
     }
 
     impl FfiFakeCast {
+        /// How many messages of `kind` (`"STOP"`, `"LOAD"`, ...) the TV was sent: for tests,
+        /// not in the bindings.
+        pub fn heard(&self, kind: &str) -> usize {
+            self.with(|r| r.heard(kind).len()).unwrap_or(0)
+        }
+
         fn with<T>(&self, read: impl FnOnce(&FakeReceiver) -> T) -> Option<T> {
             self.receiver.lock().unwrap_or_else(PoisonError::into_inner).as_ref().map(read)
         }
@@ -1058,6 +1093,33 @@ mod fake_cast {
         /// The TV stops answering, as one switched off at the wall does.
         pub fn go_silent(&self) {
             self.with(FakeReceiver::go_silent);
+        }
+
+        /// The TV closes the connection and plays on, and takes a connection again only after
+        /// `answer_after_ms`: a reconnect that rejoins in time, or one that runs out.
+        pub fn lose_connection(&self, answer_after_ms: u32) {
+            self.with(|r| {
+                r.answer_after(Duration::from_millis(u64::from(answer_after_ms)));
+                r.close_connection();
+            });
+        }
+
+        /// The receiver is stopped on the TV, with its remote or from another phone.
+        pub fn stop_app(&self) {
+            self.with(FakeReceiver::stop_app);
+        }
+
+        /// The TV waits for the stream mid-episode, or plays on again.
+        pub fn wait_for_stream(&self, waiting: bool) {
+            self.with(|r| r.buffer(waiting));
+        }
+
+        /// Kaeri's receiver says `json` on its own namespace, such as
+        /// `{"type":"subtitles-plain"}` or `{"type":"error","part":"segment","status":404}`.
+        pub fn receiver_says(&self, json: String) {
+            if let Ok(message) = serde_json::from_str(&json) {
+                self.with(|r| r.say(message));
+            }
         }
 
         pub fn stop(&self) {
@@ -1248,12 +1310,13 @@ impl From<CastUndo> for FfiCastUndo {
     }
 }
 
-/// Whether a cast's TV takes a volume level, or only mute.
+/// Whether a cast's TV takes a volume level.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
 pub enum FfiVolumeControl {
     Level,
-    /// The TV's own volume is in charge: the card shows mute alone.
-    MuteOnly,
+    /// The TV's own volume is in charge, often over HDMI-CEC, or the TV refused a level: the
+    /// card shows no slider and no steps, and the volume keys leave the TV alone.
+    Fixed,
 }
 
 /// The card for a cast: the card Play on TV draws, and what only a cast has.
@@ -1281,6 +1344,25 @@ pub struct FfiCastCard {
     /// TV itself.
     #[uniffi(default)]
     pub route: Option<FfiCastRouteHint>,
+    /// The TV waits for the stream in the middle of the file: whole seconds since it began,
+    /// `Some(0)` at once. A start or a reload is `card.now.loading` instead. The card comes
+    /// again each second while it waits.
+    #[uniffi(default)]
+    pub waiting: Option<u32>,
+    /// The connection to the TV closed and is being made again, for up to 20 seconds:
+    /// "Reconnecting to Living room" (`tv-status-reconnecting`) with a small spinner. The rest of
+    /// the card reads as it did until it joins again, or the cast ends with its notice.
+    #[uniffi(default)]
+    pub reconnecting: bool,
+    /// A note on this cast, for a notice when it first reads differently: the TV plays it in
+    /// its own player (`notice-cast-fallback`). A cast from Play on TV holds no session, so the
+    /// session's note never shows it.
+    #[uniffi(default)]
+    pub note: Option<Msg>,
+    /// Whether the card offers Mute: not where the TV's own volume is in charge, or the TV
+    /// refused a mute.
+    #[uniffi(default = true)]
+    pub can_mute: bool,
 }
 
 impl From<CastCard> for FfiCastCard {
@@ -1289,14 +1371,18 @@ impl From<CastCard> for FfiCastCard {
             card: FfiRemoteCard::from(&card.card),
             volume_control: match card.volume_control {
                 VolumeControl::Level => FfiVolumeControl::Level,
-                VolumeControl::MuteOnly => FfiVolumeControl::MuteOnly,
+                VolumeControl::Fixed => FfiVolumeControl::Fixed,
             },
+            can_mute: card.can_mute,
             muted: card.muted,
             notice: card.notice,
             phase_line: card.phase_line,
             up_next: card.up_next.map(FfiCastUpNext::from),
             undo: card.undo.map(FfiCastUndo::from),
             route: card.route.map(route_hint),
+            waiting: card.waiting,
+            reconnecting: card.reconnecting,
+            note: card.note,
         }
     }
 }
@@ -1342,12 +1428,14 @@ pub struct FfiCastSession {
     session: Arc<CastSession>,
     changes: tokio::sync::Mutex<watch::Receiver<u64>>,
     handle: Handle,
+    /// The card `next_card` gave last.
+    last: Mutex<Option<FfiCastCard>>,
 }
 
 impl FfiCastSession {
     fn new(session: Arc<CastSession>, handle: Handle) -> Arc<Self> {
         let changes = tokio::sync::Mutex::new(session.changes());
-        Arc::new(Self { session, changes, handle })
+        Arc::new(Self { session, changes, handle, last: Mutex::new(None) })
     }
 }
 
@@ -1362,25 +1450,39 @@ impl FfiCastSession {
         FfiCastCard::from(self.session.card())
     }
 
-    /// The card once it may read differently. `None` once the engine has stopped. Each second
-    /// while a start counts its seconds or an Undo note is up. Cancel-safe.
+    /// The card once it reads differently: a change that draws nothing new isn't given.
+    /// `None` once the engine has stopped. Each second while a start counts its seconds, the
+    /// TV waits for the stream or an Undo note is up. Cancel-safe.
     pub async fn next_card(&self) -> Option<FfiCastCard> {
         let mut changes = self.changes.lock().await;
-        if self.session.ticking() {
-            // The foreign side polls this future, outside the engine's runtime, and a timer is
-            // made and runs on it.
-            let tick = self.handle.spawn(async {
-                tokio::time::sleep(std::time::Duration::from_secs(1)).await;
-            });
-            tokio::select! {
-                changed = changes.changed() => changed.ok()?,
-                _ = tick => {}
+        loop {
+            if self.session.ticking() {
+                // The foreign side polls this future, outside the engine's runtime, and a timer
+                // is made and runs on it.
+                let tick = self.handle.spawn(async {
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                });
+                tokio::select! {
+                    changed = changes.changed() => changed.ok()?,
+                    _ = tick => {}
+                }
+            } else {
+                changes.changed().await.ok()?;
             }
-        } else {
-            changes.changed().await.ok()?;
+            changes.borrow_and_update();
+            let card = self.card();
+            let mut last = self.last.lock().unwrap_or_else(PoisonError::into_inner);
+            let unchanged = last.as_ref().is_some_and(|was| {
+                let mut was = was.clone();
+                was.card.rev = card.card.rev;
+                was == card
+            });
+            if unchanged {
+                continue;
+            }
+            *last = Some(card.clone());
+            return Some(card);
         }
-        changes.borrow_and_update();
-        Some(self.card())
     }
 
     /// What the card's controls ask. Volume steps do nothing on a TV whose volume is fixed;
@@ -1520,5 +1622,339 @@ impl FfiEngine {
     /// makes the stream uncastable.
     pub fn set_aac_encoder(&self, encoder: Arc<dyn FfiAacEncoder>) {
         self.remote().casts().set_encoder(Arc::new(AppEncoder(encoder)));
+    }
+}
+
+/// Where a cast session is, as the cast button and its sheet draw it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum FfiCastSessionState {
+    /// No TV is held.
+    Idle,
+    /// Connecting to the TV and launching the receiver.
+    Connecting,
+    /// The receiver is up and nothing plays: what plays next goes to the TV.
+    Connected,
+    /// Something plays on the TV, or is starting, paused or buffering.
+    Playing,
+    /// The TV or the network ended the session: `notice` says why.
+    Error,
+}
+
+impl From<SessionState> for FfiCastSessionState {
+    fn from(state: SessionState) -> Self {
+        match state {
+            SessionState::Idle => Self::Idle,
+            SessionState::Connecting => Self::Connecting,
+            SessionState::Connected => Self::Connected,
+            SessionState::Playing => Self::Playing,
+            SessionState::Error => Self::Error,
+        }
+    }
+}
+
+/// An episode moving between this device and the TV, and where in it.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct FfiCastFrom {
+    pub id: AnilistId,
+    pub episode: String,
+    pub position: f64,
+}
+
+/// What the cast button shows.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, uniffi::Enum)]
+pub enum FfiCastButton {
+    /// No TV found, or TVs are off in Settings: no button.
+    Hidden,
+    /// TVs are found and none is held: the outline button opens the chooser.
+    Available,
+    Connecting,
+    /// A TV is held, playing or not.
+    Connected,
+}
+
+/// What plays on the TV, or comes next.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct FfiCastItem {
+    /// The title, when Kaeri plays it; `None` for what the receiver plays from elsewhere.
+    #[uniffi(default)]
+    pub id: Option<AnilistId>,
+    pub title: String,
+    #[uniffi(default)]
+    pub episode: Option<String>,
+    #[uniffi(default)]
+    pub episode_title: Option<String>,
+    /// The art, by URL.
+    #[uniffi(default)]
+    pub image: Option<String>,
+    pub position: f64,
+    #[uniffi(default)]
+    pub duration: Option<f64>,
+    pub paused: bool,
+    /// The TV waits for the stream in the middle of the file: whole seconds since it began,
+    /// `Some(0)` at once. A start or a reload is `loading` instead.
+    #[uniffi(default)]
+    pub waiting: Option<u32>,
+    /// The TV is still opening it, this device is still finding its streams, or the file
+    /// loads again for another audio track.
+    pub loading: bool,
+}
+
+impl From<SessionItem> for FfiCastItem {
+    fn from(item: SessionItem) -> Self {
+        Self {
+            id: item.id,
+            title: item.title,
+            episode: item.episode,
+            episode_title: item.episode_title,
+            image: item.image,
+            position: item.position,
+            duration: item.duration,
+            paused: item.paused,
+            waiting: item.waiting,
+            loading: item.loading,
+        }
+    }
+}
+
+/// The cast session as the apps draw it. Pause, seek and volume show what was asked at once;
+/// the TV's next status confirms it.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct FfiCastSessionView {
+    pub state: FfiCastSessionState,
+    pub button: FfiCastButton,
+    /// Counts up with every change to the cast: a control holds what it shows until a view
+    /// with a higher `rev` arrives.
+    pub rev: u64,
+    /// The held TV's Cast row key, for `cast_rows` and `cast_connect`.
+    #[uniffi(default)]
+    pub device_key: Option<String>,
+    #[uniffi(default)]
+    pub device_name: Option<String>,
+    #[uniffi(default)]
+    pub item: Option<FfiCastItem>,
+    /// What plays next: Up Next's episode, once the playback has said it.
+    #[uniffi(default)]
+    pub queue: Vec<FfiCastItem>,
+    /// Why the session ended, for the app to say in its own words.
+    #[uniffi(default)]
+    pub notice: Option<Msg>,
+    /// A note while a TV is held, for a toast when it first reads differently: the TV shows
+    /// subtitles as plain text (`NoticeCastSubtitlesPlain`), or plays this cast in its own player
+    /// because Kaeri's receiver didn't start (`NoticeCastFallback`, said each time it happens).
+    #[uniffi(default)]
+    pub note: Option<Msg>,
+    /// The TV's volume, 0 to 1.
+    #[uniffi(default)]
+    pub level: Option<f64>,
+    #[uniffi(default)]
+    pub muted: Option<bool>,
+    pub volume_control: FfiVolumeControl,
+    /// Kaeri's own receiver runs on the TV, rather than the Default Media Receiver.
+    #[uniffi(default)]
+    pub own_receiver: bool,
+    /// The connection to the TV closed and is being made again, for up to 20 seconds: the mini
+    /// player and the remote read "Reconnecting to Living room" (`tv-status-reconnecting`).
+    /// `state` and `item` stay what they were until it joins again; when the tries run out the
+    /// session ends with `notice`.
+    #[uniffi(default)]
+    pub reconnecting: bool,
+    /// Whether Mute is offered: not where the TV's own volume is in charge, or the TV refused a
+    /// mute.
+    #[uniffi(default = true)]
+    pub can_mute: bool,
+}
+
+impl From<SessionView> for FfiCastSessionView {
+    fn from(view: SessionView) -> Self {
+        Self {
+            state: view.state.into(),
+            button: match view.button {
+                CastButton::Hidden => FfiCastButton::Hidden,
+                CastButton::Available => FfiCastButton::Available,
+                CastButton::Connecting => FfiCastButton::Connecting,
+                CastButton::Connected => FfiCastButton::Connected,
+            },
+            rev: view.rev,
+            device_key: view.device.as_ref().map(|device| format!("cast:{}", device.id)),
+            device_name: view.device.map(|device| device.name),
+            item: view.item.map(FfiCastItem::from),
+            queue: view.queue.into_iter().map(FfiCastItem::from).collect(),
+            notice: view.notice,
+            note: view.note,
+            level: view.level,
+            muted: view.muted,
+            volume_control: match view.volume {
+                VolumeControl::Level => FfiVolumeControl::Level,
+                VolumeControl::Fixed => FfiVolumeControl::Fixed,
+            },
+            can_mute: view.can_mute,
+            own_receiver: view.own_receiver,
+            reconnecting: view.reconnecting,
+        }
+    }
+}
+
+#[uniffi::export]
+impl FfiTvSender {
+    /// Connect to the Cast row `key` and hold its TV: the receiver launches, and whatever
+    /// plays from here on goes to the TV until `cast_disconnect`. Returns at once;
+    /// `cast_watch` follows it.
+    pub fn cast_connect(
+        &self,
+        key: String,
+        from: Option<FfiCastFrom>,
+    ) -> Result<(), FfiTvError> {
+        let _entered = self.handle.enter();
+        let from =
+            from.map(|f| CastFrom { id: f.id, episode: f.episode, position: f.position });
+        self.sender.connect_cast(&key, from).map_err(tv_error)
+    }
+
+    /// Play here: the TV stops and is let go, and the episode comes back with its position for
+    /// this device to play from. `None` when nothing of Kaeri's played on the TV.
+    pub fn cast_play_here(&self) -> Option<FfiCastFrom> {
+        let _entered = self.handle.enter();
+        let from = self.sender.cast_play_here()?;
+        Some(FfiCastFrom { id: from.id, episode: from.episode, position: from.position })
+    }
+
+    /// Let the held TV go: what plays there stops and plays open on this device again.
+    pub fn cast_disconnect(&self) {
+        let _entered = self.handle.enter();
+        self.sender.disconnect_cast();
+    }
+
+    /// The cast session as it stands.
+    pub fn cast_state(&self) -> FfiCastSessionView {
+        self.sender.cast_state().into()
+    }
+
+    /// The session sheet's controls. What Kaeri plays goes through its playback; what a session
+    /// joined again plays is driven on the TV.
+    pub fn cast_command(&self, command: FfiTvCommand) {
+        let _entered = self.handle.enter();
+        self.sender.cast_command(command.into());
+    }
+
+    /// The Cast row key of the TV a session was left running on. Browse while it is set: once
+    /// that TV is found, the session is joined again by itself.
+    pub fn cast_left_on(&self) -> Option<String> {
+        self.sender.cast_left_on()
+    }
+
+    /// What Kaeri's receiver calls this device in its own lines ("Waiting for the iPhone"):
+    /// `iphone`, `ipad`, `phone`, `tablet`, `mac` or `computer`. Call once at launch.
+    pub fn cast_set_device(&self, word: String) {
+        let _entered = self.handle.enter();
+        self.sender.cast_set_device(&word);
+    }
+
+    /// iPhone and iPad: `true` as the app leaves the foreground, `false` when it is back.
+    /// Away, the TV pauses and Kaeri's receiver says it waits for this device; back, it plays
+    /// on, or the session is connected again and the episode loads where it paused.
+    pub fn cast_away(&self, away: bool) {
+        let _entered = self.handle.enter();
+        self.sender.cast_away(away);
+    }
+
+    /// Follows the cast session. `None` before the engine has casting.
+    pub fn cast_watch(&self) -> Option<Arc<FfiCastSessionWatch>> {
+        let changes = self.sender.cast_changes()?;
+        Some(Arc::new(FfiCastSessionWatch {
+            sender: self.sender.clone(),
+            changes: tokio::sync::Mutex::new(changes),
+            handle: self.handle.clone(),
+            last: Mutex::new(None),
+        }))
+    }
+}
+
+/// The cast session's source for the cast button and its sheet.
+#[derive(uniffi::Object)]
+pub struct FfiCastSessionWatch {
+    sender: Arc<TvSender>,
+    changes: tokio::sync::Mutex<watch::Receiver<u64>>,
+    handle: Handle,
+    /// The view `next` gave last: a change that draws nothing new isn't given.
+    last: Mutex<Option<FfiCastSessionView>>,
+}
+
+/// Whether two views draw the same: all but `rev`.
+fn same_view(a: &FfiCastSessionView, b: &FfiCastSessionView) -> bool {
+    FfiCastSessionView { rev: 0, ..a.clone() } == FfiCastSessionView { rev: 0, ..b.clone() }
+}
+
+#[uniffi::export]
+impl FfiCastSessionWatch {
+    pub fn state(&self) -> FfiCastSessionView {
+        self.sender.cast_state().into()
+    }
+
+    /// The session once it reads differently, and each second while the TV waits for the
+    /// stream. `None` once the engine has stopped. Cancel-safe.
+    pub async fn next(&self) -> Option<FfiCastSessionView> {
+        let mut changes = self.changes.lock().await;
+        loop {
+            let waiting = self.sender.cast_state().item.is_some_and(|i| i.waiting.is_some());
+            if waiting {
+                // The foreign side polls this future, outside the engine's runtime.
+                let tick = self.handle.spawn(async {
+                    tokio::time::sleep(std::time::Duration::from_secs(1)).await;
+                });
+                tokio::select! {
+                    changed = changes.changed() => changed.ok()?,
+                    _ = tick => {}
+                }
+            } else {
+                changes.changed().await.ok()?;
+            }
+            changes.borrow_and_update();
+            let view = self.state();
+            let mut last = self.last.lock().unwrap_or_else(PoisonError::into_inner);
+            if last.as_ref().is_some_and(|was| same_view(was, &view)) {
+                continue;
+            }
+            *last = Some(view.clone());
+            return Some(view);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn a_play_on_tv_cards_note_reaches_the_app() {
+        let card = CastCard {
+            card: RemoteCard {
+                tv_name: "Living room".into(),
+                phase: LinkPhase::Connected,
+                phase_line: None,
+                screen: Screen::Player,
+                now: None,
+                party: None,
+                rev: 1,
+                over: false,
+                reached: true,
+            },
+            volume_control: VolumeControl::Level,
+            can_mute: true,
+            muted: None,
+            notice: None,
+            phase_line: None,
+            up_next: None,
+            undo: None,
+            route: None,
+            waiting: None,
+            reconnecting: false,
+            note: Some(Msg::NoticeCastFallback { name: "Living room".into() }),
+        };
+        let quiet = CastCard { note: None, ..card.clone() };
+        assert_eq!(
+            FfiCastCard::from(card).note,
+            Some(Msg::NoticeCastFallback { name: "Living room".into() })
+        );
+        assert_eq!(FfiCastCard::from(quiet).note, None);
     }
 }

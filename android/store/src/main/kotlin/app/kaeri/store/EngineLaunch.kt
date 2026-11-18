@@ -303,6 +303,12 @@ enum class FixtureScene {
     /** [WATCHING] with three profiles, one of them a kids profile. */
     PROFILES,
 
+    /** [WATCHING] with the people the viewer follows on AniList: ten on the first title, five on the airing one. */
+    FOLLOWING,
+
+    /** [FOLLOWING] with AniList slow to answer a title page, so the people's placeholders show first. */
+    FOLLOWING_SLOW,
+
     /** A first launch with reading on: Watch, read or both on page 2. */
     READING_FIRST_RUN,
 
@@ -353,6 +359,13 @@ enum class FixtureScene {
 
     /** Reading off as in release builds, with Both kept: the medium is Watch. */
     READING_DARK,
+
+    /**
+     * Signed in, with the second fixture's episodes 1 to 5 watched and episode 6 aired 25 minutes
+     * ago, which no source lists yet: its page says so and offers Check again, and the second
+     * Check again finds it.
+     */
+    MISSING_EPISODE,
 
     /** [WATCHING] for Search's extras: dub counts on the cards, Surprise me's fixtures and a long franchise for ranges. */
     BROWSING;

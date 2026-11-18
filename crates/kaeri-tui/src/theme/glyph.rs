@@ -36,9 +36,19 @@ pub const STATE_UNKNOWN: char = '·';
 /// Off on purpose: a source left disabled, a tracker signed out. Hollow beside the filled
 /// [`STATE_READY`], and not the interpunct, which the header also uses between chip groups.
 pub const STATE_OFF: char = '○';
+/// Under way and not answered yet: a check of the sources for a missing episode.
+pub const STATE_WAITING: char = '◌';
+
+/// Before the names of the people who stopped at an episode, in the episode table.
+pub const FOLLOWED: char = '◆';
 
 /// Sync indicator for the status line.
 pub const SYNC: char = '⇅';
+
+/// Private mode: the header chip, the title page's line and the notice lead with it, so the
+/// state colour is never the only sign. Hollow and dotted, apart from the filled and hollow
+/// marks of a source or a tracker.
+pub const PRIVATE: char = '◌';
 
 /// Back-navigation marker used in pushed-view headers.
 pub const BACK: char = '←';

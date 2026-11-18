@@ -57,9 +57,9 @@ pub enum AniListError {
     #[error("authentication required")]
     Unauthenticated,
 
-    /// AniList's own trouble on a list write: a `5xx`, whatever its body says. Only list writes
-    /// answer with this, so the tracker outbox can wait it out rather than count it as a
-    /// refusal of the change. Every other ask reports a `5xx` as `Api` or `Decode`, as before.
+    /// AniList's own trouble: a `5xx`, whatever its body says. The tracker outbox waits it out
+    /// rather than count it as a refusal of the change, and the metadata ladder takes it for an
+    /// outage, where `Api` is an answer from a live AniList.
     #[error("anilist: HTTP {status}: {message}")]
     Server { status: u16, message: String },
 }
@@ -497,6 +497,24 @@ pub struct AniList {
     token: Arc<std::sync::RwLock<Option<String>>>,
     /// Where GraphQL requests go: [`ENDPOINT`], unless a test pointed it elsewhere.
     endpoint: Arc<str>,
+    /// Whether a title page asks after the people the viewer follows, and as whom: see
+    /// [`Following`].
+    following: Arc<Following>,
+}
+
+/// A token cell, shared by every client that signs in as the same viewer.
+type TokenCell = Arc<std::sync::RwLock<Option<String>>>;
+
+/// What a title page needs to ask after the people the viewer follows: the viewer's token and
+/// this device's switch. The metadata client asks anonymously for everything else, so it
+/// borrows the tracker's token for this one root ([`AniList::follows_as`]) rather than holding
+/// one of its own.
+#[derive(Default)]
+struct Following {
+    /// Show people you follow is switched off on this device.
+    hidden: std::sync::atomic::AtomicBool,
+    /// The signed-in viewer's token cell: the AniList tracker's.
+    viewer: std::sync::RwLock<Option<TokenCell>>,
 }
 
 impl AniList {
@@ -509,6 +527,7 @@ impl AniList {
             )),
             token: Arc::new(std::sync::RwLock::new(None)),
             endpoint: Arc::from(ENDPOINT),
+            following: Arc::default(),
         }
     }
 
@@ -526,6 +545,12 @@ impl AniList {
         self
     }
 
+    /// What the requests through this client's HTTP client found lately, AniList's own among
+    /// them, and where AniList is, to tell its outcomes from the other hosts'.
+    pub(crate) fn reach(&self) -> (&kaeri_net::reach::Ledger, &str) {
+        (self.http.reach(), &self.endpoint)
+    }
+
     /// Attach an OAuth token for library and mutation access.
     pub fn with_token(self, token: Option<String>) -> Self {
         self.set_token(token);
@@ -539,6 +564,37 @@ impl AniList {
 
     pub fn is_authenticated(&self) -> bool {
         self.token().is_some()
+    }
+
+    /// Ask after the people `viewer` follows on a title page, as `viewer`: the tracker's client,
+    /// whose token comes and goes with its sign-in and sign-out. Only the title page's request
+    /// carries it; everything else this client asks stays as it was.
+    pub fn follows_as(&self, viewer: &AniList) {
+        *self.following.viewer.write().unwrap_or_else(|e| e.into_inner()) =
+            Some(viewer.token.clone());
+    }
+
+    /// Show people you follow, this device's switch: off, a title page's request leaves them
+    /// out, so AniList is not asked.
+    pub fn show_following(&self, on: bool) {
+        self.following.hidden.store(!on, std::sync::atomic::Ordering::Relaxed);
+    }
+
+    /// The token a title page asks after the people followed with, when it asks: the switch is
+    /// on and someone is signed in, to this client or to the one it [follows as](Self::follows_as).
+    fn following_token(&self) -> Option<String> {
+        if self.following.hidden.load(std::sync::atomic::Ordering::Relaxed) {
+            return None;
+        }
+        self.token().or_else(|| {
+            let viewer = self.following.viewer.read().unwrap_or_else(|e| e.into_inner());
+            viewer.as_ref()?.read().unwrap_or_else(|e| e.into_inner()).clone()
+        })
+    }
+
+    /// Whether a title page asks after the people the viewer follows now.
+    pub fn asks_following(&self) -> bool {
+        self.following_token().is_some()
     }
 
     /// A snapshot of the token. Cloned out rather than held: the lock must not be alive across an
@@ -592,23 +648,15 @@ impl AniList {
         document: &str,
         variables: serde_json::Value,
     ) -> Result<T> {
-        self.execute_as(document, variables, false).await
+        self.execute_as(document, variables, self.token()).await
     }
 
-    /// [`Self::execute`] for a list write, which answers a `5xx` as [`AniListError::Server`].
-    async fn execute_write<T: DeserializeOwned>(
-        &self,
-        document: &str,
-        variables: serde_json::Value,
-    ) -> Result<T> {
-        self.execute_as(document, variables, true).await
-    }
-
+    /// Execute a GraphQL operation as `token`'s viewer, or anonymously with `None`.
     async fn execute_as<T: DeserializeOwned>(
         &self,
         document: &str,
         variables: serde_json::Value,
-        write: bool,
+        token: Option<String>,
     ) -> Result<T> {
         let mut refused = 0;
         let lane = LANE.try_with(Clone::clone).ok();
@@ -623,15 +671,17 @@ impl AniList {
                 .post(&*self.endpoint)
                 .header("content-type", "application/json")
                 .header("accept", "application/json");
-            if let Some(token) = &self.token() {
+            if let Some(token) = &token {
                 request = request.header("authorization", format!("Bearer {token}"));
             }
 
-            let response = request
+            let sent = request
                 .json(&serde_json::json!({ "query": document, "variables": variables }))
                 .send()
-                .await
-                .map_err(|e| AniListError::Network(e.to_string()))?;
+                .await;
+            self.http.reach().note(&self.endpoint, sent.is_ok());
+            let response =
+                sent.map_err(|e| AniListError::Network(kaeri_net::reach::described(&e)))?;
 
             let status = response.status();
 
@@ -667,7 +717,7 @@ impl AniList {
                 return Err(AniListError::Unauthenticated);
             }
 
-            if write && status.is_server_error() {
+            if status.is_server_error() {
                 let body: serde_json::Value = response.json().await.unwrap_or_default();
                 let message = body["errors"][0]["message"].as_str().unwrap_or_default();
                 return Err(AniListError::Server {
@@ -948,13 +998,21 @@ impl AniList {
 
     pub async fn media(&self, id: AnilistId) -> Result<Media> {
         // The people the viewer follows are asked for in the same request, and only when someone
-        // is signed in: the filter needs an authenticated viewer.
-        let data: serde_json::Value = self
-            .execute(
-                &query::by_id(self.is_authenticated()),
-                serde_json::json!({ "id": id.get() }),
-            )
-            .await?;
+        // is signed in and the switch is on: the filter needs an authenticated viewer.
+        let variables = serde_json::json!({ "id": id.get() });
+        if let Some(viewer) = self.following_token() {
+            let document = query::by_id(true);
+            match self.execute_as(&document, variables.clone(), Some(viewer)).await {
+                Ok(data) => return decode_detail(&data),
+                // A token AniList no longer takes costs the page nothing: it is asked again
+                // without them, as anyone would ask it.
+                Err(AniListError::Unauthenticated) => {
+                    tracing::debug!("the viewer's token was refused; the page asks without it");
+                }
+                Err(e) => return Err(e),
+            }
+        }
+        let data: serde_json::Value = self.execute(&query::by_id(false), variables).await?;
         decode_detail(&data)
     }
 
@@ -1174,9 +1232,8 @@ impl AniList {
             variables.insert("scoreRaw".into(), ((score * 10.0).round() as u32).into());
         }
 
-        let data: serde_json::Value = self
-            .execute_write(query::SAVE_PROGRESS, serde_json::Value::Object(variables))
-            .await?;
+        let data: serde_json::Value =
+            self.execute(query::SAVE_PROGRESS, serde_json::Value::Object(variables)).await?;
         // The entry id, so a caller that needs to remove the entry again can. `None` is not a
         // failure — the mutation succeeded either way.
         Ok(data["SaveMediaListEntry"]["id"].as_u64().map(|id| id as u32))
@@ -1279,14 +1336,24 @@ fn decode_detail(data: &serde_json::Value) -> Result<Media> {
         .collect();
     // Best-effort too, and nothing private: AniList withholds those, and this keeps one out if it
     // does not.
-    media.following = data["following"]["mediaList"]
-        .as_array()
-        .into_iter()
-        .flatten()
-        .filter_map(|row| serde_json::from_value::<model::Follower>(row.clone()).ok())
-        .filter(|entry| !entry.private && !entry.user.name.is_empty())
-        .take(query::FOLLOWING_LIMIT as usize)
-        .collect();
+    // Only when asked: an answer without the root says nothing of them, which is not the same
+    // as nobody.
+    media.following = data.get("following").filter(|f| !f.is_null()).and_then(|following| {
+        // AniList counts the viewer among the people they follow. Without their id the viewer's
+        // own entry cannot be told apart, so the people are not known either.
+        let viewer = data["Viewer"]["id"].as_u64().and_then(|id| u32::try_from(id).ok())?;
+        Some(
+            following["mediaList"]
+                .as_array()
+                .into_iter()
+                .flatten()
+                .filter_map(|row| serde_json::from_value::<model::Follower>(row.clone()).ok())
+                .filter(|entry| !entry.private && !entry.user.name.is_empty())
+                .filter(|entry| entry.user.id.is_some_and(|id| id != viewer))
+                .take(query::FOLLOWING_LIMIT as usize)
+                .collect(),
+        )
+    });
     Ok(media)
 }
 
@@ -1515,6 +1582,44 @@ mod tests {
             decode_detail(&serde_json::json!({"Media": null})),
             Err(AniListError::NotFound)
         ));
+    }
+
+    #[test]
+    fn the_viewer_is_never_among_the_people_they_follow() {
+        // AniList's `isFollowing` answers the viewer's own entry beside the people they follow.
+        let person = |id: u32, name: &str| {
+            serde_json::json!({
+                "status": "CURRENT", "progress": 3, "private": false,
+                "user": {"id": id, "name": name, "avatar": {"medium": null}}
+            })
+        };
+        let data = serde_json::json!({
+            "Media": {"id": 1},
+            "following": {"mediaList": [
+                person(5150, "fixture-viewer"),
+                person(71, "Mika"),
+                person(72, "Tomo"),
+            ]},
+            "Viewer": {"id": 5150}
+        });
+        let following = decode_detail(&data).unwrap().following.unwrap();
+        let names: Vec<_> = following.iter().map(|f| f.user.name.as_str()).collect();
+        assert_eq!(names, ["Mika", "Tomo"]);
+
+        // Without the viewer's id their entry cannot be told apart: nobody is known.
+        let mut unknown = data.clone();
+        unknown["Viewer"] = serde_json::Value::Null;
+        assert_eq!(decode_detail(&unknown).unwrap().following, None);
+
+        // Ten shown of the eleven asked, when the viewer is not among them.
+        let eleven: Vec<_> = (0..11).map(|n| person(100 + n, &format!("P{n}"))).collect();
+        let full = serde_json::json!({
+            "Media": {"id": 1},
+            "following": {"mediaList": eleven},
+            "Viewer": {"id": 5150}
+        });
+        let shown = decode_detail(&full).unwrap().following.unwrap();
+        assert_eq!(shown.len(), query::FOLLOWING_LIMIT as usize);
     }
 
     #[test]
