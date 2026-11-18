@@ -106,6 +106,7 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalResources
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.Role
@@ -875,6 +876,7 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
     val store = LocalAppStore.current
     val colors = MaterialTheme.colorScheme
     val context = LocalContext.current
+    val resources = LocalResources.current
     val session by cast.session.collectAsStateWithLifecycle()
     val now = CastModel.now(shown)
     val stage = shown.stage
@@ -898,13 +900,13 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
     // The TV went quiet: everything but Stop casting dims and takes no input, in place.
     val still = reconnecting || waiting
     val status = when {
-        reconnecting -> CastLine(CastLineKind.Reconnecting, context.getString(R.string.tv_status_reconnecting, name))
+        reconnecting -> CastLine(CastLineKind.Reconnecting, resources.getString(R.string.tv_status_reconnecting, name))
         stage == CastStage.Starting -> if (quiet) CastLine(CastLineKind.Blank, "") else CastLine(CastLineKind.Starting, shown.cast.phaseLine?.text(context) ?: Strings.tvSessionStarting(context, name))
         waiting && waitingFor != null -> CastLine(
             CastLineKind.Waiting,
-            if (waitingFor >= CastModel.COUNT_FROM_SECONDS) Msg.CastPhaseWaiting(name, waitingFor).text(context) else context.getString(R.string.tv_waiting_for, name),
+            if (waitingFor >= CastModel.COUNT_FROM_SECONDS) Msg.CastPhaseWaiting(name, waitingFor).text(context) else resources.getString(R.string.tv_waiting_for, name),
         )
-        stage == CastStage.Playing -> CastLine(CastLineKind.Playing, if (now.paused) context.getString(R.string.cast_status_paused, name) else Strings.tvStatusPlaying(context, name))
+        stage == CastStage.Playing -> CastLine(CastLineKind.Playing, if (now.paused) resources.getString(R.string.cast_status_paused, name) else Strings.tvStatusPlaying(context, name))
         stage == CastStage.Failed -> CastLine(CastLineKind.Ended, Strings.castCardFailed(context, name))
         else -> CastLine(CastLineKind.Ended, Strings.castCardStopped(context))
     }

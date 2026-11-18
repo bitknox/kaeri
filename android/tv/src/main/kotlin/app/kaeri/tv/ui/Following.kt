@@ -35,6 +35,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -140,7 +141,7 @@ fun FollowingRow(people: List<FollowedEntry>, onOpen: () -> Unit, modifier: Modi
     val heading = Strings.moreFollowing(context)
     val names = FollowingWords.names(context, people.map { it.name })
     val help = Strings.followingOpenHelp(context)
-    val openLabel = context.getString(R.string.action_open)
+    val openLabel = stringResource(R.string.action_open)
     Surface(
         onClick = onOpen,
         modifier = modifier
