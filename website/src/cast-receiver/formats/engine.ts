@@ -54,6 +54,32 @@ const FLAC_WAIT = 2000;
 const FADE_IN = 300;
 /** Seconds kept behind the playhead. */
 const BEHIND = 30;
+/**
+ * Milliseconds the element may wait, its playhead still, while reading rests before the load
+ * fails. Reading rests only when it is far enough ahead or at the end, so nothing more would come.
+ */
+export const STALL_MS = 8000;
+
+/** Whether the element has waited STALL_MS at one playhead: cleared when it plays or moves. */
+export class StallWatch {
+	private since: number | null = null;
+	private at = 0;
+
+	/** `waiting` says whether the element waits with reading at rest at `now` (ms). */
+	check(waiting: boolean, playhead: number, now: number): boolean {
+		if (!waiting) {
+			this.since = null;
+			return false;
+		}
+		if (this.since == null || Math.abs(playhead - this.at) > 0.05) {
+			this.since = now;
+			this.at = playhead;
+			return false;
+		}
+		return now - this.since >= STALL_MS;
+	}
+}
+
 /** Frames held to work out Matroska video decode times. */
 const REORDER = 8;
 
@@ -433,6 +459,9 @@ export class Unpacker {
 	private flacEarly = false;
 	/** An audio switch is changing the SourceBuffer: reading waits. */
 	private switching = false;
+	private readonly stall = new StallWatch();
+	/** The read loop is seeking, reading or handing samples on (not resting). */
+	private reading = false;
 	private listeners: [EventTarget, string, EventListener, boolean][] = [];
 	/** The first seconds of a start through MediaSource, step by step, for the dev log (see note()). */
 	private startTrace: string[] | null = null;
@@ -639,11 +668,14 @@ export class Unpacker {
 			if (this.seekTo != null) {
 				const t = this.seekTo;
 				this.seekTo = null;
+				this.reading = true;
 				try {
 					await this.seekNow(t);
 				} catch (e) {
 					if (!this.closed) this.fail(e);
 					return;
+				} finally {
+					this.reading = false;
 				}
 				continue;
 			}
@@ -653,28 +685,38 @@ export class Unpacker {
 			}
 			const g = this.gen;
 			const playhead = this.video.currentTime;
-			if (this.atEnd || (this.held == null && this.readTo - Math.max(playhead, this.target) > this.lead())) {
+			if (this.resting(playhead)) {
 				await this.nap();
 				continue;
 			}
-			let batch: Sample[] | null;
+			this.reading = true;
 			try {
-				batch = await this.demux.read();
-			} catch (e) {
+				let batch: Sample[] | null;
+				try {
+					batch = await this.demux.read();
+				} catch (e) {
+					if (g !== this.gen || this.closed) continue;
+					this.fail(e);
+					return;
+				}
 				if (g !== this.gen || this.closed) continue;
-				this.fail(e);
-				return;
-			}
-			if (g !== this.gen || this.closed) continue;
-			try {
-				if (!batch) await this.finish(g);
-				else await this.route(batch, g);
-			} catch (e) {
-				if (g !== this.gen || this.closed) continue;
-				this.fail(e);
-				return;
+				try {
+					if (!batch) await this.finish(g);
+					else await this.route(batch, g);
+				} catch (e) {
+					if (g !== this.gen || this.closed) continue;
+					this.fail(e);
+					return;
+				}
+			} finally {
+				this.reading = false;
 			}
 		}
+	}
+
+	/** Whether the read loop rests: far enough ahead of the playhead, or at the end. */
+	private resting(playhead: number) {
+		return this.atEnd || (this.held == null && this.readTo - Math.max(playhead, this.target) > this.lead());
 	}
 
 	/** Seconds to read ahead now: less while WebAssembly sound starts. */
@@ -1135,6 +1177,20 @@ export class Unpacker {
 			} catch {
 				// next tick
 			}
+		}
+		// The element waits while reading rests: nothing more is coming, whatever the buffered
+		// ranges say, so say so rather than wait forever.
+		const t = v.currentTime;
+		const waiting =
+			!this.failed && !v.paused && !v.seeking && !v.ended && v.readyState < 3 && !this.switching && !this.swapping &&
+			this.seekTo == null && !this.reading && !this.flacQueue.length && !this.flacHold && this.resting(t);
+		if (this.stall.check(waiting, t, performance.now())) {
+			const span = (o: Output | null) => {
+				const r = o?.rangeAt(t);
+				return !o ? 'none' : r ? `${r[0].toFixed(2)}-${r[1].toFixed(2)}` : 'missing';
+			};
+			this.fail(new Error(`stalled at ${t.toFixed(2)} s, read to ${this.readTo.toFixed(2)} s, video ${span(this.vout)}, audio ${span(this.aout)}`));
+			return;
 		}
 		// A seek that never stopped playing says no 'playing' again.
 		if (this.pacedFrom == null && !v.paused && !v.seeking && v.readyState >= 3) this.pacedFrom = performance.now();

@@ -248,6 +248,10 @@ export class Matroska implements Demuxer {
 	private cues: { time: number; pos: number }[] | null = null;
 	private attachmentsAt: number | null = null;
 	private encodings = new Map<number, Encoding>();
+	/** Seconds per frame by track, to time the frames of a laced block that gives no duration. */
+	private frameTimes = new Map<number, number>();
+	/** The last per-frame time a laced block of each track was spread over (see spread()). */
+	private spreadTimes = new Map<number, number>();
 	private wanted = new Set<number>();
 	private pos = 0;
 	private videoId: number | null = null;
@@ -329,9 +333,12 @@ export class Matroska implements Demuxer {
 			if (e.id !== ID.TrackEntry) continue;
 			const t: Partial<Track> & { type?: number; codecId?: string; enabled?: boolean } = { enabled: true };
 			let encoding: Encoding | null = null;
+			let defaultDuration = 0; // ns per frame
+			let coreRate = 0;
 			for (const c of children(e.body)) {
 				switch (c.id) {
 					case ID.TrackNumber: t.id = uint(c.body); break;
+					case ID.DefaultDuration: defaultDuration = uint(c.body); break;
 					case ID.TrackType: t.type = uint(c.body); break;
 					case ID.CodecID: t.codecId = ascii(c.body).replace(/\0+$/, ''); break;
 					case ID.CodecPrivate: t.config = c.body.slice(); break;
@@ -350,7 +357,7 @@ export class Matroska implements Demuxer {
 					case ID.Audio: {
 						let out = 0;
 						for (const a of children(c.body)) {
-							if (a.id === ID.SamplingFrequency) t.sampleRate = float(a.body);
+							if (a.id === ID.SamplingFrequency) t.sampleRate = coreRate = float(a.body);
 							else if (a.id === ID.OutputSamplingFrequency) out = float(a.body);
 							else if (a.id === ID.Channels) t.channels = uint(a.body);
 							else if (a.id === ID.BitDepth) t.bitDepth = uint(a.body);
@@ -380,6 +387,8 @@ export class Matroska implements Demuxer {
 				if (encoding.zlib && track.config) track.config = await inflate(track.config);
 			}
 			if (track.codec === 'aac' && !track.config) track.config = aacConfigFromId(id, track);
+			const frame = defaultDuration > 0 ? defaultDuration / 1e9 : track.kind === 'audio' ? codecFrameTime(track.codec, coreRate) : 0;
+			if (frame > 0) this.frameTimes.set(track.id, frame);
 			this.tracks.push(track);
 		}
 	}
@@ -526,6 +535,7 @@ export class Matroska implements Demuxer {
 	private async cluster(c: Header): Promise<Sample[]> {
 		const end = c.size === UNKNOWN ? this.segmentEnd : c.data + c.size;
 		const out: Sample[] = [];
+		const laced: Sample[][] = [];
 		let base = 0;
 		let at = c.data;
 		this.src.prefetch(end);
@@ -539,7 +549,7 @@ export class Matroska implements Demuxer {
 			if (c.size === UNKNOWN && TOP_LEVEL.has(h.id)) break;
 			const size = h.size === UNKNOWN ? 0 : h.size;
 			if (h.id === ID.Timecode) base = uint(await this.src.bytes(h.data, size));
-			else if (h.id === ID.SimpleBlock) await this.block(await this.src.bytes(h.data, size), base, null, null, out);
+			else if (h.id === ID.SimpleBlock) await this.block(await this.src.bytes(h.data, size), base, null, null, out, laced);
 			else if (h.id === ID.BlockGroup) {
 				const g = await this.src.bytes(h.data, size);
 				let block: Uint8Array | null = null;
@@ -550,15 +560,35 @@ export class Matroska implements Demuxer {
 					else if (x.id === ID.BlockDuration) duration = uint(x.body);
 					else if (x.id === ID.ReferenceBlock) referenced = true;
 				}
-				if (block) await this.block(block, base, duration, !referenced, out);
+				if (block) await this.block(block, base, duration, !referenced, out, laced);
 			}
 			at = h.data + size;
 		}
 		this.pos = at;
+		this.spread(out, laced);
 		return out;
 	}
 
-	private async block(b: Uint8Array, base: number, duration: number | null, key: boolean | null, out: Sample[]) {
+	/**
+	 * Spreads the frames of laced blocks that had no frame time over the gap to the next block of
+	 * their track. Frames left on one time stamp play as one, and the sound runs out early.
+	 */
+	private spread(out: Sample[], laced: Sample[][]) {
+		for (const group of laced) {
+			const first = group[0];
+			const from = out.indexOf(group[group.length - 1]) + 1;
+			const next = out.slice(from).find((s) => s.track === first.track && s.pts > first.pts);
+			const each = next ? (next.pts - first.pts) / group.length : (this.spreadTimes.get(first.track) ?? 0);
+			if (!(each > 0)) continue;
+			this.spreadTimes.set(first.track, each);
+			group.forEach((s, i) => {
+				s.pts = s.dts = first.pts + i * each;
+				s.duration = each;
+			});
+		}
+	}
+
+	private async block(b: Uint8Array, base: number, duration: number | null, key: boolean | null, out: Sample[], laced: Sample[][]) {
 		// A block starts with the track number as an EBML size-style integer.
 		let len = 1;
 		while (len <= 8 && !(b[0] & (0x80 >> (len - 1)))) len++;
@@ -572,7 +602,10 @@ export class Matroska implements Demuxer {
 		const t = ((base + rel) * this.scale) / 1e9;
 		const d = duration != null ? (duration * this.scale) / 1e9 : 0;
 		const isKey = key ?? (flags & 0x80) !== 0;
-		const each = frames.length > 1 && d ? d / frames.length : 0;
+		// Laced frames share the block's time stamp: each frame starts one frame time after the last.
+		// mkvmerge laces audio and writes no BlockDuration, so the frame time comes from the track.
+		const each = frames.length > 1 ? (d ? d / frames.length : (this.frameTimes.get(track) ?? 0)) : 0;
+		const group: Sample[] = [];
 		for (let i = 0; i < frames.length; i++) {
 			let data = frames[i];
 			if (enc?.strip) {
@@ -583,13 +616,33 @@ export class Matroska implements Demuxer {
 			} else if (enc?.zlib) data = await inflate(data);
 			else data = data.slice();
 			const pts = t + i * each;
-			out.push({ track, pts, dts: pts, duration: frames.length > 1 ? each : d, key: isKey, data });
+			const s: Sample = { track, pts, dts: pts, duration: frames.length > 1 ? each : d, key: isKey, data };
+			out.push(s);
+			group.push(s);
 		}
+		if (frames.length > 1 && !each) laced.push(group);
 	}
 
 	close() {
 		this.src.close();
 	}
+}
+
+/**
+ * Seconds per frame of an audio codec whose frames always hold the same number of samples, or 0.
+ * `rate` is the coded rate (for HE-AAC, half the rate it plays at).
+ */
+export function codecFrameTime(codec: string, rate: number): number {
+	if (!(rate > 0)) return 0;
+	const samples =
+		codec === 'aac' ? 1024
+		: codec === 'ac3' || codec === 'eac3' ? 1536
+		: codec === 'mp3' ? (rate < 32000 ? 576 : 1152)
+		: codec === 'mp2' ? 1152
+		: codec === 'mp1' ? 384
+		: codec === 'dts' ? 512
+		: 0;
+	return samples / rate;
 }
 
 /** Old Matroska AAC ids name the profile and carry no AudioSpecificConfig. */

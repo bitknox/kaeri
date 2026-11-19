@@ -2,7 +2,7 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 import { codecString } from './codecs';
-import { DecodeTimes, audioBuffer, formatOf, sniff, videoRefusal } from './engine';
+import { DecodeTimes, STALL_MS, StallWatch, audioBuffer, formatOf, sniff, videoRefusal } from './engine';
 import { FileSource } from './file-source.test-helper';
 import { Matroska } from './mkv';
 import { Mp4File } from './mp4';
@@ -59,6 +59,33 @@ describe('decode times', () => {
 			expect(out[i].dts).toBeLessThanOrEqual(out[i].pts + 1e-6);
 			if (i) expect(out[i].dts).toBeGreaterThan(out[i - 1].dts);
 		}
+	});
+});
+
+describe('a stall nothing will end', () => {
+	test('fails once the element has waited STALL_MS at one playhead', () => {
+		const w = new StallWatch();
+		expect(w.check(true, 4.5, 1000)).toBe(false);
+		expect(w.check(true, 4.5, 1000 + STALL_MS - 1)).toBe(false);
+		expect(w.check(true, 4.52, 1000 + STALL_MS)).toBe(true);
+	});
+
+	test('starts over when the element plays again', () => {
+		const w = new StallWatch();
+		w.check(true, 4.5, 0);
+		w.check(true, 4.5, STALL_MS - 100);
+		expect(w.check(false, 4.5, STALL_MS - 50)).toBe(false);
+		expect(w.check(true, 4.5, STALL_MS)).toBe(false);
+		expect(w.check(true, 4.5, 2 * STALL_MS - 1)).toBe(false);
+		expect(w.check(true, 4.5, 2 * STALL_MS)).toBe(true);
+	});
+
+	test('starts over when the playhead moves while waiting', () => {
+		const w = new StallWatch();
+		w.check(true, 4.5, 0);
+		expect(w.check(true, 5.5, STALL_MS)).toBe(false);
+		expect(w.check(true, 5.5, 2 * STALL_MS - 1)).toBe(false);
+		expect(w.check(true, 5.5, 2 * STALL_MS)).toBe(true);
 	});
 });
 
