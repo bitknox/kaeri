@@ -2576,7 +2576,24 @@ fn apply(inner: &Inner, state: &mut State, status: &MediaStatus) {
                 state.ended = false;
                 inner.say_locked(state, PlaybackEvent::Replaced);
             }
-            _ => inner.say_locked(state, PlaybackEvent::Ended { complete: false }),
+            "ERROR" => {
+                // A receiver error no report explained (Kaeri's receiver reports first, and that
+                // ends the cast before this): the TV couldn't play the rest.
+                state.failure.get_or_insert(CastFailure::Refused);
+                tracing::warn!(
+                    position = status.position,
+                    "the TV stopped with an error mid-episode"
+                );
+                inner.say_locked(state, PlaybackEvent::Ended { complete: false });
+            }
+            _ => {
+                tracing::info!(
+                    reason,
+                    position = status.position,
+                    "the TV went idle mid-episode"
+                );
+                inner.say_locked(state, PlaybackEvent::Ended { complete: false });
+            }
         }
         return;
     }

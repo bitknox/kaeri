@@ -1912,6 +1912,40 @@ async fn kaeris_receiver_is_greeted_and_its_messages_are_heard() {
     player.quit().await.unwrap();
 }
 
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_stall_kaeris_receiver_reports_mid_episode_ends_the_cast_as_unplayable() {
+    let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    // The receiver waited at a playhead nothing would fill and gave up: it says so.
+    receiver.say(serde_json::json!({
+        "type": "error",
+        "version": 1,
+        "part": "unknown",
+        "detail": "unpacking: stalled at 4.50 s, read to 33.00 s, video 0.00-33.00, audio 0.00-4.52",
+    }));
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::Refused));
+    assert!(player.is_alive(), "the receiver stays up for the next play");
+    player.quit().await.unwrap();
+}
+
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_media_error_mid_episode_with_no_report_ends_the_cast_as_unplayable() {
+    let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    let receiver = FakeReceiver::start(FakeOptions::default()).await.unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    assert_eq!(player.failure(), None);
+    receiver.fail_media();
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::Refused));
+    player.quit().await.unwrap();
+}
+
 /// A cast of `file` on Kaeri's receiver that refuses it, saying `says` as it does; the player
 /// once the cast has ended, and the TV's memory.
 async fn refused_on_own_receiver(

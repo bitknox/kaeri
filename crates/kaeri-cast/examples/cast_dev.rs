@@ -5,6 +5,7 @@
 //! ```text
 //! KAERI_CAST_RECEIVER_APP=<dev app ID> cargo run -p kaeri-cast --example cast_dev -- <file or URL>
 //!     [--tv "Chromecast TV"] [--ip 192.168.0.19] [--sub <file>] [--volume 0.05]
+//!     [--torrent] [--inside-sub] [--start <seconds>] [--for <seconds>]
 //! KAERI_CAST_RECEIVER_APP=<dev app ID> cargo run -p kaeri-cast --example cast_dev -- --matrix
 //!     [tools/cast-dev/media/matrix.tsv] [--seconds 8] [--out <table.md>]
 //!     [--media-base http://127.0.0.1:8787/media/]
@@ -12,6 +13,9 @@
 //!
 //! Keys while one file plays: space pause/play, left and right seek 10 s, `a` next audio track,
 //! `s` next subtitle track, `k` tell the receiver an opening was skipped, `q` stop and quit.
+//! `--for` plays that many seconds with no keys and stops, for a run with no terminal.
+//! `--torrent` casts a URL as the torrent client's loopback server is cast. `--inside-sub` shows
+//! the file's first subtitle track.
 //!
 //! Safety: it casts to one TV only. The TV at `--ip` must answer to the name `--tv` (default
 //! "Chromecast TV"); a Nest device, a speaker group or anything named "Stue" is refused. The
@@ -66,6 +70,14 @@ struct Args {
     take_over: bool,
     /// Only launch the receiver, say whether it came up, and close it.
     probe: bool,
+    /// Cast a URL as the torrent client's loopback server is cast.
+    torrent: bool,
+    /// Play this many seconds with no keys, then stop: for a run with no terminal.
+    play_for: Option<u64>,
+    /// Show the file's first subtitle track, as the apps do for a viewer who wants subtitles.
+    inside_sub: bool,
+    /// Where the file starts, in seconds.
+    start: Option<f64>,
 }
 
 fn args() -> Result<Args, String> {
@@ -83,6 +95,10 @@ fn args() -> Result<Args, String> {
         any_receiver: false,
         take_over: false,
         probe: false,
+        torrent: false,
+        play_for: None,
+        inside_sub: false,
+        start: None,
     };
     let mut it = std::env::args().skip(1).peekable();
     while let Some(arg) = it.next() {
@@ -105,6 +121,16 @@ fn args() -> Result<Args, String> {
             "--any-receiver" => args.any_receiver = true,
             "--take-over" => args.take_over = true,
             "--probe" => args.probe = true,
+            "--torrent" => args.torrent = true,
+            "--inside-sub" => args.inside_sub = true,
+            "--start" => {
+                args.start =
+                    Some(value("--start")?.parse().map_err(|e| format!("--start: {e}"))?);
+            }
+            "--for" => {
+                args.play_for =
+                    Some(value("--for")?.parse().map_err(|e| format!("--for: {e}"))?);
+            }
             "--matrix" => {
                 let next = it.peek().filter(|n| !n.starts_with("--")).cloned();
                 if next.is_some() {
@@ -214,9 +240,10 @@ async fn busy(address: SocketAddr) -> Result<Option<String>, String> {
     Ok(status.app.map(|app| app.app_id))
 }
 
-fn load_of(target: &str, sub: Option<&Path>) -> CastLoad {
+fn load_of(target: &str, sub: Option<&Path>, torrent: bool) -> CastLoad {
     let remote = target.contains("://");
     let kind = match () {
+        _ if remote && torrent => SourceKind::Torrent,
         _ if remote && (target.contains(".m3u8") || target.contains(".mpd")) => SourceKind::Hls,
         _ if remote => SourceKind::Progressive,
         _ => SourceKind::File,
@@ -351,12 +378,21 @@ async fn restore(player: &CastPlayer, was: Volume) {
     }
 }
 
-async fn interactive(player: &CastPlayer, load: CastLoad) {
+async fn interactive(player: &CastPlayer, load: CastLoad, play_for: Option<u64>) {
     let mut events = player.events();
     let mut heard = player.heard();
     let mut status = player.status();
-    let mut keys = EventStream::new();
-    let raw = crossterm::terminal::enable_raw_mode().is_ok();
+    let mut keys = if play_for.is_none() {
+        EventStream::new().boxed()
+    } else {
+        futures::stream::pending().boxed()
+    };
+    let raw = play_for.is_none() && crossterm::terminal::enable_raw_mode().is_ok();
+    let until = tokio::time::sleep(Duration::from_secs(play_for.unwrap_or(u64::MAX / 4)));
+    tokio::pin!(until);
+    // With no terminal, the TV's status once a second, so a stall reads as a flat position.
+    let started = Instant::now();
+    let mut second = tokio::time::interval(Duration::from_secs(1));
     say!(
         "keys: space pause/play, left/right seek 10 s, a audio, s subtitles, k skipped, q quit"
     );
@@ -365,6 +401,12 @@ async fn interactive(player: &CastPlayer, load: CastLoad) {
     let mut last_position = -10.0;
     loop {
         tokio::select! {
+            () = &mut until => { say!("played for {} s; stopping", play_for.unwrap_or(0)); break; }
+            _ = second.tick(), if play_for.is_some() => {
+                let s = player.current();
+                say!("{:6.1}s {} waiting={:?}", started.elapsed().as_secs_f64(), status_line(&s),
+                    s.waiting_since.map(|w| w.elapsed().as_secs()));
+            }
             event = events.recv() => match event {
                 Some(PlaybackEvent::Loaded) => say!("loaded: {}", plan_line(&player.current())),
                 Some(PlaybackEvent::Ended { complete }) => {
@@ -565,7 +607,7 @@ async fn matrix(player: &CastPlayer, args: &Args, tsv: &Path) -> Result<String, 
         };
         let sidecar = entry.sidecar.as_ref().map(|s| dir.join(s));
         let (mut row, _) =
-            play_one(player, load_of(&target, sidecar.as_deref()), args.seconds).await;
+            play_one(player, load_of(&target, sidecar.as_deref(), false), args.seconds).await;
         say!("  -> {} part={} plan={}", row.plays, row.part, row.plan);
         row.id = entry.id.clone();
         row.what = entry.what.clone();
@@ -714,7 +756,13 @@ async fn main() {
             }
         }
     } else if let Some(target) = &args.target {
-        interactive(&player, load_of(target, args.sub.as_deref())).await;
+        let mut load = load_of(target, args.sub.as_deref(), args.torrent);
+        load.start = args.start;
+        if args.inside_sub {
+            // The file's own tracks are listed after the side-loaded ones.
+            load.subtitle = Some(load.subtitles.len());
+        }
+        interactive(&player, load, args.play_for).await;
     }
     let _ = player.stop().await;
     restore(&player, was).await;
