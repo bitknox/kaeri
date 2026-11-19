@@ -287,6 +287,10 @@ pub struct SyncStatus {
     /// switch each, on, for `SyncCommand::AddBookServersFrom`. Held in memory only.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub book_servers_to_add: Vec<SyncBookServerOffer>,
+    /// How many devices hold history in the folder that the last set-up found holding another
+    /// group (`SyncProblem::GroupExists`), for `rkey-enter-line`. 0 when not known.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub restore_devices: u32,
 }
 
 /// A book server a paired device signed in to, handed over with its sign-in over the paired

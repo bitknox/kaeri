@@ -152,6 +152,9 @@ pub struct SyncHub {
     pub(crate) book_servers: Mutex<Vec<crate::setup_from::HeldServer>>,
     /// This device's answer to Watch, read, or both, for a paired device that asks.
     medium: Mutex<Option<kaeri_model::medium::KaeriIsFor>>,
+    /// How many devices hold history in the folder the last set-up found holding another
+    /// group: [`SyncStatus::restore_devices`].
+    restore_devices: std::sync::atomic::AtomicU32,
 }
 
 fn locked<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -459,7 +462,8 @@ pub fn status(services: &Ctx) -> SyncStatus {
     let Ok(Some(me)) = store.sync_device() else {
         // The name, kept from a rename while sync is off, for the next pairing to use.
         let device_name = Some(device_name(services)).filter(|n| !n.is_empty());
-        return SyncStatus { clouds, device_name, ..SyncStatus::default() };
+        let restore_devices = services.syncing.restore_devices.load(Ordering::Relaxed);
+        return SyncStatus { clouds, device_name, restore_devices, ..SyncStatus::default() };
     };
     let my_remote = remote_role(store, &me);
     let seen: std::collections::HashMap<String, i64> = store
@@ -560,6 +564,7 @@ pub fn status(services: &Ctx) -> SyncStatus {
         book_servers_to_add: crate::setup_from::offers(services),
         clouds,
         problem: saved_problem(services),
+        restore_devices: services.syncing.restore_devices.load(Ordering::Relaxed),
     }
 }
 
@@ -683,6 +688,9 @@ async fn clear_and_start_in(
         return fail(services, tx, p);
     }
     cloud::say_for(tx, &folder.kind, Some(SyncSignInStep::Clearing));
+    if let Err(p) = fixture_clear(services).await {
+        return fail(services, tx, p);
+    }
     let (id, key) = (device_id(services), device_key(services));
     match FolderRoad::open_as_member(target.clone(), "", services.store.clone(), &id, key).await
     {
@@ -699,6 +707,9 @@ async fn clear_and_start_in(
         Err(e) => return fail(services, tx, problem_in(Some(&folder.kind), &e)),
     }
     cloud::say_for(tx, &folder.kind, Some(SyncSignInStep::Finishing));
+    if services.fixture {
+        tokio::time::sleep(Duration::from_millis(1_500)).await;
+    }
     set_up(services, tx, device_name, target, folder).await;
 }
 
@@ -838,6 +849,13 @@ async fn settle(
     match FolderRoad::open_as_member(target.clone(), "", store.clone(), id, key.clone()).await {
         Ok(road) => return Ok(road),
         Err(SyncError::NoGroup) => {}
+        Err(SyncError::GroupExists) => {
+            let found = target.list("devices").await.map_or(0, |all| {
+                u32::try_from(all.iter().filter(|e| e.is_dir).count()).unwrap_or(u32::MAX)
+            });
+            services.syncing.restore_devices.store(found, Ordering::Relaxed);
+            return Err(SyncProblem::GroupExists);
+        }
         Err(e) => return Err(problem_in(Some(&folder.kind), &e)),
     }
     if cloud::on_tv(services) {
@@ -862,6 +880,7 @@ async fn settle(
 /// Sync through `folder` from now on, on `road`: what was read of another folder is forgotten.
 pub(crate) fn take_folder(services: &Ctx, folder: &SyncFolderSpec, road: FolderRoad) {
     let _ = services.store.sync_meta_clear(ROAD_META);
+    services.syncing.restore_devices.store(0, Ordering::Relaxed);
     save_folder(services, folder);
     keep_ring(services, &road.keyring());
     for key in [LAST, ERROR, PROBLEM] {
@@ -1346,6 +1365,74 @@ pub enum FixtureSync {
     /// This device is the Living room TV, paired with Kim's iPhone, which syncs through Dropbox
     /// and holds the sign-in the TV can use. The TV has no folder yet.
     TvPhoneSignIn,
+    /// Sync is off, signed in to Google Drive as kim@mail.example, and the fixtures' Drive
+    /// folder holds another group of two devices: choosing Google Drive asks for its recovery
+    /// key, and starting over clears the folder and shows a new key, each step held a moment.
+    OtherGroup,
+    /// [`Self::OtherGroup`], where starting over finds Google Drive out of reach.
+    OtherGroupOffline,
+    /// [`Self::OtherGroup`], where Google Drive refuses to delete the old sync data.
+    OtherGroupRefused,
+    /// [`Self::Cloud`] after another device started sync over in Google Drive: the cloud row
+    /// says so, with no recovery key, and the fixtures' Drive folder holds the new group.
+    StartedOver,
+    /// [`Self::TvPhoneSignIn`]'s TV syncing through Google Drive after another device started
+    /// sync over there.
+    TvStartedOver,
+}
+
+/// The fixtures' Drive folder, as [`FixtureSync::OtherGroup`] and the like leave it: `other`,
+/// `offline` or `refused`.
+const FIXTURE_FOLDER: &str = "engine.fixture_folder";
+
+/// The fixtures' Drive folder holds another group of two, when the scene asks for one and it
+/// holds none yet.
+#[cfg(feature = "testing")]
+pub(crate) async fn fixture_other_group(
+    store: &kaeri_store::Store,
+    target: &Arc<dyn FolderTarget>,
+) {
+    if store.sync_meta_get(FIXTURE_FOLDER).ok().flatten().unwrap_or_default().is_empty()
+        || FolderRoad::group_exists(&**target, "").await.unwrap_or(true)
+    {
+        return;
+    }
+    let Ok(theirs) = kaeri_store::Store::open_in_memory() else { return };
+    let device = |seed: u8| DeviceKey::from_identity(&[seed; 32]);
+    let made =
+        FolderRoad::create(target.clone(), "", theirs.clone(), "f1x7c0de0000000a", device(1))
+            .await;
+    if let Ok((_, recovery)) = made {
+        let _ = FolderRoad::join(
+            target.clone(),
+            "",
+            theirs,
+            "f1x7c0de0000000b",
+            device(2),
+            &recovery,
+        )
+        .await;
+    }
+}
+
+/// How the fixtures hold or fail a start-over, so each of its states can be seen.
+#[cfg(feature = "testing")]
+async fn fixture_clear(services: &Ctx) -> Result<(), SyncProblem> {
+    if !services.fixture {
+        return Ok(());
+    }
+    let how = services.store.sync_meta_get(FIXTURE_FOLDER).ok().flatten().unwrap_or_default();
+    tokio::time::sleep(Duration::from_millis(1_500)).await;
+    match how.as_str() {
+        "offline" => Err(SyncProblem::Unreachable),
+        "refused" => Err(SyncProblem::ClearRefused),
+        _ => Ok(()),
+    }
+}
+
+#[cfg(not(feature = "testing"))]
+async fn fixture_clear(_: &Ctx) -> Result<(), SyncProblem> {
+    Ok(())
 }
 
 /// Sync as a fixture build shows it on a folder: see [`FixtureSync::Folder`].
@@ -1387,7 +1474,15 @@ pub fn seed_fixture_as(
         let _ = store.sync_fixture_trackers(device, trackers);
     };
     let me = "fixture-me";
-    let _ = store.sync_enable(me);
+    let other_group = matches!(
+        kind,
+        FixtureSync::OtherGroup
+            | FixtureSync::OtherGroupOffline
+            | FixtureSync::OtherGroupRefused
+    );
+    if !other_group {
+        let _ = store.sync_enable(me);
+    }
     let mut tokens = Vec::new();
     match kind {
         FixtureSync::Folder => {
@@ -1428,6 +1523,47 @@ pub fn seed_fixture_as(
             cloud_of("fixture-phone", Some("dropbox"), &["dropbox"]);
             trackers_of("fixture-phone", &["anilist"]);
             let _ = store.sync_meta_set(NAME, "Living room TV");
+        }
+        FixtureSync::OtherGroup
+        | FixtureSync::OtherGroupOffline
+        | FixtureSync::OtherGroupRefused => {
+            let how = match kind {
+                FixtureSync::OtherGroupOffline => "offline",
+                FixtureSync::OtherGroupRefused => "refused",
+                _ => "other",
+            };
+            let _ = store.sync_meta_set(FIXTURE_FOLDER, how);
+            let _ = store.sync_meta_set(NAME, "Kim's iPhone");
+            cloud::keep_account(store, Service::Google, Some("kim@mail.example"));
+            tokens.push((Service::Google.token_id(), "fixture-google-refresh".to_owned()));
+        }
+        FixtureSync::StartedOver | FixtureSync::TvStartedOver => {
+            let (name, other, other_name) = if kind == FixtureSync::TvStartedOver {
+                ("Living room TV", "fixture-phone", "Kim's iPhone")
+            } else {
+                ("Kim's iPhone", "fixture-mac", "Kim's MacBook Air")
+            };
+            let _ = store.sync_device_add(me, name, "00");
+            let _ = store.sync_device_add(other, other_name, "00");
+            let _ = store.sync_touch_peer(other, now - 86_400);
+            cloud_of(other, Some("google"), &[]);
+            cloud_of(me, Some("google"), &[]);
+            let _ = store.sync_meta_set(NAME, name);
+            let _ = store.sync_meta_set(LAST, &(now - 86_400).to_string());
+            saved("google", None);
+            cloud::keep_account(store, Service::Google, Some("kim@mail.example"));
+            let _ = store.sync_meta_set(PROBLEM, REPLACED);
+            let _ = store.sync_meta_set(
+                ERROR,
+                &kaeri_i18n::t::cloud_err_started_over(&label_of(&SyncFolderSpec {
+                    kind: SyncFolderKind::GoogleDrive,
+                    address: None,
+                    user: None,
+                    password: None,
+                })),
+            );
+            let _ = store.sync_meta_set(FIXTURE_FOLDER, "other");
+            tokens.push((Service::Google.token_id(), "fixture-google-refresh".to_owned()));
         }
     }
     tokens

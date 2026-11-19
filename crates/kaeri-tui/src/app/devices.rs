@@ -413,6 +413,15 @@ impl App {
         clouds
     }
 
+    /// The name of the folder's service in a line: the one being set up, else the one in use.
+    fn folder_service(&self) -> String {
+        self.devices
+            .kind
+            .clone()
+            .or_else(|| self.folder_kind())
+            .map_or_else(String::new, |k| service_name(&k))
+    }
+
     /// A sync problem in words: inside a pairing, a sign-in, or about the folder.
     pub fn problem_text(&self, problem: &SyncProblem) -> String {
         let pairing = self.devices.pairing_with.is_some()
@@ -424,6 +433,8 @@ impl App {
             SyncProblem::WrongRecoveryKey => t::rkey_wrong(),
             SyncProblem::NoGroup => t::sync_tui_err_no_group(),
             SyncProblem::GroupExists => t::cloud_err_other_group(),
+            SyncProblem::GroupReplaced => t::cloud_err_started_over(&self.folder_service()),
+            SyncProblem::ClearRefused => t::rkey_start_over_err_refused(&self.folder_service()),
             SyncProblem::Unreachable if pairing => t::pair_err_not_found(),
             SyncProblem::Unreachable => {
                 match self.devices.kind.clone().or_else(|| self.folder_kind()) {
@@ -729,7 +740,9 @@ impl App {
             | SyncSignInStep::Sheet { url, .. }
             | SyncSignInStep::Page { url } => Some(url.clone()),
             SyncSignInStep::Code { verification_url, .. } => Some(verification_url.clone()),
-            SyncSignInStep::Finishing | SyncSignInStep::Connecting => None,
+            SyncSignInStep::Finishing
+            | SyncSignInStep::Connecting
+            | SyncSignInStep::Clearing => None,
         }
     }
 
