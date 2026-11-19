@@ -619,8 +619,8 @@ internal fun DevicePage(device: app.kaeri.engine.model.SyncDeviceView, onRemove:
         lastSeenLine(context, device.lastSeen)?.let { SheetText(it) }
         Column(Modifier.padding(top = 16.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
             val remote = device.remoteKey != null
-            SwitchRow(if (remote) Place.First else Place.Only, stringResource(R.string.devices_sync_switch), !device.paused) { store.setDeviceSync(device.name, device.paused) }
-            if (remote) SwitchRow(Place.Last, stringResource(R.string.devices_remote_switch), !device.remoteOff) { store.setDeviceRemote(device.name, device.remoteOff) }
+            SwitchRow(if (remote) Place.First else Place.Only, stringResource(R.string.devices_sync_switch), !device.paused) { store.setDeviceSync(device, on = device.paused) }
+            if (remote) SwitchRow(Place.Last, stringResource(R.string.devices_remote_switch), !device.remoteOff) { store.setDeviceRemote(device, on = device.remoteOff) }
         }
         SheetText(Strings.devicesSwitchesFoot(context, resources.getString(R.string.device_kind_phone), device.name), Modifier.padding(top = 8.dp))
         SheetButtons {

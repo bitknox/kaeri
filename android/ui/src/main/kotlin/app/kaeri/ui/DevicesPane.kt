@@ -215,7 +215,7 @@ private fun YourDevices(status: SyncStatus, onOpen: (SyncDeviceView) -> Unit, on
                         lastSeenLine(context, device.lastSeen),
                         if (device.remoteKey != null && !device.remoteOff) stringResource(R.string.devices_remote_switch) else null,
                     ).joinToString(" · ") // i18n-skip
-                    DeviceRow(place, device.name, line, status.error == null, on = !device.paused, onClick = { onOpen(device) }, onSwitch = { store.setDeviceSync(device.name, device.paused) })
+                    DeviceRow(place, device.name, line, status.error == null, on = !device.paused, onClick = { onOpen(device) }, onSwitch = { store.setDeviceSync(device, on = device.paused) })
                 }
             }
             remoteOnly.forEach { tv ->

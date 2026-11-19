@@ -310,6 +310,40 @@ fn a_removed_device_stops_receiving() {
     );
 }
 
+/// Another device's Sync switch turns by its id: off, the device is listed paused; on, it is
+/// not. A name names no device to the switch, so it changes nothing and says so.
+#[test]
+fn a_devices_sync_switch_turns_by_its_id() {
+    use kaeri_model::group::SyncCommand;
+    let shared = tempfile::tempdir().expect("a shared folder");
+    let (mut desk, mut laptop) = group(shared.path());
+    let laptop_id = laptop.id();
+    desk.pass();
+    let paused = |s: &SyncStatus| s.devices.iter().any(|d| d.id == laptop_id && d.paused);
+
+    while desk.events.try_recv().is_ok() {}
+    desk.send(Command::SyncGroup(SyncCommand::SetDeviceSync {
+        device: "Laptop".into(),
+        on: false,
+    }));
+    assert!(matches!(problem_said(&mut desk), SyncProblem::Other(_)));
+    let regs = desk.store().sync_regs(kaeri_store::sync::op::kinds::DEVICE_SYNC).unwrap();
+    assert!(regs.is_empty(), "a switch set under a name: {regs:?}");
+
+    desk.send(Command::SyncGroup(SyncCommand::SetDeviceSync {
+        device: laptop_id.clone(),
+        on: false,
+    }));
+    desk.status_where("the laptop paused", paused);
+    desk.send(Command::SyncGroup(SyncCommand::SetDeviceSync {
+        device: laptop_id.clone(),
+        on: true,
+    }));
+    desk.status_where("the laptop on again", |s| {
+        s.devices.iter().any(|d| d.id == laptop_id) && !paused(s)
+    });
+}
+
 /// Pass through the folder on each device in turn until `done` holds on all of them.
 fn rounds(devices: &mut [&mut Device], what: &str, done: impl Fn(&Device) -> bool) {
     let deadline = Instant::now() + PATIENCE * 2;
