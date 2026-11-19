@@ -5,11 +5,12 @@ package app.kaeri.store
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.SyncCommand
 import app.kaeri.engine.model.SyncCopy
+import app.kaeri.engine.model.SyncDeviceView
 import app.kaeri.engine.model.SyncFolderKind
 import app.kaeri.engine.model.SyncFolderSpec
 import app.kaeri.engine.model.SyncSignInStep
 
-/** The services the cloud sign-in's redirects name: `kaeri://auth/dropbox`, `kaeri://auth/onedrive` and Google's reversed client id. */
+/** The ids the cloud sign-ins' tabs go by, which their redirects name: `kaeri://auth/dropbox` and `kaeri://auth/onedrive`. Google Drive's on a phone is Play services' own sheet, with no tab. */
 internal val SYNC_SERVICES = mapOf(
     "google" to SyncFolderKind.GOOGLE_DRIVE,
     "dropbox" to SyncFolderKind.DROPBOX,
@@ -76,9 +77,13 @@ fun AppStore.cancelSyncSignIn() {
     sync.cancelled()
 }
 
-/** The sign-in's page again, as Open the page again asks: the tab the person closed, or lost behind another app. */
+/**
+ * The sign-in's page again, as Open the page again asks: the tab the person closed, or lost
+ * behind another app, or else the platform's own sheet when the platform runs the sign-in.
+ */
 fun AppStore.openSyncPageAgain() {
-    accounts.signIn.value?.takeIf { it.tracker in SYNC_SERVICES }?.let { accounts.reopen(it) }
+    val tab = accounts.signIn.value?.takeIf { it.tracker in SYNC_SERVICES }
+    if (tab != null) accounts.reopen(tab) else sync.platformSheetAgain?.invoke()
 }
 
 /** Whether [request] is a cloud folder's sign-in rather than a tracker's. */
@@ -187,14 +192,14 @@ fun AppStore.renameDevice(name: String) {
     send(Command.SyncGroup(SyncCommand.RenameDevice(name.trim())))
 }
 
-/** The Sync switch of [device]: off holds the group back from it. */
-fun AppStore.setDeviceSync(device: String, on: Boolean) {
-    send(Command.SyncGroup(SyncCommand.SetDeviceSync(device, on)))
+/** The Sync switch of [device]: off holds the group back from it. The engine knows it by its id. */
+fun AppStore.setDeviceSync(device: SyncDeviceView, on: Boolean) {
+    send(Command.SyncGroup(SyncCommand.SetDeviceSync(device.id, on)))
 }
 
-/** The Remote switch of this device and [device], as a pair. */
-fun AppStore.setDeviceRemote(device: String, on: Boolean) {
-    send(Command.SyncGroup(SyncCommand.SetDeviceRemote(device, on)))
+/** The Remote switch of this device and [device], as a pair, by its id. */
+fun AppStore.setDeviceRemote(device: SyncDeviceView, on: Boolean) {
+    send(Command.SyncGroup(SyncCommand.SetDeviceRemote(device.id, on)))
 }
 
 /** Hand the engine the platform's DNS-SD for typed-code pairing, once it runs. */

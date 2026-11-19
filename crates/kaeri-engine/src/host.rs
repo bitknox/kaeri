@@ -24,6 +24,7 @@ use std::sync::Arc;
 #[cfg(feature = "desktop")]
 use kaeri_core::config::Config;
 use kaeri_core::config::Paths;
+use kaeri_model::group::SyncFolderKind;
 use kaeri_track::secret::LocalSecrets;
 
 pub use kaeri_track::secret::{BUNDLE, Backend, SecretError, SecretStore, Storage};
@@ -72,6 +73,86 @@ pub trait Host: Send + Sync {
     fn folder_access(&self) -> Option<Arc<dyn FolderTree>> {
         None
     }
+
+    /// The platform's own grant of access to a cloud drive, such as Android's authorization
+    /// through Google Play services for Google Drive: see [`CloudAuthorizer`]. `None`, the
+    /// default, for a host without one: the engine signs in through a page and keeps a refresh
+    /// token itself.
+    fn cloud_authorizer(&self) -> Option<Arc<dyn CloudAuthorizer>> {
+        None
+    }
+}
+
+/// What the engine asks a [`CloudAuthorizer`] for.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct GrantAsked {
+    pub service: SyncFolderKind,
+    /// The person asked to sign in, so the platform may show its own consent sheet. When false
+    /// the platform answers without any sheet, and [`CloudGrant::ConsentNeeded`] where it would
+    /// need one.
+    pub interactive: bool,
+    /// The account the grant was given for, as the service named it, when the engine knows.
+    pub account: Option<String>,
+    /// A token the service refused: the platform drops it from its cache, so the answer is a
+    /// fresh one.
+    pub rejected: Option<String>,
+}
+
+/// What a [`CloudAuthorizer`] answered.
+#[derive(Clone, PartialEq, Eq)]
+pub enum CloudGrant {
+    /// Access now: a short-lived token, and the account it is for when the platform says.
+    Granted { access_token: String, account: Option<String> },
+    /// The grant is not there, or was taken back, and asking without a sheet cannot give it.
+    ConsentNeeded,
+    /// The person closed the platform's sheet.
+    Cancelled,
+    /// The person did not give the access asked for.
+    Denied,
+    /// The platform could not reach the service.
+    Unreachable,
+    /// The platform cannot grant access on this device, for example with no Google Play
+    /// services.
+    Unavailable,
+    /// Anything else, in words for the log.
+    Failed(String),
+}
+
+impl std::fmt::Debug for CloudGrant {
+    // Never the token.
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Granted { account, .. } => f
+                .debug_struct("Granted")
+                .field("access_token", &"<hidden>")
+                .field("account", account)
+                .finish(),
+            Self::ConsentNeeded => f.write_str("ConsentNeeded"),
+            Self::Cancelled => f.write_str("Cancelled"),
+            Self::Denied => f.write_str("Denied"),
+            Self::Unreachable => f.write_str("Unreachable"),
+            Self::Unavailable => f.write_str("Unavailable"),
+            Self::Failed(reason) => f.debug_tuple("Failed").field(reason).finish(),
+        }
+    }
+}
+
+/// A platform that grants access to a cloud drive itself, in place of the engine's own sign-in.
+///
+/// It hands out short-lived access tokens and keeps the grant on its side, so the engine keeps
+/// no refresh token for that service: it asks again whenever a token runs out or the service
+/// refuses one. Asked on the engine's blocking threads, never the app's main thread. An
+/// interactive ask may wait as long as the person takes on the platform's sheet.
+pub trait CloudAuthorizer: Send + Sync {
+    /// Whether it grants access to `service`. The engine signs in to any other itself.
+    fn serves(&self, service: &SyncFolderKind) -> bool;
+
+    /// Access to the service `asked` names.
+    fn authorize(&self, asked: GrantAsked) -> CloudGrant;
+
+    /// The person signed out of `service`: take the grant back, for `account` when the engine
+    /// knows it. Starts the revocation and returns without waiting for it.
+    fn signed_out(&self, service: SyncFolderKind, account: Option<String>);
 }
 
 /// A page the platform decoded: `width` by `height` pixels as packed RGBA8 rows.

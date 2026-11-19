@@ -217,6 +217,8 @@ enum Control {
     StopApp,
     /// Another sender stops casting: what plays stops, then the app.
     StopElsewhere,
+    /// What plays stops with a media error, and the app stays up.
+    MediaError,
     /// Another sender loads its own file on the same receiver session, with this `customData`
     /// beside the media.
     LoadElsewhere(Value),
@@ -411,6 +413,12 @@ impl FakeReceiver {
         let _ = self.control.send(Control::StopElsewhere);
     }
 
+    /// What plays stops with a media error and no word on Kaeri's namespace: the receiver goes
+    /// idle with `ERROR`, as the Default Media Receiver does when it can't go on.
+    pub fn fail_media(&self) {
+        let _ = self.control.send(Control::MediaError);
+    }
+
     /// Another sender loads its own file on the receiver session this one plays on, with
     /// `custom` as the media's `customData`: another Kaeri device casting its next episode.
     pub fn load_elsewhere_with(&self, custom: Value) {
@@ -575,6 +583,13 @@ async fn serve(
                         send(&transport, &sender, NS_CONNECTION, json!({"type": "CLOSE"}));
                     }
                     send("receiver-0", "*", NS_RECEIVER, receiver_status(&app, 0, level, muted));
+                }
+                Control::MediaError => {
+                    if let Some(mut old) = playing.take() {
+                        old.advance(options.speed);
+                        send(&transport, "*", NS_MEDIA, json!({"type": "MEDIA_STATUS", "requestId": 0,
+                            "status": [old.status(Some("ERROR"), &stream)]}));
+                    }
                 }
                 Control::LoadElsewhere(custom) => {
                     if let Some(old) = playing.take() {

@@ -230,7 +230,7 @@ struct SyncModelTests {
         #expect(lines[0].contains("Kitchen iPad") && lines[2].contains("Kitchen iPad"))
     }
 
-    @Test func theSwitchesSendTheDevicesNameAndTheNewValue() {
+    @Test func theSwitchesSendTheDevicesIdAndTheNewValue() {
         let sync = SyncModel()
         var sent: [Command] = []
         sync.send = { sent.append($0) }
@@ -238,8 +238,8 @@ struct SyncModelTests {
         sync.setSync(tv, on: false)
         sync.setRemote(tv, on: false)
         #expect(sent == [
-            .syncGroup(.setDeviceSync(device: "Living room TV", on: false)),
-            .syncGroup(.setDeviceRemote(device: "Living room TV", on: false)),
+            .syncGroup(.setDeviceSync(device: "tv", on: false)),
+            .syncGroup(.setDeviceRemote(device: "tv", on: false)),
         ])
     }
 

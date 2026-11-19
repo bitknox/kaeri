@@ -2804,7 +2804,11 @@ mod tests {
         use kaeri_sync::google::{DeviceStep as Step, FakeGoogle};
 
         use super::*;
-        use crate::{cloud::CloudTest, options::CloudClient};
+        use crate::{
+            cloud::{CloudTest, PLATFORM_GRANT},
+            host::{CloudAuthorizer, CloudGrant, GrantAsked},
+            options::CloudClient,
+        };
 
         /// A host that says what it was asked to open and, when it `browses`, goes there like a
         /// person who says yes at once.
@@ -2812,6 +2816,7 @@ mod tests {
             kept: Arc<Kept>,
             opened: Arc<Mutex<Vec<String>>>,
             browses: bool,
+            platform: Option<Arc<Platform>>,
         }
 
         impl Host for Browsing {
@@ -2831,24 +2836,88 @@ mod tests {
             fn secrets(&self) -> Option<Arc<dyn SecretStore>> {
                 Some(self.kept.clone())
             }
+
+            fn cloud_authorizer(&self) -> Option<Arc<dyn CloudAuthorizer>> {
+                self.platform.clone().map(|p| p as Arc<dyn CloudAuthorizer>)
+            }
+        }
+
+        /// A platform that grants access to Google Drive itself, as Play services does on an
+        /// Android phone, with tokens the fake Drive accepts.
+        #[derive(Default)]
+        struct Platform {
+            fake: std::sync::OnceLock<Arc<FakeGoogle>>,
+            asked: Mutex<Vec<GrantAsked>>,
+            /// What its sheet answers in place of a grant.
+            sheet: Mutex<Option<CloudGrant>>,
+            /// The grant was taken back: asking without a sheet needs consent.
+            revoked: std::sync::atomic::AtomicBool,
+            signed_out: Mutex<Vec<(SyncFolderKind, Option<String>)>>,
+        }
+
+        impl Platform {
+            fn asked(&self) -> Vec<GrantAsked> {
+                self.asked.lock().unwrap().clone()
+            }
+        }
+
+        impl CloudAuthorizer for Platform {
+            fn serves(&self, service: &SyncFolderKind) -> bool {
+                *service == SyncFolderKind::GoogleDrive
+            }
+
+            fn authorize(&self, asked: GrantAsked) -> CloudGrant {
+                let interactive = asked.interactive;
+                self.asked.lock().unwrap().push(asked);
+                if interactive && let Some(answer) = self.sheet.lock().unwrap().clone() {
+                    return answer;
+                }
+                if !interactive && self.revoked.load(std::sync::atomic::Ordering::SeqCst) {
+                    return CloudGrant::ConsentNeeded;
+                }
+                CloudGrant::Granted {
+                    access_token: self.fake.get().expect("the fake").grant_access(),
+                    account: Some("kim@mail.example".into()),
+                }
+            }
+
+            fn signed_out(&self, service: SyncFolderKind, account: Option<String>) {
+                self.signed_out.lock().unwrap().push((service, account));
+            }
         }
 
         struct Rig {
             engine: Engine,
             watch: Watch,
-            fake: FakeGoogle,
+            fake: Arc<FakeGoogle>,
             kept: Arc<Kept>,
             opened: Arc<Mutex<Vec<String>>>,
             dir: tempfile::TempDir,
         }
 
         async fn rig(kind: CloudClient, browses: bool, ids: bool) -> Rig {
+            rig_with(kind, browses, ids, None).await
+        }
+
+        async fn rig_with(
+            kind: CloudClient,
+            browses: bool,
+            ids: bool,
+            platform: Option<Arc<Platform>>,
+        ) -> Rig {
             let dir = tempfile::tempdir().unwrap();
-            let fake = FakeGoogle::start().await;
+            let fake = Arc::new(FakeGoogle::start().await);
+            if let Some(platform) = &platform {
+                let _ = platform.fake.set(fake.clone());
+            }
             let kept = Arc::new(Kept::default());
             let opened = Arc::new(Mutex::new(Vec::new()));
-            let host =
-                Arc::new(Browsing { kept: kept.clone(), opened: opened.clone(), browses });
+            let host = Arc::new(Browsing {
+                kept: kept.clone(),
+                opened: opened.clone(),
+                browses,
+                platform,
+            });
             let ep = fake.endpoints();
             let test = CloudTest {
                 google: ep.clone(),
@@ -3454,6 +3523,196 @@ mod tests {
                 SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId },
                 "Google's desktop client is no use without its secret"
             );
+        }
+
+        fn steps(seen: &[Event]) -> Vec<SyncSignInStep> {
+            seen.iter()
+                .filter_map(|e| match e {
+                    Event::SyncSignIn { step: Some(step), .. } => Some(step.clone()),
+                    _ => None,
+                })
+                .collect()
+        }
+
+        async fn android_signed_in(platform: &Arc<Platform>) -> Rig {
+            let mut rig =
+                rig_with(CloudClient::Android, false, false, Some(platform.clone())).await;
+            rig.engine.send(Command::StartSync {
+                device_name: "Phone".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+            assert!(seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
+            rig
+        }
+
+        #[tokio::test]
+        async fn an_android_phone_signs_in_to_google_through_the_platform_and_keeps_no_token() {
+            let platform = Arc::new(Platform::default());
+            let mut rig =
+                rig_with(CloudClient::Android, false, true, Some(platform.clone())).await;
+            rig.engine.send(Command::StartSync {
+                device_name: "Phone".into(),
+                folder: folder(google()),
+            });
+            let seen = rig.watch.until(ended(google())).await;
+            // The platform's sheet in place of a page: no web sheet step, nothing opened, and
+            // no code exchanged with Google.
+            assert_eq!(steps(&seen), [SyncSignInStep::Connecting, SyncSignInStep::Finishing]);
+            assert!(rig.opened.lock().unwrap().is_empty());
+            assert!(rig.fake.token_requests().is_empty());
+            assert!(seen.iter().any(|e| matches!(e, Event::SyncRecoveryKey(_))), "{seen:?}");
+            // Asked once with its sheet, for any account, then without for each token.
+            let asked = platform.asked();
+            assert!(asked[0].interactive && asked[0].account.is_none(), "{asked:?}");
+            assert!(asked[1..].iter().all(|a| !a.interactive), "{asked:?}");
+            // The store says only that the platform keeps the grant.
+            assert_eq!(rig.kept.get("cloud-google").unwrap().as_deref(), Some(PLATFORM_GRANT));
+
+            rig.engine.send(Command::LoadSync);
+            let seen = rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            let row = status_of(&seen).clouds.into_iter().find(|c| c.service == google());
+            let row = row.unwrap();
+            assert!(row.signed_in);
+            assert_eq!(row.way, SyncCloudWay::Sheet);
+            assert_eq!(row.account.as_deref(), Some("kim@mail.example"));
+            // Dropbox on the same phone still signs in through the web sheet.
+            rig.engine.send(Command::SyncSignIn { service: SyncFolderKind::Dropbox });
+            rig.watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Sheet { .. }), .. }
+                    )
+                })
+                .await;
+            rig.engine.send(Command::CancelSyncSignIn);
+            rig.watch.until(ended(SyncFolderKind::Dropbox)).await;
+        }
+
+        #[tokio::test]
+        async fn a_token_drive_refuses_is_asked_for_again_without_a_sheet() {
+            let platform = Arc::new(Platform::default());
+            let mut rig = android_signed_in(&platform).await;
+            let before = platform.asked().len();
+            rig.fake.expire_access_tokens();
+            rig.engine.send(Command::SyncFolderNow);
+            let seen = rig
+                .watch
+                .until(|e| matches!(e, Event::SyncStatus(s) if !s.syncing && s.last_synced.is_some()))
+                .await;
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+            let asked = platform.asked();
+            let again = &asked[before..];
+            assert!(!again.is_empty() && again.iter().all(|a| !a.interactive), "{asked:?}");
+            // The refused token goes with the ask, for the platform to drop, and the account.
+            assert!(again.iter().any(|a| a.rejected.is_some()), "{asked:?}");
+            assert!(
+                again.iter().all(|a| a.account.as_deref() == Some("kim@mail.example")),
+                "{asked:?}"
+            );
+            assert_eq!(status_of(&seen).problem, None);
+        }
+
+        #[tokio::test]
+        async fn consent_taken_back_is_a_problem_to_sign_in_again_from() {
+            let platform = Arc::new(Platform::default());
+            let mut rig = android_signed_in(&platform).await;
+            platform.revoked.store(true, std::sync::atomic::Ordering::SeqCst);
+            rig.fake.expire_access_tokens();
+            rig.engine.send(Command::SyncFolderNow);
+            let seen = rig
+                .watch
+                .until(
+                    |e| matches!(e, Event::SyncStatus(s) if !s.syncing && s.problem.is_some()),
+                )
+                .await;
+            let needed = SyncProblem::SignInNeeded { service: google() };
+            assert!(problems(&seen).contains(&needed), "{seen:?}");
+
+            // "Sign in again" shows the platform's sheet, and the road works again.
+            platform.revoked.store(false, std::sync::atomic::Ordering::SeqCst);
+            let before = platform.asked().len();
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let seen = rig.watch.until(|e| {
+                matches!(e, Event::SyncStatus(s) if !s.syncing && s.problem.is_none() && s.last_synced.is_some())
+            })
+            .await;
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+            assert!(platform.asked()[before].interactive);
+        }
+
+        #[tokio::test]
+        async fn signing_out_takes_the_platforms_grant_back() {
+            let platform = Arc::new(Platform::default());
+            let mut rig = android_signed_in(&platform).await;
+            rig.engine.send(Command::SyncSignOut { service: google() });
+            rig.watch.until(|e| matches!(e, Event::SyncStatus(s) if s.problem.is_some())).await;
+            assert!(!has_token(&rig, "cloud-google"));
+            assert_eq!(
+                *platform.signed_out.lock().unwrap(),
+                [(google(), Some("kim@mail.example".to_owned()))]
+            );
+            // Signed out twice is no second revocation.
+            rig.engine.send(Command::SyncSignOut { service: google() });
+            rig.watch.until(|e| matches!(e, Event::SyncStatus(_))).await;
+            assert_eq!(platform.signed_out.lock().unwrap().len(), 1);
+        }
+
+        #[tokio::test]
+        async fn the_platforms_sheet_closed_or_refused_leaves_no_sign_in() {
+            let platform = Arc::new(Platform::default());
+            *platform.sheet.lock().unwrap() = Some(CloudGrant::Cancelled);
+            let mut rig =
+                rig_with(CloudClient::Android, false, false, Some(platform.clone())).await;
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(!seen.iter().any(|e| matches!(e, Event::SyncProblem(_))), "{seen:?}");
+            assert!(!has_token(&rig, "cloud-google"));
+
+            *platform.sheet.lock().unwrap() = Some(CloudGrant::Denied);
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let seen = rig.watch.until(ended(google())).await;
+            let denied = SyncProblem::SignInDenied { service: google() };
+            assert!(problems(&seen).contains(&denied), "{seen:?}");
+            assert!(!has_token(&rig, "cloud-google"));
+            assert!(platform.signed_out.lock().unwrap().is_empty());
+        }
+
+        #[tokio::test]
+        async fn a_tv_keeps_the_device_flow_and_a_grant_with_no_platform_needs_a_sign_in() {
+            let platform = Arc::new(Platform::default());
+            let mut rig = rig_with(CloudClient::Tv, false, true, Some(platform.clone())).await;
+            rig.fake.script_device(&[Step::Done]);
+            rig.engine.send(Command::SyncSignIn { service: google() });
+            let seen = rig.watch.until(ended(google())).await;
+            assert!(
+                steps(&seen).iter().any(|s| matches!(s, SyncSignInStep::Code { .. })),
+                "{seen:?}"
+            );
+            assert!(platform.asked().is_empty());
+            assert_ne!(rig.kept.get("cloud-google").unwrap().as_deref(), Some(PLATFORM_GRANT));
+
+            // A platform's grant on a device whose app gives no platform is no sign-in.
+            let mut rig = self::rig(CloudClient::Android, false, true).await;
+            rig.kept.set("cloud-google", PLATFORM_GRANT).unwrap();
+            rig.engine.send(Command::StartSync {
+                device_name: "Phone".into(),
+                folder: folder(google()),
+            });
+            let seen = rig
+                .watch
+                .until(|e| {
+                    matches!(
+                        e,
+                        Event::SyncSignIn { step: Some(SyncSignInStep::Sheet { .. }), .. }
+                    )
+                })
+                .await;
+            assert!(!problems(&seen).iter().any(|p| matches!(p, SyncProblem::Other(_))));
+            rig.engine.send(Command::CancelSyncSignIn);
+            rig.watch.until(ended(google())).await;
         }
     }
 

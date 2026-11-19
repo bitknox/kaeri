@@ -90,7 +90,8 @@ impl FfiEngine {
         let opened = Opened::open_as(&dirs, start.profile.as_deref())?;
         let host = Adapter::new(host, start.secrets_mode(), &opened.config, &opened.paths)
             .with_page_decoder(start.page_decoder.clone())
-            .with_folder_access(start.folder_access.clone());
+            .with_folder_access(start.folder_access.clone())
+            .with_cloud_authorizer(start.cloud_authorizer.clone());
         let home = RemoteHome::of(&host, &opened.paths);
         let runtime = runtime()?;
         let started = runtime.block_on(async {
