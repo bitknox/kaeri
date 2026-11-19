@@ -217,10 +217,15 @@ pub struct FfiStart {
     /// path; one added without a path then shows as not found.
     #[uniffi(default = None)]
     pub folder_access: Option<Arc<dyn crate::FfiFolderAccess>>,
+    /// The platform's own grant of access to a cloud drive, such as Android's authorization
+    /// through Google Play services for Google Drive on a phone. `None` when it has none, and
+    /// the engine signs in to every cloud drive itself.
+    #[uniffi(default = None)]
+    pub cloud_authorizer: Option<Arc<dyn crate::FfiCloudAuthorizer>>,
 }
 
 impl PartialEq for FfiStart {
-    /// Field by field, the decoder and the folder access by identity.
+    /// Field by field, the decoder, the folder access and the cloud authorizer by identity.
     fn eq(&self, other: &Self) -> bool {
         let Self {
             theme,
@@ -244,6 +249,7 @@ impl PartialEq for FfiStart {
             edition,
             page_decoder,
             folder_access,
+            cloud_authorizer,
         } = self;
         *theme == other.theme
             && *platform == other.platform
@@ -274,6 +280,11 @@ impl PartialEq for FfiStart {
                 (Some(a), Some(b)) => Arc::ptr_eq(a, b),
                 _ => false,
             }
+            && match (cloud_authorizer, &other.cloud_authorizer) {
+                (None, None) => true,
+                (Some(a), Some(b)) => Arc::ptr_eq(a, b),
+                _ => false,
+            }
     }
 }
 
@@ -284,6 +295,7 @@ impl std::fmt::Debug for FfiStart {
             .field("reading", &self.reading)
             .field("page_decoder", &self.page_decoder.is_some())
             .field("folder_access", &self.folder_access.is_some())
+            .field("cloud_authorizer", &self.cloud_authorizer.is_some())
             .finish_non_exhaustive()
     }
 }

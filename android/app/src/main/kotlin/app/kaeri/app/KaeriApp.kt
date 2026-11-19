@@ -94,6 +94,14 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         }
     }
 
+    /**
+     * Google Drive's sign-in through Play services, for the app flavour's engine on a phone: one
+     * for the process, so the engine and the activity that shows Google's sheet share it.
+     */
+    internal val googleDrive: GoogleDriveAccess by lazy {
+        GoogleDriveAccess(this).also { access -> store.sync.platformSheetAgain = access::showAgain }
+    }
+
     /** The app's own update on Android, in the app flavour only; the store makes it. */
     var appUpdates: AppUpdates? = null
         get() {

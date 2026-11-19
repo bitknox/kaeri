@@ -152,6 +152,7 @@ dependencies {
     implementation(libs.media3.session)
     implementation(libs.media3.common)
     implementation(libs.browser)
+    implementation(libs.play.services.auth)
     implementation(libs.work.runtime)
 
     testImplementation(libs.junit)

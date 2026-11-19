@@ -169,6 +169,11 @@ class MainActivity : ComponentActivity() {
     /** AniList's and MyAnimeList's sign-in in a Custom Tab, and the redirect that ends it. */
     private val signIn by lazy { BrowserSignIn(this, app.store) }
 
+    /** Google's own sheet for Google Drive's sign-in, and the grant it comes back with. */
+    private val googleSheet = registerForActivityResult(ActivityResultContracts.StartIntentSenderForResult()) { result ->
+        app.googleDrive.answered(result.resultCode, result.data)
+    }
+
     /**
      * The app links the activity is opened on, launcher shortcuts and notifications, kept until
      * the frame is there to follow them.
@@ -301,6 +306,7 @@ class MainActivity : ComponentActivity() {
         if (Flavour.FIXTURES || debuggable) announceReady()
         askForNotificationsWhenNeeded()
         signIn.start()
+        app.googleDrive.showIn(this, googleSheet)
         // A restored activity, or one opened again from Recents, has its navigation already.
         val fresh = savedInstanceState == null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
         if (!signIn.handle(intent) && !(fresh && follow(intent)) && !invite(intent) && !party(intent) && !opened(intent)) remote(intent)
