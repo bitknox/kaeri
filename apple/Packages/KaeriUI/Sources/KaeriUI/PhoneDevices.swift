@@ -138,12 +138,15 @@ struct PhoneDevicesPage: View {
                 let line = SyncWords.cloud(sync)
                 let cloud = [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind)
                 let needsSignIn = line.state == .signedOut || sync.status.problem.map(CloudRow.isSignIn) == true
+                let replaced = SyncWords.replaced(sync)
                 VStack(alignment: .leading, spacing: 4) {
-                    Text(SyncModel.name(folder.kind)).font(.ui(17, weight: .semibold)).foregroundStyle(.silk)
-                    HStack(spacing: 6) {
+                    Text(replaced ? L.cloudErrTitle(service: SyncModel.name(folder.kind)) : SyncModel.name(folder.kind))
+                        .font(.ui(17, weight: .semibold)).foregroundStyle(.silk)
+                    HStack(alignment: replaced ? .firstTextBaseline : .center, spacing: 6) {
                         StateDot(state: line.state)
-                        Text(line.text)
-                        if let account = folder.account, !needsSignIn { Text("· " + account).lineLimit(1) }
+                            .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 1 }
+                        Text(line.text).fixedSize(horizontal: false, vertical: true)
+                        if let account = folder.account, !needsSignIn, !replaced { Text("· " + account).lineLimit(1) }
                     }
                     .font(.ui(13)).foregroundStyle(.haze)
                     if let account = folder.account, needsSignIn {
@@ -151,11 +154,14 @@ struct PhoneDevicesPage: View {
                     }
                 }
                 .listRowBackground(Palette.raised)
-                if !(needsSignIn && cloud) {
+                if replaced {
+                    // The way back in: the restore screen, with the new key.
+                    Button(L.rkeyEnterNew) { sync.enterNewKey(folder.kind) }.listRowBackground(Palette.raised)
+                } else if !(needsSignIn && cloud) {
                     Button(L.cloudSyncNow) { sync.syncNow() }.listRowBackground(Palette.raised)
                 }
                 Button(L.cloudUseAnother) { sync.useAnotherService() }.listRowBackground(Palette.raised)
-                if cloud {
+                if cloud, !replaced {
                     if line.state == .signedOut || line.state == .problem {
                         Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
                             .listRowBackground(Palette.raised)
@@ -170,7 +176,7 @@ struct PhoneDevicesPage: View {
                 Button(L.cloudAdd) { sync.addCloudFolder() }.listRowBackground(Palette.raised)
             }
         } header: { PhoneSectionHeader(L.cloudGroup) } footer: { Text(L.cloudFoot) }
-        if sync.status.recoveryKey {
+        if sync.status.recoveryKey, !SyncWords.replaced(sync) {
             Section {
                 HStack {
                     PhoneRowTitle(title: L.rkeyRow, note: [SyncWords.made(sync.status.recoveryKeyMade).map { L.rkeyMade(date: $0) }, L.rkeyRestores].compactMap { $0 }.joined(separator: ". "))

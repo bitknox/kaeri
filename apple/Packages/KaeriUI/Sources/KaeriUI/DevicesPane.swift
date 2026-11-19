@@ -227,16 +227,19 @@ struct CloudRow: View {
         let line = SyncWords.cloud(sync)
         let dimmed = sync.settingUpShown
         let signedOut = line.state == .signedOut
+        let replaced = SyncWords.replaced(sync)
         TimelineView(.periodic(from: .now, by: 30)) { _ in
             HStack(spacing: 16) {
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(SyncModel.name(folder.kind))
+                    Text(replaced ? L.cloudErrTitle(service: SyncModel.name(folder.kind)) : SyncModel.name(folder.kind))
                         .font(.mac(13, weight: .semibold))
                         .foregroundStyle(.silk)
-                    HStack(spacing: 6) {
+                    HStack(alignment: replaced ? .firstTextBaseline : .center, spacing: 6) {
                         StateDot(state: line.state)
+                            .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 1 }
                         Text(line.text).font(.mac(12)).foregroundStyle(.haze)
-                        if let account = folder.account, !dimmed, !signedOut {
+                            .fixedSize(horizontal: false, vertical: true)
+                        if let account = folder.account, !dimmed, !signedOut, !replaced {
                             Text("· " + account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
                         }
                     }
@@ -267,7 +270,9 @@ struct CloudRow: View {
     private func buttons(_ sync: SyncModel, state: SyncSummary.State) -> some View {
         let needsSignIn = state == .signedOut || sync.status.problem.map(Self.isSignIn) == true
         let cloud = [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind)
-        if needsSignIn, cloud {
+        if SyncWords.replaced(sync) {
+            Button(L.rkeyEnterNew) { sync.enterNewKey(folder.kind) }
+        } else if needsSignIn, cloud {
             Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
         } else if sync.status.problem == .unreachable, folder.kind == .directory {
             Button(L.cloudChooseFolder) { sync.useAnotherService() }
@@ -312,7 +317,8 @@ struct RecoveryKeyGroup: View {
 
     var body: some View {
         let sync = store.sync
-        if sync.status.recoveryKey {
+        // A group started over elsewhere: the key this device had opens nothing there now.
+        if sync.status.recoveryKey, !SyncWords.replaced(sync) {
             SettingsGroup {
                 SettingsRow(title: L.rkeyRow, note: note(sync)) {
                     Button(L.actionShow) {
