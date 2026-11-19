@@ -5,6 +5,7 @@ package app.kaeri.store
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.SyncCommand
 import app.kaeri.engine.model.SyncCopy
+import app.kaeri.engine.model.SyncDeviceView
 import app.kaeri.engine.model.SyncFolderKind
 import app.kaeri.engine.model.SyncFolderSpec
 import app.kaeri.engine.model.SyncSignInStep
@@ -187,14 +188,14 @@ fun AppStore.renameDevice(name: String) {
     send(Command.SyncGroup(SyncCommand.RenameDevice(name.trim())))
 }
 
-/** The Sync switch of [device]: off holds the group back from it. */
-fun AppStore.setDeviceSync(device: String, on: Boolean) {
-    send(Command.SyncGroup(SyncCommand.SetDeviceSync(device, on)))
+/** The Sync switch of [device]: off holds the group back from it. The engine knows it by its id. */
+fun AppStore.setDeviceSync(device: SyncDeviceView, on: Boolean) {
+    send(Command.SyncGroup(SyncCommand.SetDeviceSync(device.id, on)))
 }
 
-/** The Remote switch of this device and [device], as a pair. */
-fun AppStore.setDeviceRemote(device: String, on: Boolean) {
-    send(Command.SyncGroup(SyncCommand.SetDeviceRemote(device, on)))
+/** The Remote switch of this device and [device], as a pair, by its id. */
+fun AppStore.setDeviceRemote(device: SyncDeviceView, on: Boolean) {
+    send(Command.SyncGroup(SyncCommand.SetDeviceRemote(device.id, on)))
 }
 
 /** Hand the engine the platform's DNS-SD for typed-code pairing, once it runs. */

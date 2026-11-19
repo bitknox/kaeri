@@ -1654,7 +1654,18 @@ async fn publish(services: &Ctx, tx: &Outbox) {
     }
 }
 
-/// Turn another device's Sync switch on or off, for the whole group.
+/// Whether `device` is the id of a device the group lists: what the switches take. Anything
+/// else, a device's name among them, would set a switch no device reads.
+fn in_group(services: &Ctx, device: &str) -> bool {
+    services
+        .store
+        .sync_peers()
+        .unwrap_or_default()
+        .iter()
+        .any(|(id, _, _, removed)| id == device && !removed)
+}
+
+/// Turn another device's Sync switch on or off, for the whole group. `device` is its id.
 pub async fn set_device_sync(services: &Ctx, tx: &Outbox, device: &str, on: bool) {
     let Ok(Some(me)) = services.store.sync_device() else {
         return fail(services, tx, SyncProblem::NoGroup);
@@ -1664,6 +1675,13 @@ pub async fn set_device_sync(services: &Ctx, tx: &Outbox, device: &str, on: bool
             services,
             tx,
             SyncProblem::Other("this device stops with LeaveSync".into()),
+        );
+    }
+    if !in_group(services, device) {
+        return fail(
+            services,
+            tx,
+            SyncProblem::Other("that device is not in the group".into()),
         );
     }
     if services.store.sync_device_paused(device) != on {
@@ -1676,11 +1694,18 @@ pub async fn set_device_sync(services: &Ctx, tx: &Outbox, device: &str, on: bool
     publish(services, tx).await;
 }
 
-/// Turn the Remote switch between this device and `device` on or off.
+/// Turn the Remote switch between this device and `device`, by its id, on or off.
 pub async fn set_device_remote(services: &Ctx, tx: &Outbox, device: &str, on: bool) {
     let Ok(Some(me)) = services.store.sync_device() else {
         return fail(services, tx, SyncProblem::NoGroup);
     };
+    if device == me || !in_group(services, device) {
+        return fail(
+            services,
+            tx,
+            SyncProblem::Other("that device is not in the group".into()),
+        );
+    }
     let key = pair_key(&me, device);
     let off = services.store.sync_reg_value(kinds::DEVICE_REMOTE, &key).ok().flatten();
     if (off.as_deref() == Some("off")) != on {

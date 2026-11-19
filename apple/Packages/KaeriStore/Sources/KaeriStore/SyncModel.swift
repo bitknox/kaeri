@@ -486,14 +486,14 @@ public final class SyncModel {
         send(.syncGroup(.renameDevice(name: trimmed)))
     }
 
-    /// The Sync switch of another device: off holds the group back from it.
+    /// The Sync switch of another device: off holds the group back from it. The engine knows it by its id.
     public func setSync(_ device: SyncDeviceView, on: Bool) {
-        send(.syncGroup(.setDeviceSync(device: device.name, on: on)))
+        send(.syncGroup(.setDeviceSync(device: device.id, on: on)))
     }
 
-    /// The Remote switch of this device and `device`, as a pair.
+    /// The Remote switch of this device and `device`, as a pair, by its id.
     public func setRemote(_ device: SyncDeviceView, on: Bool) {
-        send(.syncGroup(.setDeviceRemote(device: device.name, on: on)))
+        send(.syncGroup(.setDeviceRemote(device: device.id, on: on)))
     }
 
     /// The name this device keeps for Play on TV, from its last rename or the group's.

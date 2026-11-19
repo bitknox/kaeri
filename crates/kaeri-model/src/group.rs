@@ -151,12 +151,13 @@ pub enum SyncCommand {
     /// pairs with from now on. Kept while sync is off too, as `SyncStatus::device_name`.
     /// Answered with `Event::SyncStatus`.
     RenameDevice { name: String },
-    /// Turn a device's Sync switch on or off. Off, the group holds back from it on both roads
-    /// and it from the group, keeping what it has; on again, it catches up. Every device in the
-    /// group sees the switch. Not for this device: `LeaveSync` is how it stops.
+    /// Turn a device's Sync switch on or off, by its id (`SyncDeviceView::id`, never its name).
+    /// Off, the group holds back from it on both roads and it from the group, keeping what it
+    /// has; on again, it catches up. Every device in the group sees the switch. Not for this
+    /// device: `LeaveSync` is how it stops. A device the group does not list is a `SyncProblem`.
     SetDeviceSync { device: String, on: bool },
-    /// Turn the Remote switch between this device and `device` on or off: a TV and a device
-    /// that drives TVs, paired as a remote. Off, the TV refuses that phone's commands and keeps
+    /// Turn the Remote switch between this device and `device` (its id) on or off: a TV and a
+    /// device that drives TVs, paired as a remote. Off, the TV refuses that phone's commands and keeps
     /// the pairing. Both devices see the switch.
     SetDeviceRemote { device: String, on: bool },
     /// Join plugin stores through `device`, a paired device that is a member of them: it makes
