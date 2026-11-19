@@ -274,13 +274,18 @@ extension SyncModel {
         switch scene {
         case .startedOver, .startedOverRestore:
             guard await reached({ self.status.problem == .groupReplaced }) else { return false }
-            if scene == .startedOverRestore { enterNewKey(status.folder?.kind ?? .googleDrive) }
+            if scene == .startedOverRestore {
+                enterNewKey(status.folder?.kind ?? .googleDrive)
+                try? await Task.sleep(for: .seconds(1))
+            }
             return true
         default: break
         }
         addCloudFolder()
         choose(.googleDrive, deviceName: name)
         guard await reached({ self.sheet == .restore(.googleDrive) }) else { return false }
+        // The picker goes and the restore screen comes in, one after the other on iPhone and iPad.
+        try? await Task.sleep(for: .seconds(1))
         switch scene {
         case .startOverWrong:
             restoreKey = "K7QM 4XR9 DH2V T8NB 3CWZ 6PLE" // i18n-skip: a made-up key that opens nothing
@@ -288,6 +293,7 @@ extension SyncModel {
             return await reached { self.problem == .wrongRecoveryKey }
         case .startOverConfirm:
             confirmingStartOver = true
+            try? await Task.sleep(for: .milliseconds(600))
             return true
         case .startOverClearing, .startOverSetup, .startOverKey, .startOverFailed:
             startOver(.googleDrive, deviceName: name)

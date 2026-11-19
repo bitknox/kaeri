@@ -656,7 +656,9 @@ public final class SyncModel {
                     // A sign-in that ended while its sheet waited on it ended well: the sheet
                     // closes and the row says the rest. A key or an error keeps the sheet. A join
                     // from the restore screen that ended without a problem closes it too.
-                    if cloudTarget?.underWay == true, problem == nil {
+                    // A start over on the restore screen goes on past a sign-in's end: the one
+                    // that found the other group can end after it began.
+                    if sheet == .picker, cloudTarget?.underWay == true, problem == nil {
                         sheet = nil
                         resetCloudStep()
                     } else if isRestore(sheet), cloudTarget == nil, joining, problem == nil {

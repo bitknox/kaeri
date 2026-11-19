@@ -88,6 +88,16 @@ struct SyncModelTests {
         #expect(sync.cloudStep == .clearing(.googleDrive))
     }
 
+    @Test func theSignInThatFoundTheOtherGroupEndingLateLeavesAStartOverOnTheRestoreScreen() {
+        let clock = SteppedClock()
+        let sync = Self.restoring(clock)
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 600)
+        #expect(sync.sheet == .restore(.googleDrive) && sync.cloudStep == .clearing(.googleDrive))
+    }
+
     @Test func aStartOverThatStopsSaysWhyAndTryAgainSendsItAgain() {
         let clock = SteppedClock()
         var sent: [Command] = []
