@@ -2046,8 +2046,9 @@ public final class PlayerModel {
     // MARK: Subtitle style
 
     /// The viewer's subtitle style, as the engine keeps it (Settings, Subtitles). A change is
-    /// drawn at once by the mpv playing now; the next one starts with it.
-    @ObservationIgnored public var subtitleStyle = SettingsModel.defaultSubtitleStyle {
+    /// drawn at once by the mpv playing now; the next one starts with it. Observed: the Style
+    /// rows and the Playback menu read their sizes and checks from it.
+    public var subtitleStyle = SettingsModel.defaultSubtitleStyle {
         didSet { if subtitleStyle != oldValue { subtitleStyleChanged() } }
     }
     /// The system's caption style as it is now; a made-up one in the tests. Nil when the style

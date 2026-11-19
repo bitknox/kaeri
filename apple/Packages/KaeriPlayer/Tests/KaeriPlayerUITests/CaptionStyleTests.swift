@@ -6,6 +6,8 @@
 import KaeriKit
 import KaeriPlayer
 import Foundation
+import Observation
+import Synchronization
 import Testing
 
 @testable import KaeriPlayerUI
@@ -43,6 +45,23 @@ struct SubtitleStylePlayerTests {
         #expect(rig.model.captionOptions()["sub-color"] == "#FFFFFFFF")
         // The default font is always set, so a font chosen before does not stay.
         #expect(rig.model.captionOptions()["sub-font"] == PlayerModel.defaultSubtitleFont)
+    }
+
+    /// A style change from the player's own Style rows comes back as the setting, and the rows
+    /// and the Playback menu, which read the style from the model, show it at once.
+    @Test func aChangeOfStyleRedrawsWhatShowsIt() {
+        let rig = Rig()
+        let redrawn = Mutex(false)
+        withObservationTracking {
+            _ = rig.model.subtitleStyle.size
+        } onChange: {
+            redrawn.withLock { $0 = true }
+        }
+        var style = rig.model.subtitleStyle
+        style.size += 10
+        rig.model.subtitleStyle = style
+        #expect(redrawn.withLock { $0 }, "the views reading the style are told it changed")
+        #expect(rig.model.subtitleStyle.size == style.size)
     }
 
     @Test func aChangeOfStyleReachesTheMpvPlayingNow() async throws {
