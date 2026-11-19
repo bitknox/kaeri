@@ -13717,9 +13717,6 @@ cloud-err-webdav = Der Server hat diesen Benutzernamen oder dieses Passwort abge
 # Error, with Open the page again.
 cloud-err-timeout = Die Anmeldeseite wurde geschlossen, bevor der Zugriff erlaubt war.
 
-# Error.
-cloud-err-other-group = Dieser Ordner gehört zu einer anderen Gruppe von Geräte. Gib seinen Wiederherstellungsschlüssel ein, um ihr beizutreten, oder wähle einen anderen Ordner.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } hat Kaeri abgemeldet. Deine Änderungen warten auf diesem { $kind }, bis du dich wieder anmeldest.
 

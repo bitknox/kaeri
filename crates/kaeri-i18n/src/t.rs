@@ -9395,6 +9395,11 @@ pub fn sync_tui_hint_copy() -> String {
     text("sync-tui-hint-copy", &[])
 }
 
+/// Status line hint while the recovery key field has focus: Tab moves to Start over without the key.
+pub fn sync_tui_hint_start_over() -> String {
+    text("sync-tui-hint-start-over", &[])
+}
+
 /// In place of a QR code when the window is too short to draw it whole.
 pub fn sync_tui_qr_no_room() -> String {
     text("sync-tui-qr-no-room", &[])
@@ -23060,6 +23065,11 @@ pub fn cloud_err_title(service: &str) -> String {
     text("cloud-err-title", &[("service", Arg::Text(service))])
 }
 
+/// Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds.
+pub fn cloud_err_started_over(service: &str) -> String {
+    text("cloud-err-started-over", &[("service", Arg::Text(service))])
+}
+
 /// Picker row line.
 pub fn cloud_dropbox_line() -> String {
     text("cloud-dropbox-line", &[])
@@ -23138,6 +23148,11 @@ pub fn tv_cloud_revoked_line(service: &str) -> String {
 /// TV cloud row.
 pub fn tv_cloud_signed_out_line() -> String {
     text("tv-cloud-signed-out-line", &[])
+}
+
+/// TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page.
+pub fn tv_cloud_started_over_line() -> String {
+    text("tv-cloud-started-over-line", &[])
 }
 
 /// TV ConfirmDialog.
@@ -23238,6 +23253,61 @@ pub fn rkey_wrong() -> String {
 /// Button.
 pub fn rkey_restore() -> String {
     text("rkey-restore", &[])
+}
+
+/// Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it.
+pub fn rkey_start_over() -> String {
+    text("rkey-start-over", &[])
+}
+
+/// Confirmation title.
+pub fn rkey_start_over_title() -> String {
+    text("rkey-start-over-title", &[])
+}
+
+/// Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer.
+pub fn rkey_start_over_line(service: &str, kind: &str) -> String {
+    text("rkey-start-over-line", &[("service", Arg::Text(service)), ("kind", Arg::Text(kind))])
+}
+
+/// Destructive button in the confirmation.
+pub fn rkey_start_over_action() -> String {
+    text("rkey-start-over-action", &[])
+}
+
+/// Working title while the folder is cleared. cloud-setting-up follows.
+pub fn rkey_clearing() -> String {
+    text("rkey-clearing", &[])
+}
+
+/// Status line beside the progress indicator while the folder is cleared.
+pub fn rkey_clearing_line(service: &str) -> String {
+    text("rkey-clearing-line", &[("service", Arg::Text(service))])
+}
+
+/// Error title when starting over failed. Offline uses cloud-err-offline as the line.
+pub fn rkey_start_over_err_title() -> String {
+    text("rkey-start-over-err-title", &[])
+}
+
+/// Error line when the service refused to delete the old sync data.
+pub fn rkey_start_over_err_refused(service: &str) -> String {
+    text("rkey-start-over-err-refused", &[("service", Arg::Text(service))])
+}
+
+/// Second line under either start over error.
+pub fn rkey_start_over_err_kept(kind: &str) -> String {
+    text("rkey-start-over-err-kept", &[("kind", Arg::Text(kind))])
+}
+
+/// First line of the recovery key step after starting over, before rkey-line.
+pub fn rkey_started_over(service: &str) -> String {
+    text("rkey-started-over", &[("service", Arg::Text(service))])
+}
+
+/// Button on the cloud row of a device whose group was started over; opens the restore screen.
+pub fn rkey_enter_new() -> String {
+    text("rkey-enter-new", &[])
 }
 
 /// Add a device.

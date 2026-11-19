@@ -13552,9 +13552,6 @@ cloud-err-webdav = サーバーがそのユーザー名またはパスワード�
 # Error, with Open the page again.
 cloud-err-timeout = アクセスが許可される前に、サインインページが閉じました。
 
-# Error.
-cloud-err-other-group = このフォルダは別のデバイスのグループのものです。参加するにはその復元キーを入力するか、別のフォルダを選んでください。
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service }がKaeriをサインアウトさせました。再びサインインするまで、変更はこの{ $kind }で待機します。
 

@@ -14092,7 +14092,7 @@ public enum L {
     public static var cloudErrTimeout: String { string("cloud-err-timeout", fallback: "The sign-in page closed before access was allowed.") }
 
     /// Error.
-    public static var cloudErrOtherGroup: String { string("cloud-err-other-group", fallback: "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.") }
+    public static var cloudErrOtherGroup: String { string("cloud-err-other-group", fallback: "This folder belongs to another set of devices. Enter its recovery key to join them, choose another folder, or start over without the key.") }
 
     /// Status error, with Sign in again.
     public static func cloudErrSignedOut(service: String, kind: String) -> String {
@@ -14110,6 +14110,11 @@ public enum L {
     /// Status error title.
     public static func cloudErrTitle(service: String) -> String {
         Self.format("cloud-err-title", fallback: "Couldn’t sync with %1$@", service)
+    }
+
+    /// Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds.
+    public static func cloudErrStartedOver(service: String) -> String {
+        Self.format("cloud-err-started-over", fallback: "Sync was started over in %1$@ on another device. Enter the new recovery key to join again.", service)
     }
 
     /// Picker row line.
@@ -14169,6 +14174,9 @@ public enum L {
 
     /// TV cloud row.
     public static var tvCloudSignedOutLine: String { string("tv-cloud-signed-out-line", fallback: "Signed out. Select to sign in.") }
+
+    /// TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page.
+    public static var tvCloudStartedOverLine: String { string("tv-cloud-started-over-line", fallback: "Sync was started over on another device. Select to pair this TV again.") }
 
     /// TV ConfirmDialog.
     public static func tvCloudSignOutTitle(service: String) -> String {
@@ -14241,6 +14249,49 @@ public enum L {
 
     /// Button.
     public static var rkeyRestore: String { string("rkey-restore", fallback: "Restore") }
+
+    /// Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it.
+    public static var rkeyStartOver: String { string("rkey-start-over", fallback: "Start over without the key") }
+
+    /// Confirmation title.
+    public static var rkeyStartOverTitle: String { string("rkey-start-over-title", fallback: "Start over without the key?") }
+
+    /// Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer.
+    public static func rkeyStartOverLine(service: String, kind: String) -> String {
+        Self.format("rkey-start-over-line", fallback: "Kaeri deletes the synced history in %1$@ and sets up sync again with a new recovery key. Everything on this %2$@ stays here. Other devices keep what they have, but stop syncing until they join with the new key.", service, kind)
+    }
+
+    /// Destructive button in the confirmation.
+    public static var rkeyStartOverAction: String { string("rkey-start-over-action", fallback: "Delete and start over") }
+
+    /// Working title while the folder is cleared. cloud-setting-up follows.
+    public static var rkeyClearing: String { string("rkey-clearing", fallback: "Deleting the old history") }
+
+    /// Status line beside the progress indicator while the folder is cleared.
+    public static func rkeyClearingLine(service: String) -> String {
+        Self.format("rkey-clearing-line", fallback: "Removing the old sealed copy from %1$@. The new key comes next.", service)
+    }
+
+    /// Error title when starting over failed. Offline uses cloud-err-offline as the line.
+    public static var rkeyStartOverErrTitle: String { string("rkey-start-over-err-title", fallback: "Couldn’t start over") }
+
+    /// Error line when the service refused to delete the old sync data.
+    public static func rkeyStartOverErrRefused(service: String) -> String {
+        Self.format("rkey-start-over-err-refused", fallback: "%1$@ didn’t delete the old history. Try again in a moment.", service)
+    }
+
+    /// Second line under either start over error.
+    public static func rkeyStartOverErrKept(kind: String) -> String {
+        Self.format("rkey-start-over-err-kept", fallback: "Everything on this %1$@ is as it was.", kind)
+    }
+
+    /// First line of the recovery key step after starting over, before rkey-line.
+    public static func rkeyStartedOver(service: String) -> String {
+        Self.format("rkey-started-over", fallback: "Sync started over in %1$@. Your other devices need this key to join again.", service)
+    }
+
+    /// Button on the cloud row of a device whose group was started over; opens the restore screen.
+    public static var rkeyEnterNew: String { string("rkey-enter-new", fallback: "Enter new key") }
 
     /// Add a device.
     public static var pairEnterLine: String { string("pair-enter-line", fallback: "On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.") }

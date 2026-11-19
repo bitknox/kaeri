@@ -21,7 +21,7 @@ use ring::{
 };
 use serde::Deserialize;
 
-use crate::folder::{Entry, FolderError, FolderTarget, check_path};
+use crate::folder::{Entry, FolderError, FolderTarget, check_dir, check_path};
 
 /// Read and write the app's own hidden folder and nothing else.
 pub const SCOPE: &str = "https://www.googleapis.com/auth/drive.appdata";
@@ -891,6 +891,12 @@ impl FolderTarget for GoogleDriveTarget {
         }
         self.forget(path);
         Ok(())
+    }
+
+    /// Drive removes a folder with everything in it in one call.
+    async fn remove_dir(&self, dir: &str) -> Result<(), FolderError> {
+        check_dir(dir)?;
+        self.remove(dir).await
     }
 
     fn describe(&self) -> String {

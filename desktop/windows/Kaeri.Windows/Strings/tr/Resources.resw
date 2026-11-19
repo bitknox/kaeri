@@ -10610,9 +10610,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Giriş sayfası, erişime izin verilmeden kapandı.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Bu klasör başka bir cihazlar kümesine ait. Onlara katılmak için kurtarma anahtarını girin ya da başka bir klasör seçin.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service}, Kaeri hesabının oturumunu kapattı. Yeniden giriş yapana kadar değişiklikleriniz bu {kind} üzerinde bekler.</value>
   </data>

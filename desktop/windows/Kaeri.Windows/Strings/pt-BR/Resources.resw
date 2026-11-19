@@ -11027,9 +11027,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>A página de login fechou antes de o acesso ser permitido.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Esta pasta pertence a outro conjunto de dispositivos. Digite a chave de recuperação dele para entrar, ou escolha outra pasta.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>O {service} desconectou o Kaeri. Suas mudanças aguardam neste dispositivo ({kind}) até você fazer login de novo.</value>
   </data>

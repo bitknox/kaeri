@@ -14047,9 +14047,6 @@ cloud-err-webdav = Сервер отклонил это имя пользова�
 # Error, with Open the page again.
 cloud-err-timeout = Страница входа закрылась, прежде чем доступ был разрешён.
 
-# Error.
-cloud-err-other-group = Эта папка принадлежит другому набору устройств. Введите её ключ восстановления, чтобы присоединиться, или выберите другую папку.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } вывел Kaeri из аккаунта. Изменения ждут на этом устройстве ({ $kind }), пока вы не войдёте снова.
 

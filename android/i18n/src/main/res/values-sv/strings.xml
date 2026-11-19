@@ -4098,7 +4098,6 @@
     <string name="cloud_err_app_password">Nextcloud godtog inte det applösenordet. Skapa ett nytt i Nextcloud under Inställningar, Säkerhet.</string>
     <string name="cloud_err_webdav">Servern avvisade användarnamnet eller lösenordet.</string>
     <string name="cloud_err_timeout">Inloggningssidan stängdes innan åtkomst hade tillåtits.</string>
-    <string name="cloud_err_other_group">Den här mappen tillhör en annan uppsättning enheter. Ange dess återställningsnyckel för att gå med, eller välj en annan mapp.</string>
     <string name="cloud_err_signed_out">%1$s loggade ut Kaeri. Dina ändringar väntar på den här %2$s tills du loggar in igen.</string>
     <string name="cloud_err_full">%1$s är fullt. Frigör utrymme där och försök igen.</string>
     <string name="cloud_err_folder_gone">Kaeri kan inte öppna mappen längre. Välj den igen.</string>

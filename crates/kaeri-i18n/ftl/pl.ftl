@@ -14047,9 +14047,6 @@ cloud-err-webdav = Serwer odrzucił tę nazwę użytkownika lub hasło.
 # Error, with Open the page again.
 cloud-err-timeout = Strona logowania zamknęła się, zanim dostęp został zezwolony.
 
-# Error.
-cloud-err-other-group = Ten folder należy do innego zestawu urządzeń. Wpisz jego klucz odzyskiwania, aby dołączyć, albo wybierz inny folder.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } wylogowało aplikację Kaeri. Zmiany czekają na tym urządzeniu ({ $kind }), dopóki nie zalogujesz się ponownie.
 

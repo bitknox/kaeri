@@ -142,6 +142,15 @@ pub enum SyncCommand {
     /// with `None` stop using a folder and keep syncing nearby. The new folder must be empty or
     /// hold this group already; one holding another group is `SyncProblem::GroupExists`.
     ChangeSyncFolder { folder: Option<SyncFolderSpec> },
+    /// Start sync over in a folder that holds another group whose recovery key is lost: delete
+    /// the sync data in it, then set sync up there as `Command::StartSync` does, with a new
+    /// recovery key (`Event::SyncRecoveryKey`). Everything on this device stays. Said as
+    /// `Event::SyncSignIn` with `SyncSignInStep::Clearing`, then `Finishing`, then `None`. A
+    /// folder that holds this device's own group is not deleted, only taken. A stop part way is
+    /// `SyncProblem::Unreachable` or `SyncProblem::ClearRefused`, and sending it again carries
+    /// on. The other devices of the old group stop with `SyncProblem::GroupReplaced`. Refused
+    /// on a TV, which never sets a group's folder up.
+    ClearFolderAndStart { device_name: String, folder: SyncFolderSpec },
     /// Pair with the device showing `code` on this network, found through the app's DNS-SD
     /// browse (`FfiEngine::set_sync_network`), then swap histories, as `Command::PairJoin` does
     /// with an address. Sets sync up on this device first if it is not. A miss is
@@ -411,6 +420,10 @@ pub enum SyncSignInStep {
     Code { user_code: String, verification_url: String, expires_at: i64, interval: u32 },
     /// Signed in; the folder is being set up.
     Finishing,
+    /// The folder's old sync data is being deleted, for `SyncCommand::ClearFolderAndStart`
+    /// (`rkey-clearing`). `Finishing` follows once it is gone and the new group is set up. Said
+    /// for every kind of folder, not only the cloud drives, and ended with `step: None`.
+    Clearing,
     /// The browser came back to the engine with access allowed, and the sign-in is being
     /// finished. Said on a computer, whose loopback catches the redirect; an app that hands a
     /// sheet's redirect back with `Command::FinishSyncSignIn` knows it then by itself.
@@ -425,8 +438,20 @@ pub enum SyncProblem {
     WrongRecoveryKey,
     /// The folder holds no group to join.
     NoGroup,
-    /// The folder already holds a group; join it with its recovery key.
+    /// The folder already holds a group; join it with its recovery key, or start over without
+    /// it with `SyncCommand::ClearFolderAndStart`.
     GroupExists,
+    /// The folder no longer holds this device's group: another device started sync over there
+    /// with a new recovery key (`cloud-err-started-over`). This device stopped syncing, keeps
+    /// everything it holds, and no longer has a recovery key; it joins the new group with the
+    /// new key through `Command::JoinSync`, bringing its own history. Kept in
+    /// `SyncStatus::problem` until then.
+    GroupReplaced,
+    /// The service would not delete the folder's old sync data for
+    /// `SyncCommand::ClearFolderAndStart` (`rkey-start-over-err-refused`). Nothing on this device
+    /// changed; trying again carries on where it stopped. A folder that could not be reached is
+    /// `Unreachable`.
+    ClearRefused,
     /// The folder could not be reached.
     Unreachable,
     /// The service no longer accepts this device's sign-in (it was revoked, or the token ran

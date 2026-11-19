@@ -10193,9 +10193,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Trang đăng nhập đã đóng trước khi truy cập được cho phép.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Thư mục này thuộc một nhóm các thiết bị khác. Hãy nhập khóa khôi phục của nhóm để tham gia, hoặc chọn thư mục khác.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} đã đăng xuất Kaeri. Các thay đổi sẽ chờ trên {kind} này cho đến khi bạn đăng nhập lại.</value>
   </data>

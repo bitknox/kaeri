@@ -1208,3 +1208,155 @@ mod store_join {
         assert_eq!(problem, SyncStoreProblem::Offline);
     }
 }
+
+mod start_over {
+    use super::*;
+
+    fn problem_said(app: &mut App) -> SyncProblem {
+        app.until("a problem", |event| match event {
+            Event::SyncProblem(problem) => Some(problem.clone()),
+            _ => None,
+        })
+    }
+
+    fn key_said(app: &mut App) -> String {
+        app.until("the recovery key", |event| match event {
+            Event::SyncRecoveryKey(key) => Some(key.clone()),
+            _ => None,
+        })
+    }
+
+    fn clear(app: &App, name: &str, shared: &std::path::Path) {
+        app.engine.send(Command::SyncGroup(SyncCommand::ClearFolderAndStart {
+            device_name: name.into(),
+            folder: folder(shared),
+        }));
+    }
+
+    /// A group of two in `shared`, and its recovery key.
+    fn group_of_two(shared: &std::path::Path) -> (App, App, String) {
+        let mut living_room = App::start();
+        living_room.engine.send(Command::StartSync {
+            device_name: "Living room".into(),
+            folder: folder(shared),
+        });
+        let key = key_said(&mut living_room);
+        living_room.status_where("sync on", |s| s.last_synced.is_some());
+        let mut phone = App::start();
+        phone.engine.send(Command::JoinSync {
+            device_name: "Phone".into(),
+            folder: folder(shared),
+            recovery_key: Secret(key.clone()),
+        });
+        phone.status_where("both devices", |s| s.devices.len() == 2 && s.last_synced.is_some());
+        (living_room, phone, key)
+    }
+
+    #[test]
+    fn a_lost_key_starts_over_and_an_old_device_stops_until_it_joins_with_the_new_key() {
+        let shared = tempfile::tempdir().expect("a shared folder");
+        let (_living_room, mut phone, old_key) = group_of_two(shared.path());
+
+        // A laptop without the key finds another group's folder, and starts over.
+        let mut laptop = App::start();
+        laptop.engine.send(Command::StartSync {
+            device_name: "Laptop".into(),
+            folder: folder(shared.path()),
+        });
+        assert_eq!(problem_said(&mut laptop), SyncProblem::GroupExists);
+        clear(&laptop, "Laptop", shared.path());
+        let (mut steps, mut new_key) = (Vec::new(), None);
+        laptop.until("the steps", |event| match event {
+            Event::SyncSignIn { service: SyncFolderKind::Directory, step } => {
+                steps.push(step.clone());
+                step.is_none().then_some(())
+            }
+            Event::SyncRecoveryKey(key) => {
+                new_key = Some(key.clone());
+                None
+            }
+            _ => None,
+        });
+        assert_eq!(
+            steps,
+            [Some(SyncSignInStep::Clearing), Some(SyncSignInStep::Finishing), None]
+        );
+        let new_key = new_key.expect("a new recovery key");
+        assert_ne!(new_key, old_key);
+        laptop.engine.send(Command::LoadSync);
+        let on = laptop.status_where("sync on", |s| s.enabled && s.last_synced.is_some());
+        assert_eq!(on.devices.len(), 1);
+        assert!(on.recovery_key);
+
+        // The phone's next pass finds its group gone: it stops, says so once, and keeps it.
+        phone.engine.send(Command::SyncFolderNow);
+        assert_eq!(problem_said(&mut phone), SyncProblem::GroupReplaced);
+        let stopped = phone.status_where("the problem kept", |s| {
+            s.problem == Some(SyncProblem::GroupReplaced)
+        });
+        assert!(stopped.enabled);
+        assert!(!stopped.recovery_key);
+        assert!(stopped.folder.is_some());
+        assert!(
+            stopped.error.as_deref().is_some_and(|e| e.contains("started over")),
+            "{stopped:?}"
+        );
+        // Nothing of the phone's went into the new group's folder.
+        let phone_id =
+            stopped.devices.iter().find(|d| d.this_device).expect("this device").id.clone();
+        assert!(!shared.path().join("devices").join(&phone_id).exists());
+        phone.engine.send(Command::SyncFolderNow);
+        phone.status_where("still stopped", |s| s.problem == Some(SyncProblem::GroupReplaced));
+
+        // With the new key it joins the new group and brings itself along.
+        phone.engine.send(Command::JoinSync {
+            device_name: "Phone".into(),
+            folder: folder(shared.path()),
+            recovery_key: Secret(new_key),
+        });
+        let joined = phone.status_where("joined again", |s| {
+            s.problem.is_none() && s.devices.iter().any(|d| d.name == "Laptop")
+        });
+        assert!(joined.recovery_key);
+        laptop.engine.send(Command::SyncFolderNow);
+        laptop.status_where("the phone", |s| s.devices.iter().any(|d| d.name == "Phone"));
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn a_clear_that_stops_part_way_keeps_the_folder_asking_and_carries_on_when_sent_again() {
+        use std::os::unix::fs::PermissionsExt;
+        let shared = tempfile::tempdir().expect("a shared folder");
+        let (_living_room, _phone, _) = group_of_two(shared.path());
+        // One device's files cannot be removed: the service refuses part way through.
+        let devices = shared.path().join("devices");
+        let stuck = std::fs::read_dir(&devices).unwrap().next().unwrap().unwrap().path();
+        std::fs::set_permissions(&stuck, std::fs::Permissions::from_mode(0o555)).unwrap();
+
+        let mut laptop = App::start();
+        clear(&laptop, "Laptop", shared.path());
+        let problem = problem_said(&mut laptop);
+        std::fs::set_permissions(&stuck, std::fs::Permissions::from_mode(0o755)).unwrap();
+        assert_eq!(problem, SyncProblem::ClearRefused);
+        assert!(shared.path().join("group.bin").exists());
+        assert!(!laptop.status_where("status", |_| true).enabled);
+
+        // Sent again, it finishes.
+        clear(&laptop, "Laptop", shared.path());
+        key_said(&mut laptop);
+        let on = laptop.status_where("sync on", |s| s.enabled && s.last_synced.is_some());
+        assert_eq!(on.devices.len(), 1);
+    }
+
+    #[test]
+    fn a_tv_is_refused_and_the_folder_is_left_as_it_was() {
+        let shared = tempfile::tempdir().expect("a shared folder");
+        let (_living_room, _phone, _) = group_of_two(shared.path());
+        let group = std::fs::read(shared.path().join("group.bin")).unwrap();
+        let mut tv = App::on(FfiPlatform::AndroidTv);
+        clear(&tv, "Living room TV", shared.path());
+        assert!(matches!(problem_said(&mut tv), SyncProblem::Other(_)));
+        assert_eq!(std::fs::read(shared.path().join("group.bin")).unwrap(), group);
+        assert!(shared.path().join("devices").read_dir().unwrap().count() == 2);
+    }
+}

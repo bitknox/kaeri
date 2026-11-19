@@ -13717,9 +13717,6 @@ cloud-err-webdav = Sunucu bu kullanıcı adını ya da parolayı reddetti.
 # Error, with Open the page again.
 cloud-err-timeout = Giriş sayfası, erişime izin verilmeden kapandı.
 
-# Error.
-cloud-err-other-group = Bu klasör başka bir cihazlar kümesine ait. Onlara katılmak için kurtarma anahtarını girin ya da başka bir klasör seçin.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service }, Kaeri hesabının oturumunu kapattı. Yeniden giriş yapana kadar değişiklikleriniz bu { $kind } üzerinde bekler.
 

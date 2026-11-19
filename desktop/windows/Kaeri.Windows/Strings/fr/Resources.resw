@@ -11027,9 +11027,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>La page de connexion s’est fermée avant que l’accès soit autorisé.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Ce dossier appartient à un autre ensemble de appareils. Saisissez sa clé de récupération pour les rejoindre, ou choisissez un autre dossier.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} a déconnecté Kaeri. Vos changements attendent sur cet {kind} jusqu’à votre nouvelle connexion.</value>
   </data>

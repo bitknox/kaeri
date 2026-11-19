@@ -13717,9 +13717,6 @@ cloud-err-webdav = Servern avvisade användarnamnet eller lösenordet.
 # Error, with Open the page again.
 cloud-err-timeout = Inloggningssidan stängdes innan åtkomst hade tillåtits.
 
-# Error.
-cloud-err-other-group = Den här mappen tillhör en annan uppsättning enheter. Ange dess återställningsnyckel för att gå med, eller välj en annan mapp.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } loggade ut Kaeri. Dina ändringar väntar på den här { $kind } tills du loggar in igen.
 

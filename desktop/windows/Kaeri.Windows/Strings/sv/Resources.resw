@@ -10610,9 +10610,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Inloggningssidan stängdes innan åtkomst hade tillåtits.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Den här mappen tillhör en annan uppsättning enheter. Ange dess återställningsnyckel för att gå med, eller välj en annan mapp.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} loggade ut Kaeri. Dina ändringar väntar på den här {kind} tills du loggar in igen.</value>
   </data>

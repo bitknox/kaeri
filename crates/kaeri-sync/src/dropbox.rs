@@ -12,7 +12,7 @@ use async_trait::async_trait;
 use serde::Deserialize;
 
 use crate::{
-    folder::{Entry, FolderError, FolderTarget, check_path},
+    folder::{Entry, FolderError, FolderTarget, check_dir, check_path},
     google::{ClientConfig, Endpoints, TokenSource},
     rest::{self, Answer},
 };
@@ -261,6 +261,12 @@ impl FolderTarget for DropboxTarget {
             },
             _ => Err(failed(&answer)),
         }
+    }
+
+    /// Dropbox removes a folder with everything in it in one call.
+    async fn remove_dir(&self, dir: &str) -> Result<(), FolderError> {
+        check_dir(dir)?;
+        self.remove(dir).await
     }
 
     fn describe(&self) -> String {

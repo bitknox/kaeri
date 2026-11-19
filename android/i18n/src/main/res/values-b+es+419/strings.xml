@@ -4254,7 +4254,6 @@
     <string name="cloud_err_app_password">Nextcloud no aceptó esa contraseña de aplicación. Crea una nueva en Nextcloud, en Ajustes, Seguridad.</string>
     <string name="cloud_err_webdav">El servidor rechazó ese nombre de usuario o contraseña.</string>
     <string name="cloud_err_timeout">La página de inicio de sesión se cerró antes de permitir el acceso.</string>
-    <string name="cloud_err_other_group">Esta carpeta pertenece a otro conjunto de dispositivos. Ingresa su clave de recuperación para unirte a ellos, o elige otra carpeta.</string>
     <string name="cloud_err_signed_out">%1$s cerró la sesión de Kaeri. Tus cambios esperan en este dispositivo (%2$s) hasta que vuelvas a iniciar sesión.</string>
     <string name="cloud_err_full">%1$s está lleno. Libera espacio ahí y vuelve a intentarlo.</string>
     <string name="cloud_err_folder_gone">Kaeri ya no puede abrir la carpeta. Elígela de nuevo.</string>
