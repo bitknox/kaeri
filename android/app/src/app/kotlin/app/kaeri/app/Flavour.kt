@@ -7,6 +7,8 @@ import android.content.Intent
 import app.kaeri.app.tv.NsdCastBrowser
 import app.kaeri.app.tv.NsdTvBrowser
 import app.kaeri.engine.ffi.FfiCastBrowser
+import app.kaeri.engine.ffi.FfiCloudAuthorizer
+import app.kaeri.engine.ffi.FfiPlatform
 import app.kaeri.engine.ffi.FfiTvBrowser
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineHome
@@ -26,7 +28,12 @@ internal object Flavour {
                 platform = enginePlatform(context),
                 profile = ProfileChoice.saved(context),
                 folderAccess = PickedFolders(context.contentResolver),
+                cloudAuthorizer = googleDrive(context),
             )
+
+    /** Play services' grant of Google Drive, on a phone or tablet; a TV keeps the device code. */
+    private fun googleDrive(context: Context): FfiCloudAuthorizer? =
+        (context.applicationContext as KaeriApp).googleDrive.takeIf { enginePlatform(context) != FfiPlatform.ANDROID_TV }
 
     /** What the e-ink detection is told of a wide colour gamut in place of the display's answer: nothing. */
     val wideColourGamut: Boolean? = null
@@ -37,7 +44,7 @@ internal object Flavour {
     /** The engine background work starts while the app is not running: the app's own files. */
     fun background(context: Context): EngineLaunch =
         EngineLaunch.app(EngineHome.sandbox(files = context.filesDir, cache = context.cacheDir))
-            .copy(folderAccess = PickedFolders(context.contentResolver))
+            .copy(folderAccess = PickedFolders(context.contentResolver), cloudAuthorizer = googleDrive(context))
 
     fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {}
 

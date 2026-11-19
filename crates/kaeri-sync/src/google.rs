@@ -121,7 +121,9 @@ pub fn random_state() -> String {
 pub enum ClientKind {
     /// iPhone, iPad and the Mac (bundle `app.kaeri.app`). No secret.
     Ios,
-    /// The Android phone (package `app.kaeri.app`, custom URI scheme enabled). No secret.
+    /// The Android phone (package `app.kaeri.app`). No secret. The app signs in through Play
+    /// services where it offers that; the web sheet's redirect needs the client's custom URI
+    /// scheme enabled.
     Android,
     /// Windows, Linux and the terminal: a loopback redirect, and a secret Google requires in the
     /// token exchange.
@@ -1037,6 +1039,17 @@ mod fake {
 
         fn st(&self) -> MutexGuard<'_, State> {
             self.state.lock().unwrap_or_else(PoisonError::into_inner)
+        }
+
+        /// A new access token Drive accepts, as a platform that keeps the grant itself hands one
+        /// out, with no refresh token.
+        pub fn grant_access(&self) -> String {
+            let mut st = self.st();
+            let n = st.next_token;
+            st.next_token += 1;
+            let access = format!("at-{n}");
+            st.valid_access.insert(access.clone());
+            access
         }
 
         /// Every access token handed out so far stops working.

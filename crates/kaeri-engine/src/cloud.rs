@@ -8,6 +8,11 @@
 //! refresh token, kept in the profile's token store under `cloud-<service>`, the place the
 //! trackers' tokens are, and never in a file of ours or in a log.
 //!
+//! A host whose platform grants access itself ([`crate::host::CloudAuthorizer`], Android's Play
+//! services for Google Drive on a phone) is asked instead: its sheet in place of the page, and
+//! a short-lived token from it whenever one is needed. The platform keeps the grant, so the
+//! token store holds only [`PLATFORM_GRANT`] for that service, which says the platform has it.
+//!
 //! A service with no client id in this build says so, with a reason, instead of failing when it
 //! is chosen.
 
@@ -16,8 +21,10 @@ use std::{
         Arc, Mutex, PoisonError,
         atomic::{AtomicU64, Ordering},
     },
-    time::Duration,
+    time::{Duration, Instant},
 };
+
+use async_trait::async_trait;
 
 use kaeri_model::{
     event::Event,
@@ -31,17 +38,29 @@ use kaeri_sync::{
     folder::{FolderError, FolderTarget},
     google::{
         self, ClientConfig, ClientKind, DevicePoll, Endpoints, GoogleDriveTarget, OAuthTokens,
-        Pkce, Secret, Tokens,
+        Pkce, Secret, TokenSource, Tokens,
     },
     loopback::{self, Loopback, Params},
     onedrive::{self, OneDriveTarget},
 };
 use tokio::sync::{Notify, mpsc};
 
-use crate::{outbox::Outbox, syncing::Ctx};
+use crate::{
+    host::{CloudAuthorizer, CloudGrant, GrantAsked},
+    outbox::Outbox,
+    syncing::Ctx,
+};
 
 /// How long a sign-in page may take to come back, and the least a device code is waited for.
 const PAGE_WAIT: Duration = Duration::from_secs(600);
+
+/// What the token store keeps for a service whose grant the platform keeps: no token, only the
+/// word that the platform has it.
+pub const PLATFORM_GRANT: &str = "platform-grant";
+
+/// How long a token from the platform is used before it is asked for again. Google's last an
+/// hour; a token Drive refuses sooner is asked for again at once.
+const PLATFORM_TOKEN_FRESH: Duration = Duration::from_secs(45 * 60);
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Service {
@@ -273,6 +292,32 @@ fn kind_of_device(ctx: &Ctx) -> Option<ClientKind> {
     })
 }
 
+/// The platform's grant for `service` on a device of `kind`, when the host has one that serves
+/// it. Never on a TV, which keeps the device flow, and never in a fixture build's own fake.
+fn platform_authorizer(
+    ctx: &Ctx,
+    service: Service,
+    kind: ClientKind,
+) -> Option<Arc<dyn CloudAuthorizer>> {
+    if kind == ClientKind::Tv || fixture_fake(ctx) {
+        return None;
+    }
+    ctx.host.cloud_authorizer().filter(|a| a.serves(&service.kind()))
+}
+
+/// A fixture build on its own fake service, with no test's in its place.
+fn fixture_fake(ctx: &Ctx) -> bool {
+    #[cfg(feature = "testing")]
+    {
+        ctx.fixture
+            && ctx.syncing.cloud.test.lock().unwrap_or_else(PoisonError::into_inner).is_none()
+    }
+    #[cfg(not(feature = "testing"))]
+    {
+        ctx.fixture
+    }
+}
+
 /// Kaeri's own registered cloud clients, used when the app names none of its own.
 ///
 /// Google's desktop and TV clients come with a client secret. Google documents that an installed
@@ -361,6 +406,10 @@ pub fn way(ctx: &Ctx, service: Service) -> SyncCloudWay {
     if service == Service::Dropbox && kind == ClientKind::Tv {
         return SyncCloudWay::Unavailable { reason: CloudUnavailable::NeedsPhone };
     }
+    // The platform's own sheet, which needs no client of Kaeri's.
+    if platform_authorizer(ctx, service, kind).is_some() {
+        return SyncCloudWay::Sheet;
+    }
     if config_of(ctx, service, kind).is_none() {
         return SyncCloudWay::Unavailable { reason: CloudUnavailable::NoClientId };
     }
@@ -436,9 +485,17 @@ pub fn forget_all(ctx: &Ctx) {
     }
 }
 
+/// Forget the sign-in to `service`. A grant the platform keeps is taken back there too.
 pub fn forget(ctx: &Ctx, service: Service) {
+    let kept = signed_in(ctx, service);
+    let account = account(&ctx.store, service);
     let _ = ctx.sync.tokens.clear(service.token_id());
     keep_account(&ctx.store, service, None);
+    let platform = kind_of_device(ctx).and_then(|kind| platform_authorizer(ctx, service, kind));
+    if let (true, Some(platform)) = (kept, platform) {
+        tracing::info!(service = ?service.kind(), "the platform's grant is taken back");
+        platform.signed_out(service.kind(), account);
+    }
 }
 
 async fn endpoints(ctx: &Ctx, service: Service) -> Endpoints {
@@ -566,19 +623,31 @@ pub async fn sign_in(ctx: &Ctx, tx: &Outbox, service: Service) -> Result<(), End
         };
         return Err(SyncProblem::CloudUnavailable { service: service.kind(), reason }.into());
     };
-    let Some(config) = config_of(ctx, service, kind) else {
+    let platform = platform_authorizer(ctx, service, kind);
+    let config = config_of(ctx, service, kind);
+    if platform.is_none() && config.is_none() {
         return Err(SyncProblem::CloudUnavailable {
             service: service.kind(),
             reason: CloudUnavailable::NoClientId,
         }
         .into());
-    };
+    }
     let endpoints = endpoints(ctx, service).await;
-    let mut run = ctx.syncing.cloud.begin(service.kind(), way == SyncCloudWay::Sheet);
-    tracing::info!(service = ?service.kind(), redirect = redirect_kind(&way), "a cloud sign-in started");
-    let outcome = match way {
-        SyncCloudWay::DeviceCode => device(ctx, tx, service, &endpoints, &config, &run).await,
-        _ => code(ctx, tx, service, kind, &endpoints, &config, &mut run).await,
+    let sheet = way == SyncCloudWay::Sheet && platform.is_none();
+    let mut run = ctx.syncing.cloud.begin(service.kind(), sheet);
+    let redirect = if platform.is_some() { "platform" } else { redirect_kind(&way) };
+    tracing::info!(service = ?service.kind(), redirect, "a cloud sign-in started");
+    let outcome = match (&way, platform, config) {
+        (_, Some(platform), _) => {
+            granted(tx, service, platform, &run).await.map(Signed::Platform)
+        }
+        (SyncCloudWay::DeviceCode, None, Some(config)) => {
+            device(ctx, tx, service, &endpoints, &config, &run).await.map(Signed::Tokens)
+        }
+        (_, None, Some(config)) => code(ctx, tx, service, kind, &endpoints, &config, &mut run)
+            .await
+            .map(Signed::Tokens),
+        (_, None, None) => unreachable!("refused above"),
     };
     ctx.syncing.cloud.finish(run.id);
     match &outcome {
@@ -594,7 +663,19 @@ pub async fn sign_in(ctx: &Ctx, tx: &Outbox, service: Service) -> Result<(), End
             "a cloud sign-in failed"
         ),
     }
-    let tokens = outcome?;
+    let tokens = match outcome? {
+        Signed::Tokens(tokens) => tokens,
+        Signed::Platform(account) => {
+            ctx.sync.tokens.set(service.token_id(), PLATFORM_GRANT).map_err(|e| {
+                SyncProblem::Other(format!("the sign-in could not be kept: {e}"))
+            })?;
+            match account {
+                Some(account) => keep_account(&ctx.store, service, Some(&account)),
+                None => learn_account(ctx, service).await,
+            }
+            return Ok(());
+        }
+    };
     let Some(refresh) = tokens.refresh_token else {
         return Err(
             SyncProblem::Other("the service gave no way to stay signed in".into()).into()
@@ -606,6 +687,122 @@ pub async fn sign_in(ctx: &Ctx, tx: &Outbox, service: Service) -> Result<(), End
         .map_err(|e| SyncProblem::Other(format!("the sign-in could not be kept: {e}")))?;
     learn_account(ctx, service).await;
     Ok(())
+}
+
+/// What a sign-in ended with: the service's tokens, or the platform's grant and the account it
+/// named.
+enum Signed {
+    Tokens(Tokens),
+    Platform(Option<String>),
+}
+
+/// Ask the platform, on a blocking thread: its sheet may be up for as long as the person takes.
+async fn ask_platform(platform: Arc<dyn CloudAuthorizer>, asked: GrantAsked) -> CloudGrant {
+    tokio::task::spawn_blocking(move || platform.authorize(asked))
+        .await
+        .unwrap_or_else(|_| CloudGrant::Failed("the platform's answer was lost".into()))
+}
+
+/// The sign-in through the platform's own sheet. The account the platform names, if it does.
+async fn granted(
+    tx: &Outbox,
+    service: Service,
+    platform: Arc<dyn CloudAuthorizer>,
+    run: &Running,
+) -> Result<Option<String>, Ended> {
+    let asked = GrantAsked {
+        service: service.kind(),
+        interactive: true,
+        account: None,
+        rejected: None,
+    };
+    let grant = tokio::select! {
+        () = run.cancel.notified() => return Err(Ended::Cancelled),
+        () = tokio::time::sleep(PAGE_WAIT) => {
+            return Err(SyncProblem::SignInExpired { service: service.kind() }.into());
+        }
+        grant = ask_platform(platform, asked) => grant,
+    };
+    let kind = service.kind();
+    match grant {
+        CloudGrant::Granted { account, .. } => {
+            // Access allowed: what is left is learning the account and setting the folder up.
+            say(tx, service, Some(SyncSignInStep::Connecting));
+            Ok(account)
+        }
+        CloudGrant::Cancelled => Err(Ended::Cancelled),
+        CloudGrant::Denied | CloudGrant::ConsentNeeded => {
+            Err(SyncProblem::SignInDenied { service: kind }.into())
+        }
+        CloudGrant::Unreachable => Err(SyncProblem::Unreachable.into()),
+        CloudGrant::Unavailable => {
+            Err(SyncProblem::Other("this device cannot grant access to the service".into())
+                .into())
+        }
+        CloudGrant::Failed(reason) => Err(SyncProblem::Other(reason).into()),
+    }
+}
+
+/// Access from the platform's grant: a token asked for when there is none yet, when it is old,
+/// and when the service refused the one in use.
+struct PlatformTokens {
+    platform: Arc<dyn CloudAuthorizer>,
+    service: SyncFolderKind,
+    account: Option<String>,
+    token: tokio::sync::Mutex<Option<(String, Instant)>>,
+}
+
+impl PlatformTokens {
+    async fn ask(&self, rejected: Option<&str>) -> Result<String, FolderError> {
+        let asked = GrantAsked {
+            service: self.service.clone(),
+            interactive: false,
+            account: self.account.clone(),
+            rejected: rejected.map(str::to_owned),
+        };
+        match ask_platform(self.platform.clone(), asked).await {
+            CloudGrant::Granted { access_token, .. } if !access_token.is_empty() => {
+                Ok(access_token)
+            }
+            CloudGrant::Unreachable => {
+                Err(FolderError::Unreachable("the platform could not reach the service".into()))
+            }
+            CloudGrant::Failed(reason) => Err(FolderError::Server(reason)),
+            // The grant is gone, or needs the person: signing in again asks.
+            other => {
+                tracing::info!(service = ?self.service, answer = ?other, "the platform gave no token");
+                Err(FolderError::Unauthorized)
+            }
+        }
+    }
+}
+
+#[async_trait]
+impl TokenSource for PlatformTokens {
+    async fn access_token(&self) -> Result<String, FolderError> {
+        let mut token = self.token.lock().await;
+        if let Some((kept, at)) = token.as_ref()
+            && at.elapsed() < PLATFORM_TOKEN_FRESH
+        {
+            return Ok(kept.clone());
+        }
+        let fresh = self.ask(None).await?;
+        *token = Some((fresh.clone(), Instant::now()));
+        Ok(fresh)
+    }
+
+    async fn refresh_access_token(&self, rejected: &str) -> Result<String, FolderError> {
+        let mut token = self.token.lock().await;
+        // Another task may have asked while this one waited for the lock.
+        if let Some((kept, _)) = token.as_ref()
+            && kept != rejected
+        {
+            return Ok(kept.clone());
+        }
+        let fresh = self.ask(Some(rejected)).await?;
+        *token = Some((fresh.clone(), Instant::now()));
+        Ok(fresh)
+    }
 }
 
 /// How a sign-in comes back, for the log.
@@ -820,14 +1017,26 @@ async fn device(
     }
 }
 
-/// The access to `service` from the refresh token kept for it. No token is
-/// [`SyncProblem::SignInNeeded`].
-pub async fn tokens_for(ctx: &Ctx, service: Service) -> Result<Arc<OAuthTokens>, SyncProblem> {
+/// The access to `service` from the refresh token kept for it, or from the platform's grant. No
+/// token, or a platform grant with no platform to ask, is [`SyncProblem::SignInNeeded`].
+pub async fn tokens_for(
+    ctx: &Ctx,
+    service: Service,
+) -> Result<Arc<dyn TokenSource>, SyncProblem> {
     let needed = || SyncProblem::SignInNeeded { service: service.kind() };
     let refresh = ctx.sync.tokens.get(service.token_id()).ok().filter(|t| !t.trim().is_empty());
     let (Some(refresh), Some(kind)) = (refresh, kind_of_device(ctx)) else {
         return Err(needed());
     };
+    if refresh == PLATFORM_GRANT {
+        let platform = platform_authorizer(ctx, service, kind).ok_or_else(needed)?;
+        return Ok(Arc::new(PlatformTokens {
+            platform,
+            service: service.kind(),
+            account: account(&ctx.store, service),
+            token: tokio::sync::Mutex::new(None),
+        }));
+    }
     let Some(config) = config_of(ctx, service, kind) else {
         return Err(SyncProblem::CloudUnavailable {
             service: service.kind(),

@@ -49,6 +49,12 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     /** First run's join page: the code, the pairing, and what the paired device brings. */
     val join = JoinModel(clock)
 
+    /**
+     * Shows the platform's own sign-in sheet again, for a sign-in the platform runs rather than
+     * a browser tab (Google Drive through Play services on a phone). False when none is waiting.
+     */
+    var platformSheetAgain: (() -> Boolean)? = null
+
     private val _pairing = MutableStateFlow<Long?>(null)
 
     /** A typed code is pairing, since this moment on the clock: Pair's spinner shows after 600 ms. */

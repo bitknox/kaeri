@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.res.Configuration
 import java.io.File
 import app.kaeri.engine.ffi.FfiBackground
+import app.kaeri.engine.ffi.FfiCloudAuthorizer
 import app.kaeri.engine.ffi.FfiDirs
 import app.kaeri.engine.ffi.FfiEngine
 import app.kaeri.engine.ffi.FfiFolderAccess
@@ -79,6 +80,8 @@ data class EngineLaunch(
     val pageDecoder: FfiPageDecoder? = PlatformPageDecoder(),
     /** The way into book folders picked in the system folder picker: [PickedFolders] in the app. */
     val folderAccess: FfiFolderAccess? = null,
+    /** The platform's own grant of Google Drive on a phone, Play services' in the app flavour. */
+    val cloudAuthorizer: FfiCloudAuthorizer? = null,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -112,6 +115,7 @@ data class EngineLaunch(
             reading = engine == Engine.App,
             pageDecoder = pageDecoder,
             folderAccess = folderAccess,
+            cloudAuthorizer = cloudAuthorizer,
         )
 
     /** Stand the engine up. Blocks while it opens its files, so call it off the main thread. */

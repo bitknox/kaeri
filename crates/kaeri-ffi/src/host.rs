@@ -6,8 +6,8 @@ use kaeri_core::config::{Config, Paths};
 #[cfg(test)]
 use kaeri_engine::host::BUNDLE;
 use kaeri_engine::host::{
-    Backend, DecodedImage, FolderTree, Host, PageDecoder, SecretError, SecretStore, Storage,
-    shared_secrets,
+    Backend, CloudAuthorizer, DecodedImage, FolderTree, Host, PageDecoder, SecretError,
+    SecretStore, Storage, shared_secrets,
 };
 
 use crate::start::SecretsMode;
@@ -94,6 +94,7 @@ pub(crate) struct Adapter {
     secrets: Arc<dyn SecretStore>,
     decoder: Option<Arc<dyn PageDecoder>>,
     folders: Option<Arc<dyn FolderTree>>,
+    cloud: Option<Arc<dyn CloudAuthorizer>>,
 }
 
 impl Adapter {
@@ -107,7 +108,7 @@ impl Adapter {
     ) -> Self {
         let env = std::env::var(Backend::ENV).ok();
         let secrets = mode.secrets(app.clone(), config, paths, env.as_deref());
-        Self { app, secrets, decoder: None, folders: None }
+        Self { app, secrets, decoder: None, folders: None, cloud: None }
     }
 
     /// With the app's image decoder, when it gave one.
@@ -126,6 +127,16 @@ impl Adapter {
     ) -> Self {
         self.folders =
             access.map(|a| Arc::new(crate::folders::Folders(a)) as Arc<dyn FolderTree>);
+        self
+    }
+
+    /// With the platform's own grant of access to cloud drives, when the app gave one.
+    pub(crate) fn with_cloud_authorizer(
+        mut self,
+        authorizer: Option<Arc<dyn crate::FfiCloudAuthorizer>>,
+    ) -> Self {
+        self.cloud = authorizer
+            .map(|a| Arc::new(crate::cloud_grant::Authorizer(a)) as Arc<dyn CloudAuthorizer>);
         self
     }
 }
@@ -206,6 +217,10 @@ impl Host for Adapter {
     fn folder_access(&self) -> Option<Arc<dyn FolderTree>> {
         self.folders.clone()
     }
+
+    fn cloud_authorizer(&self) -> Option<Arc<dyn CloudAuthorizer>> {
+        self.cloud.clone()
+    }
 }
 
 #[cfg(test)]
@@ -276,7 +291,7 @@ mod tests {
             &paths(root.path()),
             None,
         );
-        Adapter { app, secrets, decoder: None, folders: None }
+        Adapter { app, secrets, decoder: None, folders: None, cloud: None }
     }
 
     /// The token file the terminal app keeps `id` in under `root`'s data directory.
