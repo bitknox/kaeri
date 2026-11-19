@@ -383,7 +383,9 @@ public final class SyncModel {
     public func pickerClosed() {
         if case .waiting = cloudTarget { cancelSignIn() }
         if sheet != .picker {
-            resetCloudStep()
+            // The restore screen that took the picker's place keeps its own steps: its start
+            // over can begin before the picker has finished going.
+            if !isRestore(sheet) { resetCloudStep() }
             switching = false
         }
     }

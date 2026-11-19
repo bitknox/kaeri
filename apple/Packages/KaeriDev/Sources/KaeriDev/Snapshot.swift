@@ -104,7 +104,15 @@ enum Snapshot {
                 width: CGFloat(picture.width), height: CGFloat(picture.height)))
         }
         place(image, at: window.frame)
-        for sheet in sheets {
+        // An alert over a sheet stands on glass the window server keeps in a window of its own,
+        // which goes beneath the alert.
+        let glass = sheets.count > 1 && !drawn
+            ? NSApp.windows.filter { $0.isVisible && String(describing: type(of: $0)).contains("GlassEffect") }
+            : []
+        for (index, sheet) in sheets.enumerated() {
+            if index == sheets.count - 1 {
+                for pane in glass { if let picture = composited(pane) { place(picture, at: pane.frame) } }
+            }
             if let picture = drawn ? cached(sheet) : composited(sheet) { place(picture, at: sheet.frame) }
         }
         for popover in popovers {

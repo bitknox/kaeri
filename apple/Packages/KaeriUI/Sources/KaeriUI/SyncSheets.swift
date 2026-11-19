@@ -211,7 +211,7 @@ private struct CloudStepView: View {
             case .clearing(let kind):
                 CloudStatusLine(text: L.rkeyClearingLine(service: SyncModel.name(kind)), busy: true, color: .haze)
             case .startOverFailed(let kind, let problem):
-                CloudStatusLine(text: Self.startOverLine(kind, problem), busy: false)
+                CloudStatusLine(text: Self.startOverLine(kind, problem), busy: false, warning: true)
                 CloudLede(text: L.rkeyStartOverErrKept(kind: Device.name))
             case .key:
                 EmptyView()
@@ -313,13 +313,15 @@ private struct CloudStatusLine: View {
     let text: String
     let busy: Bool
     var color: Color = .silk
+    /// The warning triangle the restore screen's errors use, rather than the sign-in's circle.
+    var warning = false
 
     var body: some View {
         HStack(alignment: busy ? .center : .firstTextBaseline, spacing: touch ? 10 : 8) {
             if busy {
                 ProgressView().controlSize(.small)
             } else {
-                Image(systemName: "exclamationmark.circle.fill")
+                Image(systemName: warning ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
                     .font(.plat(mac: 13, touch: 17))
                     .foregroundStyle(.vermilion)
                     .accessibilityHidden(true)

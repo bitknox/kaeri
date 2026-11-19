@@ -78,6 +78,16 @@ struct SyncModelTests {
         #expect(sync.cloudStep == .key)
     }
 
+    @Test func thePickerGoingAfterAStartOverBeganLeavesItsSteps() {
+        let clock = SteppedClock()
+        let sync = Self.restoring(clock)
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.pickerClosed()
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 600)
+        #expect(sync.cloudStep == .clearing(.googleDrive))
+    }
+
     @Test func aStartOverThatStopsSaysWhyAndTryAgainSendsItAgain() {
         let clock = SteppedClock()
         var sent: [Command] = []
