@@ -19,7 +19,7 @@ use crate::{
 
 use super::{
     accounts::{accounts_rows, conflict_rows},
-    devices::{devices_body, draw_art, tone_style},
+    devices::{devices_body, draw_art, draw_mark, tone_style},
     episodes::{candidate_rows, source_rows},
     line,
     stores::{
@@ -484,6 +484,9 @@ pub(super) fn render_overlay(
     }
     if let Some(body) = body.as_ref().filter(|body| !body.art.is_empty()) {
         draw_art(buf, &body.art, band, title_y + 2);
+    }
+    if let (Some(body), Some(shown)) = (body.as_ref(), columns.first()) {
+        draw_mark(buf, app, body, band.left() + 2, title_y + 2, shown.start, band.bottom());
     }
     report
 }

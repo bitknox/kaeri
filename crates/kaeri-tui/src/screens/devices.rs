@@ -12,8 +12,8 @@ use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 use super::chrome::mark_selected;
 use crate::{
     app::{
-        App, DeviceConfirm, DeviceLine, DevicePageItem, Field, FolderState, code_groups,
-        countdown_text, is_drive, key_groups, pair_link, service_line, service_name,
+        App, DeviceConfirm, DeviceLine, DevicePageItem, Field, FolderState, StartOverStep,
+        code_groups, countdown_text, is_drive, key_groups, pair_link, service_line, service_name,
     },
     nav::{Focus, Overlay},
     theme::{Role, glyph},
@@ -156,9 +156,12 @@ fn lines(app: &App) -> Vec<Line> {
                     out.push(Line::Prose(place, Role::TextDim));
                 }
                 if let Some(problem) = app.folder_problem() {
-                    out.push(Line::Prose(problem, Role::Alert));
+                    // Started over elsewhere is the way things are now, with the way back under it.
+                    let role = if app.group_replaced() { Role::TextDim } else { Role::Alert };
+                    out.push(Line::Prose(problem, role));
                 }
             }
+            DeviceLine::EnterNewKey => out.push(row(at, t::rkey_enter_new(), String::new())),
             DeviceLine::SignOut => {
                 let account = status
                     .and_then(|s| {
@@ -206,7 +209,10 @@ fn lines(app: &App) -> Vec<Line> {
 fn note(app: &App) -> Option<String> {
     Some(match app.device_line()? {
         DeviceLine::ShowCode | DeviceLine::EnterCode => t::pair_same_wifi(),
-        DeviceLine::AddCloud | DeviceLine::Folder | DeviceLine::SignOut => t::cloud_foot(),
+        DeviceLine::AddCloud
+        | DeviceLine::Folder
+        | DeviceLine::SignOut
+        | DeviceLine::EnterNewKey => t::cloud_foot(),
         DeviceLine::RecoveryKey => t::rkey_line(),
         DeviceLine::NewKey => t::rkey_new_foot(),
         DeviceLine::Note(_) => t::sync_notes_foot(),
@@ -338,11 +344,33 @@ pub(super) struct Body {
     pub selected: Option<usize>,
     /// A QR code, in half blocks, dark on light.
     pub art: Vec<String>,
+    /// The row whose first cell is a state mark, drawn in the state colour: the spinner, the
+    /// started-over dot.
+    pub marked: Option<usize>,
 }
 
 impl Body {
     fn new(heading: String) -> Self {
-        Self { heading, rows: Vec::new(), tones: Vec::new(), selected: None, art: Vec::new() }
+        Self {
+            heading,
+            rows: Vec::new(),
+            tones: Vec::new(),
+            selected: None,
+            art: Vec::new(),
+            marked: None,
+        }
+    }
+
+    /// A paragraph after a state mark, its other lines under the words.
+    fn marked(&mut self, mark: char, text: &str, width: usize, tone: Tone) {
+        for (i, part) in wrap(text, width.saturating_sub(2).max(8), 6).into_iter().enumerate() {
+            if i == 0 {
+                self.marked = Some(self.rows.len());
+                self.push("", format!("{mark} {part}"), tone); // i18n-skip
+            } else {
+                self.push("", format!("  {part}"), tone); // i18n-skip
+            }
+        }
     }
 
     fn push(&mut self, key: &str, text: String, tone: Tone) {
@@ -540,6 +568,14 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
             } else {
                 text
             };
+            if let Some(kind) = &d.started_over {
+                body.marked(
+                    glyph::STATE_READY,
+                    &t::rkey_started_over(&service_name(kind)),
+                    beside,
+                    Tone::Text,
+                );
+            }
             body.prose(&t::rkey_line(), beside, Tone::Dim);
             body.prose(&t::sync_tui_rkey_again(), beside, Tone::Dim);
             body.blank();
@@ -555,13 +591,53 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
             body
         }
         Overlay::SyncRestore => {
-            let mut body = Body::new(typed(app, overlay.title(), Field::RecoveryKey));
-            body.prose(&t::cloud_err_other_group(), text, Tone::Dim);
+            // The caret shows while the field has the keyboard; Tab gives it to Start over.
+            let heading = if d.start_over_focused {
+                format!("{}   {}", overlay.title(), super::overlays::field_text(app, Field::RecoveryKey)) // i18n-skip
+            } else {
+                typed(app, overlay.title(), Field::RecoveryKey)
+            };
+            let mut body = Body::new(heading);
+            body.prose(&restore_line(app), text, Tone::Dim);
             body.blank();
             body.prose(&t::rkey_enter_note(), text, Tone::Dim);
             working(&mut body, app, text);
             body.problem(app, text);
+            body.blank();
+            if d.start_over_focused {
+                body.selected = Some(body.rows.len());
+            }
+            body.push("", t::rkey_start_over(), Tone::Text);
             body
+        }
+        Overlay::SyncStartOver => {
+            let Some(so) = &d.start_over else { return Body::new(overlay.title().to_string()) };
+            let service = service_name(&so.service);
+            match &so.shown {
+                StartOverStep::Failed(problem) => {
+                    let mut body = Body::new(t::rkey_start_over_err_title());
+                    body.prose(problem, text, Tone::Alert);
+                    body.prose(&t::rkey_start_over_err_kept(&t::sync_tui_kind()), text, Tone::Dim);
+                    body
+                }
+                step => {
+                    let (heading, line) = if *step == StartOverStep::SettingUp {
+                        (t::cloud_setting_up(), t::cloud_setting_up_line(&service))
+                    } else {
+                        (t::rkey_clearing(), t::rkey_clearing_line(&service))
+                    };
+                    let mut body = Body::new(heading);
+                    // With motion off a still spinner reads as a stray mark: the words say it.
+                    if app.settings.motion {
+                        body.marked(glyph::spinner(app.pulse_frame()), &line, text, Tone::Dim);
+                    } else {
+                        body.prose(&line, text, Tone::Dim);
+                    }
+                    body.blank();
+                    body.prose(&t::cloud_close_carries_on(), text, Tone::Dim);
+                    body
+                }
+            }
         }
         Overlay::SyncConfirm => {
             let (heading, line) = match &d.confirm {
@@ -569,6 +645,10 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
                     (t::devices_remove_alert(name), t::devices_remove_alert_line(name))
                 }
                 Some(DeviceConfirm::NewKey) => (t::rkey_new(), t::rkey_new_foot()),
+                Some(DeviceConfirm::StartOver) => {
+                    let service = d.pending.as_ref().map(|p| service_name(&p.kind)).unwrap_or_default();
+                    (t::rkey_start_over_title(), t::rkey_start_over_line(&service, &t::sync_tui_kind()))
+                }
                 _ => (
                     t::sync_turn_off_alert(&app.device_name()),
                     t::sync_turn_off_alert_line(&t::sync_tui_kind()),
@@ -719,6 +799,28 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
             body
         }
         _ => Body::new(overlay.title().to_string()),
+    }
+}
+
+/// What the restore overlay says first: what the folder holds. On a device whose group was
+/// started over elsewhere, how many devices hold the new history when that is known.
+fn restore_line(app: &App) -> String {
+    let count = app.devices.status.as_ref().map_or(0, |s| s.restore_devices);
+    match app.devices.pending.as_ref() {
+        Some(folder) if app.group_replaced() && count > 0 => {
+            t::rkey_enter_line(&service_name(&folder.kind), i64::from(count))
+        }
+        _ => t::cloud_err_other_group(),
+    }
+}
+
+/// Draw `body`'s state mark, if it has one on show, in the state colour. `top` is the band's
+/// first row of rows and `offset` the first of them on show.
+pub(super) fn draw_mark(buf: &mut Buffer, app: &App, body: &Body, x: u16, top: u16, offset: usize, bottom: u16) {
+    let Some(at) = body.marked.filter(|at| *at >= offset) else { return };
+    let y = top + (at - offset) as u16;
+    if y < bottom {
+        buf[(x, y)].set_style(app.palette.style(Role::State));
     }
 }
 
