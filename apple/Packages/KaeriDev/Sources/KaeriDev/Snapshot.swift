@@ -105,12 +105,23 @@ enum Snapshot {
         }
         place(image, at: window.frame)
         // An alert over a sheet stands on glass the window server keeps in a window of its own,
-        // which goes beneath the alert.
+        // which goes beneath the alert. That glass shows what is on screen behind it, nothing
+        // when the window is behind another app's: the alert's dark ground stands in for it.
         let glass = sheets.count > 1 && !drawn
             ? NSApp.windows.filter { $0.isVisible && String(describing: type(of: $0)).contains("GlassEffect") }
             : []
         for (index, sheet) in sheets.enumerated() {
-            if index == sheets.count - 1 {
+            if index == sheets.count - 1, index > 0, sheet is NSPanel {
+                let frame = sheet.frame
+                context.saveGState()
+                context.addPath(CGPath(
+                    roundedRect: CGRect(
+                        x: (frame.minX - canvas.minX) * scale, y: (frame.minY - canvas.minY) * scale,
+                        width: frame.width * scale, height: frame.height * scale),
+                    cornerWidth: 24 * scale, cornerHeight: 24 * scale, transform: nil))
+                context.setFillColor(CGColor(srgbRed: 0.09, green: 0.09, blue: 0.1, alpha: 1))
+                context.fillPath()
+                context.restoreGState()
                 for pane in glass { if let picture = composited(pane) { place(picture, at: pane.frame) } }
             }
             if let picture = drawn ? cached(sheet) : composited(sheet) { place(picture, at: sheet.frame) }
