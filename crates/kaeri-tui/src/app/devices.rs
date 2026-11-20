@@ -385,7 +385,7 @@ impl App {
                 } else {
                     lines.push(DeviceLine::AddCloud);
                 }
-                if status.recovery_key {
+                if status.recovery_key && !self.group_replaced() {
                     lines.push(DeviceLine::RecoveryKey);
                     lines.push(DeviceLine::NewKey);
                 }
@@ -745,19 +745,8 @@ impl App {
                 None
             }
             (Overlay::SyncStartOver, Action::Open) => self.start_over_again(),
-            // Closed while the work runs, it carries on and the key opens by itself. Closed on
-            // an error, the start over is let go.
             (Overlay::SyncStartOver, Action::Back) => {
-                self.nav.close_overlay();
-                if self
-                    .devices
-                    .start_over
-                    .as_ref()
-                    .is_none_or(|so| matches!(so.said, StartOverStep::Failed(_)))
-                {
-                    self.devices.start_over = None;
-                    self.forget_sync_form();
-                }
+                self.leave_start_over();
                 None
             }
             (Overlay::SyncRecoveryKey, Action::ClearCompleted) => {
@@ -984,6 +973,28 @@ impl App {
         }))
     }
 
+    /// Esc on a start over. Closed while the work runs, it carries on and the key opens by
+    /// itself. Cancelled on an error, the start over is let go and the restore overlay is back
+    /// with its key field, for the same folder.
+    fn leave_start_over(&mut self) {
+        let failed =
+            self.devices.start_over.take_if(|so| matches!(so.said, StartOverStep::Failed(_)));
+        match (failed, self.devices.start_over.is_some()) {
+            (Some(so), _) => {
+                self.devices.kind = Some(so.service);
+                self.devices.pending = Some(so.folder);
+                self.open_restore();
+            }
+            (None, true) => {
+                self.nav.close_overlay();
+            }
+            (None, false) => {
+                self.nav.close_overlay();
+                self.forget_sync_form();
+            }
+        }
+    }
+
     /// What the engine said about a start over, kept until it is due on screen.
     fn start_over_said(&mut self, step: StartOverStep) {
         if let Some(so) = self.devices.start_over.as_mut() {
@@ -1052,18 +1063,21 @@ impl App {
                     }
                 }
             }
-            StartOverStep::Failed(text) if !ours => {
-                self.devices.start_over = None;
-                self.forget_sync_form();
-                self.push_toast(alert(text));
-            }
             step => {
-                if let Some(so) = self.devices.start_over.as_mut() {
-                    so.shown = step;
-                    so.since = now;
-                }
+                let failed = matches!(step, StartOverStep::Failed(_));
+                let Some(so) = self.devices.start_over.as_mut() else { return };
+                so.shown = step;
+                so.since = now;
                 if self.nav.overlay() == Some(&Overlay::SyncRestore) {
                     self.next_sync_overlay(Overlay::SyncStartOver);
+                } else if failed && !ours {
+                    // Closed while it worked, an error opens it again with Try again, as the
+                    // key would have.
+                    let (kind, folder) = (so.service.clone(), so.folder.clone());
+                    self.devices.kind = Some(kind);
+                    self.devices.pending = Some(folder);
+                    self.close_sync_overlays(None);
+                    self.open_sync_overlay(Overlay::SyncStartOver);
                 }
             }
         }
@@ -2109,7 +2123,7 @@ mod tests {
     }
 
     #[test]
-    fn offline_before_the_work_shows_is_said_at_once_and_esc_lets_it_go() {
+    fn offline_before_the_work_shows_is_said_at_once_and_esc_goes_back_to_the_key() {
         let mut a = at_restore();
         confirm_start_over(&mut a);
         a.apply(Event::SyncProblem(SyncProblem::Unreachable));
@@ -2118,24 +2132,68 @@ mod tests {
             shown(&a),
             Some(StartOverStep::Failed(t::cloud_err_offline("Google Drive")))
         );
-        a.handle(Action::Back, 5);
-        assert!(!a.nav.has_overlay());
-        assert!(a.devices.start_over.is_none() && a.devices.pending.is_none());
+        assert_eq!(a.handle(Action::Back, 5), None);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::SyncRestore));
+        assert!(a.devices.start_over.is_none());
+        assert!(!a.devices.start_over_focused, "the key field has the keyboard");
+        assert_eq!(
+            a.devices.pending.as_ref().map(|p| p.kind.clone()),
+            Some(SyncFolderKind::GoogleDrive)
+        );
+        // Start over is still there, for the same folder.
+        let task = confirm_start_over(&mut a);
+        assert!(
+            matches!(task, Some(Command::SyncGroup(SyncCommand::ClearFolderAndStart { .. }))),
+            "{task:?}"
+        );
     }
 
     #[test]
-    fn an_error_after_the_overlay_closed_is_a_toast() {
+    fn an_error_after_the_overlay_closed_opens_it_again_with_try_again() {
         let mut a = at_restore();
         confirm_start_over(&mut a);
         a.apply(clearing());
         after(&mut a, 600);
         a.handle(Action::Back, 5);
+        assert!(!a.nav.has_overlay());
         a.apply(Event::SyncProblem(SyncProblem::ClearRefused));
         after(&mut a, 400);
+        assert!(a.toasts.is_empty());
+        assert_eq!(a.nav.overlay(), Some(&Overlay::SyncStartOver));
+        assert_eq!(
+            shown(&a),
+            Some(StartOverStep::Failed(t::rkey_start_over_err_refused("Google Drive")))
+        );
+        let task = a.handle(Action::Open, 5);
+        assert!(
+            matches!(task, Some(Command::SyncGroup(SyncCommand::ClearFolderAndStart { .. }))),
+            "{task:?}"
+        );
+        a.apply(Event::SyncProblem(SyncProblem::Unreachable));
+        after(&mut a, 600);
+        a.handle(Action::Back, 5);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::SyncRestore), "Esc goes back to the key");
+        assert_eq!(
+            a.devices.pending.as_ref().map(|p| p.kind.clone()),
+            Some(SyncFolderKind::GoogleDrive)
+        );
+    }
+
+    #[test]
+    fn closed_in_the_quiet_moment_an_error_still_opens_on_its_folder() {
+        let mut a = at_restore();
+        confirm_start_over(&mut a);
+        a.handle(Action::Back, 5);
         assert!(!a.nav.has_overlay());
-        assert!(a.devices.start_over.is_none());
-        let refused = t::rkey_start_over_err_refused("Google Drive");
-        assert!(a.toasts.iter().any(|t| t.notice.text == refused));
+        assert!(a.devices.pending.is_none(), "Esc on the restore overlay forgets the form");
+        a.apply(Event::SyncProblem(SyncProblem::Unreachable));
+        assert_eq!(a.nav.overlay(), Some(&Overlay::SyncStartOver));
+        a.handle(Action::Back, 5);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::SyncRestore));
+        assert_eq!(
+            a.devices.pending.as_ref().map(|p| p.kind.clone()),
+            Some(SyncFolderKind::GoogleDrive)
+        );
     }
 
     #[test]
@@ -2143,17 +2201,19 @@ mod tests {
         let mut status = on(Some(SyncFolderKind::GoogleDrive));
         status.clouds[0].signed_in = true;
         status.problem = Some(SyncProblem::GroupReplaced);
-        status.recovery_key = false;
+        // The engine forgets the old key; a status that still says it holds one hides it too.
+        status.recovery_key = true;
         let mut a = at_devices(status);
         let lines = a.device_lines();
-        assert!(lines.contains(&DeviceLine::EnterNewKey));
-        assert!(
-            !lines.contains(&DeviceLine::SignOut) && !lines.contains(&DeviceLine::RecoveryKey)
+        let at = lines.iter().position(|l| *l == DeviceLine::Folder).unwrap();
+        assert_eq!(
+            lines[at..].to_vec(),
+            vec![DeviceLine::Folder, DeviceLine::EnterNewKey, DeviceLine::TurnOff],
+            "Enter new key is the only way on"
         );
         assert_eq!(a.folder_state(), FolderState::Failed);
         assert_eq!(a.folder_problem(), Some(t::cloud_err_started_over("Google Drive")));
 
-        let at = lines.iter().position(|l| *l == DeviceLine::Folder).unwrap();
         a.cursors.devices.selected = at;
         assert_eq!(a.handle(Action::Open, 5), None);
         assert_eq!(a.nav.overlay(), Some(&Overlay::SyncRestore));

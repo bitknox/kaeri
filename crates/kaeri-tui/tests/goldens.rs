@@ -628,6 +628,8 @@ scenarios! {
     start_over_key,
     start_over_failed,
     start_over_offline,
+    start_over_failed_after_close,
+    start_over_cancel,
     started_over_elsewhere,
     started_over_restore,
     pair_show,
@@ -3457,6 +3459,23 @@ fn start_over_offline(s: &mut Screen) {
     s.press(&["enter"]);
     s.apply(Event::SyncProblem(SyncProblem::Unreachable));
     s.apply(Event::SyncStatus(sync_off()));
+}
+
+/// Closed with Esc while the old history was being deleted, then refused: the failure page
+/// opens again, with Try again.
+fn start_over_failed_after_close(s: &mut Screen) {
+    start_over_clearing(s);
+    s.press(&["esc"]);
+    s.apply(Event::SyncProblem(SyncProblem::ClearRefused));
+    s.apply(Event::SyncStatus(sync_off()));
+    s.wait(Duration::from_millis(400));
+    s.idle(1);
+}
+
+/// Esc on the failure page: back to the key field, with Start over under the note.
+fn start_over_cancel(s: &mut Screen) {
+    start_over_failed(s);
+    s.press(&["esc"]);
 }
 
 /// Another device started sync over in Google Drive: this one joins with the new key.
