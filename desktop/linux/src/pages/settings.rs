@@ -808,9 +808,20 @@ impl Inner {
             .active(self.ctx.prefs.hide_chat())
             .build();
         let ctx = Rc::downgrade(&self.ctx);
-        row.connect_active_notify(move |row| {
-            if let Some(ctx) = ctx.upgrade() {
-                ctx.prefs.set_hide_chat(row.is_active());
+        row.connect_active_notify({
+            let ctx = ctx.clone();
+            move |row| {
+                if let Some(ctx) = ctx.upgrade() {
+                    ctx.prefs.set_hide_chat(row.is_active());
+                }
+            }
+        });
+        // A party's Show chat turns it off too: read again each time the pane is shown.
+        row.connect_map(move |row| {
+            if let Some(ctx) = ctx.upgrade()
+                && row.is_active() != ctx.prefs.hide_chat()
+            {
+                row.set_active(ctx.prefs.hide_chat());
             }
         });
         row
@@ -933,9 +944,12 @@ impl Inner {
             if let Some(subtitle) = &subtitle {
                 line.set_subtitle(subtitle);
             }
-            if let Some(at) = catalog::current(row) {
-                line.set_selected(at as u32);
-            }
+            // A value none of the choices says, which another device can save, selects none
+            // rather than leaving the first or the last one standing.
+            let stands = |row: &SettingRow| {
+                catalog::current(row).map_or(gtk::INVALID_LIST_POSITION, |at| at as u32)
+            };
+            line.set_selected(stands(row));
             line.connect_selected_notify({
                 let inner = Rc::downgrade(self);
                 move |line| {
@@ -948,8 +962,8 @@ impl Inner {
             self.keep(key, {
                 let line = line.clone();
                 move |row| {
-                    if let Some(at) = catalog::current(row) {
-                        line.set_selected(at as u32);
+                    if line.selected() != stands(row) {
+                        line.set_selected(stands(row));
                     }
                 }
             });
@@ -1166,12 +1180,24 @@ impl Inner {
             .title(t::downloads_background_title())
             .model(&gtk::StringList::new(&labels))
             .build();
-        let now = self.ctx.prefs.close_choice();
-        line.set_selected(CloseChoice::ALL.iter().position(|c| *c == now).unwrap_or(0) as u32);
+        let kept = |prefs: &crate::prefs::Prefs| {
+            let now = prefs.close_choice();
+            CloseChoice::ALL.iter().position(|c| *c == now).unwrap_or(0) as u32
+        };
+        line.set_selected(kept(&self.ctx.prefs));
         let prefs = Rc::clone(&self.ctx.prefs);
         line.connect_selected_notify(move |line| {
-            if let Some(choice) = CloseChoice::ALL.get(line.selected() as usize) {
+            if let Some(choice) = CloseChoice::ALL.get(line.selected() as usize)
+                && prefs.close_choice() != *choice
+            {
                 prefs.set_close_choice(*choice);
+            }
+        });
+        // The close dialog's Don't ask again sets it too: read again each time the pane is shown.
+        let prefs = Rc::clone(&self.ctx.prefs);
+        line.connect_map(move |line| {
+            if line.selected() != kept(&prefs) {
+                line.set_selected(kept(&prefs));
             }
         });
         line

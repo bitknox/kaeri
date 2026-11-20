@@ -214,6 +214,7 @@ pub fn is_switch(key: SettingKey) -> bool {
 pub fn choices(key: SettingKey) -> Vec<Choice> {
     use SettingKey as K;
     use SettingValue as V;
+    use kaeri_core::config::SubtitlesConfig;
     let ints = |values: &[i64], words: &dyn Fn(i64) -> (String, String)| {
         values
             .iter()
@@ -305,9 +306,13 @@ pub fn choices(key: SettingKey) -> Vec<Choice> {
                 (kaeri_model::wording::plural(n as usize, "episode"), t::episodes_count(n))
             }
         }),
-        K::SubtitleSize => ints(&[50, 70, 80, 90, 100, 110, 120, 140, 160, 180, 200], &|p| {
-            (format!("{p}%"), t::settings_subs_size_value(p))
-        }),
+        // The engine's own ladders, so a size or raise set on another device or in the
+        // terminal is one of the choices here.
+        K::SubtitleSize => {
+            let (low, high, by) = SubtitlesConfig::SIZES;
+            let sizes: Vec<i64> = (low..=high).step_by(by as usize).map(i64::from).collect();
+            ints(&sizes, &|p| (format!("{p}%"), t::settings_subs_size_value(p)))
+        }
         K::SubtitleFont => strs(&[
             ("default", "default", t::settings_subs_font_default()), // i18n-skip
             ("zen-kaku-gothic-new", "Zen Kaku Gothic New", "Zen Kaku Gothic New".into()), // i18n-skip
@@ -336,11 +341,17 @@ pub fn choices(key: SettingKey) -> Vec<Choice> {
             ("all-lines", "behind all lines", t::settings_subs_background_all()), // i18n-skip
         ]),
         K::SubtitleOpacity => {
-            ints(&[50, 75, 100], &|p| (format!("{p}%"), say::percent(p as f64)))
+            let opacities: Vec<i64> =
+                SubtitlesConfig::OPACITIES.iter().copied().map(i64::from).collect();
+            ints(&opacities, &|p| (format!("{p}%"), say::percent(p as f64)))
         }
-        K::SubtitleRaise => ints(&[0, 5, 10, 15, 20], &|p| {
-            (format!("{p}% of the picture"), t::settings_subs_raise_value(p)) // i18n-skip
-        }),
+        K::SubtitleRaise => {
+            let raises: Vec<i64> =
+                (0..=SubtitlesConfig::MAX_RAISE).step_by(2).map(i64::from).collect();
+            ints(&raises, &|p| {
+                (format!("{p}% of the picture"), t::settings_subs_raise_value(p)) // i18n-skip
+            })
+        }
         K::StyledSubtitles => strs(&[
             ("keep", "keep their look", t::settings_subs_styled_keep()), // i18n-skip
             ("restyle", "restyle", t::settings_subs_styled_restyle()),   // i18n-skip
@@ -436,6 +447,34 @@ mod tests {
                 r.value
             );
         }
+    }
+
+    /// Every size and raise the engine takes has its choice, so one set on the Mac, Windows or
+    /// in the terminal is shown, not the choice that was there before.
+    #[test]
+    fn subtitle_size_and_raise_offer_every_step_the_engine_takes() {
+        use kaeri_model::settings::{SettingChange, SettingKey as K};
+        let words = |key| choices(key).into_iter().map(|c| c.words).collect::<Vec<_>>();
+        let sizes = words(K::SubtitleSize);
+        for p in (50..=200).step_by(10) {
+            assert!(sizes.contains(&format!("{p}%")), "size {p}% has a choice");
+        }
+        assert_eq!(sizes.len(), 16);
+        let raises = words(K::SubtitleRaise);
+        for p in (0..=20).step_by(2) {
+            assert!(
+                raises.contains(&format!("{p}% of the picture")),
+                "raise {p}% has a choice"
+            );
+        }
+        assert_eq!(raises.len(), 11);
+        let at = |key, value: &str| {
+            current(&SettingRow { key, value: value.into(), change: SettingChange::Fixed })
+        };
+        assert!(at(K::SubtitleSize, "130%").is_some());
+        assert!(at(K::SubtitleRaise, "6% of the picture").is_some());
+        // An odd raise, which the Mac's stepper can set, stands on no choice.
+        assert_eq!(at(K::SubtitleRaise, "7% of the picture"), None);
     }
 
     #[test]
