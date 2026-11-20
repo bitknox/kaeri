@@ -16,27 +16,32 @@ public struct SyncSignInRequest: Equatable, Sendable {
 
 /// What the cloud folder's sheet shows after a service is chosen, in place of the list: the wait
 /// for its page, the sign-in finishing, the folder being made, what went wrong, or the new
-/// recovery key.
+/// recovery key. The restore screen shows the start-over steps the same way, in place of the
+/// field: the old history being deleted, the folder being made, the new key, or why it stopped.
 public enum CloudStep: Equatable, Sendable {
     case waiting(SyncFolderKind)
     case connecting(SyncFolderKind)
     case settingUp(SyncFolderKind)
     /// `folder` when the sign-in had worked and the folder could not be made.
     case failed(SyncFolderKind, SyncProblem, folder: Bool)
+    /// Start over: the folder's old sync data is being deleted.
+    case clearing(SyncFolderKind)
+    /// Start over stopped before the new group was set up; nothing on this device changed.
+    case startOverFailed(SyncFolderKind, SyncProblem)
     case key
 
     /// A step under way, which the engine moves on by itself.
     public var underWay: Bool {
         switch self {
-        case .waiting, .connecting, .settingUp: true
-        case .failed, .key: false
+        case .waiting, .connecting, .settingUp, .clearing: true
+        case .failed, .startOverFailed, .key: false
         }
     }
 
-    /// Connecting and setting up show only once they have run 600 ms.
+    /// Connecting, clearing and setting up show only once they have run 600 ms.
     var quiet: Bool {
         switch self {
-        case .connecting, .settingUp: true
+        case .connecting, .settingUp, .clearing: true
         default: false
         }
     }
@@ -143,6 +148,15 @@ public final class SyncModel {
     public private(set) var switching = false
     /// The Remove cloud folder confirmation is up.
     public var removingFolder = false
+    /// The restore screen's Start over confirmation is up.
+    public var confirmingStartOver = false
+    /// The service sync is being started over in, until its new key is put away: the key step
+    /// says so in its first line.
+    public private(set) var startedOver: SyncFolderKind?
+    /// The recovery key typed on the restore screen.
+    public var restoreKey = ""
+    /// A join from the restore screen is out: when it ends well, the screen closes.
+    private var joining = false
     /// How many times the person asked for the sign-in page again; the presenter opens it anew.
     public private(set) var pageOpens = 0
     /// What the recovery key sheet was opened for: set up, or seen again from Devices.
@@ -164,6 +178,9 @@ public final class SyncModel {
     @ObservationIgnored public var stagedRemoteKeys: Set<String>?
     /// Set by the Fixtures app: states stay as staged.
     @ObservationIgnored public var staged = false
+    /// Set by the Fixtures app once a shot's state is on screen: the engine's later events wait,
+    /// so a step it holds only for a while stays for the shot.
+    @ObservationIgnored public var held = false
     @ObservationIgnored private var settleTask: Task<Void, Never>?
     @ObservationIgnored private var syncingTask: Task<Void, Never>?
     /// The step the engine is at, which `cloudStep` shows once its time comes.
@@ -328,7 +345,7 @@ public final class SyncModel {
     /// the step shown may still be the wait.
     public var cloudCancelDimmed: Bool {
         switch cloudTarget {
-        case .connecting?, .settingUp?: true
+        case .connecting?, .settingUp?, .clearing?: true
         default: false
         }
     }
@@ -342,9 +359,9 @@ public final class SyncModel {
         case .waiting:
             cancelSignIn()
             aim(nil)
-        case .connecting, .settingUp:
+        case .connecting, .settingUp, .clearing:
             break
-        case .failed, .key, nil:
+        case .failed, .startOverFailed, .key, nil:
             sheet = nil
             resetCloudStep()
         }
@@ -353,6 +370,7 @@ public final class SyncModel {
     /// Try again after an error: the same choice again. A folder of this device has its own
     /// picker, so that one goes back to the list.
     public func tryAgain(deviceName: String) {
+        if case .startOverFailed(let kind, _) = cloudTarget { return startOver(kind, deviceName: deviceName) }
         guard case .failed(let kind, _, _) = cloudTarget else { return }
         if [.googleDrive, .dropbox, .oneDrive].contains(kind) {
             choose(kind, deviceName: deviceName)
@@ -365,7 +383,9 @@ public final class SyncModel {
     public func pickerClosed() {
         if case .waiting = cloudTarget { cancelSignIn() }
         if sheet != .picker {
-            resetCloudStep()
+            // The restore screen that took the picker's place keeps its own steps: its start
+            // over can begin before the picker has finished going.
+            if !isRestore(sheet) { resetCloudStep() }
             switching = false
         }
     }
@@ -378,7 +398,8 @@ public final class SyncModel {
         changeFolder(nil)
     }
 
-    /// Whether the sheet may not be swiped away: the folder is being made, or the key shows.
+    /// Whether the sheet may not be swiped away: the folder is being cleared or made, or the key
+    /// shows.
     public var holdsSheet: Bool {
         switch sheet {
         case .recoveryKey: return true
@@ -387,15 +408,61 @@ public final class SyncModel {
             case .connecting, .settingUp, .key: return true
             default: return false
             }
+        case .restore:
+            // From the tap that starts over: the restore content stays its first 600 ms.
+            return cloudCancelDimmed || cloudStep == .key
         default: return false
         }
+    }
+
+    /// Open the restore screen for `kind`'s folder, with its field empty: Enter new key on a device
+    /// whose group was started over elsewhere.
+    public func enterNewKey(_ kind: SyncFolderKind) {
+        resetCloudStep()
+        restoreKey = ""
+        startedOver = nil
+        confirmingStartOver = false
+        sheet = .restore(kind)
     }
 
     /// A folder that already holds a group, joined with its recovery key.
     public func join(_ kind: SyncFolderKind, key: String, deviceName: String) {
         problem = nil
+        lastService = kind
+        joining = true
         send(.joinSync(deviceName: deviceName, folder: SyncFolderSpec(kind: kind), recoveryKey: key))
     }
+
+    /// Start over without the key, after its confirmation: the folder's old sync data is deleted
+    /// and sync is set up there again with a new key, in the restore screen's place. The restore
+    /// content stays for the first 600 ms, so a quick service goes straight to the key.
+    public func startOver(_ kind: SyncFolderKind, deviceName: String) {
+        confirmingStartOver = false
+        problem = nil
+        joining = false
+        lastService = kind
+        startedOver = kind
+        aim(.clearing(kind))
+        send(.syncGroup(.clearFolderAndStart(deviceName: deviceName, folder: SyncFolderSpec(kind: kind))))
+    }
+
+    /// The restore screen went: a start-over's steps and its key go with it.
+    public func restoreClosed() {
+        guard !isRestore(sheet) else { return }
+        resetCloudStep()
+        startedOver = nil
+        confirmingStartOver = false
+        joining = false
+        restoreKey = ""
+    }
+
+    private func isRestore(_ sheet: SyncSheet?) -> Bool {
+        if case .restore? = sheet { return true }
+        return false
+    }
+
+    /// The sheet whose steps `cloudStep` shows: the picker, or the restore screen starting over.
+    private var stepsSheet: Bool { sheet == .picker || isRestore(sheet) }
 
     public func cancelSignIn() {
         send(.cancelSyncSignIn)
@@ -545,6 +612,7 @@ public final class SyncModel {
     // MARK: Events
 
     public func apply(_ event: Event) {
+        if held { return }
         switch event {
         case .syncStatus(let new):
             if !staged { statusChanged(new) }
@@ -556,8 +624,9 @@ public final class SyncModel {
             settingUpShown = false
             settleTask?.cancel()
             signIn = nil
-            // The picker's sheet turns into the key; any other sheet gives way to it.
-            if sheet == .picker, cloudTarget != nil {
+            // The picker's sheet, or the restore screen starting over, turns into the key; any
+            // other sheet gives way to it.
+            if stepsSheet, cloudTarget != nil {
                 aim(.key)
             } else {
                 sheet = .recoveryKey
@@ -573,31 +642,49 @@ public final class SyncModel {
                     case .finishing: aim(.settingUp(service))
                     default: if case .waiting = cloudTarget {} else { aim(.waiting(service)) }
                     }
+                } else if isRestore(sheet), cloudTarget?.underWay == true {
+                    switch step {
+                    // The tap aimed at clearing already: its 600 ms count from the tap.
+                    case .clearing: if cloudTarget != .clearing(service) { aim(.clearing(service)) }
+                    case .finishing: aim(.settingUp(service))
+                    default: break
+                    }
                 }
             } else {
                 signIn = nil
-                if sheet == .picker {
+                if stepsSheet {
                     // A sign-in that ended while its sheet waited on it ended well: the sheet
-                    // closes and the row says the rest. A key or an error keeps the sheet.
-                    if cloudTarget?.underWay == true, problem == nil {
+                    // closes and the row says the rest. A key or an error keeps the sheet. A join
+                    // from the restore screen that ended without a problem closes it too.
+                    // A start over on the restore screen goes on past a sign-in's end: the one
+                    // that found the other group can end after it began.
+                    if sheet == .picker, cloudTarget?.underWay == true, problem == nil {
                         sheet = nil
                         resetCloudStep()
+                    } else if isRestore(sheet), cloudTarget == nil, joining, problem == nil {
+                        sheet = nil
                     }
                 } else if problem == nil, sheet == .nextcloud || sheet == .webDav {
                     sheet = nil
                 }
+                joining = false
             }
         case .syncPairFailed(let why, let device):
             pair = .failed(why == .notFound ? .notFound : .code)
             pairFailedDevice = device
         case .syncProblem(let found):
             problem = found
+            joining = false
             if case .groupExists = found {
                 resetCloudStep()
+                restoreKey = ""
+                startedOver = nil
                 sheet = .restore(lastService ?? .googleDrive)
             } else if sheet == .picker, let target = cloudTarget, target.underWay {
                 let folder: Bool = { if case .settingUp = target { return true } else { return false } }()
                 aim(.failed(lastService ?? .googleDrive, found, folder: folder))
+            } else if isRestore(sheet), let target = cloudTarget, target.underWay {
+                aim(.startOverFailed(lastService ?? .googleDrive, found))
             }
             settingUp = nil
             settingUpShown = false
@@ -680,6 +767,7 @@ public final class SyncModel {
         recoveryKey = nil
         sheet = nil
         keyCameFromDevices = false
+        startedOver = nil
         resetCloudStep()
     }
 
@@ -757,6 +845,7 @@ public final class SyncModel {
     }
     public func stage(copied new: SyncSignInsCopiedView?) { copied = new }
     public func stage(setup new: JoinedSetup?, refused: String? = nil) { staged = true; setup = new; storeRefused = refused }
+    public func stage(startedOver service: SyncFolderKind?) { startedOver = service }
     public func stage(cloudStep step: CloudStep?, switching: Bool = false) {
         self.switching = switching
         cloudTask?.cancel()

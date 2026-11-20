@@ -6,7 +6,7 @@
 # A shot is a scene, and optionally a screen: watching (Continue filled, signed in; the default),
 # sourceless (watching with no source set up), unsure (watching with a source ahead that cannot
 # choose 900001's match; sheet=match-<menu|results|empty|failed|picking|picked|cleared> stages the
-# match sheet), storeowner (your plugin store with invites in use, used up and cancelled; sheet=members|invite), storeinvited (sheet=join-invited pastes its link), fresh (a first launch) or playing (the player's
+# match sheet), storeowner (your plugin store with invites in use, used up and cancelled; sheet=members|invite), storeinvited (sheet=join-invited pastes its link), sync-other-group, sync-other-group-offline and sync-other-group-refused (Google Drive's folder holds another group; sync=startover-<state> runs Start over to a state, see SyncScene), sync-started-over (another device started sync over; sync=startedover), sync-tv-started-over, fresh (a first launch) or playing (the player's
 # generated episode first on Continue), then after a colon a section (calendar, seasonal, search, library,
 # downloads, providers, pluginStores, settings) or title=<id>, select=<id>, query=<words>,
 # genre=<name> (Search browsing a genre), filters=set (Search with Fantasy, 2024, Spring, TV and two sheet filters set, on the fuller catalogue, which finds two titles), scroll=<points> (Search's results scrolled; on an iPhone's Home, Continue's card of that index), available=<here|services> (Search with its Available filter set) or palette=<words>, with more joined by +: pane=<Settings
@@ -90,7 +90,7 @@ players=(player-starting player-playing player-skip player-up-next player-still-
   player-found-undo player-found-panel player-found-panel-paused)
 
 usage() {
-  echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together|missingepisode>[:<section|key=value>]|player|player-<state>]…" >&2
+  echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together|missingepisode|sync-other-group|sync-other-group-offline|sync-other-group-refused|sync-started-over|sync-tv-started-over>[:<section|key=value>]|player|player-<state>]…" >&2
   exit 2
 }
 
@@ -112,7 +112,7 @@ for shot in "${shots[@]}"; do
 done
 shots=("${expanded[@]}")
 for shot in "${shots[@]}"; do
-  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | following | followingslow | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | missingepisode | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure) ;; player-*) ;; *) usage ;; esac
+  case "${shot%%:*}" in watching | sourceless | unsure | linkopened | fresh | playing | suggested | oneleft | continuefull | notfound | slow | failed | following | followingslow | offline | licensed | servers | library | sourcesbusy | available | demoonly | demoplayed | demoandstore | demoremoved | subtitlestyled | crashoff | crashsaved | crashheld | storeowner | storeinvited | together | missingepisode | browsing | reader-manga-rtl | reader-strip | reader-novel | reader-moved | reader-long | reading-dark | reading-first-run | reading-update-sheet | reading-join-ask | reading-home | reading-demo | reading-series | reading-downloads | eink-grey | eink-kaleido-unsure | sync-other-group | sync-other-group-offline | sync-other-group-refused | sync-started-over | sync-tv-started-over) ;; player-*) ;; *) usage ;; esac
   if [[ "$shot" == player-start-* ]]; then continue; fi
   if [[ "$shot" == player-* && ! " ${players[*]} " == *" $shot "* ]]; then usage; fi
 done
@@ -149,8 +149,9 @@ arguments() {
     return
   fi
   [[ "$shot" == *:* ]] && screens="${shot#*:}"
-  # The reading scenes are written with dashes (reader-manga-rtl); the launch names have none.
-  case "$scene" in reader-* | reading-* | eink-*) scene="${scene//-/}" ;; esac
+  # The reading and sync scenes are written with dashes (reader-manga-rtl, sync-other-group); the
+  # launch names have none.
+  case "$scene" in reader-* | reading-* | eink-* | sync-*) scene="${scene//-/}" ;; esac
   printf '%s\n' -KaeriScene "$scene"
   local IFS=+
   for screen in $screens; do
