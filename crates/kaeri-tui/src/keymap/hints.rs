@@ -13,6 +13,7 @@ fn pair(first: &str, second: &str) -> String {
 }
 
 const ESC: &str = "esc"; // i18n-skip
+const TAB: &str = "tab"; // i18n-skip
 
 fn hint_add_source() -> &'static str {
     said(t::keys_hint_add_source())
@@ -491,6 +492,8 @@ pub(crate) fn status_hints_paged(
                 Some(L::RecoveryKey) => said(t::sync_tui_hint_show()),
                 Some(L::TurnOff) => said(t::sync_tui_hint_turn_off()),
                 Some(L::SignOut) => hint_sign_out(),
+                Some(L::EnterNewKey) => said(t::rkey_enter_new()),
+                Some(L::Folder) if app.group_replaced() => said(t::rkey_enter_new()),
                 Some(L::Folder) if app.folder_state() == FolderState::SignedOut => {
                     hint_sign_in()
                 }
@@ -676,10 +679,28 @@ fn overlay_hints(
             vec![hint("↵", said(t::pair_show_code())), hint(ESC, hint_close())]
         }
         O::SyncPairShow => vec![hint(ESC, hint_close())],
+        // The field takes every letter, so Tab moves between the key and Start over.
+        O::SyncRestore if app.devices.start_over_focused => vec![
+            hint("↵", said(t::sync_tui_hint_start_over())),
+            hint(TAB, said(t::rkey_row())),
+            hint(ESC, hint_cancel()),
+        ],
+        O::SyncRestore => vec![
+            hint("↵", said(t::rkey_restore())),
+            hint(TAB, said(t::sync_tui_hint_start_over())),
+            hint(ESC, hint_cancel()),
+        ],
+        O::SyncStartOver => match app.devices.start_over.as_ref().map(|so| &so.shown) {
+            Some(crate::app::StartOverStep::Failed(_)) => {
+                vec![hint("↵", said(t::action_try_again())), hint(ESC, hint_cancel())]
+            }
+            _ => vec![hint(ESC, hint_close())],
+        },
         O::SyncConfirm => {
             let verb = match &app.devices.confirm {
                 Some(crate::app::DeviceConfirm::Remove { .. }) => t::sync_tui_hint_remove(),
                 Some(crate::app::DeviceConfirm::NewKey) => t::rkey_new(),
+                Some(crate::app::DeviceConfirm::StartOver) => t::rkey_start_over_action(),
                 _ => t::sync_tui_hint_turn_off(),
             };
             vec![hint("↵", said(verb)), hint(ESC, hint_cancel())]
@@ -715,7 +736,6 @@ fn overlay_hints(
                 }
                 O::SyncAddress | O::SyncUser | O::SyncPairCode | O::ProfileName => hint_next(),
                 O::SyncPassword => hint_sign_in(),
-                O::SyncRestore => said(t::rkey_restore()),
                 O::SyncPairAddress => said(t::pair_button()),
                 _ => hint_choose(),
             };

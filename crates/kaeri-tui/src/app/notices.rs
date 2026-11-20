@@ -341,6 +341,7 @@ impl App {
         self.pay_blocks();
         self.tick_strip();
         self.tick_novel();
+        self.tick_start_over();
         // A placeholder held past its answer gives way on a tick: the cursor stays on its line.
         self.settle_reading_cursor();
         // The loading pulse rides this tick rather than getting one of its own. The idle ticker

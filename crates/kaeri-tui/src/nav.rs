@@ -240,6 +240,9 @@ pub enum Overlay {
     SyncRecoveryKey,
     /// The recovery key of a folder that already holds a group, to join it.
     SyncRestore,
+    /// Starting over without the key: the old history being deleted, the folder set up again,
+    /// or why it could not be.
+    SyncStartOver,
     /// Removing a device, or turning sync off here.
     SyncConfirm,
     /// One device of the group: its switches, copying its sign-ins, removing it.
@@ -305,6 +308,7 @@ impl Overlay {
             Self::SyncPassword => t::sync_tui_password(),
             Self::SyncRecoveryKey => t::rkey_title(),
             Self::SyncRestore => t::rkey_enter_title(),
+            Self::SyncStartOver => t::rkey_clearing(),
             Self::SyncConfirm => t::devices_title(),
             Self::SyncDevice => t::devices_title(),
             Self::SyncName => t::devices_name(),
@@ -329,6 +333,7 @@ impl Overlay {
                 | Self::SyncPassword
                 | Self::SyncRecoveryKey
                 | Self::SyncRestore
+                | Self::SyncStartOver
                 | Self::SyncConfirm
                 | Self::SyncDevice
                 | Self::SyncName
@@ -462,6 +467,11 @@ impl Nav {
 
     pub fn has_overlay(&self) -> bool {
         !self.overlays.is_empty()
+    }
+
+    /// Whether `overlay` is open, on top or under another.
+    pub fn overlay_open(&self, overlay: &Overlay) -> bool {
+        self.overlays.contains(overlay)
     }
 
     /// Effective rail width: an explicit `Tab` override wins, otherwise the current view
