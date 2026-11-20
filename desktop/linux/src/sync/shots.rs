@@ -475,19 +475,17 @@ fn open(ctx: &Rc<crate::window::Ctx>, shot: &str) {
         // The dialog from the key field through both steps to the key, slower than a service.
         "sync-startover-motion" => {
             let drive = SyncFolderKind::GoogleDrive;
-            let step = |step| Event::SyncSignIn { service: drive.clone(), step: Some(step) };
+            let step = |step| Event::SyncSignIn { service: drive.clone(), step };
+            let events = vec![
+                (50, step(Some(SyncSignInStep::Clearing))),
+                (2000, step(Some(SyncSignInStep::Finishing))),
+                (4000, Event::SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA".into())),
+                (4050, step(None)),
+            ];
             dialogs::restore(ctx, &drive);
             let ctx = Rc::clone(ctx);
             glib::timeout_add_local_once(Duration::from_millis(1500), move || {
-                start_over_events(
-                    &ctx,
-                    vec![
-                        (50, step(SyncSignInStep::Clearing)),
-                        (2000, step(SyncSignInStep::Finishing)),
-                        (4000, Event::SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA".into())),
-                        (4050, Event::SyncSignIn { service: drive.clone(), step: None }),
-                    ],
-                );
+                start_over_events(&ctx, events);
             });
         }
         // The failure, then its Cancel.
