@@ -4,6 +4,7 @@
 package app.kaeri.tv
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -180,7 +181,11 @@ class TvActivity : ComponentActivity() {
      * A game controller's keys, as the Controller settings say: dropped while it is switched off,
      * and A and B swapped when asked. A swapped key is always taken, so Android adds no Back or
      * centre of its own for the button that was pressed.
+     *
+     * androidx.core's ComponentActivity marks its own override of this library-only; the method
+     * itself is Activity's public one, which this overrides and calls as any activity may.
      */
+    @SuppressLint("RestrictedApi")
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
         val controller = Gamepad.isController(event.device)
         return when (val fate = Gamepad.fate(event.keyCode, controller, Gamepad.Settings.of(app.store.settings))) {
