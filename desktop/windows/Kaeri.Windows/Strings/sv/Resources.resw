@@ -7838,6 +7838,21 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>E-läsare på {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} är ute.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>Ett nytt kapitel</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} nya kapitel</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Nytt kapitel</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Läs</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Föregående säsong</value>
   </data>

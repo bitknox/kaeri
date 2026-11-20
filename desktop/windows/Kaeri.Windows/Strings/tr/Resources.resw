@@ -7838,6 +7838,21 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>{address} adresindeki e-okuyucu</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} çıktı.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>Yeni bir bölüm</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} yeni bölüm</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Yeni bölüm</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Oku</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Önceki sezon</value>
   </data>

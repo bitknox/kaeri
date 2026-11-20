@@ -8159,6 +8159,24 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>Liseuse à {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} vient de sortir.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>{count} nouveau chapitre</value>
+  </data>
+  <data name="NotifChaptersNew_many" xml:space="preserve">
+    <value>{count} nouveaux chapitres</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} nouveaux chapitres</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Nouveau chapitre</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Lire</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Saison précédente</value>
   </data>

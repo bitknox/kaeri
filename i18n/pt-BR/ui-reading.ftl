@@ -512,3 +512,11 @@ opds-fetched-files = { $n ->
    *[other] { $n } arquivos
  }
 opds-reader-unnamed = E-reader em { $address }
+notif-chapter-new = { $chapter } já saiu.
+notif-chapters-new = { $count ->
+    [one] { $count } capítulo novo
+    [many] { $count } capítulos novos
+   *[other] { $count } capítulos novos
+ }
+notif-chapter-hidden = Capítulo novo
+notif-chapter-read = Ler

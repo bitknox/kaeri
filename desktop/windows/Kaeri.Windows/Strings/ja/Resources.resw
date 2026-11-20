@@ -7517,6 +7517,18 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>{address}の電子書籍リーダー</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter}が公開されました。</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>新しい章が{count}話あります</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>新しい章</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>読む</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>前のシーズン</value>
   </data>

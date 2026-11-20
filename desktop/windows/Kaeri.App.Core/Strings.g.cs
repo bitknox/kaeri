@@ -8048,6 +8048,18 @@ public static partial class T
     /// <summary>Name for an e-reader that did not give one.</summary>
     public static string OpdsReaderUnnamed(string address) => Fill(Get("OpdsReaderUnnamed"), ("address", address));
 
+    /// <summary>Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".</summary>
+    public static string NotifChapterNew(string chapter) => Fill(Get("NotifChapterNew"), ("chapter", chapter));
+
+    /// <summary>Notification, new chapters: the line under the series' title when one series has several.</summary>
+    public static string NotifChaptersNew(long count) => Fill(GetPlural("NotifChaptersNew", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notification, new chapter: what the lock screen shows when previews are hidden.</summary>
+    public static string NotifChapterHidden => Get("NotifChapterHidden");
+
+    /// <summary>Notification, new chapter: the action that opens the reader on the chapter.</summary>
+    public static string NotifChapterRead => Get("NotifChapterRead");
+
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
 
@@ -15185,6 +15197,11 @@ public static partial class T
         ["OpdsFetchedFiles_one"] = "One file",
         ["OpdsFetchedFiles_other"] = "{n} files",
         ["OpdsReaderUnnamed"] = "E-reader at {address}",
+        ["NotifChapterNew"] = "{chapter} is new.",
+        ["NotifChaptersNew_one"] = "One new chapter",
+        ["NotifChaptersNew_other"] = "{count} new chapters",
+        ["NotifChapterHidden"] = "New chapter",
+        ["NotifChapterRead"] = "Read",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",

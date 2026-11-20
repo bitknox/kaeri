@@ -886,14 +886,6 @@
     <string name="channel_chapters_description">Quando una serie della tua lista In lettura ha un nuovo capitolo.</string>
     <string name="channel_downloads_finished_name">Download completati</string>
     <string name="channel_downloads_finished_description">Quando i capitoli che hai chiesto di scaricare sono tutti pronti.</string>
-    <string name="notif_chapter_new">È disponibile %1$s.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">Un nuovo capitolo</item>
-        <item quantity="many">%1$,d nuovi capitoli</item>
-        <item quantity="other">%1$,d nuovi capitoli</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Nuovo capitolo</string>
-    <string name="notif_chapter_read">Leggi</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Download di un capitolo</item>
         <item quantity="many">Download di %1$,d capitoli</item>
@@ -3230,6 +3222,14 @@
         <item quantity="other">%1$,d file</item>
     </plurals>
     <string name="opds_reader_unnamed">E-reader a %1$s</string>
+    <string name="notif_chapter_new">È disponibile %1$s.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Un nuovo capitolo</item>
+        <item quantity="many">%1$,d nuovi capitoli</item>
+        <item quantity="other">%1$,d nuovi capitoli</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Nuovo capitolo</string>
+    <string name="notif_chapter_read">Leggi</string>
     <string name="seasonal_previous">Stagione precedente</string>
     <string name="seasonal_next">Stagione successiva</string>
     <string name="seasonal_loading">Caricamento della stagione</string>

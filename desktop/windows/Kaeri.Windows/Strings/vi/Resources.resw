@@ -7517,6 +7517,18 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>Máy đọc sách tại {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} đã ra mắt.</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} chương mới</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Chương mới</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Đọc</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Mùa trước</value>
   </data>

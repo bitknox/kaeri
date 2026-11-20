@@ -847,13 +847,6 @@
     <string name="channel_chapters_description">Okunan listenizdeki bir serinin yeni bölümü çıktığında.</string>
     <string name="channel_downloads_finished_name">Tamamlanan indirmeler</string>
     <string name="channel_downloads_finished_description">İndirmek istediğiniz bölümlerin hepsi bittiğinde.</string>
-    <string name="notif_chapter_new">%1$s çıktı.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">Yeni bir bölüm</item>
-        <item quantity="other">%1$,d yeni bölüm</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Yeni bölüm</string>
-    <string name="notif_chapter_read">Oku</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Bir bölüm indiriliyor</item>
         <item quantity="other">%1$,d bölüm indiriliyor</item>
@@ -3108,6 +3101,13 @@
         <item quantity="other">%1$,d dosya</item>
     </plurals>
     <string name="opds_reader_unnamed">%1$s adresindeki e-okuyucu</string>
+    <string name="notif_chapter_new">%1$s çıktı.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Yeni bir bölüm</item>
+        <item quantity="other">%1$,d yeni bölüm</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Yeni bölüm</string>
+    <string name="notif_chapter_read">Oku</string>
     <string name="seasonal_previous">Önceki sezon</string>
     <string name="seasonal_next">Sonraki sezon</string>
     <string name="seasonal_loading">Bu sezon yükleniyor</string>

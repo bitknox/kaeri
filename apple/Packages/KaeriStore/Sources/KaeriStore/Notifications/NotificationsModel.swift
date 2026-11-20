@@ -1,5 +1,6 @@
-// New-episode notifications as the screens show them: the week coming up, whether the app may
-// notify, each show's own switch, and turning them on, which asks for permission the first time.
+// Notifications as the screens show them: the week coming up, whether the app may notify, each
+// show's own switch, and turning a switch on, which asks for permission the first time. New
+// chapters and Downloads finished are posted here as the engine says them.
 
 import KaeriKit
 import KaeriStrings
@@ -18,8 +19,8 @@ public final class NotificationsModel {
     public private(set) var declined = false
     /// Each show's own switch, as its settings last said: on, off, or following Settings.
     public private(set) var showSwitch: [AnilistId: Bool?] = [:]
-    /// Whether anything notifies on this device: Settings' switch on, or a show switched on for
-    /// itself. `nil` until the engine has said its settings.
+    /// Whether anything notifies on this device: New episodes or New chapters on, or a show
+    /// switched on for itself. `nil` until the engine has said its settings.
     public private(set) var notifying: Bool? {
         didSet { tellRefreshes() }
     }
@@ -27,6 +28,9 @@ public final class NotificationsModel {
     public private(set) var widgetsPlaced = false {
         didSet { tellRefreshes() }
     }
+    /// Whether New chapters is on, which has the background refresh check for them. `nil` until
+    /// the engine has said its settings.
+    public private(set) var chaptersNotifying: Bool?
     /// Whether the background refresh is kept scheduled: while anything notifies, or a widget is
     /// placed, whose record it keeps fresh; cancelled only when neither holds. `nil` while that
     /// is not known: no widget placed, and the engine's settings not said yet.
@@ -67,7 +71,13 @@ public final class NotificationsModel {
                 Task { await scheduler.reschedule(week) }
             }
         case .settings(let view):
+            chaptersNotifying = Self.notifiesChapters(view)
             notifying = Self.notifies(view)
+        case .reading(.newChapters(let found)):
+            // The engine sends them only while New chapters is on; the system's permission still
+            // rules, which the scheduler asks.
+            guard let scheduler else { return }
+            Task { await scheduler.post(chapters: found) }
         case .reading(.downloadsDone(let work, let title, let body)):
             // The engine sends it only while the setting is on; the system's permission still rules.
             guard let scheduler, permission == .allowed else { return }
@@ -93,11 +103,16 @@ public final class NotificationsModel {
         scheduler != nil && permission == .allowed
     }
 
-    /// Whether the settings `view` has anything notify: the New episodes switch on, or a show
-    /// switched on for itself, which notifies whatever the switch says.
+    /// Whether the settings `view` has anything notify: the New episodes or New chapters switch
+    /// on, or a show switched on for itself, which notifies whatever the switch says.
     nonisolated static func notifies(_ view: SettingsView) -> Bool {
         let row = (view.rows + view.nativeRows).first { $0.key == .episodeNotifications }
-        return row?.isOn == true || view.notifySwitchedOn > 0
+        return row?.isOn == true || view.notifySwitchedOn > 0 || notifiesChapters(view)
+    }
+
+    /// Whether the settings `view` has New chapters on.
+    nonisolated static func notifiesChapters(_ view: SettingsView) -> Bool {
+        (view.rows + view.nativeRows).first { $0.key == .chapterNotifications }?.isOn == true
     }
 
     /// Whether the background refresh is kept: a widget placed keeps it whatever notifies;
@@ -237,6 +252,13 @@ extension AppStore {
     public func setDownloadsFinished(_ on: Bool) async {
         if on, !(await notifications.permit()) { return }
         setSwitch(.downloadsFinished, on: on)
+    }
+
+    /// Turn New chapters on or off on this device. On asks for permission as New episodes does,
+    /// and stays off when it is declined.
+    public func setChapterNotifications(_ on: Bool) async {
+        if on, !(await notifications.permit()) { return }
+        setSwitch(.chapterNotifications, on: on)
     }
 
     /// A show's own switch. On asks for permission as the setting's does.

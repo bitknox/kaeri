@@ -8159,6 +8159,24 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>E-reader em {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} já saiu.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>{count} capítulo novo</value>
+  </data>
+  <data name="NotifChaptersNew_many" xml:space="preserve">
+    <value>{count} capítulos novos</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} capítulos novos</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Capítulo novo</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Ler</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Temporada anterior</value>
   </data>

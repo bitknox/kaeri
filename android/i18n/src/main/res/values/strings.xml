@@ -1904,17 +1904,6 @@
     <string name="channel_downloads_finished_name">Downloads finished</string>
     <!-- What the downloads finished channel is for, shown in the system's settings. -->
     <string name="channel_downloads_finished_description">When the chapters you asked to download are all done.</string>
-    <!-- Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". -->
-    <string name="notif_chapter_new">%1$s is new.</string>
-    <!-- Notification, new chapters: the line under the series' title when one series has several. -->
-    <plurals name="notif_chapters_new">
-        <item quantity="one">One new chapter</item>
-        <item quantity="other">%1$,d new chapters</item>
-    </plurals>
-    <!-- Notification, new chapter: what the lock screen shows when previews are hidden. -->
-    <string name="notif_chapter_hidden">New chapter</string>
-    <!-- Notification, new chapter: the action that opens the reader on the chapter. -->
-    <string name="notif_chapter_read">Read</string>
     <!-- The download notification while only chapters download. -->
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Downloading one chapter</item>
@@ -6501,6 +6490,17 @@
     </plurals>
     <!-- Name for an e-reader that did not give one. -->
     <string name="opds_reader_unnamed">E-reader at %1$s</string>
+    <!-- Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". -->
+    <string name="notif_chapter_new">%1$s is new.</string>
+    <!-- Notification, new chapters: the line under the series' title when one series has several. -->
+    <plurals name="notif_chapters_new">
+        <item quantity="one">One new chapter</item>
+        <item quantity="other">%1$,d new chapters</item>
+    </plurals>
+    <!-- Notification, new chapter: what the lock screen shows when previews are hidden. -->
+    <string name="notif_chapter_hidden">New chapter</string>
+    <!-- Notification, new chapter: the action that opens the reader on the chapter. -->
+    <string name="notif_chapter_read">Read</string>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->

@@ -216,6 +216,9 @@ private final class CountingCentre: NoticeCentre, @unchecked Sendable {
     func post(identifier: String, title: String, body: String) async {
         await quiet.post(identifier: identifier, title: title, body: body)
     }
+    func post(_ notice: ChapterNotice, picture: URL?) async {
+        await quiet.post(notice, picture: picture)
+    }
 }
 
 private func ledger() -> NoticeLedger {

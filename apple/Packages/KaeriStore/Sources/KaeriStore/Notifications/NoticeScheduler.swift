@@ -123,6 +123,22 @@ public actor NoticeScheduler {
         return posted
     }
 
+    /// Post what a check for new chapters found, a notification per series, each with its
+    /// picture. Nothing without permission. What was posted.
+    @discardableResult
+    public func post(chapters found: [NewChapter]) async -> [ChapterNotice] {
+        guard !found.isEmpty, await centre.permission() == .allowed else { return [] }
+        let notices = ChapterNotices.plan(found)
+        for notice in notices {
+            var picture: URL?
+            if let url = notice.artURL, let bytes = await fetch(url) {
+                picture = NoticePictures.stage(bytes, in: staging)
+            }
+            await centre.post(notice, picture: picture)
+        }
+        return notices
+    }
+
     /// Take back every new-episode notification waiting to fire.
     public func clear() async {
         let pending = await centre.pending().filter { $0.hasPrefix(NoticePlan.prefix) }

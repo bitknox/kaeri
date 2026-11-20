@@ -18530,6 +18530,26 @@ pub fn opds_reader_unnamed(address: &str) -> String {
     text("opds-reader-unnamed", &[("address", Arg::Text(address))])
 }
 
+/// Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+pub fn notif_chapter_new(chapter: &str) -> String {
+    text("notif-chapter-new", &[("chapter", Arg::Text(chapter))])
+}
+
+/// Notification, new chapters: the line under the series' title when one series has several.
+pub fn notif_chapters_new(count: i64) -> String {
+    text("notif-chapters-new", &[("count", Arg::Int(count))])
+}
+
+/// Notification, new chapter: what the lock screen shows when previews are hidden.
+pub fn notif_chapter_hidden() -> String {
+    text("notif-chapter-hidden", &[])
+}
+
+/// Notification, new chapter: the action that opens the reader on the chapter.
+pub fn notif_chapter_read() -> String {
+    text("notif-chapter-read", &[])
+}
+
 /// Button that shows the season before.
 pub fn seasonal_previous() -> String {
     text("seasonal-previous", &[])

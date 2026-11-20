@@ -10776,6 +10776,21 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = Máy đọc sách tại { $address }
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = { $chapter } đã ra mắt.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+       *[other] { $count } chương mới
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = Chương mới
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = Đọc
+
 # Button that shows the season before.
 seasonal-previous = Mùa trước
 

@@ -10909,6 +10909,22 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = E-läsare på { $address }
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = { $chapter } är ute.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+        [one] Ett nytt kapitel
+       *[other] { $count } nya kapitel
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = Nytt kapitel
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = Läs
+
 # Button that shows the season before.
 seasonal-previous = Föregående säsong
 

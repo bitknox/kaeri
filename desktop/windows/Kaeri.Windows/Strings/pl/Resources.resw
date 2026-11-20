@@ -8480,6 +8480,27 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>E-czytnik pod adresem {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} już jest.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>Jeden nowy rozdział</value>
+  </data>
+  <data name="NotifChaptersNew_few" xml:space="preserve">
+    <value>{count} nowe rozdziały</value>
+  </data>
+  <data name="NotifChaptersNew_many" xml:space="preserve">
+    <value>{count} nowych rozdziałów</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} nowego rozdziału</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Nowy rozdział</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Czytaj</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Poprzedni sezon</value>
   </data>

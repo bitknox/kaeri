@@ -847,13 +847,6 @@
     <string name="channel_chapters_description">Wenn eine Serie auf deiner Liste „Lesend“ ein neues Kapitel hat.</string>
     <string name="channel_downloads_finished_name">Downloads abgeschlossen</string>
     <string name="channel_downloads_finished_description">Wenn alle Kapitel, die du herunterladen wolltest, fertig sind.</string>
-    <string name="notif_chapter_new">%1$s ist da.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">Ein neues Kapitel</item>
-        <item quantity="other">%1$,d neue Kapitel</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Neues Kapitel</string>
-    <string name="notif_chapter_read">Lesen</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Ein Kapitel wird heruntergeladen</item>
         <item quantity="other">%1$,d Kapitel werden heruntergeladen</item>
@@ -3108,6 +3101,13 @@
         <item quantity="other">%1$,d Dateien</item>
     </plurals>
     <string name="opds_reader_unnamed">E-Reader unter %1$s</string>
+    <string name="notif_chapter_new">%1$s ist da.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Ein neues Kapitel</item>
+        <item quantity="other">%1$,d neue Kapitel</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Neues Kapitel</string>
+    <string name="notif_chapter_read">Lesen</string>
     <string name="seasonal_previous">Vorherige Saison</string>
     <string name="seasonal_next">Nächste Saison</string>
     <string name="seasonal_loading">Saison wird geladen</string>

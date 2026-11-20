@@ -1814,3 +1814,24 @@ opds-fetched-files = { $n ->
 # Name for an e-reader that did not give one.
 # @arg address: text
 opds-reader-unnamed = E-reader at { $address }
+
+## Notifications for new chapters
+
+# Notification, new chapter: the line under the series' title. The chapter is the source's own
+# words for it, such as "Chapter 12".
+# @arg chapter: text
+notif-chapter-new = { $chapter } is new.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+# @arg count: int
+notif-chapters-new = { $count ->
+    [one] One new chapter
+   *[other] { $count } new chapters
+ }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = New chapter
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+# @max 16
+notif-chapter-read = Read

@@ -486,3 +486,10 @@ opds-fetched-files = { $n ->
    *[other] { $n } dosya
  }
 opds-reader-unnamed = { $address } adresindeki e-okuyucu
+notif-chapter-new = { $chapter } çıktı.
+notif-chapters-new = { $count ->
+    [one] Yeni bir bölüm
+   *[other] { $count } yeni bölüm
+ }
+notif-chapter-hidden = Yeni bölüm
+notif-chapter-read = Oku

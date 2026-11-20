@@ -808,12 +808,6 @@
     <string name="channel_chapters_description">Saat seri di daftar Membaca Anda punya bab baru.</string>
     <string name="channel_downloads_finished_name">Unduhan selesai</string>
     <string name="channel_downloads_finished_description">Saat semua bab yang Anda minta untuk diunduh sudah selesai.</string>
-    <string name="notif_chapter_new">%1$s sudah keluar.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="other">%1$,d bab baru</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Bab baru</string>
-    <string name="notif_chapter_read">Baca</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="other">Mengunduh %1$,d bab</item>
     </plurals>
@@ -2984,6 +2978,12 @@
         <item quantity="other">%1$,d berkas</item>
     </plurals>
     <string name="opds_reader_unnamed">E-reader di %1$s</string>
+    <string name="notif_chapter_new">%1$s sudah keluar.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="other">%1$,d bab baru</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Bab baru</string>
+    <string name="notif_chapter_read">Baca</string>
     <string name="seasonal_previous">Musim sebelumnya</string>
     <string name="seasonal_next">Musim berikutnya</string>
     <string name="seasonal_loading">Memuat musim ini</string>

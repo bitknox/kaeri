@@ -7517,6 +7517,18 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>E-reader di {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} sudah keluar.</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} bab baru</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Bab baru</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Baca</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Musim sebelumnya</value>
   </data>

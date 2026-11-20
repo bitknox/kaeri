@@ -847,13 +847,6 @@
     <string name="channel_chapters_description">När en serie på din Läser-lista får ett nytt kapitel.</string>
     <string name="channel_downloads_finished_name">Nedladdningar klara</string>
     <string name="channel_downloads_finished_description">När alla kapitel du valde att ladda ner är klara.</string>
-    <string name="notif_chapter_new">%1$s är ute.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">Ett nytt kapitel</item>
-        <item quantity="other">%1$,d nya kapitel</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Nytt kapitel</string>
-    <string name="notif_chapter_read">Läs</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Laddar ner ett kapitel</item>
         <item quantity="other">Laddar ner %1$,d kapitel</item>
@@ -3108,6 +3101,13 @@
         <item quantity="other">%1$,d filer</item>
     </plurals>
     <string name="opds_reader_unnamed">E-läsare på %1$s</string>
+    <string name="notif_chapter_new">%1$s är ute.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Ett nytt kapitel</item>
+        <item quantity="other">%1$,d nya kapitel</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Nytt kapitel</string>
+    <string name="notif_chapter_read">Läs</string>
     <string name="seasonal_previous">Föregående säsong</string>
     <string name="seasonal_next">Nästa säsong</string>
     <string name="seasonal_loading">Laddar säsongen</string>

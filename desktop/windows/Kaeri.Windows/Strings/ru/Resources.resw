@@ -8480,6 +8480,27 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>Ридер по адресу {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>Вышло: {chapter}.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>{count} новая глава</value>
+  </data>
+  <data name="NotifChaptersNew_few" xml:space="preserve">
+    <value>{count} новые главы</value>
+  </data>
+  <data name="NotifChaptersNew_many" xml:space="preserve">
+    <value>{count} новых глав</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} новой главы</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Новая глава</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Читать</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Предыдущий сезон</value>
   </data>
