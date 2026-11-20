@@ -1297,6 +1297,8 @@ mod start_over {
         assert!(stopped.enabled);
         assert!(!stopped.recovery_key);
         assert!(stopped.folder.is_some());
+        // The restore screen it opens counts the new group's devices: the laptop.
+        assert_eq!(stopped.restore_devices, 1);
         assert!(
             stopped.error.as_deref().is_some_and(|e| e.contains("started over")),
             "{stopped:?}"
@@ -1318,6 +1320,7 @@ mod start_over {
             s.problem.is_none() && s.devices.iter().any(|d| d.name == "Laptop")
         });
         assert!(joined.recovery_key);
+        assert_eq!(joined.restore_devices, 0);
         laptop.engine.send(Command::SyncFolderNow);
         laptop.status_where("the phone", |s| s.devices.iter().any(|d| d.name == "Phone"));
     }

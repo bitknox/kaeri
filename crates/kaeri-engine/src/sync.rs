@@ -101,8 +101,14 @@ pub fn apply_effects(
     if !wrote {
         return;
     }
+    let titles = engine.config.effective().meta.title_language;
     engine.config.adopt_shared();
     let _ = tx.send(Event::Settings(engine.config.view()));
+    // Titles are named the received way from here, as when the setting is changed on this device.
+    let received = engine.config.effective().meta.title_language;
+    if received != titles {
+        crate::title_language::chosen(received, services, tx);
+    }
     let _ = tx.internal(Internal::SettingsSaved);
     if sources_changed {
         services
