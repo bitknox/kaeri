@@ -27,7 +27,7 @@ class GamepadTest {
 
     @Test
     fun swapped_a_goes_back_and_b_confirms() {
-        assertEquals(Fate.As(KeyEvent.KEYCODE_BACK), Gamepad.fate(KeyEvent.KEYCODE_BUTTON_A, controller = true, settings = swapped))
+        assertEquals(Fate.Back, Gamepad.fate(KeyEvent.KEYCODE_BUTTON_A, controller = true, settings = swapped))
         assertEquals(Fate.As(KeyEvent.KEYCODE_DPAD_CENTER), Gamepad.fate(KeyEvent.KEYCODE_BUTTON_B, controller = true, settings = swapped))
         // The rest of the controller is as it was.
         assertEquals(Fate.Same, Gamepad.fate(KeyEvent.KEYCODE_BUTTON_X, controller = true, settings = swapped))
@@ -52,9 +52,9 @@ class GamepadTest {
     @Test
     fun a_retyped_key_keeps_the_press_it_came_from() {
         val down = KeyEvent(100L, 120L, KeyEvent.ACTION_DOWN, KeyEvent.KEYCODE_BUTTON_A, 2, 0, 7, 304, 0, 0x00000401)
-        val back = Gamepad.retyped(down, KeyEvent.KEYCODE_BACK)
-        assertEquals(KeyEvent.KEYCODE_BACK, back.keyCode)
+        val centre = Gamepad.retyped(down, KeyEvent.KEYCODE_DPAD_CENTER)
+        assertEquals(KeyEvent.KEYCODE_DPAD_CENTER, centre.keyCode)
         assertEquals(listOf(100L, 120L, KeyEvent.ACTION_DOWN.toLong(), 2L, 7L, 304L, 0x00000401L),
-            listOf(back.downTime, back.eventTime, back.action.toLong(), back.repeatCount.toLong(), back.deviceId.toLong(), back.scanCode.toLong(), back.source.toLong()))
+            listOf(centre.downTime, centre.eventTime, centre.action.toLong(), centre.repeatCount.toLong(), centre.deviceId.toLong(), centre.scanCode.toLong(), centre.source.toLong()))
     }
 }

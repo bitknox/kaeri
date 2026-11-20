@@ -25,6 +25,9 @@ internal object Gamepad {
 
         /** Goes on as the key [code], which does what the other face button does. */
         data class As(val code: Int) : Fate
+
+        /** Goes back, which is what the other face button does. */
+        data object Back : Fate
     }
 
     /** The Controller settings as they stand. Before the engine has said them, the defaults: on, not swapped. */
@@ -42,7 +45,7 @@ internal object Gamepad {
         !controller -> Fate.Same
         !settings.enabled -> Fate.Ignored
         !settings.swapFace -> Fate.Same
-        code == KeyEvent.KEYCODE_BUTTON_A -> Fate.As(KeyEvent.KEYCODE_BACK)
+        code == KeyEvent.KEYCODE_BUTTON_A -> Fate.Back
         code == KeyEvent.KEYCODE_BUTTON_B -> Fate.As(KeyEvent.KEYCODE_DPAD_CENTER)
         else -> Fate.Same
     }

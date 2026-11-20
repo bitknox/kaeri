@@ -180,9 +180,9 @@ class TvActivity : ComponentActivity() {
     /**
      * A game controller's keys, as the Controller settings say: dropped while it is switched off,
      * and A and B swapped when asked. A swapped key is always taken, so Android adds no Back or
-     * centre of its own for the button that was pressed. A key that becomes Back goes to the back
-     * dispatcher on its release, as the phone remote's Back does: a Back key sent on from here has
-     * passed the window's own back handling and would do nothing.
+     * centre of its own for the button that was pressed. A button that goes back does so through the
+     * back dispatcher on its release, as the phone remote's Back does: a Back key sent on from here
+     * has passed the window's own back handling and would do nothing.
      *
      * androidx.core's ComponentActivity marks its own override of this library-only; the method
      * itself is Activity's public one, which this overrides and calls as any activity may.
@@ -194,11 +194,11 @@ class TvActivity : ComponentActivity() {
             Gamepad.Fate.Same -> super.dispatchKeyEvent(event)
             Gamepad.Fate.Ignored -> true
             is Gamepad.Fate.As -> {
-                if (fate.code == KeyEvent.KEYCODE_BACK) {
-                    if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) onBackPressedDispatcher.onBackPressed()
-                } else {
-                    super.dispatchKeyEvent(Gamepad.retyped(event, fate.code))
-                }
+                super.dispatchKeyEvent(Gamepad.retyped(event, fate.code))
+                true
+            }
+            Gamepad.Fate.Back -> {
+                if (event.action == KeyEvent.ACTION_UP && !event.isCanceled) onBackPressedDispatcher.onBackPressed()
                 true
             }
         }
