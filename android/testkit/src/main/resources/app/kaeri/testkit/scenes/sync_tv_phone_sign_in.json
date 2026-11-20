@@ -1761,7 +1761,8 @@
     "groupFolder": "DROPBOX",
     "recoveryKey": false,
     "recoveryKeyMade": null,
-    "bookServersToAdd": []
+    "bookServersToAdd": [],
+    "restoreDevices": "0"
    }
   },
   {

@@ -1677,6 +1677,8 @@ class TvShots {
 
     @Test fun sync_signed_out() = syncShot("tv-sync-signed-out", "sync_cloud", "signed-out")
 
+    @Test fun sync_started_over() = syncShot("tv-sync-started-over", "sync_tv_started_over", null)
+
     @Test fun sync_code_denied() = syncShot("tv-sync-code-denied", "sync_nearby", "onedrive-code-denied")
 
     @Test fun sync_remove_menu() = syncShot("tv-sync-remove-menu", "sync_cloud", "remove-menu")

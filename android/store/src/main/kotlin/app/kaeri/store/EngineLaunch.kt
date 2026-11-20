@@ -304,6 +304,21 @@ enum class FixtureScene {
     /** A TV paired with a phone that syncs through Dropbox and holds the sign-in the TV can use; the TV has no folder yet. */
     SYNC_TV_PHONE_SIGN_IN,
 
+    /** [WATCHING] with sync off, signed in to Google Drive, whose folder holds another group of two: the restore sheet, and Start over runs. */
+    SYNC_OTHER_GROUP,
+
+    /** [SYNC_OTHER_GROUP], where starting over finds Google Drive out of reach. */
+    SYNC_OTHER_GROUP_OFFLINE,
+
+    /** [SYNC_OTHER_GROUP], where Google Drive refuses to delete the old history. */
+    SYNC_OTHER_GROUP_REFUSED,
+
+    /** [SYNC_CLOUD] after another device started sync over in Google Drive: Enter new key, and no recovery key row. */
+    SYNC_STARTED_OVER,
+
+    /** The Living room TV syncing through Google Drive after another device started sync over there; run as a TV. */
+    SYNC_TV_STARTED_OVER,
+
     /** [WATCHING] with three profiles, one of them a kids profile. */
     PROFILES,
 

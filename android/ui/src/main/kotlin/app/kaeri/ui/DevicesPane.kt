@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import app.kaeri.engine.model.SyncDeviceView
 import app.kaeri.engine.model.SyncFolderKind
+import app.kaeri.engine.model.SyncFolderSpec
 import app.kaeri.engine.model.SyncProblem
 import app.kaeri.engine.model.SyncStatus
 import app.kaeri.i18n.R
@@ -270,6 +271,8 @@ private fun CloudGroup(status: SyncStatus) {
     val problem = status.problem
     val service = folder?.kind
     val signedOut = problem is SyncProblem.SignInNeeded
+    // Another device started sync over in the folder: the new key is the only way back in.
+    val replaced = problem is SyncProblem.GroupReplaced
     val kind = kindWord()
     if (folder == null) {
         SettingsGroup(
@@ -314,6 +317,10 @@ private fun CloudGroup(status: SyncStatus) {
                     }
                 }
             }
+            if (replaced) {
+                add { place -> ActionRow(place, stringResource(R.string.rkey_enter_new)) { store.sync.askKey(SyncFolderSpec(folder.kind, folder.label.takeIf { folder.kind == SyncFolderKind.DIRECTORY }, null, null), back = null) } }
+                return@buildList
+            }
             if (signedOut) {
                 add { place -> ActionRow(place, stringResource(R.string.cloud_sign_in_again)) { store.syncSignInAgain(folder.kind) } }
                 add { place -> ActionRow(place, stringResource(R.string.cloud_use_another)) { store.sync.show(SyncSheet.PICKER) } }
@@ -331,6 +338,7 @@ private fun CloudGroup(status: SyncStatus) {
 private fun problemLine(context: Context, status: SyncStatus, name: String, kind: String): String = when (val p = status.problem) {
     is SyncProblem.SignInNeeded -> Strings.cloudErrSignedOut(context, name, kind)
     is SyncProblem.Unreachable -> Strings.cloudErrOffline(context, name)
+    is SyncProblem.GroupReplaced -> Strings.cloudErrStartedOver(context, name)
     else -> status.error ?: Strings.cloudErrOffline(context, name)
 }
 

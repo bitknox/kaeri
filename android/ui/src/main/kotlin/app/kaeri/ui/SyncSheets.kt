@@ -98,6 +98,8 @@ import app.kaeri.store.pairInvite
 import app.kaeri.store.pairJoin
 import app.kaeri.store.pairStop
 import app.kaeri.store.startSync
+import app.kaeri.store.startSyncOver
+import androidx.compose.foundation.layout.offset
 import kotlinx.coroutines.delay
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedTextField
@@ -230,6 +232,10 @@ internal fun CloudPickerSheet() {
     }
 }
 
+/** A folder's name in a sentence: the service's own, or "the folder on this phone" for one on the device. */
+@Composable
+private fun folderName(context: Context, kind: SyncFolderKind): String = cloudName(kind).ifEmpty { Strings.cloudFolder(context, kindWord()) }
+
 /** What a set-up or join problem says, for the sheet it came from. Null where the problem has its own place. */
 internal fun problemWords(context: Context, problem: SyncProblem?, host: String? = null): String? = when (problem) {
     null, SyncProblem.WrongRecoveryKey, SyncProblem.GroupExists -> null
@@ -340,14 +346,25 @@ internal fun EnterKeySheet() {
     val store = LocalAppStore.current
     val context = LocalContext.current
     val problem by store.sync.problem.collectAsStateWithLifecycle()
+    val status by store.sync.status.collectAsStateWithLifecycle()
+    val confirming by store.sync.confirmingStartOver.collectAsStateWithLifecycle()
     val name = deviceName()
     val folder = store.sync.joining
     var key by remember { mutableStateOf("") }
-    val service = folder?.let { cloudName(it.kind).ifEmpty { Strings.cloudFolder(context, kindWord()) } } ?: ""
+    val service = folder?.let { folderName(context, it.kind) } ?: ""
+    // How many devices the folder holds history from, as the set-up that found them said: 0 when
+    // it is not known (Enter new key), which says two, as the desktop apps do.
+    val devices = status?.restoreDevices?.toInt()?.takeIf { it > 0 } ?: 2
     val flow = rememberSignInFlow(failures = false, choosing = null)
-    FlowSheet(flow, onDismiss = { store.sync.show(null) }, onCancel = { store.sync.problemSeen() }, holdsInput = key.isNotEmpty()) {
+    FlowSheet(
+        flow,
+        onDismiss = { store.sync.show(null) },
+        onCancel = { store.sync.startOverLeft(); store.sync.problemSeen() },
+        onTryAgain = { folder?.let { store.startSyncOver(name, it) } },
+        holdsInput = key.isNotEmpty(),
+    ) {
         SheetTitle(stringResource(R.string.rkey_enter_title))
-        SheetText(Strings.rkeyEnterLine(context, service, 1))
+        SheetText(Strings.rkeyEnterLine(context, service, devices))
         SheetField(
             key, { key = it.uppercase() }, stringResource(R.string.rkey_row),
             modifier = Modifier.padding(top = 16.dp),
@@ -356,12 +373,27 @@ internal fun EnterKeySheet() {
             error = problem is SyncProblem.WrongRecoveryKey,
         )
         if (problem is SyncProblem.WrongRecoveryKey) SheetProblem(stringResource(R.string.rkey_wrong))
+        // The way out for a lost key, from the start: its own line, in silk, never amber.
+        TextButton(
+            onClick = { store.sync.confirmStartOver(true) },
+            enabled = folder != null,
+            colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
+            modifier = Modifier.padding(top = 4.dp).offset(x = (-12).dp),
+        ) { Text(stringResource(R.string.rkey_start_over)) }
         SheetButtons {
-            QuietButton(stringResource(R.string.action_cancel)) { store.sync.show(SyncSheet.PICKER) }
+            QuietButton(stringResource(R.string.action_cancel)) { store.sync.show(store.sync.keyBack) }
             Button(enabled = key.isNotBlank() && folder != null, onClick = { folder?.let { store.joinSync(name, it, key) } }) {
                 Text(stringResource(R.string.rkey_restore))
             }
         }
+    }
+    if (confirming && folder != null) {
+        ConfirmAlert(
+            title = stringResource(R.string.rkey_start_over_title),
+            text = Strings.rkeyStartOverLine(context, service, kindWord()),
+            confirm = stringResource(R.string.rkey_start_over_action),
+            onDismiss = { store.sync.confirmStartOver(false) },
+        ) { store.startSyncOver(name, folder) }
     }
 }
 
@@ -646,12 +678,18 @@ internal sealed interface SignInPhase {
     /** The set-up failed: [afterSignIn] says the sign-in itself worked and the folder did not. */
     data class Failed(val problem: SyncProblem, val service: SyncFolderKind, val afterSignIn: Boolean) : SignInPhase
 
-    /** The folder is ready and its recovery key shows, once. */
-    data class Key(val key: String) : SignInPhase
+    /** Start over: the folder's old sync data is being deleted. */
+    data class Clearing(val service: SyncFolderKind) : SignInPhase
+
+    /** Start over stopped before the new group was set up; nothing on this device changed. */
+    data class StartOverFailed(val problem: SyncProblem, val service: SyncFolderKind) : SignInPhase
+
+    /** The folder is ready and its recovery key shows, once: [startedOver] names the service a start over made it in. */
+    data class Key(val key: String, val startedOver: SyncFolderKind? = null) : SignInPhase
 }
 
-/** Past the redirect, nothing can stop the sign-in or the first write: Cancel dims and the sheet stays. */
-private val SignInPhase?.pastReturn: Boolean get() = this is SignInPhase.Connecting || this is SignInPhase.SettingUp
+/** Past the redirect, or once a start over begins, nothing can stop the sign-in or the first write: Cancel dims and the sheet stays. */
+private val SignInPhase?.pastReturn: Boolean get() = this is SignInPhase.Connecting || this is SignInPhase.SettingUp || this is SignInPhase.Clearing
 
 /** What a set-up's sheet shows now ([shown], paced) and what the engine says it should ([target]). */
 internal class SignInFlow(val target: SignInPhase?, val shown: SignInPhase?) {
@@ -691,11 +729,20 @@ internal fun rememberSignInFlow(failures: Boolean, choosing: SyncFolderKind?): S
     val problem by store.sync.problem.collectAsStateWithLifecycle()
     val key by store.sync.recoveryKey.collectAsStateWithLifecycle()
     val keyHere by store.sync.keyInSheet.collectAsStateWithLifecycle()
+    val startOver by store.sync.startOver.collectAsStateWithLifecycle()
     val asked = store.sync.starting?.kind ?: SyncFolderKind.GOOGLE_DRIVE
     val service = signIn?.service ?: choosing ?: asked
     val step = signIn?.step
+    val over = startOver
     val target: SignInPhase? = when {
-        keyHere && key != null -> SignInPhase.Key(key!!)
+        keyHere && key != null -> SignInPhase.Key(key!!, over)
+        // A start over runs from the confirmed tap to its key or its stop, whatever a sign-in
+        // that ended late says: deleting first, then the usual set-up.
+        over != null -> when {
+            problem.endsSetUp() -> SignInPhase.StartOverFailed(problem!!, over)
+            step is SyncSignInStep.Finishing || settingUp -> SignInPhase.SettingUp(over)
+            else -> SignInPhase.Clearing(over)
+        }
         failures && problem.endsSetUp() -> SignInPhase.Failed(problem!!, problem!!.service(asked), store.sync.passedSignIn)
         step is SyncSignInStep.Browser || step is SyncSignInStep.Sheet -> SignInPhase.Waiting(service)
         step is SyncSignInStep.Connecting -> SignInPhase.Connecting(service)
@@ -782,6 +829,29 @@ private fun SignInPhaseContent(phase: SignInPhase, canCancel: Boolean, onCancel:
             SheetText(Strings.cloudSettingUpLine(context, cloudName(phase.service)), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
             SheetButtons { QuietButton(stringResource(R.string.action_cancel), enabled = false, onClick = onCancel) }
         }
+        is SignInPhase.Clearing -> {
+            SheetTitle(stringResource(R.string.rkey_clearing))
+            WaitBar()
+            SheetText(Strings.rkeyClearingLine(context, folderName(context, phase.service)), Modifier.semantics { liveRegion = LiveRegionMode.Polite })
+            SheetButtons { QuietButton(stringResource(R.string.action_cancel), enabled = false, onClick = onCancel) }
+        }
+        is SignInPhase.StartOverFailed -> {
+            val service = folderName(context, phase.service)
+            SheetTitle(stringResource(R.string.rkey_start_over_err_title))
+            SheetProblem(
+                when (phase.problem) {
+                    SyncProblem.Unreachable -> Strings.cloudErrOffline(context, service)
+                    SyncProblem.ClearRefused -> Strings.rkeyStartOverErrRefused(context, service)
+                    else -> problemWords(context, phase.problem) ?: Strings.cloudErrSetupOther(context, service)
+                },
+                Modifier.padding(top = 4.dp),
+            )
+            SheetText(Strings.rkeyStartOverErrKept(context, kindWord()), Modifier.padding(top = 12.dp))
+            SheetButtons {
+                QuietButton(stringResource(R.string.action_cancel), onClick = onCancel)
+                Button(onClick = onTryAgain) { Text(stringResource(R.string.action_try_again)) }
+            }
+        }
         is SignInPhase.Failed -> {
             val service = cloudName(phase.service).ifEmpty { Strings.cloudFolder(context, kindWord()) }
             SheetTitle(if (phase.afterSignIn) stringResource(R.string.cloud_err_setup_title) else Strings.cloudErrSigninTitle(context, service))
@@ -804,6 +874,12 @@ private fun SignInPhaseContent(phase: SignInPhase, canCancel: Boolean, onCancel:
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Text(stringResource(R.string.rkey_title), style = MaterialTheme.typography.titleLarge, modifier = Modifier.weight(1f).semantics { heading() })
                 Button(onClick = { store.sync.recoveryKeySeen(); store.sync.show(null) }) { Text(stringResource(R.string.action_done)) }
+            }
+            phase.startedOver?.let { service ->
+                Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Box(Modifier.padding(top = 9.dp)) { StateDot(MaterialTheme.colorScheme.secondary) }
+                    Text(Strings.rkeyStartedOver(context, folderName(context, service)), style = MaterialTheme.typography.bodyLarge)
+                }
             }
             Column(Modifier.padding(top = 8.dp)) { RecoveryKeyParts(phase.key, tonal = true) }
         }

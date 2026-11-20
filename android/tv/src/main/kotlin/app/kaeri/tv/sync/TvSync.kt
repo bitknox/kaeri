@@ -208,11 +208,14 @@ fun LazyListScope.devices(memory: FocusMemory, first: Modifier) {
                     val problem = synced.problem
                     val failed = problem != null || synced.error != null
                     val signedOut = problem is SyncProblem.SignInNeeded
+                    // Another device started sync over in the folder: the TV pairs again, as it first joined.
+                    val replaced = problem is SyncProblem.GroupReplaced
                     TvListRow(
                         if (failed) Strings.cloudErrTitle(context, service) else service,
-                        onClick = { store.sync.askFolder(FolderAsk.MENU) },
+                        onClick = { if (replaced) { store.pairInvite(name); store.sync.show(SyncSheet.CODE) } else store.sync.askFolder(FolderAsk.MENU) },
                         supporting = when {
                             settingUp -> stringResource(R.string.tv_cloud_finishing)
+                            replaced -> stringResource(R.string.tv_cloud_started_over_line)
                             signedOut -> Strings.tvCloudRevokedLine(context, service)
                             failed -> Strings.cloudErrOffline(context, service)
                             synced.syncing -> stringResource(R.string.sync_syncing)
@@ -220,6 +223,8 @@ fun LazyListScope.devices(memory: FocusMemory, first: Modifier) {
                         },
                         icon = SyncIcons.Cloud,
                         dot = if (failed) ObiSilk.Vermilion else ObiSilk.Water,
+                        supportingLines = if (replaced) 2 else 1,
+                        height = if (replaced) 84.dp else 72.dp,
                         modifier = Modifier.remembered(memory, "devices/folder"),
                     )
                 }
