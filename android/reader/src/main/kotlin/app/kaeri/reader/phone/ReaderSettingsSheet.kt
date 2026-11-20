@@ -107,7 +107,7 @@ fun ReaderSettingsSheet(
     session: ReaderSession,
     state: ReaderState,
     onDismiss: () -> Unit,
-    toggle: (Key, Boolean) -> Unit = { key, on -> session.setSetting(key, SettingScope.DEVICE, ReaderValue.Toggle(on)) },
+    toggle: (Key, Boolean) -> Unit = { key, on -> session.setSetting(key, state.toggleScope(key), ReaderValue.Toggle(on)) },
     /** Paper mode: the sheet comes and goes at once. */
     instant: Boolean = false,
     /** The page it opens on. */
