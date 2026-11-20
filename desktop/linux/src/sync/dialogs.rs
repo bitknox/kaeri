@@ -1215,6 +1215,7 @@ pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     // A lost key is never typed: the way out shows from the start, plain and never amber.
     let over = button(&format!("{}\u{2026}", t::rkey_start_over()), Some("flat")); // i18n-skip
     over.set_halign(gtk::Align::Start);
+    over.add_css_class("flush-start");
     enter.append(&over);
 
     // The start over's steps: the work, the failure and the key, centred as the picker's are.
@@ -1374,7 +1375,7 @@ fn restore_folder(service: &SyncFolderKind) -> SyncFolderSpec {
 fn confirm_start_over(ctx: &Rc<Ctx>, r: &Restore) {
     let name = service_name(&r.service);
     let (weak, r2) = (Rc::downgrade(ctx), r.clone());
-    alert(
+    let dialog = alert(
         ctx,
         &t::rkey_start_over_title(),
         &t::rkey_start_over_line(&name, &super::kind()),
@@ -1386,6 +1387,8 @@ fn confirm_start_over(ctx: &Rc<Ctx>, r: &Restore) {
         },
         || {},
     );
+    // Its two responses side by side, Cancel first, as the board draws them.
+    dialog.set_prefer_wide_layout(true);
 }
 
 /// Send the start over, from the alert or from Try again. What is on screen stays until the work
@@ -2118,7 +2121,7 @@ fn alert(
     action: &str,
     done: impl Fn() + 'static,
     cancelled: impl Fn() + 'static,
-) {
+) -> adw::AlertDialog {
     let dialog = adw::AlertDialog::new(Some(title), Some(body));
     dialog.add_response("cancel", &t::action_cancel());
     dialog.add_response("go", action);
@@ -2133,6 +2136,7 @@ fn alert(
         }
     });
     dialog.present(Some(&ctx.window));
+    dialog
 }
 
 /// Turn off sync on this computer, after asking.
