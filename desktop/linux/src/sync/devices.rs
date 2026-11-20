@@ -2,18 +2,18 @@
 //! key and Turn off sync last; or, while sync is off, the one button that turns it on. The TVs
 //! paired for Play on TV sit here too, and keep working with sync off.
 
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use adw::prelude::*;
 use gtk::{gio, glib};
 use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
-    group::{SyncCommand, SyncDeviceKind, SyncDeviceView, SyncStatus},
+    group::{SyncCommand, SyncDeviceKind, SyncDeviceView, SyncProblem, SyncStatus},
 };
 
 use super::{CloudState, Mark, ProblemFix, dialogs};
-use crate::window::Ctx;
+use crate::{motion, squeeze::Squeeze, window::Ctx};
 
 fn now() -> i64 {
     glib::real_time() / 1_000_000
@@ -23,15 +23,37 @@ fn now() -> i64 {
 pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage) {
     let status = ctx.hub.known.borrow().sync_group.clone().unwrap_or_default();
     page.add(&this_device(ctx, &status));
+    let before = LAST.take();
     if !super::bare(&status) {
         page.add(&your_devices(ctx, &status));
         if let Some(group) = sync_notes(ctx, &status) {
             page.add(&group);
         }
-        page.add(&cloud_folder(ctx, &status));
-        if let Some(group) = recovery_and_off(ctx, &status) {
-            page.add(&group);
+        let replaced = status.problem == Some(SyncProblem::GroupReplaced);
+        // The group was started over elsewhere while Devices showed it: the cloud row changes in
+        // one crossfade and the recovery key's rows close their height, from stills of how they
+        // stood. With animations off it changes at once.
+        let change = (before.replaced == Some(false) && replaced && !motion::reduced())
+            .then(|| Stills::of(&before))
+            .flatten();
+        let cloud = cloud_folder(ctx, &status);
+        let (keys, off) = recovery_and_off(ctx, &status);
+        match &change {
+            Some(stills) => {
+                page.add(&crossfade_from(&stills.cloud, &cloud));
+                page.add(&close_from(&stills.keys, stills.keys_height, &keys));
+            }
+            None => {
+                page.add(&cloud);
+                page.add(&keys);
+            }
         }
+        LAST.set(Last {
+            replaced: Some(replaced),
+            cloud: Some(cloud.downgrade()),
+            keys: Some(keys.downgrade()),
+            off: Some(off.downgrade()),
+        });
         if let Some(group) = crate::tv::paired::group(ctx) {
             page.add(&group);
         }
@@ -378,6 +400,7 @@ fn cloud_folder(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
         return group;
     };
     let state = super::cloud_state(status, now(), dialogs::by_hand());
+    let replaced = matches!(state, CloudState::Problem(_, ProblemFix::EnterNewKey));
     let row = adw::ActionRow::builder()
         .title(glib::markup_escape_text(&super::service_name(&folder.kind)))
         .build();
@@ -462,8 +485,161 @@ fn cloud_folder(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
             row.add_suffix(&now_button);
         }
     }
-    row.add_suffix(&more_menu(ctx, &folder.kind, cloud));
+    // A group started over elsewhere offers only Enter new key, as the board draws it.
+    if !replaced {
+        row.add_suffix(&more_menu(ctx, &folder.kind, cloud));
+    }
     group.add(&row);
+    group
+}
+
+thread_local! {
+    /// What Devices last drew, for the change to a group started over elsewhere.
+    static LAST: RefCell<Last> = RefCell::default();
+}
+
+/// Devices as last drawn: whether its group was started over elsewhere, its cloud group, and the
+/// group with the recovery key's rows and Turn off.
+#[derive(Default)]
+struct Last {
+    replaced: Option<bool>,
+    cloud: Option<glib::WeakRef<adw::PreferencesGroup>>,
+    keys: Option<glib::WeakRef<adw::PreferencesGroup>>,
+    off: Option<glib::WeakRef<gtk::ListBoxRow>>,
+}
+
+/// Pictures of the last cloud group and of the rows above Turn off, while they are on screen.
+struct Stills {
+    cloud: Still,
+    keys: Still,
+    /// Where Turn off starts in the key group: the rows above it are what closes.
+    keys_height: i32,
+}
+
+struct Still {
+    picture: gtk::gdk::Paintable,
+    width: i32,
+    height: i32,
+}
+
+impl Still {
+    fn of(widget: &impl IsA<gtk::Widget>) -> Option<Self> {
+        let widget = widget.as_ref();
+        if !widget.is_mapped() || widget.width() <= 0 || widget.height() <= 0 {
+            return None;
+        }
+        Some(Self {
+            picture: gtk::WidgetPaintable::new(Some(widget)).current_image(),
+            width: widget.width(),
+            height: widget.height(),
+        })
+    }
+
+    /// The picture at the size it was taken, from the top left, clipped by its place rather than
+    /// squeezed into it.
+    fn widget(&self) -> gtk::ScrolledWindow {
+        let picture = gtk::Picture::for_paintable(&self.picture);
+        picture.set_content_fit(gtk::ContentFit::Fill);
+        picture.set_size_request(self.width, self.height);
+        picture.set_halign(gtk::Align::Start);
+        picture.set_valign(gtk::Align::Start);
+        picture.set_accessible_role(gtk::AccessibleRole::Presentation);
+        let clip = gtk::ScrolledWindow::builder()
+            .hscrollbar_policy(gtk::PolicyType::External)
+            .vscrollbar_policy(gtk::PolicyType::External)
+            .child(&picture)
+            .build();
+        clip.set_can_target(false);
+        clip.set_can_focus(false);
+        clip
+    }
+}
+
+impl Stills {
+    fn of(last: &Last) -> Option<Self> {
+        let cloud = last.cloud.as_ref()?.upgrade()?;
+        let keys = last.keys.as_ref()?.upgrade()?;
+        let off = last.off.as_ref()?.upgrade()?;
+        let top = off.compute_point(&keys, &gtk::graphene::Point::new(0.0, 0.0))?;
+        let keys_height = top.y().round() as i32;
+        if keys_height <= 0 {
+            return None;
+        }
+        Some(Self { cloud: Still::of(&cloud)?, keys: Still::of(&keys)?, keys_height })
+    }
+}
+
+/// Run `start` on the first frame `widget` is laid out on screen: its springs would skip to the
+/// end before it is mapped, and its size is not known until laid out.
+fn once_laid_out(widget: &impl IsA<gtk::Widget>, start: impl FnOnce() + 'static) {
+    let start = std::cell::Cell::new(Some(start));
+    widget.add_tick_callback(move |widget, _| {
+        if widget.width() <= 0 {
+            return glib::ControlFlow::Continue;
+        }
+        if let Some(start) = start.take() {
+            start();
+        }
+        glib::ControlFlow::Break
+    });
+}
+
+/// `group` in place of the still of the one before: its room starts at the old height and eases
+/// to its own on the standard token while the still fades away over it, so both are drawn
+/// throughout and the change never passes through empty.
+fn crossfade_from(still: &Still, group: &adw::PreferencesGroup) -> adw::PreferencesGroup {
+    let overlay = gtk::Overlay::new();
+    overlay.set_child(Some(group));
+    let ghost = still.widget();
+    overlay.add_overlay(&ghost);
+    let place = Squeeze::new(&overlay, gtk::Orientation::Vertical, 0);
+    place.hold_at(f64::from(still.height));
+    once_laid_out(&place, {
+        let (place, overlay) = (place.clone(), overlay.clone());
+        move || {
+            place.release();
+            let fade = motion::standard(&ghost, 1.0, 0.0, motion::opacity(&ghost));
+            let gone = ghost.clone();
+            fade.connect_done(move |_| overlay.remove_overlay(&gone));
+            fade.play();
+        }
+    });
+    holder(&place)
+}
+
+/// `group` under a still of the rows that left it, `height` tall, which closes its height on the
+/// standard token as it fades, so Turn off rises into place.
+fn close_from(
+    still: &Still,
+    height: i32,
+    group: &adw::PreferencesGroup,
+) -> adw::PreferencesGroup {
+    let ghost = still.widget();
+    ghost.set_size_request(-1, height);
+    let place = Squeeze::new(&ghost, gtk::Orientation::Vertical, 0);
+    let column = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    column.append(&place);
+    column.append(group);
+    once_laid_out(&place, {
+        let place = place.clone();
+        move || {
+            motion::standard(&ghost, 1.0, 0.0, motion::opacity(&ghost)).play();
+            let gone = place.downgrade();
+            place.close(move || {
+                if let Some(place) = gone.upgrade() {
+                    place.set_visible(false);
+                }
+            });
+        }
+    });
+    holder(&column)
+}
+
+/// A group of its own for `widget`, as the page takes only groups. With no title and no rows it
+/// adds nothing around it.
+fn holder(widget: &impl IsA<gtk::Widget>) -> adw::PreferencesGroup {
+    let group = adw::PreferencesGroup::new();
+    group.add(widget);
     group
 }
 
@@ -579,12 +755,15 @@ fn more_menu(
     more
 }
 
-/// The recovery key row (once a folder holds one) and Turn off sync last, in one box.
-fn recovery_and_off(ctx: &Rc<Ctx>, status: &SyncStatus) -> Option<adw::PreferencesGroup> {
+/// The recovery key row (once a folder holds one) and Turn off sync last, in one box; and the row
+/// that holds Turn off.
+fn recovery_and_off(
+    ctx: &Rc<Ctx>,
+    status: &SyncStatus,
+) -> (adw::PreferencesGroup, gtk::ListBoxRow) {
     let group = adw::PreferencesGroup::new();
     // A group started over on another device left this one without a key that opens anything.
-    let has_key = status.recovery_key
-        && status.problem != Some(kaeri_model::group::SyncProblem::GroupReplaced);
+    let has_key = status.recovery_key && status.problem != Some(SyncProblem::GroupReplaced);
     if has_key {
         let made = status
             .recovery_key_made
@@ -641,5 +820,130 @@ fn recovery_and_off(ctx: &Rc<Ctx>, status: &SyncStatus) -> Option<adw::Preferenc
     });
     let row = gtk::ListBoxRow::builder().child(&off).activatable(false).build();
     group.add(&row);
-    Some(group)
+    (group, row)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gtk_test::{pump, run};
+    use kaeri_model::group::{SyncFolderKind, SyncFolderView};
+
+    fn synced() -> SyncStatus {
+        SyncStatus {
+            enabled: true,
+            device_name: Some("Study desktop".into()),
+            folder: Some(SyncFolderView {
+                kind: SyncFolderKind::GoogleDrive,
+                label: "Google Drive".into(),
+                account: None,
+            }),
+            group_folder: Some(SyncFolderKind::GoogleDrive),
+            last_synced: Some(now() - 60),
+            recovery_key: true,
+            ..SyncStatus::default()
+        }
+    }
+
+    fn started_over() -> SyncStatus {
+        SyncStatus { problem: Some(SyncProblem::GroupReplaced), ..synced() }
+    }
+
+    fn all(widget: &gtk::Widget) -> Vec<gtk::Widget> {
+        let mut found = vec![widget.clone()];
+        let mut child = widget.first_child();
+        while let Some(c) = child {
+            found.extend(all(&c));
+            child = c.next_sibling();
+        }
+        found
+    }
+
+    /// Devices for `status`, shown in `ctx`'s window the way Settings swaps its pages.
+    fn show(ctx: &Rc<Ctx>, status: SyncStatus) -> adw::PreferencesPage {
+        ctx.hub.known.borrow_mut().sync_group = Some(status);
+        let page = adw::PreferencesPage::new();
+        fill(ctx, &page);
+        ctx.window.set_content(Some(&page));
+        page
+    }
+
+    fn stills(page: &adw::PreferencesPage) -> usize {
+        all(page.upcast_ref())
+            .iter()
+            .filter(|w| {
+                w.is::<gtk::Picture>() && w.parent().is_some_and(|p| p.is::<gtk::Viewport>())
+            })
+            .count()
+    }
+
+    #[test]
+    fn a_group_started_over_elsewhere_offers_only_enter_new_key() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = Ctx::for_tests(runtime.handle(), dir.path());
+            LAST.take();
+            let page = show(&ctx, started_over());
+            let widgets = all(page.upcast_ref());
+            assert!(!widgets.iter().any(|w| w.is::<gtk::MenuButton>()), "no More menu");
+            let labels: Vec<String> = widgets
+                .iter()
+                .filter_map(|w| w.downcast_ref::<gtk::Button>())
+                .filter_map(|b| b.label().map(|l| l.to_string()))
+                .collect();
+            assert!(labels.contains(&t::rkey_enter_new()));
+            assert!(!labels.contains(&t::cloud_sync_now()));
+            assert!(!labels.contains(&t::devices_show_key()), "no Recovery key row");
+        });
+    }
+
+    #[test]
+    fn started_over_while_shown_crossfades_and_closes_the_key_rows() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = Ctx::for_tests(runtime.handle(), dir.path());
+            ctx.window.set_default_size(900, 1200);
+            ctx.window.present();
+            LAST.take();
+            show(&ctx, synced());
+            pump(300);
+            let page = show(&ctx, started_over());
+            pump(60);
+            assert_eq!(stills(&page), 2, "the old cloud row and key rows show over the new");
+            pump(900);
+            assert_eq!(stills(&page), 1, "the cloud row's still is gone");
+            assert!(
+                all(page.upcast_ref()).iter().any(|w| w.is::<Squeeze>() && !w.is_visible()),
+                "the key rows' place closed"
+            );
+            // Once changed, a page drawn again is plain.
+            let page = show(&ctx, started_over());
+            pump(60);
+            assert_eq!(stills(&page), 0);
+            ctx.window.close();
+        });
+    }
+
+    #[test]
+    fn with_animations_off_it_changes_at_once() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = Ctx::for_tests(runtime.handle(), dir.path());
+            let settings = gtk::Settings::default().expect("settings");
+            let was = settings.is_gtk_enable_animations();
+            settings.set_gtk_enable_animations(false);
+            ctx.window.present();
+            LAST.take();
+            show(&ctx, synced());
+            pump(300);
+            let page = show(&ctx, started_over());
+            pump(60);
+            assert_eq!(stills(&page), 0);
+            settings.set_gtk_enable_animations(was);
+            ctx.window.close();
+        });
+    }
 }

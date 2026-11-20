@@ -50,6 +50,11 @@ impl Title {
         this
     }
 
+    /// Crossfade on the standard token's 0.3 s in place of the picker's 200 ms.
+    fn on_standard(&self) {
+        self.0.set_transition_duration(crate::motion::STANDARD_MS);
+    }
+
     fn set_title(&self, text: &str) {
         if self.0.child_by_name(text).is_none() {
             self.0.add_named(&adw::WindowTitle::new(text, ""), Some(text));
@@ -1240,7 +1245,8 @@ pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     failed.set_margin_bottom(8);
     let why = gtk::Box::new(gtk::Orientation::Horizontal, 8);
     why.set_halign(gtk::Align::Center);
-    let glyph = gtk::Image::from_icon_name("dialog-error-symbolic"); // i18n-skip
+    // The board's warning triangle, in vermilion.
+    let glyph = gtk::Image::from_icon_name("dialog-warning-symbolic"); // i18n-skip
     glyph.add_css_class("error");
     glyph.set_valign(gtk::Align::Start);
     glyph.set_accessible_role(gtk::AccessibleRole::Presentation);
@@ -1255,6 +1261,9 @@ pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     let key_slot = gtk::Box::new(gtk::Orientation::Vertical, 12);
 
     let body = crossfade_stack();
+    // Every crossfade inside this dialog runs on the standard token, as the board's Motion asks.
+    // The picker's dialogs keep their 200 ms.
+    body.set_transition_duration(crate::motion::STANDARD_MS);
     body.add_named(&enter, Some("enter"));
     body.add_named(&work, Some("work"));
     body.add_named(&failed, Some("failed"));
@@ -1262,6 +1271,7 @@ pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     let col = column();
     col.append(&body);
     let (dialog, header, head) = frame(&t::rkey_enter_title(), 480, &col);
+    head.on_standard();
     let start = button(&t::action_cancel(), None);
     let end = button(&t::rkey_restore(), Some("suggested-action"));
     end.set_sensitive(false);
@@ -1294,11 +1304,16 @@ pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
         }
     });
     start.connect_clicked({
-        let d = dialog.clone();
+        let r = r.clone();
         move |_| {
+            // Cancel on the failure goes back to the key field, with Start over under it.
+            if r.stage.get() == Over::Error {
+                restore_to(&r, Over::Enter, None);
+                return;
+            }
             // Close while the work runs leaves it running: the key or the failure opens again.
-            d.set_can_close(true);
-            d.close();
+            r.dialog.set_can_close(true);
+            r.dialog.close();
         }
     });
     end.connect_clicked({
@@ -2574,6 +2589,34 @@ mod tests {
             pump(50);
             assert_eq!(r.fail_line.label(), t::cloud_err_offline("Google Drive"));
             r.dialog.force_close();
+        });
+    }
+
+    #[test]
+    fn cancel_on_the_failure_goes_back_to_the_key_field() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 2);
+            restore(&ctx, &DRIVE);
+            let r = open();
+            send_start_over(&ctx, &r);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::Unreachable)]);
+            pump(50);
+            assert_eq!(r.stage.get(), Over::Error);
+            assert_eq!(r.start.label(), Some(t::action_cancel().into()));
+            r.start.emit_clicked();
+            pump(50);
+            assert!(with(|u| u.restore.is_some()), "the dialog stays open");
+            assert_eq!(r.stage.get(), Over::Enter);
+            assert_eq!(r.body.visible_child_name().as_deref(), Some("enter"));
+            assert_eq!(r.end.label(), Some(t::rkey_restore().into()));
+            assert!(!r.end.is_sensitive(), "Restore waits for a whole key");
+            // Its Cancel now leaves the dialog.
+            r.start.emit_clicked();
+            pump(400);
+            assert!(with(|u| u.restore.is_none()));
         });
     }
 
