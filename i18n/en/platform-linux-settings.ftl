@@ -105,20 +105,6 @@ nagare-description = Nagare, the { -app-name } mascot: a figure with a silk bob,
 # @only linux
 # @max 230
 settings-note-trailers-linux = Trailers play muted from YouTube, which sees your IP address. They don't play on a metered connection, with animations off, in power saver mode or with a screen reader running.
-# Settings row: whether a connected game controller drives the app.
-# @only linux
-# @max 30
-settings-label-controller-input = Use a controller
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-# @only linux
-# @max 30
-settings-label-swap-face-buttons = Swap A and B
-
-# Heading of the Settings group for game controllers.
-# @only linux
-# @max 24
-settings-group-controller = Controller
 
 # Settings row that names the controller in use.
 # @only linux

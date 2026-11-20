@@ -11240,6 +11240,26 @@
     <value>E-reader at {address}</value>
     <comment>Name for an e-reader that did not give one.</comment>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} is new.</value>
+    <comment>Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".</comment>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>One new chapter</value>
+    <comment>Notification, new chapters: the line under the series' title when one series has several.</comment>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} new chapters</value>
+    <comment>Notification, new chapters: the line under the series' title when one series has several.</comment>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>New chapter</value>
+    <comment>Notification, new chapter: what the lock screen shows when previews are hidden.</comment>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Read</value>
+    <comment>Notification, new chapter: the action that opens the reader on the chapter.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Previous season</value>
     <comment>Button that shows the season before.</comment>
@@ -13051,6 +13071,18 @@
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</value>
     <comment>Note under that switch.</comment>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Use a controller</value>
+    <comment>Settings row: whether a connected game controller drives the app.</comment>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Swap A and B</value>
+    <comment>Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.</comment>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Controller</value>
+    <comment>Heading of the Settings group for game controllers.</comment>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Address</value>

@@ -7517,6 +7517,18 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>{address}の電子書籍リーダー</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter}が公開されました。</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>新しい章が{count}話あります</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>新しい章</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>読む</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>前のシーズン</value>
   </data>
@@ -8836,6 +8848,15 @@
   </data>
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。</value>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>コントローラーを使う</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>AとBを入れ替える</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>コントローラー</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>アドレス</value>

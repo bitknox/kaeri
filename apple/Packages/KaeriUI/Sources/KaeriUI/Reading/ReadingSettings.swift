@@ -241,7 +241,9 @@ struct ReadingDownloadsGroup: View {
 struct ChapterNoticesRow: View {
     var body: some View {
         SettingsRow(title: SettingKey.chapterNotifications.title, note: L.settingsChapterNotificationsNote) {
-            SettingSwitch(key: .chapterNotifications)
+            ChapterNoticesToggle { Text(SettingKey.chapterNotifications.title) }
+                .toggleStyle(.switch)
+                .labelsHidden()
         }
     }
 }

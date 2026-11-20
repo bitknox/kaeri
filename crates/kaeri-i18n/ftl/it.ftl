@@ -2220,15 +2220,6 @@ nagare-description = Nagare, la mascotte di Kaeri: una figura con un caschetto d
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = I trailer vengono riprodotti senza audio da YouTube, che vede il tuo indirizzo IP. Non partono con una connessione a consumo, con le animazioni disattivate, in modalità risparmio energia o con uno screen reader attivo.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Usa un controller
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = Scambia A e B
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Controller
-
 # Settings row that names the controller in use.
 settings-controller-device = Controller
 
@@ -11051,6 +11042,23 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = E-reader a { $address }
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = È disponibile { $chapter }.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+        [one] Un nuovo capitolo
+        [many] { $count } nuovi capitoli
+       *[other] { $count } nuovi capitoli
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = Nuovo capitolo
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = Leggi
+
 # Button that shows the season before.
 seasonal-previous = Stagione precedente
 
@@ -12415,6 +12423,15 @@ settings-anilist-following = Mostra le persone che segui
 
 # Note under that switch.
 settings-anilist-following-footer = Mostra a che punto sono in una serie le persone che segui su AniList, nella sua pagina e nei suoi episodi. Chi può vedere la tua lista si imposta su AniList.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Usa un controller
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = Scambia A e B
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Controller
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Indirizzo

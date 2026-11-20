@@ -808,12 +808,6 @@
     <string name="channel_chapters_description">Saat seri di daftar Membaca Anda punya bab baru.</string>
     <string name="channel_downloads_finished_name">Unduhan selesai</string>
     <string name="channel_downloads_finished_description">Saat semua bab yang Anda minta untuk diunduh sudah selesai.</string>
-    <string name="notif_chapter_new">%1$s sudah keluar.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="other">%1$,d bab baru</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Bab baru</string>
-    <string name="notif_chapter_read">Baca</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="other">Mengunduh %1$,d bab</item>
     </plurals>
@@ -2984,6 +2978,12 @@
         <item quantity="other">%1$,d berkas</item>
     </plurals>
     <string name="opds_reader_unnamed">E-reader di %1$s</string>
+    <string name="notif_chapter_new">%1$s sudah keluar.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="other">%1$,d bab baru</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Bab baru</string>
+    <string name="notif_chapter_read">Baca</string>
     <string name="seasonal_previous">Musim sebelumnya</string>
     <string name="seasonal_next">Musim berikutnya</string>
     <string name="seasonal_loading">Memuat musim ini</string>
@@ -3443,6 +3443,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Gambar dalam gambar saat keluar dari aplikasi</string>
     <string name="settings_anilist_following">Tampilkan orang yang diikuti</string>
     <string name="settings_anilist_following_footer">Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</string>
+    <string name="settings_label_controller_input">Gunakan pengontrol</string>
+    <string name="settings_label_swap_face_buttons">Tukar A dan B</string>
+    <string name="settings_group_controller">Pengontrol</string>
     <string name="book_server_address">Alamat</string>
     <string name="book_server_address_hint">Sebuah alamat, atau seluruh tautan OPDS dari Kavita.</string>
     <string name="book_server_kavita_key">Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.</string>

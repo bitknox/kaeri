@@ -1,6 +1,7 @@
-// New-episode notifications as the app runs them: the centre they go to, the delegate their
-// actions come back through, and the background refresh that keeps the week scheduled and the
-// widgets' record written: iOS's app refresh task, and the Mac's background activity.
+// Notifications as the app runs them: the centre they go to, the delegate their actions come
+// back through, and the background refresh that keeps the week scheduled, the widgets' record
+// written and the followed series checked for new chapters: iOS's app refresh task, and the
+// Mac's background activity.
 //
 // The Fixtures app never reaches the system's centre on the Mac: its notifications go to a quiet
 // one that shows nothing and asks nothing. On iOS it uses the system's only when launched with
@@ -132,11 +133,11 @@ final class AppNotifications: NSObject {
 
     // MARK: The refresh
 
-    /// One refresh: what aired that no notification said, the week, and the widgets' record; with
-    /// nothing notifying, the widgets' record alone. On the store's engine when the app has one,
-    /// or on one started for it, with none of the launch's own background work, whose own check
-    /// says nothing when nothing notifies. The widgets placed are looked at again after it. True
-    /// when it ran to the end.
+    /// One refresh: what aired that no notification said, the week, the widgets' record and new
+    /// chapters; with nothing notifying, the widgets' record alone. On the store's engine when the
+    /// app has one, which posts the chapters as it says them, or on one started for it, with none
+    /// of the launch's own background work, whose own checks say nothing when nothing notifies.
+    /// The widgets placed are looked at again after it. True when it ran to the end.
     func refresh() async -> Bool {
         defer { lookAtWidgets() }
         // The widgets' record is the store's `WidgetFeed`'s to write, as in the foreground, so
@@ -147,7 +148,8 @@ final class AppNotifications: NSObject {
             let outcome = await NoticeRefresh(
                 questions: store.questions, scheduler: store.notifications.scheduler,
                 widgets: store.widgets.writer(art: store.artwork),
-                notifying: store.notifications.notifying != false
+                notifying: store.notifications.notifying != false,
+                chapters: store.notifications.chaptersNotifying == true ? .check : .skip
             ).run()
             return outcome.finished
         }
@@ -155,7 +157,8 @@ final class AppNotifications: NSObject {
             let scheduler = NoticeScheduler(centre: self.centre) { await engine.questions.art($0) }
             let outcome = await NoticeRefresh(
                 questions: engine.questions, scheduler: scheduler,
-                widgets: self.store.widgets.writer(art: engine.questions)
+                widgets: self.store.widgets.writer(art: engine.questions),
+                chapters: .checkAndPost
             ).run()
             return outcome.finished
         }
@@ -193,6 +196,12 @@ final class AppNotifications: NSObject {
             navigator.openTitle(id)
         case .play:
             store.perform(route)
+        case .series(let work):
+            navigator.openSeries(work)
+        case .read(let work, let chapter):
+            // The series' page under the reader, so closing it lands there.
+            navigator.openSeries(work)
+            store.reader.open(work: work, chapter: chapter)
         case .markWatched(let id, let episode):
             if storeStarted() {
                 store.perform(route)
@@ -272,7 +281,7 @@ final class AppNotifications: NSObject {
 }
 
 extension AppNotifications: UNUserNotificationCenterDelegate {
-    /// While the app is in front, a new episode still shows: in the list, and as a banner.
+    /// While the app is in front, a new episode or chapter still shows: in the list, and as a banner.
     nonisolated func userNotificationCenter(
         _ center: UNUserNotificationCenter, willPresent notification: UNNotification
     ) async -> UNNotificationPresentationOptions {

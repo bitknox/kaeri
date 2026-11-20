@@ -2378,15 +2378,6 @@ nagare-description = [Ñàĝàŕé, ţĥé Ķàéŕî ɱàšçöţ: à ƒîĝü�
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = [Ţŕàîļéŕš þļàý ɱüţéð ƒŕöɱ ÝöüŢüƀé, ŵĥîçĥ šééš ýöüŕ ÎÞ àððŕéšš. Ţĥéý ðöñ'ţ þļàý öñ à ɱéţéŕéð çöññéçţîöñ, ŵîţĥ àñîɱàţîöñš öƒƒ, îñ þöŵéŕ šàṽéŕ ɱöðé öŕ ŵîţĥ à šçŕééñ ŕéàðéŕ ŕüññîñĝ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = [Ûšé à çöñţŕöļļéŕ~~~~~]
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = [Šŵàþ Å àñð Ɓ~~~~]
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = [Çöñţŕöļļéŕ~~~]
-
 # Settings row that names the controller in use.
 settings-controller-device = [Çöñţŕöļļéŕ~~~]
 
@@ -11701,6 +11692,22 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = [É-ŕéàðéŕ àţ { $address }~~~~~]
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = [{ $chapter } îš ñéŵ.~~~~]
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+        [one] [Öñé ñéŵ çĥàþţéŕ~~~~~]
+       *[other] [{ $count } ñéŵ çĥàþţéŕš~~~~~]
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = [Ñéŵ çĥàþţéŕ~~~~]
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = [Ŕéàð~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 
@@ -13069,6 +13076,15 @@ settings-anilist-following = [Šĥöŵ þéöþļé ýöü ƒöļļöŵ~~~~~~~]
 
 # Note under that switch.
 settings-anilist-following-footer = [Šĥöŵš ŵĥéŕé þéöþļé ýöü ƒöļļöŵ öñ ÅñîĻîšţ àŕé îñ à šĥöŵ, öñ îţš þàĝé àñð îţš éþîšöðéš. Ŵĥö çàñ šéé ýöüŕ öŵñ ļîšţ îš šéţ öñ ÅñîĻîšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = [Ûšé à çöñţŕöļļéŕ~~~~~]
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = [Šŵàþ Å àñð Ɓ~~~~]
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = [Çöñţŕöļļéŕ~~~]
 
 # Label of the address field in the Add a server sheet.
 book-server-address = [Åððŕéšš~~~]

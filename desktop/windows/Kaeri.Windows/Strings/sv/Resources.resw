@@ -7838,6 +7838,21 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>E-läsare på {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} är ute.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>Ett nytt kapitel</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} nya kapitel</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Nytt kapitel</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Läs</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Föregående säsong</value>
   </data>
@@ -9184,6 +9199,15 @@
   </data>
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.</value>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Använd en handkontroll</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Byt plats på A och B</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Handkontroll</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adress</value>

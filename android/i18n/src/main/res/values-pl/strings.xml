@@ -925,15 +925,6 @@
     <string name="channel_chapters_description">Gdy seria z listy Czytane ma nowy rozdział.</string>
     <string name="channel_downloads_finished_name">Pobieranie zakończone</string>
     <string name="channel_downloads_finished_description">Gdy pobieranie wybranych rozdziałów dobiegnie końca.</string>
-    <string name="notif_chapter_new">%1$s już jest.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">Jeden nowy rozdział</item>
-        <item quantity="few">%1$,d nowe rozdziały</item>
-        <item quantity="many">%1$,d nowych rozdziałów</item>
-        <item quantity="other">%1$,d nowego rozdziału</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Nowy rozdział</string>
-    <string name="notif_chapter_read">Czytaj</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Pobieranie jednego rozdziału</item>
         <item quantity="few">Pobieranie %1$,d rozdziałów</item>
@@ -3356,6 +3347,15 @@
         <item quantity="other">%1$,d pliku</item>
     </plurals>
     <string name="opds_reader_unnamed">E-czytnik pod adresem %1$s</string>
+    <string name="notif_chapter_new">%1$s już jest.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Jeden nowy rozdział</item>
+        <item quantity="few">%1$,d nowe rozdziały</item>
+        <item quantity="many">%1$,d nowych rozdziałów</item>
+        <item quantity="other">%1$,d nowego rozdziału</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Nowy rozdział</string>
+    <string name="notif_chapter_read">Czytaj</string>
     <string name="seasonal_previous">Poprzedni sezon</string>
     <string name="seasonal_next">Następny sezon</string>
     <string name="seasonal_loading">Wczytywanie sezonu</string>
@@ -3842,6 +3842,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Obraz w obrazie po wyjściu z aplikacji</string>
     <string name="settings_anilist_following">Pokazuj obserwowane osoby</string>
     <string name="settings_anilist_following_footer">Pokazuje, gdzie w serii są osoby obserwowane na AniList, na jej stronie i przy odcinkach. Kto widzi Twoją listę, ustawiasz na AniList.</string>
+    <string name="settings_label_controller_input">Użyj kontrolera</string>
+    <string name="settings_label_swap_face_buttons">Zamień przyciski A i B</string>
+    <string name="settings_group_controller">Kontroler</string>
     <string name="book_server_address">Adres</string>
     <string name="book_server_address_hint">Adres albo cały link OPDS z Kavita.</string>
     <string name="book_server_kavita_key">To link OPDS z Kavita. Jego klucz loguje, więc hasło nie jest potrzebne.</string>

@@ -22,8 +22,21 @@ public final class EngineAnswers: Sendable {
         }
     }
 
+    /// Hand every event to `take` until `stop` is called with what this returns.
+    public func listen(_ take: @escaping @Sendable (Event) -> Void) -> UUID {
+        let id = UUID()
+        waiting.withLock { $0[id] = { event in take(event); return false } }
+        return id
+    }
+
+    /// Stop a listener `listen` started.
+    public func stop(_ id: UUID) {
+        _ = waiting.withLock { $0.removeValue(forKey: id) }
+    }
+
     /// Send what `send` sends, and wait for the first event `match` answers, for at most
-    /// `timeout`: `nil` when none came in time.
+    /// `timeout`: `nil` when none came in time, or the task asking was cancelled, as a background
+    /// task running out of time is.
     public func ask<Answer: Sendable>(
         timeout: Duration = .seconds(20),
         send: @Sendable () -> Void,
@@ -31,21 +44,31 @@ public final class EngineAnswers: Sendable {
     ) async -> Answer? {
         let id = UUID()
         let once = Once<Answer>()
-        return await withCheckedContinuation { continuation in
-            once.set(continuation)
-            waiting.withLock { waiters in
-                waiters[id] = { event in
-                    guard let answer = match(event) else { return false }
-                    once.resume(answer)
-                    return true
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                once.set(continuation)
+                // Cancelled before the continuation was there to resume.
+                if Task.isCancelled {
+                    once.resume(nil)
+                    return
+                }
+                waiting.withLock { waiters in
+                    waiters[id] = { event in
+                        guard let answer = match(event) else { return false }
+                        once.resume(answer)
+                        return true
+                    }
+                }
+                send()
+                Task { [weak self] in
+                    try? await Task.sleep(for: timeout)
+                    _ = self?.waiting.withLock { $0.removeValue(forKey: id) }
+                    once.resume(nil)
                 }
             }
-            send()
-            Task { [weak self] in
-                try? await Task.sleep(for: timeout)
-                _ = self?.waiting.withLock { $0.removeValue(forKey: id) }
-                once.resume(nil)
-            }
+        } onCancel: { [weak self] in
+            _ = self?.waiting.withLock { $0.removeValue(forKey: id) }
+            once.resume(nil)
         }
     }
 }
@@ -84,6 +107,35 @@ public struct EngineQuestions: Sendable {
             if case .newEpisodes(let said) = event { return said }
             return nil
         }
+    }
+
+    /// The chapters to notify of, from the paced check of the followed series
+    /// (`ReadingCommand::CheckUpdates`): `nil` when it did not finish within `timeout`. The
+    /// engine says Updates with `checking` while it runs and again once it is done, and the
+    /// chapters right after that; only while the person reads and New chapters is on, so with
+    /// either off this is empty, and at once when reading is off.
+    public func newChapters(timeout: Duration = .seconds(120), settle: Duration = .seconds(1)) async -> [NewChapter]? {
+        let found = Mutex<[NewChapter]>([])
+        let listener = answers.listen { event in
+            if case .reading(.newChapters(let chapters)) = event {
+                found.withLock { $0 += chapters }
+            }
+        }
+        defer { answers.stop(listener) }
+        let started = Mutex(false)
+        let ran = await answers.ask(timeout: timeout, send: { send(.reading(.checkUpdates)) }) { event -> Bool? in
+            guard case .reading(.updates(let view)) = event else { return nil }
+            if view.checking {
+                started.withLock { $0 = true }
+                return nil
+            }
+            // Done, or never started: reading is off.
+            return started.withLock { $0 }
+        }
+        guard let ran else { return nil }
+        // What it found is sent next, from the same place.
+        if ran { try? await Task.sleep(for: settle) }
+        return found.withLock { $0 }
     }
 
     /// The week's notifications (`UpcomingNotices`).

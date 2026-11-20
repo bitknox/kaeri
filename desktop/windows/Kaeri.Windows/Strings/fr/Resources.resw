@@ -8159,6 +8159,24 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>Liseuse à {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} vient de sortir.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>{count} nouveau chapitre</value>
+  </data>
+  <data name="NotifChaptersNew_many" xml:space="preserve">
+    <value>{count} nouveaux chapitres</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} nouveaux chapitres</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Nouveau chapitre</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Lire</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Saison précédente</value>
   </data>
@@ -9532,6 +9550,15 @@
   </data>
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Indique où en sont les personnes que vous suivez sur AniList dans une série, sur sa page et ses épisodes. Qui peut voir votre propre liste se règle sur AniList.</value>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Utiliser une manette</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Inverser A et B</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Manette</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adresse</value>

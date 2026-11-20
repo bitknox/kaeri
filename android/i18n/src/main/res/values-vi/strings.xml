@@ -808,12 +808,6 @@
     <string name="channel_chapters_description">Khi một bộ truyện trong danh sách Đang đọc của bạn có chương mới.</string>
     <string name="channel_downloads_finished_name">Tải xong</string>
     <string name="channel_downloads_finished_description">Khi các chương bạn yêu cầu tải đều đã xong.</string>
-    <string name="notif_chapter_new">%1$s đã ra mắt.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="other">%1$,d chương mới</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Chương mới</string>
-    <string name="notif_chapter_read">Đọc</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="other">Đang tải %1$,d chương</item>
     </plurals>
@@ -2984,6 +2978,12 @@
         <item quantity="other">%1$,d tệp</item>
     </plurals>
     <string name="opds_reader_unnamed">Máy đọc sách tại %1$s</string>
+    <string name="notif_chapter_new">%1$s đã ra mắt.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="other">%1$,d chương mới</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Chương mới</string>
+    <string name="notif_chapter_read">Đọc</string>
     <string name="seasonal_previous">Mùa trước</string>
     <string name="seasonal_next">Mùa sau</string>
     <string name="seasonal_loading">Đang tải mùa này</string>
@@ -3443,6 +3443,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Hình trong hình khi rời ứng dụng</string>
     <string name="settings_anilist_following">Hiện người bạn theo dõi</string>
     <string name="settings_anilist_following_footer">Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.</string>
+    <string name="settings_label_controller_input">Dùng tay cầm</string>
+    <string name="settings_label_swap_face_buttons">Đổi chỗ nút A và B</string>
+    <string name="settings_group_controller">Tay cầm</string>
     <string name="book_server_address">Địa chỉ</string>
     <string name="book_server_address_hint">Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.</string>
     <string name="book_server_kavita_key">Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.</string>

@@ -886,14 +886,6 @@
     <string name="channel_chapters_description">Cuando una serie de tu lista Leyendo tiene un capítulo nuevo.</string>
     <string name="channel_downloads_finished_name">Descargas terminadas</string>
     <string name="channel_downloads_finished_description">Cuando terminan de descargarse todos los capítulos que pediste.</string>
-    <string name="notif_chapter_new">Ya salió %1$s.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">Un capítulo nuevo</item>
-        <item quantity="many">%1$,d capítulos nuevos</item>
-        <item quantity="other">%1$,d capítulos nuevos</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Capítulo nuevo</string>
-    <string name="notif_chapter_read">Leer</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Descargando un capítulo</item>
         <item quantity="many">Descargando %1$,d capítulos</item>
@@ -3232,6 +3224,14 @@
         <item quantity="other">%1$,d archivos</item>
     </plurals>
     <string name="opds_reader_unnamed">Lector electrónico en %1$s</string>
+    <string name="notif_chapter_new">Ya salió %1$s.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Un capítulo nuevo</item>
+        <item quantity="many">%1$,d capítulos nuevos</item>
+        <item quantity="other">%1$,d capítulos nuevos</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Capítulo nuevo</string>
+    <string name="notif_chapter_read">Leer</string>
     <string name="seasonal_previous">Temporada anterior</string>
     <string name="seasonal_next">Próxima temporada</string>
     <string name="seasonal_loading">Cargando esta temporada</string>
@@ -3709,6 +3709,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Imagen en imagen al salir de la app</string>
     <string name="settings_anilist_following">Mostrar a quienes sigues</string>
     <string name="settings_anilist_following_footer">Muestra en qué parte de una serie van las personas que sigues en AniList, en su página y en sus episodios. Quién puede ver tu propia lista se configura en AniList.</string>
+    <string name="settings_label_controller_input">Usar un control</string>
+    <string name="settings_label_swap_face_buttons">Intercambiar A y B</string>
+    <string name="settings_group_controller">Control</string>
     <string name="book_server_address">Dirección</string>
     <string name="book_server_address_hint">Una dirección, o el enlace OPDS completo de Kavita.</string>
     <string name="book_server_kavita_key">Este es un enlace OPDS de Kavita. Su clave inicia tu sesión, así que no hace falta contraseña.</string>

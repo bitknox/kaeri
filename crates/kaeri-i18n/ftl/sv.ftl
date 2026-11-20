@@ -2175,15 +2175,6 @@ nagare-description = Nagare, maskoten för Kaeri: en figur med silkeslugg, bärn
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = Trailers spelas upp utan ljud från YouTube, som kan se din IP-adress. De spelas inte upp vid mätad anslutning, med animationer avstängda, i energisparläge eller med skärmläsare igång.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Använd en handkontroll
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = Byt plats på A och B
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Handkontroll
-
 # Settings row that names the controller in use.
 settings-controller-device = Handkontroll
 
@@ -10918,6 +10909,22 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = E-läsare på { $address }
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = { $chapter } är ute.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+        [one] Ett nytt kapitel
+       *[other] { $count } nya kapitel
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = Nytt kapitel
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = Läs
+
 # Button that shows the season before.
 seasonal-previous = Föregående säsong
 
@@ -12273,6 +12280,15 @@ settings-anilist-following = Visa personer du följer
 
 # Note under that switch.
 settings-anilist-following-footer = Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Använd en handkontroll
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = Byt plats på A och B
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Handkontroll
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Adress

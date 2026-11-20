@@ -2175,15 +2175,6 @@ nagare-description = Nagare, Kaeri maskotu: ipek gibi düz kesim saçlı, kehrib
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = Fragmanlar YouTube'dan sessiz oynatılır ve YouTube IP adresinizi görür. Ölçülü bağlantıda, animasyonlar kapalıyken, pil tasarrufu modundayken ya da ekran okuyucu çalışıyorken oynatılmaz.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Denetleyici kullan
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = A ve B'yi değiştir
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Denetleyici
-
 # Settings row that names the controller in use.
 settings-controller-device = Denetleyici
 
@@ -10918,6 +10909,22 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = { $address } adresindeki e-okuyucu
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = { $chapter } çıktı.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+        [one] Yeni bir bölüm
+       *[other] { $count } yeni bölüm
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = Yeni bölüm
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = Oku
+
 # Button that shows the season before.
 seasonal-previous = Önceki sezon
 
@@ -12273,6 +12280,15 @@ settings-anilist-following = Takip ettiklerini göster
 
 # Note under that switch.
 settings-anilist-following-footer = AniList'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList'te ayarlanır.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Denetleyici kullan
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = A ve B'yi değiştir
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Denetleyici
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Adres

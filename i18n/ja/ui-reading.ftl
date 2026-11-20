@@ -460,3 +460,9 @@ opds-fetched-files = { $n ->
    *[other] { $n }件のファイル
  }
 opds-reader-unnamed = { $address }の電子書籍リーダー
+notif-chapter-new = { $chapter }が公開されました。
+notif-chapters-new = { $count ->
+   *[other] 新しい章が{ $count }話あります
+ }
+notif-chapter-hidden = 新しい章
+notif-chapter-read = 読む

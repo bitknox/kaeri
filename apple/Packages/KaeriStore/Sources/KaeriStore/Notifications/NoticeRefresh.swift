@@ -1,7 +1,7 @@
 // The background refresh: what the app does when the system gives it a moment, iOS's app refresh
 // task or the Mac's background activity. Say what aired that no notification said, schedule the
-// week, and write the widgets' record, from the engine the app has or one started for the task;
-// with nothing notifying and a widget placed, only the widgets' record.
+// week, write the widgets' record and check for new chapters, from the engine the app has or one
+// started for the task; with nothing notifying and a widget placed, only the widgets' record.
 
 import KaeriKit
 import Foundation
@@ -17,18 +17,32 @@ public struct NoticeRefresh: Sendable {
     /// Whether anything notifies: false when the refresh runs for the widgets alone, and then it
     /// only writes their record, asking nothing of the check or the week and posting nothing.
     public let notifying: Bool
+    /// What it does about new chapters, last, since the check asks every followed series' source.
+    public let chapters: Chapters
+
+    /// What a refresh does about new chapters.
+    public enum Chapters: Sendable, Equatable {
+        /// Nothing: New chapters is off.
+        case skip
+        /// Runs the check and leaves what it finds to the store, which posts the chapters as the
+        /// engine says them: on the store's engine.
+        case check
+        /// Runs the check and posts what it finds: on an engine of its own.
+        case checkAndPost
+    }
 
     /// Writes the widgets' record it is handed.
     public typealias WidgetWriter = @MainActor @Sendable (WidgetData) async throws -> Void
 
     public init(
         questions: EngineQuestions, scheduler: NoticeScheduler?, widgets: WidgetWriter?,
-        notifying: Bool = true
+        notifying: Bool = true, chapters: Chapters = .skip
     ) {
         self.questions = questions
         self.scheduler = scheduler
         self.widgets = widgets
         self.notifying = notifying
+        self.chapters = notifying ? chapters : .skip
     }
 
     /// What a refresh did.
@@ -39,13 +53,17 @@ public struct NoticeRefresh: Sendable {
         public var scheduled: [PlannedNotice] = []
         /// Whether the widgets' record was written.
         public var wroteWidgets = false
+        /// What the check for new chapters found, `nil` when it did not run or finish.
+        public var chapters: [NewChapter]?
+        /// The new-chapter notifications posted.
+        public var postedChapters: [ChapterNotice] = []
         /// Whether it ran to the end, rather than being stopped.
         public var finished = false
     }
 
-    /// Check for new episodes, then the week, then the widgets' record, each in turn so a task
-    /// stopped part-way has done the most useful part first. With nothing notifying, the
-    /// widgets' record alone.
+    /// Check for new episodes, then the week, then the widgets' record, then new chapters, each
+    /// in turn so a task stopped part-way has done the most useful part first. With nothing
+    /// notifying, the widgets' record alone.
     public func run() async -> Outcome {
         var outcome = Outcome()
         if notifying {
@@ -67,6 +85,12 @@ public struct NoticeRefresh: Sendable {
                 outcome.wroteWidgets = true
             } catch {
                 AppLog.error("notices", "could not write the widgets' record: \(error.localizedDescription)")
+            }
+        }
+        if chapters != .skip, !Task.isCancelled {
+            outcome.chapters = await questions.newChapters()
+            if chapters == .checkAndPost, let found = outcome.chapters, let scheduler, !Task.isCancelled {
+                outcome.postedChapters = await scheduler.post(chapters: found)
             }
         }
         outcome.finished = !Task.isCancelled

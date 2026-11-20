@@ -232,3 +232,6 @@ settings-label-picture-in-picture-on-leave = Gambar dalam gambar saat keluar dar
 
 settings-anilist-following = Tampilkan orang yang diikuti
 settings-anilist-following-footer = Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.
+settings-label-controller-input = Gunakan pengontrol
+settings-label-swap-face-buttons = Tukar A dan B
+settings-group-controller = Pengontrol

@@ -538,3 +538,12 @@ opds-fetched-files = { $n ->
    *[other] { $n } файла
  }
 opds-reader-unnamed = Ридер по адресу { $address }
+notif-chapter-new = Вышло: { $chapter }.
+notif-chapters-new = { $count ->
+    [one] { $count } новая глава
+    [few] { $count } новые главы
+    [many] { $count } новых глав
+   *[other] { $count } новой главы
+ }
+notif-chapter-hidden = Новая глава
+notif-chapter-read = Читать

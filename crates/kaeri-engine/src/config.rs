@@ -446,6 +446,51 @@ mod tests {
     }
 
     #[test]
+    fn skip_recaps_and_the_tracker_rules_travel_and_the_notification_switches_stay() {
+        let dir = tempfile::tempdir().unwrap();
+        let (mut config, store, paths) = with_sync(dir.path());
+        let (on, close) = (SettingValue::Bool(true), SettingValue::Str("close".into()));
+        config.write(&paths, &["playback"], "skip_recap_auto", on.clone()).unwrap();
+        config.write(&paths, &["reading"], "send_progress_after", close.clone()).unwrap();
+        let latest = SettingValue::Str("latest".into());
+        config.write(&paths, &["reading"], "when_trackers_disagree", latest.clone()).unwrap();
+        for key in ["episodes", "chapters", "downloads"] {
+            config.write(&paths, &["notifications"], key, on.clone()).unwrap();
+        }
+        let regs = store.sync_regs("setting").unwrap();
+        let said: Vec<_> = regs
+            .iter()
+            .map(|(id, value)| (id.as_str(), kaeri_core::shared_settings::decode(value)))
+            .collect();
+        assert_eq!(
+            said,
+            [
+                ("playback.skip_recap_auto", Some(on)),
+                ("reading.send_progress_after", Some(close)),
+                ("reading.when_trackers_disagree", Some(latest)),
+            ],
+            "the notification switches stay on this device"
+        );
+    }
+
+    #[test]
+    fn received_tracker_rules_are_put_in_effect() {
+        let dir = tempfile::tempdir().unwrap();
+        let (mut config, _store, paths) = with_sync(dir.path());
+        let latest = SettingValue::Str("latest".into());
+        config.write_received(&paths, &["reading"], "when_trackers_disagree", latest).unwrap();
+        let close = SettingValue::Str("close".into());
+        config.write_received(&paths, &["reading"], "send_progress_after", close).unwrap();
+        config.adopt_shared();
+        let reading = &config.effective().reading;
+        assert_eq!(
+            reading.when_trackers_disagree,
+            kaeri_core::config::WhenTrackersDisagree::Latest
+        );
+        assert_eq!(reading.send_progress_after, kaeri_core::config::SendProgressAfter::Close);
+    }
+
+    #[test]
     fn the_source_order_and_a_source_switched_off_are_announced() {
         let dir = tempfile::tempdir().unwrap();
         let (mut config, store, paths) = with_sync(dir.path());

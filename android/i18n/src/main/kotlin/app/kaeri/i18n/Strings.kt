@@ -3525,22 +3525,6 @@ object Strings {
     fun channelDownloadsFinishedDescription(context: Context): String =
         context.getString(R.string.channel_downloads_finished_description)
 
-    /** Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". */
-    fun notifChapterNew(context: Context, chapter: String): String =
-        context.getString(R.string.notif_chapter_new, chapter)
-
-    /** Notification, new chapters: the line under the series' title when one series has several. */
-    fun notifChaptersNew(context: Context, count: Int): String =
-        context.resources.getQuantityString(R.plurals.notif_chapters_new, count, count)
-
-    /** Notification, new chapter: what the lock screen shows when previews are hidden. */
-    fun notifChapterHidden(context: Context): String =
-        context.getString(R.string.notif_chapter_hidden)
-
-    /** Notification, new chapter: the action that opens the reader on the chapter. */
-    fun notifChapterRead(context: Context): String =
-        context.getString(R.string.notif_chapter_read)
-
     /** The download notification while only chapters download. */
     fun downloadsNoticeChapters(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.downloads_notice_chapters, count, count)
@@ -12168,6 +12152,22 @@ object Strings {
     fun opdsReaderUnnamed(context: Context, address: String): String =
         context.getString(R.string.opds_reader_unnamed, address)
 
+    /** Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". */
+    fun notifChapterNew(context: Context, chapter: String): String =
+        context.getString(R.string.notif_chapter_new, chapter)
+
+    /** Notification, new chapters: the line under the series' title when one series has several. */
+    fun notifChaptersNew(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.notif_chapters_new, count, count)
+
+    /** Notification, new chapter: what the lock screen shows when previews are hidden. */
+    fun notifChapterHidden(context: Context): String =
+        context.getString(R.string.notif_chapter_hidden)
+
+    /** Notification, new chapter: the action that opens the reader on the chapter. */
+    fun notifChapterRead(context: Context): String =
+        context.getString(R.string.notif_chapter_read)
+
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
         context.getString(R.string.seasonal_previous)
@@ -13943,6 +13943,18 @@ object Strings {
     /** Note under that switch. */
     fun settingsAnilistFollowingFooter(context: Context): String =
         context.getString(R.string.settings_anilist_following_footer)
+
+    /** Settings row: whether a connected game controller drives the app. */
+    fun settingsLabelControllerInput(context: Context): String =
+        context.getString(R.string.settings_label_controller_input)
+
+    /** Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are. */
+    fun settingsLabelSwapFaceButtons(context: Context): String =
+        context.getString(R.string.settings_label_swap_face_buttons)
+
+    /** Heading of the Settings group for game controllers. */
+    fun settingsGroupController(context: Context): String =
+        context.getString(R.string.settings_group_controller)
 
     /** Label of the address field in the Add a server sheet. */
     fun bookServerAddress(context: Context): String =

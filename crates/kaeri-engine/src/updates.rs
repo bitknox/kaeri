@@ -509,26 +509,66 @@ fn now() -> i64 {
         .map_or(0, |d| d.as_secs() as i64)
 }
 
-/// The daily check. Fire-and-forget from startup; a failure is silence, never a toast —
-/// an update notice that cries wolf on every flaky network would be turned off in a week.
+/// The daily check as the Check for updates setting has it: run at launch when the setting is
+/// on, run again the moment it is turned on, and a check still under way stopped the moment it is
+/// turned off. A failure is silence, never a toast: an update notice that cries wolf on every
+/// flaky network would be turned off in a week.
 ///
-/// `terminal` is whether the front end is the terminal app, the only one told of a release
-/// with a toast: its words say to run `kaeri --update`, which an app has no use for.
-pub fn spawn_check(
-    enabled: bool,
-    beta: bool,
-    terminal: bool,
-    cache_dir: &Path,
-    http: &HttpClient,
-    tx: &Outbox,
-) {
-    if !enabled {
-        return;
+/// `allowed` is the engine's [`Background::update_check`](crate::options::Background::update_check): an engine
+/// started for a widget, a background task or a test never checks, whatever the setting says.
+#[derive(Debug, Default)]
+pub struct Daily {
+    allowed: bool,
+    running: Option<tokio::task::AbortHandle>,
+}
+
+impl Daily {
+    /// The check for an engine that may run it (`allowed`) or never does.
+    pub fn new(allowed: bool) -> Self {
+        Self { allowed, running: None }
     }
-    let (files, http, tx) = (Files::in_dir(cache_dir), http.clone(), tx.clone());
-    tokio::spawn(async move {
-        daily(&http, API, CURRENT, beta, &files, now(), terminal, &tx).await
-    });
+
+    /// Follow the setting: `on` checks now, from the day's kept answer when there is one, and
+    /// off stops a check still under way, so it neither writes nor says anything.
+    ///
+    /// `terminal` is whether the front end is the terminal app, the only one told of a release
+    /// with a toast: its words say to run `kaeri --update`, which an app has no use for.
+    pub fn follow(
+        &mut self,
+        on: bool,
+        beta: bool,
+        terminal: bool,
+        cache_dir: &Path,
+        http: &HttpClient,
+        tx: &Outbox,
+    ) {
+        self.follow_at(API, on, beta, terminal, cache_dir, http, tx);
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn follow_at(
+        &mut self,
+        api: &str,
+        on: bool,
+        beta: bool,
+        terminal: bool,
+        cache_dir: &Path,
+        http: &HttpClient,
+        tx: &Outbox,
+    ) {
+        if let Some(running) = self.running.take() {
+            running.abort();
+        }
+        if !(on && self.allowed) {
+            return;
+        }
+        let (files, http, tx) = (Files::in_dir(cache_dir), http.clone(), tx.clone());
+        let api = api.to_owned();
+        let task = tokio::spawn(async move {
+            daily(&http, &api, CURRENT, beta, &files, now(), terminal, &tx).await
+        });
+        self.running = Some(task.abort_handle());
+    }
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -615,6 +655,22 @@ async fn asked(
         Err(reason) => UpdateStatus::Failed { reason },
     };
     let _ = tx.send(Event::Update(status));
+}
+
+/// Keep an answer from now that says this build is the newest, as a check earlier in the day
+/// would have: for an engine test, which reaches no network.
+#[cfg(test)]
+pub(crate) fn keep_answer_for_test(cache_dir: &Path) {
+    std::fs::create_dir_all(cache_dir).unwrap();
+    let answer = Answer {
+        checked_at: now(),
+        asked_by: CURRENT.to_owned(),
+        beta: false,
+        running_beta: false,
+        latest: json!({ "tag_name": format!("v{CURRENT}") }),
+        checksums: BTreeMap::new(),
+    };
+    answer.write(&Files::in_dir(cache_dir).answer);
 }
 
 #[cfg(test)]
@@ -1180,7 +1236,10 @@ mod tests {
         let run = Run::new().await;
         run.github.release("v0.10.3", false);
         let (tx, mut rx) = mpsc::unbounded_channel();
-        spawn_check(false, false, true, run.dir.path(), &run.http, &Outbox::from(tx));
+        let mut daily = Daily::new(true);
+        let (api, dir) = (&run.github.base, run.dir.path());
+        daily.follow_at(api, false, false, true, dir, &run.http, &Outbox::from(tx));
+        assert!(daily.running.is_none());
         tokio::task::yield_now().await;
         assert!(drain(&mut rx).is_empty());
         assert_eq!(run.github.hits.lock().unwrap().len(), 0);
@@ -1287,5 +1346,74 @@ mod tests {
         run.github.releases(&[("v0.13.4", false), ("v0.13.1", false)]);
         let status_now = status(&run.asked("0.13.4", NOW + 60).await[1..]).0;
         assert_eq!(status_now, Some(up_to_date()));
+    }
+
+    /// A stand-in for GitHub that takes the daily check's request and holds it until the test
+    /// answers, with a release older than any build.
+    async fn held_check(off_while_waiting: bool) -> (Vec<Event>, bool) {
+        let dir = tempfile::tempdir().unwrap();
+        let listener = TcpListener::bind((Ipv4Addr::LOCALHOST, 0)).await.unwrap();
+        let base = format!("http://{}", listener.local_addr().unwrap());
+        let http =
+            HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..NetworkConfig::default() })
+                .unwrap();
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        let tx = Outbox::from(tx);
+        let mut daily = Daily::new(true);
+        daily.follow_at(&base, true, false, true, dir.path(), &http, &tx);
+        let (mut held, _) = listener.accept().await.unwrap();
+        let mut buf = vec![0; 8192];
+        let _ = held.read(&mut buf).await;
+        if off_while_waiting {
+            daily.follow_at(&base, false, false, true, dir.path(), &http, &tx);
+        }
+        let body = r#"{"tag_name": "v0.0.1"}"#;
+        let reply = format!(
+            "HTTP/1.1 200 OK\r\ncontent-length: {}\r\nconnection: close\r\n\r\n{body}",
+            body.len()
+        );
+        let _ = held.write_all(reply.as_bytes()).await;
+        let mut events = Vec::new();
+        if off_while_waiting {
+            // Time for a check left running to read the answer and say it, as the case above
+            // waits for.
+            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+        } else {
+            let said =
+                tokio::time::timeout(std::time::Duration::from_secs(10), rx.recv()).await;
+            events.extend(said.ok().flatten());
+        }
+        events.extend(drain(&mut rx));
+        (events, Files::in_dir(dir.path()).answer.exists())
+    }
+
+    #[tokio::test]
+    async fn turning_the_check_off_stops_one_under_way() {
+        let (events, kept) = held_check(false).await;
+        let said = status(&events).0;
+        assert!(matches!(said, Some(UpdateStatus::UpToDate { .. })), "left on: {said:?}");
+        assert!(kept);
+
+        let (events, kept) = held_check(true).await;
+        assert!(events.is_empty(), "turned off, it says nothing: {events:?}");
+        assert!(!kept, "and keeps no answer");
+    }
+
+    #[tokio::test]
+    async fn an_engine_that_may_not_check_never_does_whatever_the_setting() {
+        let dir = tempfile::tempdir().unwrap();
+        let http = HttpClient::offline(&NetworkConfig::default()).unwrap();
+        let (tx, _rx) = mpsc::unbounded_channel();
+        let mut daily = Daily::new(false);
+        daily.follow_at(
+            "http://192.0.2.1",
+            true,
+            false,
+            true,
+            dir.path(),
+            &http,
+            &Outbox::from(tx),
+        );
+        assert!(daily.running.is_none());
     }
 }

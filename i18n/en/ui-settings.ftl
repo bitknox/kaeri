@@ -769,3 +769,15 @@ settings-anilist-following = Show people you follow
 
 # Note under that switch.
 settings-anilist-following-footer = Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.
+
+# Settings row: whether a connected game controller drives the app.
+# @max 30
+settings-label-controller-input = Use a controller
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+# @max 30
+settings-label-swap-face-buttons = Swap A and B
+
+# Heading of the Settings group for game controllers.
+# @max 24
+settings-group-controller = Controller

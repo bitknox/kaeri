@@ -10978,6 +10978,22 @@ public enum L {
         Self.format("opds-reader-unnamed", fallback: "E-reader at %1$@", address)
     }
 
+    /// Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+    public static func notifChapterNew(chapter: String) -> String {
+        Self.format("notif-chapter-new", fallback: "%1$@ is new.", chapter)
+    }
+
+    /// Notification, new chapters: the line under the series' title when one series has several.
+    public static func notifChaptersNew(count: Int) -> String {
+        Self.format("notif-chapters-new", fallback: "%1$lld new chapters", count)
+    }
+
+    /// Notification, new chapter: what the lock screen shows when previews are hidden.
+    public static var notifChapterHidden: String { string("notif-chapter-hidden", fallback: "New chapter") }
+
+    /// Notification, new chapter: the action that opens the reader on the chapter.
+    public static var notifChapterRead: String { string("notif-chapter-read", fallback: "Read") }
+
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }
 
@@ -12443,6 +12459,15 @@ public enum L {
 
     /// Note under that switch.
     public static var settingsAnilistFollowingFooter: String { string("settings-anilist-following-footer", fallback: "Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.") }
+
+    /// Settings row: whether a connected game controller drives the app.
+    public static var settingsLabelControllerInput: String { string("settings-label-controller-input", fallback: "Use a controller") }
+
+    /// Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+    public static var settingsLabelSwapFaceButtons: String { string("settings-label-swap-face-buttons", fallback: "Swap A and B") }
+
+    /// Heading of the Settings group for game controllers.
+    public static var settingsGroupController: String { string("settings-group-controller", fallback: "Controller") }
 
     /// Label of the address field in the Add a server sheet.
     public static var bookServerAddress: String { string("book-server-address", fallback: "Address") }

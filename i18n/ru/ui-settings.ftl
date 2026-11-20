@@ -238,3 +238,6 @@ settings-label-picture-in-picture-on-leave = «Картинка в картин�
 
 settings-anilist-following = Показывать тех, на кого вы подписаны
 settings-anilist-following-footer = Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.
+settings-label-controller-input = Использовать контроллер
+settings-label-swap-face-buttons = Поменять местами A и B
+settings-group-controller = Контроллер

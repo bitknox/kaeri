@@ -847,13 +847,6 @@
     <string name="channel_chapters_description">Okunan listenizdeki bir serinin yeni bölümü çıktığında.</string>
     <string name="channel_downloads_finished_name">Tamamlanan indirmeler</string>
     <string name="channel_downloads_finished_description">İndirmek istediğiniz bölümlerin hepsi bittiğinde.</string>
-    <string name="notif_chapter_new">%1$s çıktı.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">Yeni bir bölüm</item>
-        <item quantity="other">%1$,d yeni bölüm</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Yeni bölüm</string>
-    <string name="notif_chapter_read">Oku</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Bir bölüm indiriliyor</item>
         <item quantity="other">%1$,d bölüm indiriliyor</item>
@@ -3108,6 +3101,13 @@
         <item quantity="other">%1$,d dosya</item>
     </plurals>
     <string name="opds_reader_unnamed">%1$s adresindeki e-okuyucu</string>
+    <string name="notif_chapter_new">%1$s çıktı.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">Yeni bir bölüm</item>
+        <item quantity="other">%1$,d yeni bölüm</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Yeni bölüm</string>
+    <string name="notif_chapter_read">Oku</string>
     <string name="seasonal_previous">Önceki sezon</string>
     <string name="seasonal_next">Sonraki sezon</string>
     <string name="seasonal_loading">Bu sezon yükleniyor</string>
@@ -3576,6 +3576,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Uygulamadan çıkarken pencere içinde pencere</string>
     <string name="settings_anilist_following">Takip ettiklerini göster</string>
     <string name="settings_anilist_following_footer">AniList\'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList\'te ayarlanır.</string>
+    <string name="settings_label_controller_input">Denetleyici kullan</string>
+    <string name="settings_label_swap_face_buttons">A ve B\'yi değiştir</string>
+    <string name="settings_group_controller">Denetleyici</string>
     <string name="book_server_address">Adres</string>
     <string name="book_server_address_hint">Bir adres veya Kavita’daki OPDS bağlantısının tamamı.</string>
     <string name="book_server_kavita_key">Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.</string>
