@@ -345,13 +345,15 @@ public sealed partial class SettingsPage
         }
         Cards.Children.Add(CardFrame(T.OpdsPassword, T.OpdsPasswordNote, passwordRow));
 
-        // The port: empty picks a free one.
+        // The port: empty picks a free one. The row's words read "automatic" then, so the box
+        // starts from the typed text, which is the digits or nothing.
+        string SavedPort() => SettingsCatalog.TypedText(ctx.Known.Setting(K.OpdsPort)) ?? "";
         var portBox = new TextBox
         {
             Name = "FeedPort",
             Width = 96,
             PlaceholderText = "8484",
-            Text = portTyped ?? ctx.Known.Setting(K.OpdsPort)?.Value ?? "",
+            Text = portTyped ?? SavedPort(),
             InputScope = new InputScope { Names = { new InputScopeName(InputScopeNameValue.Number) } },
             MaxLength = 5,
         };
@@ -364,7 +366,7 @@ public sealed partial class SettingsPage
             portTyped = null;
             if (portBox.Text != kept)
                 portBox.Text = kept;
-            if (kept != (ctx.Known.Setting(K.OpdsPort)?.Value ?? ""))
+            if (kept != SavedPort())
                 ctx.Send(new Command.SetSetting(K.OpdsPort, new SettingValue.Str(kept)));
         }
         portBox.LostFocus += (_, _) => SavePort();
