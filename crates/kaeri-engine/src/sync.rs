@@ -102,6 +102,9 @@ pub fn apply_effects(
         return;
     }
     engine.config.adopt_shared();
+    // When trackers disagree travels with the account: pulls from here on settle by it, as a
+    // change made on this device does.
+    services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
     let _ = tx.send(Event::Settings(engine.config.view()));
     let _ = tx.internal(Internal::SettingsSaved);
     if sources_changed {
