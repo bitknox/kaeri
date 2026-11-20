@@ -187,8 +187,10 @@ public sealed partial class MainWindow
         if (ctx.Known.Medium.Asking is not { } ask || ask is MediumAsk.FirstRun || askingMedium || welcoming is not null)
             return;
 #if KAERI_TESTING
-        // A cast scene's shots show the cast, not the question.
-        if (options.Show?.StartsWith("cast-", StringComparison.Ordinal) == true)
+        // A cast or sync scene's shots show the cast or the sync dialog, not the question, which
+        // would take WinUI's one dialog first.
+        if (options.Show is { } show && (show.StartsWith("cast-", StringComparison.Ordinal)
+            || show.StartsWith("sync-", StringComparison.Ordinal) || show.StartsWith("startover-", StringComparison.Ordinal)))
             return;
 #endif
         askingMedium = true;

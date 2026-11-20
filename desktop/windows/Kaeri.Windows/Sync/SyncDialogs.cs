@@ -160,15 +160,20 @@ static partial class SyncDialogs
     sealed class Title
     {
         public readonly Grid View = new();
+        readonly string style;
 
-        public Title(string text) => Set(text);
+        public Title(string text, string style = "SubtitleTextBlockStyle")
+        {
+            this.style = style;
+            Set(text);
+        }
 
         public void Set(string text)
         {
             var now = View.Children.OfType<TextBlock>().FirstOrDefault(t => t.Text == text);
             if (now is null)
             {
-                now = new TextBlock { Text = text, Style = Ui.Res<Style>("SubtitleTextBlockStyle"), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
+                now = new TextBlock { Text = text, Style = Ui.Res<Style>(style), TextWrapping = TextWrapping.Wrap, Visibility = Visibility.Collapsed };
                 View.Children.Add(now);
             }
             Steps.Swap(View, now);
@@ -340,6 +345,7 @@ static partial class SyncDialogs
     /// <summary>Set a folder up: the first one turns sync on, and Use another service moves the group.</summary>
     static void Begin(SyncFolderSpec folder)
     {
+        lastSpec = folder;
         if (changing)
             Ctx.Send(new Command.SyncGroup(new SyncCommand.ChangeSyncFolder(folder)));
         else
@@ -795,9 +801,24 @@ static partial class SyncDialogs
     /// The recovery key's content, into <paramref name="body"/>: its line, the key in groups of
     /// four, Copy, Save and the QR code, and the note on how to see it again.
     /// </summary>
-    static void FillKey(StackPanel body, string key)
+    static void FillKey(StackPanel body, string key, SyncFolderKind? startedOver = null)
     {
         body.Children.Clear();
+        // After a start over, first what happened: a water dot, then the line in silk.
+        if (startedOver is { } service)
+        {
+            var started = new Grid { ColumnSpacing = 8 };
+            started.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            started.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            var dot = Ui.Dot(Colours.Water);
+            dot.VerticalAlignment = VerticalAlignment.Top;
+            dot.Margin = new Thickness(0, 7, 0, 0);
+            started.Children.Add(dot);
+            var said = Ui.Text(T.RkeyStartedOver(SyncWords.ServiceName(service)), "BodyTextBlockStyle");
+            Grid.SetColumn(said, 1);
+            started.Children.Add(said);
+            body.Children.Add(started);
+        }
         body.Children.Add(Ui.Text(T.RkeyLine, "HazeBodyStyle"));
         var groups = SyncWords.KeyGroups(key);
         var grid = new StackPanel { Spacing = 6 };
@@ -858,7 +879,7 @@ static partial class SyncDialogs
     }
 
     /// <summary>The recovery key on its own, when it is seen again from Devices. The first time, it shows in the picker's dialog.</summary>
-    public static void KeyDialog()
+    public static void KeyDialog(SyncFolderKind? startedOver = null)
     {
         if (Ctx.Known.RecoveryKey is not { } key)
             return;
@@ -868,7 +889,7 @@ static partial class SyncDialogs
             Dialogs.Close(before);
         }
         var body = new StackPanel { Spacing = 16 };
-        FillKey(body, key);
+        FillKey(body, key, startedOver);
         var dialog = Dialog(T.RkeyTitle, body, 432);
         dialog.PrimaryButtonText = T.ActionDone;
         // Escape is Done: the key has been on screen, and Devices shows it again behind the lock.
@@ -888,47 +909,407 @@ static partial class SyncDialogs
     /// <summary>Make a new recovery key, after Windows Hello where it is set up.</summary>
     public static void MakeNewKey() => HelloLock.Ask(() => Ctx.Send(new Command.NewRecoveryKey()));
 
-    sealed record RestoreParts(ContentDialog Dialog, TextBlock Error);
+    /// <summary>
+    /// The restore dialog. WinUI shows one ContentDialog at a time, so every step of it is a page of
+    /// the one dialog: the key field, the start-over confirmation in its place, the work, a
+    /// failure and the new recovery key, each a crossfade with its title and its buttons.
+    /// </summary>
+    sealed class RestoreParts
+    {
+        public required ContentDialog Dialog;
+        public required Steps Pages;
+        public required Title Title, WorkLine;
+        public required TextBlock Error, FailLine;
+        public required TextBox Entry;
+        public required StackPanel KeySlot;
+        public required SyncFolderKind Service;
+        /// <summary>A join was sent from it, so the group it makes closes it.</summary>
+        public bool Joining;
+        /// <summary>The dialog is being closed by the code, not by the person.</summary>
+        public bool Done;
+        /// <summary>When Delete and start over or Try again was pressed, and when a work step went on screen.</summary>
+        public DateTime? Pressed, Shown;
+        public CancellationTokenSource? Pending;
+    }
 
     static RestoreParts? restore;
 
-    /// <summary>Restore: a folder that holds history asks for its recovery key.</summary>
-    public static void Restore(SyncFolderKind service)
+    /// <summary>The start over sent last; it outlives a dialog closed while it runs.</summary>
+    static StartOver? startOver;
+
+    /// <summary>The folder last set up, as it was typed, which the restore dialog joins or starts over.</summary>
+    static SyncFolderSpec? lastSpec;
+
+    static SyncFolderSpec RestoreSpec(SyncFolderKind service) =>
+        lastSpec is { } spec && spec.Kind == service ? spec : new SyncFolderSpec(service);
+
+    /// <summary>Restore: a folder that holds history asks for its recovery key, or starts over without it.</summary>
+    public static void Restore(SyncFolderKind service) => PresentRestore(service, null);
+
+    /// <summary>Enter new key, on a PC whose group another device started over: the same restore dialog.</summary>
+    public static void EnterNewKey(SyncFolderKind service)
     {
-        restore?.Dialog.Hide();
-        var count = Ctx.Known.SyncGroup is { } s ? Math.Max(1, s.Devices.Length) : 0;
-        var body = new StackPanel { Spacing = 12 };
-        body.Children.Add(Ui.Text(T.RkeyEnterLine(SyncWords.ServiceName(service), Math.Max(2, count)), "HazeBodyStyle"));
+        Ctx.Known.SyncTrouble = null;
+        Restore(service);
+    }
+
+    /// <summary>The restore dialog, on its key field or, with <paramref name="resume"/>, where that start over stands.</summary>
+    static RestoreParts PresentRestore(SyncFolderKind service, StartOver? resume)
+    {
+        if (restore is { } before)
+        {
+            before.Done = true;
+            before.Dialog.Hide();
+            restore = null;
+        }
+        var name = SyncWords.ServiceName(service);
+        var pages = new Steps();
+
+        // The key field, and below it the way out for a key that is lost.
+        var entering = new StackPanel { Spacing = 12 };
+        entering.Children.Add(Ui.Text(T.RkeyEnterLine(name, SyncWords.RestoreCount(Ctx.Known.SyncGroup)), "HazeBodyStyle"));
         var entry = Field(T.RkeyFieldLabel);
         // The key is set in mono; the label above it keeps the dialog's own type.
         entry.Header = new TextBlock { Text = T.RkeyFieldLabel, FontFamily = (FontFamily)Application.Current.Resources["ContentControlThemeFontFamily"] };
         AutomationProperties.SetName(entry, T.RkeyFieldLabel);
         entry.FontFamily = new FontFamily("Cascadia Mono, Consolas");
-        body.Children.Add(entry);
-        body.Children.Add(Note(T.RkeyEnterNote));
+        entering.Children.Add(entry);
+        entering.Children.Add(Note(T.RkeyEnterNote));
         var error = ErrorLine();
-        body.Children.Add(error);
-        var dialog = Dialog(T.RkeyEnterTitle, body);
-        dialog.PrimaryButtonText = T.RkeyRestore;
+        entering.Children.Add(error);
+        // A subtle button, never the accent: Restore keeps the dialog's one amber. The ellipsis
+        // says it asks first. Its words line up with the note's.
+        var startOverButton = new Button
+        {
+            Content = T.RkeyStartOver + "…", // i18n-skip
+            Style = Ui.Res<Style>("SubtleButtonStyle"),
+            Margin = new Thickness(-11, -4, 0, 0),
+        };
+        AutomationProperties.SetName(startOverButton, T.RkeyStartOver);
+        entering.Children.Add(startOverButton);
+        pages.Add("enter", entering);
+
+        // The confirmation, in the key field's place.
+        var confirming = new StackPanel { Spacing = 12 };
+        confirming.Children.Add(Ui.Text(T.RkeyStartOverLine(name, SyncWords.Kind), "BodyTextBlockStyle"));
+        pages.Add("confirm", confirming);
+
+        // The work: the ring beside the step's line, which crossfades with the title, and the
+        // note that Close leaves it running.
+        var working = new StackPanel { Spacing = 12 };
+        var workRow = new Grid { ColumnSpacing = 12 };
+        workRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        workRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        workRow.Children.Add(new ProgressRing { IsActive = true, Width = 20, Height = 20, VerticalAlignment = VerticalAlignment.Top });
+        var workLine = new Title(T.RkeyClearingLine(name), "HazeBodyStyle");
+        Grid.SetColumn(workLine.View, 1);
+        workRow.Children.Add(workLine.View);
+        working.Children.Add(workRow);
+        working.Children.Add(Note(T.CloudCloseCarriesOn));
+        pages.Add("work", working);
+
+        // A failure: why, beside the warning glyph, and that nothing on this PC changed.
+        var failed = new StackPanel { Spacing = 12 };
+        var failRow = new Grid { ColumnSpacing = 8 };
+        failRow.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        failRow.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        failRow.Children.Add(new FontIcon
+        {
+            Glyph = "",
+            FontSize = 16,
+            Foreground = new SolidColorBrush(Ui.Vermilion),
+            VerticalAlignment = VerticalAlignment.Top,
+            Margin = new Thickness(0, 2, 0, 0),
+        });
+        var failLine = Ui.Text("", "BodyTextBlockStyle");
+        Grid.SetColumn(failLine, 1);
+        failRow.Children.Add(failLine);
+        failed.Children.Add(failRow);
+        failed.Children.Add(Ui.Text(T.RkeyStartOverErrKept(SyncWords.Kind), "HazeBodyStyle"));
+        pages.Add("error", failed);
+
+        // The new recovery key, with what happened as its first line.
+        var keySlot = new StackPanel { Spacing = 16 };
+        pages.Add("key", keySlot);
+
+        var title = new Title(T.RkeyEnterTitle);
+        var dialog = Dialog(title.View, pages.View);
         dialog.CloseButtonText = T.ActionCancel;
-        dialog.IsPrimaryButtonEnabled = false;
-        entry.TextChanged += (_, _) => dialog.IsPrimaryButtonEnabled = SyncWords.KeyReady(entry.Text);
+        var parts = new RestoreParts
+        {
+            Dialog = dialog,
+            Pages = pages,
+            Title = title,
+            WorkLine = workLine,
+            Error = error,
+            FailLine = failLine,
+            Entry = entry,
+            KeySlot = keySlot,
+            Service = service,
+        };
+        entry.TextChanged += (_, _) =>
+        {
+            if (pages.Showing == "enter")
+                dialog.IsPrimaryButtonEnabled = SyncWords.KeyReady(entry.Text);
+        };
+        startOverButton.Click += (_, _) => AskStartOver(parts);
         dialog.PrimaryButtonClick += (_, e) =>
         {
-            // Open until the engine answers: a wrong key says so here.
-            e.Cancel = true;
-            SayError(error, null);
-            Ctx.Known.SyncTrouble = null;
-            Ctx.Send(new Command.JoinSync(TypedName, new SyncFolderSpec(service), entry.Text));
+            switch (pages.Showing)
+            {
+                case "key":
+                    // Done closes the dialog; the key is not offered again by itself.
+                    Ctx.Known.RecoveryKey = null;
+                    startOver = null;
+                    parts.Done = true;
+                    return;
+                case "enter":
+                    // Open until the engine answers: a wrong key says so here.
+                    e.Cancel = true;
+                    SayError(error, null);
+                    Ctx.Known.SyncTrouble = null;
+                    parts.Joining = true;
+                    Ctx.Send(new Command.JoinSync(TypedName, RestoreSpec(service), entry.Text));
+                    return;
+                default:
+                    // Delete and start over, or Try again, which sends it again.
+                    e.Cancel = true;
+                    BeginStartOver(parts);
+                    return;
+            }
         };
-        var parts = new RestoreParts(dialog, error);
+        // Escape and Cancel: the confirmation's Cancel goes back to the key field. While the work
+        // runs it is Close, which leaves the work going; its key or failure opens by itself. On the
+        // key it is Done, as the key has been on screen. A close the app asks for always goes through.
+        dialog.Closing += (sender, e) =>
+        {
+            if (parts.Done || Dialogs.Forced(sender) || e.Result != ContentDialogResult.None)
+                return;
+            switch (pages.Showing)
+            {
+                case "confirm" when startOver is not { Working: true }:
+                    e.Cancel = true;
+                    pages.Show("enter");
+                    entry.Focus(FocusState.Programmatic);
+                    break;
+                case "key":
+                    Ctx.Known.RecoveryKey = null;
+                    startOver = null;
+                    break;
+                case "error":
+                    startOver = null;
+                    break;
+            }
+        };
+        pages.Shown += page =>
+        {
+            switch (page)
+            {
+                case "enter":
+                    title.Set(T.RkeyEnterTitle);
+                    break;
+                case "confirm":
+                    title.Set(T.RkeyStartOverTitle);
+                    break;
+            }
+            RestoreButtons(parts);
+        };
         dialog.Closed += (_, _) =>
         {
+            parts.Pending?.Cancel();
             if (restore == parts)
                 restore = null;
         };
         restore = parts;
+        if (resume is null)
+            pages.Show("enter");
+        else
+            ShowStartOverStep(parts, resume);
         Present(dialog);
+        return parts;
+    }
+
+    /// <summary>Start over without the key…: the confirmation takes the key field's place, with Cancel focused.</summary>
+    static void AskStartOver(RestoreParts r)
+    {
+        r.Pages.Show("confirm");
+        // Enter is Cancel: a key typed on never confirms the delete. The focus goes to Cancel,
+        // which stays a plain button, as the destructive one does.
+        Ctx.Window.DispatcherQueue.TryEnqueue(() => DialogButton(r.Dialog, "CloseButton")?.Focus(FocusState.Programmatic));
+    }
+
+    /// <summary>A button of a dialog's own template: PrimaryButton, SecondaryButton or CloseButton.</summary>
+    static Button? DialogButton(DependencyObject under, string name)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(under); i++)
+        {
+            var child = VisualTreeHelper.GetChild(under, i);
+            if (child is Button { Name: var found } button && found == name)
+                return button;
+            if (DialogButton(child, name) is { } deeper)
+                return deeper;
+        }
+        return null;
+    }
+
+    /// <summary>The restore dialog's buttons for the page it shows.</summary>
+    static void RestoreButtons(RestoreParts r)
+    {
+        var dialog = r.Dialog;
+        var running = startOver is { Working: true };
+        switch (r.Pages.Showing)
+        {
+            case "enter":
+                dialog.PrimaryButtonText = T.RkeyRestore;
+                dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
+                dialog.IsPrimaryButtonEnabled = SyncWords.KeyReady(r.Entry.Text);
+                dialog.CloseButtonText = T.ActionCancel;
+                dialog.DefaultButton = ContentDialogButton.Primary;
+                break;
+            case "confirm":
+                // No accent on either: the destructive words are in the critical colour, and
+                // neither is the default, so Enter presses the focused Cancel.
+                dialog.PrimaryButtonText = T.RkeyStartOverAction;
+                dialog.PrimaryButtonStyle = Ui.Destructive;
+                dialog.IsPrimaryButtonEnabled = !running;
+                dialog.CloseButtonText = running ? T.ActionClose : T.ActionCancel;
+                dialog.DefaultButton = ContentDialogButton.None;
+                break;
+            case "work":
+                dialog.PrimaryButtonText = "";
+                dialog.CloseButtonText = T.ActionClose;
+                dialog.DefaultButton = ContentDialogButton.None;
+                break;
+            case "error":
+                dialog.PrimaryButtonText = T.ActionTryAgain;
+                dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
+                dialog.IsPrimaryButtonEnabled = !running;
+                dialog.CloseButtonText = running ? T.ActionClose : T.ActionCancel;
+                dialog.DefaultButton = ContentDialogButton.Primary;
+                break;
+            case "key":
+                dialog.PrimaryButtonText = T.ActionDone;
+                dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
+                dialog.IsPrimaryButtonEnabled = true;
+                dialog.CloseButtonText = "";
+                dialog.DefaultButton = ContentDialogButton.Primary;
+                break;
+        }
+    }
+
+    /// <summary>
+    /// Delete and start over, or Try again: the engine deletes the folder's old sync data and sets
+    /// sync up there with a new key. What the dialog shows stays for the first 600 ms, so a quick
+    /// service goes straight to the key.
+    /// </summary>
+    static void BeginStartOver(RestoreParts r)
+    {
+        if (startOver is { Working: true })
+            return;
+        var flow = startOver = new StartOver(r.Service);
+        r.Pressed = DateTime.UtcNow;
+        r.Shown = null;
+        Ctx.Known.SyncTrouble = null;
+        SayError(r.Error, null);
+        RestoreButtons(r);
+        Ctx.Send(new Command.SyncGroup(new SyncCommand.ClearFolderAndStart(TypedName, RestoreSpec(r.Service))));
+        StageStartOver(r, flow);
+    }
+
+    /// <summary>
+    /// Puts the dialog where <paramref name="flow"/> stands, at the work's pace: a work step shows
+    /// only past 600 ms of the press, and a work step shown stays at least 400 ms.
+    /// </summary>
+    static async void StageStartOver(RestoreParts r, StartOver flow)
+    {
+        r.Pending?.Cancel();
+        r.Pending = null;
+        var work = flow.Working;
+        var delay = TimeSpan.Zero;
+        if (work && r.Shown is null && r.Pressed is { } pressed)
+            delay = TimeSpan.FromMilliseconds(600) - (DateTime.UtcNow - pressed);
+        if (r.Shown is { } shown)
+        {
+            var left = TimeSpan.FromMilliseconds(400) - (DateTime.UtcNow - shown);
+            if (left > delay)
+                delay = left;
+        }
+        if (delay > TimeSpan.Zero)
+        {
+            var pending = r.Pending = new CancellationTokenSource();
+            try
+            {
+                await Task.Delay(delay, pending.Token);
+            }
+            catch (TaskCanceledException)
+            {
+                return;
+            }
+        }
+        r.Shown = work ? DateTime.UtcNow : null;
+        ShowStartOverStep(r, flow);
+    }
+
+    /// <summary>Shows where <paramref name="flow"/> stands at once: the title, the page and the buttons.</summary>
+    static void ShowStartOverStep(RestoreParts r, StartOver flow)
+    {
+        var name = SyncWords.ServiceName(r.Service);
+        string page;
+        switch (flow.Step)
+        {
+            case StartOverStep.Sent or StartOverStep.Clearing:
+                r.WorkLine.Set(T.RkeyClearingLine(name));
+                r.Title.Set(T.RkeyClearing);
+                page = "work";
+                break;
+            case StartOverStep.SettingUp:
+                r.WorkLine.Set(T.CloudSettingUpLine(name));
+                r.Title.Set(T.CloudSettingUp);
+                page = "work";
+                break;
+            case StartOverStep.Failed:
+                r.FailLine.Text = flow.Failure is { } why ? SyncWords.StartOverError(why, r.Service, "") : T.DevicesRowError;
+                r.Title.Set(T.RkeyStartOverErrTitle);
+                page = "error";
+                break;
+            case StartOverStep.Key when flow.Key is { } key:
+                FillKey(r.KeySlot, key, r.Service);
+                r.Title.Set(T.RkeyTitle);
+                page = "key";
+                break;
+            default:
+                // Ended with no key: the folder held this PC's own group, which sync took.
+                startOver = null;
+                r.Done = true;
+                r.Dialog.Hide();
+                return;
+        }
+        if (r.Pages.Showing != page)
+            r.Pages.Show(page);
+        RestoreButtons(r);
+    }
+
+    /// <summary>A start over moved on: the dialog follows, or, closed while it ran, its end opens by itself.</summary>
+    static void StartOverHeard(StartOver flow)
+    {
+        if (restore is { } r && r.Service == flow.Service)
+        {
+            StageStartOver(r, flow);
+            return;
+        }
+        switch (flow.Step)
+        {
+            case StartOverStep.Key:
+                startOver = null;
+                KeyDialog(flow.Service);
+                break;
+            case StartOverStep.Failed:
+                PresentRestore(flow.Service, flow);
+                break;
+            case StartOverStep.Ended:
+                startOver = null;
+                break;
+        }
     }
 
     // ---------------------------------------------------------------- pairing
@@ -1323,6 +1704,12 @@ static partial class SyncDialogs
 
     static void Heard(Event e)
     {
+        // A start over's steps, key and failure are its own, whatever else is still closing.
+        if (startOver is { Working: true } flow && flow.Take(e))
+        {
+            StartOverHeard(flow);
+            return;
+        }
         switch (e)
         {
             case Event.SyncSignIn { Step: SyncSignInStep.Browser browser } signIn:
@@ -1362,8 +1749,12 @@ static partial class SyncDialogs
                 Problem(problem.V1);
                 break;
             case Event.SyncStatus status:
-                if (status.V1.Enabled && restore is { } restored)
+                // A join that worked: the group it joined is on, with nothing wrong.
+                if (status.V1 is { Enabled: true, Problem: null } && restore is { Joining: true } restored)
+                {
+                    restored.Done = true;
                     restored.Dialog.Hide();
+                }
                 // A pairing finished when the group has a device it had not.
                 if (pair is { } p && status.V1.Devices.Length > p.StartedWith && SyncWords.Newest(status.V1) is { } added)
                     Paired(added.Name);
@@ -1392,8 +1783,13 @@ static partial class SyncDialogs
         switch (problem)
         {
             case SyncProblem.GroupExists:
+                // The picker goes at once: what follows belongs to the restore dialog, even
+                // before the picker's close has run.
                 if (picker is { } closing)
+                {
                     Close(closing);
+                    picker = null;
+                }
                 Restore(last ?? SyncFolderKind.GoogleDrive);
                 return;
             case SyncProblem.WrongRecoveryKey:

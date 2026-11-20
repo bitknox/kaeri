@@ -154,6 +154,100 @@ public class SyncTests
         Assert.Equal("K7QF2M9XHD4RTB6WPN3ZC8JA", known.RecoveryKey);
     }
 
+    [Fact]
+    public void AGroupStartedOverElsewhereOffersEnterNewKey()
+    {
+        var replaced = Assert.IsType<CloudState.Problem>(SyncWords.State(Status(new SyncProblem.GroupReplaced()), Now, false));
+        Assert.Equal(ProblemFix.EnterNewKey, replaced.Fix);
+        Assert.Equal(T.CloudErrStartedOver("Dropbox"), replaced.Line);
+        Assert.Equal(T.CloudErrStartedOver("Google Drive"), SyncWords.ProblemText(new SyncProblem.GroupReplaced(), SyncFolderKind.GoogleDrive, ""));
+    }
+
+    [Fact]
+    public void TheRestoreDialogCountsTheDevicesTheEngineFound()
+    {
+        Assert.Equal(3, SyncWords.RestoreCount(Status() with { RestoreDevices = 3 }));
+        // Not known: the devices this PC knows of, and at least two.
+        Assert.Equal(2, SyncWords.RestoreCount(Status() with { Devices = [Device(Now)] }));
+        Assert.Equal(4, SyncWords.RestoreCount(Status() with { Devices = [Device(Now), Device(Now), Device(Now), Device(Now)] }));
+        Assert.Equal(2, SyncWords.RestoreCount(null));
+    }
+
+    [Fact]
+    public void AStartOverThatStopsSaysWhy()
+    {
+        Assert.Equal(T.RkeyStartOverErrRefused("Google Drive"), SyncWords.StartOverError(new SyncProblem.ClearRefused(), SyncFolderKind.GoogleDrive, ""));
+        Assert.Equal(T.CloudErrOffline("Google Drive"), SyncWords.StartOverError(new SyncProblem.Unreachable(), SyncFolderKind.GoogleDrive, ""));
+        Assert.Contains("cloud.example", SyncWords.StartOverError(new SyncProblem.Unreachable(), SyncFolderKind.Nextcloud, "cloud.example"));
+    }
+
+    static Event Step(SyncSignInStep? step) => new Event.SyncSignIn(SyncFolderKind.GoogleDrive, step);
+
+    [Fact]
+    public void AStartOverFollowsItsStepsToTheNewKey()
+    {
+        var flow = new StartOver(SyncFolderKind.GoogleDrive);
+        Assert.True(flow.Working);
+        Assert.Equal(StartOverStep.Sent, flow.Step);
+        Assert.True(flow.Take(Step(new SyncSignInStep.Clearing())));
+        Assert.Equal(StartOverStep.Clearing, flow.Step);
+        Assert.True(flow.Take(Step(new SyncSignInStep.Finishing())));
+        Assert.Equal(StartOverStep.SettingUp, flow.Step);
+        Assert.False(flow.Take(new Event.SyncStatus(Status())));
+        Assert.True(flow.Take(new Event.SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA")));
+        Assert.Equal(StartOverStep.Key, flow.Step);
+        Assert.Equal("K7QM4XR9TB2HWN6CP3ZD8FLA", flow.Key);
+        Assert.False(flow.Working);
+        // The sign-in's end after the key is no longer the start over's.
+        Assert.False(flow.Take(Step(null)));
+    }
+
+    [Fact]
+    public void TheEndOfTheSignInThatFoundTheOtherGroupLeavesAStartOverGoing()
+    {
+        var flow = new StartOver(SyncFolderKind.GoogleDrive);
+        // Claimed, so the picker that is still closing never takes it, and ignored.
+        Assert.True(flow.Take(Step(null)));
+        Assert.Equal(StartOverStep.Sent, flow.Step);
+        Assert.True(flow.Working);
+        Assert.True(flow.Take(Step(new SyncSignInStep.Clearing())));
+        Assert.True(flow.Take(Step(new SyncSignInStep.Finishing())));
+        Assert.True(flow.Take(new Event.SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA")));
+        Assert.Equal(StartOverStep.Key, flow.Step);
+    }
+
+    [Fact]
+    public void AStartOverThatFailsKeepsWhyAndStopsTakingEvents()
+    {
+        var flow = new StartOver(SyncFolderKind.GoogleDrive);
+        flow.Take(Step(new SyncSignInStep.Clearing()));
+        Assert.True(flow.Take(new Event.SyncProblem(new SyncProblem.ClearRefused())));
+        Assert.Equal(StartOverStep.Failed, flow.Step);
+        Assert.IsType<SyncProblem.ClearRefused>(flow.Failure);
+        Assert.False(flow.Working);
+        Assert.False(flow.Take(new Event.SyncProblem(new SyncProblem.Unreachable())));
+    }
+
+    [Fact]
+    public void AStartOverOnThisPcsOwnGroupEndsWithNoKey()
+    {
+        var flow = new StartOver(SyncFolderKind.GoogleDrive);
+        flow.Take(Step(new SyncSignInStep.Clearing()));
+        flow.Take(Step(new SyncSignInStep.Finishing()));
+        Assert.True(flow.Take(Step(null)));
+        Assert.Equal(StartOverStep.Ended, flow.Step);
+        Assert.Null(flow.Key);
+    }
+
+    [Fact]
+    public void KnownKeepsARefusedClearForTheRestoreDialog()
+    {
+        var known = new Known();
+        known.Take(new Event.SyncProblem(new SyncProblem.ClearRefused()));
+        known.Take(new Event.SyncStatus(Status()));
+        Assert.IsType<SyncProblem.ClearRefused>(known.SyncTrouble);
+    }
+
     static SyncState Tracker(string tracker, bool connected, uint outbox = 0, bool expired = false, string? last = null, PullError? failed = null) =>
         new(tracker, connected, outbox, 0, NeedsReauth: expired, Last: last, PullError: failed);
 

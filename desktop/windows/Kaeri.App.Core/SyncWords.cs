@@ -17,6 +17,8 @@ public enum ProblemFix
 {
     SignInAgain,
     ChooseFolder,
+    /// <summary>Another device started sync over in the folder: Enter new key opens the restore dialog.</summary>
+    EnterNewKey,
     Nothing,
 }
 
@@ -102,6 +104,8 @@ public static class SyncWords
                 return new CloudState.Problem(T.CloudErrFolderGone, ProblemFix.ChooseFolder);
             case SyncProblem.Unreachable:
                 return new CloudState.Offline();
+            case SyncProblem.GroupReplaced:
+                return new CloudState.Problem(T.CloudErrStartedOver(service), ProblemFix.EnterNewKey);
             case not null:
                 return new CloudState.Problem(status.Error ?? T.DevicesRowError, ProblemFix.Nothing);
         }
@@ -179,11 +183,35 @@ public static class SyncWords
             SyncProblem.SignInExpired => T.CloudErrTimeout,
             SyncProblem.SignInDenied denied => T.CloudErrDenied(ServiceName(denied.Service)),
             SyncProblem.GroupExists => T.CloudErrOtherGroup,
+            SyncProblem.GroupReplaced => T.CloudErrStartedOver(name),
+            SyncProblem.ClearRefused => T.RkeyStartOverErrRefused(name),
             SyncProblem.WrongRecoveryKey => T.RkeyWrong,
             SyncProblem.Other other => other.V1,
             _ => T.DevicesRowError,
         };
     }
+
+    /// <summary>
+    /// How many devices the restore dialog says the folder holds history from: the engine's count
+    /// when it knows one, else the devices this PC knows of, and at least two.
+    /// </summary>
+    public static int RestoreCount(SyncStatus? status) => status switch
+    {
+        { RestoreDevices: > 0 and var count } => (int)count,
+        { } known => Math.Max(2, known.Devices.Length),
+        null => 2,
+    };
+
+    /// <summary>
+    /// Why a start over stopped, under "Couldn't start over": the folder out of reach, the
+    /// service refusing to delete, or what the problem says otherwise.
+    /// </summary>
+    public static string StartOverError(SyncProblem problem, SyncFolderKind service, string host) => problem switch
+    {
+        SyncProblem.ClearRefused => T.RkeyStartOverErrRefused(ServiceName(service)),
+        SyncProblem.Unreachable when IsCloud(service) => T.CloudErrOffline(ServiceName(service)),
+        _ => ProblemText(problem, service, host),
+    };
 
     /// <summary>
     /// The title and the line of a failed cloud sign-in. A refusal, a page that timed out, or any

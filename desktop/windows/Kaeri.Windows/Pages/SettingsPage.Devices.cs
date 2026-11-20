@@ -324,6 +324,12 @@ public sealed partial class SettingsPage
                 signIn.Click += (_, _) => SyncDialogs.SignInAgain(folder.Kind);
                 buttons.Children.Add(signIn);
                 break;
+            case CloudState.Problem { Fix: ProblemFix.EnterNewKey }:
+                // Another device started sync over in the folder: its new key joins it again.
+                var enterNew = new Button { Content = T.RkeyEnterNew, Style = Res<Style>("AccentButtonStyle") };
+                enterNew.Click += (_, _) => SyncDialogs.EnterNewKey(folder.Kind);
+                buttons.Children.Add(enterNew);
+                break;
             case CloudState.Problem { Fix: ProblemFix.ChooseFolder }:
                 var choose = new Button { Content = T.CloudChooseFolder, Style = Res<Style>("AccentButtonStyle") };
                 choose.Click += (_, _) => SyncDialogs.Picker();
@@ -409,7 +415,8 @@ public sealed partial class SettingsPage
     /// <summary>The recovery key (once a folder holds one), Make a new key, and Turn off sync last.</summary>
     void RecoveryAndOff(SyncStatus status)
     {
-        if (status.RecoveryKey)
+        // A group started over elsewhere left this PC with no key that opens the folder.
+        if (status.RecoveryKey && status.Problem is not SyncProblem.GroupReplaced)
         {
             Cards.Children.Add(Heading(T.RkeyRow));
             var made = status.RecoveryKeyMade is { } at
