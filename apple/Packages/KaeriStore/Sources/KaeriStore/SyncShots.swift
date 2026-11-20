@@ -43,6 +43,8 @@ import UIKit
 ///     startover-setup     the folder being set up again
 ///     startover-key       the new recovery key
 ///     startover-failed    why it stopped (sync-other-group-offline or -refused)
+///     startover-failed-cancel  the same, then Cancel 2.5 s after: back to the key field, for
+///                         recording that crossfade
 ///     startedover         on sync-started-over: the Devices pane once the engine says the group
 ///                         was started over elsewhere; startedover-restore its Enter new key
 public enum SyncScene: String, Sendable {
@@ -58,13 +60,13 @@ public enum SyncScene: String, Sendable {
     case pairMotion = "pair-motion", firstMotion = "first-motion", alone, paused, pairWrong = "pair-wrong", pairWorking = "pair-working", firstPairedStore = "first-paired-store"
     case startOver = "startover", startOverWrong = "startover-wrong", startOverConfirm = "startover-confirm"
     case startOverClearing = "startover-clearing", startOverSetup = "startover-setup", startOverKey = "startover-key"
-    case startOverFailed = "startover-failed", startedOver = "startedover", startedOverRestore = "startedover-restore"
+    case startOverFailed = "startover-failed", startOverFailedCancel = "startover-failed-cancel", startedOver = "startedover", startedOverRestore = "startedover-restore"
 
     /// A state the engine is run to, rather than one staged without it.
     var runsEngine: Bool {
         switch self {
         case .startOver, .startOverWrong, .startOverConfirm, .startOverClearing, .startOverSetup, .startOverKey,
-             .startOverFailed, .startedOver, .startedOverRestore: true
+             .startOverFailed, .startOverFailedCancel, .startedOver, .startedOverRestore: true
         default: false
         }
     }
@@ -131,7 +133,8 @@ extension SyncModel {
         switch scene {
         case .off, .firstSetup, .firstPaired, .firstMotion, .pickerWait, .pickerConnecting, .pickerSetup,
              .pickerDenied, .pickerErrSetup, .pickerKey, .startOver, .startOverWrong, .startOverConfirm,
-             .startOverClearing, .startOverSetup, .startOverKey, .startOverFailed, .startedOver, .startedOverRestore: break
+             .startOverClearing, .startOverSetup, .startOverKey, .startOverFailed, .startOverFailedCancel, .startedOver,
+             .startedOverRestore: break
         case .paused:
             status = Self.group(now: now, notes: true, held: true)
         case .alone:
@@ -296,16 +299,22 @@ extension SyncModel {
             confirmingStartOver = true
             try? await Task.sleep(for: .milliseconds(600))
             return true
-        case .startOverClearing, .startOverSetup, .startOverKey, .startOverFailed:
+        case .startOverClearing, .startOverSetup, .startOverKey, .startOverFailed, .startOverFailedCancel:
             startOver(.googleDrive, deviceName: name)
             let there = await reached {
                 switch (scene, self.cloudStep) {
                 case (.startOverClearing, .clearing?), (.startOverSetup, .settingUp?), (.startOverKey, .key?),
-                     (.startOverFailed, .startOverFailed?): true
+                     (.startOverFailed, .startOverFailed?), (.startOverFailedCancel, .startOverFailed?): true
                 default: false
                 }
             }
             held = true
+            if there, scene == .startOverFailedCancel {
+                Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(2500))
+                    self?.cancelCloudStep()
+                }
+            }
             return there
         default:
             return true

@@ -118,8 +118,29 @@ struct SyncModelTests {
         sync.apply(.syncProblem(.unreachable))
         Self.advance(sync, clock, 600)
         #expect(sync.cloudStep == .startOverFailed(.googleDrive, .unreachable))
+    }
+
+    @Test func cancelOnAStartOverThatStoppedGoesBackToTheKeyFieldAndSendsNothing() {
+        let clock = SteppedClock()
+        var sent: [Command] = []
+        let sync = Self.restoring(clock) { sent.append($0) }
+        sync.restoreKey = "K7QM 4XR9"
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 600)
+        sync.apply(.syncProblem(.unreachable))
+        Self.advance(sync, clock, 400)
+        #expect(sync.cloudStep == .startOverFailed(.googleDrive, .unreachable))
+        sent = []
         sync.cancelCloudStep()
-        #expect(sync.sheet == nil && sync.cloudStep == nil)
+        #expect(sent.isEmpty, "the engine changed nothing, so there is nothing to undo")
+        #expect(sync.sheet == .restore(.googleDrive) && sync.cloudStep == nil,
+                "the restore screen shows its field again, with Start over")
+        #expect(sync.problem == nil && sync.startedOver == nil && !sync.cloudCancelDimmed && !sync.holdsSheet)
+        #expect(sync.restoreKey == "K7QM 4XR9", "what was typed stays")
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        #expect(sent == [.syncGroup(.clearFolderAndStart(deviceName: "Kim’s Mac", folder: SyncFolderSpec(kind: .googleDrive)))],
+                "Start over works again from the field")
     }
 
     @Test func enterNewKeyOpensTheRestoreScreenAndAJoinThatWorksClosesIt() {

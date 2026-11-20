@@ -284,8 +284,16 @@ struct CloudRow: View {
         let needsSignIn = state == .signedOut || sync.status.problem.map(Self.isSignIn) == true
         let cloud = [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind)
         if SyncWords.replaced(sync) {
+            // A group started over elsewhere offers only Enter new key, with no More menu.
             Button(L.rkeyEnterNew) { sync.enterNewKey(folder.kind) }
-        } else if needsSignIn, cloud {
+        } else {
+            ordinaryButtons(sync, needsSignIn: needsSignIn, cloud: cloud)
+        }
+    }
+
+    @ViewBuilder
+    private func ordinaryButtons(_ sync: SyncModel, needsSignIn: Bool, cloud: Bool) -> some View {
+        if needsSignIn, cloud {
             Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
         } else if sync.status.problem == .unreachable, folder.kind == .directory {
             Button(L.cloudChooseFolder) { sync.useAnotherService() }

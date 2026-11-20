@@ -354,6 +354,8 @@ public final class SyncModel {
     public func openPageAgain() { pageOpens += 1 }
 
     /// Cancel in the cloud folder's sheet: back to the list from the wait, closed from an error.
+    /// A start over that stopped goes back to the restore screen's field; the engine changed
+    /// nothing, so there is nothing to send.
     public func cancelCloudStep() {
         switch cloudTarget {
         case .waiting:
@@ -361,7 +363,11 @@ public final class SyncModel {
             aim(nil)
         case .connecting, .settingUp, .clearing:
             break
-        case .failed, .startOverFailed, .key, nil:
+        case .startOverFailed:
+            startedOver = nil
+            problem = nil
+            resetCloudStep()
+        case .failed, .key, nil:
             sheet = nil
             resetCloudStep()
         }

@@ -176,18 +176,22 @@ struct PhoneDevicesPage: View {
                     }
                     .listRowBackground(Palette.raised)
                 }
-                Button(L.cloudUseAnother) { sync.useAnotherService() }.listRowBackground(Palette.raised)
-                if cloud, !replaced {
-                    if line.state == .signedOut || line.state == .problem {
-                        Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
-                            .listRowBackground(Palette.raised)
-                    } else {
-                        Button(L.cloudSignOut) { sync.signOut(folder.kind) }.listRowBackground(Palette.raised)
+                // A group started over elsewhere offers only Enter new key: the rows below close
+                // their height with the page's animation.
+                if !replaced {
+                    Button(L.cloudUseAnother) { sync.useAnotherService() }.listRowBackground(Palette.raised)
+                    if cloud {
+                        if line.state == .signedOut || line.state == .problem {
+                            Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
+                                .listRowBackground(Palette.raised)
+                        } else {
+                            Button(L.cloudSignOut) { sync.signOut(folder.kind) }.listRowBackground(Palette.raised)
+                        }
                     }
+                    Button(L.cloudRemove, role: .destructive) { sync.removingFolder = true }
+                        .foregroundStyle(.vermilion)
+                        .listRowBackground(Palette.raised)
                 }
-                Button(L.cloudRemove, role: .destructive) { sync.removingFolder = true }
-                    .foregroundStyle(.vermilion)
-                    .listRowBackground(Palette.raised)
             } else {
                 Button(L.cloudAdd) { sync.addCloudFolder() }.listRowBackground(Palette.raised)
             }

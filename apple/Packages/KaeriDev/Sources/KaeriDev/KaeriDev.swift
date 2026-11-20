@@ -241,6 +241,9 @@ final class Delegate: NSObject, NSApplicationDelegate {
             if options.reduceMotion { navigator.motionReduced = true }
             await motion.prelude(navigator: navigator, store: store)
             await frames(of: motion, in: window, to: url)
+        } else if SyncScene.named() != nil, !options.frames.isEmpty, let window = Snapshot.window {
+            // A sync scene that moves on by itself once it is up (startover-failed-cancel).
+            await frames(of: nil, in: window, to: url)
         } else if options.artTrouble != nil || ReaderModel.demoAsked, !options.frames.isEmpty, let window = Snapshot.window {
             // The window left alone while the troubled art comes in, or the reader's demo plays.
             await frames(of: nil, in: window, to: url)
