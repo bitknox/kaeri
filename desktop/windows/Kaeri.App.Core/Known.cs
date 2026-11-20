@@ -546,7 +546,7 @@ public sealed class Known
                 break;
             case Event.SyncStatus group:
                 // A pass that works clears the problem, except those only a dialog can answer.
-                if (group.V1.Problem is null && SyncTrouble is not (null or SyncProblem.WrongRecoveryKey or SyncProblem.GroupExists or SyncProblem.NoGroup))
+                if (group.V1.Problem is null && SyncTrouble is not (null or SyncProblem.WrongRecoveryKey or SyncProblem.GroupExists or SyncProblem.NoGroup or SyncProblem.ClearRefused))
                     SyncTrouble = null;
                 SyncGroup = group.V1;
                 break;
