@@ -422,6 +422,20 @@ fn cloud_folder(ctx: &Rc<Ctx>, status: &SyncStatus) -> adw::PreferencesGroup {
             });
             row.add_suffix(&b);
         }
+        CloudState::Problem(_, ProblemFix::EnterNewKey) => {
+            // Another device started sync over: the restore dialog joins with the new key.
+            let b = button(&t::rkey_enter_new(), Some("suggested-action"));
+            b.connect_clicked({
+                let ctx = Rc::downgrade(ctx);
+                let service = service.clone();
+                move |_| {
+                    if let Some(ctx) = ctx.upgrade() {
+                        dialogs::restore(&ctx, &service);
+                    }
+                }
+            });
+            row.add_suffix(&b);
+        }
         CloudState::Problem(_, ProblemFix::ChooseFolder) => {
             let b = button(&t::cloud_choose_folder(), Some("suggested-action"));
             b.connect_clicked({
@@ -568,7 +582,10 @@ fn more_menu(
 /// The recovery key row (once a folder holds one) and Turn off sync last, in one box.
 fn recovery_and_off(ctx: &Rc<Ctx>, status: &SyncStatus) -> Option<adw::PreferencesGroup> {
     let group = adw::PreferencesGroup::new();
-    if status.recovery_key {
+    // A group started over on another device left this one without a key that opens anything.
+    let has_key = status.recovery_key
+        && status.problem != Some(kaeri_model::group::SyncProblem::GroupReplaced);
+    if has_key {
         let made = status
             .recovery_key_made
             .and_then(|at| glib::DateTime::from_unix_local(at).ok())
@@ -592,7 +609,7 @@ fn recovery_and_off(ctx: &Rc<Ctx>, status: &SyncStatus) -> Option<adw::Preferenc
         row.add_suffix(&show);
         group.add(&row);
     }
-    if status.recovery_key {
+    if has_key {
         let fresh = adw::ActionRow::builder()
             .title(t::rkey_new())
             .subtitle(t::rkey_new_foot())
