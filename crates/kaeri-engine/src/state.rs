@@ -112,6 +112,8 @@ pub struct EngineState {
     /// Keep next: whether it runs, and the top-up asked for while one runs. See
     /// [`crate::downloads::ahead`].
     pub ahead: crate::downloads::ahead::Ahead,
+    /// The daily update check, which the Check for updates setting starts and stops.
+    pub updates: crate::updates::Daily,
     /// The people the viewer follows, put on the episode rows on their way out: see
     /// [`crate::followed`].
     pub followed: crate::followed::Followed,
@@ -189,6 +191,7 @@ impl EngineState {
             gated: None,
             episode_check: Arc::default(),
             ahead: Default::default(),
+            updates: Default::default(),
             followed: Default::default(),
             search: Default::default(),
             dubs: Default::default(),

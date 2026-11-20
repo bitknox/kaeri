@@ -97,6 +97,19 @@ pub fn set_setting(
     if key == SettingKey::WhenTrackersDisagree {
         services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
     }
+    // Turned on, the daily check runs now; turned off, a check under way stops.
+    if key == SettingKey::UpdateCheck {
+        let updates = &engine.config.effective().updates;
+        let (on, beta) = (updates.check, updates.beta);
+        engine.updates.follow(
+            on,
+            beta,
+            !services.hosted_player,
+            &services.paths.cache_dir,
+            &services.http,
+            tx,
+        );
+    }
     // Off means not asked: the next page leaves the people out, the cache lets go of them, and
     // a page on screen is said again without them.
     if key == SettingKey::ShowFollowing {
