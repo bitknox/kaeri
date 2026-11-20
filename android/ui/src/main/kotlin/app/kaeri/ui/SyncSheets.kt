@@ -374,15 +374,17 @@ internal fun EnterKeySheet() {
         )
         if (problem is SyncProblem.WrongRecoveryKey) SheetProblem(stringResource(R.string.rkey_wrong))
         // The way out for a lost key, from the start: its own line, in silk, never amber.
+        // From the confirmed tap the form only waits for its step to show: nothing on it acts again.
+        val live = flow.canCancel
         TextButton(
             onClick = { store.sync.confirmStartOver(true) },
-            enabled = folder != null,
+            enabled = folder != null && live,
             colors = androidx.compose.material3.ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.onSurface),
             modifier = Modifier.padding(top = 4.dp).offset(x = (-12).dp),
         ) { Text(stringResource(R.string.rkey_start_over)) }
         SheetButtons {
-            QuietButton(stringResource(R.string.action_cancel)) { store.sync.show(store.sync.keyBack) }
-            Button(enabled = key.isNotBlank() && folder != null, onClick = { folder?.let { store.joinSync(name, it, key) } }) {
+            QuietButton(stringResource(R.string.action_cancel), enabled = live) { store.sync.show(store.sync.keyBack) }
+            Button(enabled = key.isNotBlank() && folder != null && live, onClick = { folder?.let { store.joinSync(name, it, key) } }) {
                 Text(stringResource(R.string.rkey_restore))
             }
         }
@@ -847,9 +849,10 @@ private fun SignInPhaseContent(phase: SignInPhase, canCancel: Boolean, onCancel:
                 Modifier.padding(top = 4.dp),
             )
             SheetText(Strings.rkeyStartOverErrKept(context, kindWord()), Modifier.padding(top = 12.dp))
+            // After Try again the stop stays on screen for its hold, with nothing on it to tap.
             SheetButtons {
-                QuietButton(stringResource(R.string.action_cancel), onClick = onCancel)
-                Button(onClick = onTryAgain) { Text(stringResource(R.string.action_try_again)) }
+                QuietButton(stringResource(R.string.action_cancel), enabled = canCancel, onClick = onCancel)
+                Button(enabled = canCancel, onClick = onTryAgain) { Text(stringResource(R.string.action_try_again)) }
             }
         }
         is SignInPhase.Failed -> {
