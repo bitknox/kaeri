@@ -138,10 +138,46 @@ struct Enter {
     working: Rc<std::cell::Cell<bool>>,
 }
 
+/// Where the restore dialog stands: the key field, or the steps of a start over without the key,
+/// each a crossfade in the same dialog.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Over {
+    /// The key field, with Start over under its note.
+    Enter,
+    /// The folder's old sync data is being deleted.
+    Clearing,
+    /// The new group's folder is being set up.
+    SettingUp,
+    /// The start over failed; Try again sends it again.
+    Error,
+    /// The new recovery key.
+    Key,
+}
+
 #[derive(Clone)]
 struct Restore {
     dialog: adw::Dialog,
+    /// The wrong key's line, under the field.
     error: gtk::Label,
+    /// "Google Drive holds history from 2 devices", redrawn as the count arrives.
+    count: gtk::Label,
+    head: Title,
+    body: gtk::Stack,
+    work_line: gtk::Label,
+    fail_line: gtk::Label,
+    key_slot: gtk::Box,
+    /// Cancel, or Close while the work runs.
+    start: gtk::Button,
+    /// Restore, Try again or Done.
+    end: gtk::Button,
+    entry: adw::EntryRow,
+    service: SyncFolderKind,
+    stage: Rc<Cell<Over>>,
+    /// The stage last asked for, which can wait on the pace while `stage` is on screen.
+    aim: Rc<Cell<Over>>,
+    pace: Rc<RefCell<Pace>>,
+    /// Restore was pressed: the sign-in ending well closes the dialog.
+    joining: Rc<Cell<bool>>,
 }
 
 #[derive(Default)]
@@ -159,6 +195,12 @@ struct Ui {
     /// The sheet already said why pairing failed, in words of its own: the problem that follows
     /// says the same and stays quiet.
     pair_said: bool,
+    /// A start over without the key was sent for this service: its steps, its key and its
+    /// failure belong to the restore dialog, or open again by themselves once it was closed.
+    over: Option<SyncFolderKind>,
+    /// The start over's Clearing step was heard, so the sign-in's end that follows is its own
+    /// and not the late end of the sign-in that found the other group.
+    over_cleared: bool,
 }
 
 thread_local! {
@@ -388,7 +430,7 @@ pub fn picker_state(ctx: &Rc<Ctx>, service: &SyncFolderKind, state: &str, url: &
         _ => (Stage::Browser, None),
     };
     if stage == Stage::Key {
-        fill_key(ctx, &p.key_slot, "K7QM4XR9TB2HWN6CP3ZD8FLA");
+        fill_key(ctx, &p.key_slot, "K7QM4XR9TB2HWN6CP3ZD8FLA", None);
     }
     show_stage(&p, service, stage, (stage == Stage::Browser).then_some(url), error.as_ref());
 }
@@ -1029,10 +1071,21 @@ pub fn problem_text(
 // ---------------------------------------------------------------- recovery key
 
 /// The recovery key's content, into `body`: its line, the key in groups of four, Copy, Save and
-/// the QR code, and the note on how to see it again.
-fn fill_key(ctx: &Rc<Ctx>, body: &gtk::Box, key: &str) {
+/// the QR code, and the note on how to see it again. After a start over without the key, a first
+/// line with a water dot says sync started over in `started_over`.
+fn fill_key(ctx: &Rc<Ctx>, body: &gtk::Box, key: &str, started_over: Option<&SyncFolderKind>) {
     while let Some(child) = body.first_child() {
         body.remove(&child);
+    }
+    if let Some(service) = started_over {
+        let first = gtk::Label::new(None);
+        first.set_markup(
+            &super::Mark::Water.markup(&t::rkey_started_over(&service_name(service))),
+        );
+        first.set_wrap(true);
+        first.set_max_width_chars(52);
+        first.set_xalign(0.0);
+        body.append(&first);
     }
     body.append(&line(&t::rkey_line()));
     let card = gtk::Box::new(gtk::Orientation::Vertical, 6);
@@ -1089,12 +1142,18 @@ fn fill_key(ctx: &Rc<Ctx>, body: &gtk::Box, key: &str) {
 /// The recovery key on its own, when it is seen again from Devices. The first time, it shows in
 /// the picker's dialog, where the folder was made.
 pub fn key_dialog(ctx: &Rc<Ctx>) {
+    key_dialog_after(ctx, None);
+}
+
+/// The recovery key on its own; with the service a start over ran in when its dialog was closed
+/// before the key came.
+fn key_dialog_after(ctx: &Rc<Ctx>, started_over: Option<&SyncFolderKind>) {
     let Some(key) = ctx.hub.known.borrow().recovery_key.clone() else { return };
     if let Some(d) = with(|u| u.key.take()) {
         d.force_close();
     }
     let body = column();
-    fill_key(ctx, &body, &key);
+    fill_key(ctx, &body, &key, started_over);
     let (dialog, header, _) = frame(&t::rkey_title(), 480, &body);
     let done = button(&t::action_done(), Some("suggested-action"));
     header.pack_end(&done);
@@ -1134,64 +1193,341 @@ pub fn make_new_key(ctx: &Rc<Ctx>) {
     });
 }
 
-/// Restore: a folder that holds history asks for its recovery key.
+// ---------------------------------------------------------------- restore and start over
+
+/// Restore: a folder that holds history asks for its recovery key. Under the field's note,
+/// Start over without the key asks first, then the same dialog shows the folder being cleared and
+/// set up again, and the new key or why it failed.
 pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
     if let Some(r) = with(|u| u.restore.take()) {
         r.dialog.force_close();
     }
-    let count =
-        ctx.hub.known.borrow().sync_group.as_ref().map_or(0, |s| s.devices.len().max(1) as i64);
-    let body = column();
-    body.append(&line(&t::rkey_enter_line(&service_name(service), count.max(2))));
+    let enter = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    let count = line(&restore_line(ctx, service));
+    enter.append(&count);
     let group = adw::PreferencesGroup::new();
     let entry = adw::EntryRow::builder().title(t::rkey_field_label()).build();
     group.add(&entry);
-    body.append(&group);
-    body.append(&note(&t::rkey_enter_note()));
+    enter.append(&group);
+    enter.append(&note(&t::rkey_enter_note()));
     let error = error_label();
-    body.append(&error);
-    let (dialog, header, _) = frame(&t::rkey_enter_title(), 480, &body);
-    let cancel = button(&t::action_cancel(), None);
-    let go = button(&t::rkey_restore(), Some("suggested-action"));
-    go.set_sensitive(false);
-    header.pack_start(&cancel);
-    header.pack_end(&go);
+    enter.append(&error);
+    // A lost key is never typed: the way out shows from the start, plain and never amber.
+    let over = button(&format!("{}\u{2026}", t::rkey_start_over()), Some("flat")); // i18n-skip
+    over.set_halign(gtk::Align::Start);
+    over.add_css_class("flush-start");
+    enter.append(&over);
+
+    // The start over's steps: the work, the failure and the key, centred as the picker's are.
+    let work = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    work.set_halign(gtk::Align::Center);
+    work.set_margin_top(18);
+    work.set_margin_bottom(8);
+    let spinner = adw::Spinner::new();
+    spinner.set_size_request(32, 32);
+    spinner.set_halign(gtk::Align::Center);
+    let work_line = line_centered();
+    let carries_on = note(&t::cloud_close_carries_on());
+    carries_on.set_justify(gtk::Justification::Center);
+    carries_on.set_xalign(0.5);
+    carries_on.set_max_width_chars(48);
+    work.append(&spinner);
+    work.append(&work_line);
+    work.append(&carries_on);
+    let failed = gtk::Box::new(gtk::Orientation::Vertical, 12);
+    failed.set_halign(gtk::Align::Center);
+    failed.set_margin_top(18);
+    failed.set_margin_bottom(8);
+    let why = gtk::Box::new(gtk::Orientation::Horizontal, 8);
+    why.set_halign(gtk::Align::Center);
+    let glyph = gtk::Image::from_icon_name("dialog-error-symbolic"); // i18n-skip
+    glyph.add_css_class("error");
+    glyph.set_valign(gtk::Align::Start);
+    glyph.set_accessible_role(gtk::AccessibleRole::Presentation);
+    let fail_line = line("");
+    fail_line.remove_css_class("haze");
+    why.append(&glyph);
+    why.append(&fail_line);
+    let kept = line_centered();
+    kept.set_label(&t::rkey_start_over_err_kept(&super::kind()));
+    failed.append(&why);
+    failed.append(&kept);
+    let key_slot = gtk::Box::new(gtk::Orientation::Vertical, 12);
+
+    let body = crossfade_stack();
+    body.add_named(&enter, Some("enter"));
+    body.add_named(&work, Some("work"));
+    body.add_named(&failed, Some("failed"));
+    body.add_named(&key_slot, Some("key"));
+    let col = column();
+    col.append(&body);
+    let (dialog, header, head) = frame(&t::rkey_enter_title(), 480, &col);
+    let start = button(&t::action_cancel(), None);
+    let end = button(&t::rkey_restore(), Some("suggested-action"));
+    end.set_sensitive(false);
+    header.pack_start(&start);
+    header.pack_end(&end);
+    let r = Restore {
+        dialog: dialog.clone(),
+        error,
+        count,
+        head,
+        body,
+        work_line,
+        fail_line,
+        key_slot,
+        start: start.clone(),
+        end: end.clone(),
+        entry: entry.clone(),
+        service: service.clone(),
+        stage: Rc::new(Cell::new(Over::Enter)),
+        aim: Rc::new(Cell::new(Over::Enter)),
+        pace: Rc::default(),
+        joining: Rc::default(),
+    };
     entry.connect_changed({
-        let go = go.clone();
+        let r = r.clone();
         move |e| {
-            go.set_sensitive(
-                e.text().chars().filter(char::is_ascii_alphanumeric).count() >= 24,
-            );
+            if r.stage.get() == Over::Enter && with(|u| u.over.is_none()) {
+                r.end.set_sensitive(typed_whole_key(&e.text()));
+            }
         }
     });
-    cancel.connect_clicked({
+    start.connect_clicked({
         let d = dialog.clone();
         move |_| {
+            // Close while the work runs leaves it running: the key or the failure opens again.
+            d.set_can_close(true);
             d.close();
         }
     });
-    go.connect_clicked({
-        let (ctx, entry, service, error) =
-            (Rc::downgrade(ctx), entry.clone(), service.clone(), error.clone());
+    end.connect_clicked({
+        let (ctx, r) = (Rc::downgrade(ctx), r.clone());
         move |_| {
             let Some(ctx) = ctx.upgrade() else { return };
-            say_error(&error, None);
-            ctx.hub.known.borrow_mut().sync_problem = None;
-            ctx.hub.send(Command::JoinSync {
-                device_name: typed_device_name(),
-                folder: SyncFolderSpec {
-                    kind: service.clone(),
-                    address: None,
-                    user: None,
-                    password: None,
-                },
-                recovery_key: Secret(entry.text().to_string()),
+            match r.stage.get() {
+                Over::Enter => join_with_key(&ctx, &r),
+                Over::Error => send_start_over(&ctx, &r),
+                Over::Key => {
+                    ctx.hub.known.borrow_mut().recovery_key = None;
+                    r.dialog.set_can_close(true);
+                    r.dialog.force_close();
+                }
+                Over::Clearing | Over::SettingUp => {}
+            }
+        }
+    });
+    over.connect_clicked({
+        let (ctx, r) = (Rc::downgrade(ctx), r.clone());
+        move |_| {
+            if let Some(ctx) = ctx.upgrade() {
+                confirm_start_over(&ctx, &r);
+            }
+        }
+    });
+    dialog.connect_closed({
+        let r = r.clone();
+        move |_| {
+            if let Some(id) = r.pace.borrow_mut().timer.take() {
+                id.remove();
+            }
+            with(|u| {
+                if u.restore.as_ref().is_some_and(|o| o.dialog == r.dialog) {
+                    u.restore = None;
+                }
             });
         }
     });
-    dialog.connect_closed(|_| with(|u| u.restore = None));
-    with(|u| u.restore = Some(Restore { dialog: dialog.clone(), error }));
+    with(|u| u.restore = Some(r));
     present(ctx, &dialog);
+}
+
+/// Whether a typed key has its 24 letters and digits.
+fn typed_whole_key(text: &str) -> bool {
+    text.chars().filter(char::is_ascii_alphanumeric).count() >= 24
+}
+
+/// "Google Drive holds history from 2 devices": the count the engine found in the folder.
+fn restore_line(ctx: &Rc<Ctx>, service: &SyncFolderKind) -> String {
+    let count = ctx.hub.known.borrow().sync_group.as_ref().map_or(2, super::restore_count);
+    t::rkey_enter_line(&service_name(service), count)
+}
+
+/// Restore pressed: join the folder's group with the typed key.
+fn join_with_key(ctx: &Rc<Ctx>, r: &Restore) {
+    say_error(&r.error, None);
+    r.joining.set(true);
+    ctx.hub.known.borrow_mut().sync_problem = None;
+    ctx.hub.send(Command::JoinSync {
+        device_name: typed_device_name(),
+        folder: restore_folder(&r.service),
+        recovery_key: Secret(r.entry.text().to_string()),
+    });
+}
+
+/// The folder the restore dialog joins, and starts over in: the service whose sign-in found it.
+fn restore_folder(service: &SyncFolderKind) -> SyncFolderSpec {
+    SyncFolderSpec { kind: service.clone(), address: None, user: None, password: None }
+}
+
+/// Start over without the key: an alert over the dialog says what goes and what stays, with
+/// Cancel the default and Delete and start over in destructive red.
+fn confirm_start_over(ctx: &Rc<Ctx>, r: &Restore) {
+    let name = service_name(&r.service);
+    let (weak, r2) = (Rc::downgrade(ctx), r.clone());
+    let dialog = alert(
+        ctx,
+        &t::rkey_start_over_title(),
+        &t::rkey_start_over_line(&name, &super::kind()),
+        &t::rkey_start_over_action(),
+        move || {
+            if let Some(ctx) = weak.upgrade() {
+                send_start_over(&ctx, &r2);
+            }
+        },
+        || {},
+    );
+    // Its two responses side by side, Cancel first, as the board draws them.
+    dialog.set_prefer_wide_layout(true);
+}
+
+/// Send the start over, from the alert or from Try again. What is on screen stays until the work
+/// has run 600 ms, so a fast service goes straight to the key.
+fn send_start_over(ctx: &Rc<Ctx>, r: &Restore) {
+    with(|u| {
+        u.over = Some(r.service.clone());
+        u.over_cleared = false;
+    });
+    {
+        let mut pace = r.pace.borrow_mut();
+        if let Some(id) = pace.timer.take() {
+            id.remove();
+        }
+        pace.returned = Some(Instant::now());
+        pace.shown = None;
+    }
+    r.joining.set(false);
+    r.end.set_sensitive(false);
+    ctx.hub.known.borrow_mut().sync_problem = None;
+    ctx.hub.send(Command::SyncGroup(SyncCommand::ClearFolderAndStart {
+        device_name: typed_device_name(),
+        folder: restore_folder(&r.service),
+    }));
+}
+
+/// The line under "Couldn't start over": out of reach, a service that would not delete, or the
+/// problem in the words the dialogs use.
+fn start_over_error(problem: &SyncProblem, service: &SyncFolderKind) -> String {
+    let name = service_name(service);
+    match problem {
+        SyncProblem::Unreachable => t::cloud_err_offline(&name),
+        SyncProblem::ClearRefused => t::rkey_start_over_err_refused(&name),
+        SyncProblem::SignInNeeded { .. } => t::cloud_err_signed_out(&name, &super::kind()),
+        other => problem_text(other, Some(service), ""),
+    }
+}
+
+/// Move the restore dialog to `stage` at the board's pace: the work shows only past 600 ms of
+/// the tap, and a step shown stays at least 400 ms.
+fn restore_to(r: &Restore, stage: Over, error: Option<String>) {
+    r.aim.set(stage);
+    let working = matches!(stage, Over::Clearing | Over::SettingUp);
+    let delay = {
+        let mut pace = r.pace.borrow_mut();
+        if let Some(id) = pace.timer.take() {
+            id.remove();
+        }
+        let mut delay = Duration::ZERO;
+        if working && pace.shown.is_none() {
+            let since = pace.returned.map(|t| t.elapsed()).unwrap_or_default();
+            delay = Duration::from_millis(600).saturating_sub(since);
+        }
+        if let Some(shown) = pace.shown {
+            delay = delay.max(Duration::from_millis(400).saturating_sub(shown.elapsed()));
+        }
+        delay
+    };
+    let r2 = r.clone();
+    let apply = move || {
+        r2.pace.borrow_mut().shown = working.then(Instant::now);
+        show_over(&r2, stage, error.as_deref());
+    };
+    if delay.is_zero() {
+        apply();
+    } else {
+        let r3 = r.clone();
+        let id = glib::timeout_add_local_once(delay, move || {
+            r3.pace.borrow_mut().timer = None;
+            apply();
+        });
+        r.pace.borrow_mut().timer = Some(id);
+    }
+}
+
+/// Close the restore dialog once the step on screen has had its 400 ms.
+fn close_restore_after_stage(r: &Restore) {
+    let delay = {
+        let mut pace = r.pace.borrow_mut();
+        if let Some(id) = pace.timer.take() {
+            id.remove();
+        }
+        pace.shown
+            .map_or(Duration::ZERO, |s| Duration::from_millis(400).saturating_sub(s.elapsed()))
+    };
+    let r2 = r.clone();
+    let id = glib::timeout_add_local_once(delay, move || {
+        r2.pace.borrow_mut().timer = None;
+        r2.dialog.set_can_close(true);
+        r2.dialog.force_close();
+    });
+    r.pace.borrow_mut().timer = Some(id);
+}
+
+/// Put the restore dialog in `stage` at once: the title and the content crossfade, and the header
+/// bar's buttons follow. The work keeps Close, as the picker's set-up does on the desktops.
+fn show_over(r: &Restore, stage: Over, error: Option<&str>) {
+    let name = service_name(&r.service);
+    r.stage.set(stage);
+    r.aim.set(stage);
+    let title = match stage {
+        Over::Enter => t::rkey_enter_title(),
+        Over::Clearing => t::rkey_clearing(),
+        Over::SettingUp => t::cloud_setting_up(),
+        Over::Error => t::rkey_start_over_err_title(),
+        Over::Key => t::rkey_title(),
+    };
+    r.head.set_title(&title);
+    r.dialog.set_title(&title);
+    match stage {
+        Over::Clearing => r.work_line.set_label(&t::rkey_clearing_line(&name)),
+        Over::SettingUp => r.work_line.set_label(&t::cloud_setting_up_line(&name)),
+        Over::Error => r.fail_line.set_label(error.unwrap_or_default()),
+        Over::Enter | Over::Key => {}
+    }
+    r.body.set_visible_child_name(match stage {
+        Over::Enter => "enter",
+        Over::Clearing | Over::SettingUp => "work",
+        Over::Error => "failed",
+        Over::Key => "key",
+    });
+    r.start.set_visible(stage != Over::Key);
+    r.start.set_label(&if matches!(stage, Over::Clearing | Over::SettingUp) {
+        t::action_close()
+    } else {
+        t::action_cancel()
+    });
+    r.end.set_visible(!matches!(stage, Over::Clearing | Over::SettingUp));
+    r.end.set_label(&match stage {
+        Over::Error => t::action_try_again(),
+        Over::Key => t::action_done(),
+        _ => t::rkey_restore(),
+    });
+    r.end.set_sensitive(match stage {
+        Over::Enter => typed_whole_key(&r.entry.text()),
+        _ => true,
+    });
+    r.dialog.set_can_close(stage != Over::Key);
+    r.dialog.set_default_widget(r.end.is_visible().then_some(&r.end));
 }
 
 /// For a shot: the restore dialog with the wrong-key line.
@@ -1200,6 +1536,125 @@ pub fn restore_wrong(ctx: &Rc<Ctx>) {
     restore(ctx, &SyncFolderKind::GoogleDrive);
     if let Some(r) = with(|u| u.restore.clone()) {
         say_error(&r.error, Some(&t::rkey_wrong()));
+    }
+}
+
+/// For a shot: the start over's alert over the restore dialog.
+#[cfg(feature = "fixtures")]
+pub fn restore_confirm(ctx: &Rc<Ctx>) {
+    if let Some(r) = with(|u| u.restore.clone()) {
+        confirm_start_over(ctx, &r);
+    }
+}
+
+/// For a shot: the alert's Delete and start over pressed, without the command; the shot says the
+/// engine's events itself.
+#[cfg(feature = "fixtures")]
+pub fn restore_started(_ctx: &Rc<Ctx>) {
+    if let Some(r) = with(|u| u.restore.clone()) {
+        with(|u| {
+            u.over = Some(r.service.clone());
+            u.over_cleared = false;
+        });
+        {
+            let mut pace = r.pace.borrow_mut();
+            pace.returned = Some(Instant::now());
+            pace.shown = None;
+        }
+        r.end.set_sensitive(false);
+    }
+}
+
+/// What the restore dialog does with the engine's events. Answers whether the event was a start
+/// over's, which the picker then leaves alone.
+fn heard_by_restore(ctx: &Rc<Ctx>, event: &Event) -> bool {
+    let Some(service) = with(|u| u.over.clone()) else {
+        // A join from the restore dialog that ended without a problem closes it.
+        if let Event::SyncSignIn { step: None, .. } = event
+            && ctx.hub.known.borrow().sync_problem.is_none()
+            && let Some(r) = with(|u| u.restore.clone())
+            && r.joining.get()
+            && r.stage.get() == Over::Enter
+        {
+            r.dialog.force_close();
+        }
+        if let Event::SyncProblem(_) = event
+            && let Some(r) = with(|u| u.restore.clone())
+        {
+            r.joining.set(false);
+        }
+        if let Event::SyncStatus(_) = event
+            && let Some(r) = with(|u| u.restore.clone())
+            && r.stage.get() == Over::Enter
+        {
+            r.count.set_label(&restore_line(ctx, &r.service));
+        }
+        return false;
+    };
+    let open = with(|u| u.restore.clone());
+    match event {
+        Event::SyncSignIn { step: Some(step), .. } => {
+            let stage = match step {
+                SyncSignInStep::Clearing => Over::Clearing,
+                SyncSignInStep::Finishing => Over::SettingUp,
+                // A sign-in step of the start over's own folder: the work has not begun.
+                _ => return true,
+            };
+            with(|u| u.over_cleared = true);
+            if let Some(r) = open {
+                restore_to(&r, stage, None);
+            }
+            true
+        }
+        Event::SyncSignIn { step: None, .. } => {
+            // The sign-in that found the other group can end after the start over began: only
+            // the end that follows the start over's own steps is its end.
+            if !with(|u| u.over_cleared) {
+                return true;
+            }
+            with(|u| {
+                u.over = None;
+                u.over_cleared = false;
+            });
+            // No new key was made (this device's group moved into the folder): the dialog
+            // closes and the cloud row says the rest.
+            if let Some(r) = open
+                && matches!(r.aim.get(), Over::Enter | Over::Clearing | Over::SettingUp)
+            {
+                close_restore_after_stage(&r);
+            }
+            true
+        }
+        Event::SyncRecoveryKey(key) => {
+            match open {
+                Some(r) => {
+                    fill_key(ctx, &r.key_slot, key, Some(&service));
+                    restore_to(&r, Over::Key, None);
+                }
+                // Closed while the work ran: the key opens by itself, with its first line.
+                None => key_dialog_after(ctx, Some(&service)),
+            }
+            true
+        }
+        Event::SyncProblem(problem) => {
+            with(|u| {
+                u.over = None;
+                u.over_cleared = false;
+            });
+            let text = start_over_error(problem, &service);
+            match open {
+                Some(r) => restore_to(&r, Over::Error, Some(text)),
+                // Closed while the work ran: the failure opens again, with Try again.
+                None => {
+                    restore(ctx, &service);
+                    if let Some(r) = with(|u| u.restore.clone()) {
+                        show_over(&r, Over::Error, Some(&text));
+                    }
+                }
+            }
+            true
+        }
+        _ => false,
     }
 }
 
@@ -1666,7 +2121,7 @@ fn alert(
     action: &str,
     done: impl Fn() + 'static,
     cancelled: impl Fn() + 'static,
-) {
+) -> adw::AlertDialog {
     let dialog = adw::AlertDialog::new(Some(title), Some(body));
     dialog.add_response("cancel", &t::action_cancel());
     dialog.add_response("go", action);
@@ -1681,6 +2136,7 @@ fn alert(
         }
     });
     dialog.present(Some(&ctx.window));
+    dialog
 }
 
 /// Turn off sync on this computer, after asking.
@@ -1860,6 +2316,11 @@ pub fn install(ctx: &Rc<Ctx>) {
 }
 
 fn heard(ctx: &Rc<Ctx>, event: &Event) {
+    // A start over's steps belong to the restore dialog, even while the picker that found the
+    // other group is still closing.
+    if heard_by_restore(ctx, event) {
+        return;
+    }
     match event {
         Event::SyncSignIn { service, step: Some(step) } => {
             let Some(p) = with(|u| u.picker.clone()) else { return };
@@ -1891,7 +2352,7 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                 Some(p) => {
                     let service =
                         with(|u| u.last.clone()).unwrap_or(SyncFolderKind::GoogleDrive);
-                    fill_key(ctx, &p.key_slot, key);
+                    fill_key(ctx, &p.key_slot, key, None);
                     stage_to(&p, &service, Stage::Key, None, None);
                 }
                 None => key_dialog(ctx),
@@ -1912,6 +2373,7 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
                 }
                 SyncProblem::WrongRecoveryKey => {
                     if let Some(r) = with(|u| u.restore.clone()) {
+                        r.joining.set(false);
                         say_error(&r.error, Some(&text));
                     }
                 }
@@ -2013,5 +2475,118 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
             }
         }
         _ => {}
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gtk_test::{pump, run};
+    use kaeri_model::group::SyncStatus;
+
+    const DRIVE: SyncFolderKind = SyncFolderKind::GoogleDrive;
+
+    /// A window's context with the dialogs listening, the dialogs' state fresh, and Google
+    /// Drive's folder found to hold another group of `found` devices.
+    fn ready(dir: &std::path::Path, runtime: &tokio::runtime::Runtime, found: u32) -> Rc<Ctx> {
+        with(|u| *u = Ui::default());
+        let ctx = Ctx::for_tests(runtime.handle(), dir);
+        install(&ctx);
+        ctx.hub.take(vec![Event::SyncStatus(SyncStatus {
+            restore_devices: found,
+            ..SyncStatus::default()
+        })]);
+        ctx
+    }
+
+    fn step(step: Option<SyncSignInStep>) -> Event {
+        Event::SyncSignIn { service: DRIVE, step }
+    }
+
+    fn open() -> Restore {
+        with(|u| u.restore.clone()).expect("the restore dialog is open")
+    }
+
+    #[test]
+    fn a_start_over_keeps_its_steps_and_shows_the_new_key_in_the_same_dialog() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 3);
+            // The sign-in found another group: the picker gives way to the restore dialog.
+            present_picker(&ctx, "wait", None);
+            with(|u| u.last = Some(DRIVE));
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::GroupExists)]);
+            let r = open();
+            assert_eq!(r.count.label(), t::rkey_enter_line("Google Drive", 3));
+            send_start_over(&ctx, &r);
+            // The end of the sign-in that found the group, arriving late, leaves it be.
+            ctx.hub.take(vec![step(None)]);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            assert_eq!(r.aim.get(), Over::Clearing);
+            pump(700);
+            assert_eq!(r.stage.get(), Over::Clearing);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Finishing))]);
+            pump(450);
+            assert_eq!(r.stage.get(), Over::SettingUp);
+            ctx.hub.take(vec![Event::SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA".into())]);
+            ctx.hub.take(vec![Event::SyncStatus(SyncStatus::default()), step(None)]);
+            pump(450);
+            assert_eq!(r.stage.get(), Over::Key);
+            assert!(with(|u| u.key.is_none()), "the key is not on a dialog of its own");
+            assert!(with(|u| u.restore.is_some()), "the dialog stays for its Done");
+            let first = r.key_slot.first_child().and_downcast::<gtk::Label>().expect("a line");
+            assert!(first.text().contains(&t::rkey_started_over("Google Drive")));
+            r.dialog.force_close();
+        });
+    }
+
+    #[test]
+    fn a_failed_start_over_says_why_and_tries_again_in_place() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 0);
+            restore(&ctx, &DRIVE);
+            let r = open();
+            assert_eq!(r.count.label(), t::rkey_enter_line("Google Drive", 2));
+            send_start_over(&ctx, &r);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::ClearRefused), step(None)]);
+            pump(50);
+            assert_eq!(r.stage.get(), Over::Error);
+            assert_eq!(r.fail_line.label(), t::rkey_start_over_err_refused("Google Drive"));
+            assert!(
+                r.end.is_sensitive() && r.end.label() == Some(t::action_try_again().into())
+            );
+            assert!(with(|u| u.over.is_none()));
+            send_start_over(&ctx, &r);
+            assert_eq!(with(|u| u.over.clone()), Some(DRIVE));
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::Unreachable)]);
+            pump(50);
+            assert_eq!(r.fail_line.label(), t::cloud_err_offline("Google Drive"));
+            r.dialog.force_close();
+        });
+    }
+
+    #[test]
+    fn closed_while_it_works_the_key_opens_by_itself_with_its_first_line() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 2);
+            restore(&ctx, &DRIVE);
+            let r = open();
+            send_start_over(&ctx, &r);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            pump(700);
+            assert_eq!(r.start.label(), Some(t::action_close().into()));
+            r.start.emit_clicked();
+            pump(400);
+            assert!(with(|u| u.restore.is_none()));
+            ctx.hub.take(vec![Event::SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA".into())]);
+            let key = with(|u| u.key.clone()).expect("the key opens by itself");
+            key.force_close();
+        });
     }
 }

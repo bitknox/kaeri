@@ -612,6 +612,8 @@ button.reader-swatch-button:checked .reader-swatch { box-shadow: 0 0 0 2px var(-
   border-radius: 12px;
   padding: 16px 18px;
 }
+/* The restore dialog's Start over: a flat button whose label lines up with the column. */
+.flush-start { margin-left: -10px; }
 .key-grid {
   font-family: monospace;
   font-size: 17px;
