@@ -55,11 +55,22 @@ static partial class SyncDialogs
         };
     }
 
+    /// <summary>Another device started sync over in Google Drive: no key opens the folder now.</summary>
+    static SyncStatus StartedOver() => On() with
+    {
+        Problem = new SyncProblem.GroupReplaced(),
+        Error = T.CloudErrStartedOver("Google Drive"), // i18n-skip
+        RecoveryKey = false,
+        RecoveryKeyMade = null,
+    };
+
     static void Say(SyncStatus status) => Ctx.Inject(new Event.SyncStatus(status));
 
     /// <summary>Puts the window in the state <paramref name="show"/> names.</summary>
     public static void Stage(string show)
     {
+        if (show.EndsWith("-reduced", StringComparison.Ordinal))
+            Motion.Override = false;
         Ctx.Window.DispatcherQueue.TryEnqueue(async () =>
         {
             await Task.Delay(1500);
@@ -70,15 +81,10 @@ static partial class SyncDialogs
                     or "sync-restore" or "sync-restore-wrong" or "sync-motion" => Off(),
                 // The folder holds another group of two devices, as the engine counts them.
                 "sync-startover" or "sync-startover-wrong" or "sync-startover-confirm" or "sync-startover-clearing" or "sync-startover-setup"
-                    or "sync-startover-key" or "sync-startover-offline" or "sync-startover-refused" or "sync-startover-motion" => Off() with { RestoreDevices = 2 },
+                    or "sync-startover-key" or "sync-startover-offline" or "sync-startover-refused" or "sync-startover-motion"
+                    or "sync-startover-cancel-motion" => Off() with { RestoreDevices = 2 },
                 // Another device started sync over in Google Drive: no key opens the folder now.
-                "sync-startedover" or "sync-startedover-restore" => On() with
-                {
-                    Problem = new SyncProblem.GroupReplaced(),
-                    Error = T.CloudErrStartedOver("Google Drive"), // i18n-skip
-                    RecoveryKey = false,
-                    RecoveryKeyMade = null,
-                },
+                "sync-startedover" or "sync-startedover-restore" => StartedOver(),
                 "sync-devices-full" or "sync-device-page" or "sync-device-page-remote-off" or "sync-device-page-phone" or "sync-notes" => Full(),
                 "sync-syncing" => On() with { Syncing = true },
                 "sync-problem" => On() with { Problem = new SyncProblem.SignInNeeded(SyncFolderKind.GoogleDrive) },
@@ -184,6 +190,19 @@ static partial class SyncDialogs
                 break;
             case "sync-startedover-restore":
                 EnterNewKey(SyncFolderKind.GoogleDrive);
+                break;
+            case "sync-startedover-motion" or "sync-startedover-motion-reduced":
+                // Synced, then the pass finds the group started over elsewhere: the cloud card
+                // turns into the error and the Recovery key rows go.
+                await Task.Delay(2000);
+                Say(StartedOver());
+                break;
+            case "sync-startover-cancel-motion":
+                // The failure page, then its Cancel pressed as a person would.
+                StartOverAt([Clearing(), new Event.SyncProblem(new SyncProblem.Unreachable())]);
+                await Task.Delay(3000);
+                if (restore is { } failed && DialogButton(failed.Dialog, "CloseButton") is { } cancel)
+                    new Microsoft.UI.Xaml.Automation.Peers.ButtonAutomationPeer(cancel).Invoke();
                 break;
             case "sync-key":
                 Ctx.Known.RecoveryKey = "K7QF2M9XHD4RTB6WPN3ZC8JA";

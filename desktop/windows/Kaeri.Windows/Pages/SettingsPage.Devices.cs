@@ -38,18 +38,89 @@ public sealed partial class SettingsPage
     /// </summary>
     string DevicesKey()
     {
+        var (common, replaced, own) = DevicesWords();
+        return Drawn.Fingerprint(new object?[] { common, replaced, own });
+    }
+
+    /// <summary>
+    /// <see cref="DevicesKey"/> in three parts: what a group started over elsewhere leaves as it
+    /// was, whether it was, and what that decides: the cloud card's buttons and the recovery key.
+    /// </summary>
+    (string Common, bool Replaced, string Own) DevicesWords()
+    {
         var status = ctx.Known.SyncGroup ?? NoSync;
-        var now = Now;
+        var replaced = status.Problem is SyncProblem.GroupReplaced && status.Folder is not null;
         // A pass starting or ending, and a device's or the folder's line, change in place: they
         // are not part of the key, so a sync pass never redraws the pane.
-        var words = new List<object?> { SyncWords.Bare(status), status.RecoveryKey, status.RecoveryKeyMade, ctx.Tv.Available };
+        var words = new List<object?> { SyncWords.Bare(status), ctx.Tv.Available };
         foreach (var device in status.Devices.Where(d => !d.ThisDevice))
             words.Add((device.Id, device.Name, device.Kind, device.RemoteKey is null));
         foreach (var note in status.Notes)
             words.Add((note, ctx.Known.Entries.TryGetValue(note.AnilistId, out var entry) ? entry.Title : ""));
         if (status.Folder is { } folder)
-            words.Add((folder.Kind, folder.Account, CloudButtons(SyncWords.State(status, now, SyncDialogs.ByHand))));
-        return Drawn.Fingerprint(words);
+            words.Add((folder.Kind, folder.Account));
+        var own = replaced
+            ? ""
+            : Drawn.Fingerprint((status.RecoveryKey, status.RecoveryKeyMade,
+                status.Folder is null ? "" : CloudButtons(SyncWords.State(status, Now, SyncDialogs.ByHand))));
+        return (Drawn.Fingerprint(words), replaced, own);
+    }
+
+    /// <summary>The cloud card's place, which keeps it across a change of state, and the card in it now.</summary>
+    Grid? cloudSlot;
+    SettingsCard? cloudCard;
+    /// <summary>The Recovery key rows' place: their heading and cards, or the gap the pane has without them.</summary>
+    StackPanel? recoverySlot;
+    /// <summary>The pane's <see cref="DevicesWords"/> as last built.</summary>
+    string? commonDrawn;
+    bool replacedDrawn;
+
+    /// <summary>
+    /// Another device started sync over: the cloud card turns into the error in one crossfade on
+    /// the standard token, never through an empty frame, and the Recovery key rows close their
+    /// height under it. With animation effects off the crossfade stays and the height moves at
+    /// once. False when anything else changed too, and the pane is built again.
+    /// </summary>
+    bool StartedOverInPlace()
+    {
+        var status = ctx.Known.SyncGroup ?? NoSync;
+        var (common, replaced, _) = DevicesWords();
+        if (!replaced || replacedDrawn || common != commonDrawn || cloudSlot is not { } slot || cloudCard is not { } old
+            || status.Folder is not { } folder)
+            return false;
+        replacedDrawn = true;
+        var focused = Ui.FocusWithin(old) is not null || (recoverySlot is { } held && Ui.FocusWithin(held) is not null);
+        var before = slot.ActualHeight;
+        old.IsHitTestVisible = false;
+        AutomationProperties.SetAccessibilityView(old, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+        var card = CloudCard(status, folder);
+        card.Opacity = 0;
+        slot.Children.Add(card);
+        Motion.Crossfade(old, card, () => slot.Children.Remove(old));
+        slot.UpdateLayout();
+        Motion.Height(slot, before, card.ActualHeight);
+        if (focused && card.Content is Panel panel && panel.Children.OfType<Button>().FirstOrDefault() is { } first)
+            first.Focus(FocusState.Programmatic);
+        if (recoverySlot is { Children.Count: > 0 } rows)
+        {
+            rows.IsHitTestVisible = false;
+            AutomationProperties.SetAccessibilityView(rows, Microsoft.UI.Xaml.Automation.Peers.AccessibilityView.Raw);
+            const double gap = 16;
+            if (Motion.Enabled)
+                Motion.FadeTo(rows, 0, Motion.Standard);
+            Motion.Ease(rows, rows.ActualHeight, gap, height =>
+            {
+                rows.Height = height;
+                rows.Clip = new RectangleGeometry { Rect = new global::Windows.Foundation.Rect(0, 0, Math.Max(0, rows.ActualWidth), height) };
+                if (Math.Abs(height - gap) < 0.01)
+                {
+                    rows.Children.Clear();
+                    rows.Clip = null;
+                    rows.Opacity = 1;
+                }
+            });
+        }
+        return true;
     }
 
     /// <summary>Which buttons and title the cloud card has for a state: what redraws it, where its line alone does not.</summary>
@@ -63,6 +134,8 @@ public sealed partial class SettingsPage
     void ShowDevices()
     {
         var status = ctx.Known.SyncGroup ?? NoSync;
+        (cloudSlot, cloudCard, recoverySlot) = (null, null, null);
+        (commonDrawn, replacedDrawn, _) = DevicesWords();
         ThisDevice(status);
         if (!SyncWords.Bare(status))
         {
@@ -301,6 +374,14 @@ public sealed partial class SettingsPage
             Cards.Children.Add(CardFrame(T.CloudAdd, null, add, ""));
             return;
         }
+        cloudSlot = new Grid();
+        cloudSlot.Children.Add(CloudCard(status, folder));
+        Cards.Children.Add(cloudSlot);
+    }
+
+    /// <summary>The cloud card for the folder's state, with its line kept current in place.</summary>
+    SettingsCard CloudCard(SyncStatus status, SyncFolderView folder)
+    {
         var service = SyncWords.ServiceName(folder.Kind);
         var state = SyncWords.State(status, Now, SyncDialogs.ByHand);
         static (string, SyncMark) Line(CloudState state, SyncFolderView folder) => state switch
@@ -341,7 +422,11 @@ public sealed partial class SettingsPage
                 buttons.Children.Add(now);
                 break;
         }
-        buttons.Children.Add(MoreButton(folder.Kind, service));
+        // Started over elsewhere: Enter new key is the card's one way on.
+        if (state is CloudState.Problem { Fix: ProblemFix.EnterNewKey })
+            SyncDialogs.MoreOpener = null;
+        else
+            buttons.Children.Add(MoreButton(folder.Kind, service));
         var card = new SettingsCard
         {
             Header = state is CloudState.Problem ? T.CloudErrTitle(service) : service,
@@ -351,12 +436,13 @@ public sealed partial class SettingsPage
         if (Marked(line, mark) is { } described)
             card.Description = described;
         AutomationProperties.SetName(card, $"{card.Header}, {line}");
-        Cards.Children.Add(card);
-        // A pass starting or ending changes the line and Sync now in place.
+        cloudCard = card;
+        // A pass starting or ending changes the line and Sync now in place. A card on its way
+        // out in a crossfade keeps what it said.
         var drawn = (line, mark);
         refresh.Add(() =>
         {
-            if (ctx.Known.SyncGroup is not { Folder: { } nowFolder } nowStatus)
+            if (!ReferenceEquals(cloudCard, card) || ctx.Known.SyncGroup is not { Folder: { } nowFolder } nowStatus)
                 return;
             if (syncNow is not null && syncNow.IsEnabled == nowStatus.Syncing)
                 syncNow.IsEnabled = !nowStatus.Syncing;
@@ -368,6 +454,7 @@ public sealed partial class SettingsPage
                 card.Description = again;
             AutomationProperties.SetName(card, $"{card.Header}, {said.Item1}");
         });
+        return card;
     }
 
     /// <summary>
@@ -415,16 +502,19 @@ public sealed partial class SettingsPage
     /// <summary>The recovery key (once a folder holds one), Make a new key, and Turn off sync last.</summary>
     void RecoveryAndOff(SyncStatus status)
     {
+        // In a place of their own, which closes its height when the group is started over.
+        var rows = recoverySlot = new StackPanel { Spacing = Cards.Spacing };
+        Cards.Children.Add(rows);
         // A group started over elsewhere left this PC with no key that opens the folder.
         if (status.RecoveryKey && status.Problem is not SyncProblem.GroupReplaced)
         {
-            Cards.Children.Add(Heading(T.RkeyRow));
+            rows.Children.Add(Heading(T.RkeyRow));
             var made = status.RecoveryKeyMade is { } at
                 ? T.RkeyMade(DateTimeOffset.FromUnixTimeSeconds(at).ToLocalTime().ToString("d MMMM", System.Globalization.CultureInfo.CurrentCulture))
                 : null;
             var show = new Button { Content = T.DevicesShowKey };
             show.Click += (_, _) => SyncDialogs.ShowKeyAgain();
-            Cards.Children.Add(CardFrame(T.RkeyRow, made, show, ""));
+            rows.Children.Add(CardFrame(T.RkeyRow, made, show, ""));
             var fresh = new SettingsCard
             {
                 Header = T.RkeyNew,
@@ -433,11 +523,11 @@ public sealed partial class SettingsPage
                 IsClickEnabled = true,
             };
             fresh.Click += (_, _) => SyncDialogs.MakeNewKey();
-            Cards.Children.Add(fresh);
+            rows.Children.Add(fresh);
         }
         else
         {
-            Cards.Children.Add(new Border { Height = 16 });
+            rows.Height = 16;
         }
         var off = new Button { Content = T.DevicesTurnOffAction };
         off.Click += (_, _) => SyncDialogs.TurnOff();

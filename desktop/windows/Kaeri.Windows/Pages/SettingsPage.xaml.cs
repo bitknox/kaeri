@@ -374,6 +374,13 @@ public sealed partial class SettingsPage : Page
             return;
         }
         held = false;
+        // A group started over elsewhere changes the cloud card and the Recovery key rows in place.
+        if (same && pane.Name == "devices" && StartedOverInPlace())
+        {
+            shapeDrawn = shape;
+            Refresh();
+            return;
+        }
         if (!same)
         {
             if (shownPane is { } left && Keeps(left) && shapeDrawn is not null)
