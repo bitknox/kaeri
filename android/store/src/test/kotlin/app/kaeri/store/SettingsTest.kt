@@ -91,6 +91,31 @@ class SettingsTest {
     }
 
     @Test
+    fun every_setting_the_engine_words_on_or_off_is_a_switch() {
+        // The keys `kaeri_model::settings::two_state` answers and `value` words as on or off.
+        val engine = listOf(
+            SettingKey.MOTION, SettingKey.AUTO_NEXT, SettingKey.PRELOAD_METERED, SettingKey.SKIP_OPENING, SettingKey.SKIP_RECAP,
+            SettingKey.ASK_WAS_OPENING, SettingKey.FIND_SKIP_TIMES, SettingKey.SHARE_SKIP_TIMES, SettingKey.SKIP_FILLER,
+            SettingKey.MARK_CHAPTERS, SettingKey.SKIP_BUTTON, SettingKey.FULLSCREEN, SettingKey.NIGHT_MODE, SettingKey.MERGE_SUBTITLES,
+            SettingKey.KEEP_SEEDING, SettingKey.PRESENCE, SettingKey.PRESENCE_TITLE, SettingKey.PRESENCE_RICH, SettingKey.TORRENTS,
+            SettingKey.SYNCPLAY, SettingKey.UPDATE_CHECK, SettingKey.UPDATE_BETA, SettingKey.SPOILER_PROTECTION,
+            SettingKey.PICTURE_IN_PICTURE_ON_LEAVE, SettingKey.DOWNLOADS_ON_CELLULAR, SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR,
+            SettingKey.KEEP_CHAPTERS_READY, SettingKey.DELETE_AFTER_READING, SettingKey.SHOW_VOLUMES, SettingKey.OPDS_FEED,
+            SettingKey.SERIES_CHOICES_FOLLOW, SettingKey.LOOK_FOLLOWS, SettingKey.CHAPTER_NOTIFICATIONS, SettingKey.DOWNLOADS_FINISHED,
+            SettingKey.TORRENTS_ON_CELLULAR, SettingKey.EPISODE_NOTIFICATIONS, SettingKey.ADULT_TITLES, SettingKey.EPISODE_DISCUSSIONS,
+            SettingKey.SHOW_FOLLOWING, SettingKey.COMMENT_IMAGES, SettingKey.CONTROLLER_INPUT, SettingKey.SWAP_FACE_BUTTONS,
+            SettingKey.CALENDAR_MINE, SettingKey.CAST_TVS, SettingKey.TORRENTS_WHILE_CASTING, SettingKey.HOVER_CARDS,
+            SettingKey.FOLLOW_SYSTEM_CAPTIONS, SettingKey.SAVE_CRASH_REPORTS, SettingKey.ASK_AFTER_CRASH,
+        )
+        assertEquals(emptyList<SettingKey>(), engine.filterNot(SettingsCatalog::isSwitch))
+        // A TV row draws a switch for these, and its menu offers off then on.
+        assertEquals(
+            listOf(SettingValue.Bool(false), SettingValue.Bool(true)),
+            SettingsCatalog.options(SettingKey.FIND_SKIP_TIMES).map { it.value },
+        )
+    }
+
+    @Test
     fun sizes_read_as_the_terminal_says_them() {
         assertEquals("0 B", Wording.bytes(context, 0))
         assertEquals("140 MB", Wording.bytes(context, 140_300_000))

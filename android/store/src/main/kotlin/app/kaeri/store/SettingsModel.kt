@@ -62,6 +62,9 @@ object SettingsCatalog {
         SettingKey.ADULT_TITLES, SettingKey.EPISODE_DISCUSSIONS, SettingKey.SHOW_FOLLOWING, SettingKey.COMMENT_IMAGES,
         SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR, SettingKey.KEEP_CHAPTERS_READY, SettingKey.DELETE_AFTER_READING, SettingKey.SHOW_VOLUMES, SettingKey.OPDS_FEED,
         SettingKey.SERIES_CHOICES_FOLLOW, SettingKey.LOOK_FOLLOWS, SettingKey.CHAPTER_NOTIFICATIONS, SettingKey.DOWNLOADS_FINISHED,
+        SettingKey.FIND_SKIP_TIMES, SettingKey.CONTROLLER_INPUT, SettingKey.SWAP_FACE_BUTTONS, SettingKey.CALENDAR_MINE, SettingKey.CAST_TVS,
+        SettingKey.TORRENTS_WHILE_CASTING, SettingKey.HOVER_CARDS, SettingKey.FOLLOW_SYSTEM_CAPTIONS, SettingKey.SAVE_CRASH_REPORTS,
+        SettingKey.ASK_AFTER_CRASH,
     )
 
     /** The settings with two states, on and off, that a switch shows. */

@@ -232,6 +232,10 @@ internal fun ReaderState.choice(key: ReaderSettingKey): String? =
 internal fun ReaderState.toggle(key: ReaderSettingKey): Boolean =
     (settings?.rows?.firstOrNull { it.key == key }?.value as? ReaderValue.Toggle)?.on == true
 
+/** Where a switch of [key] writes: where its value in effect is kept, so a series' own choice changes. */
+internal fun ReaderState.toggleScope(key: ReaderSettingKey): SettingScope =
+    settings?.rows?.firstOrNull { it.key == key }?.scope ?: SettingScope.DEVICE
+
 private enum class Sheet { None, Chapters, Settings }
 
 private tailrec fun Context.activity(): Activity? = when (this) {
@@ -414,7 +418,7 @@ fun PhoneReader(
                 return
             }
         }
-        session.setSetting(key, SettingScope.DEVICE, ReaderValue.Toggle(on))
+        session.setSetting(key, state.toggleScope(key), ReaderValue.Toggle(on))
     }
 
     fun act(action: ReaderAction) {
