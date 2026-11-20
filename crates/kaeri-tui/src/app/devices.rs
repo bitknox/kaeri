@@ -985,7 +985,9 @@ impl App {
                 self.devices.pending = Some(so.folder);
                 self.open_restore();
             }
-            (None, true) => self.nav.close_overlay(),
+            (None, true) => {
+                self.nav.close_overlay();
+            }
             (None, false) => {
                 self.nav.close_overlay();
                 self.forget_sync_form();
@@ -2205,8 +2207,8 @@ mod tests {
         let lines = a.device_lines();
         let at = lines.iter().position(|l| *l == DeviceLine::Folder).unwrap();
         assert_eq!(
-            lines[at..],
-            [DeviceLine::Folder, DeviceLine::EnterNewKey, DeviceLine::TurnOff],
+            lines[at..].to_vec(),
+            vec![DeviceLine::Folder, DeviceLine::EnterNewKey, DeviceLine::TurnOff],
             "Enter new key is the only way on"
         );
         assert_eq!(a.folder_state(), FolderState::Failed);
