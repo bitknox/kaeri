@@ -285,7 +285,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 34] = [
+    pub const NATIVE_ROWS: [Self; 37] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::PictureInPictureOnLeave,
@@ -311,6 +311,10 @@ impl SettingKey {
         Self::NewChapters,
         Self::KeepChaptersReady,
         Self::DeleteAfterReading,
+        // The reading feed: its pane reads these rows for what is saved, the port above all.
+        Self::OpdsFeed,
+        Self::OpdsPassword,
+        Self::OpdsPort,
         Self::ShowVolumes,
         Self::SeriesChoicesFollow,
         Self::ChapterNotifications,
@@ -423,7 +427,7 @@ impl SettingKey {
         Self::ROWS
             .into_iter()
             .chain(Self::NATIVE_ROWS)
-            .chain([Self::SourceOrder, Self::OpdsFeed, Self::OpdsPassword, Self::OpdsPort])
+            .chain([Self::SourceOrder])
             .find(|setting| setting.path().is_some_and(|(t, k)| t == table && k == key))
     }
 
@@ -2062,14 +2066,8 @@ mod tests {
         let every = SettingKey::ROWS.into_iter().chain(SettingKey::NATIVE_ROWS);
         // The switch form of new chapters writes the picker's key, which names the picker.
         let every = every.filter(|key| *key != SettingKey::KeepChaptersReady);
-        // The order, and the reading feed's settings, which neither list of rows holds.
-        let others = [
-            SettingKey::SourceOrder,
-            SettingKey::OpdsFeed,
-            SettingKey::OpdsPassword,
-            SettingKey::OpdsPort,
-        ];
-        for setting in every.chain(others) {
+        // The order, which neither list of rows holds.
+        for setting in every.chain([SettingKey::SourceOrder]) {
             if let Some((table, key)) = setting.path() {
                 assert_eq!(SettingKey::at(table, key), Some(setting), "{table:?}.{key}");
             }
@@ -2128,6 +2126,9 @@ mod tests {
                 (SettingKey::NewChapters, "off"),
                 (SettingKey::KeepChaptersReady, "off"),
                 (SettingKey::DeleteAfterReading, "off"),
+                (SettingKey::OpdsFeed, "off"),
+                (SettingKey::OpdsPassword, "not set"),
+                (SettingKey::OpdsPort, "automatic"),
                 (SettingKey::ShowVolumes, "off"),
                 (SettingKey::SeriesChoicesFollow, "on"),
                 (SettingKey::ChapterNotifications, "off"),
