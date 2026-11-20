@@ -94,6 +94,8 @@ struct FeedPane: View {
     @Environment(AppStore.self) private var store
     let back: () -> Void
     @State private var port = ""
+    /// The port the settings hold, so leaving the field unchanged writes nothing.
+    @State private var savedPort = ""
     @State private var copied: String?
     @State private var askingNewPassword = false
     @FocusState private var portFocused: Bool
@@ -219,7 +221,9 @@ struct FeedPane: View {
         }
         Color.clear.frame(height: 0)
             .task {
-                port = store.settings.row(.opdsPort)?.value ?? ""
+                // The typed text, not the row's words, which say "automatic" for no port.
+                port = store.settings.row(.opdsPort)?.typedText ?? ""
+                savedPort = port
                 if sending.stageFeed() { return }
                 // The engine tells the pane when the feed or who fetched changes.
                 sending.loadFeed()
@@ -241,13 +245,14 @@ struct FeedPane: View {
         .animation(nil, value: copied)
     }
 
-    /// Kept as digits in 1024 to 65535, the ports a program may listen on; anything else is
-    /// emptied, which picks a free one.
+    /// Writes the field when it says another port than the settings hold, so focusing and
+    /// leaving it never clears a port it could not show.
     private func savePort() {
-        let digits = port.filter(\.isNumber)
-        let kept = UInt16(digits).flatMap { (1024...65535).contains($0) ? String($0) : nil } ?? ""
+        let kept = FeedPort.kept(port)
         port = kept
-        store.setSetting(.opdsPort, to: .str(kept))
+        guard let write = FeedPort.write(kept, saved: savedPort) else { return }
+        savedPort = write
+        store.setSetting(.opdsPort, to: .str(write))
     }
 
     /// What the address row says: the address, why there is none, or that it is starting.
@@ -268,6 +273,20 @@ struct FeedPane: View {
             return L.opdsPortMoved(wanted: Int(wanted), port: Int(feed.port))
         }
         return port.isEmpty ? L.opdsPortNote : ""
+    }
+}
+
+enum FeedPort {
+    /// Kept as digits in 1024 to 65535, the ports a program may listen on; anything else is
+    /// emptied, which picks a free one.
+    static func kept(_ text: String) -> String {
+        let digits = text.filter(\.isNumber)
+        return UInt16(digits).flatMap { (1024...65535).contains($0) ? String($0) : nil } ?? ""
+    }
+
+    /// What to write when the field says `kept`, or nil when the settings already hold it.
+    static func write(_ kept: String, saved: String) -> String? {
+        kept == saved ? nil : kept
     }
 }
 
