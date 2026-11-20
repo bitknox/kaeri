@@ -47,6 +47,8 @@ import UIKit
 ///                         recording that crossfade
 ///     startedover         on sync-started-over: the Devices pane once the engine says the group
 ///                         was started over elsewhere; startedover-restore its Enter new key
+///     startedover-late    staged: a synced group whose start over elsewhere arrives 2.5 s after
+///                         it is up, for recording the Devices pane changing
 public enum SyncScene: String, Sendable {
     case off, on, syncing, settingup, signedout, signedoutErr = "signedout-err", offline
     case folderGone = "folder-gone", picker, pickerDenied = "picker-denied", nextcloud
@@ -61,6 +63,7 @@ public enum SyncScene: String, Sendable {
     case startOver = "startover", startOverWrong = "startover-wrong", startOverConfirm = "startover-confirm"
     case startOverClearing = "startover-clearing", startOverSetup = "startover-setup", startOverKey = "startover-key"
     case startOverFailed = "startover-failed", startOverFailedCancel = "startover-failed-cancel", startedOver = "startedover", startedOverRestore = "startedover-restore"
+    case startedOverLate = "startedover-late"
 
     /// A state the engine is run to, rather than one staged without it.
     var runsEngine: Bool {
@@ -145,6 +148,14 @@ extension SyncModel {
             status = Self.group(now: now, stores: [SyncStoreOffer(address: "store.example", name: "Hotaru", inviteFrom: "Kitchen iPad")]) // i18n-skip
         case .pairWrong, .pairWorking, .pairMotion:
             status = Self.group(now: now, notes: true)
+        case .startedOverLate:
+            status = Self.group(now: now)
+            var replaced = status
+            replaced.problem = .groupReplaced
+            Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(2500))
+                self?.stage(status: replaced)
+            }
         case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,
              .profileAdd, .profileEdit, .picker, .nextcloud, .nextcloudWait, .nextcloudErr,
              .webdav, .webdavErr, .restore, .restoreWrong, .switchService, .remove:
