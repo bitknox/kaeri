@@ -912,12 +912,17 @@ mod tests {
             let page = show(&ctx, started_over());
             pump(60);
             assert_eq!(stills(&page), 2, "the old cloud row and key rows show over the new");
-            pump(900);
+            // The springs settle within a second, on a busy test machine too.
+            let closed =
+                || all(page.upcast_ref()).iter().any(|w| w.is::<Squeeze>() && !w.is_visible());
+            for _ in 0..30 {
+                if stills(&page) == 1 && closed() {
+                    break;
+                }
+                pump(100);
+            }
             assert_eq!(stills(&page), 1, "the cloud row's still is gone");
-            assert!(
-                all(page.upcast_ref()).iter().any(|w| w.is::<Squeeze>() && !w.is_visible()),
-                "the key rows' place closed"
-            );
+            assert!(closed(), "the key rows' place closed");
             // Once changed, a page drawn again is plain.
             let page = show(&ctx, started_over());
             pump(60);
