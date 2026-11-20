@@ -129,12 +129,16 @@ public class CreditPagesTests
 
     sealed class Open
     {
-        public readonly List<Command> Sent = [];
+        // The notice's timer sends a held keep from the thread pool, so the list is read and
+        // written under a lock.
+        readonly List<Command> sent = [];
         public readonly ReaderSession Reader;
 
-        public Open(int pages = 5)
+        // The app's hold unless a test waits for it to run out, so no keep is sent by the clock
+        // while a test is still asserting.
+        public Open(int pages = 5, uint keptHold = ReaderSession.KeptHoldMs)
         {
-            Reader = new ReaderSession { Send = Sent.Add, KeptHold = 60 };
+            Reader = new ReaderSession { Send = c => { lock (sent) sent.Add(c); }, KeptHold = keptHold };
             Reader.SurfaceChanged(new ReaderSurface(800, 1200, 1));
             Reader.Open("work-tidebell", "ch-1");
             Reader.Apply(new ReaderEvent.Opened(View("ch-1")));
@@ -146,13 +150,18 @@ public class CreditPagesTests
             new ChapterRow(chapter, "Chapter 1", new ChapterReadState.Unread()), ReaderMode.Paged, ReadDirection.RightToLeft,
             new ReadPlace("work-tidebell", chapter));
 
+        public List<Command> Sent
+        {
+            get { lock (sent) return [.. sent]; }
+        }
+
         public List<ulong> Kept => [.. Sent.OfType<Command.Reader>().Select(c => c.V1).OfType<ReaderCommand.NotACreditPage>().Select(k => k.Fingerprint)];
     }
 
     [Fact]
     public void AKeepReachesTheEngineOnceWhenUndoRunsOut()
     {
-        var open = new Open();
+        var open = new Open(keptHold: 60);
         var reader = open.Reader;
         reader.ShowCredit(reader.ShowCredits(false)!);
         Assert.Equal(ReaderLocal.NotACredit, reader.Notice?.Local);
@@ -175,7 +184,7 @@ public class CreditPagesTests
     [Fact]
     public void UndoSendsNothing()
     {
-        var open = new Open();
+        var open = new Open(keptHold: 60);
         var reader = open.Reader;
         reader.ShowCredit(reader.ShowCredits(false)!);
         reader.ActLocal(ReaderLocal.NotACredit);
