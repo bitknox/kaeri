@@ -149,7 +149,7 @@ static partial class SyncDialogs
                 Restore(SyncFolderKind.GoogleDrive);
                 if (restore is { } wrong)
                 {
-                    wrong.Entry.Text = "K7QM 4XR9 DH2V T8NB 3CWZ 6PLE";
+                    wrong.Entry.Text = "K7QM 4XR9 DH2V T8NB 3CWZ 6PLE"; // i18n-skip
                     SayError(wrong.Error, T.RkeyWrong);
                 }
                 break;
