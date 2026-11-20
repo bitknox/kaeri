@@ -2477,3 +2477,116 @@ fn heard(ctx: &Rc<Ctx>, event: &Event) {
         _ => {}
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gtk_test::{pump, run};
+    use kaeri_model::group::SyncStatus;
+
+    const DRIVE: SyncFolderKind = SyncFolderKind::GoogleDrive;
+
+    /// A window's context with the dialogs listening, the dialogs' state fresh, and Google
+    /// Drive's folder found to hold another group of `found` devices.
+    fn ready(dir: &std::path::Path, runtime: &tokio::runtime::Runtime, found: u32) -> Rc<Ctx> {
+        with(|u| *u = Ui::default());
+        let ctx = Ctx::for_tests(runtime.handle(), dir);
+        install(&ctx);
+        ctx.hub.take(vec![Event::SyncStatus(SyncStatus {
+            restore_devices: found,
+            ..SyncStatus::default()
+        })]);
+        ctx
+    }
+
+    fn step(step: Option<SyncSignInStep>) -> Event {
+        Event::SyncSignIn { service: DRIVE, step }
+    }
+
+    fn open() -> Restore {
+        with(|u| u.restore.clone()).expect("the restore dialog is open")
+    }
+
+    #[test]
+    fn a_start_over_keeps_its_steps_and_shows_the_new_key_in_the_same_dialog() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 3);
+            // The sign-in found another group: the picker gives way to the restore dialog.
+            present_picker(&ctx, "wait", None);
+            with(|u| u.last = Some(DRIVE));
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::GroupExists)]);
+            let r = open();
+            assert_eq!(r.count.label(), t::rkey_enter_line("Google Drive", 3));
+            send_start_over(&ctx, &r);
+            // The end of the sign-in that found the group, arriving late, leaves it be.
+            ctx.hub.take(vec![step(None)]);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            assert_eq!(r.aim.get(), Over::Clearing);
+            pump(700);
+            assert_eq!(r.stage.get(), Over::Clearing);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Finishing))]);
+            pump(450);
+            assert_eq!(r.stage.get(), Over::SettingUp);
+            ctx.hub.take(vec![Event::SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA".into())]);
+            ctx.hub.take(vec![Event::SyncStatus(SyncStatus::default()), step(None)]);
+            pump(450);
+            assert_eq!(r.stage.get(), Over::Key);
+            assert!(with(|u| u.key.is_none()), "the key is not on a dialog of its own");
+            assert!(with(|u| u.restore.is_some()), "the dialog stays for its Done");
+            let first = r.key_slot.first_child().and_downcast::<gtk::Label>().expect("a line");
+            assert!(first.text().contains(&t::rkey_started_over("Google Drive")));
+            r.dialog.force_close();
+        });
+    }
+
+    #[test]
+    fn a_failed_start_over_says_why_and_tries_again_in_place() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 0);
+            restore(&ctx, &DRIVE);
+            let r = open();
+            assert_eq!(r.count.label(), t::rkey_enter_line("Google Drive", 2));
+            send_start_over(&ctx, &r);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::ClearRefused), step(None)]);
+            pump(50);
+            assert_eq!(r.stage.get(), Over::Error);
+            assert_eq!(r.fail_line.label(), t::rkey_start_over_err_refused("Google Drive"));
+            assert!(
+                r.end.is_sensitive() && r.end.label() == Some(t::action_try_again().into())
+            );
+            assert!(with(|u| u.over.is_none()));
+            send_start_over(&ctx, &r);
+            assert_eq!(with(|u| u.over.clone()), Some(DRIVE));
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::Unreachable)]);
+            pump(50);
+            assert_eq!(r.fail_line.label(), t::cloud_err_offline("Google Drive"));
+            r.dialog.force_close();
+        });
+    }
+
+    #[test]
+    fn closed_while_it_works_the_key_opens_by_itself_with_its_first_line() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 2);
+            restore(&ctx, &DRIVE);
+            let r = open();
+            send_start_over(&ctx, &r);
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            pump(700);
+            assert_eq!(r.start.label(), Some(t::action_close().into()));
+            r.start.emit_clicked();
+            pump(400);
+            assert!(with(|u| u.restore.is_none()));
+            ctx.hub.take(vec![Event::SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA".into())]);
+            let key = with(|u| u.key.clone()).expect("the key opens by itself");
+            key.force_close();
+        });
+    }
+}
