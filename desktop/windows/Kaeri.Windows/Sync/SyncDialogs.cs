@@ -1032,7 +1032,8 @@ static partial class SyncDialogs
         var keySlot = new StackPanel { Spacing = 16 };
         pages.Add("key", keySlot);
 
-        var title = new Title(T.RkeyEnterTitle);
+        // A start over that goes on opens on its own step's title, with no fade from the key field's.
+        var title = new Title(resume is null ? T.RkeyEnterTitle : StepTitle(resume));
         var dialog = Dialog(title.View, pages.View);
         dialog.CloseButtonText = T.ActionCancel;
         var parts = new RestoreParts
@@ -1253,6 +1254,16 @@ static partial class SyncDialogs
         r.Shown = work ? DateTime.UtcNow : null;
         ShowStartOverStep(r, flow);
     }
+
+    /// <summary>The restore dialog's title for where <paramref name="flow"/> stands.</summary>
+    static string StepTitle(StartOver flow) => flow.Step switch
+    {
+        StartOverStep.Sent or StartOverStep.Clearing => T.RkeyClearing,
+        StartOverStep.SettingUp => T.CloudSettingUp,
+        StartOverStep.Failed => T.RkeyStartOverErrTitle,
+        StartOverStep.Key => T.RkeyTitle,
+        _ => T.RkeyEnterTitle,
+    };
 
     /// <summary>Shows where <paramref name="flow"/> stands at once: the title, the page and the buttons.</summary>
     static void ShowStartOverStep(RestoreParts r, StartOver flow)
