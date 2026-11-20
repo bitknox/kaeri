@@ -99,7 +99,9 @@ class SceneRecorder {
                 batches++
                 events += batch.filter(::kept)
             }
-            store.start(EngineLaunch(EngineLaunch.Engine.Fixtures(scene), EngineHome.override(home)), AppHost(MemorySecrets()))
+            // A TV's scene runs as a TV, as the TV app starts it.
+            val platform = if (scene == FixtureScene.SYNC_TV_STARTED_OVER) app.kaeri.engine.ffi.FfiPlatform.ANDROID_TV else enginePlatform()
+            store.start(EngineLaunch(EngineLaunch.Engine.Fixtures(scene), EngineHome.override(home), platform = platform), AppHost(MemorySecrets()))
         }
         withTimeout(60_000) { store.phase.first { it == AppStore.Phase.Running } }
         settled(store, scene, "start")
@@ -217,6 +219,7 @@ class SceneRecorder {
             FixtureScene.SOURCES_BUSY, FixtureScene.AVAILABLE, FixtureScene.DEMO_ONLY, FixtureScene.DEMO_PLAYED, FixtureScene.DEMO_AND_STORE,
             FixtureScene.DEMO_REMOVED, FixtureScene.SUBTITLE_STYLED, FixtureScene.CRASH_OFF, FixtureScene.CRASH_SAVED, FixtureScene.CRASH_HELD,
             FixtureScene.TOGETHER, FixtureScene.SYNC_ON, FixtureScene.SYNC_NEARBY, FixtureScene.SYNC_CLOUD, FixtureScene.SYNC_TV_PHONE_SIGN_IN,
+            FixtureScene.SYNC_OTHER_GROUP, FixtureScene.SYNC_STARTED_OVER, FixtureScene.SYNC_TV_STARTED_OVER,
             FixtureScene.PROFILES, FixtureScene.BROWSING, FixtureScene.FOLLOWING, FixtureScene.MISSING_EPISODE,
         )
 

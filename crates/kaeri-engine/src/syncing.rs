@@ -67,6 +67,12 @@ const ERROR: &str = "engine.error";
 /// A problem a person can fix, kept until a pass works: `signin:<kind>`.
 const PROBLEM: &str = "engine.problem";
 const SIGN_IN: &str = "signin:";
+/// [`PROBLEM`] once the folder's group was started over on another device: no pass runs until
+/// this device joins the new group.
+const REPLACED: &str = "replaced";
+/// How many devices hold history in the folder that replaced this device's group, for the
+/// restore screen that joins it. Kept while [`REPLACED`] stands.
+const REPLACED_DEVICES: &str = "engine.replaced_devices";
 /// When the recovery key this device holds was made, in Unix seconds.
 const RECOVERY_MADE: &str = "engine.recovery_made";
 /// `1` while the folder says the group holds back from this device (its Sync switch is off).
@@ -149,6 +155,9 @@ pub struct SyncHub {
     pub(crate) book_servers: Mutex<Vec<crate::setup_from::HeldServer>>,
     /// This device's answer to Watch, read, or both, for a paired device that asks.
     medium: Mutex<Option<kaeri_model::medium::KaeriIsFor>>,
+    /// How many devices hold history in the folder the last set-up found holding another
+    /// group: [`SyncStatus::restore_devices`].
+    restore_devices: std::sync::atomic::AtomicU32,
 }
 
 fn locked<T>(m: &Mutex<T>) -> std::sync::MutexGuard<'_, T> {
@@ -219,6 +228,7 @@ fn problem_in(kind: Option<&SyncFolderKind>, e: &SyncError) -> SyncProblem {
         }
         SyncError::NoGroup => SyncProblem::NoGroup,
         SyncError::GroupExists => SyncProblem::GroupExists,
+        SyncError::GroupReplaced => SyncProblem::GroupReplaced,
         SyncError::Folder(_) | SyncError::Network(_) => SyncProblem::Unreachable,
         other => SyncProblem::Other(error_text(other)),
     }
@@ -241,6 +251,10 @@ fn describe(p: &SyncProblem) -> String {
         SyncProblem::NoGroup => "the folder holds no sync group".into(),
         SyncProblem::WrongRecoveryKey => "that recovery key does not open this folder".into(),
         SyncProblem::GroupExists => "the folder already holds a sync group".into(),
+        SyncProblem::GroupReplaced => {
+            "the folder's group was started over on another device".into()
+        }
+        SyncProblem::ClearRefused => "the service did not delete the old sync data".into(),
         SyncProblem::Other(text) => text.clone(),
         _ => "sync could not carry on".into(),
     }
@@ -451,7 +465,8 @@ pub fn status(services: &Ctx) -> SyncStatus {
     let Ok(Some(me)) = store.sync_device() else {
         // The name, kept from a rename while sync is off, for the next pairing to use.
         let device_name = Some(device_name(services)).filter(|n| !n.is_empty());
-        return SyncStatus { clouds, device_name, ..SyncStatus::default() };
+        let restore_devices = restore_devices(services);
+        return SyncStatus { clouds, device_name, restore_devices, ..SyncStatus::default() };
     };
     let my_remote = remote_role(store, &me);
     let seen: std::collections::HashMap<String, i64> = store
@@ -552,11 +567,15 @@ pub fn status(services: &Ctx) -> SyncStatus {
         book_servers_to_add: crate::setup_from::offers(services),
         clouds,
         problem: saved_problem(services),
+        restore_devices: restore_devices(services),
     }
 }
 
 fn saved_problem(services: &Ctx) -> Option<SyncProblem> {
     let kept = services.store.sync_meta_get(PROBLEM).ok().flatten()?;
+    if kept == REPLACED {
+        return Some(SyncProblem::GroupReplaced);
+    }
     let kind = kind_of(kept.strip_prefix(SIGN_IN)?)?;
     Some(SyncProblem::SignInNeeded { service: kind })
 }
@@ -594,6 +613,17 @@ async fn start_in(
     if let Err(p) = start_over_if_removed(services, Some(&*target)).await {
         return fail(services, tx, p);
     }
+    set_up(services, tx, device_name, target, folder).await;
+}
+
+/// Set sync up on `target`, once it is signed in to: see [`settle`].
+async fn set_up(
+    services: &Ctx,
+    tx: &Outbox,
+    device_name: String,
+    target: Arc<dyn FolderTarget>,
+    folder: SyncFolderSpec,
+) {
     let enabled = services.store.sync_device().ok().flatten().is_some();
     let id = device_id(services);
     match settle(services, tx, target, &folder, &id).await {
@@ -614,6 +644,151 @@ async fn start_in(
             fail(services, tx, p);
         }
     }
+}
+
+/// Start sync over in a folder that holds another group, whose recovery key is lost: delete what
+/// the folder road keeps there, then set sync up as [`start`] does, with a new recovery key.
+/// Everything on this device stays. A folder that holds this device's own group is only taken,
+/// never deleted. A clear that stops part way leaves `group.bin`, so the folder still asks for a
+/// key, and running this again carries on. A TV never sets a group's folder up, so it is
+/// refused there.
+pub async fn clear_and_start(
+    services: &Ctx,
+    tx: &Outbox,
+    device_name: String,
+    folder: SyncFolderSpec,
+) {
+    let kind = folder.kind.clone();
+    clear_and_start_in(services, tx, device_name, folder).await;
+    if Service::of(&kind).is_some() || kind == SyncFolderKind::Nextcloud {
+        cloud::ended(services, tx, &kind);
+    } else {
+        cloud::say_for(tx, &kind, None);
+    }
+}
+
+async fn clear_and_start_in(
+    services: &Ctx,
+    tx: &Outbox,
+    device_name: String,
+    mut folder: SyncFolderSpec,
+) {
+    if cloud::on_tv(services) {
+        return fail(services, tx, SyncProblem::Other("a TV does not start sync over".into()));
+    }
+    let target = match target_for(services, Some(tx), &mut folder).await {
+        Ok(target) => target,
+        Err(Ended::Cancelled) => {
+            leave_nothing(services, &folder, None);
+            return say_status(services, tx);
+        }
+        Err(Ended::Problem(p)) => {
+            leave_nothing(services, &folder, Some(&p));
+            return fail(services, tx, p);
+        }
+    };
+    if let Err(p) = start_over_if_removed(services, Some(&*target)).await {
+        return fail(services, tx, p);
+    }
+    cloud::say_for(tx, &folder.kind, Some(SyncSignInStep::Clearing));
+    if let Err(p) = fixture_clear(services).await {
+        return fail(services, tx, p);
+    }
+    let (id, key) = (device_id(services), device_key(services));
+    match FolderRoad::open_as_member(target.clone(), "", services.store.clone(), &id, key).await
+    {
+        // This device's own group: nothing to start over.
+        Ok(_) => {}
+        Err(SyncError::NoGroup | SyncError::GroupExists) => {
+            services.syncing.set_road(None);
+            if let Err(e) = FolderRoad::clear(&*target, "").await {
+                tracing::warn!(error = %e, "could not delete the old sync data in the folder");
+                return fail(services, tx, not_cleared(&folder.kind, &e));
+            }
+            tracing::info!(kind = ?folder.kind, "the folder's old sync data is deleted");
+        }
+        Err(e) => return fail(services, tx, problem_in(Some(&folder.kind), &e)),
+    }
+    cloud::say_for(tx, &folder.kind, Some(SyncSignInStep::Finishing));
+    if services.fixture {
+        tokio::time::sleep(Duration::from_millis(1_500)).await;
+    }
+    set_up(services, tx, device_name, target, folder).await;
+}
+
+/// Why a clear stopped, for the restore screen: a sign-in to renew, a folder out of reach, or a
+/// service that would not delete.
+fn not_cleared(kind: &SyncFolderKind, e: &SyncError) -> SyncProblem {
+    match e {
+        SyncError::Folder(FolderError::Unauthorized) if Service::of(kind).is_some() => {
+            SyncProblem::SignInNeeded { service: kind.clone() }
+        }
+        SyncError::Folder(FolderError::Unreachable(_)) | SyncError::Network(_) => {
+            SyncProblem::Unreachable
+        }
+        _ => SyncProblem::ClearRefused,
+    }
+}
+
+/// The folder's group was started over on another device. This device stops, keeps everything
+/// it holds, and forgets the old group's keyring and recovery key, which open nothing there now.
+/// The problem is kept, and no pass runs, until it joins the new group with the new key.
+fn group_replaced(services: &Ctx, tx: &Outbox) {
+    services.syncing.set_road(None);
+    for id in [KEYRING, RECOVERY] {
+        let _ = services.sync.tokens.clear(id);
+    }
+    for key in [HELD, ROTATE] {
+        let _ = services.store.sync_meta_set(key, "");
+    }
+    let _ = services.store.sync_meta_remove(RECOVERY_MADE);
+    let text = saved_folder(services).map_or_else(
+        || describe(&SyncProblem::GroupReplaced),
+        |f| kaeri_i18n::t::cloud_err_started_over(&label_of(&f)),
+    );
+    let _ = services.store.sync_meta_set(ERROR, &text);
+    let was = services.store.sync_meta_get(PROBLEM).ok().flatten();
+    if was.as_deref() != Some(REPLACED) {
+        let _ = services.store.sync_meta_set(PROBLEM, REPLACED);
+        let _ = tx.send(Event::SyncProblem(SyncProblem::GroupReplaced));
+        tracing::info!(
+            "the folder's group was started over on another device; sync stops here"
+        );
+    }
+}
+
+fn replaced_here(services: &Ctx) -> bool {
+    services.store.sync_meta_get(PROBLEM).ok().flatten().as_deref() == Some(REPLACED)
+}
+
+/// [`SyncStatus::restore_devices`]: what the last set-up found, else, while the group was
+/// replaced, what the folder held when last looked.
+fn restore_devices(services: &Ctx) -> u32 {
+    let found = services.syncing.restore_devices.load(Ordering::Relaxed);
+    if found > 0 || !replaced_here(services) {
+        return found;
+    }
+    let kept = services.store.sync_meta_get(REPLACED_DEVICES).ok().flatten();
+    kept.and_then(|n| n.parse().ok()).unwrap_or(0)
+}
+
+/// Count the devices in the folder that replaced this device's group, once, for the restore
+/// screen. Out of reach, it is looked at again on the next pass.
+async fn count_replacing(services: &Ctx) {
+    if restore_devices(services) > 0 {
+        return;
+    }
+    let Some(mut folder) = saved_folder(services) else { return };
+    let Ok(target) = target_for(services, None, &mut folder).await else { return };
+    if let Some(found) = devices_in(target.as_ref()).await.filter(|n| *n > 0) {
+        let _ = services.store.sync_meta_set(REPLACED_DEVICES, &found.to_string());
+    }
+}
+
+/// How many devices hold history in the folder, or `None` when it can't be listed.
+async fn devices_in(target: &dyn FolderTarget) -> Option<u32> {
+    let all = target.list("devices").await.ok()?;
+    Some(u32::try_from(all.iter().filter(|e| e.is_dir).count()).unwrap_or(u32::MAX))
 }
 
 /// A set-up through a cloud drive that failed or was cancelled leaves no sign-in behind: a
@@ -707,6 +882,11 @@ async fn settle(
     match FolderRoad::open_as_member(target.clone(), "", store.clone(), id, key.clone()).await {
         Ok(road) => return Ok(road),
         Err(SyncError::NoGroup) => {}
+        Err(SyncError::GroupExists) => {
+            let found = devices_in(target.as_ref()).await.unwrap_or(0);
+            services.syncing.restore_devices.store(found, Ordering::Relaxed);
+            return Err(SyncProblem::GroupExists);
+        }
         Err(e) => return Err(problem_in(Some(&folder.kind), &e)),
     }
     if cloud::on_tv(services) {
@@ -731,6 +911,8 @@ async fn settle(
 /// Sync through `folder` from now on, on `road`: what was read of another folder is forgotten.
 pub(crate) fn take_folder(services: &Ctx, folder: &SyncFolderSpec, road: FolderRoad) {
     let _ = services.store.sync_meta_clear(ROAD_META);
+    services.syncing.restore_devices.store(0, Ordering::Relaxed);
+    let _ = services.store.sync_meta_remove(REPLACED_DEVICES);
     save_folder(services, folder);
     keep_ring(services, &road.keyring());
     for key in [LAST, ERROR, PROBLEM] {
@@ -963,6 +1145,10 @@ async fn road_of(services: &Ctx) -> Result<Arc<FolderRoad>, SyncProblem> {
 /// One pass through the folder: what others wrote is read and applied, this device's own is
 /// written. Said as the status before and after. At most one runs at a time.
 pub async fn pass(services: &Ctx, tx: &Outbox) {
+    if replaced_here(services) {
+        count_replacing(services).await;
+        return say_status(services, tx);
+    }
     if services.syncing.running.swap(true, Ordering::AcqRel) {
         return;
     }
@@ -994,6 +1180,10 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
             let _ = services.store.sync_meta_set(PROBLEM, "");
             announce_cloud(services);
             carry_out(services, tx, report);
+        }
+        Err((SyncProblem::GroupReplaced, _)) => {
+            group_replaced(services, tx);
+            count_replacing(services).await;
         }
         Err((p, text)) => {
             let _ = services.store.sync_meta_set(ERROR, &text);
@@ -1113,7 +1303,9 @@ async fn sign_in_done(
             let using = saved_folder(services).is_some_and(|f| &f.kind == kind);
             if using {
                 services.syncing.set_road(None);
-                let _ = services.store.sync_meta_set(PROBLEM, "");
+                if !replaced_here(services) {
+                    let _ = services.store.sync_meta_set(PROBLEM, "");
+                }
                 pass(services, tx).await;
             } else {
                 say_status(services, tx);
@@ -1145,6 +1337,23 @@ pub fn sign_out(services: &Ctx, tx: &Outbox, kind: &SyncFolderKind) {
 /// once or, with the folder out of reach, on the first pass that reaches it. No old recovery key
 /// is needed, so any device in the group can remove one.
 pub async fn remove_device(services: &Ctx, tx: &Outbox, device: &str) {
+    let Ok(Some(me)) = services.store.sync_device() else {
+        return fail(services, tx, SyncProblem::NoGroup);
+    };
+    if device == me {
+        return fail(
+            services,
+            tx,
+            SyncProblem::Other("this device stops with LeaveSync".into()),
+        );
+    }
+    if !in_group(services, device) {
+        return fail(
+            services,
+            tx,
+            SyncProblem::Other("that device is not in the group".into()),
+        );
+    }
     if let Err(e) = services.store.sync_device_remove(device) {
         return fail(services, tx, SyncProblem::Other(e.to_string()));
     }
@@ -1209,6 +1418,74 @@ pub enum FixtureSync {
     /// This device is the Living room TV, paired with Kim's iPhone, which syncs through Dropbox
     /// and holds the sign-in the TV can use. The TV has no folder yet.
     TvPhoneSignIn,
+    /// Sync is off, signed in to Google Drive as kim@mail.example, and the fixtures' Drive
+    /// folder holds another group of two devices: choosing Google Drive asks for its recovery
+    /// key, and starting over clears the folder and shows a new key, each step held a moment.
+    OtherGroup,
+    /// [`Self::OtherGroup`], where starting over finds Google Drive out of reach.
+    OtherGroupOffline,
+    /// [`Self::OtherGroup`], where Google Drive refuses to delete the old sync data.
+    OtherGroupRefused,
+    /// [`Self::Cloud`] after another device started sync over in Google Drive: the cloud row
+    /// says so, with no recovery key, and the fixtures' Drive folder holds the new group.
+    StartedOver,
+    /// [`Self::TvPhoneSignIn`]'s TV syncing through Google Drive after another device started
+    /// sync over there.
+    TvStartedOver,
+}
+
+/// The fixtures' Drive folder, as [`FixtureSync::OtherGroup`] and the like leave it: `other`,
+/// `offline` or `refused`.
+const FIXTURE_FOLDER: &str = "engine.fixture_folder";
+
+/// The fixtures' Drive folder holds another group of two, when the scene asks for one and it
+/// holds none yet.
+#[cfg(feature = "testing")]
+pub(crate) async fn fixture_other_group(
+    store: &kaeri_store::Store,
+    target: &Arc<dyn FolderTarget>,
+) {
+    if store.sync_meta_get(FIXTURE_FOLDER).ok().flatten().unwrap_or_default().is_empty()
+        || FolderRoad::group_exists(&**target, "").await.unwrap_or(true)
+    {
+        return;
+    }
+    let Ok(theirs) = kaeri_store::Store::open_in_memory() else { return };
+    let device = |seed: u8| DeviceKey::from_identity(&[seed; 32]);
+    let made =
+        FolderRoad::create(target.clone(), "", theirs.clone(), "f1x7c0de0000000a", device(1))
+            .await;
+    if let Ok((_, recovery)) = made {
+        let _ = FolderRoad::join(
+            target.clone(),
+            "",
+            theirs,
+            "f1x7c0de0000000b",
+            device(2),
+            &recovery,
+        )
+        .await;
+    }
+}
+
+/// How the fixtures hold or fail a start-over, so each of its states can be seen.
+#[cfg(feature = "testing")]
+async fn fixture_clear(services: &Ctx) -> Result<(), SyncProblem> {
+    if !services.fixture {
+        return Ok(());
+    }
+    let how = services.store.sync_meta_get(FIXTURE_FOLDER).ok().flatten().unwrap_or_default();
+    tokio::time::sleep(Duration::from_millis(1_500)).await;
+    match how.as_str() {
+        "offline" => Err(SyncProblem::Unreachable),
+        "refused" => Err(SyncProblem::ClearRefused),
+        _ => Ok(()),
+    }
+}
+
+#[cfg(not(feature = "testing"))]
+async fn fixture_clear(_: &Ctx) -> Result<(), SyncProblem> {
+    Ok(())
 }
 
 /// Sync as a fixture build shows it on a folder: see [`FixtureSync::Folder`].
@@ -1250,7 +1527,15 @@ pub fn seed_fixture_as(
         let _ = store.sync_fixture_trackers(device, trackers);
     };
     let me = "fixture-me";
-    let _ = store.sync_enable(me);
+    let other_group = matches!(
+        kind,
+        FixtureSync::OtherGroup
+            | FixtureSync::OtherGroupOffline
+            | FixtureSync::OtherGroupRefused
+    );
+    if !other_group {
+        let _ = store.sync_enable(me);
+    }
     let mut tokens = Vec::new();
     match kind {
         FixtureSync::Folder => {
@@ -1291,6 +1576,48 @@ pub fn seed_fixture_as(
             cloud_of("fixture-phone", Some("dropbox"), &["dropbox"]);
             trackers_of("fixture-phone", &["anilist"]);
             let _ = store.sync_meta_set(NAME, "Living room TV");
+        }
+        FixtureSync::OtherGroup
+        | FixtureSync::OtherGroupOffline
+        | FixtureSync::OtherGroupRefused => {
+            let how = match kind {
+                FixtureSync::OtherGroupOffline => "offline",
+                FixtureSync::OtherGroupRefused => "refused",
+                _ => "other",
+            };
+            let _ = store.sync_meta_set(FIXTURE_FOLDER, how);
+            let _ = store.sync_meta_set(NAME, "Kim's iPhone");
+            cloud::keep_account(store, Service::Google, Some("kim@mail.example"));
+            tokens.push((Service::Google.token_id(), "fixture-google-refresh".to_owned()));
+        }
+        FixtureSync::StartedOver | FixtureSync::TvStartedOver => {
+            let (name, other, other_name) = if kind == FixtureSync::TvStartedOver {
+                ("Living room TV", "fixture-phone", "Kim's iPhone")
+            } else {
+                ("Kim's iPhone", "fixture-mac", "Kim's MacBook Air")
+            };
+            let _ = store.sync_device_add(me, name, "00");
+            let _ = store.sync_device_add(other, other_name, "00");
+            let _ = store.sync_touch_peer(other, now - 86_400);
+            cloud_of(other, Some("google"), &[]);
+            cloud_of(me, Some("google"), &[]);
+            let _ = store.sync_meta_set(NAME, name);
+            let _ = store.sync_meta_set(LAST, &(now - 86_400).to_string());
+            saved("google", None);
+            cloud::keep_account(store, Service::Google, Some("kim@mail.example"));
+            let _ = store.sync_meta_set(PROBLEM, REPLACED);
+            let _ = store.sync_meta_set(REPLACED_DEVICES, "2");
+            let _ = store.sync_meta_set(
+                ERROR,
+                &kaeri_i18n::t::cloud_err_started_over(&label_of(&SyncFolderSpec {
+                    kind: SyncFolderKind::GoogleDrive,
+                    address: None,
+                    user: None,
+                    password: None,
+                })),
+            );
+            let _ = store.sync_meta_set(FIXTURE_FOLDER, "other");
+            tokens.push((Service::Google.token_id(), "fixture-google-refresh".to_owned()));
         }
     }
     tokens

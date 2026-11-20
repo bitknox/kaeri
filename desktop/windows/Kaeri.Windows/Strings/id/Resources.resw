@@ -10193,9 +10193,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Halaman masuk tertutup sebelum akses diizinkan.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Folder ini milik kumpulan perangkat lain. Masukkan kunci pemulihannya untuk bergabung, atau pilih folder lain.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} mengeluarkan Kaeri. Perubahan Anda menunggu di {kind} ini sampai Anda masuk lagi.</value>
   </data>

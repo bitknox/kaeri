@@ -4410,7 +4410,6 @@
     <string name="cloud_err_app_password">Nextcloud не принял этот пароль приложения. Создайте новый в Nextcloud, в разделе «Настройки», «Безопасность».</string>
     <string name="cloud_err_webdav">Сервер отклонил это имя пользователя или пароль.</string>
     <string name="cloud_err_timeout">Страница входа закрылась, прежде чем доступ был разрешён.</string>
-    <string name="cloud_err_other_group">Эта папка принадлежит другому набору устройств. Введите её ключ восстановления, чтобы присоединиться, или выберите другую папку.</string>
     <string name="cloud_err_signed_out">%1$s вывел Kaeri из аккаунта. Изменения ждут на этом устройстве (%2$s), пока вы не войдёте снова.</string>
     <string name="cloud_err_full">В %1$s нет места. Освободите его и попробуйте снова.</string>
     <string name="cloud_err_folder_gone">Kaeri больше не может открыть папку. Выберите её снова.</string>

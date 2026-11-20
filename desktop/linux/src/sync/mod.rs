@@ -97,7 +97,8 @@ pub enum CloudState {
     Synced(String),
     Syncing,
     SignedOut,
-    /// The service signed this device out, or its folder is gone: the line and its button.
+    /// The service signed this device out, its folder is gone, or another device started sync
+    /// over there: the line and its button.
     Problem(String, ProblemFix),
     Offline,
 }
@@ -107,6 +108,8 @@ pub enum CloudState {
 pub enum ProblemFix {
     SignInAgain,
     ChooseFolder,
+    /// Another device started sync over in the folder: Enter new key opens the restore dialog.
+    EnterNewKey,
     Nothing,
 }
 
@@ -128,6 +131,12 @@ pub fn cloud_state(status: &SyncStatus, now: i64, by_hand: bool) -> CloudState {
             return CloudState::Problem(t::cloud_err_folder_gone(), ProblemFix::ChooseFolder);
         }
         Some(SyncProblem::Unreachable) => return CloudState::Offline,
+        Some(SyncProblem::GroupReplaced) => {
+            return CloudState::Problem(
+                t::cloud_err_started_over(&service),
+                ProblemFix::EnterNewKey,
+            );
+        }
         Some(_) => {
             return CloudState::Problem(
                 status.error.clone().unwrap_or_else(t::devices_row_error),
@@ -142,6 +151,15 @@ pub fn cloud_state(status: &SyncStatus, now: i64, by_hand: bool) -> CloudState {
     match status.last_synced {
         Some(at) => CloudState::Synced(t::devices_row_synced(&ago_inline((now - at).max(0)))),
         None => CloudState::Synced(t::devices_row_synced(&t::time_just_now_inline())),
+    }
+}
+
+/// How many devices hold history in a folder of another group, for the restore dialog's line:
+/// the count the engine found there, else this group's size and at least two.
+pub fn restore_count(status: &SyncStatus) -> i64 {
+    match status.restore_devices {
+        0 => status.devices.len().max(2) as i64,
+        found => i64::from(found),
     }
 }
 
@@ -255,6 +273,52 @@ mod tests {
             CloudState::Problem(_, ProblemFix::SignInAgain)
         ));
         assert_eq!(cloud_state(&status, 0, true), CloudState::SignedOut);
+    }
+
+    #[test]
+    fn a_group_started_over_elsewhere_offers_the_new_key() {
+        let status = SyncStatus {
+            enabled: true,
+            folder: Some(kaeri_model::group::SyncFolderView {
+                kind: SyncFolderKind::GoogleDrive,
+                label: String::new(),
+                account: None,
+            }),
+            problem: Some(SyncProblem::GroupReplaced),
+            error: Some("the engine's words".into()),
+            ..SyncStatus::default()
+        };
+        assert_eq!(
+            cloud_state(&status, 0, false),
+            CloudState::Problem(
+                t::cloud_err_started_over("Google Drive"),
+                ProblemFix::EnterNewKey
+            )
+        );
+    }
+
+    #[test]
+    fn the_restore_line_counts_what_the_folder_holds() {
+        let device = |id: &str| SyncDeviceView {
+            id: id.into(),
+            name: id.into(),
+            this_device: false,
+            last_seen: None,
+            trackers: Vec::new(),
+            sign_ins: Vec::new(),
+            folder: None,
+            asked: Vec::new(),
+            kind: None,
+            paused: false,
+            remote_key: None,
+            remote_off: false,
+        };
+        let mut status = SyncStatus { restore_devices: 3, ..SyncStatus::default() };
+        assert_eq!(restore_count(&status), 3);
+        status.restore_devices = 0;
+        assert_eq!(restore_count(&status), 2);
+        status.devices = vec![device("a"), device("b"), device("c"), device("d")];
+        assert_eq!(restore_count(&status), 4);
     }
 }
 

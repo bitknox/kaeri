@@ -13882,9 +13882,6 @@ cloud-err-webdav = El servidor rechazó ese nombre de usuario o contraseña.
 # Error, with Open the page again.
 cloud-err-timeout = La página de inicio de sesión se cerró antes de permitir el acceso.
 
-# Error.
-cloud-err-other-group = Esta carpeta pertenece a otro conjunto de dispositivos. Ingresa su clave de recuperación para unirte a ellos, o elige otra carpeta.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } cerró la sesión de Kaeri. Tus cambios esperan en este dispositivo ({ $kind }) hasta que vuelvas a iniciar sesión.
 

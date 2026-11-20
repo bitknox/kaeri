@@ -30,6 +30,25 @@ import UIKit
 ///     pair-wrong     a typed code a named device turned down; pair-working the try under way
 ///     first-paired-store  first launch's paired page with a plugin store to join
 ///     profiles       two profiles
+///
+/// The start-over states run the engine instead of staging, on the scenes that hold another
+/// group's folder (sync-other-group and its offline and refused kinds): Add a cloud folder,
+/// Google Drive, then the restore screen. Each waits until its state is on screen and then holds
+/// the engine's later events, so a step the engine holds 1.5 s stays for the shot.
+///
+///     startover           the restore screen with Start over
+///     startover-wrong     a wrong key restored
+///     startover-confirm   Start over's confirmation
+///     startover-clearing  the old history being deleted
+///     startover-setup     the folder being set up again
+///     startover-key       the new recovery key
+///     startover-failed    why it stopped (sync-other-group-offline or -refused)
+///     startover-failed-cancel  the same, then Cancel 2.5 s after: back to the key field, for
+///                         recording that crossfade
+///     startedover         on sync-started-over: the Devices pane once the engine says the group
+///                         was started over elsewhere; startedover-restore its Enter new key
+///     startedover-late    staged: a synced group whose start over elsewhere arrives 2.5 s after
+///                         it is up, for recording the Devices pane changing
 public enum SyncScene: String, Sendable {
     case off, on, syncing, settingup, signedout, signedoutErr = "signedout-err", offline
     case folderGone = "folder-gone", picker, pickerDenied = "picker-denied", nextcloud
@@ -41,6 +60,19 @@ public enum SyncScene: String, Sendable {
     case firstSetup = "first-setup", firstPaired = "first-paired"
     case profiles, profileAdd = "profile-add", profileEdit = "profile-edit"
     case pairMotion = "pair-motion", firstMotion = "first-motion", alone, paused, pairWrong = "pair-wrong", pairWorking = "pair-working", firstPairedStore = "first-paired-store"
+    case startOver = "startover", startOverWrong = "startover-wrong", startOverConfirm = "startover-confirm"
+    case startOverClearing = "startover-clearing", startOverSetup = "startover-setup", startOverKey = "startover-key"
+    case startOverFailed = "startover-failed", startOverFailedCancel = "startover-failed-cancel", startedOver = "startedover", startedOverRestore = "startedover-restore"
+    case startedOverLate = "startedover-late"
+
+    /// A state the engine is run to, rather than one staged without it.
+    var runsEngine: Bool {
+        switch self {
+        case .startOver, .startOverWrong, .startOverConfirm, .startOverClearing, .startOverSetup, .startOverKey,
+             .startOverFailed, .startOverFailedCancel, .startedOver, .startedOverRestore: true
+        default: false
+        }
+    }
 
     public static let argument = "-KaeriSync"
 
@@ -95,6 +127,7 @@ extension SyncModel {
 
     /// Put `scene` on screen: the status it names, and the sheet.
     public func stage(_ scene: SyncScene, store: AppStore) async -> Bool {
+        if scene.runsEngine { return await run(to: scene) }
         staged = true
         let now = Int64(Date.now.timeIntervalSince1970)
         deviceName = DeviceName.this
@@ -102,7 +135,9 @@ extension SyncModel {
         var sheet: SyncSheet?
         switch scene {
         case .off, .firstSetup, .firstPaired, .firstMotion, .pickerWait, .pickerConnecting, .pickerSetup,
-             .pickerDenied, .pickerErrSetup, .pickerKey: break
+             .pickerDenied, .pickerErrSetup, .pickerKey, .startOver, .startOverWrong, .startOverConfirm,
+             .startOverClearing, .startOverSetup, .startOverKey, .startOverFailed, .startOverFailedCancel, .startedOver,
+             .startedOverRestore: break
         case .paused:
             status = Self.group(now: now, notes: true, held: true)
         case .alone:
@@ -113,6 +148,14 @@ extension SyncModel {
             status = Self.group(now: now, stores: [SyncStoreOffer(address: "store.example", name: "Hotaru", inviteFrom: "Kitchen iPad")]) // i18n-skip
         case .pairWrong, .pairWorking, .pairMotion:
             status = Self.group(now: now, notes: true)
+        case .startedOverLate:
+            status = Self.group(now: now)
+            var replaced = status
+            replaced.problem = .groupReplaced
+            Task { [weak self] in
+                try? await Task.sleep(for: .milliseconds(2500))
+                self?.stage(status: replaced)
+            }
         case .on, .key, .keyQr, .pairShow, .pairEnter, .pairErr, .pairNf, .paired, .profiles,
              .profileAdd, .profileEdit, .picker, .nextcloud, .nextcloudWait, .nextcloudErr,
              .webdav, .webdavErr, .restore, .restoreWrong, .switchService, .remove:
@@ -234,6 +277,68 @@ extension SyncModel {
         default: break
         }
         self.sheet = sheet
+        return true
+    }
+}
+
+extension SyncModel {
+    /// Run the engine's scene to a start-over state: whether it got there.
+    private func run(to scene: SyncScene) async -> Bool {
+        let name = status.deviceName ?? DeviceName.this
+        switch scene {
+        case .startedOver, .startedOverRestore:
+            guard await reached({ self.status.problem == .groupReplaced }) else { return false }
+            if scene == .startedOverRestore {
+                enterNewKey(status.folder?.kind ?? .googleDrive)
+                try? await Task.sleep(for: .seconds(1))
+            }
+            return true
+        default: break
+        }
+        addCloudFolder()
+        choose(.googleDrive, deviceName: name)
+        guard await reached({ self.sheet == .restore(.googleDrive) }) else { return false }
+        // The picker goes and the restore screen comes in, one after the other on iPhone and iPad:
+        // an alert asked for before then never shows.
+        try? await Task.sleep(for: .milliseconds(1500))
+        switch scene {
+        case .startOverWrong:
+            restoreKey = "K7QM 4XR9 DH2V T8NB 3CWZ 6PLE" // i18n-skip: a made-up key that opens nothing
+            join(.googleDrive, key: restoreKey, deviceName: name)
+            return await reached { self.problem == .wrongRecoveryKey }
+        case .startOverConfirm:
+            confirmingStartOver = true
+            try? await Task.sleep(for: .milliseconds(600))
+            return true
+        case .startOverClearing, .startOverSetup, .startOverKey, .startOverFailed, .startOverFailedCancel:
+            startOver(.googleDrive, deviceName: name)
+            let there = await reached {
+                switch (scene, self.cloudStep) {
+                case (.startOverClearing, .clearing?), (.startOverSetup, .settingUp?), (.startOverKey, .key?),
+                     (.startOverFailed, .startOverFailed?), (.startOverFailedCancel, .startOverFailed?): true
+                default: false
+                }
+            }
+            held = true
+            if there, scene == .startOverFailedCancel {
+                Task { [weak self] in
+                    try? await Task.sleep(for: .milliseconds(2500))
+                    self?.cancelCloudStep()
+                }
+            }
+            return there
+        default:
+            return true
+        }
+    }
+
+    /// Wait, up to 20 s, for `condition`.
+    private func reached(_ condition: () -> Bool) async -> Bool {
+        let deadline = ContinuousClock.now + .seconds(20)
+        while !condition() {
+            guard ContinuousClock.now < deadline else { return false }
+            try? await Task.sleep(for: .milliseconds(50))
+        }
         return true
     }
 }

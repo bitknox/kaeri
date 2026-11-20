@@ -62,8 +62,8 @@ use kaeri_model::{
 };
 use kaeri_model::{
     group::{
-        CloudUnavailable, SyncCloudView, SyncCloudWay, SyncDeviceView, SyncFolderKind,
-        SyncFolderView, SyncNoteView, SyncProblem, SyncSignInStep, SyncStatus,
+        CloudUnavailable, SyncCloudView, SyncCloudWay, SyncCommand, SyncDeviceView,
+        SyncFolderKind, SyncFolderView, SyncNoteView, SyncProblem, SyncSignInStep, SyncStatus,
     },
     profiles::{ProfileView, ProfilesView},
 };
@@ -620,6 +620,18 @@ scenarios! {
     recovery_key,
     recovery_key_qr,
     restore_wrong_key,
+    start_over_restore,
+    start_over_focused,
+    start_over_confirm,
+    start_over_clearing,
+    start_over_setting_up,
+    start_over_key,
+    start_over_failed,
+    start_over_offline,
+    start_over_failed_after_close,
+    start_over_cancel,
+    started_over_elsewhere,
+    started_over_restore,
     pair_show,
     pair_expired,
     pair_enter_code,
@@ -3361,6 +3373,126 @@ fn restore_wrong_key(s: &mut Screen) {
     s.press(&["enter"]);
     s.apply(Event::SyncProblem(SyncProblem::WrongRecoveryKey));
     s.type_text("K7QM");
+}
+
+/// Google Drive holds another group of two devices: the restore overlay, its field with the
+/// keyboard and Start over under the note.
+fn start_over_restore(s: &mut Screen) {
+    devices_pick(s, SyncFolderKind::GoogleDrive);
+    s.press(&["enter"]);
+    s.apply(Event::SyncSignIn {
+        service: SyncFolderKind::GoogleDrive,
+        step: Some(SyncSignInStep::Finishing),
+    });
+    s.apply(Event::SyncProblem(SyncProblem::GroupExists));
+    // The sign-in that found the group ends after the restore overlay is up.
+    s.apply(Event::SyncSignIn { service: SyncFolderKind::GoogleDrive, step: None });
+    s.apply(Event::SyncStatus(SyncStatus { restore_devices: 2, ..sync_off() }));
+}
+
+/// Tab gives the keyboard to Start over.
+fn start_over_focused(s: &mut Screen) {
+    start_over_restore(s);
+    s.press(&["tab"]);
+}
+
+/// Enter on Start over asks first.
+fn start_over_confirm(s: &mut Screen) {
+    start_over_focused(s);
+    s.press(&["enter"]);
+}
+
+/// Confirmed: the restore content holds 600 ms, then the old history is being deleted.
+fn start_over_clearing(s: &mut Screen) {
+    start_over_confirm(s);
+    let task = s.act(Action::Open);
+    assert!(
+        matches!(task, Some(Command::SyncGroup(SyncCommand::ClearFolderAndStart { .. }))),
+        "{task:?}"
+    );
+    s.apply(Event::SyncSignIn {
+        service: SyncFolderKind::GoogleDrive,
+        step: Some(SyncSignInStep::Clearing),
+    });
+    s.wait(Duration::from_millis(600));
+    s.idle(2);
+}
+
+/// The folder is set up again, after the deleting has had its 400 ms.
+fn start_over_setting_up(s: &mut Screen) {
+    start_over_clearing(s);
+    s.apply(Event::SyncSignIn {
+        service: SyncFolderKind::GoogleDrive,
+        step: Some(SyncSignInStep::Finishing),
+    });
+    s.wait(Duration::from_millis(400));
+    s.idle(1);
+}
+
+/// Done: the new key, with the line that says sync started over.
+fn start_over_key(s: &mut Screen) {
+    start_over_setting_up(s);
+    s.apply(Event::SyncRecoveryKey("K7QM4XR9DH2VT8NB3CWZ6PLF".into()));
+    s.apply(Event::SyncStatus(SyncStatus {
+        devices: vec![sync_device("a", "Kim's laptop", true, Some(NOW))],
+        last_synced: Some(NOW),
+        recovery_key_made: Some(NOW),
+        ..sync_on()
+    }));
+    s.wait(Duration::from_millis(400));
+    s.idle(1);
+    s.apply(Event::SyncSignIn { service: SyncFolderKind::GoogleDrive, step: None });
+}
+
+/// Google Drive refused to delete the old history.
+fn start_over_failed(s: &mut Screen) {
+    start_over_clearing(s);
+    s.apply(Event::SyncProblem(SyncProblem::ClearRefused));
+    s.apply(Event::SyncStatus(sync_off()));
+    s.wait(Duration::from_millis(400));
+    s.idle(1);
+}
+
+/// Google Drive could not be reached, said at once when nothing of the work had shown.
+fn start_over_offline(s: &mut Screen) {
+    start_over_confirm(s);
+    s.press(&["enter"]);
+    s.apply(Event::SyncProblem(SyncProblem::Unreachable));
+    s.apply(Event::SyncStatus(sync_off()));
+}
+
+/// Closed with Esc while the old history was being deleted, then refused: the failure page
+/// opens again, with Try again.
+fn start_over_failed_after_close(s: &mut Screen) {
+    start_over_clearing(s);
+    s.press(&["esc"]);
+    s.apply(Event::SyncProblem(SyncProblem::ClearRefused));
+    s.apply(Event::SyncStatus(sync_off()));
+    s.wait(Duration::from_millis(400));
+    s.idle(1);
+}
+
+/// Esc on the failure page: back to the key field, with Start over under the note.
+fn start_over_cancel(s: &mut Screen) {
+    start_over_failed(s);
+    s.press(&["esc"]);
+}
+
+/// Another device started sync over in Google Drive: this one joins with the new key.
+fn started_over_elsewhere(s: &mut Screen) {
+    let mut status = sync_on();
+    status.devices[2].last_seen = Some(NOW - 2 * MINUTE);
+    status.problem = Some(SyncProblem::GroupReplaced);
+    status.recovery_key = false;
+    status.recovery_key_made = None;
+    devices_with(s, status);
+    devices_cursor(s, DeviceLine::Folder);
+}
+
+/// Enter on the folder's row: the restore overlay, to join with the new key.
+fn started_over_restore(s: &mut Screen) {
+    started_over_elsewhere(s);
+    s.press(&["enter"]);
 }
 
 /// A pairing code on show, twelve seconds in.

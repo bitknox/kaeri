@@ -59,6 +59,11 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.SYNC_NEARBY -> FfiScene.SyncNearby
     FixtureScene.SYNC_CLOUD -> FfiScene.SyncCloud
     FixtureScene.SYNC_TV_PHONE_SIGN_IN -> FfiScene.SyncTvPhoneSignIn
+    FixtureScene.SYNC_OTHER_GROUP -> FfiScene.SyncOtherGroup
+    FixtureScene.SYNC_OTHER_GROUP_OFFLINE -> FfiScene.SyncOtherGroupOffline
+    FixtureScene.SYNC_OTHER_GROUP_REFUSED -> FfiScene.SyncOtherGroupRefused
+    FixtureScene.SYNC_STARTED_OVER -> FfiScene.SyncStartedOver
+    FixtureScene.SYNC_TV_STARTED_OVER -> FfiScene.SyncTvStartedOver
     FixtureScene.PROFILES -> FfiScene.Profiles
     FixtureScene.FOLLOWING -> FfiScene.Following
     FixtureScene.FOLLOWING_SLOW -> FfiScene.FollowingSlow

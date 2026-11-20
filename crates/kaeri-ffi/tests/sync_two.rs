@@ -286,6 +286,67 @@ fn a_change_made_on_both_settles_the_same_on_both() {
     assert_eq!(on(&laptop).as_deref(), Some("DROPPED"));
 }
 
+/// A title form chosen on one device is in effect on the other as soon as it arrives, not only
+/// from its next launch.
+#[test]
+fn a_title_form_chosen_on_one_device_names_titles_on_the_other_at_once() {
+    use kaeri_model::catalog::TitleLanguage;
+    let shared = tempfile::tempdir().expect("a shared folder");
+    let (mut desk, mut laptop) = group(shared.path());
+
+    desk.send(Command::SetSetting {
+        key: SettingKey::Titles,
+        value: SettingValue::Str("romaji".into()),
+    });
+    let deadline = Instant::now() + PATIENCE;
+    while !desk.config().contains("title_language = \"romaji\"") {
+        assert!(Instant::now() < deadline, "the desk never kept its title form");
+        thread::sleep(Duration::from_millis(50));
+    }
+    desk.pass();
+
+    while laptop.events.try_recv().is_ok() {}
+    let deadline = Instant::now() + PATIENCE;
+    loop {
+        laptop.send(Command::SyncFolderNow);
+        let mut passed = false;
+        while !passed {
+            let left = deadline.saturating_duration_since(Instant::now());
+            let Ok(event) = laptop.events.recv_timeout(left) else {
+                panic!("the laptop never named titles the desk's way: {}", laptop.config())
+            };
+            match event {
+                Event::TitlesChanged(TitleLanguage::Romaji) => return,
+                Event::SyncStatus(s) if !s.syncing && s.last_synced.is_some() => passed = true,
+                _ => {}
+            }
+        }
+        thread::sleep(Duration::from_millis(100));
+    }
+}
+
+/// Removing a device takes its id: a name, this device or a device the group never listed is
+/// refused, and nothing is written.
+#[test]
+fn removing_a_device_the_group_does_not_list_is_refused() {
+    let shared = tempfile::tempdir().expect("a shared folder");
+    let (mut desk, mut laptop) = group(shared.path());
+    let laptop_id = laptop.id();
+    let desk_id = desk.id();
+
+    for device in ["Laptop", "no-such-device", desk_id.as_str()] {
+        while desk.events.try_recv().is_ok() {}
+        desk.send(Command::RemoveSyncDevice { device: device.to_owned() });
+        assert!(
+            matches!(problem_said(&mut desk), SyncProblem::Other(_)),
+            "removing {device} was not refused"
+        );
+    }
+    let status = desk.pass();
+    assert!(status.devices.iter().any(|d| d.id == laptop_id), "the laptop went: {status:?}");
+    assert!(!removed(&laptop.pass()), "the laptop was told it was removed");
+}
+
 /// A device removed from the group is listed by nobody, what the group does after no longer
 /// reaches it, and it says it was removed.
 #[test]

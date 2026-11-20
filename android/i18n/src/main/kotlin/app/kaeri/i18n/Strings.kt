@@ -15791,6 +15791,10 @@ object Strings {
     fun cloudErrTitle(context: Context, service: String): String =
         context.getString(R.string.cloud_err_title, service)
 
+    /** Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds. */
+    fun cloudErrStartedOver(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_started_over, service)
+
     /** Picker row line. */
     fun cloudDropboxLine(context: Context): String =
         context.getString(R.string.cloud_dropbox_line)
@@ -15854,6 +15858,10 @@ object Strings {
     /** TV cloud row. */
     fun tvCloudSignedOutLine(context: Context): String =
         context.getString(R.string.tv_cloud_signed_out_line)
+
+    /** TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page. */
+    fun tvCloudStartedOverLine(context: Context): String =
+        context.getString(R.string.tv_cloud_started_over_line)
 
     /** TV ConfirmDialog. */
     fun tvCloudSignOutTitle(context: Context, service: String): String =
@@ -15934,6 +15942,50 @@ object Strings {
     /** Button. */
     fun rkeyRestore(context: Context): String =
         context.getString(R.string.rkey_restore)
+
+    /** Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it. */
+    fun rkeyStartOver(context: Context): String =
+        context.getString(R.string.rkey_start_over)
+
+    /** Confirmation title. */
+    fun rkeyStartOverTitle(context: Context): String =
+        context.getString(R.string.rkey_start_over_title)
+
+    /** Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer. */
+    fun rkeyStartOverLine(context: Context, service: String, kind: String): String =
+        context.getString(R.string.rkey_start_over_line, service, kind)
+
+    /** Destructive button in the confirmation. */
+    fun rkeyStartOverAction(context: Context): String =
+        context.getString(R.string.rkey_start_over_action)
+
+    /** Working title while the folder is cleared. cloud-setting-up follows. */
+    fun rkeyClearing(context: Context): String =
+        context.getString(R.string.rkey_clearing)
+
+    /** Status line beside the progress indicator while the folder is cleared. */
+    fun rkeyClearingLine(context: Context, service: String): String =
+        context.getString(R.string.rkey_clearing_line, service)
+
+    /** Error title when starting over failed. Offline uses cloud-err-offline as the line. */
+    fun rkeyStartOverErrTitle(context: Context): String =
+        context.getString(R.string.rkey_start_over_err_title)
+
+    /** Error line when the service refused to delete the old sync data. */
+    fun rkeyStartOverErrRefused(context: Context, service: String): String =
+        context.getString(R.string.rkey_start_over_err_refused, service)
+
+    /** Second line under either start over error. */
+    fun rkeyStartOverErrKept(context: Context, kind: String): String =
+        context.getString(R.string.rkey_start_over_err_kept, kind)
+
+    /** First line of the recovery key step after starting over, before rkey-line. */
+    fun rkeyStartedOver(context: Context, service: String): String =
+        context.getString(R.string.rkey_started_over, service)
+
+    /** Button on the cloud row of a device whose group was started over; opens the restore screen. */
+    fun rkeyEnterNew(context: Context): String =
+        context.getString(R.string.rkey_enter_new)
 
     /** Add a device. */
     fun pairEnterLine(context: Context): String =

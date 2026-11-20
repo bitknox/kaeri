@@ -59,6 +59,18 @@ fun AppStore.joinSync(deviceName: String, folder: SyncFolderSpec, recoveryKey: S
     send(Command.JoinSync(deviceName, folder, recoveryKey))
 }
 
+/**
+ * Start over without the key in [folder], which holds another group: its old sync data is deleted
+ * and sync is set up there again with a new recovery key, on the restore sheet. Sending it again
+ * after a stop carries on.
+ */
+fun AppStore.startSyncOver(deviceName: String, folder: SyncFolderSpec) {
+    sync.problemSeen()
+    sync.begin(folder)
+    sync.startingOver(folder.kind)
+    send(Command.SyncGroup(SyncCommand.ClearFolderAndStart(deviceName, folder)))
+}
+
 /** Sign in to [service] again, as Sign in again asks. */
 fun AppStore.syncSignInAgain(service: SyncFolderKind) {
     sync.problemSeen()

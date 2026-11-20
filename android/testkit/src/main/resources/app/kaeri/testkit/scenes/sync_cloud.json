@@ -1786,7 +1786,8 @@
     "groupFolder": "GOOGLE_DRIVE",
     "recoveryKey": true,
     "recoveryKeyMade": "1793523600",
-    "bookServersToAdd": []
+    "bookServersToAdd": [],
+    "restoreDevices": "0"
    }
   },
   {

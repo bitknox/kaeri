@@ -1699,7 +1699,8 @@
     "groupFolder": null,
     "recoveryKey": false,
     "recoveryKeyMade": null,
-    "bookServersToAdd": []
+    "bookServersToAdd": [],
+    "restoreDevices": "0"
    }
   },
   {

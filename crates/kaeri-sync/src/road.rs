@@ -26,6 +26,12 @@
 //! under `keys/`, which no other device writes over, so the keys of rotations that ran at once
 //! reach everyone.
 //!
+//! Starting over ([`FolderRoad::clear`]) removes everything the road owns, `group.bin` last, so
+//! a clear that stopped part way still reads as another group's folder and runs again. Each
+//! device keeps the id of the group it is in (the 16 plain bytes after the magic in `group.bin`)
+//! and reads it at the start of every pass: a folder with no `group.bin`, or another group's, is
+//! [`SyncError::GroupReplaced`], and the pass writes nothing.
+//!
 //! A removed device cannot read the removal, which is sealed under the key it no longer holds, so
 //! the device that removes it also writes its name under `removed/`. The removed device finds it
 //! at the start of its next pass and says it was removed, rather than that it holds no key, and a
@@ -96,7 +102,13 @@ pub struct FolderRoad {
     device: String,
     key: DeviceKey,
     ring: std::sync::Mutex<Keyring>,
+    /// The group this device is in, once known: from creating, joining or opening it, else
+    /// from what the store kept.
+    group: std::sync::Mutex<Option<[u8; 16]>>,
 }
+
+/// What the road owns in a folder, besides `group.bin`.
+const OWNED_DIRS: [&str; 4] = ["devices", "keys", "paused", "removed"];
 
 impl std::fmt::Debug for FolderRoad {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -116,11 +128,16 @@ fn group_file(group: &[u8; 16], recovery: &RecoveryKey, ring: &Keyring) -> Vec<u
     out
 }
 
-fn open_group_file(bytes: &[u8], recovery: &RecoveryKey) -> Result<([u8; 16], Keyring)> {
+/// The group id in `group.bin`, which is plain.
+fn group_id(bytes: &[u8]) -> Result<[u8; 16]> {
     if bytes.len() < 20 || &bytes[..4] != GROUP_MAGIC {
         return Err(SyncError::Damaged("group.bin"));
     }
-    let group: [u8; 16] = bytes[4..20].try_into().expect("16 bytes");
+    Ok(bytes[4..20].try_into().expect("16 bytes"))
+}
+
+fn open_group_file(bytes: &[u8], recovery: &RecoveryKey) -> Result<([u8; 16], Keyring)> {
+    let group = group_id(bytes)?;
     let plain = open_with(&recovery.wrap_key(), &group_aad(&group), &bytes[20..])
         .ok_or(SyncError::WrongRecoveryKey)?;
     Ok((group, Keyring::from_bytes(&plain)?))
@@ -197,9 +214,32 @@ impl FolderRoad {
             .write_new(&join(prefix, "group.bin"), &group_file(&group, recovery, &ring))
             .await?;
         let road = Self::open(target, prefix, store, device, key, ring);
+        road.know_group(group)?;
         road.write_own_keys().await?;
         road.share_keys(&[]).await?;
         Ok(road)
+    }
+
+    /// Remove everything the road owns in a folder, so a new group can be set up there: every
+    /// device's files, the keys, the markers, and `group.bin` last. Only files are removed that
+    /// the road writes, so a folder the person picked keeps anything else in it. Removing what is
+    /// already gone is done, so a clear that stopped part way finishes when run again, and until
+    /// it does the folder still reads as another group's.
+    pub async fn clear(target: &dyn FolderTarget, prefix: &str) -> Result<()> {
+        for dir in OWNED_DIRS {
+            target.remove_dir(&join(prefix, dir)).await?;
+        }
+        let group = join(prefix, "group.bin");
+        // A rewrite of `group.bin` that never moved into place.
+        for entry in target.list(prefix.trim_matches('/')).await? {
+            if !entry.is_dir
+                && entry.name.starts_with("group.bin.")
+                && entry.name.ends_with(".tmp")
+            {
+                remove_file(target, &join(prefix, &entry.name)).await?;
+            }
+        }
+        remove_file(target, &group).await
     }
 
     /// Whether the folder names `device` under `removed/`: the group removed it.
@@ -226,9 +266,11 @@ impl FolderRoad {
         device: &str,
         key: DeviceKey,
     ) -> Result<Self> {
-        if !Self::group_exists(&*target, prefix).await? {
-            return Err(SyncError::NoGroup);
-        }
+        let group = match target.read(&join(prefix, "group.bin")).await {
+            Ok(bytes) => group_id(&bytes)?,
+            Err(FolderError::NotFound(_)) => return Err(SyncError::NoGroup),
+            Err(e) => return Err(e.into()),
+        };
         if Self::is_removed(&*target, prefix, device).await? {
             return Err(SyncError::Removed);
         }
@@ -239,7 +281,9 @@ impl FolderRoad {
             Err(e) => return Err(e.into()),
         };
         let ring = key.unwrap(device, &wrapped).map_err(|_| SyncError::GroupExists)?;
-        Ok(Self::open(target, prefix, store, device, key, ring))
+        let road = Self::open(target, prefix, store, device, key, ring);
+        road.know_group(group)?;
+        Ok(road)
     }
 
     /// Join the group a folder holds, with its recovery key. [`SyncError::Removed`] when the
@@ -257,11 +301,12 @@ impl FolderRoad {
             Err(FolderError::NotFound(_)) => return Err(SyncError::NoGroup),
             Err(e) => return Err(e.into()),
         };
-        let (_, ring) = open_group_file(&bytes, recovery)?;
+        let (group, ring) = open_group_file(&bytes, recovery)?;
         if Self::is_removed(&*target, prefix, device).await? {
             return Err(SyncError::Removed);
         }
         let road = Self::open(target, prefix, store, device, key, ring);
+        road.know_group(group)?;
         road.write_own_keys().await?;
         Ok(road)
     }
@@ -282,7 +327,101 @@ impl FolderRoad {
             device: device.to_owned(),
             key,
             ring: std::sync::Mutex::new(ring),
+            group: std::sync::Mutex::new(None),
         }
+    }
+
+    /// Keep `group` as the one this device is in, here and in the store. What was kept of
+    /// another group in this folder (cursors, numbers published) means nothing in this one and
+    /// goes, so this device reads the new group from its start and writes all it holds again.
+    fn know_group(&self, group: [u8; 16]) -> Result<()> {
+        *self.group.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = Some(group);
+        let key = self.meta("group");
+        let hexed = hex::encode(group);
+        match self.store.sync_meta_get(&key)? {
+            Some(kept) if kept == hexed => return Ok(()),
+            Some(_) => {
+                self.store.sync_meta_clear(&self.meta(""))?;
+            }
+            None => {}
+        }
+        self.store.sync_meta_set(&key, &hexed)?;
+        Ok(())
+    }
+
+    fn known_group(&self) -> Result<Option<[u8; 16]>> {
+        if let Some(group) =
+            *self.group.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+        {
+            return Ok(Some(group));
+        }
+        Ok(self
+            .store
+            .sync_meta_get(&self.meta("group"))?
+            .and_then(|h| hex::decode(h).ok())
+            .and_then(|b| b.try_into().ok()))
+    }
+
+    /// Whether the folder still holds the group this device is in, read before a pass writes
+    /// anything: [`SyncError::GroupReplaced`] when `group.bin` is gone or another group's. A
+    /// device that never kept the id (set up by an older version) takes the folder's when the
+    /// folder still holds this device's keys, and finds the group replaced when it does not.
+    async fn check_same_group(&self) -> Result<()> {
+        let found = match self.target.read(&self.path("group.bin")).await {
+            Ok(bytes) => group_id(&bytes)?,
+            Err(FolderError::NotFound(_)) => return Err(SyncError::GroupReplaced),
+            Err(e) => return Err(e.into()),
+        };
+        match self.known_group()? {
+            Some(known) if known == found => {
+                // The store's copy goes when the host takes a folder: put it back.
+                if self.store.sync_meta_get(&self.meta("group"))?.is_none() {
+                    self.know_group(found)?;
+                }
+                Ok(())
+            }
+            Some(_) => Err(SyncError::GroupReplaced),
+            None if self.member_without_id(found).await? => self.know_group(found),
+            None => Err(SyncError::GroupReplaced),
+        }
+    }
+
+    /// For a device that kept no group id: whether the folder's group is the one it is in.
+    /// Yes when the folder holds keys for it, or one of its recovery keys opens `group.bin`, or
+    /// its keyring opens what the other devices said they have seen. No when others said so and
+    /// none of it opens. Yes when nothing says either way, as before ids were kept.
+    async fn member_without_id(&self, found: [u8; 16]) -> Result<bool> {
+        let path = self.path(&format!("devices/{}/keys.bin", self.device));
+        match self.target.read(&path).await {
+            Ok(bytes) if self.key.unwrap(&self.device, &bytes).is_ok() => return Ok(true),
+            Ok(_) | Err(FolderError::NotFound(_)) => {}
+            Err(e) => return Err(e.into()),
+        }
+        let ring = self.keyring();
+        if !ring.recovery_keys().is_empty() {
+            let bytes = self.target.read(&self.path("group.bin")).await?;
+            if ring
+                .recovery_keys()
+                .iter()
+                .any(|r| open_group_file(&bytes, r).is_ok_and(|(group, _)| group == found))
+            {
+                return Ok(true);
+            }
+        }
+        let mut others = 0;
+        for entry in self.target.list(&self.path("devices")).await? {
+            if !entry.is_dir || entry.name == self.device {
+                continue;
+            }
+            let path = self.path(&format!("devices/{}/acks.bin", entry.name));
+            match self.target.read(&path).await {
+                Ok(bytes) if seal::open(&ring, &bytes).is_ok() => return Ok(true),
+                Ok(_) => others += 1,
+                Err(FolderError::NotFound(_)) => {}
+                Err(e) => return Err(e.into()),
+            }
+        }
+        Ok(others == 0)
     }
 
     /// The keyring now, for the host to keep: it changes when another device rotates the key.
@@ -321,6 +460,7 @@ impl FolderRoad {
     /// The recovery key a rotation made comes back in [`FolderReport::rotated`].
     pub async fn sync_rotating(&self, rotate: bool) -> Result<FolderReport> {
         let mut report = FolderReport::default();
+        self.check_same_group().await?;
         let removed: Vec<String> = self
             .store
             .sync_peers()?
@@ -377,6 +517,9 @@ impl FolderRoad {
         }
         self.share_keys(&present).await?;
         report.recovery = self.check_group().await?;
+        // Again before the segments: a group started over while this pass read writes nothing
+        // of this device's under the old key into the new group's folder.
+        self.check_same_group().await?;
         self.write_segments(&mut report).await?;
         self.write_acks().await?;
         // After the segments, so a device that finds a marker can read the register behind it.
@@ -418,6 +561,11 @@ impl FolderRoad {
             }
         }
         Ok(())
+    }
+
+    /// Whether the group's list names `device`, removed or not.
+    fn listed(&self, device: &str) -> Result<bool> {
+        Ok(self.store.sync_peers()?.iter().any(|(d, ..)| d == device))
     }
 
     fn removed_devices(&self) -> Result<Vec<String>> {
@@ -566,7 +714,14 @@ impl FolderRoad {
                 Err(SyncError::KeyMismatch) => {
                     // Written under a key this device may be sent in a moment.
                     self.refresh_keys().await?;
-                    seal::open(&self.keyring(), &bytes)?
+                    match seal::open(&self.keyring(), &bytes) {
+                        Ok(o) => o,
+                        // A device the group never listed, writing under a key it never had:
+                        // one of a group this folder held before, still writing. Skipped, so
+                        // the group's own devices go on syncing.
+                        Err(SyncError::KeyMismatch) if !self.listed(device)? => return Ok(()),
+                        Err(e) => return Err(e),
+                    }
                 }
                 Err(e) => return Err(e),
             };
@@ -756,6 +911,14 @@ pub fn import_backup(store: &Store, recovery: &RecoveryKey, bytes: &[u8]) -> Res
     let ops: Vec<Op> = serde_json::from_slice(&opened.plain)
         .map_err(|_| SyncError::Damaged("backup contents"))?;
     Ok(store.apply_ops(ops)?)
+}
+
+/// Remove one file; one already gone is done.
+async fn remove_file(target: &dyn FolderTarget, path: &str) -> Result<()> {
+    match target.remove(path).await {
+        Ok(()) | Err(FolderError::NotFound(_)) => Ok(()),
+        Err(e) => Err(e.into()),
+    }
 }
 
 fn join(prefix: &str, rest: &str) -> String {
@@ -1076,6 +1239,198 @@ mod tests {
         assert!(matches!(err, SyncError::NoGroup));
     }
 
+    /// Every file in the folder, for a test to see that nothing was written.
+    async fn target_paths(target: &Arc<dyn FolderTarget>) -> Vec<String> {
+        let mut out = Vec::new();
+        let mut dirs = vec![String::new()];
+        while let Some(dir) = dirs.pop() {
+            for e in target.list(&dir).await.unwrap() {
+                let path = if dir.is_empty() { e.name } else { format!("{dir}/{}", e.name) };
+                if e.is_dir { dirs.push(path) } else { out.push(path) }
+            }
+        }
+        out.sort();
+        out
+    }
+
+    /// A folder whose removes start failing after `left` of them, as a service that stops
+    /// answering part way through.
+    struct Stopping {
+        inner: MemoryTarget,
+        left: std::sync::atomic::AtomicUsize,
+    }
+
+    #[async_trait::async_trait]
+    impl FolderTarget for Stopping {
+        async fn list(
+            &self,
+            dir: &str,
+        ) -> std::result::Result<Vec<crate::folder::Entry>, FolderError> {
+            self.inner.list(dir).await
+        }
+        async fn read(&self, path: &str) -> std::result::Result<Vec<u8>, FolderError> {
+            self.inner.read(path).await
+        }
+        async fn write_new(
+            &self,
+            path: &str,
+            bytes: &[u8],
+        ) -> std::result::Result<(), FolderError> {
+            self.inner.write_new(path, bytes).await
+        }
+        async fn rename(&self, from: &str, to: &str) -> std::result::Result<(), FolderError> {
+            self.inner.rename(from, to).await
+        }
+        async fn remove(&self, path: &str) -> std::result::Result<(), FolderError> {
+            let left = self.left.load(Ordering::SeqCst);
+            if left == 0 {
+                return Err(FolderError::Unreachable("stopped".into()));
+            }
+            self.left.store(left - 1, Ordering::SeqCst);
+            self.inner.remove(path).await
+        }
+        fn describe(&self) -> String {
+            "stopping".into()
+        }
+    }
+
+    #[tokio::test]
+    async fn clearing_removes_what_the_road_owns_with_the_group_last_and_resumes() {
+        let memory = MemoryTarget::default();
+        let target: Arc<dyn FolderTarget> = Arc::new(memory.clone());
+        let (a, ra, b, rb, _) = pair(&target).await;
+        announce(&[&a, &b]);
+        a.watch("1", 300.0);
+        ra.sync().await.unwrap();
+        rb.sync().await.unwrap();
+        a.store.sync_register(kinds::DEVICE_SYNC, &b.id, Some("off"), None).unwrap();
+        ra.sync().await.unwrap();
+        memory.put_raw("kaeri/group.bin.0badf00d.tmp", b"half".to_vec());
+        memory.put_raw("kaeri/notes.txt", b"the person's".to_vec());
+        memory.put_raw("elsewhere/keep.seg", b"not ours".to_vec());
+        let owned = target_paths(&target).await;
+        assert!(owned.iter().any(|p| p.starts_with("kaeri/paused/")), "{owned:?}");
+
+        // It stops part way: the group is still there, so the folder still reads as a group's.
+        let stopping = Stopping { inner: memory.clone(), left: 3.into() };
+        let err = FolderRoad::clear(&stopping, "kaeri").await.unwrap_err();
+        assert!(matches!(err, SyncError::Folder(FolderError::Unreachable(_))), "{err:?}");
+        assert!(FolderRoad::group_exists(&*target, "kaeri").await.unwrap());
+        assert!(target_paths(&target).await.len() < owned.len());
+
+        // Run again, it finishes, and only what the road never wrote is left.
+        FolderRoad::clear(&*target, "kaeri").await.unwrap();
+        assert_eq!(
+            target_paths(&target).await,
+            ["elsewhere/keep.seg", "kaeri/notes.txt"].map(String::from)
+        );
+        assert!(!FolderRoad::group_exists(&*target, "kaeri").await.unwrap());
+        FolderRoad::clear(&*target, "kaeri").await.unwrap();
+    }
+
+    #[tokio::test]
+    async fn a_device_of_a_group_started_over_stops_and_joins_the_new_one_with_its_history() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, ra, b, rb, _) = pair(&target).await;
+        announce(&[&a, &b]);
+        a.watch("1", 300.0);
+        b.watch("2", 600.0);
+        ra.sync().await.unwrap();
+        rb.sync().await.unwrap();
+        ra.sync().await.unwrap();
+
+        // C lost the key: it clears the folder. Until the new group is there, B writes nothing.
+        let c = dev("00000000000000c3", 1_000);
+        FolderRoad::clear(&*target, "kaeri").await.unwrap();
+        b.watch("3", 900.0);
+        assert!(matches!(rb.sync().await.unwrap_err(), SyncError::GroupReplaced));
+        assert!(target_paths(&target).await.is_empty());
+
+        // C sets a new group up. A and B find it replaced and write nothing into it.
+        let (rc, recovery) =
+            FolderRoad::create(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity())
+                .await
+                .unwrap();
+        announce(&[&c]);
+        c.watch("4", 120.0);
+        rc.sync().await.unwrap();
+        let theirs = target_paths(&target).await;
+        assert!(matches!(rb.sync().await.unwrap_err(), SyncError::GroupReplaced));
+        assert!(matches!(ra.sync().await.unwrap_err(), SyncError::GroupReplaced));
+        assert_eq!(target_paths(&target).await, theirs);
+        // Opened again from what the store kept, it still knows its old group.
+        let reopened = FolderRoad::open(
+            target.clone(),
+            "kaeri",
+            b.store.clone(),
+            &b.id,
+            b.identity(),
+            rb.keyring(),
+        );
+        assert!(matches!(reopened.sync().await.unwrap_err(), SyncError::GroupReplaced));
+
+        // B joins with the new key, as a device of the new group, and brings what it holds.
+        let rb = join_with(&target, &b, &recovery).await;
+        rb.sync().await.unwrap();
+        assert_eq!(b.resume("4"), Some(120.0));
+        rc.sync().await.unwrap();
+        assert_eq!(c.resume("2"), Some(600.0));
+        assert_eq!(c.resume("3"), Some(900.0));
+        // What B had read from A came with A's own segments, which the new group never had.
+        assert_eq!(c.resume("1"), None);
+    }
+
+    #[tokio::test]
+    async fn a_device_that_kept_no_group_id_takes_its_own_and_not_a_new_one() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, ra, b, rb, _) = pair(&target).await;
+        announce(&[&a, &b]);
+        ra.sync().await.unwrap();
+        rb.sync().await.unwrap();
+        // As a version that kept no id left it.
+        b.store.sync_meta_remove("folder.kaeri.group").unwrap();
+        let open = |d: &Dev, ring: Keyring| {
+            FolderRoad::open(
+                target.clone(),
+                "kaeri",
+                d.store.clone(),
+                &d.id,
+                d.identity(),
+                ring,
+            )
+        };
+        open(&b, rb.keyring()).sync().await.unwrap();
+        assert!(b.store.sync_meta_get("folder.kaeri.group").unwrap().is_some());
+
+        // Started over by C: without an id, B still sees the group is not its own.
+        b.store.sync_meta_remove("folder.kaeri.group").unwrap();
+        FolderRoad::clear(&*target, "kaeri").await.unwrap();
+        let c = dev("00000000000000c3", 1_000);
+        let (rc, _) =
+            FolderRoad::create(target.clone(), "kaeri", c.store.clone(), &c.id, c.identity())
+                .await
+                .unwrap();
+        rc.sync().await.unwrap();
+        let err = open(&b, rb.keyring()).sync().await.unwrap_err();
+        assert!(matches!(err, SyncError::GroupReplaced), "{err:?}");
+    }
+
+    #[tokio::test]
+    async fn segments_a_listed_device_never_wrote_under_the_groups_key_are_skipped() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let (a, ra, b, rb, _) = pair(&target).await;
+        announce(&[&a, &b]);
+        a.watch("1", 300.0);
+        ra.sync().await.unwrap();
+        // A device of some other group wrote into this folder.
+        let stray =
+            seal::seal(&Keyring::generate(), Kind::Segment, "00000000000000e5", 1, b"[]")
+                .unwrap();
+        target.write_new("kaeri/devices/00000000000000e5/000001.seg", &stray).await.unwrap();
+        rb.sync().await.unwrap();
+        assert_eq!(b.resume("1"), Some(300.0));
+    }
+
     #[tokio::test]
     async fn creating_over_a_group_is_refused() {
         let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
@@ -1108,9 +1463,12 @@ mod tests {
             s.identity(),
             Keyring::generate(),
         );
-        // Its own keys.bin does not exist, so a first sync lists devices and fails on the first segment.
+        // The folder holds no keys for it, and nothing the others wrote opens with its keyring:
+        // the group is not its own, and it reads and writes nothing.
+        let before = target_paths(&target).await;
         let err = other.sync().await.unwrap_err();
-        assert!(matches!(err, SyncError::KeyMismatch), "{err:?}");
+        assert!(matches!(err, SyncError::GroupReplaced), "{err:?}");
+        assert_eq!(target_paths(&target).await, before);
         assert_eq!(s.resume("1"), None);
     }
 

@@ -69,7 +69,7 @@ static class Crossfade
             Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= drawn;
             Motion.HideStandard(ghost);
             var timer = ghost.DispatcherQueue.CreateTimer();
-            timer.Interval = Motion.Standard + TimeSpan.FromMilliseconds(80);
+            timer.Interval = Motion.Scaled(Motion.Standard) + TimeSpan.FromMilliseconds(80);
             timer.IsRepeating = false;
             timer.Tick += (_, _) => host.Children.Remove(ghost);
             timer.Start();

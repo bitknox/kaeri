@@ -13552,9 +13552,6 @@ cloud-err-webdav = Server menolak nama pengguna atau kata sandi itu.
 # Error, with Open the page again.
 cloud-err-timeout = Halaman masuk tertutup sebelum akses diizinkan.
 
-# Error.
-cloud-err-other-group = Folder ini milik kumpulan perangkat lain. Masukkan kunci pemulihannya untuk bergabung, atau pilih folder lain.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } mengeluarkan Kaeri. Perubahan Anda menunggu di { $kind } ini sampai Anda masuk lagi.
 

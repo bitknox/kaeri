@@ -18,6 +18,8 @@ public sealed partial class MainWindow
 #if KAERI_TESTING
         if (options.Show?.StartsWith("sync-", StringComparison.Ordinal) == true)
             SyncDialogs.Stage(options.Show);
+        if (options.Show?.StartsWith("startover-", StringComparison.Ordinal) == true)
+            SyncDialogs.Drive(options.Show);
         if (options.Show?.StartsWith("profiles-", StringComparison.Ordinal) == true)
             Profiles.Stage(options.Show);
 #endif

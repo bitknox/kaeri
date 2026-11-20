@@ -10193,9 +10193,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>アクセスが許可される前に、サインインページが閉じました。</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>このフォルダは別のデバイスのグループのものです。参加するにはその復元キーを入力するか、別のフォルダを選んでください。</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service}がKaeriをサインアウトさせました。再びサインインするまで、変更はこの{kind}で待機します。</value>
   </data>

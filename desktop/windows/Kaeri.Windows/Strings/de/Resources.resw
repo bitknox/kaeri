@@ -10610,9 +10610,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Die Anmeldeseite wurde geschlossen, bevor der Zugriff erlaubt war.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Dieser Ordner gehört zu einer anderen Gruppe von Geräte. Gib seinen Wiederherstellungsschlüssel ein, um ihr beizutreten, oder wähle einen anderen Ordner.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} hat Kaeri abgemeldet. Deine Änderungen warten auf diesem {kind}, bis du dich wieder anmeldest.</value>
   </data>

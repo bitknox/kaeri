@@ -210,6 +210,21 @@ pub enum FfiScene {
     /// Living room TV, paired with Kim's iPhone, which syncs through Dropbox and holds the
     /// sign-in the TV can use. The TV has no folder yet.
     SyncTvPhoneSignIn,
+    /// [`Self::Watching`] with sync off, signed in to Google Drive as kim@mail.example, whose
+    /// folder holds another group of two devices: choosing Google Drive in Add a cloud folder
+    /// asks for its recovery key (two devices), and Start over without the key clears the
+    /// folder and shows a new key. The clearing and set-up steps each hold 1.5 s.
+    SyncOtherGroup,
+    /// [`Self::SyncOtherGroup`], where starting over finds Google Drive out of reach.
+    SyncOtherGroupOffline,
+    /// [`Self::SyncOtherGroup`], where Google Drive refuses to delete the old history.
+    SyncOtherGroupRefused,
+    /// [`Self::SyncCloud`] after another device started sync over in Google Drive: the cloud
+    /// row says so with Enter new key, and there is no recovery key row.
+    SyncStartedOver,
+    /// [`Self::Watching`] on a TV (start it with `FfiPlatform::AndroidTv`): the Living room TV,
+    /// syncing through Google Drive, after another device started sync over there.
+    SyncTvStartedOver,
     /// [`Self::Watching`] with three profiles: Alex, who is in use and whose data this is,
     /// Kim, and Sam, a kids profile. Kim's and Sam's start empty.
     Profiles,
@@ -421,6 +436,11 @@ impl FfiScene {
                 | Self::SyncNearby
                 | Self::SyncCloud
                 | Self::SyncTvPhoneSignIn
+                | Self::SyncOtherGroup
+                | Self::SyncOtherGroupOffline
+                | Self::SyncOtherGroupRefused
+                | Self::SyncStartedOver
+                | Self::SyncTvStartedOver
                 | Self::Profiles
                 | Self::Following
                 | Self::FollowingSlow
@@ -452,6 +472,11 @@ impl FfiScene {
                 | Self::SyncNearby
                 | Self::SyncCloud
                 | Self::SyncTvPhoneSignIn
+                | Self::SyncOtherGroup
+                | Self::SyncOtherGroupOffline
+                | Self::SyncOtherGroupRefused
+                | Self::SyncStartedOver
+                | Self::SyncTvStartedOver
                 | Self::Profiles
                 | Self::Following
                 | Self::FollowingSlow
@@ -496,6 +521,11 @@ impl FfiScene {
             Self::SyncNearby => FixtureSync::Nearby,
             Self::SyncCloud => FixtureSync::Cloud,
             Self::SyncTvPhoneSignIn => FixtureSync::TvPhoneSignIn,
+            Self::SyncOtherGroup => FixtureSync::OtherGroup,
+            Self::SyncOtherGroupOffline => FixtureSync::OtherGroupOffline,
+            Self::SyncOtherGroupRefused => FixtureSync::OtherGroupRefused,
+            Self::SyncStartedOver => FixtureSync::StartedOver,
+            Self::SyncTvStartedOver => FixtureSync::TvStartedOver,
             _ => return None,
         })
     }
@@ -1208,6 +1238,11 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         | FfiScene::SyncNearby
         | FfiScene::SyncCloud
         | FfiScene::SyncTvPhoneSignIn
+        | FfiScene::SyncOtherGroup
+        | FfiScene::SyncOtherGroupOffline
+        | FfiScene::SyncOtherGroupRefused
+        | FfiScene::SyncStartedOver
+        | FfiScene::SyncTvStartedOver
         | FfiScene::Profiles
         | FfiScene::Following
         | FfiScene::FollowingSlow

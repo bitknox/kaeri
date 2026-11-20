@@ -13552,9 +13552,6 @@ cloud-err-webdav = Máy chủ từ chối tên người dùng hoặc mật khẩ
 # Error, with Open the page again.
 cloud-err-timeout = Trang đăng nhập đã đóng trước khi truy cập được cho phép.
 
-# Error.
-cloud-err-other-group = Thư mục này thuộc một nhóm các thiết bị khác. Hãy nhập khóa khôi phục của nhóm để tham gia, hoặc chọn thư mục khác.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } đã đăng xuất Kaeri. Các thay đổi sẽ chờ trên { $kind } này cho đến khi bạn đăng nhập lại.
 

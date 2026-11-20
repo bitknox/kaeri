@@ -11444,9 +11444,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Strona logowania zamknęła się, zanim dostęp został zezwolony.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Ten folder należy do innego zestawu urządzeń. Wpisz jego klucz odzyskiwania, aby dołączyć, albo wybierz inny folder.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} wylogowało aplikację Kaeri. Zmiany czekają na tym urządzeniu ({kind}), dopóki nie zalogujesz się ponownie.</value>
   </data>

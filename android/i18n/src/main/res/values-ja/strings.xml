@@ -3942,7 +3942,6 @@
     <string name="cloud_err_app_password">Nextcloudがそのアプリパスワードを受け付けませんでした。Nextcloudの「設定」の「セキュリティ」で新しく作成してください。</string>
     <string name="cloud_err_webdav">サーバーがそのユーザー名またはパスワードを受け付けませんでした。</string>
     <string name="cloud_err_timeout">アクセスが許可される前に、サインインページが閉じました。</string>
-    <string name="cloud_err_other_group">このフォルダは別のデバイスのグループのものです。参加するにはその復元キーを入力するか、別のフォルダを選んでください。</string>
     <string name="cloud_err_signed_out">%1$sがKaeriをサインアウトさせました。再びサインインするまで、変更はこの%2$sで待機します。</string>
     <string name="cloud_err_full">%1$sの空き容量がありません。空きを作ってから、もう一度お試しください。</string>
     <string name="cloud_err_folder_gone">Kaeriはこのフォルダを開けなくなりました。もう一度選んでください。</string>

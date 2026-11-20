@@ -3942,7 +3942,6 @@
     <string name="cloud_err_app_password">Nextcloud không chấp nhận mật khẩu ứng dụng đó. Hãy tạo mật khẩu mới trong Nextcloud, mục Cài đặt, Bảo mật.</string>
     <string name="cloud_err_webdav">Máy chủ từ chối tên người dùng hoặc mật khẩu đó.</string>
     <string name="cloud_err_timeout">Trang đăng nhập đã đóng trước khi truy cập được cho phép.</string>
-    <string name="cloud_err_other_group">Thư mục này thuộc một nhóm các thiết bị khác. Hãy nhập khóa khôi phục của nhóm để tham gia, hoặc chọn thư mục khác.</string>
     <string name="cloud_err_signed_out">%1$s đã đăng xuất Kaeri. Các thay đổi sẽ chờ trên %2$s này cho đến khi bạn đăng nhập lại.</string>
     <string name="cloud_err_full">%1$s đã đầy. Hãy giải phóng bớt dung lượng ở đó rồi thử lại.</string>
     <string name="cloud_err_folder_gone">Kaeri không mở được thư mục nữa. Hãy chọn lại.</string>

@@ -35976,7 +35976,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You can close this. Kaeri carries on, and opens the next step by itself when it's ready."
+            "value" : "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready."
           }
         },
         "es-419" : {
@@ -36975,82 +36975,10 @@
       "comment" : "Error.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Dieser Ordner gehört zu einer anderen Gruppe von Geräte. Gib seinen Wiederherstellungsschlüssel ein, um ihr beizutreten, oder wähle einen anderen Ordner."
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta carpeta pertenece a otro conjunto de dispositivos. Ingresa su clave de recuperación para unirte a ellos, o elige otra carpeta."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ce dossier appartient à un autre ensemble de appareils. Saisissez sa clé de récupération pour les rejoindre, ou choisissez un autre dossier."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Folder ini milik kumpulan perangkat lain. Masukkan kunci pemulihannya untuk bergabung, atau pilih folder lain."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Questa cartella appartiene a un altro gruppo di dispositivi. Inserisci la sua chiave di ripristino per unirti, o scegli un'altra cartella."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "このフォルダは別のデバイスのグループのものです。参加するにはその復元キーを入力するか、別のフォルダを選んでください。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ten folder należy do innego zestawu urządzeń. Wpisz jego klucz odzyskiwania, aby dołączyć, albo wybierz inny folder."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Esta pasta pertence a outro conjunto de dispositivos. Digite a chave de recuperação dele para entrar, ou escolha outra pasta."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Эта папка принадлежит другому набору устройств. Введите её ключ восстановления, чтобы присоединиться, или выберите другую папку."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Den här mappen tillhör en annan uppsättning enheter. Ange dess återställningsnyckel för att gå med, eller välj en annan mapp."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Bu klasör başka bir cihazlar kümesine ait. Onlara katılmak için kurtarma anahtarını girin ya da başka bir klasör seçin."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Thư mục này thuộc một nhóm các thiết bị khác. Hãy nhập khóa khôi phục của nhóm để tham gia, hoặc chọn thư mục khác."
+            "value" : "This folder belongs to another set of devices. Enter its recovery key to join them, choose another folder, or start over without the key."
           }
         }
       }
@@ -37471,6 +37399,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không đăng nhập được %1$@"
+          }
+        }
+      }
+    },
+    "cloud-err-started-over" : {
+      "comment" : "Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync was started over in %1$@ on another device. Enter the new recovery key to join again."
           }
         }
       }
@@ -254323,6 +254263,30 @@
         }
       }
     },
+    "rkey-clearing" : {
+      "comment" : "Working title while the folder is cleared. cloud-setting-up follows.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Deleting the old history"
+          }
+        }
+      }
+    },
+    "rkey-clearing-line" : {
+      "comment" : "Status line beside the progress indicator while the folder is cleared. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Removing the old sealed copy from %1$@. The new key comes next."
+          }
+        }
+      }
+    },
     "rkey-copy" : {
       "comment" : "Button.",
       "extractionState" : "manual",
@@ -254887,6 +254851,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ đang giữ lịch sử từ các các thiết bị khác của bạn. Khóa bạn đã lưu khi bật đồng bộ sẽ mở được nó."
+          }
+        }
+      }
+    },
+    "rkey-enter-new" : {
+      "comment" : "Button on the cloud row of a device whose group was started over; opens the restore screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Enter new key"
           }
         }
       }
@@ -256147,6 +256123,102 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Lưu"
+          }
+        }
+      }
+    },
+    "rkey-start-over" : {
+      "comment" : "Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start over without the key"
+          }
+        }
+      }
+    },
+    "rkey-start-over-action" : {
+      "comment" : "Destructive button in the confirmation.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete and start over"
+          }
+        }
+      }
+    },
+    "rkey-start-over-err-kept" : {
+      "comment" : "Second line under either start over error. Argument 1: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everything on this %1$@ is as it was."
+          }
+        }
+      }
+    },
+    "rkey-start-over-err-refused" : {
+      "comment" : "Error line when the service refused to delete the old sync data. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ didn’t delete the old history. Try again in a moment."
+          }
+        }
+      }
+    },
+    "rkey-start-over-err-title" : {
+      "comment" : "Error title when starting over failed. Offline uses cloud-err-offline as the line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn’t start over"
+          }
+        }
+      }
+    },
+    "rkey-start-over-line" : {
+      "comment" : "Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer. Argument 1: service (Text). Argument 2: kind (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri deletes the synced history in %1$@ and sets up sync again with a new recovery key. Everything on this %2$@ stays here. Other devices keep what they have, but stop syncing until they join with the new key."
+          }
+        }
+      }
+    },
+    "rkey-start-over-title" : {
+      "comment" : "Confirmation title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start over without the key?"
+          }
+        }
+      }
+    },
+    "rkey-started-over" : {
+      "comment" : "First line of the recovery key step after starting over, before rkey-line. Argument 1: service (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync started over in %1$@. Your other devices need this key to join again."
           }
         }
       }
@@ -381297,6 +381369,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã đăng xuất. Chọn để đăng nhập."
+          }
+        }
+      }
+    },
+    "tv-cloud-started-over-line" : {
+      "comment" : "TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sync was started over on another device. Select to pair this TV again."
           }
         }
       }

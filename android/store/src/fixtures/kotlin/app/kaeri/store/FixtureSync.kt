@@ -24,12 +24,21 @@ object FixtureSync {
         "add", "code", "name", "offline", "signed-out", "denied", "other-group", "switch", "setting-up", "pair-ok", "first-code", "first-ok", "first-ok-join", "join-failed-offline", "join-failed-refused", "join-failed-not-allowed",
         "connecting", "key-sheet", "timed-out", "setup-failed", "switch-service", "remove-menu", "remove-ask", "onedrive-code-denied",
         "google-code", "onedrive-code", "code-expired", "dropbox-phone", "dropbox-nophone", "nextcloud-qr", "who",
+        "startover", "startover-wrong", "startover-confirm", "startover-clearing", "startover-setup", "startover-key",
+        "startover-offline", "startover-refused", "startedover-restore",
+        "live-restore", "live-confirm", "live-clearing", "live-setup", "live-key", "live-failed",
     )
 
     private const val CODE_URL = "https://activate.example/device"
     private const val PAGE_URL = "https://cloud.example/index.php/login/v2/flow/0000"
 
     /** Set up [state] once the engine has said how sync stands. False for a state there is none of. */
+    /** The restore sheet for [spec]'s folder, which holds history from two devices, as a set-up that found it says. */
+    private fun restore(store: AppStore, spec: SyncFolderSpec) {
+        store.sync.status.value?.let { store.apply(Event.SyncStatus(it.copy(restoreDevices = 2u))) }
+        store.sync.askKey(spec)
+    }
+
     suspend fun stage(store: AppStore, state: String): Boolean {
         val kim = SyncDeviceView(id = "kim", name = "Kim's phone", thisDevice = false, trackers = listOf("anilist"), signIns = listOf(SyncFolderKind.DROPBOX))
         val offer = SyncStoreOffer(address = "https://plugins.example", name = "Example plugins", inviteFrom = "kim")
@@ -116,6 +125,64 @@ object FixtureSync {
                 store.apply(Event.SyncProblem(SyncProblem.SignInDenied(SyncFolderKind.ONE_DRIVE)))
             }
             "key" -> store.sync.askKey(spec)
+            // Start over without the key, each state staged with the engine's own events.
+            "startover", "startover-wrong", "startover-confirm" -> {
+                restore(store, spec)
+                if (state == "startover-wrong") store.apply(Event.SyncProblem(SyncProblem.WrongRecoveryKey))
+                if (state == "startover-confirm") store.sync.confirmStartOver(true)
+            }
+            "startover-clearing", "startover-setup", "startover-key", "startover-offline", "startover-refused" -> {
+                restore(store, spec)
+                delay(800)
+                store.sync.begin(spec)
+                store.sync.startingOver(SyncFolderKind.GOOGLE_DRIVE)
+                when (state) {
+                    "startover-clearing" -> store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Clearing))
+                    "startover-setup" -> {
+                        store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Clearing))
+                        delay(1_200)
+                        store.apply(Event.SyncSignIn(SyncFolderKind.GOOGLE_DRIVE, SyncSignInStep.Finishing))
+                    }
+                    "startover-key" -> store.apply(Event.SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA"))
+                    "startover-offline" -> store.apply(Event.SyncProblem(SyncProblem.Unreachable))
+                    else -> store.apply(Event.SyncProblem(SyncProblem.ClearRefused))
+                }
+                delay(1_200)
+            }
+            "startedover-restore" -> store.sync.askKey(spec, back = null)
+            // The same on the testing engine's own start over (the SyncOtherGroup scenes): Google
+            // Drive is chosen, the folder holds another group, and Start over runs for real.
+            "live-restore", "live-confirm", "live-clearing", "live-setup", "live-key", "live-failed" -> {
+                val name = store.sync.status.value?.deviceName ?: "Kim's phone"
+                store.sync.show(SyncSheet.PICKER)
+                delay(800)
+                store.startSync(name, spec)
+                withTimeoutOrNull(10_000) { store.sync.sheet.first { it == SyncSheet.KEY } } ?: return false
+                if (state == "live-restore") return true.also { delay(800) }
+                delay(800)
+                if (state == "live-confirm") {
+                    store.sync.confirmStartOver(true)
+                    delay(800)
+                    return true
+                }
+                store.startSyncOver(name, spec)
+                when (state) {
+                    "live-clearing" -> delay(1_100)
+                    "live-setup" -> {
+                        withTimeoutOrNull(10_000) { store.sync.settingUp.first { it } }
+                        delay(900)
+                    }
+                    "live-key" -> {
+                        withTimeoutOrNull(10_000) { store.sync.recoveryKey.first { it != null } }
+                        delay(900)
+                    }
+                    else -> {
+                        withTimeoutOrNull(10_000) { store.sync.problem.first { it != null } }
+                        delay(900)
+                    }
+                }
+                return true
+            }
             "key-wrong" -> {
                 store.sync.askKey(spec)
                 store.apply(Event.SyncProblem(SyncProblem.WrongRecoveryKey))

@@ -1079,7 +1079,9 @@ pub async fn target(
             sign_in(ctx, tx, service).await?;
             say(tx, service, Some(SyncSignInStep::Finishing));
         }
-        return Ok(Arc::new(ctx.syncing.cloud.memory.clone()));
+        let target: Arc<dyn FolderTarget> = Arc::new(ctx.syncing.cloud.memory.clone());
+        crate::syncing::fixture_other_group(&ctx.store, &target).await;
+        return Ok(target);
     }
     let tokens = match tokens_for(ctx, service).await {
         Ok(tokens) => tokens,

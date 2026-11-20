@@ -50,6 +50,7 @@ enum SyncWords {
                 return (isSignedOutByHand(sync) ? L.cloudSignedOutLine(kind: Device.name)
                         : L.cloudErrSignedOut(service: service, kind: Device.name), isSignedOutByHand(sync) ? .signedOut : .problem)
             case .unreachable: return (L.cloudErrTitle(service: service), .problem)
+            case .groupReplaced: return (L.cloudErrStartedOver(service: service), .problem)
             default: return (status.error ?? L.cloudErrTitle(service: service), .problem)
             }
         }
@@ -58,6 +59,12 @@ enum SyncWords {
             return (agoLine(max(0, Int64(now.timeIntervalSince1970) - at)), .synced)
         }
         return (L.settingsSyncedJustNow, .synced)
+    }
+
+    /// Another device started sync over in the folder: the row says so under Couldn't sync, and
+    /// Enter new key opens the restore screen.
+    static func replaced(_ sync: SyncModel) -> Bool {
+        (sync.status.problem ?? sync.problem) == .groupReplaced
     }
 
     /// Signed out on purpose rather than by the service: nothing in the problem says which, so

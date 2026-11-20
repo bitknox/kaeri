@@ -10755,6 +10755,9 @@ public static partial class T
     /// <summary>Status error title.</summary>
     public static string CloudErrTitle(string service) => Fill(Get("CloudErrTitle"), ("service", service));
 
+    /// <summary>Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds.</summary>
+    public static string CloudErrStartedOver(string service) => Fill(Get("CloudErrStartedOver"), ("service", service));
+
     /// <summary>Picker row line.</summary>
     public static string CloudDropboxLine => Get("CloudDropboxLine");
 
@@ -10802,6 +10805,9 @@ public static partial class T
 
     /// <summary>TV cloud row.</summary>
     public static string TvCloudSignedOutLine => Get("TvCloudSignedOutLine");
+
+    /// <summary>TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page.</summary>
+    public static string TvCloudStartedOverLine => Get("TvCloudStartedOverLine");
 
     /// <summary>TV ConfirmDialog.</summary>
     public static string TvCloudSignOutTitle(string service) => Fill(Get("TvCloudSignOutTitle"), ("service", service));
@@ -10862,6 +10868,39 @@ public static partial class T
 
     /// <summary>Button.</summary>
     public static string RkeyRestore => Get("RkeyRestore");
+
+    /// <summary>Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it.</summary>
+    public static string RkeyStartOver => Get("RkeyStartOver");
+
+    /// <summary>Confirmation title.</summary>
+    public static string RkeyStartOverTitle => Get("RkeyStartOverTitle");
+
+    /// <summary>Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer.</summary>
+    public static string RkeyStartOverLine(string service, string kind) => Fill(Get("RkeyStartOverLine"), ("service", service), ("kind", kind));
+
+    /// <summary>Destructive button in the confirmation.</summary>
+    public static string RkeyStartOverAction => Get("RkeyStartOverAction");
+
+    /// <summary>Working title while the folder is cleared. cloud-setting-up follows.</summary>
+    public static string RkeyClearing => Get("RkeyClearing");
+
+    /// <summary>Status line beside the progress indicator while the folder is cleared.</summary>
+    public static string RkeyClearingLine(string service) => Fill(Get("RkeyClearingLine"), ("service", service));
+
+    /// <summary>Error title when starting over failed. Offline uses cloud-err-offline as the line.</summary>
+    public static string RkeyStartOverErrTitle => Get("RkeyStartOverErrTitle");
+
+    /// <summary>Error line when the service refused to delete the old sync data.</summary>
+    public static string RkeyStartOverErrRefused(string service) => Fill(Get("RkeyStartOverErrRefused"), ("service", service));
+
+    /// <summary>Second line under either start over error.</summary>
+    public static string RkeyStartOverErrKept(string kind) => Fill(Get("RkeyStartOverErrKept"), ("kind", kind));
+
+    /// <summary>First line of the recovery key step after starting over, before rkey-line.</summary>
+    public static string RkeyStartedOver(string service) => Fill(Get("RkeyStartedOver"), ("service", service));
+
+    /// <summary>Button on the cloud row of a device whose group was started over; opens the restore screen.</summary>
+    public static string RkeyEnterNew => Get("RkeyEnterNew");
 
     /// <summary>Add a device.</summary>
     public static string PairEnterLine => Get("PairEnterLine");
@@ -16027,7 +16066,7 @@ public static partial class T
         ["StoresShare"] = "Share…",
         ["CloudBrowserLine"] = "Your browser opened {service}'s page. Allow access there, and Kaeri carries on by itself.",
         ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
-        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it's ready.",
+        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.",
         ["DeviceKindComputer"] = "computer",
         ["DevicesEnterCode"] = "Enter a code",
         ["DevicesShowKey"] = "Show",
@@ -16109,11 +16148,12 @@ public static partial class T
         ["CloudErrAppPassword"] = "Nextcloud didn’t accept that app password. Make a new one in Nextcloud under Settings, Security.",
         ["CloudErrWebdav"] = "The server refused that user name or password.",
         ["CloudErrTimeout"] = "The sign-in page closed before access was allowed.",
-        ["CloudErrOtherGroup"] = "This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.",
+        ["CloudErrOtherGroup"] = "This folder belongs to another set of devices. Enter its recovery key to join them, choose another folder, or start over without the key.",
         ["CloudErrSignedOut"] = "{service} signed Kaeri out. Your changes wait on this {kind} until you sign in again.",
         ["CloudErrFull"] = "{service} is full. Free some space there, then try again.",
         ["CloudErrFolderGone"] = "Kaeri can’t open the folder any more. Choose it again.",
         ["CloudErrTitle"] = "Couldn’t sync with {service}",
+        ["CloudErrStartedOver"] = "Sync was started over in {service} on another device. Enter the new recovery key to join again.",
         ["CloudDropboxLine"] = "Kaeri’s own folder in your Dropbox, Apps/Kaeri",
         ["CloudOnedriveLine"] = "Kaeri’s own folder in your OneDrive, Apps/Kaeri",
         ["CloudSyncNow"] = "Sync now",
@@ -16130,6 +16170,7 @@ public static partial class T
         ["TvCloudFinishing"] = "Signed in. Setting up the folder",
         ["TvCloudRevokedLine"] = "{service} signed Kaeri out. Select to sign in again.",
         ["TvCloudSignedOutLine"] = "Signed out. Select to sign in.",
+        ["TvCloudStartedOverLine"] = "Sync was started over on another device. Select to pair this TV again.",
         ["TvCloudSignOutTitle"] = "Sign out of {service}?",
         ["TvCloudSignOutLine"] = "This TV stops syncing through {service}. Changes wait here until you sign in again.",
         ["CloudOffline"] = "Waiting for a connection. Changes are kept on this {kind}.",
@@ -16151,6 +16192,17 @@ public static partial class T
         ["RkeyEnterNote"] = "24 letters and digits, in groups of four. Spaces and case don’t matter.",
         ["RkeyWrong"] = "That key doesn’t open this folder. Check each group of four and try again.",
         ["RkeyRestore"] = "Restore",
+        ["RkeyStartOver"] = "Start over without the key",
+        ["RkeyStartOverTitle"] = "Start over without the key?",
+        ["RkeyStartOverLine"] = "Kaeri deletes the synced history in {service} and sets up sync again with a new recovery key. Everything on this {kind} stays here. Other devices keep what they have, but stop syncing until they join with the new key.",
+        ["RkeyStartOverAction"] = "Delete and start over",
+        ["RkeyClearing"] = "Deleting the old history",
+        ["RkeyClearingLine"] = "Removing the old sealed copy from {service}. The new key comes next.",
+        ["RkeyStartOverErrTitle"] = "Couldn’t start over",
+        ["RkeyStartOverErrRefused"] = "{service} didn’t delete the old history. Try again in a moment.",
+        ["RkeyStartOverErrKept"] = "Everything on this {kind} is as it was.",
+        ["RkeyStartedOver"] = "Sync started over in {service}. Your other devices need this key to join again.",
+        ["RkeyEnterNew"] = "Enter new key",
         ["PairEnterLine"] = "On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.",
         ["PairScan"] = "Scan the code",
         ["PairSameWifi"] = "Both devices need to be on the same Wi-Fi.",

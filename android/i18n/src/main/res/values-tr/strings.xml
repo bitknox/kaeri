@@ -4098,7 +4098,6 @@
     <string name="cloud_err_app_password">Nextcloud bu uygulama parolasını kabul etmedi. Nextcloud\'da Ayarlar, Güvenlik bölümünden yenisini oluşturun.</string>
     <string name="cloud_err_webdav">Sunucu bu kullanıcı adını ya da parolayı reddetti.</string>
     <string name="cloud_err_timeout">Giriş sayfası, erişime izin verilmeden kapandı.</string>
-    <string name="cloud_err_other_group">Bu klasör başka bir cihazlar kümesine ait. Onlara katılmak için kurtarma anahtarını girin ya da başka bir klasör seçin.</string>
     <string name="cloud_err_signed_out">%1$s, Kaeri hesabının oturumunu kapattı. Yeniden giriş yapana kadar değişiklikleriniz bu %2$s üzerinde bekler.</string>
     <string name="cloud_err_full">%1$s dolu. Orada yer açıp yeniden deneyin.</string>
     <string name="cloud_err_folder_gone">Kaeri klasörü artık açamıyor. Yeniden seçin.</string>

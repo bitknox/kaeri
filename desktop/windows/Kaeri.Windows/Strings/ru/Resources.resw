@@ -11444,9 +11444,6 @@
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Страница входа закрылась, прежде чем доступ был разрешён.</value>
   </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Эта папка принадлежит другому набору устройств. Введите её ключ восстановления, чтобы присоединиться, или выберите другую папку.</value>
-  </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} вывел Kaeri из аккаунта. Изменения ждут на этом устройстве ({kind}), пока вы не войдёте снова.</value>
   </data>

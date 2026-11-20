@@ -22,6 +22,7 @@ enum DeviceNaming {
 
 struct DevicesPane: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let sync = store.sync
@@ -29,12 +30,18 @@ struct DevicesPane: View {
             SettingsRow(title: L.devicesName) { DeviceNameField() }
         }
         if sync.inUse {
-            YourDevicesGroup()
-            SyncNotesGroup()
-            CloudFolderGroup()
-            RecoveryKeyGroup()
-            TurnOffGroup()
-            TVsGroup()
+            // A group started over elsewhere: the cloud row crossfades (CloudRow) and the
+            // Recovery key row closes its height on standard. Reduce Motion keeps the crossfade
+            // and drops the height move.
+            Group {
+                YourDevicesGroup()
+                SyncNotesGroup()
+                CloudFolderGroup()
+                RecoveryKeyGroup()
+                TurnOffGroup()
+                TVsGroup()
+            }
+            .animation(reduceMotion ? nil : .standard, value: SyncWords.replaced(sync))
         } else {
             SyncStartGroup()
             TVsGroup(title: L.tvPairedTvs, footnoteOverride: L.devicesPairedTvsFoot)
@@ -227,39 +234,48 @@ struct CloudRow: View {
         let line = SyncWords.cloud(sync)
         let dimmed = sync.settingUpShown
         let signedOut = line.state == .signedOut
+        let replaced = SyncWords.replaced(sync)
         TimelineView(.periodic(from: .now, by: 30)) { _ in
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(SyncModel.name(folder.kind))
-                        .font(.mac(13, weight: .semibold))
-                        .foregroundStyle(.silk)
-                    HStack(spacing: 6) {
-                        StateDot(state: line.state)
-                        Text(line.text).font(.mac(12)).foregroundStyle(.haze)
-                        if let account = folder.account, !dimmed, !signedOut {
-                            Text("· " + account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
+            // One crossfade when the group is started over elsewhere: the row before and the row
+            // after, each fading on standard, so Reduce Motion keeps it.
+            ZStack {
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(replaced ? L.cloudErrTitle(service: SyncModel.name(folder.kind)) : SyncModel.name(folder.kind))
+                            .font(.mac(13, weight: .semibold))
+                            .foregroundStyle(.silk)
+                        HStack(alignment: replaced ? .firstTextBaseline : .center, spacing: 6) {
+                            StateDot(state: line.state)
+                                .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 1 }
+                            Text(line.text).font(.mac(12)).foregroundStyle(.haze)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if let account = folder.account, !dimmed, !signedOut, !replaced {
+                                Text("· " + account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
+                            }
+                        }
+                        if let account = folder.account, !dimmed, signedOut {
+                            Text(account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
                         }
                     }
-                    if let account = folder.account, !dimmed, signedOut {
-                        Text(account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
+                    .macLineHeight(16)
+                    Spacer(minLength: 0)
+                    HStack(spacing: 8) {
+                        if sync.settingUpShown {
+                            ProgressView().controlSize(.small)
+                        }
+                        buttons(sync, state: line.state)
                     }
+                    .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
+                    .fixedSize()
+                    .disabled(dimmed)
                 }
-                .macLineHeight(16)
-                Spacer(minLength: 0)
-                HStack(spacing: 8) {
-                    if sync.settingUpShown {
-                        ProgressView().controlSize(.small)
-                    }
-                    buttons(sync, state: line.state)
-                }
-                .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
-                .fixedSize()
-                .disabled(dimmed)
+                .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))
+                .frame(minHeight: 50)
+                .padding(.horizontal, 4)
+                .accessibilityElement(children: .combine)
+                .id(replaced)
+                .transition(.opacity.animation(.standard))
             }
-            .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))
-            .frame(minHeight: 50)
-            .padding(.horizontal, 4)
-            .accessibilityElement(children: .combine)
         }
     }
 
@@ -267,6 +283,16 @@ struct CloudRow: View {
     private func buttons(_ sync: SyncModel, state: SyncSummary.State) -> some View {
         let needsSignIn = state == .signedOut || sync.status.problem.map(Self.isSignIn) == true
         let cloud = [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind)
+        if SyncWords.replaced(sync) {
+            // A group started over elsewhere offers only Enter new key, with no More menu.
+            Button(L.rkeyEnterNew) { sync.enterNewKey(folder.kind) }
+        } else {
+            ordinaryButtons(sync, needsSignIn: needsSignIn, cloud: cloud)
+        }
+    }
+
+    @ViewBuilder
+    private func ordinaryButtons(_ sync: SyncModel, needsSignIn: Bool, cloud: Bool) -> some View {
         if needsSignIn, cloud {
             Button(sync.signedOutByHand ? L.cloudSignIn : L.cloudSignInAgain) { sync.signInAgain(folder.kind) }
         } else if sync.status.problem == .unreachable, folder.kind == .directory {
@@ -312,7 +338,8 @@ struct RecoveryKeyGroup: View {
 
     var body: some View {
         let sync = store.sync
-        if sync.status.recoveryKey {
+        // A group started over elsewhere: the key this device had opens nothing there now.
+        if sync.status.recoveryKey, !SyncWords.replaced(sync) {
             SettingsGroup {
                 SettingsRow(title: L.rkeyRow, note: note(sync)) {
                     Button(L.actionShow) {

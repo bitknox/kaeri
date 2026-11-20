@@ -23,6 +23,11 @@ pub enum SyncError {
     Damaged(&'static str),
     #[error("this device was removed from the group")]
     Removed,
+    /// The folder no longer holds the group this device is in: another device cleared it and
+    /// started a new group there, or is doing so now. The device stops, so it never writes what
+    /// it holds back under the old key.
+    #[error("the folder's group was started over on another device")]
+    GroupReplaced,
     #[error("{0}")]
     Pairing(String),
     /// The device dialled is showing a code, and it is not the one given.

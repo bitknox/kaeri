@@ -4098,7 +4098,6 @@
     <string name="cloud_err_app_password">Nextcloud hat dieses App-Passwort nicht akzeptiert. Erstelle in Nextcloud unter Einstellungen, Sicherheit ein neues.</string>
     <string name="cloud_err_webdav">Der Server hat diesen Benutzernamen oder dieses Passwort abgelehnt.</string>
     <string name="cloud_err_timeout">Die Anmeldeseite wurde geschlossen, bevor der Zugriff erlaubt war.</string>
-    <string name="cloud_err_other_group">Dieser Ordner gehört zu einer anderen Gruppe von Geräte. Gib seinen Wiederherstellungsschlüssel ein, um ihr beizutreten, oder wähle einen anderen Ordner.</string>
     <string name="cloud_err_signed_out">%1$s hat Kaeri abgemeldet. Deine Änderungen warten auf diesem %2$s, bis du dich wieder anmeldest.</string>
     <string name="cloud_err_full">%1$s ist voll. Gib dort etwas Speicher frei und versuch es dann noch einmal.</string>
     <string name="cloud_err_folder_gone">Kaeri kann den Ordner nicht mehr öffnen. Wähle ihn erneut.</string>

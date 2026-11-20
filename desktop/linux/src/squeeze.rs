@@ -185,6 +185,13 @@ impl Squeeze {
         self.imp().held.set(Some(f64::from(size)));
     }
 
+    /// Start held at `size` along its axis, as a place that takes over from one that stood that
+    /// size, until [`Self::release`].
+    pub fn hold_at(&self, size: f64) {
+        self.imp().held.set(Some(size.max(0.0)));
+        self.queue_resize();
+    }
+
     /// Ease from the held size to the child's own on the standard spring; at once under Reduce
     /// Animation or off screen.
     pub fn release(&self) {

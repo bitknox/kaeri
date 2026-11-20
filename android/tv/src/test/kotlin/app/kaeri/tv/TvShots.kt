@@ -1677,6 +1677,20 @@ class TvShots {
 
     @Test fun sync_signed_out() = syncShot("tv-sync-signed-out", "sync_cloud", "signed-out")
 
+    /** A group started over elsewhere: the cloud row under focus says so, and selecting it opens the pairing code. */
+    @Test fun sync_started_over() = shoot(null, scene = "sync_tv_started_over", section = "Devices", then = {
+        press(Key.DirectionRight)
+        repeat(6) {
+            if (focusedText().startsWith("Couldn")) return@repeat
+            press(Key.DirectionDown)
+        }
+        assertTrue("the cloud row takes focus: ${focusedText()}", focusedText().startsWith("Couldn"))
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-sync-started-over.png")
+        press(Key.DirectionCenter)
+        settle()
+        assertEquals(app.kaeri.store.SyncSheet.CODE, shot.sync.sheet.value)
+    })
+
     @Test fun sync_code_denied() = syncShot("tv-sync-code-denied", "sync_nearby", "onedrive-code-denied")
 
     @Test fun sync_remove_menu() = syncShot("tv-sync-remove-menu", "sync_cloud", "remove-menu")

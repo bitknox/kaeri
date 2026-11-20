@@ -3942,7 +3942,6 @@
     <string name="cloud_err_app_password">Nextcloud tidak menerima kata sandi aplikasi itu. Buat yang baru di Nextcloud, Pengaturan, Keamanan.</string>
     <string name="cloud_err_webdav">Server menolak nama pengguna atau kata sandi itu.</string>
     <string name="cloud_err_timeout">Halaman masuk tertutup sebelum akses diizinkan.</string>
-    <string name="cloud_err_other_group">Folder ini milik kumpulan perangkat lain. Masukkan kunci pemulihannya untuk bergabung, atau pilih folder lain.</string>
     <string name="cloud_err_signed_out">%1$s mengeluarkan Kaeri. Perubahan Anda menunggu di %2$s ini sampai Anda masuk lagi.</string>
     <string name="cloud_err_full">%1$s penuh. Kosongkan sebagian ruang di sana, lalu coba lagi.</string>
     <string name="cloud_err_folder_gone">Kaeri tidak dapat membuka folder itu lagi. Pilih lagi.</string>

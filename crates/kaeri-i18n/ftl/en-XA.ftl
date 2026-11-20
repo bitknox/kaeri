@@ -5946,6 +5946,9 @@ sync-tui-hint-turn-off = [Ţüŕñ öƒƒ~~~]
 # Status line hint: a key that copies the recovery key.
 sync-tui-hint-copy = [Çöþý~~]
 
+# Status line hint while the recovery key field has focus: Tab moves to Start over without the key.
+sync-tui-hint-start-over = [Šţàŕţ öṽéŕ~~~]
+
 # In place of a QR code when the window is too short to draw it whole.
 sync-tui-qr-no-room = [Ṁàķé ţĥé ŵîñðöŵ ţàļļéŕ ţö šéé ţĥé ǪŔ çöðé.~~~~~~~~~~~~~]
 
@@ -14281,7 +14284,7 @@ cloud-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }'š þà�
 cloud-browser-title = [Šîĝñ îñ ţö { $service } îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]
 
 # Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-cloud-close-carries-on = [Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ'š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cloud-close-carries-on = [Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = [çöɱþüţéŕ~~~]
@@ -14527,7 +14530,7 @@ cloud-err-webdav = [Ţĥé šéŕṽéŕ ŕéƒüšéð ţĥàţ üšéŕ ñàɱ
 cloud-err-timeout = [Ţĥé šîĝñ-îñ þàĝé çļöšéð ƀéƒöŕé àççéšš ŵàš àļļöŵéð.~~~~~~~~~~~~~~~]
 
 # Error.
-cloud-err-other-group = [Ţĥîš ƒöļðéŕ ƀéļöñĝš ţö àñöţĥéŕ šéţ öƒ ðéṽîçéš. Éñţéŕ îţš ŕéçöṽéŕý ķéý ţö ĵöîñ ţĥéɱ, öŕ çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cloud-err-other-group = [Ţĥîš ƒöļðéŕ ƀéļöñĝš ţö àñöţĥéŕ šéţ öƒ ðéṽîçéš. Éñţéŕ îţš ŕéçöṽéŕý ķéý ţö ĵöîñ ţĥéɱ, çĥööšé àñöţĥéŕ ƒöļðéŕ, öŕ šţàŕţ öṽéŕ ŵîţĥöüţ ţĥé ķéý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Status error, with Sign in again.
 cloud-err-signed-out = [{ $service } šîĝñéð Ķàéŕî öüţ. Ýöüŕ çĥàñĝéš ŵàîţ öñ ţĥîš { $kind } üñţîļ ýöü šîĝñ îñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~]
@@ -14540,6 +14543,9 @@ cloud-err-folder-gone = [Ķàéŕî çàñ’ţ öþéñ ţĥé ƒöļðéŕ à�
 
 # Status error title.
 cloud-err-title = [Çöüļðñ’ţ šýñç ŵîţĥ { $service }~~~~~~~]
+
+# Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds.
+cloud-err-started-over = [Šýñç ŵàš šţàŕţéð öṽéŕ îñ { $service } öñ àñöţĥéŕ ðéṽîçé. Éñţéŕ ţĥé ñéŵ ŕéçöṽéŕý ķéý ţö ĵöîñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Picker row line.
 cloud-dropbox-line = [Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ Ðŕöþƀöẋ, Åþþš/Ķàéŕî~~~~~~~~~~~~~~]
@@ -14588,6 +14594,9 @@ tv-cloud-revoked-line = [{ $service } šîĝñéð Ķàéŕî öüţ. Šéļéç
 
 # TV cloud row.
 tv-cloud-signed-out-line = [Šîĝñéð öüţ. Šéļéçţ ţö šîĝñ îñ.~~~~~~~~~]
+
+# TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page.
+tv-cloud-started-over-line = [Šýñç ŵàš šţàŕţéð öṽéŕ öñ àñöţĥéŕ ðéṽîçé. Šéļéçţ ţö þàîŕ ţĥîš ŢṼ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]
 
 # TV ConfirmDialog.
 tv-cloud-sign-out-title = [Šîĝñ öüţ öƒ { $service }?~~~~~]
@@ -14652,6 +14661,39 @@ rkey-wrong = [Ţĥàţ ķéý ðöéšñ’ţ öþéñ ţĥîš ƒöļðéŕ. Ç
 
 # Button.
 rkey-restore = [Ŕéšţöŕé~~~]
+
+# Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it.
+rkey-start-over = [Šţàŕţ öṽéŕ ŵîţĥöüţ ţĥé ķéý~~~~~~~~]
+
+# Confirmation title.
+rkey-start-over-title = [Šţàŕţ öṽéŕ ŵîţĥöüţ ţĥé ķéý?~~~~~~~~~]
+
+# Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer.
+rkey-start-over-line = [Ķàéŕî ðéļéţéš ţĥé šýñçéð ĥîšţöŕý îñ { $service } àñð šéţš üþ šýñç àĝàîñ ŵîţĥ à ñéŵ ŕéçöṽéŕý ķéý. Éṽéŕýţĥîñĝ öñ ţĥîš { $kind } šţàýš ĥéŕé. Öţĥéŕ ðéṽîçéš ķééþ ŵĥàţ ţĥéý ĥàṽé, ƀüţ šţöþ šýñçîñĝ üñţîļ ţĥéý ĵöîñ ŵîţĥ ţĥé ñéŵ ķéý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Destructive button in the confirmation.
+rkey-start-over-action = [Ðéļéţé àñð šţàŕţ öṽéŕ~~~~~~~]
+
+# Working title while the folder is cleared. cloud-setting-up follows.
+rkey-clearing = [Ðéļéţîñĝ ţĥé öļð ĥîšţöŕý~~~~~~~~]
+
+# Status line beside the progress indicator while the folder is cleared.
+rkey-clearing-line = [Ŕéɱöṽîñĝ ţĥé öļð šéàļéð çöþý ƒŕöɱ { $service }. Ţĥé ñéŵ ķéý çöɱéš ñéẋţ.~~~~~~~~~~~~~~~~~~~]
+
+# Error title when starting over failed. Offline uses cloud-err-offline as the line.
+rkey-start-over-err-title = [Çöüļðñ’ţ šţàŕţ öṽéŕ~~~~~~]
+
+# Error line when the service refused to delete the old sync data.
+rkey-start-over-err-refused = [{ $service } ðîðñ’ţ ðéļéţé ţĥé öļð ĥîšţöŕý. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~]
+
+# Second line under either start over error.
+rkey-start-over-err-kept = [Éṽéŕýţĥîñĝ öñ ţĥîš { $kind } îš àš îţ ŵàš.~~~~~~~~~~~]
+
+# First line of the recovery key step after starting over, before rkey-line.
+rkey-started-over = [Šýñç šţàŕţéð öṽéŕ îñ { $service }. Ýöüŕ öţĥéŕ ðéṽîçéš ñééð ţĥîš ķéý ţö ĵöîñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button on the cloud row of a device whose group was started over; opens the restore screen.
+rkey-enter-new = [Éñţéŕ ñéŵ ķéý~~~~]
 
 # Add a device.
 pair-enter-line = [Öñ ţĥé öţĥéŕ ðéṽîçé, öþéñ Ķàéŕî àñð çĥööšé Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé, öŕ Šéţţîñĝš, Ðéṽîçéš, Šĥöŵ à çöðé. Ţĥéñ éñţéŕ ţĥé çöðé ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]

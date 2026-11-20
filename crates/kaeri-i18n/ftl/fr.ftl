@@ -13882,9 +13882,6 @@ cloud-err-webdav = Le serveur a refusé ce nom d’utilisateur ou ce mot de pass
 # Error, with Open the page again.
 cloud-err-timeout = La page de connexion s’est fermée avant que l’accès soit autorisé.
 
-# Error.
-cloud-err-other-group = Ce dossier appartient à un autre ensemble de appareils. Saisissez sa clé de récupération pour les rejoindre, ou choisissez un autre dossier.
-
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } a déconnecté Kaeri. Vos changements attendent sur cet { $kind } jusqu’à votre nouvelle connexion.
 
