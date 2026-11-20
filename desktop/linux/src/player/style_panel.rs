@@ -57,10 +57,10 @@ pub fn button(ctx: &Rc<Ctx>) -> gtk::MenuButton {
         move || {
             quiet.set(true);
             for (key, row) in &rows {
-                if let Some(at) =
-                    ctx.hub.known.borrow().setting(*key).and_then(|r| catalog::current(&r))
-                {
-                    row.set_selected(at as u32);
+                // A value none of the choices says selects none, not the one there before.
+                let at = ctx.hub.known.borrow().setting(*key).map(|r| catalog::current(&r));
+                if let Some(at) = at {
+                    row.set_selected(at.map_or(gtk::INVALID_LIST_POSITION, |at| at as u32));
                 }
             }
             quiet.set(false);
