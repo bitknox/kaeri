@@ -1033,7 +1033,7 @@ static partial class SyncDialogs
         pages.Add("key", keySlot);
 
         var title = new Title(T.RkeyEnterTitle);
-        var dialog = Dialog(title.View, pages.View, 448);
+        var dialog = Dialog(title.View, pages.View);
         dialog.CloseButtonText = T.ActionCancel;
         var parts = new RestoreParts
         {
