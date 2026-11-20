@@ -977,11 +977,20 @@ impl Inner {
             if key == K::Subtitles {
                 return self.subtitles_row(&title, text);
             }
-            let line = adw::EntryRow::builder()
-                .title(&title)
-                .text(text)
-                .show_apply_button(true)
-                .build();
+            // The feed's password is typed hidden, and never shown back.
+            let line: adw::EntryRow = if key == K::OpdsPassword {
+                adw::PasswordEntryRow::builder()
+                    .title(&title)
+                    .show_apply_button(true)
+                    .build()
+                    .upcast()
+            } else {
+                adw::EntryRow::builder()
+                    .title(&title)
+                    .text(text)
+                    .show_apply_button(true)
+                    .build()
+            };
             line.connect_apply({
                 let inner = Rc::downgrade(self);
                 move |line| {
