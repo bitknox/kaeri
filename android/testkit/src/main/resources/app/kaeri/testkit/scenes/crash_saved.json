@@ -11,7 +11,7 @@
       "value": "adaptive",
       "change": {
        "@type": "Steps",
-       "back": false,
+       "back": true,
        "forward": true
       }
      },
@@ -692,6 +692,31 @@
        "@type": "Steps",
        "back": false,
        "forward": true
+      }
+     },
+     {
+      "key": "OPDS_FEED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
+      "key": "OPDS_PASSWORD",
+      "value": "not set",
+      "change": {
+       "@type": "Typed",
+       "text": ""
+      }
+     },
+     {
+      "key": "OPDS_PORT",
+      "value": "automatic",
+      "change": {
+       "@type": "Typed",
+       "text": ""
       }
      },
      {
