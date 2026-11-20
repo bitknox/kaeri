@@ -3576,6 +3576,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Bild-i-bild när du lämnar appen</string>
     <string name="settings_anilist_following">Visa personer du följer</string>
     <string name="settings_anilist_following_footer">Visar var personer du följer på AniList är i en serie, på dess sida och dess avsnitt. Vem som kan se din egen lista ställs in på AniList.</string>
+    <string name="settings_label_controller_input">Använd en handkontroll</string>
+    <string name="settings_label_swap_face_buttons">Byt plats på A och B</string>
+    <string name="settings_group_controller">Handkontroll</string>
     <string name="book_server_address">Adress</string>
     <string name="book_server_address_hint">En adress, eller hela OPDS-länken från Kavita.</string>
     <string name="book_server_kavita_key">Det här är en OPDS-länk från Kavita. Nyckeln loggar in dig, så inget lösenord behövs.</string>

@@ -2265,15 +2265,6 @@ nagare-description = Нагаре, талисман Kaeri: фигурка с ш�
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = Трейлеры без звука идут с YouTube, который видит ваш IP-адрес. Не воспроизводятся на лимитном подключении, с отключёнными анимациями, в режиме экономии энергии и при работающей программе чтения с экрана.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Использовать контроллер
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = Поменять местами A и B
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Контроллер
-
 # Settings row that names the controller in use.
 settings-controller-device = Контроллер
 
@@ -12557,6 +12548,15 @@ settings-anilist-following = Показывать тех, на кого вы п�
 
 # Note under that switch.
 settings-anilist-following-footer = Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Использовать контроллер
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = Поменять местами A и B
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Контроллер
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Адрес

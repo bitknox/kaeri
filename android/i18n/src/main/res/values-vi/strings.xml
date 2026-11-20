@@ -3443,6 +3443,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Hình trong hình khi rời ứng dụng</string>
     <string name="settings_anilist_following">Hiện người bạn theo dõi</string>
     <string name="settings_anilist_following_footer">Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.</string>
+    <string name="settings_label_controller_input">Dùng tay cầm</string>
+    <string name="settings_label_swap_face_buttons">Đổi chỗ nút A và B</string>
+    <string name="settings_group_controller">Tay cầm</string>
     <string name="book_server_address">Địa chỉ</string>
     <string name="book_server_address_hint">Một địa chỉ, hoặc toàn bộ liên kết OPDS từ Kavita.</string>
     <string name="book_server_kavita_key">Đây là liên kết OPDS của Kavita. Khóa trong đó dùng để đăng nhập, nên không cần mật khẩu.</string>

@@ -3443,6 +3443,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Gambar dalam gambar saat keluar dari aplikasi</string>
     <string name="settings_anilist_following">Tampilkan orang yang diikuti</string>
     <string name="settings_anilist_following_footer">Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</string>
+    <string name="settings_label_controller_input">Gunakan pengontrol</string>
+    <string name="settings_label_swap_face_buttons">Tukar A dan B</string>
+    <string name="settings_group_controller">Pengontrol</string>
     <string name="book_server_address">Alamat</string>
     <string name="book_server_address_hint">Sebuah alamat, atau seluruh tautan OPDS dari Kavita.</string>
     <string name="book_server_kavita_key">Ini tautan OPDS Kavita. Kuncinya dipakai untuk masuk, jadi tidak perlu kata sandi.</string>

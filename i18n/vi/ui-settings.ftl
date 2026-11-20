@@ -232,3 +232,6 @@ settings-label-picture-in-picture-on-leave = Hình trong hình khi rời ứng d
 
 settings-anilist-following = Hiện người bạn theo dõi
 settings-anilist-following-footer = Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.
+settings-label-controller-input = Dùng tay cầm
+settings-label-swap-face-buttons = Đổi chỗ nút A và B
+settings-group-controller = Tay cầm

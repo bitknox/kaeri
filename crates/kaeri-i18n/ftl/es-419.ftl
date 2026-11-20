@@ -2220,15 +2220,6 @@ nagare-description = Nagare, la mascota de Kaeri: una figura con peinado bob de 
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = Los tráilers se reproducen sin sonido desde YouTube, que ve tu dirección IP. No se reproducen con conexión medida, con animaciones desactivadas, en modo de ahorro de energía ni con un lector de pantalla activo.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Usar un control
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = Intercambiar A y B
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Control
-
 # Settings row that names the controller in use.
 settings-controller-device = Control
 
@@ -12415,6 +12406,15 @@ settings-anilist-following = Mostrar a quienes sigues
 
 # Note under that switch.
 settings-anilist-following-footer = Muestra en qué parte de una serie van las personas que sigues en AniList, en su página y en sus episodios. Quién puede ver tu propia lista se configura en AniList.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Usar un control
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = Intercambiar A y B
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Control
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Dirección

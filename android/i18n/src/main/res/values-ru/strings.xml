@@ -3842,6 +3842,9 @@
     <string name="settings_label_picture_in_picture_on_leave">«Картинка в картинке» при выходе из приложения</string>
     <string name="settings_anilist_following">Показывать тех, на кого вы подписаны</string>
     <string name="settings_anilist_following_footer">Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.</string>
+    <string name="settings_label_controller_input">Использовать контроллер</string>
+    <string name="settings_label_swap_face_buttons">Поменять местами A и B</string>
+    <string name="settings_group_controller">Контроллер</string>
     <string name="book_server_address">Адрес</string>
     <string name="book_server_address_hint">Адрес или вся ссылка OPDS из Kavita.</string>
     <string name="book_server_kavita_key">Это ссылка OPDS из Kavita. Ключ в ней служит для входа, поэтому пароль не нужен.</string>

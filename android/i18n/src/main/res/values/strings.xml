@@ -7419,6 +7419,12 @@
     <string name="settings_anilist_following">Show people you follow</string>
     <!-- Note under that switch. -->
     <string name="settings_anilist_following_footer">Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</string>
+    <!-- Settings row: whether a connected game controller drives the app. -->
+    <string name="settings_label_controller_input">Use a controller</string>
+    <!-- Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are. -->
+    <string name="settings_label_swap_face_buttons">Swap A and B</string>
+    <!-- Heading of the Settings group for game controllers. -->
+    <string name="settings_group_controller">Controller</string>
     <!-- Label of the address field in the Add a server sheet. -->
     <string name="book_server_address">Address</string>
     <!-- Note under the empty address field. -->

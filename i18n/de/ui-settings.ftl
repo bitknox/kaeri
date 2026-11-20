@@ -234,3 +234,6 @@ settings-label-picture-in-picture-on-leave = Bild-im-Bild beim Verlassen der App
 
 settings-anilist-following = Personen anzeigen, denen du folgst
 settings-anilist-following-footer = Zeigt bei einer Serie, auf ihrer Seite und bei ihren Folgen, wo Personen stehen, denen du auf AniList folgst. Wer deine eigene Liste sehen kann, legst du auf AniList fest.
+settings-label-controller-input = Controller verwenden
+settings-label-swap-face-buttons = A und B tauschen
+settings-group-controller = Controller

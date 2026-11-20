@@ -9533,6 +9533,15 @@
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Indique où en sont les personnes que vous suivez sur AniList dans une série, sur sa page et ses épisodes. Qui peut voir votre propre liste se règle sur AniList.</value>
   </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Utiliser une manette</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Inverser A et B</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Manette</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adresse</value>
   </data>

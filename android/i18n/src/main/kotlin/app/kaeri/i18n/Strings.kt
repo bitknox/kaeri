@@ -13944,6 +13944,18 @@ object Strings {
     fun settingsAnilistFollowingFooter(context: Context): String =
         context.getString(R.string.settings_anilist_following_footer)
 
+    /** Settings row: whether a connected game controller drives the app. */
+    fun settingsLabelControllerInput(context: Context): String =
+        context.getString(R.string.settings_label_controller_input)
+
+    /** Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are. */
+    fun settingsLabelSwapFaceButtons(context: Context): String =
+        context.getString(R.string.settings_label_swap_face_buttons)
+
+    /** Heading of the Settings group for game controllers. */
+    fun settingsGroupController(context: Context): String =
+        context.getString(R.string.settings_group_controller)
+
     /** Label of the address field in the Add a server sheet. */
     fun bookServerAddress(context: Context): String =
         context.getString(R.string.book_server_address)

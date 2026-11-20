@@ -3576,6 +3576,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Uygulamadan çıkarken pencere içinde pencere</string>
     <string name="settings_anilist_following">Takip ettiklerini göster</string>
     <string name="settings_anilist_following_footer">AniList\'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList\'te ayarlanır.</string>
+    <string name="settings_label_controller_input">Denetleyici kullan</string>
+    <string name="settings_label_swap_face_buttons">A ve B\'yi değiştir</string>
+    <string name="settings_group_controller">Denetleyici</string>
     <string name="book_server_address">Adres</string>
     <string name="book_server_address_hint">Bir adres veya Kavita’daki OPDS bağlantısının tamamı.</string>
     <string name="book_server_kavita_key">Bu bir Kavita OPDS bağlantısı. Anahtarı oturum açmayı sağlar, bu yüzden parola gerekmez.</string>

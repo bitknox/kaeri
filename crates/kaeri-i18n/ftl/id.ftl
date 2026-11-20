@@ -2130,15 +2130,6 @@ nagare-description = Nagare, maskot Kaeri: sosok berambut bob licin, berselendan
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = Trailer diputar tanpa suara dari YouTube, yang dapat melihat alamat IP Anda. Trailer tidak diputar pada koneksi berkuota, saat animasi dimatikan, dalam mode hemat daya, atau saat pembaca layar berjalan.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Gunakan pengontrol
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = Tukar A dan B
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Pengontrol
-
 # Settings row that names the controller in use.
 settings-controller-device = Pengontrol
 
@@ -12131,6 +12122,15 @@ settings-anilist-following = Tampilkan orang yang diikuti
 
 # Note under that switch.
 settings-anilist-following-footer = Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Gunakan pengontrol
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = Tukar A dan B
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Pengontrol
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Alamat

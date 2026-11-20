@@ -9377,6 +9377,15 @@ public static partial class T
     /// <summary>Note under that switch.</summary>
     public static string SettingsAnilistFollowingFooter => Get("SettingsAnilistFollowingFooter");
 
+    /// <summary>Settings row: whether a connected game controller drives the app.</summary>
+    public static string SettingsLabelControllerInput => Get("SettingsLabelControllerInput");
+
+    /// <summary>Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.</summary>
+    public static string SettingsLabelSwapFaceButtons => Get("SettingsLabelSwapFaceButtons");
+
+    /// <summary>Heading of the Settings group for game controllers.</summary>
+    public static string SettingsGroupController => Get("SettingsGroupController");
+
     /// <summary>Label of the address field in the Add a server sheet.</summary>
     public static string BookServerAddress => Get("BookServerAddress");
 
@@ -15629,6 +15638,9 @@ public static partial class T
         ["SettingsLabelPictureInPictureOnLeave"] = "Picture in picture when leaving the app",
         ["SettingsAnilistFollowing"] = "Show people you follow",
         ["SettingsAnilistFollowingFooter"] = "Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.",
+        ["SettingsLabelControllerInput"] = "Use a controller",
+        ["SettingsLabelSwapFaceButtons"] = "Swap A and B",
+        ["SettingsGroupController"] = "Controller",
         ["BookServerAddress"] = "Address",
         ["BookServerAddressHint"] = "An address, or the whole OPDS link from Kavita.",
         ["BookServerKavitaKey"] = "This is a Kavita OPDS link. Its key signs you in, so no password is needed.",

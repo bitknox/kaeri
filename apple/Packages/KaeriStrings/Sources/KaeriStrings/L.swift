@@ -12444,6 +12444,15 @@ public enum L {
     /// Note under that switch.
     public static var settingsAnilistFollowingFooter: String { string("settings-anilist-following-footer", fallback: "Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.") }
 
+    /// Settings row: whether a connected game controller drives the app.
+    public static var settingsLabelControllerInput: String { string("settings-label-controller-input", fallback: "Use a controller") }
+
+    /// Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+    public static var settingsLabelSwapFaceButtons: String { string("settings-label-swap-face-buttons", fallback: "Swap A and B") }
+
+    /// Heading of the Settings group for game controllers.
+    public static var settingsGroupController: String { string("settings-group-controller", fallback: "Controller") }
+
     /// Label of the address field in the Add a server sheet.
     public static var bookServerAddress: String { string("book-server-address", fallback: "Address") }
 

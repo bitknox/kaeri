@@ -238,3 +238,6 @@ settings-label-picture-in-picture-on-leave = Obraz w obrazie po wyjściu z aplik
 
 settings-anilist-following = Pokazuj obserwowane osoby
 settings-anilist-following-footer = Pokazuje, gdzie w serii są osoby obserwowane na AniList, na jej stronie i przy odcinkach. Kto widzi Twoją listę, ustawiasz na AniList.
+settings-label-controller-input = Użyj kontrolera
+settings-label-swap-face-buttons = Zamień przyciski A i B
+settings-group-controller = Kontroler

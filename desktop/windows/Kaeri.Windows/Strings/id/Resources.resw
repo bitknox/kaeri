@@ -8837,6 +8837,15 @@
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</value>
   </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Gunakan pengontrol</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Tukar A dan B</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Pengontrol</value>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Alamat</value>
   </data>

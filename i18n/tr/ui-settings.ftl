@@ -234,3 +234,6 @@ settings-label-picture-in-picture-on-leave = Uygulamadan çıkarken pencere içi
 
 settings-anilist-following = Takip ettiklerini göster
 settings-anilist-following-footer = AniList'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList'te ayarlanır.
+settings-label-controller-input = Denetleyici kullan
+settings-label-swap-face-buttons = A ve B'yi değiştir
+settings-group-controller = Denetleyici

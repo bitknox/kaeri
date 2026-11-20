@@ -13052,6 +13052,18 @@
     <value>[Šĥöŵš ŵĥéŕé þéöþļé ýöü ƒöļļöŵ öñ ÅñîĻîšţ àŕé îñ à šĥöŵ, öñ îţš þàĝé àñð îţš éþîšöðéš. Ŵĥö çàñ šéé ýöüŕ öŵñ ļîšţ îš šéţ öñ ÅñîĻîšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under that switch.</comment>
   </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>[Ûšé à çöñţŕöļļéŕ~~~~~]</value>
+    <comment>Settings row: whether a connected game controller drives the app.</comment>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>[Šŵàþ Å àñð Ɓ~~~~]</value>
+    <comment>Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.</comment>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>[Çöñţŕöļļéŕ~~~]</value>
+    <comment>Heading of the Settings group for game controllers.</comment>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>[Åððŕéšš~~~]</value>
     <comment>Label of the address field in the Add a server sheet.</comment>

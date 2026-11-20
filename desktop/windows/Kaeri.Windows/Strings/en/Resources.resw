@@ -13052,6 +13052,18 @@
     <value>Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</value>
     <comment>Note under that switch.</comment>
   </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Use a controller</value>
+    <comment>Settings row: whether a connected game controller drives the app.</comment>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Swap A and B</value>
+    <comment>Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.</comment>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Controller</value>
+    <comment>Heading of the Settings group for game controllers.</comment>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Address</value>
     <comment>Label of the address field in the Add a server sheet.</comment>

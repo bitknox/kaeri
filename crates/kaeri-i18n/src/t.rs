@@ -3647,21 +3647,6 @@ pub fn settings_note_trailers_linux() -> String {
     text("settings-note-trailers-linux", &[])
 }
 
-/// Settings row: whether a connected game controller drives the app.
-pub fn settings_label_controller_input() -> String {
-    text("settings-label-controller-input", &[])
-}
-
-/// Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-pub fn settings_label_swap_face_buttons() -> String {
-    text("settings-label-swap-face-buttons", &[])
-}
-
-/// Heading of the Settings group for game controllers.
-pub fn settings_group_controller() -> String {
-    text("settings-group-controller", &[])
-}
-
 /// Settings row that names the controller in use.
 pub fn settings_controller_device() -> String {
     text("settings-controller-device", &[])
@@ -20758,6 +20743,21 @@ pub fn settings_anilist_following() -> String {
 /// Note under that switch.
 pub fn settings_anilist_following_footer() -> String {
     text("settings-anilist-following-footer", &[])
+}
+
+/// Settings row: whether a connected game controller drives the app.
+pub fn settings_label_controller_input() -> String {
+    text("settings-label-controller-input", &[])
+}
+
+/// Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+pub fn settings_label_swap_face_buttons() -> String {
+    text("settings-label-swap-face-buttons", &[])
+}
+
+/// Heading of the Settings group for game controllers.
+pub fn settings_group_controller() -> String {
+    text("settings-group-controller", &[])
 }
 
 /// Label of the address field in the Add a server sheet.

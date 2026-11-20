@@ -3709,6 +3709,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Picture-in-picture ao sair do app</string>
     <string name="settings_anilist_following">Mostrar quem você segue</string>
     <string name="settings_anilist_following_footer">Mostra onde as pessoas que você segue no AniList estão em uma série, na página dela e nos episódios. Quem pode ver a sua lista é definido no AniList.</string>
+    <string name="settings_label_controller_input">Usar um controle</string>
+    <string name="settings_label_swap_face_buttons">Trocar A e B</string>
+    <string name="settings_group_controller">Controle</string>
     <string name="book_server_address">Endereço</string>
     <string name="book_server_address_hint">Um endereço, ou o link OPDS completo do Kavita.</string>
     <string name="book_server_kavita_key">Este é um link OPDS do Kavita. A chave dele faz seu login, então não precisa de senha.</string>

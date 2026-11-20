@@ -3443,6 +3443,9 @@
     <string name="settings_label_picture_in_picture_on_leave">アプリを離れるときにピクチャー イン ピクチャー</string>
     <string name="settings_anilist_following">フォロー中の人を表示</string>
     <string name="settings_anilist_following_footer">AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。</string>
+    <string name="settings_label_controller_input">コントローラーを使う</string>
+    <string name="settings_label_swap_face_buttons">AとBを入れ替える</string>
+    <string name="settings_group_controller">コントローラー</string>
     <string name="book_server_address">アドレス</string>
     <string name="book_server_address_hint">アドレス、またはKavitaのOPDSリンク全体を入力します。</string>
     <string name="book_server_kavita_key">これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</string>

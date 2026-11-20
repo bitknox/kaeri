@@ -12,6 +12,7 @@ import android.os.Bundle
 import android.os.SystemClock
 import android.text.format.DateFormat
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.WindowManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -173,6 +174,29 @@ class TvActivity : ComponentActivity() {
         val decor = window.decorView
         decor.dispatchKeyEvent(KeyEvent(now, now, KeyEvent.ACTION_DOWN, code, 0))
         decor.dispatchKeyEvent(KeyEvent(now, SystemClock.uptimeMillis(), KeyEvent.ACTION_UP, code, 0))
+    }
+
+    /**
+     * A game controller's keys, as the Controller settings say: dropped while it is switched off,
+     * and A and B swapped when asked. A swapped key is always taken, so Android adds no Back or
+     * centre of its own for the button that was pressed.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val controller = Gamepad.isController(event.device)
+        return when (val fate = Gamepad.fate(event.keyCode, controller, Gamepad.Settings.of(app.store.settings))) {
+            Gamepad.Fate.Same -> super.dispatchKeyEvent(event)
+            Gamepad.Fate.Ignored -> true
+            is Gamepad.Fate.As -> {
+                super.dispatchKeyEvent(Gamepad.retyped(event, fate.code))
+                true
+            }
+        }
+    }
+
+    /** The controller's sticks, which Android turns into D-pad presses: nothing while it is switched off. */
+    override fun dispatchGenericMotionEvent(event: MotionEvent): Boolean {
+        if (Gamepad.isController(event.device) && !Gamepad.Settings.of(app.store.settings).enabled) return true
+        return super.dispatchGenericMotionEvent(event)
     }
 
     /** Android 17 asks before an app reaches the local network, which the remote needs. */

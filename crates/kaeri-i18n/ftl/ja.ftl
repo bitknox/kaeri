@@ -2130,15 +2130,6 @@ nagare-description = Nagare、Kaeriのマスコット。絹のようなボブヘ
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = 予告編はYouTubeからミュートで再生されます。YouTubeにはあなたのIPアドレスが届きます。従量課金の接続、アニメーションオフ、省電力モード、スクリーンリーダー使用中には再生されません。
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = コントローラーを使う
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = AとBを入れ替える
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = コントローラー
-
 # Settings row that names the controller in use.
 settings-controller-device = コントローラー
 
@@ -12131,6 +12122,15 @@ settings-anilist-following = フォロー中の人を表示
 
 # Note under that switch.
 settings-anilist-following-footer = AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = コントローラーを使う
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = AとBを入れ替える
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = コントローラー
 
 # Label of the address field in the Add a server sheet.
 book-server-address = アドレス
