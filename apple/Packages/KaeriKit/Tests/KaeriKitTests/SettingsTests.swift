@@ -1,7 +1,7 @@
 // The settings rules as Swift ports them, against the engine's own: every option a menu offers,
 // set on the testing engine, comes back with the words the port gave it.
 
-import KaeriKit
+@testable import KaeriKit
 import Foundation
 import Testing
 
@@ -45,6 +45,19 @@ struct SettingsPortTests {
         #expect(Wording.bytes(9_400_000_000, locale: en) == "9.4 GB")
         #expect(Wording.bytes(140_300_000, locale: en) == "140 MB")
         #expect(Wording.bytes(1_500, locale: en) == "1.5 kB")
+    }
+
+    /// The upload menu finds its tick by the engine's words, so they stay English in every
+    /// app language (French says `ko`, Russian `кБ`), unlike `Wording.bytes`.
+    @Test func uploadLabelsAreTheEnginesEnglishWords() {
+        #expect(SettingKey.engineBytes(0) == "0 B")
+        #expect(SettingKey.engineBytes(999) == "999 B")
+        #expect(SettingKey.engineBytes(1_500) == "1.5 kB")
+        #expect(SettingKey.engineBytes(262_144) == "262 kB")
+        #expect(SettingKey.engineBytes(9_960_000) == "10.0 MB")
+        #expect(SettingKey.engineBytes(140_300_000) == "140 MB")
+        #expect(SettingKey.engineBytes(9_400_000_000) == "9.4 GB")
+        #expect(SettingKey.uploadLabel(kib: 2048) == "2.1 MB/s")
     }
 
     @Test func aRowStandsOnTheSavedChoiceWhenTheSessionDiffers() {
