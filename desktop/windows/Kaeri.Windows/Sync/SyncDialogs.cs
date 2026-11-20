@@ -1078,9 +1078,10 @@ static partial class SyncDialogs
                     return;
             }
         };
-        // Escape and Cancel: the confirmation's Cancel goes back to the key field. While the work
-        // runs it is Close, which leaves the work going; its key or failure opens by itself. On the
-        // key it is Done, as the key has been on screen. A close the app asks for always goes through.
+        // Escape and Cancel: the confirmation's and the failure's Cancel go back to the key field,
+        // with Start over under it. While the work runs it is Close, which leaves the work going;
+        // its key or failure opens by itself. On the key it is Done, as the key has been on screen.
+        // A close the app asks for always goes through.
         dialog.Closing += (sender, e) =>
         {
             if (parts.Done || Dialogs.Forced(sender) || e.Result != ContentDialogResult.None)
@@ -1096,8 +1097,11 @@ static partial class SyncDialogs
                     Ctx.Known.RecoveryKey = null;
                     startOver = null;
                     break;
-                case "error":
+                case "error" when startOver is not { Working: true }:
+                    e.Cancel = true;
                     startOver = null;
+                    pages.Show("enter");
+                    entry.Focus(FocusState.Programmatic);
                     break;
             }
         };

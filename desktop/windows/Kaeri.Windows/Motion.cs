@@ -100,11 +100,12 @@ static class Motion
     /// <summary>
     /// Text changing in place: the new half fades in over the old, which fades away, on the
     /// standard token, whether or not animation effects are on (a fade is what the brief keeps).
+    /// <paramref name="done"/> runs when the old half has gone, unless another fade took it over.
     /// </summary>
-    public static void Crossfade(UIElement from, UIElement to)
+    public static void Crossfade(UIElement from, UIElement to, Action? done = null)
     {
         Fade(to, to.Opacity, 1, Standard, Curve.Spring, null);
-        Fade(from, from.Opacity, 0, Standard, Curve.Spring, null);
+        Fade(from, from.Opacity, 0, Standard, Curve.Spring, done);
     }
 
     /// <summary>Fades an element that keeps its place to <paramref name="to"/>, whether or not animation effects are on.</summary>
