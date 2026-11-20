@@ -13,7 +13,8 @@ use super::chrome::mark_selected;
 use crate::{
     app::{
         App, DeviceConfirm, DeviceLine, DevicePageItem, Field, FolderState, StartOverStep,
-        code_groups, countdown_text, is_drive, key_groups, pair_link, service_line, service_name,
+        code_groups, countdown_text, is_drive, key_groups, pair_link, service_line,
+        service_name,
     },
     nav::{Focus, Overlay},
     theme::{Role, glyph},
@@ -593,7 +594,11 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
         Overlay::SyncRestore => {
             // The caret shows while the field has the keyboard; Tab gives it to Start over.
             let heading = if d.start_over_focused {
-                format!("{}   {}", overlay.title(), super::overlays::field_text(app, Field::RecoveryKey)) // i18n-skip
+                format!(
+                    "{}   {}",
+                    overlay.title(),
+                    super::overlays::field_text(app, Field::RecoveryKey)
+                ) // i18n-skip
             } else {
                 typed(app, overlay.title(), Field::RecoveryKey)
             };
@@ -617,7 +622,11 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
                 StartOverStep::Failed(problem) => {
                     let mut body = Body::new(t::rkey_start_over_err_title());
                     body.prose(problem, text, Tone::Alert);
-                    body.prose(&t::rkey_start_over_err_kept(&t::sync_tui_kind()), text, Tone::Dim);
+                    body.prose(
+                        &t::rkey_start_over_err_kept(&t::sync_tui_kind()),
+                        text,
+                        Tone::Dim,
+                    );
                     body
                 }
                 step => {
@@ -646,8 +655,12 @@ pub(super) fn devices_body(app: &App, overlay: &Overlay, width: u16, room: usize
                 }
                 Some(DeviceConfirm::NewKey) => (t::rkey_new(), t::rkey_new_foot()),
                 Some(DeviceConfirm::StartOver) => {
-                    let service = d.pending.as_ref().map(|p| service_name(&p.kind)).unwrap_or_default();
-                    (t::rkey_start_over_title(), t::rkey_start_over_line(&service, &t::sync_tui_kind()))
+                    let service =
+                        d.pending.as_ref().map(|p| service_name(&p.kind)).unwrap_or_default();
+                    (
+                        t::rkey_start_over_title(),
+                        t::rkey_start_over_line(&service, &t::sync_tui_kind()),
+                    )
                 }
                 _ => (
                     t::sync_turn_off_alert(&app.device_name()),
@@ -816,7 +829,15 @@ fn restore_line(app: &App) -> String {
 
 /// Draw `body`'s state mark, if it has one on show, in the state colour. `top` is the band's
 /// first row of rows and `offset` the first of them on show.
-pub(super) fn draw_mark(buf: &mut Buffer, app: &App, body: &Body, x: u16, top: u16, offset: usize, bottom: u16) {
+pub(super) fn draw_mark(
+    buf: &mut Buffer,
+    app: &App,
+    body: &Body,
+    x: u16,
+    top: u16,
+    offset: usize,
+    bottom: u16,
+) {
     let Some(at) = body.marked.filter(|at| *at >= offset) else { return };
     let y = top + (at - offset) as u16;
     if y < bottom {

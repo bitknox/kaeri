@@ -421,7 +421,10 @@ impl App {
     /// Whether another device started sync over in the folder, so this one has to join with
     /// the new key.
     pub fn group_replaced(&self) -> bool {
-        self.devices.status.as_ref().is_some_and(|s| s.problem == Some(SyncProblem::GroupReplaced))
+        self.devices
+            .status
+            .as_ref()
+            .is_some_and(|s| s.problem == Some(SyncProblem::GroupReplaced))
     }
 
     /// The cloud drive the folder is in, when this device is signed in to it.
@@ -608,7 +611,8 @@ impl App {
         let Some(folder) = self.devices.status.as_ref().and_then(|s| s.folder.clone()) else {
             return;
         };
-        let address = (!is_drive(&folder.kind) && !folder.label.is_empty()).then_some(folder.label);
+        let address =
+            (!is_drive(&folder.kind) && !folder.label.is_empty()).then_some(folder.label);
         self.forget_sync_form();
         self.devices.kind = Some(folder.kind.clone());
         self.devices.pending =
@@ -745,9 +749,12 @@ impl App {
             // an error, the start over is let go.
             (Overlay::SyncStartOver, Action::Back) => {
                 self.nav.close_overlay();
-                if self.devices.start_over.as_ref().is_none_or(|so| {
-                    matches!(so.said, StartOverStep::Failed(_))
-                }) {
+                if self
+                    .devices
+                    .start_over
+                    .as_ref()
+                    .is_none_or(|so| matches!(so.said, StartOverStep::Failed(_)))
+                {
                     self.devices.start_over = None;
                     self.forget_sync_form();
                 }
@@ -857,9 +864,9 @@ impl App {
             | SyncSignInStep::Sheet { url, .. }
             | SyncSignInStep::Page { url } => Some(url.clone()),
             SyncSignInStep::Code { verification_url, .. } => Some(verification_url.clone()),
-            SyncSignInStep::Finishing | SyncSignInStep::Connecting | SyncSignInStep::Clearing => {
-                None
-            }
+            SyncSignInStep::Finishing
+            | SyncSignInStep::Connecting
+            | SyncSignInStep::Clearing => None,
         }
     }
 
@@ -1027,7 +1034,8 @@ impl App {
 
     /// Put `step` on show, in the overlay the restore began, unless it was closed.
     fn show_start_over(&mut self, step: StartOverStep, now: Instant) {
-        let ours = matches!(self.nav.overlay(), Some(Overlay::SyncRestore | Overlay::SyncStartOver));
+        let ours =
+            matches!(self.nav.overlay(), Some(Overlay::SyncRestore | Overlay::SyncStartOver));
         match step {
             StartOverStep::Done => {
                 let Some(so) = self.devices.start_over.take() else { return };
@@ -1063,7 +1071,10 @@ impl App {
 
     /// Keys the restore overlay reads before its field: Tab between the key and Start over,
     /// and a letter typed on Start over going back to the key. `Some` when one was taken.
-    pub(super) fn restore_key(&mut self, key: &crossterm::event::KeyEvent) -> Option<Option<Command>> {
+    pub(super) fn restore_key(
+        &mut self,
+        key: &crossterm::event::KeyEvent,
+    ) -> Option<Option<Command>> {
         use crossterm::event::KeyCode;
         if self.nav.overlay() != Some(&Overlay::SyncRestore)
             || self.devices.working
@@ -1286,7 +1297,11 @@ impl App {
                 Some(SyncSignInStep::Clearing) => StartOverStep::Clearing,
                 Some(SyncSignInStep::Finishing) => StartOverStep::SettingUp,
                 // The end, with no key made: this device brought its own group along.
-                None if matches!(so.said, StartOverStep::Clearing | StartOverStep::SettingUp) => {
+                None if matches!(
+                    so.said,
+                    StartOverStep::Clearing | StartOverStep::SettingUp
+                ) =>
+                {
                     StartOverStep::Done
                 }
                 _ => {
@@ -2132,7 +2147,9 @@ mod tests {
         let mut a = at_devices(status);
         let lines = a.device_lines();
         assert!(lines.contains(&DeviceLine::EnterNewKey));
-        assert!(!lines.contains(&DeviceLine::SignOut) && !lines.contains(&DeviceLine::RecoveryKey));
+        assert!(
+            !lines.contains(&DeviceLine::SignOut) && !lines.contains(&DeviceLine::RecoveryKey)
+        );
         assert_eq!(a.folder_state(), FolderState::Failed);
         assert_eq!(a.folder_problem(), Some(t::cloud_err_started_over("Google Drive")));
 
