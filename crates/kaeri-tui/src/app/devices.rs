@@ -1980,7 +1980,7 @@ mod tests {
         press(&mut a, crossterm::event::KeyCode::Tab);
         assert!(a.devices.start_over_focused);
         assert_eq!(a.text(Field::RecoveryKey), "k7qm", "Tab is not typed");
-        type_text(&mut a, "4");
+        press(&mut a, crossterm::event::KeyCode::Char('4'));
         assert!(!a.devices.start_over_focused);
         assert_eq!(a.text(Field::RecoveryKey), "k7qm4");
         press(&mut a, crossterm::event::KeyCode::Down);
