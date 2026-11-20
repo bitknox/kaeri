@@ -175,6 +175,8 @@ struct Restore {
     start: gtk::Button,
     /// Restore, Try again or Done.
     end: gtk::Button,
+    /// Start over without the key, under the field.
+    over: gtk::Button,
     entry: adw::EntryRow,
     service: SyncFolderKind,
     stage: Rc<Cell<Over>>,
@@ -1288,6 +1290,7 @@ pub fn restore(ctx: &Rc<Ctx>, service: &SyncFolderKind) {
         key_slot,
         start: start.clone(),
         end: end.clone(),
+        over: over.clone(),
         entry: entry.clone(),
         service: service.clone(),
         stage: Rc::new(Cell::new(Over::Enter)),
@@ -1422,12 +1425,22 @@ fn send_start_over(ctx: &Rc<Ctx>, r: &Restore) {
         pace.shown = None;
     }
     r.joining.set(false);
-    r.end.set_sensitive(false);
+    hold_still(r);
     ctx.hub.known.borrow_mut().sync_problem = None;
     ctx.hub.send(Command::SyncGroup(SyncCommand::ClearFolderAndStart {
         device_name: typed_device_name(),
         folder: restore_folder(&r.service),
     }));
+}
+
+/// From the confirmed tap or Try again until the next step shows, nothing on the dialog can be
+/// pressed: Cancel can't close it mid-clear and a second press can't send a second start over.
+/// `show_over` gives the buttons back.
+fn hold_still(r: &Restore) {
+    r.start.set_sensitive(false);
+    r.end.set_sensitive(false);
+    r.over.set_sensitive(false);
+    r.dialog.set_can_close(false);
 }
 
 /// The line under "Couldn't start over": out of reach, a service that would not delete, or the
@@ -1526,6 +1539,8 @@ fn show_over(r: &Restore, stage: Over, error: Option<&str>) {
         Over::Key => "key",
     });
     r.start.set_visible(stage != Over::Key);
+    r.start.set_sensitive(true);
+    r.over.set_sensitive(true);
     r.start.set_label(&if matches!(stage, Over::Clearing | Over::SettingUp) {
         t::action_close()
     } else {
@@ -1584,7 +1599,7 @@ pub fn restore_started(_ctx: &Rc<Ctx>) {
             pace.returned = Some(Instant::now());
             pace.shown = None;
         }
-        r.end.set_sensitive(false);
+        hold_still(&r);
     }
 }
 
@@ -2588,6 +2603,56 @@ mod tests {
             ctx.hub.take(vec![Event::SyncProblem(SyncProblem::Unreachable)]);
             pump(50);
             assert_eq!(r.fail_line.label(), t::cloud_err_offline("Google Drive"));
+            r.dialog.force_close();
+        });
+    }
+
+    #[test]
+    fn nothing_can_be_pressed_from_the_confirmed_tap_until_the_next_step_shows() {
+        run(|| {
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = ready(dir.path(), &runtime, 2);
+            restore(&ctx, &DRIVE);
+            let r = open();
+            r.entry.set_text("K7QM4XR9TB2HWN6CP3ZD8FLA");
+            assert!(r.start.is_sensitive() && r.end.is_sensitive() && r.over.is_sensitive());
+            let held = |r: &Restore| {
+                !r.start.is_sensitive()
+                    && !r.end.is_sensitive()
+                    && !r.over.is_sensitive()
+                    && !r.dialog.can_close()
+            };
+            // The confirmed tap: Cancel, Restore and Start over hold still through the 600 ms.
+            send_start_over(&ctx, &r);
+            assert!(held(&r), "the key field holds still after the confirm");
+            let sent = r.pace.borrow().returned;
+            ctx.hub.take(vec![step(Some(SyncSignInStep::Clearing))]);
+            pump(300);
+            assert!(held(&r), "still held inside the 600 ms");
+            // Typing does not wake Restore either.
+            r.entry.set_text("K7QM4XR9TB2HWN6CP3ZD8FLB");
+            assert!(!r.end.is_sensitive());
+            assert_eq!(r.pace.borrow().returned, sent, "no second start over was sent");
+            pump(450);
+            assert_eq!(r.stage.get(), Over::Clearing);
+            assert!(r.start.is_sensitive() && r.dialog.can_close(), "Close works on the work");
+            // The failure, then Try again: its Cancel and Try again hold still the same way.
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::Unreachable)]);
+            pump(450);
+            assert_eq!(r.stage.get(), Over::Error);
+            assert!(r.start.is_sensitive() && r.end.is_sensitive());
+            r.end.emit_clicked();
+            assert!(held(&r), "the failure holds still after Try again");
+            ctx.hub.take(vec![Event::SyncProblem(SyncProblem::Unreachable)]);
+            pump(450);
+            assert_eq!(r.stage.get(), Over::Error);
+            assert!(r.start.is_sensitive() && r.end.is_sensitive());
+            // Back on the key field, Start over and Cancel work again.
+            r.start.emit_clicked();
+            pump(450);
+            assert_eq!(r.stage.get(), Over::Enter);
+            assert!(r.start.is_sensitive() && r.over.is_sensitive() && r.dialog.can_close());
             r.dialog.force_close();
         });
     }
