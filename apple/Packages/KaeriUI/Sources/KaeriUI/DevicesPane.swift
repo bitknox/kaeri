@@ -22,6 +22,7 @@ enum DeviceNaming {
 
 struct DevicesPane: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     var body: some View {
         let sync = store.sync
@@ -29,12 +30,18 @@ struct DevicesPane: View {
             SettingsRow(title: L.devicesName) { DeviceNameField() }
         }
         if sync.inUse {
-            YourDevicesGroup()
-            SyncNotesGroup()
-            CloudFolderGroup()
-            RecoveryKeyGroup()
-            TurnOffGroup()
-            TVsGroup()
+            // A group started over elsewhere: the cloud row crossfades (CloudRow) and the
+            // Recovery key row closes its height on standard. Reduce Motion keeps the crossfade
+            // and drops the height move.
+            Group {
+                YourDevicesGroup()
+                SyncNotesGroup()
+                CloudFolderGroup()
+                RecoveryKeyGroup()
+                TurnOffGroup()
+                TVsGroup()
+            }
+            .animation(reduceMotion ? nil : .standard, value: SyncWords.replaced(sync))
         } else {
             SyncStartGroup()
             TVsGroup(title: L.tvPairedTvs, footnoteOverride: L.devicesPairedTvsFoot)
@@ -229,40 +236,46 @@ struct CloudRow: View {
         let signedOut = line.state == .signedOut
         let replaced = SyncWords.replaced(sync)
         TimelineView(.periodic(from: .now, by: 30)) { _ in
-            HStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(replaced ? L.cloudErrTitle(service: SyncModel.name(folder.kind)) : SyncModel.name(folder.kind))
-                        .font(.mac(13, weight: .semibold))
-                        .foregroundStyle(.silk)
-                    HStack(alignment: replaced ? .firstTextBaseline : .center, spacing: 6) {
-                        StateDot(state: line.state)
-                            .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 1 }
-                        Text(line.text).font(.mac(12)).foregroundStyle(.haze)
-                            .fixedSize(horizontal: false, vertical: true)
-                        if let account = folder.account, !dimmed, !signedOut, !replaced {
-                            Text("· " + account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
+            // One crossfade when the group is started over elsewhere: the row before and the row
+            // after, each fading on standard, so Reduce Motion keeps it.
+            ZStack {
+                HStack(spacing: 16) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(replaced ? L.cloudErrTitle(service: SyncModel.name(folder.kind)) : SyncModel.name(folder.kind))
+                            .font(.mac(13, weight: .semibold))
+                            .foregroundStyle(.silk)
+                        HStack(alignment: replaced ? .firstTextBaseline : .center, spacing: 6) {
+                            StateDot(state: line.state)
+                                .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 1 }
+                            Text(line.text).font(.mac(12)).foregroundStyle(.haze)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if let account = folder.account, !dimmed, !signedOut, !replaced {
+                                Text("· " + account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
+                            }
+                        }
+                        if let account = folder.account, !dimmed, signedOut {
+                            Text(account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
                         }
                     }
-                    if let account = folder.account, !dimmed, signedOut {
-                        Text(account).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
+                    .macLineHeight(16)
+                    Spacer(minLength: 0)
+                    HStack(spacing: 8) {
+                        if sync.settingUpShown {
+                            ProgressView().controlSize(.small)
+                        }
+                        buttons(sync, state: line.state)
                     }
+                    .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
+                    .fixedSize()
+                    .disabled(dimmed)
                 }
-                .macLineHeight(16)
-                Spacer(minLength: 0)
-                HStack(spacing: 8) {
-                    if sync.settingUpShown {
-                        ProgressView().controlSize(.small)
-                    }
-                    buttons(sync, state: line.state)
-                }
-                .buttonStyle(SecondaryCapsuleStyle(raisedSurface: true))
-                .fixedSize()
-                .disabled(dimmed)
+                .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))
+                .frame(minHeight: 50)
+                .padding(.horizontal, 4)
+                .accessibilityElement(children: .combine)
+                .id(replaced)
+                .transition(.opacity.animation(.standard))
             }
-            .padding(EdgeInsets(top: 8, leading: 10, bottom: 8, trailing: 6))
-            .frame(minHeight: 50)
-            .padding(.horizontal, 4)
-            .accessibilityElement(children: .combine)
         }
     }
 

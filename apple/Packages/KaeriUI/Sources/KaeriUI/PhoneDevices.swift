@@ -10,6 +10,7 @@ import SwiftUI
 
 struct PhoneDevicesPage: View {
     @Environment(AppStore.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var removing: SyncDeviceView?
     @State private var turningOff = false
     @State private var renaming = false
@@ -48,6 +49,9 @@ struct PhoneDevicesPage: View {
                 }
             }
         }
+        // A group started over elsewhere: the cloud rows crossfade and the rows that go close
+        // their height on standard. Reduce Motion keeps the crossfade and drops the height move.
+        .animation(reduceMotion ? nil : .standard, value: SyncWords.replaced(sync))
         .navigationTitle(L.devicesTitle)
         .navigationBarTitleDisplayMode(.inline)
         // On the page, not the cloud section, so it rises from the bottom as an action sheet.
@@ -139,26 +143,38 @@ struct PhoneDevicesPage: View {
                 let cloud = [SyncFolderKind.googleDrive, .dropbox, .oneDrive].contains(folder.kind)
                 let needsSignIn = line.state == .signedOut || sync.status.problem.map(CloudRow.isSignIn) == true
                 let replaced = SyncWords.replaced(sync)
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(replaced ? L.cloudErrTitle(service: SyncModel.name(folder.kind)) : SyncModel.name(folder.kind))
-                        .font(.ui(17, weight: .semibold)).foregroundStyle(.silk)
-                    HStack(alignment: replaced ? .firstTextBaseline : .center, spacing: 6) {
-                        StateDot(state: line.state)
-                            .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 1 }
-                        Text(line.text).fixedSize(horizontal: false, vertical: true)
-                        if let account = folder.account, !needsSignIn, !replaced { Text("· " + account).lineLimit(1) }
+                // One crossfade when the group is started over elsewhere: the row before and the
+                // row after, each fading on standard, so Reduce Motion keeps it.
+                ZStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(replaced ? L.cloudErrTitle(service: SyncModel.name(folder.kind)) : SyncModel.name(folder.kind))
+                            .font(.ui(17, weight: .semibold)).foregroundStyle(.silk)
+                        HStack(alignment: replaced ? .firstTextBaseline : .center, spacing: 6) {
+                            StateDot(state: line.state)
+                                .alignmentGuide(.firstTextBaseline) { $0[.bottom] + 1 }
+                            Text(line.text).fixedSize(horizontal: false, vertical: true)
+                            if let account = folder.account, !needsSignIn, !replaced { Text("· " + account).lineLimit(1) }
+                        }
+                        .font(.ui(13)).foregroundStyle(.haze)
+                        if let account = folder.account, needsSignIn {
+                            Text(account).font(.ui(13)).foregroundStyle(.haze).lineLimit(1)
+                        }
                     }
-                    .font(.ui(13)).foregroundStyle(.haze)
-                    if let account = folder.account, needsSignIn {
-                        Text(account).font(.ui(13)).foregroundStyle(.haze).lineLimit(1)
-                    }
+                    .id(replaced)
+                    .transition(.opacity.animation(.standard))
                 }
                 .listRowBackground(Palette.raised)
-                if replaced {
-                    // The way back in: the restore screen, with the new key.
-                    Button(L.rkeyEnterNew) { sync.enterNewKey(folder.kind) }.listRowBackground(Palette.raised)
-                } else if !(needsSignIn && cloud) {
-                    Button(L.cloudSyncNow) { sync.syncNow() }.listRowBackground(Palette.raised)
+                if replaced || !(needsSignIn && cloud) {
+                    // Sync now, or the way back in: the restore screen, with the new key. One row,
+                    // so the words crossfade in place.
+                    Button { replaced ? sync.enterNewKey(folder.kind) : sync.syncNow() } label: {
+                        ZStack(alignment: .leading) {
+                            Text(replaced ? L.rkeyEnterNew : L.cloudSyncNow)
+                                .id(replaced)
+                                .transition(.opacity.animation(.standard))
+                        }
+                    }
+                    .listRowBackground(Palette.raised)
                 }
                 Button(L.cloudUseAnother) { sync.useAnotherService() }.listRowBackground(Palette.raised)
                 if cloud, !replaced {
