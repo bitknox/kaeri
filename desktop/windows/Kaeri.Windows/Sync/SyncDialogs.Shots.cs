@@ -275,10 +275,13 @@ static partial class SyncDialogs
     /// shots: with --scene=sync-other-group (or its -offline and -refused forms) and
     /// --show=startover-run, Add a cloud folder, Google Drive, the restore dialog the folder's
     /// other group opens, Start over without the key, then Delete and start over. With
-    /// --scene=sync-started-over and --show=startover-enter-new, Enter new key.
+    /// --scene=sync-started-over and --show=startover-enter-new, Enter new key. --show=startover-look
+    /// does nothing, and only keeps other dialogs out of the shot.
     /// </summary>
     public static void Drive(string show)
     {
+        if (show == "startover-look")
+            return;
         Ctx.Window.DispatcherQueue.TryEnqueue(async () =>
         {
             await Task.Delay(3000);
