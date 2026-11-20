@@ -1547,6 +1547,14 @@ pub fn restore_confirm(ctx: &Rc<Ctx>) {
     }
 }
 
+/// For a recording: the restore dialog's Cancel pressed, as a person would.
+#[cfg(feature = "fixtures")]
+pub fn restore_cancel(_ctx: &Rc<Ctx>) {
+    if let Some(r) = with(|u| u.restore.clone()) {
+        r.start.emit_clicked();
+    }
+}
+
 /// For a shot: the alert's Delete and start over pressed, without the command; the shot says the
 /// engine's events itself.
 #[cfg(feature = "fixtures")]
