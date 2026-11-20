@@ -1041,7 +1041,9 @@ struct CastToolbarItem: ToolbarContent {
     var body: some ToolbarContent {
         if store.tv.castButton != .hidden {
             #if os(macOS)
-            ToolbarItem(placement: .primaryAction) { CastButton() }
+            // One width in the bar and in the overflow menu, as every item in the Mac's toolbar
+            // is (`toolbarItemWidth`).
+            ToolbarItem(placement: .primaryAction) { CastButton().toolbarItemWidth(store.tv.castButton) }
             #else
             ToolbarItem(placement: .topBarTrailing) { CastButton() }
             #endif

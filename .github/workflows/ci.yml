@@ -662,6 +662,21 @@ jobs:
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
         run: apple/scripts/test.sh
+      # The Mac toolbar narrowed past where its items go into the overflow menu and widened
+      # again, on every section and a title's page, while the sync capsule, the activity line and
+      # private mode change (KaeriDev's ToolbarSweep). AppKit ends the app when an item's size
+      # keeps changing as it moves in and out, so the sweep either prints KAERI_SWEEP_PASSED or
+      # dies. On test.sh's build of the dev harness.
+      - name: Swift, the Mac toolbar's overflow
+        if: env.PART == 'swift'
+        timeout-minutes: 15
+        shell: bash
+        env:
+          MACOSX_DEPLOYMENT_TARGET: "26.0"
+        run: |
+          cd apple/Packages/KaeriDev
+          swift run KaeriDev --toolbar-sweep 12 | tee "$RUNNER_TEMP/toolbar-sweep.log"
+          grep -q KAERI_SWEEP_PASSED "$RUNNER_TEMP/toolbar-sweep.log"
       # The XcodeGen project every job below builds from.
       - name: The project
         if: ${{ !cancelled() && env.PART != 'caches' }}

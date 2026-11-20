@@ -1459,7 +1459,8 @@ struct TitleFactsPlaceholder: View {
     }
 }
 
-/// The title page's toolbar on the Mac: back, its list, and More.
+/// The title page's toolbar on the Mac: back, its list, and More, each item one width in the bar
+/// and in the overflow menu (`toolbarItemWidth`).
 struct TitleToolbar: ToolbarContent {
     let store: AppStore
     let navigator: Navigator
@@ -1471,17 +1472,22 @@ struct TitleToolbar: ToolbarContent {
                 withAnimation(.standard) { navigator.back() }
             }
             .keyboardShortcut("[", modifiers: .command)
+            .toolbarItemWidth(0)
         }
         ToolbarItem(placement: .primaryAction) {
-            AnotherButton(id: id)
+            // Wrapped only when it shows, so an empty item stays out of the toolbar.
+            if navigator.pickVisit.map({ $0.id == id && $0.more }) == true {
+                AnotherButton(id: id).toolbarItemWidth(0)
+            }
         }
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 StatusItems(id: id)
             } label: {
-                Text(store.titles[id]?.listStatus.map { $0.label.capitalizedSentence } ?? L.libraryAddToList)
+                Text(listLabel)
             }
             .fixedSize()
+            .toolbarItemWidth(listLabel)
         }
         ToolbarItem(placement: .primaryAction) {
             Menu {
@@ -1491,8 +1497,14 @@ struct TitleToolbar: ToolbarContent {
             } label: {
                 Label(L.actionMore, systemImage: "ellipsis")
             }
+            .toolbarItemWidth(0)
         }
         CastToolbarItem()
+    }
+
+    /// The list the title is on, or Add to list.
+    private var listLabel: String {
+        store.titles[id]?.listStatus.map { $0.label.capitalizedSentence } ?? L.libraryAddToList
     }
 }
 

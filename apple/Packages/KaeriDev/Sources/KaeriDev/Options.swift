@@ -55,6 +55,10 @@ import Foundation
 ///                                                     the page in the middle of the window scrolled
 ///                                                     through these offsets (ms:points, eased
 ///                                                     between), shot as it moves
+///     swift run KaeriDev --toolbar-sweep 6     narrow the window to its minimum and back, 6 points
+///                                                     a step, on every section, while the
+///                                                     toolbar's items change; prints
+///                                                     KAERI_SWEEP_PASSED and quits, or crashes
 ///     swift run KaeriDev --home <dir>             keep the files in <dir> instead
 ///     swift run KaeriDev --real                   the app's own engine, real sources and
 ///                                                     AniList, in a new temporary home
@@ -109,6 +113,8 @@ struct Options {
     var visit: [AnilistId] = []
     /// Whether a motion demo runs as with Reduce Motion on, for the moves the app decides itself.
     var reduceMotion = false
+    /// The toolbar sweep's step in points, when asked for (ToolbarSweep).
+    var toolbarSweep: CGFloat?
     var width: CGFloat = 1280
     var height: CGFloat = 800
 
@@ -120,7 +126,7 @@ struct Options {
                             [--detail-delay <ms>] [--list-delay <ms>] [--visit <id>,…] [--open-menu <x>,<y>]
                             [--app-menu <x>,<y>]
                             [--frames <ms>,… [--scroll-path <ms>:<points>,…]]
-                            [--reduce-motion]
+                            [--reduce-motion] [--toolbar-sweep <points>]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
         """
 
@@ -222,6 +228,10 @@ struct Options {
                 listDelay = .milliseconds(delay)
             case "--reduce-motion":
                 reduceMotion = true
+            case "--toolbar-sweep":
+                let points = try value(flag)
+                guard let step = Double(points), step > 0 else { throw Problem.bad(flag, points) }
+                toolbarSweep = step
             case "--search-delay":
                 let ms = try value(flag)
                 guard let delay = Int(ms), delay >= 0 else { throw Problem.bad(flag, ms) }
