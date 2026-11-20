@@ -13,6 +13,7 @@ fn pair(first: &str, second: &str) -> String {
 }
 
 const ESC: &str = "esc"; // i18n-skip
+const TAB: &str = "tab"; // i18n-skip
 
 fn hint_add_source() -> &'static str {
     said(t::keys_hint_add_source())
@@ -681,12 +682,12 @@ fn overlay_hints(
         // The field takes every letter, so Tab moves between the key and Start over.
         O::SyncRestore if app.devices.start_over_focused => vec![
             hint("↵", said(t::sync_tui_hint_start_over())),
-            hint("tab", said(t::rkey_row())),
+            hint(TAB, said(t::rkey_row())),
             hint(ESC, hint_cancel()),
         ],
         O::SyncRestore => vec![
             hint("↵", said(t::rkey_restore())),
-            hint("tab", said(t::sync_tui_hint_start_over())),
+            hint(TAB, said(t::sync_tui_hint_start_over())),
             hint(ESC, hint_cancel()),
         ],
         O::SyncStartOver => match app.devices.start_over.as_ref().map(|so| &so.shown) {
