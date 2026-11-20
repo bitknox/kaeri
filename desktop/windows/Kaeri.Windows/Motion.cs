@@ -37,6 +37,22 @@ static class Motion
 
     static readonly Dictionary<UIElement, Storyboard> running = [];
 
+#if KAERI_TESTING
+    /// <summary>A motion clip's: every fade and ease this many times slower (KAERI_MOTION_SCALE), so a slow run of stills catches its curve.</summary>
+    static readonly double Scale = double.TryParse(Environment.GetEnvironmentVariable("KAERI_MOTION_SCALE"), System.Globalization.NumberStyles.Float,
+        System.Globalization.CultureInfo.InvariantCulture, out var scale) && scale is > 0 and <= 50 ? scale : 1;
+#endif
+
+    /// <summary>A token's time as this run plays it: as it is, but slower in a testing build's motion clip.</summary>
+    public static TimeSpan Scaled(TimeSpan time)
+    {
+#if KAERI_TESTING
+        return time * Scale;
+#else
+        return time;
+#endif
+    }
+
     /// <summary>Shows a collapsed element by fading it in (fade-in).</summary>
     public static void Show(UIElement element) => Show(element, FadeInTime, Curve.FadeIn);
 
@@ -178,7 +194,7 @@ static class Motion
         EventHandler<object>? step = null;
         step = (_, _) =>
         {
-            var t = Math.Min(1, clock.Elapsed / Standard);
+            var t = Math.Min(1, clock.Elapsed / Scaled(Standard));
             set(from + (to - from) * SpringAt(t));
             if (t >= 1)
             {
@@ -253,7 +269,7 @@ static class Motion
             was.Stop();
         var animation = new DoubleAnimationUsingKeyFrames();
         animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = TimeSpan.Zero, Value = from });
-        animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = time, Value = to, KeySpline = Spline(curve) });
+        animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = Scaled(time), Value = to, KeySpline = Spline(curve) });
         Storyboard.SetTarget(animation, element);
         Storyboard.SetTargetProperty(animation, "Opacity");
         var board = new Storyboard();
@@ -285,7 +301,7 @@ static class Motion
             return;
         var animation = new DoubleAnimationUsingKeyFrames { EnableDependentAnimation = true };
         animation.KeyFrames.Add(new DiscreteDoubleKeyFrame { KeyTime = TimeSpan.Zero, Value = from });
-        animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = Standard, Value = to, KeySpline = SpringSpline() });
+        animation.KeyFrames.Add(new SplineDoubleKeyFrame { KeyTime = Scaled(Standard), Value = to, KeySpline = SpringSpline() });
         Storyboard.SetTarget(animation, element);
         Storyboard.SetTargetProperty(animation, "Height");
         var board = new Storyboard();
