@@ -399,6 +399,33 @@ impl Default for PresenceConfig {
     }
 }
 
+impl DownloadsConfig {
+    /// Where finished files go, as a path: a leading `~` is the home folder, as a shell reads
+    /// it, and a blank setting is none. Typed `~/Videos`, the setting was taken as a folder named
+    /// `~` in whichever folder the app was started from.
+    pub fn directory_path(&self) -> Option<PathBuf> {
+        let home = directories::BaseDirs::new().map(|dirs| dirs.home_dir().to_path_buf());
+        self.directory_in(home.as_deref())
+    }
+
+    /// [`Self::directory_path`], with `home` as the home folder.
+    pub fn directory_in(&self, home: Option<&std::path::Path>) -> Option<PathBuf> {
+        let dir = self.directory.as_deref()?.trim();
+        if dir.is_empty() {
+            return None;
+        }
+        let rest = match dir.strip_prefix('~') {
+            Some("") => Some(""),
+            Some(rest) => rest.strip_prefix(['/', std::path::MAIN_SEPARATOR]),
+            None => None,
+        };
+        Some(match (rest, home) {
+            (Some(rest), Some(home)) => home.join(rest),
+            _ => PathBuf::from(dir),
+        })
+    }
+}
+
 impl Default for DownloadsConfig {
     fn default() -> Self {
         Self {
@@ -1817,6 +1844,30 @@ mod tests {
         assert!(Config::default().meta.following);
         let cfg = Config::from_toml("[meta]\nfollowing = false").unwrap();
         assert!(!cfg.meta.following);
+    }
+
+    #[test]
+    fn a_downloads_folder_under_home_is_read_as_a_shell_reads_it() {
+        let home = std::path::Path::new("/home/viewer");
+        let at = |dir: &str| {
+            DownloadsConfig { directory: Some(dir.into()), ..Default::default() }
+                .directory_in(Some(home))
+        };
+        assert_eq!(at("~/Videos/Kaeri"), Some(home.join("Videos/Kaeri")));
+        assert_eq!(at("~"), Some(home.to_path_buf()));
+        assert_eq!(at(" /srv/media "), Some(PathBuf::from("/srv/media")));
+        assert_eq!(
+            at("~other/Videos"),
+            Some(PathBuf::from("~other/Videos")),
+            "not ours to expand"
+        );
+        assert_eq!(at(""), None, "blank is no folder");
+        assert_eq!(at("  "), None);
+        assert_eq!(DownloadsConfig::default().directory_in(Some(home)), None);
+        // No home to be had: the setting as written.
+        let typed =
+            DownloadsConfig { directory: Some("~/Videos".into()), ..Default::default() };
+        assert_eq!(typed.directory_in(None), Some(PathBuf::from("~/Videos")));
     }
 
     #[test]

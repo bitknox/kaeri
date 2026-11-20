@@ -154,8 +154,8 @@ pub struct PlaySettings {
     /// or the moment it opens, and plays with the room until it ends. See [`crate::playback::seat`].
     pub party: PartyHub,
     /// How many seconds a hosted player's Up Next counts down before it plays the next
-    /// episode, `0` for none: [`UP_NEXT_COUNTDOWN`] until the config keeps one. The terminal's
-    /// companion keeps its own ten.
+    /// episode, `0` for none: `playback.up_next_countdown`. The terminal's companion keeps its
+    /// own ten.
     pub up_next_countdown: u32,
     /// The viewer's own mpv options, as property and value, for a hosted player to set as it
     /// opens: `playback.mpv_args`, which mpv's own process takes on its command line.
@@ -197,8 +197,8 @@ impl PlaySettings {
     }
 }
 
-/// How many seconds Up Next counts down, the design's ten: what every playback says until the
-/// config has a setting for it.
+/// How many seconds Up Next counts down, the design's ten: the config's default, and what a
+/// playback built without a config says.
 pub const UP_NEXT_COUNTDOWN: u32 = 10;
 
 /// How many episodes in a row play with no input from the viewer before a hosted player asks

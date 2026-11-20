@@ -373,6 +373,8 @@ pub struct Mpv {
     bundle: Option<Bundle>,
     /// `kaeri-<key>=<value>` options for the companion: the palette and font.
     theme: Vec<(String, String)>,
+    /// The viewer's subtitle style, as mpv options without the dashes.
+    subtitles: Vec<(String, String)>,
     /// The binary's version, read once on first use.
     version: Arc<tokio::sync::OnceCell<Option<MpvVersion>>>,
 }
@@ -386,6 +388,7 @@ impl Mpv {
             ui: PlayerUi::Mpv,
             bundle: None,
             theme: Vec::new(),
+            subtitles: Vec::new(),
             version: Arc::new(tokio::sync::OnceCell::new()),
         }
     }
@@ -405,6 +408,13 @@ impl Mpv {
     /// The companion's palette and font, as `(key, value)` pairs without the prefix.
     pub fn with_theme(mut self, theme: Vec<(String, String)>) -> Self {
         self.theme = theme;
+        self
+    }
+
+    /// The viewer's subtitle style, as `(option, value)` pairs without the dashes: set on the
+    /// command line before the extra arguments, so a flag of the viewer's own still wins.
+    pub fn with_subtitles(mut self, options: Vec<(String, String)>) -> Self {
+        self.subtitles = options;
         self
     }
 
@@ -517,6 +527,16 @@ impl Mpv {
         args
     }
 
+    /// The subtitle style's flags, or none for an mpv older than 0.39: the options carry that
+    /// version's names, which an older mpv refuses as unknown and does not start. It plays with
+    /// its own look.
+    fn subtitle_args(&self, version: Option<MpvVersion>) -> Vec<String> {
+        if version.is_some_and(|v| !v.has_border_style()) {
+            return Vec::new();
+        }
+        self.subtitles.iter().map(|(name, value)| format!("--{name}={value}")).collect()
+    }
+
     /// Open the player window with nothing in it yet.
     ///
     /// The window comes up idle and files are loaded into it with [`MpvSession::load`], which
@@ -544,6 +564,7 @@ impl Mpv {
         // Before the user's extra args, so `--no-fullscreen` there still wins.
         args.extend(session_args(request.speed, request.volume, request.fullscreen));
         args.extend(self.interface_args(version));
+        args.extend(self.subtitle_args(version));
         // Last: mpv takes the last value for a repeated flag, so these genuinely override.
         args.extend(self.extra_args.iter().cloned());
 
@@ -796,6 +817,20 @@ mod tests {
         assert!(mpv.interface_args(MpvVersion::parse("mpv 0.35.1 Copyright")).is_empty());
         assert!(fonts(mpv.interface_args(MpvVersion::parse("mpv 0.37.0 Copyright"))));
         assert!(fonts(mpv.interface_args(None)));
+    }
+
+    #[test]
+    fn the_subtitle_style_goes_only_to_an_mpv_that_knows_its_options() {
+        // 0.39 named the outline options and added the border style; 0.38 refuses them.
+        let mpv = Mpv::new(std::env::temp_dir()).with_subtitles(vec![
+            ("sub-scale".into(), "1.50".into()),
+            ("sub-border-style".into(), "opaque-box".into()),
+        ]);
+        let want = vec!["--sub-scale=1.50".to_string(), "--sub-border-style=opaque-box".into()];
+        assert_eq!(mpv.subtitle_args(MpvVersion::parse("mpv v0.39.0 Copyright")), want);
+        assert_eq!(mpv.subtitle_args(None), want, "an unreadable banner is taken as current");
+        assert!(mpv.subtitle_args(MpvVersion::parse("mpv 0.38.0 Copyright")).is_empty());
+        assert!(Mpv::new(std::env::temp_dir()).subtitle_args(None).is_empty());
     }
 
     #[tokio::test]
