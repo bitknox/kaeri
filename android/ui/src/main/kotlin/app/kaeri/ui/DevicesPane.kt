@@ -4,6 +4,13 @@
 package app.kaeri.ui
 
 import app.kaeri.design.SyncIcons
+import app.kaeri.design.Motion
+import app.kaeri.design.SwapFade
+import app.kaeri.design.rememberSystemReducedMotion
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import android.content.Context
 import android.os.Build
 import android.provider.Settings
@@ -128,7 +135,14 @@ internal fun DevicesPane(actions: AppActions) {
         } else {
             YourDevices(synced, onOpen = { opened = it }, onRemove = { removing = it })
             CloudGroup(synced)
-            if (synced.recoveryKey) RecoveryKeyRow(synced)
+            // The Recovery key row closes its height as the folder's group is started over elsewhere;
+            // with Reduce Motion it fades and the space goes at once.
+            val reduced = rememberSystemReducedMotion()
+            androidx.compose.animation.AnimatedVisibility(
+                visible = synced.recoveryKey,
+                enter = if (reduced) fadeIn(Motion.fadeIn()) else expandVertically(Motion.standard()) + fadeIn(Motion.fadeIn()),
+                exit = if (reduced) fadeOut(Motion.fadeOut()) else shrinkVertically(Motion.standard()) + fadeOut(Motion.fadeOut()),
+            ) { RecoveryKeyRow(synced) }
             TvSettingsGroup()
             SettingsGroup(
                 rows = listOf { place -> ActionRow(place, stringResource(R.string.sync_turn_off, kindWord())) { turningOff = true } },
@@ -261,6 +275,9 @@ private fun DeviceRow(place: Place, name: String, line: String, well: Boolean, o
     }
 }
 
+/** What the cloud folder's row says: its title, its line and whether that line is an error. */
+private data class CloudLook(val title: String, val line: String, val error: Boolean)
+
 /** The cloud folder: its service and state, then Sync now and Sign out; or Add a cloud folder. */
 @Composable
 private fun CloudGroup(status: SyncStatus) {
@@ -296,23 +313,26 @@ private fun CloudGroup(status: SyncStatus) {
         footer = stringResource(R.string.cloud_foot),
         rows = buildList<@Composable (Place) -> Unit> {
             add { place ->
-                when {
-                    failed -> CloudRow(place, stringResource(R.string.cloud_err_title, name), null) {
-                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            Box(Modifier.padding(top = 7.dp)) { StateDot(colors.error) }
-                            Text(problemLine(context, status, name, kind), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
-                        }
+                val look = if (failed) {
+                    CloudLook(stringResource(R.string.cloud_err_title, name), problemLine(context, status, name, kind), error = true)
+                } else {
+                    val line = when {
+                        status.syncing -> Strings.syncSyncing(context)
+                        status.lastSynced != null -> lastSeenLine(context, status.lastSynced)
+                        else -> null
                     }
-                    else -> CloudRow(place, name, null) {
-                        val account = folder.account
-                        val line = when {
-                            status.syncing -> Strings.syncSyncing(context)
-                            status.lastSynced != null -> lastSeenLine(context, status.lastSynced)
-                            else -> null
-                        }
-                        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                            StateDot(colors.secondary)
-                            Text(listOfNotNull(line, account).joinToString(" · "), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant) // i18n-skip
+                    CloudLook(name, listOfNotNull(line, folder.account).joinToString(" · "), error = false) // i18n-skip
+                }
+                // One crossfade as the row turns into the started-over error, kept under Reduce
+                // Motion: each side draws what it said last, so the old row fades under the new.
+                val looks = remember { mutableMapOf<Boolean, CloudLook>() }
+                looks[replaced] = look
+                SwapFade(targetState = replaced, label = "cloud row") { side -> // i18n-skip
+                    val shown = looks[side] ?: look
+                    CloudRow(place, shown.title, null) {
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Box(Modifier.padding(top = 7.dp)) { StateDot(if (shown.error) colors.error else colors.secondary) }
+                            Text(shown.line, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
                         }
                     }
                 }
