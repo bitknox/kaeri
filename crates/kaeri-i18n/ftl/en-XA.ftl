@@ -14284,7 +14284,7 @@ cloud-browser-line = [Ýöüŕ ƀŕöŵšéŕ öþéñéð { $service }'š þà�
 cloud-browser-title = [Šîĝñ îñ ţö { $service } îñ ýöüŕ ƀŕöŵšéŕ~~~~~~~~~]
 
 # Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-cloud-close-carries-on = [Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ'š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+cloud-close-carries-on = [Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = [çöɱþüţéŕ~~~]

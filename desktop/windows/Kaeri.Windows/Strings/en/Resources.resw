@@ -14640,7 +14640,7 @@
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>You can close this. Kaeri carries on, and opens the next step by itself when it's ready.</value>
+    <value>You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</value>
     <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">

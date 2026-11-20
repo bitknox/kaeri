@@ -13810,7 +13810,7 @@ public enum L {
     }
 
     /// Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-    public static var cloudCloseCarriesOn: String { string("cloud-close-carries-on", fallback: "You can close this. Kaeri carries on, and opens the next step by itself when it's ready.") }
+    public static var cloudCloseCarriesOn: String { string("cloud-close-carries-on", fallback: "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.") }
 
     /// Word for this device in sentences such as “Turn off sync on this computer”.
     public static var deviceKindComputer: String { string("device-kind-computer", fallback: "computer") }

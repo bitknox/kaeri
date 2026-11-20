@@ -16066,7 +16066,7 @@ public static partial class T
         ["StoresShare"] = "Share…",
         ["CloudBrowserLine"] = "Your browser opened {service}'s page. Allow access there, and Kaeri carries on by itself.",
         ["CloudBrowserTitle"] = "Sign in to {service} in your browser",
-        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it's ready.",
+        ["CloudCloseCarriesOn"] = "You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.",
         ["DeviceKindComputer"] = "computer",
         ["DevicesEnterCode"] = "Enter a code",
         ["DevicesShowKey"] = "Show",

@@ -14640,7 +14640,7 @@
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>[Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ'š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">

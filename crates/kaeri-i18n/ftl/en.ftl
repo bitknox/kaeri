@@ -14284,7 +14284,7 @@ cloud-browser-line = Your browser opened { $service }'s page. Allow access there
 cloud-browser-title = Sign in to { $service } in your browser
 
 # Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.
-cloud-close-carries-on = You can close this. Kaeri carries on, and opens the next step by itself when it's ready.
+cloud-close-carries-on = You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.
 
 # Word for this device in sentences such as “Turn off sync on this computer”.
 device-kind-computer = computer
