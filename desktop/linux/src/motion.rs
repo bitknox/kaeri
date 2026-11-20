@@ -4,6 +4,10 @@
 
 use adw::prelude::*;
 
+/// The standard token's length, for GTK's own timed transitions that a spring cannot drive: a
+/// stack's crossfade, a revealer.
+pub const STANDARD_MS: u32 = 300;
+
 /// A spring of zero bounce with `stiffness`: 1000 for quick, 440 for standard, the stiffness of
 /// zero-bounce springs of 0.2 s and 0.3 s. Made with the builder, as `timed` explains.
 fn spring(

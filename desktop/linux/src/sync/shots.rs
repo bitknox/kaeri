@@ -18,7 +18,7 @@ use gtk::prelude::*;
 use super::dialogs::{self, Origin};
 use crate::window::Shell;
 
-pub const NAMES: [&str; 51] = [
+pub const NAMES: [&str; 54] = [
     "sync-home-continue",
     "sync-off",
     "sync-picker",
@@ -66,6 +66,11 @@ pub const NAMES: [&str; 51] = [
     "sync-startover-refused",
     "sync-startedover",
     "sync-startedover-restore",
+    // For the recordings: the dialog's steps to the key, Cancel on the failure, and an old device
+    // finding out while Devices is open.
+    "sync-startover-motion",
+    "sync-startover-cancel",
+    "sync-startedover-motion",
     "profiles-one",
     "profiles-many",
     "profiles-add",
@@ -215,6 +220,17 @@ fn started_over() -> SyncStatus {
     }
 }
 
+/// The same computer before it finds out: synced with Google Drive, its recovery key made.
+fn drive_synced() -> SyncStatus {
+    SyncStatus {
+        problem: None,
+        error: None,
+        recovery_key: true,
+        recovery_key_made: Some(now() - 18 * 86_400),
+        ..started_over()
+    }
+}
+
 /// The engine's events of a start over, `at` seconds after the alert's Delete and start over,
 /// as the fixture's Google Drive says them.
 fn start_over_events(ctx: &Rc<crate::window::Ctx>, events: Vec<(u64, Event)>) {
@@ -337,7 +353,10 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         | "sync-startover-setup"
         | "sync-startover-key"
         | "sync-startover-offline"
-        | "sync-startover-refused" => say(vec![Event::SyncStatus(other_group())]),
+        | "sync-startover-refused"
+        | "sync-startover-motion"
+        | "sync-startover-cancel" => say(vec![Event::SyncStatus(other_group())]),
+        "sync-startedover-motion" => say(vec![Event::SyncStatus(drive_synced())]),
         "sync-startedover" | "sync-startedover-restore" => {
             say(vec![Event::SyncStatus(started_over())]);
         }
@@ -358,6 +377,9 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     glib::timeout_add_local_once(Duration::from_millis(500), move || open(&ctx, &owned));
     if shot == "sync-motion" {
         return 16.0;
+    }
+    if shot.ends_with("-motion") || shot == "sync-startover-cancel" {
+        return 9.0;
     }
     if shot.starts_with("sync-startover-") {
         // The work shows past 600 ms and each step stays 400 ms, then the crossfade.
@@ -449,6 +471,54 @@ fn open(ctx: &Rc<crate::window::Ctx>, shot: &str) {
         "sync-startover-confirm" => {
             dialogs::restore(ctx, &SyncFolderKind::GoogleDrive);
             dialogs::restore_confirm(ctx);
+        }
+        // The dialog from the key field through both steps to the key, slower than a service.
+        "sync-startover-motion" => {
+            let drive = SyncFolderKind::GoogleDrive;
+            let step = |step| Event::SyncSignIn { service: drive.clone(), step };
+            let events = vec![
+                (50, step(Some(SyncSignInStep::Clearing))),
+                (2000, step(Some(SyncSignInStep::Finishing))),
+                (4000, Event::SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA".into())),
+                (4050, step(None)),
+            ];
+            dialogs::restore(ctx, &drive);
+            let ctx = Rc::clone(ctx);
+            glib::timeout_add_local_once(Duration::from_millis(1500), move || {
+                start_over_events(&ctx, events);
+            });
+        }
+        // The failure, then its Cancel.
+        "sync-startover-cancel" => {
+            let drive = SyncFolderKind::GoogleDrive;
+            dialogs::restore(ctx, &drive);
+            let ctx = Rc::clone(ctx);
+            glib::timeout_add_local_once(Duration::from_millis(1000), move || {
+                start_over_events(
+                    &ctx,
+                    vec![
+                        (
+                            50,
+                            Event::SyncSignIn {
+                                service: drive.clone(),
+                                step: Some(SyncSignInStep::Clearing),
+                            },
+                        ),
+                        (1200, Event::SyncProblem(SyncProblem::Unreachable)),
+                    ],
+                );
+                let ctx = Rc::clone(&ctx);
+                glib::timeout_add_local_once(Duration::from_millis(3800), move || {
+                    dialogs::restore_cancel(&ctx);
+                });
+            });
+        }
+        // Devices open on a synced folder when the engine says the group was started over.
+        "sync-startedover-motion" => {
+            let hub = Rc::clone(&ctx.hub);
+            glib::timeout_add_local_once(Duration::from_millis(2500), move || {
+                hub.show_instead(vec![Event::SyncStatus(started_over())]);
+            });
         }
         "sync-startover-clearing"
         | "sync-startover-setup"
