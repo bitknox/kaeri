@@ -80,12 +80,14 @@ struct MacShell: View {
                         ToolbarItem(placement: .navigation) {
                             Button(L.actionBack, systemImage: "chevron.left") { navigator.closeSeries() }
                                 .keyboardShortcut("[", modifiers: .command)
+                                .toolbarItemWidth(0)
                         }
                     }
                     if navigator.section == .providers, navigator.bookSourcePage != nil {
                         ToolbarItem(placement: .navigation) {
                             Button(L.actionBack, systemImage: "chevron.left") { navigator.bookSourcePage = nil }
                                 .keyboardShortcut("[", modifiers: .command)
+                                .toolbarItemWidth(0)
                         }
                     }
                     // Search opened by a Home row's View all: Back returns to Home where it was.
@@ -93,18 +95,26 @@ struct MacShell: View {
                         ToolbarItem(placement: .navigation) {
                             Button(L.actionBack, systemImage: "chevron.left") { navigator.closeReadSearch() }
                                 .keyboardShortcut("[", modifiers: .command)
+                                .toolbarItemWidth(0)
                         }
                     }
                     if navigator.section == .downloads, navigator.seriesOnMac == nil {
                         // The title on the toolbar itself, as a title is, not in a glass capsule.
-                        ToolbarItem(placement: .navigation) { DownloadsTitle() }
+                        ToolbarItem(placement: .navigation) { DownloadsTitle().toolbarItemWidth(downloadsSubtitle(store)) }
                             .sharedBackgroundVisibility(.hidden)
                     }
                     if navigator.section == .together, store.party.lobbyShown {
-                        ToolbarItem(placement: .navigation) { TogetherLobbyBack() }
+                        ToolbarItem(placement: .navigation) { TogetherLobbyBack().toolbarItemWidth(0) }
                     }
+                    // Every item here is one width in the bar and in the overflow menu
+                    // (`toolbarItemWidth`), keyed on what it shows. An item that can show nothing
+                    // is wrapped only when it shows, so the toolbar still leaves it out.
                     // What has run past 600 ms, quietly, beside the section's own items.
-                    ToolbarItem(placement: .primaryAction) { ActivityIndicator() }
+                    ToolbarItem(placement: .primaryAction) {
+                        if let job = store.jobs.shown.first {
+                            ActivityIndicator().toolbarItemWidth(job.note ?? job.activity)
+                        }
+                    }
                     // A book source's page has no Add a source: Back is all its toolbar adds.
                     if navigator.seriesOnMac == nil, navigator.bookSourcePage == nil {
                         SectionToolbar(section: navigator.section)
@@ -196,26 +206,31 @@ struct MacShell: View {
     }
 }
 
-/// The toolbar items a section adds beside the sync capsule and search.
+/// The toolbar items a section adds beside the sync capsule and search, each one width in the bar
+/// and in the overflow menu (`toolbarItemWidth`).
 struct SectionToolbar: ToolbarContent {
+    @Environment(AppStore.self) private var store
+    @Environment(Navigator.self) private var navigator
     let section: AppSection
 
     var body: some ToolbarContent {
         switch section {
         case .calendar:
-            ToolbarItem(placement: .primaryAction) { CalendarToolbar() }
+            ToolbarItem(placement: .primaryAction) { CalendarToolbar().toolbarItemWidth(0) }
         case .library:
             ToolbarItem(placement: .primaryAction) { LibraryToolbar() }
         case .updates:
-            ToolbarItem(placement: .primaryAction) { UpdatesDownloadNew() }
+            ToolbarItem(placement: .primaryAction) { UpdatesDownloadNew().toolbarItemWidth(0) }
         case .search:
-            ToolbarItem(placement: .primaryAction) { SurpriseButton() }
+            ToolbarItem(placement: .primaryAction) {
+                if surprisePool(store: store, navigator: navigator) != nil { SurpriseButton().toolbarItemWidth(0) }
+            }
         case .seasonal:
-            ToolbarItem(placement: .primaryAction) { SeasonalToolbar() }
+            ToolbarItem(placement: .primaryAction) { SeasonalToolbar().toolbarItemWidth(0) }
         case .providers:
             ToolbarItem(placement: .primaryAction) { SourcesToolbar() }
         case .pluginStores:
-            ToolbarItem(placement: .primaryAction) { StoresToolbar() }
+            ToolbarItem(placement: .primaryAction) { StoresToolbar().toolbarItemWidth(0) }
         case .downloads:
             ToolbarItem(placement: .primaryAction) { DownloadsToolbar() }
         default:
@@ -230,6 +245,8 @@ struct LibraryToolbar: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
 
+    @AppStorage("kaeri.librarySort") private var sort: LibrarySort = .lastWatched
+
     var body: some View {
         if !ReadLibraryScope.reading(store: store, navigator: navigator) {
             HStack(spacing: 8) {
@@ -237,7 +254,18 @@ struct LibraryToolbar: View {
                 SurpriseButton()
                 LibraryMenus()
             }
+            .toolbarItemWidth(shown)
         }
+    }
+
+    /// What the toolbar shows: each list's count, the dice and the order.
+    private var shown: [String] {
+        let counts = LibraryModel.order.map { String(store.library.segment($0).state.ids.count) }
+        return counts + [
+            "\(store.accounts.summary.state == .signedOut)",
+            "\(surprisePool(store: store, navigator: navigator) != nil)",
+            sort.rawValue,
+        ]
     }
 }
 
@@ -247,10 +275,13 @@ struct SourcesToolbar: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
+        let shows = store.medium.answer != .read
+        let books = BookSourcesToolbar.shows(store)
         HStack(spacing: 8) {
-            if store.medium.answer != .read { ProvidersToolbar() }
-            if BookSourcesToolbar.shows(store) { BookSourcesToolbar() }
+            if shows { ProvidersToolbar() }
+            if books { BookSourcesToolbar() }
         }
+        .toolbarItemWidth([shows, books])
     }
 }
 
@@ -303,6 +334,7 @@ struct DownloadsToolbar: View {
             }
             .disabled((store.settings.row(.downloadDir)?.typedText ?? "").isEmpty)
         }
+        .toolbarItemWidth([!store.medium.watches || store.downloads.rows.isEmpty, running || !paused])
     }
 }
 
