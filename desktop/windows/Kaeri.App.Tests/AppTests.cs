@@ -1890,6 +1890,9 @@ public class OutsideTests
             "ms-settings:privacy",
             "shell:startup",
             "javascript:alert(1)",
+            "hikari-player://watch/1",
+            "mailto:someone@service.example",
+            "ftp://files.example/payload.exe",
             "not a link",
         ];
         foreach (var url in refused)
@@ -1900,11 +1903,11 @@ public class OutsideTests
     }
 
     [Fact]
-    public void TheWebOpensAndAnotherAppsLinkAsksFirst()
+    public void OnlyAWebAddressOpens()
     {
         Assert.Equal(Launch.Open, Outside.For("https://service.example/watch/1", out var web));
         Assert.Equal("service.example", web?.Host);
-        Assert.Equal(Launch.Ask, Outside.For("hikari-player://watch/1", out var app));
-        Assert.Equal("hikari-player", app?.Scheme);
+        Assert.Equal(Launch.Open, Outside.For("HTTP://service.example/", out var plain));
+        Assert.Equal("http", plain?.Scheme);
     }
 }

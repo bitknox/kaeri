@@ -8,40 +8,28 @@ public enum Launch
 
     /// <summary>Opened in the default browser.</summary>
     Open,
-
-    /// <summary>Handed to the app that claims its scheme, with Windows asking first.</summary>
-    Ask,
 }
 
 /// <summary>
 /// The links the engine hands to Windows through the host's <c>OpenUrl</c>: a tracker's sign-in,
-/// a store's page, or a stream a provider plugin says plays in another app. A plugin chooses that
-/// last link itself, so the host decides what Windows may do with it.
+/// a store's page, or a stream a provider plugin says plays elsewhere. A plugin chooses that last
+/// link itself, so the host decides what Windows may do with it.
 /// </summary>
 public static class Outside
 {
     /// <summary>
-    /// Schemes that reach Windows itself rather than another app: files and shares, Search, the
-    /// shell, script, and every <c>ms-</c> handler (Settings, the Store, Office documents).
-    /// </summary>
-    static readonly string[] Refused = ["file", "search", "search-ms", "shell", "javascript", "vbscript", "data"];
-
-    /// <summary>
-    /// What happens to <paramref name="url"/>: http and https open in the browser; a file, a
-    /// share or a system handler is refused; any other app's scheme is handed over with Windows
-    /// asking first, as a link from a plugin can name any handler with any arguments.
+    /// What happens to <paramref name="url"/>: an http or https link with a host opens in the
+    /// browser; every other scheme is refused, as a link from a plugin could otherwise name a
+    /// file, a share, Windows' own handlers or any app with any arguments.
     /// </summary>
     public static Launch For(string? url, out Uri? uri)
     {
         uri = null;
         if (string.IsNullOrWhiteSpace(url) || !Uri.TryCreate(url.Trim(), UriKind.Absolute, out var parsed))
             return Launch.Refuse;
-        var scheme = parsed.Scheme.ToLowerInvariant();
-        if (parsed.IsUnc || parsed.IsFile || Refused.Contains(scheme) || scheme.StartsWith("ms-", StringComparison.Ordinal))
+        if (parsed.IsUnc || parsed.IsFile || parsed.Scheme is not ("http" or "https") || parsed.Host.Length == 0)
             return Launch.Refuse;
-        var launch = scheme is "https" or "http" ? parsed.Host.Length > 0 ? Launch.Open : Launch.Refuse : Launch.Ask;
-        if (launch != Launch.Refuse)
-            uri = parsed;
-        return launch;
+        uri = parsed;
+        return Launch.Open;
     }
 }

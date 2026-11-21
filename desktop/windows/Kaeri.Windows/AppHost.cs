@@ -17,16 +17,14 @@ sealed class AppHost(DispatcherQueue ui, bool fixture) : FfiHost
     public Action<string, string>? Notified { get; set; }
 
     /// <summary>
-    /// A link the engine opens. A provider plugin can name one itself, so files, shares and
-    /// Windows' own handlers are refused, and another app's link opens only after Windows asks.
+    /// A link the engine opens. A provider plugin can name one itself, so only a web address
+    /// opens, in the browser; every other scheme is refused.
     /// </summary>
     public bool OpenUrl(string url)
     {
-        var launch = Outside.For(url, out var uri);
-        if (launch == Launch.Refuse || uri is null)
+        if (Outside.For(url, out var uri) != Launch.Open || uri is null)
             return false;
-        var options = new global::Windows.System.LauncherOptions { TreatAsUntrusted = launch == Launch.Ask };
-        return ui.TryEnqueue(async () => await global::Windows.System.Launcher.LaunchUriAsync(uri, options));
+        return ui.TryEnqueue(async () => await global::Windows.System.Launcher.LaunchUriAsync(uri));
     }
 
     public void Notify(string title, string body) => ui.TryEnqueue(() => Notified?.Invoke(title, body));
