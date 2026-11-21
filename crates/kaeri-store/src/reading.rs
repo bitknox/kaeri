@@ -684,11 +684,14 @@ fn write_status(
 ) -> rusqlite::Result<()> {
     // A status written here is the person's or a tracker's, never one a read put there.
     tx.execute(
-        "INSERT INTO read_status (work, status, score, updated_at) VALUES (?1, ?2, ?3, ?4)
+        "INSERT INTO read_status (work, status, score, updated_at, status_at, score_at)
+         VALUES (?1, ?2, ?3, ?4, CASE WHEN ?5 THEN ?4 END, CASE WHEN ?6 THEN ?4 END)
          ON CONFLICT(work) DO UPDATE SET
             status = CASE WHEN ?5 THEN excluded.status ELSE status END,
+            status_at = CASE WHEN ?5 THEN excluded.updated_at ELSE status_at END,
             auto = CASE WHEN ?5 THEN 0 ELSE auto END,
             score = CASE WHEN ?6 THEN excluded.score ELSE score END,
+            score_at = CASE WHEN ?6 THEN excluded.updated_at ELSE score_at END,
             updated_at = excluded.updated_at",
         params![work, status.flatten(), score.flatten(), at, status.is_some(), score.is_some()],
     )?;
@@ -704,10 +707,10 @@ fn write_status(
 /// on the device: each device reaches it from the reads it holds.
 fn start_reading(tx: &Transaction<'_>, work: &str, at: i64) -> rusqlite::Result<()> {
     tx.execute(
-        "INSERT INTO read_status (work, status, score, updated_at, auto)
-         VALUES (?1, 'reading', NULL, ?2, 1)
+        "INSERT INTO read_status (work, status, score, updated_at, auto, status_at)
+         VALUES (?1, 'reading', NULL, ?2, 1, ?2)
          ON CONFLICT(work) DO UPDATE SET status = 'reading', auto = 1,
-            updated_at = excluded.updated_at
+            updated_at = excluded.updated_at, status_at = excluded.updated_at
           WHERE read_status.status IS NULL",
         params![work, at],
     )?;
@@ -1259,7 +1262,7 @@ impl Store {
         self.with_personal_tx(|tx| {
             let auto: Option<i64> = tx
                 .query_row(
-                    "SELECT updated_at FROM read_status
+                    "SELECT COALESCE(status_at, updated_at) FROM read_status
                       WHERE work = ?1 AND status IS NOT NULL AND auto = 1",
                     [work],
                     |r| r.get(0),
@@ -1281,6 +1284,21 @@ impl Store {
                 r.get(0)
             })
             .optional()?)
+        })
+    }
+
+    /// When a work's status and its score were each last set here or by a synced device.
+    pub fn read_status_dates(&self, work: &str) -> Result<(Option<i64>, Option<i64>)> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT CASE WHEN status IS NOT NULL THEN COALESCE(status_at, updated_at) END,
+                        CASE WHEN score IS NOT NULL THEN COALESCE(score_at, updated_at) END
+                   FROM read_status WHERE work = ?1",
+                [work],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?
+            .unwrap_or_default())
         })
     }
 
@@ -1748,8 +1766,9 @@ pub(crate) fn backfill(tx: &Transaction<'_>, device: &str) -> Result<()> {
         let mut stmt = tx.prepare(
             // A Reading a read put there stays on the device; the other devices reach it from
             // the reads.
-            "SELECT work, CASE WHEN auto = 0 THEN status END, score, updated_at FROM read_status
-              WHERE work LIKE 'a:%'",
+            "SELECT work, CASE WHEN auto = 0 THEN status END, score,
+                    COALESCE(status_at, updated_at), COALESCE(score_at, updated_at)
+               FROM read_status WHERE work LIKE 'a:%'",
         )?;
         for row in stmt.query_map([], |r| {
             Ok((
@@ -1757,14 +1776,15 @@ pub(crate) fn backfill(tx: &Transaction<'_>, device: &str) -> Result<()> {
                 r.get::<_, Option<String>>(1)?,
                 r.get::<_, Option<f64>>(2)?,
                 r.get::<_, i64>(3)?,
+                r.get::<_, i64>(4)?,
             ))
         })? {
-            let (work, status, score, at) = row?;
+            let (work, status, score, status_at, score_at) = row?;
             if status.is_some() {
-                regs.push((kinds::READ_STATUS, work.clone(), status, at));
+                regs.push((kinds::READ_STATUS, work.clone(), status, status_at));
             }
             if let Some(score) = score {
-                regs.push((kinds::READ_SCORE, work, Some(score.to_string()), at));
+                regs.push((kinds::READ_SCORE, work, Some(score.to_string()), score_at));
             }
         }
         let mut stmt =

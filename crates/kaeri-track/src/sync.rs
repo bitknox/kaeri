@@ -843,7 +843,8 @@ pub fn local_read_state(
 ) -> Result<merge::ReadLocal, kaeri_store::StoreError> {
     let (chapters, volumes) = store.tracked_progress(work)?;
     let (status, score) = store.read_status(work)?;
-    let at = store.read_status_at(work)?;
+    // Each dated by its own last change: a score set here says nothing about the status.
+    let (status_at, score_at) = store.read_status_dates(work)?;
     // A Reading that a read put there is no choice of the person's: the tracker's list stands.
     let auto = store.read_status_is_auto(work)?;
     let status = status.filter(|_| !auto);
@@ -853,9 +854,9 @@ pub fn local_read_state(
         volumes,
         status: named.map(|(status, _)| status),
         rereading: named.is_some_and(|(_, rereading)| rereading),
-        status_at: named.and(at),
+        status_at: named.and(status_at),
         score: score.map(|s| s as f32),
-        score_at: score.and(at),
+        score_at: score.and(score_at),
         last_pushed: None,
         progress_at: store.read_progress_at(work)?,
         rule: WhenTrackersDisagree::default(),
@@ -1755,5 +1756,46 @@ mod tests {
         reconcile_read(&store, "anilist", &[remote(WatchStatus::Paused)], 600, 550, rule)
             .unwrap();
         assert_eq!(store.read_status(&work).unwrap().0.as_deref(), Some("completed"));
+    }
+
+    #[test]
+    fn a_score_set_here_leaves_the_status_dated_as_it_was() {
+        let id = AnilistId::new(900_303);
+        let work = read_work(id);
+        let store = Store::open_in_memory().unwrap();
+        store.set_read_status(&work, Some("reading"), 100).unwrap();
+        store.set_read_score(&work, Some(8.0), 300).unwrap();
+        // The tracker's site moved the series to Completed after the pull at 200.
+        let remote = kaeri_core::traits::TrackedReadEntry {
+            anilist_id: id,
+            medium: kaeri_core::media::Medium::Manga,
+            chapters: 0,
+            volumes: None,
+            status: WatchStatus::Completed,
+            rereading: false,
+            score: None,
+        };
+        let report = reconcile_read(
+            &store,
+            "anilist",
+            &[remote],
+            400,
+            200,
+            WhenTrackersDisagree::Latest,
+        )
+        .unwrap();
+        let outbox = store.read_outbox("anilist").unwrap();
+        assert!(
+            !outbox.iter().any(|op| matches!(op, TrackOp::SetReadStatus { .. })),
+            "the older Reading never goes over the site's Completed: {outbox:?}"
+        );
+        assert!(
+            outbox.iter().any(|op| matches!(op, TrackOp::SetReadScore { .. })),
+            "the score set after the pull goes"
+        );
+        assert!(
+            report.conflicts.iter().any(|c| c.field == merge::Field::Status),
+            "the status is a difference to settle"
+        );
     }
 }
