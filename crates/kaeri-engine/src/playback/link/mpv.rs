@@ -52,7 +52,10 @@ impl PlayerOpener for Mpv {
 #[async_trait]
 impl PlayerLink for MpvSession {
     async fn load(&self, url: &str, options: Vec<(String, String)>) -> Result<(), LinkError> {
-        tracing::info!(%url, ?options, "loading into mpv");
+        // Option names only: the values hold the stream's request headers, which can carry a
+        // server's token, and the title.
+        let option_names: Vec<&str> = options.iter().map(|(name, _)| name.as_str()).collect();
+        tracing::info!(%url, ?option_names, "loading into mpv");
         let index_slot = self.loadfile_index();
         Ok(self.send(Command::LoadFile { url: url.to_owned(), options, index_slot }).await?)
     }
