@@ -12005,6 +12005,9 @@ public static partial class T
     /// <summary>Title of the pairing sheet.</summary>
     public static string TvPairWithTv => Get("TvPairWithTv");
 
+    /// <summary>Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.</summary>
+    public static string TvLinkPairAsk(string address) => Fill(Get("TvLinkPairAsk"), ("address", address));
+
     /// <summary>Title of the pairing step for one TV. The name is the name the TV gave itself.</summary>
     public static string TvPairWith(string name) => Fill(Get("TvPairWith"), ("name", name));
 
@@ -16604,6 +16607,7 @@ public static partial class T
         ["TvPairAction"] = "Pair a TV",
         ["TvPairMenu"] = "Pair a TV…",
         ["TvPairWithTv"] = "Pair with a TV",
+        ["TvLinkPairAsk"] = "A link asks to pair with the TV at {address}. Pair only with a TV in front of you.",
         ["TvPairWith"] = "Pair with {name}",
         ["TvPairingWith"] = "Pairing with {name}",
         ["TvPair"] = "Pair",

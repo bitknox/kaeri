@@ -25136,6 +25136,11 @@ pub fn tv_pair_with_tv() -> String {
     text("tv-pair-with-tv", &[])
 }
 
+/// Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.
+pub fn tv_link_pair_ask(address: &str) -> String {
+    text("tv-link-pair-ask", &[("address", Arg::Text(address))])
+}
+
 /// Title of the pairing step for one TV. The name is the name the TV gave itself.
 pub fn tv_pair_with(name: &str) -> String {
     text("tv-pair-with", &[("name", Arg::Text(name))])

@@ -15654,6 +15654,11 @@ public enum L {
     /// Title of the pairing sheet.
     public static var tvPairWithTv: String { string("tv-pair-with-tv", fallback: "Pair with a TV") }
 
+    /// Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.
+    public static func tvLinkPairAsk(address: String) -> String {
+        Self.format("tv-link-pair-ask", fallback: "A link asks to pair with the TV at %1$@. Pair only with a TV in front of you.", address)
+    }
+
     /// Title of the pairing step for one TV. The name is the name the TV gave itself.
     public static func tvPairWith(name: String) -> String {
         Self.format("tv-pair-with", fallback: "Pair with %1$@", name)

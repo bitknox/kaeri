@@ -456,8 +456,8 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * A TV's pairing link, from its QR code read by the system's camera, pairs with it; the TV
-     * notification's tap opens its card.
+     * A TV's pairing link, from its QR code read by the system's camera, opens the pairing sheet,
+     * which asks before it pairs; the TV notification's tap opens its card.
      */
     private fun remote(intent: Intent?): Boolean {
         intent ?: return false

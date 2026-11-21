@@ -144,6 +144,10 @@ class TvShots {
 
     @Test
     @Config(qualifiers = PHONE)
+    fun phone_tv_link_ask() = shoot("phone-tv-link-ask", TvScene.PAIRED) { it.open("kaeri-remote://pair?addr=192.0.2.10:47811") }
+
+    @Test
+    @Config(qualifiers = PHONE)
     fun phone_tv_remote() = shoot("phone-tv-remote", TvScene.REMOTE)
 
     @Test

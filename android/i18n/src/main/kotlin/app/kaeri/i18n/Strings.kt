@@ -17443,6 +17443,10 @@ object Strings {
     fun tvPairWithTv(context: Context): String =
         context.getString(R.string.tv_pair_with_tv)
 
+    /** Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811. */
+    fun tvLinkPairAsk(context: Context, address: String): String =
+        context.getString(R.string.tv_link_pair_ask, address)
+
     /** Title of the pairing step for one TV. The name is the name the TV gave itself. */
     fun tvPairWith(context: Context, name: String): String =
         context.getString(R.string.tv_pair_with, name)

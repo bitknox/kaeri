@@ -383321,6 +383321,18 @@
         }
       }
     },
+    "tv-link-pair-ask" : {
+      "comment" : "Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811. Argument 1: address (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A link asks to pair with the TV at %1$@. Pair only with a TV in front of you."
+          }
+        }
+      }
+    },
     "tv-looking" : {
       "comment" : "Line while the app looks for TVs.",
       "extractionState" : "manual",
