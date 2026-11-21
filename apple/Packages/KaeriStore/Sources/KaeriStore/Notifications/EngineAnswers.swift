@@ -23,7 +23,7 @@ public final class EngineAnswers: Sendable {
     }
 
     /// Send what `send` sends, and wait for the first event `match` answers, for at most
-    /// `timeout`: `nil` when none came in time.
+    /// `timeout`: `nil` when none came in time, or when the task asking was stopped.
     public func ask<Answer: Sendable>(
         timeout: Duration = .seconds(20),
         send: @Sendable () -> Void,
@@ -31,37 +31,65 @@ public final class EngineAnswers: Sendable {
     ) async -> Answer? {
         let id = UUID()
         let once = Once<Answer>()
-        return await withCheckedContinuation { continuation in
-            once.set(continuation)
-            waiting.withLock { waiters in
-                waiters[id] = { event in
-                    guard let answer = match(event) else { return false }
-                    once.resume(answer)
-                    return true
+        return await withTaskCancellationHandler {
+            await withCheckedContinuation { continuation in
+                guard once.set(continuation) else { return }
+                waiting.withLock { waiters in
+                    waiters[id] = { event in
+                        guard let answer = match(event) else { return false }
+                        once.resume(answer)
+                        return true
+                    }
+                }
+                send()
+                Task { [weak self] in
+                    try? await Task.sleep(for: timeout)
+                    _ = self?.waiting.withLock { $0.removeValue(forKey: id) }
+                    once.resume(nil)
                 }
             }
-            send()
-            Task { [weak self] in
-                try? await Task.sleep(for: timeout)
-                _ = self?.waiting.withLock { $0.removeValue(forKey: id) }
-                once.resume(nil)
-            }
+        } onCancel: {
+            _ = waiting.withLock { $0.removeValue(forKey: id) }
+            once.resume(nil)
         }
     }
 }
 
-/// A continuation resumed once, by whichever comes first: the answer or the timeout.
+/// A continuation resumed once, by whichever comes first: the answer, the timeout or a stop,
+/// which can come before the continuation is set.
 private final class Once<Answer: Sendable>: Sendable {
-    private let continuation = Mutex<CheckedContinuation<Answer?, Never>?>(nil)
+    private enum Stage {
+        case unset
+        case waiting(CheckedContinuation<Answer?, Never>)
+        case answered(Answer?)
+    }
 
-    func set(_ continuation: CheckedContinuation<Answer?, Never>) {
-        self.continuation.withLock { $0 = continuation }
+    private let stage = Mutex<Stage>(.unset)
+
+    /// Wait on `continuation`, false when it was already answered, which resumes it at once.
+    func set(_ continuation: CheckedContinuation<Answer?, Never>) -> Bool {
+        let early = stage.withLock { stage -> Answer?? in
+            if case .answered(let answer) = stage { return .some(answer) }
+            stage = .waiting(continuation)
+            return .none
+        }
+        guard let early else { return true }
+        continuation.resume(returning: early)
+        return false
     }
 
     func resume(_ answer: Answer?) {
-        let waiting = continuation.withLock { value -> CheckedContinuation<Answer?, Never>? in
-            defer { value = nil }
-            return value
+        let waiting = stage.withLock { stage -> CheckedContinuation<Answer?, Never>? in
+            switch stage {
+            case .unset:
+                stage = .answered(answer)
+                return nil
+            case .waiting(let continuation):
+                stage = .answered(answer)
+                return continuation
+            case .answered:
+                return nil
+            }
         }
         waiting?.resume(returning: answer)
     }

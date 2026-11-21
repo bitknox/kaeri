@@ -127,10 +127,16 @@ public final class BackgroundRun {
     public init() {}
 
     /// Run `work` on a task of its own, and wait for it. True when it says it ran to the end.
+    /// Stopping the caller stops the work too, as when iOS's refresh task runs out of time:
+    /// waiting on a task's value alone passes no stop on.
     public func run(_ work: @escaping @MainActor () async -> Bool) async -> Bool {
         let task = Task { @MainActor in await work() }
         current = task
-        let done = await task.value
+        let done = await withTaskCancellationHandler {
+            await task.value
+        } onCancel: {
+            task.cancel()
+        }
         if current == task { current = nil }
         return done
     }
