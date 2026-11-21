@@ -334,7 +334,7 @@ struct SynopsisText: View {
                     }
                 }
                 .anchorPreference(key: SynopsisMorePlace.self, value: .bounds) { bounds in
-                    expandable && (expanded || full > shown + 1)
+                    expandable && MoreLess.control(expanded: expanded, full: full, shown: shown) != nil
                         ? SynopsisMorePlace.Place(bounds: bounds, expanded: expanded) : nil
                 }
                 .id(text)
