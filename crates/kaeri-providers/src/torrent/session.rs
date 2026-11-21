@@ -156,6 +156,16 @@ impl StreamSource for TorrentFileSource {
     }
 }
 
+/// The folder torrent `id`'s files are written under, as librqbit says: the session's own for
+/// a single file, and a folder of the torrent's name inside it for a batch. A file's name in
+/// the torrent is relative to this.
+fn written_to(session: &Arc<Session>, id: usize) -> Result<PathBuf, ProviderError> {
+    librqbit::Api::new(Arc::clone(session), None)
+        .api_torrent_details(TorrentIdOrHash::Id(id))
+        .map(|details| PathBuf::from(details.output_folder))
+        .map_err(|e| ProviderError::Other(format!("locating torrent output: {e}")))
+}
+
 /// Reads the verified pieces of one torrent file straight from disk, for seekbar thumbnails.
 ///
 /// A thumbnailer seeking around the file through [`TorrentFileSource`] would open a librqbit
@@ -182,16 +192,6 @@ impl StreamSource for TorrentFileSource {
 ///   bytes are final and visible to any reader. It is opened read-only, per request; a file
 ///   that has gone — or a download folder whose path is not UTF-8, which that API reports
 ///   lossily — fails to open and is answered as nothing on hand.
-/// The folder torrent `id`'s files are written under, as librqbit says: the session's own for
-/// a single file, and a folder of the torrent's name inside it for a batch. A file's name in
-/// the torrent is relative to this.
-fn written_to(session: &Arc<Session>, id: usize) -> Result<PathBuf, ProviderError> {
-    librqbit::Api::new(Arc::clone(session), None)
-        .api_torrent_details(TorrentIdOrHash::Id(id))
-        .map(|details| PathBuf::from(details.output_folder))
-        .map_err(|e| ProviderError::Other(format!("locating torrent output: {e}")))
-}
-
 #[derive(Clone)]
 struct VerifiedFile {
     api: librqbit::Api,
