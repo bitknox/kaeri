@@ -41,6 +41,10 @@ enum PanelFixture {
         ]
     }
 
+    /// A made-up synopsis long enough to run past the row's two lines.
+    static let synopsis = "A letter turns up in the lamplighter's coat, addressed to a keeper who left the star road years ago. " // i18n-skip
+        + "The road home goes the long way round, past every lamp still lit, and one that has been dark since the first night." // i18n-skip
+
     static func to(_ release: SourceCandidate) -> SwitchTo {
         SwitchTo(providerId: release.providerId, name: release.providerName, release: release.id, stream: nil)
     }
@@ -55,9 +59,21 @@ extension PlayerModel {
         var there = await waited(10) { self.position >= at + 0.5 && self.menus != nil }
         // Stills are paused; the recording plays, so the held picture shows against the moving one.
         if shot != .panelMotion && shot != .panelLive { togglePause() }
+        // Spoiler protection off for the show, as on the board: the revealed row shows its still
+        // and synopsis rather than the protected line.
+        store.setShowSetting(id, .spoilerProtection, to: .bool(false))
         store.loadEpisodes(id)
         _ = await waited(10) { store.titles.episodes[id]?.isEmpty == false }
         let next = String((Int(episode) ?? 1) + 1)
+        // The fixture lists a synopsis for the first episode only; the revealed one gets a long
+        // one, so the reveal shows its whole text. Laid on again below, over a later listing.
+        func describeNext() {
+            guard var rows = store.titles.episodes[id], let at = rows.firstIndex(where: { $0.number == next }),
+                  rows[at].description == nil else { return }
+            rows[at].description = PanelFixture.synopsis
+            store.apply(.episodes(id: id, rows: rows, failed: nil))
+        }
+        describeNext()
         if shot == .panelLive {
             panelShot = PanelShot(tab: .sources, serial: 1)
             requestMenu(.episodes)
@@ -82,6 +98,7 @@ extension PlayerModel {
             for _ in 0 ..< 24 {
                 try? await Task.sleep(for: .milliseconds(500))
                 store.apply(.sourceOptions(id: id, options: PanelFixture.options()))
+                describeNext()
             }
         }
         switch shot {
