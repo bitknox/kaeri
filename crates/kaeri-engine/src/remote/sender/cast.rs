@@ -372,7 +372,8 @@ impl TvSender {
         }
         let Some(left) = lock(&self.casting.away).take() else { return };
         if let Some(player) = hub.held(&left.device).filter(|p| p.is_alive()) {
-            let (language, device) = (hub.language(), hub.device_word());
+            let (language, device, reduce_motion) =
+                (hub.language(), hub.device_word(), hub.reduce_motion());
             hub.spawn(async move {
                 // A connection that dropped while away is made again first.
                 if !player.settled().await {
@@ -385,7 +386,7 @@ impl TvSender {
                 } else {
                     // The receiver waits for this device until it hears from it. Playing on
                     // tells it; a cast left paused stays paused, so the greeting does.
-                    player.set_greeting(language, device);
+                    player.set_greeting(language, device, reduce_motion);
                 }
             });
             return;
