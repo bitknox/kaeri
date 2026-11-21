@@ -141,6 +141,24 @@ struct UpdatesTests {
         #expect(installer.cancelled == 1)
     }
 
+    @Test func aStoppedUpdateSaysNothingMore() throws {
+        let store = AppStore()
+        let installer = RecordingInstaller()
+        store.updates.installer = installer
+        store.apply(.update(.available(release: release("0.10.3"), notify: false)))
+        store.updates.update()
+        let stopped = try #require(installer.report)
+        stopped(.unpacking(0.3))
+        store.updates.cancel()
+        // Unpacking has no stop, so word of it still comes.
+        stopped(.unpacking(0.8))
+        #expect(store.updates.progress == .idle)
+        store.updates.update()
+        #expect(installer.installed == ["0.10.3", "0.10.3"], "Update can be pressed again")
+        stopped(.failed("The update was skipped."))
+        #expect(store.updates.progress == .preparing, "the stopped one's word is not the new one's")
+    }
+
     @Test func withoutAnInstallerOrTheMacsFileNothingInstalls() {
         let store = AppStore()
         store.apply(.update(.available(release: release("0.10.3"), notify: true)))
@@ -161,19 +179,26 @@ struct UpdatesTests {
     @Test func theGateInstallsOnlyWhatTheViewerAskedFor() {
         var gate = UpdateGate()
         // Found by the updater on its own: never.
-        #expect(gate.choice(found: "0.10.3", informationOnly: false) == .dismiss)
+        #expect(stops(gate.choice(found: "0.10.3", informationOnly: false)))
 
         gate.arm("0.10.3")
         #expect(gate.choice(found: "0.10.3", informationOnly: false) == .install)
         // A newer release published since is still what the viewer wants.
         #expect(gate.choice(found: "0.10.10", informationOnly: false) == .install)
         #expect(gate.choice(found: "0.11.0", informationOnly: false) == .install)
-        // An older one, or one with nothing to install, is not.
-        #expect(gate.choice(found: "0.10.2", informationOnly: false) == .dismiss)
+        // An older one is not, nor one with nothing to install.
+        #expect(stops(gate.choice(found: "0.10.2", informationOnly: false)))
         #expect(gate.choice(found: "0.10.3", informationOnly: true) == .dismiss)
 
+        // Stopped while it unpacked: once it is ready to install, it is stopped too.
         gate.disarm()
-        #expect(gate.choice(found: "0.10.3", informationOnly: false) == .dismiss)
+        #expect(stops(gate.choice(found: "0.10.3", informationOnly: false)))
+    }
+
+    /// Whether the gate's answer stops the update: neither installs it nor only leaves it, which
+    /// lets one that began installing install when the app quits.
+    func stops(_ choice: UpdateGate.Choice) -> Bool {
+        choice != .install && choice != .dismiss
     }
 
     @Test func iPhoneAndIPadUpdateInSideStoreThenAltStoreThenThePage() throws {

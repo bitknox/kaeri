@@ -1,5 +1,5 @@
 // The download queue and what is still seeding, as Downloads shows them: grouped by title, with
-// each running download's speed worked out from how far it moved between two updates.
+// each running download's speed worked out from how far it moved between two of its moves.
 
 import KaeriKit
 import Foundation
@@ -16,29 +16,52 @@ public final class DownloadsModel {
     public private(set) var loaded = false
     /// Bytes a second for each running download.
     public private(set) var rates: [Int64: Double] = [:]
-    @ObservationIgnored private var last: [Int64: (bytes: UInt64, at: Date)] = [:]
+    @ObservationIgnored private var marks: [Int64: Mark] = [:]
+
+    /// Where a running download last moved to and when, and how long that move took.
+    private struct Mark {
+        var bytes: UInt64
+        var at: Date
+        var took: TimeInterval?
+
+        /// How long it may sit still before its speed says nothing: three of its moves, and at
+        /// least ten seconds. Progress comes a piece at a time, so a slow download sits still
+        /// between pieces while the queue updates for the downloads beside it.
+        var patience: TimeInterval { max(10, 3 * (took ?? 0)) }
+    }
 
     public init() {}
 
     func apply(_ rows: [DownloadRow], at now: Date = .now) {
         var rates: [Int64: Double] = [:]
-        var last: [Int64: (bytes: UInt64, at: Date)] = [:]
+        var marks: [Int64: Mark] = [:]
         for row in rows where row.state == .active {
-            last[row.id] = (row.downloaded, now)
-            guard let before = self.last[row.id] else { continue }
-            let seconds = now.timeIntervalSince(before.at)
-            guard seconds > 0.2, row.downloaded >= before.bytes else {
+            guard let mark = self.marks[row.id], row.downloaded >= mark.bytes else {
+                // The first reading, or one that went back: measure from here.
+                marks[row.id] = Mark(bytes: row.downloaded, at: now)
                 rates[row.id] = self.rates[row.id]
-                last[row.id] = before
                 continue
             }
-            let rate = Double(row.downloaded - before.bytes) / seconds
-            // Half the last reading and half this one: steady enough to read, quick to follow.
-            rates[row.id] = self.rates[row.id].map { ($0 + rate) / 2 } ?? rate
+            let seconds = now.timeIntervalSince(mark.at)
+            if row.downloaded == mark.bytes || seconds <= 0.2 {
+                // Not moved since its last move, or too soon to tell. Sitting still between pieces is
+                // not a speed of zero, so the speed stays until it has sat still too long.
+                marks[row.id] = mark
+                rates[row.id] = seconds > mark.patience ? nil : self.rates[row.id]
+            } else if mark.took != nil, seconds > mark.patience {
+                // Moving again after a stall, which is not its speed: measure from here.
+                marks[row.id] = Mark(bytes: row.downloaded, at: now)
+                rates[row.id] = self.rates[row.id]
+            } else {
+                let rate = Double(row.downloaded - mark.bytes) / seconds
+                // Half the last speed and half this move's: steady enough to read, quick to follow.
+                rates[row.id] = self.rates[row.id].map { ($0 + rate) / 2 } ?? rate
+                marks[row.id] = Mark(bytes: row.downloaded, at: now, took: seconds)
+            }
         }
         self.rows = rows
         self.rates = rates
-        self.last = last
+        self.marks = marks
         loaded = true
     }
 
@@ -67,9 +90,16 @@ public final class DownloadsModel {
 
     /// Seconds until a running download finishes, at its speed.
     public func secondsLeft(_ row: DownloadRow) -> Int64? {
-        guard row.state == .active, row.total > row.downloaded, let rate = rates[row.id], rate > 0
-        else { return nil }
-        return Int64((Double(row.total - row.downloaded) / rate).rounded(.up))
+        guard row.state == .active, row.total > row.downloaded, let rate = rates[row.id] else { return nil }
+        return Self.seconds(toMove: row.total - row.downloaded, at: rate)
+    }
+
+    /// Seconds to move `bytes` at `rate` bytes a second. There is no forecast at no speed, nor
+    /// past a year, where it says nothing.
+    nonisolated static func seconds(toMove bytes: UInt64, at rate: Double) -> Int64? {
+        let seconds = (Double(bytes) / rate).rounded(.up)
+        guard rate > 0, seconds <= 365 * 24 * 60 * 60 else { return nil }
+        return Int64(seconds)
     }
 }
 

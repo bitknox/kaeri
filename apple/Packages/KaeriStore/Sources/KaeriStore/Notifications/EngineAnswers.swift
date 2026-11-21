@@ -46,12 +46,7 @@ public final class EngineAnswers: Sendable {
         let once = Once<Answer>()
         return await withTaskCancellationHandler {
             await withCheckedContinuation { continuation in
-                once.set(continuation)
-                // Cancelled before the continuation was there to resume.
-                if Task.isCancelled {
-                    once.resume(nil)
-                    return
-                }
+                guard once.set(continuation) else { return }
                 waiting.withLock { waiters in
                     waiters[id] = { event in
                         guard let answer = match(event) else { return false }
@@ -73,18 +68,41 @@ public final class EngineAnswers: Sendable {
     }
 }
 
-/// A continuation resumed once, by whichever comes first: the answer or the timeout.
+/// A continuation resumed once, by whichever comes first: the answer, the timeout or a stop,
+/// which can come before the continuation is set.
 private final class Once<Answer: Sendable>: Sendable {
-    private let continuation = Mutex<CheckedContinuation<Answer?, Never>?>(nil)
+    private enum Stage {
+        case unset
+        case waiting(CheckedContinuation<Answer?, Never>)
+        case answered(Answer?)
+    }
 
-    func set(_ continuation: CheckedContinuation<Answer?, Never>) {
-        self.continuation.withLock { $0 = continuation }
+    private let stage = Mutex<Stage>(.unset)
+
+    /// Wait on `continuation`, false when it was already answered, which resumes it at once.
+    func set(_ continuation: CheckedContinuation<Answer?, Never>) -> Bool {
+        let early = stage.withLock { stage -> Answer?? in
+            if case .answered(let answer) = stage { return .some(answer) }
+            stage = .waiting(continuation)
+            return .none
+        }
+        guard let early else { return true }
+        continuation.resume(returning: early)
+        return false
     }
 
     func resume(_ answer: Answer?) {
-        let waiting = continuation.withLock { value -> CheckedContinuation<Answer?, Never>? in
-            defer { value = nil }
-            return value
+        let waiting = stage.withLock { stage -> CheckedContinuation<Answer?, Never>? in
+            switch stage {
+            case .unset:
+                stage = .answered(answer)
+                return nil
+            case .waiting(let continuation):
+                stage = .answered(answer)
+                return continuation
+            case .answered:
+                return nil
+            }
         }
         waiting?.resume(returning: answer)
     }

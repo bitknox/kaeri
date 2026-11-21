@@ -423,3 +423,41 @@ struct NoticeRefreshTests {
         #expect(centre.quiet.notices.isEmpty)
     }
 }
+
+/// iOS gives a background refresh about thirty seconds and stops its task when they run out: the
+/// refresh has to stop then, or iOS ends the app.
+@MainActor
+@Suite(.timeLimit(.minutes(2)))
+struct BackgroundStopTests {
+    /// Questions no engine answers, as on a network that never replies.
+    let silent = EngineQuestions(answers: EngineAnswers()) { _ in }
+
+    @Test func aQuestionStopsWhenItsTaskIsStopped() async {
+        let silent = self.silent
+        let asking = Task { await silent.newEpisodes() }
+        try? await Task.sleep(for: .milliseconds(100))
+        let clock = ContinuousClock()
+        let stopped = clock.now
+        asking.cancel()
+        let answer = await asking.value
+        #expect(answer == nil)
+        #expect(clock.now - stopped < .seconds(5), "it waited out its timeout")
+    }
+
+    @Test func aRefreshOnAnEngineOfItsOwnStopsWithTheTaskThatRunsIt() async {
+        let runs = BackgroundRun()
+        let silent = self.silent
+        let refresh = Task { @MainActor in
+            await runs.run {
+                await NoticeRefresh(questions: silent, scheduler: nil, widgets: nil).run().finished
+            }
+        }
+        try? await Task.sleep(for: .milliseconds(100))
+        let clock = ContinuousClock()
+        let stopped = clock.now
+        refresh.cancel()
+        let finished = await refresh.value
+        #expect(!finished, "a stopped refresh did not run to the end")
+        #expect(clock.now - stopped < .seconds(5), "it ran every step after it was stopped")
+    }
+}
