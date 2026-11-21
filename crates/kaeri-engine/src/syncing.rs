@@ -9,7 +9,7 @@
 use std::{
     sync::{
         Arc, Mutex,
-        atomic::{AtomicBool, Ordering},
+        atomic::{AtomicBool, AtomicU64, Ordering},
     },
     time::Duration,
 };
@@ -134,6 +134,9 @@ impl Ctx {
 #[derive(Default)]
 pub struct SyncHub {
     road: Mutex<Option<Arc<FolderRoad>>>,
+    /// Moves on each time the road is let go or replaced, so a pass that began on the one
+    /// before knows its findings belong to a folder no longer used.
+    generation: AtomicU64,
     running: AtomicBool,
     effects: Mutex<Vec<Effect>>,
     listener: Mutex<Option<Arc<tokio::sync::Mutex<Listener>>>>,
@@ -205,8 +208,32 @@ impl SyncHub {
         self.road.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone()
     }
 
+    /// Let the road go, or replace it. The one before is retired, so a pass still running on
+    /// it keeps nothing more in the store.
     fn set_road(&self, road: Option<Arc<FolderRoad>>) {
-        *self.road.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = road;
+        let before = {
+            let mut slot = self.road.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+            self.generation.fetch_add(1, Ordering::AcqRel);
+            std::mem::replace(&mut *slot, road)
+        };
+        if let Some(before) = before {
+            before.retire();
+        }
+    }
+
+    fn generation(&self) -> u64 {
+        self.generation.load(Ordering::Acquire)
+    }
+
+    /// Use `road`, opened from what was kept, unless the road was let go or replaced since
+    /// `generation`. The road in use, or none.
+    fn open_road(&self, road: Arc<FolderRoad>, generation: u64) -> Option<Arc<FolderRoad>> {
+        let mut slot = self.road.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if self.generation.load(Ordering::Acquire) != generation {
+            road.retire();
+            return None;
+        }
+        Some(slot.get_or_insert(road).clone())
     }
 }
 
@@ -910,6 +937,8 @@ async fn settle(
 
 /// Sync through `folder` from now on, on `road`: what was read of another folder is forgotten.
 pub(crate) fn take_folder(services: &Ctx, folder: &SyncFolderSpec, road: FolderRoad) {
+    // The old road goes first, so a pass still on it cannot keep its cursors after the clear.
+    services.syncing.set_road(None);
     let _ = services.store.sync_meta_clear(ROAD_META);
     services.syncing.restore_devices.store(0, Ordering::Relaxed);
     let _ = services.store.sync_meta_remove(REPLACED_DEVICES);
@@ -1117,6 +1146,7 @@ pub(crate) fn fail(services: &Ctx, tx: &Outbox, p: SyncProblem) {
 
 /// The road to the folder, opened from what was kept when it is not up.
 async fn road_of(services: &Ctx) -> Result<Arc<FolderRoad>, SyncProblem> {
+    let generation = services.syncing.generation();
     if let Some(road) = services.syncing.road() {
         return Ok(road);
     }
@@ -1138,33 +1168,59 @@ async fn road_of(services: &Ctx) -> Result<Arc<FolderRoad>, SyncProblem> {
         device_key(services),
         ring,
     ));
-    services.syncing.set_road(Some(road.clone()));
-    Ok(road)
+    // The folder changed or sync was left while it opened: what was kept named another folder.
+    services.syncing.open_road(road, generation).ok_or_else(no_group)
 }
 
 /// One pass through the folder: what others wrote is read and applied, this device's own is
 /// written. Said as the status before and after. At most one runs at a time.
 pub async fn pass(services: &Ctx, tx: &Outbox) {
-    if replaced_here(services) {
-        count_replacing(services).await;
+    loop {
+        if replaced_here(services) {
+            count_replacing(services).await;
+            return say_status(services, tx);
+        }
+        if services.syncing.running.swap(true, Ordering::AcqRel) {
+            return;
+        }
+        say_status(services, tx);
+        let generation = services.syncing.generation();
+        let asked = services.store.sync_meta_get(ROTATE).ok().flatten().as_deref() == Some("1");
+        let outcome = match road_of(services).await {
+            Ok(road) => {
+                road.sync_rotating(asked).await.map(|report| (road, report)).map_err(|e| {
+                    if matches!(e, SyncError::Removed) {
+                        let _ = services.store.sync_meta_set(REMOVED, "1");
+                    }
+                    let kind = saved_folder(services).map(|f| f.kind);
+                    (problem_in(kind.as_ref(), &e), error_text(&e))
+                })
+            }
+            Err(p) => Err((p.clone(), describe(&p))),
+        };
+        services.syncing.running.store(false, Ordering::Release);
+        if services.syncing.generation() != generation {
+            // The person changed folder or left while this pass ran: its keyring, recovery key
+            // and times belong to a folder no longer used. What it applied stays, and the
+            // folder now chosen, if any, gets a pass of its own, which returned at once while
+            // this one ran.
+            if let Ok((_, report)) = outcome {
+                carry_out(services, tx, report);
+            }
+            if saved_folder(services).is_some() {
+                continue;
+            }
+            return say_status(services, tx);
+        }
+        settle_pass(services, tx, outcome, asked).await;
         return say_status(services, tx);
     }
-    if services.syncing.running.swap(true, Ordering::AcqRel) {
-        return;
-    }
-    say_status(services, tx);
-    let asked = services.store.sync_meta_get(ROTATE).ok().flatten().as_deref() == Some("1");
-    let outcome = match road_of(services).await {
-        Ok(road) => road.sync_rotating(asked).await.map(|report| (road, report)).map_err(|e| {
-            if matches!(e, SyncError::Removed) {
-                let _ = services.store.sync_meta_set(REMOVED, "1");
-            }
-            let kind = saved_folder(services).map(|f| f.kind);
-            (problem_in(kind.as_ref(), &e), error_text(&e))
-        }),
-        Err(p) => Err((p.clone(), describe(&p))),
-    };
-    services.syncing.running.store(false, Ordering::Release);
+}
+
+type PassOutcome = Result<(Arc<FolderRoad>, FolderReport), (SyncProblem, String)>;
+
+/// Keep what a pass on the road in use found, or say why it failed.
+async fn settle_pass(services: &Ctx, tx: &Outbox, outcome: PassOutcome, asked: bool) {
     match outcome {
         Ok((road, report)) if report.paused => {
             keep_ring(services, &road.keyring());
@@ -1198,7 +1254,6 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
             }
         }
     }
-    say_status(services, tx);
 }
 
 /// Keep the recovery key a pass made, or found opening the folder, when it is not the one held:
