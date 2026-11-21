@@ -168,6 +168,16 @@ impl Capabilities {
         self.fetches.load(Ordering::Relaxed)
     }
 
+    /// Fetches this call may still make.
+    pub fn fetches_left(&self) -> u32 {
+        self.limits.max_fetches.saturating_sub(self.fetches_used())
+    }
+
+    /// Why a request past the call's fetch budget is refused.
+    fn budget_spent(&self) -> String {
+        format!("fetch budget exhausted ({} per call)", self.limits.max_fetches)
+    }
+
     /// What one guest `log` line becomes: cut to [`LOG_LINE_BYTES`], and `None` once the call
     /// has logged [`LOG_LINES`]. The first line past that says the rest are dropped.
     ///
@@ -204,12 +214,8 @@ impl Capabilities {
     /// Separated from [`Self::fetch`] so the rules are testable without a network, and so the
     /// order is unambiguous: budget, then scheme and host, then headers.
     pub fn authorise(&self, request: &Request) -> Result<(), HostError> {
-        let used = self.fetches.load(Ordering::Relaxed);
-        if used >= self.limits.max_fetches {
-            return Err(HostError::Denied(format!(
-                "fetch budget exhausted ({} per call)",
-                self.limits.max_fetches
-            )));
+        if self.fetches_left() == 0 {
+            return Err(HostError::Denied(self.budget_spent()));
         }
 
         // GET and POST are what parsing needs. Anything else is a way to change state on a
@@ -338,6 +344,47 @@ async fn read_capped(
         body.extend_from_slice(&chunk);
     }
     Ok(body)
+}
+
+/// The answers to one `fetch-many` call, in the order of `requests`: each as `fetch` answers it,
+/// exactly as if the guest had fetched them one at a time, and those past the call's fetch
+/// budget refused with the reason `refused` is given.
+///
+/// The list is the guest's to size, and a fetch in flight costs the host far more than the
+/// request did in the guest's memory. So no more fetches are in flight at once than the budget
+/// has left, and a request the budget cannot take is answered without a fetch ever being
+/// built for it. A round whose requests were refused for their host or method spends nothing,
+/// and the next requests get the same chance they would have had one at a time.
+pub async fn fetch_each<Q, A, F>(
+    capabilities: &Capabilities,
+    requests: Vec<Q>,
+    fetch: impl Fn(Q) -> F,
+    refused: impl Fn(String) -> A,
+) -> Vec<A>
+where
+    F: std::future::Future<Output = A>,
+{
+    let mut answers = Vec::with_capacity(requests.len());
+    let mut requests = requests.into_iter();
+    loop {
+        let left = capabilities.fetches_left() as usize;
+        let round: Vec<Q> = requests.by_ref().take(left).collect();
+        if round.is_empty() {
+            break;
+        }
+        answers.extend(futures::future::join_all(round.into_iter().map(&fetch)).await);
+    }
+    let past = requests.len();
+    if past != 0 {
+        tracing::debug!(
+            plugin = capabilities.plugin_id(),
+            refused = past,
+            "a fetch-many went past its call's fetch budget"
+        );
+        let spent = capabilities.budget_spent();
+        answers.extend(requests.map(|_| refused(spent.clone())));
+    }
+    answers
 }
 
 /// Capture groups for every match of `pattern` in `haystack`.

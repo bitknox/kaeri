@@ -384,8 +384,12 @@ impl kaeri::provider::host::Host for PluginState {
         // Genuinely concurrent — this is the one thing a synchronous guest cannot do for
         // itself. Authorisation and the fetch budget apply per request, exactly as if the
         // guest had called `fetch` in a loop.
-        Ok(futures::future::join_all(
-            requests.into_iter().map(|request| one_fetch(&self.capabilities, request)),
+        let capabilities = &self.capabilities;
+        Ok(host::fetch_each(
+            capabilities,
+            requests,
+            |request| one_fetch(capabilities, request),
+            |reason| Err(GuestHostError::Denied(reason)),
         )
         .await)
     }
@@ -1234,14 +1238,15 @@ mod host_call_tests {
         atomic::{AtomicUsize, Ordering},
     };
 
-    use super::*;
     use super::kaeri::provider::host::Host as _;
+    use super::*;
 
     /// A call's state with no network, as a guest's host calls see it.
     fn state() -> PluginState {
         let limits = Limits::default();
+        let allowed = vec!["allowed.example".to_owned()];
         PluginState {
-            capabilities: Capabilities::new("noisy", Vec::new(), limits, None),
+            capabilities: Capabilities::new("noisy", allowed, limits, None),
             ceiling: Ceiling { memory_bytes: limits.memory_bytes },
             wasi: empty_wasi(),
             table: wasmtime::component::ResourceTable::new(),
@@ -1298,5 +1303,36 @@ mod host_call_tests {
         assert!(lines <= 201, "{lines} lines logged");
         assert!(bytes < 1024 * 1024, "{bytes} bytes logged");
         assert!(lines > 0, "the first lines are kept");
+    }
+
+    #[tokio::test]
+    async fn requests_past_the_fetch_budget_are_answered_without_a_fetch() {
+        let counting = Counting::default();
+        let _default = tracing::subscriber::set_default(counting.clone());
+        let mut state = state();
+        let budget = Limits::default().max_fetches as usize;
+        let count = 100_000;
+        let requests = (0..count)
+            .map(|_| HttpRequest {
+                method: "GET".into(),
+                url: "https://allowed.example/a".into(),
+                headers: Vec::new(),
+                body: None,
+            })
+            .collect();
+        let answers = state.fetch_many(requests).await.unwrap();
+        assert_eq!(answers.len(), count);
+        // Within the budget each is fetched, which fails here for want of a client.
+        for answer in &answers[..budget] {
+            assert!(matches!(answer, Err(GuestHostError::Transport(_))), "{answer:?}");
+        }
+        for answer in &answers[budget..] {
+            assert!(
+                matches!(answer, Err(GuestHostError::Denied(reason)) if reason.contains("budget")),
+                "{answer:?}"
+            );
+        }
+        // The rest were refused together, without a fetch built for each.
+        assert_eq!(counting.lines.load(Ordering::Relaxed), 1);
     }
 }

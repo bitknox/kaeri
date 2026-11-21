@@ -162,8 +162,12 @@ impl kaeri::books::host::Host for PluginState {
         &mut self,
         requests: Vec<HttpRequest>,
     ) -> wasmtime::Result<Vec<Result<HttpResponse, GuestHostError>>> {
-        Ok(futures::future::join_all(
-            requests.into_iter().map(|request| one_fetch(&self.capabilities, request)),
+        let capabilities = &self.capabilities;
+        Ok(host::fetch_each(
+            capabilities,
+            requests,
+            |request| one_fetch(capabilities, request),
+            |reason| Err(GuestHostError::Denied(reason)),
         )
         .await)
     }
