@@ -1,5 +1,6 @@
-// Which way the iPhone may turn, from what covers the app: the player turns it to landscape (T2)
-// and the reader follows the sensor. The iPad stays as it is held. The app delegate answers
+// Which way the iPhone may turn, from what covers the app: the app runs in portrait, the player
+// turns it to landscape (T2), and the reader follows the sensor while it is open and gives the
+// app back in portrait. The iPad stays as it is held. The app delegate answers
 // `supportedInterfaceOrientationsFor` with `PhoneOrientation.mask`.
 
 #if os(iOS)
@@ -23,10 +24,12 @@ public struct PhoneOrientation: Equatable, Sendable {
         self.reader = reader
     }
 
-    /// The player's landscape wins over the reader under it.
+    /// Portrait with nothing over the app (native-ux, iPhone). The player's landscape wins over
+    /// the reader under it.
     public var allowed: Allowed {
         if player { return .landscape }
-        return .either
+        if reader { return .either }
+        return .portrait
     }
 }
 
@@ -70,7 +73,8 @@ extension PhoneOrientation {
         let turn: UIInterfaceOrientationMask? = switch after {
         case .portrait: .portrait
         case .landscape: .landscape
-        case .either: before == .landscape ? .portrait : nil
+        // The reader follows the sensor from where it is.
+        case .either: nil
         }
         if let turn {
             scene.requestGeometryUpdate(.iOS(interfaceOrientations: turn)) { _ in }
