@@ -122,7 +122,8 @@ private val COLUMN = 520.dp
  */
 @Composable
 internal fun StartingLayer(model: PlayerModel, rect: VideoRect, art: Boolean, onChooseSource: () -> Unit) {
-    val up = model.isPresented && (model.starting != null || !model.hasPicture || model.failure != null)
+    // A switch of source holds the picture as it loads: no starting screen over it.
+    val up = model.isPresented && (model.starting != null || !model.hasPicture && !model.holding || model.failure != null)
     val content = rememberStartingShown(model, up)
     val reduced = rememberSystemReducedMotion()
     val shown by animateFloatAsState(if (up || content) 1f else 0f, if (reduced) snap() else Motion.fadeIn(), label = "starting") // i18n-skip
