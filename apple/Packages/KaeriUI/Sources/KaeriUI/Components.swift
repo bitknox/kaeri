@@ -376,7 +376,6 @@ struct SyncCapsule: View {
     /// Accounts in Settings, from the popover's foot.
     let open: () -> Void
     @State private var showing = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     /// Each face's width, for the capsule to change between them: the widest each has
     /// measured, the sync line's for its words. A face measures a few points differently in the
     /// toolbar's bar and in its overflow menu, and keeping whichever came last wrote state on
@@ -395,7 +394,10 @@ struct SyncCapsule: View {
         let on = store.privacy.on
         Button { showing.toggle() } label: {
             // While private mode is on the badge takes the capsule's place: the faces crossfade
-            // in place as the capsule's width moves between them, never through an empty one.
+            // in place, never through an empty one, and the capsule takes the new face's width at
+            // once. The width is not animated: a toolbar item that resizes on every frame while
+            // the window resizes keeps AppKit's toolbar layout from settling, and AppKit ends the
+            // app (`KaeriDev --toolbar-sweep`).
             ZStack(alignment: .leading) {
                 HStack(spacing: 6) {
                     StateDot(state: summary.state)
@@ -417,9 +419,7 @@ struct SyncCapsule: View {
                     }
                     .animation(.reveal) { $0.opacity(on ? 1 : 0) }
             }
-            .animation(reduceMotion ? .reveal : .standard) {
-                $0.frame(width: on ? privateWidth : syncWidth?.width, alignment: .leading)
-            }
+            .frame(width: on ? privateWidth : syncWidth?.width, alignment: .leading)
             .clipped()
             .padding(.horizontal, 4)
         }
