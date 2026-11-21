@@ -1,7 +1,9 @@
-//! The watch party rooms this device was in: the last ten, newest first.
+//! The watch party rooms this profile was in: the last ten, newest first.
 //!
 //! A row is a place and a title, with who was there. It holds no source and no stream, so it is
-//! safe to keep and to show.
+//! safe to keep and to show. The rooms are personal, like the rest of a profile's history: each
+//! profile sees only its own, and the rooms an install kept before it had profiles are the first
+//! profile's, as they sit in its database.
 
 use kaeri_core::ids::AnilistId;
 
@@ -10,7 +12,7 @@ use crate::{Result, Store};
 /// How many rooms are kept.
 pub const KEPT: usize = 10;
 
-/// One room this device was in.
+/// One room this profile was in.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PartyRoom {
     /// `host:port`.
@@ -30,7 +32,7 @@ impl Store {
     /// Keep `room` as the newest, in place of the same room before it, and let go of all but
     /// the last ten.
     pub fn remember_party_room(&self, room: &PartyRoom) -> Result<()> {
-        self.with_tx(|tx| {
+        self.with_personal_tx(|tx| {
             tx.execute(
                 "INSERT INTO party_room
                     (server, room, anilist_id, title, episode, names, cover_url, last_at)
@@ -64,7 +66,7 @@ impl Store {
 
     /// The rooms kept, newest first.
     pub fn party_rooms(&self) -> Result<Vec<PartyRoom>> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             let mut statement = c.prepare(
                 "SELECT server, room, anilist_id, title, episode, names, cover_url, last_at
                  FROM party_room ORDER BY last_at DESC, rowid DESC",
@@ -94,7 +96,7 @@ impl Store {
 
     /// Let go of one room.
     pub fn forget_party_room(&self, server: &str, room: &str) -> Result<()> {
-        self.with_conn(|c| {
+        self.with_personal(|c| {
             c.execute(
                 "DELETE FROM party_room WHERE server = ?1 AND room = ?2",
                 rusqlite::params![server, room],
