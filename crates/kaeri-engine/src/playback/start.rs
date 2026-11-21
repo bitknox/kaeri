@@ -510,7 +510,6 @@ pub fn play_local(
     let hints = PlayHints { title: title.clone(), ..hints };
     let (prx, handoff) = take_controls(player_tx, successor(id, &episode, &hints, config));
     let PlayHints { next, episodes, cover_url, banner_url, episode_total, .. } = hints;
-    handoff.now();
     let tracker_ids = signed_in_tracker_ids(sync);
     if episodes.is_empty() {
         fill_episodes(id, &episode, services, player_tx);
@@ -559,6 +558,9 @@ pub fn play_local(
             find_skip_times: find,
             ..play_settings(&config, tracker_ids, party)
         };
+        // The window is asked for and waited on, as a streamed play's is: claimed while the
+        // playback before still opened its own, it opened a second one beside it.
+        handoff.complete().await;
         playback::play(vec![stream], context, store, http, machine, settings, tx, prx).await;
     });
 }

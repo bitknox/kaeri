@@ -1576,3 +1576,43 @@ fn a_download_played_while_private_is_held_in_memory_as_any_private_play() {
     assert_eq!(app.history("12"), Vec::<f64>::new(), "nor once it played to the end");
     app.shutdown();
 }
+
+#[test]
+fn a_download_played_while_an_episode_opens_takes_its_player() {
+    // The episode before waits on its subtitles, which never come, before it opens a player:
+    // the download asked for meanwhile takes that player rather than opening its own beside it.
+    let (host, asked) = subtitle_host(None);
+    let url = "https://cdn.example/stardust-wayfarer/11/subbed.mp4";
+    let mut app = App::start(with_streams(vec![with_subtitles(url, &host)]), "");
+    app.play(FINISHED, "11");
+    let deadline = Instant::now() + PATIENCE;
+    while asked.get().is_none() {
+        assert!(Instant::now() < deadline, "the subtitles never asked for");
+        thread::sleep(Duration::from_millis(10));
+    }
+    let path = app.root.path().join("Stardust Wayfarer 12.mp4").display().to_string();
+    play_download(&app, "12", &path);
+
+    // The episode before hands its window over once it has one, and the download plays in it.
+    app.until("the episode before left", |event| match event {
+        Event::EpisodeLeft { episode, .. } if episode == "11" => Some(()),
+        _ => None,
+    });
+    let download = |app: &App| {
+        app.ops.iter().find_map(|(playback, op)| {
+            matches!(op, PlayerOp::Load { url, .. } if *url == path).then_some(*playback)
+        })
+    };
+    if download(&app).is_none() {
+        app.op(
+            "the download loaded",
+            |op| matches!(op, PlayerOp::Load { url, .. } if *url == path),
+        );
+    }
+    let playback = download(&app).unwrap();
+    app.settle();
+    assert_eq!(app.shown(), 1, "one player: {:?}", app.ops);
+    app.opened(playback, &[]);
+    app.stop();
+    app.shutdown();
+}
