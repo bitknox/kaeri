@@ -119,6 +119,13 @@ pub const FAILURE_WINDOW_SECS: i64 = 10 * 60;
 pub const OPEN_JOINS_ALLOWED: i64 = 10;
 pub const OPEN_JOIN_WINDOW_SECS: i64 = 60 * 60;
 
+/// How long the secret addresses are counted under lasts: the longest window anything is
+/// counted over. Each window has its own, and the counts made under the last one go with it.
+const ADDRESS_KEY_SECS: i64 = OPEN_JOIN_WINDOW_SECS;
+
+/// Where the window's secret is kept in `meta`, as `<window>:<secret>`.
+const ADDRESS_KEY: &str = "address_key";
+
 /// A store name nobody chose.
 pub const DEFAULT_NAME: &str = "Plugin store";
 
@@ -769,10 +776,11 @@ impl<D: Database, B: Blobs> Store<D, B> {
 
     /// Whether `client` has had as many devices join from it lately as it may.
     pub async fn joins_blocked(&self, client: &str, now: i64) -> Result<bool, StoreError> {
+        let counted = self.address_key(client, now).await?;
         let rows = self
             .query(sql!(
                 "SELECT window_start, attempts FROM open_joins WHERE key = ?1",
-                join_key(client)
+                counted.as_str()
             ))
             .await?;
         let Some(row) = rows.first() else { return Ok(false) };
@@ -797,6 +805,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
         }
         let member = Member { id: crypto::new_id()?, name: String::new(), role: Role::Member };
         let token = crypto::new_token()?;
+        let counted = self.address_key(client, now).await?;
+        // The window, never the second: the count must not tell when the member below joined.
+        let window = window_of(now, OPEN_JOIN_WINDOW_SECS);
         // Each value is cast to its column's type: Postgres cannot infer a parameter's type from
         // the column an `INSERT … SELECT` fills.
         let changed = self
@@ -827,14 +838,11 @@ impl<D: Database, B: Blobs> Store<D, B> {
                                             THEN ?2 ELSE open_joins.window_start END,
                         attempts = CASE WHEN ?2 - open_joins.window_start >= ?3
                                         THEN 1 ELSE open_joins.attempts + 1 END",
-                    join_key(client),
-                    now,
+                    counted.as_str(),
+                    window,
                     OPEN_JOIN_WINDOW_SECS
                 ),
-                sql!(
-                    "DELETE FROM open_joins WHERE window_start < ?1",
-                    now - OPEN_JOIN_WINDOW_SECS
-                ),
+                sql!("DELETE FROM open_joins WHERE window_start < ?1", window),
             ])
             .await?;
         if changed.first().copied().unwrap_or(0) == 0 {
@@ -1197,8 +1205,15 @@ impl<D: Database, B: Blobs> Store<D, B> {
 
     /// Whether `key` — an address, usually — has failed too often lately.
     pub async fn blocked(&self, key: &str, now: i64) -> Result<bool, StoreError> {
+        let counted = self.address_key(key, now).await?;
+        // Expired counts go whenever anything is counted, not only when the next failure comes.
+        let window = window_of(now, FAILURE_WINDOW_SECS);
+        self.exec(sql!("DELETE FROM failures WHERE window_start < ?1", window)).await?;
         let rows = self
-            .query(sql!("SELECT window_start, attempts FROM failures WHERE key = ?1", key))
+            .query(sql!(
+                "SELECT window_start, attempts FROM failures WHERE key = ?1",
+                counted.as_str()
+            ))
             .await?;
         let Some(row) = rows.first() else { return Ok(false) };
         Ok(now - row.int(0)? < FAILURE_WINDOW_SECS && row.int(1)? >= ALLOWED_FAILURES)
@@ -1207,6 +1222,8 @@ impl<D: Database, B: Blobs> Store<D, B> {
     /// Count a failed attempt. Kept in the database rather than in memory, because where a store
     /// runs as a function there is no memory that outlives one request.
     pub async fn fail(&self, key: &str, now: i64) -> Result<(), StoreError> {
+        let counted = self.address_key(key, now).await?;
+        let window = window_of(now, FAILURE_WINDOW_SECS);
         self.batch(vec![
             sql!(
                 "INSERT INTO failures (key, window_start, attempts) VALUES (?1, ?2, 1)
@@ -1215,15 +1232,51 @@ impl<D: Database, B: Blobs> Store<D, B> {
                                         THEN ?2 ELSE failures.window_start END,
                     attempts = CASE WHEN ?2 - failures.window_start >= ?3
                                     THEN 1 ELSE failures.attempts + 1 END",
-                key,
-                now,
+                counted.as_str(),
+                window,
                 FAILURE_WINDOW_SECS
             ),
             // Expired windows go as new failures arrive, so the table holds only what counts.
-            sql!("DELETE FROM failures WHERE window_start < ?1", now - FAILURE_WINDOW_SECS),
+            sql!("DELETE FROM failures WHERE window_start < ?1", window),
         ])
         .await?;
         Ok(())
+    }
+
+    /// What `client` is counted under at `now`, for failures and open joins: a digest of its
+    /// address, or of an IPv6 address's /64, which one connection is usually handed whole,
+    /// keyed with the window's secret. The tables never hold an address as it is, and once the
+    /// window's secret is replaced nobody, whoever runs or backs up the store included, can
+    /// tell which address a count was.
+    async fn address_key(&self, client: &str, now: i64) -> Result<String, StoreError> {
+        let window = now.div_euclid(ADDRESS_KEY_SECS);
+        let kept = self.meta(ADDRESS_KEY).await?;
+        let secret = match kept.as_deref().and_then(|kept| secret_for(kept, window)) {
+            Some(secret) => secret.to_owned(),
+            None => self.new_address_key(window).await?,
+        };
+        Ok(crypto::sha256_hex(format!("{secret}\n{}", join_address(client)).as_bytes()))
+    }
+
+    /// A new window's secret, in place of the last, with the counts made under the last gone.
+    async fn new_address_key(&self, window: i64) -> Result<String, StoreError> {
+        let fresh = format!("{window:012}:{}", crypto::new_code()?);
+        let start = window * ADDRESS_KEY_SECS;
+        self.batch(vec![
+            // Two requests starting the window together each make one; the greater is kept.
+            sql!(
+                "INSERT INTO meta (key, value) VALUES (?1, ?2)
+                 ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                 WHERE meta.value < excluded.value",
+                ADDRESS_KEY,
+                fresh.as_str()
+            ),
+            sql!("DELETE FROM failures WHERE window_start < ?1", start),
+            sql!("DELETE FROM open_joins WHERE window_start < ?1", start),
+        ])
+        .await?;
+        let kept = self.meta(ADDRESS_KEY).await?.unwrap_or(fresh);
+        Ok(kept.split_once(':').map_or(kept.as_str(), |(_, secret)| secret).to_owned())
     }
 
     // --- plugins and the index --------------------------------------------------------------
@@ -1703,15 +1756,21 @@ fn codes_match(a: &str, b: &str) -> bool {
     crypto::hash_secret(a) == crypto::hash_secret(b)
 }
 
-/// What open joins from `client` are counted under: a digest of the address, or of an IPv6
-/// address's /64, which one connection is usually handed whole. A digest, so the table never
-/// holds an address as it is; and nothing ties a count to the device that joined.
-fn join_key(client: &str) -> String {
-    crypto::hash_secret(&join_address(client))
+/// The secret in `kept`, an `address_key` row, when it serves `window` or a later one: a store
+/// whose clock is behind another instance's counts by the newer secret rather than replace it.
+fn secret_for(kept: &str, window: i64) -> Option<&str> {
+    let (from, secret) = kept.split_once(':')?;
+    (from.parse::<i64>().ok()? >= window).then_some(secret)
 }
 
-/// The address an open join is counted by, before it is digested. Anything that is not an
-/// address is counted as it is.
+/// The start of the `secs`-long window `now` is in. Counts keep this, never the second they
+/// were made, so a count cannot be matched to a member who joined at that second.
+fn window_of(now: i64, secs: i64) -> i64 {
+    now - now.rem_euclid(secs)
+}
+
+/// The address a failure or an open join is counted by, before it is digested. Anything that
+/// is not an address is counted as it is.
 fn join_address(client: &str) -> String {
     match client.trim().parse::<std::net::IpAddr>() {
         Ok(std::net::IpAddr::V6(ip)) => match ip.to_ipv4_mapped() {

@@ -590,6 +590,55 @@ async fn open_joins_are_limited_per_address_and_an_ipv6_network_counts_as_one() 
 }
 
 #[tokio::test]
+async fn counts_by_address_keep_no_address_and_go_with_their_hour() {
+    use kaeri_store_core::store::{ALLOWED_FAILURES, FAILURE_WINDOW_SECS};
+    const ADDRESS: &str = "203.0.113.7";
+    let db: Arc<dyn Database> = Arc::new(SqliteDb::in_memory().unwrap());
+    let dir = tempfile::tempdir().unwrap();
+    let blobs: Box<dyn Blobs> = Box::new(LocalBlobs::new(dir.path()));
+    let store = Store::open(db.clone(), blobs, Some(BASE), Some("Test")).await.unwrap();
+    let column = |sql: &'static str| {
+        let db = db.clone();
+        async move {
+            let rows = db.query(sql, &[]).await.unwrap();
+            rows.iter().map(|row| row.text(0).unwrap()).collect::<Vec<_>>()
+        }
+    };
+
+    // A failure from a stale link keeps nothing that reads back as the address.
+    store.fail(ADDRESS, NOW).await.unwrap();
+    let keys = column("SELECT key FROM failures").await;
+    assert_eq!(keys.len(), 1);
+    assert!(
+        !keys.contains(&ADDRESS.to_owned()) && !keys.contains(&crypto::hash_secret(ADDRESS))
+    );
+
+    // An open join keeps neither the address's plain digest nor the second the member joined.
+    let code = opened(&store).await;
+    let joined = NOW + 1_234;
+    store.join_open(&code, ADDRESS, joined).await.unwrap();
+    let keys = column("SELECT key FROM open_joins").await;
+    assert_eq!(keys.len(), 1);
+    assert!(!keys.contains(&crypto::hash_secret(ADDRESS)), "{keys:?}");
+    let starts = column("SELECT CAST(window_start AS TEXT) FROM open_joins").await;
+    assert_ne!(starts, [joined.to_string()], "tied to the member who joined then");
+
+    // Failures from one IPv6 network count together, as its open joins do.
+    for host in 1..=ALLOWED_FAILURES {
+        store.fail(&format!("2001:db8:1:2::{host:x}"), NOW).await.unwrap();
+    }
+    assert!(store.blocked("2001:db8:1:2::ffff", NOW).await.unwrap());
+    assert!(!store.blocked("2001:db8:1:3::1", NOW).await.unwrap());
+
+    // Expired failures go with the next count, whatever it is.
+    assert!(!store.blocked("198.51.100.1", NOW + 2 * FAILURE_WINDOW_SECS).await.unwrap());
+    assert_eq!(column("SELECT key FROM failures").await, Vec::<String>::new());
+    // An hour on, the joins counted in the last one go too.
+    assert!(!store.joins_blocked("198.51.100.1", NOW + OPEN_JOIN_WINDOW_SECS).await.unwrap());
+    assert_eq!(column("SELECT key FROM open_joins").await, Vec::<String>::new());
+}
+
+#[tokio::test]
 async fn switching_back_to_invites_stops_new_joins_and_keeps_the_devices_that_joined() {
     let (_dir, store) = open().await;
     let code = opened(&store).await;
