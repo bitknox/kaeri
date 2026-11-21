@@ -1395,7 +1395,11 @@ mod tests {
         assert!(ended.is_err(), "the pass stops once its road is let go");
         for what in ["published", "segno", "group", "acked"] {
             let key = format!("folder.kaeri.{what}");
-            assert_eq!(a.store.sync_meta_get(&key).unwrap(), None, "{key} kept after the clear");
+            assert_eq!(
+                a.store.sync_meta_get(&key).unwrap(),
+                None,
+                "{key} kept after the clear"
+            );
         }
     }
 
