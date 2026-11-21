@@ -91,6 +91,15 @@ fn lift_reauth_hold(tracker: &str) {
     let _ = kaeri_track::sync::clear_reauth_hold(&store, tracker);
 }
 
+/// The trackers [`login`] signs in to.
+const SIGNS_IN: [&str; 5] = ["anilist", "mal", "kitsu", "simkl", "trakt"];
+
+/// The command that signs `tracker` in from the command line, or `None` when the command line
+/// has no sign-in for it.
+pub fn login_command(tracker: &str) -> Option<String> {
+    SIGNS_IN.contains(&tracker).then(|| format!("kaeri --login --tracker {tracker}"))
+}
+
 /// Sign in: run the configured flow, or take a code that was obtained by hand.
 ///
 /// The code is exchanged for a token here rather than stored as-is — an authorization code is
@@ -473,7 +482,9 @@ pub fn migrate_token(config: &Config, paths: &Paths, tracker: &str) -> Result<()
         }
         Err(kaeri_track::secret::SecretError::Missing(_)) => {
             println!("No {tracker} token in the keychain, so there is nothing to move.");
-            println!("Sign in with: kaeri --login");
+            if let Some(command) = login_command(tracker) {
+                println!("Sign in with: {command}");
+            }
             Ok(())
         }
         Err(e) => Err(e.into()),
@@ -485,4 +496,21 @@ pub fn forget_token(config: &Config, paths: &Paths, tracker: &str) -> Result<()>
     println!("forgot the {tracker} token");
     let _ = config;
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_sign_in_hint_names_the_tracker() {
+        assert_eq!(login_command("trakt").as_deref(), Some("kaeri --login --tracker trakt"));
+        assert_eq!(login_command("kitsu").as_deref(), Some("kaeri --login --tracker kitsu"));
+        assert_eq!(
+            login_command("anilist").as_deref(),
+            Some("kaeri --login --tracker anilist")
+        );
+        // Only the apps sign in to MangaUpdates.
+        assert_eq!(login_command("mangaupdates"), None);
+    }
 }

@@ -7,6 +7,8 @@ use kaeri_engine::tracking;
 use kaeri_net::HttpClient;
 use kaeri_store::Store;
 
+use super::login::login_command;
+
 /// Drain and pull once, reporting what happened.
 pub async fn sync_once(
     config: &Config,
@@ -26,7 +28,10 @@ pub async fn sync_once(
         println!("  authenticated  {}", tracker.is_authenticated());
         println!("  queued         {}", store.outbox_depth(Some(id)).unwrap_or(0));
         if !tracker.is_authenticated() {
-            println!("  ▲ not signed in; run kaeri --login-url");
+            match login_command(id) {
+                Some(command) => println!("  ▲ not signed in; run {command}"),
+                None => println!("  ▲ not signed in; the terminal has no sign-in for it"),
+            }
             continue;
         }
 
