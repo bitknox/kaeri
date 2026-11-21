@@ -109,6 +109,9 @@ pub struct FolderRoad {
     /// The group this device is in, once known: from creating, joining or opening it, else
     /// from what the store kept.
     group: std::sync::Mutex<Option<[u8; 16]>>,
+    /// Set once the device moved to another folder or left: from then on this road keeps
+    /// nothing in the store, since what it would keep belongs to a folder no longer used.
+    retired: std::sync::Mutex<bool>,
 }
 
 /// What the road owns in a folder, besides `group.bin`.
@@ -332,7 +335,25 @@ impl FolderRoad {
             key,
             ring: std::sync::Mutex::new(ring),
             group: std::sync::Mutex::new(None),
+            retired: std::sync::Mutex::new(false),
         }
+    }
+
+    /// Stop keeping anything in the store: the device moved to another folder or left. A write
+    /// under way finishes first, so once this returns the road writes nothing more, and what
+    /// it kept can be cleared.
+    pub fn retire(&self) {
+        *self.retired.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
+    }
+
+    /// Keep `value` under `key` in the store, unless the road was retired: then the pass stops.
+    fn keep(&self, key: &str, value: &str) -> Result<()> {
+        let retired = self.retired.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if *retired {
+            return Err(SyncError::NoGroup);
+        }
+        self.store.sync_meta_set(key, value)?;
+        Ok(())
     }
 
     /// Keep `group` as the one this device is in, here and in the store. What was kept of
@@ -345,11 +366,16 @@ impl FolderRoad {
         match self.store.sync_meta_get(&key)? {
             Some(kept) if kept == hexed => return Ok(()),
             Some(_) => {
+                let retired =
+                    self.retired.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if *retired {
+                    return Err(SyncError::NoGroup);
+                }
                 self.store.sync_meta_clear(&self.meta(""))?;
             }
             None => {}
         }
-        self.store.sync_meta_set(&key, &hexed)?;
+        self.keep(&key, &hexed)?;
         Ok(())
     }
 
@@ -626,7 +652,7 @@ impl FolderRoad {
                     Err(e) => return Err(e.into()),
                 }
             }
-            self.store.sync_meta_set(&shared, &fp)?;
+            self.keep(&shared, &fp)?;
         }
         Ok(())
     }
@@ -671,7 +697,7 @@ impl FolderRoad {
         if names != seen {
             let json =
                 serde_json::to_string(&names).map_err(|_| SyncError::Damaged("encoding"))?;
-            self.store.sync_meta_set(&seen_key, &json)?;
+            self.keep(&seen_key, &json)?;
         }
         Ok(())
     }
@@ -701,7 +727,7 @@ impl FolderRoad {
                 break;
             }
         }
-        self.store.sync_meta_set(&checked, &fp)?;
+        self.keep(&checked, &fp)?;
         Ok(found)
     }
 
@@ -751,7 +777,7 @@ impl FolderRoad {
                 break;
             }
             cursor = n;
-            self.store.sync_meta_set(&self.meta(&cursor_key), &cursor.to_string())?;
+            self.keep(&self.meta(&cursor_key), &cursor.to_string())?;
         }
         self.store.sync_touch_peer(device, now_secs())?;
         Ok(())
@@ -857,8 +883,8 @@ impl FolderRoad {
                     Err(e) => return Err(e.into()),
                 }
             }
-            self.store.sync_meta_set(&self.meta("segno"), &number.to_string())?;
-            self.store.sync_meta_set(&self.meta("published"), &last.to_string())?;
+            self.keep(&self.meta("segno"), &number.to_string())?;
+            self.keep(&self.meta("published"), &last.to_string())?;
             report.segments_written += 1;
             report.ops_written += batch.len();
         }
@@ -874,7 +900,7 @@ impl FolderRoad {
         }
         let sealed = seal::seal(&self.keyring(), Kind::Acks, &self.device, 0, &plain)?;
         self.replace(&self.path(&format!("devices/{}/acks.bin", self.device)), &sealed).await?;
-        self.store.sync_meta_set(&self.meta("acked"), &hex::encode(&plain))?;
+        self.keep(&self.meta("acked"), &hex::encode(&plain))?;
         Ok(())
     }
 
@@ -1445,6 +1471,89 @@ mod tests {
         }
         fn describe(&self) -> String {
             "stopping".into()
+        }
+    }
+
+    /// A folder that holds its next list or read once armed, until told to go on, as a slow
+    /// service does.
+    #[derive(Default)]
+    struct Held {
+        inner: MemoryTarget,
+        armed: std::sync::atomic::AtomicBool,
+        reached: tokio::sync::Notify,
+        go: tokio::sync::Notify,
+    }
+
+    impl Held {
+        async fn hold(&self) {
+            if self.armed.swap(false, Ordering::SeqCst) {
+                self.reached.notify_one();
+                self.go.notified().await;
+            }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl FolderTarget for Held {
+        async fn list(
+            &self,
+            dir: &str,
+        ) -> std::result::Result<Vec<crate::folder::Entry>, FolderError> {
+            self.hold().await;
+            self.inner.list(dir).await
+        }
+        async fn read(&self, path: &str) -> std::result::Result<Vec<u8>, FolderError> {
+            self.hold().await;
+            self.inner.read(path).await
+        }
+        async fn write_new(
+            &self,
+            path: &str,
+            bytes: &[u8],
+        ) -> std::result::Result<(), FolderError> {
+            self.inner.write_new(path, bytes).await
+        }
+        async fn rename(&self, from: &str, to: &str) -> std::result::Result<(), FolderError> {
+            self.inner.rename(from, to).await
+        }
+        async fn remove(&self, path: &str) -> std::result::Result<(), FolderError> {
+            self.inner.remove(path).await
+        }
+        fn describe(&self) -> String {
+            "held".into()
+        }
+    }
+
+    #[tokio::test]
+    async fn a_road_let_go_during_a_pass_keeps_nothing_after_the_clear() {
+        let held = Arc::new(Held::default());
+        let target: Arc<dyn FolderTarget> = held.clone();
+        let (a, ra, _b, _rb, _) = pair(&target).await;
+        a.watch("1", 300.0);
+        let ra = Arc::new(ra);
+        held.armed.store(true, Ordering::SeqCst);
+        let pass = tokio::spawn({
+            let ra = ra.clone();
+            async move { ra.sync().await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), held.reached.notified())
+            .await
+            .expect("the pass reaches the folder");
+
+        // The person moves to another folder: the road is let go and what it kept is cleared.
+        ra.retire();
+        a.store.sync_meta_clear("folder.").unwrap();
+        held.go.notify_one();
+        let ended = pass.await.unwrap();
+
+        assert!(ended.is_err(), "the pass stops once its road is let go");
+        for what in ["published", "segno", "group", "acked"] {
+            let key = format!("folder.kaeri.{what}");
+            assert_eq!(
+                a.store.sync_meta_get(&key).unwrap(),
+                None,
+                "{key} kept after the clear"
+            );
         }
     }
 
