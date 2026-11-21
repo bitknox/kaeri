@@ -266,22 +266,30 @@ impl Store {
     }
 
     /// The devices as the lead rule sees them.
+    /// An id no device writes under any more counts as removed: it never leads.
     pub fn sync_lead_candidates(&self) -> Result<Vec<LeadCandidate>> {
         self.with_personal(|c| {
+            let retired = retired(c)?;
             let mut stmt =
                 c.prepare("SELECT device, trackers, last_seen, removed FROM sync_peer")?;
             Ok(stmt
                 .query_map([], |r| {
                     let trackers: String = r.get(1)?;
+                    let device: String = r.get(0)?;
                     Ok(LeadCandidate {
-                        device: r.get(0)?,
+                        removed: r.get::<_, i64>(3)? != 0 || retired.contains(&device),
+                        device,
                         trackers: serde_json::from_str(&trackers).unwrap_or_default(),
                         last_seen: r.get(2)?,
-                        removed: r.get::<_, i64>(3)? != 0,
                     })
                 })?
                 .collect::<rusqlite::Result<_>>()?)
         })
+    }
+
+    /// The ids no device writes under any more, for Devices to leave out: see [`retired`].
+    pub fn sync_retired_ids(&self) -> Result<BTreeSet<String>> {
+        self.with_personal(|c| Ok(retired(c)?))
     }
 
     /// Say which trackers this device is signed in to, so the others can work out the lead.
@@ -698,6 +706,48 @@ impl Store {
 fn parse_key(key: &str) -> Option<(u32, &str)> {
     let (id, rest) = key.split_once('/')?;
     Some((id.parse().ok()?, rest))
+}
+
+/// The ids no device writes under any more. When both copies of a device notice each other,
+/// both move to new ids with the key they share, and the old id stays in the group's list with
+/// nothing behind it. Such an id is known by its key: two ids that started later carry it. Its
+/// events keep its id, and its name, which the moved copies took with them, still names them.
+/// This device's own id is never one: a third copy may still write under an old id, and then only
+/// its row in Devices is missing.
+fn retired(c: &rusqlite::Connection) -> rusqlite::Result<BTreeSet<String>> {
+    let me = log::device(c)?;
+    let mut by_key: BTreeMap<String, Vec<String>> = BTreeMap::new();
+    {
+        let mut stmt = c.prepare(
+            "SELECT device, pubkey FROM sync_peer
+              WHERE removed = 0 AND pubkey IS NOT NULL AND pubkey != ''",
+        )?;
+        for row in
+            stmt.query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))?
+        {
+            let (device, key) = row?;
+            by_key.entry(key).or_default().push(device);
+        }
+    }
+    let mut out = BTreeSet::new();
+    let mut first =
+        c.prepare("SELECT stamp FROM sync_op WHERE device = ?1 ORDER BY seq LIMIT 1")?;
+    for ids in by_key.into_values().filter(|ids| ids.len() >= 3) {
+        // When each id started writing: its first op held, which for a moved id is the add that
+        // announced it. An id with none held here is taken as the oldest.
+        let mut started = Vec::new();
+        for id in ids {
+            let at: Option<i64> = first.query_row([&id], |r| r.get(0)).optional()?;
+            started.push((id, at.unwrap_or(0)));
+        }
+        for (id, at) in &started {
+            let later = started.iter().filter(|(_, other)| other > at).count();
+            if later >= 2 && me.as_deref() != Some(id.as_str()) {
+                out.insert(id.clone());
+            }
+        }
+    }
+    Ok(out)
 }
 
 /// `sync_meta` key: the highest number under this device's id that another device has sent back

@@ -524,6 +524,41 @@ fn a_watch_held_under_the_old_id_and_written_again_under_the_new_counts_once() {
     }
 }
 
+/// Whether `d` counts `id` among the devices that can lead, as Devices lists them.
+fn leads(d: &Dev, id: &str) -> bool {
+    d.store.sync_lead_candidates().unwrap().iter().any(|c| c.device == id && !c.removed)
+}
+
+#[test]
+fn an_id_both_copies_moved_away_from_no_longer_counts_as_a_device() {
+    let dir = tempfile::tempdir().unwrap();
+    let (a, b, q, copy) = two_copies(dir.path());
+    let key = "5c".repeat(32);
+    b.store.sync_device_add("aaaa", "Desk", &key).unwrap();
+
+    // One copy moves: the other still writes under the old id, and both are devices.
+    assert!(say(&b, &copy).second_copy);
+    copy.store.sync_take_new_id("cccc", &key).unwrap();
+    say(&copy, &b);
+    assert!(leads(&b, "aaaa") && leads(&b, "cccc"));
+
+    // The other copy moves too: nothing writes under the old id any more.
+    assert!(say(&q, &a).second_copy);
+    a.store.sync_take_new_id("dddd", &key).unwrap();
+    for _ in 0..2 {
+        for (from, to) in [(&a, &b), (&b, &q), (&q, &copy), (&copy, &a), (&q, &a), (&b, &copy)]
+        {
+            say(from, to);
+        }
+    }
+    for d in [&a, &b, &q, &copy] {
+        assert!(!leads(d, "aaaa"), "{} still lists the old id", d.id);
+        for id in ["cccc", "dddd"] {
+            assert!(leads(d, id), "{} lost {id}", d.id);
+        }
+    }
+}
+
 #[test]
 fn any_order_of_the_same_ops_gives_the_same_state() {
     // Three devices make random changes offline; four other stores take every device's log in a
