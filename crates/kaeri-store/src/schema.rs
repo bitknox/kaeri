@@ -1438,6 +1438,34 @@ mod tests {
         );
     }
 
+    /// A database at 0038, the last one 0.5.2 ran, takes both later migrations in order.
+    #[test]
+    fn a_database_from_0_5_2_takes_the_read_dates_and_the_cover_change() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0039_read_status_dates")).unwrap();
+        conn.execute(
+            "INSERT INTO read_status (work, status, score, updated_at) VALUES ('l:m:x', 'reading', 7, 42)",
+            [],
+        )
+        .unwrap();
+        conn.execute(
+            "INSERT INTO book_work (work, medium, titles, cover, fetched_at)
+             VALUES ('l:m:x', 'manga', '[]', 'https://kavita.home.example/c?id=1&apiKey=k', 1)",
+            [],
+        )
+        .unwrap();
+        assert_eq!(migrate(&conn).unwrap(), 2);
+        let (status_at, score_at): (i64, i64) = conn
+            .query_row("SELECT status_at, score_at FROM read_status", [], |r| {
+                Ok((r.get(0)?, r.get(1)?))
+            })
+            .unwrap();
+        assert_eq!((status_at, score_at), (42, 42));
+        let cover: String =
+            conn.query_row("SELECT cover FROM book_work", [], |r| r.get(0)).unwrap();
+        assert_eq!(cover, "https://kavita.home.example/c?id=1");
+    }
+
     #[test]
     fn kavita_covers_kept_before_lose_the_api_key() {
         let conn = Connection::open_in_memory().unwrap();
