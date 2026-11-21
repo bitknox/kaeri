@@ -99,6 +99,7 @@ import app.kaeri.engine.model.ProxyStatus
 import app.kaeri.engine.model.ProxyView
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.SettingKey
+import app.kaeri.engine.model.SettingRow
 import app.kaeri.engine.model.TorrentView
 import app.kaeri.engine.model.SourceNote
 import app.kaeri.engine.model.SourceOption
@@ -1206,6 +1207,13 @@ class TvShots {
         downTo("Edit proxy…")
     }
 
+    /** A saved proxy: Use UDP trackers under the proxy check, off, with why it matters. */
+    @Test
+    fun torrents_udp_trackers_row() = shoot("tv-torrents-udp-trackers-row", section = "Sources", torrents = ProxyStatus.PASSED, proxy = true) {
+        press(Key.DirectionRight)
+        downTo("Use UDP trackers")
+    }
+
     /**
      * Edit proxy: the saved proxy filled in, Save focused. Save checks first: Checking the proxy,
      * then a failed check's reason with the saved proxy kept, then a passed one saves and closes.
@@ -1804,10 +1812,15 @@ class TvShots {
 }
 
 /** [event], when it is the settings, with torrents on, connecting directly or behind a [proxy]. */
+/** [rows] with Use UDP trackers, off, as the engine sends it beside a saved proxy; the recorded scene predates the row. */
+private fun withUdpTrackersRow(rows: List<SettingRow>): List<SettingRow> =
+    if (rows.any { it.key == SettingKey.UDP_TRACKERS_WITH_PROXY }) rows
+    else rows + rows.first { it.key == SettingKey.TORRENTS }.copy(key = SettingKey.UDP_TRACKERS_WITH_PROXY, value = "off")
+
 private fun torrentsOn(event: Event, proxy: Boolean = false): Event = when (event) {
     is Event.Settings -> Event.Settings(
         event.v1.copy(
-            rows = event.v1.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it },
+            rows = event.v1.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it }.let { if (proxy) withUdpTrackersRow(it) else it },
             sources = event.v1.sources.copy(torrent = true),
             torrent = TorrentView(if (proxy) ProxyView("proxy.example", 1080u, "mika") else null),
         ),
