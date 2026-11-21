@@ -1,4 +1,6 @@
-// The links a widget or the Live Activity opens the app with, through its kaeri:// scheme.
+// The links a widget or the Live Activity opens the app with, through its kaeri:// scheme. Any
+// page or message can open these too, so none of them plays from the network: an episode plays
+// only through the widget's play intent, which runs in the app.
 
 import Foundation
 
@@ -6,7 +8,8 @@ import Foundation
 public enum WidgetLink: Sendable, Equatable {
     /// A title's page: `kaeri://title/900001`.
     case title(Int)
-    /// The player, on an episode of a title: `kaeri://play/900001/7`.
+    /// The player, on an episode of a title, from the widget's play intent only. As a link it is
+    /// its title's page.
     case play(Int, episode: Int)
     /// The Calendar, on today: `kaeri://calendar`.
     case calendar
@@ -21,12 +24,9 @@ public enum WidgetLink: Sendable, Equatable {
         var components = URLComponents()
         components.scheme = Self.scheme
         switch self {
-        case .title(let id):
+        case .title(let id), .play(let id, _):
             components.host = "title"
             components.path = "/\(id)"
-        case .play(let id, let episode):
-            components.host = "play"
-            components.path = "/\(id)/\(episode)"
         case .calendar:
             components.host = "calendar"
         case .accounts:
@@ -48,8 +48,9 @@ public enum WidgetLink: Sendable, Equatable {
             guard let id = Int(parts[0]), id > 0 else { return nil }
             self = .title(id)
         case ("play", 2):
+            // The widgets' play links before the intent: whoever made one, the viewer presses Play.
             guard let id = Int(parts[0]), id > 0, let episode = Int(parts[1]), episode > 0 else { return nil }
-            self = .play(id, episode: episode)
+            self = .title(id)
         case ("calendar", 0):
             self = .calendar
         case ("settings", 1) where parts[0] == "accounts":
