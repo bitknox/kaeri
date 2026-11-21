@@ -1261,7 +1261,8 @@ mod tests {
         /// The process runs out of file descriptors for a moment, as a torrent's peers can make
         /// it, just as the TV opens a connection: the relay can't take it then. Once descriptors
         /// are free again, that connection is answered, the one the TV kept open still is, and so
-        /// is the next.
+        /// is the next. On Apple systems the kernel closes a connection it had no descriptor
+        /// for, so there the TV sees that one close and opens another.
         #[test]
         fn the_relay_takes_connections_again_after_running_out_of_descriptors() {
             if std::env::var_os(CHILD).is_some() {
@@ -1323,7 +1324,11 @@ mod tests {
             drop(taken);
 
             let answer = ask(&mut opened, path).await;
-            assert!(answer.starts_with("HTTP/1.1 200"), "the one opened meanwhile: {answer:?}");
+            let closed_by_the_system = cfg!(target_vendor = "apple") && answer.is_empty();
+            assert!(
+                answer.starts_with("HTTP/1.1 200") || closed_by_the_system,
+                "the one opened meanwhile: {answer:?}"
+            );
             let answer = ask(&mut kept, path).await;
             assert!(answer.starts_with("HTTP/1.1 200"), "the one kept open: {answer:?}");
             assert_eq!(get(&url, None).await.bytes(1024).await.unwrap(), CLIP);
