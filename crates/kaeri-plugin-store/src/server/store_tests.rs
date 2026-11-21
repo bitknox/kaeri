@@ -1008,3 +1008,73 @@ async fn a_name_made_from_a_long_invite_name_stays_a_name() {
     assert_eq!(member.name.chars().count(), 64);
     assert!(member.name.ends_with(" 1"));
 }
+
+/// A database whose next batch fails after a use of an invite or a sign-in link is claimed, as
+/// a D1 hiccup or a dropped Postgres connection fails it, for as many claims as it is told.
+struct FailsAfterClaim {
+    db: Arc<dyn Database>,
+    claims: std::sync::atomic::AtomicUsize,
+    armed: std::sync::atomic::AtomicBool,
+}
+
+#[async_trait::async_trait]
+impl Database for FailsAfterClaim {
+    fn dialect(&self) -> kaeri_store_core::db::Dialect {
+        self.db.dialect()
+    }
+
+    async fn query(
+        &self,
+        sql: &str,
+        params: &[kaeri_store_core::db::Value],
+    ) -> Result<Vec<kaeri_store_core::db::Row>, kaeri_store_core::db::DbError> {
+        use std::sync::atomic::Ordering::SeqCst;
+        let sql = sql.trim_start();
+        let claim = sql.starts_with("UPDATE invites SET used_at")
+            || sql.starts_with("UPDATE admin_links SET used_at = ?1");
+        if claim && self.claims.fetch_update(SeqCst, SeqCst, |n| n.checked_sub(1)).is_ok() {
+            self.armed.store(true, SeqCst);
+        }
+        self.db.query(sql, params).await
+    }
+
+    async fn batch(
+        &self,
+        statements: &[kaeri_store_core::db::Statement],
+    ) -> Result<Vec<u64>, kaeri_store_core::db::DbError> {
+        if self.armed.swap(false, std::sync::atomic::Ordering::SeqCst) {
+            return Err(kaeri_store_core::db::DbError("the connection dropped".into()));
+        }
+        self.db.batch(statements).await
+    }
+}
+
+#[tokio::test]
+async fn a_join_or_sign_in_that_fails_after_its_claim_can_be_tried_again() {
+    use std::sync::atomic::Ordering::SeqCst;
+    let dir = tempfile::tempdir().unwrap();
+    let flaky = Arc::new(FailsAfterClaim {
+        db: Arc::new(SqliteDb::in_memory().unwrap()),
+        claims: 0.into(),
+        armed: false.into(),
+    });
+    let blobs: Box<dyn Blobs> = Box::new(LocalBlobs::new(dir.path()));
+    let db: Arc<dyn Database> = flaky.clone();
+    let store = Store::open(db, blobs, Some(BASE), Some("Test")).await.unwrap();
+    let (_, owner) = join(&store, "Owner", Role::Owner).await;
+
+    // A once-only invite: the first try fails once its use is claimed, and the retry joins.
+    let invite = member_invite(&store, "Alex", Role::Member, NOW + 60).await;
+    flaky.claims.store(1, SeqCst);
+    assert!(store.redeem(&invite.code, "phone", NOW).await.is_err());
+    let (_, alex) = store.redeem(&invite.code, "phone", NOW).await.unwrap();
+    assert_eq!(alex.name, "Alex");
+
+    // A sign-in link the same.
+    let (link, _) = store.create_admin_link(&owner.id, BASE, NOW).await.unwrap();
+    let code = link.rsplit('=').next().unwrap();
+    flaky.claims.store(1, SeqCst);
+    assert!(store.open_session(code, NOW).await.is_err());
+    let (session, _) = store.open_session(code, NOW).await.unwrap();
+    assert_eq!(store.session(&session, NOW).await.unwrap().unwrap().id, owner.id);
+}

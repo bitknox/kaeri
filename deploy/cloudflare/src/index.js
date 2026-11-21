@@ -124,7 +124,7 @@ export default {
       }
       const url = new URL(request.url);
       const store = await pending;
-      const out = await store.handle({
+      const handled = store.handle({
         method: request.method,
         path: url.pathname,
         headers: [...request.headers],
@@ -133,6 +133,10 @@ export default {
         base: env.KAERI_STORE_URL || url.origin,
         now: Math.floor(Date.now() / 1000),
       });
+      // Finished even when the client hangs up: a join stopped between spending an invite's use
+      // and adding the member would leave the use spent and nobody in.
+      ctx.waitUntil(handled.catch(() => {}));
+      const out = await handled;
       // Appended one by one: a response can carry more than one set-cookie.
       const headers = new Headers();
       for (const [name, value] of out.headers) headers.append(name, value);

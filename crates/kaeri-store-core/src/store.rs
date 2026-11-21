@@ -471,6 +471,34 @@ impl<D: Database, B: Blobs> Store<D, B> {
             return Err(self.why_unusable(code, now).await?);
         };
         let invite_id = row.text(0)?;
+        // The use is spent once the member and device are in. Anything that stops them going
+        // in gives it back, so the joiner's retry, or the next person, finds it unspent.
+        let joined = self.join_with(row, device_label, name, new_member, now).await;
+        if joined.is_err() {
+            let back = self
+                .exec(sql!(
+                    "UPDATE invites SET uses = uses - 1 WHERE id = ?1 AND uses > 0",
+                    invite_id.as_str()
+                ))
+                .await;
+            if let Err(e) = back {
+                tracing::warn!(error = %e, "an invite's use was not given back");
+            }
+        }
+        joined
+    }
+
+    /// The member and device a claimed use of an invite makes, for [`Self::redeem_named`].
+    /// `row` is what the claim returned.
+    async fn join_with(
+        &self,
+        row: &Row,
+        device_label: &str,
+        name: Option<&str>,
+        new_member: String,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
+        let invite_id = row.text(0)?;
         let kind = InviteKind::parse(&row.text(1)?);
         let role = Role::parse(&row.text(3)?).unwrap_or_default();
         let max_uses = row.opt_int(5)?;
@@ -1148,6 +1176,29 @@ impl<D: Database, B: Blobs> Store<D, B> {
             ))
             .await?;
         let member_id = claimed.first().ok_or(StoreError::LinkUnusable)?.text(0)?;
+        // As with an invite's use: a session that was not made gives the link back.
+        let opened = self.session_for(member_id, now).await;
+        if opened.is_err() {
+            let back = self
+                .exec(sql!(
+                    "UPDATE admin_links SET used_at = NULL WHERE code_hash = ?1 AND used_at = ?2",
+                    crypto::hash_secret(code),
+                    now
+                ))
+                .await;
+            if let Err(e) = back {
+                tracing::warn!(error = %e, "a sign-in link was not given back");
+            }
+        }
+        opened
+    }
+
+    /// The session a spent sign-in link of `member_id`'s makes, for [`Self::open_session`].
+    async fn session_for(
+        &self,
+        member_id: String,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
         let rows = self
             .query(sql!(
                 "SELECT name FROM members
