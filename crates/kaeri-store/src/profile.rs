@@ -64,6 +64,7 @@ pub const PERSONAL_TABLES: &[&str] = &[
     "book_edition_pref",
     "book_credit_keep",
     "private_title",
+    "party_room",
 ];
 
 /// The first profile's id: today's install's, once profiles are added.
@@ -83,7 +84,6 @@ pub const DEVICE_TABLES: &[&str] = &[
     "skip_marks",
     "skip_votes",
     "aniskip_outbox",
-    "party_room",
     "dub_extent",
     "skip_prints",
     "skip_found",
@@ -523,6 +523,43 @@ mod tests {
         let clone = store.clone();
         store.use_profile(dir.path(), "p2", now()).unwrap();
         assert!(clone.progress(AnilistId::new(2)).unwrap().is_some());
+    }
+
+    #[test]
+    fn each_profile_sees_only_its_own_party_rooms_and_the_first_keeps_today_s() {
+        let room = |room: &str, title: &str, names: &[&str], at: i64| crate::PartyRoom {
+            server: "party.example:8999".into(),
+            room: room.into(),
+            anilist_id: AnilistId::new(900_741),
+            title: title.into(),
+            episode: "2".into(),
+            names: names.iter().map(|n| (*n).to_owned()).collect(),
+            cover_url: None,
+            last_at: at,
+        };
+        let rooms = |store: &Store| -> Vec<String> {
+            store.party_rooms().unwrap().into_iter().map(|r| r.room).collect()
+        };
+        let dir = tempfile::tempdir().unwrap();
+        let store = Store::open(dir.path().join("kaeri.db")).unwrap();
+        store
+            .remember_party_room(&room("kite-aaaa-0001", "Lantern Ledger", &["Ren"], 10))
+            .unwrap();
+
+        let aki = add(dir.path(), "Aki", false, "Mika", now()).unwrap();
+        store.use_profile(dir.path(), &aki.id, now()).unwrap();
+        assert!(rooms(&store).is_empty(), "Aki never sees the rooms kept before profiles");
+        store
+            .remember_party_room(&room("kite-bbbb-0002", "Paper Comet", &["Sora"], 20))
+            .unwrap();
+        store.forget_party_room("party.example:8999", "kite-aaaa-0001").unwrap();
+        assert_eq!(rooms(&store), ["kite-bbbb-0002"]);
+
+        store.use_profile(dir.path(), "p1", now()).unwrap();
+        let first = store.party_rooms().unwrap();
+        assert_eq!(first.len(), 1, "Mika keeps today's room and never sees Aki's: {first:?}");
+        assert_eq!(first[0].room, "kite-aaaa-0001");
+        assert_eq!(first[0].names, ["Ren"]);
     }
 
     #[test]
