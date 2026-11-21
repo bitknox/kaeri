@@ -572,7 +572,7 @@ private fun Block(commentId: Int, index: Int, block: CommentBlock, view: Discuss
 
 /** The field and Post, or what stands in their place: sign in, or posting waiting for the network. */
 @Composable
-private fun Composer(
+internal fun Composer(
     view: DiscussionView,
     replying: CommentView?,
     editing: CommentView?,
