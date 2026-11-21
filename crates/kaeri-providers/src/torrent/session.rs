@@ -182,6 +182,16 @@ impl StreamSource for TorrentFileSource {
 ///   bytes are final and visible to any reader. It is opened read-only, per request; a file
 ///   that has gone — or a download folder whose path is not UTF-8, which that API reports
 ///   lossily — fails to open and is answered as nothing on hand.
+/// The folder torrent `id`'s files are written under, as librqbit says: the session's own for
+/// a single file, and a folder of the torrent's name inside it for a batch. A file's name in
+/// the torrent is relative to this.
+fn written_to(session: &Arc<Session>, id: usize) -> Result<PathBuf, ProviderError> {
+    librqbit::Api::new(Arc::clone(session), None)
+        .api_torrent_details(TorrentIdOrHash::Id(id))
+        .map(|details| PathBuf::from(details.output_folder))
+        .map_err(|e| ProviderError::Other(format!("locating torrent output: {e}")))
+}
+
 #[derive(Clone)]
 struct VerifiedFile {
     api: librqbit::Api,
@@ -200,10 +210,7 @@ impl VerifiedFile {
     ) -> Result<Self, ProviderError> {
         let api = librqbit::Api::new(Arc::clone(session), None);
         let torrent = TorrentIdOrHash::Id(handle.id());
-        let folder = api
-            .api_torrent_details(torrent)
-            .map_err(|e| ProviderError::Other(format!("locating torrent output: {e}")))?
-            .output_folder;
+        let folder = written_to(session, handle.id())?;
         let (layout, pieces, relative) = handle
             .with_metadata(|metadata| {
                 let file = metadata.file_infos.get(index)?;
@@ -216,7 +223,7 @@ impl VerifiedFile {
             .ok()
             .flatten()
             .ok_or_else(|| ProviderError::Parse(format!("torrent has no file {index}")))?;
-        Ok(Self { api, torrent, layout, pieces, path: PathBuf::from(folder).join(relative) })
+        Ok(Self { api, torrent, layout, pieces, path: folder.join(relative) })
     }
 
     fn have(&self) -> Option<HavePieces> {
