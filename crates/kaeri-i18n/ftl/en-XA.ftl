@@ -9597,6 +9597,73 @@ player-subs-bg-box = [Ɓöẋ~]
 # Button in the subtitles panel that opens Settings.
 player-subs-more = [Ṁöŕé îñ Šéţţîñĝš…~~~~~~]
 
+# Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+player-sheet-episodes-loading = [Ţĥé éþîšöðé ļîšţ îš öñ îţš ŵàý.~~~~~~~~~~]
+
+# Accessibility label of the player's side panel with the Episodes and Sources tabs.
+player-panel = [Éþîšöðéš àñð šöüŕçéš~~~~~~]
+
+# Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+episode-row-playing = [Þļàýîñĝ · { $left }~~~~]
+
+# Episode row in the player's panel: the episode is part story, part filler.
+episode-row-mixed = [Ṁîẋéð~~]
+
+# Episode row in the player's panel: the length of an episode nobody has started.
+episode-row-length = [{ $minutes } ɱîñ~~~]
+
+# Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+episode-row-delayed = [Ðéļàýéð, ŵàš { $when }~~~~~]
+
+# Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+episode-row-from = [Ƒŕöɱ { $source }~~~]
+
+# Button on a partly watched episode: plays it from where it was left.
+action-resume = [Ŕéšüɱé~~]
+
+# Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+player-panel-metadata-only = [Ñö šöüŕçé ļîšţš ţĥîš šĥöŵ ýéţ. Éþîšöðéš çàñ šţîļļ ƀé ɱàŕķéð ŵàţçĥéð.~~~~~~~~~~~~~~~~~~~~~]
+
+# Player panel, Sources tab: heading over the source and streams playing now.
+player-panel-playing-now = [Þļàýîñĝ ñöŵ~~~~]
+
+# Player panel, Sources tab: heading over the other sources, in the order they are tried.
+player-panel-other-sources = [Öţĥéŕ šöüŕçéš~~~~]
+
+# Player panel, Sources tab: the folded list of a source's releases for this episode.
+player-panel-releases =
+    { $count ->
+        [one] [Öñé ŕéļéàšé~~~~]
+       *[other] [{ $count } ŕéļéàšéš~~~~]
+    }
+
+# Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+player-release-automatic = [Åüţöɱàţîç þîçķš ţĥîš~~~~~~]
+
+# Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+player-panel-order = [Ţŕîéð îñ ţĥé öŕðéŕ šéţ îñ Šöüŕçéš.~~~~~~~~~~~]
+
+# Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+player-panel-pick-scope = [Å þîçķ ĥéŕé îš ƒöŕ ţĥîš éþîšöðé öñļý.~~~~~~~~~~~~]
+
+# Accessibility label of the subtitled or dubbed switch in the player panel.
+player-translation = [Šüƀƀéð öŕ ðüƀƀéð~~~~~]
+
+# Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+player-panel-starting = [Šţàŕţîñĝ · { $seconds } š~~~~~]
+
+# Notice when another source started playing while the player panel was closed.
+notice-playing-from-source = [Þļàýîñĝ ƒŕöɱ { $source } àţ { $clock }~~~~~~~]
+
+# Player panel, under the subtitled or dubbed switch during a watch party.
+party-version-own = [Öñļý ýöüŕ þļàýéŕ šŵîţçĥéš. Ţĥé ŕööɱ ķééþš þļàýîñĝ.~~~~~~~~~~~~~~~]
+
+# Player panel: button under a synopsis cut to three lines, that shows it whole.
+player-panel-more = [Ṁöŕé~~]
+
+# Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+player-panel-less = [Ļéšš~~]
+
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = [Þŕîṽàţé ɱöðé~~~~]
 

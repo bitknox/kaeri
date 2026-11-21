@@ -207,3 +207,4 @@ player-subs-bg-outline = Kontur
 player-subs-bg-shadow = Gölge
 player-subs-bg-box = Kutu
 player-subs-more = Ayarlar'da daha fazlası…
+player-sheet-episodes-loading = Bölüm listesi geliyor.

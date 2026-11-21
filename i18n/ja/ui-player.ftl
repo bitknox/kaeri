@@ -205,3 +205,4 @@ player-subs-bg-outline = 縁取り
 player-subs-bg-shadow = 影
 player-subs-bg-box = ボックス
 player-subs-more = 設定でさらに表示…
+player-sheet-episodes-loading = エピソード一覧を読み込んでいます。

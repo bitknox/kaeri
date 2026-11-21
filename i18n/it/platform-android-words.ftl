@@ -217,7 +217,6 @@ episode-number-title-text = Episodio { $number } · { $title }
 player-position-state = { $at } di { $total }
 player-sheet-finding = Ricerca delle { -source-pl }…
 player-sheet-none = Nessuna { -source-pl } trovata per questo episodio.
-player-sheet-episodes-loading = L'elenco degli episodi sta arrivando.
 player-dual-audio = { -subbed-cap } e { -dubbed }
 notif-new-episodes = { $count ->
     [one] Un nuovo episodio

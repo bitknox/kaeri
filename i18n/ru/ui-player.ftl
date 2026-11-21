@@ -211,3 +211,4 @@ player-subs-bg-outline = Контур
 player-subs-bg-shadow = Тень
 player-subs-bg-box = Рамка
 player-subs-more = Больше в настройках…
+player-sheet-episodes-loading = Список эпизодов скоро появится.

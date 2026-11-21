@@ -15302,6 +15302,111 @@ pub fn player_subs_more() -> String {
     text("player-subs-more", &[])
 }
 
+/// Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+pub fn player_sheet_episodes_loading() -> String {
+    text("player-sheet-episodes-loading", &[])
+}
+
+/// Accessibility label of the player's side panel with the Episodes and Sources tabs.
+pub fn player_panel() -> String {
+    text("player-panel", &[])
+}
+
+/// Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+pub fn episode_row_playing(left: &str) -> String {
+    text("episode-row-playing", &[("left", Arg::Text(left))])
+}
+
+/// Episode row in the player's panel: the episode is part story, part filler.
+pub fn episode_row_mixed() -> String {
+    text("episode-row-mixed", &[])
+}
+
+/// Episode row in the player's panel: the length of an episode nobody has started.
+pub fn episode_row_length(minutes: i64) -> String {
+    text("episode-row-length", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+pub fn episode_row_delayed(when: &str) -> String {
+    text("episode-row-delayed", &[("when", Arg::Text(when))])
+}
+
+/// Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+pub fn episode_row_from(source: &str) -> String {
+    text("episode-row-from", &[("source", Arg::Text(source))])
+}
+
+/// Button on a partly watched episode: plays it from where it was left.
+pub fn action_resume() -> String {
+    text("action-resume", &[])
+}
+
+/// Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+pub fn player_panel_metadata_only() -> String {
+    text("player-panel-metadata-only", &[])
+}
+
+/// Player panel, Sources tab: heading over the source and streams playing now.
+pub fn player_panel_playing_now() -> String {
+    text("player-panel-playing-now", &[])
+}
+
+/// Player panel, Sources tab: heading over the other sources, in the order they are tried.
+pub fn player_panel_other_sources() -> String {
+    text("player-panel-other-sources", &[])
+}
+
+/// Player panel, Sources tab: the folded list of a source's releases for this episode.
+pub fn player_panel_releases(count: i64) -> String {
+    text("player-panel-releases", &[("count", Arg::Int(count))])
+}
+
+/// Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+pub fn player_release_automatic() -> String {
+    text("player-release-automatic", &[])
+}
+
+/// Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+pub fn player_panel_order() -> String {
+    text("player-panel-order", &[])
+}
+
+/// Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+pub fn player_panel_pick_scope() -> String {
+    text("player-panel-pick-scope", &[])
+}
+
+/// Accessibility label of the subtitled or dubbed switch in the player panel.
+pub fn player_translation() -> String {
+    text("player-translation", &[])
+}
+
+/// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+pub fn player_panel_starting(seconds: i64) -> String {
+    text("player-panel-starting", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Notice when another source started playing while the player panel was closed.
+pub fn notice_playing_from_source(source: &str, clock: &str) -> String {
+    text("notice-playing-from-source", &[("source", Arg::Text(source)), ("clock", Arg::Text(clock))])
+}
+
+/// Player panel, under the subtitled or dubbed switch during a watch party.
+pub fn party_version_own() -> String {
+    text("party-version-own", &[])
+}
+
+/// Player panel: button under a synopsis cut to three lines, that shows it whole.
+pub fn player_panel_more() -> String {
+    text("player-panel-more", &[])
+}
+
+/// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+pub fn player_panel_less() -> String {
+    text("player-panel-less", &[])
+}
+
 /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 pub fn private_mode() -> String {
     text("private-mode", &[])

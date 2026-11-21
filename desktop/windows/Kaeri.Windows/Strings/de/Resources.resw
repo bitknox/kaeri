@@ -6173,6 +6173,9 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Mehr in den Einstellungen…</value>
   </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>Die Episodenliste ist unterwegs.</value>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Privater Modus</value>
   </data>

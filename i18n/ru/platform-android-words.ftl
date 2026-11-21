@@ -229,7 +229,6 @@ episode-number-title-text = Эпизод { $number } · { $title }
 player-position-state = { $at } из { $total }
 player-sheet-finding = Ищем { -source-pl }…
 player-sheet-none = { -source-cap }ов для этого эпизода не найдено.
-player-sheet-episodes-loading = Список эпизодов скоро появится.
 player-dual-audio = { -subbed-cap } и { -dubbed }
 notif-new-episodes = { $count ->
     [one] { $count } новый эпизод

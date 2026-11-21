@@ -1148,7 +1148,6 @@
     <string name="player_position_state">%1$s trên %2$s</string>
     <string name="player_sheet_finding">Đang tìm các nguồn…</string>
     <string name="player_sheet_none">Không tìm thấy các nguồn cho tập này.</string>
-    <string name="player_sheet_episodes_loading">Danh sách tập đang được tải.</string>
     <string name="player_dual_audio">Có phụ đề và lồng tiếng</string>
     <plurals name="notif_new_episodes">
         <item quantity="other">%1$,d tập mới</item>
@@ -2387,6 +2386,7 @@
     <string name="player_subs_bg_shadow">Bóng đổ</string>
     <string name="player_subs_bg_box">Khung</string>
     <string name="player_subs_more">Thêm trong Cài đặt…</string>
+    <string name="player_sheet_episodes_loading">Danh sách tập đang được tải.</string>
     <string name="private_mode">Chế độ riêng tư</string>
     <string name="private_mode_detail">Những gì bạn xem hoặc đọc sẽ không được lưu hay đồng bộ cho đến khi bạn tắt chế độ này hoặc thoát Kaeri.</string>
     <string name="private_mode_limits">các nguồn và các buổi xem chung của bạn vẫn thấy những gì bạn mở.</string>

@@ -2587,8 +2587,6 @@
     <string name="player_sheet_finding">Finding sources…</string>
     <!-- Player, sources sheet: shown when no source has the episode. -->
     <string name="player_sheet_none">No sources found for this episode.</string>
-    <!-- Player, episodes sheet: shown before the list arrives. -->
-    <string name="player_sheet_episodes_loading">The episode list is on its way.</string>
     <!-- Player, sources sheet: a stream with both languages. -->
     <string name="player_dual_audio">Subbed and dubbed</string>
     <!-- Notification, new episodes: the summary's title when several shows have a new episode. -->
@@ -5065,6 +5063,51 @@
     <string name="player_subs_bg_box">Box</string>
     <!-- Button in the subtitles panel that opens Settings. -->
     <string name="player_subs_more">More in Settings…</string>
+    <!-- Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives. -->
+    <string name="player_sheet_episodes_loading">The episode list is on its way.</string>
+    <!-- Accessibility label of the player's side panel with the Episodes and Sources tabs. -->
+    <string name="player_panel">Episodes and sources</string>
+    <!-- Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left. -->
+    <string name="episode_row_playing">Playing · %1$s</string>
+    <!-- Episode row in the player's panel: the episode is part story, part filler. -->
+    <string name="episode_row_mixed">Mixed</string>
+    <!-- Episode row in the player's panel: the length of an episode nobody has started. -->
+    <string name="episode_row_length">%1$,d min</string>
+    <!-- Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it. -->
+    <string name="episode_row_delayed">Delayed, was %1$s</string>
+    <!-- Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one. -->
+    <string name="episode_row_from">From %1$s</string>
+    <!-- Button on a partly watched episode: plays it from where it was left. -->
+    <string name="action_resume">Resume</string>
+    <!-- Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play. -->
+    <string name="player_panel_metadata_only">No source lists this show yet. Episodes can still be marked watched.</string>
+    <!-- Player panel, Sources tab: heading over the source and streams playing now. -->
+    <string name="player_panel_playing_now">Playing now</string>
+    <!-- Player panel, Sources tab: heading over the other sources, in the order they are tried. -->
+    <string name="player_panel_other_sources">Other sources</string>
+    <!-- Player panel, Sources tab: the folded list of a source's releases for this episode. -->
+    <plurals name="player_panel_releases">
+        <item quantity="one">One release</item>
+        <item quantity="other">%1$,d releases</item>
+    </plurals>
+    <!-- Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better. -->
+    <string name="player_release_automatic">Automatic picks this</string>
+    <!-- Player panel, Sources tab, foot of the list: the panel never sorts the sources itself. -->
+    <string name="player_panel_order">Tried in the order set in Sources.</string>
+    <!-- Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is. -->
+    <string name="player_panel_pick_scope">A pick here is for this episode only.</string>
+    <!-- Accessibility label of the subtitled or dubbed switch in the player panel. -->
+    <string name="player_translation">Subbed or dubbed</string>
+    <!-- Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. -->
+    <string name="player_panel_starting">Starting · %1$,d s</string>
+    <!-- Notice when another source started playing while the player panel was closed. -->
+    <string name="notice_playing_from_source">Playing from %1$s at %2$s</string>
+    <!-- Player panel, under the subtitled or dubbed switch during a watch party. -->
+    <string name="party_version_own">Only your player switches. The room keeps playing.</string>
+    <!-- Player panel: button under a synopsis cut to three lines, that shows it whole. -->
+    <string name="player_panel_more">More</string>
+    <!-- Player panel: button under a synopsis shown whole after More, that folds it back to three lines. -->
+    <string name="player_panel_less">Less</string>
     <!-- The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. -->
     <string name="private_mode">Private mode</string>
     <!-- The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux. -->

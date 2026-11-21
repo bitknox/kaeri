@@ -6109,6 +6109,69 @@ public static partial class T
     /// <summary>Button in the subtitles panel that opens Settings.</summary>
     public static string PlayerSubsMore => Get("PlayerSubsMore");
 
+    /// <summary>Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.</summary>
+    public static string PlayerSheetEpisodesLoading => Get("PlayerSheetEpisodesLoading");
+
+    /// <summary>Accessibility label of the player's side panel with the Episodes and Sources tabs.</summary>
+    public static string PlayerPanel => Get("PlayerPanel");
+
+    /// <summary>Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.</summary>
+    public static string EpisodeRowPlaying(string left) => Fill(Get("EpisodeRowPlaying"), ("left", left));
+
+    /// <summary>Episode row in the player's panel: the episode is part story, part filler.</summary>
+    public static string EpisodeRowMixed => Get("EpisodeRowMixed");
+
+    /// <summary>Episode row in the player's panel: the length of an episode nobody has started.</summary>
+    public static string EpisodeRowLength(long minutes) => Fill(Get("EpisodeRowLength"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.</summary>
+    public static string EpisodeRowDelayed(string when) => Fill(Get("EpisodeRowDelayed"), ("when", when));
+
+    /// <summary>Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.</summary>
+    public static string EpisodeRowFrom(string source) => Fill(Get("EpisodeRowFrom"), ("source", source));
+
+    /// <summary>Button on a partly watched episode: plays it from where it was left.</summary>
+    public static string ActionResume => Get("ActionResume");
+
+    /// <summary>Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.</summary>
+    public static string PlayerPanelMetadataOnly => Get("PlayerPanelMetadataOnly");
+
+    /// <summary>Player panel, Sources tab: heading over the source and streams playing now.</summary>
+    public static string PlayerPanelPlayingNow => Get("PlayerPanelPlayingNow");
+
+    /// <summary>Player panel, Sources tab: heading over the other sources, in the order they are tried.</summary>
+    public static string PlayerPanelOtherSources => Get("PlayerPanelOtherSources");
+
+    /// <summary>Player panel, Sources tab: the folded list of a source's releases for this episode.</summary>
+    public static string PlayerPanelReleases(long count) => Fill(GetPlural("PlayerPanelReleases", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.</summary>
+    public static string PlayerReleaseAutomatic => Get("PlayerReleaseAutomatic");
+
+    /// <summary>Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.</summary>
+    public static string PlayerPanelOrder => Get("PlayerPanelOrder");
+
+    /// <summary>Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.</summary>
+    public static string PlayerPanelPickScope => Get("PlayerPanelPickScope");
+
+    /// <summary>Accessibility label of the subtitled or dubbed switch in the player panel.</summary>
+    public static string PlayerTranslation => Get("PlayerTranslation");
+
+    /// <summary>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</summary>
+    public static string PlayerPanelStarting(long seconds) => Fill(Get("PlayerPanelStarting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice when another source started playing while the player panel was closed.</summary>
+    public static string NoticePlayingFromSource(string source, string clock) => Fill(Get("NoticePlayingFromSource"), ("source", source), ("clock", clock));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch during a watch party.</summary>
+    public static string PartyVersionOwn => Get("PartyVersionOwn");
+
+    /// <summary>Player panel: button under a synopsis cut to three lines, that shows it whole.</summary>
+    public static string PlayerPanelMore => Get("PlayerPanelMore");
+
+    /// <summary>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</summary>
+    public static string PlayerPanelLess => Get("PlayerPanelLess");
+
     /// <summary>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</summary>
     public static string PrivateMode => Get("PrivateMode");
 
@@ -14553,6 +14616,28 @@ public static partial class T
         ["PlayerSubsBgShadow"] = "Shadow",
         ["PlayerSubsBgBox"] = "Box",
         ["PlayerSubsMore"] = "More in Settings…",
+        ["PlayerSheetEpisodesLoading"] = "The episode list is on its way.",
+        ["PlayerPanel"] = "Episodes and sources",
+        ["EpisodeRowPlaying"] = "Playing · {left}",
+        ["EpisodeRowMixed"] = "Mixed",
+        ["EpisodeRowLength"] = "{minutes} min",
+        ["EpisodeRowDelayed"] = "Delayed, was {when}",
+        ["EpisodeRowFrom"] = "From {source}",
+        ["ActionResume"] = "Resume",
+        ["PlayerPanelMetadataOnly"] = "No source lists this show yet. Episodes can still be marked watched.",
+        ["PlayerPanelPlayingNow"] = "Playing now",
+        ["PlayerPanelOtherSources"] = "Other sources",
+        ["PlayerPanelReleases_one"] = "One release",
+        ["PlayerPanelReleases_other"] = "{count} releases",
+        ["PlayerReleaseAutomatic"] = "Automatic picks this",
+        ["PlayerPanelOrder"] = "Tried in the order set in Sources.",
+        ["PlayerPanelPickScope"] = "A pick here is for this episode only.",
+        ["PlayerTranslation"] = "Subbed or dubbed",
+        ["PlayerPanelStarting"] = "Starting · {seconds} s",
+        ["NoticePlayingFromSource"] = "Playing from {source} at {clock}",
+        ["PartyVersionOwn"] = "Only your player switches. The room keeps playing.",
+        ["PlayerPanelMore"] = "More",
+        ["PlayerPanelLess"] = "Less",
         ["PrivateMode"] = "Private mode",
         ["PrivateModeDetail"] = "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.",
         ["PrivateModeLimits"] = "Your sources and watch parties still see what you open.",
