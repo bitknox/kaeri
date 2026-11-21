@@ -167,13 +167,26 @@ const base = '/features/mac-home';
 		});
 	}
 
+	/**
+	 * Whether a clip stands still only because its data is on the way: it has no frames ahead, it is
+	 * neither seeking nor at its end, and the browser has none of it yet or is still fetching it. A
+	 * slow network can hold the first frame, or a later one, for seconds, and the MP4 would start
+	 * that wait again with a larger file.
+	 */
+	function fetching(video: HTMLVideoElement) {
+		if (video.readyState >= HTMLMediaElement.HAVE_FUTURE_DATA || video.seeking) return false;
+		if (video.currentTime >= video.duration - 0.25) return false;
+		return video.readyState === HTMLMediaElement.HAVE_NOTHING || video.networkState === HTMLMediaElement.NETWORK_LOADING;
+	}
+
 	// WebKit can stall a WebM at its end instead of looping: a clip that has not moved for a second
-	// and a half plays its MP4 from then on.
+	// and a half, not counting the time it waits for data, plays its MP4 from then on.
 	window.setInterval(() => {
 		for (const clip of onScreen) {
 			const video = videoOf(clip);
 			const mp4 = video.querySelector<HTMLSourceElement>('source[type^="video/mp4"]');
 			if (video.paused || !mp4 || video.currentSrc.endsWith('.mp4')) continue;
+			if (fetching(video)) moved.set(clip, performance.now());
 			if (performance.now() - (moved.get(clip) ?? performance.now()) < 1500) continue;
 			video.src = mp4.src;
 			play(clip);
