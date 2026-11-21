@@ -47,7 +47,8 @@ use kaeri_model::{
     notice::Notice,
     reading::{
         BookDownloadRow, BookDownloadsView, ChapterDownloadState, ChapterReadState, ChapterRow,
-        DownloadPick, ReadingEvent, ReadingFailure, StorageMeter, VolumeGroup, WriteProblem,
+        DownloadPick, ReadingEvent, ReadingFailure, SendProblem, StorageMeter, VolumeGroup,
+        WriteProblem,
     },
 };
 use kaeri_store::{
@@ -853,7 +854,8 @@ impl BookDownloads {
     }
 
     /// Cancel what is queued or fetching of `chapters` (all of the work's when empty). Finished
-    /// downloads stay.
+    /// downloads stay. One queued to be fetched again, as its source added a part, still names
+    /// its old file, which goes with it: nothing else would ever remove it.
     pub fn cancel(&self, lent: &Lent, work: &WorkId, chapters: &[ChapterId]) {
         let store = lent.sources.store();
         let ids: Vec<String> = chapters.iter().map(|c| c.as_str().to_owned()).collect();
@@ -864,7 +866,12 @@ impl BookDownloads {
                 matches!(row.state, BookDownloadState::Queued | BookDownloadState::Failed)
                     || row.state == BookDownloadState::Downloading;
             if waiting && (ids.is_empty() || ids.contains(&row.chapter)) {
-                let _ = store.remove_book_downloads(work.as_str(), &[row.chapter], false, now);
+                let taken =
+                    store.remove_book_downloads(work.as_str(), &[row.chapter], false, now);
+                for row in taken.unwrap_or_default().iter().filter(|r| r.path.is_some()) {
+                    forget_file(row);
+                    keep_parts(store, &row.work, &row.chapter, None);
+                }
                 gone = true;
             }
         }
@@ -972,7 +979,12 @@ impl BookDownloads {
         (work, chapter): (&WorkId, &ChapterId),
         now: i64,
     ) -> bool {
-        if store.unqueue_kept_ready(work.as_str(), chapter.as_str(), now).unwrap_or(false) {
+        if let Ok(Some(taken)) = store.take_kept_ready(work.as_str(), chapter.as_str(), now) {
+            // A chapter queued to be fetched again still names its old file.
+            if taken.path.is_some() {
+                forget_file(&taken);
+                keep_parts(store, &taken.work, &taken.chapter, None);
+            }
             self.publish(store, tx);
             return true;
         }
@@ -1316,6 +1328,11 @@ impl BookDownloads {
                     // goes with the row, and a row kept as removed stays removed.
                     let _ = std::fs::remove_file(&done.path);
                 }
+                // Fetched again under another name, as a chapter that came as pages and now
+                // comes as a book: the old file is no row's any more.
+                if kept && row.path.as_deref().is_some_and(|old| Path::new(old) != done.path) {
+                    forget_file(row);
+                }
                 self.note_outcome(row, false, now);
                 self.publish(store, &lent.tx);
                 (true, kept)
@@ -1639,8 +1656,14 @@ impl BookDownloads {
                 finish(&part, &stem.with_extension("epub"), None)
             }
             ChapterContent::Book(book) => {
-                // A folder of pages is packed as a CBZ; a book file is copied as it is.
-                let extension = if keep_book(&book.path, &part)? {
+                // A folder of pages is packed as a CBZ; a book file is copied as it is. A
+                // server's copy made for this fetch goes once kept, and when keeping it failed
+                // too: nothing else ever removes it.
+                let packed = keep_book(&book.path, &part);
+                if book.temporary {
+                    let _ = std::fs::remove_file(&book.path);
+                }
+                let extension = if packed? {
                     "cbz".to_owned()
                 } else {
                     book.path
@@ -1648,9 +1671,6 @@ impl BookDownloads {
                         .and_then(|e| e.to_str())
                         .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase)
                 };
-                if book.temporary {
-                    let _ = std::fs::remove_file(&book.path);
-                }
                 finish(&part, &stem.with_extension(extension), None)
             }
         }
@@ -1910,13 +1930,17 @@ pub(crate) fn chapter_row(d: &BookDownload, read: bool, bookmarked: bool) -> Cha
     }
 }
 
-/// What a failure is kept as in the row.
+/// What a failure is kept as in the row: its kind, then what it names, with the one field that
+/// can hold a colon last. Every failure has a kind of its own, so each reads back as itself; one
+/// added later has to be given one here before the engine builds.
 fn encode(failure: &ReadingFailure) -> String {
     match failure {
         ReadingFailure::Offline => "offline".into(),
         ReadingFailure::DiskFull => "disk_full".into(),
         ReadingFailure::NotFound => "not_found".into(),
+        ReadingFailure::NoSource => "no_source".into(),
         ReadingFailure::Protected => "protected".into(),
+        ReadingFailure::ReadingOff => "reading_off".into(),
         ReadingFailure::PageFetch { status } => format!("page:{status}"),
         ReadingFailure::SourceDown { source } => format!("down:{source}"),
         ReadingFailure::SourceOff { source } => format!("off:{source}"),
@@ -1924,6 +1948,11 @@ fn encode(failure: &ReadingFailure) -> String {
         ReadingFailure::SignInNeeded { what } => format!("sign_in:{what}"),
         ReadingFailure::Blocked { source, reason } => format!("blocked:{source}:{reason}"),
         ReadingFailure::FileMissing { path } => format!("file:{path}"),
+        ReadingFailure::Unreadable { path, format } => format!("unreadable:{format}:{path}"),
+        ReadingFailure::Unsupported { extension } => format!("unsupported:{extension}"),
+        ReadingFailure::WebViewTooOld { version } => format!("webview:{version}"),
+        ReadingFailure::NeedsNewerKaeri { world } => format!("newer:{world}"),
+        ReadingFailure::Other { reason } => format!("other:{reason}"),
         ReadingFailure::CannotWrite { path, problem } => {
             let problem = match problem {
                 WriteProblem::Name => "name",
@@ -1932,18 +1961,36 @@ fn encode(failure: &ReadingFailure) -> String {
             };
             format!("write:{problem}:{path}")
         }
-        _ => "other".into(),
+        // Two names that can each hold a colon: kept as a JSON list.
+        ReadingFailure::SendTooLarge { file, target, bytes, limit } => {
+            format!("send_size:{}", serde_json::json!([file, target, bytes, limit]))
+        }
+        ReadingFailure::SendCheck { file, part, problem } => {
+            let problem = match problem {
+                SendProblem::Missing => "missing",
+                SendProblem::NotUtf8 => "not_utf8",
+                SendProblem::Malformed => "malformed",
+            };
+            format!("send_check:{}", serde_json::json!([problem, file, part]))
+        }
     }
 }
 
+/// A failure as [`encode`] keeps it. A kind this version does not know, as a later one may
+/// keep, reads as a failure with nothing more to say, never as a source with no name that is not
+/// answering.
 fn decode(text: &str) -> ReadingFailure {
     let (kind, rest) = text.split_once(':').unwrap_or((text, ""));
+    let unknown = || ReadingFailure::Other { reason: String::new() };
     match kind {
         "offline" => ReadingFailure::Offline,
         "disk_full" => ReadingFailure::DiskFull,
         "not_found" => ReadingFailure::NotFound,
+        "no_source" => ReadingFailure::NoSource,
         "protected" => ReadingFailure::Protected,
+        "reading_off" => ReadingFailure::ReadingOff,
         "page" => ReadingFailure::PageFetch { status: rest.parse().unwrap_or(0) },
+        "down" => ReadingFailure::SourceDown { source: rest.to_owned() },
         "parse" => ReadingFailure::Parse { source: rest.to_owned() },
         "off" => ReadingFailure::SourceOff { source: rest.to_owned() },
         "sign_in" => ReadingFailure::SignInNeeded { what: rest.to_owned() },
@@ -1952,6 +1999,15 @@ fn decode(text: &str) -> ReadingFailure {
             ReadingFailure::Blocked { source: source.to_owned(), reason: reason.to_owned() }
         }
         "file" => ReadingFailure::FileMissing { path: rest.to_owned() },
+        "unreadable" => {
+            let (format, path) = rest.split_once(':').unwrap_or((rest, ""));
+            ReadingFailure::Unreadable { path: path.to_owned(), format: format.to_owned() }
+        }
+        "unsupported" => ReadingFailure::Unsupported { extension: rest.to_owned() },
+        "webview" => ReadingFailure::WebViewTooOld { version: rest.parse().unwrap_or(0) },
+        "newer" => ReadingFailure::NeedsNewerKaeri { world: rest.to_owned() },
+        // Earlier versions kept every failure not named above as a bare "other".
+        "other" => ReadingFailure::Other { reason: rest.to_owned() },
         "write" => {
             let (problem, path) = rest.split_once(':').unwrap_or(("other", rest));
             let problem = match problem {
@@ -1961,7 +2017,27 @@ fn decode(text: &str) -> ReadingFailure {
             };
             ReadingFailure::CannotWrite { path: path.to_owned(), problem }
         }
-        _ => ReadingFailure::SourceDown { source: rest.to_owned() },
+        "send_size" => serde_json::from_str::<(String, String, u64, u64)>(rest).map_or_else(
+            |_| unknown(),
+            |(file, target, bytes, limit)| ReadingFailure::SendTooLarge {
+                file,
+                target,
+                bytes,
+                limit,
+            },
+        ),
+        "send_check" => serde_json::from_str::<(String, String, String)>(rest).map_or_else(
+            |_| unknown(),
+            |(problem, file, part)| {
+                let problem = match problem.as_str() {
+                    "missing" => SendProblem::Missing,
+                    "not_utf8" => SendProblem::NotUtf8,
+                    _ => SendProblem::Malformed,
+                };
+                ReadingFailure::SendCheck { file, part, problem }
+            },
+        ),
+        _ => unknown(),
     }
 }
 
