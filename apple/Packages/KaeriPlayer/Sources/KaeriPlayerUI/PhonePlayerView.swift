@@ -237,8 +237,8 @@ public struct PhonePlayerView: View {
             // The subtitles rise above the bar while the controls are up, as PhonePlayer has them.
             model.liftSubtitles(lift.visible ? metrics.subtitleLift / max(lift.height, 1) : 0, animated: !reduceMotion)
         }
-        .onAppear { PlayerOrientation.landscape(true) }
-        .onDisappear { PlayerOrientation.landscape(false) }
+        .onAppear { PhoneOrientation.player(true) }
+        .onDisappear { PhoneOrientation.player(false) }
         .preferredColorScheme(.dark)
     }
 
@@ -687,24 +687,6 @@ struct AirPlayButton: UIViewRepresentable {
     }
 
     func updateUIView(_ view: AVRoutePickerView, context: Context) {}
-}
-
-/// The iPhone turns to landscape while the player is up and back to portrait after; the iPad
-/// stays as it is held. The app delegate answers `supportedInterfaceOrientationsFor` with `mask`.
-@MainActor
-public enum PlayerOrientation {
-    public private(set) static var mask: UIInterfaceOrientationMask = .allButUpsideDown
-
-    static func landscape(_ on: Bool) {
-        guard UIDevice.current.userInterfaceIdiom == .phone,
-            let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
-        else { return }
-        mask = on ? .landscape : .allButUpsideDown
-        for window in scene.windows {
-            window.rootViewController?.setNeedsUpdateOfSupportedInterfaceOrientations()
-        }
-        scene.requestGeometryUpdate(.iOS(interfaceOrientations: on ? .landscape : .portrait)) { _ in }
-    }
 }
 
 /// The Episodes sheet on iPhone and iPad: the list, and under it the footer with the title and
