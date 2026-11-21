@@ -15806,6 +15806,9 @@ tv-pair-menu = [Þàîŕ à ŢṼ…~~~]
 # Title of the pairing sheet.
 tv-pair-with-tv = [Þàîŕ ŵîţĥ à ŢṼ~~~~~]
 
+# Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.
+tv-link-pair-ask = [Å ļîñķ àšķš ţö þàîŕ ŵîţĥ ţĥé ŢṼ àţ { $address }. Þàîŕ öñļý ŵîţĥ à ŢṼ îñ ƒŕöñţ öƒ ýöü.~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Title of the pairing step for one TV. The name is the name the TV gave itself.
 tv-pair-with = [Þàîŕ ŵîţĥ { $name }~~~~]
 

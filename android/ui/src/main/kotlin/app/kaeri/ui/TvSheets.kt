@@ -320,7 +320,15 @@ private fun TvPairing(tv: TvRemoteModel, step: TvPairingStep) {
     val typing = step.needsCode && step.tvName.isNotEmpty()
     LaunchedEffect(step.problem) { if (step.problem != null) code = "" }
     SheetTitle(stringResource(R.string.tv_pair_with_tv))
-    if (typing) {
+    val ask = step.asking
+    if (ask != null) {
+        // A link from outside the app pairs only once the viewer has seen where it goes.
+        SheetText(stringResource(R.string.tv_link_pair_ask, ask.address))
+        SheetButtons {
+            QuietButton(stringResource(R.string.action_cancel), onClick = tv::sheetClosed)
+            Button(onClick = { tv.begin(ask.link) }) { Text(stringResource(R.string.tv_pair)) }
+        }
+    } else if (typing) {
         SheetText(TvWords.pairingLine(LocalContext.current, step.tvName))
         TvHeading(stringResource(R.string.tv_sheet_code_on, step.tvName))
         TvCodeBoxes(code, { code = it }) { digits -> if (!step.working) tv.submit(digits) }

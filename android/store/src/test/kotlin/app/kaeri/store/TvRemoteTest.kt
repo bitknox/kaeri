@@ -16,6 +16,7 @@ import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.setMain
 import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeout
+import kotlinx.coroutines.withTimeoutOrNull
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -32,8 +33,8 @@ import app.kaeri.engine.ffi.FfiTvRowKind
 
 /**
  * Play on TV on the real engine against the fixtures' two fake TVs on the loopback interface: the
- * picker finds them, a code that is wrong says so, the QR link pairs at once, and the card follows
- * what the TV plays.
+ * picker finds them, a code that is wrong says so, the QR link asks first and then pairs at once,
+ * and the card follows what the TV plays.
  */
 @OptIn(ExperimentalCoroutinesApi::class, kotlinx.coroutines.DelicateCoroutinesApi::class)
 class TvRemoteTest {
@@ -100,9 +101,25 @@ class TvRemoteTest {
     }
 
     @Test
-    fun the_tvs_link_pairs_at_once_and_the_card_follows_the_tv(): Unit = runBlocking {
+    fun a_link_from_outside_asks_before_it_pairs(): Unit = runBlocking {
         val link = requireNotNull(FixtureTvs.openLink(browser, 0))
         withContext(main) { assertTrue(tv.open(link)) }
+        assertEquals(TvRemoteModel.Sheet.Picker, tv.sheet.value)
+        // Nothing reaches the TV before Pair: a pairing that went ahead has long finished by then.
+        assertNull(withTimeoutOrNull(5_000) { tv.paired.first { it.isNotEmpty() } })
+        assertNull(tv.connected.value)
+        assertFalse(tv.pairing.value?.working ?: true)
+
+        // Pair on the sheet begins from the link, which carried the code: it pairs at once.
+        withContext(main) { tv.begin(link) }
+        assertNotNull(tv.connected.until { it != null })
+        assertEquals(listOf("Living room"), tv.paired.until { it.isNotEmpty() }.map { it.name })
+    }
+
+    @Test
+    fun the_tvs_link_pairs_at_once_and_the_card_follows_the_tv(): Unit = runBlocking {
+        val link = requireNotNull(FixtureTvs.openLink(browser, 0))
+        withContext(main) { tv.begin(link) }
         val fingerprint = tv.connected.until { it != null }!!
         tv.sheet.until { it == TvRemoteModel.Sheet.Remote }
         assertEquals(listOf("Living room"), tv.paired.until { it.isNotEmpty() }.map { it.name })
@@ -139,7 +156,7 @@ class TvRemoteTest {
         val opened = java.util.concurrent.LinkedBlockingQueue<String>()
         tv.openLink = { opened.add(it) }
         val link = requireNotNull(FixtureTvs.openLink(browser, 0))
-        withContext(main) { assertTrue(tv.open(link)) }
+        withContext(main) { tv.begin(link) }
         tv.card.until { it?.card?.phase == FfiLinkPhase.CONNECTED }
 
         val url = "https://watch.example/show/7"
@@ -154,7 +171,7 @@ class TvRemoteTest {
     @Test
     fun a_tv_gone_mid_episode_stops_the_playhead_where_it_went(): Unit = runBlocking {
         val link = requireNotNull(FixtureTvs.openLink(browser, 0))
-        withContext(main) { assertTrue(tv.open(link)) }
+        withContext(main) { tv.begin(link) }
         tv.card.until { it?.card?.phase == FfiLinkPhase.CONNECTED }
         withContext(main) { tv.offer(TvPlayRequest(900001u, "Fixture title", "3")) }
         tv.card.until { it?.card?.now?.let { now -> !now.loading } == true }
