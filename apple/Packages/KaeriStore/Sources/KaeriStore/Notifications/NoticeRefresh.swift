@@ -116,3 +116,29 @@ public final class BackgroundEngine: Sendable {
         client.shutdown()
     }
 }
+
+/// Work on an engine of its own, as a refresh or a notification's Mark watched does with no store
+/// started, on a task of its own: the app's start stops it and waits it out before starting the
+/// store's engine.
+@MainActor
+public final class BackgroundRun {
+    private var current: Task<Bool, Never>?
+
+    public init() {}
+
+    /// Run `work` on a task of its own, and wait for it. True when it says it ran to the end.
+    public func run(_ work: @escaping @MainActor () async -> Bool) async -> Bool {
+        let task = Task { @MainActor in await work() }
+        current = task
+        let done = await task.value
+        if current == task { current = nil }
+        return done
+    }
+
+    /// Stop what runs, and wait for it.
+    public func yield() async {
+        guard let task = current else { return }
+        task.cancel()
+        _ = await task.value
+    }
+}

@@ -36,7 +36,7 @@ final class AppNotifications: NSObject {
     let real: Bool
     let centre: any NoticeCentre
     /// A refresh or a mark running on an engine of its own, which the app's start waits out.
-    private(set) var backgroundRun: Task<Bool, Never>?
+    private let backgroundRun = BackgroundRun()
     #if os(iOS)
     private var registered = false
     #else
@@ -125,9 +125,7 @@ final class AppNotifications: NSObject {
 
     /// The app is starting its own engine: stop whatever ran on one of its own, and wait for it.
     func yieldBackgroundEngine() async {
-        guard let run = backgroundRun else { return }
-        run.cancel()
-        _ = await run.value
+        await backgroundRun.yield()
     }
 
     // MARK: The refresh
@@ -164,7 +162,7 @@ final class AppNotifications: NSObject {
     /// Run `work` on an engine started for it, and shut it down after.
     private func onOwnEngine(_ work: @escaping @MainActor (BackgroundEngine) async -> Bool) async -> Bool {
         guard let (launch, host) = backgroundLaunch() else { return false }
-        let run = Task { @MainActor () -> Bool in
+        return await backgroundRun.run {
             let started = await Task.detached(priority: .utility) { () -> BackgroundEngine? in
                 do {
                     return try BackgroundEngine(launch, host: host)
@@ -178,10 +176,6 @@ final class AppNotifications: NSObject {
             await Task.detached { engine.shutdown() }.value
             return done
         }
-        backgroundRun = run
-        let done = await run.value
-        if backgroundRun == run { backgroundRun = nil }
-        return done
     }
 
     // MARK: Where an action goes
