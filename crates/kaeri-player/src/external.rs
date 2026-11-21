@@ -38,6 +38,12 @@ impl Player for ExternalPlayer {
     }
 
     async fn play(&self, stream: &Stream, _request: PlaybackRequest) -> Result<(), Error> {
+        // The link is the source's own: one to a file, a share or a system handler is refused.
+        if !kaeri_core::stream::opens_elsewhere(&stream.url) {
+            return Err(Error::Player(
+                "the link is to a file, a share or a system handler".into(),
+            ));
+        }
         tracing::info!(url = %stream.url, "handing off to the system handler");
         open::that_detached(&stream.url)
             .map_err(|e| Error::Player(format!("could not open {}: {e}", stream.url)))

@@ -226,9 +226,87 @@ impl Stream {
     }
 }
 
+/// Schemes a [`StreamKind::ExternalDeepLink`] link may not use: the system opens these as files
+/// on this device, network shares or its own handlers, not as a page or a player.
+const REFUSED_LINK_SCHEMES: &[&str] = &[
+    "file",
+    "smb",
+    "cifs",
+    "afp",
+    "nfs",
+    "webdav",
+    "dav",
+    "davs",
+    "ftp",
+    "ftps",
+    "sftp",
+    "tftp",
+    "ssh",
+    "telnet",
+    "vnc",
+    "rdp",
+    "data",
+    "javascript",
+    "vbscript",
+    "blob",
+    "about",
+    "jar",
+    "help",
+    "x-man-page",
+    "applescript",
+    "search",
+    "search-ms",
+    "shell",
+    "hcp",
+    "its",
+    "mk",
+];
+
+/// Scheme prefixes of the system's own handlers, refused like [`REFUSED_LINK_SCHEMES`]: Windows'
+/// `ms-` protocols and macOS's `x-apple-` ones.
+const REFUSED_LINK_PREFIXES: &[&str] = &["ms-", "x-apple-"];
+
+/// Whether `url`, an [`StreamKind::ExternalDeepLink`] stream's link, may be handed to the system
+/// to open. A source names it, and the system opens whatever its scheme reaches: on a Mac a
+/// `file:` link starts an app or opens a document, and `smb:` mounts a share. A web address or a
+/// link into another app is opened; a link with no scheme, or one of those, is not.
+pub fn opens_elsewhere(url: &str) -> bool {
+    let Some((scheme, _)) = url.trim_start().split_once(':') else { return false };
+    let well_formed = scheme.starts_with(|c: char| c.is_ascii_alphabetic())
+        && scheme.chars().all(|c| c.is_ascii_alphanumeric() || matches!(c, '+' | '-' | '.'));
+    if !well_formed {
+        return false;
+    }
+    let scheme = scheme.to_ascii_lowercase();
+    !REFUSED_LINK_SCHEMES.contains(&scheme.as_str())
+        && !REFUSED_LINK_PREFIXES.iter().any(|prefix| scheme.starts_with(prefix))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_link_opens_elsewhere_only_as_a_page_or_another_app() {
+        for url in
+            ["https://watch.example/e/1", "http://watch.example/", "watchapp://episode/1"]
+        {
+            assert!(opens_elsewhere(url), "{url}");
+        }
+        for url in [
+            "file:///System/Applications/Calculator.app",
+            "FILE:///tmp/x",
+            "smb://share.example/x",
+            "afp://share.example/x",
+            "ms-msdt:/id",
+            "x-apple-systempreferences:",
+            "javascript:alert(1)",
+            "/Applications/Calculator.app",
+            "",
+        ] {
+            assert!(!opens_elsewhere(url), "{url}");
+        }
+    }
 
     fn stream_at(quality: Option<u32>) -> Stream {
         let mut s = Stream::new("https://example.test/v.m3u8", StreamKind::Hls);

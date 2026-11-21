@@ -547,6 +547,21 @@ async fn a_licensed_stream_is_handed_to_the_host_and_no_window_opens() {
 }
 
 #[tokio::test]
+async fn a_link_to_a_file_or_a_share_is_never_handed_to_the_host() {
+    for url in ["file:///System/Applications/Calculator.app", "smb://share.example/films"] {
+        let rig = Rig::new(Vec::new());
+        let link = Stream::new(url, StreamKind::ExternalDeepLink);
+        let events = rig.play(link, context("1", None), settings()).await;
+
+        assert!(rig.links.0.lock().unwrap().is_empty(), "{url} was opened");
+        assert!(rig.opener.calls().is_empty(), "{:?}", rig.opener.calls());
+        assert_eq!(toasts(&events).len(), 1, "{url}");
+        assert!(toasts(&events)[0].starts_with("Couldn't open that."), "{:?}", toasts(&events));
+        assert_eq!(ending(&events), Some(Ending::Failed));
+    }
+}
+
+#[tokio::test]
 async fn a_player_that_will_not_open_fails_the_playback_in_words() {
     let scratch = tempfile::tempdir().unwrap();
     let rig = Rig::with(Arc::new(ScriptedOpener::refusing(scratch.path())), scratch);
