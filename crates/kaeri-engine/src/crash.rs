@@ -9,6 +9,7 @@
 //! before it is written, at most [`MAX_REPORTS`] of them and none older than [`KEPT_DAYS`].
 
 use std::{
+    collections::HashSet,
     panic::PanicHookInfo,
     path::{Path, PathBuf},
     sync::{
@@ -28,6 +29,8 @@ pub use kaeri_model::crash::{KEPT_DAYS, MAX_REPORTS};
 pub const DIR: &str = "crash";
 /// The ids already offered in a notice, one per line.
 const NOTICED: &str = "noticed.txt";
+/// The most characters of an id that [`CrashRecord::redacted`] keeps.
+const ID_CHARS: usize = 64;
 
 /// The reports on this device.
 #[derive(Debug, Clone)]
@@ -151,6 +154,13 @@ pub struct HeldCrashes(Mutex<Vec<CrashRecord>>);
 impl HeldCrashes {
     /// Keep the records from the week before saving was turned on at `enabled_at_ms`, and
     /// return them. Saving off, or never turned on, offers none.
+    ///
+    /// The add and the apps' lists find a held record by its id, so each one kept gets an id no
+    /// other has: the app's own, or `held-{at_ms}` for a record without one, with `-1`, `-2`
+    /// and on added when an earlier record has that id already. The system can hold several
+    /// records from one moment: Apple's diagnostics come without ids and carry their payload's
+    /// time, and one payload can hold a crash and a hang. The same records in the same order get
+    /// the same ids at every offer, so adding one again replaces its report.
     pub fn offer(
         &self,
         records: Vec<CrashRecord>,
@@ -158,15 +168,19 @@ impl HeldCrashes {
         enabled_at_ms: Option<i64>,
     ) -> Vec<CrashSummary> {
         let (true, Some(enabled)) = (saving, enabled_at_ms) else { return Vec::new() };
+        let mut taken = HashSet::new();
         let kept: Vec<CrashRecord> = records
             .into_iter()
             .filter(|record| held_counts(record.at_ms, enabled))
-            .map(|mut record| {
+            .map(|record| {
+                // Named after redaction, which filters and cuts ids, so the id checked is the
+                // one kept and saved.
+                let mut record = record.redacted();
                 record.origin = CrashOrigin::HeldBySystem;
-                if record.id.is_empty() {
-                    record.id = format!("held-{}", record.at_ms);
-                }
-                record.redacted()
+                let id = std::mem::take(&mut record.id);
+                let id = if id.is_empty() { format!("held-{}", record.at_ms) } else { id };
+                record.id = unused_id(&id, &mut taken);
+                record
             })
             .collect();
         let summaries = kept.iter().map(CrashRecord::summary).collect();
@@ -186,6 +200,20 @@ impl HeldCrashes {
         let Some(record) = found else { return false };
         store.save(&CrashRecord { origin: CrashOrigin::Saved, ..record }, saving, now_ms)
     }
+}
+
+/// `id`, or the first of `id-1`, `id-2` and on that `taken` lacks, cut to fit in [`ID_CHARS`]
+/// so that saving keeps it whole. The id given is added to `taken`.
+fn unused_id(id: &str, taken: &mut HashSet<String>) -> String {
+    let mut candidate = id.to_owned();
+    let mut n: u32 = 0;
+    while !taken.insert(candidate.clone()) {
+        n += 1;
+        let suffix = format!("-{n}");
+        let head: String = id.chars().take(ID_CHARS.saturating_sub(suffix.len())).collect();
+        candidate = format!("{head}{suffix}");
+    }
+    candidate
 }
 
 // The panic hook's state: process-wide, because a hook has nowhere else to look.
@@ -471,6 +499,86 @@ mod tests {
         assert!(held.add("c1", &store, true, on));
         assert_eq!(store.list(on).len(), 1);
         assert_eq!(store.get("c1").unwrap().origin, CrashOrigin::Saved);
+    }
+
+    #[test]
+    fn held_records_from_one_moment_get_ids_of_their_own_and_add_saves_the_one_picked() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = CrashStore::new(dir.path().join("crash"));
+        let held = HeldCrashes::default();
+        let on = 50 * DAY_MS;
+        // One system payload: a crash and a hang, both without an id and at the payload's time.
+        let at = on - DAY_MS;
+        let crash = CrashRecord {
+            id: String::new(),
+            kind: CrashKind::Signal,
+            reason: "signal 11".into(),
+            ..record(1, at)
+        };
+        let hang = CrashRecord {
+            id: String::new(),
+            kind: CrashKind::Hang,
+            reason: "hang".into(),
+            ..record(2, at)
+        };
+        let offered = held.offer(vec![crash.clone(), hang.clone()], true, Some(on));
+        assert_eq!(offered.len(), 2);
+        assert_ne!(offered[0].id, offered[1].id, "each held record has an id of its own");
+
+        assert!(held.add(&offered[1].id, &store, true, on));
+        let saved: Vec<String> = store.list(on).into_iter().map(|s| s.id).collect();
+        assert_eq!(saved, [offered[1].id.clone()]);
+        assert_eq!(store.get(&offered[1].id).unwrap().reason, "hang", "the one picked");
+        assert!(store.get(&offered[0].id).is_none(), "the other is still only offered");
+
+        assert!(held.add(&offered[0].id, &store, true, on));
+        assert_eq!(store.get(&offered[0].id).unwrap().reason, "signal 11");
+        assert_eq!(store.list(on).len(), 2);
+
+        // Offered again, the same records keep their ids: adding one again replaces its report.
+        let again = held.offer(vec![crash, hang], true, Some(on));
+        assert_eq!(again, offered);
+        assert!(held.add(&again[1].id, &store, true, on));
+        assert_eq!(store.list(on).len(), 2);
+    }
+
+    #[test]
+    fn held_records_given_one_id_are_told_apart_within_the_length_a_saved_id_keeps() {
+        let dir = tempfile::tempdir().unwrap();
+        let store = CrashStore::new(dir.path().join("crash"));
+        let held = HeldCrashes::default();
+        let on = 50 * DAY_MS;
+        let long = "x".repeat(64);
+        let given = [
+            ("held-signal-7", "first"),
+            ("held-signal-7", "second"),
+            (long.as_str(), "third"),
+            (long.as_str(), "fourth"),
+        ];
+        let records = given
+            .iter()
+            .map(|(id, reason)| CrashRecord {
+                id: (*id).into(),
+                reason: (*reason).into(),
+                ..record(0, on - DAY_MS)
+            })
+            .collect();
+        let offered = held.offer(records, true, Some(on));
+        let ids: Vec<&str> = offered.iter().map(|s| s.id.as_str()).collect();
+        let mut distinct = ids.clone();
+        distinct.sort_unstable();
+        distinct.dedup();
+        assert_eq!(distinct.len(), given.len(), "{ids:?}");
+        assert_eq!(ids[0], "held-signal-7", "the first with an id keeps it as given");
+        for (summary, (_, reason)) in offered.iter().zip(given) {
+            assert!(held.add(&summary.id, &store, true, on));
+            let saved = store.get(&summary.id).unwrap();
+            assert_eq!(
+                (saved.id.as_str(), saved.reason.as_str()),
+                (summary.id.as_str(), reason)
+            );
+        }
+        assert_eq!(store.list(on).len(), given.len());
     }
 
     #[test]

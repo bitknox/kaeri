@@ -3212,7 +3212,7 @@
         <item quantity="other">%1$,d Folgen erschienen</item>
     </plurals>
     <string name="count_out_short">%1$,d da</string>
-    <string name="count_starts">Startet %1$s</string>
+    <string name="count_starts">Startet am %1$d. %2$s</string>
     <string name="count_not_out">Noch nicht erschienen</string>
     <string name="count_next_of">Flg. %1$d von %2$d</string>
     <string name="count_dub">Dub</string>
@@ -3226,7 +3226,7 @@
         <item quantity="one">Eine Folge erschienen</item>
         <item quantity="other">%1$,d Folgen erschienen</item>
     </plurals>
-    <string name="count_spoken_starts">Startet %1$s</string>
+    <string name="count_spoken_starts">Startet am %1$d. %2$s</string>
     <string name="count_spoken_next_of">Folge %1$d von %2$d</string>
     <string name="count_spoken_dub_through">synchronisiert bis Folge %1$d</string>
     <string name="count_spoken_dub">hat eine Synchronfassung</string>

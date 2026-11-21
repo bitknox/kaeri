@@ -81,6 +81,9 @@ pub struct FolderReport {
     pub rotated: Option<RecoveryKey>,
     /// The recovery key that opens `group.bin`, when this pass looked: after the keyring changed.
     pub recovery: Option<RecoveryKey>,
+    /// Another copy of this device writes under its id: the pass stopped before writing, for
+    /// the device to carry on under a new id.
+    pub second_copy: bool,
 }
 
 impl FolderReport {
@@ -92,6 +95,7 @@ impl FolderReport {
         self.watches.extend(applied.watches);
         self.works.extend(applied.works);
         self.read_notes.extend(applied.read_notes);
+        self.second_copy |= applied.second_copy;
     }
 }
 
@@ -105,6 +109,9 @@ pub struct FolderRoad {
     /// The group this device is in, once known: from creating, joining or opening it, else
     /// from what the store kept.
     group: std::sync::Mutex<Option<[u8; 16]>>,
+    /// Set once the device moved to another folder or left: from then on this road keeps
+    /// nothing in the store, since what it would keep belongs to a folder no longer used.
+    retired: std::sync::Mutex<bool>,
 }
 
 /// What the road owns in a folder, besides `group.bin`.
@@ -328,7 +335,25 @@ impl FolderRoad {
             key,
             ring: std::sync::Mutex::new(ring),
             group: std::sync::Mutex::new(None),
+            retired: std::sync::Mutex::new(false),
         }
+    }
+
+    /// Stop keeping anything in the store: the device moved to another folder or left. A write
+    /// under way finishes first, so once this returns the road writes nothing more, and what
+    /// it kept can be cleared.
+    pub fn retire(&self) {
+        *self.retired.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
+    }
+
+    /// Keep `value` under `key` in the store, unless the road was retired: then the pass stops.
+    fn keep(&self, key: &str, value: &str) -> Result<()> {
+        let retired = self.retired.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+        if *retired {
+            return Err(SyncError::NoGroup);
+        }
+        self.store.sync_meta_set(key, value)?;
+        Ok(())
     }
 
     /// Keep `group` as the one this device is in, here and in the store. What was kept of
@@ -341,11 +366,16 @@ impl FolderRoad {
         match self.store.sync_meta_get(&key)? {
             Some(kept) if kept == hexed => return Ok(()),
             Some(_) => {
+                let retired =
+                    self.retired.lock().unwrap_or_else(std::sync::PoisonError::into_inner);
+                if *retired {
+                    return Err(SyncError::NoGroup);
+                }
                 self.store.sync_meta_clear(&self.meta(""))?;
             }
             None => {}
         }
-        self.store.sync_meta_set(&key, &hexed)?;
+        self.keep(&key, &hexed)?;
         Ok(())
     }
 
@@ -520,7 +550,15 @@ impl FolderRoad {
         // Again before the segments: a group started over while this pass read writes nothing
         // of this device's under the old key into the new group's folder.
         self.check_same_group().await?;
+        self.know_writer()?;
+        self.read_own(&mut report).await?;
+        if report.second_copy {
+            return Ok(report);
+        }
         self.write_segments(&mut report).await?;
+        if report.second_copy {
+            return Ok(report);
+        }
         self.write_acks().await?;
         // After the segments, so a device that finds a marker can read the register behind it.
         self.mark_paused(&paused, &marked, &removed).await?;
@@ -614,7 +652,7 @@ impl FolderRoad {
                     Err(e) => return Err(e.into()),
                 }
             }
-            self.store.sync_meta_set(&shared, &fp)?;
+            self.keep(&shared, &fp)?;
         }
         Ok(())
     }
@@ -659,7 +697,7 @@ impl FolderRoad {
         if names != seen {
             let json =
                 serde_json::to_string(&names).map_err(|_| SyncError::Damaged("encoding"))?;
-            self.store.sync_meta_set(&seen_key, &json)?;
+            self.keep(&seen_key, &json)?;
         }
         Ok(())
     }
@@ -689,7 +727,7 @@ impl FolderRoad {
                 break;
             }
         }
-        self.store.sync_meta_set(&checked, &fp)?;
+        self.keep(&checked, &fp)?;
         Ok(found)
     }
 
@@ -739,9 +777,69 @@ impl FolderRoad {
                 break;
             }
             cursor = n;
-            self.store.sync_meta_set(&self.meta(&cursor_key), &cursor.to_string())?;
+            self.keep(&self.meta(&cursor_key), &cursor.to_string())?;
         }
         self.store.sync_touch_peer(device, now_secs())?;
+        Ok(())
+    }
+
+    /// What this device wrote is counted for the id it wrote under: a device that moved to a new
+    /// id (another copy of it writes under the old one) starts its own directory from the start.
+    fn know_writer(&self) -> Result<()> {
+        let key = self.meta("writer");
+        match self.store.sync_meta_get(&key)? {
+            Some(writer) if writer == self.device => return Ok(()),
+            Some(_) => {
+                for what in ["published", "segno", "acked"] {
+                    self.store.sync_meta_remove(&self.meta(what))?;
+                }
+            }
+            None => {}
+        }
+        self.store.sync_meta_set(&key, &self.device)?;
+        Ok(())
+    }
+
+    /// Segments under this device's own id numbered past the last it wrote: another copy of this
+    /// device (a backup restored, the install copied) wrote them, or a pass here stopped before
+    /// it kept the number. What they hold is compared with what this device wrote.
+    async fn read_own(&self, report: &mut FolderReport) -> Result<()> {
+        let written = self.meta_u64("segno")?;
+        let dir = self.path(&format!("devices/{}", self.device));
+        let mut numbers: Vec<u64> = self
+            .target
+            .list(&dir)
+            .await?
+            .iter()
+            .filter(|e| !e.is_dir)
+            .filter_map(|e| e.name.strip_suffix(".seg")?.parse().ok())
+            .filter(|n| *n > written)
+            .collect();
+        numbers.sort_unstable();
+        for n in numbers {
+            self.read_own_segment(n, report).await?;
+            if report.second_copy {
+                break;
+            }
+        }
+        Ok(())
+    }
+
+    async fn read_own_segment(&self, n: u64, report: &mut FolderReport) -> Result<()> {
+        let path = self.path(&format!("devices/{}/{n:06}.seg", self.device));
+        let bytes = match self.target.read(&path).await {
+            Ok(bytes) => bytes,
+            Err(FolderError::NotFound(_)) => return Ok(()),
+            Err(e) => return Err(e.into()),
+        };
+        // Under a key this device does not hold yet: looked at again on a later pass.
+        let Ok(opened) = seal::open(&self.keyring(), &bytes) else { return Ok(()) };
+        if opened.kind != Kind::Segment || opened.device != self.device || opened.number != n {
+            return Ok(());
+        }
+        let ops: Vec<Op> = serde_json::from_slice(&opened.plain)
+            .map_err(|_| SyncError::Damaged("segment contents"))?;
+        report.absorb(self.store.apply_ops(ops)?);
         Ok(())
     }
 
@@ -773,12 +871,20 @@ impl FolderRoad {
                 let path = self.path(&format!("devices/{}/{number:06}.seg", self.device));
                 match self.target.write_new(&path, &sealed).await {
                     Ok(()) => break,
-                    Err(FolderError::Exists(_)) => number += 1,
+                    Err(FolderError::Exists(_)) => {
+                        // Left by a pass that stopped before it kept the number, or written by
+                        // another copy of this device.
+                        self.read_own_segment(number, report).await?;
+                        if report.second_copy {
+                            return Ok(());
+                        }
+                        number += 1;
+                    }
                     Err(e) => return Err(e.into()),
                 }
             }
-            self.store.sync_meta_set(&self.meta("segno"), &number.to_string())?;
-            self.store.sync_meta_set(&self.meta("published"), &last.to_string())?;
+            self.keep(&self.meta("segno"), &number.to_string())?;
+            self.keep(&self.meta("published"), &last.to_string())?;
             report.segments_written += 1;
             report.ops_written += batch.len();
         }
@@ -794,7 +900,7 @@ impl FolderRoad {
         }
         let sealed = seal::seal(&self.keyring(), Kind::Acks, &self.device, 0, &plain)?;
         self.replace(&self.path(&format!("devices/{}/acks.bin", self.device)), &sealed).await?;
-        self.store.sync_meta_set(&self.meta("acked"), &hex::encode(&plain))?;
+        self.keep(&self.meta("acked"), &hex::encode(&plain))?;
         Ok(())
     }
 
@@ -1196,6 +1302,80 @@ mod tests {
         assert!(matches!(again, Err(SyncError::GroupExists)));
     }
 
+    /// A device whose database is the file `kaeri.db` in `dir`.
+    fn dev_on_disk(dir: &std::path::Path, id: &str, secs: i64, key: [u8; 32]) -> Dev {
+        let store = Store::open(dir.join("kaeri.db")).unwrap();
+        let clock = Arc::new(AtomicI64::new(secs * 1000));
+        let c = clock.clone();
+        store.set_sync_clock(move || c.load(Ordering::SeqCst));
+        store.sync_enable(id).unwrap();
+        Dev { store, clock, id: id.to_owned(), key }
+    }
+
+    #[tokio::test]
+    async fn a_copy_of_a_device_finds_the_other_in_the_folder_and_moves_to_a_new_id() {
+        let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
+        let dir = tempfile::tempdir().unwrap();
+        let (here, there) = (dir.path().join("a"), dir.path().join("copy"));
+        let a = dev_on_disk(&here, "00000000000000a1", 1_000, random());
+        let b = dev("00000000000000b2", 1_000);
+        let (ra, recovery) =
+            FolderRoad::create(target.clone(), "kaeri", a.store.clone(), &a.id, a.identity())
+                .await
+                .unwrap();
+        let rb = FolderRoad::join(
+            target.clone(),
+            "kaeri",
+            b.store.clone(),
+            &b.id,
+            b.identity(),
+            &recovery,
+        )
+        .await
+        .unwrap();
+        a.watch("1", 300.0);
+        ra.sync().await.unwrap();
+        rb.sync().await.unwrap();
+
+        // The install is copied, closed first so the file holds everything.
+        let (ring, key) = (ra.keyring(), a.key);
+        drop((ra, a));
+        std::fs::create_dir_all(&there).unwrap();
+        std::fs::copy(here.join("kaeri.db"), there.join("kaeri.db")).unwrap();
+        let a = dev_on_disk(&here, "00000000000000a1", 1_100, key);
+        let copy = dev_on_disk(&there, "00000000000000a1", 1_200, key);
+        let road = |d: &Dev| {
+            FolderRoad::open(
+                target.clone(),
+                "kaeri",
+                d.store.clone(),
+                &d.id,
+                d.identity(),
+                ring.clone(),
+            )
+        };
+        let (ra, rc) = (road(&a), road(&copy));
+
+        a.watch("2", 600.0);
+        ra.sync().await.unwrap();
+        copy.watch("3", 900.0);
+        let r = rc.sync().await.unwrap();
+        assert!(r.second_copy, "the copy found a segment under its id it never wrote");
+        assert_eq!(r.ops_written, 0, "and wrote nothing more under that id");
+
+        copy.store.sync_take_new_id("00000000000000c3", &copy.identity().public_hex()).unwrap();
+        let copy = Dev { id: "00000000000000c3".into(), ..copy };
+        let rc = road(&copy);
+        for road in [&rc, &rb, &ra, &rc, &rb] {
+            assert!(!road.sync().await.unwrap().second_copy);
+        }
+        for d in [&a, &b, &copy] {
+            assert_eq!(d.resume("1"), Some(300.0));
+            assert_eq!(d.resume("2"), Some(600.0));
+            assert_eq!(d.resume("3"), Some(900.0));
+        }
+    }
+
     #[tokio::test]
     async fn a_device_offline_catches_up_in_order() {
         let target: Arc<dyn FolderTarget> = Arc::new(MemoryTarget::default());
@@ -1291,6 +1471,89 @@ mod tests {
         }
         fn describe(&self) -> String {
             "stopping".into()
+        }
+    }
+
+    /// A folder that holds its next list or read once armed, until told to go on, as a slow
+    /// service does.
+    #[derive(Default)]
+    struct Held {
+        inner: MemoryTarget,
+        armed: std::sync::atomic::AtomicBool,
+        reached: tokio::sync::Notify,
+        go: tokio::sync::Notify,
+    }
+
+    impl Held {
+        async fn hold(&self) {
+            if self.armed.swap(false, Ordering::SeqCst) {
+                self.reached.notify_one();
+                self.go.notified().await;
+            }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl FolderTarget for Held {
+        async fn list(
+            &self,
+            dir: &str,
+        ) -> std::result::Result<Vec<crate::folder::Entry>, FolderError> {
+            self.hold().await;
+            self.inner.list(dir).await
+        }
+        async fn read(&self, path: &str) -> std::result::Result<Vec<u8>, FolderError> {
+            self.hold().await;
+            self.inner.read(path).await
+        }
+        async fn write_new(
+            &self,
+            path: &str,
+            bytes: &[u8],
+        ) -> std::result::Result<(), FolderError> {
+            self.inner.write_new(path, bytes).await
+        }
+        async fn rename(&self, from: &str, to: &str) -> std::result::Result<(), FolderError> {
+            self.inner.rename(from, to).await
+        }
+        async fn remove(&self, path: &str) -> std::result::Result<(), FolderError> {
+            self.inner.remove(path).await
+        }
+        fn describe(&self) -> String {
+            "held".into()
+        }
+    }
+
+    #[tokio::test]
+    async fn a_road_let_go_during_a_pass_keeps_nothing_after_the_clear() {
+        let held = Arc::new(Held::default());
+        let target: Arc<dyn FolderTarget> = held.clone();
+        let (a, ra, _b, _rb, _) = pair(&target).await;
+        a.watch("1", 300.0);
+        let ra = Arc::new(ra);
+        held.armed.store(true, Ordering::SeqCst);
+        let pass = tokio::spawn({
+            let ra = ra.clone();
+            async move { ra.sync().await }
+        });
+        tokio::time::timeout(std::time::Duration::from_secs(5), held.reached.notified())
+            .await
+            .expect("the pass reaches the folder");
+
+        // The person moves to another folder: the road is let go and what it kept is cleared.
+        ra.retire();
+        a.store.sync_meta_clear("folder.").unwrap();
+        held.go.notify_one();
+        let ended = pass.await.unwrap();
+
+        assert!(ended.is_err(), "the pass stops once its road is let go");
+        for what in ["published", "segno", "group", "acked"] {
+            let key = format!("folder.kaeri.{what}");
+            assert_eq!(
+                a.store.sync_meta_get(&key).unwrap(),
+                None,
+                "{key} kept after the clear"
+            );
         }
     }
 

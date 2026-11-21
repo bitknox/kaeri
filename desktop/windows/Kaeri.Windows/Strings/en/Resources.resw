@@ -11661,8 +11661,8 @@
     <comment>The same, short.</comment>
   </data>
   <data name="CountStarts" xml:space="preserve">
-    <value>Starts {date}</value>
-    <comment>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</comment>
+    <value>Starts {day} {month}</value>
+    <comment>The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.</comment>
   </data>
   <data name="CountNotOut" xml:space="preserve">
     <value>Not out yet</value>
@@ -11701,8 +11701,8 @@
     <comment>What a screen reader says for a show that is airing with no known total.</comment>
   </data>
   <data name="CountSpokenStarts" xml:space="preserve">
-    <value>Starts {date}</value>
-    <comment>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</comment>
+    <value>Starts {day} {month}</value>
+    <comment>What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.</comment>
   </data>
   <data name="CountSpokenNextOf" xml:space="preserve">
     <value>Episode {episode} of {total}</value>
@@ -16127,6 +16127,14 @@
     <value>Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.</value>
     <comment>Line under the switch.</comment>
   </data>
+  <data name="TorrentsProxyUdpTrackers" xml:space="preserve">
+    <value>Use UDP trackers</value>
+    <comment>Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.</comment>
+  </data>
+  <data name="TorrentsProxyUdpTrackersDetail" xml:space="preserve">
+    <value>UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.</value>
+    <comment>Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.</comment>
+  </data>
   <data name="TorrentsSummaryProxyAt" xml:space="preserve">
     <value>Through a SOCKS5 proxy at {host}:{port}.</value>
     <comment>Summary: torrents go through a proxy. Host and port are already formatted.</comment>
@@ -16670,6 +16678,10 @@
   <data name="TvPairWithTv" xml:space="preserve">
     <value>Pair with a TV</value>
     <comment>Title of the pairing sheet.</comment>
+  </data>
+  <data name="TvLinkPairAsk" xml:space="preserve">
+    <value>A link asks to pair with the TV at {address}. Pair only with a TV in front of you.</value>
+    <comment>Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.</comment>
   </data>
   <data name="TvPairWith" xml:space="preserve">
     <value>Pair with {name}</value>

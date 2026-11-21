@@ -97,15 +97,15 @@ if (( ! notes_only )); then
     "$p-x86_64-unknown-linux-gnu.tar.gz" "$p-aarch64-apple-darwin.tar.gz" \
     "$p-x86_64-apple-darwin.tar.gz" "$p-x86_64-pc-windows-msvc.zip" \
     "$p-aarch64-apple-darwin.pkg" "$p-x86_64-apple-darwin.pkg" "$p-setup.exe" \
-    "$p-amd64.deb" "$p-x86_64.AppImage"
+    "$p-amd64.deb" "kaeri-terminal-$version-x86_64.AppImage"
   expect "$terminal" "$p-rust-licences.txt"
   expect_checked "$apps" \
     "$p-android-arm64.apk" "$p-android-tv-arm64.apk" "$p-android-tv-armv7.apk" "$p-macos.dmg" "$p-macos-dsyms.zip" "$p-ios-unsigned.ipa" \
     "$p-apps-third-party.zip" "$p-apps-sources.tar" \
     "$p-windows-x64-setup.exe" "$p-windows-arm64-setup.exe" \
-    "$p-linux-x86_64.AppImage" "$p-linux-aarch64.AppImage"
+    "Kaeri-$version-x86_64.AppImage" "Kaeri-$version-aarch64.AppImage"
   # The AppImages' update files, which AppImageUpdate fetches from the newest release.
-  expect "$apps" "$p-linux-x86_64.AppImage.zsync" "$p-linux-aarch64.AppImage.zsync"
+  expect "$apps" "Kaeri-$version-x86_64.AppImage.zsync" "Kaeri-$version-aarch64.AppImage.zsync"
   expect "$apps" appcast.xml sidestore.json
 
   shopt -s nullglob
@@ -120,6 +120,20 @@ if (( ! notes_only )); then
     done
   done
   shopt -u nullglob
+
+  # The update patterns installed AppImages carry, which AppImageUpdate matches with fnmatch,
+  # case-sensitive like [[ == ]]. Each of today's picks exactly one file. The Linux app up to 0.5.2
+  # carries kaeri-*-linux-<arch>, which picks none: a release never offers it another app's file.
+  # The terminal AppImage carries no update information; it updates from the tar.gz.
+  for check in "1 Kaeri-*-x86_64.AppImage.zsync" "1 Kaeri-*-aarch64.AppImage.zsync" \
+    "0 kaeri-*-linux-x86_64.AppImage.zsync" "0 kaeri-*-linux-aarch64.AppImage.zsync"; do
+    want="${check%% *}" pattern="${check#* }" matches=0
+    for wanted in "${files[@]}"; do
+      # shellcheck disable=SC2053 # the pattern is a glob on purpose
+      if [[ "${wanted##*/}" == $pattern ]]; then matches=$((matches + 1)); fi
+    done
+    (( matches == want )) || fail "the update pattern $pattern matches $matches files, not $want"
+  done
 fi
 [[ -f "$apps/apps-release-notes.md" ]] || fail "no apps-release-notes.md in $apps"
 
@@ -195,6 +209,17 @@ fi
 
 # --- The release -----------------------------------------------------------------------------------
 
+# Every file, the Linux app's AppImages last: the AppImage catalog tests the one uploaded last of
+# those named alike, which should be Kaeri-<version>-x86_64.AppImage, not its copy under the old name.
+upload() {
+  local file first=() last=()
+  for file in "${files[@]}"; do
+    if [[ "$(basename "$file")" == Kaeri-*.AppImage ]]; then last+=("$file"); else first+=("$file"); fi
+  done
+  gh release upload "$tag" "${first[@]}" --clobber
+  gh release upload "$tag" "${last[@]}" --clobber
+}
+
 echo "publish.sh: $tag on $commit, after ${previous:-no release}, $channel, latest $latest, pre-release $prerelease"
 
 # A tag on another commit already, as when a failed run is run again after a later push has
@@ -208,7 +233,7 @@ fi
 if id="$(gh api "repos/$repo/releases/tags/$tag" --jq .id 2>/dev/null)"; then
   # The release keeps its channel: the flags are not touched. A stable's notes are the
   # promotion's, so only a beta gets its notes written again.
-  gh release upload "$tag" "${files[@]}" --clobber
+  upload
   if [[ "$(gh api "repos/$repo/releases/$id" --jq .prerelease)" == true ]]; then
     echo "publish.sh: $tag is published already, so its files are replaced and its notes written again"
     gh api -X PATCH "repos/$repo/releases/$id" -F body=@"$work/notes.md" --jq .html_url
@@ -228,7 +253,7 @@ gh api --paginate "repos/$repo/releases?per_page=100" \
 id="$(gh api "repos/$repo/releases" -f tag_name="$tag" -f target_commitish="$commit" \
   -f name="$tag" -F draft=true -F prerelease="$prerelease" -F body=@"$work/notes.md" --jq .id)"
 echo "publish.sh: made draft $id, uploading ${#files[@]} files"
-gh release upload "$tag" "${files[@]}" --clobber
+upload
 
 uploaded="$(gh api "repos/$repo/releases/$id" --jq '.assets | length')"
 [[ "$uploaded" == "${#files[@]}" ]] || fail "the draft has $uploaded files, not ${#files[@]}"

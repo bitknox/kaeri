@@ -105,7 +105,9 @@ The host's stream proxy learns which URLs are keys and which are segments from t
 serves. For each fetched part your plugin declares, it calls `transform` once with the body and
 the request it was fetched with, and serves and keeps what comes back; the host reads nothing
 into those bytes. Playlists, subtitles and the parts you did not declare are served as the stream's
-host sent them, and so is a ranged slice. Each call runs under the same limits as every other
+host sent them, and so is a ranged slice. Only parts on a host in your `allowed-hosts` are
+passed to `transform`, never one on a loopback or private address, so list the hosts your keys and
+segments come from there too; a part on any other host is served as it came. Each call runs under the same limits as every other
 call, so a segment has to fit in the guest's memory twice. An error fails that one request, which
 the player sees as a failed segment.
 

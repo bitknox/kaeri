@@ -114,6 +114,17 @@ struct DownloadsActivityFeedTests {
         #expect(DownloadsActivityText(state).title == "Downloading 3 episodes")
     }
 
+    @Test func severalCrawlingHaveNoTimeLeftPastAYear() {
+        // 40 bytes a second between them, with 2.2 GB to go.
+        let feed = feed()
+        apply(feed, [download(1, "8", .active, done: 0), download(2, "9", .active, done: 0)])
+        clock.now += 1
+        apply(feed, [download(1, "8", .active, done: 20), download(2, "9", .active, done: 20)])
+        let state = DownloadsActivityFeed.state(current: model.rows, first: model.rows[0], model: model, cover: nil)
+        #expect(state.speed == 40)
+        #expect(state.secondsLeft == nil)
+    }
+
     @Test func theLastOneFinishedStaysAFewMinutesWithPlay() {
         let feed = feed()
         apply(feed, [download(7, "8", .active, done: 1_000_000_000)])

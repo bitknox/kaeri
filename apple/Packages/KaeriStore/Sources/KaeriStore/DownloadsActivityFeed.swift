@@ -122,7 +122,7 @@ public final class DownloadsActivityFeed {
         if paused {
             seconds = nil
         } else if several {
-            seconds = speed > 0 ? Int((Double(left) / speed).rounded(.up)) : nil
+            seconds = DownloadsModel.seconds(toMove: UInt64(left), at: speed).map(Int.init)
         } else {
             seconds = model.secondsLeft(first).map(Int.init)
         }

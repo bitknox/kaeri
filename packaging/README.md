@@ -121,7 +121,7 @@ packaging/linux/glibc-floor.sh target/x86_64-unknown-linux-gnu/release/kaeri 2.2
 A release carries the apps beside the terminal binaries: `kaeri-<version>-android-arm64.apk`,
 `kaeri-<version>-android-tv-{arm64,armv7}.apk`, `kaeri-<version>-macos.dmg`, `kaeri-<version>-macos-dsyms.zip` (the Mac app's symbols, which it ships without, for symbolicating its crash reports), `kaeri-<version>-ios-unsigned.ipa`,
 `kaeri-<version>-windows-{x64,arm64}-setup.exe` and
-`kaeri-<version>-linux-{x86_64,aarch64}.AppImage` (each AppImage with its `.zsync`), with
+`Kaeri-<version>-{x86_64,aarch64}.AppImage` (each AppImage with its `.zsync`), with
 `kaeri-<version>-apps-third-party.zip` and `kaeri-<version>-apps-sources.tar`, each with a
 `.sha256`. `.github/workflows/apps-release.yml` builds them, and `release.yml` calls it for every
 release and publishes what it built with the terminal builds. A pull request that
@@ -151,8 +151,10 @@ and so does a dispatch of apps-release.yml. CI's own jobs build the apps for eve
   desktop to open a window on.
 - `desktop/linux/scripts/appimage.sh` (beside the app): the AppImage, built in Debian 13 with
   libmpv from `desktop/linux/scripts/libmpv.sh` (LGPL, from Android's pins) and Debian's GTK and
-  libadwaita, held to glibc 2.41 by `linux/glibc-floor.sh`. `appimage-check.sh` beside it runs
-  an AppImage in a fresh container of another distribution.
+  libadwaita, held to glibc 2.41 by `linux/glibc-floor.sh`. Below that glibc, AppRun starts the
+  app through the Debian 13 glibc and system libraries the AppImage carries in `usr/lib/compat`.
+  `appimage-check.sh` beside it runs an AppImage without network in a fresh container of another
+  distribution, Ubuntu 22.04 among them, and waits for its window.
 - `apps/mac-update.sh`: `appcast.xml`, the feed Sparkle in the Mac app updates from, offering the
   release's `.dmg` with its EdDSA signature, and signed itself. Both signatures are checked
   against `SUPublicEDKey` in the app's Info.plist before the release goes on.

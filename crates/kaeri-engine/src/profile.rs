@@ -127,15 +127,23 @@ pub fn delete(
     id: &str,
 ) -> Result<(), String> {
     let active = store.active_profile();
-    let overlay =
-        active.as_ref().map(|a| ProfileList::dir(&paths.data_dir, a).join("profile.toml"));
+    // When the first profile goes, the store moves the one in use into its place and removes
+    // that one's directory, `profile.toml` with it: its shared settings are read before that.
+    let settings = match &active {
+        Some(a) => kaeri_core::profile::read_overlay(
+            &ProfileList::dir(&paths.data_dir, a).join("profile.toml"),
+        )
+        .map_err(|e| e.to_string())?,
+        None => None,
+    };
     let deleted = store.delete_profile(&paths.data_dir, id).map_err(|e| e.to_string())?;
     match (&deleted.promoted, &active) {
         (Some(_), Some(active)) => {
-            tokens.promote(active, &TRACKER_TOKENS).map_err(|e| e.to_string())?;
-            if let Some(overlay) = overlay {
-                kaeri_core::profile::promote(paths, &overlay).map_err(|e| e.to_string())?;
+            if let Some(settings) = settings {
+                kaeri_core::profile::promote_text(paths, &settings)
+                    .map_err(|e| e.to_string())?;
             }
+            tokens.promote(active, &TRACKER_TOKENS).map_err(|e| e.to_string())?;
         }
         _ => {
             tokens.clear_profile(id, &TRACKER_TOKENS).map_err(|e| e.to_string())?;
@@ -152,4 +160,44 @@ pub fn choose(paths: &Paths, id: &str) -> Result<(), String> {
         return Err(format!("no profile {id}"));
     }
     profile::touch(&paths.data_dir, id, kaeri_store::now()).map_err(|e| e.to_string())
+}
+
+#[cfg(test)]
+mod tests {
+    use kaeri_core::settings::SettingValue;
+    use kaeri_track::secret::Backend;
+
+    use super::*;
+
+    #[test]
+    fn deleting_the_first_profile_keeps_the_settings_of_the_one_taking_its_place() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        std::fs::create_dir_all(&paths.data_dir).unwrap();
+        std::fs::write(&paths.config_file, "[syncplay]\nname = \"Mika\"\n").unwrap();
+        let store = Store::open(paths.data_dir.join("kaeri.db")).unwrap();
+        let tokens = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
+
+        add(&store, &paths, "Aki", false, "Mika").unwrap();
+        assert_eq!(enter(&store, &paths, Some("p2")).unwrap().as_deref(), Some("p2"));
+        let overlay = overlay_of(&store, &paths).expect("Aki's settings are her own");
+        let set = |table: &[&str], key: &str, value: SettingValue| {
+            assert!(kaeri_core::profile::write_shared(&overlay, table, key, value).unwrap());
+        };
+        set(&["syncplay"], "name", SettingValue::Str("Aki".into()));
+        set(&["meta"], "adult", SettingValue::Bool(true));
+        assert_eq!(read_config(&store, &paths).unwrap().syncplay.name, "Aki");
+
+        // Aki takes Mika's place, and with it the config's keys.
+        delete(&store, &paths, &tokens, "p1").unwrap();
+        assert_eq!(overlay_of(&store, &paths), None);
+        let config = read_config(&store, &paths).unwrap();
+        assert_eq!(config.syncplay.name, "Aki", "not the deleted profile's name");
+        assert!(config.meta.adult);
+        assert!(!overlay.exists());
+    }
 }

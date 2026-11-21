@@ -5,7 +5,7 @@ it, the apps host no content and supply no sources. You add the sources you are 
 
 ### Android
 
-`kaeri-@VERSION@-android-arm64.apk`, for Android 15 or later on a 64-bit ARM phone or tablet.
+`kaeri-@VERSION@-android-arm64.apk`, for Android 11 or later on a 64-bit ARM phone or tablet.
 
 Open the APK on the device. Android asks once whether the app you opened it from, your browser or
 file manager, may install apps: allow it, then choose Install. The APK is signed with Kaeri's
@@ -69,15 +69,18 @@ library and settings.
 
 ### Linux
 
-`kaeri-@VERSION@-linux-x86_64.AppImage`, or `kaeri-@VERSION@-linux-aarch64.AppImage` on
-64-bit ARM, for systems with glibc 2.41 or newer: Debian 13, Ubuntu 25.04, Fedora 42 and later. It
-carries GTK 4, libadwaita and the player.
+`Kaeri-@VERSION@-x86_64.AppImage`, or `Kaeri-@VERSION@-aarch64.AppImage` on
+64-bit ARM, for Ubuntu 22.04, Debian 12, Fedora 42 and later. It carries GTK 4, libadwaita and the
+player.
 
-Make it executable with `chmod +x kaeri-@VERSION@-linux-x86_64.AppImage` and open it. The first
+Make it executable with `chmod +x Kaeri-@VERSION@-x86_64.AppImage` and open it. The first
 run registers it for kaeri:// links. The app updates itself: it downloads each new version,
 checks it, and puts it in place of the AppImage when you choose Restart to Update in its notice or
 in Settings. AppImageUpdate, AppImageLauncher and Gear Lever can update it in place too, from the
 release's `.zsync` file. Without FUSE, run it with `--appimage-extract-and-run`.
+
+A Linux app from 0.5.2 or older can't update itself to this version, because the AppImage's
+file name changed. Download the new AppImage once by hand, and later versions update as usual.
 
 ### Checking a download
 

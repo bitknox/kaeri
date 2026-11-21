@@ -1726,15 +1726,24 @@ fn followed(
             let airs =
                 matches!(entry.status, Some(AiringStatus::Releasing | AiringStatus::Hiatus))
                     || media.next_airing_episode.is_some();
-            let ended_lately = entry.end_date.is_some_and(|d| {
-                let (month, day) = (d.month.unwrap_or(12), d.day.unwrap_or(28));
-                jiff::civil::date(d.year as i16, month as i8, day as i8)
-                    .to_zoned(ask.zone.clone())
+            let ended_lately = entry.end_date.and_then(end_day).is_some_and(|date| {
+                date.to_zoned(ask.zone.clone())
                     .is_ok_and(|z| z.timestamp().as_second() >= cutoff)
             });
             airs || ended_lately
         })
         .collect()
+}
+
+/// The day a show's end date names, reading a missing month as December and a missing day as
+/// the 28th. A day past the month's end, such as 31 April, is read as the month's last day,
+/// and a year outside the calendar as no date at all.
+fn end_day(date: kaeri_model::catalog::FuzzyDate) -> Option<jiff::civil::Date> {
+    let year = i16::try_from(date.year).ok()?;
+    let month = i8::try_from(date.month.unwrap_or(12)).ok()?;
+    let first = jiff::civil::Date::new(year, month, 1).ok()?;
+    let day = i8::try_from(date.day.unwrap_or(28)).ok()?.clamp(1, first.days_in_month());
+    first.with().day(day).build().ok()
 }
 
 fn week_signature(followed: &[AnilistId], ask: &HomeAsk) -> u64 {
@@ -1974,5 +1983,47 @@ mod tests {
         let (document, variables) = kaeri_meta::anilist::query::together(&parts);
         let cost = kaeri_testkit::complexity(&document, &variables);
         assert!(cost <= kaeri_testkit::COMPLEXITY_LIMIT / 2, "{cost}");
+    }
+
+    #[test]
+    fn a_show_that_ended_on_a_day_past_its_months_end_is_followed_without_a_panic() {
+        let store = Store::open_in_memory().unwrap();
+        let now = jiff::civil::date(2026, 5, 10)
+            .to_zoned(jiff::tz::TimeZone::UTC)
+            .unwrap()
+            .timestamp()
+            .as_second();
+        let ended = |id: u32, year: u16, month: u8, day: u8| {
+            let media = serde_json::json!({
+                "id": id,
+                "title": { "romaji": "Hoshizora Kissa" },
+                "format": "TV",
+                "status": "FINISHED",
+                "endDate": { "year": year, "month": month, "day": day },
+            });
+            store.cache_media(AnilistId::new(id), &media.to_string(), now).unwrap();
+            AnilistId::new(id)
+        };
+        // 31 April reads as 30 April, ten days before now; 29 February 2026 as the 28th, too
+        // long ago; and a year past the calendar's end as no date.
+        let april = ended(900_401, 2026, 4, 31);
+        let february = ended(900_402, 2026, 2, 29);
+        let far = ended(900_403, 40_000, 1, 1);
+        let config = kaeri_core::config::NetworkConfig::default();
+        let http = kaeri_net::HttpClient::offline(&config).unwrap();
+        let meta = Meta::new(kaeri_meta::AniList::new(http, 30), None, store.clone());
+        let ask = HomeAsk {
+            listed: false,
+            adult: false,
+            now,
+            clock: Clock::default(),
+            zone: jiff::tz::TimeZone::UTC,
+            offline: true,
+            refresh: false,
+            sources: true,
+            usable: Default::default(),
+            demo: Default::default(),
+        };
+        assert_eq!(followed(&meta, &store, &ask, &[april, february, far]), vec![april]);
     }
 }

@@ -19045,9 +19045,9 @@ pub fn count_out_short(count: i64) -> String {
     text("count-out-short", &[("count", Arg::Int(count))])
 }
 
-/// The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
-pub fn count_starts(date: &str) -> String {
-    text("count-starts", &[("date", Arg::Text(date))])
+/// The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.
+pub fn count_starts(day: i64, month: &str) -> String {
+    text("count-starts", &[("day", Arg::Plain(day)), ("month", Arg::Text(month))])
 }
 
 /// The count line of a show that has not started and has no date.
@@ -19085,9 +19085,9 @@ pub fn count_spoken_out(count: i64) -> String {
     text("count-spoken-out", &[("count", Arg::Int(count))])
 }
 
-/// What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
-pub fn count_spoken_starts(date: &str) -> String {
-    text("count-spoken-starts", &[("date", Arg::Text(date))])
+/// What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.
+pub fn count_spoken_starts(day: i64, month: &str) -> String {
+    text("count-spoken-starts", &[("day", Arg::Plain(day)), ("month", Arg::Text(month))])
 }
 
 /// What a screen reader says for a show the viewer is part way through.
@@ -24451,6 +24451,16 @@ pub fn torrents_proxy_route_detail() -> String {
     text("torrents-proxy-route-detail", &[])
 }
 
+/// Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+pub fn torrents_proxy_udp_trackers() -> String {
+    text("torrents-proxy-udp-trackers", &[])
+}
+
+/// Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+pub fn torrents_proxy_udp_trackers_detail() -> String {
+    text("torrents-proxy-udp-trackers-detail", &[])
+}
+
 /// Summary: torrents go through a proxy. Host and port are already formatted.
 pub fn torrents_summary_proxy_at(host: &str, port: &str) -> String {
     text("torrents-summary-proxy-at", &[("host", Arg::Text(host)), ("port", Arg::Text(port))])
@@ -25124,6 +25134,11 @@ pub fn tv_pair_menu() -> String {
 /// Title of the pairing sheet.
 pub fn tv_pair_with_tv() -> String {
     text("tv-pair-with-tv", &[])
+}
+
+/// Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.
+pub fn tv_link_pair_ask(address: &str) -> String {
+    text("tv-link-pair-ask", &[("address", Arg::Text(address))])
 }
 
 /// Title of the pairing step for one TV. The name is the name the TV gave itself.

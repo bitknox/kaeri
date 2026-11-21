@@ -11328,9 +11328,9 @@ public enum L {
         Self.format("count-out-short", fallback: "%1$lld out", count)
     }
 
-    /// The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
-    public static func countStarts(date: String) -> String {
-        Self.format("count-starts", fallback: "Starts %1$@", date)
+    /// The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.
+    public static func countStarts(day: Int, month: String) -> String {
+        Self.format("count-starts", fallback: "Starts %1$@ %2$@", String(day), month)
     }
 
     /// The count line of a show that has not started and has no date.
@@ -11364,9 +11364,9 @@ public enum L {
         Self.format("count-spoken-out", fallback: "%1$lld episodes out", count)
     }
 
-    /// What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
-    public static func countSpokenStarts(date: String) -> String {
-        Self.format("count-spoken-starts", fallback: "Starts %1$@", date)
+    /// What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.
+    public static func countSpokenStarts(day: Int, month: String) -> String {
+        Self.format("count-spoken-starts", fallback: "Starts %1$@ %2$@", String(day), month)
     }
 
     /// What a screen reader says for a show the viewer is part way through.
@@ -15155,6 +15155,12 @@ public enum L {
     /// Line under the switch.
     public static var torrentsProxyRouteDetail: String { string("torrents-proxy-route-detail", fallback: "Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.") }
 
+    /// Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+    public static var torrentsProxyUdpTrackers: String { string("torrents-proxy-udp-trackers", fallback: "Use UDP trackers") }
+
+    /// Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+    public static var torrentsProxyUdpTrackersDetail: String { string("torrents-proxy-udp-trackers-detail", fallback: "UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.") }
+
     /// Summary: torrents go through a proxy. Host and port are already formatted.
     public static func torrentsSummaryProxyAt(host: String, port: String) -> String {
         Self.format("torrents-summary-proxy-at", fallback: "Through a SOCKS5 proxy at %1$@:%2$@.", host, port)
@@ -15647,6 +15653,11 @@ public enum L {
 
     /// Title of the pairing sheet.
     public static var tvPairWithTv: String { string("tv-pair-with-tv", fallback: "Pair with a TV") }
+
+    /// Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.
+    public static func tvLinkPairAsk(address: String) -> String {
+        Self.format("tv-link-pair-ask", fallback: "A link asks to pair with the TV at %1$@. Pair only with a TV in front of you.", address)
+    }
 
     /// Title of the pairing step for one TV. The name is the name the TV gave itself.
     public static func tvPairWith(name: String) -> String {

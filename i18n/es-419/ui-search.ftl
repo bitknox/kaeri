@@ -104,7 +104,7 @@ count-out = { $count ->
    *[other] { $count } eps. emitidos
  }
 count-out-short = { $count } emit.
-count-starts = Empieza el { $date }
+count-starts = Empieza el { $day } { $month }
 count-not-out = Aún no sale
 count-next-of = Ep. { $episode } de { $total }
 count-dub = Dob.
@@ -120,7 +120,7 @@ count-spoken-out = { $count ->
     [many] { $count } de episodios emitidos
    *[other] { $count } episodios emitidos
  }
-count-spoken-starts = Empieza el { $date }
+count-spoken-starts = Empieza el { $day } { $month }
 count-spoken-next-of = Episodio { $episode } de { $total }
 count-spoken-dub-through = { -dubbed } hasta el episodio { $through }
 count-spoken-dub = tiene doblaje

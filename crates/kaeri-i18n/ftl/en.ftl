@@ -12010,8 +12010,8 @@ count-out =
 # The same, short.
 count-out-short = { $count } out
 
-# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
-count-starts = Starts { $date }
+# The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.
+count-starts = Starts { $day } { $month }
 
 # The count line of a show that has not started and has no date.
 count-not-out = Not out yet
@@ -12042,8 +12042,8 @@ count-spoken-out =
        *[other] { $count } episodes out
     }
 
-# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
-count-spoken-starts = Starts { $date }
+# What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.
+count-spoken-starts = Starts { $day } { $month }
 
 # What a screen reader says for a show the viewer is part way through.
 count-spoken-next-of = Episode { $episode } of { $total }
@@ -15397,6 +15397,12 @@ torrents-proxy-route = Route torrent traffic through a proxy
 # Line under the switch.
 torrents-proxy-route-detail = Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.
 
+# Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+torrents-proxy-udp-trackers = Use UDP trackers
+
+# Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+torrents-proxy-udp-trackers-detail = UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.
+
 # Summary: torrents go through a proxy. Host and port are already formatted.
 torrents-summary-proxy-at = Through a SOCKS5 proxy at { $host }:{ $port }.
 
@@ -15805,6 +15811,9 @@ tv-pair-menu = Pair a TV…
 
 # Title of the pairing sheet.
 tv-pair-with-tv = Pair with a TV
+
+# Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.
+tv-link-pair-ask = A link asks to pair with the TV at { $address }. Pair only with a TV in front of you.
 
 # Title of the pairing step for one TV. The name is the name the TV gave itself.
 tv-pair-with = Pair with { $name }

@@ -226,9 +226,58 @@ impl Stream {
     }
 }
 
+/// Whether `url`, an [`StreamKind::ExternalDeepLink`] stream's link, may be handed to the system
+/// to open. A source names it, and the system opens whatever its scheme reaches: on a Mac a
+/// `file:` link starts an app or opens a document, `smb:` mounts a share, and any other scheme
+/// starts whichever app claims it. Only a web address with a host is opened, in the browser.
+pub fn opens_elsewhere(url: &str) -> bool {
+    let url = url.trim();
+    let Some((scheme, rest)) = url.split_once(':') else { return false };
+    if !scheme.eq_ignore_ascii_case("http") && !scheme.eq_ignore_ascii_case("https") {
+        return false;
+    }
+    let Some(after) = rest.strip_prefix("//") else { return false };
+    let host = after.split(['/', '?', '#']).next().unwrap_or_default();
+    let host = host.rsplit_once('@').map_or(host, |(_, host)| host);
+    !host.is_empty()
+        && !host.starts_with(':')
+        && !url.chars().any(|c| c.is_whitespace() || c.is_control())
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_link_opens_elsewhere_only_as_a_web_page() {
+        for url in [
+            "https://watch.example/e/1",
+            "http://watch.example/",
+            "HTTPS://watch.example",
+            "https://watch.example:8443/e?x=1",
+        ] {
+            assert!(opens_elsewhere(url), "{url}");
+        }
+        for url in [
+            "watchapp://episode/1",
+            "file:///System/Applications/Calculator.app",
+            "FILE:///tmp/x",
+            "smb://share.example/x",
+            "afp://share.example/x",
+            "ms-msdt:/id",
+            "x-apple-systempreferences:",
+            "javascript:alert(1)",
+            "mailto:someone@watch.example",
+            "https:watch.example",
+            "https:///path",
+            "https://user@/path",
+            "https://watch.example/a b",
+            "/Applications/Calculator.app",
+            "",
+        ] {
+            assert!(!opens_elsewhere(url), "{url}");
+        }
+    }
 
     fn stream_at(quality: Option<u32>) -> Stream {
         let mut s = Stream::new("https://example.test/v.m3u8", StreamKind::Hls);

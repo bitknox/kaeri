@@ -32,7 +32,7 @@ sealed class Updater
         this.staged = staged;
         // Beside the download, not in a profile's folders: the copy that opens after the
         // installer reads it whichever profile it runs on.
-        marker = Path.Combine(dir, "updating");
+        marker = Path.Combine(dir, Updates.Marker);
     }
 
     /// <summary>How the update stands.</summary>
@@ -93,7 +93,7 @@ sealed class Updater
             end = await Rehearse(r.Version, asset, mine.Token);
         else
         {
-            Tidy(asset.Name);
+            Updates.Tidy(dir, asset.Name);
             end = await Task.Run(() => Updates.Fetch(http, asset, r.Version, dir,
                 step => ui.TryEnqueue(() => { if (cancel == mine) Set(step); }), mine.Token));
         }
@@ -139,7 +139,7 @@ sealed class Updater
             Directory.CreateDirectory(dir);
             File.WriteAllText(marker, version);
             var app = Environment.ProcessPath ?? throw new Win32Exception("the app's own path is unknown");
-            Process.Start(new ProcessStartInfo("cmd.exe", Updates.RelaunchCommand(ready.Path!, Path.Combine(dir, "install.log"), app,
+            Process.Start(new ProcessStartInfo("cmd.exe", Updates.RelaunchCommand(ready.Path!, Path.Combine(dir, Updates.InstallLog), app,
                 Updates.RelaunchArguments(Environment.GetCommandLineArgs().Skip(1))))
             {
                 UseShellExecute = false,
@@ -172,7 +172,7 @@ sealed class Updater
         {
             var installed = !Updates.Older(Current, version);
             if (installed)
-                Tidy(null);
+                Updates.Tidy(dir, null);
             return (installed, version);
         }
         catch (Exception e)
@@ -186,26 +186,6 @@ sealed class Updater
     {
         State = state;
         Changed?.Invoke();
-    }
-
-    /// <summary>Removes what earlier updates left, apart from <paramref name="keep"/>.</summary>
-    void Tidy(string? keep)
-    {
-        try
-        {
-            if (!Directory.Exists(dir))
-                return;
-            foreach (var file in Directory.EnumerateFiles(dir))
-                if (keep is null || !Path.GetFileName(file).StartsWith(keep, StringComparison.Ordinal))
-                    File.Delete(file);
-        }
-        catch (IOException)
-        {
-            // Left for the next update to clear.
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
     }
 
     /// <summary>A fixture run's download: the steps at a believable pace, and nothing fetched.</summary>

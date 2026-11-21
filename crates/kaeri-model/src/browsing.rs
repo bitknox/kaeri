@@ -157,11 +157,10 @@ fn not_out(start: Option<FuzzyDate>) -> Base {
     if let Some(FuzzyDate { month: Some(month), day: Some(day), .. }) = start
         && let (Some(short), Some(long)) = (month_short(month), month_long(month))
     {
-        return Base {
-            long: t::count_starts(&format!("{day} {short}")),
-            short: t::count_starts(&format!("{day} {short}")),
-            spoken: t::count_spoken_starts(&format!("{day} {long}")),
-        };
+        // The day and the month reach the message apart, so each language puts them in the
+        // order it writes a date.
+        let day = i64::from(day);
+        return Base::same(t::count_starts(day, &short), t::count_spoken_starts(day, &long));
     }
     Base::same(t::count_not_out(), t::count_not_out())
 }

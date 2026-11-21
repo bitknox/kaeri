@@ -476,6 +476,20 @@ struct State {
     /// The language and device word Kaeri's receiver is greeted with.
     language: Option<String>,
     device_word: Option<String>,
+    /// Whether the sender's device asks for reduced motion; `None` until it says.
+    reduce_motion: Option<bool>,
+}
+
+/// The hello Kaeri's receiver is greeted with: the language for its strings, the word for this
+/// device and, once the device said, whether its scenes keep still. Without `motion` the
+/// receiver goes by the TV's own setting, which a TV seldom has.
+fn greeting(state: &State) -> Value {
+    let mut hello =
+        json!({"type": "hello", "language": state.language, "device": state.device_word});
+    if let Some(reduce) = state.reduce_motion {
+        hello["motion"] = json!(if reduce { "reduce" } else { "full" });
+    }
+    hello
 }
 
 /// The receiver app left the TV: its connection closed, or the receiver's status stopped
@@ -773,12 +787,8 @@ impl Inner {
 
     /// Greet Kaeri's receiver: the language for its strings and the word for this device.
     fn hello(&self, app: &App) -> &Self {
-        let (language, device) = {
-            let state = lock(&self.state);
-            (state.language.clone(), state.device_word.clone())
-        };
-        let hello = json!({"type": "hello", "version": KAERI_PROTOCOL,
-                           "language": language, "device": device});
+        let mut hello = greeting(&lock(&self.state));
+        hello["version"] = json!(KAERI_PROTOCOL);
         if let Err(e) = self.device().channel.send(&app.transport_id, NS_KAERI, &hello) {
             tracing::debug!(error = %e, "couldn't greet Kaeri's receiver");
         }
@@ -963,15 +973,23 @@ impl CastPlayer {
         lock(&self.inner.state).receiver = receiver.or(KAERI_RECEIVER.map(str::to_owned));
     }
 
-    /// The language Kaeri's receiver shows its strings in and the word it calls this device
-    /// by (`iphone`, `phone`, `mac`, ...). A receiver already running hears it at once.
-    pub fn set_greeting(&self, language: Option<String>, device: Option<String>) {
-        {
+    /// The language Kaeri's receiver shows its strings in, the word it calls this device by
+    /// (`iphone`, `phone`, `mac`, ...) and whether this device asks for reduced motion (`None`
+    /// until it says). A receiver already running hears them at once.
+    pub fn set_greeting(
+        &self,
+        language: Option<String>,
+        device: Option<String>,
+        reduce_motion: Option<bool>,
+    ) {
+        let hello = {
             let mut state = lock(&self.inner.state);
-            state.language = language.clone();
-            state.device_word = device.clone();
-        }
-        self.inner.tell(json!({"type": "hello", "language": language, "device": device}));
+            state.language = language;
+            state.device_word = device;
+            state.reduce_motion = reduce_motion;
+            greeting(&state)
+        };
+        self.inner.tell(hello);
     }
 
     /// What Kaeri's receiver says from now on: plain subtitles, Up Next's buttons, errors.
@@ -1415,14 +1433,15 @@ impl CastPlayer {
             self.inner.publish();
         }
         let Some(media) = self.inner.media() else { return Ok(()) };
-        if media.media_session_id.is_none() {
+        // A cast that ended by itself has no file of its own left on the TV, as `close` says.
+        if media.media_session_id.is_none() || lock(&self.inner.state).closed {
             return Ok(());
         }
         answered(async move { media.stop().await.map(|_| ()) }).await
     }
 
     /// Stop playing and close the receiver app, so the TV goes back to what it showed. The
-    /// event stream ends with it.
+    /// event stream ends with it. A cast that ended by itself leaves the TV as it is.
     pub async fn quit(&self) -> Result<(), CastError> {
         if let Some(attempt) = lock(&self.inner.attempt).take() {
             attempt.abort();
@@ -1490,11 +1509,21 @@ async fn answered(
     }
 }
 
-/// Stop the media and the app, when one runs.
+/// Stop the media and the app, when one runs. A cast that ended by itself sends neither: taken
+/// over, the receiver session can be another Kaeri device's, which joined the app this cast
+/// launched and plays in it now, and a stop would close it under them. Stopped on the TV or
+/// lost, nothing of this cast's runs there to stop.
 async fn close(inner: &Inner) -> Result<(), CastError> {
     let media = lock(&inner.media).take();
     let Some(media) = media else { return Ok(()) };
-    lock(&inner.state).app = None;
+    let ended = {
+        let mut state = lock(&inner.state);
+        state.app = None;
+        state.closed
+    };
+    if ended {
+        return Ok(());
+    }
     let device = inner.device();
     answered(async move {
         if media.media_session_id.is_some() {

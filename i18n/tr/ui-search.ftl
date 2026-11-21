@@ -102,7 +102,7 @@ count-out = { $count ->
    *[other] { $count } bölüm çıktı
  }
 count-out-short = { $count } çıktı
-count-starts = { $date } başlıyor
+count-starts = { $day } { $month } başlıyor
 count-not-out = Henüz çıkmadı
 count-next-of = Böl. { $episode }/{ $total }
 count-dub = Dublaj
@@ -116,7 +116,7 @@ count-spoken-out = { $count ->
     [one] Bir bölüm çıktı
    *[other] { $count } bölüm çıktı
  }
-count-spoken-starts = { $date } tarihinde başlıyor
+count-spoken-starts = { $day } { $month } tarihinde başlıyor
 count-spoken-next-of = { $total } bölümün { $episode }. bölümü
 count-spoken-dub-through = { $through }. bölüme kadar { -dubbed }
 count-spoken-dub = dublajı var

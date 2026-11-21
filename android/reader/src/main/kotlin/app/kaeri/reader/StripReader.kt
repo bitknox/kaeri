@@ -64,7 +64,6 @@ import app.kaeri.engine.model.LeafPart
 import app.kaeri.engine.model.StripPos
 import androidx.compose.animation.core.AnimationSpec
 import androidx.compose.animation.core.animate
-import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.runtime.withFrameNanos
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
@@ -129,12 +128,23 @@ class StripStep {
                     }
                 }
             } else {
-                list.scrollBy(total)
+                list.scroll {
+                    scrollBy(total)
+                    withFrameNanos { }
+                }
             }
             left = 0f
         }.also { job = it }
     }
 }
+
+/**
+ * Holds [this] list in a scroll for one frame after a move made at once. A move that never
+ * suspends starts and ends its scroll within one task, so nothing that watches
+ * isScrollInProgress sees it: the place, the read rule at the foot and the flow into the next
+ * chapter all wait on that.
+ */
+internal suspend fun LazyListState.holdAfterMove() = scroll { withFrameNanos { } }
 
 /** The lift of [down]'s touch if it stays within [slop] of where it landed, whatever else takes its events; null once it moves. */
 private suspend fun AwaitPointerEventScope.awaitLift(down: PointerInputChange, slop: Float): PointerInputChange? {

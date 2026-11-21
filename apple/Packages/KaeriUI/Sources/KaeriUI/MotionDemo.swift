@@ -114,6 +114,9 @@ public enum MotionDemo: String, CaseIterable, Sendable {
     case groupPick
     /// The cut synopsis on screen opened, as its More does: a show's page or a series' page.
     case synopsisMore
+    /// The first episode row whose synopsis runs past 300 characters opened, as its More does,
+    /// on the Mac's title page.
+    case episodeMore
     /// Private mode turned on from the switch, as a click on it does: the switch, the Mac's
     /// capsule crossfading to the badge, the title page's line growing in. No notice.
     case privateOn
@@ -154,7 +157,7 @@ public enum MotionDemo: String, CaseIterable, Sendable {
         case .backSpotlight, .backReopen:
             MotionDemo.t1Spotlight.run(navigator: navigator, store: store)
             try? await Task.sleep(for: .seconds(2))
-        case .episodeRange, .protectionLine, .reveal, .goTo, .typed:
+        case .episodeRange, .protectionLine, .reveal, .goTo, .typed, .episodeMore:
             for _ in 0..<200 {
                 if let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
                    store.titles.episodes[id] != nil { break }
@@ -403,6 +406,11 @@ public enum MotionDemo: String, CaseIterable, Sendable {
             store.reading.chooseGroup(view.work, group: other.label)
         case .synopsisMore:
             navigator.synopsisMoreAsked += 1
+        case .episodeMore:
+            guard let id = navigator.titleOnMac ?? navigator.paths[navigator.section]?.last?.id,
+                  let row = store.titles.episodes[id]?.first(where: { ($0.description?.count ?? 0) > 300 })
+            else { return }
+            navigator.episodeMoreAsked = row.number
         case .privateOn:
             store.setPrivate(true)
         case .privateNotice:

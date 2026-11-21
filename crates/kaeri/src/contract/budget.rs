@@ -694,3 +694,149 @@ async fn anilist_cold_launch_over_a_tight_limit_waits_and_says_nothing() {
 /// common than 13. The viewer's id is kept from an earlier run, so the list rides with the
 /// viewer lookup.
 const COLD_LAUNCH: usize = 16;
+
+#[cfg(test)]
+/// Hover cards while AniList's queue is long: what a card the pointer rests on waits for, and
+/// what hovering it again costs.
+mod hover {
+    use std::time::Duration;
+
+    use kaeri_testkit::Operation;
+
+    use super::*;
+
+    /// A hovered cover's card is work for the page on screen, not background work: after a
+    /// screen's request the background queue waits out its quiet and its pacing, and a card
+    /// that waited there stayed bare, with no trailer to play, for as long as the queue took.
+    #[tokio::test]
+    async fn a_hovered_card_does_not_wait_behind_the_background_queue() {
+        let now = kaeri_store::now();
+        let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+        let pacing = kaeri_meta::Pacing {
+            quiet: Duration::from_secs(60),
+            launch_after: Duration::ZERO,
+            launch_at_most: Duration::ZERO,
+            ..kaeri_meta::Pacing::APP
+        };
+        let mut h = launch_paced(now, None, &world, false, 0, Some(pacing)).await;
+        let hovered = world
+            .titles
+            .iter()
+            .find_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
+            .expect("a title to hover");
+        // A screen's request that brings no titles: background work now waits a minute of
+        // quiet, and no list has brought the hovered card.
+        run(&mut h, vec![Command::LoadSearchFacets]).await;
+        h.send(Command::LoadCards { ids: vec![hovered] });
+        let carded = |u: &Event| match u {
+            Event::Cards(entries) => entries.iter().any(|e| e.id == hovered),
+            _ => false,
+        };
+        let waited =
+            tokio::time::timeout(Duration::from_secs(10), h.settle_until(carded)).await;
+        assert!(waited.is_ok(), "the hovered card is answered without waiting out the queue");
+        let _ = h.settle().await;
+    }
+
+    /// Covers hovered again and again on the Mac while AniList answers slowly, as it does
+    /// behind a long queue: each hover asks for the cover's card and its stills. A cover
+    /// hovered again while its first ask is still out joins that ask. It costs no request, and
+    /// its job ends at once, so the activity list holds one row for each ask under way rather
+    /// than one for each hover.
+    #[tokio::test]
+    async fn a_cover_hovered_again_joins_the_ask_under_way() {
+        let now = kaeri_store::now();
+        let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+        let mut h = launch(now, None, &world, false, 0).await;
+        let ids: Vec<AnilistId> = world
+            .titles
+            .iter()
+            .filter_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
+            .take(4)
+            .collect();
+        // The cards come first, so every stills job is still open when they do.
+        h.server().answer_slowly(Operation::Many, Duration::from_millis(1500));
+        h.server().answer_slowly(Operation::Tables, Duration::from_millis(3000));
+        let mut tally = Tally::default();
+        tally.take(&h, "before");
+        let mut jobs = 0;
+        for _ in 0..3 {
+            for id in &ids {
+                jobs += usize::from(h.send(Command::LoadCards { ids: vec![*id] }).is_some());
+                jobs += usize::from(h.send(Command::LoadStills(*id)).is_some());
+            }
+            // Past the batching window, as the pointer's next pass over the covers is.
+            tokio::time::sleep(Duration::from_millis(200)).await;
+        }
+        let seen = h.settle().await;
+        tally.take(&h, "three passes over four covers");
+        let answered = seen
+            .iter()
+            .position(|u| matches!(u, Event::Cards(_)))
+            .expect("the hovered covers' cards are answered");
+        let ended = seen[..answered].iter().filter(|u| matches!(u, Event::JobDone(_))).count();
+        assert_eq!(
+            jobs - ended,
+            2 * ids.len(),
+            "a card and a stills job for each cover while AniList is asked, of {jobs} sent"
+        );
+        assert_eq!(
+            tally.rows[1].2.get("Many"),
+            Some(&1),
+            "one card lookup for every pass: {:?}",
+            tally.rows[1].2
+        );
+        let carded: usize = seen
+            .iter()
+            .map(|u| if let Event::Cards(entries) = u { entries.len() } else { 0 })
+            .sum();
+        assert!(carded >= ids.len(), "every hovered card is answered");
+    }
+
+    /// A cover hovered while the screen's ask for its covers' tables is still out joins that
+    /// ask, which brings the card too, rather than asking for the card on its own: no second
+    /// request, and the screen's ask, waiting behind the background queue, is raised to the
+    /// card's class.
+    #[tokio::test]
+    async fn a_hovered_card_joins_and_raises_the_screens_ask() {
+        let now = kaeri_store::now();
+        let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+        let pacing = kaeri_meta::Pacing {
+            quiet: Duration::from_secs(60),
+            launch_after: Duration::ZERO,
+            launch_at_most: Duration::ZERO,
+            ..kaeri_meta::Pacing::APP
+        };
+        let mut h = launch_paced(now, None, &world, false, 0, Some(pacing)).await;
+        let ids: Vec<AnilistId> = world
+            .titles
+            .iter()
+            .filter_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
+            .take(4)
+            .collect();
+        // A screen's request that brings no titles: background work now waits a minute of
+        // quiet, and no list has brought the hovered card.
+        run(&mut h, vec![Command::LoadSearchFacets]).await;
+        let mut tally = Tally::default();
+        tally.take(&h, "before");
+        h.send(Command::PrepareCards { ids: ids.clone() });
+        let hovered = ids[0];
+        h.send(Command::LoadCards { ids: vec![hovered] });
+        let carded = |u: &Event| match u {
+            Event::Cards(entries) => entries.iter().any(|e| e.id == hovered),
+            _ => false,
+        };
+        let waited =
+            tokio::time::timeout(Duration::from_secs(10), h.settle_until(carded)).await;
+        tally.take(&h, "the screen's covers, then a hover");
+        assert!(waited.is_ok(), "the hovered card is answered without waiting out the queue");
+        assert_eq!(
+            tally.rows[1].2.get("Many"),
+            None,
+            "the card rides the screen's ask: {:?}",
+            tally.rows[1].2
+        );
+        assert_eq!(tally.rows[1].2.get("Tables"), Some(&1), "which is asked once");
+        let _ = h.settle().await;
+    }
+}

@@ -91,6 +91,7 @@ import app.kaeri.store.MatchSearch
 import app.kaeri.store.EngineHome
 import app.kaeri.store.NewEpisode
 import app.kaeri.store.EngineLaunch
+import app.kaeri.store.AppLanguage
 import app.kaeri.store.enginePlatform
 import app.kaeri.engine.ffi.FfiCastBrowser
 import app.kaeri.engine.ffi.FfiException
@@ -187,7 +188,11 @@ internal object Flavour {
         FixtureCasts.stepsAfter = intent.getStringExtra("castat")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
         return EngineLaunch.fixtures(scene, context.cacheDir)
-            .copy(platform = enginePlatform(context), profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context))
+            .copy(
+                platform = enginePlatform(context),
+                profile = intent.getStringExtra("profile") ?: ProfileChoice.saved(context),
+                language = AppLanguage.showing(context).tag,
+            )
             .also { launched = it }
     }
 

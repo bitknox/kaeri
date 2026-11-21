@@ -106,7 +106,7 @@ count-out = { $count ->
    *[other] Вышло { $count } эпизода
  }
 count-out-short = Вышло { $count }
-count-starts = Старт: { $date }
+count-starts = Старт: { $day } { $month }
 count-not-out = Ещё не вышло
 count-next-of = Эп. { $episode } из { $total }
 count-dub = Дубляж
@@ -124,7 +124,7 @@ count-spoken-out = { $count ->
     [many] Вышло { $count } эпизодов
    *[other] Вышло { $count } эпизода
  }
-count-spoken-starts = Старт: { $date }
+count-spoken-starts = Старт: { $day } { $month }
 count-spoken-next-of = Эпизод { $episode } из { $total }
 count-spoken-dub-through = { -dubbed } до эпизода { $through }
 count-spoken-dub = есть дубляж

@@ -733,6 +733,10 @@ internal fun SourcesPane(actions: AppActions) {
                         onClick = { proxySheet = true },
                     )
                 } else null,
+                // UDP trackers bypass the proxy, so through one they are skipped unless this lets them through.
+                if (proxy != null) @Composable { place: Place ->
+                    SettingSwitch(place, SettingKey.UDP_TRACKERS_WITH_PROXY, stringResource(R.string.torrents_proxy_udp_trackers), note = stringResource(R.string.torrents_proxy_udp_trackers_detail))
+                } else null,
                 if (torrents && store.cast.available) @Composable { place: Place ->
                     SettingSwitch(place, SettingKey.TORRENTS_WHILE_CASTING, stringResource(R.string.cast_settings_torrents), note = stringResource(R.string.cast_settings_torrents_note))
                 } else null,

@@ -102,7 +102,7 @@ count-out = { $count ->
    *[other] { $count } Folgen erschienen
  }
 count-out-short = { $count } da
-count-starts = Startet { $date }
+count-starts = Startet am { $day }. { $month }
 count-not-out = Noch nicht erschienen
 count-next-of = Flg. { $episode } von { $total }
 count-dub = Dub
@@ -116,7 +116,7 @@ count-spoken-out = { $count ->
     [one] Eine Folge erschienen
    *[other] { $count } Folgen erschienen
  }
-count-spoken-starts = Startet { $date }
+count-spoken-starts = Startet am { $day }. { $month }
 count-spoken-next-of = Folge { $episode } von { $total }
 count-spoken-dub-through = { -dubbed } bis Folge { $through }
 count-spoken-dub = hat eine Synchronfassung

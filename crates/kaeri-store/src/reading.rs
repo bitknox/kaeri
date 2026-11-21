@@ -326,28 +326,40 @@ pub(crate) fn apply_read_op(
             seen_unread,
             ..
         } => {
-            let inserted = tx.execute(
-                "INSERT OR IGNORE INTO read_event
+            let twin = crate::sync::twins::settle(
+                tx,
+                crate::sync::twins::Plays::Read,
+                &uid,
+                op.stamp,
+                work,
+                chapter,
+            )?;
+            let inserted = if twin {
+                0
+            } else {
+                tx.execute(
+                    "INSERT OR IGNORE INTO read_event
                    (uid, stamp, work, chapter, page, of_pages, strip_image, strip_offset,
                     novel_pos, completed, source_id, version_label, at)
                  SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13
                   WHERE NOT EXISTS (SELECT 1 FROM sync_tomb WHERE uid = ?1)",
-                params![
-                    uid,
-                    op.stamp as i64,
-                    work,
-                    chapter,
-                    page,
-                    of,
-                    strip_image,
-                    strip_offset,
-                    novel_pos,
-                    *completed as i32,
-                    source_id,
-                    version_label,
-                    at
-                ],
-            )?;
+                    params![
+                        uid,
+                        op.stamp as i64,
+                        work,
+                        chapter,
+                        page,
+                        of,
+                        strip_image,
+                        strip_offset,
+                        novel_pos,
+                        *completed as i32,
+                        source_id,
+                        version_label,
+                        at
+                    ],
+                )?
+            };
             if inserted > 0 && *completed {
                 // An unread another device wrote, later than this read, that did not name it.
                 let unread: Option<(i64, String)> = tx
@@ -382,7 +394,17 @@ pub(crate) fn apply_read_op(
                     "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
                     params![removed, op.stamp as i64],
                 )?;
-                tx.execute("DELETE FROM read_event WHERE uid = ?1", [removed])?;
+                tx.execute(
+                    "DELETE FROM read_event WHERE uid = ?1 AND work = ?2 AND chapter = ?3",
+                    params![removed, work, chapter],
+                )?;
+                crate::sync::twins::unplay(
+                    tx,
+                    crate::sync::twins::Plays::Read,
+                    removed,
+                    work,
+                    chapter,
+                )?;
             }
             note_unread(tx, work, chapter, op.stamp, &op.device)?;
             // Finished reads by other devices that this unread never named.
@@ -684,11 +706,14 @@ fn write_status(
 ) -> rusqlite::Result<()> {
     // A status written here is the person's or a tracker's, never one a read put there.
     tx.execute(
-        "INSERT INTO read_status (work, status, score, updated_at) VALUES (?1, ?2, ?3, ?4)
+        "INSERT INTO read_status (work, status, score, updated_at, status_at, score_at)
+         VALUES (?1, ?2, ?3, ?4, CASE WHEN ?5 THEN ?4 END, CASE WHEN ?6 THEN ?4 END)
          ON CONFLICT(work) DO UPDATE SET
             status = CASE WHEN ?5 THEN excluded.status ELSE status END,
+            status_at = CASE WHEN ?5 THEN excluded.updated_at ELSE status_at END,
             auto = CASE WHEN ?5 THEN 0 ELSE auto END,
             score = CASE WHEN ?6 THEN excluded.score ELSE score END,
+            score_at = CASE WHEN ?6 THEN excluded.updated_at ELSE score_at END,
             updated_at = excluded.updated_at",
         params![work, status.flatten(), score.flatten(), at, status.is_some(), score.is_some()],
     )?;
@@ -704,10 +729,10 @@ fn write_status(
 /// on the device: each device reaches it from the reads it holds.
 fn start_reading(tx: &Transaction<'_>, work: &str, at: i64) -> rusqlite::Result<()> {
     tx.execute(
-        "INSERT INTO read_status (work, status, score, updated_at, auto)
-         VALUES (?1, 'reading', NULL, ?2, 1)
+        "INSERT INTO read_status (work, status, score, updated_at, auto, status_at)
+         VALUES (?1, 'reading', NULL, ?2, 1, ?2)
          ON CONFLICT(work) DO UPDATE SET status = 'reading', auto = 1,
-            updated_at = excluded.updated_at
+            updated_at = excluded.updated_at, status_at = excluded.updated_at
           WHERE read_status.status IS NULL",
         params![work, at],
     )?;
@@ -863,8 +888,10 @@ impl Store {
                         "SELECT uid FROM read_event
                           WHERE work = ?1 AND chapter = ?2 AND uid IS NOT NULL",
                     )?;
-                    stmt.query_map(params![work, chapter], |r| r.get(0))?
-                        .collect::<rusqlite::Result<_>>()?
+                    let uids = stmt
+                        .query_map(params![work, chapter], |r| r.get(0))?
+                        .collect::<rusqlite::Result<_>>()?;
+                    crate::sync::twins::with_twins(tx, uids)?
                 };
                 tx.execute(
                     "DELETE FROM read_event WHERE work = ?1 AND chapter = ?2",
@@ -882,6 +909,13 @@ impl Store {
                             tx.execute(
                                 "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
                                 params![uid, op.stamp as i64],
+                            )?;
+                            crate::sync::twins::unplay(
+                                tx,
+                                crate::sync::twins::Plays::Read,
+                                uid,
+                                work,
+                                chapter,
                             )?;
                         }
                         kept = Some((op.stamp, op.device));
@@ -1259,7 +1293,7 @@ impl Store {
         self.with_personal_tx(|tx| {
             let auto: Option<i64> = tx
                 .query_row(
-                    "SELECT updated_at FROM read_status
+                    "SELECT COALESCE(status_at, updated_at) FROM read_status
                       WHERE work = ?1 AND status IS NOT NULL AND auto = 1",
                     [work],
                     |r| r.get(0),
@@ -1281,6 +1315,21 @@ impl Store {
                 r.get(0)
             })
             .optional()?)
+        })
+    }
+
+    /// When a work's status and its score were each last set here or by a synced device.
+    pub fn read_status_dates(&self, work: &str) -> Result<(Option<i64>, Option<i64>)> {
+        self.with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT CASE WHEN status IS NOT NULL THEN COALESCE(status_at, updated_at) END,
+                        CASE WHEN score IS NOT NULL THEN COALESCE(score_at, updated_at) END
+                   FROM read_status WHERE work = ?1",
+                [work],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?
+            .unwrap_or_default())
         })
     }
 
@@ -1748,8 +1797,9 @@ pub(crate) fn backfill(tx: &Transaction<'_>, device: &str) -> Result<()> {
         let mut stmt = tx.prepare(
             // A Reading a read put there stays on the device; the other devices reach it from
             // the reads.
-            "SELECT work, CASE WHEN auto = 0 THEN status END, score, updated_at FROM read_status
-              WHERE work LIKE 'a:%'",
+            "SELECT work, CASE WHEN auto = 0 THEN status END, score,
+                    COALESCE(status_at, updated_at), COALESCE(score_at, updated_at)
+               FROM read_status WHERE work LIKE 'a:%'",
         )?;
         for row in stmt.query_map([], |r| {
             Ok((
@@ -1757,14 +1807,15 @@ pub(crate) fn backfill(tx: &Transaction<'_>, device: &str) -> Result<()> {
                 r.get::<_, Option<String>>(1)?,
                 r.get::<_, Option<f64>>(2)?,
                 r.get::<_, i64>(3)?,
+                r.get::<_, i64>(4)?,
             ))
         })? {
-            let (work, status, score, at) = row?;
+            let (work, status, score, status_at, score_at) = row?;
             if status.is_some() {
-                regs.push((kinds::READ_STATUS, work.clone(), status, at));
+                regs.push((kinds::READ_STATUS, work.clone(), status, status_at));
             }
             if let Some(score) = score {
-                regs.push((kinds::READ_SCORE, work, Some(score.to_string()), at));
+                regs.push((kinds::READ_SCORE, work, Some(score.to_string()), score_at));
             }
         }
         let mut stmt =

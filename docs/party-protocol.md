@@ -320,7 +320,7 @@ uniffi metadata for `Command` within its size limit.
 | `StartAnyway` | Starts the room without waiting for those who are not ready |
 | `OpenPlayer` | Opens the player again in the room's episode |
 | `LookIn { server, room, name }` | Joins a room for a moment and says who is there and what it watches; only when a room is opened |
-| `LoadRecent`, `ForgetRoom { server, room }` | The last ten rooms on this device, newest first |
+| `LoadRecent`, `ForgetRoom { server, room }` | The last ten rooms of the profile in use, newest first |
 | `Say { text }` | Says something in chat; see [Chat](#chat) |
 | `React { reaction }` | Reacts at the playhead of the episode this device plays |
 | `Mute { name, muted }` | Hides a member's lines and reactions for this party, on this device |
@@ -442,8 +442,9 @@ found for the play that follows. A device whose sources lack the episode stays i
 
 ## Looking in and recent rooms
 
-The last ten rooms are kept on the device (`party_room` table, migration 16): server, room,
-title, episode, who was there and when. They are checked only when a room is opened: that
+The last ten rooms are kept per profile (`party_room`, a personal table, migration 16): server,
+room, title, episode, who was there and when. Each profile sees only its own rooms; an install's
+rooms from before it had profiles are the first profile's. They are checked only when a room is opened: that
 command joins not ready with no file, reads the members and playlist, and leaves
 (`kaeri_party::look`).
 

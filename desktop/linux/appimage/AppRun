@@ -8,13 +8,18 @@
 
 appdir="${APPDIR:-$(dirname "$(readlink -f "$0")")}"
 
-# The glibc the AppImage was built against, which it needs, said plainly on an older system
-# rather than as the loader's version errors.
+# The app runs on the system's glibc when it is as new as the one the AppImage was built with.
+# On an older system, or one without glibc, it runs on the glibc the AppImage carries in
+# usr/lib/compat, through that glibc's own loader, with the newer libraries it needs there too.
+# Only the app does: what it starts runs on the system's.
 floor=@FLOOR@
 have="$(getconf GNU_LIBC_VERSION 2>/dev/null | cut -d' ' -f2)"
-if [ -n "$have" ] && [ "$(printf '%s\n%s\n' "$floor" "$have" | sort -V | head -n 1)" != "$floor" ]; then
-  echo "Kaeri needs glibc $floor or newer, as in Debian 13, Ubuntu 25.04 or Fedora 42, and this system has glibc $have." >&2
-  exit 1
+app="$appdir/usr/bin/kaeri-desktop"
+if [ -n "$have" ] && [ "$(printf '%s\n%s\n' "$floor" "$have" | sort -V | head -n 1)" = "$floor" ]; then
+  set -- "$app" "$@"
+else
+  set -- "$appdir/usr/lib/compat/@LOADER@" --library-path "$appdir/usr/lib/compat" \
+    --argv0 "$app" "$app" "$@"
 fi
 
 # GTK's settings schemas, the SVG loader its icons need, Adwaita's icons, the dconf backend and
@@ -77,4 +82,4 @@ EOF
   fi
 fi
 
-exec "$appdir/usr/bin/kaeri-desktop" "$@"
+exec "$@"

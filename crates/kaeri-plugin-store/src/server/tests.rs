@@ -1255,3 +1255,47 @@ async fn only_the_offered_choices_are_made() {
         assert_eq!(answer(body).await, refused(400, "bad_request"));
     }
 }
+
+/// Answers TLS without a certificate, which is all a client that never says hello needs.
+#[derive(Debug)]
+struct NoCertificate;
+
+impl tokio_rustls::rustls::server::ResolvesServerCert for NoCertificate {
+    fn resolve(
+        &self,
+        _: tokio_rustls::rustls::server::ClientHello<'_>,
+    ) -> Option<Arc<tokio_rustls::rustls::sign::CertifiedKey>> {
+        None
+    }
+}
+
+#[tokio::test]
+async fn a_connection_that_never_starts_its_tls_handshake_is_closed() {
+    use tokio::io::AsyncReadExt;
+    use tokio_rustls::rustls;
+
+    let dir = tempfile::tempdir().unwrap();
+    let (listener, addr) = bind("127.0.0.1:0".parse().unwrap()).await.unwrap();
+    let base = format!("https://{addr}");
+    let store =
+        open(&Storage::Dir(dir.path().into()), Some(&base), Some("Test store")).await.unwrap();
+    let server = Arc::new(Server::new(store, Some(base), None, None, false));
+    let provider = Arc::new(rustls::crypto::aws_lc_rs::default_provider());
+    let config = rustls::ServerConfig::builder_with_provider(provider)
+        .with_safe_default_protocol_versions()
+        .unwrap()
+        .with_no_client_auth()
+        .with_cert_resolver(Arc::new(NoCertificate));
+    let acceptor = tokio_rustls::TlsAcceptor::from(Arc::new(config));
+    let (stop, stopped) = tokio::sync::oneshot::channel::<()>();
+    tokio::spawn(serve(listener, server, Some(acceptor), async {
+        let _ = stopped.await;
+    }));
+
+    let mut silent = tokio::net::TcpStream::connect(addr).await.unwrap();
+    let mut byte = [0_u8; 1];
+    let read = silent.read(&mut byte);
+    let closed = tokio::time::timeout(std::time::Duration::from_secs(30), read).await;
+    assert!(matches!(closed, Ok(Ok(0) | Err(_))), "the store still holds the connection");
+    let _ = stop.send(());
+}

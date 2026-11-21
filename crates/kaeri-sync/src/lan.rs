@@ -282,6 +282,14 @@ impl Listener {
     pub async fn next_session(&mut self) -> Option<Result<PeerReport>> {
         self.done.recv().await
     }
+
+    /// The sessions as they end, for a watcher of its own where the listener is shared, so
+    /// reading them never holds the listener: [`Self::next_session`] finds none after.
+    pub fn take_sessions(
+        &mut self,
+    ) -> tokio::sync::mpsc::UnboundedReceiver<Result<PeerReport>> {
+        std::mem::replace(&mut self.done, tokio::sync::mpsc::unbounded_channel().1)
+    }
 }
 
 impl Drop for Listener {
@@ -445,16 +453,23 @@ pub async fn dial(
     let binding = Binding { phone: me.identity.fingerprint(), tv: their_fp, exporter };
     let started = code.map(|c| PhonePairing::start(c, binding));
     write(&mut stream, &Msg::Hello { pair: started.as_ref().map(|(_, m)| m.clone()) }).await?;
+    // Pinned, the handshake held the other side to the key it paired with. Unpinned (dialing
+    // with a code), any key passes the handshake: a device that skips the code's proof is taken
+    // at its word only when this one already trusts its key, or anyone on the network could
+    // answer and take the log, or tell this device it was removed.
+    let known = find(store, &their_fp);
+    let vouched = expect.is_some() || known.is_some();
     let (peer, just_paired) = match read(&mut stream).await? {
+        Msg::Ready if !vouched => return Err(unproven()),
         Msg::Ready => {
-            let peer = find(store, &their_fp);
-            if peer.as_ref().is_some_and(|p| {
+            if known.as_ref().is_some_and(|p| {
                 store.sync_device_paused(&p.device) || is_removed(store, &p.device)
             }) {
                 return Err(SyncError::Paused);
             }
-            (peer, false)
+            (known, false)
         }
+        Msg::Removed if !vouched => return Err(unproven()),
         Msg::Removed => return Err(SyncError::Removed),
         Msg::PairReply { message, mac } => {
             let (side, _) = started.ok_or_else(|| pairing("a code was not asked for"))?;
@@ -481,6 +496,11 @@ pub async fn dial(
     let mut report = peer::exchange(store, &me.device, stream).await?;
     report.handoff = received;
     Ok(report)
+}
+
+/// A device this one does not know answered a code without proving it.
+fn unproven() -> SyncError {
+    pairing("that device did not prove the code")
 }
 
 /// A paired device's key fingerprint, for dialing it again.
@@ -660,6 +680,41 @@ mod tests {
             dial(&guest, &guest_store, loopback(listener.port()), Some(&code), None).await;
         assert!(late.is_err());
         assert!(trusted(&host_store).unwrap().is_empty());
+        assert!(trusted(&guest_store).unwrap().is_empty());
+    }
+
+    /// A stranger on the network, with a key of its own, that answers any hello with `reply`.
+    /// The task says whether the dialer sent anything after that reply.
+    async fn stranger(reply: Msg) -> (u16, JoinHandle<bool>) {
+        let identity = Identity::generate().unwrap();
+        let acceptor = TlsAcceptor::from(tls::server_config_for(&identity, SYNC_ALPN).unwrap());
+        let listener = TcpListener::bind(loopback(0)).await.unwrap();
+        let port = listener.local_addr().unwrap().port();
+        let task = tokio::spawn(async move {
+            let (socket, _) = listener.accept().await.unwrap();
+            let mut stream = acceptor.accept(socket).await.unwrap();
+            let hello: Msg = read(&mut stream).await.unwrap();
+            assert!(matches!(hello, Msg::Hello { pair: Some(_) }), "a pairing hello");
+            write(&mut stream, &reply).await.unwrap();
+            read::<_, serde_json::Value>(&mut stream).await.is_ok()
+        });
+        (port, task)
+    }
+
+    #[tokio::test]
+    async fn a_stranger_that_skips_the_codes_proof_gets_nothing_and_removes_nothing() {
+        let (guest, guest_store) = device("00000000000000b2", "Phone");
+        watch(&guest_store, "1");
+        for reply in [Msg::Ready, Msg::Removed] {
+            let (port, heard_more) = stranger(reply).await;
+            let dialed = dial(&guest, &guest_store, loopback(port), Some("123456"), None).await;
+            assert!(dialed.is_err(), "pairing with a stranger fails");
+            assert!(
+                !matches!(dialed, Err(SyncError::Removed)),
+                "a stranger cannot say this device was removed"
+            );
+            assert!(!heard_more.await.unwrap(), "nothing crosses after the stranger's reply");
+        }
         assert!(trusted(&guest_store).unwrap().is_empty());
     }
 

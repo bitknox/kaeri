@@ -6703,8 +6703,8 @@
     </plurals>
     <!-- The same, short. -->
     <string name="count_out_short">%1$,d out</string>
-    <!-- The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. -->
-    <string name="count_starts">Starts %1$s</string>
+    <!-- The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date. -->
+    <string name="count_starts">Starts %1$d %2$s</string>
     <!-- The count line of a show that has not started and has no date. -->
     <string name="count_not_out">Not out yet</string>
     <!-- The count line of a show the viewer is part way through, in the library: the next episode and the total. -->
@@ -6725,8 +6725,8 @@
         <item quantity="one">One episode out</item>
         <item quantity="other">%1$,d episodes out</item>
     </plurals>
-    <!-- What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. -->
-    <string name="count_spoken_starts">Starts %1$s</string>
+    <!-- What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date. -->
+    <string name="count_spoken_starts">Starts %1$d %2$s</string>
     <!-- What a screen reader says for a show the viewer is part way through. -->
     <string name="count_spoken_next_of">Episode %1$d of %2$d</string>
     <!-- What a screen reader says after the count when the dub goes to an episode. -->
@@ -8976,6 +8976,10 @@
     <string name="torrents_proxy_route">Route torrent traffic through a proxy</string>
     <!-- Line under the switch. -->
     <string name="torrents_proxy_route_detail">Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.</string>
+    <!-- Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary. -->
+    <string name="torrents_proxy_udp_trackers">Use UDP trackers</string>
+    <!-- Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy. -->
+    <string name="torrents_proxy_udp_trackers_detail">UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.</string>
     <!-- Summary: torrents go through a proxy. Host and port are already formatted. -->
     <string name="torrents_summary_proxy_at">Through a SOCKS5 proxy at %1$s:%2$s.</string>
     <!-- Summary: torrents go through a proxy, address not shown. -->
@@ -9249,6 +9253,8 @@
     <string name="tv_pair_menu">Pair a TV…</string>
     <!-- Title of the pairing sheet. -->
     <string name="tv_pair_with_tv">Pair with a TV</string>
+    <!-- Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811. -->
+    <string name="tv_link_pair_ask">A link asks to pair with the TV at %1$s. Pair only with a TV in front of you.</string>
     <!-- Title of the pairing step for one TV. The name is the name the TV gave itself. -->
     <string name="tv_pair_with">Pair with %1$s</string>
     <!-- Title while pairing is under way. -->

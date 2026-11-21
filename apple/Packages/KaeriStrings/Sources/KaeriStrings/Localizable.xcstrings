@@ -45736,169 +45736,169 @@
       }
     },
     "count-spoken-starts" : {
-      "comment" : "What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. Argument 1: date (Text).",
+      "comment" : "What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date. Argument 1: day (Plain). Argument 2: month (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Startet %1$@"
+            "value" : "Startet am %1$@. %2$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Starts %1$@"
+            "value" : "Starts %1$@ %2$@"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empieza el %1$@"
+            "value" : "Empieza el %1$@ %2$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Début le %1$@"
+            "value" : "Début le %1$@ %2$@"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mulai %1$@"
+            "value" : "Mulai %1$@ %2$@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inizia il %1$@"
+            "value" : "Inizia il %1$@ %2$@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@開始"
+            "value" : "%2$@%1$@日開始"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start: %1$@"
+            "value" : "Start: %1$@ %2$@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Começa em %1$@"
+            "value" : "Começa em %1$@ %2$@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Старт: %1$@"
+            "value" : "Старт: %1$@ %2$@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Startar %1$@"
+            "value" : "Startar %1$@ %2$@"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ tarihinde başlıyor"
+            "value" : "%1$@ %2$@ tarihinde başlıyor"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bắt đầu %1$@"
+            "value" : "Bắt đầu %1$@ %2$@"
           }
         }
       }
     },
     "count-starts" : {
-      "comment" : "The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. Argument 1: date (Text).",
+      "comment" : "The count line of a show that has not started and has a date: the day of the month and the month it starts, such as \"Starts 9 Jan\". The month is the short month name from the months below. Write the day and the month in the order the language writes a date. Argument 1: day (Plain). Argument 2: month (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "de" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Startet %1$@"
+            "value" : "Startet am %1$@. %2$@"
           }
         },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Starts %1$@"
+            "value" : "Starts %1$@ %2$@"
           }
         },
         "es-419" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Empieza el %1$@"
+            "value" : "Empieza el %1$@ %2$@"
           }
         },
         "fr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Début le %1$@"
+            "value" : "Début le %1$@ %2$@"
           }
         },
         "id" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Mulai %1$@"
+            "value" : "Mulai %1$@ %2$@"
           }
         },
         "it" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Inizia il %1$@"
+            "value" : "Inizia il %1$@ %2$@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@開始"
+            "value" : "%2$@%1$@日開始"
           }
         },
         "pl" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Start: %1$@"
+            "value" : "Start: %1$@ %2$@"
           }
         },
         "pt-BR" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Começa em %1$@"
+            "value" : "Começa em %1$@ %2$@"
           }
         },
         "ru" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Старт: %1$@"
+            "value" : "Старт: %1$@ %2$@"
           }
         },
         "sv" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Startar %1$@"
+            "value" : "Startar %1$@ %2$@"
           }
         },
         "tr" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ başlıyor"
+            "value" : "%1$@ %2$@ başlıyor"
           }
         },
         "vi" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Bắt đầu %1$@"
+            "value" : "Bắt đầu %1$@ %2$@"
           }
         }
       }
@@ -378413,6 +378413,30 @@
         }
       }
     },
+    "torrents-proxy-udp-trackers" : {
+      "comment" : "Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use UDP trackers"
+          }
+        }
+      }
+    },
+    "torrents-proxy-udp-trackers-detail" : {
+      "comment" : "Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them."
+          }
+        }
+      }
+    },
     "torrents-proxy-user" : {
       "comment" : "Label of the proxy user name field.",
       "extractionState" : "manual",
@@ -383293,6 +383317,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đăng nhập Google Drive"
+          }
+        }
+      }
+    },
+    "tv-link-pair-ask" : {
+      "comment" : "Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811. Argument 1: address (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A link asks to pair with the TV at %1$@. Pair only with a TV in front of you."
           }
         }
       }

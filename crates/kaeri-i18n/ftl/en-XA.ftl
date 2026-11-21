@@ -12010,8 +12010,8 @@ count-out =
 # The same, short.
 count-out-short = [{ $count } öüţ~~~]
 
-# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
-count-starts = [Šţàŕţš { $date }~~~]
+# The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.
+count-starts = [Šţàŕţš { $day } { $month }~~~~~]
 
 # The count line of a show that has not started and has no date.
 count-not-out = [Ñöţ öüţ ýéţ~~~~]
@@ -12042,8 +12042,8 @@ count-spoken-out =
        *[other] [{ $count } éþîšöðéš öüţ~~~~~]
     }
 
-# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
-count-spoken-starts = [Šţàŕţš { $date }~~~]
+# What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.
+count-spoken-starts = [Šţàŕţš { $day } { $month }~~~~~]
 
 # What a screen reader says for a show the viewer is part way through.
 count-spoken-next-of = [Éþîšöðé { $episode } öƒ { $total }~~~~~~]
@@ -15397,6 +15397,12 @@ torrents-proxy-route = [Ŕöüţé ţöŕŕéñţ ţŕàƒƒîç ţĥŕöüĝĥ 
 # Line under the switch.
 torrents-proxy-route-detail = [Ţöŕŕéñţ ţŕàƒƒîç ĝöéš ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý ýöü ŕüñ öŕ ŕéñţ. Ŵĥîļé ţĥîš îš öƒƒ, ţöŕŕéñţš çöññéçţ ðîŕéçţļý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
+# Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+torrents-proxy-udp-trackers = [Ûšé ÛÐÞ ţŕàçķéŕš~~~~~]
+
+# Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+torrents-proxy-udp-trackers-detail = [ÛÐÞ ţŕàçķéŕš ƀýþàšš ţĥé þŕöẋý, šö ţĥéý šéé ýöüŕ ÎÞ àððŕéšš. Ŵĥîļé ţĥîš îš öƒƒ, ţöŕŕéñţš šķîþ ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Summary: torrents go through a proxy. Host and port are already formatted.
 torrents-summary-proxy-at = [Ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý àţ { $host }:{ $port }.~~~~~~~~~~~]
 
@@ -15805,6 +15811,9 @@ tv-pair-menu = [Þàîŕ à ŢṼ…~~~]
 
 # Title of the pairing sheet.
 tv-pair-with-tv = [Þàîŕ ŵîţĥ à ŢṼ~~~~~]
+
+# Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.
+tv-link-pair-ask = [Å ļîñķ àšķš ţö þàîŕ ŵîţĥ ţĥé ŢṼ àţ { $address }. Þàîŕ öñļý ŵîţĥ à ŢṼ îñ ƒŕöñţ öƒ ýöü.~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Title of the pairing step for one TV. The name is the name the TV gave itself.
 tv-pair-with = [Þàîŕ ŵîţĥ { $name }~~~~]

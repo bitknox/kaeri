@@ -12560,9 +12560,9 @@ object Strings {
     fun countOutShort(context: Context, count: Int): String =
         context.getString(R.string.count_out_short, count)
 
-    /** The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. */
-    fun countStarts(context: Context, date: String): String =
-        context.getString(R.string.count_starts, date)
+    /** The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date. */
+    fun countStarts(context: Context, day: Int, month: String): String =
+        context.getString(R.string.count_starts, day, month)
 
     /** The count line of a show that has not started and has no date. */
     fun countNotOut(context: Context): String =
@@ -12592,9 +12592,9 @@ object Strings {
     fun countSpokenOut(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.count_spoken_out, count, count)
 
-    /** What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. */
-    fun countSpokenStarts(context: Context, date: String): String =
-        context.getString(R.string.count_spoken_starts, date)
+    /** What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date. */
+    fun countSpokenStarts(context: Context, day: Int, month: String): String =
+        context.getString(R.string.count_spoken_starts, day, month)
 
     /** What a screen reader says for a show the viewer is part way through. */
     fun countSpokenNextOf(context: Context, episode: Int, total: Int): String =
@@ -16895,6 +16895,14 @@ object Strings {
     fun torrentsProxyRouteDetail(context: Context): String =
         context.getString(R.string.torrents_proxy_route_detail)
 
+    /** Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary. */
+    fun torrentsProxyUdpTrackers(context: Context): String =
+        context.getString(R.string.torrents_proxy_udp_trackers)
+
+    /** Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy. */
+    fun torrentsProxyUdpTrackersDetail(context: Context): String =
+        context.getString(R.string.torrents_proxy_udp_trackers_detail)
+
     /** Summary: torrents go through a proxy. Host and port are already formatted. */
     fun torrentsSummaryProxyAt(context: Context, host: String, port: String): String =
         context.getString(R.string.torrents_summary_proxy_at, host, port)
@@ -17434,6 +17442,10 @@ object Strings {
     /** Title of the pairing sheet. */
     fun tvPairWithTv(context: Context): String =
         context.getString(R.string.tv_pair_with_tv)
+
+    /** Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811. */
+    fun tvLinkPairAsk(context: Context, address: String): String =
+        context.getString(R.string.tv_link_pair_ask, address)
 
     /** Title of the pairing step for one TV. The name is the name the TV gave itself. */
     fun tvPairWith(context: Context, name: String): String =

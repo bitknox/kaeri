@@ -137,6 +137,10 @@ impl Binding {
     }
 
     pub(super) fn from_event(event: KeyEvent) -> Self {
+        // A character typed with AltGr is the character, as one typed with shift is.
+        if altgr(&event) {
+            return Self { code: event.code, modifiers: KeyModifiers::NONE };
+        }
         // Crossterm reports SHIFT alongside uppercase characters and shifted symbols on some
         // platforms and not others. Normalising it away keeps `G` and `+` matching whether or
         // not the flag arrives.
@@ -148,6 +152,15 @@ impl Binding {
         };
         Self { code: event.code, modifiers }
     }
+}
+
+/// A character typed with AltGr, as Windows reports it: ctrl and alt held, shift at times too,
+/// with the character the layout makes, such as `@`, `{` or `ł`. No binding uses ctrl+alt, and a
+/// terminal elsewhere says ctrl+alt only with a letter or a digit, which stay as they are.
+pub fn altgr(event: &KeyEvent) -> bool {
+    let held = event.modifiers & !KeyModifiers::SHIFT;
+    held == KeyModifiers::CONTROL | KeyModifiers::ALT
+        && matches!(event.code, KeyCode::Char(c) if !c.is_ascii_alphanumeric() && !c.is_control())
 }
 
 #[cfg(test)]
@@ -163,6 +176,22 @@ mod tests {
         let with = KeyEvent::new(KeyCode::Char('G'), KeyModifiers::SHIFT);
         assert_eq!(keymap.action_for(without, Context::Browsing), Some(Action::Bottom));
         assert_eq!(keymap.action_for(with, Context::Browsing), Some(Action::Bottom));
+    }
+
+    #[test]
+    fn a_key_typed_with_altgr_on_windows_resolves_as_its_character() {
+        // Windows reports AltGr as ctrl and alt held: `{` on a German or Nordic layout.
+        let keymap = Keymap::new();
+        let altgr = KeyModifiers::CONTROL | KeyModifiers::ALT;
+        for modifiers in [altgr, altgr | KeyModifiers::SHIFT] {
+            let brace = KeyEvent::new(KeyCode::Char('{'), modifiers);
+            assert_eq!(keymap.action_for(brace, Context::Browsing), Some(Action::PreviousDay));
+            let close = KeyEvent::new(KeyCode::Char('}'), modifiers);
+            assert_eq!(keymap.action_for(close, Context::Browsing), Some(Action::NextDay));
+        }
+        // Ctrl and alt with a letter stay a chord, as other terminals send it.
+        let chord = KeyEvent::new(KeyCode::Char('d'), altgr);
+        assert_eq!(keymap.action_for(chord, Context::Browsing), None);
     }
 
     #[test]

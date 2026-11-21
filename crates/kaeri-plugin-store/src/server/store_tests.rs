@@ -311,6 +311,37 @@ async fn a_sign_in_link_expires_and_a_session_too() {
 }
 
 #[tokio::test]
+async fn a_demoted_owner_cannot_become_owner_again_with_an_invite_they_made() {
+    let (_dir, store) = open().await;
+    let (_, first) = join(&store, "Ines", Role::Owner).await;
+    let (_, second) = join(&store, "Ravi", Role::Owner).await;
+    let invite = store
+        .create_invite(
+            NewInvite::member("Spare", Role::Owner, Some(&first.id), NO_END_DATE),
+            BASE,
+            NOW,
+        )
+        .await
+        .unwrap()
+        .1;
+    store.set_role(&first.id, Role::Member, &second.id).await.unwrap();
+    assert!(matches!(
+        store.check_invite(&invite.code, NOW).await,
+        Err(StoreError::InviteCancelled { .. })
+    ));
+    assert!(matches!(
+        store.redeem(&invite.code, "laptop", NOW).await,
+        Err(StoreError::InviteCancelled { .. })
+    ));
+    assert_eq!(store.owner_names().await.unwrap(), ["Ravi"]);
+
+    // An owner again, their invite works again.
+    store.set_role(&first.id, Role::Owner, &second.id).await.unwrap();
+    let (_, joined) = store.redeem(&invite.code, "laptop", NOW).await.unwrap();
+    assert_eq!(joined.role, Role::Owner);
+}
+
+#[tokio::test]
 async fn failures_are_counted_per_key_and_forgotten_after_the_window() {
     use kaeri_store_core::store::{ALLOWED_FAILURES, FAILURE_WINDOW_SECS};
     let (_dir, store) = open().await;
@@ -357,6 +388,31 @@ async fn a_published_version_never_changes() {
     let changed = plugin("example", "1.0.0", &["else.example"]);
     assert!(matches!(
         store.publish(&changed, Some(&FakeInspector), NOW).await,
+        Err(StoreError::Conflict(_))
+    ));
+}
+
+#[tokio::test]
+async fn a_version_keeps_its_bytes_after_it_is_unpublished_or_replaced() {
+    let (_dir, store) = open().await;
+    let first = plugin("example", "1.0.0", &[]);
+    let changed = plugin("example", "1.0.0", &["else.example"]);
+    store.publish(&first, Some(&FakeInspector), NOW).await.unwrap();
+    store.unpublish("example", NOW + 1).await.unwrap();
+    assert!(matches!(
+        store.publish(&changed, Some(&FakeInspector), NOW + 2).await,
+        Err(StoreError::Conflict(_))
+    ));
+    // The same build again is the version it was.
+    store.publish(&first, Some(&FakeInspector), NOW + 3).await.unwrap();
+
+    // Replaced by a newer version, the same.
+    store
+        .publish(&plugin("example", "1.1.0", &[]), Some(&FakeInspector), NOW + 4)
+        .await
+        .unwrap();
+    assert!(matches!(
+        store.publish(&changed, Some(&FakeInspector), NOW + 5).await,
         Err(StoreError::Conflict(_))
     ));
 }
@@ -587,6 +643,55 @@ async fn open_joins_are_limited_per_address_and_an_ipv6_network_counts_as_one() 
         Err(StoreError::TooManyJoins)
     ));
     store.join_open(&code, "2001:db8:1:3::1", NOW).await.unwrap();
+}
+
+#[tokio::test]
+async fn counts_by_address_keep_no_address_and_go_with_their_hour() {
+    use kaeri_store_core::store::{ALLOWED_FAILURES, FAILURE_WINDOW_SECS};
+    const ADDRESS: &str = "203.0.113.7";
+    let db: Arc<dyn Database> = Arc::new(SqliteDb::in_memory().unwrap());
+    let dir = tempfile::tempdir().unwrap();
+    let blobs: Box<dyn Blobs> = Box::new(LocalBlobs::new(dir.path()));
+    let store = Store::open(db.clone(), blobs, Some(BASE), Some("Test")).await.unwrap();
+    let column = |sql: &'static str| {
+        let db = db.clone();
+        async move {
+            let rows = db.query(sql, &[]).await.unwrap();
+            rows.iter().map(|row| row.text(0).unwrap()).collect::<Vec<_>>()
+        }
+    };
+
+    // A failure from a stale link keeps nothing that reads back as the address.
+    store.fail(ADDRESS, NOW).await.unwrap();
+    let keys = column("SELECT key FROM failures").await;
+    assert_eq!(keys.len(), 1);
+    assert!(
+        !keys.contains(&ADDRESS.to_owned()) && !keys.contains(&crypto::hash_secret(ADDRESS))
+    );
+
+    // An open join keeps neither the address's plain digest nor the second the member joined.
+    let code = opened(&store).await;
+    let joined = NOW + 1_234;
+    store.join_open(&code, ADDRESS, joined).await.unwrap();
+    let keys = column("SELECT key FROM open_joins").await;
+    assert_eq!(keys.len(), 1);
+    assert!(!keys.contains(&crypto::hash_secret(ADDRESS)), "{keys:?}");
+    let starts = column("SELECT CAST(window_start AS TEXT) FROM open_joins").await;
+    assert_ne!(starts, [joined.to_string()], "tied to the member who joined then");
+
+    // Failures from one IPv6 network count together, as its open joins do.
+    for host in 1..=ALLOWED_FAILURES {
+        store.fail(&format!("2001:db8:1:2::{host:x}"), NOW).await.unwrap();
+    }
+    assert!(store.blocked("2001:db8:1:2::ffff", NOW).await.unwrap());
+    assert!(!store.blocked("2001:db8:1:3::1", NOW).await.unwrap());
+
+    // Expired failures go with the next count, whatever it is.
+    assert!(!store.blocked("198.51.100.1", NOW + 2 * FAILURE_WINDOW_SECS).await.unwrap());
+    assert_eq!(column("SELECT key FROM failures").await, Vec::<String>::new());
+    // An hour on, the joins counted in the last one go too.
+    assert!(!store.joins_blocked("198.51.100.1", NOW + OPEN_JOIN_WINDOW_SECS).await.unwrap());
+    assert_eq!(column("SELECT key FROM open_joins").await, Vec::<String>::new());
 }
 
 #[tokio::test]
@@ -958,4 +1063,76 @@ async fn a_name_made_from_a_long_invite_name_stays_a_name() {
     let (_, member) = store.redeem(&invite.code, "phone", NOW).await.unwrap();
     assert_eq!(member.name.chars().count(), 64);
     assert!(member.name.ends_with(" 1"));
+}
+
+/// A database whose next batch fails after a use of an invite or a sign-in link is claimed, as
+/// a D1 hiccup or a dropped Postgres connection fails it, for as many claims as it is told.
+struct FailsAfterClaim {
+    db: Arc<dyn Database>,
+    claims: std::sync::atomic::AtomicUsize,
+    armed: std::sync::atomic::AtomicBool,
+}
+
+#[async_trait::async_trait]
+impl Database for FailsAfterClaim {
+    fn dialect(&self) -> kaeri_store_core::db::Dialect {
+        self.db.dialect()
+    }
+
+    async fn query(
+        &self,
+        sql: &str,
+        params: &[kaeri_store_core::db::Value],
+    ) -> Result<Vec<kaeri_store_core::db::Row>, kaeri_store_core::db::DbError> {
+        use std::sync::atomic::Ordering::SeqCst;
+        let sql = sql.trim_start();
+        let claim = sql.starts_with("UPDATE invites SET used_at")
+            || sql.starts_with("UPDATE admin_links SET used_at = ?1");
+        let left = self.claims.load(SeqCst);
+        if claim && left > 0 {
+            self.claims.store(left - 1, SeqCst);
+            self.armed.store(true, SeqCst);
+        }
+        self.db.query(sql, params).await
+    }
+
+    async fn batch(
+        &self,
+        statements: &[kaeri_store_core::db::Statement],
+    ) -> Result<Vec<u64>, kaeri_store_core::db::DbError> {
+        if self.armed.swap(false, std::sync::atomic::Ordering::SeqCst) {
+            return Err(kaeri_store_core::db::DbError("the connection dropped".into()));
+        }
+        self.db.batch(statements).await
+    }
+}
+
+#[tokio::test]
+async fn a_join_or_sign_in_that_fails_after_its_claim_can_be_tried_again() {
+    use std::sync::atomic::Ordering::SeqCst;
+    let dir = tempfile::tempdir().unwrap();
+    let flaky = Arc::new(FailsAfterClaim {
+        db: Arc::new(SqliteDb::in_memory().unwrap()),
+        claims: 0.into(),
+        armed: false.into(),
+    });
+    let blobs: Box<dyn Blobs> = Box::new(LocalBlobs::new(dir.path()));
+    let db: Arc<dyn Database> = flaky.clone();
+    let store = Store::open(db, blobs, Some(BASE), Some("Test")).await.unwrap();
+    let (_, owner) = join(&store, "Owner", Role::Owner).await;
+
+    // A once-only invite: the first try fails once its use is claimed, and the retry joins.
+    let invite = member_invite(&store, "Alex", Role::Member, NOW + 60).await;
+    flaky.claims.store(1, SeqCst);
+    assert!(store.redeem(&invite.code, "phone", NOW).await.is_err());
+    let (_, alex) = store.redeem(&invite.code, "phone", NOW).await.unwrap();
+    assert_eq!(alex.name, "Alex");
+
+    // A sign-in link the same.
+    let (link, _) = store.create_admin_link(&owner.id, BASE, NOW).await.unwrap();
+    let code = link.rsplit('=').next().unwrap();
+    flaky.claims.store(1, SeqCst);
+    assert!(store.open_session(code, NOW).await.is_err());
+    let (session, _) = store.open_session(code, NOW).await.unwrap();
+    assert_eq!(store.session(&session, NOW).await.unwrap().unwrap().id, owner.id);
 }

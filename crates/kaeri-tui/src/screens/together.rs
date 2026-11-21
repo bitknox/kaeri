@@ -57,6 +57,14 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
     let text = app.palette.style(Role::Text);
     let width = main.width as usize;
     let mut y = main.top();
+    // A line of the list on its row, or nothing when that row is below the stage. The screen
+    // draws on a stage of four rows, which the party's lines and the start line outgrow, and
+    // under the stage are the status rows or the end of the terminal.
+    let put_line = |buf: &mut Buffer, x: u16, y: u16, line: &str, style| {
+        if y < main.bottom() {
+            buf.set_string(x, y, truncate(line, width), style);
+        }
+    };
 
     buf.set_string(main.left(), y, truncate(&t::together_title(), width), dim);
     y += 1;
@@ -70,25 +78,20 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
                 .room_episode
                 .as_ref()
                 .map_or_else(|| party.room.clone(), |room| room.title.clone());
-            buf.set_string(
-                main.left(),
-                y,
-                truncate(&title, width),
-                text.add_modifier(Modifier::BOLD),
-            );
+            put_line(buf, main.left(), y, &title, text.add_modifier(Modifier::BOLD));
             y += 1;
             if detail.is_none()
                 && let Some(line) = episode_line(app)
             {
-                buf.set_string(main.left(), y, truncate(&line, width), dim);
+                put_line(buf, main.left(), y, &line, dim);
                 y += 1;
             }
             let code = party.code.as_deref().unwrap_or(&party.room);
-            buf.set_string(main.left(), y, truncate(code, width), dim);
+            put_line(buf, main.left(), y, code, dim);
             y += 2;
             y = render_members(buf, app, main, y, focused);
             if app.party_members.len() <= 1 {
-                buf.set_string(main.left() + 2, y, truncate(&t::party_alone(), width), dim);
+                put_line(buf, main.left() + 2, y, &t::party_alone(), dim);
                 y += 1;
             }
             y += 1;
@@ -98,7 +101,7 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
         }
         None => {
             for line in wrap(&t::together_start_line(), width, 3) {
-                buf.set_string(main.left(), y, line, dim);
+                put_line(buf, main.left(), y, &line, dim);
                 y += 1;
             }
             y += 1;
@@ -160,7 +163,7 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
     Hairline::new(&app.palette).render(Rect { y, height: 1, ..main }, buf);
     y += 1;
     if app.party_recent.is_empty() {
-        buf.set_string(main.left(), y, truncate(&t::together_recent_empty(), width), dim);
+        put_line(buf, main.left(), y, &t::together_recent_empty(), dim);
     }
     let first = app.join_row() + 1;
     for (i, room) in app.party_recent.iter().enumerate() {
@@ -533,4 +536,180 @@ fn render_chat(buf: &mut Buffer, app: &App, area: Rect) -> u16 {
         quiet(buf, &mut y, &t::party_chat_privacy(), dim);
     }
     y - area.top()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use kaeri_core::ids::AnilistId;
+    use kaeri_model::{
+        catalog::ContentList,
+        event::Event,
+        party::{PartyConversation, PartyFound, PartyMember, PartyRoomEpisode, PartyView},
+    };
+
+    use crate::{
+        nav::Section,
+        screens::{
+            fixtures::{app_with, text_of},
+            render_to_buffer,
+        },
+    };
+
+    /// A room whose episode is known, as starting a party from an episode leaves it.
+    fn party() -> PartyView {
+        PartyView {
+            server: "party.example:8999".into(),
+            room: "kite-7qm4-xr9d".into(),
+            name: "Ada".into(),
+            connection: PartyConnection::Connected,
+            encrypted: true,
+            ready: false,
+            episode: None,
+            invite: None,
+            motd: None,
+            latency_ms: Some(42),
+            room_episode: Some(PartyRoomEpisode {
+                id: Some(AnilistId::new(104_321)),
+                episode: "9".into(),
+                title: "Natsukaze Relay".into(),
+                file: "Natsukaze Relay, episode 9 [anilist:104321:9]".into(),
+                found: PartyFound::Tag,
+                plain_by: None,
+            }),
+            next_episode: None,
+            starter: Some("Ada".into()),
+            starter_present: true,
+            can_start_anyway: false,
+            code: Some("kite-7qm4-xr9d".into()),
+            link: None,
+            playing: false,
+            starting_in: None,
+            sources: None,
+            guesses: Vec::new(),
+            looking: false,
+            moves_on: false,
+        }
+    }
+
+    fn member(name: &str, you: bool) -> PartyMember {
+        PartyMember {
+            name: name.into(),
+            ready: Some(false),
+            file: None,
+            duration: None,
+            file_matches: None,
+            you,
+        }
+    }
+
+    fn recent(room: &str) -> PartyRecentRoom {
+        PartyRecentRoom {
+            server: "party.example:8999".into(),
+            room: room.into(),
+            id: AnilistId::new(104_321),
+            title: "Lantern Harbour".into(),
+            episode: "3".into(),
+            names: vec!["Mika".into()],
+            last_at: 0,
+            cover_url: None,
+        }
+    }
+
+    /// Together, before any party.
+    fn outside() -> App {
+        let mut app = app_with(ContentList::Empty);
+        app.go_to_section(Section::Together);
+        app
+    }
+
+    /// In a room nobody else has joined yet.
+    fn alone() -> App {
+        let mut app = outside();
+        app.apply(Event::PartyJoined(party()));
+        app.apply(Event::PartyMembers(vec![member("Ada", true)]));
+        app
+    }
+
+    /// In a full room with a conversation, and rooms from before.
+    fn full() -> App {
+        let mut app = alone();
+        app.apply(Event::PartyMembers(vec![
+            member("Ada", true),
+            member("Mika", false),
+            member("Ren", false),
+            member("Sol", false),
+        ]));
+        let said = |id: u64, from: &str, text: &str| PartyChatLine {
+            id,
+            from: from.into(),
+            you: from == "Ada",
+            body: PartyChatBody::Said { text: text.into() },
+            muted: false,
+        };
+        app.apply(Event::PartyChat(PartyConversation {
+            lines: vec![said(1, "Mika", "ok starting"), said(2, "Ada", "back in 2")],
+            marks: Vec::new(),
+            failed: None,
+        }));
+        app.apply(Event::PartyRecent(vec![
+            recent("ember-2hv8-kd4p"),
+            recent("ember-9wz3-tn6c"),
+        ]));
+        app
+    }
+
+    /// Outside a party, with rooms from before.
+    fn outside_with_rooms() -> App {
+        let mut app = outside();
+        app.apply(Event::PartyRecent(vec![recent("ember-2hv8-kd4p")]));
+        app
+    }
+
+    #[test]
+    fn a_party_waiting_for_others_draws_in_an_eight_row_terminal() {
+        let mut app = alone();
+        let text = text_of(&render_to_buffer(&mut app, 80, 8));
+        assert!(text.contains("Natsukaze Relay"), "{text}");
+        assert!(text.contains("Episode 9"), "{text}");
+    }
+
+    /// A state to draw, by name.
+    type State = (&'static str, fn() -> App);
+
+    #[test]
+    fn nothing_is_written_below_the_stage_at_any_size() {
+        // Drawn into a buffer exactly the stage's size: a line on a row below it lands outside
+        // the buffer and panics here, where in a frame it would cover the status line or, at
+        // the terminal's last row, take the app down.
+        let states: [State; 4] = [
+            ("outside a party", outside),
+            ("outside a party, with rooms", outside_with_rooms),
+            ("alone in a room", alone),
+            ("in a full room", full),
+        ];
+        for (name, state) in states {
+            for say in [false, true] {
+                for height in 1..=16u16 {
+                    for width in [20, 40, 56, 72, 79, 80, 100, 120] {
+                        let mut app = state();
+                        if say {
+                            app.nav.open_overlay(Overlay::Say);
+                        }
+                        let area = Rect::new(0, 0, width, height);
+                        let mut buf = Buffer::empty(area);
+                        let drawn =
+                            std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                                render_together(&mut buf, &app, area);
+                            }));
+                        assert!(
+                            drawn.is_ok(),
+                            "{name} at {width}x{height}{}",
+                            if say { " with the Say line" } else { "" }
+                        );
+                    }
+                }
+            }
+        }
+    }
 }

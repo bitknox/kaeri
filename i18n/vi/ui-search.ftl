@@ -100,7 +100,7 @@ count-out = { $count ->
    *[other] Đã ra { $count } tập
  }
 count-out-short = Ra { $count }
-count-starts = Bắt đầu { $date }
+count-starts = Bắt đầu { $day } { $month }
 count-not-out = Chưa ra mắt
 count-next-of = Tập { $episode } trên { $total }
 count-dub = { -dubbed-cap }
@@ -112,7 +112,7 @@ count-spoken-out-of = Đã ra { $out } trên { $total } tập
 count-spoken-out = { $count ->
    *[other] Đã ra { $count } tập
  }
-count-spoken-starts = Bắt đầu { $date }
+count-spoken-starts = Bắt đầu { $day } { $month }
 count-spoken-next-of = Tập { $episode } trên { $total }
 count-spoken-dub-through = { -dubbed } đến tập { $through }
 count-spoken-dub = có bản { -dubbed }

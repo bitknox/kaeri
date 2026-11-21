@@ -379,10 +379,13 @@ impl Chat {
 
     /// Everything on the video goes at once.
     fn clear(&self) {
-        while let Some(shown) = self.shown.borrow_mut().pop_front() {
+        // The lines come out of the lists before GTK sees them go: removing a line that is still
+        // sliding ends its slide, and the slide's finish runs inside `column.remove`.
+        let shown = std::mem::take(&mut *self.shown.borrow_mut());
+        self.waiting.borrow_mut().clear();
+        for shown in shown {
             self.column.remove(&shown.revealer);
         }
-        self.waiting.borrow_mut().clear();
         self.fold.set_visible(false);
         while let Some(moment) = self.moments.first_child() {
             self.moments.remove(&moment);
@@ -545,9 +548,31 @@ impl Chat {
                 let revealer = revealer_c.clone();
                 move || {
                     let Some(chat) = me.upgrade() else { return };
-                    chat.shown.borrow_mut().retain(|s| s.revealer != revealer);
+                    let listed = {
+                        let mut shown = chat.shown.borrow_mut();
+                        let before = shown.len();
+                        shown.retain(|s| s.revealer != revealer);
+                        shown.len() < before
+                    };
+                    // A line cleared away while it slid is gone already.
+                    if !listed {
+                        return;
+                    }
                     if revealer.parent().is_some() {
-                        chat.column.remove(&revealer);
+                        if chat.column.is_mapped() {
+                            chat.column.remove(&revealer);
+                        } else {
+                            // The column is being hidden and GTK is still walking its children:
+                            // the line goes once that walk is over.
+                            let column = chat.column.clone();
+                            glib::idle_add_local_once(move || {
+                                if revealer.parent().as_ref()
+                                    == Some(column.upcast_ref::<gtk::Widget>())
+                                {
+                                    column.remove(&revealer);
+                                }
+                            });
+                        }
                     }
                     chat.promote();
                 }
@@ -757,5 +782,59 @@ impl Chat {
 
     fn me_weak(&self) -> std::rc::Weak<Chat> {
         self.me.borrow().clone()
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::gtk_test::{pump, run};
+    use std::time::{Duration, Instant};
+
+    /// Run the main loop until `done` says so, for at most `ms`.
+    fn pump_until(ms: u64, done: impl Fn() -> bool) -> bool {
+        let until = Instant::now() + Duration::from_millis(ms);
+        while Instant::now() < until {
+            if done() {
+                return true;
+            }
+            pump(5);
+        }
+        done()
+    }
+
+    #[test]
+    fn leaving_the_party_while_a_line_slides_away_clears_the_column() {
+        run(|| {
+            let settings = gtk::Settings::default().expect("settings");
+            let animated = settings.is_gtk_enable_animations();
+            settings.set_gtk_enable_animations(true);
+            let runtime = tokio::runtime::Runtime::new().expect("a runtime");
+            let dir = tempfile::tempdir().expect("a scratch directory");
+            let ctx = Ctx::for_tests(runtime.handle(), dir.path());
+            let chat = Chat::new(&ctx, &gtk::Box::new(gtk::Orientation::Vertical, 0));
+            let window = gtk::Window::new();
+            window.set_child(Some(&chat.column));
+            window.present();
+            chat.show(Pending { who: "Mira".into(), you: false, text: "Hello there".into() });
+            let revealer = chat.shown.borrow()[0].revealer.clone();
+            assert!(pump_until(2000, || revealer.is_mapped()), "the line is on screen");
+
+            Chat::leave(&chat, &revealer);
+            // The fade ends and the slide starts: the child is going but still revealed.
+            assert!(
+                pump_until(2000, || !revealer.reveals_child()),
+                "the line starts to slide away"
+            );
+            assert!(revealer.is_child_revealed(), "the slide is still running");
+
+            chat.heard(&Event::PartyLeft { reason: None }, true);
+            pump(50);
+            assert!(chat.shown.borrow().is_empty());
+            assert!(revealer.parent().is_none(), "the line left the column");
+
+            window.close();
+            settings.set_gtk_enable_animations(animated);
+        });
     }
 }

@@ -184,12 +184,18 @@ struct WidgetFilesTests {
 struct LinkTests {
     @Test("Each link reads back from its URL")
     func roundTrip() {
-        for link in [WidgetLink.title(900001), .play(900001, episode: 7), .calendar, .accounts] {
+        for link in [WidgetLink.title(900001), .calendar, .accounts] {
             #expect(WidgetLink(url: link.url) == link)
         }
-        #expect(WidgetLink.play(900001, episode: 7).url.absoluteString == "kaeri://play/900001/7")
         #expect(WidgetLink.title(900001).url.absoluteString == "kaeri://title/900001")
         #expect(WidgetLink.accounts.url.absoluteString == "kaeri://settings/accounts")
+    }
+
+    @Test("A play link from a page or a message opens its title, where the viewer presses Play")
+    func playLinksOpenTheTitle() {
+        #expect(WidgetLink(url: URL(string: "kaeri://play/900001/7")!) == .title(900001))
+        #expect(WidgetLink(url: URL(string: "KAERI://PLAY/900001/7")!) == .title(900001))
+        #expect(WidgetLink.play(900001, episode: 7).url.absoluteString == "kaeri://title/900001")
     }
 
     @Test("Other Kaeri links are not the widgets'")

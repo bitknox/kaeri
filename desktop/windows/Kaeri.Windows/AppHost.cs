@@ -16,9 +16,13 @@ sealed class AppHost(DispatcherQueue ui, bool fixture) : FfiHost
     /// <summary>A notice for the window, on the UI thread.</summary>
     public Action<string, string>? Notified { get; set; }
 
+    /// <summary>
+    /// A link the engine opens. A provider plugin can name one itself, so only a web address
+    /// opens, in the browser; every other scheme is refused.
+    /// </summary>
     public bool OpenUrl(string url)
     {
-        if (!Uri.TryCreate(url, UriKind.Absolute, out var uri))
+        if (Outside.For(url, out var uri) != Launch.Open || uri is null)
             return false;
         return ui.TryEnqueue(async () => await global::Windows.System.Launcher.LaunchUriAsync(uri));
     }

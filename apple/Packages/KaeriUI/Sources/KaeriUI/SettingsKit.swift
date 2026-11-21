@@ -314,6 +314,7 @@ extension SettingKey {
         case .downloadHook: L.settingsHookCommand
         case .torrents: L.sourcesTorrentSource
         case .torrentProxy: L.torrentsProxyRoute
+        case .udpTrackersWithProxy: L.torrentsProxyUdpTrackers
         case .seedRatio: L.settingsSeedAfter
         case .seedHours: L.settingsSeedFor
         case .uploadLimit: L.settingsUploadLimit

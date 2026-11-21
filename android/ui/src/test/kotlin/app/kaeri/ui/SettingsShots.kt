@@ -60,6 +60,7 @@ import app.kaeri.engine.model.ProxyView
 import app.kaeri.engine.model.Release
 import app.kaeri.engine.model.ReleaseAsset
 import app.kaeri.engine.model.SettingKey
+import app.kaeri.engine.model.SettingRow
 import app.kaeri.engine.model.TorrentView
 import app.kaeri.engine.model.StorePluginRow
 import app.kaeri.engine.model.StorePluginStatus
@@ -291,13 +292,18 @@ class SettingsShots {
     }
 
     /** Torrents on, behind a saved SOCKS5 proxy whose check passed. */
+    /** [rows] with Use UDP trackers, off, as the engine sends it beside a saved proxy; the recorded scene predates the row. */
+    private fun withUdpTrackersRow(rows: List<SettingRow>): List<SettingRow> =
+        if (rows.any { it.key == SettingKey.UDP_TRACKERS_WITH_PROXY }) rows
+        else rows + rows.first { it.key == SettingKey.TORRENTS }.copy(key = SettingKey.UDP_TRACKERS_WITH_PROXY, value = "off")
+
     private fun proxyOn(store: AppStore) {
         val view = store.settings.view.value ?: return
         store.apply(
             listOf(
                 Event.Settings(
                     view.copy(
-                        rows = view.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it },
+                        rows = withUdpTrackersRow(view.rows.map { if (it.key == SettingKey.TORRENTS) it.copy(value = "on") else it }),
                         sources = view.sources.copy(torrent = true),
                         torrent = TorrentView(ProxyView("proxy.example", 1080u, "mika")),
                     ),

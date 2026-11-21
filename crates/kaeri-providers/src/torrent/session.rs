@@ -156,6 +156,16 @@ impl StreamSource for TorrentFileSource {
     }
 }
 
+/// The folder torrent `id`'s files are written under, as librqbit says: the session's own for
+/// a single file, and a folder of the torrent's name inside it for a batch. A file's name in
+/// the torrent is relative to this.
+fn written_to(session: &Arc<Session>, id: usize) -> Result<PathBuf, ProviderError> {
+    librqbit::Api::new(Arc::clone(session), None)
+        .api_torrent_details(TorrentIdOrHash::Id(id))
+        .map(|details| PathBuf::from(details.output_folder))
+        .map_err(|e| ProviderError::Other(format!("locating torrent output: {e}")))
+}
+
 /// Reads the verified pieces of one torrent file straight from disk, for seekbar thumbnails.
 ///
 /// A thumbnailer seeking around the file through [`TorrentFileSource`] would open a librqbit
@@ -200,10 +210,7 @@ impl VerifiedFile {
     ) -> Result<Self, ProviderError> {
         let api = librqbit::Api::new(Arc::clone(session), None);
         let torrent = TorrentIdOrHash::Id(handle.id());
-        let folder = api
-            .api_torrent_details(torrent)
-            .map_err(|e| ProviderError::Other(format!("locating torrent output: {e}")))?
-            .output_folder;
+        let folder = written_to(session, handle.id())?;
         let (layout, pieces, relative) = handle
             .with_metadata(|metadata| {
                 let file = metadata.file_infos.get(index)?;
@@ -216,7 +223,7 @@ impl VerifiedFile {
             .ok()
             .flatten()
             .ok_or_else(|| ProviderError::Parse(format!("torrent has no file {index}")))?;
-        Ok(Self { api, torrent, layout, pieces, path: PathBuf::from(folder).join(relative) })
+        Ok(Self { api, torrent, layout, pieces, path: folder.join(relative) })
     }
 
     fn have(&self) -> Option<HavePieces> {
@@ -317,6 +324,11 @@ pub struct TorrentSession {
     /// Why no torrent may start on the network the device is on, when none may: see
     /// [`Self::refuse_on_this_network`].
     refusal: Mutex<Option<String>>,
+    /// Files the download queue fetched, which are the person's: a torrent forgotten with its
+    /// files leaves these where they are. A finished download stays in its batch folder when no
+    /// downloads folder is set, and the same batch can come back as a stream or another
+    /// episode's download, whose files go when it does.
+    kept: Mutex<std::collections::HashSet<PathBuf>>,
 }
 
 /// Which torrents wait while the app cannot or should not use the network for them, by what
@@ -406,18 +418,36 @@ pub const NO_PEERS: &str = "No one is sharing this release";
 
 /// [`Session::add_torrent`] for `magnet`, given [`METADATA_WAIT`] to resolve. Cancelling the
 /// add drops its peer search, so nothing is left running for a release that never answered.
+///
+/// Through a proxy the magnet's `udp://` trackers are left out unless `route` lets them
+/// through: a UDP announce does not go through the proxy, so it would tell the tracker this
+/// device's own address beside the torrent.
 async fn add_bounded(
     session: &Arc<Session>,
+    route: &TorrentRoute,
     magnet: &str,
     options: AddTorrentOptions,
     what: &str,
 ) -> Result<librqbit::AddTorrentResponse, ProviderError> {
+    let magnet = announced(route, magnet);
     add_within(
         METADATA_WAIT,
         session.add_torrent(AddTorrent::from_url(magnet), Some(options)),
         what,
     )
     .await
+}
+
+/// `magnet` as the session is given it: without its `udp://` trackers when `route` skips them.
+fn announced(route: &TorrentRoute, magnet: &str) -> String {
+    if !route.skips_udp_trackers() {
+        return magnet.to_owned();
+    }
+    let (magnet, dropped) = crate::proxy::without_udp_trackers(magnet);
+    if dropped > 0 {
+        tracing::info!(dropped, "UDP trackers skipped: they would not go through the proxy");
+    }
+    magnet
 }
 
 /// `adding`, given `wait` to finish: the bound [`add_bounded`] puts on a magnet, apart from the
@@ -437,6 +467,25 @@ async fn add_within<T, E: std::fmt::Display>(
             Err(ProviderError::Other(NO_PEERS.into()))
         }
     }
+}
+
+/// `text` without the proxy's URL or the password in it. librqbit names the URL in some of its
+/// errors, and the reason a session did not start reaches the log and the screen.
+fn without_proxy(text: &str, url: Option<&str>) -> String {
+    let Some(url) = url.map(str::trim).filter(|url| !url.is_empty()) else {
+        return text.to_owned();
+    };
+    let mut text = text.replace(url, "[proxy]");
+    let password = url
+        .split_once("://")
+        .and_then(|(_, rest)| rest.rsplit_once('@'))
+        .and_then(|(credentials, _)| credentials.split_once(':'))
+        .map(|(_, password)| password)
+        .filter(|password| !password.is_empty());
+    if let Some(password) = password {
+        text = text.replace(password, "[removed]");
+    }
+    text
 }
 
 /// Stream servers kept at once: the episode playing and the next one, fetched ahead.
@@ -467,7 +516,8 @@ fn admit<T>(
 pub struct DownloadHandle {
     /// librqbit's id for this torrent, for polling and for pausing it individually.
     pub id: usize,
-    /// The chosen file, relative to the session's output directory.
+    /// The chosen file, relative to the session's output directory: in a batch, under the
+    /// torrent's own folder there.
     pub name: String,
     pub total: u64,
 }
@@ -518,9 +568,11 @@ impl TorrentSession {
             ProviderError::Other(format!("cannot create download directory: {e}"))
         })?;
 
-        let session = Session::new_with_opts(download_dir.clone(), options)
-            .await
-            .map_err(|e| ProviderError::Other(format!("starting torrent session: {e}")))?;
+        let session =
+            Session::new_with_opts(download_dir.clone(), options).await.map_err(|e| {
+                let reason = without_proxy(&format!("{e:#}"), route.proxy_url());
+                ProviderError::Other(format!("starting torrent session: {reason}"))
+            })?;
 
         Ok(Self {
             session,
@@ -529,6 +581,7 @@ impl TorrentSession {
             held: Mutex::default(),
             hold: Mutex::default(),
             refusal: Mutex::default(),
+            kept: Mutex::default(),
             token,
             output_dir: download_dir,
             stream_history: Mutex::new(std::collections::VecDeque::new()),
@@ -544,6 +597,7 @@ impl TorrentSession {
 
         let response = add_bounded(
             &self.session,
+            &self.route,
             magnet,
             AddTorrentOptions { list_only: true, ..Default::default() },
             "reading torrent metadata",
@@ -586,6 +640,7 @@ impl TorrentSession {
 
         let response = add_bounded(
             &self.session,
+            &self.route,
             magnet,
             AddTorrentOptions {
                 // Required for *resuming*. librqbit refuses to touch existing files by
@@ -707,6 +762,7 @@ impl TorrentSession {
 
         let response = add_bounded(
             &self.session,
+            &self.route,
             magnet,
             AddTorrentOptions { overwrite: true, ..Default::default() },
             "adding torrent",
@@ -726,6 +782,10 @@ impl TorrentSession {
         let file =
             choose_file(&files, episode, selected).ok_or(ProviderError::NotFound)?.clone();
         tracing::info!(file = %file.name, size = file.length, "downloading torrent file");
+        // The file is the person's from now on, whatever else comes to share the torrent.
+        if let Ok(folder) = written_to(&self.session, handle.id()) {
+            self.kept.lock().unwrap_or_else(|e| e.into_inner()).insert(folder.join(&file.name));
+        }
 
         // The queue owns this torrent now. Off the stream ledger — the same infohash may
         // already be there from a watch — and onto the download roster, so stream
@@ -745,7 +805,11 @@ impl TorrentSession {
             self.held.lock().unwrap_or_else(|e| e.into_inner()).insert(handle.id());
         }
 
-        Ok(DownloadHandle { id: handle.id(), name: file.name.clone(), total: file.length })
+        // A batch is written under a folder of its own, which the file's name in the torrent
+        // leaves out.
+        let path = written_to(&self.session, handle.id())?.join(&file.name);
+        let name = path.strip_prefix(&self.output_dir).unwrap_or(&path).to_string_lossy();
+        Ok(DownloadHandle { id: handle.id(), name: name.into_owned(), total: file.length })
     }
 
     /// How the stream served at `url` is doing: its peers, its speeds and what it has sent,
@@ -928,8 +992,50 @@ impl TorrentSession {
         outcome.map_err(|e| ProviderError::Transport(format!("torrent {id}: {e}")))
     }
 
-    /// Forget a torrent entirely, optionally deleting what it has fetched.
+    /// Name files downloads kept from earlier runs, which a torrent forgotten with its files
+    /// must leave: see [`Self::forget`].
+    pub fn keep_files(&self, files: impl IntoIterator<Item = PathBuf>) {
+        self.kept.lock().unwrap_or_else(|e| e.into_inner()).extend(files);
+    }
+
+    /// A download the person cancelled or deleted: its file is no longer theirs to keep.
+    pub fn let_go_of_file(&self, file: &std::path::Path) {
+        self.kept.lock().unwrap_or_else(|e| e.into_inner()).remove(file);
+    }
+
+    /// Where torrent `id`'s files are on disk; nothing while its metadata is not known.
+    fn files_on_disk(&self, id: usize) -> Vec<PathBuf> {
+        let handle = self.session.with_torrents(|torrents| {
+            for (tid, handle) in torrents {
+                if tid == id {
+                    return Some(handle.clone());
+                }
+            }
+            None
+        });
+        let (Some(handle), Ok(folder)) = (handle, written_to(&self.session, id)) else {
+            return Vec::new();
+        };
+        handle
+            .with_metadata(|metadata| {
+                metadata.file_infos.iter().map(|f| folder.join(&f.relative_filename)).collect()
+            })
+            .unwrap_or_default()
+    }
+
+    /// Forget a torrent entirely, optionally deleting what it has fetched. A file a download
+    /// keeps stays, with the folder it is in: only the torrent's other files go.
     pub async fn forget(&self, id: usize, delete_files: bool) -> Result<(), ProviderError> {
+        // A torrent holding a kept file loses only its other files, removed here: librqbit's
+        // own delete takes every file of the torrent.
+        let others: Option<Vec<PathBuf>> =
+            delete_files.then(|| self.files_on_disk(id)).and_then(|files| {
+                let kept = self.kept.lock().unwrap_or_else(|e| e.into_inner());
+                files
+                    .iter()
+                    .any(|f| kept.contains(f))
+                    .then(|| files.into_iter().filter(|f| !kept.contains(f)).collect())
+            });
         // Off every ledger first — a forgotten id must not shield a future torrent that
         // happens to be assigned the same number.
         self.seeding.lock().unwrap_or_else(|e| e.into_inner()).retain(|s| s.id != id);
@@ -942,9 +1048,21 @@ impl TorrentSession {
             history.retain(|h| *h != id);
         }
         self.session
-            .delete(TorrentIdOrHash::Id(id), delete_files)
+            .delete(TorrentIdOrHash::Id(id), delete_files && others.is_none())
             .await
-            .map_err(|e| ProviderError::Transport(format!("removing torrent {id}: {e}")))
+            .map_err(|e| ProviderError::Transport(format!("removing torrent {id}: {e}")))?;
+        for file in others.iter().flatten() {
+            let _ = std::fs::remove_file(file);
+            // Folders it leaves empty go too, up to the session's own.
+            let mut folder = file.parent();
+            while let Some(dir) = folder.filter(|d| d.starts_with(&self.output_dir)) {
+                if dir == self.output_dir || std::fs::remove_dir(dir).is_err() {
+                    break;
+                }
+                folder = dir.parent();
+            }
+        }
+        Ok(())
     }
 
     /// Let go of the stream served at `url`, which nothing played: its server, and the torrent
@@ -1336,6 +1454,25 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_session_that_will_not_start_never_repeats_the_proxy_password() {
+        // Kaeri's own check reads this URL; librqbit's parser refuses it, naming the URL.
+        let route = TorrentRoute::fixed(Some("socks5://mika:lantern@[::1:1".into())).unwrap();
+        route.verify().await;
+
+        let scratch = tempfile::tempdir().unwrap();
+        let dir = scratch.path().to_path_buf();
+        let Err(error) =
+            TorrentSession::start(route, dir.join("dl"), dir.join("dht.json"), "tok".into())
+                .await
+        else {
+            panic!("librqbit took a proxy URL it cannot parse");
+        };
+        let reason = error.to_string();
+        assert!(reason.contains("starting torrent session"), "{reason}");
+        assert!(!reason.contains("lantern"), "{reason}");
+    }
+
+    #[tokio::test]
     async fn an_acknowledged_unprotected_session_can_start() {
         // The escape hatch still works, having been explicitly acknowledged in config.
         let route = TorrentRoute::new(None).unwrap();
@@ -1512,6 +1649,86 @@ mod tests {
         // Every torrent waits again once the window ends.
         session.set_hold(Hold::EVERYTHING).await.unwrap();
         assert!(paused(&session));
+        session.session.stop().await;
+    }
+
+    /// Serves `bytes` as a .torrent file on loopback, and says at which address.
+    async fn serve_torrent(bytes: Vec<u8>) -> String {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/batch.torrent", listener.local_addr().unwrap());
+        tokio::spawn(async move {
+            while let Ok((mut stream, _)) = listener.accept().await {
+                let mut request = [0_u8; 4096];
+                let _ = stream.read(&mut request).await;
+                let head = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/x-bittorrent\r\n\
+                     Content-Length: {}\r\nConnection: close\r\n\r\n",
+                    bytes.len()
+                );
+                let _ = stream.write_all(head.as_bytes()).await;
+                let _ = stream.write_all(&bytes).await;
+            }
+        });
+        url
+    }
+
+    /// The .torrent of the batch `session_with_local_torrent` wrote at `root/<name>`.
+    async fn batch_torrent(root: &std::path::Path, name: &str) -> Vec<u8> {
+        let options =
+            librqbit::CreateTorrentOptions { name: Some(name), piece_length: Some(16 * 1024) };
+        let torrent = librqbit::create_torrent(&root.join(name), options).await.unwrap();
+        torrent.as_bytes().unwrap().to_vec()
+    }
+
+    #[tokio::test]
+    async fn a_download_from_a_batch_names_the_file_where_it_is_written() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) = session_with_local_torrent(root.path(), "Kept Batch", &BATCH).await;
+        let url = serve_torrent(batch_torrent(root.path(), "Kept Batch").await).await;
+
+        let handle = session.download(&url, Some(2)).await.unwrap();
+
+        assert_eq!(handle.id, id, "the same torrent");
+        let path = session.output_dir().join(&handle.name);
+        assert!(path.exists(), "{}", path.display());
+        let written = root.path().join("Kept Batch").join("ep02.mkv");
+        assert_eq!(path.canonicalize().unwrap(), written.canonicalize().unwrap());
+        session.session.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_batch_streamed_after_one_of_its_episodes_was_downloaded_leaves_that_episode() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, _) = session_with_local_torrent(root.path(), "Kept Batch", &BATCH).await;
+        let bytes = batch_torrent(root.path(), "Kept Batch").await;
+        let url = serve_torrent(bytes.clone()).await;
+        // Episode 1 is downloaded and finishes; with no downloads folder it stays in the batch.
+        let handle = session.download(&url, Some(1)).await.unwrap();
+        session.forget(handle.id, false).await.unwrap();
+
+        // Later the batch is streamed for episode 2, which is let go of with its files.
+        let streamed = session
+            .session
+            .add_torrent(
+                AddTorrent::from_bytes(bytes),
+                Some(AddTorrentOptions {
+                    paused: true,
+                    overwrite: true,
+                    disable_trackers: true,
+                    ..Default::default()
+                }),
+            )
+            .await
+            .unwrap()
+            .into_handle()
+            .unwrap();
+        streamed.wait_until_initialized().await.unwrap();
+        session.discard(streamed.id()).await;
+
+        let batch = root.path().join("Kept Batch");
+        assert!(batch.join("ep01.mkv").exists(), "the downloaded episode stays");
+        assert!(!batch.join("ep02.mkv").exists(), "what only the stream wanted goes");
         session.session.stop().await;
     }
 

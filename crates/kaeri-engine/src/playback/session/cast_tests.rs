@@ -584,6 +584,23 @@ async fn a_tv_playing_something_else_at_launch_drops_the_record_and_is_left_alon
     }
 }
 
+/// Another Kaeri device's Play on TV joins the receiver this cast runs and loads its episode in
+/// the same receiver session. The cast here ends as taken over, and neither its playback's end
+/// nor Stop casting afterwards stops what the other device plays.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_another_kaeri_device_took_over_leaves_its_episode_playing() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    rig.receiver.load_elsewhere_with(serde_json::json!({
+        "kaeriCard": {"id": 900_002, "episode": "2", "title": "Stardust Wayfarer"},
+    }));
+    session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    let _ = playing.await;
+    rig.hub.disconnect();
+    rig.hub.quits_sent().await;
+    let stops = rig.receiver.heard("STOP");
+    assert!(stops.is_empty(), "what the other device plays was stopped: {stops:?}");
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_stale_record_is_dropped_at_launch_without_reaching_the_tv() {
     let (rig, playing) = playing_on_a_tv_that_plays_on().await;
@@ -1052,6 +1069,50 @@ async fn back_after_the_session_ended_away_the_receiver_is_joined_and_plays_on()
         "the episode isn't cast again"
     );
     assert!(rig.hub.disconnect());
+}
+
+/// The `count`th message of `kind` the receiver heard, once it has.
+async fn heard_until(receiver: &FakeReceiver, kind: &str, count: usize) -> serde_json::Value {
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    loop {
+        let heard = receiver.heard(kind);
+        if let Some(message) = heard.get(count - 1) {
+            return message.clone();
+        }
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "the receiver heard {} {kind}, not {count}",
+            heard.len()
+        );
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+/// Away from a paused cast, and back while the connection to the TV held: the receiver hears
+/// that the iPhone is back, so it stops showing that it waits for it, and the episode stays
+/// paused.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn back_to_a_paused_cast_the_receiver_hears_this_device_is_back() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (sender, _sent) = sender_on(&rig);
+    sender.cast_set_device("iphone");
+    let player = rig.hub.held(&rig.device().id).expect("the TV is held");
+    player.set_paused(true).await.unwrap();
+    session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+
+    // The app leaves the screen: the receiver shows that it waits for the iPhone.
+    sender.cast_away(true);
+    heard_until(&rig.receiver, "sender-away", 1).await;
+    let hellos = rig.receiver.heard("hello").len();
+    let plays = rig.receiver.heard("PLAY").len();
+
+    sender.cast_away(false);
+    let hello = heard_until(&rig.receiver, "hello", hellos + 1).await;
+    assert_eq!(hello["device"], "iphone");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert_eq!(rig.receiver.heard("PLAY").len(), plays, "paused before it left, it stays so");
+    assert!(rig.hub.session().item.is_some_and(|i| i.paused));
+    playing.abort();
 }
 
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]

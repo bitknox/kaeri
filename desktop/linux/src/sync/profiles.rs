@@ -322,16 +322,35 @@ fn restart(ctx: &Rc<Ctx>) {
     if crate::hub::in_guard() {
         return;
     }
-    if let Ok(exe) = std::env::current_exe() {
+    // From an AppImage, the AppImage itself: its mount, and the app's path in it, are gone once
+    // this copy quits, and on a system with an older glibc this process is glibc's loader.
+    let appimage = crate::updates::appimage();
+    if let Some(exe) = appimage.clone().or_else(|| std::env::current_exe().ok()) {
         let args = crate::updates::relaunch_args(std::env::args().skip(1));
-        let _ = std::process::Command::new("sh")
+        let mut command = std::process::Command::new("sh");
+        command
             .arg("-c")
             .arg(crate::updates::RELAUNCH)
             .arg("kaeri-relaunch") // i18n-skip
             .arg(std::process::id().to_string())
             .arg(exe)
-            .args(args)
-            .spawn();
+            .args(args);
+        // What this mount set up, which the AppImage sets up again for its own.
+        if appimage.is_some() {
+            if let (Some(appdir), Some(dirs)) =
+                (std::env::var_os("APPDIR"), std::env::var_os("XDG_DATA_DIRS"))
+            {
+                let dirs = crate::updates::data_dirs_without(
+                    &dirs.to_string_lossy(),
+                    &appdir.to_string_lossy(),
+                );
+                command.env("XDG_DATA_DIRS", dirs);
+            }
+            for var in crate::updates::MOUNT_VARS {
+                command.env_remove(var);
+            }
+        }
+        let _ = command.spawn();
     }
     if let Some(app) = ctx.window.application() {
         app.quit();

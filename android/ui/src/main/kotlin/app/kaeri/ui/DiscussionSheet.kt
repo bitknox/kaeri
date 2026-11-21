@@ -572,7 +572,7 @@ private fun Block(commentId: Int, index: Int, block: CommentBlock, view: Discuss
 
 /** The field and Post, or what stands in their place: sign in, or posting waiting for the network. */
 @Composable
-private fun Composer(
+internal fun Composer(
     view: DiscussionView,
     replying: CommentView?,
     editing: CommentView?,
@@ -587,7 +587,9 @@ private fun Composer(
             !view.signedIn -> OutlinedButton(onClick = onSignIn, modifier = Modifier.fillMaxWidth()) { Text(stringResource(R.string.discussion_sign_in)) }
             !view.canPost -> Text(stringResource(R.string.discussion_offline_post), style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = Modifier.padding(8.dp))
             else -> {
-                var field by remember(replying?.id, editing?.id) { mutableStateOf(TextFieldValue(editing?.markdown.orEmpty(), TextRange(editing?.markdown?.length ?: 0))) }
+                // What is typed stays when Reply picks another comment or the reply is let go;
+                // only Edit starts the field from the comment's own text.
+                var field by remember(editing?.id) { mutableStateOf(TextFieldValue(editing?.markdown.orEmpty(), TextRange(editing?.markdown?.length ?: 0))) }
                 val typed = field.text.isNotBlank() && field.text != editing?.markdown
                 SideEffect { onTyped(typed) }
                 DisposableEffect(Unit) { onDispose { onTyped(false) } }

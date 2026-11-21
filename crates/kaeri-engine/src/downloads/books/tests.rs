@@ -50,6 +50,8 @@ struct Shelf {
     cut: Mutex<Vec<String>>,
     /// Told on every ask and every cut.
     knock: tokio::sync::Notify,
+    /// `book-` chapters come as this file, a copy made for the fetch as a book server's are.
+    book: Mutex<Option<std::path::PathBuf>>,
 }
 
 type Gate = tokio::sync::oneshot::Receiver<bool>;
@@ -137,6 +139,13 @@ impl BookSource for Shelf {
                  <img src=\"https://elsewhere.example/pictures/gull.png\"/>"
                     .into(),
             ));
+        }
+        if chapter.starts_with("book-") {
+            let path = self.book.lock().unwrap().clone().expect("a book to give");
+            return Ok(ChapterContent::Book(kaeri_core::books::BookFile {
+                path,
+                temporary: true,
+            }));
         }
         if chapter.starts_with("made-") {
             return Ok(ChapterContent::Images(
@@ -304,6 +313,7 @@ fn kit_in(chapters: &[&str], hosts: &[&str], store: Store, dir: Arc<tempfile::Te
         gates: Mutex::default(),
         cut: Mutex::default(),
         knock: tokio::sync::Notify::new(),
+        book: Mutex::default(),
     });
     sources.registry.put(shelf.clone());
     store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
@@ -738,7 +748,6 @@ async fn a_chapter_whose_fetch_panics_fails_and_the_queue_goes_on() {
     }
     kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
     kit.settle().await;
-    // A failure is kept in the row by kind, so the panic's reason is not read back.
     let failed =
         |state: &ChapterDownloadState| matches!(state, ChapterDownloadState::Failed { .. });
     let states = kit.states();
@@ -982,6 +991,7 @@ async fn a_chapter_listed_from_another_source_downloads_from_there() {
         gates: Mutex::default(),
         cut: Mutex::default(),
         knock: tokio::sync::Notify::new(),
+        book: Mutex::default(),
     });
     kit.lent.sources.registry.put(other.clone());
     kit.store().set_book_match("other", "s-2", WORK, 90, true, false, 1).unwrap();
@@ -1210,24 +1220,164 @@ async fn turning_reading_off_with_the_deletion_asked_clears_every_download() {
 
 #[test]
 fn failures_survive_the_row() {
+    use kaeri_model::reading::SendProblem;
     for failure in [
         ReadingFailure::Offline,
         ReadingFailure::DiskFull,
         ReadingFailure::NotFound,
+        ReadingFailure::NoSource,
+        ReadingFailure::Protected,
+        ReadingFailure::ReadingOff,
         ReadingFailure::PageFetch { status: 403 },
         ReadingFailure::SourceDown { source: "shelf".into() },
+        ReadingFailure::SourceOff { source: "Shelf".into() },
+        ReadingFailure::Parse { source: "shelf".into() },
         ReadingFailure::Blocked { source: "shelf".into(), reason: "slow down: later".into() },
         ReadingFailure::SignInNeeded { what: "shelf".into() },
         ReadingFailure::FileMissing { path: "/d/a:1/1.cbz".into() },
+        ReadingFailure::Unreadable { path: "/d/a:1/pages".into(), format: "folder".into() },
+        ReadingFailure::Unsupported { extension: "djvu".into() },
+        ReadingFailure::WebViewTooOld { version: 79 },
+        ReadingFailure::NeedsNewerKaeri { world: "kaeri:books/source@9.0.0".into() },
+        ReadingFailure::Other { reason: "page 2 was not kept: no room".into() },
+        ReadingFailure::Other { reason: String::new() },
         ReadingFailure::CannotWrite {
             path: "/d/a:1/1.cbz".into(),
             problem: WriteProblem::Name,
         },
         ReadingFailure::CannotWrite { path: "/d/x".into(), problem: WriteProblem::Denied },
         ReadingFailure::CannotWrite { path: "/d/x".into(), problem: WriteProblem::Other },
+        ReadingFailure::SendTooLarge {
+            file: "Ferry: one.epub".into(),
+            target: "Desk: reader".into(),
+            bytes: 60_000_000,
+            limit: 50_000_000,
+        },
+        ReadingFailure::SendCheck {
+            file: "Ferry: one.epub".into(),
+            part: "OEBPS/content.opf".into(),
+            problem: SendProblem::NotUtf8,
+        },
     ] {
         assert_eq!(decode(&encode(&failure)), failure);
     }
+}
+
+/// A failure the row had no kind of its own for, such as a fetch that panicked, reads back as
+/// itself on the row, never as a source with no name that isn't answering, which waiting would
+/// mend. One an earlier version kept as a bare "other", or a later version under a kind this
+/// one does not know, reads as a failure with nothing more to say.
+#[tokio::test]
+async fn a_failure_kept_on_the_row_never_reads_as_a_nameless_source_down() {
+    let kit = kit(&[]);
+    kit.shelf.listed.lock().unwrap().push(SourceChapter::new("panics", "1"));
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    let reason = "the chapter could not be downloaded".to_owned();
+    let failure = ReadingFailure::Other { reason };
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Failed { failure })]);
+
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    for kept in ["other", "a_later_kind:with: words"] {
+        kit.store().book_download_failed(row.id, kept, 2).unwrap();
+        let failure = ReadingFailure::Other { reason: String::new() };
+        let states = kit.states();
+        assert_eq!(states, [("1".into(), ChapterDownloadState::Failed { failure })], "{kept}");
+    }
+}
+
+/// A chapter queued to be fetched again, as its source added a part, still names its old file.
+/// Cancelled, or taken out of the queue as the reader fetches it, the file goes with the row;
+/// nothing else would ever remove it.
+#[tokio::test]
+async fn a_chapter_queued_again_takes_its_old_file_along_when_it_leaves_the_queue() {
+    let kit = kit(&["1", "2"]);
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: WORK,
+        chapter: "2",
+        source_id: "shelf",
+        version_label: None,
+        keep_ready: true,
+    };
+    kit.store().queue_book_download(&ask, 1).unwrap();
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    let file = |c: &str| {
+        let row = kit.store().book_download(WORK, c).unwrap().unwrap();
+        assert_eq!(row.state, BookDownloadState::Done, "{c}");
+        std::path::PathBuf::from(row.path.unwrap())
+    };
+    let (one, two) = (file("1"), file("2"));
+    assert!(one.exists() && two.exists());
+
+    kit.store().book_download_refetch(WORK, "1", 5).unwrap();
+    kit.queue.cancel(&kit.lent, &WorkId::new(WORK), &ids(&["1"]));
+    assert!(kit.store().book_download(WORK, "1").unwrap().is_none());
+    assert!(!one.exists(), "cancelled, the old file stayed with no row");
+
+    kit.store().book_download_refetch(WORK, "2", 6).unwrap();
+    let chapter = (&WorkId::new(WORK), &ChapterId::new("2"));
+    assert!(kit.queue.reader_fetches(kit.store(), &kit.lent.tx, chapter, 7));
+    assert!(!two.exists(), "taken out of the queue, the old file stayed with no row");
+}
+
+/// A chapter fetched again under another name than its old file's, as one that came as a book
+/// and now comes as pages, leaves no old file behind.
+#[tokio::test]
+async fn a_chapter_fetched_again_under_another_name_removes_its_old_file() {
+    let kit = kit(&["1"]);
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    let new = std::path::PathBuf::from(row.path.unwrap());
+    std::fs::remove_file(&new).unwrap();
+    let old = new.with_extension("epub");
+    std::fs::write(&old, b"PK an older edition").unwrap();
+    kit.store().book_download_done(row.id, &old.to_string_lossy(), None, 19, 4).unwrap();
+
+    kit.store().book_download_refetch(WORK, "1", 5).unwrap();
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    assert_eq!(row.path.as_deref(), Some(&*new.to_string_lossy()));
+    assert!(new.exists());
+    assert!(!old.exists(), "the old file stayed with no row");
+}
+
+/// A book server's copy of a whole book, made for the fetch, is removed when keeping it as the
+/// chapter's download fails, as it is when keeping it works.
+#[tokio::test]
+async fn a_server_copy_of_a_book_goes_when_keeping_it_fails() {
+    let kit = kit(&[]);
+    kit.shelf.listed.lock().unwrap().push(SourceChapter::new("book-1", "1"));
+    let copies = kit._dir.path().join("cache").join("books");
+    std::fs::create_dir_all(&copies).unwrap();
+    let copy = copies.join("lantern-ferry-1.cbz");
+    std::fs::write(&copy, b"PK a whole book").unwrap();
+    *kit.shelf.book.lock().unwrap() = Some(copy.clone());
+    // A folder where the chapter's file is written first: writing it fails.
+    let stem = kit.queue.dir().join(safe(WORK)).join(safe("1"));
+    std::fs::create_dir_all(part_of(&stem)).unwrap();
+
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    let states = kit.states();
+    assert!(matches!(states[0].1, ChapterDownloadState::Failed { .. }), "{states:?}");
+    assert!(!copy.exists(), "the server's copy was left behind");
+
+    // Kept, the copy goes too.
+    std::fs::remove_dir(part_of(&stem)).unwrap();
+    std::fs::write(&copy, b"PK a whole book").unwrap();
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert!(!copy.exists());
 }
 
 #[test]

@@ -1,5 +1,5 @@
-// The small widget's play button: an App Intent that opens the app into the player, since a small
-// widget takes no links of its own. The medium and large ones link to the same place.
+// The widgets' play button: an App Intent that opens the app into the player. It is not a link,
+// since any page or message can open the app's links.
 
 import AppIntents
 import Foundation

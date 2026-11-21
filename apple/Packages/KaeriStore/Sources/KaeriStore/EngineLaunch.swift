@@ -102,7 +102,8 @@ public struct EngineLaunch: Sendable {
 
     /// What the engine is told of the app. The sign-ins redirect to the app's own scheme,
     /// `kaeri://auth/<tracker>`, so the redirect fields stay unset. The app reads as well as
-    /// watches; a Fixtures scene says for itself whether reading is in it.
+    /// watches; a Fixtures scene says for itself whether reading is in it. The engine speaks
+    /// the language the app shows, for its own words, reading's chapter groups and the TV.
     public var record: FfiStart {
         FfiStart(
             theme: theme,
@@ -112,6 +113,7 @@ public struct EngineLaunch: Sendable {
             simklClientId: simklClientID,
             traktClientId: traktClientID,
             secrets: secrets,
+            language: AppLanguage.showing.tag,
             profile: profile,
             audioTap: true,
             reading: engine == .app

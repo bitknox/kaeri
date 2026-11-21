@@ -1,8 +1,10 @@
 //! Private watching and reading: what the engine says of the mode, and what it keeps.
 //!
-//! The mode is said at launch and on every change, a search made while it is on is not kept,
-//! and a title kept always private is kept on this device only, out of the sync log.
+//! The mode is said at launch and on every change, a search made while it is on is not kept and
+//! is left out of the log, and a title kept always private is kept on this device only, out of
+//! the sync log.
 
+use kaeri_engine::private::redact;
 use kaeri_model::{
     command::Command,
     event::Event,
@@ -10,7 +12,7 @@ use kaeri_model::{
     progress::TitleProgress,
     search::SearchQuery,
 };
-use kaeri_testkit::fixtures::FINISHED;
+use kaeri_testkit::{Operation, fixtures::FINISHED};
 use kaeri_tui::keymap::Action;
 
 use super::progress::{opened, seed_partway};
@@ -48,6 +50,35 @@ async fn a_search_while_private_is_not_remembered() {
     h.send(Command::RememberSearch(SearchQuery::text("paper moon")));
     h.settle().await;
     assert_eq!(kaeri_engine::catalog::recents::recent(h.store()).len(), 1, "kept again");
+}
+
+#[tokio::test]
+async fn a_live_search_while_private_leaves_out_what_it_searched_for_not_the_typing() {
+    const WORDS: &str = "quill harbour";
+    let mut h = Harness::new().await;
+    h.send(Command::SetPrivate { on: true });
+    let typed: Vec<&str> = (1..=WORDS.len()).map(|n| &WORDS[..n]).collect();
+    for text in &typed {
+        h.send(Command::SearchLive { query: SearchQuery::text(*text) });
+    }
+    h.settle().await;
+    let searched: Vec<String> = h
+        .server()
+        .requests_for(Operation::Search)
+        .iter()
+        .filter_map(|asked| asked.variables["r0_search"].as_str().map(str::to_owned))
+        .collect();
+    assert!(searched.iter().any(|text| text == WORDS), "searched {searched:?}");
+    // The words searched for are left out of the log and the rest of the typing is not,
+    // however the waits between the keystrokes fell.
+    for text in typed.iter().map(|text| text.trim()).filter(|text| text.len() >= 3) {
+        let left_out = redact::line(text) == redact::HIDDEN;
+        assert_eq!(
+            left_out,
+            searched.iter().any(|s| s == text),
+            "{text:?}, searched {searched:?}"
+        );
+    }
 }
 
 #[tokio::test]

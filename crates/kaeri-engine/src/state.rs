@@ -133,6 +133,9 @@ pub struct EngineState {
     /// The titles whose episodes were listed lately, for listing them again when the sources
     /// change: see [`crate::titles::refresh`].
     pub listed: crate::titles::refresh::Listed,
+    /// The hover-card work under way, which a cover hovered again joins: see
+    /// [`crate::catalog::cards::HoverAsks`].
+    pub hover: crate::catalog::cards::HoverAsks,
     /// The quiet rechecks of episodes that aired and no source lists: see
     /// [`crate::titles::recheck`].
     pub rechecks: crate::titles::recheck::Rechecks,
@@ -199,6 +202,7 @@ impl EngineState {
             calendar: Default::default(),
             names: Default::default(),
             listed: Default::default(),
+            hover: Default::default(),
             rechecks: Default::default(),
             discussion: Default::default(),
             #[cfg(feature = "party")]

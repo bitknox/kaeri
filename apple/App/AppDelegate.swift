@@ -1,5 +1,6 @@
 // What the app does at launch and at quit, around the store.
 
+import KaeriDesign
 import KaeriKit
 import KaeriPlayerUI
 import KaeriStore
@@ -491,11 +492,11 @@ extension AppDelegate: UIApplicationDelegate {
         quit()
     }
 
-    /// Landscape while the iPhone's player is up.
+    /// Which way the iPhone may turn, from what covers the app.
     func application(
         _ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?
     ) -> UIInterfaceOrientationMask {
-        PlayerOrientation.mask
+        PhoneOrientation.mask
     }
 }
 #endif

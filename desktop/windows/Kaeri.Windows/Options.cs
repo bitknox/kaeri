@@ -33,7 +33,7 @@ namespace Kaeri.Windows;
 /// <param name="Read">Testing build: open the reader on a series, <c>work</c> or <c>work,chapter</c>, where it was left.</param>
 /// <param name="Send">Testing build: a Send to e-reader dialog in a state for a screenshot: preparing, waiting, failed or ready.</param>
 /// <param name="Feed">Testing build: the feed pane told as on or paused, never switched on.</param>
-/// <param name="Opens">The <c>kaeri://</c> link the app was opened with, as the installer's <c>kaeri.exe "%1"</c> hands it over.</param>
+/// <param name="Opens">The link the app was opened with, a <c>kaeri://</c> link, a magnet link or a torrent file, as the installer's <c>kaeri.exe "%1"</c> hands it over.</param>
 public sealed record Options(
     string? Scene, string? Media, string? Page, uint? Title, string? Query, bool Play,
     string? Pane, int? Width, int? Height, bool KeepControls, bool Downloads, bool AskClose,

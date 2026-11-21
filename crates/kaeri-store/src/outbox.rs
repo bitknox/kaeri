@@ -160,6 +160,31 @@ fn put_dropped_ops(c: &rusqlite::Connection, key: &str, ops: &[DroppedOp]) -> Re
     Ok(())
 }
 
+/// Put the op `op` in place of the one row `id` of `table` holds, as a new row that keeps the
+/// old one's place and history: its `created_at`, attempts, retry time and last error. Returns
+/// the new row's id.
+///
+/// A new id rather than an `UPDATE` of the op, since a drain settles what it sent by id once the
+/// tracker answers and claiming takes no lease. While the id went on naming the row after its op
+/// changed, a drain that had sent the older op deleted the newer one unsent, or counted the
+/// tracker's refusal of the older one against it. With one id per op, the answer settles only
+/// the op it was for, and the newer one waits for the next drain. Ids are never reused
+/// (`AUTOINCREMENT`), so the old one cannot come to name another row.
+fn replace_op(c: &rusqlite::Connection, table: &str, id: i64, op: &str) -> Result<i64> {
+    c.execute(
+        &format!(
+            "INSERT INTO {table}
+                    (tracker_id, op, anilist_id, created_at, attempts, next_retry, last_error)
+             SELECT tracker_id, ?1, anilist_id, created_at, attempts, next_retry, last_error
+               FROM {table} WHERE id = ?2"
+        ),
+        rusqlite::params![op, id],
+    )?;
+    let replaced = c.last_insert_rowid();
+    c.execute(&format!("DELETE FROM {table} WHERE id = ?1"), [id])?;
+    Ok(replaced)
+}
+
 /// `next_retry` for an op held until the id mappings change.
 ///
 /// A sentinel rather than a column: `claim_ready` already skips anything not yet due, so a
@@ -240,11 +265,8 @@ impl Store {
                     //
                     // The row is still the same obligation — "tell the tracker where this
                     // title is" — and its history of failing to discharge it is worth keeping.
-                    tx.execute(
-                        "UPDATE sync_outbox SET op = ?1 WHERE id = ?2",
-                        rusqlite::params![&payload, existing_id],
-                    )?;
-                    return Ok(Some(existing_id));
+                    // Its id is new: see `replace_op`.
+                    return replace_op(tx, "sync_outbox", existing_id, &payload).map(Some);
                 }
             }
 
@@ -324,11 +346,7 @@ impl Store {
                     };
                     let json = serde_json::to_string(&merged)
                         .map_err(|source| StoreError::Encode { what: "TrackOp", source })?;
-                    tx.execute(
-                        "UPDATE read_outbox SET op = ?1 WHERE id = ?2",
-                        rusqlite::params![json, existing_id],
-                    )?;
-                    return Ok(Some(existing_id));
+                    return replace_op(tx, "read_outbox", existing_id, &json).map(Some);
                 }
             }
             tx.execute(
@@ -806,6 +824,46 @@ mod tests {
         let entry = &store.claim_ready("anilist", 9_999, 10).unwrap()[0];
         assert_eq!(entry.op, progress(8), "and it still carries the newest episode");
         assert_eq!(entry.attempts, 1, "the row's history of failing survived");
+    }
+
+    #[test]
+    fn the_answer_to_a_sent_op_leaves_what_coalesced_while_it_was_out() {
+        // A drain claims episode 7 and sends it, and episode 8 is marked before the tracker
+        // answers. Settling 7 must neither delete 8 nor count a refusal of 7 against it.
+        let store = Store::open_in_memory().unwrap();
+        let comet = AnilistId::new(900_611);
+        let progress = |episode| TrackOp::SetProgress { anilist_id: comet, episode };
+        store.enqueue("anilist", &progress(7), 1_000).unwrap();
+        let sent = store.claim_ready("anilist", 1_000, 10).unwrap().remove(0);
+        store.enqueue("anilist", &progress(8), 1_010).unwrap();
+
+        assert!(!store.fail(sent.id, "refused", 1_020).unwrap());
+        store.complete(sent.id).unwrap();
+        assert_eq!(store.pending_progress("anilist", comet).unwrap(), Some(8));
+        let next = store.claim_ready("anilist", 1_020, 10).unwrap();
+        assert_eq!(next.len(), 1, "8 is due at the next drain");
+        assert_eq!((&next[0].op, next[0].attempts), (&progress(8), 0));
+        assert_eq!(next[0].created_at, 1_000, "in the queue's order as before");
+
+        store.complete(next[0].id).unwrap();
+        assert_eq!(store.outbox_depth(None).unwrap(), 0);
+    }
+
+    #[test]
+    fn reading_progress_that_coalesced_while_its_row_was_out_stays_queued() {
+        let store = Store::open_in_memory().unwrap();
+        let comet = AnilistId::new(900_611);
+        let read =
+            |chapter| TrackOp::SetReadProgress { anilist_id: comet, chapter, volume: None };
+        store.enqueue("mal", &read(7), 1_000).unwrap();
+        let sent = store.claim_ready_read("mal", 1_000, 10).unwrap().remove(0);
+        store.enqueue("mal", &read(8), 1_010).unwrap();
+
+        assert!(!store.fail_read(sent.id, "refused", 1_020).unwrap());
+        store.complete_read(sent.id).unwrap();
+        assert_eq!(store.read_outbox("mal").unwrap(), [read(8)]);
+        let next = store.claim_ready_read("mal", 1_020, 10).unwrap();
+        assert_eq!((&next[0].op, next[0].attempts), (&read(8), 0));
     }
 
     #[test]

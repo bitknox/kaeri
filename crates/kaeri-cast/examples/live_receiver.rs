@@ -154,7 +154,7 @@ async fn cast_one(
     });
     let was_muted = player.current().muted.unwrap_or(false);
     let _ = player.set_muted(true).await;
-    player.set_greeting(Some("en".into()), Some("computer".into()));
+    player.set_greeting(Some("en".into()), Some("computer".into()), None);
 
     let path = std::fs::canonicalize(media).expect("the file");
     let url = format!("file://{}", path.display());

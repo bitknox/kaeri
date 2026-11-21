@@ -423,7 +423,8 @@ fn prepare_torrent(config: &Config, fixture: bool) -> std::result::Result<Torren
 /// check passes without connecting anywhere.
 pub fn route_for(config: &Config, fixture: bool) -> std::result::Result<TorrentRoute, String> {
     let proxy = config.providers.torrent.proxy.clone();
-    if fixture { TorrentRoute::fixed(proxy) } else { TorrentRoute::new(proxy) }
+    let route = if fixture { TorrentRoute::fixed(proxy) } else { TorrentRoute::new(proxy) }?;
+    Ok(route.with_udp_trackers(config.providers.torrent.udp_trackers_with_proxy))
 }
 
 /// The longest torrents wait between checks of a proxy that keeps failing.
@@ -448,7 +449,7 @@ async fn start_torrent_playback(
     }
 
     sweep_before_session(config, paths, store).await;
-    start_torrent_session(paths, route).await.map_err(|reason| (reason, None))
+    start_torrent_session(paths, route, store).await.map_err(|reason| (reason, None))
 }
 
 /// Bring torrent playback up for the interface, however long a proxy's check takes to pass.
@@ -504,7 +505,7 @@ pub async fn bring_up_torrent(
         wait = (wait * 2).min(RETRY_CEILING);
     }
 
-    start_torrent_session(&paths, route).await
+    start_torrent_session(&paths, route, &store).await
 }
 
 /// The check's answer as the interface is told it, without its reasons, which are the log's.
@@ -531,6 +532,7 @@ async fn sweep_before_session(config: &Config, paths: &Paths, store: &kaeri_stor
 async fn start_torrent_session(
     paths: &Paths,
     route: TorrentRoute,
+    store: &kaeri_store::Store,
 ) -> std::result::Result<TorrentUp, Msg> {
     let session = Arc::new(
         kaeri_providers::torrent::TorrentSession::start(
@@ -542,6 +544,11 @@ async fn start_torrent_session(
         .await
         .map_err(|e| Msg::Store(StoreMsg::TorrentSessionFailed { reason: e.to_string() }))?,
     );
+    // Downloads kept from earlier runs, which a torrent of the same batch must leave when it
+    // goes with its files.
+    let downloads = store.downloads().unwrap_or_default();
+    session
+        .keep_files(downloads.into_iter().filter_map(|d| d.path).map(std::path::PathBuf::from));
 
     Ok(TorrentUp { route, session })
 }

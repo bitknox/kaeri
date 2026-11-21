@@ -3086,7 +3086,7 @@
         <item quantity="other">Đã ra %1$,d tập</item>
     </plurals>
     <string name="count_out_short">Ra %1$,d</string>
-    <string name="count_starts">Bắt đầu %1$s</string>
+    <string name="count_starts">Bắt đầu %1$d %2$s</string>
     <string name="count_not_out">Chưa ra mắt</string>
     <string name="count_next_of">Tập %1$d trên %2$d</string>
     <string name="count_dub">Lồng tiếng</string>
@@ -3098,7 +3098,7 @@
     <plurals name="count_spoken_out">
         <item quantity="other">Đã ra %1$,d tập</item>
     </plurals>
-    <string name="count_spoken_starts">Bắt đầu %1$s</string>
+    <string name="count_spoken_starts">Bắt đầu %1$d %2$s</string>
     <string name="count_spoken_next_of">Tập %1$d trên %2$d</string>
     <string name="count_spoken_dub_through">lồng tiếng đến tập %1$d</string>
     <string name="count_spoken_dub">có bản lồng tiếng</string>

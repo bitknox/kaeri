@@ -162,19 +162,28 @@ impl kaeri::books::host::Host for PluginState {
         &mut self,
         requests: Vec<HttpRequest>,
     ) -> wasmtime::Result<Vec<Result<HttpResponse, GuestHostError>>> {
-        Ok(futures::future::join_all(
-            requests.into_iter().map(|request| one_fetch(&self.capabilities, request)),
+        let capabilities = &self.capabilities;
+        Ok(host::fetch_each(
+            capabilities,
+            requests,
+            |request| one_fetch(capabilities, request),
+            |reason| Err(GuestHostError::Denied(reason)),
         )
         .await)
     }
 
     async fn log(&mut self, level: String, msg: String) -> wasmtime::Result<()> {
         let plugin = self.capabilities.plugin_id();
-        match level.to_ascii_lowercase().as_str() {
-            "error" => tracing::error!(plugin, "{msg}"),
-            "warn" => tracing::warn!(plugin, "{msg}"),
-            "debug" | "trace" => tracing::debug!(plugin, "{msg}"),
-            _ => tracing::info!(plugin, "{msg}"),
+        let Some(msg) = self.capabilities.log_line(&msg) else { return Ok(()) };
+        let is = |name: &str| level.eq_ignore_ascii_case(name);
+        if is("error") {
+            tracing::error!(plugin, "{msg}");
+        } else if is("warn") {
+            tracing::warn!(plugin, "{msg}");
+        } else if is("debug") || is("trace") {
+            tracing::debug!(plugin, "{msg}");
+        } else {
+            tracing::info!(plugin, "{msg}");
         }
         Ok(())
     }

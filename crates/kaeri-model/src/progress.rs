@@ -88,6 +88,10 @@ pub fn watch_row(rows: &mut [EpisodeRow], watch: &Watch) {
     }
 }
 
+/// Where a play resumes from at the earliest: a place closer to the start opens at nought. The
+/// same floor as the store's `MIN_RESUME_SECS`, which every play reads its place through.
+pub const RESUME_FROM_SECS: f64 = 30.0;
+
 /// A watch on a title's entry: where Continue carries on, and how many episodes are done.
 ///
 /// `rows` is the title's episode table, read before the watch lands on it, or `None` when the
@@ -148,7 +152,9 @@ pub fn watch_entry(entry: &mut Entry, rows: Option<&[EpisodeRow]>, watch: &Watch
                 done: entry.progress.map_or(0, |p| p.done),
                 next: number,
             });
-            entry.resume = Some(ResumePoint {
+            // Closer to the start than a play resumes from, it starts at nought: nothing to
+            // offer to resume.
+            entry.resume = (watch.position >= RESUME_FROM_SECS).then(|| ResumePoint {
                 position: watch.position,
                 fraction: watch
                     .duration

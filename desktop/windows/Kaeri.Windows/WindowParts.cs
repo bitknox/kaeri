@@ -1,6 +1,8 @@
 using System.Runtime.InteropServices;
 using System.Text.Json;
+using Kaeri.App;
 using Kaeri.Engine.Model;
+using Microsoft.UI;
 using Microsoft.UI.Windowing;
 using Windows.Graphics;
 
@@ -41,29 +43,70 @@ sealed record Place(RectInt32 Frame, bool Maximised)
     }
 
     /// <summary>
-    /// Whether enough of the frame's title strip lies on a display to be grabbed. The display is
-    /// the one the strip overlaps most. <c>DisplayArea.FindAll()</c> is not used: walking its list
-    /// from C# throws InvalidCastException on some machines. When the check fails, the window is
-    /// centred instead.
+    /// The frame this place opens at, as <see cref="WindowPlace.Opening"/> has it, or null to open
+    /// at the first launch's frame. The display is the one the frame's title strip overlaps most.
+    /// <c>DisplayArea.FindAll()</c> is not used: walking its list from C# throws
+    /// InvalidCastException on some machines.
     /// </summary>
-    public static bool OnADisplay(RectInt32 frame)
+    public RectInt32? Opening(double scale)
     {
         try
         {
-            var strip = new RectInt32(frame.X, frame.Y, Math.Max(1, frame.Width), 40);
-            if (DisplayArea.GetFromRect(strip, DisplayAreaFallback.None) is not { } display)
-                return false;
-            var area = display.WorkArea;
-            var left = Math.Max(area.X, frame.X);
-            var right = Math.Min(area.X + area.Width, frame.X + frame.Width);
-            var top = frame.Y;
-            return right - left >= 120 && top >= area.Y - 8 && top < area.Y + area.Height - 40;
+            var strip = new RectInt32(Frame.X, Frame.Y, Math.Max(1, Frame.Width), 40);
+            var display = DisplayArea.GetFromRect(strip, DisplayAreaFallback.None);
+            return WindowPlace.Opening(Frame.ToFrame(), Maximised, display?.WorkArea.ToFrame(), scale)?.ToRect();
         }
         catch (Exception)
         {
-            return false;
+            return null;
         }
     }
+}
+
+/// <summary>
+/// The frame Restore down takes the window back to, from GetWindowPlacement. Windows keeps it while
+/// the window is maximised, and moves it with the window to another display.
+/// </summary>
+static partial class NormalFrame
+{
+    /// <summary>The window's normal frame in screen pixels; null when Windows does not say.</summary>
+    public static RectInt32? Of(nint hwnd, WindowId window)
+    {
+        try
+        {
+            var placement = new WindowPlacement { Length = (uint)Marshal.SizeOf<WindowPlacement>() };
+            if (!GetWindowPlacement(hwnd, ref placement))
+                return null;
+            var display = DisplayArea.GetFromWindowId(window, DisplayAreaFallback.Nearest);
+            var normal = new WindowFrame(placement.Left, placement.Top, placement.Right - placement.Left, placement.Bottom - placement.Top);
+            return WindowPlace.FromWorkspace(normal, display.OuterBounds.ToFrame(), display.WorkArea.ToFrame()).ToRect();
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+    }
+
+    /// <summary>WINDOWPLACEMENT: the normal frame is in workspace coordinates.</summary>
+    [StructLayout(LayoutKind.Sequential)]
+    struct WindowPlacement
+    {
+        public uint Length, Flags, ShowCommand;
+        public int MinX, MinY, MaxX, MaxY;
+        public int Left, Top, Right, Bottom;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetWindowPlacement(nint hwnd, ref WindowPlacement placement);
+}
+
+/// <summary>A frame as WinRT and as the app's core have it.</summary>
+static class Frames
+{
+    public static WindowFrame ToFrame(this RectInt32 rect) => new(rect.X, rect.Y, rect.Width, rect.Height);
+
+    public static RectInt32 ToRect(this WindowFrame frame) => new(frame.X, frame.Y, frame.Width, frame.Height);
 }
 
 /// <summary>

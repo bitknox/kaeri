@@ -340,9 +340,10 @@ impl TvSender {
 
     /// The app leaves the foreground (`true`) or is back (`false`): what an iPhone or an iPad
     /// says, which can't serve the TV from the background. Away, the TV pauses on Kaeri's
-    /// receiver's "Waiting for the iPhone". Back, it plays on; if the session ended meanwhile
-    /// (the receiver closed when idle, the network dropped), it connects again and the episode
-    /// loads at the second it paused.
+    /// receiver's "Waiting for the iPhone". Back, it plays on, or, paused before the app left,
+    /// stays paused and stops waiting; if the session ended meanwhile (the receiver closed when
+    /// idle, the network dropped), it connects again and the episode loads at the second it
+    /// paused.
     pub fn cast_away(&self, away: bool) {
         let Some((hub, engine)) = self.hub() else { return };
         if away {
@@ -371,16 +372,23 @@ impl TvSender {
         }
         let Some(left) = lock(&self.casting.away).take() else { return };
         if let Some(player) = hub.held(&left.device).filter(|p| p.is_alive()) {
-            if left.paused {
-                hub.spawn(async move {
-                    // A connection that dropped while away is made again first.
-                    if player.settled().await
-                        && let Err(e) = player.set_paused(false).await
-                    {
+            let (language, device, reduce_motion) =
+                (hub.language(), hub.device_word(), hub.reduce_motion());
+            hub.spawn(async move {
+                // A connection that dropped while away is made again first.
+                if !player.settled().await {
+                    return;
+                }
+                if left.paused {
+                    if let Err(e) = player.set_paused(false).await {
                         tracing::debug!(error = %e, "the TV didn't play on");
                     }
-                });
-            }
+                } else {
+                    // The receiver waits for this device until it hears from it. Playing on
+                    // tells it; a cast left paused stays paused, so the greeting does.
+                    player.set_greeting(language, device, reduce_motion);
+                }
+            });
             return;
         }
         // The session ended while away: connect again. A receiver still up holds the episode

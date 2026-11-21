@@ -182,6 +182,56 @@ fn the_log_leaves_out_learnt_words_and_ids() {
 }
 
 #[test]
+fn a_learnt_word_is_left_out_where_it_stands_alone_not_inside_another() {
+    let log = Redactor::new();
+    // A search for "the" and one for "202", made while private, and a private title.
+    log.word("the");
+    log.word("202");
+    // A shorter word learnt first still leaves the longer one to be taken out whole.
+    log.word("Kite");
+    log.word("Kite Weather");
+    assert_eq!(
+        log.line("2026-11-21T10:12:03Z INFO the other source failed, then authenticated"),
+        "2026-11-21T10:12:03Z INFO [private] other source failed, then authenticated"
+    );
+    assert_eq!(
+        log.line("title=\"KITE WEATHER\" next: Kite Weather's 2nd (202)"),
+        "title=\"[private]\" next: [private]'s 2nd ([private])"
+    );
+}
+
+#[test]
+fn a_learnt_word_is_left_out_in_any_case_where_lowercasing_changes_lengths() {
+    let log = Redactor::new();
+    log.word("\u{130}lara Lantern");
+    assert_eq!(log.line("staging \u{130}LARA LANTERN 03"), "staging [private] 03");
+    // Lowercased, the dotted capital I takes a byte more and the ohm sign a byte less: the
+    // line keeps its length while its letters move.
+    log.word("ab\u{130}");
+    assert_eq!(log.line("ab\u{130}\u{2126} done"), "[private]\u{2126} done");
+}
+
+#[test]
+fn the_keystrokes_of_a_live_search_while_private_are_not_left_out() {
+    use kaeri_model::{command::Command, search::SearchQuery};
+    // The process's log: words are only added, so this does not disturb other tests.
+    let privacy = Privacy::default();
+    privacy.set(true);
+    for text in ["qui", "quill", "quill harb", "quill harbour"] {
+        super::note_command(&privacy, &Command::SearchLive { query: SearchQuery::text(text) });
+    }
+    // The live search notes the words it searches for once it runs; the keystrokes note none.
+    assert_eq!(super::redact::line("quill pen, quill harb"), "quill pen, quill harb");
+    // Return searches at once, and its words are left out from then on.
+    super::note_command(
+        &privacy,
+        &Command::Search { query: SearchQuery::text("quill harbour") },
+    );
+    privacy.set(false);
+    assert_eq!(super::redact::line("q=Quill Harbour, quill pen"), "q=[private], quill pen");
+}
+
+#[test]
 fn the_log_leaves_out_addresses_only_while_private() {
     let log = Redactor::new();
     let text = "fetch https://media.example/a/b.m3u8?t=1 failed, magnet:?xt=urn:btih:abc too";

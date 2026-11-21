@@ -112,9 +112,13 @@ enum PageImages {
             let shown = file.crop.map { CGFloat(max($0.width, $0.height)) } ?? longest
             let limit = max(longestSide, 256) * longest / max(shown, 1)
             if longest > limit * 1.5 {
+                // The thumbnail keeps the stored pixels' shape, as the full decode below does:
+                // the engine lays the page out, splits it and crops it in stored pixels. A turn
+                // from the file's EXIF applied here alone would draw the page in another shape
+                // at this size, with its crop on another part of it.
                 image = CGImageSourceCreateThumbnailAtIndex(source, 0, [
                     kCGImageSourceCreateThumbnailFromImageAlways: true,
-                    kCGImageSourceCreateThumbnailWithTransform: true,
+                    kCGImageSourceCreateThumbnailWithTransform: false,
                     kCGImageSourceThumbnailMaxPixelSize: limit,
                     kCGImageSourceShouldCacheImmediately: true,
                 ] as CFDictionary)

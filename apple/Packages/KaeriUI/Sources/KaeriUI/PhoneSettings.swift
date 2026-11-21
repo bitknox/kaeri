@@ -769,6 +769,7 @@ struct PhoneSourcesPage: View {
                     if let status = store.providers.proxyStatus, status != .direct {
                         PhoneProxyCheckRow()
                     }
+                    PhoneSettingSwitch(key: .udpTrackersWithProxy, note: L.torrentsProxyUdpTrackersDetail)
                 }
             } header: {
                 PhoneSectionHeader(L.torrentsTitle)

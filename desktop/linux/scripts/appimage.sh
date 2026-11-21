@@ -4,16 +4,18 @@
 #   desktop/linux/scripts/appimage.sh --deps             install the build box's packages (as root)
 #   desktop/linux/scripts/appimage.sh <version> <out>    build and write into <out>:
 #
-#     kaeri-<version>-linux-<arch>.AppImage           the app, GTK 4, libadwaita and libmpv
-#     kaeri-<version>-linux-<arch>.AppImage.zsync     for AppImageUpdate and the like
-#     kaeri-<version>-linux-<arch>.AppImage.sha256
-#     linux-<arch>/                                       the build's record, for the notices
+#     Kaeri-<version>-<arch>.AppImage                 the app, GTK 4, libadwaita and libmpv
+#     Kaeri-<version>-<arch>.AppImage.zsync           for AppImageUpdate and the like
+#     Kaeri-<version>-<arch>.AppImage.sha256
+#     linux-<arch>/                                   the build's record, for the notices
 #
 # It runs in Debian 13 (debian:trixie), the oldest Debian with the GTK 4.16 and libadwaita 1.7 the
-# app asks for, and the AppImage carries Debian's GTK, libadwaita and what they need. So the
-# AppImage needs Debian 13's glibc, 2.41, or newer: Debian 13, Ubuntu 25.04, Fedora 42 and later,
-# whatever GTK they have themselves. packaging/linux/glibc-floor.sh checks every file in it
-# against that floor, and AppRun says so on an older system rather than failing to load.
+# app asks for, and the AppImage carries Debian's GTK, libadwaita and what they need, built
+# against Debian 13's glibc, 2.41. packaging/linux/glibc-floor.sh checks every file in it against
+# that floor. On a system with glibc 2.41 or newer, the app runs on the system's glibc and its
+# graphics, X11, Wayland, font and sound libraries. On an older system, or one without glibc,
+# AppRun starts it through the glibc the AppImage carries in usr/lib/compat, beside Debian 13's
+# copies of those system libraries, all but the graphics drivers', which stay the system's.
 #
 # libmpv is desktop/linux/scripts/libmpv.sh's LGPL build, never Debian's, which is GPL. Every
 # library stays a shared library of its own. What the system must have is linuxdeploy's
@@ -45,7 +47,8 @@ declare -A sums=(
   [runtime-x86_64]=2fca8b443c92510f1483a883f60061ad09b46b978b2631c807cd873a47ec260d
   [runtime-aarch64]=00cbdfcf917cc6c0ff6d3347d59e0ca1f7f45a6df1a428a0d6d8a78664d87444
 )
-# The glibc of the build box, which is what the AppImage needs.
+# The glibc of the build box: the AppImage runs on the system's glibc from this version on, and on
+# its own below it.
 floor=2.41
 
 # The build box's packages: the app's and libmpv's build dependencies, the libraries the
@@ -88,7 +91,7 @@ glibc="$(getconf GNU_LIBC_VERSION | cut -d' ' -f2)"
 [[ "$glibc" == "$floor" ]] || fail "the floor is glibc $floor, and this box has $glibc"
 triplet="$(gcc -dumpmachine)"
 syslib="/usr/lib/$triplet"
-name="kaeri-$version-linux-$arch"
+name="Kaeri-$version-$arch"
 work="$out/.appimage-$arch"
 appdir="$work/AppDir"
 record="$out/linux-$arch"
@@ -139,7 +142,9 @@ desktop="$appdir/usr/share/applications/$id.desktop"
 grep -q '^MimeType=.*x-scheme-handler/kaeri;' "$desktop" || fail "$id.desktop does not take kaeri:// links"
 desktop-file-validate "$desktop"
 install -Dm755 "$linux/appimage/AppRun" "$work/AppRun"
-sed -i "s/@FLOOR@/$floor/" "$work/AppRun"
+loader="$(readelf -l "$bin" | sed -n 's|.*Requesting program interpreter: .*/\([^/]*\)]$|\1|p')"
+[[ "$loader" == ld-linux-*.so.* ]] || fail "the app's loader is '$loader', not glibc's"
+sed -i -e "s/@FLOOR@/$floor/" -e "s/@LOADER@/$loader/" "$work/AppRun"
 grep -q '@[A-Z_]*@' "$work/AppRun" && fail "AppRun has a placeholder left"
 
 # The show titles' typeface, which the app finds through KAERI_FONTS.
@@ -203,6 +208,45 @@ grep -q '"%APPDIR%/usr/lib/libpixbufloader_svg.so"' "$loaders/loaders.cache.in" 
   fail "the loaders' cache names no SVG loader"
 "$syslib/glib-2.0/gio-querymodules" "$appdir/usr/lib/gio/modules"
 
+# For a system older than the floor: Debian 13's glibc, and every library the AppImage leaves to
+# the system but the graphics drivers' (libGL, libEGL, libgbm, libdrm, Vulkan), which have to match
+# the system's drivers. AppRun puts them on the loader's path only there, so a system with a new
+# enough glibc runs on its own libraries as before. They keep Debian's files, unpatched.
+step "carrying glibc and the system's libraries for older systems"
+compat="$appdir/usr/lib/compat"
+mkdir -p "$compat"
+dpkg -L libc6 | grep -E "/lib/$triplet/[^/]+\.so[.0-9]*\$" | while read -r lib; do
+  cp -L "$lib" "$compat/$(basename "$lib")"
+done
+[[ -x "$compat/$loader" && -f "$compat/libc.so.6" ]] || fail "found no $loader or libc.so.6 in Debian's libc6"
+drivers='^(libGL|libGLX|libGLdispatch|libOpenGL|libEGL|libGLESv1_CM|libGLESv2|libgbm|libdrm|libvulkan)\.so'
+while IFS= read -r -d '' file; do
+  [[ "$(head -c 4 "$file" | od -An -c | tr -d ' ')" == '177ELF' ]] || continue
+  ldd "$file" 2>/dev/null | awk '$2 == "=>" && $3 ~ /^\// { print $1, $3 }'
+done < <(find "$appdir/usr" -path "$compat" -prune -o -type f -print0) | sort -u |
+  while read -r soname path; do
+    [[ "$path" == "$appdir"/* || -e "$compat/$soname" || -e "$appdir/usr/lib/$soname" ]] && continue
+    [[ "$soname" =~ $drivers ]] && continue
+    cp -L "$path" "$compat/$soname"
+  done
+# What those need in turn, which may be more of the system's.
+for _ in 1 2 3; do
+  for file in "$compat"/*.so*; do
+    ldd "$file" 2>/dev/null | awk '$2 == "=>" && $3 ~ /^\// { print $1, $3 }'
+  done | sort -u | while read -r soname path; do
+    [[ "$path" == "$appdir"/* || -e "$compat/$soname" || -e "$appdir/usr/lib/$soname" ]] && continue
+    [[ "$soname" =~ $drivers ]] && continue
+    cp -L "$path" "$compat/$soname"
+  done
+done
+for lib in libharfbuzz.so.0 libfontconfig.so.1 libfreetype.so.6 libX11.so.6 libwayland-client.so.0; do
+  [[ -f "$compat/$lib" ]] || fail "usr/lib/compat has no $lib"
+done
+# Nothing in it is a second copy of a library usr/lib carries: the app has that one already.
+for lib in "$compat"/*.so*; do
+  [[ ! -e "$appdir/usr/lib/$(basename "$lib")" ]] || fail "usr/lib/compat and usr/lib both carry $(basename "$lib")"
+done
+
 # --- Checks ----------------------------------------------------------------------------------------
 
 step "checking what it carries"
@@ -237,6 +281,9 @@ done
 for system in libc.so.6 libGL.so.1 libEGL.so.1 libgbm.so.1 libdrm.so.2 libX11.so.6 libfontconfig.so.1; do
   [[ ! -e "$appdir/usr/lib/$system" ]] || fail "the AppImage carries $system, which is the system's"
 done
+for driver in libGL.so.1 libEGL.so.1 libgbm.so.1 libdrm.so.2; do
+  [[ ! -e "$compat/$driver" ]] || fail "usr/lib/compat carries $driver, which has to be the system's"
+done
 # Every library resolves inside the AppDir or on the system.
 missing="$(for file in "${elves[@]}"; do ldd "$file" 2>/dev/null | grep 'not found' || true; done | sort -u)"
 [[ -z "$missing" ]] || fail "unresolved libraries: $missing"
@@ -248,7 +295,8 @@ step "collecting the notices"
 docs="$appdir/usr/share/doc/third-party"
 mkdir -p "$docs/debian"
 : >"$record/packages"
-for file in "$appdir"/usr/lib/*.so* "$appdir"/usr/lib/*/*/*/*.so "$appdir"/usr/lib/gio/modules/*.so; do
+for file in "$appdir"/usr/lib/*.so* "$appdir"/usr/lib/*/*/*/*.so "$appdir"/usr/lib/gio/modules/*.so \
+  "$compat"/*.so*; do
   [[ -f "$file" ]] || continue
   base="$(basename "$file")"
   # linuxdeploy keeps the names the libraries are loaded by; dpkg knows them by their real path.
@@ -286,7 +334,8 @@ libmpv and FFmpeg are LGPL builds, without their GPL parts (mpv with -Dgpl=false
 sources. libmpv-build.txt names their sources, by address and SHA-256; the release's
 kaeri-$version-apps-sources.tar holds them, and ffmpeg/ and mpv/ hold their licences.
 
-The other libraries in usr/lib are Debian 13's, unmodified. debian/PACKAGES.txt lists each with
+The other libraries in usr/lib, and glibc and the system libraries in usr/lib/compat, which the
+app uses only on a system with an older glibc, are Debian 13's, unmodified. debian/PACKAGES.txt lists each with
 its Debian package, version and source package, whose source is in Debian's archive
 (apt-get source <package>=<version>, or https://snapshot.debian.org). debian/<package>/copyright
 is that package's licence.
@@ -300,7 +349,7 @@ cp -R "$docs" "$record/third-party"
 # --- The AppImage ----------------------------------------------------------------------------------
 
 step "making the AppImage"
-update="gh-releases-zsync|bitknox|kaeri|latest|kaeri-*-linux-$arch.AppImage.zsync"
+update="gh-releases-zsync|bitknox|kaeri|latest|Kaeri-*-$arch.AppImage.zsync"
 (
   cd "$out"
   ARCH="$arch" VERSION="$version" "$work/tools/appimagetool-$arch" --no-appstream \
@@ -317,6 +366,9 @@ readelf -p .upd_info "$appimage" | grep -qF "$update" || fail "the AppImage has 
 workspace="$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' "$root/Cargo.toml")"
 version_line="$(HOME="$work/home" "$appimage" --version)"
 [[ "$version_line" == "Kaeri $workspace" ]] || fail "the AppImage says '$version_line', not 'Kaeri $workspace'"
+# And through the glibc it carries, as on an older system.
+version_line="$(HOME="$work/home" "$compat/$loader" --library-path "$compat" "$appdir/usr/bin/kaeri-desktop" --version)"
+[[ "$version_line" == "Kaeri $workspace" ]] || fail "on its own glibc, the app says '$version_line', not 'Kaeri $workspace'"
 
 du -sh "$appdir" | sed 's/^/AppDir: /' >"$record/sizes"
 ls -l "$appimage" "$appimage.zsync" >>"$record/sizes"

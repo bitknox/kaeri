@@ -8154,7 +8154,7 @@
     <value>{count} çıktı</value>
   </data>
   <data name="CountStarts" xml:space="preserve">
-    <value>{date} başlıyor</value>
+    <value>{day} {month} başlıyor</value>
   </data>
   <data name="CountNotOut" xml:space="preserve">
     <value>Henüz çıkmadı</value>
@@ -8184,7 +8184,7 @@
     <value>{count} bölüm çıktı</value>
   </data>
   <data name="CountSpokenStarts" xml:space="preserve">
-    <value>{date} tarihinde başlıyor</value>
+    <value>{day} {month} tarihinde başlıyor</value>
   </data>
   <data name="CountSpokenNextOf" xml:space="preserve">
     <value>{total} bölümün {episode}. bölümü</value>

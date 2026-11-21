@@ -10,6 +10,7 @@ import app.kaeri.engine.ffi.FfiCastBrowser
 import app.kaeri.engine.ffi.FfiCloudAuthorizer
 import app.kaeri.engine.ffi.FfiPlatform
 import app.kaeri.engine.ffi.FfiTvBrowser
+import app.kaeri.store.AppLanguage
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineHome
 import app.kaeri.store.EngineLaunch
@@ -27,6 +28,7 @@ internal object Flavour {
             .copy(
                 platform = enginePlatform(context),
                 profile = ProfileChoice.saved(context),
+                language = AppLanguage.showing(context).tag,
                 folderAccess = PickedFolders(context.contentResolver),
                 cloudAuthorizer = googleDrive(context),
             )
@@ -44,7 +46,11 @@ internal object Flavour {
     /** The engine background work starts while the app is not running: the app's own files. */
     fun background(context: Context): EngineLaunch =
         EngineLaunch.app(EngineHome.sandbox(files = context.filesDir, cache = context.cacheDir))
-            .copy(folderAccess = PickedFolders(context.contentResolver), cloudAuthorizer = googleDrive(context))
+            .copy(
+                folderAccess = PickedFolders(context.contentResolver),
+                cloudAuthorizer = googleDrive(context),
+                language = AppLanguage.showing(context).tag,
+            )
 
     fun started(context: Context, store: AppStore, intent: Intent, notifier: EpisodeNotifier, player: app.kaeri.player.PlayerModel) {}
 

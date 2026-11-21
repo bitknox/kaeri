@@ -348,6 +348,11 @@ struct SourcesPane: View {
             if proxy != nil, let status = store.providers.proxyStatus, status != .direct {
                 ProxyCheckRow()
             }
+            if proxy != nil {
+                SettingsRow(title: SettingKey.udpTrackersWithProxy.title, note: L.torrentsProxyUdpTrackersDetail) {
+                    SettingSwitch(key: .udpTrackersWithProxy)
+                }
+            }
         }
         if on {
             SettingsGroup(title: L.downloadsSeedingTitle, footnote: L.settingsSeedingOpenOnly) {

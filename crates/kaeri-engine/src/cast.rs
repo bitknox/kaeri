@@ -66,6 +66,9 @@ pub struct CastHub {
     language: Mutex<Option<String>>,
     /// What Kaeri's receiver calls this device: `iphone`, `phone`, `mac`, ...
     device_word: Mutex<Option<String>>,
+    /// Whether the device asks for reduced motion, for the receiver's scenes; `None` until the
+    /// front end says.
+    reduce_motion: Mutex<Option<bool>>,
     /// The player whose receiver's messages are followed.
     listening: Mutex<Weak<CastPlayer>>,
     /// What Kaeri's receiver says, for the sender's parts that act on it.
@@ -519,6 +522,7 @@ impl CastHub {
             show_tvs: AtomicBool::new(true),
             language: Mutex::new(None),
             device_word: Mutex::new(None),
+            reduce_motion: Mutex::new(None),
             listening: Mutex::new(Weak::new()),
             heard: broadcast::channel(16).0,
             session: Mutex::new(Session::default()),
@@ -1334,7 +1338,7 @@ impl CastHub {
     pub fn set_language(&self, language: Option<String>) {
         *lock(&self.language) = language;
         if let Some(player) = self.player() {
-            player.set_greeting(self.language(), self.device_word());
+            player.set_greeting(self.language(), self.device_word(), self.reduce_motion());
         }
     }
 
@@ -1347,12 +1351,27 @@ impl CastHub {
     pub fn set_device_word(&self, word: Option<String>) {
         *lock(&self.device_word) = word;
         if let Some(player) = self.player() {
-            player.set_greeting(self.language(), self.device_word());
+            player.set_greeting(self.language(), self.device_word(), self.reduce_motion());
         }
     }
 
     pub fn device_word(&self) -> Option<String> {
         lock(&self.device_word).clone()
+    }
+
+    /// The device's Reduce Motion, from the front end's device state: Kaeri's receiver keeps
+    /// its scenes still while it is on.
+    pub fn set_reduce_motion(&self, reduce: bool) {
+        if lock(&self.reduce_motion).replace(reduce) == Some(reduce) {
+            return;
+        }
+        if let Some(player) = self.player() {
+            player.set_greeting(self.language(), self.device_word(), self.reduce_motion());
+        }
+    }
+
+    pub fn reduce_motion(&self) -> Option<bool> {
+        *lock(&self.reduce_motion)
     }
 
     /// What Kaeri's receiver says from now on, past the hub's own handling.
@@ -1369,7 +1388,7 @@ impl CastHub {
             }
             *listening = Arc::downgrade(player);
         }
-        player.set_greeting(self.language(), self.device_word());
+        player.set_greeting(self.language(), self.device_word(), self.reduce_motion());
         let mut heard = player.heard();
         let hub = Arc::downgrade(self);
         let tv = player.device().clone();

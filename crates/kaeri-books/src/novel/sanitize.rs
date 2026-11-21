@@ -896,4 +896,20 @@ mod tests {
             "{out}"
         );
     }
+
+    #[test]
+    fn deeply_nested_css_in_a_chapter_is_cleaned_on_a_small_stack() {
+        let deep = "(".repeat(50_000);
+        let src = format!(
+            "<html xmlns=\"http://www.w3.org/1999/xhtml\"><head><style>p{{{deep}}}</style>\
+             </head><body><p style=\"color:{deep}\">Kept text</p></body></html>"
+        );
+        let out = std::thread::Builder::new()
+            .stack_size(1024 * 1024)
+            .spawn(move || clean(&src))
+            .unwrap()
+            .join()
+            .unwrap();
+        assert!(out.contains("Kept text"), "{out}");
+    }
 }

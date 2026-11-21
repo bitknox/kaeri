@@ -162,6 +162,7 @@ pub fn live(query: SearchQuery, engine: &mut EngineState, services: &Services, t
     let kept = searches.recall(&Key { query: query.clone(), adult, page: 1 }, now_epoch());
     let lent = lend(services, tx);
     let running = searches.clone();
+    let privacy = Arc::clone(&services.privacy);
     let task = tokio::spawn(async move {
         if kept.is_none() {
             tokio::time::sleep(if text_changed { AFTER_TYPING } else { AFTER_FILTERING }).await;
@@ -171,6 +172,9 @@ pub fn live(query: SearchQuery, engine: &mut EngineState, services: &Services, t
             }
         }
         running.pause(false, &lent.tx);
+        // Private mode leaves out the words searched for, known only now: the text typed on the
+        // way was never searched.
+        crate::private::note_search(&privacy, &query.text);
         first_page(lent, &running, query, adult).await;
     });
     searches.replace(Some(task.abort_handle()));

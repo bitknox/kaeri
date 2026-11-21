@@ -191,10 +191,17 @@ impl FfiEngine {
 
 impl FfiEngine {
     /// Start the engine from `options` on the app's `host`, on the runtime this is polled in.
+    ///
+    /// The language the app starts in becomes the process's before anything is written: the
+    /// model's and the engine's words come from the catalogue in the process's language, and
+    /// an app, unlike the terminal, sets it nowhere else. No language leaves it as it is.
     pub(crate) async fn launch(
         options: EngineOptions,
         host: Adapter,
     ) -> Result<(Engine, EventStream), FfiError> {
+        if let Some(tag) = &options.language {
+            kaeri_i18n::set_language(kaeri_i18n::negotiate([tag.as_str()]));
+        }
         let host: Arc<dyn Host> = Arc::new(host);
         Engine::start(options, host)
             .await

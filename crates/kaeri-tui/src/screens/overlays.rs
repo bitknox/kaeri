@@ -331,8 +331,16 @@ pub(super) fn render_overlay(
     let title = overlay.title().to_string();
     // The title, then what goes with it, three cells apart.
     let titled = |rest: &str| format!("{}   {}", title, rest);
-    // A title, then what is typed so far and the caret.
-    let typed = |field: Field| titled(&format!("{}▏", field_text(app, field)));
+    // Where in a table too long for the band the window is, so the rest is known to exist.
+    let position = position.filter(|p| p.cells() + 8 < band.width as usize);
+    let position_room = position.as_ref().map_or(0, |p| p.cells() as u16 + 2);
+    // A title, then what is typed so far and the caret. Text longer than the band shows its end,
+    // where the caret is and what was typed last.
+    let typed = |field: Field| {
+        let room = usize::from(band.width.saturating_sub(position_room))
+            .saturating_sub(title.cells() + 8);
+        titled(&format!("{}▏", tail(&field_text(app, field), room)))
+    };
     let heading = match overlay {
         Overlay::CommandPalette => typed(Field::Palette),
         Overlay::ManualQuery => typed(Field::ManualQuery),
@@ -340,16 +348,8 @@ pub(super) fn render_overlay(
         Overlay::ReaderGoTo => typed(Field::Page),
         Overlay::EditSetting => typed(Field::Setting),
         Overlay::KitsuUsername => typed(Field::KitsuUser),
-        // A link is longer than the band, and the end is where the cursor is, so the end is
-        // what shows.
-        Overlay::JoinStore => {
-            let room = (band.width as usize).saturating_sub(title.cells() + 8);
-            titled(&format!("{}▏", tail(&field_text(app, Field::JoinLink), room)))
-        }
-        Overlay::JoinParty => {
-            let room = (band.width as usize).saturating_sub(title.cells() + 8);
-            titled(&format!("{}▏", tail(&field_text(app, Field::PartyLink), room)))
-        }
+        Overlay::JoinStore => typed(Field::JoinLink),
+        Overlay::JoinParty => typed(Field::PartyLink),
         Overlay::Say => typed(Field::Say),
         Overlay::InviteName => typed(Field::InviteName),
         Overlay::StoreConfirm => store_confirm_heading(app),
@@ -405,9 +405,6 @@ pub(super) fn render_overlay(
         }),
         _ => body.as_ref().map_or_else(|| title.clone(), |body| body.heading.clone()),
     };
-    // Where in a table too long for the band the window is, so the rest is known to exist.
-    let position = position.filter(|p| p.cells() + 8 < band.width as usize);
-    let position_room = position.as_ref().map_or(0, |p| p.cells() as u16 + 2);
     line(
         buf,
         band.left() + 2,
@@ -837,6 +834,28 @@ mod tests {
             draw(&app),
             FrameReport { overlay_offset: Some(0), window, ..FrameReport::default() }
         );
+    }
+
+    /// Text typed past the band's width shows its end, where the caret is, in every overlay
+    /// that is typed into: what was typed last can be seen and taken back.
+    #[test]
+    fn a_long_typed_heading_keeps_its_end_and_the_caret_in_view() {
+        const TYPED: &str = "The Lantern Ferry and the Long Winter Crossing over the Grey Northern \
+             Sea and Past the Lighthouse";
+        for overlay in [Overlay::ManualQuery, Overlay::CommandPalette] {
+            let mut app = app_with(ContentList::Entries(vec![]));
+            let overlay_name = format!("{overlay:?}");
+            app.nav.open_overlay(overlay);
+            for c in TYPED.chars() {
+                app.type_char(c);
+            }
+            let text = text_of(&render_to_buffer(&mut app, 80, 24));
+            let heading = text.lines().find(|l| l.contains('▏')).unwrap_or_else(|| {
+                panic!("{overlay_name}: no caret on any row\n{text}");
+            });
+            assert!(heading.contains("the Lighthouse▏"), "{overlay_name}: {heading}");
+            assert!(heading.contains('…'), "{overlay_name}: the start gives way: {heading}");
+        }
     }
 
     #[test]

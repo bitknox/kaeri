@@ -27,8 +27,11 @@ impl App {
         // Text first: while a field has focus, plain characters are input, not bindings.
         if self.is_typing() {
             match key.code {
+                // A character typed with AltGr too: Windows reports it as ctrl and alt held.
                 KeyCode::Char(c)
-                    if key.modifiers.is_empty() || key.modifiers == KeyModifiers::SHIFT =>
+                    if key.modifiers.is_empty()
+                        || key.modifiers == KeyModifiers::SHIFT
+                        || crate::keymap::altgr(&key) =>
                 {
                     self.type_char(c);
                     return None;
@@ -525,6 +528,20 @@ mod tests {
 
     fn setting_row(id: SettingKey) -> usize {
         SettingKey::ROWS.iter().position(|s| *s == id).expect("a settings row")
+    }
+
+    #[test]
+    fn characters_typed_with_altgr_on_windows_go_into_the_field() {
+        let mut a = app();
+        a.handle(Action::FocusSearch, 10);
+        assert!(a.is_typing());
+        let altgr = KeyModifiers::CONTROL | KeyModifiers::ALT;
+        for (c, modifiers) in
+            [('@', altgr), ('\\', altgr), ('{', altgr), ('Ł', altgr | KeyModifiers::SHIFT)]
+        {
+            assert_eq!(a.press(KeyEvent::new(KeyCode::Char(c), modifiers), 10), None);
+        }
+        assert_eq!(a.text(Field::Search), "@\\{Ł");
     }
 
     #[test]

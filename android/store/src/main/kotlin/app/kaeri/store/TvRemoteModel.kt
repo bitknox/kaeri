@@ -55,7 +55,12 @@ data class TvPairingStep(
     val working: Boolean,
     /** The engine's words for the last try that failed. */
     val problem: String? = null,
+    /** A link opened from outside the app, waiting for Pair before anything reaches its address. */
+    val asking: TvLinkAsk? = null,
 )
+
+/** A pairing link opened from outside the app: [link] pairs once the viewer chooses Pair; [address] is what the sheet names. */
+data class TvLinkAsk(val link: String, val address: String)
 
 /**
  * What the TV shots open on, the fixtures' `tv` extra:
@@ -185,7 +190,7 @@ class TvRemoteModel(
         refresh()
         waiting?.let {
             waiting = null
-            begin(it)
+            ask(it)
         }
         watcher?.cancel()
         watcher = scope.launch {
@@ -317,12 +322,21 @@ class TvRemoteModel(
 
     /**
      * A link the app was opened with: the QR code on a TV's Pair a phone screen, read by the
-     * system's camera. False when it is not one.
+     * system's camera, or a link anyone could send. The sheet names its address and pairs only
+     * once the viewer chooses Pair ([begin] with the link). False when it is not one.
      */
     fun open(link: String): Boolean {
         if (!link.startsWith("$SCHEME://")) return false
-        if (available) begin(link) else waiting = link
+        if (available) ask(link) else waiting = link
         return true
+    }
+
+    private fun ask(link: String) {
+        cancelPairing()
+        openSheet(Sheet.Picker)
+        // A link with no address to name can pair with nothing: begin says why.
+        val address = linkAddress(link) ?: return begin(link)
+        _pairing.value = TvPairingStep(tvName = "", needsCode = false, working = false, asking = TvLinkAsk(link, address))
     }
 
     /** A link the app was opened with before the engine was up, followed once it is. */
@@ -528,6 +542,14 @@ class TvRemoteModel(
     companion object {
         /** The scheme of the link a TV's QR code carries. */
         const val SCHEME = "kaeri-remote"
+
+        private val ADDRESS = Regex("[0-9A-Fa-f.:\\[\\]]{1,64}")
+
+        /** The `addr` a pairing link names, when it reads as an address and port; null otherwise. */
+        internal fun linkAddress(link: String): String? =
+            link.substringAfter('?', "").split('&')
+                .firstNotNullOfOrNull { it.split('=', limit = 2).takeIf { p -> p.size == 2 && p[0] == "addr" }?.get(1) }
+                ?.takeIf { ADDRESS.matches(it) }
 
         /** What a TV lists this device as: the kind of device, never the name it was given. */
         const val DEVICE_NAME = "Android phone"

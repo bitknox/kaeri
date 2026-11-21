@@ -8354,8 +8354,8 @@ public static partial class T
     /// <summary>The same, short.</summary>
     public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</summary>
-    public static string CountStarts(string date) => Fill(Get("CountStarts"), ("date", date));
+    /// <summary>The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.</summary>
+    public static string CountStarts(long day, string month) => Fill(Get("CountStarts"), ("day", day.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("month", month));
 
     /// <summary>The count line of a show that has not started and has no date.</summary>
     public static string CountNotOut => Get("CountNotOut");
@@ -8378,8 +8378,8 @@ public static partial class T
     /// <summary>What a screen reader says for a show that is airing with no known total.</summary>
     public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</summary>
-    public static string CountSpokenStarts(string date) => Fill(Get("CountSpokenStarts"), ("date", date));
+    /// <summary>What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.</summary>
+    public static string CountSpokenStarts(long day, string month) => Fill(Get("CountSpokenStarts"), ("day", day.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("month", month));
 
     /// <summary>What a screen reader says for a show the viewer is part way through.</summary>
     public static string CountSpokenNextOf(long episode, long total) => Fill(Get("CountSpokenNextOf"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -11594,6 +11594,12 @@ public static partial class T
     /// <summary>Line under the switch.</summary>
     public static string TorrentsProxyRouteDetail => Get("TorrentsProxyRouteDetail");
 
+    /// <summary>Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.</summary>
+    public static string TorrentsProxyUdpTrackers => Get("TorrentsProxyUdpTrackers");
+
+    /// <summary>Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.</summary>
+    public static string TorrentsProxyUdpTrackersDetail => Get("TorrentsProxyUdpTrackersDetail");
+
     /// <summary>Summary: torrents go through a proxy. Host and port are already formatted.</summary>
     public static string TorrentsSummaryProxyAt(string host, string port) => Fill(Get("TorrentsSummaryProxyAt"), ("host", host), ("port", port));
 
@@ -11998,6 +12004,9 @@ public static partial class T
 
     /// <summary>Title of the pairing sheet.</summary>
     public static string TvPairWithTv => Get("TvPairWithTv");
+
+    /// <summary>Line of the pairing sheet when a link opened from outside the app asks to pair. Nothing is sent until Pair is chosen. The address is a network address and port, such as 192.168.1.20:47811.</summary>
+    public static string TvLinkPairAsk(string address) => Fill(Get("TvLinkPairAsk"), ("address", address));
 
     /// <summary>Title of the pairing step for one TV. The name is the name the TV gave itself.</summary>
     public static string TvPairWith(string name) => Fill(Get("TvPairWith"), ("name", name));
@@ -15341,7 +15350,7 @@ public static partial class T
         ["CountOut_one"] = "One episode out",
         ["CountOut_other"] = "{count} episodes out",
         ["CountOutShort"] = "{count} out",
-        ["CountStarts"] = "Starts {date}",
+        ["CountStarts"] = "Starts {day} {month}",
         ["CountNotOut"] = "Not out yet",
         ["CountNextOf"] = "Ep {episode} of {total}",
         ["CountDub"] = "Dub",
@@ -15351,7 +15360,7 @@ public static partial class T
         ["CountSpokenOutOf"] = "{out} of {total} episodes out",
         ["CountSpokenOut_one"] = "One episode out",
         ["CountSpokenOut_other"] = "{count} episodes out",
-        ["CountSpokenStarts"] = "Starts {date}",
+        ["CountSpokenStarts"] = "Starts {day} {month}",
         ["CountSpokenNextOf"] = "Episode {episode} of {total}",
         ["CountSpokenDubThrough"] = "dubbed to episode {through}",
         ["CountSpokenDub"] = "has a dub",
@@ -16460,6 +16469,8 @@ public static partial class T
         ["TorrentsNotAPlugin"] = "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.",
         ["TorrentsProxyRoute"] = "Route torrent traffic through a proxy",
         ["TorrentsProxyRouteDetail"] = "Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.",
+        ["TorrentsProxyUdpTrackers"] = "Use UDP trackers",
+        ["TorrentsProxyUdpTrackersDetail"] = "UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.",
         ["TorrentsSummaryProxyAt"] = "Through a SOCKS5 proxy at {host}:{port}.",
         ["TorrentsSummaryProxy"] = "Through a SOCKS5 proxy.",
         ["TorrentsSummaryDirect"] = "Connecting directly, without a proxy.",
@@ -16596,6 +16607,7 @@ public static partial class T
         ["TvPairAction"] = "Pair a TV",
         ["TvPairMenu"] = "Pair a TV…",
         ["TvPairWithTv"] = "Pair with a TV",
+        ["TvLinkPairAsk"] = "A link asks to pair with the TV at {address}. Pair only with a TV in front of you.",
         ["TvPairWith"] = "Pair with {name}",
         ["TvPairingWith"] = "Pairing with {name}",
         ["TvPair"] = "Pair",

@@ -58,11 +58,29 @@ internal static unsafe partial class Dxgi
         Marshal.ThrowExceptionForHR(Marshal.QueryInterface(swapchain, in IidSwapChain2, out var sc2));
         try
         {
-            var matrix = stackalloc float[6] { 1f / scaleX, 0, 0, 1f / scaleY, 0, 0 };
+            var matrix = stackalloc float[6] { Kaeri.App.SwapchainFit.Matrix(scaleX), 0, 0, Kaeri.App.SwapchainFit.Matrix(scaleY), 0, 0 };
             var hr = ((delegate* unmanaged[Stdcall]<nint, float*, int>)Slot(sc2, 34))(sc2, matrix);
             Marshal.ThrowExceptionForHR(hr);
         }
         finally { Release(sc2); }
+    }
+
+    /// <summary>
+    /// Binds mpv's swapchain to <paramref name="panel"/>, or sets its matrix again, as
+    /// <paramref name="fit"/> says, with the inverse of the panel's scale now. A swapchain just
+    /// made has the identity matrix, so at 100% binding it is enough.
+    /// </summary>
+    public static void Fit(SwapChainPanel panel, nint swapchain, Kaeri.App.SwapchainFit fit)
+    {
+        var (x, y) = (panel.CompositionScaleX, panel.CompositionScaleY);
+        var step = fit.Next(swapchain, x, y);
+        if (step == Kaeri.App.SwapchainStep.None)
+            return;
+        if (step == Kaeri.App.SwapchainStep.Bind)
+            SetSwapChain(panel, swapchain);
+        if (step == Kaeri.App.SwapchainStep.Rescale || Math.Abs(x - 1) > 0.001 || Math.Abs(y - 1) > 0.001)
+            SetInverseScale(swapchain, x, y);
+        fit.Done(swapchain, x, y);
     }
 
     [StructLayout(LayoutKind.Sequential)]

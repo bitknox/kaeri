@@ -61,6 +61,8 @@ public sealed partial class MainWindow : Window
     readonly MediaControls? media;
     Tray? tray;
     readonly ShellStatus status;
+    /// <summary>What a restart to update came to, read at start and said once the first page is up.</summary>
+    (bool Installed, string Version)? restarted;
     bool selecting, played, closing, askedClose, firstRun;
 
     public MainWindow(Options options)
@@ -105,6 +107,9 @@ public sealed partial class MainWindow : Window
         session = new EngineSession(engine, act => ui.TryEnqueue(() => act()));
         var art = new Art(session.Send);
         var updater = new Updater(ui, staged: options.Fixture && options.UpdateFrom is null) { Quit = CloseNow };
+        // Read before the engine starts: its first answer can set a download going in the folder
+        // the marker is in.
+        restarted = updater.AfterRestart();
         updater.Ready += version =>
         {
             ShowToast(InfoBarSeverity.Informational, T.UpdatesReady(version), T.UpdatesRestart, updater.Install);
@@ -251,6 +256,8 @@ public sealed partial class MainWindow : Window
             // Kept half a second after a drag or resize settles, not on every pixel of it.
             if (e.DidPositionChange || e.DidSizeChange || e.DidPresenterChange)
             {
+                // A new presenter, or a move to a display with another scale.
+                ApplyMinimum();
                 placeLater ??= PlaceTimer();
                 placeLater.Stop();
                 placeLater.Start();
@@ -287,29 +294,42 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
+    /// The window's minimum, <see cref="WindowPlace.Minimum"/>, on the presenter it has now and at
+    /// the scale of the display it is on now. Leaving full screen or the mini player gives the
+    /// window a new presenter without one, and another display's scale needs another.
+    /// </summary>
+    void ApplyMinimum()
+    {
+        if (AppWindow.Presenter is not OverlappedPresenter overlapped)
+            return;
+        var (width, height) = WindowPlace.Minimum(GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0);
+        if (overlapped.PreferredMinimumWidth != width)
+            overlapped.PreferredMinimumWidth = width;
+        if (overlapped.PreferredMinimumHeight != height)
+            overlapped.PreferredMinimumHeight = height;
+    }
+
+    /// <summary>
     /// The window where it was last left (size, position and maximised), when that still lies on
-    /// a display; otherwise 80% of the display's work area (at least 1280 by 800, at most the work area), centred.
+    /// a display; otherwise the first launch's frame, <see cref="WindowPlace.First"/>.
     /// The minimum is 500 by 420.
     /// </summary>
     void Size()
     {
         var area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary).WorkArea;
         var scale = GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
-        if (AppWindow.Presenter is OverlappedPresenter overlapped)
+        ApplyMinimum();
+        if (options.Width is null && Place.Read(PlacePath) is { } place && place.Opening(scale) is { } frame)
         {
-            overlapped.PreferredMinimumWidth = (int)(500 * scale);
-            overlapped.PreferredMinimumHeight = (int)(420 * scale);
-        }
-        if (options.Width is null && Place.Read(PlacePath) is { } place && Place.OnADisplay(place.Frame))
-        {
-            AppWindow.MoveAndResize(place.Frame);
+            AppWindow.MoveAndResize(frame);
             if (place.Maximised && AppWindow.Presenter is OverlappedPresenter p)
                 p.Maximize();
             placed = true;
             return;
         }
-        var width = options.Width is { } w ? (int)(w * scale) : Math.Min(Math.Max((int)(area.Width * 0.8), (int)(1280 * scale)), area.Width);
-        var height = options.Height is { } h ? (int)(h * scale) : Math.Min(Math.Max((int)(area.Height * 0.8), (int)(800 * scale)), area.Height);
+        var first = WindowPlace.First(area.ToFrame(), scale);
+        var width = options.Width is { } w ? (int)(w * scale) : first.Width;
+        var height = options.Height is { } h ? (int)(h * scale) : first.Height;
         AppWindow.MoveAndResize(new RectInt32(
             area.X + Math.Max(0, (area.Width - width) / 2), area.Y + Math.Max(0, (area.Height - height) / 2), width, height));
         placed = true;
@@ -339,7 +359,11 @@ public sealed partial class MainWindow : Window
         RememberPlace();
     }
 
-    /// <summary>Keeps the window's frame for the next launch: the normal frame, and whether it was maximised.</summary>
+    /// <summary>
+    /// Keeps the window's frame for the next launch, as <see cref="WindowPlace.Keep"/> has it: the
+    /// normal frame, which while maximised is the one Restore down goes back to, and whether it
+    /// was maximised.
+    /// </summary>
     void RememberPlace()
     {
         if (!placed || options.Width is not null || AppWindow.Presenter is not OverlappedPresenter overlapped || !AppWindow.IsVisible)
@@ -347,10 +371,11 @@ public sealed partial class MainWindow : Window
         var maximised = overlapped.State == OverlappedPresenterState.Maximized;
         if (overlapped.State == OverlappedPresenterState.Minimized)
             return;
-        var frame = maximised && Place.Read(PlacePath) is { } was
-            ? was.Frame
-            : new RectInt32(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
-        Place.Write(PlacePath, new Place(frame, maximised));
+        var current = new WindowFrame(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
+        var normal = maximised ? NormalFrame.Of(WinRT.Interop.WindowNative.GetWindowHandle(this), AppWindow.Id)?.ToFrame() : null;
+        var kept = maximised ? Place.Read(PlacePath)?.Frame.ToFrame() : null;
+        if (WindowPlace.Keep(maximised, current, normal, kept) is { } frame)
+            Place.Write(PlacePath, new Place(frame.ToRect(), maximised));
     }
 
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
@@ -476,15 +501,18 @@ public sealed partial class MainWindow : Window
                 OpenLink(link);
         }));
         // After Restart to update: whether the new version is the one running.
-        if (ctx.Updater.AfterRestart() is { } restarted)
+        if (restarted is { } after)
+        {
+            restarted = null;
             ui.TryEnqueue(DispatcherQueuePriority.Low, () =>
             {
-                if (restarted.Installed)
+                if (after.Installed)
                     ShowToast(InfoBarSeverity.Success, T.UpdatesUpdated(Updater.Current));
                 else
-                    ShowToast(InfoBarSeverity.Warning, T.UpdatesDidNotInstall(restarted.Version), T.UpdatesOpenAbout,
+                    ShowToast(InfoBarSeverity.Warning, T.UpdatesDidNotInstall(after.Version), T.UpdatesOpenAbout,
                         () => OpenSettings("about"));
             });
+        }
 #if KAERI_TESTING
         // --show=update: a newer release with this machine's installer, as the engine's check
         // tells of one, which a fixture run stages without fetching.

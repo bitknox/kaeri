@@ -276,6 +276,73 @@ private func ledger() -> NoticeLedger {
         #expect(file.pathExtension == "jpg")
         #expect(NoticePictures.stage(Data("not a picture".utf8), in: staging) == nil)
     }
+
+    @Test(.timeLimit(.minutes(1)))
+    func aShowSwitchedOffWhileTheWeekIsSchedulingStaysOff() async {
+        let centre = CountingCentre()
+        let held = HeldPicture("https://img.example/2.png")
+        let scheduler = NoticeScheduler(centre: centre, ledger: ledger()) { await held.fetch($0) }
+        // New episodes turned on: the week schedules show 1, then waits for show 2's picture.
+        let first = Task {
+            await scheduler.reschedule(week([airing(1, 2, in: hour), airing(2, 3, in: 2 * hour)]), now: now)
+        }
+        await held.reached()
+        // Meanwhile show 2 is switched off.
+        let second = Task {
+            await scheduler.reschedule(week([airing(1, 2, in: hour), airing(2, 3, in: 2 * hour, .switchedOff)]), now: now)
+        }
+        #expect(await second.value.map(\.identifier) == ["ep.1.2.sub"])
+        held.release()
+        #expect(await first.value.map(\.identifier) == ["ep.1.2.sub"], "the older call ends with the newer week")
+        #expect(await centre.pending() == ["ep.1.2.sub"], "show 2 stays off")
+    }
+}
+
+/// A picture that waits until released or until the task asking for it is stopped, and says
+/// when it is first asked for.
+private final class HeldPicture: @unchecked Sendable {
+    let address: String
+    private let lock = NSLock()
+    private var waiting: CheckedContinuation<Void, Never>?
+    private var released = false
+    private let asked: AsyncStream<Void>
+    private let ask: AsyncStream<Void>.Continuation
+
+    init(_ address: String) {
+        self.address = address
+        (self.asked, self.ask) = AsyncStream.makeStream(of: Void.self)
+    }
+
+    func fetch(_ url: String) async -> Data? {
+        guard url == address else { return nil }
+        await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                let free = lock.withLock {
+                    if !released { waiting = continuation }
+                    return released
+                }
+                ask.yield()
+                if free { continuation.resume() }
+            }
+        } onCancel: {
+            release()
+        }
+        return nil
+    }
+
+    /// Once the picture is asked for.
+    func reached() async {
+        for await _ in asked { return }
+    }
+
+    func release() {
+        let continuation = lock.withLock {
+            released = true
+            defer { waiting = nil }
+            return waiting
+        }
+        continuation?.resume()
+    }
 }
 
 @MainActor
@@ -421,5 +488,43 @@ struct NoticeRefreshTests {
         #expect(files.snapshot() != nil)
         #expect(outcome.posted.isEmpty && outcome.scheduled.isEmpty, "nothing notifies")
         #expect(centre.quiet.notices.isEmpty)
+    }
+}
+
+/// iOS gives a background refresh about thirty seconds and stops its task when they run out: the
+/// refresh has to stop then, or iOS ends the app.
+@MainActor
+@Suite(.timeLimit(.minutes(2)))
+struct BackgroundStopTests {
+    /// Questions no engine answers, as on a network that never replies.
+    let silent = EngineQuestions(answers: EngineAnswers()) { _ in }
+
+    @Test func aQuestionStopsWhenItsTaskIsStopped() async {
+        let silent = self.silent
+        let asking = Task { await silent.newEpisodes() }
+        try? await Task.sleep(for: .milliseconds(100))
+        let clock = ContinuousClock()
+        let stopped = clock.now
+        asking.cancel()
+        let answer = await asking.value
+        #expect(answer == nil)
+        #expect(clock.now - stopped < .seconds(5), "it waited out its timeout")
+    }
+
+    @Test func aRefreshOnAnEngineOfItsOwnStopsWithTheTaskThatRunsIt() async {
+        let runs = BackgroundRun()
+        let silent = self.silent
+        let refresh = Task { @MainActor in
+            await runs.run {
+                await NoticeRefresh(questions: silent, scheduler: nil, widgets: nil).run().finished
+            }
+        }
+        try? await Task.sleep(for: .milliseconds(100))
+        let clock = ContinuousClock()
+        let stopped = clock.now
+        refresh.cancel()
+        let finished = await refresh.value
+        #expect(!finished, "a stopped refresh did not run to the end")
+        #expect(clock.now - stopped < .seconds(5), "it ran every step after it was stopped")
     }
 }
