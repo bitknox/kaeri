@@ -1640,8 +1640,14 @@ impl BookDownloads {
                 finish(&part, &stem.with_extension("epub"), None)
             }
             ChapterContent::Book(book) => {
-                // A folder of pages is packed as a CBZ; a book file is copied as it is.
-                let extension = if keep_book(&book.path, &part)? {
+                // A folder of pages is packed as a CBZ; a book file is copied as it is. A
+                // server's copy made for this fetch goes once kept, and when keeping it failed
+                // too: nothing else ever removes it.
+                let packed = keep_book(&book.path, &part);
+                if book.temporary {
+                    let _ = std::fs::remove_file(&book.path);
+                }
+                let extension = if packed? {
                     "cbz".to_owned()
                 } else {
                     book.path
@@ -1649,9 +1655,6 @@ impl BookDownloads {
                         .and_then(|e| e.to_str())
                         .map_or_else(|| "cbz".to_owned(), str::to_ascii_lowercase)
                 };
-                if book.temporary {
-                    let _ = std::fs::remove_file(&book.path);
-                }
                 finish(&part, &stem.with_extension(extension), None)
             }
         }

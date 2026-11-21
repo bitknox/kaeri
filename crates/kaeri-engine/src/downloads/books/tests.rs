@@ -50,6 +50,8 @@ struct Shelf {
     cut: Mutex<Vec<String>>,
     /// Told on every ask and every cut.
     knock: tokio::sync::Notify,
+    /// `book-` chapters come as this file, a copy made for the fetch as a book server's are.
+    book: Mutex<Option<std::path::PathBuf>>,
 }
 
 type Gate = tokio::sync::oneshot::Receiver<bool>;
@@ -137,6 +139,10 @@ impl BookSource for Shelf {
                  <img src=\"https://elsewhere.example/pictures/gull.png\"/>"
                     .into(),
             ));
+        }
+        if chapter.starts_with("book-") {
+            let path = self.book.lock().unwrap().clone().expect("a book to give");
+            return Ok(ChapterContent::Book(kaeri_core::books::BookFile { path, temporary: true }));
         }
         if chapter.starts_with("made-") {
             return Ok(ChapterContent::Images(
@@ -304,6 +310,7 @@ fn kit_in(chapters: &[&str], hosts: &[&str], store: Store, dir: Arc<tempfile::Te
         gates: Mutex::default(),
         cut: Mutex::default(),
         knock: tokio::sync::Notify::new(),
+        book: Mutex::default(),
     });
     sources.registry.put(shelf.clone());
     store.set_book_match("shelf", "s-1", WORK, 100, true, false, 1).unwrap();
@@ -981,6 +988,7 @@ async fn a_chapter_listed_from_another_source_downloads_from_there() {
         gates: Mutex::default(),
         cut: Mutex::default(),
         knock: tokio::sync::Notify::new(),
+        book: Mutex::default(),
     });
     kit.lent.sources.registry.put(other.clone());
     kit.store().set_book_match("other", "s-2", WORK, 90, true, false, 1).unwrap();
@@ -1274,6 +1282,38 @@ async fn a_failure_kept_on_the_row_never_reads_as_a_nameless_source_down() {
         let states = kit.states();
         assert_eq!(states, [("1".into(), ChapterDownloadState::Failed { failure })], "{kept}");
     }
+}
+
+/// A book server's copy of a whole book, made for the fetch, is removed when keeping it as the
+/// chapter's download fails, as it is when keeping it works.
+#[tokio::test]
+async fn a_server_copy_of_a_book_goes_when_keeping_it_fails() {
+    let kit = kit(&[]);
+    kit.shelf.listed.lock().unwrap().push(SourceChapter::new("book-1", "1"));
+    let copies = kit._dir.path().join("cache").join("books");
+    std::fs::create_dir_all(&copies).unwrap();
+    let copy = copies.join("lantern-ferry-1.cbz");
+    std::fs::write(&copy, b"PK a whole book").unwrap();
+    *kit.shelf.book.lock().unwrap() = Some(copy.clone());
+    // A folder where the chapter's file is written first: writing it fails.
+    let stem = kit.queue.dir().join(safe(WORK)).join(safe("1"));
+    std::fs::create_dir_all(part_of(&stem)).unwrap();
+
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    let states = kit.states();
+    assert!(matches!(states[0].1, ChapterDownloadState::Failed { .. }), "{states:?}");
+    assert!(!copy.exists(), "the server's copy was left behind");
+
+    // Kept, the copy goes too.
+    std::fs::remove_dir(part_of(&stem)).unwrap();
+    std::fs::write(&copy, b"PK a whole book").unwrap();
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Done)]);
+    assert!(!copy.exists());
 }
 
 #[test]
