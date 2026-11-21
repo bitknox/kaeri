@@ -782,6 +782,9 @@ impl Reader {
         }
     }
 
+    /// The app is in the foreground again.
+    pub fn foreground(&mut self, _cx: &Cx<'_>) {}
+
     /// The device went off line or came back: an end page already said follows the connection,
     /// since what it leads into, and why it has nothing, depend on it.
     pub fn network_moved(&mut self, cx: &mut Cx<'_>, was_offline: bool) {
