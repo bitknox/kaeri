@@ -10,6 +10,7 @@
     "astro": "astro",
     "diagrams": "bun scripts/export-architecture.ts",
     "test": "bun test src",
+    "site:check": "bun scripts/site-check.ts",
     "build:pseudo": "bun scripts/pseudo.ts && SITE_PSEUDO=1 astro build --outDir dist-pseudo",
     "cast-receiver": "bun scripts/cast-receiver.ts",
     "cast-receiver:check": "bun scripts/cast-receiver-check.ts",

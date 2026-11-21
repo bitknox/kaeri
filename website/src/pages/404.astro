@@ -22,7 +22,11 @@ const { t, href } = useSite(Astro);
 </Page>
 
 <script>
-	document.querySelector('[data-open-search]')?.addEventListener('click', () => {
+	// The button opens the top bar's search. Starlight's dialog shuts on any click that reaches the
+	// window from outside it, and starts listening for one as it opens, so this click would get there
+	// next and shut it before it showed. The click stops here, as one on the bar's own button does.
+	document.querySelector('[data-open-search]')?.addEventListener('click', (event) => {
+		event.stopPropagation();
 		document.querySelector<HTMLButtonElement>('site-search button[data-open-modal]')?.click();
 	});
 </script>

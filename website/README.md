@@ -8,7 +8,7 @@ docs. It is built with Astro and Starlight, and it uses Bun with the committed `
 ```
 .
 ├── public/                 static files, served as they are
-├── scripts/                app shots, feature videos, icons and the pseudo-locale build
+├── scripts/                app shots, feature videos, icons, the pseudo-locale build and checks
 ├── src/
 │   ├── components/         page sections and the Starlight overrides
 │   ├── content/
@@ -36,6 +36,7 @@ Run these from `website/`:
 | `bun run build`                  | Builds the site into `./dist/`               |
 | `bun run preview`                | Serves the production build locally          |
 | `bun run test`                   | Runs the unit tests under `src/`             |
+| `bun run site:check`             | Checks the built site in headless Chrome     |
 | `bun run build:pseudo`           | Builds a pseudo-locale copy to check strings |
 
 The copy follows [docs/writing.md](../docs/writing.md).
