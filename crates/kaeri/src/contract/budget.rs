@@ -694,3 +694,44 @@ async fn anilist_cold_launch_over_a_tight_limit_waits_and_says_nothing() {
 /// common than 13. The viewer's id is kept from an earlier run, so the list rides with the
 /// viewer lookup.
 const COLD_LAUNCH: usize = 16;
+
+#[cfg(test)]
+/// Hover cards while AniList's queue is long: what a card the pointer rests on waits for, and
+/// what hovering it again costs.
+mod hover {
+    use std::time::Duration;
+
+    use super::*;
+
+    /// A hovered cover's card is work for the page on screen, not background work: after a
+    /// screen's request the background queue waits out its quiet and its pacing, and a card
+    /// that waited there stayed bare, with no trailer to play, for as long as the queue took.
+    #[tokio::test]
+    async fn a_hovered_card_does_not_wait_behind_the_background_queue() {
+        let now = kaeri_store::now();
+        let world = HomeWorld::at(HomeClock::in_zone(now, &jiff::tz::TimeZone::UTC));
+        let pacing = kaeri_meta::Pacing {
+            quiet: Duration::from_secs(60),
+            launch_after: Duration::ZERO,
+            launch_at_most: Duration::ZERO,
+            ..kaeri_meta::Pacing::APP
+        };
+        let mut h = launch_paced(now, None, &world, false, 0, Some(pacing)).await;
+        let hovered = world
+            .titles
+            .iter()
+            .find_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
+            .expect("a title to hover");
+        // A screen's request: background work now waits a minute of quiet.
+        run(&mut h, vec![Command::LoadBrowse]).await;
+        h.send(Command::LoadCards { ids: vec![hovered] });
+        let carded = |u: &Event| match u {
+            Event::Cards(entries) => entries.iter().any(|e| e.id == hovered),
+            _ => false,
+        };
+        let waited =
+            tokio::time::timeout(Duration::from_secs(10), h.settle_until(carded)).await;
+        assert!(waited.is_ok(), "the hovered card is answered without waiting out the queue");
+        let _ = h.settle().await;
+    }
+}

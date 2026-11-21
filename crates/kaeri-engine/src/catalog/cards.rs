@@ -9,8 +9,9 @@ use crate::{data, dispatch::Lent};
 const AT_MOST: usize = 50;
 
 /// Say the cards of `ids`: first those the metadata cache holds, fresh, from the lists that
-/// showed them, then the rest from one batched lookup at low priority. A title nothing could describe
-/// is left out, and the card keeps what the list row had.
+/// showed them, then the rest from one batched lookup as work for the page on screen: someone
+/// is looking at the card, which shows without it and fills in when it lands. A title nothing
+/// could describe is left out, and the card keeps what the list row had.
 pub async fn load_cards(lent: Lent, ids: Vec<AnilistId>) {
     let Lent { meta, store, tx, .. } = lent;
     let wanted = at_most(ids);
@@ -33,7 +34,7 @@ pub async fn load_cards(lent: Lent, ids: Vec<AnilistId>) {
     if missing.is_empty() {
         return;
     }
-    match kaeri_meta::in_background(meta.media_many(&missing)).await {
+    match kaeri_meta::on_screen(meta.media_many(&missing)).await {
         Ok(found) if !found.is_empty() => {
             let entries =
                 found.iter().map(|media| data::entry_from(media, Some(&store))).collect();
