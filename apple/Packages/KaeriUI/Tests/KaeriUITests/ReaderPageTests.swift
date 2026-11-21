@@ -89,6 +89,74 @@ struct ReaderPageTests {
         #expect(abs(Double(image.width) / Double(image.height) - 0.75) < 0.01)
     }
 
+    /// A made-up photo of a page, saved as a phone saves one taken upright: stored landscape,
+    /// with EXIF orientation 6 to turn it a quarter turn clockwise. Its stored left half is red
+    /// and its right half blue.
+    private func turnedPhoto(width: Int, height: Int) throws -> PageFile {
+        let context = try #require(CGContext(
+            data: nil, width: width, height: height, bitsPerComponent: 8, bytesPerRow: 0,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        context.setFillColor(red: 0.85, green: 0.15, blue: 0.15, alpha: 1)
+        context.fill(CGRect(x: 0, y: 0, width: width / 2, height: height))
+        context.setFillColor(red: 0.15, green: 0.15, blue: 0.85, alpha: 1)
+        context.fill(CGRect(x: width / 2, y: 0, width: width - width / 2, height: height))
+        let image = try #require(context.makeImage())
+        let url = FileManager.default.temporaryDirectory.appending(path: "reader-page-\(UUID().uuidString).jpg")
+        let destination = try #require(CGImageDestinationCreateWithURL(url as CFURL, "public.jpeg" as CFString, 1, nil))
+        CGImageDestinationAddImage(destination, image, [kCGImagePropertyOrientation: 6] as CFDictionary)
+        #expect(CGImageDestinationFinalize(destination))
+        // The turn is only in the file's EXIF: the pixels stay as stored.
+        let source = try #require(CGImageSourceCreateWithURL(url as CFURL, nil))
+        let properties = try #require(CGImageSourceCopyPropertiesAtIndex(source, 0, nil) as? [CFString: Any])
+        try #require(properties[kCGImagePropertyOrientation] as? Int == 6)
+        let bytes = try Data(contentsOf: url).count
+        return PageFile(
+            path: url.path, encoding: .original(mime: "image/jpeg"), width: UInt32(width), height: UInt32(height),
+            crop: nil, colour: true, bytes: UInt64(bytes))
+    }
+
+    /// The colour at an image's middle, in 8-bit sRGB.
+    private func middle(_ image: CGImage) throws -> (red: Int, green: Int, blue: Int) {
+        let context = try #require(CGContext(
+            data: nil, width: 1, height: 1, bitsPerComponent: 8, bytesPerRow: 4,
+            space: CGColorSpace(name: CGColorSpace.sRGB)!, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue))
+        // Drawn with its middle pixel over the context's one pixel.
+        context.draw(image, in: CGRect(
+            x: -CGFloat(image.width / 2), y: -CGFloat(image.height / 2),
+            width: CGFloat(image.width), height: CGFloat(image.height)))
+        let pixel = try #require(context.data).assumingMemoryBound(to: UInt8.self)
+        return (Int(pixel[0]), Int(pixel[1]), Int(pixel[2]))
+    }
+
+    @Test func aTurnedPhotoKeepsTheShapeTheEngineLaidItOutAtEverySize() throws {
+        // The engine measures, splits and crops a page in its stored pixels. Drawn large, the
+        // photo decodes whole as stored; drawn small, it decodes to a thumbnail, which keeps the
+        // same shape.
+        let file = try turnedPhoto(width: 800, height: 600)
+        defer { try? FileManager.default.removeItem(atPath: file.path) }
+        let whole = try #require(PageImages.decode(file, longestSide: 800))
+        #expect(whole.width == 800)
+        #expect(whole.height == 600)
+        let small = try #require(PageImages.decode(file, longestSide: 200))
+        #expect(max(small.width, small.height) < 800)
+        #expect(small.width > small.height)
+        #expect(abs(Double(small.width) / Double(small.height) - 800.0 / 600.0) < 0.02)
+    }
+
+    @Test func aSplitHalfOfATurnedPhotoShowsThatHalfAtEverySize() throws {
+        // The stored landscape is a spread, which the engine splits into stored halves. The
+        // right half is the blue one, drawn large from the whole file or small from a thumbnail.
+        var file = try turnedPhoto(width: 800, height: 600)
+        defer { try? FileManager.default.removeItem(atPath: file.path) }
+        file.crop = PixelRect(x: 400, y: 0, width: 400, height: 600)
+        for longestSide: CGFloat in [600, 256] {
+            let half = try #require(PageImages.decode(file, longestSide: longestSide))
+            #expect(abs(Double(half.width) / Double(half.height) - 400.0 / 600.0) < 0.02)
+            let colour = try middle(half)
+            #expect(colour.blue > colour.red + 100, "drawn for \(longestSide): \(colour)")
+        }
+    }
+
     @Test func aStripPlatesWordsSitInTheMiddleOfThePartOnScreen() {
         // A 3000 pt image whose top is 1600 pt above an 800 pt window.
         #expect(PagePlate.wordsShift(plate: 3000, visible: 1600...2400, words: 40) == 500)
