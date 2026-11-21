@@ -124,6 +124,20 @@ if (( ! notes_only )); then
     done
   done
   shopt -u nullglob
+
+  # Each update pattern an installed AppImage carries picks exactly one file, so an install never
+  # updates itself into another app. AppImageUpdate matches them with fnmatch, case-sensitive like
+  # [[ == ]]. kaeri-*-linux-<arch> is in the releases before the rename, Kaeri-*-<arch> after it.
+  # The terminal AppImage carries no update information; it updates from the tar.gz.
+  for pattern in "kaeri-*-linux-x86_64.AppImage.zsync" "kaeri-*-linux-aarch64.AppImage.zsync" \
+    "Kaeri-*-x86_64.AppImage.zsync" "Kaeri-*-aarch64.AppImage.zsync"; do
+    matches=0
+    for wanted in "${files[@]}"; do
+      # shellcheck disable=SC2053 # the pattern is a glob on purpose
+      if [[ "${wanted##*/}" == $pattern ]]; then matches=$((matches + 1)); fi
+    done
+    (( matches == 1 )) || fail "the update pattern $pattern matches $matches files, not one"
+  done
 fi
 [[ -f "$apps/apps-release-notes.md" ]] || fail "no apps-release-notes.md in $apps"
 
