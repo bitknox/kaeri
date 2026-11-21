@@ -1285,6 +1285,36 @@ public class LinkTests
         Assert.Equal("kaeri://calendar", Link.InCommandLine("kaeri.exe kaeri://calendar --x"));
         Assert.Null(Link.InCommandLine("\"C:\\kaeri\\kaeri.exe\""));
     }
+
+    [Fact]
+    public void AMagnetLinkOrTorrentFileOpensTheAppWhetherItRunsOrNot()
+    {
+        const string magnet = "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=Made-up%20Show%2007";
+        const string file = @"C:\Downloads\Made-up Show 07.torrent";
+        // Opened while the app is closed: the installer's kaeri.exe "%1", as the app's arguments.
+        Assert.Equal(magnet, Link.InArguments([magnet]));
+        Assert.Equal(file, Link.InArguments([file]));
+        Assert.Equal(file, Link.InArguments(["--scene=watching", file]));
+        Assert.Null(Link.InArguments([@"--media=C:\Clips\a.torrent"]));
+        // Opened while it runs: the whole command line, the program's own path first.
+        Assert.Equal(file, Link.InCommandLine($"\"C:\\Apps\\kaeri.exe\" \"{file}\""));
+        Assert.Equal(new Link.Opened(file), Link.Parse(Link.InCommandLine($"\"C:\\Program Files\\Kaeri\\kaeri.exe\" \"{file}\"")));
+        Assert.Equal(magnet, Link.InCommandLine($"\"C:\\Program Files\\Kaeri\\kaeri.exe\" \"{magnet}\""));
+        Assert.Equal(@"C:\Downloads\x.torrent", Link.InCommandLine("kaeri.exe \t C:\\Downloads\\x.torrent "));
+        // A restart for an update or a profile opens neither again.
+        Assert.Equal(["--scene=watching"], Updates.RelaunchArguments(["--scene=watching", magnet, file]));
+    }
+
+    [Fact]
+    public void ACommandLineIsSplitAsWindowsProgramsSplitIt()
+    {
+        const string file = @"C:\Downloads\Made-up Show 07.torrent";
+        // Before a quote a pair of backslashes stands for one and the quote closes the part; an
+        // odd one out keeps the quote as text, so it opens nothing.
+        Assert.Equal(file, Link.InCommandLine($"\"C:\\Apps\\kaeri.exe\" --dir=\"C:\\Made-up\\\\\" \"{file}\""));
+        Assert.Equal(file, Link.InCommandLine($"\"C:\\Apps\\kaeri.exe\" --name=a\\\"b \"{file}\""));
+        Assert.Equal(file, Link.InCommandLine($"kaeri.exe --name=\"a b\" \"{file}\""));
+    }
 }
 
 public class UpdateTests

@@ -98,30 +98,85 @@ public abstract record Link
     }
 
     /// <summary>
-    /// The link a launch carries: the first argument with the app's scheme, as the installer's
-    /// <c>kaeri.exe "%1"</c> hands it over, whole or as a command line.
+    /// The link a launch carries: the first argument the app opens, as the installer's
+    /// <c>kaeri.exe "%1"</c> hands over a <c>kaeri:</c> link, a magnet link or a torrent file.
     /// </summary>
     public static string? InArguments(IEnumerable<string> args) =>
-        args.Select(a => a.Trim().Trim('"'))
-            .FirstOrDefault(a => a.StartsWith(Scheme + ":", StringComparison.OrdinalIgnoreCase));
+        args.Select(a => a.Trim().Trim('"')).FirstOrDefault(Launched);
 
-    /// <summary>The same, from a whole command line, as a redirected launch brings it.</summary>
-    public static string? InCommandLine(string? line)
+    /// <summary>
+    /// The same, from a whole command line, as a redirected launch brings it: split the way
+    /// Windows splits a program's command line, so a quoted path with spaces stays one argument.
+    /// The program's own path, first, is never one the app opens.
+    /// </summary>
+    public static string? InCommandLine(string? line) =>
+        string.IsNullOrWhiteSpace(line) ? null : InArguments(Arguments(line));
+
+    /// <summary>
+    /// Whether a launch's argument is one the app opens: a link with the app's scheme, a magnet
+    /// link or a torrent file's path, the three the installer registers. A switch is never one.
+    /// </summary>
+    public static bool Launched(string arg)
     {
-        if (string.IsNullOrEmpty(line))
-            return null;
-        // A torrent file, from its association: the path, quoted when it has spaces.
-        var trimmed = line.Trim().Trim('"');
-        if (trimmed.EndsWith(".torrent", StringComparison.OrdinalIgnoreCase))
-            return trimmed;
-        var at = line.IndexOf(Scheme + "://", StringComparison.OrdinalIgnoreCase);
-        if (at < 0)
-            at = line.IndexOf("magnet:", StringComparison.OrdinalIgnoreCase);
-        if (at < 0)
-            return null;
-        var quoted = at > 0 && line[at - 1] == '"';
-        var end = quoted ? line.IndexOf('"', at) : line.IndexOf(' ', at);
-        return end < 0 ? line[at..] : line[at..end];
+        arg = arg.Trim().Trim('"');
+        return !arg.StartsWith('-')
+            && (arg.StartsWith(Scheme + ":", StringComparison.OrdinalIgnoreCase)
+                || arg.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase)
+                || arg.EndsWith(".torrent", StringComparison.OrdinalIgnoreCase));
+    }
+
+    /// <summary>
+    /// A command line's arguments, read as Windows programs read theirs: spaces and tabs part
+    /// them outside quotes, a quote opens or closes a quoted part, and backslashes count only
+    /// before a quote, where each pair stands for one backslash and an odd one out keeps the
+    /// quote as text. The program's path comes first, read with its quotes alone.
+    /// </summary>
+    static List<string> Arguments(string line)
+    {
+        static bool Space(char c) => c is ' ' or '\t';
+        var args = new List<string>();
+        var arg = new System.Text.StringBuilder();
+        var i = 0;
+        var quoted = false;
+        for (; i < line.Length && (quoted || !Space(line[i])); i++)
+        {
+            if (line[i] == '"')
+                quoted = !quoted;
+            else
+                arg.Append(line[i]);
+        }
+        args.Add(arg.ToString());
+        while (true)
+        {
+            while (i < line.Length && Space(line[i]))
+                i++;
+            if (i == line.Length)
+                return args;
+            arg.Clear();
+            quoted = false;
+            while (i < line.Length && (quoted || !Space(line[i])))
+            {
+                var slashes = 0;
+                for (; i < line.Length && line[i] == '\\'; i++)
+                    slashes++;
+                if (i < line.Length && line[i] == '"')
+                {
+                    arg.Append('\\', slashes / 2);
+                    if (slashes % 2 == 1)
+                        arg.Append('"');
+                    else
+                        quoted = !quoted;
+                    i++;
+                }
+                else
+                {
+                    arg.Append('\\', slashes);
+                    if (i < line.Length && (quoted || !Space(line[i])))
+                        arg.Append(line[i++]);
+                }
+            }
+            args.Add(arg.ToString());
+        }
     }
 
     /// <summary>The https invite <paramref name="text"/> is, as the store makes it: a path with <c>/join/</c> in it.</summary>

@@ -169,10 +169,10 @@ public static class Updates
 
     /// <summary>
     /// The arguments the app opens again with after an update: the ones it started with, less a
-    /// link it was opened by and the testing switches that set the update going.
+    /// link or torrent file it was opened by and the testing switches that set the update going.
     /// </summary>
     public static IEnumerable<string> RelaunchArguments(IEnumerable<string> started) => started.Where(a =>
-        !a.StartsWith("kaeri:", StringComparison.OrdinalIgnoreCase) &&
+        !Link.Launched(a) &&
         !a.StartsWith("--show=", StringComparison.Ordinal) &&
         !a.StartsWith("--update-from=", StringComparison.Ordinal));
 
