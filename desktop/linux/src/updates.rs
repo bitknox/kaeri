@@ -446,8 +446,8 @@ mod tests {
     fn asset(bytes: &[u8]) -> ReleaseAsset {
         let hex: String = Sha256::digest(bytes).iter().map(|b| format!("{b:02X}")).collect();
         ReleaseAsset {
-            name: "kaeri-1.4.0-linux-x86_64.AppImage".into(),
-            url: "https://releases.example/kaeri-1.4.0-linux-x86_64.AppImage".into(),
+            name: "Kaeri-1.4.0-x86_64.AppImage".into(),
+            url: "https://releases.example/Kaeri-1.4.0-x86_64.AppImage".into(),
             sha256: hex,
             size: bytes.len() as u64,
         }
@@ -554,10 +554,10 @@ mod tests {
         }
         std::fs::set_permissions(&opt, std::fs::Permissions::from_mode(0o755)).unwrap();
 
-        let ready = dir.path().join("kaeri-0.11.0-linux-x86_64.AppImage");
+        let ready = dir.path().join("Kaeri-0.11.0-x86_64.AppImage");
         std::fs::write(&ready, b"new").unwrap();
         let saved = save_to(&ready, &downloads).unwrap();
-        assert_eq!(saved, downloads.join("kaeri-0.11.0-linux-x86_64.AppImage"));
+        assert_eq!(saved, downloads.join("Kaeri-0.11.0-x86_64.AppImage"));
         assert_eq!(std::fs::read(&saved).unwrap(), b"new");
         assert_eq!(std::fs::metadata(&saved).unwrap().permissions().mode() & 0o777, 0o755);
     }
@@ -601,7 +601,7 @@ mod tests {
                 stream.write_all(body).unwrap();
             }
         });
-        format!("http://{at}/kaeri-1.4.0-linux-x86_64.AppImage")
+        format!("http://{at}/Kaeri-1.4.0-x86_64.AppImage")
     }
 
     #[test]

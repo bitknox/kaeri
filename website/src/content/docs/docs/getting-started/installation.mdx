@@ -137,22 +137,21 @@ keeps them too.
 
 ### Linux
 
-`kaeri-<version>-linux-x86_64.AppImage`, or `kaeri-<version>-linux-aarch64.AppImage` on
+`Kaeri-<version>-x86_64.AppImage`, or `Kaeri-<version>-aarch64.AppImage` on
 64-bit ARM. It carries GTK 4, libadwaita 1.7 and the player, so there is nothing to install first.
-It needs glibc 2.41 or newer, which means one of these or later:
+It runs on these or later:
 
-- Ubuntu 25.04, including Ubuntu 26.04 LTS
+- Ubuntu 22.04
+- Debian 12
 - Fedora 42
-- Debian 13
 
-Ubuntu 24.04 and other systems with an older glibc are not supported. There the AppImage says so
-and stops, and the terminal app is the way to run Kaeri.
+On a system older than Debian 13 or Ubuntu 25.04, it runs on the glibc it carries.
 
 Make the file executable once, then open it:
 
 ```sh
-chmod +x kaeri-<version>-linux-x86_64.AppImage
-./kaeri-<version>-linux-x86_64.AppImage
+chmod +x Kaeri-<version>-x86_64.AppImage
+./Kaeri-<version>-x86_64.AppImage
 ```
 
 The first time it runs, it registers itself for `kaeri://` links. If you move the file, the

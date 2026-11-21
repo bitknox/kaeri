@@ -5,7 +5,7 @@ import DownloadGrid from '../../components/DownloadGrid.astro';
 import Faq from '../../components/Faq.astro';
 import Pic from '../../components/Pic.astro';
 import Page from '../../layouts/Page.astro';
-import { FILES, INSTALL_GUIDE, RELEASES, SIDESTORE_SOURCE } from '../../data/site';
+import { FILES, INSTALL_GUIDE, RELEASES, SIDESTORE_SOURCE, fileName } from '../../data/site';
 import { VERSION } from '../../data/version';
 import { localePaths, useSite } from '../../i18n/site';
 
@@ -35,7 +35,7 @@ const code = (id: string) =>
 			: id === 'terminal'
 				? block('brew install mpv ffmpeg')
 				: '';
-const name = (suffix: string) => `kaeri-${VERSION}${suffix}`;
+const name = (suffix: string) => fileName(suffix, VERSION);
 ---
 
 <Page title={t('download.title')} description={t('download.description')}>

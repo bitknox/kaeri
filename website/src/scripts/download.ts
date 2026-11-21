@@ -57,10 +57,22 @@ const DEVICES: Record<DeviceId, { card: string; key: string; suffix?: string }> 
 	'windows-x64': { card: 'windows', key: 'windows' },
 	'windows-arm64': { card: 'windows', key: 'windows', suffix: '-windows-arm64-setup.exe' },
 	'linux-x64': { card: 'linux', key: 'linux' },
-	'linux-arm64': { card: 'linux', key: 'linux', suffix: '-linux-aarch64.AppImage' },
+	'linux-arm64': { card: 'linux', key: 'linux', suffix: 'Kaeri-*-aarch64.AppImage|kaeri-*-linux-aarch64.AppImage' },
 };
 
-const find = (release: Release | null, suffix: string | undefined) => (suffix ? release?.assets.find((a) => a.name.endsWith(suffix)) : undefined);
+/** The release's file for an `AppFile.suffix`: a name's ending, or names with `*` for the version, tried in turn. */
+function find(release: Release | null, suffix: string | undefined) {
+	if (!release || !suffix) return undefined;
+	for (const one of suffix.split('|')) {
+		const [head, tail] = one.includes('*') ? one.split('*') : ['', one];
+		const asset = release.assets.find((a) => a.name.startsWith(head) && a.name.endsWith(tail) && a.name.length > head.length + tail.length);
+		if (asset) return asset;
+	}
+	return undefined;
+}
+
+/** The checksum beside each name an `AppFile.suffix` gives. */
+const sums = (suffix: string) => suffix.split('|').map((one) => `${one}.sha256`).join('|');
 
 function fillLinks(release: Release | null, version: string) {
 	for (const el of document.body.querySelectorAll<HTMLElement>('[data-version]')) el.textContent = version;
@@ -73,7 +85,7 @@ function fillLinks(release: Release | null, version: string) {
 		if (size) size.textContent = formatMegabytes(asset.size);
 	}
 	for (const link of document.querySelectorAll<HTMLAnchorElement>('a[data-sha]')) {
-		const asset = find(release, `${link.dataset.sha}.sha256`);
+		const asset = find(release, link.dataset.sha && sums(link.dataset.sha));
 		if (asset) link.href = asset.browser_download_url;
 	}
 	for (const el of document.querySelectorAll<HTMLElement>('[data-file]')) {

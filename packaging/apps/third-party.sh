@@ -189,7 +189,7 @@ windows/   kaeri-$version-windows-x64-setup.exe, kaeri-$version-windows-arm64-se
   the Windows App SDK's${windows_sdk:+ ($windows_sdk)}, whose runtime the app carries, the Rust crates in the engine,
   the fonts' and the shaders'.
 
-linux/     kaeri-$version-linux-x86_64.AppImage, kaeri-$version-linux-aarch64.AppImage
+linux/     Kaeri-$version-x86_64.AppImage, Kaeri-$version-aarch64.AppImage
 
   libmpv.so.2 and FFmpeg's libraries, mpv $linux_mpv and FFmpeg $linux_ffmpeg, built from source
   by build/libmpv.sh from the same archives as Android's, in Debian 13. FFmpeg's configure says:

@@ -85,7 +85,7 @@ Also in the apps:
 
 The [features page](https://kaeri.app/features/) lists every feature and which app has it.
 
-## Apps
+## The Kaeri apps
 
 Each app is built with its platform's toolkit: SwiftUI on Apple, Jetpack Compose on Android,
 WinUI 3 on Windows, GTK 4 on Linux and Ratatui in the terminal. They share one engine, written in
@@ -157,7 +157,7 @@ or on Google Play, so each one needs one extra step the first time you open it. 
 | Android 11 or later, 64-bit ARM | `kaeri-<version>-android-arm64.apk` | Open the APK on the device and allow installs from your browser or file manager once. |
 | Android TV and Google TV, Android 11 or later, 64-bit ARM or 32-bit ARM | `kaeri-<version>-android-tv-arm64.apk` or `kaeri-<version>-android-tv-armv7.apk` | Install it with a sideloading app or `adb install`. |
 | Windows 10 version 2004 or later, x64 or Arm64 | `kaeri-<version>-windows-x64-setup.exe` or `kaeri-<version>-windows-arm64-setup.exe` | The installer is not signed: in SmartScreen, choose **More info**, then **Run anyway**. |
-| Linux with glibc 2.41 or newer (Ubuntu 25.04 or later, including 26.04 LTS, Fedora 42 or later, Debian 13), x86-64 or ARM64 | `kaeri-<version>-linux-x86_64.AppImage` or `kaeri-<version>-linux-aarch64.AppImage` | `chmod +x`, then open it. Ubuntu 24.04 is not supported. |
+| Linux: Ubuntu 22.04, Debian 12, Fedora 42 or later, x86-64 or ARM64 | `Kaeri-<version>-x86_64.AppImage` or `Kaeri-<version>-aarch64.AppImage` | `chmod +x`, then open it. |
 
 The SideStore and AltStore source address, for **Sources** › **+**:
 
@@ -177,7 +177,7 @@ The terminal app comes as an installer or an archive for each system:
 | macOS | `kaeri-<version>-aarch64-apple-darwin.pkg` (Apple silicon), `kaeri-<version>-x86_64-apple-darwin.pkg` (Intel), or the `.tar.gz` of either |
 | Windows | `kaeri-<version>-setup.exe`, or `kaeri-<version>-x86_64-pc-windows-msvc.zip` |
 | Debian, Ubuntu | `kaeri-<version>-amd64.deb` |
-| Other Linux | `kaeri-<version>-x86_64.AppImage`: `chmod +x`, then run it from a terminal. The `x86_64-unknown-linux-gnu.tar.gz` holds the binary alone. |
+| Other Linux | `kaeri-terminal-<version>-x86_64.AppImage`: `chmod +x`, then run it from a terminal. The `x86_64-unknown-linux-gnu.tar.gz` holds the binary alone. |
 
 The Linux builds need glibc 2.28 or newer. The terminal app drives mpv and ffmpeg, which are not
 bundled: install them first (`brew install mpv ffmpeg` on macOS). The apps have mpv built in. The
