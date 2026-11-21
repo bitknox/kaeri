@@ -363,6 +363,47 @@ struct DownloadsTests {
         #expect(model.rates[3] == nil)
     }
 
+    @Test func aDownloadSittingStillBetweenPiecesKeepsItsSpeedUntilItStalls() {
+        // The queue comes every second while either download moves. The first moves 2 MB a second;
+        // the second moves 1 MB once and then sits still.
+        let model = DownloadsModel()
+        let start = Date(timeIntervalSince1970: 1_000)
+        func queue(at second: Int, secondDone: UInt64) {
+            model.apply([
+                download(1, title: 1, episode: "1", .active, done: UInt64(second) * 2_000_000, of: 1_400_000_000),
+                download(2, title: 1, episode: "2", .active, done: secondDone, of: 1_400_000_000),
+            ], at: start.addingTimeInterval(TimeInterval(second)))
+        }
+        queue(at: 0, secondDone: 0)
+        for second in 1...11 { queue(at: second, secondDone: 1_000_000) }
+        #expect(model.rates[1] == 2_000_000)
+        #expect(model.rates[2] == 1_000_000, "sitting still between pieces is not a speed of zero")
+        #expect(model.secondsLeft(model.rows[1]) == 1_399)
+        queue(at: 12, secondDone: 1_000_000)
+        #expect(model.rates[2] == nil, "still for longer than its moves take, it has stalled")
+        #expect(model.secondsLeft(model.rows[1]) == nil)
+        // Moving again, it is measured from there and not across the stall.
+        queue(at: 13, secondDone: 1_500_000)
+        #expect(model.rates[2] == nil)
+        queue(at: 14, secondDone: 2_500_000)
+        #expect(model.rates[2] == 1_000_000)
+    }
+
+    @Test func aForecastPastAYearIsNone() {
+        // At 40 bytes a second, 1.4 GB takes over a year.
+        let model = DownloadsModel()
+        let start = Date(timeIntervalSince1970: 1_000)
+        model.apply([download(3, title: 1, episode: "9", .active, done: 0, of: 1_400_000_000)], at: start)
+        model.apply([download(3, title: 1, episode: "9", .active, done: 40, of: 1_400_000_000)],
+                    at: start.addingTimeInterval(1))
+        #expect(model.rates[3] == 40)
+        #expect(model.secondsLeft(model.rows[0]) == nil)
+        // At 50 bytes a second it takes under one.
+        model.apply([download(3, title: 1, episode: "9", .active, done: 100, of: 1_400_000_000)],
+                    at: start.addingTimeInterval(2))
+        #expect(model.secondsLeft(model.rows[0]) == 27_999_998)
+    }
+
     @Test func aQueuedDownloadIsStartedAheadOfTheQueue() {
         let store = AppStore()
         store.startDownloadNow(2)
