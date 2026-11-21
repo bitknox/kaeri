@@ -735,7 +735,7 @@ mod tests {
             android_tv_armv7: Some(file("kaeri-0.10.3-android-tv-armv7.apk", 38_000_000)),
             windows_x64: Some(file("kaeri-0.10.3-windows-x64-setup.exe", 70_000_000)),
             windows_arm64: Some(file("kaeri-0.10.3-windows-arm64-setup.exe", 68_000_000)),
-            linux_x86_64: Some(file("kaeri-0.10.3-linux-x86_64.AppImage", 90_000_000)),
+            linux_x86_64: Some(file("Kaeri-0.10.3-x86_64.AppImage", 90_000_000)),
             linux_aarch64: None,
             beta: true,
         };

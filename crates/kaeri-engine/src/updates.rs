@@ -266,8 +266,8 @@ impl Answer {
             android_tv_armv7: file(format!("kaeri-{version}-android-tv-armv7.apk")),
             windows_x64: file(format!("kaeri-{version}-windows-x64-setup.exe")),
             windows_arm64: file(format!("kaeri-{version}-windows-arm64-setup.exe")),
-            linux_x86_64: file(format!("kaeri-{version}-linux-x86_64.AppImage")),
-            linux_aarch64: file(format!("kaeri-{version}-linux-aarch64.AppImage")),
+            linux_x86_64: file(format!("Kaeri-{version}-x86_64.AppImage")),
+            linux_aarch64: file(format!("Kaeri-{version}-aarch64.AppImage")),
             beta: flag("prerelease"),
             version,
         })
@@ -483,8 +483,8 @@ async fn ask(
         format!("kaeri-{version}-android-tv-armv7.apk"),
         format!("kaeri-{version}-windows-x64-setup.exe"),
         format!("kaeri-{version}-windows-arm64-setup.exe"),
-        format!("kaeri-{version}-linux-x86_64.AppImage"),
-        format!("kaeri-{version}-linux-aarch64.AppImage"),
+        format!("Kaeri-{version}-x86_64.AppImage"),
+        format!("Kaeri-{version}-aarch64.AppImage"),
     ] {
         let Some(url) = asset_named(&answer.latest, &format!("{name}.sha256"))
             .and_then(|sidecar| sidecar.get("browser_download_url")?.as_str())
@@ -877,21 +877,24 @@ mod tests {
         fn release_json(&self, tag: &str, prerelease: bool) -> Value {
             let version = tag.trim_start_matches('v');
             let mut assets = Vec::new();
-            for (i, suffix) in [
-                "macos.dmg",
-                "ios-unsigned.ipa",
-                "android-arm64.apk",
-                "android-tv-arm64.apk",
-                "android-tv-armv7.apk",
-                "windows-x64-setup.exe",
-                "windows-arm64-setup.exe",
-                "linux-x86_64.AppImage",
-                "linux-aarch64.AppImage",
+            // The Linux app's AppImages also under their old names, as a release carries them.
+            for (i, template) in [
+                "kaeri-@-macos.dmg",
+                "kaeri-@-ios-unsigned.ipa",
+                "kaeri-@-android-arm64.apk",
+                "kaeri-@-android-tv-arm64.apk",
+                "kaeri-@-android-tv-armv7.apk",
+                "kaeri-@-windows-x64-setup.exe",
+                "kaeri-@-windows-arm64-setup.exe",
+                "Kaeri-@-x86_64.AppImage",
+                "Kaeri-@-aarch64.AppImage",
+                "kaeri-@-linux-x86_64.AppImage",
+                "kaeri-@-linux-aarch64.AppImage",
             ]
             .iter()
             .enumerate()
             {
-                let name = format!("kaeri-{version}-{suffix}");
+                let name = template.replace('@', version);
                 let hex = format!("{i}").repeat(64);
                 self.route(&format!("/download/{name}.sha256"), Ok(format!("{hex}  {name}\n")));
                 assets.push(json!({
@@ -1047,10 +1050,10 @@ mod tests {
         assert_eq!(windows.name, "kaeri-0.10.3-windows-arm64-setup.exe");
         assert_eq!((windows.sha256, windows.size), ("6".repeat(64), 1006));
         let linux = release.linux_x86_64.expect("Linux's x86_64 AppImage");
-        assert_eq!(linux.name, "kaeri-0.10.3-linux-x86_64.AppImage");
+        assert_eq!(linux.name, "Kaeri-0.10.3-x86_64.AppImage");
         assert_eq!((linux.sha256, linux.size), ("7".repeat(64), 1007));
         let linux = release.linux_aarch64.expect("Linux's aarch64 AppImage");
-        assert_eq!(linux.name, "kaeri-0.10.3-linux-aarch64.AppImage");
+        assert_eq!(linux.name, "Kaeri-0.10.3-aarch64.AppImage");
         assert_eq!((linux.sha256, linux.size), ("8".repeat(64), 1008));
     }
 

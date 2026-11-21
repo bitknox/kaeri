@@ -535,7 +535,8 @@ jobs:
           curl -fsSL -o appimagetool \
             https://github.com/AppImage/appimagetool/releases/download/continuous/appimagetool-x86_64.AppImage
           chmod +x appimagetool
-          appimage="dist/kaeri-${version}-x86_64.AppImage"
+          # "terminal" in its name tells it from the Linux app's Kaeri-<version>-x86_64.AppImage.
+          appimage="dist/kaeri-terminal-${version}-x86_64.AppImage"
           # --appimage-extract-and-run: hosted runners have no FUSE, and the tool is itself
           # an AppImage; extracting first is how it runs at all here.
           ARCH=x86_64 ./appimagetool --appimage-extract-and-run "$appdir" "$appimage"

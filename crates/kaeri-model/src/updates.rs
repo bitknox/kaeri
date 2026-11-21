@@ -43,10 +43,10 @@ pub struct Release {
     /// `kaeri-<version>-windows-arm64-setup.exe`.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub windows_arm64: Option<ReleaseAsset>,
-    /// The Linux app for x86_64, `kaeri-<version>-linux-x86_64.AppImage`.
+    /// The Linux app for x86_64, `Kaeri-<version>-x86_64.AppImage`.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub linux_x86_64: Option<ReleaseAsset>,
-    /// The Linux app for aarch64, `kaeri-<version>-linux-aarch64.AppImage`.
+    /// The Linux app for aarch64, `Kaeri-<version>-aarch64.AppImage`.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub linux_aarch64: Option<ReleaseAsset>,
     /// Whether it is a beta, a GitHub pre-release not yet made the stable release. Only the

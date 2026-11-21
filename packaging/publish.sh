@@ -97,15 +97,19 @@ if (( ! notes_only )); then
     "$p-x86_64-unknown-linux-gnu.tar.gz" "$p-aarch64-apple-darwin.tar.gz" \
     "$p-x86_64-apple-darwin.tar.gz" "$p-x86_64-pc-windows-msvc.zip" \
     "$p-aarch64-apple-darwin.pkg" "$p-x86_64-apple-darwin.pkg" "$p-setup.exe" \
-    "$p-amd64.deb" "$p-x86_64.AppImage"
+    "$p-amd64.deb" "kaeri-terminal-$version-x86_64.AppImage"
   expect "$terminal" "$p-rust-licences.txt"
   expect_checked "$apps" \
     "$p-android-arm64.apk" "$p-android-tv-arm64.apk" "$p-android-tv-armv7.apk" "$p-macos.dmg" "$p-macos-dsyms.zip" "$p-ios-unsigned.ipa" \
     "$p-apps-third-party.zip" "$p-apps-sources.tar" \
     "$p-windows-x64-setup.exe" "$p-windows-arm64-setup.exe" \
+    "Kaeri-$version-x86_64.AppImage" "Kaeri-$version-aarch64.AppImage" \
     "$p-linux-x86_64.AppImage" "$p-linux-aarch64.AppImage"
-  # The AppImages' update files, which AppImageUpdate fetches from the newest release.
-  expect "$apps" "$p-linux-x86_64.AppImage.zsync" "$p-linux-aarch64.AppImage.zsync"
+  # The AppImages' update files, which AppImageUpdate fetches from the newest release. The
+  # kaeri-<version>-linux-<arch> copies are the same AppImages under the name the releases before
+  # the rename look for, so that those update too.
+  expect "$apps" "Kaeri-$version-x86_64.AppImage.zsync" "Kaeri-$version-aarch64.AppImage.zsync" \
+    "$p-linux-x86_64.AppImage.zsync" "$p-linux-aarch64.AppImage.zsync"
   expect "$apps" appcast.xml sidestore.json
 
   shopt -s nullglob
@@ -195,6 +199,17 @@ fi
 
 # --- The release -----------------------------------------------------------------------------------
 
+# Every file, the Linux app's AppImages last: the AppImage catalog tests the one uploaded last of
+# those named alike, which should be Kaeri-<version>-x86_64.AppImage, not its copy under the old name.
+upload() {
+  local file first=() last=()
+  for file in "${files[@]}"; do
+    if [[ "$(basename "$file")" == Kaeri-*.AppImage ]]; then last+=("$file"); else first+=("$file"); fi
+  done
+  gh release upload "$tag" "${first[@]}" --clobber
+  gh release upload "$tag" "${last[@]}" --clobber
+}
+
 echo "publish.sh: $tag on $commit, after ${previous:-no release}, $channel, latest $latest, pre-release $prerelease"
 
 # A tag on another commit already, as when a failed run is run again after a later push has
@@ -208,7 +223,7 @@ fi
 if id="$(gh api "repos/$repo/releases/tags/$tag" --jq .id 2>/dev/null)"; then
   # The release keeps its channel: the flags are not touched. A stable's notes are the
   # promotion's, so only a beta gets its notes written again.
-  gh release upload "$tag" "${files[@]}" --clobber
+  upload
   if [[ "$(gh api "repos/$repo/releases/$id" --jq .prerelease)" == true ]]; then
     echo "publish.sh: $tag is published already, so its files are replaced and its notes written again"
     gh api -X PATCH "repos/$repo/releases/$id" -F body=@"$work/notes.md" --jq .html_url
@@ -228,7 +243,7 @@ gh api --paginate "repos/$repo/releases?per_page=100" \
 id="$(gh api "repos/$repo/releases" -f tag_name="$tag" -f target_commitish="$commit" \
   -f name="$tag" -F draft=true -F prerelease="$prerelease" -F body=@"$work/notes.md" --jq .id)"
 echo "publish.sh: made draft $id, uploading ${#files[@]} files"
-gh release upload "$tag" "${files[@]}" --clobber
+upload
 
 uploaded="$(gh api "repos/$repo/releases/$id" --jq '.assets | length')"
 [[ "$uploaded" == "${#files[@]}" ]] || fail "the draft has $uploaded files, not ${#files[@]}"
