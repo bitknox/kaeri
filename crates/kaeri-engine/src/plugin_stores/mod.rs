@@ -593,9 +593,27 @@ impl Stores {
         Ok((entry, path))
     }
 
-    /// Delete an installed plugin's file and forget where it came from.
+    /// Delete a plugin's files and forget where it came from.
+    ///
+    /// The loader loads every `*.wasm` in the plugin directory whatever its name, and a plugin
+    /// added by hand keeps the name it was copied under. So beside the file a store installs,
+    /// named after the id, every other file that declares the id goes too, or the plugin would
+    /// be back at the next launch.
     pub async fn remove(&self, plugin: &str) -> Result<(), Msg> {
-        install::uninstall(&self.plugin_dir, plugin).await.map_err(foreign)?;
+        if kaeri_plugin_store::protocol::is_valid_id(plugin) {
+            install::uninstall(&self.plugin_dir, plugin).await.map_err(foreign)?;
+        }
+        let inspector = self.inspector().await?;
+        for (path, info) in self.local_files(inspector.as_ref()).await {
+            if info.id != plugin {
+                continue;
+            }
+            match tokio::fs::remove_file(&path).await {
+                Ok(()) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::NotFound => {}
+                Err(e) => return Err(foreign(e)),
+            }
+        }
         self.update(|state| state.forget_install(plugin)).await?;
         Ok(())
     }
@@ -1257,6 +1275,51 @@ mod tests {
         local::Installed,
         protocol::{Member, PROTOCOL},
     };
+
+    /// An inspector that reads a file's bytes as the id it declares, so a test needs no built
+    /// plugin.
+    struct ByBytes;
+
+    #[async_trait::async_trait]
+    impl Inspector for ByBytes {
+        async fn inspect(&self, wasm: &[u8]) -> Result<PluginInfo, String> {
+            Ok(PluginInfo {
+                id: String::from_utf8_lossy(wasm).into_owned(),
+                name: "Hand Added".into(),
+                version: "0.1.0".into(),
+                allowed_hosts: Vec::new(),
+                translations: Vec::new(),
+                kind: None,
+                media: Vec::new(),
+            })
+        }
+    }
+
+    #[tokio::test]
+    async fn removing_a_plugin_added_by_hand_deletes_the_file_it_was_loaded_from() {
+        let root = tempfile::tempdir().unwrap();
+        let paths = Paths {
+            config_file: root.path().join("config").join("config.toml"),
+            data_dir: root.path().join("data"),
+            cache_dir: root.path().join("cache"),
+        };
+        let tokens = kaeri_track::secret::TokenStore::with_backend(
+            root.path().join("tokens"),
+            kaeri_track::secret::Backend::File,
+        );
+        let stores = Stores::with_tokens(&Config::default(), &paths, tokens).unwrap();
+        assert!(stores.inspector.set(Arc::new(ByBytes)).is_ok());
+        std::fs::create_dir_all(&paths.data_dir).unwrap();
+        let dir = paths.plugin_dir();
+        std::fs::create_dir_all(&dir).unwrap();
+        // Copied in under the name its build gave it, not its id.
+        std::fs::write(dir.join("hand_built_plugin.wasm"), "example").unwrap();
+        std::fs::write(dir.join("another.wasm"), "another").unwrap();
+
+        stores.remove("example").await.unwrap();
+        assert!(!dir.join("hand_built_plugin.wasm").exists(), "the plugin would come back");
+        assert!(dir.join("another.wasm").exists(), "another plugin is left alone");
+    }
 
     #[test]
     fn run_by_names_the_setup_owner_by_the_stores_contact_or_not_at_all() {
