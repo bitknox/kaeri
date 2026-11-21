@@ -32,7 +32,7 @@ sealed class Updater
         this.staged = staged;
         // Beside the download, not in a profile's folders: the copy that opens after the
         // installer reads it whichever profile it runs on.
-        marker = Path.Combine(dir, "updating");
+        marker = Path.Combine(dir, Updates.Marker);
     }
 
     /// <summary>How the update stands.</summary>
@@ -139,7 +139,7 @@ sealed class Updater
             Directory.CreateDirectory(dir);
             File.WriteAllText(marker, version);
             var app = Environment.ProcessPath ?? throw new Win32Exception("the app's own path is unknown");
-            Process.Start(new ProcessStartInfo("cmd.exe", Updates.RelaunchCommand(ready.Path!, Path.Combine(dir, "install.log"), app,
+            Process.Start(new ProcessStartInfo("cmd.exe", Updates.RelaunchCommand(ready.Path!, Path.Combine(dir, Updates.InstallLog), app,
                 Updates.RelaunchArguments(Environment.GetCommandLineArgs().Skip(1))))
             {
                 UseShellExecute = false,

@@ -1455,6 +1455,31 @@ public class UpdateTests
     }
 
     [Fact]
+    public void ADownloadAfterAFailedInstallKeepsTheMarkerAndTheInstallersLog()
+    {
+        HomeGuard.Check();
+        var dir = Dir();
+        try
+        {
+            Directory.CreateDirectory(dir);
+            var next = Asset("x64", 1).Name;
+            foreach (var name in new[] { "updating", "install.log", "kaeri-0.10.0-windows-x64-setup.exe", next + ".partial" })
+                File.WriteAllText(Path.Combine(dir, name), "0.11.0");
+            string[] Left() => [.. Directory.EnumerateFiles(dir).Select(f => Path.GetFileName(f)).Order(StringComparer.Ordinal)];
+            // The copy that opens again reads the marker, and the log says why the install failed.
+            Updates.Tidy(dir, next);
+            Assert.Equal(["install.log", next + ".partial", "updating"], Left());
+            // Once an update has installed, nothing is kept.
+            Updates.Tidy(dir, null);
+            Assert.Empty(Left());
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
     public void TheInstallerRunsSilentlyAndTheAppOpensAgainAfterIt()
     {
         var command = Updates.RelaunchCommand(@"C:\Temp\kaeri-update\setup.exe", @"C:\Temp\kaeri-update\install.log", @"C:\Apps\kaeri\kaeri.exe");

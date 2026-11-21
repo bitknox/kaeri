@@ -149,7 +149,18 @@ public static class Updates
 
     static UpdateState Failed(string version, string reason) => new(UpdateStep.Failed, version, Reason: reason);
 
-    /// <summary>Removes what earlier updates left in <paramref name="dir"/>, apart from <paramref name="keep"/>.</summary>
+    /// <summary>The file a restart to update leaves beside the download, with the version it installs.</summary>
+    public const string Marker = "updating";
+
+    /// <summary>The installer's log, beside the download.</summary>
+    public const string InstallLog = "install.log";
+
+    /// <summary>
+    /// Removes what earlier updates left in <paramref name="dir"/>: all of it once an update has
+    /// installed (<paramref name="keep"/> null), and before a download all but that download,
+    /// whole or partial, the marker and the installer's log. After a failed install the copy that
+    /// opens again reads the marker, and the log says why the install failed.
+    /// </summary>
     public static void Tidy(string dir, string? keep)
     {
         try
@@ -157,8 +168,11 @@ public static class Updates
             if (!Directory.Exists(dir))
                 return;
             foreach (var file in Directory.EnumerateFiles(dir))
-                if (keep is null || !System.IO.Path.GetFileName(file).StartsWith(keep, StringComparison.Ordinal))
+            {
+                var name = System.IO.Path.GetFileName(file);
+                if (keep is null || !(name.StartsWith(keep, StringComparison.Ordinal) || name is Marker or InstallLog))
                     File.Delete(file);
+            }
         }
         catch (IOException)
         {
