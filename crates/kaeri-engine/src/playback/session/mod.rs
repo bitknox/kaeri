@@ -314,12 +314,12 @@ pub async fn play(
     // A licensed stream cannot be decoded locally, so it is handed to whatever is licensed to
     // play it, through the host: the system's handler for the link. No progress is tracked,
     // because we never see any.
-    // The link is the source's own, and the system opens whatever its scheme reaches, so one to
-    // a file, a share or a system handler is refused rather than handed over.
+    // The link is the source's own, and the system opens whatever its scheme reaches, so only a
+    // web address is handed over; any other scheme is refused.
     if first.kind == StreamKind::ExternalDeepLink {
         slot.release();
         let (update, ended) = if !kaeri_core::stream::opens_elsewhere(&first.url) {
-            tracing::warn!(source = %first.provider_id, "a link to a file, a share or a system handler; not opened");
+            tracing::warn!(source = %first.provider_id, "a link that is not a web address; not opened");
             // The why is the log's: "Couldn't open that." is all there is to do about it.
             let reason = String::new();
             (Event::Toast(Notice::alert(Msg::NoticeCouldNotOpen { reason })), Ending::Failed)
