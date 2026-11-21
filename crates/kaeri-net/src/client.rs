@@ -99,6 +99,32 @@ impl HttpClient {
         &self.reach
     }
 
+    /// A client that reaches `name` at `address` and resolves no other name, for tests that
+    /// serve a named host on loopback: what a source names is checked by its host name, and a
+    /// loopback address is never a host a source may name. Built as [`Self::offline`] builds
+    /// its clients otherwise. Hidden for the same reason.
+    #[doc(hidden)]
+    pub fn resolving(
+        config: &NetworkConfig,
+        name: &str,
+        address: std::net::SocketAddr,
+    ) -> Result<Self, NetError> {
+        let refused = Refused::default();
+        let resolving = |builder: reqwest::ClientBuilder| {
+            builder
+                .no_proxy()
+                .dns_resolver(std::sync::Arc::new(Unresolved(refused.clone())))
+                .resolve(name, address)
+        };
+        let plain = resolving(builder(config))
+            .build()
+            .map_err(|e| NetError::Build(format!("http client: {e}")))?;
+        let sources = resolving(builder(config).redirect(reqwest::redirect::Policy::none()))
+            .build()
+            .map_err(|e| NetError::Build(format!("sources client: {e}")))?;
+        Ok(Self { plain, sources, refused: Some(refused), reach: Default::default() })
+    }
+
     /// The host names this offline client was asked for and refused, oldest first: empty on a
     /// client that resolves names. A fixture build's tests read it to see that nothing aimed at a
     /// real host.

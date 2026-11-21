@@ -11,9 +11,12 @@
 //! - **Every ceiling is counted host-side.** Fetch counts and body sizes are tracked here, not
 //!   trusted to the guest.
 
-use std::sync::{
-    Arc,
-    atomic::{AtomicU32, Ordering},
+use std::{
+    borrow::Cow,
+    sync::{
+        Arc,
+        atomic::{AtomicU32, AtomicU64, Ordering},
+    },
 };
 
 use crate::sandbox::{self, Limits};
@@ -55,6 +58,12 @@ pub struct Response {
 const RESERVED_HEADERS: &[&str] =
     &["host", "content-length", "connection", "transfer-encoding", "accept-encoding"];
 
+/// The longest line a guest's `log` call writes. A parser's diagnostics fit in far less.
+pub const LOG_LINE_BYTES: usize = 4096;
+
+/// Lines one call may log. Past them the guest's lines are dropped, after one that says so.
+pub const LOG_LINES: u64 = 200;
+
 /// What the host lends to one plugin, for the duration of one call.
 ///
 /// Constructed per call rather than per plugin, because the fetch counter has to reset — a
@@ -65,6 +74,8 @@ pub struct Capabilities {
     allowed_hosts: Vec<String>,
     limits: Limits,
     fetches: Arc<AtomicU32>,
+    /// Lines this call has logged, for [`Capabilities::log_line`].
+    logged: Arc<AtomicU64>,
     /// What this call's fetches met, shared with whoever made the call.
     reach: Reach,
     /// `None` in tests that exercise policy without a network.
@@ -127,6 +138,7 @@ impl Capabilities {
             allowed_hosts,
             limits,
             fetches: Arc::new(AtomicU32::new(0)),
+            logged: Arc::new(AtomicU64::new(0)),
             reach: Reach::default(),
             http,
             settings: Default::default(),
@@ -156,6 +168,42 @@ impl Capabilities {
         self.fetches.load(Ordering::Relaxed)
     }
 
+    /// Fetches this call may still make.
+    pub fn fetches_left(&self) -> u32 {
+        self.limits.max_fetches.saturating_sub(self.fetches_used())
+    }
+
+    /// Why a request past the call's fetch budget is refused.
+    fn budget_spent(&self) -> String {
+        format!("fetch budget exhausted ({} per call)", self.limits.max_fetches)
+    }
+
+    /// What one guest `log` line becomes: cut to [`LOG_LINE_BYTES`], and `None` once the call
+    /// has logged [`LOG_LINES`]. The first line past that says the rest are dropped.
+    ///
+    /// The guest chooses the length and the count, and the cost lands on the host: every line
+    /// is formatted, kept in the writer's buffers and written to the app's log file, which no
+    /// limit on the guest's own memory or time reaches.
+    pub fn log_line<'m>(&self, msg: &'m str) -> Option<Cow<'m, str>> {
+        let line = self.logged.fetch_add(1, Ordering::Relaxed);
+        if line > LOG_LINES {
+            return None;
+        }
+        if line == LOG_LINES {
+            return Some(Cow::Owned(format!(
+                "log limit reached ({LOG_LINES} lines per call), later lines dropped"
+            )));
+        }
+        if msg.len() <= LOG_LINE_BYTES {
+            return Some(Cow::Borrowed(msg));
+        }
+        let mut end = LOG_LINE_BYTES;
+        while !msg.is_char_boundary(end) {
+            end -= 1;
+        }
+        Some(Cow::Owned(format!("{} [{} bytes cut]", &msg[..end], msg.len() - end)))
+    }
+
     /// What this call's fetches meet, readable after the call by whoever kept a copy.
     pub fn reach(&self) -> Reach {
         self.reach.clone()
@@ -166,12 +214,8 @@ impl Capabilities {
     /// Separated from [`Self::fetch`] so the rules are testable without a network, and so the
     /// order is unambiguous: budget, then scheme and host, then headers.
     pub fn authorise(&self, request: &Request) -> Result<(), HostError> {
-        let used = self.fetches.load(Ordering::Relaxed);
-        if used >= self.limits.max_fetches {
-            return Err(HostError::Denied(format!(
-                "fetch budget exhausted ({} per call)",
-                self.limits.max_fetches
-            )));
+        if self.fetches_left() == 0 {
+            return Err(HostError::Denied(self.budget_spent()));
         }
 
         // GET and POST are what parsing needs. Anything else is a way to change state on a
@@ -300,6 +344,47 @@ async fn read_capped(
         body.extend_from_slice(&chunk);
     }
     Ok(body)
+}
+
+/// The answers to one `fetch-many` call, in the order of `requests`: each as `fetch` answers it,
+/// exactly as if the guest had fetched them one at a time, and those past the call's fetch
+/// budget refused with the reason `refused` is given.
+///
+/// The list is the guest's to size, and a fetch in flight costs the host far more than the
+/// request did in the guest's memory. So no more fetches are in flight at once than the budget
+/// has left, and a request the budget cannot take is answered without a fetch ever being
+/// built for it. A round whose requests were refused for their host or method spends nothing,
+/// and the next requests get the same chance they would have had one at a time.
+pub async fn fetch_each<Q, A, F>(
+    capabilities: &Capabilities,
+    requests: Vec<Q>,
+    fetch: impl Fn(Q) -> F,
+    refused: impl Fn(String) -> A,
+) -> Vec<A>
+where
+    F: std::future::Future<Output = A>,
+{
+    let mut answers = Vec::with_capacity(requests.len());
+    let mut requests = requests.into_iter();
+    loop {
+        let left = capabilities.fetches_left() as usize;
+        let round: Vec<Q> = requests.by_ref().take(left).collect();
+        if round.is_empty() {
+            break;
+        }
+        answers.extend(futures::future::join_all(round.into_iter().map(&fetch)).await);
+    }
+    let past = requests.len();
+    if past != 0 {
+        tracing::debug!(
+            plugin = capabilities.plugin_id(),
+            refused = past,
+            "a fetch-many went past its call's fetch budget"
+        );
+        let spent = capabilities.budget_spent();
+        answers.extend(requests.map(|_| refused(spent.clone())));
+    }
+    answers
 }
 
 /// Capture groups for every match of `pattern` in `haystack`.
