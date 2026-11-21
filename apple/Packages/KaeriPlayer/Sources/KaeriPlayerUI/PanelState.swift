@@ -112,7 +112,8 @@ enum ReleaseWords {
         if let label = candidate.label, !label.isEmpty { parts.append(label) }
         if candidate.dubbed { parts.append(L.playerReleaseDub) } else if candidate.dualAudio { parts.append(L.playerReleaseDualAudio) }
         if candidate.autoPick { parts.append(L.playerReleaseAutomatic) }
-        return parts.joined(separator: " · ")
+        // Each part wraps whole: "Automatic picks this" never leaves "picks this" on a line alone.
+        return parts.map { $0.replacingOccurrences(of: " ", with: "\u{00A0}") }.joined(separator: " · ")
     }
 }
 

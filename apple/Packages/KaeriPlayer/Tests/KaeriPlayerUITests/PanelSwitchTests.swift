@@ -107,11 +107,13 @@ struct PanelSwitchTests {
         #expect(PanelSwitch.counting == .seconds(3))
     }
 
-    @Test func aReleasesLineIsItsOwnFieldsOnly() {
-        #expect(ReleaseWords.detail(Self.release) == "1080p · 1.4 GiB · lantern-archive")
+    @Test func aReleasesLineIsItsOwnFieldsOnlyEachKeptWhole() {
+        // Each part's own spaces are kept from breaking, so a part wraps as a whole.
+        let whole = { (part: String) in part.replacingOccurrences(of: " ", with: "\u{00A0}") }
+        #expect(ReleaseWords.detail(Self.release) == "1080p · \(whole("1.4 GiB")) · lantern-archive")
         var auto = Self.release
         auto.dubbed = true
         auto.autoPick = true
-        #expect(ReleaseWords.detail(auto) == "1080p · 1.4 GiB · lantern-archive · \(L.playerReleaseDub) · \(L.playerReleaseAutomatic)")
+        #expect(ReleaseWords.detail(auto) == "1080p · \(whole("1.4 GiB")) · lantern-archive · \(whole(L.playerReleaseDub)) · \(whole(L.playerReleaseAutomatic))")
     }
 }
