@@ -6,6 +6,10 @@
 	--sl-nav-height: 4rem;
 	--ani-raised-selected: #d9d5c9;
 	--ani-select: #f0ddc2;
+	/* The asides' marks: notes and tips in the state colour (the apps' water), dangers in the
+	   alert colour (their vermilion), as starlight-tokens.css sets them for each theme. */
+	--ani-state: var(--sl-color-blue);
+	--ani-alert: var(--sl-color-red);
 	--ani-r-chip: 4px;
 	--ani-r-row: 8px;
 	--ani-r-box: 12px;
