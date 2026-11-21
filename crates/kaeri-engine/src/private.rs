@@ -295,17 +295,21 @@ fn overlay_standing(
 
 /// Before a command runs while private mode is on: the words it searches for are left out of the
 /// log from now on, the job that names them included.
+///
+/// A live search is the exception. It is sent on every keystroke and searches only once the
+/// typing stops, so its words are noted as it searches, by [`note_search`]. Noted here, each
+/// step of the typing would stay left out until the app quits: "the", then "the l", and on.
 pub fn note_command(privacy: &Privacy, command: &kaeri_model::command::Command) {
     use kaeri_model::{command::Command, reading::ReadingCommand};
     if !privacy.is_on() {
         return;
     }
     match command {
-        Command::Search { query }
-        | Command::SearchLive { query }
-        | Command::SearchMore { query, .. } => {
+        Command::Search { query } | Command::SearchMore { query, .. } => {
             redact::word(query.trimmed_text());
         }
+        // Noted as it searches, if it ever does: see `catalog::search::live`.
+        Command::SearchLive { .. } => {}
         Command::ManualSearch { query, .. } => redact::word(query),
         Command::Reading(
             ReadingCommand::Search { query }
@@ -313,6 +317,14 @@ pub fn note_command(privacy: &Privacy, command: &kaeri_model::command::Command) 
             | ReadingCommand::RetrySourceSearch { query, .. },
         ) => redact::word(query.text.trim()),
         _ => {}
+    }
+}
+
+/// A search about to run while private mode is on: its words are left out of the log from now
+/// on. A live search notes its words here as it searches: see [`note_command`].
+pub fn note_search(privacy: &Privacy, text: &str) {
+    if privacy.is_on() {
+        redact::word(text);
     }
 }
 
@@ -390,8 +402,8 @@ impl std::fmt::Debug for Gate {
 ///
 /// The log is the process's, so this is too: every engine in it adds the words it holds back.
 /// [`redact::Redacting`] wraps the log's writer and puts each line through [`line`]: the words learnt here
-/// are taken out at any time, and while the mode is on, or a private play or read is open, every
-/// address too.
+/// are taken out at any time, wherever they stand on their own, and while the mode is on, or a
+/// private play or read is open, every address too.
 pub mod redact {
     use std::{
         io::Write,
@@ -503,13 +515,14 @@ pub mod redact {
             Open(self)
         }
 
-        /// Words shorter than three characters say nothing on their own and are kept.
+        /// Words shorter than three characters say nothing on their own and are kept. A word is
+        /// taken out wherever it stands on its own: see [`Self::line`].
         pub fn word(&self, word: &str) {
             let word = word.trim();
             if word.chars().count() < 3 {
                 return;
             }
-            let lower = word.to_lowercase();
+            let lower = lowercase(word);
             let mut words = self.words.write().unwrap_or_else(|e| e.into_inner());
             if !words.contains(&lower) {
                 words.push(lower);
@@ -548,16 +561,18 @@ pub mod redact {
             }
         }
 
-        /// `text` with the words and ids learnt taken out, and while [`Self::active`], every
-        /// address.
+        /// `text` with the words and ids learnt taken out where each stands on its own, and while
+        /// [`Self::active`], every address. A word is taken out in any case, but not from inside
+        /// a longer word or number: a search for "the" leaves "other" whole, and one for "202"
+        /// the log's dates.
         pub fn line(&self, text: &str) -> String {
             let mut out = text.to_owned();
             if self.active() {
                 out = addresses(&out);
             }
             let words = self.words.read().unwrap_or_else(|e| e.into_inner());
-            for word in words.iter() {
-                out = replace_ignoring_case(&out, word);
+            if !words.is_empty() {
+                out = hide_words(&out, &words);
             }
             drop(words);
             let ids = self.ids.read().unwrap_or_else(|e| e.into_inner());
@@ -601,22 +616,64 @@ pub mod redact {
         out
     }
 
-    fn replace_ignoring_case(text: &str, lower_word: &str) -> String {
-        let lower = text.to_lowercase();
-        // Lowercasing can change byte lengths outside ASCII; then only exact matches are taken.
-        if lower.len() != text.len() {
-            return text.replace(lower_word, HIDDEN);
+    /// `text` lowercased a character at a time, as both the words and the lines are, so the same
+    /// letters always lowercase the same way.
+    fn lowercase(text: &str) -> String {
+        text.chars().flat_map(char::to_lowercase).collect()
+    }
+
+    /// `text` with each of `words` (lowercased) taken out wherever it stands on its own, in any
+    /// case. Longer words go first, and a word found inside one already taken out is left to it.
+    fn hide_words(text: &str, words: &[String]) -> String {
+        let mut words: Vec<&str> = words.iter().map(String::as_str).collect();
+        words.sort_unstable_by_key(|word| std::cmp::Reverse(word.len()));
+        // The text lowercased, and for each of its bytes where the character it came from starts
+        // in `text`: lowercasing changes the length of some letters, so places are mapped back.
+        let mut lower = String::with_capacity(text.len());
+        let mut from = Vec::with_capacity(text.len());
+        for (at, c) in text.char_indices() {
+            lower.extend(c.to_lowercase());
+            from.resize(lower.len(), at);
         }
+        let end_of = |at: usize| at + text[at..].chars().next().map_or(0, char::len_utf8);
+        let mut hidden: Vec<(usize, usize)> = Vec::new();
+        for word in words {
+            let mut search = 0;
+            while let Some(found) = lower[search..].find(word) {
+                let found = search + found;
+                let past = found + word.len();
+                let (start, end) = (from[found], end_of(from[past - 1]));
+                let free = hidden.iter().all(|&(s, e)| end <= s || e <= start);
+                if free && stands_alone(text, start, end, word) {
+                    hidden.push((start, end));
+                    search = past;
+                } else {
+                    search = found + lower[found..].chars().next().map_or(1, char::len_utf8);
+                }
+            }
+        }
+        hidden.sort_unstable();
         let mut out = String::with_capacity(text.len());
-        let mut from = 0;
-        while let Some(at) = lower[from..].find(lower_word) {
-            let at = from + at;
-            out.push_str(&text[from..at]);
+        let mut at = 0;
+        for (start, end) in hidden {
+            out.push_str(&text[at..start]);
             out.push_str(HIDDEN);
-            from = at + lower_word.len();
+            at = end;
         }
-        out.push_str(&text[from..]);
+        out.push_str(&text[at..]);
         out
+    }
+
+    /// Whether `word`, found at `text[start..end]`, stands on its own there: where it begins or
+    /// ends with a letter or a digit, no other letter or digit runs on from it on that side.
+    /// Only ASCII letters and digits run on, so a title is still found beside Japanese text.
+    fn stands_alone(text: &str, start: usize, end: usize, word: &str) -> bool {
+        let runs_on = |edge: Option<char>, next: Option<char>| {
+            edge.is_some_and(|c| c.is_ascii_alphanumeric())
+                && next.is_some_and(|c| c.is_ascii_alphanumeric())
+        };
+        !runs_on(word.chars().next(), text[..start].chars().next_back())
+            && !runs_on(word.chars().next_back(), text[end..].chars().next())
     }
 
     /// `id` taken out wherever it stands alone, not inside a longer number or word.
