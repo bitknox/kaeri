@@ -3,6 +3,7 @@
 // place and full screen, and closing it shows the window as it was, scrolled where it was. The
 // Go menu's keys work on both, with a hardware keyboard on iPad.
 
+import KaeriDesign
 import KaeriStore
 import KaeriStrings
 import SwiftUI
@@ -28,6 +29,8 @@ private struct ReaderHost: ViewModifier {
             ReaderScreen(model: model) {}
                 .ignoresSafeArea()
                 .background(Color.black)
+                .onAppear { PhoneOrientation.reader(true) }
+                .onDisappear { PhoneOrientation.reader(false) }
         }
         #else
         // The window under the reader stays as it is, so going back finds it where it was. The
