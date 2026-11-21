@@ -837,8 +837,8 @@ mod tests {
     /// that is typed into: what was typed last can be seen and taken back.
     #[test]
     fn a_long_typed_heading_keeps_its_end_and_the_caret_in_view() {
-        const TYPED: &str =
-            "The Lantern Ferry and the Long Winter Crossing Past the Lighthouse";
+        const TYPED: &str = "The Lantern Ferry and the Long Winter Crossing over the Grey Northern \
+             Sea and Past the Lighthouse";
         for overlay in [Overlay::ManualQuery, Overlay::CommandPalette] {
             let mut app = app_with(ContentList::Entries(vec![]));
             let overlay_name = format!("{overlay:?}");
