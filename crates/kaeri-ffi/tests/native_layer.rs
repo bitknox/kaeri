@@ -503,9 +503,20 @@ fn the_title_is_in_the_form_the_title_setting_picks() {
 #[test]
 fn nothing_is_asked_while_the_cache_shows_nothing_can_have_aired() {
     let (engine, _root) = watching();
-    // Continue fetched the four titles, and the cache keeps each one's next episode.
+    // Continue fetched the four titles, and the cache keeps each one's next episode. Its
+    // last-aired lookup runs behind the list, after the job is done: waited for too, so its
+    // request is not counted as one the check asked.
     let job = engine.send(Command::LoadContinue).expect("Continue is a job");
-    read_until(&engine, move |event| matches!(event, Event::JobDone(done) if *done == job));
+    let seen = Arc::new(std::sync::atomic::AtomicU8::new(0));
+    read_until(&engine, move |event| {
+        use std::sync::atomic::Ordering::SeqCst;
+        match event {
+            Event::JobDone(done) if *done == job => seen.fetch_or(1, SeqCst),
+            Event::LastAired(_) => seen.fetch_or(2, SeqCst),
+            _ => 0,
+        };
+        seen.load(SeqCst) == 3
+    });
     notifications(&engine, true);
     assert_eq!(check(&engine).0, []);
 

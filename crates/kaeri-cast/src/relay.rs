@@ -194,27 +194,7 @@ impl Relay {
             unreadable: AtomicBool::new(false),
             slow_source: Mutex::new(SLOW_SOURCE),
         });
-        let task = {
-            let shared = Arc::clone(&shared);
-            tokio::spawn(async move {
-                // Every connection lives in this set, so aborting the accept loop drops them
-                // all: a TV's kept-alive connection gets nothing once the cast has ended.
-                let mut connections = JoinSet::new();
-                while let Ok((socket, peer)) = listener.accept().await {
-                    while connections.try_join_next().is_some() {}
-                    if peer.ip() != shared.allow {
-                        tracing::debug!(peer = %peer.ip(), "relay refused a connection");
-                        continue;
-                    }
-                    let shared = Arc::clone(&shared);
-                    connections.spawn(async move {
-                        if let Err(e) = connection(socket, &shared).await {
-                            tracing::debug!(error = %e, "relay connection ended");
-                        }
-                    });
-                }
-            })
-        };
+        let task = tokio::spawn(serve(listener, Arc::clone(&shared)));
         Ok(Self { shared, task })
     }
 
@@ -323,6 +303,61 @@ impl Relay {
     pub fn idle_for(&self) -> Duration {
         lock(&self.shared.last_request).elapsed()
     }
+}
+
+/// How long the relay waits after an accept failed before it tries again: at first, and at most
+/// while the failures go on.
+const ACCEPT_RETRY: Duration = Duration::from_millis(50);
+const ACCEPT_RETRY_MAX: Duration = Duration::from_secs(1);
+
+/// Take the TV's connections on `listener` and serve each one, until the relay closes.
+async fn serve(listener: TcpListener, shared: Arc<Shared>) {
+    // Every connection lives in this set, so aborting the accept loop drops them all: a TV's
+    // kept-alive connection gets nothing once the cast has ended.
+    let mut connections = JoinSet::new();
+    // A failed accept leaves the listener as it was. The process may be out of file descriptors
+    // for a moment (a torrent's peers take many), or a connection may have gone before it was
+    // taken. Ending the loop there would close the listener and every connection open on it,
+    // and the TV could fetch nothing more from this relay while the cast lasts. So the relay
+    // waits and takes connections again, and only closing it ends the loop.
+    let mut failures = 0_u32;
+    loop {
+        let (socket, peer) = match listener.accept().await {
+            Ok(accepted) => accepted,
+            Err(e) => {
+                failures = failures.saturating_add(1);
+                // Said as the failures start, then less and less often while they go on.
+                if failures.is_power_of_two() {
+                    tracing::warn!(error = %e, failures, "the relay couldn't take a connection");
+                }
+                // The listener stays ready after a failure, so trying at once would spin.
+                tokio::time::sleep(accept_retry(failures)).await;
+                continue;
+            }
+        };
+        if failures > 0 {
+            tracing::info!(failures, "the relay takes connections again");
+            failures = 0;
+        }
+        while connections.try_join_next().is_some() {}
+        if peer.ip() != shared.allow {
+            tracing::debug!(peer = %peer.ip(), "relay refused a connection");
+            continue;
+        }
+        let shared = Arc::clone(&shared);
+        connections.spawn(async move {
+            if let Err(e) = connection(socket, &shared).await {
+                tracing::debug!(error = %e, "relay connection ended");
+            }
+        });
+    }
+}
+
+/// The wait after `failures` accepts in a row failed: [`ACCEPT_RETRY`], doubling with each
+/// failure up to [`ACCEPT_RETRY_MAX`].
+fn accept_retry(failures: u32) -> Duration {
+    let doublings = failures.saturating_sub(1).min(5);
+    ACCEPT_RETRY.saturating_mul(1 << doublings).min(ACCEPT_RETRY_MAX)
 }
 
 /// `scheme://authority` of a URL.
@@ -1208,6 +1243,112 @@ mod tests {
             .await
             .expect("the connection closed");
         assert!(read.is_err() || rest.is_empty(), "{}", String::from_utf8_lossy(&rest));
+    }
+
+    /// The process out of file descriptors, which only a Unix limit brings about in a test.
+    #[cfg(unix)]
+    mod descriptors {
+        use super::*;
+
+        /// Set in the process of its own the test runs in.
+        const CHILD: &str = "KAERI_RELAY_OUT_OF_DESCRIPTORS";
+
+        /// Too many open files, the same number on Linux and macOS.
+        const EMFILE: i32 = 24;
+
+        const CLIP: &[u8] = b"not a real clip";
+
+        /// The process runs out of file descriptors for a moment, as a torrent's peers can make
+        /// it, just as the TV opens a connection: the relay can't take it then. Once descriptors
+        /// are free again, that connection is answered, the one the TV kept open still is, and so
+        /// is the next.
+        #[test]
+        fn the_relay_takes_connections_again_after_running_out_of_descriptors() {
+            if std::env::var_os(CHILD).is_some() {
+                let runtime =
+                    tokio::runtime::Builder::new_current_thread().enable_all().build();
+                runtime.unwrap().block_on(run_out());
+                return;
+            }
+            // A process of its own with a low limit, so running out touches no other test.
+            let module = module_path!().split_once("::").unwrap().1;
+            let test = format!(
+                "{module}::the_relay_takes_connections_again_after_running_out_of_descriptors"
+            );
+            let run = std::process::Command::new("sh")
+                .args(["-c", "ulimit -S -n 64 && exec \"$0\" \"$@\""])
+                .arg(std::env::current_exe().unwrap())
+                .args(["--exact", &test, "--nocapture", "--test-threads", "1"])
+                .env(CHILD, "1")
+                .output()
+                .unwrap();
+            let said = format!(
+                "{}{}",
+                String::from_utf8_lossy(&run.stdout),
+                String::from_utf8_lossy(&run.stderr)
+            );
+            assert!(run.status.success() && said.contains("1 passed"), "{said}");
+        }
+
+        /// The test, in a process limited to 64 descriptors.
+        async fn run_out() {
+            let relay = Relay::start(
+                Ipv4Addr::LOCALHOST,
+                IpAddr::V4(Ipv4Addr::LOCALHOST),
+                Arc::new(PlainHttp),
+            )
+            .await
+            .unwrap();
+            let url = relay.share_bytes("clip.webm", "video/webm", CLIP);
+            let (authority, path) = url.trim_start_matches("http://").split_once('/').unwrap();
+            let mut kept = tokio::net::TcpStream::connect(authority).await.unwrap();
+            assert!(ask(&mut kept, path).await.starts_with("HTTP/1.1 200"));
+
+            // Every descriptor taken, the last one by the connection the TV opens.
+            let mut taken = Vec::new();
+            loop {
+                match std::fs::File::open("/dev/null") {
+                    Ok(file) => taken.push(file),
+                    Err(e) if e.raw_os_error() == Some(EMFILE) => break,
+                    Err(e) => panic!("{e}"),
+                }
+                assert!(taken.len() < 1024, "the limit of 64 never came");
+            }
+            taken.pop();
+            let opened = std::net::TcpStream::connect(authority).unwrap();
+            opened.set_nonblocking(true).unwrap();
+            let mut opened = tokio::net::TcpStream::from_std(opened).unwrap();
+            // The relay tries to take it, and can't.
+            tokio::time::sleep(Duration::from_millis(300)).await;
+            drop(taken);
+
+            let answer = ask(&mut opened, path).await;
+            assert!(answer.starts_with("HTTP/1.1 200"), "the one opened meanwhile: {answer:?}");
+            let answer = ask(&mut kept, path).await;
+            assert!(answer.starts_with("HTTP/1.1 200"), "the one kept open: {answer:?}");
+            assert_eq!(get(&url, None).await.bytes(1024).await.unwrap(), CLIP);
+        }
+
+        /// Ask for `path` on `socket` and read the answer through to the clip's bytes, or what
+        /// came before the connection failed or 10 s went by.
+        async fn ask(socket: &mut tokio::net::TcpStream, path: &str) -> String {
+            let mut answer = Vec::new();
+            let asking = async {
+                let request = format!("GET /{path} HTTP/1.1\r\nHost: tv\r\n\r\n");
+                socket.write_all(request.as_bytes()).await?;
+                let mut chunk = [0u8; 512];
+                while !answer.ends_with(CLIP) {
+                    let n = socket.read(&mut chunk).await?;
+                    if n == 0 {
+                        break;
+                    }
+                    answer.extend_from_slice(&chunk[..n]);
+                }
+                std::io::Result::Ok(())
+            };
+            let _ = tokio::time::timeout(Duration::from_secs(10), asking).await;
+            String::from_utf8_lossy(&answer).into_owned()
+        }
     }
 
     #[tokio::test]
