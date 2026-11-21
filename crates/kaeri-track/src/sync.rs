@@ -10,7 +10,10 @@
 //! nothing may lose a queued op, and a tracker that is down must not turn into a stream of
 //! error toasts.
 
-use std::sync::Arc;
+use std::{
+    collections::HashMap,
+    sync::{Arc, LazyLock, Mutex, PoisonError},
+};
 
 use kaeri_core::{
     config::WhenTrackersDisagree,
@@ -179,7 +182,7 @@ fn outage_streak_key(tracker_id: &str) -> String {
 }
 
 /// Which of a tracker's two outboxes a drain works on.
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Queue {
     Watching,
     Reading,
@@ -320,6 +323,26 @@ fn holds(until: i64, longest: i64, now: i64) -> bool {
     now < until && until - now <= longest
 }
 
+/// Wait until no other drain of the tracker's `queue` runs in this process, and hold it.
+///
+/// A drain claims rows, sends them and settles them once the tracker answers, and a claim
+/// takes no lease. Two drains that overlapped (the timer's, waiting behind the paced
+/// background requests, and the one a finished episode starts) sent the same title side by
+/// side: a history tracker counted the play twice, and when the older progress landed last
+/// the tracker stayed behind, since the newer one was already remembered as sent and no pull
+/// queued it again. Each drain now starts after the one before has settled.
+async fn one_drain_at_a_time(id: &str, queue: Queue) -> tokio::sync::OwnedMutexGuard<()> {
+    type Drains = HashMap<(String, Queue), Arc<tokio::sync::Mutex<()>>>;
+    static DRAINS: LazyLock<Mutex<Drains>> = LazyLock::new(Mutex::default);
+    let drain = DRAINS
+        .lock()
+        .unwrap_or_else(PoisonError::into_inner)
+        .entry((id.to_owned(), queue))
+        .or_default()
+        .clone();
+    drain.lock_owned().await
+}
+
 async fn drain_queue(
     store: &Store,
     tracker: &dyn Tracker,
@@ -327,6 +350,7 @@ async fn drain_queue(
     queue: Queue,
 ) -> Result<DrainReport, kaeri_store::StoreError> {
     let id = tracker.id();
+    let _alone = one_drain_at_a_time(id, queue).await;
     let mut report = DrainReport::default();
 
     // A token the tracker has already rejected is still a token, and every
@@ -940,7 +964,10 @@ mod tests {
         traits::{TrackOp, TrackedEntry, WatchStatus},
     };
     use kaeri_store::WatchEvent;
-    use std::sync::Mutex;
+    use std::sync::{
+        Mutex,
+        atomic::{AtomicBool, AtomicUsize, Ordering},
+    };
 
     const HOSHIKUZU: AnilistId = AnilistId::new(154_587);
 
@@ -1272,6 +1299,139 @@ mod tests {
 
         assert_eq!(second.sent, 1);
         assert_eq!(tracker.batches().len(), 2);
+    }
+
+    /// Something the person does while a push is out.
+    type Meanwhile = Box<dyn FnOnce() + Send>;
+
+    /// A tracker whose first push stays out until the test lets it answer, running `meanwhile`
+    /// before it does, and which counts how many of its pushes were out at once.
+    struct SlowTracker {
+        id: &'static str,
+        pushed: Mutex<Vec<Vec<TrackOp>>>,
+        meanwhile: Mutex<Option<Meanwhile>>,
+        /// The first push answers once this is cleared.
+        hold: AtomicBool,
+        out: AtomicUsize,
+        most_out: AtomicUsize,
+    }
+
+    impl SlowTracker {
+        fn new(id: &'static str, hold: bool) -> Self {
+            Self {
+                id,
+                pushed: Mutex::new(Vec::new()),
+                meanwhile: Mutex::new(None),
+                hold: AtomicBool::new(hold),
+                out: AtomicUsize::new(0),
+                most_out: AtomicUsize::new(0),
+            }
+        }
+
+        fn batches(&self) -> Vec<Vec<TrackOp>> {
+            self.pushed.lock().unwrap().clone()
+        }
+
+        async fn until_a_push_is_out(&self) {
+            while self.out.load(Ordering::SeqCst) == 0 {
+                tokio::task::yield_now().await;
+            }
+        }
+    }
+
+    #[async_trait::async_trait]
+    impl Tracker for SlowTracker {
+        fn id(&self) -> &str {
+            self.id
+        }
+
+        fn is_authenticated(&self) -> bool {
+            true
+        }
+
+        async fn pull_library(&self) -> Result<Vec<TrackedEntry>, kaeri_core::Error> {
+            Ok(Vec::new())
+        }
+
+        async fn push(&self, ops: &[TrackOp]) -> Result<(), kaeri_core::Error> {
+            let first = {
+                let mut pushed = self.pushed.lock().unwrap();
+                pushed.push(ops.to_vec());
+                pushed.len() == 1
+            };
+            let out = self.out.fetch_add(1, Ordering::SeqCst) + 1;
+            self.most_out.fetch_max(out, Ordering::SeqCst);
+            if first {
+                let meanwhile = self.meanwhile.lock().unwrap().take();
+                if let Some(meanwhile) = meanwhile {
+                    meanwhile();
+                }
+                while self.hold.load(Ordering::SeqCst) {
+                    tokio::task::yield_now().await;
+                }
+            }
+            self.out.fetch_sub(1, Ordering::SeqCst);
+            Ok(())
+        }
+    }
+
+    /// A made-up title.
+    const PAPER_COMET: AnilistId = AnilistId::new(900_611);
+
+    fn progress(episode: u32) -> TrackOp {
+        TrackOp::SetProgress { anilist_id: PAPER_COMET, episode }
+    }
+
+    #[tokio::test]
+    async fn progress_marked_while_a_push_is_out_goes_at_the_next_drain() {
+        // Episode 7 is on its way when 8 is marked on the episode list, which starts no drain
+        // of its own. The answer for 7 must leave 8 queued.
+        let store = Store::open_in_memory().unwrap();
+        store.enqueue("marked-meanwhile", &progress(7), 0).unwrap();
+        let tracker = SlowTracker::new("marked-meanwhile", false);
+        let marks = store.clone();
+        *tracker.meanwhile.lock().unwrap() = Some(Box::new(move || {
+            marks.enqueue("marked-meanwhile", &progress(8), 50).unwrap();
+        }));
+
+        let report = drain(&store, &tracker, 100).await.unwrap();
+        assert_eq!((report.sent, report.remaining), (1, 1), "8 is still waiting");
+        assert_eq!(store.pending_progress("marked-meanwhile", PAPER_COMET).unwrap(), Some(8));
+
+        drain(&store, &tracker, 200).await.unwrap();
+        assert_eq!(tracker.batches(), [vec![progress(7)], vec![progress(8)]]);
+        assert_eq!(store.outbox_depth(None).unwrap(), 0);
+    }
+
+    #[tokio::test]
+    async fn drains_of_one_queue_take_turns() {
+        // A drain is sending 7 when 8 finishes and starts a drain of its own. Side by side,
+        // the older value could land last and the play could count twice; the second drain
+        // waits for the first to settle, then sends 8.
+        let store = Store::open_in_memory().unwrap();
+        store.enqueue("take-turns", &progress(7), 0).unwrap();
+        let tracker = SlowTracker::new("take-turns", true);
+
+        let first = drain(&store, &tracker, 100);
+        let second = async {
+            tracker.until_a_push_is_out().await;
+            store.enqueue("take-turns", &progress(8), 150).unwrap();
+            drain(&store, &tracker, 150).await
+        };
+        let answer = async {
+            tracker.until_a_push_is_out().await;
+            // Every chance for the second drain to push alongside the first.
+            for _ in 0..20 {
+                tokio::task::yield_now().await;
+            }
+            tracker.hold.store(false, Ordering::SeqCst);
+        };
+        let (first, second, ()) = tokio::join!(first, second, answer);
+
+        assert_eq!(tracker.most_out.load(Ordering::SeqCst), 1, "one push at a time");
+        assert_eq!(tracker.batches(), [vec![progress(7)], vec![progress(8)]]);
+        assert_eq!((first.unwrap().sent, second.unwrap().sent), (1, 1));
+        assert_eq!(store.outbox_depth(None).unwrap(), 0);
     }
 
     #[tokio::test]
