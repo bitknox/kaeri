@@ -350,6 +350,7 @@ pub(crate) async fn start(
     tokio::fs::create_dir_all(&dir)
         .await
         .map_err(|e| ReadingFailure::Other { reason: e.to_string() })?;
+    mark(&dir).await;
     let spans = opened.spans();
     let (edges, mut pending) = edge_pages((&sources, &kept), &mut opened, &spans, now).await;
     let mine: Vec<PagePrint> = edges
@@ -809,6 +810,32 @@ pub(crate) async fn write(dir: &Path, name: &str, bytes: Vec<u8>, gone: &Gone) -
 pub(crate) fn page_extension(bytes: &[u8]) -> Option<&'static str> {
     let ext = kaeri_books::mime::sniff_image(bytes)?.strip_prefix("image/")?;
     Some(if ext == "jpeg" { "jpg" } else { ext })
+}
+
+/// The file a feed leaves in its folder before any page lands. A book's folder never takes it
+/// for a page: its name starts with a dot.
+const MARK: &str = ".feed";
+
+/// Mark `dir` as the folder this feed fills, with a mark no other feed has. The folder's size
+/// and change time move with each page that lands, so the page cache knows it by its mark
+/// instead (see [`mark_of`]). A folder filled again at the same path, later in the session or in
+/// a later run as session numbers start again, is marked anew, so the pages kept for the earlier
+/// feed are never taken for the new one's.
+async fn mark(dir: &Path) {
+    let path = dir.join(MARK);
+    let written = tokio::fs::write(&path, format!("{:016x}", rand::random::<u64>())).await;
+    if let Err(e) = written {
+        tracing::debug!(error = %e, "a feed's folder was not marked");
+        // An earlier feed's mark is not this feed's: without one, the folder goes by its state.
+        let _ = tokio::fs::remove_file(&path).await;
+    }
+}
+
+/// The mark the feed filling `dir` left there, if one did.
+pub(crate) fn mark_of(dir: &Path) -> Option<String> {
+    let text = std::fs::read_to_string(dir.join(MARK)).ok()?;
+    let text = text.trim();
+    (!text.is_empty()).then(|| text.to_owned())
 }
 
 #[cfg(test)]

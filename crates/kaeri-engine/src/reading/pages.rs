@@ -38,7 +38,7 @@ use kaeri_pages::{
 use crate::{
     host::PageDecoder,
     outbox::{Internal, Outbox, ReaderWake},
-    reading::feed::{Feed, FeedPage},
+    reading::feed::{Feed, FeedPage, mark_of},
 };
 
 /// How long a book may take to open before the chapter fails.
@@ -1798,13 +1798,22 @@ fn look_key(look: &Look) -> u64 {
     h.finish()
 }
 
-/// The cache folder's name for a book: its path, size and change time.
+/// The cache folder's name for a book: its path, size and change time. A folder a source's
+/// chapter is fetched into changes with each page that lands, so it goes by the mark its feed
+/// left there instead: one cache folder for the chapter however often it is laid out, while its
+/// pages land and after.
 fn book_key(path: &Path) -> String {
     let mut h = DefaultHasher::new();
     path.hash(&mut h);
     if let Ok(meta) = kaeri_books::tree::stat(path) {
-        meta.size.hash(&mut h);
-        meta.modified.hash(&mut h);
+        let mark = if meta.folder { mark_of(path) } else { None };
+        match mark {
+            Some(mark) => mark.hash(&mut h),
+            None => {
+                meta.size.hash(&mut h);
+                meta.modified.hash(&mut h);
+            }
+        }
     }
     format!("{:016x}", h.finish())
 }

@@ -50,6 +50,8 @@ struct PageSource {
     title: Option<&'static str>,
     /// No page leaves the device: each fails for want of a network.
     no_network: AtomicBool,
+    /// The grey every page is drawn in.
+    shade: u8,
 }
 
 impl PageSource {
@@ -76,6 +78,7 @@ impl PageSource {
             wide: HashSet::new(),
             title: None,
             no_network: AtomicBool::new(false),
+            shade: 90,
         }
     }
 
@@ -148,7 +151,7 @@ impl kaeri_core::traits::BookSource for PageSource {
         }
         assert!(!self.panicking.lock().unwrap().contains(&index), "a page no one foresaw");
         let (w, h) = if self.wide.contains(&index) { (640, 480) } else { (320, 480) };
-        let picture = image::GrayImage::from_pixel(w, h, image::Luma([90]));
+        let picture = image::GrayImage::from_pixel(w, h, image::Luma([self.shade]));
         let mut png = Vec::new();
         picture.write_to(&mut Cursor::new(&mut png), image::ImageFormat::Png).unwrap();
         Ok(png)
@@ -646,6 +649,7 @@ async fn a_strip_writes_its_place_when_the_image_changes() {
 
 mod kept_above;
 mod lifecycle;
+mod page_cache;
 mod r5_audit;
 
 /// Offline, the end page leads into the next chapter on this device, past the ones only the
