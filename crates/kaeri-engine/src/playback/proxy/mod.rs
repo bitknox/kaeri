@@ -931,8 +931,8 @@ mod tests {
         assert_eq!(&raw[split..], &body[..]);
     }
 
-    /// A host on loopback answering each path with its file, and `404` otherwise; the proxy
-    /// fronting its `/master.m3u8`.
+    /// A host on loopback, named `media.example`, answering each path with its file, and `404`
+    /// otherwise; the proxy fronting its `/master.m3u8`.
     async fn serve_files(files: Vec<(&'static str, String)>) -> (ProxyServer, String) {
         serve_files_for(files, None).await
     }
@@ -966,8 +966,10 @@ mod tests {
                 });
             }
         });
-        let http = HttpClient::new(&kaeri_core::config::NetworkConfig::default()).unwrap();
-        let origin = format!("http://{address}");
+        // Named as the stream's host, as a source names it, and reached on loopback.
+        let config = kaeri_core::config::NetworkConfig::default();
+        let http = HttpClient::resolving(&config, "media.example", address).unwrap();
+        let origin = format!("http://media.example:{}", address.port());
         let headers = vec![("referer".to_owned(), "https://media.example/".to_owned())];
         let server = serve_for(http, &format!("{origin}/master.m3u8"), headers, source, "tok")
             .await
