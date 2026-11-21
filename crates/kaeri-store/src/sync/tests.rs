@@ -334,6 +334,30 @@ fn ops_apply_once_and_wait_for_the_one_before() {
 }
 
 #[test]
+fn a_restored_device_takes_its_old_ops_back_and_writes_on_after_them() {
+    let a = dev("aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    // A backup of a taken before it wrote anything, restored while a's ops live on in b.
+    let restored = dev("aaaa", 10_000);
+    a.finish(SHOW, "1");
+    a.finish(SHOW, "2");
+    send(&a, &b);
+    send(&b, &restored);
+
+    restored.advance(60);
+    let mut e = WatchEvent::new(OTHER, "1", 1400.0);
+    e.duration_secs = Some(1440.0);
+    e.at = restored.secs();
+    e.completed = true;
+    restored.store.record_event(&e).expect("a change made here still saves");
+    assert_eq!(restored.store.completed_episodes(SHOW).unwrap().len(), 2);
+
+    let sent = send(&restored, &b);
+    assert_eq!((sent.ops, sent.duplicates), (1, 0), "the new change is not taken for an old one");
+    assert_eq!(b.store.completed_episodes(OTHER).unwrap().len(), 1);
+}
+
+#[test]
 fn any_order_of_the_same_ops_gives_the_same_state() {
     // Three devices make random changes offline; four other stores take every device's log in a
     // different interleaving, and all must end the same.
