@@ -69,11 +69,11 @@ library and settings.
 
 ### Linux
 
-`kaeri-@VERSION@-linux-x86_64.AppImage`, or `kaeri-@VERSION@-linux-aarch64.AppImage` on
-64-bit ARM, for systems with glibc 2.41 or newer: Debian 13, Ubuntu 25.04, Fedora 42 and later. It
-carries GTK 4, libadwaita and the player.
+`Kaeri-@VERSION@-x86_64.AppImage`, or `Kaeri-@VERSION@-aarch64.AppImage` on
+64-bit ARM, for Ubuntu 22.04, Debian 12, Fedora 42 and later. It carries GTK 4, libadwaita and the
+player.
 
-Make it executable with `chmod +x kaeri-@VERSION@-linux-x86_64.AppImage` and open it. The first
+Make it executable with `chmod +x Kaeri-@VERSION@-x86_64.AppImage` and open it. The first
 run registers it for kaeri:// links. The app updates itself: it downloads each new version,
 checks it, and puts it in place of the AppImage when you choose Restart to Update in its notice or
 in Settings. AppImageUpdate, AppImageLauncher and Gear Lever can update it in place too, from the

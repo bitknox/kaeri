@@ -24,7 +24,11 @@ export const CC = 'https://creativecommons.org/licenses/by/4.0/';
 
 /** One file of an app in the release. */
 export interface AppFile {
-	/** The file's name with the version left out, as the release names it. */
+	/**
+	 * The file's name after `kaeri-<version>`, as the release names it. Or its whole name with `*`
+	 * for the version, and `|` between names to try in turn, as for the Linux app's AppImages,
+	 * which older releases name `kaeri-<version>-linux-<arch>.AppImage`.
+	 */
 	suffix: string;
 	/** The processor it is for, where an app has a file for each. */
 	arch?: string;
@@ -37,5 +41,12 @@ export const FILES: Record<'mac' | 'android' | 'android-tv' | 'windows' | 'linux
 	android: [{ suffix: '-android-arm64.apk' }],
 	'android-tv': [{ suffix: '-android-tv-armv7.apk', arch: 'armv7' }, { suffix: '-android-tv-arm64.apk', arch: 'arm64' }],
 	windows: [{ suffix: '-windows-x64-setup.exe', arch: 'x64' }, { suffix: '-windows-arm64-setup.exe', arch: 'Arm64' }],
-	linux: [{ suffix: '-linux-x86_64.AppImage', arch: 'x86-64' }, { suffix: '-linux-aarch64.AppImage', arch: 'ARM64' }],
+	linux: [
+		{ suffix: 'Kaeri-*-x86_64.AppImage|kaeri-*-linux-x86_64.AppImage', arch: 'x86-64' },
+		{ suffix: 'Kaeri-*-aarch64.AppImage|kaeri-*-linux-aarch64.AppImage', arch: 'ARM64' },
+	],
 };
+
+/** A file's name in the release of `version`: the first name an `AppFile.suffix` gives. */
+export const fileName = (suffix: string, version: string) =>
+	suffix.includes('*') ? suffix.split('|')[0].replace('*', version) : `kaeri-${version}${suffix}`;

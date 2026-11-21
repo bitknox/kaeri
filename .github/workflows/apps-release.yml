@@ -885,8 +885,8 @@ jobs:
 
   # Each AppImage where people will run it: a fresh container of distributions other than the one
   # it was built on, with only what a desktop has (desktop/linux/scripts/appimage-check.sh) and
-  # without network, as the AppImage catalog runs it. Ubuntu 22.04 and 24.04 are below the glibc
-  # floor, so there it runs on the glibc it carries.
+  # without network, as the AppImage catalog runs it. Ubuntu 22.04 and 24.04 and Debian 12 are
+  # below the glibc floor, so there it runs on the glibc it carries.
   linux-check:
     name: Linux (${{ matrix.arch }}) on other distributions
     needs: linux
@@ -924,7 +924,7 @@ jobs:
           # The version the engine says: the release's, or the workspace's on a run without a tag.
           want="$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' <(git show HEAD:Cargo.toml))"
           if [[ -n "$TAG" ]]; then want="$VERSION"; fi
-          for image in ubuntu:22.04 ubuntu:24.04 fedora:42 ubuntu:26.04 debian:trixie; do
+          for image in ubuntu:22.04 debian:bookworm ubuntu:24.04 fedora:42 ubuntu:26.04 debian:trixie; do
             echo "::group::$image"
             # What a desktop has, installed with network; then the run, without.
             docker rm -f desktop >/dev/null 2>&1 || true

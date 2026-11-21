@@ -229,7 +229,7 @@ while IFS= read -r -d '' file; do
   ldd "$file" 2>/dev/null | awk '$2 == "=>" && $3 ~ /^\// { print $1, $3 }'
 done < <(find "$appdir/usr" -path "$compat" -prune -o -type f -print0) | sort -u |
   while read -r soname path; do
-    [[ "$path" == "$appdir"/* || -e "$compat/$soname" ]] && continue
+    [[ "$path" == "$appdir"/* || -e "$compat/$soname" || -e "$appdir/usr/lib/$soname" ]] && continue
     [[ "$soname" =~ $drivers ]] && continue
     cp -L "$path" "$compat/$soname"
   done
@@ -245,6 +245,10 @@ for _ in 1 2 3; do
 done
 for lib in libharfbuzz.so.0 libfontconfig.so.1 libfreetype.so.6 libX11.so.6 libwayland-client.so.0; do
   [[ -f "$compat/$lib" ]] || fail "usr/lib/compat has no $lib"
+done
+# Nothing in it is a second copy of a library usr/lib carries: the app has that one already.
+for lib in "$compat"/*.so*; do
+  [[ ! -e "$appdir/usr/lib/$(basename "$lib")" ]] || fail "usr/lib/compat and usr/lib both carry $(basename "$lib")"
 done
 
 # --- Checks ----------------------------------------------------------------------------------------
