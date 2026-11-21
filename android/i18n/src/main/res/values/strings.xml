@@ -8944,6 +8944,10 @@
     <string name="torrents_proxy_route">Route torrent traffic through a proxy</string>
     <!-- Line under the switch. -->
     <string name="torrents_proxy_route_detail">Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.</string>
+    <!-- Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary. -->
+    <string name="torrents_proxy_udp_trackers">Use UDP trackers</string>
+    <!-- Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy. -->
+    <string name="torrents_proxy_udp_trackers_detail">UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.</string>
     <!-- Summary: torrents go through a proxy. Host and port are already formatted. -->
     <string name="torrents_summary_proxy_at">Through a SOCKS5 proxy at %1$s:%2$s.</string>
     <!-- Summary: torrents go through a proxy, address not shown. -->

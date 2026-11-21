@@ -64,6 +64,9 @@ pub struct TorrentRoute {
     state: Arc<RwLock<ProxyState>>,
     /// A fixture build's route: its check passes without connecting anywhere.
     fixed: bool,
+    /// Whether torrents through the proxy still announce to `udp://` trackers, which do not go
+    /// through it. Off unless the setting turns it on.
+    udp_trackers: bool,
 }
 
 impl std::fmt::Debug for TorrentRoute {
@@ -71,6 +74,7 @@ impl std::fmt::Debug for TorrentRoute {
         f.debug_struct("TorrentRoute")
             .field("proxy", &self.url.is_some())
             .field("state", &self.state())
+            .field("udp_trackers", &self.udp_trackers)
             .finish_non_exhaustive()
     }
 }
@@ -87,7 +91,21 @@ impl TorrentRoute {
             target(url)?;
         }
         let state = if url.is_some() { ProxyState::Unchecked } else { ProxyState::Direct };
-        Ok(Self { url, state: Arc::new(RwLock::new(state)), fixed: false })
+        Ok(Self { url, state: Arc::new(RwLock::new(state)), fixed: false, udp_trackers: false })
+    }
+
+    /// This route, letting torrents through the proxy announce to `udp://` trackers when
+    /// `allowed`. A UDP announce does not go through a SOCKS5 proxy, so the tracker sees this
+    /// device's own address; the setting that turns this on says so.
+    #[must_use]
+    pub fn with_udp_trackers(self, allowed: bool) -> Self {
+        Self { udp_trackers: allowed, ..self }
+    }
+
+    /// Whether torrents leave out their `udp://` trackers: through a proxy, unless the setting
+    /// lets them through.
+    pub fn skips_udp_trackers(&self) -> bool {
+        self.proxied() && !self.udp_trackers
     }
 
     /// A route for a fixture build: its check passes without connecting anywhere, so a
@@ -151,6 +169,40 @@ impl TorrentRoute {
         self.set(next.clone());
         next
     }
+}
+
+/// `magnet` without its `udp://` trackers, and how many it had. Its other parts stay as they
+/// are, in their order.
+pub fn without_udp_trackers(magnet: &str) -> (String, usize) {
+    let Some((head, query)) = magnet.split_once('?') else { return (magnet.to_owned(), 0) };
+    let (query, fragment) = match query.split_once('#') {
+        Some((query, fragment)) => (query, Some(fragment)),
+        None => (query, None),
+    };
+    let mut dropped = 0;
+    let kept: Vec<&str> = query
+        .split('&')
+        .filter(|pair| {
+            let udp = pair.split_once('=').is_some_and(|(key, value)| {
+                let key = key.to_ascii_lowercase();
+                (key == "tr" || key.starts_with("tr.")) && is_udp(value)
+            });
+            dropped += usize::from(udp);
+            !udp
+        })
+        .collect();
+    let mut link = format!("{head}?{}", kept.join("&"));
+    if let Some(fragment) = fragment {
+        link.push('#');
+        link.push_str(fragment);
+    }
+    (link, dropped)
+}
+
+/// Whether a magnet's `tr` value, percent-encoded or not, is a `udp://` tracker.
+fn is_udp(value: &str) -> bool {
+    let decoded = unescape(value);
+    decoded.trim().get(..6).is_some_and(|scheme| scheme.eq_ignore_ascii_case("udp://"))
 }
 
 /// `url` with a `socks5h://` scheme written as `socks5://`, the one the torrent session takes.
@@ -348,6 +400,38 @@ mod tests {
         assert_eq!(fixed.proxy_url(), Some("socks5://127.0.0.1:1080"));
         let plain = TorrentRoute::new(Some("socks5://mika:lantern@127.0.0.1:1080".into()));
         assert_eq!(plain.unwrap().proxy_url(), Some("socks5://mika:lantern@127.0.0.1:1080"));
+    }
+
+    #[test]
+    fn through_a_proxy_udp_trackers_are_skipped_unless_the_setting_lets_them_through() {
+        let proxied = || TorrentRoute::new(Some("socks5://127.0.0.1:1080".into())).unwrap();
+        assert!(proxied().skips_udp_trackers(), "off by default");
+        assert!(!proxied().with_udp_trackers(true).skips_udp_trackers());
+        let direct = TorrentRoute::new(None).unwrap();
+        assert!(!direct.skips_udp_trackers(), "nothing to bypass without a proxy");
+        assert!(!direct.with_udp_trackers(false).skips_udp_trackers());
+    }
+
+    #[test]
+    fn a_magnet_loses_its_udp_trackers_and_keeps_the_rest() {
+        let magnet = "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567\
+            &dn=Paper%20Comet%2001\
+            &tr=udp%3A%2F%2Ftracker.example%3A1337%2Fannounce\
+            &tr=https%3A%2F%2Ftracker.example%2Fannounce\
+            &tr=UDP://open.example:6969\
+            &tr.1=udp%3A%2F%2Fthird.example%3A80\
+            &tr=http://plain.example/announce";
+        let (kept, dropped) = without_udp_trackers(magnet);
+        assert_eq!(dropped, 3);
+        assert_eq!(
+            kept,
+            "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567\
+             &dn=Paper%20Comet%2001\
+             &tr=https%3A%2F%2Ftracker.example%2Fannounce\
+             &tr=http://plain.example/announce"
+        );
+        let bare = "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567";
+        assert_eq!(without_udp_trackers(bare), (bare.to_owned(), 0));
     }
 
     #[test]

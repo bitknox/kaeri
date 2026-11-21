@@ -1396,6 +1396,11 @@ pub struct TorrentConfig {
     /// Files from before this setting kept it as `[providers.torrent.vpn] socks_url`, which is
     /// read as this one and dropped on the next write.
     pub proxy: Option<String>,
+    /// Whether torrents still announce to `udp://` trackers while a proxy is set. Off by default:
+    /// a UDP announce does not go through a SOCKS5 proxy, so the tracker sees this device's own
+    /// address. With it off, torrents through a proxy skip their UDP trackers and use the rest.
+    /// Without a proxy it changes nothing.
+    pub udp_trackers_with_proxy: bool,
     /// Trackers added to every torrent played, supplied by you.
     ///
     /// Through a proxy DHT is off, so with none of these there is no way to find peers.
@@ -1423,6 +1428,7 @@ impl Default for TorrentConfig {
         Self {
             enabled: false,
             proxy: None,
+            udp_trackers_with_proxy: false,
             trackers: Vec::new(),
             seeding: SeedingConfig::default(),
             // Room for a dozen episodes at 1080p: enough that resuming or rewatching last

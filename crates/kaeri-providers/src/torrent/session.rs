@@ -406,18 +406,36 @@ pub const NO_PEERS: &str = "No one is sharing this release";
 
 /// [`Session::add_torrent`] for `magnet`, given [`METADATA_WAIT`] to resolve. Cancelling the
 /// add drops its peer search, so nothing is left running for a release that never answered.
+///
+/// Through a proxy the magnet's `udp://` trackers are left out unless `route` lets them
+/// through: a UDP announce does not go through the proxy, so it would tell the tracker this
+/// device's own address beside the torrent.
 async fn add_bounded(
     session: &Arc<Session>,
+    route: &TorrentRoute,
     magnet: &str,
     options: AddTorrentOptions,
     what: &str,
 ) -> Result<librqbit::AddTorrentResponse, ProviderError> {
+    let magnet = announced(route, magnet);
     add_within(
         METADATA_WAIT,
         session.add_torrent(AddTorrent::from_url(magnet), Some(options)),
         what,
     )
     .await
+}
+
+/// `magnet` as the session is given it: without its `udp://` trackers when `route` skips them.
+fn announced(route: &TorrentRoute, magnet: &str) -> String {
+    if !route.skips_udp_trackers() {
+        return magnet.to_owned();
+    }
+    let (magnet, dropped) = crate::proxy::without_udp_trackers(magnet);
+    if dropped > 0 {
+        tracing::info!(dropped, "UDP trackers skipped: they would not go through the proxy");
+    }
+    magnet
 }
 
 /// `adding`, given `wait` to finish: the bound [`add_bounded`] puts on a magnet, apart from the
@@ -565,6 +583,7 @@ impl TorrentSession {
 
         let response = add_bounded(
             &self.session,
+            &self.route,
             magnet,
             AddTorrentOptions { list_only: true, ..Default::default() },
             "reading torrent metadata",
@@ -607,6 +626,7 @@ impl TorrentSession {
 
         let response = add_bounded(
             &self.session,
+            &self.route,
             magnet,
             AddTorrentOptions {
                 // Required for *resuming*. librqbit refuses to touch existing files by
@@ -728,6 +748,7 @@ impl TorrentSession {
 
         let response = add_bounded(
             &self.session,
+            &self.route,
             magnet,
             AddTorrentOptions { overwrite: true, ..Default::default() },
             "adding torrent",

@@ -15339,6 +15339,12 @@ torrents-proxy-route = Route torrent traffic through a proxy
 # Line under the switch.
 torrents-proxy-route-detail = Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.
 
+# Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+torrents-proxy-udp-trackers = Use UDP trackers
+
+# Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+torrents-proxy-udp-trackers-detail = UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.
+
 # Summary: torrents go through a proxy. Host and port are already formatted.
 torrents-summary-proxy-at = Through a SOCKS5 proxy at { $host }:{ $port }.
 

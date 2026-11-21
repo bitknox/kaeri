@@ -423,7 +423,8 @@ fn prepare_torrent(config: &Config, fixture: bool) -> std::result::Result<Torren
 /// check passes without connecting anywhere.
 pub fn route_for(config: &Config, fixture: bool) -> std::result::Result<TorrentRoute, String> {
     let proxy = config.providers.torrent.proxy.clone();
-    if fixture { TorrentRoute::fixed(proxy) } else { TorrentRoute::new(proxy) }
+    let route = if fixture { TorrentRoute::fixed(proxy) } else { TorrentRoute::new(proxy) }?;
+    Ok(route.with_udp_trackers(config.providers.torrent.udp_trackers_with_proxy))
 }
 
 /// The longest torrents wait between checks of a proxy that keeps failing.

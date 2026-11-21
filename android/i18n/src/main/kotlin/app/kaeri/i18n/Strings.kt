@@ -16831,6 +16831,14 @@ object Strings {
     fun torrentsProxyRouteDetail(context: Context): String =
         context.getString(R.string.torrents_proxy_route_detail)
 
+    /** Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary. */
+    fun torrentsProxyUdpTrackers(context: Context): String =
+        context.getString(R.string.torrents_proxy_udp_trackers)
+
+    /** Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy. */
+    fun torrentsProxyUdpTrackersDetail(context: Context): String =
+        context.getString(R.string.torrents_proxy_udp_trackers_detail)
+
     /** Summary: torrents go through a proxy. Host and port are already formatted. */
     fun torrentsSummaryProxyAt(context: Context, host: String, port: String): String =
         context.getString(R.string.torrents_summary_proxy_at, host, port)
