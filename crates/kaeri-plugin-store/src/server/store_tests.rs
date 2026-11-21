@@ -311,6 +311,37 @@ async fn a_sign_in_link_expires_and_a_session_too() {
 }
 
 #[tokio::test]
+async fn a_demoted_owner_cannot_become_owner_again_with_an_invite_they_made() {
+    let (_dir, store) = open().await;
+    let (_, first) = join(&store, "Ines", Role::Owner).await;
+    let (_, second) = join(&store, "Ravi", Role::Owner).await;
+    let invite = store
+        .create_invite(
+            NewInvite::member("Spare", Role::Owner, Some(&first.id), NO_END_DATE),
+            BASE,
+            NOW,
+        )
+        .await
+        .unwrap()
+        .1;
+    store.set_role(&first.id, Role::Member, &second.id).await.unwrap();
+    assert!(matches!(
+        store.check_invite(&invite.code, NOW).await,
+        Err(StoreError::InviteCancelled { .. })
+    ));
+    assert!(matches!(
+        store.redeem(&invite.code, "laptop", NOW).await,
+        Err(StoreError::InviteCancelled { .. })
+    ));
+    assert_eq!(store.owner_names().await.unwrap(), ["Ravi"]);
+
+    // An owner again, their invite works again.
+    store.set_role(&first.id, Role::Owner, &second.id).await.unwrap();
+    let (_, joined) = store.redeem(&invite.code, "laptop", NOW).await.unwrap();
+    assert_eq!(joined.role, Role::Owner);
+}
+
+#[tokio::test]
 async fn failures_are_counted_per_key_and_forgotten_after_the_window() {
     use kaeri_store_core::store::{ALLOWED_FAILURES, FAILURE_WINDOW_SECS};
     let (_dir, store) = open().await;

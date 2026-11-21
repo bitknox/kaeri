@@ -437,8 +437,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
     /// Spend one use of an invite, as [`Self::redeem`], with the name the joiner gave.
     ///
     /// The use is claimed by one statement that only matches an invite with a use left, before
-    /// its end date, whose maker is still a member, so two devices racing for an invite's last
-    /// use cannot both get it. Each use of a member invite makes a member of its own: named by
+    /// its end date, whose maker is still a member, and still an owner for an owner invite, so
+    /// two devices racing for an invite's last use cannot both get it, and an owner who was
+    /// demoted cannot make themselves owner again with an invite they made before. Each use of a member invite makes a member of its own: named by
     /// the invite when it works once, and otherwise by `name`, or with none given, the invite's
     /// name and the use's number ("Book club 3").
     pub async fn redeem_named(
@@ -460,7 +461,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
                    AND (max_uses IS NULL OR uses < max_uses)
                    AND (created_by IS NULL OR EXISTS (
                        SELECT 1 FROM members m
-                       WHERE m.id = invites.created_by AND m.removed_at IS NULL))
+                       WHERE m.id = invites.created_by AND m.removed_at IS NULL
+                         AND (invites.kind <> 'member' OR invites.role <> 'owner'
+                              OR m.role = 'owner')))
                  RETURNING id, kind, name, role, member_id, max_uses, uses",
                 now,
                 new_member.as_str(),
@@ -619,7 +622,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
                    AND (max_uses IS NULL OR uses < max_uses)
                    AND (created_by IS NULL OR EXISTS (
                        SELECT 1 FROM members m
-                       WHERE m.id = invites.created_by AND m.removed_at IS NULL))",
+                       WHERE m.id = invites.created_by AND m.removed_at IS NULL
+                         AND (invites.kind <> 'member' OR invites.role <> 'owner'
+                              OR m.role = 'owner')))",
                 crypto::hash_secret(code),
                 now
             ))
