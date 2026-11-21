@@ -44,7 +44,7 @@ pub(crate) fn said(text: String) -> &'static str {
 }
 
 pub use action::{Action, Scope};
-pub use binding::Binding;
+pub use binding::{Binding, altgr};
 pub use hints::status_hints;
 pub(crate) use hints::{hint_to_reading, reading_hints, status_hints_paged};
 
