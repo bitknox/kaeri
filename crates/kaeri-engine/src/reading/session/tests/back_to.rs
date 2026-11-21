@@ -200,6 +200,62 @@ async fn another_devices_place_in_a_shorter_copy_opens_there_with_no_move_back()
     );
 }
 
+/// Opened from inside the reader, a chapter's place kept in a longer copy of it goes to the same
+/// point here, as an open from the series page does: page 21 of 24 there is page 11 of the 12
+/// here, short of the last page, so the chapter is not counted read on landing.
+#[tokio::test(start_paused = true)]
+async fn a_place_in_a_longer_copy_opens_at_the_same_point_from_inside_the_reader() {
+    let mut h = twelve_pages("paged");
+    let mut there = ReadEvent::new(WORK, "2", 1);
+    there.page = Some(20);
+    there.of_pages = Some(24);
+    h.services.store.record_read(&there, Vec::new()).unwrap();
+    h.open(OpenAt::Start).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    let start = h
+        .until(|e| match e {
+            ReaderEvent::Opened(view) => view.start.page,
+            _ => None,
+        })
+        .await;
+    h.shown(start, TurnHow::Placed).await;
+    tokio::time::sleep(READ_AFTER * 2).await;
+    let read = h.drain().iter().any(
+        |e| matches!(e, ReaderEvent::ChapterRead { chapter, .. } if chapter.as_str() == "2"),
+    );
+    assert_eq!((start, read), (10, false));
+}
+
+/// A private read's place, held in memory, is where the chapter opens from inside the reader
+/// too, partway into its strip image.
+#[tokio::test(start_paused = true)]
+async fn a_place_held_in_memory_opens_the_chapter_from_inside_the_reader() {
+    let mut h = twelve_pages("strip");
+    h.services.privacy.set(true);
+    let mut held = ReadEvent::new(WORK, "1", 1);
+    held.page = Some(7);
+    held.strip_image = Some(7);
+    held.strip_offset = Some(0.5);
+    h.services.privacy.keep_read(held);
+    // Back from chapter 2: a strip flows into the next chapter from its start instead.
+    let work = WorkId::new(WORK);
+    let chapter = Some(ChapterId::new("2"));
+    h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Start, surface: surface() });
+    h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("1") });
+    let start = h
+        .until(|e| match e {
+            ReaderEvent::Opened(view) if view.chapter.id.as_str() == "1" => {
+                Some(view.start.clone())
+            }
+            _ => None,
+        })
+        .await;
+    assert_eq!((start.page, start.strip), (Some(7), Some(StripPos { image: 7, offset: 0.5 })));
+}
+
 /// In a strip the Moved notice counts images, as every other line there does.
 #[tokio::test(start_paused = true)]
 async fn another_devices_place_in_a_strip_is_an_image() {

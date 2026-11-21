@@ -1509,15 +1509,18 @@ impl Session {
                 // A strip flows into the next chapter in the same scroll, under its marker:
                 // it starts at its first image, never at a place kept from before.
                 let flowing = self.mode == ReaderMode::Strip && index == self.at + 1;
+                // Any other open takes the chapter's kept place as an open from the series page
+                // does: the one a private read held in memory first, within its strip image,
+                // and moved to the same point of a copy of the chapter with other pages.
                 let store = &cx.services.store;
-                let page = crate::read_catalog::chapters::read_state(store, self.work.as_str())
-                    .1
-                    .into_iter()
-                    .find(|k| k.chapter == chapter.as_str() && !k.read && !flowing)
-                    .and_then(|k| k.last_page)
-                    .unwrap_or(0);
+                let (_, kept) =
+                    crate::read_catalog::chapters::read_state(store, self.work.as_str());
+                let memory = cx.services.privacy.read_kept(self.work.as_str());
+                let at = left_at(memory.as_ref(), &kept, &chapter)
+                    .filter(|_| !flowing)
+                    .unwrap_or_default();
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
-                self.open_chapter(cx, pages, index, OpensAt::page(page), novel, flowing);
+                self.open_chapter(cx, pages, index, at, novel, flowing);
             }
             C::BackTo { .. } => {
                 if let Some(back) = self.back_to.clone() {
