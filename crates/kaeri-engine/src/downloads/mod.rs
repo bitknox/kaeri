@@ -135,6 +135,10 @@ async fn poll_running(
             // row still read as active. The torrent is only forgotten once nothing else wants
             // it; until then the row simply stops being tracked.
             None => {
+                // Its file is no longer one the session keeps when the torrent goes.
+                if let Some(path) = &entry.path {
+                    session.let_go_of_file(path);
+                }
                 let shared = rows_per_torrent.get(&entry.torrent_id).copied().unwrap_or(0) > 1;
                 if shared {
                     tracing::info!(
