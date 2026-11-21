@@ -119,6 +119,13 @@ pub const FAILURE_WINDOW_SECS: i64 = 10 * 60;
 pub const OPEN_JOINS_ALLOWED: i64 = 10;
 pub const OPEN_JOIN_WINDOW_SECS: i64 = 60 * 60;
 
+/// How long the secret addresses are counted under lasts: the longest window anything is
+/// counted over. Each window has its own, and the counts made under the last one go with it.
+const ADDRESS_KEY_SECS: i64 = OPEN_JOIN_WINDOW_SECS;
+
+/// Where the window's secret is kept in `meta`, as `<window>:<secret>`.
+const ADDRESS_KEY: &str = "address_key";
+
 /// A store name nobody chose.
 pub const DEFAULT_NAME: &str = "Plugin store";
 
@@ -430,8 +437,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
     /// Spend one use of an invite, as [`Self::redeem`], with the name the joiner gave.
     ///
     /// The use is claimed by one statement that only matches an invite with a use left, before
-    /// its end date, whose maker is still a member, so two devices racing for an invite's last
-    /// use cannot both get it. Each use of a member invite makes a member of its own: named by
+    /// its end date, whose maker is still a member, and still an owner for an owner invite, so
+    /// two devices racing for an invite's last use cannot both get it, and an owner who was
+    /// demoted cannot make themselves owner again with an invite they made before. Each use of a member invite makes a member of its own: named by
     /// the invite when it works once, and otherwise by `name`, or with none given, the invite's
     /// name and the use's number ("Book club 3").
     pub async fn redeem_named(
@@ -453,7 +461,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
                    AND (max_uses IS NULL OR uses < max_uses)
                    AND (created_by IS NULL OR EXISTS (
                        SELECT 1 FROM members m
-                       WHERE m.id = invites.created_by AND m.removed_at IS NULL))
+                       WHERE m.id = invites.created_by AND m.removed_at IS NULL
+                         AND (invites.kind <> 'member' OR invites.role <> 'owner'
+                              OR m.role = 'owner')))
                  RETURNING id, kind, name, role, member_id, max_uses, uses",
                 now,
                 new_member.as_str(),
@@ -463,6 +473,34 @@ impl<D: Database, B: Blobs> Store<D, B> {
         let Some(row) = claimed.first() else {
             return Err(self.why_unusable(code, now).await?);
         };
+        let invite_id = row.text(0)?;
+        // The use is spent once the member and device are in. Anything that stops them going
+        // in gives it back, so the joiner's retry, or the next person, finds it unspent.
+        let joined = self.join_with(row, device_label, name, new_member, now).await;
+        if joined.is_err() {
+            let back = self
+                .exec(sql!(
+                    "UPDATE invites SET uses = uses - 1 WHERE id = ?1 AND uses > 0",
+                    invite_id.as_str()
+                ))
+                .await;
+            if let Err(e) = back {
+                tracing::warn!(error = %e, "an invite's use was not given back");
+            }
+        }
+        joined
+    }
+
+    /// The member and device a claimed use of an invite makes, for [`Self::redeem_named`].
+    /// `row` is what the claim returned.
+    async fn join_with(
+        &self,
+        row: &Row,
+        device_label: &str,
+        name: Option<&str>,
+        new_member: String,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
         let invite_id = row.text(0)?;
         let kind = InviteKind::parse(&row.text(1)?);
         let role = Role::parse(&row.text(3)?).unwrap_or_default();
@@ -584,7 +622,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
                    AND (max_uses IS NULL OR uses < max_uses)
                    AND (created_by IS NULL OR EXISTS (
                        SELECT 1 FROM members m
-                       WHERE m.id = invites.created_by AND m.removed_at IS NULL))",
+                       WHERE m.id = invites.created_by AND m.removed_at IS NULL
+                         AND (invites.kind <> 'member' OR invites.role <> 'owner'
+                              OR m.role = 'owner')))",
                 crypto::hash_secret(code),
                 now
             ))
@@ -769,10 +809,11 @@ impl<D: Database, B: Blobs> Store<D, B> {
 
     /// Whether `client` has had as many devices join from it lately as it may.
     pub async fn joins_blocked(&self, client: &str, now: i64) -> Result<bool, StoreError> {
+        let counted = self.address_key(client, now).await?;
         let rows = self
             .query(sql!(
                 "SELECT window_start, attempts FROM open_joins WHERE key = ?1",
-                join_key(client)
+                counted.as_str()
             ))
             .await?;
         let Some(row) = rows.first() else { return Ok(false) };
@@ -797,6 +838,9 @@ impl<D: Database, B: Blobs> Store<D, B> {
         }
         let member = Member { id: crypto::new_id()?, name: String::new(), role: Role::Member };
         let token = crypto::new_token()?;
+        let counted = self.address_key(client, now).await?;
+        // The window, never the second: the count must not tell when the member below joined.
+        let window = window_of(now, OPEN_JOIN_WINDOW_SECS);
         // Each value is cast to its column's type: Postgres cannot infer a parameter's type from
         // the column an `INSERT … SELECT` fills.
         let changed = self
@@ -827,14 +871,11 @@ impl<D: Database, B: Blobs> Store<D, B> {
                                             THEN ?2 ELSE open_joins.window_start END,
                         attempts = CASE WHEN ?2 - open_joins.window_start >= ?3
                                         THEN 1 ELSE open_joins.attempts + 1 END",
-                    join_key(client),
-                    now,
+                    counted.as_str(),
+                    window,
                     OPEN_JOIN_WINDOW_SECS
                 ),
-                sql!(
-                    "DELETE FROM open_joins WHERE window_start < ?1",
-                    now - OPEN_JOIN_WINDOW_SECS
-                ),
+                sql!("DELETE FROM open_joins WHERE window_start < ?1", window),
             ])
             .await?;
         if changed.first().copied().unwrap_or(0) == 0 {
@@ -1140,6 +1181,29 @@ impl<D: Database, B: Blobs> Store<D, B> {
             ))
             .await?;
         let member_id = claimed.first().ok_or(StoreError::LinkUnusable)?.text(0)?;
+        // As with an invite's use: a session that was not made gives the link back.
+        let opened = self.session_for(member_id, now).await;
+        if opened.is_err() {
+            let back = self
+                .exec(sql!(
+                    "UPDATE admin_links SET used_at = NULL WHERE code_hash = ?1 AND used_at = ?2",
+                    crypto::hash_secret(code),
+                    now
+                ))
+                .await;
+            if let Err(e) = back {
+                tracing::warn!(error = %e, "a sign-in link was not given back");
+            }
+        }
+        opened
+    }
+
+    /// The session a spent sign-in link of `member_id`'s makes, for [`Self::open_session`].
+    async fn session_for(
+        &self,
+        member_id: String,
+        now: i64,
+    ) -> Result<(String, Member), StoreError> {
         let rows = self
             .query(sql!(
                 "SELECT name FROM members
@@ -1197,8 +1261,15 @@ impl<D: Database, B: Blobs> Store<D, B> {
 
     /// Whether `key` — an address, usually — has failed too often lately.
     pub async fn blocked(&self, key: &str, now: i64) -> Result<bool, StoreError> {
+        let counted = self.address_key(key, now).await?;
+        // Expired counts go whenever anything is counted, not only when the next failure comes.
+        let window = window_of(now, FAILURE_WINDOW_SECS);
+        self.exec(sql!("DELETE FROM failures WHERE window_start < ?1", window)).await?;
         let rows = self
-            .query(sql!("SELECT window_start, attempts FROM failures WHERE key = ?1", key))
+            .query(sql!(
+                "SELECT window_start, attempts FROM failures WHERE key = ?1",
+                counted.as_str()
+            ))
             .await?;
         let Some(row) = rows.first() else { return Ok(false) };
         Ok(now - row.int(0)? < FAILURE_WINDOW_SECS && row.int(1)? >= ALLOWED_FAILURES)
@@ -1207,6 +1278,8 @@ impl<D: Database, B: Blobs> Store<D, B> {
     /// Count a failed attempt. Kept in the database rather than in memory, because where a store
     /// runs as a function there is no memory that outlives one request.
     pub async fn fail(&self, key: &str, now: i64) -> Result<(), StoreError> {
+        let counted = self.address_key(key, now).await?;
+        let window = window_of(now, FAILURE_WINDOW_SECS);
         self.batch(vec![
             sql!(
                 "INSERT INTO failures (key, window_start, attempts) VALUES (?1, ?2, 1)
@@ -1215,15 +1288,51 @@ impl<D: Database, B: Blobs> Store<D, B> {
                                         THEN ?2 ELSE failures.window_start END,
                     attempts = CASE WHEN ?2 - failures.window_start >= ?3
                                     THEN 1 ELSE failures.attempts + 1 END",
-                key,
-                now,
+                counted.as_str(),
+                window,
                 FAILURE_WINDOW_SECS
             ),
             // Expired windows go as new failures arrive, so the table holds only what counts.
-            sql!("DELETE FROM failures WHERE window_start < ?1", now - FAILURE_WINDOW_SECS),
+            sql!("DELETE FROM failures WHERE window_start < ?1", window),
         ])
         .await?;
         Ok(())
+    }
+
+    /// What `client` is counted under at `now`, for failures and open joins: a digest of its
+    /// address, or of an IPv6 address's /64, which one connection is usually handed whole,
+    /// keyed with the window's secret. The tables never hold an address as it is, and once the
+    /// window's secret is replaced nobody, whoever runs or backs up the store included, can
+    /// tell which address a count was.
+    async fn address_key(&self, client: &str, now: i64) -> Result<String, StoreError> {
+        let window = now.div_euclid(ADDRESS_KEY_SECS);
+        let kept = self.meta(ADDRESS_KEY).await?;
+        let secret = match kept.as_deref().and_then(|kept| secret_for(kept, window)) {
+            Some(secret) => secret.to_owned(),
+            None => self.new_address_key(window).await?,
+        };
+        Ok(crypto::sha256_hex(format!("{secret}\n{}", join_address(client)).as_bytes()))
+    }
+
+    /// A new window's secret, in place of the last, with the counts made under the last gone.
+    async fn new_address_key(&self, window: i64) -> Result<String, StoreError> {
+        let fresh = format!("{window:012}:{}", crypto::new_code()?);
+        let start = window * ADDRESS_KEY_SECS;
+        self.batch(vec![
+            // Two requests starting the window together each make one; the greater is kept.
+            sql!(
+                "INSERT INTO meta (key, value) VALUES (?1, ?2)
+                 ON CONFLICT(key) DO UPDATE SET value = excluded.value
+                 WHERE meta.value < excluded.value",
+                ADDRESS_KEY,
+                fresh.as_str()
+            ),
+            sql!("DELETE FROM failures WHERE window_start < ?1", start),
+            sql!("DELETE FROM open_joins WHERE window_start < ?1", start),
+        ])
+        .await?;
+        let kept = self.meta(ADDRESS_KEY).await?.unwrap_or(fresh);
+        Ok(kept.split_once(':').map_or(kept.as_str(), |(_, secret)| secret).to_owned())
     }
 
     // --- plugins and the index --------------------------------------------------------------
@@ -1434,6 +1543,13 @@ impl<D: Database, B: Blobs> Store<D, B> {
                 Err(version_conflict(&entry))
             };
         }
+        // A version published before and since replaced or unpublished is still that build:
+        // members who installed it keep it and are never offered other bytes under its number.
+        if let Some(earlier) = self.meta(&published_key(&entry.id, &entry.version)).await?
+            && earlier != entry.sha256
+        {
+            return Err(version_conflict(&entry));
+        }
 
         // Named by content, so a file is never overwritten in place: a racing publish of the same
         // version writes a different key, and the row decides which one counts.
@@ -1461,6 +1577,7 @@ impl<D: Database, B: Blobs> Store<D, B> {
             entry.kind(),
             serde_json::to_string(&entry.media).unwrap_or_else(|_| "[]".into())
         )];
+        statements.extend(previous.iter().chain([&entry]).map(remember_published));
         statements.extend(bump_sequence(now));
         let changed = self.batch(statements).await?;
         if changed.first().copied().unwrap_or(0) == 0 {
@@ -1485,6 +1602,7 @@ impl<D: Database, B: Blobs> Store<D, B> {
             id,
             previous.sha256.as_str()
         )];
+        statements.push(remember_published(&previous));
         statements.extend(bump_sequence(now));
         let changed = self.batch(statements).await?;
         if changed.first().copied().unwrap_or(0) == 0 {
@@ -1703,15 +1821,21 @@ fn codes_match(a: &str, b: &str) -> bool {
     crypto::hash_secret(a) == crypto::hash_secret(b)
 }
 
-/// What open joins from `client` are counted under: a digest of the address, or of an IPv6
-/// address's /64, which one connection is usually handed whole. A digest, so the table never
-/// holds an address as it is; and nothing ties a count to the device that joined.
-fn join_key(client: &str) -> String {
-    crypto::hash_secret(&join_address(client))
+/// The secret in `kept`, an `address_key` row, when it serves `window` or a later one: a store
+/// whose clock is behind another instance's counts by the newer secret rather than replace it.
+fn secret_for(kept: &str, window: i64) -> Option<&str> {
+    let (from, secret) = kept.split_once(':')?;
+    (from.parse::<i64>().ok()? >= window).then_some(secret)
 }
 
-/// The address an open join is counted by, before it is digested. Anything that is not an
-/// address is counted as it is.
+/// The start of the `secs`-long window `now` is in. Counts keep this, never the second they
+/// were made, so a count cannot be matched to a member who joined at that second.
+fn window_of(now: i64, secs: i64) -> i64 {
+    now - now.rem_euclid(secs)
+}
+
+/// The address a failure or an open join is counted by, before it is digested. Anything that
+/// is not an address is counted as it is.
 fn join_address(client: &str) -> String {
     match client.trim().parse::<std::net::IpAddr>() {
         Ok(std::net::IpAddr::V6(ip)) => match ip.to_ipv4_mapped() {
@@ -1743,6 +1867,21 @@ fn bump_sequence(now: i64) -> [Statement; 2] {
             now.to_string()
         ),
     ]
+}
+
+/// Where the digest of every version of a plugin ever published here is kept in `meta`, so a
+/// version keeps its bytes after a newer one replaces it or it is unpublished.
+fn published_key(id: &str, version: &str) -> String {
+    format!("published:{id}@{version}")
+}
+
+/// Remember `entry`'s digest under its version, unless one is already kept.
+fn remember_published(entry: &IndexEntry) -> Statement {
+    sql!(
+        "INSERT INTO meta (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO NOTHING",
+        published_key(&entry.id, &entry.version),
+        entry.sha256.as_str()
+    )
 }
 
 fn version_conflict(entry: &IndexEntry) -> StoreError {

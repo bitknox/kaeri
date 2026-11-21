@@ -194,8 +194,9 @@ carries the store's key, so the plugin list is checked against it, a different s
 address is refused, and a list older than one already seen is refused. Downloads are checked, and
 plugins run in the same sandbox. Each device that joins gets its own token, which the owner can
 revoke, and the store counts joins per address, ten an hour, so a script cannot fill it with
-devices quickly. It counts them by a digest of the address, kept for the hour and tied to no
-device.
+devices quickly. It counts them, and failed attempts, by a digest of the address made with a
+secret that is replaced every hour. A count holds the hour, never the second, so it is tied to no
+device, and it goes with its secret at the next count after the hour.
 
 It does not keep the link private. Whoever has it can pass it on, and so can whoever they pass it
 to, and the store cannot tell them apart: it keeps no names, labels or anything else about who
