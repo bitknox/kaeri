@@ -105,7 +105,10 @@ class StripKeys {
             StripMove.TOP -> if (last >= first) {
                 step.stop()
                 val to = first
-                track(scope.launch { list.scrollToItem(to) })
+                track(scope.launch {
+                    list.scrollToItem(to)
+                    list.holdAfterMove()
+                })
             }
             StripMove.BOTTOM -> if (last >= first) {
                 step.stop()
@@ -113,10 +116,11 @@ class StripKeys {
                 track(scope.launch {
                     list.scrollToItem(to)
                     val info = list.layoutInfo
-                    val item = info.visibleItemsInfo.firstOrNull { it.index == to } ?: return@launch
+                    val item = info.visibleItemsInfo.firstOrNull { it.index == to }
                     // The foot of the last image at the foot of the screen: up from its top for a
                     // tall image, down onto the one above for a short one.
-                    list.scrollBy((item.offset + item.size - info.viewportEndOffset).toFloat())
+                    if (item != null) list.scrollBy((item.offset + item.size - info.viewportEndOffset).toFloat())
+                    list.holdAfterMove()
                 })
             }
             StripMove.NONE -> {}
