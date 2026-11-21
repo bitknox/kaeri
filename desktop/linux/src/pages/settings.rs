@@ -864,6 +864,7 @@ impl Inner {
                 K::TorrentsWhileCasting => {
                     Some(t::settings_note_torrents_while_casting_computer())
                 }
+                K::UdpTrackersWithProxy => Some(t::torrents_proxy_udp_trackers_detail()),
                 _ => None,
             }
         });
@@ -1410,14 +1411,20 @@ impl Inner {
             }
         });
         check.add_suffix(&again);
+        // UDP trackers bypass the proxy, so through one they are skipped unless this lets them
+        // through. Shown while a proxy is set.
+        let udp = known.setting(K::UdpTrackersWithProxy).map(|row| self.row(&row));
         let shown: Rc<dyn Fn()> = Rc::new({
-            let (hub, check, verdict) =
-                (Rc::downgrade(&self.ctx.hub), check.clone(), verdict.clone());
+            let (hub, check, verdict, udp) =
+                (Rc::downgrade(&self.ctx.hub), check.clone(), verdict.clone(), udp.clone());
             move || {
                 let Some(hub) = hub.upgrade() else { return };
                 let known = hub.known.borrow();
                 let proxied =
                     known.settings.as_ref().is_some_and(|v| v.torrent.proxy.is_some());
+                if let Some(udp) = &udp {
+                    udp.set_visible(proxied);
+                }
                 let torrents_on =
                     known.setting(K::Torrents).is_some_and(|r| catalog::is_on(&r));
                 let words = if proxied && torrents_on {
@@ -1435,6 +1442,9 @@ impl Inner {
         shown();
         self.guard.replace(Some(Rc::clone(&shown)));
         group.add(&check);
+        if let Some(udp) = &udp {
+            group.add(udp);
+        }
 
         // Whether a cast plays torrents, which this computer then serves to the TV.
         if let Some(casting) = known.setting(K::TorrentsWhileCasting) {

@@ -70,6 +70,7 @@ pub fn label(key: SettingKey) -> String {
         K::SeedHours => t::settings_label_seed_hours(),
         K::UploadLimit => t::settings_label_upload_limit(),
         K::TorrentProxy => t::settings_label_torrent_proxy(),
+        K::UdpTrackersWithProxy => t::torrents_proxy_udp_trackers(),
         K::TokenStorage => t::settings_label_token_storage(),
         K::SourceOrder => t::settings_label_source_order(),
         K::UpNextCountdown => t::settings_label_up_next_countdown(),
@@ -205,6 +206,7 @@ pub fn is_switch(key: SettingKey) -> bool {
             | K::ShowFollowing
             | K::CastTvs
             | K::TorrentsWhileCasting
+            | K::UdpTrackersWithProxy
             | K::HoverCards
             | K::FindSkipTimes
     )
