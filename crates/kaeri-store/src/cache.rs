@@ -12,17 +12,31 @@ use crate::{Result, Store};
 
 impl Store {
     /// Upsert one title's serialized metadata.
+    ///
+    /// The cache is the device's, and the people followed on a page are one viewer's: a page
+    /// that has them is kept with whose they are, the profile in use, and only that profile is
+    /// given them back.
     pub fn cache_media(&self, anilist_id: AnilistId, payload: &str, now: i64) -> Result<()> {
+        let owner = self.following_owner();
         self.with_conn(|c| {
             c.execute(
                 "INSERT INTO media_cache (anilist_id, payload, fetched_at)
-                 VALUES (?1, ?2, ?3)
+                 VALUES (?1,
+                    CASE WHEN json_valid(?2) AND json_type(?2, '$.following') IS NOT NULL
+                         THEN json_set(?2, '$.followingOf', ?4) ELSE ?2 END,
+                    ?3)
                  ON CONFLICT(anilist_id) DO UPDATE
                     SET payload = excluded.payload, fetched_at = excluded.fetched_at",
-                rusqlite::params![anilist_id.get(), payload, now],
+                rusqlite::params![anilist_id.get(), payload, now, owner],
             )?;
             Ok(())
         })
+    }
+
+    /// Whose the people followed on a page cached now are: the profile in use, or on an install
+    /// without profiles the first profile it becomes once one is added.
+    fn following_owner(&self) -> String {
+        self.active_profile().unwrap_or_else(|| crate::profile::FIRST.to_owned())
     }
 
     /// How many titles the cache can answer for — the Providers screen's number.
@@ -34,11 +48,13 @@ impl Store {
 
     /// Take the people the viewer follows out of every cached page: after a sign-out from
     /// AniList, or once Show people you follow is switched off, nothing of them stays on the
-    /// device. The rest of each page stays as it was, its fetch time too.
+    /// device. The rest of each page stays as it was, its fetch time too. A profile deleted
+    /// takes them out as well, since its id can come back as a new profile's.
     pub fn forget_following(&self) -> Result<()> {
         self.with_conn(|c| {
             c.execute(
-                "UPDATE media_cache SET payload = json_remove(payload, '$.following')
+                "UPDATE media_cache
+                    SET payload = json_remove(payload, '$.following', '$.followingOf')
                  WHERE json_valid(payload) AND json_type(payload, '$.following') IS NOT NULL",
                 [],
             )?;
@@ -46,13 +62,21 @@ impl Store {
         })
     }
 
-    /// The last cached payload and when it was fetched.
+    /// The last cached payload and when it was fetched. The people followed on it come back
+    /// only to the profile they were cached for: see [`Self::cache_media`].
     pub fn cached_media(&self, anilist_id: AnilistId) -> Result<Option<(String, i64)>> {
+        let owner = self.following_owner();
         self.with_conn(|c| {
             let row = c
                 .query_row(
-                    "SELECT payload, fetched_at FROM media_cache WHERE anilist_id = ?1",
-                    [anilist_id.get()],
+                    "SELECT CASE WHEN json_valid(payload)
+                                  AND json_type(payload, '$.following') IS NOT NULL
+                                  AND json_extract(payload, '$.followingOf') IS NOT ?2
+                                 THEN json_remove(payload, '$.following', '$.followingOf')
+                                 ELSE payload END,
+                            fetched_at
+                       FROM media_cache WHERE anilist_id = ?1",
+                    rusqlite::params![anilist_id.get(), owner],
                     |r| Ok((r.get(0)?, r.get(1)?)),
                 )
                 .ok();

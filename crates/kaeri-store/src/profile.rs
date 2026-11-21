@@ -66,6 +66,9 @@ pub const PERSONAL_TABLES: &[&str] = &[
     "private_title",
 ];
 
+/// The first profile's id: today's install's, once profiles are added.
+pub(crate) const FIRST: &str = "p1";
+
 /// Tables that belong to the device and are shared by every profile.
 pub const DEVICE_TABLES: &[&str] = &[
     "media_cache",
@@ -206,9 +209,9 @@ pub fn add(
     now: i64,
 ) -> Result<Profile> {
     let mut list = ProfileList::load(data_dir)?.unwrap_or_else(|| ProfileList {
-        primary: "p1".into(),
+        primary: FIRST.into(),
         profiles: vec![Profile {
-            id: "p1".into(),
+            id: FIRST.into(),
             name: current_name.trim().to_owned(),
             initials: initials_of(current_name),
             kids: false,
@@ -356,6 +359,9 @@ impl Store {
         if active == id {
             return Err(StoreError::Profile("the profile in use cannot be deleted".into()));
         }
+        // The people followed on cached pages are kept with a profile's id, which a profile
+        // added later can be given again, and the one in use may become the first.
+        self.forget_following()?;
         let mut promoted = None;
         if id == list.primary {
             let from = ProfileList::dir(data_dir, &active).join("kaeri.db");
@@ -517,6 +523,42 @@ mod tests {
         let clone = store.clone();
         store.use_profile(dir.path(), "p2", now()).unwrap();
         assert!(clone.progress(AnilistId::new(2)).unwrap().is_some());
+    }
+
+    #[test]
+    fn the_people_one_profile_follows_are_never_another_profiles() {
+        const TITLE: AnilistId = AnilistId::new(900_731);
+        let page = r#"{"id":900731,"title":"Lantern Ledger","following":[{"user":{"id":71,"name":"Mika"}}]}"#;
+        let followed =
+            |store: &Store| store.cached_media(TITLE).unwrap().unwrap().0.contains("Mika");
+        let dir = tempfile::tempdir().unwrap();
+        let store = Store::open(dir.path().join("kaeri.db")).unwrap();
+        store.cache_media(TITLE, page, 1_000).unwrap();
+        assert!(followed(&store));
+
+        // The install's own person becomes the first profile and keeps them.
+        let aki = add(dir.path(), "Aki", false, "Mika", now()).unwrap();
+        store.use_profile(dir.path(), "p1", now()).unwrap();
+        assert!(followed(&store));
+        store.use_profile(dir.path(), &aki.id, now()).unwrap();
+        let (seen, at) = store.cached_media(TITLE).unwrap().unwrap();
+        assert!(!seen.contains("Mika") && !seen.contains("following"), "{seen}");
+        assert!(seen.contains("Lantern Ledger"), "the rest of the page is the device's");
+        assert_eq!(at, 1_000);
+
+        // Each profile's own come back to it alone.
+        let aki_page = page.replace("Mika", "Tomo");
+        store.cache_media(TITLE, &aki_page, 2_000).unwrap();
+        assert!(store.cached_media(TITLE).unwrap().unwrap().0.contains("Tomo"));
+        store.use_profile(dir.path(), "p1", now()).unwrap();
+        assert!(!store.cached_media(TITLE).unwrap().unwrap().0.contains("Tomo"));
+
+        // A profile deleted takes them along: a profile added next is given its id again.
+        store.delete_profile(dir.path(), &aki.id).unwrap();
+        let again = add(dir.path(), "Ren", false, "Mika", now()).unwrap();
+        assert_eq!(again.id, aki.id);
+        store.use_profile(dir.path(), &again.id, now()).unwrap();
+        assert!(!store.cached_media(TITLE).unwrap().unwrap().0.contains("Tomo"));
     }
 
     #[test]
