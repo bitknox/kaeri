@@ -378413,6 +378413,30 @@
         }
       }
     },
+    "torrents-proxy-udp-trackers" : {
+      "comment" : "Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Use UDP trackers"
+          }
+        }
+      }
+    },
+    "torrents-proxy-udp-trackers-detail" : {
+      "comment" : "Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them."
+          }
+        }
+      }
+    },
     "torrents-proxy-user" : {
       "comment" : "Label of the proxy user name field.",
       "extractionState" : "manual",

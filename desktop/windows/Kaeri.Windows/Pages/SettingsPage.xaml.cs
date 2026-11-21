@@ -185,6 +185,7 @@ public sealed partial class SettingsPage : Page
         K.CommentImages => T.SettingsCommentImages,
         K.CastTvs => T.SettingsLabelCastTvs,
         K.TorrentsWhileCasting => T.SettingsLabelTorrentsWhileCasting,
+        K.UdpTrackersWithProxy => T.TorrentsProxyUdpTrackers,
         _ => T.SettingsMpvOptions,
     };
 
@@ -450,6 +451,7 @@ public sealed partial class SettingsPage : Page
         parts.Add(SettingsCatalog.IsOn(ctx.Known.Setting(K.Torrents)));
         parts.Add(settings.Torrent.Proxy is null);
         parts.Add(ctx.Known.Setting(K.TorrentsWhileCasting) is null);
+        parts.Add(ctx.Known.Setting(K.UdpTrackersWithProxy) is null);
         parts.Add(ctx.Tv.Available && ctx.Known.Setting(K.CastTvs) is not null);
         parts.Add(settings.SubtitleStyle is null);
         parts.Add((ctx.Known.Medium.Choosable, ctx.Known.Medium.Answer));
@@ -1077,6 +1079,9 @@ public sealed partial class SettingsPage : Page
             Cards.Children.Add(guardCard);
             ShowProxyCheck();
             guardClock.Start();
+            // UDP trackers bypass the proxy, so through one they are skipped unless this lets them through.
+            if (ctx.Known.Setting(K.UdpTrackersWithProxy) is { } udp)
+                Cards.Children.Add(Card(udp));
         }
 
         // Whether a cast plays torrents, which this PC then serves to the TV: only while torrents
@@ -1481,6 +1486,8 @@ public sealed partial class SettingsPage : Page
             description = SettingsCatalog.PreloadLine(SettingsCatalog.IsOn(ctx.Known.Setting(K.Torrents)));
         if (row.Key == K.TorrentsWhileCasting)
             description = T.SettingsNoteTorrentsWhileCastingPc;
+        if (row.Key == K.UdpTrackersWithProxy)
+            description = T.TorrentsProxyUdpTrackersDetail;
         // Torrents: where traffic goes while they are on.
         if (row.Key == K.Torrents && ctx.Known.Settings is { } settings)
             description = SettingsCatalog.IsOn(row) ? TorrentWords.OnNote(settings.Torrent) : TorrentWords.OffNote;

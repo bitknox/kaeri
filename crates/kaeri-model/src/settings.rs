@@ -81,6 +81,9 @@ pub enum SettingKey {
     ///
     /// [`Command::SetTorrentProxy`]: crate::command::Command::SetTorrentProxy
     TorrentProxy,
+    /// Whether torrents through the proxy still announce to UDP trackers, which do not go
+    /// through it. Off by default; without a proxy it changes nothing.
+    UdpTrackersWithProxy,
     SeedRatio,
     SeedHours,
     UploadLimit,
@@ -228,7 +231,7 @@ impl SettingKey {
     /// The Settings screen's rows, in display order. Grouped by [`Self::category`] — the
     /// renderer draws a heading each time the category changes, so rows of one category must
     /// be contiguous here.
-    pub const ROWS: [Self; 51] = [
+    pub const ROWS: [Self; 52] = [
         Self::Theme,
         Self::Motion,
         Self::Titles,
@@ -266,6 +269,7 @@ impl SettingKey {
         Self::DownloadHook,
         Self::Torrents,
         Self::TorrentProxy,
+        Self::UdpTrackersWithProxy,
         Self::SeedRatio,
         Self::SeedHours,
         Self::UploadLimit,
@@ -416,6 +420,9 @@ impl SettingKey {
             Self::DownloadsFinished => (&["notifications"], "downloads"),
             Self::OpenAt => (&["reading"], "open_at"),
             Self::TorrentsOnCellular => (&["providers", "torrent"], "on_cellular"),
+            Self::UdpTrackersWithProxy => {
+                (&["providers", "torrent"], "udp_trackers_with_proxy")
+            }
             Self::EpisodeNotifications => (&["notifications"], "episodes"),
             Self::MpvOptions => (&["playback"], "mpv_args"),
             Self::TorrentProxy | Self::TokenStorage => return None,
@@ -583,6 +590,10 @@ impl SettingKey {
             Self::TorrentsOnCellular => {
                 to.providers.torrent.on_cellular = from.providers.torrent.on_cellular;
             }
+            Self::UdpTrackersWithProxy => {
+                to.providers.torrent.udp_trackers_with_proxy =
+                    from.providers.torrent.udp_trackers_with_proxy;
+            }
             Self::EpisodeNotifications => {
                 to.notifications.episodes = from.notifications.episodes;
             }
@@ -656,6 +667,7 @@ impl SettingKey {
             Self::SendProgressAfter | Self::WhenTrackersDisagree => "accounts",
             Self::Torrents
             | Self::TorrentProxy
+            | Self::UdpTrackersWithProxy
             | Self::SeedRatio
             | Self::SeedHours
             | Self::UploadLimit
@@ -726,6 +738,7 @@ impl SettingKey {
             Self::SeedHours => "seed for at most",
             Self::UploadLimit => "upload limit",
             Self::TorrentProxy => "torrent proxy",
+            Self::UdpTrackersWithProxy => "udp trackers with proxy",
             Self::TokenStorage => "token storage",
             Self::SourceOrder => "source order",
             Self::UpNextCountdown => "up next countdown",
@@ -795,7 +808,13 @@ pub fn while_casting(config: &Config) -> bool {
 /// here writes it, since the torrent session is built on it; the sources switched off by name
 /// and the remote's address, which the file alone sets, have no key to list.
 pub fn redefines_sources(setting: SettingKey) -> bool {
-    matches!(setting, SettingKey::Torrents | SettingKey::TorrentProxy | SettingKey::SourceOrder)
+    matches!(
+        setting,
+        SettingKey::Torrents
+            | SettingKey::TorrentProxy
+            | SettingKey::UdpTrackersWithProxy
+            | SettingKey::SourceOrder
+    )
 }
 
 // The Settings screen's rules, over the config in effect and the file's: what each row shows and
@@ -1153,6 +1172,9 @@ pub fn step(
             V::Str(LADDER[(at as i64 + delta).clamp(0, 1) as usize].into())
         }
         SettingKey::TorrentsOnCellular => V::Bool(!effective.providers.torrent.on_cellular),
+        SettingKey::UdpTrackersWithProxy => {
+            V::Bool(!effective.providers.torrent.udp_trackers_with_proxy)
+        }
         SettingKey::EpisodeNotifications => V::Bool(!effective.notifications.episodes),
         SettingKey::AdultTitles => V::Bool(!effective.meta.adult),
         SettingKey::EpisodeDiscussions => V::Bool(!effective.meta.discussions),
@@ -1477,6 +1499,9 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
         (SettingKey::TorrentsOnCellular, V::Bool(on)) => {
             config.providers.torrent.on_cellular = *on;
         }
+        (SettingKey::UdpTrackersWithProxy, V::Bool(on)) => {
+            config.providers.torrent.udp_trackers_with_proxy = *on;
+        }
         _ => return false,
     }
     true
@@ -1624,6 +1649,7 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::DownloadsFinished => on_off(effective.notifications.downloads),
         SettingKey::OpenAt => effective.reading.open_at.clone(),
         SettingKey::TorrentsOnCellular => on_off(torrent.on_cellular),
+        SettingKey::UdpTrackersWithProxy => on_off(torrent.udp_trackers_with_proxy),
         SettingKey::EpisodeNotifications => on_off(effective.notifications.episodes),
         SettingKey::AdultTitles => on_off(effective.meta.adult),
         SettingKey::EpisodeDiscussions => on_off(effective.meta.discussions),
@@ -1744,6 +1770,7 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::ChapterNotifications => c.notifications.chapters,
         S::DownloadsFinished => c.notifications.downloads,
         S::TorrentsOnCellular => c.providers.torrent.on_cellular,
+        S::UdpTrackersWithProxy => c.providers.torrent.udp_trackers_with_proxy,
         S::EpisodeNotifications => c.notifications.episodes,
         S::AdultTitles => c.meta.adult,
         S::EpisodeDiscussions => c.meta.discussions,
@@ -2337,11 +2364,27 @@ mod tests {
     }
 
     #[test]
+    fn udp_trackers_through_a_proxy_are_off_until_switched_on() {
+        let mut config = Config::default();
+        let key = SettingKey::UdpTrackersWithProxy;
+        assert_eq!(value(&config, &config, key), "off");
+        assert_eq!(
+            key.path(),
+            Some((&["providers", "torrent"][..], "udp_trackers_with_proxy"))
+        );
+        assert_eq!(step(&config, &config, key, 1), Some(SettingValue::Bool(true)));
+        assert!(put(&mut config, key, &SettingValue::Bool(true)));
+        assert!(config.providers.torrent.udp_trackers_with_proxy);
+        assert_eq!(value(&config, &config, key), "on");
+    }
+
+    #[test]
     fn only_source_defining_keys_force_a_rebuild() {
         // A rebuild tears down a live torrent session, so it must not fire on a setting
         // that has nothing to do with which sources exist.
         assert!(redefines_sources(SettingKey::Torrents));
         assert!(redefines_sources(SettingKey::TorrentProxy));
+        assert!(redefines_sources(SettingKey::UdpTrackersWithProxy));
         assert!(redefines_sources(SettingKey::SourceOrder));
 
         assert!(!redefines_sources(SettingKey::Upscaling));

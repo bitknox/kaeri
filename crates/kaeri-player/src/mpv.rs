@@ -236,7 +236,10 @@ impl MpvSession {
             request.subtitle_language.as_deref(),
             request.dub,
         );
-        tracing::info!(url = %stream.url, ?options, "loading into mpv");
+        // Option names only: the values hold the stream's request headers, which can carry a
+        // server's token, and the title.
+        let option_names: Vec<&str> = options.iter().map(|(name, _)| name.as_str()).collect();
+        tracing::info!(url = %stream.url, ?option_names, "loading into mpv");
         let index_slot = self.loadfile_index;
         self.send(Command::LoadFile { url: stream.url.clone(), options, index_slot }).await
     }

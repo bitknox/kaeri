@@ -830,6 +830,9 @@ const PRIVATE_FIELDS: &[&str] = &[
     "name",
     "room",
     "server",
+    // Request headers and player options: a header can carry a server's token or a cookie.
+    "headers",
+    "options",
 ];
 
 /// What an event said, as one line: its message, then its other fields as `key=value`.
@@ -1190,6 +1193,27 @@ mod tests {
                 "INFO mpv [ffmpeg] hls: opening",
             ]
         );
+    }
+
+    #[test]
+    fn request_headers_and_player_options_are_left_out() {
+        let log = Arc::new(PlayerLog::new());
+        let subscriber = tracing_subscriber::registry().with(
+            Keeper { log: Arc::clone(&log), redact: own_redactor() }
+                .with_filter(filter_fn(wanted)),
+        );
+        let options = vec![(
+            "http-header-fields".to_owned(),
+            "Authorization: MediaBrowser Token=\"tok-123\"".to_owned(),
+        )];
+        tracing::subscriber::with_default(subscriber, || {
+            log.begin("8", &["Moonlit Harbor".into()], T0);
+            tracing::info!(target: "kaeri_engine::playback::link::mpv", ?options, "loading into mpv");
+            tracing::info!(target: "kaeri_engine::playback::resolve", headers = ?options, "trying");
+        });
+        let kept = &texts(&log)[0];
+        let said: Vec<&str> = kept.lines.iter().map(|line| line.message.as_str()).collect();
+        assert_eq!(said, ["loading into mpv options=[removed]", "trying headers=[removed]"]);
     }
 
     #[test]

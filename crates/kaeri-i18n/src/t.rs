@@ -24451,6 +24451,16 @@ pub fn torrents_proxy_route_detail() -> String {
     text("torrents-proxy-route-detail", &[])
 }
 
+/// Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+pub fn torrents_proxy_udp_trackers() -> String {
+    text("torrents-proxy-udp-trackers", &[])
+}
+
+/// Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+pub fn torrents_proxy_udp_trackers_detail() -> String {
+    text("torrents-proxy-udp-trackers-detail", &[])
+}
+
 /// Summary: torrents go through a proxy. Host and port are already formatted.
 pub fn torrents_summary_proxy_at(host: &str, port: &str) -> String {
     text("torrents-summary-proxy-at", &[("host", Arg::Text(host)), ("port", Arg::Text(port))])

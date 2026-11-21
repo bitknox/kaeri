@@ -11594,6 +11594,12 @@ public static partial class T
     /// <summary>Line under the switch.</summary>
     public static string TorrentsProxyRouteDetail => Get("TorrentsProxyRouteDetail");
 
+    /// <summary>Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.</summary>
+    public static string TorrentsProxyUdpTrackers => Get("TorrentsProxyUdpTrackers");
+
+    /// <summary>Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.</summary>
+    public static string TorrentsProxyUdpTrackersDetail => Get("TorrentsProxyUdpTrackersDetail");
+
     /// <summary>Summary: torrents go through a proxy. Host and port are already formatted.</summary>
     public static string TorrentsSummaryProxyAt(string host, string port) => Fill(Get("TorrentsSummaryProxyAt"), ("host", host), ("port", port));
 
@@ -16460,6 +16466,8 @@ public static partial class T
         ["TorrentsNotAPlugin"] = "Torrents are part of Kaeri, not a plugin. The proxy and seeding are set in Settings, under Sources.",
         ["TorrentsProxyRoute"] = "Route torrent traffic through a proxy",
         ["TorrentsProxyRouteDetail"] = "Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.",
+        ["TorrentsProxyUdpTrackers"] = "Use UDP trackers",
+        ["TorrentsProxyUdpTrackersDetail"] = "UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.",
         ["TorrentsSummaryProxyAt"] = "Through a SOCKS5 proxy at {host}:{port}.",
         ["TorrentsSummaryProxy"] = "Through a SOCKS5 proxy.",
         ["TorrentsSummaryDirect"] = "Connecting directly, without a proxy.",

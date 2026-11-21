@@ -15397,6 +15397,12 @@ torrents-proxy-route = [Ŕöüţé ţöŕŕéñţ ţŕàƒƒîç ţĥŕöüĝĥ 
 # Line under the switch.
 torrents-proxy-route-detail = [Ţöŕŕéñţ ţŕàƒƒîç ĝöéš ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý ýöü ŕüñ öŕ ŕéñţ. Ŵĥîļé ţĥîš îš öƒƒ, ţöŕŕéñţš çöññéçţ ðîŕéçţļý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
+# Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+torrents-proxy-udp-trackers = [Ûšé ÛÐÞ ţŕàçķéŕš~~~~~]
+
+# Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+torrents-proxy-udp-trackers-detail = [ÛÐÞ ţŕàçķéŕš ƀýþàšš ţĥé þŕöẋý, šö ţĥéý šéé ýöüŕ ÎÞ àððŕéšš. Ŵĥîļé ţĥîš îš öƒƒ, ţöŕŕéñţš šķîþ ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Summary: torrents go through a proxy. Host and port are already formatted.
 torrents-summary-proxy-at = [Ţĥŕöüĝĥ à ŠÖÇĶŠ5 þŕöẋý àţ { $host }:{ $port }.~~~~~~~~~~~]
 

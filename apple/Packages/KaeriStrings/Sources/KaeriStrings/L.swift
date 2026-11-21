@@ -15155,6 +15155,12 @@ public enum L {
     /// Line under the switch.
     public static var torrentsProxyRouteDetail: String { string("torrents-proxy-route-detail", fallback: "Torrent traffic goes through a SOCKS5 proxy you run or rent. While this is off, torrents connect directly.") }
 
+    /// Switch under the proxy setting: let torrents announce to UDP trackers while a proxy is set. Off by default. Torrent trackers, not the list trackers of the glossary.
+    public static var torrentsProxyUdpTrackers: String { string("torrents-proxy-udp-trackers", fallback: "Use UDP trackers") }
+
+    /// Line under that switch. UDP tracker traffic doesn't go through a SOCKS5 proxy.
+    public static var torrentsProxyUdpTrackersDetail: String { string("torrents-proxy-udp-trackers-detail", fallback: "UDP trackers bypass the proxy, so they see your IP address. While this is off, torrents skip them.") }
+
     /// Summary: torrents go through a proxy. Host and port are already formatted.
     public static func torrentsSummaryProxyAt(host: String, port: String) -> String {
         Self.format("torrents-summary-proxy-at", fallback: "Through a SOCKS5 proxy at %1$@:%2$@.", host, port)

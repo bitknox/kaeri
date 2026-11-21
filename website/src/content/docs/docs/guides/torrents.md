@@ -23,7 +23,10 @@ enabled = true
 proxy = "socks5://192.0.2.10:1080"
 
 # Needed with a proxy: DHT is off through a proxy, so without trackers there are no peers.
-trackers = ["udp://tracker.example:1337/announce"]
+trackers = ["https://tracker.example/announce"]
+
+# Optional, off by default: with a proxy, still use udp:// trackers. They bypass the proxy.
+udp_trackers_with_proxy = false
 ```
 
 Streams play while they download, and you can seek in them.
@@ -50,6 +53,8 @@ While a proxy is set:
 
 - The torrent session goes through it, and DHT is off, since SOCKS5 has no reliable way to carry
   it. Add trackers so peers can be found.
+- UDP trackers are skipped, since their traffic would bypass the proxy and show your IP address.
+  **Use UDP trackers**, under the proxy setting, lets them through. It is off by default.
 - Torrents start once the proxy check passes. While it fails, they wait and Kaeri tries again
   every so often, so a proxy that comes up after launch brings torrents up without a restart.
   The interface does not wait for it.
