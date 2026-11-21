@@ -508,11 +508,13 @@ pub fn status(services: &Ctx) -> SyncStatus {
         .into_iter()
         .map(|c| (c.device, c.trackers))
         .collect();
+    // An old id both copies of a device moved away from is listed by neither.
+    let retired = store.sync_retired_ids().unwrap_or_default();
     let devices: Vec<SyncDeviceView> = store
         .sync_peers()
         .unwrap_or_default()
         .into_iter()
-        .filter(|(_, _, _, removed)| !removed)
+        .filter(|(id, _, _, removed)| !removed && !retired.contains(id))
         .map(|(id, name, _, _)| {
             let cloud = device_cloud(store, &id);
             SyncDeviceView {

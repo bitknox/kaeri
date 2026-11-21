@@ -326,28 +326,40 @@ pub(crate) fn apply_read_op(
             seen_unread,
             ..
         } => {
-            let inserted = tx.execute(
-                "INSERT OR IGNORE INTO read_event
+            let twin = crate::sync::twins::settle(
+                tx,
+                crate::sync::twins::Plays::Read,
+                &uid,
+                op.stamp,
+                work,
+                chapter,
+            )?;
+            let inserted = if twin {
+                0
+            } else {
+                tx.execute(
+                    "INSERT OR IGNORE INTO read_event
                    (uid, stamp, work, chapter, page, of_pages, strip_image, strip_offset,
                     novel_pos, completed, source_id, version_label, at)
                  SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13
                   WHERE NOT EXISTS (SELECT 1 FROM sync_tomb WHERE uid = ?1)",
-                params![
-                    uid,
-                    op.stamp as i64,
-                    work,
-                    chapter,
-                    page,
-                    of,
-                    strip_image,
-                    strip_offset,
-                    novel_pos,
-                    *completed as i32,
-                    source_id,
-                    version_label,
-                    at
-                ],
-            )?;
+                    params![
+                        uid,
+                        op.stamp as i64,
+                        work,
+                        chapter,
+                        page,
+                        of,
+                        strip_image,
+                        strip_offset,
+                        novel_pos,
+                        *completed as i32,
+                        source_id,
+                        version_label,
+                        at
+                    ],
+                )?
+            };
             if inserted > 0 && *completed {
                 // An unread another device wrote, later than this read, that did not name it.
                 let unread: Option<(i64, String)> = tx
@@ -382,7 +394,17 @@ pub(crate) fn apply_read_op(
                     "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
                     params![removed, op.stamp as i64],
                 )?;
-                tx.execute("DELETE FROM read_event WHERE uid = ?1", [removed])?;
+                tx.execute(
+                    "DELETE FROM read_event WHERE uid = ?1 AND work = ?2 AND chapter = ?3",
+                    params![removed, work, chapter],
+                )?;
+                crate::sync::twins::unplay(
+                    tx,
+                    crate::sync::twins::Plays::Read,
+                    removed,
+                    work,
+                    chapter,
+                )?;
             }
             note_unread(tx, work, chapter, op.stamp, &op.device)?;
             // Finished reads by other devices that this unread never named.
@@ -866,8 +888,10 @@ impl Store {
                         "SELECT uid FROM read_event
                           WHERE work = ?1 AND chapter = ?2 AND uid IS NOT NULL",
                     )?;
-                    stmt.query_map(params![work, chapter], |r| r.get(0))?
-                        .collect::<rusqlite::Result<_>>()?
+                    let uids = stmt
+                        .query_map(params![work, chapter], |r| r.get(0))?
+                        .collect::<rusqlite::Result<_>>()?;
+                    crate::sync::twins::with_twins(tx, uids)?
                 };
                 tx.execute(
                     "DELETE FROM read_event WHERE work = ?1 AND chapter = ?2",
@@ -885,6 +909,13 @@ impl Store {
                             tx.execute(
                                 "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
                                 params![uid, op.stamp as i64],
+                            )?;
+                            crate::sync::twins::unplay(
+                                tx,
+                                crate::sync::twins::Plays::Read,
+                                uid,
+                                work,
+                                chapter,
                             )?;
                         }
                         kept = Some((op.stamp, op.device));
