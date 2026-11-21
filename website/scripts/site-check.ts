@@ -254,6 +254,63 @@ check('404-search', "The 404 page's Search button opens the search dialog, and i
 	expect(!(await dialogOpen()), 'Escape shuts it');
 });
 
+// The text in every element under `.theatre` that has text of its own: how it reads against what
+// is painted behind it, with the backgrounds of the element and its ancestors laid over each other
+// as the page lays them (on a canvas, so any colour syntax works).
+const theatreText = String.raw`(() => {
+	const ctx = Object.assign(document.createElement('canvas'), { width: 1, height: 1 }).getContext('2d', { willReadFrequently: true });
+	const paint = (colors) => {
+		ctx.clearRect(0, 0, 1, 1);
+		for (const c of ['#fff', ...colors]) {
+			ctx.fillStyle = c;
+			ctx.fillRect(0, 0, 1, 1);
+		}
+		return [...ctx.getImageData(0, 0, 1, 1).data.slice(0, 3)];
+	};
+	const lin = (v) => ((v /= 255) <= 0.04045 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4);
+	const lum = ([r, g, b]) => 0.2126 * lin(r) + 0.7152 * lin(g) + 0.0722 * lin(b);
+	const hex = (c) => '#' + c.map((v) => v.toString(16).padStart(2, '0')).join('');
+	const out = [];
+	for (const el of document.querySelectorAll('.theatre *')) {
+		if (![...el.childNodes].some((n) => n.nodeType === Node.TEXT_NODE && n.textContent.trim())) continue;
+		const style = getComputedStyle(el);
+		const box = el.getBoundingClientRect();
+		if (style.visibility !== 'visible' || !box.width || !box.height) continue;
+		const under = [];
+		for (let e = el; e; e = e.parentElement) under.unshift(getComputedStyle(e).backgroundColor);
+		const back = paint(under);
+		const fore = paint([...under, style.color]);
+		const [hi, lo] = [lum(fore), lum(back)].sort((a, b) => b - a);
+		const size = parseFloat(style.fontSize);
+		out.push({
+			text: el.textContent.trim().replace(/\s+/g, ' ').slice(0, 40),
+			pressed: !!el.closest('[aria-pressed="true"]'),
+			ratio: (hi + 0.05) / (lo + 0.05),
+			need: size >= 24 || (size >= 18.66 && Number(style.fontWeight) >= 700) ? 3 : 4.5,
+			colours: hex(fore) + ' on ' + hex(back),
+		});
+	}
+	return out;
+})()`;
+
+check('theatre-contrast', "Text in the player's dark room reads at 4.5:1 or more (3:1 when large), in either theme", async () => {
+	for (const scheme of ['light', 'dark'] as const) {
+		for (const path of ['/', '/features/']) {
+			await open(path, { ...wide, scheme });
+			expect((await js<string>('document.documentElement.dataset.theme')) === scheme, `${path} opens in the ${scheme} theme`);
+			const texts = await js<{ text: string; pressed: boolean; ratio: number; need: number; colours: string }[]>(theatreText);
+			const low = texts.filter((t) => t.ratio < t.need);
+			const lowest = Math.min(...texts.map((t) => t.ratio));
+			expect(texts.length > 0 && !low.length, `${path} in ${scheme}: ${texts.length} texts in the dark room, the lowest at ${lowest.toFixed(2)}:1`);
+			for (const t of low) console.log(`     "${t.text}" reads at ${t.ratio.toFixed(2)}:1 (${t.colours}), under ${t.need}:1`);
+			if (path === '/features/') expect(texts.some((t) => t.pressed), `${path} in ${scheme}: the pressed look button is among them`);
+		}
+	}
+	await open('/features/', { ...wide, scale: 2 });
+	await js(`document.querySelector('.compare-looks').scrollIntoView({ block: 'center' })`);
+	await shot('theatre-contrast');
+});
+
 // ---------- Run ----------
 
 const unknown = only?.filter((name) => !checks.some((c) => c.name === name)) ?? [];

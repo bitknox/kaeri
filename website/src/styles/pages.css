@@ -19,11 +19,19 @@
 }
 
 /* The theatre: the player's section is a dark room in either theme, set off by its own ground
-   rather than a hairline. */
+   rather than a hairline. It sets every colour the dark theme sets for what a section can hold,
+   with the room's own colour as the ground, so nothing inside it picks up a colour meant for the
+   light page: the pressed look button paints its label in the ground colour. */
 .theatre {
+	--ani-ground: var(--ani-theatre);
 	--ani-text: #e4e0d6;
 	--ani-dim: #9298b5;
 	--ani-rule: #434653;
+	--ani-rule-faint: #2f3242;
+	--ani-raised: #161a2e;
+	--ani-well: #161a2e;
+	--ani-band: #222638;
+	--ani-on-obi: #161a2e;
 	--ani-link-hover: #f5b467;
 	--ani-focus: #f5b467;
 	--ani-bezel: #161a2e;
