@@ -41,22 +41,33 @@ pub fn ask(then: impl FnOnce() + 'static) {
         gio::DBusCallFlags::NONE,
         120_000,
         gio::Cancellable::NONE,
-        move |reply| match reply {
-            Ok(value) => {
-                if let Some((authorised, _, _)) =
-                    value.get::<((bool, bool, HashMap<String, String>),)>().map(|(r,)| r)
-                {
-                    if authorised {
-                        go();
-                    }
-                } else {
-                    go();
-                }
+        move |reply| {
+            if decide(reply) == Answer::Go {
+                go();
             }
-            // No polkit, or no policy for the action installed: nothing to ask.
-            Err(_) => go(),
         },
     );
+}
+
+/// What polkit's reply to CheckAuthorization means for the key.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Answer {
+    /// The password was given, or polkit is not there to ask.
+    Go,
+    /// Polkit said no, or the answer cannot be read.
+    Refuse,
+}
+
+fn decide(reply: Result<glib::Variant, glib::Error>) -> Answer {
+    match reply {
+        Ok(value) => match value.get::<((bool, bool, HashMap<String, String>),)>() {
+            Some(((true, _, _),)) => Answer::Go,
+            Some(_) => Answer::Refuse,
+            None => Answer::Go,
+        },
+        // No polkit, or no policy for the action installed: nothing to ask.
+        Err(_) => Answer::Go,
+    }
 }
 
 /// This process's start time in clock ticks, as polkit names a process.
