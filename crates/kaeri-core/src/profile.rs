@@ -84,27 +84,35 @@ pub fn write_shared(
     Ok(true)
 }
 
-/// Move a profile's overlay into `config.toml` and remove it: the profile takes the first one's
-/// place. Its keys replace the config's, and a shared key it never set is left as the config has it.
-pub fn promote(paths: &Paths, overlay: &Path) -> Result<(), crate::Error> {
-    let over = match std::fs::read_to_string(overlay) {
-        Ok(src) => src,
-        Err(e) if e.kind() == std::io::ErrorKind::NotFound => return Ok(()),
-        Err(e) => {
-            return Err(crate::Error::Config(format!(
-                "cannot read {}: {e}",
-                overlay.display()
-            )));
-        }
-    };
+/// A profile's overlay as it is on disk, `None` when the profile never set a shared key. Deleting
+/// the first profile removes the directory of the profile taking its place, this file with it, so
+/// the caller reads it first and hands it to [`promote_text`] once the database has moved.
+pub fn read_overlay(overlay: &Path) -> Result<Option<String>, crate::Error> {
+    match std::fs::read_to_string(overlay) {
+        Ok(src) => Ok(Some(src)),
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => Ok(None),
+        Err(e) => Err(crate::Error::Config(format!("cannot read {}: {e}", overlay.display()))),
+    }
+}
+
+/// Write a profile's overlay, as [`read_overlay`] gave it, into `config.toml`: the profile takes
+/// the first one's place. Its keys replace the config's, and a shared key it never set is left as
+/// the config has it.
+pub fn promote_text(paths: &Paths, over: &str) -> Result<(), crate::Error> {
     let base = std::fs::read_to_string(&paths.config_file).unwrap_or_default();
-    let merged = merged(&base, &over)?;
+    let merged = merged(&base, over)?;
     Config::from_toml(&merged)?;
     if let Some(dir) = paths.config_file.parent() {
         let _ = std::fs::create_dir_all(dir);
     }
     std::fs::write(&paths.config_file, merged)
-        .map_err(|e| crate::Error::Config(format!("cannot write config.toml: {e}")))?;
+        .map_err(|e| crate::Error::Config(format!("cannot write config.toml: {e}")))
+}
+
+/// Move a profile's overlay into `config.toml` and remove it, as [`promote_text`] does.
+pub fn promote(paths: &Paths, overlay: &Path) -> Result<(), crate::Error> {
+    let Some(over) = read_overlay(overlay)? else { return Ok(()) };
+    promote_text(paths, &over)?;
     let _ = std::fs::remove_file(overlay);
     Ok(())
 }
