@@ -992,6 +992,11 @@ fn row(effective: &Config, saved: &Config, key: SettingKey) -> SettingRow {
 /// back as it is; a two-state value flips whichever way. Theme and sub/dub step from the
 /// saved value, the one their row leads with: the arrows change what is saved, and a session
 /// override simply gives way to it.
+/// The themes in the order the Theme row steps through them: adaptive first, as it is the one
+/// most want.
+const THEMES: [ThemeMode; 4] =
+    [ThemeMode::Adaptive, ThemeMode::Immersive, ThemeMode::Light, ThemeMode::Dark];
+
 pub fn step(
     effective: &Config,
     saved: &Config,
@@ -999,7 +1004,7 @@ pub fn step(
     delta: i64,
 ) -> Option<SettingValue> {
     use SettingValue as V;
-    use kaeri_core::config::{DownloadQuality, PlayerUi, ThemeMode, Upscaling};
+    use kaeri_core::config::{DownloadQuality, PlayerUi, Upscaling};
     use kaeri_core::media::Translation;
 
     let playback = &effective.playback;
@@ -1007,10 +1012,8 @@ pub fn step(
     Some(match key {
         // Round the four, either way: adaptive first, as it is the one most want.
         SettingKey::Theme => {
-            const RING: [ThemeMode; 4] =
-                [ThemeMode::Adaptive, ThemeMode::Immersive, ThemeMode::Light, ThemeMode::Dark];
-            let at = RING.iter().position(|m| *m == saved.theme.mode).unwrap_or(0) as i64;
-            let next = RING[(at + delta.signum()).rem_euclid(RING.len() as i64) as usize];
+            let at = THEMES.iter().position(|m| *m == saved.theme.mode).unwrap_or(0) as i64;
+            let next = THEMES[(at + delta.signum()).rem_euclid(THEMES.len() as i64) as usize];
             V::Str(format!("{next:?}").to_lowercase())
         }
         SettingKey::Motion => V::Bool(!effective.theme.motion),
@@ -1674,6 +1677,12 @@ fn change(effective: &Config, saved: &Config, key: SettingKey) -> SettingChange 
     if key.path().is_none() {
         return SettingChange::Fixed;
     }
+    // The four themes step like a ladder with the arrows, Adaptive at one end and Dark at the
+    // other, on the saved choice as the arrows change that one. Enter still rounds them.
+    if key == SettingKey::Theme {
+        let at = THEMES.iter().position(|m| *m == saved.theme.mode).unwrap_or(0);
+        return SettingChange::Steps { back: at > 0, forward: at + 1 < THEMES.len() };
+    }
     // A two-state value steps like a two-rung ladder: back is off, or the first of its two
     // choices, and forward the other.
     if let Some(second) = two_state(effective, saved, key) {
@@ -1688,12 +1697,11 @@ fn change(effective: &Config, saved: &Config, key: SettingKey) -> SettingChange 
 /// its two choices. `None` for every other row.
 fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool> {
     use SettingKey as S;
-    use kaeri_core::config::{PlayerUi, ThemeMode};
+    use kaeri_core::config::PlayerUi;
     let c = effective;
     Some(match key {
-        // Theme and sub/dub can differ for this session (`--theme`, `t`), and their arrows
-        // change the saved choice, so that is the one they stand on.
-        S::Theme => saved.theme.mode != ThemeMode::Adaptive,
+        // Sub/dub can differ for this session (`t`), and its arrows change the saved choice,
+        // so that is the one they stand on.
         S::Translation => saved.playback.translation == kaeri_core::media::Translation::Dub,
         S::PlayerUi => c.playback.player_ui == PlayerUi::Mpv,
         S::Motion => c.theme.motion,
@@ -1931,6 +1939,31 @@ fn step_through<T: Copy + PartialOrd>(ladder: &[T], current: T, delta: i64) -> T
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The Theme row's arrows reach all four themes, stopping at Adaptive and Dark.
+    #[test]
+    fn theme_arrows_step_through_all_four_themes() {
+        let themed = |mode: &str| {
+            let mut config = Config::default();
+            assert!(put(&mut config, SettingKey::Theme, &SettingValue::Str(mode.into())));
+            config
+        };
+        let steps = |config: &Config| change(config, config, SettingKey::Theme);
+        let to = |config: &Config, delta| step(config, config, SettingKey::Theme, delta);
+        assert_eq!(
+            steps(&themed("adaptive")),
+            SettingChange::Steps { back: false, forward: true }
+        );
+        assert_eq!(
+            steps(&themed("immersive")),
+            SettingChange::Steps { back: true, forward: true }
+        );
+        assert_eq!(to(&themed("immersive"), 1), Some(SettingValue::Str("light".into())));
+        assert_eq!(steps(&themed("light")), SettingChange::Steps { back: true, forward: true });
+        assert_eq!(to(&themed("light"), 1), Some(SettingValue::Str("dark".into())));
+        assert_eq!(steps(&themed("dark")), SettingChange::Steps { back: true, forward: false });
+        assert_eq!(to(&themed("dark"), -1), Some(SettingValue::Str("light".into())));
+    }
 
     #[test]
     fn titles_step_from_anilists_choice_to_english_to_romaji() {
