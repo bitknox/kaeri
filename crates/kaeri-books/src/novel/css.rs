@@ -26,10 +26,16 @@ const REFUSED_FUNCTIONS: &[&str] =
 /// Properties left out with their value: they bind code (old IE and Firefox).
 const REFUSED_PROPERTIES: &[&str] = &["behavior", "-moz-binding"];
 
+/// How deep blocks, brackets and function calls are scanned. The scanner recurses once per
+/// level, so a book nesting thousands of brackets would run the reading thread out of stack.
+/// Real stylesheets nest a handful of levels; what sits deeper than this is dropped.
+const MAX_DEPTH: usize = 64;
+
 /// Cleans a whole stylesheet, or a `style` attribute's declarations.
 pub(crate) fn clean(text: &str, urls: &dyn Urls) -> String {
     let chars: Vec<char> = text.chars().collect();
-    let mut s = Scan { c: &chars, i: 0, out: String::with_capacity(text.len()), urls };
+    let mut s =
+        Scan { c: &chars, i: 0, depth: 0, out: String::with_capacity(text.len()), urls };
     s.run(None);
     s.out
 }
@@ -52,6 +58,8 @@ pub(crate) fn allowed_url(url: &str, urls: &dyn Urls) -> bool {
 struct Scan<'a> {
     c: &'a [char],
     i: usize,
+    /// How many blocks and calls the cursor is inside.
+    depth: usize,
     out: String,
     urls: &'a dyn Urls,
 }
@@ -77,16 +85,7 @@ impl Scan<'_> {
                 '(' | '[' | '{' => {
                     self.out.push(c);
                     self.i += 1;
-                    let end = match c {
-                        '(' => ')',
-                        '[' => ']',
-                        _ => '}',
-                    };
-                    self.run(Some(end));
-                    if self.peek(0) == Some(end) {
-                        self.out.push(end);
-                        self.i += 1;
-                    }
+                    self.nested(closer(c));
                 }
                 c if starts_ident(c) || c == '\\' => self.ident_or_function(),
                 _ => {
@@ -94,6 +93,53 @@ impl Scan<'_> {
                     self.i += 1;
                 }
             }
+        }
+    }
+
+    /// Copies the inside of a block or call up to `close`, the cursor after its opening, and
+    /// the closing character when there is one. Past [`MAX_DEPTH`] the inside is dropped.
+    fn nested(&mut self, close: char) {
+        if self.depth < MAX_DEPTH {
+            self.depth += 1;
+            self.run(Some(close));
+            self.depth -= 1;
+        } else {
+            self.skip_block(close);
+        }
+        if self.peek(0) == Some(close) {
+            self.out.push(close);
+            self.i += 1;
+        }
+    }
+
+    /// Skips to `close` at this nesting without recursing, as [`Scan::run`] would find it:
+    /// brackets opened inside are followed, and strings, comments and escapes are passed
+    /// over. Leaves the cursor on `close`.
+    fn skip_block(&mut self, close: char) {
+        let mut open: Vec<char> = Vec::new();
+        while let Some(c) = self.peek(0) {
+            if open.is_empty() && c == close {
+                return;
+            }
+            match c {
+                '/' if self.peek(1) == Some('*') => {
+                    let before = self.out.len();
+                    self.comment();
+                    self.out.truncate(before);
+                    continue;
+                }
+                '"' | '\'' => {
+                    self.string();
+                    continue;
+                }
+                '\\' if self.peek(1).is_some() => self.i += 1,
+                '(' | '[' | '{' => open.push(closer(c)),
+                c if open.last() == Some(&c) => {
+                    open.pop();
+                }
+                _ => {}
+            }
+            self.i += 1;
         }
     }
 
@@ -198,11 +244,7 @@ impl Scan<'_> {
             } else {
                 self.out.push_str(&escape_ident(&name));
                 self.out.push('(');
-                self.run(Some(')'));
-                if self.peek(0) == Some(')') {
-                    self.out.push(')');
-                    self.i += 1;
-                }
+                self.nested(')');
             }
             return;
         }
@@ -388,6 +430,15 @@ impl Scan<'_> {
     }
 }
 
+/// The character that closes a block or call opened with `open`.
+fn closer(open: char) -> char {
+    match open {
+        '(' => ')',
+        '[' => ']',
+        _ => '}',
+    }
+}
+
 fn starts_ident(c: char) -> bool {
     c.is_alphabetic() || c == '_' || c == '-' || !c.is_ascii()
 }
@@ -566,5 +617,30 @@ mod tests {
             Some(super::super::Flow::VerticalLr)
         );
         assert_eq!(vertical_mode("body{writing-mode:horizontal-tb}"), None);
+    }
+
+    /// Runs `f` on a thread with a 512 KiB stack, as small as a web view's resource thread.
+    fn on_small_stack(f: impl FnOnce() -> String + Send + 'static) -> String {
+        std::thread::Builder::new().stack_size(512 * 1024).spawn(f).unwrap().join().unwrap()
+    }
+
+    #[test]
+    fn deeply_nested_css_is_cleaned_on_a_small_stack() {
+        let open = on_small_stack(|| c(&"(".repeat(200_000)));
+        assert_eq!(open, "(".repeat(65));
+        let balanced =
+            on_small_stack(|| c(&format!("{}{}", "[".repeat(100_000), "]".repeat(100_000))));
+        assert_eq!(balanced, format!("{}{}", "[".repeat(65), "]".repeat(65)));
+        let calls = on_small_stack(|| c(&format!("p{{color:{}}}", "a(".repeat(100_000))));
+        assert!(calls.starts_with("p{color:a(a("), "{calls}");
+        // What sits too deep is dropped, URLs and all, and the rule after it is kept.
+        let deep = format!(
+            "p{{x:{}url(https://x.example/a.png)\"}}\"{}}} h1{{background:url(../img/a.png)}}",
+            "(".repeat(100),
+            ")".repeat(100)
+        );
+        let out = c(&deep);
+        assert!(!out.contains("x.example"), "{out}");
+        assert!(out.ends_with("} h1{background:url(\"../img/a.png\")}"), "{out}");
     }
 }
