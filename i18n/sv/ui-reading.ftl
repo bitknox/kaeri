@@ -486,3 +486,10 @@ opds-fetched-files = { $n ->
    *[other] { $n } filer
  }
 opds-reader-unnamed = E-läsare på { $address }
+notif-chapter-new = { $chapter } är ute.
+notif-chapters-new = { $count ->
+    [one] Ett nytt kapitel
+   *[other] { $count } nya kapitel
+ }
+notif-chapter-hidden = Nytt kapitel
+notif-chapter-read = Läs

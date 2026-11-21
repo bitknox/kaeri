@@ -2130,15 +2130,6 @@ nagare-description = Nagare, linh vật của Kaeri: một nhân vật có tóc 
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = Trailer phát không tiếng từ YouTube, nơi có thể thấy địa chỉ IP của bạn. Trailer không phát khi dùng kết nối tính phí theo dung lượng, khi tắt hoạt ảnh, ở chế độ tiết kiệm pin hoặc khi có trình đọc màn hình.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Dùng tay cầm
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = Đổi chỗ nút A và B
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Tay cầm
-
 # Settings row that names the controller in use.
 settings-controller-device = Tay cầm
 
@@ -10785,6 +10776,21 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = Máy đọc sách tại { $address }
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = { $chapter } đã ra mắt.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+       *[other] { $count } chương mới
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = Chương mới
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = Đọc
+
 # Button that shows the season before.
 seasonal-previous = Mùa trước
 
@@ -12131,6 +12137,15 @@ settings-anilist-following = Hiện người bạn theo dõi
 
 # Note under that switch.
 settings-anilist-following-footer = Cho biết những người bạn theo dõi trên AniList đang xem đến đâu trong một bộ, trên trang và các tập của bộ đó. Ai xem được danh sách của bạn được đặt trên AniList.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Dùng tay cầm
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = Đổi chỗ nút A và B
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Tay cầm
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Địa chỉ
@@ -13551,9 +13566,6 @@ cloud-err-webdav = Máy chủ từ chối tên người dùng hoặc mật khẩ
 
 # Error, with Open the page again.
 cloud-err-timeout = Trang đăng nhập đã đóng trước khi truy cập được cho phép.
-
-# Error.
-cloud-err-other-group = Thư mục này thuộc một nhóm các thiết bị khác. Hãy nhập khóa khôi phục của nhóm để tham gia, hoặc chọn thư mục khác.
 
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } đã đăng xuất Kaeri. Các thay đổi sẽ chờ trên { $kind } này cho đến khi bạn đăng nhập lại.

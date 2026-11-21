@@ -358,6 +358,7 @@ impl Known {
                             kaeri_model::group::SyncProblem::WrongRecoveryKey
                                 | kaeri_model::group::SyncProblem::GroupExists
                                 | kaeri_model::group::SyncProblem::NoGroup
+                                | kaeri_model::group::SyncProblem::ClearRefused
                         )
                     })
                 {
@@ -963,6 +964,18 @@ mod tests {
         assert!(!in_guard(), "the guard is left");
         assert!(guarded("a test", || heard.push(2)));
         assert_eq!(heard, [2]);
+    }
+
+    #[test]
+    fn a_start_over_the_service_refused_outlasts_the_status_after_it() {
+        use kaeri_model::group::{SyncProblem, SyncStatus};
+        let mut known = Known::default();
+        known.take(&Event::SyncProblem(SyncProblem::ClearRefused));
+        known.take(&Event::SyncStatus(SyncStatus::default()));
+        assert_eq!(known.sync_problem, Some(SyncProblem::ClearRefused));
+        known.take(&Event::SyncProblem(SyncProblem::Unreachable));
+        known.take(&Event::SyncStatus(SyncStatus::default()));
+        assert_eq!(known.sync_problem, None);
     }
 
     #[test]

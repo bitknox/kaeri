@@ -18,7 +18,7 @@ public enum NoticePermission: Sendable, Equatable {
     case denied
 }
 
-/// Where the app's new-episode notifications go.
+/// Where the app's notifications go: new episodes, new chapters and Downloads finished.
 public protocol NoticeCentre: Sendable {
     func permission() async -> NoticePermission
     /// Ask for permission, the first time a switch is turned on. True when it was given.
@@ -34,6 +34,9 @@ public protocol NoticeCentre: Sendable {
     func registerCategories()
     /// Post a plain notification now, replacing one with its identifier: Downloads finished.
     func post(identifier: String, title: String, body: String) async
+    /// Post a series' new chapters now, replacing its last, with `picture` attached when there
+    /// is one: a file the centre takes over.
+    func post(_ notice: ChapterNotice, picture: URL?) async
 }
 
 /// The system's centre.
@@ -109,9 +112,40 @@ public struct SystemNoticeCentre: NoticeCentre {
         try? await centre.add(UNNotificationRequest(identifier: identifier, content: content, trigger: nil))
     }
 
-    /// The two kinds, by their actions: caught up, Play and Mark watched; behind, Play alone.
-    /// Play brings the app forward; Mark watched runs in the background. Hidden previews say
-    /// "New episode", and a group "3 more new episodes".
+    public func post(_ notice: ChapterNotice, picture: URL?) async {
+        let content = Self.content(notice)
+        if let picture {
+            if let attachment = try? Self.attachment(picture) {
+                content.attachments = [attachment]
+            } else {
+                try? FileManager.default.removeItem(at: picture)
+            }
+        }
+        do {
+            try await centre.add(UNNotificationRequest(identifier: notice.identifier, content: content, trigger: nil))
+        } catch {
+            AppLog.error("notices", "could not post \(notice.identifier): \(error.localizedDescription)")
+        }
+    }
+
+    /// What a series' new-chapter notification says: in the new-chapters thread, named in a
+    /// group by its series, with Read.
+    public static func content(_ notice: ChapterNotice) -> UNMutableNotificationContent {
+        let content = UNMutableNotificationContent()
+        content.title = notice.title
+        content.body = notice.body
+        content.threadIdentifier = ChapterNotices.thread
+        content.summaryArgument = notice.title
+        content.categoryIdentifier = ChapterNotices.category
+        content.userInfo = NoticeRoute.userInfo(notice)
+        content.sound = .default
+        return content
+    }
+
+    /// The kinds, by their actions. A new episode caught up has Play and Mark watched; behind,
+    /// Play alone. Play brings the app forward; Mark watched runs in the background. Hidden
+    /// previews say "New episode", and a group "3 more new episodes". New chapters have Read,
+    /// which brings the app forward, and hidden say "New chapter".
     public static func categories() -> Set<UNNotificationCategory> {
         let (play, mark) = (L.actionPlay, L.episodeMarkWatched)
         let playAction = UNNotificationAction(identifier: NoticeAction.play.rawValue, title: play, options: [.foreground])
@@ -122,9 +156,15 @@ public struct SystemNoticeCentre: NoticeCentre {
                 hiddenPreviewsBodyPlaceholder: NoticePlan.hiddenPreview,
                 categorySummaryFormat: NoticePlan.summaryFormat, options: [])
         }
+        let readAction = UNNotificationAction(
+            identifier: NoticeAction.read.rawValue, title: L.notifChapterRead, options: [.foreground])
+        let chapters = UNNotificationCategory(
+            identifier: ChapterNotices.category, actions: [readAction], intentIdentifiers: [],
+            hiddenPreviewsBodyPlaceholder: ChapterNotices.hiddenPreview, options: [])
         return [
             category(.newEpisode, [playAction, markAction]),
             category(.behind, [playAction]),
+            chapters,
         ]
     }
 
@@ -149,8 +189,11 @@ public final class QuietNoticeCentre: NoticeCentre, @unchecked Sendable {
     private var order: [String] = []
     private var asked = 0
     private var posted: [String] = []
+    private var chapters: [ChapterNotice] = []
     /// What was posted at once, by identifier, in order.
     public var postedNow: [String] { lock.withLock { posted } }
+    /// The new-chapter notifications posted, in order.
+    public var chapterNotices: [ChapterNotice] { lock.withLock { chapters } }
 
     /// - Parameters:
     ///   - permission: what the centre says before it is asked.
@@ -199,6 +242,14 @@ public final class QuietNoticeCentre: NoticeCentre, @unchecked Sendable {
 
     public func post(identifier: String, title: String, body: String) async {
         lock.withLock { posted.append(identifier) }
+    }
+
+    public func post(_ notice: ChapterNotice, picture: URL?) async {
+        lock.withLock {
+            posted.append(notice.identifier)
+            chapters.append(notice)
+        }
+        if let picture { try? FileManager.default.removeItem(at: picture) }
     }
 }
 

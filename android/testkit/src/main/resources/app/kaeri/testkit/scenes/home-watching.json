@@ -11,7 +11,7 @@
       "value": "adaptive",
       "change": {
        "@type": "Steps",
-       "back": false,
+       "back": true,
        "forward": true
       }
      },
@@ -84,6 +84,15 @@
        "@type": "Steps",
        "back": true,
        "forward": false
+      }
+     },
+     {
+      "key": "PRELOAD_METERED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
       }
      },
      {
@@ -489,6 +498,15 @@
       }
      },
      {
+      "key": "PICTURE_IN_PICTURE_ON_LEAVE",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "DOWNLOAD_QUALITY",
       "value": "standard",
       "change": {
@@ -674,6 +692,31 @@
        "@type": "Steps",
        "back": false,
        "forward": true
+      }
+     },
+     {
+      "key": "OPDS_FEED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
+      "key": "OPDS_PASSWORD",
+      "value": "not set",
+      "change": {
+       "@type": "Typed",
+       "text": ""
+      }
+     },
+     {
+      "key": "OPDS_PORT",
+      "value": "automatic",
+      "change": {
+       "@type": "Typed",
+       "text": ""
       }
      },
      {
@@ -897,7 +940,9 @@
        "Drama",
        "Fantasy"
       ],
-      "availableOn": [],
+      "availableOn": [
+       "Lantern Library"
+      ],
       "availableAt": null,
       "progress": {
        "done": "6",
@@ -1020,7 +1065,9 @@
           "Drama",
           "Fantasy"
          ],
-         "availableOn": [],
+         "availableOn": [
+          "Lantern Library"
+         ],
          "availableAt": null,
          "progress": {
           "done": "6",
@@ -1257,7 +1304,9 @@
           "Mystery",
           "Slice of Life"
          ],
-         "availableOn": [],
+         "availableOn": [
+          "Lantern Library"
+         ],
          "availableAt": null,
          "progress": {
           "done": "3",
@@ -1570,7 +1619,9 @@
           "Mystery",
           "Slice of Life"
          ],
-         "availableOn": [],
+         "availableOn": [
+          "Lantern Library"
+         ],
          "availableAt": null,
          "progress": {
           "done": "3",
@@ -5265,7 +5316,8 @@
     "groupFolder": null,
     "recoveryKey": false,
     "recoveryKeyMade": null,
-    "bookServersToAdd": []
+    "bookServersToAdd": [],
+    "restoreDevices": "0"
    }
   },
   {
@@ -5642,7 +5694,9 @@
        "Drama",
        "Fantasy"
       ],
-      "availableOn": [],
+      "availableOn": [
+       "Lantern Library"
+      ],
       "availableAt": null,
       "progress": {
        "done": "6",
@@ -5835,7 +5889,9 @@
        "Mystery",
        "Slice of Life"
       ],
-      "availableOn": [],
+      "availableOn": [
+       "Lantern Library"
+      ],
       "availableAt": null,
       "progress": {
        "done": "3",
@@ -23251,7 +23307,9 @@
         "Drama",
         "Fantasy"
        ],
-       "availableOn": [],
+       "availableOn": [
+        "Lantern Library"
+       ],
        "availableAt": null,
        "progress": {
         "done": "6",

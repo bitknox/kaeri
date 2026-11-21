@@ -1006,6 +1006,16 @@ pub(crate) fn dispatch(
                 crate::syncing::change_folder(&ctx, &tx, folder).await;
             });
         }
+        Command::SyncGroup(kaeri_model::group::SyncCommand::ClearFolderAndStart {
+            device_name,
+            folder,
+        }) => {
+            let (ctx, tx) = (Ctx::of(services), tx.clone());
+            tokio::spawn(async move {
+                let _job = job;
+                crate::syncing::clear_and_start(&ctx, &tx, device_name, folder).await;
+            });
+        }
         Command::SyncGroup(kaeri_model::group::SyncCommand::PairWithCode {
             device_name,
             code,

@@ -73,8 +73,8 @@ pub use self::{
     accounts::sync_badge,
     cursor::{Cursor, Cursors},
     devices::{
-        DeviceConfirm, DeviceLine, DevicePageItem, Devices, FolderState, PairCode, code_groups,
-        key_groups, pair_link,
+        DeviceConfirm, DeviceLine, DevicePageItem, Devices, FolderState, PairCode, StartOver,
+        StartOverStep, code_groups, key_groups, pair_link,
     },
     episodes::EpisodeFilter,
     lists::{

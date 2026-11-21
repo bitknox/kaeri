@@ -120,13 +120,54 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     fun show(sheet: SyncSheet?) {
         _sheet.value = sheet
-        if (sheet != SyncSheet.KEY) joining = null
+        if (sheet != SyncSheet.KEY) {
+            joining = null
+            _startOver.value = null
+            _confirmingStartOver.value = false
+        }
     }
 
-    /** Ask for the recovery key that opens [folder]'s group. */
-    fun askKey(folder: app.kaeri.engine.model.SyncFolderSpec) {
+    /** Where the restore sheet's Cancel goes: the picker it came from, or nowhere for Enter new key. */
+    var keyBack: SyncSheet? = SyncSheet.PICKER
+        private set
+
+    /** Ask for the recovery key that opens [folder]'s group; Cancel goes back to [back]. */
+    fun askKey(folder: app.kaeri.engine.model.SyncFolderSpec, back: SyncSheet? = SyncSheet.PICKER) {
         joining = folder
+        keyBack = back
+        _startOver.value = null
+        _confirmingStartOver.value = false
         _sheet.value = SyncSheet.KEY
+    }
+
+    private val _confirmingStartOver = MutableStateFlow(false)
+
+    /** The restore sheet's Start over confirmation is up. */
+    val confirmingStartOver: StateFlow<Boolean> = _confirmingStartOver.asStateFlow()
+
+    fun confirmStartOver(on: Boolean) {
+        _confirmingStartOver.value = on
+    }
+
+    private val _startOver = MutableStateFlow<SyncFolderKind?>(null)
+
+    /**
+     * The service sync is being started over in from the restore sheet, from the confirmed tap
+     * until its key is put away or the sheet closes. The sheet keeps the start over's steps while
+     * it is set, whatever a sign-in that ended late says, and its key step says so in a first line.
+     */
+    val startOver: StateFlow<SyncFolderKind?> = _startOver.asStateFlow()
+
+    /** Start over without the key in [kind]'s folder: said after [begin], which clears it. */
+    internal fun startingOver(kind: SyncFolderKind) {
+        _confirmingStartOver.value = false
+        _startOver.value = kind
+    }
+
+    /** A start over that stopped was left: the restore sheet shows its field again. */
+    fun startOverLeft() {
+        _startOver.value = null
+        _problem.value = null
     }
 
     /** The folder the last set-up asked for, kept so a group that already exists can be joined with its key. */
@@ -162,6 +203,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
         working = true
         passedSignIn = false
         _keyInSheet.value = false
+        _startOver.value = null
         _problem.value = null
         _lastCode.value = null
         _pairFailed.value = null
@@ -217,7 +259,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     internal fun signIn(service: SyncFolderKind, step: SyncSignInStep?) {
         _signIn.value = if (step == null) null else CloudSignIn(service, step)
         if (step is SyncSignInStep.Finishing) _settingUp.value = true
-        if (step is SyncSignInStep.Finishing || step is SyncSignInStep.Connecting) passedSignIn = true
+        if (step is SyncSignInStep.Finishing || step is SyncSignInStep.Connecting || step is SyncSignInStep.Clearing) passedSignIn = true
         if (step != null) _problem.value = null
         if (step is SyncSignInStep.Code) _lastCode.value = service to step else if (step != null) _lastCode.value = null
     }
@@ -232,7 +274,8 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
 
     internal fun recoveryKey(key: String) {
         _recoveryKey.value = key
-        _keyInSheet.value = working
+        // A start over's key belongs on its restore sheet even when the set-up was said to be over first.
+        _keyInSheet.value = working || _startOver.value != null
     }
 
     internal fun invite(code: String, port: Int, seconds: Int) {
@@ -295,6 +338,7 @@ class SyncModel(private val clock: () -> Long = { System.currentTimeMillis() }) 
     fun recoveryKeySeen() {
         _recoveryKey.value = null
         _keyInSheet.value = false
+        _startOver.value = null
     }
 
     /** The problem was read, or the sheet that showed it was left. */

@@ -19,29 +19,6 @@ channel-downloads-finished-name = Downloads finished
 # @only android
 channel-downloads-finished-description = When the chapters you asked to download are all done.
 
-# Notification, new chapter: the line under the series' title. The chapter is the source's own
-# words for it, such as "Chapter 12".
-# @only android
-# @arg chapter: text
-notif-chapter-new = { $chapter } is new.
-
-# Notification, new chapters: the line under the series' title when one series has several.
-# @only android
-# @arg count: int
-notif-chapters-new = { $count ->
-    [one] One new chapter
-   *[other] { $count } new chapters
- }
-
-# Notification, new chapter: what the lock screen shows when previews are hidden.
-# @only android
-notif-chapter-hidden = New chapter
-
-# Notification, new chapter: the action that opens the reader on the chapter.
-# @only android
-# @max 16
-notif-chapter-read = Read
-
 # The download notification while only chapters download.
 # @only android
 # @arg count: int

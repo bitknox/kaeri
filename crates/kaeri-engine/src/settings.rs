@@ -97,6 +97,19 @@ pub fn set_setting(
     if key == SettingKey::WhenTrackersDisagree {
         services.sync.set_read_rule(engine.config.effective().reading.when_trackers_disagree);
     }
+    // Turned on, the daily check runs now; turned off, a check under way stops.
+    if key == SettingKey::UpdateCheck {
+        let updates = &engine.config.effective().updates;
+        let (on, beta) = (updates.check, updates.beta);
+        engine.updates.follow(
+            on,
+            beta,
+            !services.hosted_player,
+            &services.paths.cache_dir,
+            &services.http,
+            tx,
+        );
+    }
     // Off means not asked: the next page leaves the people out, the cache lets go of them, and
     // a page on screen is said again without them.
     if key == SettingKey::ShowFollowing {
@@ -304,7 +317,11 @@ pub fn remember(
             None
         }
         Event::PlayerSubtitleStyle { setting, value } => {
-            let Some((key, value)) = subtitle_style_value(setting, value) else { return };
+            let Some((key, value)) =
+                subtitle_style_kept(engine.config.effective_mut(), setting, value)
+            else {
+                return;
+            };
             let tx = tx();
             write_setting(&["subtitles"], key, value, engine, services, &tx);
             return;
@@ -323,6 +340,19 @@ pub fn remember(
     }
 }
 
+/// A subtitle style row from the player's panel put in effect in `effective`, and the setting
+/// to write. In effect as well as in the file, so the next play this session opens with it and
+/// the Settings screen shows it: the write alone changes the file and nothing else.
+fn subtitle_style_kept(
+    effective: &mut kaeri_core::config::Config,
+    setting: &str,
+    value: &str,
+) -> Option<(&'static str, SettingValue)> {
+    let (key, value) = subtitle_style_value(setting, value)?;
+    let row = SettingKey::at(&["subtitles"], key)?;
+    settings::put(effective, row, &value).then_some((key, value))
+}
+
 /// A subtitle style row from the player's panel as a setting to write: only the rows the panel
 /// has, and only values the setting accepts.
 fn subtitle_style_value(setting: &str, value: &str) -> Option<(&'static str, SettingValue)> {
@@ -330,8 +360,11 @@ fn subtitle_style_value(setting: &str, value: &str) -> Option<(&'static str, Set
     use kaeri_core::settings::SettingValue as V;
     Some(match setting {
         "size" => {
-            let (low, high, _) = SubtitlesConfig::SIZES;
-            ("size", V::Int(value.parse::<i64>().ok()?.clamp(i64::from(low), i64::from(high))))
+            // On the setting's steps of ten, as the Settings screen steps it.
+            let (low, high, by) = SubtitlesConfig::SIZES;
+            let (low, high, by) = (i64::from(low), i64::from(high), i64::from(by));
+            let size = value.parse::<i64>().ok()?.clamp(low, high);
+            ("size", V::Int(((size + by / 2) / by * by).clamp(low, high)))
         }
         "raise" => (
             "raise",
@@ -379,5 +412,28 @@ mod subtitle_style_tests {
         assert!(subtitle_style_value("background", "glow").is_none());
         assert!(subtitle_style_value("styled", "strip").is_some());
         assert!(subtitle_style_value("font", "serif").is_none());
+        assert!(matches!(
+            subtitle_style_value("size", "155"),
+            Some(("size", SettingValue::Int(160)))
+        ));
+    }
+
+    #[test]
+    fn the_panels_change_is_in_effect_as_well_as_written() {
+        use kaeri_core::config::{Config, SubtitleBackground};
+        let mut effective = Config::default();
+        assert!(matches!(
+            subtitle_style_kept(&mut effective, "size", "130"),
+            Some(("size", SettingValue::Int(130)))
+        ));
+        assert_eq!(effective.subtitles.size, 130);
+        subtitle_style_kept(&mut effective, "raise", "6").unwrap();
+        assert_eq!(effective.subtitles.raise, 6);
+        subtitle_style_kept(&mut effective, "background", "each-line").unwrap();
+        assert_eq!(
+            Some(effective.subtitles.background),
+            SubtitleBackground::from_name("each-line")
+        );
+        assert!(subtitle_style_kept(&mut effective, "font", "serif").is_none());
     }
 }

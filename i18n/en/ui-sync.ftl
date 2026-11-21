@@ -192,7 +192,7 @@ cloud-err-webdav = The server refused that user name or password.
 cloud-err-timeout = The sign-in page closed before access was allowed.
 
 # Error.
-cloud-err-other-group = This folder belongs to another set of { -device-pl }. Enter its recovery key to join them, or choose another folder.
+cloud-err-other-group = This folder belongs to another set of { -device-pl }. Enter its recovery key to join them, choose another folder, or start over without the key.
 
 # Status error, with Sign in again.
 # @arg service: text
@@ -209,6 +209,11 @@ cloud-err-folder-gone = { -app-name } can’t open the folder any more. Choose i
 # Status error title.
 # @arg service: text
 cloud-err-title = Couldn’t sync with { $service }
+
+# Status error line under cloud-err-title, with Enter new key, on a device whose group another
+# device started over with a new recovery key. This device keeps everything it holds.
+# @arg service: text
+cloud-err-started-over = Sync was started over in { $service } on another { -device }. Enter the new recovery key to join again.
 
 # Picker row line.
 cloud-dropbox-line = { -app-name }’s own folder in your Dropbox, Apps/{ -app-name }
@@ -262,6 +267,10 @@ tv-cloud-revoked-line = { $service } signed { -app-name } out. Select to sign in
 
 # TV cloud row.
 tv-cloud-signed-out-line = Signed out. Select to sign in.
+
+# TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the
+# row opens the pairing code page.
+tv-cloud-started-over-line = Sync was started over on another { -device }. Select to pair this TV again.
 
 # TV ConfirmDialog.
 # @arg service: text
@@ -333,6 +342,47 @@ rkey-wrong = That key doesn’t open this folder. Check each group of four and t
 
 # Button.
 rkey-restore = Restore
+
+# Text button on the restore screen, for a person who lost the recovery key. It opens a
+# confirmation; the Mac, Windows and Linux add an ellipsis after it.
+rkey-start-over = Start over without the key
+
+# Confirmation title.
+rkey-start-over-title = Start over without the key?
+
+# Confirmation message. Says what is deleted, what stays and what happens to the other devices.
+# The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer.
+# @arg service: text
+# @arg kind: text
+rkey-start-over-line = { -app-name } deletes the synced history in { $service } and sets up sync again with a new recovery key. Everything on this { $kind } stays here. Other { -device-pl } keep what they have, but stop syncing until they join with the new key.
+
+# Destructive button in the confirmation.
+rkey-start-over-action = Delete and start over
+
+# Working title while the folder is cleared. cloud-setting-up follows.
+rkey-clearing = Deleting the old history
+
+# Status line beside the progress indicator while the folder is cleared.
+# @arg service: text
+rkey-clearing-line = Removing the old sealed copy from { $service }. The new key comes next.
+
+# Error title when starting over failed. Offline uses cloud-err-offline as the line.
+rkey-start-over-err-title = Couldn’t start over
+
+# Error line when the service refused to delete the old sync data.
+# @arg service: text
+rkey-start-over-err-refused = { $service } didn’t delete the old history. Try again in a moment.
+
+# Second line under either start over error.
+# @arg kind: text
+rkey-start-over-err-kept = Everything on this { $kind } is as it was.
+
+# First line of the recovery key step after starting over, before rkey-line.
+# @arg service: text
+rkey-started-over = Sync started over in { $service }. Your other { -device-pl } need this key to join again.
+
+# Button on the cloud row of a device whose group was started over; opens the restore screen.
+rkey-enter-new = Enter new key
 
 # Add a device.
 pair-enter-line = On the other { -device }, open { -app-name } and choose Set up from another { -device }, or Settings, { -device-cap-pl }, Show a code. Then enter the code here.

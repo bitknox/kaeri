@@ -8159,6 +8159,24 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>E-reader a {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>È disponibile {chapter}.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>Un nuovo capitolo</value>
+  </data>
+  <data name="NotifChaptersNew_many" xml:space="preserve">
+    <value>{count} nuovi capitoli</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} nuovi capitoli</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Nuovo capitolo</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Leggi</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Stagione precedente</value>
   </data>
@@ -9532,6 +9550,15 @@
   </data>
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Mostra a che punto sono in una serie le persone che segui su AniList, nella sua pagina e nei suoi episodi. Chi può vedere la tua lista si imposta su AniList.</value>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Usa un controller</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Scambia A e B</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Controller</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Indirizzo</value>
@@ -11026,9 +11053,6 @@
   </data>
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>La pagina di accesso si è chiusa prima che l'accesso fosse consentito.</value>
-  </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Questa cartella appartiene a un altro gruppo di dispositivi. Inserisci la sua chiave di ripristino per unirti, o scegli un'altra cartella.</value>
   </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} ha disconnesso Kaeri. Le tue modifiche restano in attesa su questo {kind} finché non accedi di nuovo.</value>

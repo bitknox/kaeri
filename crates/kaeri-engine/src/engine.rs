@@ -495,17 +495,17 @@ impl Engine {
         // engine side's messages to itself ride it too, each in its place among the events.
         let mut inbox = Inbox::default();
 
-        if background.update_check {
-            // The daily update check: one cached request, one quiet toast when a release exists.
-            updates::spawn_check(
-                state.config.effective().updates.check,
-                state.config.effective().updates.beta,
-                !services.hosted_player,
-                &services.paths.cache_dir,
-                &services.http,
-                &inbox.sender(),
-            );
-        }
+        // The daily update check: one cached request, one quiet toast when a release exists.
+        // The setting starts and stops it from here on, see `settings::set_setting`.
+        state.updates = updates::Daily::new(background.update_check);
+        state.updates.follow(
+            state.config.effective().updates.check,
+            state.config.effective().updates.beta,
+            !services.hosted_player,
+            &services.paths.cache_dir,
+            &services.http,
+            &inbox.sender(),
+        );
         if background.digest {
             // The airing digest: what aired for shows you watch since the last launch. Same
             // philosophy as the update check — one line, only when there is something to say.
@@ -1948,6 +1948,35 @@ mod tests {
         assert_eq!(saved.msg, Some(Msg::NoticeSaved { label: "auto-play next".into() }));
         let file = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
         assert_eq!(file, "[playback]\nauto_next = false\n");
+    }
+
+    /// Check for updates applies the moment it changes, as every app's switch has it: turned on,
+    /// the day's check runs at once, from the answer the day already has.
+    #[tokio::test]
+    async fn turning_the_update_check_on_checks_at_once() {
+        use kaeri_model::{settings::SettingKey, updates::UpdateStatus};
+        let dir = tempfile::tempdir().unwrap();
+        crate::updates::keep_answer_for_test(&dir.path().join("cache"));
+        let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        let (engine, mut events) = engine_with(dir.path(), host, |o| {
+            o.background.update_check = true;
+            o.config.updates.check = false;
+        })
+        .await;
+        let launch = events.launch().await;
+        assert!(
+            !launch.iter().any(|e| matches!(e, Event::Update(_))),
+            "off at launch: {launch:?}"
+        );
+
+        let value = kaeri_core::settings::SettingValue::Bool(true);
+        engine.send(Command::SetSetting { key: SettingKey::UpdateCheck, value });
+        let seen = until(&mut events, |e| matches!(e, Event::Update(_))).await;
+        let updates: Vec<_> = seen.iter().filter(|e| matches!(e, Event::Update(_))).collect();
+        assert!(
+            matches!(updates[..], [Event::Update(UpdateStatus::UpToDate { .. })]),
+            "one check, at once: {seen:?}"
+        );
     }
 
     #[tokio::test]

@@ -6,7 +6,7 @@ namespace Kaeri.Windows;
 /// <c>kaeri.exe --scene=watching --page=calendar</c>, or
 /// <c>kaeri.exe --scene=playing --media=C:\clip.mp4 --play</c>.
 /// </summary>
-/// <param name="Scene">fresh, watching, sourceless, unsure (a source ahead cannot choose the finished title's match), playing, demo-only, demo-played, demo-and-store, demo-removed, subtitle-styled, crash-off, crash-saved, crash-held or missing-episode (title 900002's episode 6 aired 25 minutes ago and no source has it): the testing engine's scenes.</param>
+/// <param name="Scene">fresh, watching, sourceless, unsure (a source ahead cannot choose the finished title's match), playing, demo-only, demo-played, demo-and-store, demo-removed, subtitle-styled, crash-off, crash-saved, crash-held, missing-episode (title 900002's episode 6 aired 25 minutes ago and no source has it), sync-other-group, sync-other-group-offline, sync-other-group-refused (a Google Drive folder that holds another group, for Start over without the key) or sync-started-over (another device started sync over): the testing engine's scenes.</param>
 /// <param name="Media">The file every episode streams in the playing scene.</param>
 /// <param name="Page">The destination to open: home, downloads, providers, stores, search, seasonal, calendar, library or settings.</param>
 /// <param name="Title">An AniList id whose title page opens over the page.</param>

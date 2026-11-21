@@ -419,6 +419,10 @@ public sealed partial class MainWindow : Window
                 "reading-source-failed" => new FfiScene.ReadingSourceFailed(),
                 "reading-anilist-failed" => new FfiScene.ReadingAnilistFailed(),
                 "missing-episode" => new FfiScene.MissingEpisode(),
+                "sync-other-group" => new FfiScene.SyncOtherGroup(),
+                "sync-other-group-offline" => new FfiScene.SyncOtherGroupOffline(),
+                "sync-other-group-refused" => new FfiScene.SyncOtherGroupRefused(),
+                "sync-started-over" => new FfiScene.SyncStartedOver(),
                 _ => new FfiScene.Watching(),
             };
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);

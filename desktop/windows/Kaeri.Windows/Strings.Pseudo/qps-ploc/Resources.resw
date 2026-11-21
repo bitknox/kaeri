@@ -11240,6 +11240,26 @@
     <value>[É-ŕéàðéŕ àţ {address}~~~~~]</value>
     <comment>Name for an e-reader that did not give one.</comment>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>[{chapter} îš ñéŵ.~~~~]</value>
+    <comment>Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".</comment>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>[Öñé ñéŵ çĥàþţéŕ~~~~~]</value>
+    <comment>Notification, new chapters: the line under the series' title when one series has several.</comment>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>[{count} ñéŵ çĥàþţéŕš~~~~~]</value>
+    <comment>Notification, new chapters: the line under the series' title when one series has several.</comment>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>[Ñéŵ çĥàþţéŕ~~~~]</value>
+    <comment>Notification, new chapter: what the lock screen shows when previews are hidden.</comment>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>[Ŕéàð~~]</value>
+    <comment>Notification, new chapter: the action that opens the reader on the chapter.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>[Þŕéṽîöüš šéàšöñ~~~~~]</value>
     <comment>Button that shows the season before.</comment>
@@ -13052,6 +13072,18 @@
     <value>[Šĥöŵš ŵĥéŕé þéöþļé ýöü ƒöļļöŵ öñ ÅñîĻîšţ àŕé îñ à šĥöŵ, öñ îţš þàĝé àñð îţš éþîšöðéš. Ŵĥö çàñ šéé ýöüŕ öŵñ ļîšţ îš šéţ öñ ÅñîĻîšţ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Note under that switch.</comment>
   </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>[Ûšé à çöñţŕöļļéŕ~~~~~]</value>
+    <comment>Settings row: whether a connected game controller drives the app.</comment>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>[Šŵàþ Å àñð Ɓ~~~~]</value>
+    <comment>Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.</comment>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>[Çöñţŕöļļéŕ~~~]</value>
+    <comment>Heading of the Settings group for game controllers.</comment>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>[Åððŕéšš~~~]</value>
     <comment>Label of the address field in the Add a server sheet.</comment>
@@ -14640,7 +14672,7 @@
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>[Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ'š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ýöü çàñ çļöšé ţĥîš. Ķàéŕî çàŕŕîéš öñ, àñð öþéñš ţĥé ñéẋţ šţéþ ƀý îţšéļƒ ŵĥéñ îţ’š ŕéàðý.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
@@ -14968,7 +15000,7 @@
     <comment>Error, with Open the page again.</comment>
   </data>
   <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>[Ţĥîš ƒöļðéŕ ƀéļöñĝš ţö àñöţĥéŕ šéţ öƒ ðéṽîçéš. Éñţéŕ îţš ŕéçöṽéŕý ķéý ţö ĵöîñ ţĥéɱ, öŕ çĥööšé àñöţĥéŕ ƒöļðéŕ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥîš ƒöļðéŕ ƀéļöñĝš ţö àñöţĥéŕ šéţ öƒ ðéṽîçéš. Éñţéŕ îţš ŕéçöṽéŕý ķéý ţö ĵöîñ ţĥéɱ, çĥööšé àñöţĥéŕ ƒöļðéŕ, öŕ šţàŕţ öṽéŕ ŵîţĥöüţ ţĥé ķéý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Error.</comment>
   </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
@@ -14986,6 +15018,10 @@
   <data name="CloudErrTitle" xml:space="preserve">
     <value>[Çöüļðñ’ţ šýñç ŵîţĥ {service}~~~~~~~]</value>
     <comment>Status error title.</comment>
+  </data>
+  <data name="CloudErrStartedOver" xml:space="preserve">
+    <value>[Šýñç ŵàš šţàŕţéð öṽéŕ îñ {service} öñ àñöţĥéŕ ðéṽîçé. Éñţéŕ ţĥé ñéŵ ŕéçöṽéŕý ķéý ţö ĵöîñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds.</comment>
   </data>
   <data name="CloudDropboxLine" xml:space="preserve">
     <value>[Ķàéŕî’š öŵñ ƒöļðéŕ îñ ýöüŕ Ðŕöþƀöẋ, Åþþš/Ķàéŕî~~~~~~~~~~~~~~]</value>
@@ -15050,6 +15086,10 @@
   <data name="TvCloudSignedOutLine" xml:space="preserve">
     <value>[Šîĝñéð öüţ. Šéļéçţ ţö šîĝñ îñ.~~~~~~~~~]</value>
     <comment>TV cloud row.</comment>
+  </data>
+  <data name="TvCloudStartedOverLine" xml:space="preserve">
+    <value>[Šýñç ŵàš šţàŕţéð öṽéŕ öñ àñöţĥéŕ ðéṽîçé. Šéļéçţ ţö þàîŕ ţĥîš ŢṼ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page.</comment>
   </data>
   <data name="TvCloudSignOutTitle" xml:space="preserve">
     <value>[Šîĝñ öüţ öƒ {service}?~~~~~]</value>
@@ -15134,6 +15174,50 @@
   <data name="RkeyRestore" xml:space="preserve">
     <value>[Ŕéšţöŕé~~~]</value>
     <comment>Button.</comment>
+  </data>
+  <data name="RkeyStartOver" xml:space="preserve">
+    <value>[Šţàŕţ öṽéŕ ŵîţĥöüţ ţĥé ķéý~~~~~~~~]</value>
+    <comment>Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it.</comment>
+  </data>
+  <data name="RkeyStartOverTitle" xml:space="preserve">
+    <value>[Šţàŕţ öṽéŕ ŵîţĥöüţ ţĥé ķéý?~~~~~~~~~]</value>
+    <comment>Confirmation title.</comment>
+  </data>
+  <data name="RkeyStartOverLine" xml:space="preserve">
+    <value>[Ķàéŕî ðéļéţéš ţĥé šýñçéð ĥîšţöŕý îñ {service} àñð šéţš üþ šýñç àĝàîñ ŵîţĥ à ñéŵ ŕéçöṽéŕý ķéý. Éṽéŕýţĥîñĝ öñ ţĥîš {kind} šţàýš ĥéŕé. Öţĥéŕ ðéṽîçéš ķééþ ŵĥàţ ţĥéý ĥàṽé, ƀüţ šţöþ šýñçîñĝ üñţîļ ţĥéý ĵöîñ ŵîţĥ ţĥé ñéŵ ķéý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer.</comment>
+  </data>
+  <data name="RkeyStartOverAction" xml:space="preserve">
+    <value>[Ðéļéţé àñð šţàŕţ öṽéŕ~~~~~~~]</value>
+    <comment>Destructive button in the confirmation.</comment>
+  </data>
+  <data name="RkeyClearing" xml:space="preserve">
+    <value>[Ðéļéţîñĝ ţĥé öļð ĥîšţöŕý~~~~~~~~]</value>
+    <comment>Working title while the folder is cleared. cloud-setting-up follows.</comment>
+  </data>
+  <data name="RkeyClearingLine" xml:space="preserve">
+    <value>[Ŕéɱöṽîñĝ ţĥé öļð šéàļéð çöþý ƒŕöɱ {service}. Ţĥé ñéŵ ķéý çöɱéš ñéẋţ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status line beside the progress indicator while the folder is cleared.</comment>
+  </data>
+  <data name="RkeyStartOverErrTitle" xml:space="preserve">
+    <value>[Çöüļðñ’ţ šţàŕţ öṽéŕ~~~~~~]</value>
+    <comment>Error title when starting over failed. Offline uses cloud-err-offline as the line.</comment>
+  </data>
+  <data name="RkeyStartOverErrRefused" xml:space="preserve">
+    <value>[{service} ðîðñ’ţ ðéļéţé ţĥé öļð ĥîšţöŕý. Ţŕý àĝàîñ îñ à ɱöɱéñţ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Error line when the service refused to delete the old sync data.</comment>
+  </data>
+  <data name="RkeyStartOverErrKept" xml:space="preserve">
+    <value>[Éṽéŕýţĥîñĝ öñ ţĥîš {kind} îš àš îţ ŵàš.~~~~~~~~~~~]</value>
+    <comment>Second line under either start over error.</comment>
+  </data>
+  <data name="RkeyStartedOver" xml:space="preserve">
+    <value>[Šýñç šţàŕţéð öṽéŕ îñ {service}. Ýöüŕ öţĥéŕ ðéṽîçéš ñééð ţĥîš ķéý ţö ĵöîñ àĝàîñ.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>First line of the recovery key step after starting over, before rkey-line.</comment>
+  </data>
+  <data name="RkeyEnterNew" xml:space="preserve">
+    <value>[Éñţéŕ ñéŵ ķéý~~~~]</value>
+    <comment>Button on the cloud row of a device whose group was started over; opens the restore screen.</comment>
   </data>
   <data name="PairEnterLine" xml:space="preserve">
     <value>[Öñ ţĥé öţĥéŕ ðéṽîçé, öþéñ Ķàéŕî àñð çĥööšé Šéţ üþ ƒŕöɱ àñöţĥéŕ ðéṽîçé, öŕ Šéţţîñĝš, Ðéṽîçéš, Šĥöŵ à çöðé. Ţĥéñ éñţéŕ ţĥé çöðé ĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>

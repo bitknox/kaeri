@@ -1712,7 +1712,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "39cab71617ae0d63f51a36d69f866391735b51691dbda63cf6f96d042b63efeb"
 dependencies = [
  "libc",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -2629,7 +2629,7 @@ checksum = "45f2b4f6b5da34d400d4c112eadcc14512cc5d04307a8eee182586d9bebd7ce6"
 
 [[package]]
 name = "i18n-tool"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "anyhow",
  "clap",
@@ -3151,7 +3151,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "anyhow",
  "base64 0.23.1",
@@ -3190,15 +3190,15 @@ dependencies = [
 
 [[package]]
 name = "kaeri-alloc"
-version = "0.5.1"
+version = "0.5.2"
 
 [[package]]
 name = "kaeri-audio-tap"
-version = "0.5.1"
+version = "0.5.2"
 
 [[package]]
 name = "kaeri-books"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "hayro",
  "hypher",
@@ -3216,7 +3216,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-bookserver"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "futures",
@@ -3236,7 +3236,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-cast"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "crossterm",
@@ -3256,7 +3256,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-core"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "directories",
@@ -3274,7 +3274,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-discord"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "serde_json",
  "tempfile",
@@ -3284,7 +3284,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-engine"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -3336,7 +3336,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-ffi"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "futures",
@@ -3369,7 +3369,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-i18n"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "fluent-bundle",
  "unic-langid",
@@ -3377,7 +3377,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-jellyfin"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "kaeri-core",
@@ -3397,7 +3397,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-meta"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "graphql-parser",
  "kaeri-core",
@@ -3414,7 +3414,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-model"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "kaeri-core",
  "kaeri-i18n",
@@ -3426,7 +3426,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-mpv-host"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "find-msvc-tools",
  "kaeri-audio-tap",
@@ -3440,7 +3440,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-net"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "kaeri-core",
  "reqwest 0.13.1",
@@ -3452,7 +3452,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-pages"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "fast_image_resize",
  "image",
@@ -3466,7 +3466,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-party"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "rustls",
  "serde",
@@ -3480,7 +3480,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-playback"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "kaeri-core",
  "rusty-chromaprint",
@@ -3490,7 +3490,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-player"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "kaeri-core",
@@ -3508,7 +3508,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -3532,7 +3532,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-plugin-store"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "bytes",
@@ -3559,7 +3559,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-providers"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "futures",
@@ -3579,7 +3579,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-remote"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "base64 0.23.1",
  "hex",
@@ -3599,7 +3599,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "kaeri-core",
  "rusqlite",
@@ -3612,7 +3612,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-core"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -3629,7 +3629,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-server"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "clap",
@@ -3644,7 +3644,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-store-wasm"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "js-sys",
@@ -3656,7 +3656,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-sync"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "base64 0.23.1",
@@ -3679,7 +3679,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-testkit"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "image",
  "jiff",
@@ -3697,7 +3697,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-track"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "async-trait",
  "http",
@@ -3719,7 +3719,7 @@ dependencies = [
 
 [[package]]
 name = "kaeri-tui"
-version = "0.5.1"
+version = "0.5.2"
 dependencies = [
  "chrono",
  "crossterm",
@@ -5133,7 +5133,7 @@ dependencies = [
  "once_cell",
  "socket2",
  "tracing",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5776,7 +5776,7 @@ dependencies = [
  "errno",
  "libc",
  "linux-raw-sys 0.12.1",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -5845,7 +5845,7 @@ dependencies = [
  "security-framework",
  "security-framework-sys",
  "webpki-root-certs",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -6513,7 +6513,7 @@ dependencies = [
  "getrandom 0.3.4",
  "once_cell",
  "rustix 1.1.5",
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -7834,9 +7834,9 @@ dependencies = [
 
 [[package]]
 name = "wasmtime-wasi"
-version = "49.0.5"
+version = "49.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "705b90d1fa1084cc73df656868948da77711b97f6b895d145a4949f86bcea674"
+checksum = "3175ff29e2992269f51ec372f7757941f11f87b265a614761726960d42ef6e4d"
 dependencies = [
  "async-trait",
  "bitflags 2.13.1",
@@ -7858,9 +7858,9 @@ dependencies = [
 
 [[package]]
 name = "wasmtime-wasi-io"
-version = "49.0.5"
+version = "49.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f3d2b6a255be488639f450b380e7e0923789f946de3463696cd30f2fe8a65cc3"
+checksum = "3bb561839e32b61bf0cdd51efe3874fac5de1bd5775a5b7c41bdf70993e367ea"
 dependencies = [
  "async-trait",
  "bytes",
@@ -8039,7 +8039,7 @@ version = "0.1.11"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c2a7b1c03c876122aa43f3020e6c3c3ee5c05081c9a00739faf7503aeba10d22"
 dependencies = [
- "windows-sys 0.52.0",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]
@@ -8630,7 +8630,7 @@ version = "0.13.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e91ee311a569c327171651566e07972200e76fcfe2242a4fa446149a3881c08a"
 dependencies = [
- "zstd-safe 7.2.4",
+ "zstd-safe 7.4.1",
 ]
 
 [[package]]
@@ -8644,9 +8644,9 @@ dependencies = [
 
 [[package]]
 name = "zstd-safe"
-version = "7.2.4"
+version = "7.4.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8f49c4d5f0abb602a93fb8736af2a4f4dd9512e36f7f570d66e65ff867ed3b9d"
+checksum = "498d94ad68720c89b4fbe41b9090850651e68cb2dd9210ce7ffbff3a94653819"
 dependencies = [
  "zstd-sys",
 ]

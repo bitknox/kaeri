@@ -2265,15 +2265,6 @@ nagare-description = Нагаре, талисман Kaeri: фигурка с ш�
 # Note under the Play trailers setting: what the trailers are and when they do not play.
 settings-note-trailers-linux = Трейлеры без звука идут с YouTube, который видит ваш IP-адрес. Не воспроизводятся на лимитном подключении, с отключёнными анимациями, в режиме экономии энергии и при работающей программе чтения с экрана.
 
-# Settings row: whether a connected game controller drives the app.
-settings-label-controller-input = Использовать контроллер
-
-# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
-settings-label-swap-face-buttons = Поменять местами A и B
-
-# Heading of the Settings group for game controllers.
-settings-group-controller = Контроллер
-
 # Settings row that names the controller in use.
 settings-controller-device = Контроллер
 
@@ -11184,6 +11175,24 @@ opds-fetched-files =
 # Name for an e-reader that did not give one.
 opds-reader-unnamed = Ридер по адресу { $address }
 
+# Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".
+notif-chapter-new = Вышло: { $chapter }.
+
+# Notification, new chapters: the line under the series' title when one series has several.
+notif-chapters-new =
+    { $count ->
+        [one] { $count } новая глава
+        [few] { $count } новые главы
+        [many] { $count } новых глав
+       *[other] { $count } новой главы
+    }
+
+# Notification, new chapter: what the lock screen shows when previews are hidden.
+notif-chapter-hidden = Новая глава
+
+# Notification, new chapter: the action that opens the reader on the chapter.
+notif-chapter-read = Читать
+
 # Button that shows the season before.
 seasonal-previous = Предыдущий сезон
 
@@ -12557,6 +12566,15 @@ settings-anilist-following = Показывать тех, на кого вы п�
 
 # Note under that switch.
 settings-anilist-following-footer = Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.
+
+# Settings row: whether a connected game controller drives the app.
+settings-label-controller-input = Использовать контроллер
+
+# Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.
+settings-label-swap-face-buttons = Поменять местами A и B
+
+# Heading of the Settings group for game controllers.
+settings-group-controller = Контроллер
 
 # Label of the address field in the Add a server sheet.
 book-server-address = Адрес
@@ -14046,9 +14064,6 @@ cloud-err-webdav = Сервер отклонил это имя пользова�
 
 # Error, with Open the page again.
 cloud-err-timeout = Страница входа закрылась, прежде чем доступ был разрешён.
-
-# Error.
-cloud-err-other-group = Эта папка принадлежит другому набору устройств. Введите её ключ восстановления, чтобы присоединиться, или выберите другую папку.
 
 # Status error, with Sign in again.
 cloud-err-signed-out = { $service } вывел Kaeri из аккаунта. Изменения ждут на этом устройстве ({ $kind }), пока вы не войдёте снова.

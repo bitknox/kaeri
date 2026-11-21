@@ -132,6 +132,11 @@ sync-tui-hint-turn-off = Turn off
 # @only tui
 sync-tui-hint-copy = Copy
 
+# Status line hint while the recovery key field has focus: Tab moves to Start over without the key.
+# @max 14
+# @only tui
+sync-tui-hint-start-over = Start over
+
 # In place of a QR code when the window is too short to draw it whole.
 # @only tui
 sync-tui-qr-no-room = Make the window taller to see the QR code.

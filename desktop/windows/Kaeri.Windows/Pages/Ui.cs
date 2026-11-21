@@ -86,7 +86,7 @@ static class Ui
     public static readonly global::Windows.UI.Color Vermilion = global::Windows.UI.Color.FromArgb(0xFF, 0xE0, 0x6B, 0x54);
 
     /// <summary>The default button with its words in the critical colour: Delete, Remove, Leave.</summary>
-    static Style Destructive
+    public static Style Destructive
     {
         get
         {

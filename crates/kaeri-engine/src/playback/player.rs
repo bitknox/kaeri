@@ -35,7 +35,18 @@ pub fn player(config: &Config, paths: &Paths, theme: &PlayerTheme) -> kaeri_play
         .with_binary(config.playback.mpv_binary.clone())
         .with_ui(config.playback.player_ui, bundle)
         .with_theme(theme.options())
+        .with_subtitles(subtitle_options(config))
         .with_extra_args(args)
+}
+
+/// The Subtitles settings as the terminal's mpv takes them: only what differs from mpv's own
+/// look, so a viewer's `mpv.conf` keeps the rest. The player's own style panel changes these
+/// while it plays and the engine keeps them, so the next window opens the same.
+fn subtitle_options(config: &Config) -> Vec<(String, String)> {
+    kaeri_model::subtitle_style::terminal_subtitle_options(&config.subtitles.clone().into())
+        .into_iter()
+        .map(|option| (option.name, option.value))
+        .collect()
 }
 
 /// What launch says of the player, or `None` when it plays as it should: that mpv is not there
@@ -66,3 +77,20 @@ pub fn old_mpv_note(version: MpvVersion) -> Option<String> {
 
 // Where the shaders were written, named from here too, beside the player they dress.
 pub use super::shaders::shader_dir;
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn the_terminal_player_wears_the_subtitle_settings() {
+        let mut config = Config::default();
+        assert!(subtitle_options(&config).is_empty(), "an untouched style leaves mpv's own");
+        config.subtitles.size = 150;
+        config.subtitles.raise = 10;
+        let options = subtitle_options(&config);
+        let get = |name: &str| options.iter().find(|(n, _)| n == name).map(|(_, v)| v.as_str());
+        assert_eq!(get("sub-scale"), Some("1.50"));
+        assert_eq!(get("sub-pos"), Some("90"));
+    }
+}

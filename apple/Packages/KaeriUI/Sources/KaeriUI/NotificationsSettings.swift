@@ -91,7 +91,6 @@ enum NoticeWords {
     }
 }
 
-/// The New episodes switch: on asks for permission the first time; declined, it stays off.
 /// The Downloads finished switch: on asks for permission first, as New episodes does.
 struct DownloadsFinishedToggle<Label: View>: View {
     @Environment(AppStore.self) private var store
@@ -109,6 +108,24 @@ struct DownloadsFinishedToggle<Label: View>: View {
     }
 }
 
+/// The New chapters switch: on asks for permission first, as New episodes does.
+struct ChapterNoticesToggle<Label: View>: View {
+    @Environment(AppStore.self) private var store
+    @ViewBuilder let label: Label
+
+    var body: some View {
+        Toggle(isOn: Binding(
+            get: { store.settings.isOn(.chapterNotifications) },
+            set: { on in Task { await store.setChapterNotifications(on) } }
+        )) {
+            label
+        }
+        .tint(.amber)
+        .disabled(store.settings.row(.chapterNotifications) == nil)
+    }
+}
+
+/// The New episodes switch: on asks for permission the first time; declined, it stays off.
 struct EpisodeNoticesToggle<Label: View>: View {
     @Environment(AppStore.self) private var store
     @ViewBuilder let label: Label
@@ -385,7 +402,10 @@ struct PhoneNotificationsPage: View {
         PhoneList {
             Section {
                 if store.medium.reads {
-                    PhoneSettingSwitch(key: .chapterNotifications, note: L.settingsChapterNotificationsNote)
+                    ChapterNoticesToggle {
+                        PhoneRowTitle(title: SettingKey.chapterNotifications.title, note: L.settingsChapterNotificationsNote)
+                    }
+                    .listRowBackground(Palette.raised)
                     DownloadsFinishedToggle {
                         PhoneRowTitle(title: SettingKey.downloadsFinished.title, note: L.settingsDownloadsFinishedNote)
                     }

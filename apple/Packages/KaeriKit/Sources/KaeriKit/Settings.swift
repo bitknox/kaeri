@@ -104,8 +104,22 @@ extension SettingKey {
 
     /// An upload cap as people read it: `unlimited`, `524 kB/s`, `2.1 MB/s`. `upload_label`.
     static func uploadLabel(kib: UInt64) -> String {
-        // The engine's own words, which `SettingRow.option` matches the row's value against.
-        kib == 0 ? "unlimited" : "\(Wording.bytes(kib * 1024, locale: Locale(identifier: "en")))/s"
+        // The engine's own words, which `SettingRow.option` matches the row's value against. They
+        // stay English whatever the app's language: `display` gives the localized words.
+        kib == 0 ? "unlimited" : "\(engineBytes(kib * 1024))/s" // i18n-skip: the engine's words
+    }
+
+    /// A size in the engine's English words, `wording::human_bytes`, unlike `Wording.bytes`,
+    /// which follows the app's language.
+    static func engineBytes(_ bytes: UInt64) -> String {
+        let units: [(String, UInt64)] = [("GB", 1_000_000_000), ("MB", 1_000_000), ("kB", 1_000), ("B", 1)] // i18n-skip
+        for (unit, scale) in units where bytes >= scale {
+            let value = Double(bytes) / Double(scale)
+            return value < 10 && scale > 1
+                ? String(format: "%.1f %@", locale: Locale(identifier: "en_US_POSIX"), value, unit)
+                : "\(UInt64(value.rounded())) \(unit)"
+        }
+        return "0 B" // i18n-skip
     }
 }
 

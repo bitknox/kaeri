@@ -11240,6 +11240,26 @@
     <value>E-reader at {address}</value>
     <comment>Name for an e-reader that did not give one.</comment>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} is new.</value>
+    <comment>Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12".</comment>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>One new chapter</value>
+    <comment>Notification, new chapters: the line under the series' title when one series has several.</comment>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} new chapters</value>
+    <comment>Notification, new chapters: the line under the series' title when one series has several.</comment>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>New chapter</value>
+    <comment>Notification, new chapter: what the lock screen shows when previews are hidden.</comment>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Read</value>
+    <comment>Notification, new chapter: the action that opens the reader on the chapter.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Previous season</value>
     <comment>Button that shows the season before.</comment>
@@ -13052,6 +13072,18 @@
     <value>Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</value>
     <comment>Note under that switch.</comment>
   </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Use a controller</value>
+    <comment>Settings row: whether a connected game controller drives the app.</comment>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Swap A and B</value>
+    <comment>Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are.</comment>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Controller</value>
+    <comment>Heading of the Settings group for game controllers.</comment>
+  </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Address</value>
     <comment>Label of the address field in the Add a server sheet.</comment>
@@ -14640,7 +14672,7 @@
     <comment>Windows and Linux dialog title while the browser is open for a cloud sign-in.</comment>
   </data>
   <data name="CloudCloseCarriesOn" xml:space="preserve">
-    <value>You can close this. Kaeri carries on, and opens the next step by itself when it's ready.</value>
+    <value>You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</value>
     <comment>Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running.</comment>
   </data>
   <data name="DeviceKindComputer" xml:space="preserve">
@@ -14968,7 +15000,7 @@
     <comment>Error, with Open the page again.</comment>
   </data>
   <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.</value>
+    <value>This folder belongs to another set of devices. Enter its recovery key to join them, choose another folder, or start over without the key.</value>
     <comment>Error.</comment>
   </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
@@ -14986,6 +15018,10 @@
   <data name="CloudErrTitle" xml:space="preserve">
     <value>Couldn’t sync with {service}</value>
     <comment>Status error title.</comment>
+  </data>
+  <data name="CloudErrStartedOver" xml:space="preserve">
+    <value>Sync was started over in {service} on another device. Enter the new recovery key to join again.</value>
+    <comment>Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds.</comment>
   </data>
   <data name="CloudDropboxLine" xml:space="preserve">
     <value>Kaeri’s own folder in your Dropbox, Apps/Kaeri</value>
@@ -15050,6 +15086,10 @@
   <data name="TvCloudSignedOutLine" xml:space="preserve">
     <value>Signed out. Select to sign in.</value>
     <comment>TV cloud row.</comment>
+  </data>
+  <data name="TvCloudStartedOverLine" xml:space="preserve">
+    <value>Sync was started over on another device. Select to pair this TV again.</value>
+    <comment>TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page.</comment>
   </data>
   <data name="TvCloudSignOutTitle" xml:space="preserve">
     <value>Sign out of {service}?</value>
@@ -15134,6 +15174,50 @@
   <data name="RkeyRestore" xml:space="preserve">
     <value>Restore</value>
     <comment>Button.</comment>
+  </data>
+  <data name="RkeyStartOver" xml:space="preserve">
+    <value>Start over without the key</value>
+    <comment>Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it.</comment>
+  </data>
+  <data name="RkeyStartOverTitle" xml:space="preserve">
+    <value>Start over without the key?</value>
+    <comment>Confirmation title.</comment>
+  </data>
+  <data name="RkeyStartOverLine" xml:space="preserve">
+    <value>Kaeri deletes the synced history in {service} and sets up sync again with a new recovery key. Everything on this {kind} stays here. Other devices keep what they have, but stop syncing until they join with the new key.</value>
+    <comment>Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer.</comment>
+  </data>
+  <data name="RkeyStartOverAction" xml:space="preserve">
+    <value>Delete and start over</value>
+    <comment>Destructive button in the confirmation.</comment>
+  </data>
+  <data name="RkeyClearing" xml:space="preserve">
+    <value>Deleting the old history</value>
+    <comment>Working title while the folder is cleared. cloud-setting-up follows.</comment>
+  </data>
+  <data name="RkeyClearingLine" xml:space="preserve">
+    <value>Removing the old sealed copy from {service}. The new key comes next.</value>
+    <comment>Status line beside the progress indicator while the folder is cleared.</comment>
+  </data>
+  <data name="RkeyStartOverErrTitle" xml:space="preserve">
+    <value>Couldn’t start over</value>
+    <comment>Error title when starting over failed. Offline uses cloud-err-offline as the line.</comment>
+  </data>
+  <data name="RkeyStartOverErrRefused" xml:space="preserve">
+    <value>{service} didn’t delete the old history. Try again in a moment.</value>
+    <comment>Error line when the service refused to delete the old sync data.</comment>
+  </data>
+  <data name="RkeyStartOverErrKept" xml:space="preserve">
+    <value>Everything on this {kind} is as it was.</value>
+    <comment>Second line under either start over error.</comment>
+  </data>
+  <data name="RkeyStartedOver" xml:space="preserve">
+    <value>Sync started over in {service}. Your other devices need this key to join again.</value>
+    <comment>First line of the recovery key step after starting over, before rkey-line.</comment>
+  </data>
+  <data name="RkeyEnterNew" xml:space="preserve">
+    <value>Enter new key</value>
+    <comment>Button on the cloud row of a device whose group was started over; opens the restore screen.</comment>
   </data>
   <data name="PairEnterLine" xml:space="preserve">
     <value>On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.</value>

@@ -374,6 +374,13 @@ public sealed partial class SettingsPage : Page
             return;
         }
         held = false;
+        // A group started over elsewhere changes the cloud card and the Recovery key rows in place.
+        if (same && pane.Name == "devices" && StartedOverInPlace())
+        {
+            shapeDrawn = shape;
+            Refresh();
+            return;
+        }
         if (!same)
         {
             if (shownPane is { } left && Keeps(left) && shapeDrawn is not null)
@@ -843,12 +850,24 @@ public sealed partial class SettingsPage : Page
         return CardFrame(T.SettingsSmoothScrolling, T.SettingsSmoothScrollingDetail, toggle);
     }
 
-    /// <summary>Hide chat in watch parties: the app's own setting, kept on this device.</summary>
-    static SettingsCard HideChatCard()
+    /// <summary>
+    /// Hide chat in watch parties: the app's own setting, kept on this device. A party's "Show
+    /// chat" turns it off too, so the switch reads it again whenever the pane is shown.
+    /// </summary>
+    SettingsCard HideChatCard()
     {
         var toggle = new ToggleSwitch { IsOn = ChatSetting.Hidden, OnContent = "", OffContent = "", MinWidth = 0 };
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.SettingsHideChat);
-        toggle.Toggled += (_, _) => ChatSetting.Set(toggle.IsOn);
+        toggle.Toggled += (_, _) =>
+        {
+            if (!quiet)
+                ChatSetting.Set(toggle.IsOn);
+        };
+        refresh.Add(() =>
+        {
+            if (toggle.IsOn != ChatSetting.Hidden)
+                toggle.IsOn = ChatSetting.Hidden;
+        });
         return CardFrame(T.SettingsHideChat, T.SettingsHideChatLine, toggle);
     }
 
@@ -875,12 +894,21 @@ public sealed partial class SettingsPage : Page
         return card;
     }
 
-    /// <summary>What closing the window does while episodes download: ask, keep going, or stop.</summary>
+    /// <summary>
+    /// What closing the window does while episodes download: ask, keep going, or stop. The close
+    /// dialog's "Don't ask again" sets it too, so the box reads it again whenever the pane is shown.
+    /// </summary>
     SettingsCard WhenClosingCard()
     {
         var choices = new[] { (CloseChoice.Ask, T.DownloadsBackgroundAsk), (CloseChoice.KeepGoing, T.DownloadsBackgroundKeep), (CloseChoice.Stop, T.DownloadsBackgroundStop) };
         var box = new ComboBox { MinWidth = 200, ItemsSource = choices.Select(c => c.Item2).ToList() };
-        box.SelectedIndex = Array.FindIndex(choices, c => c.Item1 == ctx.Window.WhenClosing);
+        int Kept() => Array.FindIndex(choices, c => c.Item1 == ctx.Window.WhenClosing);
+        box.SelectedIndex = Kept();
+        refresh.Add(() =>
+        {
+            if (box.SelectedIndex != Kept())
+                box.SelectedIndex = Kept();
+        });
         Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(box, T.DownloadsBackgroundTitle);
         box.SelectionChanged += (_, _) =>
         {
@@ -1051,8 +1079,9 @@ public sealed partial class SettingsPage : Page
             guardClock.Start();
         }
 
-        // Whether a cast plays torrents, which this PC then serves to the TV.
-        if (ctx.Known.Setting(K.TorrentsWhileCasting) is { } casting)
+        // Whether a cast plays torrents, which this PC then serves to the TV: only while torrents
+        // are on, as the engine's row says and the Mac and Linux show it.
+        if (SettingsCatalog.IsOn(row) && ctx.Known.Setting(K.TorrentsWhileCasting) is { } casting)
             Cards.Children.Add(Card(casting));
     }
 

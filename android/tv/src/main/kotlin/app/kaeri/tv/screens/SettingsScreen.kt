@@ -212,12 +212,36 @@ fun SettingsScreen(nav: TvNavigator, memory: FocusMemory, start: SettingsSection
     EnterFocus(memory)
 }
 
-/** General: how titles are named, which is about every screen rather than playback. */
+/**
+ * General: how titles are named, which is about every screen rather than playback, and the game
+ * controller, as the desktop's Controller group has it.
+ */
 private fun LazyListScope.general(store: AppStore, view: SettingsView?, memory: FocusMemory, first: Modifier) {
     item(key = "titles", contentType = "setting") { TitleLanguageRow(store, view, memory, first) }
     item(key = "language", contentType = "setting") { AppLanguageRow(memory) }
     item(key = "hidden", contentType = "setting") { HiddenTitlesRow(store, memory) }
+    item(key = "controller/heading", contentType = "heading") { GroupLabel(stringResource(R.string.settings_group_controller)) }
+    ControllerRows.forEach { (key, labelRes) ->
+        item(key = key.name, contentType = "setting") {
+            val row = store.settings.row(key, view)
+            // Swapping A and B means nothing while the controller is switched off.
+            val usable = key == SettingKey.CONTROLLER_INPUT || store.settings.isOn(SettingKey.CONTROLLER_INPUT, view)
+            TvListRow(
+                stringResource(labelRes),
+                onClick = { store.setSwitch(key, !store.settings.isOn(key, view)) },
+                switch = store.settings.isOn(key, view),
+                enabled = usable && SettingsCatalog.editable(row),
+                modifier = Modifier.remembered(memory, "row/${key.name}"),
+            )
+        }
+    }
 }
+
+/** The Controller group's switches, in order. */
+val ControllerRows: List<Pair<SettingKey, Int>> = listOf(
+    SettingKey.CONTROLLER_INPUT to R.string.settings_label_controller_input,
+    SettingKey.SWAP_FACE_BUTTONS to R.string.settings_label_swap_face_buttons,
+)
 
 /** Hidden titles: the ones marked Not interested, in a sheet where choosing one restores it. */
 @Composable

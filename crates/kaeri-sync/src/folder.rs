@@ -70,6 +70,29 @@ pub trait FolderTarget: Send + Sync + 'static {
 
     async fn remove(&self, path: &str) -> Result<(), FolderError>;
 
+    /// Remove `dir` and everything under it. Removing what is already gone is done, so a removal
+    /// that stopped part way finishes when called again. The default walks [`Self::list`] and
+    /// [`Self::remove`], which every target has; a target that removes a directory in one call
+    /// overrides it. The root (`""`) is never removed this way.
+    async fn remove_dir(&self, dir: &str) -> Result<(), FolderError> {
+        check_dir(dir)?;
+        let mut dirs = vec![dir.to_owned()];
+        while let Some(dir) = dirs.pop() {
+            for entry in self.list(&dir).await? {
+                let path = format!("{dir}/{}", entry.name);
+                if entry.is_dir {
+                    dirs.push(path);
+                    continue;
+                }
+                match self.remove(&path).await {
+                    Ok(()) | Err(FolderError::NotFound(_)) => {}
+                    Err(e) => return Err(e),
+                }
+            }
+        }
+        Ok(())
+    }
+
     /// A name for the status line: "Synced 4 min ago · dav.example".
     fn describe(&self) -> String;
 }
@@ -81,6 +104,12 @@ pub fn check_path(path: &str) -> Result<(), FolderError> {
         || path.split('/').any(|part| part == ".." || part == "." || part.is_empty())
             && !path.is_empty();
     if bad { Err(FolderError::BadPath(path.to_owned())) } else { Ok(()) }
+}
+
+/// Refuse what [`check_path`] refuses, and the root: a directory to remove names one.
+pub fn check_dir(dir: &str) -> Result<(), FolderError> {
+    check_path(dir)?;
+    if dir.is_empty() { Err(FolderError::BadPath("the root".into())) } else { Ok(()) }
 }
 
 /// A folder kept in memory: for tests, and for two simulated devices to share. Clones share it.
@@ -301,6 +330,16 @@ impl FolderTarget for DirTarget {
         .await
     }
 
+    async fn remove_dir(&self, dir: &str) -> Result<(), FolderError> {
+        check_dir(dir)?;
+        let path = self.resolve(dir)?;
+        blocking(move || match std::fs::remove_dir_all(path) {
+            Err(e) if e.kind() != std::io::ErrorKind::NotFound => Err(e.into()),
+            _ => Ok(()),
+        })
+        .await
+    }
+
     fn describe(&self) -> String {
         self.root
             .file_name()
@@ -339,6 +378,19 @@ pub(crate) mod contract {
         t.remove("a/three.seg").await.unwrap();
         t.remove("a/three.seg").await.unwrap();
         assert!(matches!(t.read("../x").await, Err(FolderError::BadPath(_))));
+
+        // A directory goes with everything under it, and removing it again is done.
+        t.write_new("d/x/one.seg", b"1").await.unwrap();
+        t.write_new("d/two.seg", b"2").await.unwrap();
+        t.write_new("e.seg", b"3").await.unwrap();
+        t.remove_dir("d").await.unwrap();
+        t.remove_dir("d").await.unwrap();
+        assert!(t.list("d").await.unwrap().is_empty());
+        assert!(matches!(t.read("d/two.seg").await, Err(FolderError::NotFound(_))));
+        assert!(matches!(t.read("d/x/one.seg").await, Err(FolderError::NotFound(_))));
+        assert!(!t.list("").await.unwrap().iter().any(|e| e.name == "d"));
+        assert_eq!(t.read("e.seg").await.unwrap(), b"3");
+        assert!(matches!(t.remove_dir("").await, Err(FolderError::BadPath(_))));
     }
 }
 

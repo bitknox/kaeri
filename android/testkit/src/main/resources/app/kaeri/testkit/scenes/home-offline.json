@@ -11,7 +11,7 @@
       "value": "adaptive",
       "change": {
        "@type": "Steps",
-       "back": false,
+       "back": true,
        "forward": true
       }
      },
@@ -84,6 +84,15 @@
        "@type": "Steps",
        "back": true,
        "forward": false
+      }
+     },
+     {
+      "key": "PRELOAD_METERED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
       }
      },
      {
@@ -489,6 +498,15 @@
       }
      },
      {
+      "key": "PICTURE_IN_PICTURE_ON_LEAVE",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "DOWNLOAD_QUALITY",
       "value": "standard",
       "change": {
@@ -674,6 +692,31 @@
        "@type": "Steps",
        "back": false,
        "forward": true
+      }
+     },
+     {
+      "key": "OPDS_FEED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
+      "key": "OPDS_PASSWORD",
+      "value": "not set",
+      "change": {
+       "@type": "Typed",
+       "text": ""
+      }
+     },
+     {
+      "key": "OPDS_PORT",
+      "value": "automatic",
+      "change": {
+       "@type": "Typed",
+       "text": ""
       }
      },
      {
@@ -940,7 +983,8 @@
     "groupFolder": null,
     "recoveryKey": false,
     "recoveryKeyMade": null,
-    "bookServersToAdd": []
+    "bookServersToAdd": [],
+    "restoreDevices": "0"
    }
   },
   {
@@ -1320,49 +1364,6 @@
    "content": {
     "@type": "Entries",
     "v1": []
-   }
-  },
-  {
-   "@type": "MetaStatus",
-   "v1": [
-    {
-     "source": "anilist",
-     "state": "unreachable",
-     "healthy": false,
-     "active": false,
-     "detail": "network: error sending request for url (http://anilist.example/graphql)",
-     "retryAt": null
-    },
-    {
-     "source": "tenrai",
-     "state": "serving",
-     "healthy": true,
-     "active": true,
-     "detail": null,
-     "retryAt": null
-    },
-    {
-     "source": "cache",
-     "state": "ready",
-     "healthy": true,
-     "active": false,
-     "detail": "0 titles",
-     "retryAt": null
-    }
-   ]
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "INFO",
-    "text": "AniList isn't answering. Showing data from another service for now.",
-    "hint": null,
-    "msg": {
-     "@type": "Store",
-     "v1": {
-      "@type": "NoticeAnilistUnreachable"
-     }
-    }
    }
   },
   {

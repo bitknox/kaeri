@@ -94,7 +94,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
         // Only an app in the Dock goes full screen, so `--full-screen` runs as one.
         // KAERI_SHOT_ACTIVE=1 runs a snapshot as the app in front, for the window as it looks key.
         let active = ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1"
-        let regular = options.snapshot == nil || options.fullScreenCycles > 0 || active
+        // The toolbar sweep stays out of the Dock and out of the way too.
+        let regular = (options.snapshot == nil && options.toolbarSweep == nil) || options.fullScreenCycles > 0 || active
         NSApp.setActivationPolicy(regular ? .regular : .accessory)
         // Shots: KAERI_APPEARANCE=light|dark overrides the system appearance for this process only.
         switch ProcessInfo.processInfo.environment["KAERI_APPEARANCE"] {
@@ -198,6 +199,12 @@ final class Delegate: NSObject, NSApplicationDelegate {
         // A missing episode: Check again pressed, and its answer in.
         if !(await store.stageCheckAgain()) { print("KaeriDev: Check again did not come back") }
         print(settled ? "KAERI_READY" : "KaeriDev: did not settle; going on")
+        if let step = options.toolbarSweep, let window = Snapshot.window {
+            _ = await ToolbarSweep.run(window: window, store: store, navigator: navigator, step: step)
+            print("KAERI_SWEEP_PASSED")
+            NSApp.terminate(nil)
+            return
+        }
         if let shot = options.playerShot {
             let there: Bool
             if !options.frames.isEmpty, MotionDemo.from() == nil, let url = options.snapshot, let window = Snapshot.window {
@@ -241,6 +248,9 @@ final class Delegate: NSObject, NSApplicationDelegate {
             if options.reduceMotion { navigator.motionReduced = true }
             await motion.prelude(navigator: navigator, store: store)
             await frames(of: motion, in: window, to: url)
+        } else if SyncScene.named() != nil, !options.frames.isEmpty, let window = Snapshot.window {
+            // A sync scene that moves on by itself once it is up (startover-failed-cancel).
+            await frames(of: nil, in: window, to: url)
         } else if options.artTrouble != nil || ReaderModel.demoAsked, !options.frames.isEmpty, let window = Snapshot.window {
             // The window left alone while the troubled art comes in, or the reader's demo plays.
             await frames(of: nil, in: window, to: url)

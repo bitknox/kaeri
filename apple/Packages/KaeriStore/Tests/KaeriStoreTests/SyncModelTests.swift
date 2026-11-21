@@ -24,6 +24,148 @@ struct SyncModelTests {
         #expect(sync.sheet == .restore(.googleDrive))
     }
 
+    /// The restore screen, as a folder that holds another group opens it.
+    private static func restoring(_ clock: SteppedClock, sent: @escaping (Command) -> Void = { _ in }) -> SyncModel {
+        let sync = Self.stepped(clock)
+        sync.send = sent
+        sync.addCloudFolder()
+        sync.choose(.googleDrive, deviceName: "Kim’s Mac")
+        sync.apply(.syncProblem(.groupExists))
+        return sync
+    }
+
+    @Test func startingOverKeepsTheRestoreContentItsFirst600MsThenShowsEachStepAndTheKey() {
+        let clock = SteppedClock()
+        var sent: [Command] = []
+        let sync = Self.restoring(clock) { sent.append($0) }
+        #expect(sync.sheet == .restore(.googleDrive) && sync.cloudStep == nil)
+        sync.confirmingStartOver = true
+        sent = []
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        #expect(!sync.confirmingStartOver)
+        #expect(sent == [.syncGroup(.clearFolderAndStart(deviceName: "Kim’s Mac", folder: SyncFolderSpec(kind: .googleDrive)))])
+        #expect(sync.cloudStep == nil && sync.cloudCancelDimmed && sync.holdsSheet,
+                "the restore content stays, with Cancel dimmed and the sheet held")
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 599)
+        #expect(sync.cloudStep == nil, "work shows only past 600 ms from the tap")
+        Self.advance(sync, clock, 1)
+        #expect(sync.cloudStep == .clearing(.googleDrive))
+        sync.apply(.syncSignIn(service: .googleDrive, step: .finishing))
+        Self.advance(sync, clock, 600)
+        #expect(sync.cloudStep == .settingUp(.googleDrive))
+        sent = []
+        sync.cancelCloudStep()
+        #expect(sent.isEmpty && sync.sheet == .restore(.googleDrive), "Cancel can't stop it half way")
+        sync.apply(.syncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA"))
+        sync.apply(.syncStatus(SyncStatus(enabled: true, syncing: false)))
+        sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        Self.advance(sync, clock, 400)
+        #expect(sync.cloudStep == .key && sync.sheet == .restore(.googleDrive), "the same sheet becomes the key")
+        #expect(sync.startedOver == .googleDrive, "the key step says sync started over")
+        sync.keySaved()
+        #expect(sync.sheet == nil && sync.cloudStep == nil && sync.startedOver == nil)
+    }
+
+    @Test func aQuickStartOverGoesFromTheRestoreContentStraightToTheKey() {
+        let clock = SteppedClock()
+        let sync = Self.restoring(clock)
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        sync.apply(.syncSignIn(service: .googleDrive, step: .finishing))
+        sync.apply(.syncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA"))
+        sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        #expect(sync.cloudStep == .key)
+    }
+
+    @Test func thePickerGoingAfterAStartOverBeganLeavesItsSteps() {
+        let clock = SteppedClock()
+        let sync = Self.restoring(clock)
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.pickerClosed()
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 600)
+        #expect(sync.cloudStep == .clearing(.googleDrive))
+    }
+
+    @Test func theSignInThatFoundTheOtherGroupEndingLateLeavesAStartOverOnTheRestoreScreen() {
+        let clock = SteppedClock()
+        let sync = Self.restoring(clock)
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 600)
+        #expect(sync.sheet == .restore(.googleDrive) && sync.cloudStep == .clearing(.googleDrive))
+    }
+
+    @Test func aStartOverThatStopsSaysWhyAndTryAgainSendsItAgain() {
+        let clock = SteppedClock()
+        var sent: [Command] = []
+        let sync = Self.restoring(clock) { sent.append($0) }
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 600)
+        sync.apply(.syncProblem(.clearRefused))
+        sync.apply(.syncStatus(SyncStatus(enabled: false, syncing: false)))
+        sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        Self.advance(sync, clock, 400)
+        #expect(sync.cloudStep == .startOverFailed(.googleDrive, .clearRefused))
+        #expect(sync.sheet == .restore(.googleDrive) && !sync.holdsSheet)
+        sent = []
+        sync.tryAgain(deviceName: "Kim’s Mac")
+        #expect(sent == [.syncGroup(.clearFolderAndStart(deviceName: "Kim’s Mac", folder: SyncFolderSpec(kind: .googleDrive)))])
+        #expect(sync.cloudCancelDimmed)
+        sync.apply(.syncProblem(.unreachable))
+        Self.advance(sync, clock, 600)
+        #expect(sync.cloudStep == .startOverFailed(.googleDrive, .unreachable))
+    }
+
+    @Test func cancelOnAStartOverThatStoppedGoesBackToTheKeyFieldAndSendsNothing() {
+        let clock = SteppedClock()
+        var sent: [Command] = []
+        let sync = Self.restoring(clock) { sent.append($0) }
+        sync.restoreKey = "K7QM 4XR9"
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        sync.apply(.syncSignIn(service: .googleDrive, step: .clearing))
+        Self.advance(sync, clock, 600)
+        sync.apply(.syncProblem(.unreachable))
+        Self.advance(sync, clock, 400)
+        #expect(sync.cloudStep == .startOverFailed(.googleDrive, .unreachable))
+        sent = []
+        sync.cancelCloudStep()
+        #expect(sent.isEmpty, "the engine changed nothing, so there is nothing to undo")
+        #expect(sync.sheet == .restore(.googleDrive) && sync.cloudStep == nil,
+                "the restore screen shows its field again, with Start over")
+        #expect(sync.problem == nil && sync.startedOver == nil && !sync.cloudCancelDimmed && !sync.holdsSheet)
+        #expect(sync.restoreKey == "K7QM 4XR9", "what was typed stays")
+        sync.startOver(.googleDrive, deviceName: "Kim’s Mac")
+        #expect(sent == [.syncGroup(.clearFolderAndStart(deviceName: "Kim’s Mac", folder: SyncFolderSpec(kind: .googleDrive)))],
+                "Start over works again from the field")
+    }
+
+    @Test func enterNewKeyOpensTheRestoreScreenAndAJoinThatWorksClosesIt() {
+        let sync = SyncModel()
+        var sent: [Command] = []
+        sync.send = { sent.append($0) }
+        sync.apply(.syncProblem(.groupReplaced))
+        sync.enterNewKey(.googleDrive)
+        #expect(sync.sheet == .restore(.googleDrive) && sync.restoreKey.isEmpty)
+        sync.join(.googleDrive, key: "K7QM4XR9TB2HWN6CP3ZD8FLA", deviceName: "Kim’s Mac")
+        #expect(sent.last == .joinSync(deviceName: "Kim’s Mac", folder: SyncFolderSpec(kind: .googleDrive), recoveryKey: "K7QM4XR9TB2HWN6CP3ZD8FLA"))
+        sync.apply(.syncStatus(SyncStatus(enabled: true, syncing: false)))
+        sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        #expect(sync.sheet == nil)
+    }
+
+    @Test func aWrongKeyKeepsTheRestoreScreen() {
+        let sync = SyncModel()
+        sync.enterNewKey(.googleDrive)
+        sync.join(.googleDrive, key: "K7QM4XR9TB2HWN6CP3ZD8FLA", deviceName: "Kim’s Mac")
+        sync.apply(.syncProblem(.wrongRecoveryKey))
+        sync.apply(.syncSignIn(service: .googleDrive, step: nil))
+        #expect(sync.sheet == .restore(.googleDrive) && sync.problem == .wrongRecoveryKey)
+    }
+
     private static let page = SyncSignInStep.sheet(url: "https://accounts.example/auth", callbackScheme: "example.apps.123")
 
     /// A sync model whose cloud steps wait on `clock`, so a slow or busy machine changes nothing

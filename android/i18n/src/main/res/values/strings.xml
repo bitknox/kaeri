@@ -1904,17 +1904,6 @@
     <string name="channel_downloads_finished_name">Downloads finished</string>
     <!-- What the downloads finished channel is for, shown in the system's settings. -->
     <string name="channel_downloads_finished_description">When the chapters you asked to download are all done.</string>
-    <!-- Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". -->
-    <string name="notif_chapter_new">%1$s is new.</string>
-    <!-- Notification, new chapters: the line under the series' title when one series has several. -->
-    <plurals name="notif_chapters_new">
-        <item quantity="one">One new chapter</item>
-        <item quantity="other">%1$,d new chapters</item>
-    </plurals>
-    <!-- Notification, new chapter: what the lock screen shows when previews are hidden. -->
-    <string name="notif_chapter_hidden">New chapter</string>
-    <!-- Notification, new chapter: the action that opens the reader on the chapter. -->
-    <string name="notif_chapter_read">Read</string>
     <!-- The download notification while only chapters download. -->
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Downloading one chapter</item>
@@ -6501,6 +6490,17 @@
     </plurals>
     <!-- Name for an e-reader that did not give one. -->
     <string name="opds_reader_unnamed">E-reader at %1$s</string>
+    <!-- Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". -->
+    <string name="notif_chapter_new">%1$s is new.</string>
+    <!-- Notification, new chapters: the line under the series' title when one series has several. -->
+    <plurals name="notif_chapters_new">
+        <item quantity="one">One new chapter</item>
+        <item quantity="other">%1$,d new chapters</item>
+    </plurals>
+    <!-- Notification, new chapter: what the lock screen shows when previews are hidden. -->
+    <string name="notif_chapter_hidden">New chapter</string>
+    <!-- Notification, new chapter: the action that opens the reader on the chapter. -->
+    <string name="notif_chapter_read">Read</string>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->
@@ -7419,6 +7419,12 @@
     <string name="settings_anilist_following">Show people you follow</string>
     <!-- Note under that switch. -->
     <string name="settings_anilist_following_footer">Shows where people you follow on AniList are in a show, on its page and its episodes. Who can see your own list is set on AniList.</string>
+    <!-- Settings row: whether a connected game controller drives the app. -->
+    <string name="settings_label_controller_input">Use a controller</string>
+    <!-- Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are. -->
+    <string name="settings_label_swap_face_buttons">Swap A and B</string>
+    <!-- Heading of the Settings group for game controllers. -->
+    <string name="settings_group_controller">Controller</string>
     <!-- Label of the address field in the Add a server sheet. -->
     <string name="book_server_address">Address</string>
     <!-- Note under the empty address field. -->
@@ -8239,7 +8245,7 @@
     <!-- Windows and Linux dialog title while the browser is open for a cloud sign-in. -->
     <string name="cloud_browser_title">Sign in to %1$s in your browser</string>
     <!-- Windows and Linux dialog line under Connecting or Setting up the folder: the dialog's Close button leaves the work running. -->
-    <string name="cloud_close_carries_on">You can close this. Kaeri carries on, and opens the next step by itself when it\'s ready.</string>
+    <string name="cloud_close_carries_on">You can close this. Kaeri carries on, and opens the next step by itself when it’s ready.</string>
     <!-- Word for this device in sentences such as “Turn off sync on this computer”. -->
     <string name="device_kind_computer">computer</string>
     <!-- Button on the Devices page that opens the box for a code another device shows. -->
@@ -8403,7 +8409,7 @@
     <!-- Error, with Open the page again. -->
     <string name="cloud_err_timeout">The sign-in page closed before access was allowed.</string>
     <!-- Error. -->
-    <string name="cloud_err_other_group">This folder belongs to another set of devices. Enter its recovery key to join them, or choose another folder.</string>
+    <string name="cloud_err_other_group">This folder belongs to another set of devices. Enter its recovery key to join them, choose another folder, or start over without the key.</string>
     <!-- Status error, with Sign in again. -->
     <string name="cloud_err_signed_out">%1$s signed Kaeri out. Your changes wait on this %2$s until you sign in again.</string>
     <!-- Status error. -->
@@ -8412,6 +8418,8 @@
     <string name="cloud_err_folder_gone">Kaeri can’t open the folder any more. Choose it again.</string>
     <!-- Status error title. -->
     <string name="cloud_err_title">Couldn’t sync with %1$s</string>
+    <!-- Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds. -->
+    <string name="cloud_err_started_over">Sync was started over in %1$s on another device. Enter the new recovery key to join again.</string>
     <!-- Picker row line. -->
     <string name="cloud_dropbox_line">Kaeri’s own folder in your Dropbox, Apps/Kaeri</string>
     <!-- Picker row line. -->
@@ -8444,6 +8452,8 @@
     <string name="tv_cloud_revoked_line">%1$s signed Kaeri out. Select to sign in again.</string>
     <!-- TV cloud row. -->
     <string name="tv_cloud_signed_out_line">Signed out. Select to sign in.</string>
+    <!-- TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page. -->
+    <string name="tv_cloud_started_over_line">Sync was started over on another device. Select to pair this TV again.</string>
     <!-- TV ConfirmDialog. -->
     <string name="tv_cloud_sign_out_title">Sign out of %1$s?</string>
     <!-- TV ConfirmDialog, with Cancel focused and Sign out. -->
@@ -8487,6 +8497,28 @@
     <string name="rkey_wrong">That key doesn’t open this folder. Check each group of four and try again.</string>
     <!-- Button. -->
     <string name="rkey_restore">Restore</string>
+    <!-- Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it. -->
+    <string name="rkey_start_over">Start over without the key</string>
+    <!-- Confirmation title. -->
+    <string name="rkey_start_over_title">Start over without the key?</string>
+    <!-- Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer. -->
+    <string name="rkey_start_over_line">Kaeri deletes the synced history in %1$s and sets up sync again with a new recovery key. Everything on this %2$s stays here. Other devices keep what they have, but stop syncing until they join with the new key.</string>
+    <!-- Destructive button in the confirmation. -->
+    <string name="rkey_start_over_action">Delete and start over</string>
+    <!-- Working title while the folder is cleared. cloud-setting-up follows. -->
+    <string name="rkey_clearing">Deleting the old history</string>
+    <!-- Status line beside the progress indicator while the folder is cleared. -->
+    <string name="rkey_clearing_line">Removing the old sealed copy from %1$s. The new key comes next.</string>
+    <!-- Error title when starting over failed. Offline uses cloud-err-offline as the line. -->
+    <string name="rkey_start_over_err_title">Couldn’t start over</string>
+    <!-- Error line when the service refused to delete the old sync data. -->
+    <string name="rkey_start_over_err_refused">%1$s didn’t delete the old history. Try again in a moment.</string>
+    <!-- Second line under either start over error. -->
+    <string name="rkey_start_over_err_kept">Everything on this %1$s is as it was.</string>
+    <!-- First line of the recovery key step after starting over, before rkey-line. -->
+    <string name="rkey_started_over">Sync started over in %1$s. Your other devices need this key to join again.</string>
+    <!-- Button on the cloud row of a device whose group was started over; opens the restore screen. -->
+    <string name="rkey_enter_new">Enter new key</string>
     <!-- Add a device. -->
     <string name="pair_enter_line">On the other device, open Kaeri and choose Set up from another device, or Settings, Devices, Show a code. Then enter the code here.</string>
     <!-- Button, phones. -->

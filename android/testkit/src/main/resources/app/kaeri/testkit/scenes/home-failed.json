@@ -11,7 +11,7 @@
       "value": "adaptive",
       "change": {
        "@type": "Steps",
-       "back": false,
+       "back": true,
        "forward": true
       }
      },
@@ -84,6 +84,15 @@
        "@type": "Steps",
        "back": true,
        "forward": false
+      }
+     },
+     {
+      "key": "PRELOAD_METERED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
       }
      },
      {
@@ -489,6 +498,15 @@
       }
      },
      {
+      "key": "PICTURE_IN_PICTURE_ON_LEAVE",
+      "value": "on",
+      "change": {
+       "@type": "Steps",
+       "back": true,
+       "forward": false
+      }
+     },
+     {
       "key": "DOWNLOAD_QUALITY",
       "value": "standard",
       "change": {
@@ -674,6 +692,31 @@
        "@type": "Steps",
        "back": false,
        "forward": true
+      }
+     },
+     {
+      "key": "OPDS_FEED",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
+      "key": "OPDS_PASSWORD",
+      "value": "not set",
+      "change": {
+       "@type": "Typed",
+       "text": ""
+      }
+     },
+     {
+      "key": "OPDS_PORT",
+      "value": "automatic",
+      "change": {
+       "@type": "Typed",
+       "text": ""
       }
      },
      {
@@ -1948,231 +1991,162 @@
       "viewAll": {
        "@type": "CalendarView"
       }
+     }
+    ],
+    "pending": [
+     "SUGGESTIONS"
+    ],
+    "end": null,
+    "offline": false,
+    "offlineSince": null,
+    "failed": true,
+    "season": null
+   }
+  },
+  {
+   "@type": "Home",
+   "v1": {
+    "spotlight": {
+     "case": "CONTINUING",
+     "label": {
+      "@type": "HomeSpotlightContinuing"
      },
+     "entry": {
+      "id": "900001",
+      "title": "Stardust Wayfarer",
+      "secondary": "Hoshikuzu no Tabibito",
+      "format": "TV",
+      "episodes": "12",
+      "year": "2024",
+      "score": "82",
+      "studio": "Kujaku Animation Works",
+      "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+      "coverUrl": "https://img.example/cover/900001-xl.jpg",
+      "coverColor": "#e4a15d",
+      "bannerUrl": "https://img.example/banner/900001.jpg",
+      "seenStill": null,
+      "genres": [
+       "Adventure",
+       "Drama",
+       "Fantasy"
+      ],
+      "availableOn": [],
+      "availableAt": null,
+      "progress": {
+       "done": "6",
+       "next": "7"
+      },
+      "airingIn": null,
+      "airingEpisode": null,
+      "nextEpisode": null,
+      "nextAiringIn": null,
+      "lastAired": null,
+      "resume": {
+       "position": 606.0,
+       "fraction": 0.42083333333333334
+      },
+      "related": [],
+      "recommended": [],
+      "trailerUrl": null,
+      "listStatus": null,
+      "titleRomaji": "Hoshikuzu no Tabibito",
+      "titleEnglish": "Stardust Wayfarer",
+      "titleNative": "星屑の旅人",
+      "season": "SPRING",
+      "startDate": {
+       "year": "2024",
+       "month": "4",
+       "day": "6"
+      },
+      "endDate": {
+       "year": "2024",
+       "month": "6",
+       "day": "22"
+      },
+      "source": "MANGA",
+      "adult": false,
+      "isDemo": false,
+      "detail": null,
+      "status": "FINISHED",
+      "airing": {
+       "@type": "Finished",
+       "from": {
+        "year": "2024",
+        "month": "4",
+        "day": "6"
+       },
+       "to": {
+        "year": "2024",
+        "month": "6",
+        "day": "22"
+       }
+      },
+      "duration": "24",
+      "filmLength": null,
+      "country": null,
+      "madeOutsideJapan": false,
+      "synopsisSpans": [
+       {
+        "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+        "spoiler": false
+       }
+      ],
+      "delayedFrom": null,
+      "airingApproximate": false,
+      "airingTranslation": null,
+      "airingDubbed": false,
+      "watchedIn": "SUB",
+      "trailer": null,
+      "prequels": [],
+      "sequels": [
+       "900004"
+      ],
+      "dub": null,
+      "countLine": {
+       "long": "12 episodes",
+       "short": "12 ep",
+       "spoken": "12 episodes",
+       "dub": null
+      }
+     },
+     "episode": "7",
+     "action": "RESUME",
+     "reason": null,
+     "resume": {
+      "position": 606.0,
+      "fraction": 0.42083333333333334
+     },
+     "starts": null,
+     "playable": "UNKNOWN",
+     "line": {
+      "@type": "HomeTimeLeft",
+      "episode": "7",
+      "minutes": "14"
+     },
+     "because": null,
+     "lastDevice": null
+    },
+    "sections": [
      {
-      "kind": "UP_NEXT",
+      "kind": "CONTINUE",
       "title": {
-       "@type": "HomeUpNext"
+       "@type": "HomeContinue"
       },
       "items": [
        {
         "entry": {
-         "id": "950012",
-         "title": "The Ice Knight Season 2",
-         "secondary": "Koori no Kishi Season 2",
+         "id": "900001",
+         "title": "Stardust Wayfarer",
+         "secondary": "Hoshikuzu no Tabibito",
          "format": "TV",
          "episodes": "12",
-         "year": "2026",
+         "year": "2024",
          "score": "82",
-         "studio": null,
-         "synopsis": "The knight who guarded the frozen pass for a winter is sent south, where nobody has seen snow and nobody believes her.",
-         "coverUrl": "https://img.example/cover/950012-xl.jpg",
-         "coverColor": "#1f3048",
-         "bannerUrl": "https://img.example/banner/950012.jpg",
-         "seenStill": null,
-         "genres": [
-          "Action",
-          "Drama"
-         ],
-         "availableOn": [],
-         "availableAt": null,
-         "progress": null,
-         "airingIn": "212400",
-         "airingEpisode": null,
-         "nextEpisode": "5",
-         "nextAiringIn": "212400",
-         "lastAired": null,
-         "resume": null,
-         "related": [],
-         "recommended": [],
-         "trailerUrl": null,
-         "listStatus": null,
-         "titleRomaji": "Koori no Kishi Season 2",
-         "titleEnglish": "The Ice Knight Season 2",
-         "titleNative": null,
-         "season": "FALL",
-         "startDate": {
-          "year": "2026",
-          "month": "10",
-          "day": "9"
-         },
-         "endDate": null,
-         "source": "ORIGINAL",
-         "adult": false,
-         "isDemo": false,
-         "detail": null,
-         "status": "RELEASING",
-         "airing": {
-          "@type": "Airing",
-          "since": {
-           "year": "2026",
-           "month": "10",
-           "day": "9"
-          }
-         },
-         "duration": "24",
-         "filmLength": null,
-         "country": null,
-         "madeOutsideJapan": false,
-         "synopsisSpans": [
-          {
-           "text": "The knight who guarded the frozen pass for a winter is sent south, where nobody has seen snow and nobody believes her.",
-           "spoiler": false
-          }
-         ],
-         "delayedFrom": null,
-         "airingApproximate": false,
-         "airingTranslation": null,
-         "airingDubbed": false,
-         "watchedIn": null,
-         "trailer": null,
-         "prequels": [
-          {
-           "id": "950018",
-           "listStatus": "COMPLETED"
-          }
-         ],
-         "sequels": [],
-         "dub": null,
-         "countLine": {
-          "long": "4 of 12 out",
-          "short": "4 of 12",
-          "spoken": "4 of 12 episodes out",
-          "dub": null
-         }
-        },
-        "action": "PLAY",
-        "line": {
-         "@type": "HomeReasonNewSeason"
-        },
-        "episode": "1",
-        "resume": null,
-        "progress": null,
-        "new": false,
-        "airsAt": null,
-        "day": null,
-        "reason": "NEW_SEASON",
-        "starts": null,
-        "playable": "UNKNOWN",
-        "because": null,
-        "lastDevice": null
-       },
-       {
-        "entry": {
-         "id": "950013",
-         "title": "Thunder Diner Season 2",
-         "secondary": "Kaminari Shokudo Season 2",
-         "format": "TV",
-         "episodes": "12",
-         "year": "2026",
-         "score": "77",
-         "studio": null,
-         "synopsis": "The diner that only opens during storms gets a second branch, and a rival cook who can make it rain.",
-         "coverUrl": "https://img.example/cover/950013-xl.jpg",
-         "coverColor": "#3c2f57",
-         "bannerUrl": "https://img.example/banner/950013.jpg",
-         "seenStill": null,
-         "genres": [
-          "Comedy",
-          "Slice of Life"
-         ],
-         "availableOn": [],
-         "availableAt": null,
-         "progress": null,
-         "airingIn": "378000",
-         "airingEpisode": null,
-         "nextEpisode": "5",
-         "nextAiringIn": "378000",
-         "lastAired": null,
-         "resume": null,
-         "related": [],
-         "recommended": [],
-         "trailerUrl": null,
-         "listStatus": null,
-         "titleRomaji": "Kaminari Shokudo Season 2",
-         "titleEnglish": "Thunder Diner Season 2",
-         "titleNative": null,
-         "season": "FALL",
-         "startDate": {
-          "year": "2026",
-          "month": "10",
-          "day": "11"
-         },
-         "endDate": null,
-         "source": "ORIGINAL",
-         "adult": false,
-         "isDemo": false,
-         "detail": null,
-         "status": "RELEASING",
-         "airing": {
-          "@type": "Airing",
-          "since": {
-           "year": "2026",
-           "month": "10",
-           "day": "11"
-          }
-         },
-         "duration": "24",
-         "filmLength": null,
-         "country": null,
-         "madeOutsideJapan": false,
-         "synopsisSpans": [
-          {
-           "text": "The diner that only opens during storms gets a second branch, and a rival cook who can make it rain.",
-           "spoiler": false
-          }
-         ],
-         "delayedFrom": null,
-         "airingApproximate": false,
-         "airingTranslation": null,
-         "airingDubbed": false,
-         "watchedIn": null,
-         "trailer": null,
-         "prequels": [
-          {
-           "id": "950019",
-           "listStatus": "COMPLETED"
-          }
-         ],
-         "sequels": [],
-         "dub": null,
-         "countLine": {
-          "long": "4 of 12 out",
-          "short": "4 of 12",
-          "spoken": "4 of 12 episodes out",
-          "dub": null
-         }
-        },
-        "action": "PLAY",
-        "line": {
-         "@type": "HomeReasonNewSeason"
-        },
-        "episode": "1",
-        "resume": null,
-        "progress": null,
-        "new": false,
-        "airsAt": null,
-        "day": null,
-        "reason": "NEW_SEASON",
-        "starts": null,
-        "playable": "UNKNOWN",
-        "because": null,
-        "lastDevice": null
-       },
-       {
-        "entry": {
-         "id": "900004",
-         "title": "Stardust Wayfarer Season 2",
-         "secondary": "Hoshikuzu no Tabibito 2nd Season",
-         "format": "TV",
-         "episodes": "12",
-         "year": "2025",
-         "score": "84",
          "studio": "Kujaku Animation Works",
-         "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
-         "coverUrl": "https://img.example/cover/900004-xl.jpg",
-         "coverColor": "#d77f4a",
-         "bannerUrl": "https://img.example/banner/900004.jpg",
+         "synopsis": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
+         "coverUrl": "https://img.example/cover/900001-xl.jpg",
+         "coverColor": "#e4a15d",
+         "bannerUrl": "https://img.example/banner/900001.jpg",
          "seenStill": null,
          "genres": [
           "Adventure",
@@ -2181,30 +2155,36 @@
          ],
          "availableOn": [],
          "availableAt": null,
-         "progress": null,
+         "progress": {
+          "done": "6",
+          "next": "7"
+         },
          "airingIn": null,
          "airingEpisode": null,
          "nextEpisode": null,
          "nextAiringIn": null,
          "lastAired": null,
-         "resume": null,
+         "resume": {
+          "position": 606.0,
+          "fraction": 0.42083333333333334
+         },
          "related": [],
          "recommended": [],
          "trailerUrl": null,
          "listStatus": null,
-         "titleRomaji": "Hoshikuzu no Tabibito 2nd Season",
-         "titleEnglish": "Stardust Wayfarer Season 2",
-         "titleNative": "星屑の旅人 第2期",
-         "season": "WINTER",
+         "titleRomaji": "Hoshikuzu no Tabibito",
+         "titleEnglish": "Stardust Wayfarer",
+         "titleNative": "星屑の旅人",
+         "season": "SPRING",
          "startDate": {
-          "year": "2025",
-          "month": "1",
-          "day": "11"
+          "year": "2024",
+          "month": "4",
+          "day": "6"
          },
          "endDate": {
-          "year": "2025",
-          "month": "3",
-          "day": "29"
+          "year": "2024",
+          "month": "6",
+          "day": "22"
          },
          "source": "MANGA",
          "adult": false,
@@ -2214,14 +2194,14 @@
          "airing": {
           "@type": "Finished",
           "from": {
-           "year": "2025",
-           "month": "1",
-           "day": "11"
+           "year": "2024",
+           "month": "4",
+           "day": "6"
           },
           "to": {
-           "year": "2025",
-           "month": "3",
-           "day": "29"
+           "year": "2024",
+           "month": "6",
+           "day": "22"
           }
          },
          "duration": "24",
@@ -2230,7 +2210,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
+           "text": "A lamplighter with no memory of her home walks the old star roads, relighting the beacons that guide travellers between the towns.\n\nEach town she saves remembers a little of her, and she, a little less of herself.",
            "spoiler": false
           }
          ],
@@ -2238,15 +2218,12 @@
          "airingApproximate": false,
          "airingTranslation": null,
          "airingDubbed": false,
-         "watchedIn": null,
+         "watchedIn": "SUB",
          "trailer": null,
-         "prequels": [
-          {
-           "id": "900001",
-           "listStatus": "COMPLETED"
-          }
+         "prequels": [],
+         "sequels": [
+          "900004"
          ],
-         "sequels": [],
          "dub": null,
          "countLine": {
           "long": "12 episodes",
@@ -2255,17 +2232,22 @@
           "dub": null
          }
         },
-        "action": "PLAY",
+        "action": "RESUME",
         "line": {
-         "@type": "HomeReasonNewSeason"
+         "@type": "HomeTimeLeft",
+         "episode": "7",
+         "minutes": "14"
         },
-        "episode": "1",
-        "resume": null,
-        "progress": null,
+        "episode": "7",
+        "resume": {
+         "position": 606.0,
+         "fraction": 0.42083333333333334
+        },
+        "progress": 0.42083333333333334,
         "new": false,
         "airsAt": null,
         "day": null,
-        "reason": "NEW_SEASON",
+        "reason": null,
         "starts": null,
         "playable": "UNKNOWN",
         "because": null,
@@ -2273,44 +2255,576 @@
        },
        {
         "entry": {
-         "id": "950014",
-         "title": "The Cloud Whale",
-         "secondary": "Kumo Kujira",
-         "format": "TV",
-         "episodes": "12",
-         "year": "2026",
-         "score": "73",
-         "studio": null,
-         "synopsis": "A whale made of cloud drifts over the plains once a generation. A cartographer's son climbs aboard to map it.",
-         "coverUrl": "https://img.example/cover/950014-xl.jpg",
-         "coverColor": "#5f9db0",
-         "bannerUrl": "https://img.example/banner/950014.jpg",
+         "id": "900005",
+         "title": "The Steel Gardener",
+         "secondary": "Hagane no Niwashi",
+         "format": "ONA",
+         "episodes": "10",
+         "year": "2023",
+         "score": "71",
+         "studio": "Studio Mokusei",
+         "synopsis": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+         "coverUrl": "https://img.example/cover/900005-xl.jpg",
+         "coverColor": "#7ac47f",
+         "bannerUrl": null,
          "seenStill": null,
          "genres": [
-          "Adventure",
-          "Fantasy"
+          "Sci-Fi",
+          "Slice of Life"
          ],
          "availableOn": [],
          "availableAt": null,
-         "progress": null,
-         "airingIn": "556200",
+         "progress": {
+          "done": "1",
+          "next": "2"
+         },
+         "airingIn": null,
          "airingEpisode": null,
-         "nextEpisode": "4",
-         "nextAiringIn": "556200",
+         "nextEpisode": null,
+         "nextAiringIn": null,
+         "lastAired": null,
+         "resume": {
+          "position": 810.0,
+          "fraction": 0.75
+         },
+         "related": [],
+         "recommended": [],
+         "trailerUrl": null,
+         "listStatus": null,
+         "titleRomaji": "Hagane no Niwashi",
+         "titleEnglish": "The Steel Gardener",
+         "titleNative": "鋼の庭師",
+         "season": "SUMMER",
+         "startDate": {
+          "year": "2023",
+          "month": "7",
+          "day": "1"
+         },
+         "endDate": {
+          "year": "2023",
+          "month": "9",
+          "day": "2"
+         },
+         "source": "WEB_NOVEL",
+         "adult": false,
+         "isDemo": false,
+         "detail": null,
+         "status": "FINISHED",
+         "airing": {
+          "@type": "Finished",
+          "from": {
+           "year": "2023",
+           "month": "7",
+           "day": "1"
+          },
+          "to": {
+           "year": "2023",
+           "month": "9",
+           "day": "2"
+          }
+         },
+         "duration": "18",
+         "filmLength": null,
+         "country": null,
+         "madeOutsideJapan": false,
+         "synopsisSpans": [
+          {
+           "text": "A decommissioned construction robot tends a rooftop garden and, one season at a time, the neighbours who come to see it.",
+           "spoiler": false
+          }
+         ],
+         "delayedFrom": null,
+         "airingApproximate": false,
+         "airingTranslation": null,
+         "airingDubbed": false,
+         "watchedIn": "DUB",
+         "trailer": null,
+         "prequels": [],
+         "sequels": [],
+         "dub": null,
+         "countLine": {
+          "long": "10 episodes",
+          "short": "10 ep",
+          "spoken": "10 episodes",
+          "dub": null
+         }
+        },
+        "action": "RESUME",
+        "line": {
+         "@type": "HomeTimeLeft",
+         "episode": "2",
+         "minutes": "5"
+        },
+        "episode": "2",
+        "resume": {
+         "position": 810.0,
+         "fraction": 0.75
+        },
+        "progress": 0.75,
+        "new": false,
+        "airsAt": null,
+        "day": null,
+        "reason": null,
+        "starts": null,
+        "playable": "UNKNOWN",
+        "because": null,
+        "lastDevice": null
+       },
+       {
+        "entry": {
+         "id": "900002",
+         "title": "The Library Above the Clouds",
+         "secondary": "Kumo no Ue no Toshokan",
+         "format": "TV",
+         "episodes": "24",
+         "year": "2026",
+         "score": "77",
+         "studio": "Hanabishi Pictures",
+         "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "coverUrl": "https://img.example/cover/900002-xl.jpg",
+         "coverColor": "#5d9be4",
+         "bannerUrl": "https://img.example/banner/900002.jpg",
+         "seenStill": null,
+         "genres": [
+          "Fantasy",
+          "Mystery",
+          "Slice of Life"
+         ],
+         "availableOn": [],
+         "availableAt": null,
+         "progress": {
+          "done": "3",
+          "next": "4"
+         },
+         "airingIn": "184500",
+         "airingEpisode": null,
+         "nextEpisode": "6",
+         "nextAiringIn": "184500",
          "lastAired": null,
          "resume": null,
          "related": [],
          "recommended": [],
          "trailerUrl": null,
-         "listStatus": "PLANNING",
-         "titleRomaji": "Kumo Kujira",
-         "titleEnglish": "The Cloud Whale",
+         "listStatus": null,
+         "titleRomaji": "Kumo no Ue no Toshokan",
+         "titleEnglish": "The Library Above the Clouds",
+         "titleNative": "雲の上の図書館",
+         "season": "FALL",
+         "startDate": {
+          "year": "2026",
+          "month": "9",
+          "day": "11"
+         },
+         "endDate": null,
+         "source": "LIGHT_NOVEL",
+         "adult": false,
+         "isDemo": false,
+         "detail": null,
+         "status": "RELEASING",
+         "airing": {
+          "@type": "Airing",
+          "since": {
+           "year": "2026",
+           "month": "9",
+           "day": "11"
+          }
+         },
+         "duration": "23",
+         "filmLength": null,
+         "country": null,
+         "madeOutsideJapan": false,
+         "synopsisSpans": [
+          {
+           "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+           "spoiler": false
+          }
+         ],
+         "delayedFrom": null,
+         "airingApproximate": false,
+         "airingTranslation": null,
+         "airingDubbed": false,
+         "watchedIn": "SUB",
+         "trailer": null,
+         "prequels": [],
+         "sequels": [],
+         "dub": null,
+         "countLine": {
+          "long": "5 of 24 out",
+          "short": "5 of 24",
+          "spoken": "5 of 24 episodes out",
+          "dub": null
+         }
+        },
+        "action": "PLAY",
+        "line": {
+         "@type": "HomeEpisodeNext",
+         "episode": "4"
+        },
+        "episode": "4",
+        "resume": null,
+        "progress": null,
+        "new": false,
+        "airsAt": null,
+        "day": null,
+        "reason": null,
+        "starts": null,
+        "playable": "UNKNOWN",
+        "because": null,
+        "lastDevice": null
+       },
+       {
+        "entry": {
+         "id": "900006",
+         "title": "Summer Wind Relay",
+         "secondary": "Natsukaze Relay",
+         "format": "TV",
+         "episodes": "12",
+         "year": "2026",
+         "score": null,
+         "studio": null,
+         "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "coverUrl": "https://img.example/cover/900006-xl.jpg",
+         "coverColor": null,
+         "bannerUrl": null,
+         "seenStill": null,
+         "genres": [
+          "Comedy",
+          "Sports"
+         ],
+         "availableOn": [],
+         "availableAt": null,
+         "progress": {
+          "done": "7",
+          "next": "8"
+         },
+         "airingIn": "536400",
+         "airingEpisode": null,
+         "nextEpisode": "9",
+         "nextAiringIn": "536400",
+         "lastAired": null,
+         "resume": null,
+         "related": [],
+         "recommended": [],
+         "trailerUrl": null,
+         "listStatus": null,
+         "titleRomaji": "Natsukaze Relay",
+         "titleEnglish": "Summer Wind Relay",
+         "titleNative": "夏風リレー",
+         "season": "FALL",
+         "startDate": {
+          "year": "2026",
+          "month": "8",
+          "day": null
+         },
+         "endDate": null,
+         "source": null,
+         "adult": false,
+         "isDemo": false,
+         "detail": null,
+         "status": "RELEASING",
+         "airing": {
+          "@type": "Airing",
+          "since": {
+           "year": "2026",
+           "month": "8",
+           "day": null
+          }
+         },
+         "duration": "24",
+         "filmLength": null,
+         "country": null,
+         "madeOutsideJapan": false,
+         "synopsisSpans": [
+          {
+           "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+           "spoiler": false
+          }
+         ],
+         "delayedFrom": null,
+         "airingApproximate": false,
+         "airingTranslation": null,
+         "airingDubbed": false,
+         "watchedIn": "SUB",
+         "trailer": null,
+         "prequels": [],
+         "sequels": [],
+         "dub": null,
+         "countLine": {
+          "long": "8 of 12 out",
+          "short": "8 of 12",
+          "spoken": "8 of 12 episodes out",
+          "dub": null
+         }
+        },
+        "action": "PLAY",
+        "line": {
+         "@type": "HomeEpisodeOut",
+         "episode": "8"
+        },
+        "episode": "8",
+        "resume": null,
+        "progress": null,
+        "new": false,
+        "airsAt": null,
+        "day": null,
+        "reason": null,
+        "starts": null,
+        "playable": "UNKNOWN",
+        "because": null,
+        "lastDevice": null
+       }
+      ],
+      "total": "4",
+      "viewAll": {
+       "@type": "Watching"
+      }
+     },
+     {
+      "kind": "THIS_WEEK",
+      "title": {
+       "@type": "HomeThisWeek"
+      },
+      "items": [
+       {
+        "entry": {
+         "id": "950009",
+         "title": "Wind Town Diary",
+         "secondary": "Kaze Machi Nikki",
+         "format": "TV",
+         "episodes": "12",
+         "year": "2026",
+         "score": "81",
+         "studio": null,
+         "synopsis": "A town where the wind never stops keeps a shared diary nailed to the station wall. A new arrival starts writing back.",
+         "coverUrl": "https://img.example/cover/950009-xl.jpg",
+         "coverColor": "#9fb3c8",
+         "bannerUrl": "https://img.example/banner/950009.jpg",
+         "seenStill": null,
+         "genres": [
+          "Slice of Life",
+          "Comedy"
+         ],
+         "availableOn": [],
+         "availableAt": null,
+         "progress": {
+          "done": "7",
+          "next": "8"
+         },
+         "airingIn": "135000",
+         "airingEpisode": null,
+         "nextEpisode": "8",
+         "nextAiringIn": "135000",
+         "lastAired": null,
+         "resume": null,
+         "related": [],
+         "recommended": [],
+         "trailerUrl": null,
+         "listStatus": null,
+         "titleRomaji": "Kaze Machi Nikki",
+         "titleEnglish": "Wind Town Diary",
+         "titleNative": null,
+         "season": "FALL",
+         "startDate": {
+          "year": "2026",
+          "month": "9",
+          "day": "17"
+         },
+         "endDate": null,
+         "source": "ORIGINAL",
+         "adult": false,
+         "isDemo": false,
+         "detail": null,
+         "status": "RELEASING",
+         "airing": {
+          "@type": "Airing",
+          "since": {
+           "year": "2026",
+           "month": "9",
+           "day": "17"
+          }
+         },
+         "duration": "24",
+         "filmLength": null,
+         "country": null,
+         "madeOutsideJapan": false,
+         "synopsisSpans": [
+          {
+           "text": "A town where the wind never stops keeps a shared diary nailed to the station wall. A new arrival starts writing back.",
+           "spoiler": false
+          }
+         ],
+         "delayedFrom": null,
+         "airingApproximate": false,
+         "airingTranslation": null,
+         "airingDubbed": false,
+         "watchedIn": "SUB",
+         "trailer": null,
+         "prequels": [],
+         "sequels": [],
+         "dub": null,
+         "countLine": {
+          "long": "7 of 12 out",
+          "short": "7 of 12",
+          "spoken": "7 of 12 episodes out",
+          "dub": null
+         }
+        },
+        "action": "NOTHING",
+        "line": null,
+        "episode": "8",
+        "resume": null,
+        "progress": null,
+        "new": false,
+        "airsAt": "1793917800",
+        "day": "1",
+        "reason": null,
+        "starts": null,
+        "playable": "UNKNOWN",
+        "because": null,
+        "lastDevice": null
+       },
+       {
+        "entry": {
+         "id": "900002",
+         "title": "The Library Above the Clouds",
+         "secondary": "Kumo no Ue no Toshokan",
+         "format": "TV",
+         "episodes": "24",
+         "year": "2026",
+         "score": "77",
+         "studio": "Hanabishi Pictures",
+         "synopsis": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+         "coverUrl": "https://img.example/cover/900002-xl.jpg",
+         "coverColor": "#5d9be4",
+         "bannerUrl": "https://img.example/banner/900002.jpg",
+         "seenStill": null,
+         "genres": [
+          "Fantasy",
+          "Mystery",
+          "Slice of Life"
+         ],
+         "availableOn": [],
+         "availableAt": null,
+         "progress": {
+          "done": "3",
+          "next": "4"
+         },
+         "airingIn": "184500",
+         "airingEpisode": null,
+         "nextEpisode": "6",
+         "nextAiringIn": "184500",
+         "lastAired": null,
+         "resume": null,
+         "related": [],
+         "recommended": [],
+         "trailerUrl": null,
+         "listStatus": null,
+         "titleRomaji": "Kumo no Ue no Toshokan",
+         "titleEnglish": "The Library Above the Clouds",
+         "titleNative": "雲の上の図書館",
+         "season": "FALL",
+         "startDate": {
+          "year": "2026",
+          "month": "9",
+          "day": "11"
+         },
+         "endDate": null,
+         "source": "LIGHT_NOVEL",
+         "adult": false,
+         "isDemo": false,
+         "detail": null,
+         "status": "RELEASING",
+         "airing": {
+          "@type": "Airing",
+          "since": {
+           "year": "2026",
+           "month": "9",
+           "day": "11"
+          }
+         },
+         "duration": "23",
+         "filmLength": null,
+         "country": null,
+         "madeOutsideJapan": false,
+         "synopsisSpans": [
+          {
+           "text": "Above the cloud line floats a library that lends books to the weather. Its newest apprentice has a week to find a storm that was never returned.",
+           "spoiler": false
+          }
+         ],
+         "delayedFrom": null,
+         "airingApproximate": false,
+         "airingTranslation": null,
+         "airingDubbed": false,
+         "watchedIn": "SUB",
+         "trailer": null,
+         "prequels": [],
+         "sequels": [],
+         "dub": null,
+         "countLine": {
+          "long": "5 of 24 out",
+          "short": "5 of 24",
+          "spoken": "5 of 24 episodes out",
+          "dub": null
+         }
+        },
+        "action": "NOTHING",
+        "line": null,
+        "episode": "6",
+        "resume": null,
+        "progress": null,
+        "new": false,
+        "airsAt": "1793967300",
+        "day": "2",
+        "reason": null,
+        "starts": null,
+        "playable": "UNKNOWN",
+        "because": null,
+        "lastDevice": null
+       },
+       {
+        "entry": {
+         "id": "950010",
+         "title": "The Swallow Flying Club",
+         "secondary": "Tsubame Hiko Kurabu",
+         "format": "TV",
+         "episodes": "12",
+         "year": "2026",
+         "score": "77",
+         "studio": null,
+         "synopsis": "Three students rebuild a school glider club from one cracked wing and a handbook with half its pages missing.",
+         "coverUrl": "https://img.example/cover/950010-xl.jpg",
+         "coverColor": "#c98f8f",
+         "bannerUrl": "https://img.example/banner/950010.jpg",
+         "seenStill": null,
+         "genres": [
+          "Sports",
+          "Comedy"
+         ],
+         "availableOn": [],
+         "availableAt": null,
+         "progress": {
+          "done": "5",
+          "next": "6"
+         },
+         "airingIn": "223200",
+         "airingEpisode": null,
+         "nextEpisode": "6",
+         "nextAiringIn": "223200",
+         "lastAired": null,
+         "resume": null,
+         "related": [],
+         "recommended": [],
+         "trailerUrl": null,
+         "listStatus": null,
+         "titleRomaji": "Tsubame Hiko Kurabu",
+         "titleEnglish": "The Swallow Flying Club",
          "titleNative": null,
          "season": "FALL",
          "startDate": {
           "year": "2026",
           "month": "10",
-          "day": "20"
+          "day": "2"
          },
          "endDate": null,
          "source": "ORIGINAL",
@@ -2323,7 +2837,7 @@
           "since": {
            "year": "2026",
            "month": "10",
-           "day": "20"
+           "day": "2"
           }
          },
          "duration": "24",
@@ -2332,7 +2846,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "A whale made of cloud drifts over the plains once a generation. A cartographer's son climbs aboard to map it.",
+           "text": "Three students rebuild a school glider club from one cracked wing and a handbook with half its pages missing.",
            "spoiler": false
           }
          ],
@@ -2340,29 +2854,27 @@
          "airingApproximate": false,
          "airingTranslation": null,
          "airingDubbed": false,
-         "watchedIn": null,
+         "watchedIn": "SUB",
          "trailer": null,
          "prequels": [],
          "sequels": [],
          "dub": null,
          "countLine": {
-          "long": "3 of 12 out",
-          "short": "3 of 12",
-          "spoken": "3 of 12 episodes out",
+          "long": "5 of 12 out",
+          "short": "5 of 12",
+          "spoken": "5 of 12 episodes out",
           "dub": null
          }
         },
-        "action": "PLAY",
-        "line": {
-         "@type": "HomeReasonPlanning"
-        },
-        "episode": "1",
+        "action": "NOTHING",
+        "line": null,
+        "episode": "6",
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": null,
-        "day": null,
-        "reason": "PLANNING",
+        "airsAt": "1794006000",
+        "day": "2",
+        "reason": null,
         "starts": null,
         "playable": "UNKNOWN",
         "because": null,
@@ -2370,57 +2882,60 @@
        },
        {
         "entry": {
-         "id": "950015",
-         "title": "The Umbrella Office",
-         "secondary": "Amagasa Shokai",
+         "id": "950011",
+         "title": "The Galaxy Post Office",
+         "secondary": "Ginga Yubinkyoku",
          "format": "TV",
          "episodes": "12",
-         "year": "2027",
-         "score": null,
+         "year": "2026",
+         "score": "79",
          "studio": null,
-         "synopsis": "An office that returns lost umbrellas to their owners takes a case with no owner, no rain and forty umbrellas.",
-         "coverUrl": "https://img.example/cover/950015-xl.jpg",
-         "coverColor": "#c98f8f",
-         "bannerUrl": "https://img.example/banner/950015.jpg",
+         "synopsis": "A post office at the edge of a space station sorts letters to people who left on ships decades ago, and some of them write back.",
+         "coverUrl": "https://img.example/cover/950011-xl.jpg",
+         "coverColor": "#262c57",
+         "bannerUrl": "https://img.example/banner/950011.jpg",
          "seenStill": null,
          "genres": [
-          "Comedy",
-          "Mystery"
+          "Sci-Fi",
+          "Slice of Life"
          ],
          "availableOn": [],
          "availableAt": null,
-         "progress": null,
-         "airingIn": "5662800",
+         "progress": {
+          "done": "6",
+          "next": "7"
+         },
+         "airingIn": "460800",
          "airingEpisode": null,
-         "nextEpisode": "1",
-         "nextAiringIn": "5662800",
+         "nextEpisode": "7",
+         "nextAiringIn": "460800",
          "lastAired": null,
          "resume": null,
          "related": [],
          "recommended": [],
          "trailerUrl": null,
-         "listStatus": "PLANNING",
-         "titleRomaji": "Amagasa Shokai",
-         "titleEnglish": "The Umbrella Office",
+         "listStatus": null,
+         "titleRomaji": "Ginga Yubinkyoku",
+         "titleEnglish": "The Galaxy Post Office",
          "titleNative": null,
-         "season": "WINTER",
+         "season": "FALL",
          "startDate": {
-          "year": "2027",
-          "month": "1",
-          "day": "8"
+          "year": "2026",
+          "month": "9",
+          "day": "28"
          },
          "endDate": null,
          "source": "ORIGINAL",
          "adult": false,
          "isDemo": false,
          "detail": null,
-         "status": "NOT_YET_RELEASED",
+         "status": "RELEASING",
          "airing": {
-          "@type": "NotYetReleased",
-          "from": {
-           "year": "2027",
-           "month": "1",
-           "day": "8"
+          "@type": "Airing",
+          "since": {
+           "year": "2026",
+           "month": "9",
+           "day": "28"
           }
          },
          "duration": "24",
@@ -2429,7 +2944,7 @@
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "An office that returns lost umbrellas to their owners takes a case with no owner, no rain and forty umbrellas.",
+           "text": "A post office at the edge of a space station sorts letters to people who left on ships decades ago, and some of them write back.",
            "spoiler": false
           }
          ],
@@ -2437,106 +2952,97 @@
          "airingApproximate": false,
          "airingTranslation": null,
          "airingDubbed": false,
-         "watchedIn": null,
+         "watchedIn": "SUB",
          "trailer": null,
          "prequels": [],
          "sequels": [],
          "dub": null,
          "countLine": {
-          "long": "Starts 8 Jan",
-          "short": "Starts 8 Jan",
-          "spoken": "Starts 8 January",
+          "long": "6 of 12 out",
+          "short": "6 of 12",
+          "spoken": "6 of 12 episodes out",
           "dub": null
          }
         },
         "action": "NOTHING",
         "line": null,
-        "episode": null,
+        "episode": "7",
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": null,
-        "day": null,
-        "reason": "PLANNING",
-        "starts": {
-         "year": "2027",
-         "month": "1",
-         "day": "8"
-        },
+        "airsAt": "1794243600",
+        "day": "5",
+        "reason": null,
+        "starts": null,
         "playable": "UNKNOWN",
         "because": null,
         "lastDevice": null
        },
        {
         "entry": {
-         "id": "900003",
-         "title": "Moonlit Platform",
-         "secondary": "Tsukiakari no Teishajo",
-         "format": "MOVIE",
-         "episodes": "1",
-         "year": "2025",
-         "score": "85",
-         "studio": "Kujaku Animation Works",
-         "synopsis": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
-         "coverUrl": "https://img.example/cover/900003-xl.jpg",
-         "coverColor": "#f1d97a",
-         "bannerUrl": "https://img.example/banner/900003.jpg",
+         "id": "900006",
+         "title": "Summer Wind Relay",
+         "secondary": "Natsukaze Relay",
+         "format": "TV",
+         "episodes": "12",
+         "year": "2026",
+         "score": null,
+         "studio": null,
+         "synopsis": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
+         "coverUrl": "https://img.example/cover/900006-xl.jpg",
+         "coverColor": null,
+         "bannerUrl": null,
          "seenStill": null,
          "genres": [
-          "Drama",
-          "Romance"
+          "Comedy",
+          "Sports"
          ],
          "availableOn": [],
          "availableAt": null,
-         "progress": null,
-         "airingIn": null,
+         "progress": {
+          "done": "7",
+          "next": "8"
+         },
+         "airingIn": "536400",
          "airingEpisode": null,
-         "nextEpisode": null,
-         "nextAiringIn": null,
+         "nextEpisode": "9",
+         "nextAiringIn": "536400",
          "lastAired": null,
          "resume": null,
          "related": [],
          "recommended": [],
          "trailerUrl": null,
-         "listStatus": "PLANNING",
-         "titleRomaji": "Tsukiakari no Teishajo",
-         "titleEnglish": "Moonlit Platform",
-         "titleNative": "月明かりの停車場",
-         "season": "SUMMER",
+         "listStatus": null,
+         "titleRomaji": "Natsukaze Relay",
+         "titleEnglish": "Summer Wind Relay",
+         "titleNative": "夏風リレー",
+         "season": "FALL",
          "startDate": {
-          "year": "2025",
+          "year": "2026",
           "month": "8",
-          "day": "15"
+          "day": null
          },
-         "endDate": {
-          "year": "2025",
-          "month": "8",
-          "day": "15"
-         },
-         "source": "ORIGINAL",
+         "endDate": null,
+         "source": null,
          "adult": false,
          "isDemo": false,
          "detail": null,
-         "status": "FINISHED",
+         "status": "RELEASING",
          "airing": {
-          "@type": "Finished",
-          "from": {
-           "year": "2025",
+          "@type": "Airing",
+          "since": {
+           "year": "2026",
            "month": "8",
-           "day": "15"
-          },
-          "to": null
+           "day": null
+          }
          },
-         "duration": "108",
-         "filmLength": {
-          "hours": "1",
-          "minutes": "48"
-         },
+         "duration": "24",
+         "filmLength": null,
          "country": null,
          "madeOutsideJapan": false,
          "synopsisSpans": [
           {
-           "text": "On the last night a rural station is open, two strangers wait for a train that only runs under a full moon.",
+           "text": "A coastal high school's relay team has four runners, three shoes and one summer to qualify.\n\nNobody on the team has ever won anything, unless the school lost-and-found raffle counts. Captain Mio Haraki counts it twice a day.\n\nThe first practice is a disaster. The baton ends up in the harbour, the stopwatch in the vending machine, and the coach, who is also the music teacher, in a very long argument with a seagull about the rules of lane eight.\n\nOver the weeks that follow the four of them learn each other's strides, excuses and favourite convenience-store snacks. They also learn that the shoes fit best in turns, which makes the baton pass a small act of trust and an even smaller act of comedy.\n\nThen the regional heats are moved a week earlier, the harbour floods the track, and the team has to find out what they are good at before they find out what they are up against.\n\nWhatever happens at the finish line, the summer wind has already decided which of them it will carry home first.",
            "spoiler": false
           }
          ],
@@ -2544,37 +3050,37 @@
          "airingApproximate": false,
          "airingTranslation": null,
          "airingDubbed": false,
-         "watchedIn": null,
+         "watchedIn": "SUB",
          "trailer": null,
          "prequels": [],
          "sequels": [],
          "dub": null,
          "countLine": {
-          "long": "1 h 48 min",
-          "short": "1 h 48 min",
-          "spoken": "1 h 48 min",
+          "long": "8 of 12 out",
+          "short": "8 of 12",
+          "spoken": "8 of 12 episodes out",
           "dub": null
          }
         },
-        "action": "PLAY",
-        "line": {
-         "@type": "HomeReasonPlanning"
-        },
-        "episode": "1",
+        "action": "NOTHING",
+        "line": null,
+        "episode": "9",
         "resume": null,
         "progress": null,
         "new": false,
-        "airsAt": null,
-        "day": null,
-        "reason": "PLANNING",
+        "airsAt": "1794319200",
+        "day": "6",
+        "reason": null,
         "starts": null,
         "playable": "UNKNOWN",
         "because": null,
         "lastDevice": null
        }
       ],
-      "total": "6",
-      "viewAll": null
+      "total": "5",
+      "viewAll": {
+       "@type": "CalendarView"
+      }
      }
     ],
     "pending": [],
@@ -2583,49 +3089,6 @@
     "offlineSince": null,
     "failed": true,
     "season": null
-   }
-  },
-  {
-   "@type": "MetaStatus",
-   "v1": [
-    {
-     "source": "anilist",
-     "state": "backing off",
-     "healthy": false,
-     "active": false,
-     "detail": "anilist: the fake AniList answered 500",
-     "retryAt": "1793782830"
-    },
-    {
-     "source": "tenrai",
-     "state": "standby",
-     "healthy": true,
-     "active": false,
-     "detail": null,
-     "retryAt": null
-    },
-    {
-     "source": "cache",
-     "state": "serving",
-     "healthy": true,
-     "active": true,
-     "detail": "17 titles",
-     "retryAt": null
-    }
-   ]
-  },
-  {
-   "@type": "Toast",
-   "v1": {
-    "kind": "INFO",
-    "text": "No metadata service answered. Showing what was last cached.",
-    "hint": null,
-    "msg": {
-     "@type": "Store",
-     "v1": {
-      "@type": "NoticeMetadataCached"
-     }
-    }
    }
   },
   {
@@ -2674,7 +3137,8 @@
     "groupFolder": null,
     "recoveryKey": false,
     "recoveryKeyMade": null,
-    "bookServersToAdd": []
+    "bookServersToAdd": [],
+    "restoreDevices": "0"
    }
   },
   {
@@ -2700,26 +3164,26 @@
    "v1": [
     {
      "source": "anilist",
-     "state": "backing off",
+     "state": "unreachable",
      "healthy": false,
-     "active": false,
-     "detail": "anilist: the fake AniList answered 500",
-     "retryAt": "1793782830"
+     "active": true,
+     "detail": "anilist: HTTP 500: the fake AniList answered 500",
+     "retryAt": null
     },
     {
      "source": "tenrai",
-     "state": "standby",
-     "healthy": true,
+     "state": "failing",
+     "healthy": false,
      "active": false,
-     "detail": null,
+     "detail": "no mal id mapped for this title",
      "retryAt": null
     },
     {
      "source": "cache",
-     "state": "serving",
+     "state": "ready",
      "healthy": true,
-     "active": true,
-     "detail": "17 titles",
+     "active": false,
+     "detail": "14 titles",
      "retryAt": null
     }
    ]
@@ -2762,7 +3226,10 @@
      "showOthers": true
     },
     "region": "DK",
-    "available": [],
+    "available": [
+     "Hikari Library",
+     "Lantern Library"
+    ],
     "regions": [
      "AD",
      "AE",
@@ -3393,6 +3860,25 @@
    }
   },
   {
+   "@type": "LastAired",
+   "v1": [
+    {
+     "id": "900002",
+     "aired": {
+      "episode": "5",
+      "ago": "420300"
+     }
+    },
+    {
+     "id": "900006",
+     "aired": {
+      "episode": "8",
+      "ago": "68400"
+     }
+    }
+   ]
+  },
+  {
    "@type": "JobDone",
    "v1": "3"
   },
@@ -3423,11 +3909,11 @@
    "v1": [
     {
      "source": "anilist",
-     "state": "backing off",
+     "state": "unreachable",
      "healthy": false,
      "active": false,
-     "detail": "anilist: the fake AniList answered 500",
-     "retryAt": "1793782830"
+     "detail": "anilist: HTTP 500: the fake AniList answered 500",
+     "retryAt": null
     },
     {
      "source": "tenrai",
@@ -3442,7 +3928,7 @@
      "state": "ready",
      "healthy": true,
      "active": false,
-     "detail": "17 titles",
+     "detail": "14 titles",
      "retryAt": null
     }
    ]
@@ -3477,7 +3963,7 @@
    },
    "content": {
     "@type": "Failed",
-    "v1": "network: anilist skipped after repeated failures; next try in 30s"
+    "v1": "anilist: HTTP 500: the fake AniList answered 500"
    }
   },
   {
@@ -3509,23 +3995,65 @@
      "Adventure",
      "Comedy",
      "Drama",
-     "Ecchi",
      "Fantasy",
-     "Horror",
-     "Mahou Shoujo",
      "Mecha",
-     "Music",
      "Mystery",
-     "Psychological",
      "Romance",
      "Sci-Fi",
      "Slice of Life",
-     "Sports",
-     "Supernatural",
-     "Thriller"
+     "Sports"
     ],
-    "tagGroups": [],
-    "streamingSites": []
+    "tagGroups": [
+     {
+      "category": "Theme",
+      "tags": [
+       {
+        "name": "Found Family",
+        "description": "Strangers who become a family.",
+        "spoiler": false
+       },
+       {
+        "name": "Gardening",
+        "description": "Growing things.",
+        "spoiler": false
+       },
+       {
+        "name": "The Last Lantern",
+        "description": "A twist at the end.",
+        "spoiler": true
+       },
+       {
+        "name": "Travel",
+        "description": "Journeys from place to place.",
+        "spoiler": false
+       },
+       {
+        "name": "Weather Magic",
+        "description": "Magic over wind and rain.",
+        "spoiler": false
+       }
+      ]
+     },
+     {
+      "category": "Setting",
+      "tags": [
+       {
+        "name": "Libraries",
+        "description": "Set in or around a library.",
+        "spoiler": false
+       },
+       {
+        "name": "Trains",
+        "description": "Railways feature prominently.",
+        "spoiler": false
+       }
+      ]
+     }
+    ],
+    "streamingSites": [
+     "Lantern Library",
+     "Hikari Library"
+    ]
    }
   },
   {
@@ -5032,7 +5560,7 @@
      "state": "backing off",
      "healthy": false,
      "active": false,
-     "detail": "anilist: the fake AniList answered 500",
+     "detail": "anilist: HTTP 500: the fake AniList answered 500",
      "retryAt": "1793782830"
     },
     {
@@ -5048,7 +5576,7 @@
      "state": "serving",
      "healthy": true,
      "active": true,
-     "detail": "17 titles",
+     "detail": "14 titles",
      "retryAt": null
     }
    ]
@@ -5970,113 +6498,13 @@
    "v1": null
   },
   {
-   "@type": "Detail",
+   "@type": "Toast",
    "v1": {
-    "id": "900004",
-    "title": "Stardust Wayfarer Season 2",
-    "secondary": "Hoshikuzu no Tabibito 2nd Season",
-    "format": "TV",
-    "episodes": "12",
-    "year": "2025",
-    "score": "84",
-    "studio": "Kujaku Animation Works",
-    "synopsis": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
-    "coverUrl": "https://img.example/cover/900004-xl.jpg",
-    "coverColor": "#d77f4a",
-    "bannerUrl": "https://img.example/banner/900004.jpg",
-    "seenStill": null,
-    "genres": [
-     "Adventure",
-     "Drama",
-     "Fantasy"
-    ],
-    "availableOn": [],
-    "availableAt": null,
-    "progress": null,
-    "airingIn": null,
-    "airingEpisode": null,
-    "nextEpisode": null,
-    "nextAiringIn": null,
-    "lastAired": null,
-    "resume": null,
-    "related": [],
-    "recommended": [],
-    "trailerUrl": null,
-    "listStatus": null,
-    "titleRomaji": "Hoshikuzu no Tabibito 2nd Season",
-    "titleEnglish": "Stardust Wayfarer Season 2",
-    "titleNative": "星屑の旅人 第2期",
-    "season": "WINTER",
-    "startDate": {
-     "year": "2025",
-     "month": "1",
-     "day": "11"
-    },
-    "endDate": {
-     "year": "2025",
-     "month": "3",
-     "day": "29"
-    },
-    "source": "MANGA",
-    "adult": false,
-    "isDemo": false,
-    "detail": {
-     "tags": [],
-     "schedule": [],
-     "relations": [],
-     "seasons": [],
-     "recommendations": [],
-     "rankings": [],
-     "characters": [],
-     "staff": [],
-     "streamingLinks": [],
-     "following": [],
-     "partial": false,
-     "otherMedium": null
-    },
-    "status": "FINISHED",
-    "airing": {
-     "@type": "Finished",
-     "from": {
-      "year": "2025",
-      "month": "1",
-      "day": "11"
-     },
-     "to": {
-      "year": "2025",
-      "month": "3",
-      "day": "29"
-     }
-    },
-    "duration": "24",
-    "filmLength": null,
-    "country": null,
-    "madeOutsideJapan": false,
-    "synopsisSpans": [
-     {
-      "text": "The beacons are lit, and the roads lead somewhere new: to the city that sent the first lamplighters out.",
-      "spoiler": false
-     }
-    ],
-    "delayedFrom": null,
-    "airingApproximate": false,
-    "airingTranslation": null,
-    "airingDubbed": false,
-    "watchedIn": null,
-    "trailer": null,
-    "prequels": [
-     {
-      "id": "900001",
-      "listStatus": "COMPLETED"
-     }
-    ],
-    "sequels": [],
-    "dub": null,
-    "countLine": {
-     "long": "12 episodes",
-     "short": "12 ep",
-     "spoken": "12 episodes",
-     "dub": null
+    "kind": "ALERT",
+    "text": "Couldn't load this title. Check your connection and try again.",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeTitleLoadFailed"
     }
    }
   },
@@ -6092,258 +6520,22 @@
   {
    "@type": "Episodes",
    "id": "900004",
-   "rows": [
-    {
-     "number": "1",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": false,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "2",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "3",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "4",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "5",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "6",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "7",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": "FILLER",
-     "skippable": true,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "8",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "9",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "10",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "11",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    },
-    {
-     "number": "12",
-     "title": null,
-     "thumbnail": null,
-     "description": null,
-     "durationSecs": "1440",
-     "watched": 0.0,
-     "completed": false,
-     "kind": null,
-     "skippable": false,
-     "airsAt": null,
-     "delayedFrom": null,
-     "metadataOnly": false,
-     "source": null,
-     "unsourced": false,
-     "pastProgress": true,
-     "spoilerAhead": true,
-     "synopsisPending": false,
-     "followed": []
-    }
-   ],
-   "failed": null
+   "rows": [],
+   "failed": {
+    "@type": "NoticeEpisodesFailed",
+    "reason": "anilist: network: anilist skipped after repeated failures; next try in 30s; fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+   }
   },
   {
-   "@type": "TitleMatch",
-   "id": "900004",
-   "current": {
-    "providerId": "fixture",
-    "source": "fixture",
-    "title": "Hoshikuzu no Tabibito 2nd Season",
-    "chosenByYou": false
+   "@type": "Toast",
+   "v1": {
+    "kind": "ALERT",
+    "text": "Couldn't load the episodes. anilist: network: anilist skipped after repeated failures; next try in 30s; fallback: tenrai: no mal id mapped for this title; nothing useful cached",
+    "hint": null,
+    "msg": {
+     "@type": "NoticeEpisodesFailed",
+     "reason": "anilist: network: anilist skipped after repeated failures; next try in 30s; fallback: tenrai: no mal id mapped for this title; nothing useful cached"
+    }
    }
   },
   {
@@ -6407,19 +6599,6 @@
     "remembered": [],
     "source": null,
     "alwaysPrivate": false
-   }
-  },
-  {
-   "@type": "Availability",
-   "v1": {
-    "id": "900004",
-    "case": "NOT_IN_SOURCES",
-    "main": null,
-    "alsoOn": [],
-    "yours": [],
-    "others": [],
-    "episodes": [],
-    "chooseServices": true
    }
   },
   {
@@ -8382,7 +8561,7 @@
      "state": "backing off",
      "healthy": false,
      "active": false,
-     "detail": "anilist: the fake AniList answered 500",
+     "detail": "anilist: HTTP 500: the fake AniList answered 500",
      "retryAt": "1793782830"
     },
     {
@@ -8398,7 +8577,7 @@
      "state": "ready",
      "healthy": true,
      "active": false,
-     "detail": "17 titles",
+     "detail": "14 titles",
      "retryAt": null
     }
    ]

@@ -20,6 +20,10 @@ impl App {
     /// The whole route from key to action in one place, so what a key does in any state can be
     /// tested as a key rather than as the action someone assumed it would become.
     pub fn press(&mut self, key: KeyEvent, visible_rows: usize) -> Option<Command> {
+        // The restore overlay's field takes every letter, so Tab moves between it and Start over.
+        if let Some(task) = self.restore_key(&key) {
+            return task;
+        }
         // Text first: while a field has focus, plain characters are input, not bindings.
         if self.is_typing() {
             match key.code {

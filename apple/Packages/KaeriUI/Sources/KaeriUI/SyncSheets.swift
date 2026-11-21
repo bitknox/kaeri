@@ -122,13 +122,15 @@ struct CloudPickerSheet: View {
         }
     }
 
-    private static func phase(_ step: CloudStep?) -> String {
+    /// Which step shows, for the crossfade between them.
+    static func phase(_ step: CloudStep?) -> String {
         switch step {
         case nil: "list"
         case .waiting?: "waiting"
         case .connecting?: "connecting"
         case .settingUp?: "setting-up"
-        case .failed?: "failed"
+        case .clearing?: "clearing"
+        case .failed?, .startOverFailed?: "failed"
         case .key?: "key"
         }
     }
@@ -206,6 +208,11 @@ private struct CloudStepView: View {
                 CloudStatusLine(text: L.cloudSettingUpLine(service: SyncModel.name(kind)), busy: true, color: .haze)
             case .failed(let kind, let problem, let folder):
                 CloudStatusLine(text: Self.problemLine(kind, problem, folder: folder), busy: false)
+            case .clearing(let kind):
+                CloudStatusLine(text: L.rkeyClearingLine(service: SyncModel.name(kind)), busy: true, color: .haze)
+            case .startOverFailed(let kind, let problem):
+                CloudStatusLine(text: Self.startOverLine(kind, problem), busy: false, warning: true)
+                CloudLede(text: L.rkeyStartOverErrKept(kind: Device.name))
             case .key:
                 EmptyView()
             }
@@ -223,9 +230,11 @@ private struct CloudStepView: View {
                 .padding(.leading, -10)
                 .frame(maxWidth: .infinity)
                 .layoutPriority(1)
-            case .failed:
+            case .failed, .startOverFailed:
                 SyncButton(title: L.actionCancel) { sync.cancelCloudStep() }
+                    .disabled(busy)
                 SyncButton(title: L.actionTryAgain, primary: true) { sync.tryAgain(deviceName: deviceName) }
+                    .disabled(busy)
             default:
                 SyncButton(title: L.actionCancel) {}
                     .disabled(true)
@@ -234,8 +243,9 @@ private struct CloudStepView: View {
             switch step {
             case .waiting:
                 SyncButton(title: L.cloudOpenAgain, wide: true) { sync.openPageAgain() }
-            case .failed:
+            case .failed, .startOverFailed:
                 SyncButton(title: L.actionTryAgain, primary: true, wide: true) { sync.tryAgain(deviceName: deviceName) }
+                    .disabled(busy)
             default:
                 EmptyView()
             }
@@ -260,6 +270,8 @@ private struct CloudStepView: View {
         case .settingUp: L.cloudSettingUp
         case .failed(_, _, folder: true): L.cloudErrSetupTitle
         case .failed(let kind, _, _): L.cloudErrSigninTitle(service: SyncModel.name(kind))
+        case .clearing: L.rkeyClearing
+        case .startOverFailed: L.rkeyStartOverErrTitle
         case .key: L.rkeyTitle
         }
     }
@@ -283,6 +295,17 @@ private struct CloudStepView: View {
         default: return folder ? L.cloudErrSetupOther(service: name) : L.cloudErrSigninOther(service: name)
         }
     }
+
+    /// Why starting over stopped: the service out of reach, refusing the delete, or anything else
+    /// as a folder that could not be set up. The engine's own words go to Messages.
+    static func startOverLine(_ kind: SyncFolderKind, _ problem: SyncProblem) -> String {
+        let name = SyncModel.name(kind)
+        switch problem {
+        case .unreachable: return L.cloudErrOffline(service: name)
+        case .clearRefused: return L.rkeyStartOverErrRefused(service: name)
+        default: return problemLine(kind, problem, folder: true)
+        }
+    }
 }
 
 /// The line under a step's title: an indeterminate indicator, or the error's glyph, and words.
@@ -290,13 +313,15 @@ private struct CloudStatusLine: View {
     let text: String
     let busy: Bool
     var color: Color = .silk
+    /// The warning triangle the restore screen's errors use, rather than the sign-in's circle.
+    var warning = false
 
     var body: some View {
         HStack(alignment: busy ? .center : .firstTextBaseline, spacing: touch ? 10 : 8) {
             if busy {
                 ProgressView().controlSize(.small)
             } else {
-                Image(systemName: "exclamationmark.circle.fill")
+                Image(systemName: warning ? "exclamationmark.triangle.fill" : "exclamationmark.circle.fill")
                     .font(.plat(mac: 13, touch: 17))
                     .foregroundStyle(.vermilion)
                     .accessibilityHidden(true)
@@ -477,6 +502,9 @@ struct RecoveryKeySheet: View {
         let key = sync.recoveryKey ?? ""
         let groups = groupedKey(key)
         SyncSheetFrame(title: L.rkeyTitle) {
+            if let service = sync.startedOver {
+                StartedOverLine(text: L.rkeyStartedOver(service: SyncModel.name(service)))
+            }
             SyncNote(text: L.rkeyLine).listRowSeparator(.hidden)
             keyCard(groups)
             SyncSection(footer: sync.keyCameFromDevices ? nil : L.rkeyAgain(kind: Device.name)) {
@@ -548,29 +576,152 @@ struct RecoveryKeySheet: View {
     }
 }
 
+/// The first line of the key step after starting over: where sync started over, on a water dot,
+/// in silk.
+private struct StartedOverLine: View {
+    let text: String
+
+    var body: some View {
+        HStack(alignment: .firstTextBaseline, spacing: touch ? 8 : 7) {
+            StateDot(state: .synced)
+                .alignmentGuide(.firstTextBaseline) { $0[.bottom] }
+            Text(text)
+                #if os(macOS)
+                .font(.mac(12)).macLineHeight(17)
+                #else
+                .font(.ui(13))
+                #endif
+                .foregroundStyle(.silk)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .combine)
+        #if os(iOS)
+        .listRowBackground(Color.clear)
+        .listRowSeparator(.hidden)
+        .listRowInsets(EdgeInsets(top: 4, leading: 16, bottom: 0, trailing: 16))
+        #endif
+    }
+
+    private var touch: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
+}
+
+/// A folder that holds history asks for its recovery key, with Start over without the key as
+/// the way out. Starting over shows its steps in the same sheet, as the cloud folder's sheet
+/// does: the old history being deleted, the folder being set up, then the new key, or why it
+/// stopped. Each crossfades into the next.
 struct RestoreSheet: View {
     @Environment(AppStore.self) private var store
     let kind: SyncFolderKind
-    @State private var key = ""
 
     var body: some View {
         let sync = store.sync
+        ZStack {
+            Group {
+                switch sync.cloudStep {
+                case nil: RestoreEntry(kind: kind)
+                case .key?: RecoveryKeySheet()
+                case let step?: CloudStepView(step: step, deviceName: sync.joinName)
+                }
+            }
+            .id(CloudPickerSheet.phase(sync.cloudStep))
+            .transition(.opacity)
+        }
+        .animation(.standard, value: CloudPickerSheet.phase(sync.cloudStep))
+        .onDisappear { store.sync.restoreClosed() }
+    }
+}
+
+/// The restore screen itself: the key's field, Restore, and Start over without the key, which
+/// asks first in the platform's alert.
+private struct RestoreEntry: View {
+    @Environment(AppStore.self) private var store
+    let kind: SyncFolderKind
+
+    var body: some View {
+        @Bindable var sync = store.sync
         let wrong: Bool = { if let problem = sync.problem, case .wrongRecoveryKey = problem { return true } else { return false } }()
-        SyncSheetFrame(title: L.rkeyEnterTitle, cancel: { sync.close() }) {
-            SyncNote(text: L.rkeyEnterLineGeneric(service: SyncModel.name(kind)))
-            SyncField(label: L.rkeyRow, text: $key, prompt: "XXXX XXXX XXXX", invalid: wrong, // i18n-skip
+        // From the tap that starts over: the content stays its first 600 ms, and nothing in it acts.
+        let busy = sync.cloudCancelDimmed
+        let service = SyncModel.name(kind)
+        SyncSheetFrame(title: L.rkeyEnterTitle, cancel: { sync.close() }, cancelDimmed: busy) {
+            SyncNote(text: L.rkeyEnterLineGeneric(service: service))
+            SyncField(label: L.rkeyRow, text: $sync.restoreKey, prompt: "XXXX XXXX XXXX", invalid: wrong, // i18n-skip
                       note: wrong ? nil : L.rkeyEnterNote)
             if wrong { SyncProblemLine(text: L.rkeyWrong) }
+            #if os(iOS)
+            Button(L.rkeyStartOver) { sync.confirmingStartOver = true }
+                .buttonStyle(.borderless)
+                .font(.ui(17, weight: .semibold))
+                .foregroundStyle(.silk)
+                .disabled(busy)
+                .listRowBackground(Color.clear)
+                .listRowSeparator(.hidden)
+                .listRowInsets(EdgeInsets(top: 14, leading: 16, bottom: 4, trailing: 16))
+            #endif
         } bottom: {
             #if os(macOS)
-            SyncButton(title: L.actionCancel) { sync.close() }
-            #endif
-            SyncButton(title: L.rkeyRestore, primary: true, wide: true) {
-                sync.join(kind, key: key, deviceName: sync.deviceName.isEmpty ? DeviceNaming.system : sync.deviceName)
+            // Start over sits at the leading edge, as a third action that leaves the sheet's
+            // purpose; the ellipsis says it asks first.
+            HStack(spacing: 10) {
+                Button { sync.confirmingStartOver = true } label: {
+                    Text(L.rkeyStartOver + "…").font(.mac(13)).foregroundStyle(.silk)
+                }
+                .buttonStyle(.plain)
+                .pointerHover()
+                Spacer(minLength: 0)
+                SyncButton(title: L.actionCancel) { sync.close() }
+                restore(sync)
             }
-            .disabled(key.filter { $0.isLetter || $0.isNumber }.count < 24)
+            .disabled(busy)
+            // The frame's own 10 pt between its spacer and this row, so Start over starts at the
+            // content's edge.
+            .padding(.leading, -10)
+            .frame(maxWidth: .infinity)
+            .layoutPriority(1)
+            #else
+            restore(sync)
+                .disabled(busy)
+            #endif
+        }
+        .alert(L.rkeyStartOverTitle, isPresented: $sync.confirmingStartOver) {
+            #if os(macOS)
+            Button(L.actionCancel, role: .cancel) {}
+                .keyboardShortcut(.defaultAction)
+            #else
+            Button(L.actionCancel, role: .cancel) {}
+            #endif
+            Button(L.rkeyStartOverAction, role: .destructive) { sync.startOver(kind, deviceName: sync.joinName) }
+        } message: {
+            Text(L.rkeyStartOverLine(service: service, kind: Device.name))
         }
     }
+
+    private func restore(_ sync: SyncModel) -> some View {
+        SyncButton(title: L.rkeyRestore, primary: true, wide: touch) {
+            sync.join(kind, key: sync.restoreKey, deviceName: sync.joinName)
+        }
+        .disabled(sync.restoreKey.filter { $0.isLetter || $0.isNumber }.count < 24)
+    }
+
+    private var touch: Bool {
+        #if os(iOS)
+        true
+        #else
+        false
+        #endif
+    }
+}
+
+extension SyncModel {
+    /// The name this device joins or starts a group with.
+    var joinName: String { deviceName.isEmpty ? DeviceNaming.system : deviceName }
 }
 
 // MARK: Pairing

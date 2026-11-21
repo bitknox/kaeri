@@ -285,7 +285,7 @@ impl SettingKey {
     /// The native apps' own rows, which the terminal's Settings screen does not show: a front
     /// end finds the rows both show among [`Self::ROWS`]. In no order of their own, since each
     /// app lays them out on its own panes; grouped by [`Self::category`] all the same.
-    pub const NATIVE_ROWS: [Self; 34] = [
+    pub const NATIVE_ROWS: [Self; 37] = [
         Self::UpNextCountdown,
         Self::SpoilerProtection,
         Self::PictureInPictureOnLeave,
@@ -311,6 +311,10 @@ impl SettingKey {
         Self::NewChapters,
         Self::KeepChaptersReady,
         Self::DeleteAfterReading,
+        // The reading feed: its pane reads these rows for what is saved, the port above all.
+        Self::OpdsFeed,
+        Self::OpdsPassword,
+        Self::OpdsPort,
         Self::ShowVolumes,
         Self::SeriesChoicesFollow,
         Self::ChapterNotifications,
@@ -1674,6 +1678,10 @@ fn change(effective: &Config, saved: &Config, key: SettingKey) -> SettingChange 
     if key.path().is_none() {
         return SettingChange::Fixed;
     }
+    // The theme goes round its four either way, so both arrows always change it.
+    if key == SettingKey::Theme {
+        return SettingChange::Steps { back: true, forward: true };
+    }
     // A two-state value steps like a two-rung ladder: back is off, or the first of its two
     // choices, and forward the other.
     if let Some(second) = two_state(effective, saved, key) {
@@ -1688,12 +1696,11 @@ fn change(effective: &Config, saved: &Config, key: SettingKey) -> SettingChange 
 /// its two choices. `None` for every other row.
 fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool> {
     use SettingKey as S;
-    use kaeri_core::config::{PlayerUi, ThemeMode};
+    use kaeri_core::config::PlayerUi;
     let c = effective;
     Some(match key {
-        // Theme and sub/dub can differ for this session (`--theme`, `t`), and their arrows
-        // change the saved choice, so that is the one they stand on.
-        S::Theme => saved.theme.mode != ThemeMode::Adaptive,
+        // Sub/dub can differ for this session (`t`), and its arrows change the saved choice,
+        // so that is the one they stand on.
         S::Translation => saved.playback.translation == kaeri_core::media::Translation::Dub,
         S::PlayerUi => c.playback.player_ui == PlayerUi::Mpv,
         S::Motion => c.theme.motion,
@@ -2059,6 +2066,7 @@ mod tests {
         let every = SettingKey::ROWS.into_iter().chain(SettingKey::NATIVE_ROWS);
         // The switch form of new chapters writes the picker's key, which names the picker.
         let every = every.filter(|key| *key != SettingKey::KeepChaptersReady);
+        // The order, which neither list of rows holds.
         for setting in every.chain([SettingKey::SourceOrder]) {
             if let Some((table, key)) = setting.path() {
                 assert_eq!(SettingKey::at(table, key), Some(setting), "{table:?}.{key}");
@@ -2118,6 +2126,9 @@ mod tests {
                 (SettingKey::NewChapters, "off"),
                 (SettingKey::KeepChaptersReady, "off"),
                 (SettingKey::DeleteAfterReading, "off"),
+                (SettingKey::OpdsFeed, "off"),
+                (SettingKey::OpdsPassword, "not set"),
+                (SettingKey::OpdsPort, "automatic"),
                 (SettingKey::ShowVolumes, "off"),
                 (SettingKey::SeriesChoicesFollow, "on"),
                 (SettingKey::ChapterNotifications, "off"),
@@ -2252,6 +2263,19 @@ mod tests {
             SettingChange::Typed { text: "eng".into() }
         );
         assert_eq!(row(&config, SettingKey::TorrentProxy), SettingChange::Fixed);
+        // The theme goes round its four, so from any of them both arrows lead somewhere.
+        for mode in ["adaptive", "immersive", "light", "dark"] {
+            assert!(put(&mut config, SettingKey::Theme, &SettingValue::Str(mode.into())));
+            assert_eq!(
+                row(&config, SettingKey::Theme),
+                SettingChange::Steps { back: true, forward: true },
+                "{mode}"
+            );
+            assert_ne!(
+                step(&config, &config, SettingKey::Theme, 1),
+                Some(SettingValue::Str(mode.into()))
+            );
+        }
     }
 
     #[test]

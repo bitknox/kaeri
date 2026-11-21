@@ -3,7 +3,8 @@
 //! One list answers two questions: which settings sync between a person's devices, and which are
 //! a profile's own when a device has several profiles. A key is added here in code, with the test
 //! below, so that nothing bound to a device (VPN, torrents, mpv, paths, quality on a cellular
-//! connection, key bindings, the controller, casting) reaches it by accident.
+//! connection, key bindings, the controller, casting, the notifications it posts) reaches it by
+//! accident. Account settings travel; a device's own stay where they are.
 
 /// `(table path, key)` as `settings::write_key` takes them.
 pub const SHARED: &[(&[&str], &str)] = &[
@@ -13,6 +14,7 @@ pub const SHARED: &[(&[&str], &str)] = &[
     (&["playback"], "auto_next"),
     (&["playback"], "skip_opening"),
     (&["playback"], "skip_filler"),
+    (&["playback"], "skip_recap_auto"),
     (&["playback"], "skip_button"),
     (&["playback"], "up_next_countdown"),
     (&["playback"], "spoiler_protection"),
@@ -21,9 +23,9 @@ pub const SHARED: &[(&[&str], &str)] = &[
     (&["meta"], "adult"),
     (&["meta"], "discussions"),
     (&["meta"], "calendar_mine"),
-    (&["notifications"], "episodes"),
-    (&["notifications"], "chapters"),
     (&["reading"], "counts_as_read"),
+    (&["reading"], "send_progress_after"),
+    (&["reading"], "when_trackers_disagree"),
     (&["reading", "manga"], "mode"),
     (&["reading", "manga"], "direction"),
     (&["reading", "manga"], "colour"),
@@ -139,6 +141,8 @@ mod tests {
             "presence",
             "hook",
             "on_complete",
+            // Each device posts its own notices, and asked for its own permission to.
+            "notifications",
         ];
         for (table, key) in SHARED {
             let name = id(table, key);
@@ -157,6 +161,22 @@ mod tests {
         assert_eq!(parse("downloads.directory"), None);
         assert!(is_shared(&["playback"], "auto_next"));
         assert!(!is_shared(&["playback"], "mpv_args"));
+    }
+
+    #[test]
+    fn the_skips_and_the_tracker_rules_travel_and_the_notification_switches_stay() {
+        // The three skip switches go together.
+        for key in ["skip_opening", "skip_filler", "skip_recap_auto"] {
+            assert!(is_shared(&["playback"], key), "{key}");
+        }
+        // How progress reaches the trackers describes the account's trackers, not the device.
+        assert!(is_shared(&["reading"], "send_progress_after"));
+        assert!(is_shared(&["reading"], "when_trackers_disagree"));
+        // Each device asks for its own permission to post, and posts its own notices.
+        for key in ["episodes", "chapters", "downloads"] {
+            assert!(!is_shared(&["notifications"], key), "{key}");
+            assert_eq!(parse(&format!("notifications.{key}")), None, "a peer's is ignored");
+        }
     }
 
     #[test]

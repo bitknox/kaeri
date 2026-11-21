@@ -1,5 +1,5 @@
-// Where a new-episode notification takes the app: what was tapped, read back from the
-// notification's own record, so the app does the same whether it was running or not.
+// Where a new-episode or new-chapter notification takes the app: what was tapped, read back from
+// the notification's own record, so the app does the same whether it was running or not.
 
 import KaeriKit
 import Foundation
@@ -12,6 +12,8 @@ public enum NoticeAction: String, Sendable, CaseIterable {
     /// Marks the episode watched, in the background, as the engine's mark does: queued for the
     /// trackers when offline.
     case markWatched = "mark-watched"
+    /// Opens the app into the reader, on the chapter a new-chapter notification names.
+    case read
 }
 
 /// What the app does for a notification that was tapped, or one of whose actions was.
@@ -22,12 +24,18 @@ public enum NoticeRoute: Equatable, Sendable {
     case play(AnilistId, episode: UInt32)
     /// Mark watched: the episode that came out.
     case markWatched(AnilistId, episode: UInt32)
+    /// A new-chapter notification itself: the series' page.
+    case series(WorkId)
+    /// Read: the chapter it names, which for someone behind is the one they are up to.
+    case read(WorkId, chapter: ChapterId)
 
     /// The keys of a notification's record.
     enum Key {
         static let title = "title"
         static let episode = "episode"
         static let play = "play"
+        static let work = "work"
+        static let chapter = "chapter"
     }
 
     /// What a notification keeps of `notice`: the show, the episode, and the episode Play starts.
@@ -35,10 +43,27 @@ public enum NoticeRoute: Equatable, Sendable {
         [Key.title: Int(notice.show), Key.episode: Int(notice.episode), Key.play: Int(notice.playEpisode)]
     }
 
+    /// What a new-chapter notification keeps: the series, and the chapter Read opens.
+    public static func userInfo(_ notice: ChapterNotice) -> [String: String] {
+        [Key.work: notice.work, Key.chapter: notice.opens]
+    }
+
     /// The route for `action`, the identifier the system handed back, on a notification whose
     /// record is `userInfo`. `nil` for a dismissal, an action this build does not know, or a
-    /// notification that is not a new episode's.
+    /// notification that is neither a new episode's nor a new chapter's.
     public init?(action: String, userInfo: [AnyHashable: Any]) {
+        if let work = userInfo[Key.work] as? String, !work.isEmpty {
+            switch action {
+            case UNNotificationDefaultActionIdentifier:
+                self = .series(work)
+            case NoticeAction.read.rawValue:
+                guard let chapter = userInfo[Key.chapter] as? String, !chapter.isEmpty else { return nil }
+                self = .read(work, chapter: chapter)
+            default:
+                return nil
+            }
+            return
+        }
         func number(_ key: String) -> Int? {
             switch userInfo[key] {
             case let value as Int: value
@@ -73,10 +98,10 @@ public enum NoticeRoute: Equatable, Sendable {
 
 extension AppStore {
     /// Do what a notification's action asks, of the engine: play the episode, or mark it watched.
-    /// Opening the title page is the navigator's.
+    /// Opening the title page, the series' page or the reader is the navigator's.
     public func perform(_ route: NoticeRoute) {
         switch route {
-        case .open:
+        case .open, .series, .read:
             break
         case .play(let show, let episode):
             send(.play(id: show, episode: String(episode)))

@@ -460,3 +460,9 @@ opds-fetched-files = { $n ->
    *[other] { $n } berkas
  }
 opds-reader-unnamed = E-reader di { $address }
+notif-chapter-new = { $chapter } sudah keluar.
+notif-chapters-new = { $count ->
+   *[other] { $count } bab baru
+ }
+notif-chapter-hidden = Bab baru
+notif-chapter-read = Baca

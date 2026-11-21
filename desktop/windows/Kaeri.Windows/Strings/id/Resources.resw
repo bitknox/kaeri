@@ -7517,6 +7517,18 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>E-reader di {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} sudah keluar.</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} bab baru</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Bab baru</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Baca</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Musim sebelumnya</value>
   </data>
@@ -8836,6 +8848,15 @@
   </data>
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Menampilkan sampai mana orang yang diikuti di AniList menonton sebuah acara, di halamannya dan episodenya. Siapa yang bisa melihat daftar sendiri diatur di AniList.</value>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Gunakan pengontrol</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Tukar A dan B</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Pengontrol</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Alamat</value>
@@ -10192,9 +10213,6 @@
   </data>
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Halaman masuk tertutup sebelum akses diizinkan.</value>
-  </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Folder ini milik kumpulan perangkat lain. Masukkan kunci pemulihannya untuk bergabung, atau pilih folder lain.</value>
   </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} mengeluarkan Kaeri. Perubahan Anda menunggu di {kind} ini sampai Anda masuk lagi.</value>

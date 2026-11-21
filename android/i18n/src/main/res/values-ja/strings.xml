@@ -808,12 +808,6 @@
     <string name="channel_chapters_description">「読書中」リストの作品に新しい章が出たとき。</string>
     <string name="channel_downloads_finished_name">ダウンロード完了</string>
     <string name="channel_downloads_finished_description">ダウンロードを指定した章がすべて終わったとき。</string>
-    <string name="notif_chapter_new">%1$sが公開されました。</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="other">新しい章が%1$,d話あります</item>
-    </plurals>
-    <string name="notif_chapter_hidden">新しい章</string>
-    <string name="notif_chapter_read">読む</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="other">%1$,d話をダウンロード中</item>
     </plurals>
@@ -2984,6 +2978,12 @@
         <item quantity="other">%1$,d件のファイル</item>
     </plurals>
     <string name="opds_reader_unnamed">%1$sの電子書籍リーダー</string>
+    <string name="notif_chapter_new">%1$sが公開されました。</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="other">新しい章が%1$,d話あります</item>
+    </plurals>
+    <string name="notif_chapter_hidden">新しい章</string>
+    <string name="notif_chapter_read">読む</string>
     <string name="seasonal_previous">前のシーズン</string>
     <string name="seasonal_next">次のシーズン</string>
     <string name="seasonal_loading">シーズンを読み込んでいます</string>
@@ -3443,6 +3443,9 @@
     <string name="settings_label_picture_in_picture_on_leave">アプリを離れるときにピクチャー イン ピクチャー</string>
     <string name="settings_anilist_following">フォロー中の人を表示</string>
     <string name="settings_anilist_following_footer">AniListでフォローしている人がどこまで観ているかを、作品のページとエピソードに表示します。自分のリストを誰が見られるかはAniListで設定します。</string>
+    <string name="settings_label_controller_input">コントローラーを使う</string>
+    <string name="settings_label_swap_face_buttons">AとBを入れ替える</string>
+    <string name="settings_group_controller">コントローラー</string>
     <string name="book_server_address">アドレス</string>
     <string name="book_server_address_hint">アドレス、またはKavitaのOPDSリンク全体を入力します。</string>
     <string name="book_server_kavita_key">これはKavitaのOPDSリンクです。キーでサインインするため、パスワードは不要です。</string>
@@ -3942,7 +3945,6 @@
     <string name="cloud_err_app_password">Nextcloudがそのアプリパスワードを受け付けませんでした。Nextcloudの「設定」の「セキュリティ」で新しく作成してください。</string>
     <string name="cloud_err_webdav">サーバーがそのユーザー名またはパスワードを受け付けませんでした。</string>
     <string name="cloud_err_timeout">アクセスが許可される前に、サインインページが閉じました。</string>
-    <string name="cloud_err_other_group">このフォルダは別のデバイスのグループのものです。参加するにはその復元キーを入力するか、別のフォルダを選んでください。</string>
     <string name="cloud_err_signed_out">%1$sがKaeriをサインアウトさせました。再びサインインするまで、変更はこの%2$sで待機します。</string>
     <string name="cloud_err_full">%1$sの空き容量がありません。空きを作ってから、もう一度お試しください。</string>
     <string name="cloud_err_folder_gone">Kaeriはこのフォルダを開けなくなりました。もう一度選んでください。</string>

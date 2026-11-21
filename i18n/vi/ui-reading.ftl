@@ -460,3 +460,9 @@ opds-fetched-files = { $n ->
    *[other] { $n } tệp
  }
 opds-reader-unnamed = Máy đọc sách tại { $address }
+notif-chapter-new = { $chapter } đã ra mắt.
+notif-chapters-new = { $count ->
+   *[other] { $count } chương mới
+ }
+notif-chapter-hidden = Chương mới
+notif-chapter-read = Đọc

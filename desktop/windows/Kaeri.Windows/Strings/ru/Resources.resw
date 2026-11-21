@@ -8480,6 +8480,27 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>Ридер по адресу {address}</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>Вышло: {chapter}.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>{count} новая глава</value>
+  </data>
+  <data name="NotifChaptersNew_few" xml:space="preserve">
+    <value>{count} новые главы</value>
+  </data>
+  <data name="NotifChaptersNew_many" xml:space="preserve">
+    <value>{count} новых глав</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} новой главы</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Новая глава</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Читать</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Предыдущий сезон</value>
   </data>
@@ -9880,6 +9901,15 @@
   </data>
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.</value>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Использовать контроллер</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>Поменять местами A и B</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Контроллер</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Адрес</value>
@@ -11443,9 +11473,6 @@
   </data>
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Страница входа закрылась, прежде чем доступ был разрешён.</value>
-  </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Эта папка принадлежит другому набору устройств. Введите её ключ восстановления, чтобы присоединиться, или выберите другую папку.</value>
   </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service} вывел Kaeri из аккаунта. Изменения ждут на этом устройстве ({kind}), пока вы не войдёте снова.</value>

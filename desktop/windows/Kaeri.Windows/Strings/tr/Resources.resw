@@ -7838,6 +7838,21 @@
   <data name="OpdsReaderUnnamed" xml:space="preserve">
     <value>{address} adresindeki e-okuyucu</value>
   </data>
+  <data name="NotifChapterNew" xml:space="preserve">
+    <value>{chapter} çıktı.</value>
+  </data>
+  <data name="NotifChaptersNew_one" xml:space="preserve">
+    <value>Yeni bir bölüm</value>
+  </data>
+  <data name="NotifChaptersNew_other" xml:space="preserve">
+    <value>{count} yeni bölüm</value>
+  </data>
+  <data name="NotifChapterHidden" xml:space="preserve">
+    <value>Yeni bölüm</value>
+  </data>
+  <data name="NotifChapterRead" xml:space="preserve">
+    <value>Oku</value>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Önceki sezon</value>
   </data>
@@ -9184,6 +9199,15 @@
   </data>
   <data name="SettingsAnilistFollowingFooter" xml:space="preserve">
     <value>AniList'te takip ettiğin kişilerin bir dizide nerede olduğunu, dizinin sayfasında ve bölümlerinde gösterir. Kendi listeni kimlerin görebileceği AniList'te ayarlanır.</value>
+  </data>
+  <data name="SettingsLabelControllerInput" xml:space="preserve">
+    <value>Denetleyici kullan</value>
+  </data>
+  <data name="SettingsLabelSwapFaceButtons" xml:space="preserve">
+    <value>A ve B'yi değiştir</value>
+  </data>
+  <data name="SettingsGroupController" xml:space="preserve">
+    <value>Denetleyici</value>
   </data>
   <data name="BookServerAddress" xml:space="preserve">
     <value>Adres</value>
@@ -10609,9 +10633,6 @@
   </data>
   <data name="CloudErrTimeout" xml:space="preserve">
     <value>Giriş sayfası, erişime izin verilmeden kapandı.</value>
-  </data>
-  <data name="CloudErrOtherGroup" xml:space="preserve">
-    <value>Bu klasör başka bir cihazlar kümesine ait. Onlara katılmak için kurtarma anahtarını girin ya da başka bir klasör seçin.</value>
   </data>
   <data name="CloudErrSignedOut" xml:space="preserve">
     <value>{service}, Kaeri hesabının oturumunu kapattı. Yeniden giriş yapana kadar değişiklikleriniz bu {kind} üzerinde bekler.</value>

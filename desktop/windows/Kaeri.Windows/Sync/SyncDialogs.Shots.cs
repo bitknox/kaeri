@@ -55,11 +55,22 @@ static partial class SyncDialogs
         };
     }
 
+    /// <summary>Another device started sync over in Google Drive: no key opens the folder now.</summary>
+    static SyncStatus StartedOver() => On() with
+    {
+        Problem = new SyncProblem.GroupReplaced(),
+        Error = T.CloudErrStartedOver("Google Drive"), // i18n-skip
+        RecoveryKey = false,
+        RecoveryKeyMade = null,
+    };
+
     static void Say(SyncStatus status) => Ctx.Inject(new Event.SyncStatus(status));
 
     /// <summary>Puts the window in the state <paramref name="show"/> names.</summary>
     public static void Stage(string show)
     {
+        if (show.EndsWith("-reduced", StringComparison.Ordinal))
+            Motion.Override = false;
         Ctx.Window.DispatcherQueue.TryEnqueue(async () =>
         {
             await Task.Delay(1500);
@@ -68,6 +79,12 @@ static partial class SyncDialogs
                 "sync-off" or "sync-picker" or "sync-picker-error" or "sync-wait" or "sync-connecting" or "sync-setting-up" or "sync-key-setup"
                     or "sync-wait-denied" or "sync-wait-expired" or "sync-wait-full" or "sync-nextcloud" or "sync-webdav"
                     or "sync-restore" or "sync-restore-wrong" or "sync-motion" => Off(),
+                // The folder holds another group of two devices, as the engine counts them.
+                "sync-startover" or "sync-startover-wrong" or "sync-startover-confirm" or "sync-startover-clearing" or "sync-startover-setup"
+                    or "sync-startover-key" or "sync-startover-offline" or "sync-startover-refused" or "sync-startover-motion"
+                    or "sync-startover-cancel-motion" => Off() with { RestoreDevices = 2 },
+                // Another device started sync over in Google Drive: no key opens the folder now.
+                "sync-startedover" or "sync-startedover-restore" => StartedOver(),
                 "sync-devices-full" or "sync-device-page" or "sync-device-page-remote-off" or "sync-device-page-phone" or "sync-notes" => Full(),
                 "sync-syncing" => On() with { Syncing = true },
                 "sync-problem" => On() with { Problem = new SyncProblem.SignInNeeded(SyncFolderKind.GoogleDrive) },
@@ -124,6 +141,68 @@ static partial class SyncDialogs
                 Restore(SyncFolderKind.GoogleDrive);
                 if (restore is { } r)
                     SayError(r.Error, T.RkeyWrong);
+                break;
+            case "sync-startover":
+                Restore(SyncFolderKind.GoogleDrive);
+                break;
+            case "sync-startover-wrong":
+                Restore(SyncFolderKind.GoogleDrive);
+                if (restore is { } wrong)
+                {
+                    wrong.Entry.Text = "K7QM 4XR9 DH2V T8NB 3CWZ 6PLE"; // i18n-skip
+                    SayError(wrong.Error, T.RkeyWrong);
+                }
+                break;
+            case "sync-startover-confirm":
+                Restore(SyncFolderKind.GoogleDrive);
+                await Task.Delay(400);
+                if (restore is { } confirming)
+                    AskStartOver(confirming);
+                break;
+            case "sync-startover-clearing" or "sync-startover-setup" or "sync-startover-key" or "sync-startover-offline" or "sync-startover-refused":
+                StartOverAt(show switch
+                {
+                    "sync-startover-clearing" => [Clearing()],
+                    "sync-startover-setup" => [Clearing(), Finishing()],
+                    "sync-startover-key" => [Clearing(), Finishing(), new Event.SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA")],
+                    "sync-startover-offline" => [Clearing(), new Event.SyncProblem(new SyncProblem.Unreachable())],
+                    _ => [Clearing(), new Event.SyncProblem(new SyncProblem.ClearRefused())],
+                });
+                break;
+            case "sync-startover-motion":
+                // The key field, the confirmation in its place, then the work at the fixture's
+                // pace (1.5 s a step) and the key; each through the dialog's own pacing.
+                Restore(SyncFolderKind.GoogleDrive);
+                await Task.Delay(2000);
+                if (restore is not { } moving)
+                    break;
+                AskStartOver(moving);
+                await Task.Delay(2000);
+                var flow = startOver = new StartOver(SyncFolderKind.GoogleDrive);
+                moving.Pressed = DateTime.UtcNow;
+                RestoreButtons(moving);
+                StageStartOver(moving, flow);
+                foreach (var (wait, said) in new (int, Event)[] { (100, Clearing()), (1500, Finishing()), (1500, new Event.SyncRecoveryKey("K7QM4XR9TB2HWN6CP3ZD8FLA")) })
+                {
+                    await Task.Delay(wait);
+                    Ctx.Inject(said);
+                }
+                break;
+            case "sync-startedover-restore":
+                EnterNewKey(SyncFolderKind.GoogleDrive);
+                break;
+            case "sync-startedover-motion" or "sync-startedover-motion-reduced":
+                // Synced, then the pass finds the group started over elsewhere: the cloud card
+                // turns into the error and the Recovery key rows go.
+                await Task.Delay(2000);
+                Say(StartedOver());
+                break;
+            case "sync-startover-cancel-motion":
+                // The failure page, then its Cancel pressed as a person would.
+                StartOverAt([Clearing(), new Event.SyncProblem(new SyncProblem.Unreachable())]);
+                await Task.Delay(3000);
+                if (restore is { } failed && DialogButton(failed.Dialog, "CloseButton") is { } cancel)
+                    new Microsoft.UI.Xaml.Automation.Peers.ButtonAutomationPeer(cancel).Invoke();
                 break;
             case "sync-key":
                 Ctx.Known.RecoveryKey = "K7QF2M9XHD4RTB6WPN3ZC8JA";
@@ -208,6 +287,58 @@ static partial class SyncDialogs
                 }
                 break;
         }
+    }
+
+    /// <summary>
+    /// Drives the fixture engine through a start over as a person would, for the real flow's
+    /// shots: with --scene=sync-other-group (or its -offline and -refused forms) and
+    /// --show=startover-run, Add a cloud folder, Google Drive, the restore dialog the folder's
+    /// other group opens, Start over without the key, then Delete and start over. With
+    /// --scene=sync-started-over and --show=startover-enter-new, Enter new key. --show=startover-look
+    /// does nothing, and only keeps other dialogs out of the shot.
+    /// </summary>
+    public static void Drive(string show)
+    {
+        if (show == "startover-look")
+            return;
+        Ctx.Window.DispatcherQueue.TryEnqueue(async () =>
+        {
+            await Task.Delay(3000);
+            if (show == "startover-enter-new")
+            {
+                if (Ctx.Known.SyncGroup?.Folder is { } folder)
+                    EnterNewKey(folder.Kind);
+                return;
+            }
+            Picker();
+            await Task.Delay(1000);
+            Choose(SyncFolderKind.GoogleDrive);
+            for (var i = 0; i < 100 && restore is null; i++)
+                await Task.Delay(100);
+            if (restore is not { } r)
+                return;
+            await Task.Delay(1500);
+            AskStartOver(r);
+            await Task.Delay(1500);
+            BeginStartOver(r);
+        });
+    }
+
+    static Event Clearing() => new Event.SyncSignIn(SyncFolderKind.GoogleDrive, new SyncSignInStep.Clearing());
+
+    static Event Finishing() => new Event.SyncSignIn(SyncFolderKind.GoogleDrive, new SyncSignInStep.Finishing());
+
+    /// <summary>The restore dialog with a start over that heard <paramref name="said"/>, shown at once.</summary>
+    static void StartOverAt(Event[] said)
+    {
+        var flow = startOver = new StartOver(SyncFolderKind.GoogleDrive);
+        foreach (var e in said)
+        {
+            Ctx.Known.Take(e);
+            flow.Take(e);
+        }
+        var r = PresentRestore(SyncFolderKind.GoogleDrive, flow);
+        r.Shown = DateTime.UtcNow;
     }
 
     /// <summary>The picker's wait in one of its states, at once and without the return's pacing.</summary>

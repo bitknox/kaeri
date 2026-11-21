@@ -40,6 +40,12 @@ impl MpvVersion {
     pub const fn has_companion_support(self) -> bool {
         self.at_least(0, 36)
     }
+
+    /// `--sub-border-style`, with `--sub-outline-size` and `--sub-outline-color` as the
+    /// outline's names: 0.39. An older mpv refuses those as unknown options and does not start.
+    pub const fn has_border_style(self) -> bool {
+        self.at_least(0, 39)
+    }
 }
 
 impl std::fmt::Display for MpvVersion {

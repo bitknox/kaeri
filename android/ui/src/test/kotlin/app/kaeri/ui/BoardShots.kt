@@ -210,6 +210,68 @@ class BoardShots {
     @Test @Config(qualifiers = PHONE)
     fun phone_wait_signed_out() = signInWait("phone-wait-signed-out", "sync_cloud", "signed-out")
 
+    // Start over without the key, by the start-over board's states.
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_1_restore() = signInWait("phone-start-over-1-restore", "sync_other_group", "startover")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_1b_wrong() = signInWait("phone-start-over-1b-wrong", "sync_other_group", "startover-wrong")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_2_confirm() = signInWait("phone-start-over-2-confirm", "sync_other_group", "startover-confirm")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_3_clearing() = signInWait("phone-start-over-3-clearing", "sync_other_group", "startover-clearing")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_3b_setting_up() = signInWait("phone-start-over-3b-setting-up", "sync_other_group", "startover-setup")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_4_key() = signInWait("phone-start-over-4-key", "sync_other_group", "startover-key")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_5_offline() = signInWait("phone-start-over-5-offline", "sync_other_group", "startover-offline")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_5b_refused() = signInWait("phone-start-over-5b-refused", "sync_other_group", "startover-refused")
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_6_started_over() = signInWait("phone-start-over-6-started-over", "sync_started_over", null)
+
+    @Test @Config(qualifiers = PHONE)
+    fun phone_start_over_6b_enter_new_key() = signInWait("phone-start-over-6b-enter-new-key", "sync_started_over", "startedover-restore")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_1_restore() = signInWait("tablet-start-over-1-restore", "sync_other_group", "startover")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_1b_wrong() = signInWait("tablet-start-over-1b-wrong", "sync_other_group", "startover-wrong")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_2_confirm() = signInWait("tablet-start-over-2-confirm", "sync_other_group", "startover-confirm")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_3_clearing() = signInWait("tablet-start-over-3-clearing", "sync_other_group", "startover-clearing")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_3b_setting_up() = signInWait("tablet-start-over-3b-setting-up", "sync_other_group", "startover-setup")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_4_key() = signInWait("tablet-start-over-4-key", "sync_other_group", "startover-key")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_5_offline() = signInWait("tablet-start-over-5-offline", "sync_other_group", "startover-offline")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_5b_refused() = signInWait("tablet-start-over-5b-refused", "sync_other_group", "startover-refused")
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_6_started_over() = signInWait("tablet-start-over-6-started-over", "sync_started_over", null)
+
+    @Test @Config(qualifiers = TABLET)
+    fun tablet_start_over_6b_enter_new_key() = signInWait("tablet-start-over-6b-enter-new-key", "sync_started_over", "startedover-restore")
+
     @Test
     @Config(qualifiers = PHONE)
     fun phone_home_continue_full() = shoot("phone-home-continue-full", "home-continuefull")

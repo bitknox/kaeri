@@ -377,9 +377,18 @@ struct SyncCapsule: View {
     let open: () -> Void
     @State private var showing = false
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    /// Each face's width, for the capsule to change between them.
-    @State private var syncWidth: CGFloat?
+    /// Each face's width, for the capsule to change between them: the widest each has
+    /// measured, the sync line's for its words. A face measures a few points differently in the
+    /// toolbar's bar and in its overflow menu, and keeping whichever came last wrote state on
+    /// every layout pass there, which laid the toolbar out again without end.
+    @State private var syncWidth: FaceWidth?
     @State private var privateWidth: CGFloat?
+
+    /// The sync line's width, and the words it was measured with.
+    struct FaceWidth: Equatable {
+        var text: String
+        var width: CGFloat
+    }
 
     var body: some View {
         let summary = shown
@@ -395,19 +404,27 @@ struct SyncCapsule: View {
                         .foregroundStyle(summary.state == .signedOut ? .haze : .silk)
                 }
                 .fixedSize()
-                .onGeometryChange(for: CGFloat.self, of: \.size.width) { syncWidth = $0 }
+                .onGeometryChange(for: CGFloat.self, of: \.size.width) { width in
+                    if syncWidth?.text != summary.text || width > syncWidth?.width ?? 0 {
+                        syncWidth = FaceWidth(text: summary.text, width: width)
+                    }
+                }
                 .animation(.reveal) { $0.opacity(on ? 0 : 1) }
                 PrivateBadgeLabel()
                     .fixedSize()
-                    .onGeometryChange(for: CGFloat.self, of: \.size.width) { privateWidth = $0 }
+                    .onGeometryChange(for: CGFloat.self, of: \.size.width) { width in
+                        if width > privateWidth ?? 0 { privateWidth = width }
+                    }
                     .animation(.reveal) { $0.opacity(on ? 1 : 0) }
             }
             .animation(reduceMotion ? .reveal : .standard) {
-                $0.frame(width: on ? privateWidth : syncWidth, alignment: .leading)
+                $0.frame(width: on ? privateWidth : syncWidth?.width, alignment: .leading)
             }
             .clipped()
             .padding(.horizontal, 4)
         }
+        // One width in the toolbar's bar and in its overflow menu (`toolbarItemWidth`).
+        .toolbarItemWidth([summary.text, "\(on)"])
         .accessibilityLabel(on ? L.privateBadgeLabel : accessibilityLabel(summary))
         .accessibilityHint(on ? L.privateModeOnNotice : L.shellSyncHint)
         .onAppear {

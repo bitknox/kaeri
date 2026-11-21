@@ -3525,22 +3525,6 @@ object Strings {
     fun channelDownloadsFinishedDescription(context: Context): String =
         context.getString(R.string.channel_downloads_finished_description)
 
-    /** Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". */
-    fun notifChapterNew(context: Context, chapter: String): String =
-        context.getString(R.string.notif_chapter_new, chapter)
-
-    /** Notification, new chapters: the line under the series' title when one series has several. */
-    fun notifChaptersNew(context: Context, count: Int): String =
-        context.resources.getQuantityString(R.plurals.notif_chapters_new, count, count)
-
-    /** Notification, new chapter: what the lock screen shows when previews are hidden. */
-    fun notifChapterHidden(context: Context): String =
-        context.getString(R.string.notif_chapter_hidden)
-
-    /** Notification, new chapter: the action that opens the reader on the chapter. */
-    fun notifChapterRead(context: Context): String =
-        context.getString(R.string.notif_chapter_read)
-
     /** The download notification while only chapters download. */
     fun downloadsNoticeChapters(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.downloads_notice_chapters, count, count)
@@ -12168,6 +12152,22 @@ object Strings {
     fun opdsReaderUnnamed(context: Context, address: String): String =
         context.getString(R.string.opds_reader_unnamed, address)
 
+    /** Notification, new chapter: the line under the series' title. The chapter is the source's own words for it, such as "Chapter 12". */
+    fun notifChapterNew(context: Context, chapter: String): String =
+        context.getString(R.string.notif_chapter_new, chapter)
+
+    /** Notification, new chapters: the line under the series' title when one series has several. */
+    fun notifChaptersNew(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.notif_chapters_new, count, count)
+
+    /** Notification, new chapter: what the lock screen shows when previews are hidden. */
+    fun notifChapterHidden(context: Context): String =
+        context.getString(R.string.notif_chapter_hidden)
+
+    /** Notification, new chapter: the action that opens the reader on the chapter. */
+    fun notifChapterRead(context: Context): String =
+        context.getString(R.string.notif_chapter_read)
+
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
         context.getString(R.string.seasonal_previous)
@@ -13943,6 +13943,18 @@ object Strings {
     /** Note under that switch. */
     fun settingsAnilistFollowingFooter(context: Context): String =
         context.getString(R.string.settings_anilist_following_footer)
+
+    /** Settings row: whether a connected game controller drives the app. */
+    fun settingsLabelControllerInput(context: Context): String =
+        context.getString(R.string.settings_label_controller_input)
+
+    /** Settings row: swaps the A and B buttons, for a controller laid out as Nintendo's are. */
+    fun settingsLabelSwapFaceButtons(context: Context): String =
+        context.getString(R.string.settings_label_swap_face_buttons)
+
+    /** Heading of the Settings group for game controllers. */
+    fun settingsGroupController(context: Context): String =
+        context.getString(R.string.settings_group_controller)
 
     /** Label of the address field in the Add a server sheet. */
     fun bookServerAddress(context: Context): String =
@@ -15791,6 +15803,10 @@ object Strings {
     fun cloudErrTitle(context: Context, service: String): String =
         context.getString(R.string.cloud_err_title, service)
 
+    /** Status error line under cloud-err-title, with Enter new key, on a device whose group another device started over with a new recovery key. This device keeps everything it holds. */
+    fun cloudErrStartedOver(context: Context, service: String): String =
+        context.getString(R.string.cloud_err_started_over, service)
+
     /** Picker row line. */
     fun cloudDropboxLine(context: Context): String =
         context.getString(R.string.cloud_dropbox_line)
@@ -15854,6 +15870,10 @@ object Strings {
     /** TV cloud row. */
     fun tvCloudSignedOutLine(context: Context): String =
         context.getString(R.string.tv_cloud_signed_out_line)
+
+    /** TV cloud row line, under cloud-err-title, when another device started sync over. Selecting the row opens the pairing code page. */
+    fun tvCloudStartedOverLine(context: Context): String =
+        context.getString(R.string.tv_cloud_started_over_line)
 
     /** TV ConfirmDialog. */
     fun tvCloudSignOutTitle(context: Context, service: String): String =
@@ -15934,6 +15954,50 @@ object Strings {
     /** Button. */
     fun rkeyRestore(context: Context): String =
         context.getString(R.string.rkey_restore)
+
+    /** Text button on the restore screen, for a person who lost the recovery key. It opens a confirmation; the Mac, Windows and Linux add an ellipsis after it. */
+    fun rkeyStartOver(context: Context): String =
+        context.getString(R.string.rkey_start_over)
+
+    /** Confirmation title. */
+    fun rkeyStartOverTitle(context: Context): String =
+        context.getString(R.string.rkey_start_over_title)
+
+    /** Confirmation message. Says what is deleted, what stays and what happens to the other devices. The kind is the word for this device: iPhone, iPad, Mac, phone, tablet, PC or computer. */
+    fun rkeyStartOverLine(context: Context, service: String, kind: String): String =
+        context.getString(R.string.rkey_start_over_line, service, kind)
+
+    /** Destructive button in the confirmation. */
+    fun rkeyStartOverAction(context: Context): String =
+        context.getString(R.string.rkey_start_over_action)
+
+    /** Working title while the folder is cleared. cloud-setting-up follows. */
+    fun rkeyClearing(context: Context): String =
+        context.getString(R.string.rkey_clearing)
+
+    /** Status line beside the progress indicator while the folder is cleared. */
+    fun rkeyClearingLine(context: Context, service: String): String =
+        context.getString(R.string.rkey_clearing_line, service)
+
+    /** Error title when starting over failed. Offline uses cloud-err-offline as the line. */
+    fun rkeyStartOverErrTitle(context: Context): String =
+        context.getString(R.string.rkey_start_over_err_title)
+
+    /** Error line when the service refused to delete the old sync data. */
+    fun rkeyStartOverErrRefused(context: Context, service: String): String =
+        context.getString(R.string.rkey_start_over_err_refused, service)
+
+    /** Second line under either start over error. */
+    fun rkeyStartOverErrKept(context: Context, kind: String): String =
+        context.getString(R.string.rkey_start_over_err_kept, kind)
+
+    /** First line of the recovery key step after starting over, before rkey-line. */
+    fun rkeyStartedOver(context: Context, service: String): String =
+        context.getString(R.string.rkey_started_over, service)
+
+    /** Button on the cloud row of a device whose group was started over; opens the restore screen. */
+    fun rkeyEnterNew(context: Context): String =
+        context.getString(R.string.rkey_enter_new)
 
     /** Add a device. */
     fun pairEnterLine(context: Context): String =

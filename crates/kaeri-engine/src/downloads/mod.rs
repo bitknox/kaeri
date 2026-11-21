@@ -215,9 +215,9 @@ async fn poll_running(
                 // Only a forgotten file can be relocated — while seeding, the torrent
                 // needs it exactly where the session put it.
                 if let (Some(path), Some(dir)) =
-                    (entry.path.clone(), config.downloads.directory.as_ref())
+                    (entry.path.clone(), config.downloads.directory_path())
                 {
-                    final_path = Some(move_into(path, PathBuf::from(dir)));
+                    final_path = Some(move_into(path, dir));
                 }
             }
             let merged = finish(store, config, &row, final_path.clone()).await;

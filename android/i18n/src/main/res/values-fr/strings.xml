@@ -886,14 +886,6 @@
     <string name="channel_chapters_description">Quand une série de votre liste Lecture a un nouveau chapitre.</string>
     <string name="channel_downloads_finished_name">Téléchargements terminés</string>
     <string name="channel_downloads_finished_description">Quand les chapitres que vous avez choisi de télécharger sont tous prêts.</string>
-    <string name="notif_chapter_new">%1$s vient de sortir.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">%1$,d nouveau chapitre</item>
-        <item quantity="many">%1$,d nouveaux chapitres</item>
-        <item quantity="other">%1$,d nouveaux chapitres</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Nouveau chapitre</string>
-    <string name="notif_chapter_read">Lire</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Téléchargement de %1$,d chapitre</item>
         <item quantity="many">Téléchargement de %1$,d chapitres</item>
@@ -3232,6 +3224,14 @@
         <item quantity="other">%1$,d fichiers</item>
     </plurals>
     <string name="opds_reader_unnamed">Liseuse à %1$s</string>
+    <string name="notif_chapter_new">%1$s vient de sortir.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">%1$,d nouveau chapitre</item>
+        <item quantity="many">%1$,d nouveaux chapitres</item>
+        <item quantity="other">%1$,d nouveaux chapitres</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Nouveau chapitre</string>
+    <string name="notif_chapter_read">Lire</string>
     <string name="seasonal_previous">Saison précédente</string>
     <string name="seasonal_next">Saison suivante</string>
     <string name="seasonal_loading">Chargement de cette saison</string>
@@ -3709,6 +3709,9 @@
     <string name="settings_label_picture_in_picture_on_leave">Picture-in-picture en quittant l\'app</string>
     <string name="settings_anilist_following">Afficher les personnes que vous suivez</string>
     <string name="settings_anilist_following_footer">Indique où en sont les personnes que vous suivez sur AniList dans une série, sur sa page et ses épisodes. Qui peut voir votre propre liste se règle sur AniList.</string>
+    <string name="settings_label_controller_input">Utiliser une manette</string>
+    <string name="settings_label_swap_face_buttons">Inverser A et B</string>
+    <string name="settings_group_controller">Manette</string>
     <string name="book_server_address">Adresse</string>
     <string name="book_server_address_hint">Une adresse, ou le lien OPDS complet de Kavita.</string>
     <string name="book_server_kavita_key">Ceci est un lien OPDS de Kavita. Sa clé vous connecte, aucun mot de passe n’est donc nécessaire.</string>
@@ -4254,7 +4257,6 @@
     <string name="cloud_err_app_password">Nextcloud n’a pas accepté ce mot de passe d’application. Créez-en un nouveau dans Nextcloud, sous Réglages, Sécurité.</string>
     <string name="cloud_err_webdav">Le serveur a refusé ce nom d’utilisateur ou ce mot de passe.</string>
     <string name="cloud_err_timeout">La page de connexion s’est fermée avant que l’accès soit autorisé.</string>
-    <string name="cloud_err_other_group">Ce dossier appartient à un autre ensemble de appareils. Saisissez sa clé de récupération pour les rejoindre, ou choisissez un autre dossier.</string>
     <string name="cloud_err_signed_out">%1$s a déconnecté Kaeri. Vos changements attendent sur cet %2$s jusqu’à votre nouvelle connexion.</string>
     <string name="cloud_err_full">%1$s est plein. Libérez de l’espace là-bas, puis réessayez.</string>
     <string name="cloud_err_folder_gone">Kaeri ne peut plus ouvrir le dossier. Choisissez-le à nouveau.</string>

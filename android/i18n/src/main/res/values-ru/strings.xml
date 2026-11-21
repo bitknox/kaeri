@@ -925,15 +925,6 @@
     <string name="channel_chapters_description">Когда у серии из списка «Читаю» выходит новая глава.</string>
     <string name="channel_downloads_finished_name">Загрузки завершены</string>
     <string name="channel_downloads_finished_description">Когда все главы, выбранные для скачивания, готовы.</string>
-    <string name="notif_chapter_new">Вышло: %1$s.</string>
-    <plurals name="notif_chapters_new">
-        <item quantity="one">%1$,d новая глава</item>
-        <item quantity="few">%1$,d новые главы</item>
-        <item quantity="many">%1$,d новых глав</item>
-        <item quantity="other">%1$,d новой главы</item>
-    </plurals>
-    <string name="notif_chapter_hidden">Новая глава</string>
-    <string name="notif_chapter_read">Читать</string>
     <plurals name="downloads_notice_chapters">
         <item quantity="one">Скачивается %1$,d глава</item>
         <item quantity="few">Скачиваются %1$,d главы</item>
@@ -3356,6 +3347,15 @@
         <item quantity="other">%1$,d файла</item>
     </plurals>
     <string name="opds_reader_unnamed">Ридер по адресу %1$s</string>
+    <string name="notif_chapter_new">Вышло: %1$s.</string>
+    <plurals name="notif_chapters_new">
+        <item quantity="one">%1$,d новая глава</item>
+        <item quantity="few">%1$,d новые главы</item>
+        <item quantity="many">%1$,d новых глав</item>
+        <item quantity="other">%1$,d новой главы</item>
+    </plurals>
+    <string name="notif_chapter_hidden">Новая глава</string>
+    <string name="notif_chapter_read">Читать</string>
     <string name="seasonal_previous">Предыдущий сезон</string>
     <string name="seasonal_next">Следующий сезон</string>
     <string name="seasonal_loading">Загружаем сезон</string>
@@ -3842,6 +3842,9 @@
     <string name="settings_label_picture_in_picture_on_leave">«Картинка в картинке» при выходе из приложения</string>
     <string name="settings_anilist_following">Показывать тех, на кого вы подписаны</string>
     <string name="settings_anilist_following_footer">Показывает на странице сериала и у его эпизодов, где сейчас те, на кого вы подписаны в AniList. Кто видит ваш собственный список, настраивается в AniList.</string>
+    <string name="settings_label_controller_input">Использовать контроллер</string>
+    <string name="settings_label_swap_face_buttons">Поменять местами A и B</string>
+    <string name="settings_group_controller">Контроллер</string>
     <string name="book_server_address">Адрес</string>
     <string name="book_server_address_hint">Адрес или вся ссылка OPDS из Kavita.</string>
     <string name="book_server_kavita_key">Это ссылка OPDS из Kavita. Ключ в ней служит для входа, поэтому пароль не нужен.</string>
@@ -4410,7 +4413,6 @@
     <string name="cloud_err_app_password">Nextcloud не принял этот пароль приложения. Создайте новый в Nextcloud, в разделе «Настройки», «Безопасность».</string>
     <string name="cloud_err_webdav">Сервер отклонил это имя пользователя или пароль.</string>
     <string name="cloud_err_timeout">Страница входа закрылась, прежде чем доступ был разрешён.</string>
-    <string name="cloud_err_other_group">Эта папка принадлежит другому набору устройств. Введите её ключ восстановления, чтобы присоединиться, или выберите другую папку.</string>
     <string name="cloud_err_signed_out">%1$s вывел Kaeri из аккаунта. Изменения ждут на этом устройстве (%2$s), пока вы не войдёте снова.</string>
     <string name="cloud_err_full">В %1$s нет места. Освободите его и попробуйте снова.</string>
     <string name="cloud_err_folder_gone">Kaeri больше не может открыть папку. Выберите её снова.</string>

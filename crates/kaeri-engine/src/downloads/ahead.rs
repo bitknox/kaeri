@@ -601,8 +601,8 @@ impl Work for Live {
 
 /// Where a finished download stays: the downloads folder, unless it seeds on from the cache.
 fn destination(config: &Config, cache_dir: &Path) -> PathBuf {
-    match (&config.downloads.directory, config.downloads.keep_seeding) {
-        (Some(dir), false) => PathBuf::from(dir),
+    match (config.downloads.directory_path(), config.downloads.keep_seeding) {
+        (Some(dir), false) => dir,
         _ => cache_dir.join("torrents"),
     }
 }

@@ -1166,7 +1166,7 @@ pub fn play_settings(
         presence: config.presence.clone(),
         reports: Default::default(),
         party,
-        up_next_countdown: playback::UP_NEXT_COUNTDOWN,
+        up_next_countdown: playback.up_next_countdown,
         mpv_options: kaeri_playback::protocol::option_pairs(&playback.mpv_args),
         untracked: false,
         swarm: Default::default(),
@@ -1248,5 +1248,25 @@ mod tests {
         assert_eq!(following(&rows, "1").as_deref(), Some("2"));
         assert_eq!(following(&rows, "3"), None, "a finale has no next");
         assert_eq!(following(&rows, "OVA"), None);
+    }
+
+    #[test]
+    fn up_next_counts_down_what_the_setting_says() {
+        let mut config = Config::default();
+        assert_eq!(
+            play_settings(&config, Vec::new(), Default::default()).up_next_countdown,
+            playback::UP_NEXT_COUNTDOWN,
+        );
+        config.playback.up_next_countdown = 20;
+        assert_eq!(
+            play_settings(&config, Vec::new(), Default::default()).up_next_countdown,
+            20
+        );
+        config.playback.up_next_countdown = 0;
+        assert_eq!(
+            play_settings(&config, Vec::new(), Default::default()).up_next_countdown,
+            0,
+            "off waits for Play now"
+        );
     }
 }
