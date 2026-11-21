@@ -2070,6 +2070,8 @@ impl Session {
         self.at = index;
         self.opened = false;
         self.read_fired = false;
+        // The read rule's wait ends with the chapter it started in, whatever opens the next.
+        self.read_timer += 1;
         self.read_wait = None;
         self.end_page_said = false;
         self.peeked = false;
@@ -3517,6 +3519,43 @@ mod tests {
             })
             .await;
         assert_eq!((back.0.as_str(), back.1), ("1", Some(1)));
+    }
+
+    /// Another device's place moves the reader on from the last page while the read rule waits
+    /// there: the wait goes with the chapter it started in, and the chapter moved to is not
+    /// counted read by it.
+    #[tokio::test(start_paused = true)]
+    async fn a_move_to_another_chapter_ends_the_last_pages_wait() {
+        let mine = Store::open_in_memory().unwrap();
+        mine.sync_enable("phone").unwrap();
+        let desk = Store::open_in_memory().unwrap();
+        desk.set_sync_clock(|| 4_000_000_000_000);
+        desk.sync_enable("desk").unwrap();
+        mine.sync_device_add("desk", "Desk", "").unwrap();
+        let mut h = harness(mine.clone());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        let mut ahead = ReadEvent::new(WORK, "2", 2);
+        ahead.page = Some(0);
+        desk.record_read(&ahead, Vec::new()).unwrap();
+        let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+        mine.apply_ops(ops).unwrap();
+        h.synced();
+        h.until(|e| match e {
+            ReaderEvent::Opened(view) if view.chapter.id.as_str() == "2" => Some(()),
+            _ => None,
+        })
+        .await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        let read: Vec<ChapterId> = h
+            .drain()
+            .into_iter()
+            .filter_map(|e| match e {
+                ReaderEvent::ChapterRead { chapter, .. } => Some(chapter),
+                _ => None,
+            })
+            .collect();
+        assert!(!read.contains(&ChapterId::new("2")), "{read:?}");
     }
 
     #[tokio::test(start_paused = true)]
