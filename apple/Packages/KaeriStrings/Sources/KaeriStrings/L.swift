@@ -8654,6 +8654,9 @@ public enum L {
         Self.format("episode-row-playing", fallback: "Playing · %1$@", left)
     }
 
+    /// Episode row in the player's panel: the episode is part story, part filler.
+    public static var episodeRowMixed: String { string("episode-row-mixed", fallback: "Mixed") }
+
     /// Episode row in the player's panel: the length of an episode nobody has started.
     public static func episodeRowLength(minutes: Int) -> String {
         Self.format("episode-row-length", fallback: "%1$lld min", minutes)
@@ -8710,6 +8713,12 @@ public enum L {
 
     /// Player panel, under the subtitled or dubbed switch during a watch party.
     public static var partyVersionOwn: String { string("party-version-own", fallback: "Only your player switches. The room keeps playing.") }
+
+    /// Player panel: button under a synopsis cut to three lines, that shows it whole.
+    public static var playerPanelMore: String { string("player-panel-more", fallback: "More") }
+
+    /// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+    public static var playerPanelLess: String { string("player-panel-less", fallback: "Less") }
 
     /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
     public static var privateMode: String { string("private-mode", fallback: "Private mode") }

@@ -5069,6 +5069,8 @@
     <string name="player_panel">Episodes and sources</string>
     <!-- Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left. -->
     <string name="episode_row_playing">Playing · %1$s</string>
+    <!-- Episode row in the player's panel: the episode is part story, part filler. -->
+    <string name="episode_row_mixed">Mixed</string>
     <!-- Episode row in the player's panel: the length of an episode nobody has started. -->
     <string name="episode_row_length">%1$,d min</string>
     <!-- Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it. -->
@@ -5102,6 +5104,10 @@
     <string name="notice_playing_from_source">Playing from %1$s at %2$s</string>
     <!-- Player panel, under the subtitled or dubbed switch during a watch party. -->
     <string name="party_version_own">Only your player switches. The room keeps playing.</string>
+    <!-- Player panel: button under a synopsis cut to three lines, that shows it whole. -->
+    <string name="player_panel_more">More</string>
+    <!-- Player panel: button under a synopsis shown whole after More, that folds it back to three lines. -->
+    <string name="player_panel_less">Less</string>
     <!-- The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. -->
     <string name="private_mode">Private mode</string>
     <!-- The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux. -->

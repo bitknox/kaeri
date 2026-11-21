@@ -9542,6 +9542,10 @@ object Strings {
     fun episodeRowPlaying(context: Context, left: String): String =
         context.getString(R.string.episode_row_playing, left)
 
+    /** Episode row in the player's panel: the episode is part story, part filler. */
+    fun episodeRowMixed(context: Context): String =
+        context.getString(R.string.episode_row_mixed)
+
     /** Episode row in the player's panel: the length of an episode nobody has started. */
     fun episodeRowLength(context: Context, minutes: Int): String =
         context.getString(R.string.episode_row_length, minutes)
@@ -9601,6 +9605,14 @@ object Strings {
     /** Player panel, under the subtitled or dubbed switch during a watch party. */
     fun partyVersionOwn(context: Context): String =
         context.getString(R.string.party_version_own)
+
+    /** Player panel: button under a synopsis cut to three lines, that shows it whole. */
+    fun playerPanelMore(context: Context): String =
+        context.getString(R.string.player_panel_more)
+
+    /** Player panel: button under a synopsis shown whole after More, that folds it back to three lines. */
+    fun playerPanelLess(context: Context): String =
+        context.getString(R.string.player_panel_less)
 
     /** The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. */
     fun privateMode(context: Context): String =

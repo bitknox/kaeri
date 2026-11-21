@@ -73837,6 +73837,18 @@
         }
       }
     },
+    "episode-row-mixed" : {
+      "comment" : "Episode row in the player's panel: the episode is part story, part filler.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixed"
+          }
+        }
+      }
+    },
     "episode-row-not-out" : {
       "comment" : "Row note for an episode that has not aired.",
       "extractionState" : "manual",
@@ -182761,6 +182773,18 @@
         }
       }
     },
+    "player-panel-less" : {
+      "comment" : "Player panel: button under a synopsis shown whole after More, that folds it back to three lines.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Less"
+          }
+        }
+      }
+    },
     "player-panel-metadata-only" : {
       "comment" : "Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.",
       "extractionState" : "manual",
@@ -182769,6 +182793,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "No source lists this show yet. Episodes can still be marked watched."
+          }
+        }
+      }
+    },
+    "player-panel-more" : {
+      "comment" : "Player panel: button under a synopsis cut to three lines, that shows it whole.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
           }
         }
       }
