@@ -854,7 +854,8 @@ impl BookDownloads {
     }
 
     /// Cancel what is queued or fetching of `chapters` (all of the work's when empty). Finished
-    /// downloads stay.
+    /// downloads stay. One queued to be fetched again, as its source added a part, still names
+    /// its old file, which goes with it: nothing else would ever remove it.
     pub fn cancel(&self, lent: &Lent, work: &WorkId, chapters: &[ChapterId]) {
         let store = lent.sources.store();
         let ids: Vec<String> = chapters.iter().map(|c| c.as_str().to_owned()).collect();
@@ -865,7 +866,12 @@ impl BookDownloads {
                 matches!(row.state, BookDownloadState::Queued | BookDownloadState::Failed)
                     || row.state == BookDownloadState::Downloading;
             if waiting && (ids.is_empty() || ids.contains(&row.chapter)) {
-                let _ = store.remove_book_downloads(work.as_str(), &[row.chapter], false, now);
+                let taken =
+                    store.remove_book_downloads(work.as_str(), &[row.chapter], false, now);
+                for row in taken.unwrap_or_default().iter().filter(|r| r.path.is_some()) {
+                    forget_file(row);
+                    keep_parts(store, &row.work, &row.chapter, None);
+                }
                 gone = true;
             }
         }
@@ -973,7 +979,12 @@ impl BookDownloads {
         (work, chapter): (&WorkId, &ChapterId),
         now: i64,
     ) -> bool {
-        if store.unqueue_kept_ready(work.as_str(), chapter.as_str(), now).unwrap_or(false) {
+        if let Ok(Some(taken)) = store.take_kept_ready(work.as_str(), chapter.as_str(), now) {
+            // A chapter queued to be fetched again still names its old file.
+            if taken.path.is_some() {
+                forget_file(&taken);
+                keep_parts(store, &taken.work, &taken.chapter, None);
+            }
             self.publish(store, tx);
             return true;
         }
@@ -1316,6 +1327,11 @@ impl BookDownloads {
                     // Cancelled or deleted while its last page or its file was made: the file
                     // goes with the row, and a row kept as removed stays removed.
                     let _ = std::fs::remove_file(&done.path);
+                }
+                // Fetched again under another name, as a chapter that came as pages and now
+                // comes as a book: the old file is no row's any more.
+                if kept && row.path.as_deref().is_some_and(|old| Path::new(old) != done.path) {
+                    forget_file(row);
                 }
                 self.note_outcome(row, false, now);
                 self.publish(store, &lent.tx);

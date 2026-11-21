@@ -124,7 +124,9 @@ fn row_of(r: &Row<'_>) -> rusqlite::Result<BookDownload> {
 
 impl Store {
     /// Queue a chapter. A chapter that has a row is not queued twice: a failed one is queued
-    /// again, one let go of is queued again only when asked for by hand.
+    /// again, one let go of is queued again only when asked for by hand. A file still named on
+    /// the row, as on a chapter whose fetching again failed, stays named until the new one
+    /// replaces it, so it goes with the row.
     pub fn queue_book_download(&self, ask: &BookDownloadAsk<'_>, now: i64) -> Result<Queued> {
         self.with_tx(|tx| {
             let had: Option<(String, i64)> = tx
@@ -143,7 +145,7 @@ impl Store {
                      VALUES (?1, ?2, ?3, ?4, 'queued', ?5, ?6, ?6)
                      ON CONFLICT(work, chapter) DO UPDATE SET source_id = excluded.source_id,
                         version_label = excluded.version_label, state = 'queued',
-                        path = NULL, pages_done = 0, pages_total = NULL, bytes = 0,
+                        pages_done = 0, pages_total = NULL, bytes = 0,
                         error = NULL, keep_ready = excluded.keep_ready,
                         owner = NULL, lease_until = 0, updated_at = excluded.updated_at",
                     params![
@@ -415,7 +417,7 @@ impl Store {
     pub fn book_downloads_signed_in(&self, source: &str, now: i64) -> Result<usize> {
         self.with_conn(|c| {
             Ok(c.execute(
-                "UPDATE book_download SET state = 'queued', path = NULL, pages_done = 0,
+                "UPDATE book_download SET state = 'queued', pages_done = 0,
                         pages_total = NULL, bytes = 0, error = NULL, updated_at = ?2
                   WHERE source_id = ?1 AND state = 'failed' AND substr(error, 1, 8) = 'sign_in:'",
                 params![source, now],
@@ -486,15 +488,39 @@ impl Store {
     /// [`Self::remove_book_downloads`] would: true when it was taken. One the queue has started,
     /// or one the person asked for, stays.
     pub fn unqueue_kept_ready(&self, work: &str, chapter: &str, now: i64) -> Result<bool> {
-        self.with_conn(|c| {
-            let taken = c.execute(
-                "UPDATE book_download SET state = 'removed', path = NULL, bytes = 0,
-                    pages_done = 0, error = NULL, updated_at = ?3
-                  WHERE work = ?1 AND chapter = ?2 AND keep_ready = 1 AND state = 'queued'",
-                params![work, chapter, now],
-            )?;
-            Ok(taken > 0)
-        })
+        Ok(self.take_kept_ready(work, chapter, now)?.is_some())
+    }
+
+    /// [`Self::unqueue_kept_ready`], saying which row was taken, as it was: a chapter queued to
+    /// be fetched again still names its old file, which is the caller's to delete.
+    pub fn take_kept_ready(
+        &self,
+        work: &str,
+        chapter: &str,
+        now: i64,
+    ) -> Result<Option<BookDownload>> {
+        let taken = self.with_tx(|tx| {
+            let row = tx
+                .query_row(
+                    &format!(
+                        "SELECT {COLUMNS} FROM book_download
+                          WHERE work = ?1 AND chapter = ?2 AND keep_ready = 1
+                            AND state = 'queued'"
+                    ),
+                    params![work, chapter],
+                    row_of,
+                )
+                .optional()?;
+            if let Some(row) = &row {
+                tx.execute(
+                    "UPDATE book_download SET state = 'removed', path = NULL, bytes = 0,
+                        pages_done = 0, error = NULL, updated_at = ?2 WHERE id = ?1",
+                    params![row.id, now],
+                )?;
+            }
+            Ok(row)
+        })?;
+        Ok(taken.map(|r| self.whole(r)))
     }
 
     /// Take chapters out. A chapter fetched ahead on its own leaves a mark so it is not fetched
@@ -605,6 +631,28 @@ mod tests {
         assert_eq!(store.queue_book_download(&ask("1", false), 13).unwrap(), Queued::Added);
         let again = store.book_download("a:900401", "1").unwrap().unwrap();
         assert_eq!((again.state, again.error), (BookDownloadState::Queued, None));
+    }
+
+    #[test]
+    fn a_chapter_whose_fetching_again_failed_keeps_its_old_file_named_when_queued_again() {
+        let store = Store::open_in_memory().unwrap();
+        for (chapter, error) in [("1", "offline"), ("2", "sign_in:shelf")] {
+            store.queue_book_download(&ask(chapter, false), 1).unwrap();
+            let row = store.next_book_download().unwrap().unwrap();
+            store
+                .book_download_done(row.id, &format!("/d/{chapter}.cbz"), Some(3), 10, 2)
+                .unwrap();
+            store.book_download_refetch("a:900401", chapter, 3).unwrap();
+            store.book_download_failed(row.id, error, 4).unwrap();
+        }
+        assert_eq!(store.queue_book_download(&ask("1", false), 5).unwrap(), Queued::Added);
+        assert_eq!(store.book_downloads_signed_in("shelf", 5).unwrap(), 1);
+        for chapter in ["1", "2"] {
+            let again = store.book_download("a:900401", chapter).unwrap().unwrap();
+            let file = format!("/d/{chapter}.cbz");
+            assert_eq!(again.state, BookDownloadState::Queued, "{chapter}");
+            assert_eq!(again.path.as_deref(), Some(file.as_str()), "{chapter}");
+        }
     }
 
     #[test]

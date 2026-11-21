@@ -142,7 +142,10 @@ impl BookSource for Shelf {
         }
         if chapter.starts_with("book-") {
             let path = self.book.lock().unwrap().clone().expect("a book to give");
-            return Ok(ChapterContent::Book(kaeri_core::books::BookFile { path, temporary: true }));
+            return Ok(ChapterContent::Book(kaeri_core::books::BookFile {
+                path,
+                temporary: true,
+            }));
         }
         if chapter.starts_with("made-") {
             return Ok(ChapterContent::Images(
@@ -1282,6 +1285,67 @@ async fn a_failure_kept_on_the_row_never_reads_as_a_nameless_source_down() {
         let states = kit.states();
         assert_eq!(states, [("1".into(), ChapterDownloadState::Failed { failure })], "{kept}");
     }
+}
+
+/// A chapter queued to be fetched again, as its source added a part, still names its old file.
+/// Cancelled, or taken out of the queue as the reader fetches it, the file goes with the row;
+/// nothing else would ever remove it.
+#[tokio::test]
+async fn a_chapter_queued_again_takes_its_old_file_along_when_it_leaves_the_queue() {
+    let kit = kit(&["1", "2"]);
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    let ask = kaeri_store::book_downloads::BookDownloadAsk {
+        work: WORK,
+        chapter: "2",
+        source_id: "shelf",
+        version_label: None,
+        keep_ready: true,
+    };
+    kit.store().queue_book_download(&ask, 1).unwrap();
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    let file = |c: &str| {
+        let row = kit.store().book_download(WORK, c).unwrap().unwrap();
+        assert_eq!(row.state, BookDownloadState::Done, "{c}");
+        std::path::PathBuf::from(row.path.unwrap())
+    };
+    let (one, two) = (file("1"), file("2"));
+    assert!(one.exists() && two.exists());
+
+    kit.store().book_download_refetch(WORK, "1", 5).unwrap();
+    kit.queue.cancel(&kit.lent, &WorkId::new(WORK), &ids(&["1"]));
+    assert!(kit.store().book_download(WORK, "1").unwrap().is_none());
+    assert!(!one.exists(), "cancelled, the old file stayed with no row");
+
+    kit.store().book_download_refetch(WORK, "2", 6).unwrap();
+    let chapter = (&WorkId::new(WORK), &ChapterId::new("2"));
+    assert!(kit.queue.reader_fetches(kit.store(), &kit.lent.tx, chapter, 7));
+    assert!(!two.exists(), "taken out of the queue, the old file stayed with no row");
+}
+
+/// A chapter fetched again under another name than its old file's, as one that came as a book
+/// and now comes as pages, leaves no old file behind.
+#[tokio::test]
+async fn a_chapter_fetched_again_under_another_name_removes_its_old_file() {
+    let kit = kit(&["1"]);
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    let new = std::path::PathBuf::from(row.path.unwrap());
+    std::fs::remove_file(&new).unwrap();
+    let old = new.with_extension("epub");
+    std::fs::write(&old, b"PK an older edition").unwrap();
+    kit.store().book_download_done(row.id, &old.to_string_lossy(), None, 19, 4).unwrap();
+
+    kit.store().book_download_refetch(WORK, "1", 5).unwrap();
+    kit.queue.start(&kit.lent);
+    kit.settle().await;
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    assert_eq!(row.path.as_deref(), Some(&*new.to_string_lossy()));
+    assert!(new.exists());
+    assert!(!old.exists(), "the old file stayed with no row");
 }
 
 /// A book server's copy of a whole book, made for the fetch, is removed when keeping it as the
