@@ -82,6 +82,12 @@ data class EngineLaunch(
     val folderAccess: FfiFolderAccess? = null,
     /** The platform's own grant of Google Drive on a phone, Play services' in the app flavour. */
     val cloudAuthorizer: FfiCloudAuthorizer? = null,
+    /**
+     * The language the engine speaks, as a catalogue tag: the one the app shows, for the engine's
+     * own words, reading's chapter groups and the TV. A launch from an activity or the app passes
+     * [AppLanguage.showing]; without a context, the process's own language is the same choice.
+     */
+    val language: String = AppLanguage.process().tag,
 ) {
     /** Which engine. */
     sealed interface Engine {
@@ -110,6 +116,7 @@ data class EngineLaunch(
             simklClientId = simklClientId,
             traktClientId = traktClientId,
             secrets = secrets,
+            language = language,
             profile = profile,
             audioTap = audioTap,
             reading = engine == Engine.App,

@@ -18,6 +18,14 @@ struct AppLanguageTests {
         AppLanguage.shipped.first { $0.tag == tag }!
     }
 
+    /// The engine starts in the language the app shows, so its words, reading's chapter groups
+    /// and the TV's lines come in it too.
+    @Test func theEngineStartsInTheLanguageTheAppShows() {
+        let root = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
+        let launch = EngineLaunch(engine: .app, home: .override(root: root), platform: .macOs, secrets: .host)
+        #expect(launch.record.language == AppLanguage.showing.tag)
+    }
+
     @Test func nothingIsChosenUntilOneIsPicked() {
         let (language, defaults, name) = language()
         defer { defaults.removePersistentDomain(forName: name) }

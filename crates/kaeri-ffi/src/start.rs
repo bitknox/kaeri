@@ -185,9 +185,12 @@ pub struct FfiStart {
     /// [`SecretsMode::Host`].
     #[uniffi(default = None)]
     pub secrets: Option<SecretsMode>,
-    /// The language the app speaks, as a tag such as `da` or `pt-BR`, for what the engine
-    /// writes where the app can't render it: the episode line a TV shows while casting. `None`
-    /// for English.
+    /// The language the app speaks, as a catalogue tag such as `de` or `pt-BR`. Starting makes
+    /// it the process's language, so the words the engine and the model write come in it
+    /// (count lines, headings, search chips), and so does the episode line a TV shows while
+    /// casting. A tag the catalogue lacks falls back to the same language in another region,
+    /// then English. `None` leaves the process's language as it is: English, unless something
+    /// set it.
     #[uniffi(default = None)]
     pub language: Option<String>,
     /// The profile to start in, when the install has profiles: the picker's choice, or what

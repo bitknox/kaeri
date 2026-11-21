@@ -78,6 +78,8 @@ kaeri-alloc.workspace = true
 kaeri-audio-tap.workspace = true
 kaeri-core.workspace = true
 kaeri-engine.workspace = true
+# The process's language, set from the one the app starts in.
+kaeri-i18n.workspace = true
 # The commands and events themselves cross, with every row they carry: the model's `ffi` feature
 # derives their conversions, and turns on the core's for the core types among them.
 kaeri-model = { workspace = true, features = ["ffi"] }

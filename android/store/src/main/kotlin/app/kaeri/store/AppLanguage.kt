@@ -34,6 +34,12 @@ object AppLanguage {
         chosen(context) ?: match(Locale.getDefault().toLanguageTag()) ?: shipped.first()
 
     /**
+     * The language the process runs in, among the shipped: what [showing] gives where no context
+     * is at hand, since the chosen language becomes the process's default locale as the app starts.
+     */
+    fun process(): Language = match(Locale.getDefault().toLanguageTag()) ?: shipped.first()
+
+    /**
      * Choose [language], or `null` to follow the system. From Android 13 this is the system's
      * per-app setting, so the system's own screen shows the same choice and the activity is
      * recreated by the system; below that the caller recreates it.
