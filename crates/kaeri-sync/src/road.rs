@@ -105,6 +105,8 @@ pub struct FolderRoad {
     /// The group this device is in, once known: from creating, joining or opening it, else
     /// from what the store kept.
     group: std::sync::Mutex<Option<[u8; 16]>>,
+    /// Set once the device moved to another folder or left.
+    retired: std::sync::Mutex<bool>,
 }
 
 /// What the road owns in a folder, besides `group.bin`.
@@ -328,7 +330,19 @@ impl FolderRoad {
             key,
             ring: std::sync::Mutex::new(ring),
             group: std::sync::Mutex::new(None),
+            retired: std::sync::Mutex::new(false),
         }
+    }
+
+    /// Mark the road as no longer used: the device moved to another folder or left.
+    pub fn retire(&self) {
+        *self.retired.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = true;
+    }
+
+    /// Keep `value` under `key` in the store.
+    fn keep(&self, key: &str, value: &str) -> Result<()> {
+        self.store.sync_meta_set(key, value)?;
+        Ok(())
     }
 
     /// Keep `group` as the one this device is in, here and in the store. What was kept of
@@ -345,7 +359,7 @@ impl FolderRoad {
             }
             None => {}
         }
-        self.store.sync_meta_set(&key, &hexed)?;
+        self.keep(&key, &hexed)?;
         Ok(())
     }
 
@@ -614,7 +628,7 @@ impl FolderRoad {
                     Err(e) => return Err(e.into()),
                 }
             }
-            self.store.sync_meta_set(&shared, &fp)?;
+            self.keep(&shared, &fp)?;
         }
         Ok(())
     }
@@ -659,7 +673,7 @@ impl FolderRoad {
         if names != seen {
             let json =
                 serde_json::to_string(&names).map_err(|_| SyncError::Damaged("encoding"))?;
-            self.store.sync_meta_set(&seen_key, &json)?;
+            self.keep(&seen_key, &json)?;
         }
         Ok(())
     }
@@ -689,7 +703,7 @@ impl FolderRoad {
                 break;
             }
         }
-        self.store.sync_meta_set(&checked, &fp)?;
+        self.keep(&checked, &fp)?;
         Ok(found)
     }
 
@@ -739,7 +753,7 @@ impl FolderRoad {
                 break;
             }
             cursor = n;
-            self.store.sync_meta_set(&self.meta(&cursor_key), &cursor.to_string())?;
+            self.keep(&self.meta(&cursor_key), &cursor.to_string())?;
         }
         self.store.sync_touch_peer(device, now_secs())?;
         Ok(())
@@ -777,8 +791,8 @@ impl FolderRoad {
                     Err(e) => return Err(e.into()),
                 }
             }
-            self.store.sync_meta_set(&self.meta("segno"), &number.to_string())?;
-            self.store.sync_meta_set(&self.meta("published"), &last.to_string())?;
+            self.keep(&self.meta("segno"), &number.to_string())?;
+            self.keep(&self.meta("published"), &last.to_string())?;
             report.segments_written += 1;
             report.ops_written += batch.len();
         }
@@ -794,7 +808,7 @@ impl FolderRoad {
         }
         let sealed = seal::seal(&self.keyring(), Kind::Acks, &self.device, 0, &plain)?;
         self.replace(&self.path(&format!("devices/{}/acks.bin", self.device)), &sealed).await?;
-        self.store.sync_meta_set(&self.meta("acked"), &hex::encode(&plain))?;
+        self.keep(&self.meta("acked"), &hex::encode(&plain))?;
         Ok(())
     }
 
