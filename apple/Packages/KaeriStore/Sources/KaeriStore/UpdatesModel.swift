@@ -84,6 +84,9 @@ public final class UpdatesModel {
     @ObservationIgnored public var installer: (any UpdateInstaller)?
     /// How a command reaches the engine.
     @ObservationIgnored var send: (Command) -> Void = { _ in }
+    /// Counts the updates the viewer started and stopped: word from one that was stopped, or
+    /// from before the latest Update, is not the latest one's.
+    @ObservationIgnored private var session = 0
 
     public init() {}
 
@@ -137,14 +140,19 @@ public final class UpdatesModel {
         guard let release = latest, release.macos != nil, let installer, !progress.isActive else { return }
         notice = nil
         progress = .preparing
+        session += 1
+        let current = session
         installer.install(release) { [weak self] progress in
-            self?.progress = progress
+            guard let self, self.session == current else { return }
+            self.progress = progress
         }
     }
 
-    /// Stop an update before it installs.
+    /// Stop an update before it installs. What the installer still says of it afterwards, as
+    /// while it unpacks, which has no stop, is not shown.
     public func cancel() {
         guard progress.isActive, progress != .relaunching else { return }
+        session += 1
         installer?.cancel()
         progress = .idle
     }
@@ -179,8 +187,13 @@ public struct UpdateGate: Equatable, Sendable {
     public init() {}
 
     public enum Choice: Equatable, Sendable {
+        /// Download it if need be, and install it.
         case install
+        /// Leave it: an update that is only information has nothing to install.
         case dismiss
+        /// Stop it, and whatever began for it. Leaving an update that began installing would
+        /// still install it when the app quits.
+        case stop
     }
 
     /// The viewer pressed Update for `version`.
@@ -193,11 +206,13 @@ public struct UpdateGate: Equatable, Sendable {
         armed = nil
     }
 
-    /// What to answer the feed's update `found`: install it when the viewer asked for it or an
-    /// older release, as when a newer one came out since; dismiss anything else, and an update
-    /// that is only information, with no file.
+    /// What to answer the feed's update `found`, and again once it is ready to install: install
+    /// it when the viewer asked for it or an older release, as when a newer one came out since;
+    /// stop anything else, as once the viewer stopped it. An update that is only information,
+    /// with no file, is dismissed.
     public func choice(found: String, informationOnly: Bool) -> Choice {
-        guard let armed, !informationOnly, !Self.older(found, than: armed) else { return .dismiss }
+        if informationOnly { return .dismiss }
+        guard let armed, !Self.older(found, than: armed) else { return .stop }
         return .install
     }
 
