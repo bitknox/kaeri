@@ -379,13 +379,10 @@ impl Chat {
 
     /// Everything on the video goes at once.
     fn clear(&self) {
-        // The lines come out of the lists before GTK sees them go: removing a line that is still
-        // sliding ends its slide, and the slide's finish runs inside `column.remove`.
-        let shown = std::mem::take(&mut *self.shown.borrow_mut());
-        self.waiting.borrow_mut().clear();
-        for shown in shown {
+        while let Some(shown) = self.shown.borrow_mut().pop_front() {
             self.column.remove(&shown.revealer);
         }
+        self.waiting.borrow_mut().clear();
         self.fold.set_visible(false);
         while let Some(moment) = self.moments.first_child() {
             self.moments.remove(&moment);
@@ -548,31 +545,9 @@ impl Chat {
                 let revealer = revealer_c.clone();
                 move || {
                     let Some(chat) = me.upgrade() else { return };
-                    let listed = {
-                        let mut shown = chat.shown.borrow_mut();
-                        let before = shown.len();
-                        shown.retain(|s| s.revealer != revealer);
-                        shown.len() < before
-                    };
-                    // A line cleared away while it slid is gone already.
-                    if !listed {
-                        return;
-                    }
+                    chat.shown.borrow_mut().retain(|s| s.revealer != revealer);
                     if revealer.parent().is_some() {
-                        if chat.column.is_mapped() {
-                            chat.column.remove(&revealer);
-                        } else {
-                            // The column is being hidden and GTK is still walking its children:
-                            // the line goes once that walk is over.
-                            let column = chat.column.clone();
-                            glib::idle_add_local_once(move || {
-                                if revealer.parent().as_ref()
-                                    == Some(column.upcast_ref::<gtk::Widget>())
-                                {
-                                    column.remove(&revealer);
-                                }
-                            });
-                        }
+                        chat.column.remove(&revealer);
                     }
                     chat.promote();
                 }
