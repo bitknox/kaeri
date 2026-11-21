@@ -1538,6 +1538,13 @@ impl<D: Database, B: Blobs> Store<D, B> {
                 Err(version_conflict(&entry))
             };
         }
+        // A version published before and since replaced or unpublished is still that build:
+        // members who installed it keep it and are never offered other bytes under its number.
+        if let Some(earlier) = self.meta(&published_key(&entry.id, &entry.version)).await?
+            && earlier != entry.sha256
+        {
+            return Err(version_conflict(&entry));
+        }
 
         // Named by content, so a file is never overwritten in place: a racing publish of the same
         // version writes a different key, and the row decides which one counts.
@@ -1565,6 +1572,7 @@ impl<D: Database, B: Blobs> Store<D, B> {
             entry.kind(),
             serde_json::to_string(&entry.media).unwrap_or_else(|_| "[]".into())
         )];
+        statements.extend(previous.iter().chain([&entry]).map(remember_published));
         statements.extend(bump_sequence(now));
         let changed = self.batch(statements).await?;
         if changed.first().copied().unwrap_or(0) == 0 {
@@ -1589,6 +1597,7 @@ impl<D: Database, B: Blobs> Store<D, B> {
             id,
             previous.sha256.as_str()
         )];
+        statements.push(remember_published(&previous));
         statements.extend(bump_sequence(now));
         let changed = self.batch(statements).await?;
         if changed.first().copied().unwrap_or(0) == 0 {
@@ -1853,6 +1862,21 @@ fn bump_sequence(now: i64) -> [Statement; 2] {
             now.to_string()
         ),
     ]
+}
+
+/// Where the digest of every version of a plugin ever published here is kept in `meta`, so a
+/// version keeps its bytes after a newer one replaces it or it is unpublished.
+fn published_key(id: &str, version: &str) -> String {
+    format!("published:{id}@{version}")
+}
+
+/// Remember `entry`'s digest under its version, unless one is already kept.
+fn remember_published(entry: &IndexEntry) -> Statement {
+    sql!(
+        "INSERT INTO meta (key, value) VALUES (?1, ?2) ON CONFLICT(key) DO NOTHING",
+        published_key(&entry.id, &entry.version),
+        entry.sha256.as_str()
+    )
 }
 
 fn version_conflict(entry: &IndexEntry) -> StoreError {

@@ -362,6 +362,31 @@ async fn a_published_version_never_changes() {
 }
 
 #[tokio::test]
+async fn a_version_keeps_its_bytes_after_it_is_unpublished_or_replaced() {
+    let (_dir, store) = open().await;
+    let first = plugin("example", "1.0.0", &[]);
+    let changed = plugin("example", "1.0.0", &["else.example"]);
+    store.publish(&first, Some(&FakeInspector), NOW).await.unwrap();
+    store.unpublish("example", NOW + 1).await.unwrap();
+    assert!(matches!(
+        store.publish(&changed, Some(&FakeInspector), NOW + 2).await,
+        Err(StoreError::Conflict(_))
+    ));
+    // The same build again is the version it was.
+    store.publish(&first, Some(&FakeInspector), NOW + 3).await.unwrap();
+
+    // Replaced by a newer version, the same.
+    store
+        .publish(&plugin("example", "1.1.0", &[]), Some(&FakeInspector), NOW + 4)
+        .await
+        .unwrap();
+    assert!(matches!(
+        store.publish(&changed, Some(&FakeInspector), NOW + 5).await,
+        Err(StoreError::Conflict(_))
+    ));
+}
+
+#[tokio::test]
 async fn a_new_version_replaces_the_old_file() {
     let (dir, store) = open().await;
     store.publish(&plugin("example", "1.0.0", &[]), Some(&FakeInspector), NOW).await.unwrap();
