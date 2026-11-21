@@ -394,6 +394,31 @@ fn a_fixtures_tv_shows_a_code_and_cancel_ends_it_and_dropbox_needs_a_phone() {
     });
 }
 
+/// A device already listening (Nearby on, or a code shown before) shows a new code at once, on
+/// the same port, while it waits for sessions, and a device pairs with that code.
+#[test]
+fn a_code_asked_for_again_while_listening_is_shown_at_once() {
+    fn show(app: &mut App) -> (String, u16) {
+        app.engine.send(Command::PairInvite { device_name: "Living room".into() });
+        app.until("a code", |event| match event {
+            Event::SyncInvite { code, port, .. } => Some((code.clone(), *port)),
+            _ => None,
+        })
+    }
+    let mut living_room = App::start();
+    let (_, port) = show(&mut living_room);
+    let (code, again) = show(&mut living_room);
+    assert_eq!(again, port);
+
+    let mut phone = App::start();
+    phone.engine.send(Command::PairJoin {
+        device_name: "Kim's phone".into(),
+        address: format!("127.0.0.1:{port}"),
+        code,
+    });
+    phone.status_where("both devices", |s| s.devices.len() == 2);
+}
+
 /// Pair `asker`, which shows the code, with `holder`, which enters it. The port `asker` listens
 /// on comes back, for sessions after. `asker`'s events are left for the caller to read.
 fn pair(asker: &mut App, asker_name: &str, holder: &mut App, holder_name: &str) -> u16 {

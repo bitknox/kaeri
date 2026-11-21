@@ -130,7 +130,7 @@ pub struct SyncHub {
     road: Mutex<Option<Arc<FolderRoad>>>,
     running: AtomicBool,
     effects: Mutex<Vec<Effect>>,
-    listener: Mutex<Option<Arc<tokio::sync::Mutex<Listener>>>>,
+    listener: Mutex<Option<Arc<Listener>>>,
     /// The cloud sign-in under way, and what a test or a fixture build points it at.
     pub cloud: crate::cloud::State,
     /// The language the front end speaks, as a tag, for the page a desktop sign-in ends on.
@@ -1395,27 +1395,26 @@ pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
                 Ok(listener) => Ok(listener),
                 Err(_) => Listener::bind(me, services.store.clone(), any(0)).await,
             };
-            let listener = match bound {
-                Ok(listener) => Arc::new(tokio::sync::Mutex::new(listener)),
+            let mut listener = match bound {
+                Ok(listener) => listener,
                 Err(e) => return fail(services, tx, problem(&e)),
             };
+            let mut sessions = listener.take_sessions();
+            let listener = Arc::new(listener);
             *services
                 .syncing
                 .listener
                 .lock()
                 .unwrap_or_else(std::sync::PoisonError::into_inner) = Some(listener.clone());
             // Sessions end here, whoever opened them: carried out, and the status said again.
-            let (watcher, tx, ctx) = (listener.clone(), tx.clone(), services.clone());
+            // The watcher keeps the listener without a lock on it, so a code asked for while it
+            // waits is shown at once.
+            let (kept, tx, ctx) = (listener.clone(), tx.clone(), services.clone());
             tokio::spawn(async move {
-                loop {
-                    let session = {
-                        let mut guard = watcher.lock().await;
-                        guard.next_session().await
-                    };
-                    match session {
-                        Some(Ok(report)) => carry_out_peer(&ctx, &tx, &report).await,
-                        Some(Err(_)) => {}
-                        None => return,
+                let _kept = kept;
+                while let Some(session) = sessions.recv().await {
+                    if let Ok(report) = session {
+                        carry_out_peer(&ctx, &tx, &report).await;
                     }
                     say_status(&ctx, &tx);
                 }
@@ -1423,10 +1422,7 @@ pub async fn invite(services: &Ctx, tx: &Outbox, device_name: String) {
             listener
         }
     };
-    let (code, port) = {
-        let guard = listener.lock().await;
-        (guard.show_code(), guard.port())
-    };
+    let (code, port) = (listener.show_code(), listener.port());
     // Said on the network for a device given only the code: see `pair_with_code`.
     let advertiser = locked(&services.syncing.advertiser).clone();
     if let Some(advertiser) = advertiser {
