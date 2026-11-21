@@ -738,7 +738,6 @@ async fn a_chapter_whose_fetch_panics_fails_and_the_queue_goes_on() {
     }
     kit.queue.download(&kit.lent, WorkId::new(WORK), DownloadPick::Unread).await;
     kit.settle().await;
-    // A failure is kept in the row by kind, so the panic's reason is not read back.
     let failed =
         |state: &ChapterDownloadState| matches!(state, ChapterDownloadState::Failed { .. });
     let states = kit.states();
@@ -1210,23 +1209,70 @@ async fn turning_reading_off_with_the_deletion_asked_clears_every_download() {
 
 #[test]
 fn failures_survive_the_row() {
+    use kaeri_model::reading::SendProblem;
     for failure in [
         ReadingFailure::Offline,
         ReadingFailure::DiskFull,
         ReadingFailure::NotFound,
+        ReadingFailure::NoSource,
+        ReadingFailure::Protected,
+        ReadingFailure::ReadingOff,
         ReadingFailure::PageFetch { status: 403 },
         ReadingFailure::SourceDown { source: "shelf".into() },
+        ReadingFailure::SourceOff { source: "Shelf".into() },
+        ReadingFailure::Parse { source: "shelf".into() },
         ReadingFailure::Blocked { source: "shelf".into(), reason: "slow down: later".into() },
         ReadingFailure::SignInNeeded { what: "shelf".into() },
         ReadingFailure::FileMissing { path: "/d/a:1/1.cbz".into() },
+        ReadingFailure::Unreadable { path: "/d/a:1/pages".into(), format: "folder".into() },
+        ReadingFailure::Unsupported { extension: "djvu".into() },
+        ReadingFailure::WebViewTooOld { version: 79 },
+        ReadingFailure::NeedsNewerKaeri { world: "kaeri:books/source@9.0.0".into() },
+        ReadingFailure::Other { reason: "page 2 was not kept: no room".into() },
+        ReadingFailure::Other { reason: String::new() },
         ReadingFailure::CannotWrite {
             path: "/d/a:1/1.cbz".into(),
             problem: WriteProblem::Name,
         },
         ReadingFailure::CannotWrite { path: "/d/x".into(), problem: WriteProblem::Denied },
         ReadingFailure::CannotWrite { path: "/d/x".into(), problem: WriteProblem::Other },
+        ReadingFailure::SendTooLarge {
+            file: "Ferry: one.epub".into(),
+            target: "Desk: reader".into(),
+            bytes: 60_000_000,
+            limit: 50_000_000,
+        },
+        ReadingFailure::SendCheck {
+            file: "Ferry: one.epub".into(),
+            part: "OEBPS/content.opf".into(),
+            problem: SendProblem::NotUtf8,
+        },
     ] {
         assert_eq!(decode(&encode(&failure)), failure);
+    }
+}
+
+/// A failure the row had no kind of its own for, such as a fetch that panicked, reads back as
+/// itself on the row, never as a source with no name that isn't answering, which waiting would
+/// mend. One an earlier version kept as a bare "other", or a later version under a kind this
+/// one does not know, reads as a failure with nothing more to say.
+#[tokio::test]
+async fn a_failure_kept_on_the_row_never_reads_as_a_nameless_source_down() {
+    let kit = kit(&[]);
+    kit.shelf.listed.lock().unwrap().push(SourceChapter::new("panics", "1"));
+    let pick = DownloadPick::Chapters { ids: ids(&["1"]) };
+    kit.queue.download(&kit.lent, WorkId::new(WORK), pick).await;
+    kit.settle().await;
+    let reason = "the chapter could not be downloaded".to_owned();
+    let failure = ReadingFailure::Other { reason };
+    assert_eq!(kit.states(), [("1".into(), ChapterDownloadState::Failed { failure })]);
+
+    let row = kit.store().book_download(WORK, "1").unwrap().unwrap();
+    for kept in ["other", "a_later_kind:with: words"] {
+        kit.store().book_download_failed(row.id, kept, 2).unwrap();
+        let failure = ReadingFailure::Other { reason: String::new() };
+        let states = kit.states();
+        assert_eq!(states, [("1".into(), ChapterDownloadState::Failed { failure })], "{kept}");
     }
 }
 
