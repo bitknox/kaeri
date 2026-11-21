@@ -16,6 +16,9 @@ pub enum PluginCommand {
 ///
 /// Loaded with **no HTTP client**, so inspecting a plugin cannot cause it to make a request. A
 /// plugin describing itself is the one call that runs with no capabilities at all.
+///
+/// Fails after the list when a plugin did not load, so a script can tell. A book source does
+/// not count: nothing is wrong with it, it is just not a show source.
 pub async fn list_plugins(config: &Config, paths: &Paths) -> Result<()> {
     let dir = paths.plugin_dir();
     println!("plugin directory  {}", dir.display());
@@ -54,6 +57,8 @@ pub async fn list_plugins(config: &Config, paths: &Paths) -> Result<()> {
         return Ok(());
     }
 
+    let total = loaded.len();
+    let mut failed = 0;
     for result in loaded {
         match result {
             Ok(plugin) => {
@@ -69,9 +74,39 @@ pub async fn list_plugins(config: &Config, paths: &Paths) -> Result<()> {
                 }
                 println!("  cannot        read files, open sockets, read your environment");
             }
-            Err(e) => println!("✕ {e}"),
+            Err(e) => {
+                println!("✕ {e}");
+                if !matches!(e, kaeri_plugin::PluginError::OtherKind { .. }) {
+                    failed += 1;
+                }
+            }
         }
         println!();
     }
+    if failed > 0 {
+        anyhow::bail!("{failed} of {total} plugins did not load");
+    }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_plugin_that_does_not_load_fails_the_listing() {
+        let dir = tempfile::tempdir().expect("a temporary directory");
+        let paths = Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        std::fs::create_dir_all(paths.plugin_dir()).expect("a plugin directory");
+        std::fs::write(paths.plugin_dir().join("broken.wasm"), b"not a component")
+            .expect("a broken plugin");
+
+        let listed = list_plugins(&Config::default(), &paths).await;
+        let error = listed.expect_err("a plugin that did not load must fail the listing");
+        assert_eq!(error.to_string(), "1 of 1 plugins did not load");
+    }
 }
