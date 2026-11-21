@@ -8466,7 +8466,7 @@
     <value>{count} sortis</value>
   </data>
   <data name="CountStarts" xml:space="preserve">
-    <value>Début le {date}</value>
+    <value>Début le {day} {month}</value>
   </data>
   <data name="CountNotOut" xml:space="preserve">
     <value>Pas encore sorti</value>
@@ -8502,7 +8502,7 @@
     <value>{count} épisodes sortis</value>
   </data>
   <data name="CountSpokenStarts" xml:space="preserve">
-    <value>Début le {date}</value>
+    <value>Début le {day} {month}</value>
   </data>
   <data name="CountSpokenNextOf" xml:space="preserve">
     <value>Épisode {episode} sur {total}</value>

@@ -11312,9 +11312,9 @@ public enum L {
         Self.format("count-out-short", fallback: "%1$lld out", count)
     }
 
-    /// The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
-    public static func countStarts(date: String) -> String {
-        Self.format("count-starts", fallback: "Starts %1$@", date)
+    /// The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.
+    public static func countStarts(day: Int, month: String) -> String {
+        Self.format("count-starts", fallback: "Starts %1$@ %2$@", String(day), month)
     }
 
     /// The count line of a show that has not started and has no date.
@@ -11348,9 +11348,9 @@ public enum L {
         Self.format("count-spoken-out", fallback: "%1$lld episodes out", count)
     }
 
-    /// What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
-    public static func countSpokenStarts(date: String) -> String {
-        Self.format("count-spoken-starts", fallback: "Starts %1$@", date)
+    /// What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.
+    public static func countSpokenStarts(day: Int, month: String) -> String {
+        Self.format("count-spoken-starts", fallback: "Starts %1$@ %2$@", String(day), month)
     }
 
     /// What a screen reader says for a show the viewer is part way through.

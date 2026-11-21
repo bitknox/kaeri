@@ -8342,8 +8342,8 @@ public static partial class T
     /// <summary>The same, short.</summary>
     public static string CountOutShort(long count) => Fill(Get("CountOutShort"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</summary>
-    public static string CountStarts(string date) => Fill(Get("CountStarts"), ("date", date));
+    /// <summary>The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.</summary>
+    public static string CountStarts(long day, string month) => Fill(Get("CountStarts"), ("day", day.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("month", month));
 
     /// <summary>The count line of a show that has not started and has no date.</summary>
     public static string CountNotOut => Get("CountNotOut");
@@ -8366,8 +8366,8 @@ public static partial class T
     /// <summary>What a screen reader says for a show that is airing with no known total.</summary>
     public static string CountSpokenOut(long count) => Fill(GetPlural("CountSpokenOut", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</summary>
-    public static string CountSpokenStarts(string date) => Fill(Get("CountSpokenStarts"), ("date", date));
+    /// <summary>What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.</summary>
+    public static string CountSpokenStarts(long day, string month) => Fill(Get("CountSpokenStarts"), ("day", day.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("month", month));
 
     /// <summary>What a screen reader says for a show the viewer is part way through.</summary>
     public static string CountSpokenNextOf(long episode, long total) => Fill(Get("CountSpokenNextOf"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString(System.Globalization.CultureInfo.CurrentCulture)));
@@ -15276,7 +15276,7 @@ public static partial class T
         ["CountOut_one"] = "One episode out",
         ["CountOut_other"] = "{count} episodes out",
         ["CountOutShort"] = "{count} out",
-        ["CountStarts"] = "Starts {date}",
+        ["CountStarts"] = "Starts {day} {month}",
         ["CountNotOut"] = "Not out yet",
         ["CountNextOf"] = "Ep {episode} of {total}",
         ["CountDub"] = "Dub",
@@ -15286,7 +15286,7 @@ public static partial class T
         ["CountSpokenOutOf"] = "{out} of {total} episodes out",
         ["CountSpokenOut_one"] = "One episode out",
         ["CountSpokenOut_other"] = "{count} episodes out",
-        ["CountSpokenStarts"] = "Starts {date}",
+        ["CountSpokenStarts"] = "Starts {day} {month}",
         ["CountSpokenNextOf"] = "Episode {episode} of {total}",
         ["CountSpokenDubThrough"] = "dubbed to episode {through}",
         ["CountSpokenDub"] = "has a dub",

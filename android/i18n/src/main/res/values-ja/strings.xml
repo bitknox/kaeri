@@ -3086,7 +3086,7 @@
         <item quantity="other">%1$,d話 配信済み</item>
     </plurals>
     <string name="count_out_short">%1$,d話</string>
-    <string name="count_starts">%1$s開始</string>
+    <string name="count_starts">%2$s%1$d日開始</string>
     <string name="count_not_out">未配信</string>
     <string name="count_next_of">第%1$d話/全%2$d話</string>
     <string name="count_dub">吹替</string>
@@ -3098,7 +3098,7 @@
     <plurals name="count_spoken_out">
         <item quantity="other">%1$,d話が配信済み</item>
     </plurals>
-    <string name="count_spoken_starts">%1$s開始</string>
+    <string name="count_spoken_starts">%2$s%1$d日開始</string>
     <string name="count_spoken_next_of">全%2$d話のうち第%1$d話</string>
     <string name="count_spoken_dub_through">第%1$d話まで吹替版</string>
     <string name="count_spoken_dub">吹替あり</string>

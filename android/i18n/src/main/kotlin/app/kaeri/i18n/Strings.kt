@@ -12560,9 +12560,9 @@ object Strings {
     fun countOutShort(context: Context, count: Int): String =
         context.getString(R.string.count_out_short, count)
 
-    /** The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below. */
-    fun countStarts(context: Context, date: String): String =
-        context.getString(R.string.count_starts, date)
+    /** The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date. */
+    fun countStarts(context: Context, day: Int, month: String): String =
+        context.getString(R.string.count_starts, day, month)
 
     /** The count line of a show that has not started and has no date. */
     fun countNotOut(context: Context): String =
@@ -12592,9 +12592,9 @@ object Strings {
     fun countSpokenOut(context: Context, count: Int): String =
         context.resources.getQuantityString(R.plurals.count_spoken_out, count, count)
 
-    /** What a screen reader says for a show not out yet, with a date. The date is the day and the full month name. */
-    fun countSpokenStarts(context: Context, date: String): String =
-        context.getString(R.string.count_spoken_starts, date)
+    /** What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date. */
+    fun countSpokenStarts(context: Context, day: Int, month: String): String =
+        context.getString(R.string.count_spoken_starts, day, month)
 
     /** What a screen reader says for a show the viewer is part way through. */
     fun countSpokenNextOf(context: Context, episode: Int, total: Int): String =

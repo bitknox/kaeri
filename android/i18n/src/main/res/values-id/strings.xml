@@ -3086,7 +3086,7 @@
         <item quantity="other">%1$,d episode tayang</item>
     </plurals>
     <string name="count_out_short">%1$,d tayang</string>
-    <string name="count_starts">Mulai %1$s</string>
+    <string name="count_starts">Mulai %1$d %2$s</string>
     <string name="count_not_out">Belum tayang</string>
     <string name="count_next_of">Eps %1$d dari %2$d</string>
     <string name="count_dub">Dub</string>
@@ -3098,7 +3098,7 @@
     <plurals name="count_spoken_out">
         <item quantity="other">%1$,d episode sudah tayang</item>
     </plurals>
-    <string name="count_spoken_starts">Mulai %1$s</string>
+    <string name="count_spoken_starts">Mulai %1$d %2$s</string>
     <string name="count_spoken_next_of">Episode %1$d dari %2$d</string>
     <string name="count_spoken_dub_through">Berdubbing sampai episode %1$d</string>
     <string name="count_spoken_dub">punya dub</string>

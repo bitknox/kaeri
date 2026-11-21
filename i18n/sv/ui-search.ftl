@@ -102,7 +102,7 @@ count-out = { $count ->
    *[other] { $count } avsnitt ute
  }
 count-out-short = { $count } ute
-count-starts = Startar { $date }
+count-starts = Startar { $day } { $month }
 count-not-out = Inte ute än
 count-next-of = Avs { $episode } av { $total }
 count-dub = Dub
@@ -116,7 +116,7 @@ count-spoken-out = { $count ->
     [one] Ett avsnitt ute
    *[other] { $count } avsnitt ute
  }
-count-spoken-starts = Startar { $date }
+count-spoken-starts = Startar { $day } { $month }
 count-spoken-next-of = Avsnitt { $episode } av { $total }
 count-spoken-dub-through = { -dubbed } till avsnitt { $through }
 count-spoken-dub = har en dubbning

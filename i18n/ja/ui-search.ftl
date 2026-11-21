@@ -100,7 +100,7 @@ count-out = { $count ->
    *[other] { $count }話 配信済み
  }
 count-out-short = { $count }話
-count-starts = { $date }開始
+count-starts = { $month }{ $day }日開始
 count-not-out = 未配信
 count-next-of = 第{ $episode }話/全{ $total }話
 count-dub = 吹替
@@ -112,7 +112,7 @@ count-spoken-out-of = 全{ $total }話のうち{ $out }話が配信済み
 count-spoken-out = { $count ->
    *[other] { $count }話が配信済み
  }
-count-spoken-starts = { $date }開始
+count-spoken-starts = { $month }{ $day }日開始
 count-spoken-next-of = 全{ $total }話のうち第{ $episode }話
 count-spoken-dub-through = 第{ $through }話まで{ -dubbed }
 count-spoken-dub = 吹替あり

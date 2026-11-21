@@ -11085,8 +11085,8 @@ count-out =
 # The same, short.
 count-out-short = Ra { $count }
 
-# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
-count-starts = Bắt đầu { $date }
+# The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.
+count-starts = Bắt đầu { $day } { $month }
 
 # The count line of a show that has not started and has no date.
 count-not-out = Chưa ra mắt
@@ -11115,8 +11115,8 @@ count-spoken-out =
        *[other] Đã ra { $count } tập
     }
 
-# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
-count-spoken-starts = Bắt đầu { $date }
+# What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.
+count-spoken-starts = Bắt đầu { $day } { $month }
 
 # What a screen reader says for a show the viewer is part way through.
 count-spoken-next-of = Tập { $episode } trên { $total }

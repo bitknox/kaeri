@@ -7812,7 +7812,7 @@
     <value>{count}話</value>
   </data>
   <data name="CountStarts" xml:space="preserve">
-    <value>{date}開始</value>
+    <value>{month}{day}日開始</value>
   </data>
   <data name="CountNotOut" xml:space="preserve">
     <value>未配信</value>
@@ -7836,7 +7836,7 @@
     <value>{count}話が配信済み</value>
   </data>
   <data name="CountSpokenStarts" xml:space="preserve">
-    <value>{date}開始</value>
+    <value>{month}{day}日開始</value>
   </data>
   <data name="CountSpokenNextOf" xml:space="preserve">
     <value>全{total}話のうち第{episode}話</value>

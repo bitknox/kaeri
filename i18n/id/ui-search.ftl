@@ -100,7 +100,7 @@ count-out = { $count ->
    *[other] { $count } episode tayang
  }
 count-out-short = { $count } tayang
-count-starts = Mulai { $date }
+count-starts = Mulai { $day } { $month }
 count-not-out = Belum tayang
 count-next-of = Eps { $episode } dari { $total }
 count-dub = Dub
@@ -112,7 +112,7 @@ count-spoken-out-of = { $out } dari { $total } episode sudah tayang
 count-spoken-out = { $count ->
    *[other] { $count } episode sudah tayang
  }
-count-spoken-starts = Mulai { $date }
+count-spoken-starts = Mulai { $day } { $month }
 count-spoken-next-of = Episode { $episode } dari { $total }
 count-spoken-dub-through = { -dubbed-cap } sampai episode { $through }
 count-spoken-dub = punya dub

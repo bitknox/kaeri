@@ -7812,7 +7812,7 @@
     <value>{count} tayang</value>
   </data>
   <data name="CountStarts" xml:space="preserve">
-    <value>Mulai {date}</value>
+    <value>Mulai {day} {month}</value>
   </data>
   <data name="CountNotOut" xml:space="preserve">
     <value>Belum tayang</value>
@@ -7836,7 +7836,7 @@
     <value>{count} episode sudah tayang</value>
   </data>
   <data name="CountSpokenStarts" xml:space="preserve">
-    <value>Mulai {date}</value>
+    <value>Mulai {day} {month}</value>
   </data>
   <data name="CountSpokenNextOf" xml:space="preserve">
     <value>Episode {episode} dari {total}</value>

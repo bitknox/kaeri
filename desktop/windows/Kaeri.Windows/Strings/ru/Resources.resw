@@ -8793,7 +8793,7 @@
     <value>Вышло {count}</value>
   </data>
   <data name="CountStarts" xml:space="preserve">
-    <value>Старт: {date}</value>
+    <value>Старт: {day} {month}</value>
   </data>
   <data name="CountNotOut" xml:space="preserve">
     <value>Ещё не вышло</value>
@@ -8835,7 +8835,7 @@
     <value>Вышло {count} эпизода</value>
   </data>
   <data name="CountSpokenStarts" xml:space="preserve">
-    <value>Старт: {date}</value>
+    <value>Старт: {day} {month}</value>
   </data>
   <data name="CountSpokenNextOf" xml:space="preserve">
     <value>Эпизод {episode} из {total}</value>
