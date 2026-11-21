@@ -11,9 +11,12 @@
 //! - **Every ceiling is counted host-side.** Fetch counts and body sizes are tracked here, not
 //!   trusted to the guest.
 
-use std::sync::{
-    Arc,
-    atomic::{AtomicU32, Ordering},
+use std::{
+    borrow::Cow,
+    sync::{
+        Arc,
+        atomic::{AtomicU32, AtomicU64, Ordering},
+    },
 };
 
 use crate::sandbox::{self, Limits};
@@ -55,6 +58,12 @@ pub struct Response {
 const RESERVED_HEADERS: &[&str] =
     &["host", "content-length", "connection", "transfer-encoding", "accept-encoding"];
 
+/// The longest line a guest's `log` call writes. A parser's diagnostics fit in far less.
+pub const LOG_LINE_BYTES: usize = 4096;
+
+/// Lines one call may log. Past them the guest's lines are dropped, after one that says so.
+pub const LOG_LINES: u64 = 200;
+
 /// What the host lends to one plugin, for the duration of one call.
 ///
 /// Constructed per call rather than per plugin, because the fetch counter has to reset — a
@@ -65,6 +74,8 @@ pub struct Capabilities {
     allowed_hosts: Vec<String>,
     limits: Limits,
     fetches: Arc<AtomicU32>,
+    /// Lines this call has logged, for [`Capabilities::log_line`].
+    logged: Arc<AtomicU64>,
     /// What this call's fetches met, shared with whoever made the call.
     reach: Reach,
     /// `None` in tests that exercise policy without a network.
@@ -127,6 +138,7 @@ impl Capabilities {
             allowed_hosts,
             limits,
             fetches: Arc::new(AtomicU32::new(0)),
+            logged: Arc::new(AtomicU64::new(0)),
             reach: Reach::default(),
             http,
             settings: Default::default(),
@@ -154,6 +166,32 @@ impl Capabilities {
 
     pub fn fetches_used(&self) -> u32 {
         self.fetches.load(Ordering::Relaxed)
+    }
+
+    /// What one guest `log` line becomes: cut to [`LOG_LINE_BYTES`], and `None` once the call
+    /// has logged [`LOG_LINES`]. The first line past that says the rest are dropped.
+    ///
+    /// The guest chooses the length and the count, and the cost lands on the host: every line
+    /// is formatted, kept in the writer's buffers and written to the app's log file, which no
+    /// limit on the guest's own memory or time reaches.
+    pub fn log_line<'m>(&self, msg: &'m str) -> Option<Cow<'m, str>> {
+        let line = self.logged.fetch_add(1, Ordering::Relaxed);
+        if line > LOG_LINES {
+            return None;
+        }
+        if line == LOG_LINES {
+            return Some(Cow::Owned(format!(
+                "log limit reached ({LOG_LINES} lines per call), later lines dropped"
+            )));
+        }
+        if msg.len() <= LOG_LINE_BYTES {
+            return Some(Cow::Borrowed(msg));
+        }
+        let mut end = LOG_LINE_BYTES;
+        while !msg.is_char_boundary(end) {
+            end -= 1;
+        }
+        Some(Cow::Owned(format!("{} [{} bytes cut]", &msg[..end], msg.len() - end)))
     }
 
     /// What this call's fetches meet, readable after the call by whoever kept a copy.

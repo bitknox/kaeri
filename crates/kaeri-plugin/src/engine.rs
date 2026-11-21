@@ -394,11 +394,16 @@ impl kaeri::provider::host::Host for PluginState {
         // A guest's only output channel, and deliberately attributed: an unexplained log line
         // from a third-party parser would be worse than none.
         let plugin = self.capabilities.plugin_id();
-        match level.to_ascii_lowercase().as_str() {
-            "error" => tracing::error!(plugin, "{msg}"),
-            "warn" => tracing::warn!(plugin, "{msg}"),
-            "debug" | "trace" => tracing::debug!(plugin, "{msg}"),
-            _ => tracing::info!(plugin, "{msg}"),
+        let Some(msg) = self.capabilities.log_line(&msg) else { return Ok(()) };
+        let is = |name: &str| level.eq_ignore_ascii_case(name);
+        if is("error") {
+            tracing::error!(plugin, "{msg}");
+        } else if is("warn") {
+            tracing::warn!(plugin, "{msg}");
+        } else if is("debug") || is("trace") {
+            tracing::debug!(plugin, "{msg}");
+        } else {
+            tracing::info!(plugin, "{msg}");
         }
         Ok(())
     }
@@ -1219,5 +1224,79 @@ mod tests {
 
         let host = PluginHost::new(Limits::default(), None).unwrap();
         assert!(host.load_dir(dir.path()).await.is_empty());
+    }
+}
+
+#[cfg(test)]
+mod host_call_tests {
+    use std::sync::{
+        Arc,
+        atomic::{AtomicUsize, Ordering},
+    };
+
+    use super::*;
+    use super::kaeri::provider::host::Host as _;
+
+    /// A call's state with no network, as a guest's host calls see it.
+    fn state() -> PluginState {
+        let limits = Limits::default();
+        PluginState {
+            capabilities: Capabilities::new("noisy", Vec::new(), limits, None),
+            ceiling: Ceiling { memory_bytes: limits.memory_bytes },
+            wasi: empty_wasi(),
+            table: wasmtime::component::ResourceTable::new(),
+        }
+    }
+
+    /// A subscriber that counts the events it is given and the bytes of their fields.
+    #[derive(Default, Clone)]
+    struct Counting {
+        lines: Arc<AtomicUsize>,
+        bytes: Arc<AtomicUsize>,
+    }
+
+    impl tracing::Subscriber for Counting {
+        fn enabled(&self, _: &tracing::Metadata<'_>) -> bool {
+            true
+        }
+        fn new_span(&self, _: &tracing::span::Attributes<'_>) -> tracing::span::Id {
+            tracing::span::Id::from_u64(1)
+        }
+        fn record(&self, _: &tracing::span::Id, _: &tracing::span::Record<'_>) {}
+        fn record_follows_from(&self, _: &tracing::span::Id, _: &tracing::span::Id) {}
+        fn event(&self, event: &tracing::Event<'_>) {
+            struct Length(usize);
+            impl tracing::field::Visit for Length {
+                fn record_debug(
+                    &mut self,
+                    _: &tracing::field::Field,
+                    value: &dyn std::fmt::Debug,
+                ) {
+                    self.0 += format!("{value:?}").len();
+                }
+            }
+            let mut length = Length(0);
+            event.record(&mut length);
+            self.lines.fetch_add(1, Ordering::Relaxed);
+            self.bytes.fetch_add(length.0, Ordering::Relaxed);
+        }
+        fn enter(&self, _: &tracing::span::Id) {}
+        fn exit(&self, _: &tracing::span::Id) {}
+    }
+
+    #[tokio::test]
+    async fn a_guest_cannot_log_without_bound() {
+        let counting = Counting::default();
+        let _default = tracing::subscriber::set_default(counting.clone());
+        let mut state = state();
+        let big = "a".repeat(64 * 1024);
+        for _ in 0..1_000 {
+            state.log("INFO".into(), big.clone()).await.unwrap();
+        }
+        let lines = counting.lines.load(Ordering::Relaxed);
+        let bytes = counting.bytes.load(Ordering::Relaxed);
+        assert!(lines <= 201, "{lines} lines logged");
+        assert!(bytes < 1024 * 1024, "{bytes} bytes logged");
+        assert!(lines > 0, "the first lines are kept");
     }
 }
