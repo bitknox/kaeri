@@ -124,39 +124,41 @@ impl ImageEngine {
         } else if answer.sixel {
             picker.set_protocol_type(ProtocolType::Sixel);
         }
-        let graphics = if picker.protocol_type() == ProtocolType::Halfblocks {
-            Graphics::Halfblocks
-        } else {
-            Graphics::Native
-        };
-        tracing::info!(?graphics, protocol = ?picker.protocol_type(), font_size = ?(width, height), "terminal graphics");
-        Self {
-            picker: Some(picker),
-            graphics,
-            cache_dir: PathBuf::new(),
-            font_size: (width, height),
-        }
+        let engine = Self::with_picker(picker);
+        tracing::info!(graphics = ?engine.graphics, font_size = ?(width, height), "terminal graphics");
+        engine
     }
 
     /// `ratatui-image`'s own query, where the start-up reader does not run.
     #[cfg(not(unix))]
     fn queried() -> Self {
         match Picker::from_query_stdio() {
+            // A terminal that names no protocol, or does not answer, gets half blocks here too.
             Ok(picker) => {
-                let fs = picker.font_size();
-                let font_size = (fs.width, fs.height);
-                tracing::info!(?font_size, "terminal graphics available");
-                Self {
-                    picker: Some(picker),
-                    graphics: Graphics::Native,
-                    cache_dir: PathBuf::new(),
-                    font_size,
-                }
+                let engine = Self::with_picker(picker);
+                tracing::info!(graphics = ?engine.graphics, font_size = ?engine.font_size, "terminal graphics");
+                engine
             }
             Err(e) => {
                 tracing::info!(error = %e, "no graphics protocol; using halfblocks");
                 Self::halfblocks_with_default_cells()
             }
+        }
+    }
+
+    /// An engine for `picker`, said to draw pictures with a graphics protocol only when the
+    /// picker has one: half blocks are said as half blocks, however the picker was made.
+    pub(crate) fn with_picker(picker: Picker) -> Self {
+        let font = picker.font_size();
+        let graphics = match picker.protocol_type() {
+            ratatui_image::picker::ProtocolType::Halfblocks => Graphics::Halfblocks,
+            _ => Graphics::Native,
+        };
+        Self {
+            graphics,
+            font_size: (font.width, font.height),
+            picker: Some(picker),
+            cache_dir: PathBuf::new(),
         }
     }
 
@@ -207,18 +209,6 @@ impl ImageEngine {
             graphics: Graphics::Native,
             cache_dir: PathBuf::new(),
             font_size: (10, 20),
-        }
-    }
-
-    /// An engine for a picker made by hand, for tests of what a protocol does.
-    #[cfg(test)]
-    pub(crate) fn with_picker(picker: Picker) -> Self {
-        let font = picker.font_size();
-        Self {
-            graphics: Graphics::Native,
-            font_size: (font.width, font.height),
-            picker: Some(picker),
-            cache_dir: PathBuf::new(),
         }
     }
 
@@ -608,6 +598,21 @@ impl ImageRequests {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// On Windows `ratatui-image` asks the terminal itself, and answers a terminal that names no
+    /// protocol, or does not answer, with a halfblocks picker: said as half blocks, as on Unix,
+    /// so doctor and the reader say how pictures are drawn.
+    #[test]
+    fn a_halfblocks_picker_is_said_as_half_blocks_however_it_was_made() {
+        use ratatui_image::picker::ProtocolType;
+        let blocks = ImageEngine::with_picker(Picker::halfblocks());
+        assert_eq!(blocks.graphics(), Graphics::Halfblocks);
+        #[allow(deprecated)]
+        let mut sixel = Picker::from_fontsize(ratatui_image::FontSize::new(10, 20));
+        sixel.set_protocol_type(ProtocolType::Sixel);
+        let sixel = ImageEngine::with_picker(sixel);
+        assert_eq!((sixel.graphics(), sixel.font_size()), (Graphics::Native, (10, 20)));
+    }
 
     fn engine() -> ImageEngine {
         // Fixed font metrics so aspect maths is deterministic in tests.
