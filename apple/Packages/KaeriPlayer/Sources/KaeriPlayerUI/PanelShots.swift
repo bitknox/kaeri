@@ -33,11 +33,11 @@ enum PanelFixture {
         }
         return [
             SourceCandidate(id: "h1", providerId: "home", providerName: "Home server", title: "\(title) \(number).mkv", quality: 1080, label: nil, size: "1.2 GiB", dualAudio: false, dubbed: false, autoPick: false),
-            release("r1", "\(title) \(number) 1080p", quality: 1080, size: "1.4 GiB", label: "lantern-archive", auto: true),
+            release("r1", "\(title) \(number) 1080p", quality: 1080, size: "1.4 GiB", label: "lantern-archive", auto: true), // i18n-skip
             release("r2", "\(title) \(number) 1080p multi", quality: 1080, size: "2.1 GiB", dual: true),
             release("r3", "\(title) \(number) dub 1080p", quality: 1080, size: "1.5 GiB", dub: true),
-            release("r4", "\(title) \(number) 720p", quality: 720, size: "620 MiB", label: "night-index"),
-            release("r5", "\(title) 01 to 13 1080p", quality: 1080, size: "18.2 GiB", label: "batch"),
+            release("r4", "\(title) \(number) 720p", quality: 720, size: "620 MiB", label: "night-index"), // i18n-skip
+            release("r5", "\(title) 01 to 13 1080p", quality: 1080, size: "18.2 GiB", label: "batch"), // i18n-skip
         ]
     }
 
