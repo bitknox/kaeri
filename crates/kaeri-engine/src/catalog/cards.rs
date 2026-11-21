@@ -1,6 +1,10 @@
 //! The data a hover card or preview shows, for covers on screen: no request on a hover.
 
+use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
+
 use kaeri_core::ids::AnilistId;
+use kaeri_meta::{Lane, Priority};
 use kaeri_model::event::Event;
 
 use crate::{data, dispatch::Lent};
@@ -62,8 +66,84 @@ pub async fn prepare_cards(lent: Lent, ids: Vec<AnilistId>) {
     }
 }
 
+/// The hover-card work under way, by title: a cover's card, the tables of a screen's covers,
+/// and a card's stills. A cover hovered again while its first ask is still out joins that ask
+/// and starts nothing, so its job ends at once and the activity list holds one row for it.
+#[derive(Debug, Clone, Default)]
+pub struct HoverAsks {
+    /// [`load_cards`] under way.
+    pub cards: UnderWay,
+    /// [`prepare_cards`] under way.
+    pub tables: UnderWay,
+    /// The quiet episode listings for a card's stills under way.
+    pub stills: UnderWay,
+}
+
+/// Titles some work is asking after, each with the lane that work's AniList requests go in.
+#[derive(Debug, Clone, Default)]
+pub struct UnderWay(Arc<Mutex<HashMap<AnilistId, Lane>>>);
+
+impl UnderWay {
+    /// Whether title `id` is being asked after. When it is, its ask is raised to `priority`,
+    /// for a joiner more urgent than the work that asked.
+    pub fn join(&self, id: AnilistId, priority: Priority) -> bool {
+        let asks = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        asks.get(&id).inspect(|lane| lane.raise(priority)).is_some()
+    }
+
+    /// Take the titles of `ids` nothing here is asking after, for work in a new lane of
+    /// `priority`, and raise the asks of the others to it. The titles are let go when the
+    /// claim is dropped, however the work ends.
+    pub fn claim(&self, ids: impl IntoIterator<Item = AnilistId>, priority: Priority) -> Claim {
+        let lane = Lane::new(priority);
+        let mut asks = self.0.lock().unwrap_or_else(|e| e.into_inner());
+        let mut taken = Vec::new();
+        for id in ids {
+            match asks.get(&id) {
+                Some(under_way) => under_way.raise(priority),
+                None => {
+                    asks.insert(id, lane.clone());
+                    taken.push(id);
+                }
+            }
+        }
+        Claim { under_way: self.clone(), ids: taken, lane }
+    }
+}
+
+/// Titles taken by one piece of work: see [`UnderWay::claim`].
+#[derive(Debug)]
+pub struct Claim {
+    under_way: UnderWay,
+    ids: Vec<AnilistId>,
+    lane: Lane,
+}
+
+impl Claim {
+    /// The titles this work asks after: none when others were asking after all of them.
+    pub fn ids(&self) -> &[AnilistId] {
+        &self.ids
+    }
+
+    /// The lane the work's AniList requests go in, which a joiner raises.
+    pub fn lane(&self) -> Lane {
+        self.lane.clone()
+    }
+}
+
+impl Drop for Claim {
+    fn drop(&mut self) {
+        let mut asks = self.under_way.0.lock().unwrap_or_else(|e| e.into_inner());
+        for id in &self.ids {
+            if asks.get(id).is_some_and(|lane| lane.same(&self.lane)) {
+                asks.remove(id);
+            }
+        }
+    }
+}
+
 /// `ids` once each, the first [`AT_MOST`] of them.
-fn at_most(ids: Vec<AnilistId>) -> Vec<AnilistId> {
+pub(crate) fn at_most(ids: Vec<AnilistId>) -> Vec<AnilistId> {
     let mut wanted: Vec<AnilistId> = Vec::new();
     for id in ids {
         if !wanted.contains(&id) && wanted.len() < AT_MOST {
