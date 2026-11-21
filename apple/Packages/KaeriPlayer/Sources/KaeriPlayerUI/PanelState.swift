@@ -115,3 +115,20 @@ enum ReleaseWords {
         return parts.joined(separator: " · ")
     }
 }
+
+/// A screenshot's or recording's panel, as a viewer would have left it: the tab, the episode
+/// revealed and the source opened. Each change is a new `serial`, so the same state can be asked
+/// for again.
+public struct PanelShot: Equatable, Sendable {
+    public var tab: PanelTab
+    public var revealed: String?
+    public var expanded: String?
+    public var serial: Int
+
+    public init(tab: PanelTab, revealed: String? = nil, expanded: String? = nil, serial: Int = 0) {
+        self.tab = tab
+        self.revealed = revealed
+        self.expanded = expanded
+        self.serial = serial
+    }
+}

@@ -17,6 +17,9 @@ import UIKit
 public struct PhonePlayerView: View {
     let model: PlayerModel
     @State private var sheet: Sheet?
+    /// The Episodes and Sources panel at the trailing edge, and its tab.
+    @State private var episodesPanel = false
+    @State private var panelTab: PanelTab = .episodes
     /// The party sheet opens at the conversation: it came from the column's "n more in chat".
     @State private var sheetAtChat = false
     /// The phone is held sideways: the party opens as a trailing panel over the video, not a sheet.
@@ -66,9 +69,14 @@ public struct PhonePlayerView: View {
         self.model = model
     }
 
-    private var visible: Bool { (model.controlsVisible || sheet != nil) && !model.stillWatching && model.failure == nil && !curtain }
+    private var visible: Bool {
+        (model.controlsVisible || sheet != nil) && !model.stillWatching && model.failure == nil && !curtain && !episodesPanel
+    }
     /// Up from the playback staged to its first frame, and a roll-on's starting screen its 0.6 s.
-    private var curtain: Bool { model.starting != nil || !model.hasPicture || model.holdsCurtain || model.startingHeld }
+    /// A switch to another release holds the old picture instead (`PlayerModel.holding`).
+    private var curtain: Bool {
+        model.starting != nil || (!model.hasPicture && !model.holding) || model.holdsCurtain || model.startingHeld
+    }
     /// How far the swipe down has gone toward closing, 0 to 1.
     private var pull: CGFloat { min(drag / 120, 1) }
 
@@ -78,6 +86,7 @@ public struct PhonePlayerView: View {
                 Color.black
                 ZStack {
                     PlayerPicture(model: model)
+                    HeldPictureView(model: model)
                     // Out of the tree once it fades, so VoiceOver does not read "Starting episode 7"
                     // over a playing video.
                     if curtain {
@@ -138,6 +147,9 @@ public struct PhonePlayerView: View {
                 }
                 chatBar
                 sidePanel
+                PlayerPanelLayer(
+                    model: model, metrics: UIDevice.current.userInterfaceIdiom == .pad ? .pad : .phone,
+                    open: episodesPanel, tab: $panelTab, close: closeEpisodesPanel)
                 // The iPhone gets the side panel; the iPad, wide and tall enough, the Mac's bar.
                 let wide = proxy.size.width >= 700 && proxy.size.height >= 600
                 SkipMarkLayer(model: model, metrics: metrics, layout: wide ? .bar : .panel)
@@ -171,10 +183,12 @@ public struct PhonePlayerView: View {
             }
             .foregroundStyle(.silk)
             .contentShape(.rect)
-            .simultaneousGesture(dismissal)
-            .simultaneousGesture(speedHold(width: proxy.size.width))
+            // The panel's own scrolling and swipe take the touches while it is open.
+            .simultaneousGesture(dismissal, including: episodesPanel ? .subviews : .all)
+            .simultaneousGesture(speedHold(width: proxy.size.width), including: episodesPanel ? .subviews : .all)
             .simultaneousGesture(
-                MagnifyGesture().onEnded { value in model.setFill(value.magnification > 1) }
+                MagnifyGesture().onEnded { value in model.setFill(value.magnification > 1) },
+                including: episodesPanel ? .subviews : .all
             )
         }
         .ignoresSafeArea()
@@ -190,7 +204,15 @@ public struct PhonePlayerView: View {
             // A sheet closes the field's bar; the draft stays, and the party sheet's field shows it.
             if open != nil, fielding { closeField() }
         }
-        .onChange(of: model.menuRequests) { sheet = Sheet(model.requestedMenu) }
+        .onChange(of: model.menuRequests) {
+            if model.requestedMenu == .episodes {
+                sheet = nil
+                openEpisodesPanel()
+            } else {
+                sheet = Sheet(model.requestedMenu)
+            }
+        }
+        .onChange(of: sheet) { _, open in if open != nil { episodesPanel = false } }
         .onChange(of: store.party.panelRequests) {
             #if FIXTURES
             // The conversation's shot opens the sheet as the column's fold does, at the chat.
@@ -310,7 +332,7 @@ public struct PhonePlayerView: View {
                 AirPlayButton()
                     .frame(width: 44, height: 44)
                     .accessibilityLabel("AirPlay") // i18n-skip
-                headerButton("list.bullet", L.playerEpisodes) { sheet = .episodes }
+                headerButton("list.bullet", L.playerEpisodes) { openEpisodesPanel() }
             }
             .background(.overVideo(0.62), in: .capsule)
             .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
@@ -632,6 +654,19 @@ public struct PhonePlayerView: View {
             try? await Task.sleep(for: .milliseconds(900))
             if flash?.at == now { withAnimation(.fadeOut) { flash = nil } }
         }
+    }
+
+    /// The Episodes and Sources panel opens on Episodes (player panel board).
+    private func openEpisodesPanel() {
+        sheet = nil
+        if fielding { closeField() }
+        panelTab = .episodes
+        episodesPanel = true
+    }
+
+    private func closeEpisodesPanel() {
+        episodesPanel = false
+        model.poke()
     }
 
     private func toggleControls() {

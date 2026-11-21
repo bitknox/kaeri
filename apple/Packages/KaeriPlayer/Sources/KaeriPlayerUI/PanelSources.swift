@@ -18,9 +18,11 @@ struct PanelSources: View {
 
     var body: some View {
         let id = model.staged?.id
+        ScrollViewReader { proxy in
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 PanelHeading(title: L.playerPanelPlayingNow, metrics: metrics)
+                    .id(Self.top)
                 playing
                 translation
                 Rectangle()
@@ -46,10 +48,28 @@ struct PanelSources: View {
             .animation(.fadeIn, value: model.panelReleases)
         }
         .scrollIndicators(.hidden)
+        .onChange(of: model.playingRelease) { _, landed in
+            // A switch landed: what plays now is at the top.
+            guard landed != nil else { return }
+            withAnimation(.standard) { proxy.scrollTo(Self.top, anchor: .top) }
+        }
+        .onChange(of: model.panelShot, initial: true) { _, shot in
+            // A shot's opened source at the top, its releases under it.
+            guard let open = shot?.expanded else { return }
+            Task { @MainActor in
+                try? await Task.sleep(for: .milliseconds(600))
+                withAnimation(.standard) { proxy.scrollTo(open, anchor: .top) }
+            }
+        }
+        }
         .task(id: id) {
             guard let id else { return }
             store.loadSourceOptions(id)
             model.loadPanelReleases()
+        }
+        .onChange(of: model.panelShot, initial: true) { _, shot in
+            guard let shot else { return }
+            expanded = shot.expanded.map { [$0] } ?? []
         }
         .onChange(of: model.panelSwitch?.target.providerId) { _, provider in
             // A release picked elsewhere, or tried again, shows on its row.
@@ -57,6 +77,8 @@ struct PanelSources: View {
             expanded.insert(provider)
         }
     }
+
+    private static let top = "playing now"
 
     // MARK: Playing now
 
@@ -185,6 +207,7 @@ struct PanelSources: View {
                     action: {
                         if open { expanded.remove(group.providerId) } else { expanded.insert(group.providerId) }
                     })
+                    .id(group.providerId)
                 if open {
                     VStack(alignment: .leading, spacing: 0) {
                         ForEach(releases, id: \.id) { release in
@@ -202,12 +225,14 @@ struct PanelSources: View {
                     model: model, metrics: metrics, title: group.name, detail: line ?? ReleaseWords.detail(release),
                     target: SwitchTarget(providerId: release.providerId, name: group.name, release: release.id),
                     action: { model.switchTo(release) })
+                    .id(group.providerId)
             } else {
                 // Resting, or nothing for this episode: said, and nothing to pick.
                 PanelChoiceRow(
                     model: model, metrics: metrics, title: group.name, detail: line,
                     target: SwitchTarget(providerId: group.providerId, name: group.name),
                     dim: resting || releasesKnown, waiting: !releasesKnown && !resting, action: nil)
+                    .id(group.providerId)
             }
         }
     }
@@ -317,8 +342,9 @@ struct PanelChoiceRow: View {
                 TimelineView(.periodic(from: .now, by: 0.2)) { _ in
                     let shown = ContinuousClock.now - picked.since >= PanelSwitch.silent
                     ProgressView()
-                        .controlSize(.small)
-                        .scaleEffect(metrics.touch ? 0.8 : 0.6)
+                        .controlSize(metrics.touch ? .regular : .small)
+                        .scaleEffect(metrics.touch ? 0.85 : 0.9)
+                        .tint(Palette.silk)
                         .opacity(shown ? 1 : 0)
                         .animation(.fadeIn, value: shown)
                 }

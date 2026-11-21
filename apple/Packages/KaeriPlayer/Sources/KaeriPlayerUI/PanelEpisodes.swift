@@ -64,6 +64,9 @@ struct PanelEpisodes: View {
                 proxy.scrollTo(current, anchor: UnitPoint(x: 0.5, y: 0.25))
             }
         }
+        .onChange(of: model.panelShot, initial: true) { _, shot in
+            if let shot { revealed = shot.revealed }
+        }
         .task(id: id) {
             guard let id else { return }
             if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
@@ -282,8 +285,8 @@ struct PanelEpisodeRow: View {
             parts.append(L.episodeWatched)
         } else if row.watched > 0, !metadataOnly, let seconds {
             parts.append(L.timeMinutesLeft(minutes: max(1, Int((seconds * (1 - row.watched) / 60).rounded()))))
-        } else if let seconds {
-            parts.append(L.episodeRowLength(minutes: Int((seconds / 60).rounded())))
+        } else if let seconds, seconds > 0 {
+            parts.append(L.episodeRowLength(minutes: max(1, Int((seconds / 60).rounded()))))
         }
         if let source = row.source, !metadataOnly { parts.append(L.episodeRowFrom(source: source)) }
         return parts.joined(separator: " · ")

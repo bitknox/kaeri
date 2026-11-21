@@ -112,6 +112,10 @@ struct PlayerPanelLayer: View {
         .onChange(of: open, initial: true) { _, now in
             model.panelOpen = now
             if now { model.loadPanelReleases() }
+            if now, let shot = model.panelShot { tab = shot.tab }
+        }
+        .onChange(of: model.panelShot) { _, shot in
+            if let shot { tab = shot.tab }
         }
     }
 }
@@ -180,9 +184,7 @@ struct PlayerPanel: View {
             .pointingHand()
             .help(L.actionClose)
             .accessibilityLabel(L.actionClose)
-            #if os(macOS)
             .keyboardShortcut(.cancelAction)
-            #endif
         }
         .padding(.horizontal, metrics.pad)
         .frame(height: metrics.head)
@@ -198,9 +200,35 @@ extension View {
         if reduceTransparency {
             background(Palette.raised, in: shape).clipShape(shape)
         } else {
-            clipShape(shape)
+            // The system's tint alone stays too clear over a bright frame: the board's 60% ground
+            // is laid inside the glass as well, under the content.
+            background(Palette.ground.opacity(0.5), in: shape)
+                .clipShape(shape)
                 .glassEffect(.regular.tint(Palette.ground.opacity(0.6)), in: shape)
         }
+    }
+}
+
+// MARK: The held picture
+
+/// The picture on screen when a switch began to load, over the video until the new release's
+/// first frame, then crossfaded away as the new picture comes up under it.
+struct HeldPictureView: View {
+    let model: PlayerModel
+
+    var body: some View {
+        ZStack {
+            if let held = model.heldPicture {
+                Image(decorative: held.image, scale: 1)
+                    .resizable()
+                    .scaledToFit()
+                    .opacity(model.holding ? 1 : 0)
+                    .animation(.fadeIn, value: model.holding)
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 
@@ -222,6 +250,8 @@ struct PanelButton: View {
                 .padding(.horizontal, metrics.touch ? 18 : 14)
                 .frame(height: metrics.touch ? 36 : 28)
                 .foregroundStyle(kind == .primary ? Palette.ground : Palette.silk)
+                // The Mac's glass tint alone washes amber out over the dim: the fill is laid inside.
+                .background(kind == .primary ? Palette.amber : .clear, in: .capsule)
                 .contentShape(.capsule)
         }
         .buttonStyle(.plain)

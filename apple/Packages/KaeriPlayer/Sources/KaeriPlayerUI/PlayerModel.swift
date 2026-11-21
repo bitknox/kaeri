@@ -193,6 +193,8 @@ public final class PlayerModel {
     public internal(set) var playingSource: String?
     /// The release playing, when one was picked in the panel and landed.
     public internal(set) var playingRelease: SourceCandidate?
+    /// What a screenshot or recording puts the panel in (PlayerShots).
+    public internal(set) var panelShot: PanelShot?
     /// Holding the picture over the video while a switch loads (`PlayerSwitch` Loading to
     /// Landed or Failed): the starting screen stays away and the seek line stays at `holdAt`.
     public internal(set) var holding = false
