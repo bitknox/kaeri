@@ -81,6 +81,9 @@ pub struct FolderReport {
     pub rotated: Option<RecoveryKey>,
     /// The recovery key that opens `group.bin`, when this pass looked: after the keyring changed.
     pub recovery: Option<RecoveryKey>,
+    /// Another copy of this device writes under its id: the pass stopped before writing, for
+    /// the device to carry on under a new id.
+    pub second_copy: bool,
 }
 
 impl FolderReport {
@@ -92,6 +95,7 @@ impl FolderReport {
         self.watches.extend(applied.watches);
         self.works.extend(applied.works);
         self.read_notes.extend(applied.read_notes);
+        self.second_copy |= applied.second_copy;
     }
 }
 
@@ -520,6 +524,7 @@ impl FolderRoad {
         // Again before the segments: a group started over while this pass read writes nothing
         // of this device's under the old key into the new group's folder.
         self.check_same_group().await?;
+        self.know_writer()?;
         self.write_segments(&mut report).await?;
         self.write_acks().await?;
         // After the segments, so a device that finds a marker can read the register behind it.
@@ -742,6 +747,23 @@ impl FolderRoad {
             self.store.sync_meta_set(&self.meta(&cursor_key), &cursor.to_string())?;
         }
         self.store.sync_touch_peer(device, now_secs())?;
+        Ok(())
+    }
+
+    /// What this device wrote is counted for the id it wrote under: a device that moved to a new
+    /// id (another copy of it writes under the old one) starts its own directory from the start.
+    fn know_writer(&self) -> Result<()> {
+        let key = self.meta("writer");
+        match self.store.sync_meta_get(&key)? {
+            Some(writer) if writer == self.device => return Ok(()),
+            Some(_) => {
+                for what in ["published", "segno", "acked"] {
+                    self.store.sync_meta_remove(&self.meta(what))?;
+                }
+            }
+            None => {}
+        }
+        self.store.sync_meta_set(&key, &self.device)?;
         Ok(())
     }
 

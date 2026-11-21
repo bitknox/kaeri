@@ -1178,8 +1178,10 @@ pub async fn pass(services: &Ctx, tx: &Outbox) {
             let _ = services.store.sync_meta_set(LAST, &kaeri_store::now().to_string());
             let _ = services.store.sync_meta_set(ERROR, "");
             let _ = services.store.sync_meta_set(PROBLEM, "");
+            let copied = report.second_copy;
             announce_cloud(services);
             carry_out(services, tx, report);
+            move_if_copied(services, copied);
         }
         Err((SyncProblem::GroupReplaced, _)) => {
             group_replaced(services, tx);
@@ -1669,6 +1671,28 @@ fn enable_for_pairing(services: &Ctx, device_name: &str) -> Result<(), SyncProbl
     Ok(())
 }
 
+/// Another copy of this device writes under its id (a backup restored, the install copied): this
+/// copy carries on in the same group under a new id, with the key it has, and nothing for the
+/// person to do. Its ops the other copy numbered the same are written again under the new id.
+fn move_if_copied(services: &Ctx, seen: bool) {
+    if !seen && !services.store.sync_second_copy_seen().unwrap_or(false) {
+        return;
+    }
+    let id = keys::new_device_id();
+    let key = device_key(services);
+    if let Err(e) = services.store.sync_take_new_id(&id, &key.public_hex()) {
+        tracing::warn!(error = %e, "could not move this device to a new sync id");
+        return;
+    }
+    tracing::info!(
+        "another copy of this device writes under its sync id; carrying on as a new one"
+    );
+    // The folder road writes under the old id: the next pass opens one under the new.
+    services.syncing.set_road(None);
+    tracking::commands::announce_signed_in(&services.store, &services.sync);
+    announce_cloud(services);
+}
+
 /// What a session with another device brought, carried out as a pass through the folder's is.
 async fn carry_out_peer(services: &Ctx, tx: &Outbox, report: &PeerReport) {
     if let Some(received) = &report.handoff {
@@ -1686,6 +1710,7 @@ async fn carry_out_peer(services: &Ctx, tx: &Outbox, report: &PeerReport) {
             ..FolderReport::default()
         },
     );
+    move_if_copied(services, report.applied.second_copy);
 }
 
 /// Listen for other devices and show a code for one to pair with.

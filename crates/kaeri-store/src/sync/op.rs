@@ -283,6 +283,9 @@ pub struct Applied {
     pub watches: Vec<ReceivedWatch>,
     /// Works whose reading changed, by WorkId.
     pub works: Vec<String>,
+    /// An op under this device's own id arrived that this device did not write: another copy of
+    /// it (a backup restored, the install copied) writes under the same id.
+    pub second_copy: bool,
     pub(crate) device: Vec<DeviceWrite>,
 }
 
