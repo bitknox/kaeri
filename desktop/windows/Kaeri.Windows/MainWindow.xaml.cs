@@ -288,7 +288,7 @@ public sealed partial class MainWindow : Window
 
     /// <summary>
     /// The window where it was last left (size, position and maximised), when that still lies on
-    /// a display; otherwise 80% of the display's work area (at least 1280 by 800, at most the work area), centred.
+    /// a display; otherwise the first launch's frame, <see cref="WindowPlace.First"/>.
     /// The minimum is 500 by 420.
     /// </summary>
     void Size()
@@ -300,16 +300,17 @@ public sealed partial class MainWindow : Window
             overlapped.PreferredMinimumWidth = (int)(500 * scale);
             overlapped.PreferredMinimumHeight = (int)(420 * scale);
         }
-        if (options.Width is null && Place.Read(PlacePath) is { } place && Place.OnADisplay(place.Frame))
+        if (options.Width is null && Place.Read(PlacePath) is { } place && place.Opening(scale) is { } frame)
         {
-            AppWindow.MoveAndResize(place.Frame);
+            AppWindow.MoveAndResize(frame);
             if (place.Maximised && AppWindow.Presenter is OverlappedPresenter p)
                 p.Maximize();
             placed = true;
             return;
         }
-        var width = options.Width is { } w ? (int)(w * scale) : Math.Min(Math.Max((int)(area.Width * 0.8), (int)(1280 * scale)), area.Width);
-        var height = options.Height is { } h ? (int)(h * scale) : Math.Min(Math.Max((int)(area.Height * 0.8), (int)(800 * scale)), area.Height);
+        var first = WindowPlace.First(area.ToFrame(), scale);
+        var width = options.Width is { } w ? (int)(w * scale) : first.Width;
+        var height = options.Height is { } h ? (int)(h * scale) : first.Height;
         AppWindow.MoveAndResize(new RectInt32(
             area.X + Math.Max(0, (area.Width - width) / 2), area.Y + Math.Max(0, (area.Height - height) / 2), width, height));
         placed = true;
@@ -339,7 +340,11 @@ public sealed partial class MainWindow : Window
         RememberPlace();
     }
 
-    /// <summary>Keeps the window's frame for the next launch: the normal frame, and whether it was maximised.</summary>
+    /// <summary>
+    /// Keeps the window's frame for the next launch, as <see cref="WindowPlace.Keep"/> has it: the
+    /// normal frame, which while maximised is the one Restore down goes back to, and whether it
+    /// was maximised.
+    /// </summary>
     void RememberPlace()
     {
         if (!placed || options.Width is not null || AppWindow.Presenter is not OverlappedPresenter overlapped || !AppWindow.IsVisible)
@@ -347,10 +352,11 @@ public sealed partial class MainWindow : Window
         var maximised = overlapped.State == OverlappedPresenterState.Maximized;
         if (overlapped.State == OverlappedPresenterState.Minimized)
             return;
-        var frame = maximised && Place.Read(PlacePath) is { } was
-            ? was.Frame
-            : new RectInt32(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
-        Place.Write(PlacePath, new Place(frame, maximised));
+        var current = new WindowFrame(AppWindow.Position.X, AppWindow.Position.Y, AppWindow.Size.Width, AppWindow.Size.Height);
+        var normal = maximised ? NormalFrame.Of(WinRT.Interop.WindowNative.GetWindowHandle(this), AppWindow.Id)?.ToFrame() : null;
+        var kept = maximised ? Place.Read(PlacePath)?.Frame.ToFrame() : null;
+        if (WindowPlace.Keep(maximised, current, normal, kept) is { } frame)
+            Place.Write(PlacePath, new Place(frame.ToRect(), maximised));
     }
 
     [System.Runtime.InteropServices.LibraryImport("user32.dll")]
