@@ -1,7 +1,8 @@
 ---
 // One architecture drawing in a figure: the wide layout where the column is 720 or wider, the
 // narrow one below that, at their own sizes so the text never shrinks. Colours and fonts come
-// from the site's tokens, so the drawing follows the theme.
+// from the site's tokens, so the drawing follows the theme. What it marks out is in the accent,
+// which is the amber on dark and a deep amber on light, where the amber itself would not read.
 import { CAPTIONS, renderDiagram, sitePaint, type DiagramKind } from './diagrams';
 
 interface Props {
@@ -88,7 +89,7 @@ const narrow = renderDiagram(kind, 'narrow', sitePaint);
 
 	.ani-arch .arch-em {
 		fill: none;
-		stroke: var(--ani-obi);
+		stroke: var(--sl-color-accent);
 		stroke-width: 1.5;
 		stroke-dasharray: 4 3;
 	}
@@ -127,7 +128,7 @@ const narrow = renderDiagram(kind, 'narrow', sitePaint);
 	}
 
 	.ani-arch :is(.arch-caps-em, .arch-em-text) {
-		fill: var(--ani-obi);
+		fill: var(--sl-color-accent);
 	}
 
 	.ani-arch :is(.arch-crate, .arch-chip-text, .arch-edge-text, .arch-em-text) {

@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-import { contrast, Palette, rules, sheet, THEMES } from './palette';
+import { componentStyle, contrast, Palette, rules, sheet, THEMES } from './palette';
 
 const website = new URL('../../', import.meta.url).pathname;
 
@@ -46,6 +46,30 @@ describe('the docs asides', () => {
 				const mark = declared(`.starlight-aside--${kind}`, '--ani-aside-mark');
 				expect(mark, `${kind} has no mark`).toBeDefined();
 				expect(contrast(palette.resolve(mark!), aside), `${kind}'s mark on the aside`).toBeGreaterThanOrEqual(3);
+			}
+		});
+	}
+});
+
+describe('the architecture drawings', () => {
+	const drawing = rules(componentStyle(readFileSync(join(website, 'src/components/architecture/ArchitectureDiagram.astro'), 'utf8')));
+	/** What the drawing's style gives a property in the rules for a selector, the last rule winning. */
+	const declared = (selector: string, property: string) =>
+		drawing
+			.filter((r) => r.selectors.includes(selector))
+			.flatMap((r) => r.declarations)
+			.findLast(([p]) => p === property)?.[1];
+
+	// The drawings sit on the docs page's ground, and their boxes are raised.
+	for (const theme of THEMES) {
+		test(`marked-out text reads at 4.5:1 and the marked-out rule at 3:1, in the ${theme} theme`, () => {
+			const palette = new Palette(theme, sheet('starlight-tokens.css'), sheet('site.css'), sheet('docs.css'));
+			const text = palette.resolve(declared('.ani-arch :is(.arch-caps-em, .arch-em-text)', 'fill')!);
+			const rule = palette.resolve(declared('.ani-arch .arch-em', 'stroke')!);
+			for (const under of ['--ani-ground', '--ani-raised']) {
+				const back = palette.resolve(`var(${under})`);
+				expect(contrast(text, back), `the marked-out text on ${under}`).toBeGreaterThanOrEqual(4.5);
+				expect(contrast(rule, back), `the marked-out rule on ${under}`).toBeGreaterThanOrEqual(3);
 			}
 		});
 	}
