@@ -1875,3 +1875,36 @@ public class LawfulLinesTests
         Assert.Equal(T.SearchResultPlaysHere, Wording.Where(new AvailableAt.PlaysHere()));
     }
 }
+
+public class OutsideTests
+{
+    [Fact]
+    public void APluginsLinkNeverReachesAFileAShareOrWindowsOwnHandlers()
+    {
+        string[] refused =
+        [
+            "file:///C:/Users/x/payload.exe",
+            @"\\files.example\share\payload.exe",
+            @"search-ms:query=player&crumb=location:\\files.example\share",
+            "ms-word:ofe|u|https://files.example/doc.docx",
+            "ms-settings:privacy",
+            "shell:startup",
+            "javascript:alert(1)",
+            "not a link",
+        ];
+        foreach (var url in refused)
+        {
+            Assert.Equal(Launch.Refuse, Outside.For(url, out var uri));
+            Assert.Null(uri);
+        }
+    }
+
+    [Fact]
+    public void TheWebOpensAndAnotherAppsLinkAsksFirst()
+    {
+        Assert.Equal(Launch.Open, Outside.For("https://service.example/watch/1", out var web));
+        Assert.Equal("service.example", web?.Host);
+        Assert.Equal(Launch.Ask, Outside.For("hikari-player://watch/1", out var app));
+        Assert.Equal("hikari-player", app?.Scheme);
+    }
+}
