@@ -3212,7 +3212,7 @@
         <item quantity="other">%1$,d avsnitt ute</item>
     </plurals>
     <string name="count_out_short">%1$,d ute</string>
-    <string name="count_starts">Startar %1$s</string>
+    <string name="count_starts">Startar %1$d %2$s</string>
     <string name="count_not_out">Inte ute än</string>
     <string name="count_next_of">Avs %1$d av %2$d</string>
     <string name="count_dub">Dub</string>
@@ -3226,7 +3226,7 @@
         <item quantity="one">Ett avsnitt ute</item>
         <item quantity="other">%1$,d avsnitt ute</item>
     </plurals>
-    <string name="count_spoken_starts">Startar %1$s</string>
+    <string name="count_spoken_starts">Startar %1$d %2$s</string>
     <string name="count_spoken_next_of">Avsnitt %1$d av %2$d</string>
     <string name="count_spoken_dub_through">dubbat till avsnitt %1$d</string>
     <string name="count_spoken_dub">har en dubbning</string>

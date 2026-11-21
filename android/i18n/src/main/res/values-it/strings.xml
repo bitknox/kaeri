@@ -3336,7 +3336,7 @@
         <item quantity="other">%1$,d episodi usciti</item>
     </plurals>
     <string name="count_out_short">%1$,d usciti</string>
-    <string name="count_starts">Inizia il %1$s</string>
+    <string name="count_starts">Inizia il %1$d %2$s</string>
     <string name="count_not_out">Non ancora uscito</string>
     <string name="count_next_of">Ep %1$d di %2$d</string>
     <string name="count_dub">Dop.</string>
@@ -3352,7 +3352,7 @@
         <item quantity="many">%1$,d episodi usciti</item>
         <item quantity="other">%1$,d episodi usciti</item>
     </plurals>
-    <string name="count_spoken_starts">Inizia il %1$s</string>
+    <string name="count_spoken_starts">Inizia il %1$d %2$s</string>
     <string name="count_spoken_next_of">Episodio %1$d di %2$d</string>
     <string name="count_spoken_dub_through">doppiato fino all\'episodio %1$d</string>
     <string name="count_spoken_dub">ha un doppiaggio</string>

@@ -3464,7 +3464,7 @@
         <item quantity="other">Вышло %1$,d эпизода</item>
     </plurals>
     <string name="count_out_short">Вышло %1$,d</string>
-    <string name="count_starts">Старт: %1$s</string>
+    <string name="count_starts">Старт: %1$d %2$s</string>
     <string name="count_not_out">Ещё не вышло</string>
     <string name="count_next_of">Эп. %1$d из %2$d</string>
     <string name="count_dub">Дубляж</string>
@@ -3482,7 +3482,7 @@
         <item quantity="many">Вышло %1$,d эпизодов</item>
         <item quantity="other">Вышло %1$,d эпизода</item>
     </plurals>
-    <string name="count_spoken_starts">Старт: %1$s</string>
+    <string name="count_spoken_starts">Старт: %1$d %2$s</string>
     <string name="count_spoken_next_of">Эпизод %1$d из %2$d</string>
     <string name="count_spoken_dub_through">с дубляжом до эпизода %1$d</string>
     <string name="count_spoken_dub">есть дубляж</string>

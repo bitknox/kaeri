@@ -3212,7 +3212,7 @@
         <item quantity="other">%1$,d bölüm çıktı</item>
     </plurals>
     <string name="count_out_short">%1$,d çıktı</string>
-    <string name="count_starts">%1$s başlıyor</string>
+    <string name="count_starts">%1$d %2$s başlıyor</string>
     <string name="count_not_out">Henüz çıkmadı</string>
     <string name="count_next_of">Böl. %1$d/%2$d</string>
     <string name="count_dub">Dublaj</string>
@@ -3226,7 +3226,7 @@
         <item quantity="one">Bir bölüm çıktı</item>
         <item quantity="other">%1$,d bölüm çıktı</item>
     </plurals>
-    <string name="count_spoken_starts">%1$s tarihinde başlıyor</string>
+    <string name="count_spoken_starts">%1$d %2$s tarihinde başlıyor</string>
     <string name="count_spoken_next_of">%2$d bölümün %1$d. bölümü</string>
     <string name="count_spoken_dub_through">%1$d. bölüme kadar dublajlı</string>
     <string name="count_spoken_dub">dublajı var</string>

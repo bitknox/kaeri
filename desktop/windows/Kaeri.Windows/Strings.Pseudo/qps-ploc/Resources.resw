@@ -11661,8 +11661,8 @@
     <comment>The same, short.</comment>
   </data>
   <data name="CountStarts" xml:space="preserve">
-    <value>[Šţàŕţš {date}~~~]</value>
-    <comment>The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.</comment>
+    <value>[Šţàŕţš {day} {month}~~~~~]</value>
+    <comment>The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.</comment>
   </data>
   <data name="CountNotOut" xml:space="preserve">
     <value>[Ñöţ öüţ ýéţ~~~~]</value>
@@ -11701,8 +11701,8 @@
     <comment>What a screen reader says for a show that is airing with no known total.</comment>
   </data>
   <data name="CountSpokenStarts" xml:space="preserve">
-    <value>[Šţàŕţš {date}~~~]</value>
-    <comment>What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.</comment>
+    <value>[Šţàŕţš {day} {month}~~~~~]</value>
+    <comment>What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.</comment>
   </data>
   <data name="CountSpokenNextOf" xml:space="preserve">
     <value>[Éþîšöðé {episode} öƒ {total}~~~~~~]</value>

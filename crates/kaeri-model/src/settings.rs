@@ -989,6 +989,11 @@ fn row(effective: &Config, saved: &Config, key: SettingKey) -> SettingRow {
     }
 }
 
+/// The themes in the order the Theme row steps through them: adaptive first, as it is the one
+/// most want.
+const THEMES: [ThemeMode; 4] =
+    [ThemeMode::Adaptive, ThemeMode::Immersive, ThemeMode::Light, ThemeMode::Dark];
+
 /// The value a step of `delta` makes of `key`, as the file would be given it, or `None` for
 /// a setting no step changes: typed, read-only, or the order.
 ///
@@ -1003,7 +1008,7 @@ pub fn step(
     delta: i64,
 ) -> Option<SettingValue> {
     use SettingValue as V;
-    use kaeri_core::config::{DownloadQuality, PlayerUi, ThemeMode, Upscaling};
+    use kaeri_core::config::{DownloadQuality, PlayerUi, Upscaling};
     use kaeri_core::media::Translation;
 
     let playback = &effective.playback;
@@ -1011,10 +1016,8 @@ pub fn step(
     Some(match key {
         // Round the four, either way: adaptive first, as it is the one most want.
         SettingKey::Theme => {
-            const RING: [ThemeMode; 4] =
-                [ThemeMode::Adaptive, ThemeMode::Immersive, ThemeMode::Light, ThemeMode::Dark];
-            let at = RING.iter().position(|m| *m == saved.theme.mode).unwrap_or(0) as i64;
-            let next = RING[(at + delta.signum()).rem_euclid(RING.len() as i64) as usize];
+            let at = THEMES.iter().position(|m| *m == saved.theme.mode).unwrap_or(0) as i64;
+            let next = THEMES[(at + delta.signum()).rem_euclid(THEMES.len() as i64) as usize];
             V::Str(format!("{next:?}").to_lowercase())
         }
         SettingKey::Motion => V::Bool(!effective.theme.motion),
@@ -1938,6 +1941,28 @@ fn step_through<T: Copy + PartialOrd>(ladder: &[T], current: T, delta: i64) -> T
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// The Theme row's arrows reach all four themes and go round from either end.
+    #[test]
+    fn theme_arrows_step_through_all_four_themes() {
+        let themed = |mode: &str| {
+            let mut config = Config::default();
+            assert!(put(&mut config, SettingKey::Theme, &SettingValue::Str(mode.into())));
+            config
+        };
+        let to = |config: &Config, delta| step(config, config, SettingKey::Theme, delta);
+        for mode in ["adaptive", "immersive", "light", "dark"] {
+            assert_eq!(
+                change(&themed(mode), &themed(mode), SettingKey::Theme),
+                SettingChange::Steps { back: true, forward: true }
+            );
+        }
+        assert_eq!(to(&themed("adaptive"), 1), Some(SettingValue::Str("immersive".into())));
+        assert_eq!(to(&themed("immersive"), 1), Some(SettingValue::Str("light".into())));
+        assert_eq!(to(&themed("light"), 1), Some(SettingValue::Str("dark".into())));
+        assert_eq!(to(&themed("dark"), 1), Some(SettingValue::Str("adaptive".into())));
+        assert_eq!(to(&themed("adaptive"), -1), Some(SettingValue::Str("dark".into())));
+    }
 
     #[test]
     fn titles_step_from_anilists_choice_to_english_to_romaji() {
