@@ -46,7 +46,9 @@ pub struct Stores {
     state_path: PathBuf,
     plugin_dir: PathBuf,
     tokens: TokenStore,
-    inspector: Arc<tokio::sync::OnceCell<Arc<WasmInspector>>>,
+    /// What reads a plugin file's manifest: the WebAssembly host, made on first use. A test
+    /// may set its own.
+    inspector: Arc<tokio::sync::OnceCell<Arc<dyn Inspector>>>,
     config: Config,
     paths: Paths,
     /// Held across every read-modify-write of the state file, so two tasks finishing together
@@ -168,14 +170,14 @@ impl Stores {
 
     /// The WebAssembly host, built the first time a plugin has to be read. Nothing pays for an
     /// engine until someone installs or publishes.
-    async fn inspector(&self) -> Result<Arc<WasmInspector>, Msg> {
+    async fn inspector(&self) -> Result<Arc<dyn Inspector>, Msg> {
         self.inspector
             .get_or_try_init(|| async {
                 WasmInspector::new(
                     crate::sources::plugin_limits(&self.config),
                     Some(&self.paths.cache_dir.join("wasm")),
                 )
-                .map(Arc::new)
+                .map(|inspector| Arc::new(inspector) as Arc<dyn Inspector>)
             })
             .await
             .cloned()
