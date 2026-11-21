@@ -61,6 +61,8 @@ public sealed partial class MainWindow : Window
     readonly MediaControls? media;
     Tray? tray;
     readonly ShellStatus status;
+    /// <summary>What a restart to update came to, read at start and said once the first page is up.</summary>
+    (bool Installed, string Version)? restarted;
     bool selecting, played, closing, askedClose, firstRun;
 
     public MainWindow(Options options)
@@ -105,6 +107,9 @@ public sealed partial class MainWindow : Window
         session = new EngineSession(engine, act => ui.TryEnqueue(() => act()));
         var art = new Art(session.Send);
         var updater = new Updater(ui, staged: options.Fixture && options.UpdateFrom is null) { Quit = CloseNow };
+        // Read before the engine starts: its first answer can set a download going in the folder
+        // the marker is in.
+        restarted = updater.AfterRestart();
         updater.Ready += version =>
         {
             ShowToast(InfoBarSeverity.Informational, T.UpdatesReady(version), T.UpdatesRestart, updater.Install);
@@ -476,15 +481,18 @@ public sealed partial class MainWindow : Window
                 OpenLink(link);
         }));
         // After Restart to update: whether the new version is the one running.
-        if (ctx.Updater.AfterRestart() is { } restarted)
+        if (restarted is { } after)
+        {
+            restarted = null;
             ui.TryEnqueue(DispatcherQueuePriority.Low, () =>
             {
-                if (restarted.Installed)
+                if (after.Installed)
                     ShowToast(InfoBarSeverity.Success, T.UpdatesUpdated(Updater.Current));
                 else
-                    ShowToast(InfoBarSeverity.Warning, T.UpdatesDidNotInstall(restarted.Version), T.UpdatesOpenAbout,
+                    ShowToast(InfoBarSeverity.Warning, T.UpdatesDidNotInstall(after.Version), T.UpdatesOpenAbout,
                         () => OpenSettings("about"));
             });
+        }
 #if KAERI_TESTING
         // --show=update: a newer release with this machine's installer, as the engine's check
         // tells of one, which a fixture run stages without fetching.

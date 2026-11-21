@@ -24,6 +24,8 @@ public sealed class Privately
     readonly HashSet<uint> alwaysShows = [];
     readonly HashSet<string> alwaysSeries = [];
     readonly Dictionary<uint, bool> keptShows = [];
+    /// <summary>The shows whose own flag the engine has said this launch, on or off.</summary>
+    readonly HashSet<uint> toldShows = [];
 
     /// <summary>Process-wide: private mode is on now, for the app's own log lines.</summary>
     public static bool Now { get; private set; }
@@ -65,15 +67,27 @@ public sealed class Privately
         return changed;
     }
 
-    bool Flag(PrivateTitle title, bool on) => title switch
+    bool Flag(PrivateTitle title, bool on)
     {
-        PrivateTitle.Show show => on ? alwaysShows.Add(show.Id) : alwaysShows.Remove(show.Id),
-        PrivateTitle.Series series => on ? alwaysSeries.Add(series.Work) : alwaysSeries.Remove(series.Work),
-        _ => false,
-    };
+        if (title is PrivateTitle.Show told)
+            toldShows.Add(told.Id);
+        return title switch
+        {
+            PrivateTitle.Show show => on ? alwaysShows.Add(show.Id) : alwaysShows.Remove(show.Id),
+            PrivateTitle.Series series => on ? alwaysSeries.Add(series.Work) : alwaysSeries.Remove(series.Work),
+            _ => false,
+        };
+    }
 
     /// <summary>Show <paramref name="id"/> is always private on this device.</summary>
     public bool ShowAlways(uint id) => alwaysShows.Contains(id);
+
+    /// <summary>
+    /// Whether the app may keep what it records of show <paramref name="id"/> by itself past the
+    /// session, as the engine keeps its history: not while the mode is on, not for a show always
+    /// private, and only once the engine has said this launch whether the show is.
+    /// </summary>
+    public bool MayKeep(uint id) => !On && toldShows.Contains(id) && !alwaysShows.Contains(id);
 
     /// <summary>Series <paramref name="work"/> is always private on this device.</summary>
     public bool SeriesAlways(string work) => alwaysSeries.Contains(work);

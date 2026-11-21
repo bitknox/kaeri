@@ -1285,6 +1285,36 @@ public class LinkTests
         Assert.Equal("kaeri://calendar", Link.InCommandLine("kaeri.exe kaeri://calendar --x"));
         Assert.Null(Link.InCommandLine("\"C:\\kaeri\\kaeri.exe\""));
     }
+
+    [Fact]
+    public void AMagnetLinkOrTorrentFileOpensTheAppWhetherItRunsOrNot()
+    {
+        const string magnet = "magnet:?xt=urn:btih:0123456789abcdef0123456789abcdef01234567&dn=Made-up%20Show%2007";
+        const string file = @"C:\Downloads\Made-up Show 07.torrent";
+        // Opened while the app is closed: the installer's kaeri.exe "%1", as the app's arguments.
+        Assert.Equal(magnet, Link.InArguments([magnet]));
+        Assert.Equal(file, Link.InArguments([file]));
+        Assert.Equal(file, Link.InArguments(["--scene=watching", file]));
+        Assert.Null(Link.InArguments([@"--media=C:\Clips\a.torrent"]));
+        // Opened while it runs: the whole command line, the program's own path first.
+        Assert.Equal(file, Link.InCommandLine($"\"C:\\Apps\\kaeri.exe\" \"{file}\""));
+        Assert.Equal(new Link.Opened(file), Link.Parse(Link.InCommandLine($"\"C:\\Program Files\\Kaeri\\kaeri.exe\" \"{file}\"")));
+        Assert.Equal(magnet, Link.InCommandLine($"\"C:\\Program Files\\Kaeri\\kaeri.exe\" \"{magnet}\""));
+        Assert.Equal(@"C:\Downloads\x.torrent", Link.InCommandLine("kaeri.exe \t C:\\Downloads\\x.torrent "));
+        // A restart for an update or a profile opens neither again.
+        Assert.Equal(["--scene=watching"], Updates.RelaunchArguments(["--scene=watching", magnet, file]));
+    }
+
+    [Fact]
+    public void ACommandLineIsSplitAsWindowsProgramsSplitIt()
+    {
+        const string file = @"C:\Downloads\Made-up Show 07.torrent";
+        // Before a quote a pair of backslashes stands for one and the quote closes the part; an
+        // odd one out keeps the quote as text, so it opens nothing.
+        Assert.Equal(file, Link.InCommandLine($"\"C:\\Apps\\kaeri.exe\" --dir=\"C:\\Made-up\\\\\" \"{file}\""));
+        Assert.Equal(file, Link.InCommandLine($"\"C:\\Apps\\kaeri.exe\" --name=a\\\"b \"{file}\""));
+        Assert.Equal(file, Link.InCommandLine($"kaeri.exe --name=\"a b\" \"{file}\""));
+    }
 }
 
 public class UpdateTests
@@ -1417,6 +1447,31 @@ public class UpdateTests
 
             var refused = await Updates.Fetch(new HttpClient(new Serve([], System.Net.HttpStatusCode.NotFound)), Asset("x64", 5) with { Name = "gone.exe" }, "0.11.0", dir, _ => { }, default);
             Assert.Equal("The download stopped: the server refused it (404). Try again later.", refused.Reason);
+        }
+        finally
+        {
+            Directory.Delete(dir, recursive: true);
+        }
+    }
+
+    [Fact]
+    public void ADownloadAfterAFailedInstallKeepsTheMarkerAndTheInstallersLog()
+    {
+        HomeGuard.Check();
+        var dir = Dir();
+        try
+        {
+            Directory.CreateDirectory(dir);
+            var next = Asset("x64", 1).Name;
+            foreach (var name in new[] { "updating", "install.log", "kaeri-0.10.0-windows-x64-setup.exe", next + ".partial" })
+                File.WriteAllText(Path.Combine(dir, name), "0.11.0");
+            string[] Left() => [.. Directory.EnumerateFiles(dir).Select(f => Path.GetFileName(f)).Order(StringComparer.Ordinal)];
+            // The copy that opens again reads the marker, and the log says why the install failed.
+            Updates.Tidy(dir, next);
+            Assert.Equal(["install.log", next + ".partial", "updating"], Left());
+            // Once an update has installed, nothing is kept.
+            Updates.Tidy(dir, null);
+            Assert.Empty(Left());
         }
         finally
         {
@@ -1818,5 +1873,41 @@ public class LawfulLinesTests
         Assert.Equal(T.SearchResultOnServer("Mika's Jellyfin"), Wording.Where(new AvailableAt.OnServer("Mika's Jellyfin")));
         Assert.Equal(T.SearchResultOnService("Lantern Library"), Wording.Where(new AvailableAt.OnService("Lantern Library")));
         Assert.Equal(T.SearchResultPlaysHere, Wording.Where(new AvailableAt.PlaysHere()));
+    }
+}
+
+public class OutsideTests
+{
+    [Fact]
+    public void APluginsLinkNeverReachesAFileAShareOrWindowsOwnHandlers()
+    {
+        string[] refused =
+        [
+            "file:///C:/Users/x/payload.exe",
+            @"\\files.example\share\payload.exe",
+            @"search-ms:query=player&crumb=location:\\files.example\share",
+            "ms-word:ofe|u|https://files.example/doc.docx",
+            "ms-settings:privacy",
+            "shell:startup",
+            "javascript:alert(1)",
+            "hikari-player://watch/1",
+            "mailto:someone@service.example",
+            "ftp://files.example/payload.exe",
+            "not a link",
+        ];
+        foreach (var url in refused)
+        {
+            Assert.Equal(Launch.Refuse, Outside.For(url, out var uri));
+            Assert.Null(uri);
+        }
+    }
+
+    [Fact]
+    public void OnlyAWebAddressOpens()
+    {
+        Assert.Equal(Launch.Open, Outside.For("https://service.example/watch/1", out var web));
+        Assert.Equal("service.example", web?.Host);
+        Assert.Equal(Launch.Open, Outside.For("HTTP://service.example/", out var plain));
+        Assert.Equal("http", plain?.Scheme);
     }
 }

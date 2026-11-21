@@ -24,6 +24,7 @@ public sealed partial class MainWindow
     FfiTvSender? tvSender;
     CastButton? castButton;
     CastLayer? castLayer;
+    LastCast? lastCast;
     bool openingTv, browsingForButton;
 
     /// <summary>The sender, when the engine was built with the remote; without one Play on TV stays out of sight.</summary>
@@ -77,6 +78,7 @@ public sealed partial class MainWindow
         tv.PlayOnTv = play => ctx.Play(play.Id, play.Episode);
         tv.PlayingHere = () => Player.Showing ? Player.PlayingOnTv() : null;
         castButton = new CastButton(ctx, tv, () => castLayer?.Expand());
+        var last = lastCast = new LastCast(Path.Combine(dirs.Config, "windows-cast-last"), ctx.Known.Private);
         castLayer = new CastLayer(ctx, tv, PaneGrid, new CastHost
         {
             OpenShow = OpenTitle,
@@ -84,7 +86,7 @@ public sealed partial class MainWindow
             ChooseSource = ChooseCastSource,
             // Over the mini while it shows; at the foot, over the remote, while that is open.
             MiniShown = shown => Toast.Margin = new Thickness(24, 0, 24, shown ? 92 : 16),
-            Remembered = RememberedCast,
+            Remembered = last.Remembered,
         });
         AppTitleBar.RightHeader = TitleBarEnd();
         // The TV went away, was stopped there or was taken: the mini goes, and the notice offers
@@ -92,6 +94,7 @@ public sealed partial class MainWindow
         tv.TakenOver = CastEnded;
         tv.SessionEnded = CastEnded;
         tv.Changed += TvChanged;
+        ctx.Known.Private.Changed += RememberCast;
         tv.Attach(tvSender, browser, casts);
         // The button knows whether TVs exist, and a cast left running is joined again, only by
         // browsing: from launch while the window is up.
@@ -115,6 +118,7 @@ public sealed partial class MainWindow
         if (tvSender is null)
             return;
         tv.Changed -= TvChanged;
+        ctx.Known.Private.Changed -= RememberCast;
         // Quitting lets the TV go: what plays there stops.
         if (tv.SessionHeld)
             tv.DisconnectCast();
@@ -335,23 +339,14 @@ public sealed partial class MainWindow
         }
     }
 
-    string CastLastPath => Path.Combine(dirs.Config, "windows-cast-last");
-    uint? rememberedId;
-
-    /// <summary>The show on the TV, kept for the next launch: the mini names it while the cast is joined again.</summary>
+    /// <summary>
+    /// The show on the TV, for the mini to name while the cast is joined again. Also when the mode
+    /// or a show's own flag turns over, so that a private cast leaves no file behind.
+    /// </summary>
     void RememberCast()
     {
-        if (tv.Session?.Item is not { Id: { } id } item || id == rememberedId)
-            return;
-        rememberedId = id;
-        SmallFiles.Write(CastLastPath, $"{id}\t{item.Title}");
-    }
-
-    (uint Id, string Title)? RememberedCast()
-    {
-        if (SmallFiles.Read(CastLastPath) is not { } kept || kept.Split('\t', 2) is not [var id, var title] || !uint.TryParse(id, out var known))
-            return null;
-        return (known, title);
+        if (tv.Session?.Item is { Id: { } id } item)
+            lastCast?.Playing(id, item.Title);
     }
 
 #if KAERI_TESTING
