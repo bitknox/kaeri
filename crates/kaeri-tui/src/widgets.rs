@@ -39,7 +39,10 @@ impl<'a> Hairline<'a> {
 
 impl Widget for Hairline<'_> {
     fn render(self, area: Rect, buf: &mut Buffer) {
-        if area.height == 0 {
+        // Only the part of the area the buffer has: screens place their rules at rows counted
+        // down from a top, and a row under the buffer's last has nothing to draw on.
+        let area = area.intersection(buf.area);
+        if area.is_empty() {
             return;
         }
         let style = self.palette.style(Role::Rule);
@@ -723,6 +726,17 @@ mod tests {
         Hairline::new(&palette()).render(Rect { x: 0, y: 1, width: 10, height: 1 }, &mut buf);
         assert_eq!(row_text(&buf, 1), "──────────");
         assert_eq!(row_text(&buf, 0).trim(), "", "must not bleed into neighbouring rows");
+    }
+
+    #[test]
+    fn a_hairline_draws_only_where_the_buffer_is() {
+        let mut buf = buffer(10, 3);
+        // On the row under the last: nothing.
+        Hairline::new(&palette()).render(Rect { x: 0, y: 3, width: 10, height: 1 }, &mut buf);
+        assert!((0..3).all(|y| row_text(&buf, y).trim().is_empty()));
+        // Running past the right edge: the part on the buffer.
+        Hairline::new(&palette()).render(Rect { x: 6, y: 2, width: 10, height: 1 }, &mut buf);
+        assert_eq!(row_text(&buf, 2), "      ────");
     }
 
     #[test]

@@ -88,20 +88,26 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
             app.palette.style(Role::Text).add_modifier(Modifier::BOLD),
         );
         // How long the code has left, under it; once it expires, Enter on the row asks again.
+        // It and the rule under the prompt only on rows of the stage: at four rows the code is
+        // the last one, and the rows under the stage are the status line's.
         if let Some(at) = prompt.expires_at {
             y += 1;
-            buf.set_string(
-                area.left() + 12,
-                y,
-                truncate(
-                    &code_expiry(at - app.clock.now_epoch()),
-                    area.width.saturating_sub(13) as usize,
-                ),
-                app.palette.style(Role::TextDim),
-            );
+            if y < area.bottom() {
+                buf.set_string(
+                    area.left() + 12,
+                    y,
+                    truncate(
+                        &code_expiry(at - app.clock.now_epoch()),
+                        area.width.saturating_sub(13) as usize,
+                    ),
+                    app.palette.style(Role::TextDim),
+                );
+            }
         }
         y += 2;
-        Hairline::new(&app.palette).render(Rect { y, height: 1, ..area }, buf);
+        if y < area.bottom() {
+            Hairline::new(&app.palette).render(Rect { y, height: 1, ..area }, buf);
+        }
         y += 2;
         if y >= area.bottom() {
             return;
@@ -139,12 +145,14 @@ pub(super) fn render_accounts(buf: &mut Buffer, app: &App, area: Rect) {
             t::accounts_empty_heading(),
             app.palette.style(Role::TextDim),
         );
-        buf.set_string(
-            area.left(),
-            y + 2,
-            truncate(&t::accounts_empty_hint(TRACKERS_SETTING), area.width as usize),
-            app.palette.style(Role::TextDim),
-        );
+        if y + 2 < area.bottom() {
+            buf.set_string(
+                area.left(),
+                y + 2,
+                truncate(&t::accounts_empty_hint(TRACKERS_SETTING), area.width as usize),
+                app.palette.style(Role::TextDim),
+            );
+        }
         return;
     }
 
@@ -594,5 +602,96 @@ mod tests {
         // A prompt left up after approval asks for a code that no longer does anything.
         app.apply(kaeri_model::event::Event::DeviceCode(None));
         assert!(!text_of(&render_to_buffer(&mut app, 110, 20)).contains("F A 4 3 3"));
+    }
+
+    /// Accounts with no tracker enabled.
+    fn no_trackers() -> App {
+        let mut app = app_with(ContentList::Empty);
+        app.go_to_section(Section::Accounts);
+        app
+    }
+
+    /// Every kind of row: AniList signed in (with the following switch under it), a pull that
+    /// failed, and tokens kept in files.
+    fn trackers() -> App {
+        use kaeri_model::sync::SyncState;
+        let mut app = no_trackers();
+        let now = app.clock.now_epoch();
+        app.apply(Event::Sync(Box::new(SyncState {
+            connected: true,
+            ..SyncState::new("anilist")
+        })));
+        app.apply(Event::Sync(Box::new(SyncState {
+            connected: true,
+            pull_error: Some(PullError {
+                reason: "the server did not answer".into(),
+                at: now - 60,
+            }),
+            ..SyncState::new("mal")
+        })));
+        app.apply(Event::Sync(Box::new(SyncState {
+            storage: Some("file".into()),
+            storage_degraded: true,
+            ..SyncState::new("simkl")
+        })));
+        app
+    }
+
+    /// A Simkl sign-in waiting on its code, which the engine always sends with when it expires.
+    fn signing_in() -> App {
+        let mut app = trackers();
+        let expires_at = Some(app.clock.now_epoch() + 15 * 60);
+        app.apply(Event::DeviceCode(Some(kaeri_model::sync::DeviceCodePrompt {
+            tracker: "simkl".into(),
+            code: "FA433".into(),
+            url: "https://tracker.example/pin".into(),
+            expires_at,
+        })));
+        app
+    }
+
+    /// The same, from a service that did not say when the code expires.
+    fn signing_in_without_expiry() -> App {
+        let mut app = trackers();
+        app.apply(Event::DeviceCode(Some(kaeri_model::sync::DeviceCodePrompt {
+            tracker: "simkl".into(),
+            code: "FA433".into(),
+            url: "https://tracker.example/pin".into(),
+            expires_at: None,
+        })));
+        app
+    }
+
+    #[test]
+    fn a_device_code_draws_in_an_eight_row_terminal() {
+        let mut app = signing_in();
+        let text = text_of(&render_to_buffer(&mut app, 80, 8));
+        assert!(text.contains("F A 4 3 3"), "the code is the row to keep: {text}");
+    }
+
+    #[test]
+    fn nothing_is_written_below_the_stage_at_any_size() {
+        // Drawn into a buffer exactly the stage's size: a row below it lands outside the buffer
+        // and panics here, where in a frame it would cover the status line or, at the
+        // terminal's last row, take the app down.
+        let states: [(&str, fn() -> App); 4] = [
+            ("no trackers", no_trackers),
+            ("trackers", trackers),
+            ("a device code", signing_in),
+            ("a device code without its expiry", signing_in_without_expiry),
+        ];
+        for (name, state) in states {
+            for height in 1..=16u16 {
+                for width in [20, 40, 56, 72, 80, 100, 120] {
+                    let app = state();
+                    let area = Rect::new(0, 0, width, height);
+                    let mut buf = Buffer::empty(area);
+                    let drawn = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                        render_accounts(&mut buf, &app, area);
+                    }));
+                    assert!(drawn.is_ok(), "{name} at {width}x{height}");
+                }
+            }
+        }
     }
 }
