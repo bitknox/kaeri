@@ -418,7 +418,10 @@ impl Store {
                AND uid IS NOT NULL {}",
             if completed_only { "AND completed = 1" } else { "" }
         ))?;
-        stmt.query_map(params![anilist_id, episode], |r| r.get(0))?.collect()
+        let uids = stmt
+            .query_map(params![anilist_id, episode], |r| r.get(0))?
+            .collect::<rusqlite::Result<_>>()?;
+        twins::with_twins(tx, uids)
     }
 
     /// An unwatch made here, after its deletes: the op, and tombstones so that a relayed copy of
@@ -441,6 +444,7 @@ impl Store {
                 "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
                 params![uid, op.stamp as i64],
             )?;
+            twins::unplay(tx, twins::Plays::Watch, uid, &anilist_id.to_string(), episode)?;
         }
         tx.execute(
             "INSERT INTO sync_unwatch (anilist_id, episode, stamp, device) VALUES (?1, ?2, ?3, ?4)
@@ -857,6 +861,155 @@ impl Store {
     }
 }
 
+/// One play held under two ids. A device that moved to a new id writes its ops again there with
+/// the stamps they had, so a device that held them under the old id gets each a second time. A
+/// play counts once: the event keeps the id it arrived under first, and the other is noted as its
+/// twin (`twin.<id>` in `sync_meta`) so an unwatch or unread made here names both. Taking one back
+/// takes the play back under every id, in whatever order its ops arrive (`sync_tomb` keeps the
+/// play itself as `~<stamp>:<title>:<episode>`).
+pub(crate) mod twins {
+    use rusqlite::{OptionalExtension, Transaction, params};
+
+    use super::{OpBody, Stamp, log};
+
+    /// A table of plays: watches or reads.
+    #[derive(Clone, Copy)]
+    pub(crate) enum Plays {
+        Watch,
+        Read,
+    }
+
+    impl Plays {
+        /// The table, and the columns naming what was played: the title or work, and the episode
+        /// or chapter.
+        fn table(self) -> (&'static str, &'static str, &'static str) {
+            match self {
+                Plays::Watch => ("watch_event", "anilist_id", "episode"),
+                Plays::Read => ("read_event", "work", "chapter"),
+            }
+        }
+
+        /// What an op played, when it is a play of this kind.
+        fn of(self, body: &OpBody) -> Option<(String, String)> {
+            match (self, body) {
+                (Plays::Watch, OpBody::Watch { anilist_id, episode, .. }) => {
+                    Some((anilist_id.to_string(), episode.clone()))
+                }
+                (Plays::Read, OpBody::Read { work, chapter, .. }) => {
+                    Some((work.clone(), chapter.clone()))
+                }
+                _ => None,
+            }
+        }
+    }
+
+    fn gone(stamp: Stamp, what: &str, part: &str) -> String {
+        format!("~{stamp}:{what}:{part}")
+    }
+
+    /// Before a received play is inserted as `uid`: whether to leave it out, as taken back or as
+    /// held already under another id.
+    pub(crate) fn settle(
+        tx: &Transaction<'_>,
+        plays: Plays,
+        uid: &str,
+        stamp: Stamp,
+        what: &str,
+        part: &str,
+    ) -> crate::Result<bool> {
+        let (table, a, b) = plays.table();
+        let tomb = |id: &str| -> rusqlite::Result<bool> {
+            tx.query_row("SELECT EXISTS(SELECT 1 FROM sync_tomb WHERE uid = ?1)", [id], |r| {
+                r.get(0)
+            })
+        };
+        if tomb(uid)? {
+            take_back(tx, plays, stamp, what, part)?;
+            return Ok(true);
+        }
+        if tomb(&gone(stamp, what, part))? {
+            return Ok(true);
+        }
+        let twin: Option<String> = tx
+            .query_row(
+                &format!(
+                    "SELECT uid FROM {table} WHERE {a} = ?1 AND {b} = ?2 AND stamp = ?3
+                       AND uid IS NOT NULL AND uid != ?4 LIMIT 1"
+                ),
+                params![what, part, stamp as i64, uid],
+                |r| r.get(0),
+            )
+            .optional()?;
+        let Some(twin) = twin else { return Ok(false) };
+        log::set_meta(tx, &format!("twin.{uid}"), &twin)?;
+        Ok(true)
+    }
+
+    /// A play named in a received unwatch or unread as `uid`, of `what` and `part`: its events
+    /// under every id go, and so does any copy of it arriving later.
+    pub(crate) fn unplay(
+        tx: &Transaction<'_>,
+        plays: Plays,
+        uid: &str,
+        what: &str,
+        part: &str,
+    ) -> rusqlite::Result<()> {
+        let Some((device, seq)) = uid.split_once(':') else { return Ok(()) };
+        let Ok(seq) = seq.parse::<i64>() else { return Ok(()) };
+        let held: Option<(i64, String)> = tx
+            .query_row(
+                "SELECT stamp, body FROM sync_op WHERE device = ?1 AND seq = ?2",
+                params![device, seq],
+                |r| Ok((r.get(0)?, r.get(1)?)),
+            )
+            .optional()?;
+        let Some((stamp, body)) = held else { return Ok(()) };
+        let Ok(body) = serde_json::from_str::<OpBody>(&body) else { return Ok(()) };
+        // Two copies of a device may have used one number for different plays.
+        if plays.of(&body).is_some_and(|(w, p)| w == what && p == part) {
+            take_back(tx, plays, stamp as Stamp, what, part)?;
+        }
+        Ok(())
+    }
+
+    fn take_back(
+        tx: &Transaction<'_>,
+        plays: Plays,
+        stamp: Stamp,
+        what: &str,
+        part: &str,
+    ) -> rusqlite::Result<()> {
+        let (table, a, b) = plays.table();
+        tx.execute(
+            "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
+            params![gone(stamp, what, part), stamp as i64],
+        )?;
+        tx.execute(
+            &format!("DELETE FROM {table} WHERE {a} = ?1 AND {b} = ?2 AND stamp = ?3"),
+            params![what, part, stamp as i64],
+        )?;
+        Ok(())
+    }
+
+    /// `uids` and the twins noted for them, for naming in an unwatch or unread.
+    pub(crate) fn with_twins(
+        tx: &Transaction<'_>,
+        mut uids: Vec<String>,
+    ) -> rusqlite::Result<Vec<String>> {
+        let mut stmt = tx.prepare(
+            "SELECT substr(key, 6) FROM sync_meta WHERE key LIKE 'twin.%' AND value = ?1",
+        )?;
+        let mut twins = Vec::new();
+        for uid in &uids {
+            for twin in stmt.query_map([uid], |r| r.get::<_, String>(0))? {
+                twins.push(twin?);
+            }
+        }
+        uids.extend(twins);
+        Ok(uids)
+    }
+}
+
 /// `sync_op.received` for an op another device made, applied here.
 const RECEIVED: i64 = 1;
 /// `sync_op.received` for an op another device made whose kind this version did not know when it
@@ -925,26 +1078,38 @@ fn apply_one(
             queued_for,
         } => {
             let uid = format!("{}:{}", op.device, op.seq);
-            let inserted = tx.execute(
-                "INSERT OR IGNORE INTO watch_event
+            let twin = twins::settle(
+                tx,
+                twins::Plays::Watch,
+                &uid,
+                op.stamp,
+                &anilist_id.to_string(),
+                episode,
+            )?;
+            let inserted = if twin {
+                0
+            } else {
+                tx.execute(
+                    "INSERT OR IGNORE INTO watch_event
                    (anilist_id, episode, position_secs, duration_secs, watched_secs,
                     provider_id, translation, completed, at, uid, stamp)
                  SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11
                   WHERE NOT EXISTS (SELECT 1 FROM sync_tomb WHERE uid = ?10)",
-                params![
-                    anilist_id,
-                    episode,
-                    position_secs,
-                    duration_secs,
-                    watched_secs,
-                    provider_id,
-                    translation,
-                    *completed as i32,
-                    at,
-                    uid,
-                    op.stamp as i64
-                ],
-            )?;
+                    params![
+                        anilist_id,
+                        episode,
+                        position_secs,
+                        duration_secs,
+                        watched_secs,
+                        provider_id,
+                        translation,
+                        *completed as i32,
+                        at,
+                        uid,
+                        op.stamp as i64
+                    ],
+                )?
+            };
             titles.insert(*anilist_id);
             if inserted > 0 && *completed {
                 report.watches.push(ReceivedWatch {
@@ -975,7 +1140,11 @@ fn apply_one(
                     "INSERT OR IGNORE INTO sync_tomb (uid, stamp) VALUES (?1, ?2)",
                     params![uid, op.stamp as i64],
                 )?;
-                tx.execute("DELETE FROM watch_event WHERE uid = ?1", [uid])?;
+                tx.execute(
+                    "DELETE FROM watch_event WHERE uid = ?1 AND anilist_id = ?2 AND episode = ?3",
+                    params![uid, anilist_id, episode],
+                )?;
+                twins::unplay(tx, twins::Plays::Watch, uid, &anilist_id.to_string(), episode)?;
             }
             tx.execute(
                 "INSERT INTO sync_unwatch (anilist_id, episode, stamp, device) VALUES (?1, ?2, ?3, ?4)

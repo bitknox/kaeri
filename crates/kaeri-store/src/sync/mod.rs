@@ -25,7 +25,7 @@ use std::sync::{Arc, PoisonError, RwLock};
 
 pub use op::*;
 
-pub(crate) use apply::{refresh_title, set_reg};
+pub(crate) use apply::{refresh_title, set_reg, twins};
 pub(crate) use log::{hlc, push_op};
 pub(crate) use log::{match_json, pin_json};
 

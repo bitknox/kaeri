@@ -452,6 +452,78 @@ fn a_copy_of_a_device_moves_to_a_new_id_and_neither_copy_loses_a_change() {
     assert_eq!(dump(&copy.store), dump(&b.store));
 }
 
+/// The watch events a device holds of a title: plays, as history and stats count them.
+fn plays(d: &Dev, id: AnilistId) -> i64 {
+    d.store
+        .with_personal(|c| {
+            Ok(c.query_row(
+                "SELECT COUNT(*) FROM watch_event WHERE anilist_id = ?1",
+                [id.get()],
+                |r| r.get(0),
+            )?)
+        })
+        .unwrap()
+}
+
+/// Two copies of `aaaa` that each wrote a watch under the same number, one of them relayed by
+/// `q`, the other by `b`.
+fn two_copies(dir: &std::path::Path) -> (Dev, Dev, Dev, Dev) {
+    let a = dev_on_disk(dir, "aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    let q = dev("qqqq", 10_000);
+    a.finish(SHOW, "1");
+    say(&a, &b);
+    say(&b, &a);
+    say(&a, &q);
+    let copy = copy_of(&a, dir);
+    a.finish(SHOW, "2");
+    copy.advance(30);
+    copy.finish(OTHER, "1");
+    say(&a, &b);
+    say(&copy, &q);
+    (a, b, q, copy)
+}
+
+#[test]
+fn a_watch_held_under_the_old_id_and_written_again_under_the_new_counts_once() {
+    let dir = tempfile::tempdir().unwrap();
+    let (a, b, q, copy) = two_copies(dir.path());
+    assert!(say(&b, &copy).second_copy);
+    copy.store.sync_take_new_id("cccc", "00").unwrap();
+
+    // q held the copy's watch under the old id: it comes again under the new one.
+    let again = say(&copy, &q);
+    assert_eq!(plays(&q, OTHER), 1, "one watch, one event");
+    assert!(again.watches.is_empty(), "no tracker is told of it twice");
+
+    // The first copy notices too and moves; b held its watch under the old id.
+    assert!(say(&q, &a).second_copy);
+    a.store.sync_take_new_id("dddd", "00").unwrap();
+    for _ in 0..2 {
+        for (from, to) in [(&a, &b), (&b, &q), (&q, &copy), (&copy, &a), (&q, &a), (&b, &copy)]
+        {
+            say(from, to);
+        }
+    }
+    for d in [&a, &b, &q, &copy] {
+        assert_eq!((plays(d, SHOW), plays(d, OTHER)), (2, 1), "{}", d.id);
+    }
+
+    // Taking the episode back where it is held under both ids takes it back everywhere, and
+    // leaves the other play that shares its old number alone.
+    b.advance(60);
+    b.store.forget_episode(SHOW, "2").unwrap();
+    for _ in 0..2 {
+        for (from, to) in [(&b, &q), (&q, &a), (&a, &copy), (&copy, &b)] {
+            say(from, to);
+        }
+    }
+    for d in [&a, &b, &q, &copy] {
+        assert_eq!(done(d, SHOW), ["1"], "{}", d.id);
+        assert_eq!(done(d, OTHER), ["1"], "{}", d.id);
+    }
+}
+
 #[test]
 fn any_order_of_the_same_ops_gives_the_same_state() {
     // Three devices make random changes offline; four other stores take every device's log in a
