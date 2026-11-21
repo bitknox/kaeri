@@ -103,13 +103,9 @@ if (( ! notes_only )); then
     "$p-android-arm64.apk" "$p-android-tv-arm64.apk" "$p-android-tv-armv7.apk" "$p-macos.dmg" "$p-macos-dsyms.zip" "$p-ios-unsigned.ipa" \
     "$p-apps-third-party.zip" "$p-apps-sources.tar" \
     "$p-windows-x64-setup.exe" "$p-windows-arm64-setup.exe" \
-    "Kaeri-$version-x86_64.AppImage" "Kaeri-$version-aarch64.AppImage" \
-    "$p-linux-x86_64.AppImage" "$p-linux-aarch64.AppImage"
-  # The AppImages' update files, which AppImageUpdate fetches from the newest release. The
-  # kaeri-<version>-linux-<arch> copies are the same AppImages under the name the releases before
-  # the rename look for, so that those update too.
-  expect "$apps" "Kaeri-$version-x86_64.AppImage.zsync" "Kaeri-$version-aarch64.AppImage.zsync" \
-    "$p-linux-x86_64.AppImage.zsync" "$p-linux-aarch64.AppImage.zsync"
+    "Kaeri-$version-x86_64.AppImage" "Kaeri-$version-aarch64.AppImage"
+  # The AppImages' update files, which AppImageUpdate fetches from the newest release.
+  expect "$apps" "Kaeri-$version-x86_64.AppImage.zsync" "Kaeri-$version-aarch64.AppImage.zsync"
   expect "$apps" appcast.xml sidestore.json
 
   shopt -s nullglob
@@ -125,18 +121,18 @@ if (( ! notes_only )); then
   done
   shopt -u nullglob
 
-  # Each update pattern an installed AppImage carries picks exactly one file, so an install never
-  # updates itself into another app. AppImageUpdate matches them with fnmatch, case-sensitive like
-  # [[ == ]]. kaeri-*-linux-<arch> is in the releases before the rename, Kaeri-*-<arch> after it.
+  # The update patterns installed AppImages carry, which AppImageUpdate matches with fnmatch,
+  # case-sensitive like [[ == ]]. Each of today's picks exactly one file. The Linux app up to 0.5.2
+  # carries kaeri-*-linux-<arch>, which picks none: a release never offers it another app's file.
   # The terminal AppImage carries no update information; it updates from the tar.gz.
-  for pattern in "kaeri-*-linux-x86_64.AppImage.zsync" "kaeri-*-linux-aarch64.AppImage.zsync" \
-    "Kaeri-*-x86_64.AppImage.zsync" "Kaeri-*-aarch64.AppImage.zsync"; do
-    matches=0
+  for check in "1 Kaeri-*-x86_64.AppImage.zsync" "1 Kaeri-*-aarch64.AppImage.zsync" \
+    "0 kaeri-*-linux-x86_64.AppImage.zsync" "0 kaeri-*-linux-aarch64.AppImage.zsync"; do
+    want="${check%% *}" pattern="${check#* }" matches=0
     for wanted in "${files[@]}"; do
       # shellcheck disable=SC2053 # the pattern is a glob on purpose
       if [[ "${wanted##*/}" == $pattern ]]; then matches=$((matches + 1)); fi
     done
-    (( matches == 1 )) || fail "the update pattern $pattern matches $matches files, not one"
+    (( matches == want )) || fail "the update pattern $pattern matches $matches files, not $want"
   done
 fi
 [[ -f "$apps/apps-release-notes.md" ]] || fail "no apps-release-notes.md in $apps"

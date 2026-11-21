@@ -27,7 +27,8 @@ export interface AppFile {
 	/**
 	 * The file's name after `kaeri-<version>`, as the release names it. Or its whole name with `*`
 	 * for the version, and `|` between names to try in turn, as for the Linux app's AppImages,
-	 * which older releases name `kaeri-<version>-linux-<arch>.AppImage`.
+	 * which releases up to 0.5.2 name `kaeri-<version>-linux-<arch>.AppImage`. The old name can
+	 * go once the latest stable release carries the new one.
 	 */
 	suffix: string;
 	/** The processor it is for, where an app has a file for each. */

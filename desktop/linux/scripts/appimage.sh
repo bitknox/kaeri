@@ -7,9 +7,6 @@
 #     Kaeri-<version>-<arch>.AppImage                 the app, GTK 4, libadwaita and libmpv
 #     Kaeri-<version>-<arch>.AppImage.zsync           for AppImageUpdate and the like
 #     Kaeri-<version>-<arch>.AppImage.sha256
-#     kaeri-<version>-linux-<arch>.AppImage[.sha256,.zsync]
-#                                                     the same AppImage under its old name, which
-#                                                     the releases before the rename update from
 #     linux-<arch>/                                   the build's record, for the notices
 #
 # It runs in Debian 13 (debian:trixie), the oldest Debian with the GTK 4.16 and libadwaita 1.7 the
@@ -95,7 +92,6 @@ glibc="$(getconf GNU_LIBC_VERSION | cut -d' ' -f2)"
 triplet="$(gcc -dumpmachine)"
 syslib="/usr/lib/$triplet"
 name="Kaeri-$version-$arch"
-legacy="kaeri-$version-linux-$arch"
 work="$out/.appimage-$arch"
 appdir="$work/AppDir"
 record="$out/linux-$arch"
@@ -361,11 +357,6 @@ update="gh-releases-zsync|bitknox|kaeri|latest|Kaeri-*-$arch.AppImage.zsync"
     >"$work/appimagetool.log" 2>&1 || { tail -40 "$work/appimagetool.log"; fail "appimagetool failed"; }
   [[ -f "$name.AppImage.zsync" ]] || zsyncmake -u "$name.AppImage" -o "$name.AppImage.zsync" "$name.AppImage"
   sha256sum "$name.AppImage" >"$name.AppImage.sha256"
-  # The old name, which the app's releases before the rename look for in a release, and which
-  # those AppImages' update information names for AppImageUpdate. Its .zsync points at the same file under its own name.
-  cp "$name.AppImage" "$legacy.AppImage"
-  sha256sum "$legacy.AppImage" >"$legacy.AppImage.sha256"
-  zsyncmake -u "$legacy.AppImage" -o "$legacy.AppImage.zsync" "$legacy.AppImage" >/dev/null
 )
 appimage="$out/$name.AppImage"
 # The runtime's .upd_info section, which updaters read, padded with NULs.
@@ -380,6 +371,6 @@ version_line="$(HOME="$work/home" "$compat/$loader" --library-path "$compat" "$a
 [[ "$version_line" == "Kaeri $workspace" ]] || fail "on its own glibc, the app says '$version_line', not 'Kaeri $workspace'"
 
 du -sh "$appdir" | sed 's/^/AppDir: /' >"$record/sizes"
-ls -l "$appimage" "$appimage.zsync" "$out/$legacy.AppImage" >>"$record/sizes"
+ls -l "$appimage" "$appimage.zsync" >>"$record/sizes"
 rm -rf "$work"
 step "wrote $appimage ($(( $(stat -c %s "$appimage") / 1048576 )) MiB)"

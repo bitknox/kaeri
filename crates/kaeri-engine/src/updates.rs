@@ -877,7 +877,6 @@ mod tests {
         fn release_json(&self, tag: &str, prerelease: bool) -> Value {
             let version = tag.trim_start_matches('v');
             let mut assets = Vec::new();
-            // The Linux app's AppImages also under their old names, as a release carries them.
             for (i, template) in [
                 "kaeri-@-macos.dmg",
                 "kaeri-@-ios-unsigned.ipa",
@@ -888,8 +887,6 @@ mod tests {
                 "kaeri-@-windows-arm64-setup.exe",
                 "Kaeri-@-x86_64.AppImage",
                 "Kaeri-@-aarch64.AppImage",
-                "kaeri-@-linux-x86_64.AppImage",
-                "kaeri-@-linux-aarch64.AppImage",
             ]
             .iter()
             .enumerate()

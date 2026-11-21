@@ -121,8 +121,7 @@ packaging/linux/glibc-floor.sh target/x86_64-unknown-linux-gnu/release/kaeri 2.2
 A release carries the apps beside the terminal binaries: `kaeri-<version>-android-arm64.apk`,
 `kaeri-<version>-android-tv-{arm64,armv7}.apk`, `kaeri-<version>-macos.dmg`, `kaeri-<version>-macos-dsyms.zip` (the Mac app's symbols, which it ships without, for symbolicating its crash reports), `kaeri-<version>-ios-unsigned.ipa`,
 `kaeri-<version>-windows-{x64,arm64}-setup.exe` and
-`Kaeri-<version>-{x86_64,aarch64}.AppImage` (each AppImage with its `.zsync`, and a copy under
-the old name `kaeri-<version>-linux-<arch>.AppImage` that releases before the rename update from), with
+`Kaeri-<version>-{x86_64,aarch64}.AppImage` (each AppImage with its `.zsync`), with
 `kaeri-<version>-apps-third-party.zip` and `kaeri-<version>-apps-sources.tar`, each with a
 `.sha256`. `.github/workflows/apps-release.yml` builds them, and `release.yml` calls it for every
 release and publishes what it built with the terminal builds. A pull request that

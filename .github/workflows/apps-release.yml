@@ -917,10 +917,8 @@ jobs:
       - name: Run it
         run: |
           appimage="Kaeri-$VERSION-${{ matrix.arch }}.AppImage"
-          legacy="kaeri-$VERSION-linux-${{ matrix.arch }}.AppImage"
           chmod +x "dist/$appimage"
-          (cd dist && sha256sum -c "$appimage.sha256" && sha256sum -c "$legacy.sha256")
-          cmp "dist/$appimage" "dist/$legacy"
+          (cd dist && sha256sum -c "$appimage.sha256")
           # The version the engine says: the release's, or the workspace's on a run without a tag.
           want="$(sed -n '/^\[workspace.package\]/,/^\[/s/^version = "\(.*\)"/\1/p' <(git show HEAD:Cargo.toml))"
           if [[ -n "$TAG" ]]; then want="$VERSION"; fi
