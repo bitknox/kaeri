@@ -724,8 +724,9 @@ mod hover {
             .iter()
             .find_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
             .expect("a title to hover");
-        // A screen's request: background work now waits a minute of quiet.
-        run(&mut h, vec![Command::LoadBrowse]).await;
+        // A screen's request that brings no titles: background work now waits a minute of
+        // quiet, and no list has brought the hovered card.
+        run(&mut h, vec![Command::LoadSearchFacets]).await;
         h.send(Command::LoadCards { ids: vec![hovered] });
         let carded = |u: &Event| match u {
             Event::Cards(entries) => entries.iter().any(|e| e.id == hovered),
@@ -813,8 +814,9 @@ mod hover {
             .filter_map(|t| t["id"].as_u64().map(|n| AnilistId::new(n as u32)))
             .take(4)
             .collect();
-        // A screen's request: background work now waits a minute of quiet.
-        run(&mut h, vec![Command::LoadBrowse]).await;
+        // A screen's request that brings no titles: background work now waits a minute of
+        // quiet, and no list has brought the hovered card.
+        run(&mut h, vec![Command::LoadSearchFacets]).await;
         let mut tally = Tally::default();
         tally.take(&h, "before");
         h.send(Command::PrepareCards { ids: ids.clone() });
