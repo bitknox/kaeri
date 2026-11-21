@@ -296,6 +296,23 @@ async fn back_to_page_in_a_novel_follows_only_a_jump_of_more_than_two_screens() 
     assert_eq!(offers(&h.drain()), [None]);
 }
 
+/// A private read holds a novel's text position in memory and stores nothing: the next open
+/// resumes there, as an open after a stored read does.
+#[tokio::test(start_paused = true)]
+async fn a_private_novel_opens_again_at_the_place_held_in_memory() {
+    let mut h = novel_harness();
+    h.services.privacy.set(true);
+    let (_, novel) = h.open_novel(OpenAt::Resume).await;
+    let first = novel.spine.iter().position(|s| s.linear).unwrap() as u32;
+    h.at(pos(first, &[3], 12), 2, 4, TurnHow::Turn);
+    let session = h.session();
+    h.send(ReaderCommand::Close { session });
+    let (_, again) = h.open_novel(OpenAt::Resume).await;
+    assert!(h.kept("1").is_none());
+    assert_eq!(again.restore, Some(pos(first, &[3], 12)));
+    assert!(again.entry.ends_with(&format!("#kaeri:pos={first}/3/12")), "{}", again.entry);
+}
+
 #[tokio::test(start_paused = true)]
 async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
     let mut h = novel_harness();

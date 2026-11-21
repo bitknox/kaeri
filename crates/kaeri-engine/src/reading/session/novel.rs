@@ -506,17 +506,23 @@ fn kept_counts(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, key: &str) -> Ve
     counts.split(',').map(str::parse).collect::<Result<_, _>>().unwrap_or_default()
 }
 
-/// The place a person left a novel chapter at, when not read through.
+/// The place a person left a novel chapter at, when not read through. A place a private read
+/// held in memory comes first, as it does for pages: it is the newer, and nothing was stored.
 pub(super) fn kept_novel(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> Option<NovelPos> {
-    cx.services
-        .store
-        .read_chapters(work.as_str())
-        .ok()?
-        .into_iter()
-        .find(|k| k.chapter == chapter.as_str() && !k.read)?
-        .novel_pos
-        .as_deref()
-        .and_then(NovelPos::decode)
+    let memory = cx.services.privacy.read_kept(work.as_str());
+    let pos = match memory.filter(|m| m.chapter == chapter.as_str() && !m.completed) {
+        Some(m) => m.novel_pos,
+        None => {
+            cx.services
+                .store
+                .read_chapters(work.as_str())
+                .ok()?
+                .into_iter()
+                .find(|k| k.chapter == chapter.as_str() && !k.read)?
+                .novel_pos
+        }
+    };
+    pos.as_deref().and_then(NovelPos::decode)
 }
 
 /// A source's chapters as the reader orders them.
