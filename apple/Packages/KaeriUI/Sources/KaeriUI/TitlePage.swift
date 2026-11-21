@@ -216,8 +216,14 @@ struct TitlePage: View {
                     // The held block and the page's in one place, one crossfading into the other.
                     ZStack(alignment: .topLeading) {
                         VStack(alignment: .leading, spacing: 0) {
+                            // The scroll view places the page at the height it measured, and this
+                            // stack shares that height out by how far each part gives: the seasons'
+                            // sideways scroller takes any height offered, and the episodes and
+                            // details give way to their rows' floors. Each keeps its own height, so
+                            // a synopsis opened grows its row and the page, not the seasons' row.
                             if block == "page", !family.seasons.isEmpty || !family.related.isEmpty {
                                 TitleFamilyRow(entry: kin, family: family)
+                                    .fixedSize(horizontal: false, vertical: true)
                                     .padding(.top, 20)
                             }
                             HStack(alignment: .top, spacing: 32) {
@@ -225,6 +231,7 @@ struct TitlePage: View {
                                 TitleDetails(entry: entry, held: held)
                                     .frame(width: 260)
                             }
+                            .fixedSize(horizontal: false, vertical: true)
                             .padding(.top, 24)
                             // On the ground, so Related cards dissolving as the episodes move up go
                             // under them rather than through their words.
