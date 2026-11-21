@@ -361,6 +361,97 @@ fn a_restored_device_takes_its_old_ops_back_and_writes_on_after_them() {
     assert_eq!(b.store.completed_episodes(OTHER).unwrap().len(), 1);
 }
 
+/// Everything `from` holds after what `to` says it holds, as `to` says it to a device nearby.
+fn say(from: &Dev, to: &Dev) -> Applied {
+    let ops =
+        from.store.ops_after(&to.store.sync_vector_to_say().unwrap(), usize::MAX).unwrap();
+    to.store.apply_ops(ops).unwrap()
+}
+
+/// A device whose database is a file in `dir`.
+fn dev_on_disk(dir: &std::path::Path, id: &str, start_secs: i64) -> Dev {
+    let store = Store::open(dir.join("a").join("kaeri.db")).unwrap();
+    let clock = Arc::new(AtomicI64::new(start_secs * 1000));
+    let c = clock.clone();
+    store.set_sync_clock(move || c.load(Ordering::SeqCst));
+    store.sync_enable(id).unwrap();
+    Dev { store, clock, id: id.to_owned() }
+}
+
+/// A second device opened from a copy of `dev`'s database file: an install copied to a new
+/// computer, or a backup restored, while the first goes on.
+fn copy_of(dev: &Dev, dir: &std::path::Path) -> Dev {
+    dev.store
+        .with_personal(|c| {
+            Ok(c.query_row("PRAGMA wal_checkpoint(TRUNCATE)", [], |_| Ok(()))?)
+        })
+        .unwrap();
+    let to = dir.join("copy");
+    std::fs::create_dir_all(&to).unwrap();
+    std::fs::copy(dir.join("a").join("kaeri.db"), to.join("kaeri.db")).unwrap();
+    let store = Store::open(to.join("kaeri.db")).unwrap();
+    let clock = Arc::new(AtomicI64::new(dev.clock.load(Ordering::SeqCst)));
+    let c = clock.clone();
+    store.set_sync_clock(move || c.load(Ordering::SeqCst));
+    Dev { store, clock, id: dev.id.clone() }
+}
+
+/// The episodes a device holds as watched, in order.
+fn done(d: &Dev, id: AnilistId) -> Vec<String> {
+    let mut eps = d.store.completed_episodes(id).unwrap();
+    eps.sort();
+    eps
+}
+
+#[test]
+fn a_copy_of_a_device_moves_to_a_new_id_and_neither_copy_loses_a_change() {
+    let dir = tempfile::tempdir().unwrap();
+    let a = dev_on_disk(dir.path(), "aaaa", 10_000);
+    let b = dev("bbbb", 10_000);
+    a.finish(SHOW, "1");
+    say(&a, &b);
+    say(&b, &a);
+    let copy = copy_of(&a, dir.path());
+
+    // Both write on under the one id, and the same numbers.
+    a.finish(SHOW, "2");
+    copy.advance(30);
+    copy.finish(OTHER, "1");
+    say(&a, &b);
+    let met = say(&b, &copy);
+    assert!(met.second_copy, "b sent back a's op under a number the copy used too");
+    assert!(copy.store.sync_second_copy_seen().unwrap());
+
+    copy.store.sync_take_new_id("cccc", "00").unwrap();
+    assert_eq!(copy.store.sync_device().unwrap().as_deref(), Some("cccc"));
+    assert!(!copy.store.sync_second_copy_seen().unwrap());
+    assert_eq!(done(&copy, SHOW), ["1", "2"], "a's change arrived");
+    assert_eq!(done(&copy, OTHER), ["1"], "its own change stays");
+
+    // The group takes the copy's change under the new id, and lists the new id.
+    let sent = say(&copy, &b);
+    assert!(!sent.second_copy);
+    assert_eq!(done(&b, OTHER), ["1"]);
+    assert!(b.store.sync_peers().unwrap().iter().any(|(d, ..)| d == "cccc"));
+
+    // The first copy never noticed and writes on under the old id; both reach everyone.
+    a.finish(SHOW, "3");
+    say(&a, &b);
+    let back = say(&b, &a);
+    assert!(!back.second_copy, "what comes back under a's id is a's own");
+    assert_eq!(done(&a, OTHER), ["1"]);
+    copy.finish(OTHER, "2");
+    say(&copy, &b);
+    say(&b, &copy);
+    for d in [&a, &b, &copy] {
+        assert_eq!(done(d, SHOW), ["1", "2", "3"]);
+    }
+    assert_eq!(done(&b, OTHER), ["1", "2"]);
+    say(&b, &a);
+    assert_eq!(dump(&a.store), dump(&b.store));
+    assert_eq!(dump(&copy.store), dump(&b.store));
+}
+
 #[test]
 fn any_order_of_the_same_ops_gives_the_same_state() {
     // Three devices make random changes offline; four other stores take every device's log in a

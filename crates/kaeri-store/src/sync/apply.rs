@@ -467,7 +467,42 @@ impl Store {
             if log::meta(tx, HELD_UNKNOWN)?.is_some() {
                 apply_held(tx, now_secs, &mut report, &mut titles, &mut works)?;
             }
+            let me = log::device(tx)?;
             for op in ops {
+                if me.as_deref() == Some(op.device.as_str()) {
+                    match own_op(tx, &op)? {
+                        Own::Same => {
+                            let confirmed =
+                                log::meta(tx, CONFIRMED)?.and_then(|v| v.parse().ok());
+                            if confirmed.is_some_and(|c: u64| op.seq == c + 1) {
+                                log::set_meta(tx, CONFIRMED, &op.seq.to_string())?;
+                            }
+                            report.duplicates += 1;
+                            continue;
+                        }
+                        Own::Differs => {
+                            // Another copy of this device wrote this number. Kept until this
+                            // device moves to a new id, when it takes the number in place of
+                            // this device's own op.
+                            let key = format!("{FORK}{}", op.seq);
+                            if log::meta(tx, &key)?.is_none() {
+                                let json = serde_json::to_string(&op).map_err(|source| {
+                                    crate::StoreError::Encode { what: "sync op", source }
+                                })?;
+                                log::set_meta(tx, &key, &json)?;
+                            }
+                            report.second_copy = true;
+                            report.duplicates += 1;
+                            continue;
+                        }
+                        // Only this device writes under its id: an op it never wrote is another
+                        // copy's. Taken like any other, as the group holds it.
+                        Own::NotHeld => {
+                            log::set_meta(tx, &format!("{FORK}seen"), "1")?;
+                            report.second_copy = true;
+                        }
+                    }
+                }
                 let held = match have.get(&op.device) {
                     Some(h) => *h,
                     None => {
@@ -661,6 +696,37 @@ fn parse_key(key: &str) -> Option<(u32, &str)> {
     Some((id.parse().ok()?, rest))
 }
 
+/// `sync_meta` key: the highest number under this device's id that another device has sent back
+/// as this device wrote it. Said as this device's own number to a device nearby, so it sends
+/// back what it holds after it, and an op another copy wrote under the same number shows.
+pub(crate) const CONFIRMED: &str = "confirmed";
+/// `sync_meta` key prefix: an op another copy of this device wrote under a number this device
+/// used too, by number, kept until [`Store::sync_take_new_id`].
+const FORK: &str = "fork.";
+
+enum Own {
+    Same,
+    Differs,
+    NotHeld,
+}
+
+/// How an op under this device's own id compares with the one held under its number. A
+/// compacted op keeps its stamp and loses its body, on either side.
+fn own_op(tx: &Transaction<'_>, op: &Op) -> Result<Own> {
+    let held: Option<(i64, String)> = tx
+        .query_row(
+            "SELECT stamp, body FROM sync_op WHERE device = ?1 AND seq = ?2",
+            params![op.device, op.seq as i64],
+            |r| Ok((r.get(0)?, r.get(1)?)),
+        )
+        .optional()?;
+    let Some((stamp, body)) = held else { return Ok(Own::NotHeld) };
+    let body: OpBody = serde_json::from_str(&body).unwrap_or(OpBody::Noop);
+    let same = stamp as u64 == op.stamp
+        && (body == op.body || body == OpBody::Noop || op.body == OpBody::Noop);
+    Ok(if same { Own::Same } else { Own::Differs })
+}
+
 impl Store {
     /// Whether another copy of this device has written under its id: a backup restored, or the
     /// install copied, while the original goes on. Seen in what arrived, so far.
@@ -675,9 +741,24 @@ impl Store {
         })
     }
 
-    /// The version vector to say to a device nearby.
+    /// The version vector to say to a device nearby: this device's own number is the one last
+    /// sent back as written here, so the other sends back what it holds after it.
     pub fn sync_vector_to_say(&self) -> Result<VersionVector> {
-        self.version_vector()
+        let mut vector = self.version_vector()?;
+        self.with_personal_tx(|tx| {
+            let Some(me) = log::device(tx)? else { return Ok(()) };
+            let mine = vector.get(&me).copied().unwrap_or(0);
+            match log::meta(tx, CONFIRMED)?.and_then(|v| v.parse::<u64>().ok()) {
+                Some(confirmed) if confirmed < mine => {
+                    vector.insert(me, confirmed);
+                }
+                Some(_) => {}
+                // Kept from here: what was written before is taken as the group holds it.
+                None => log::set_meta(tx, CONFIRMED, &mine.to_string())?,
+            }
+            Ok(())
+        })?;
+        Ok(vector)
     }
 
     /// Carry on as `new_id` in the same group, after another copy of this device wrote under its
@@ -710,6 +791,7 @@ impl Store {
                 .flatten();
             log::set_meta(tx, "device", new_id)?;
             log::set_meta(tx, "seq", "0")?;
+            tx.execute("DELETE FROM sync_meta WHERE key = ?1", [CONFIRMED])?;
             let (mut titles, mut works) = (BTreeSet::new(), BTreeSet::new());
             let add = OpBody::DeviceAdd {
                 device: new_id.to_owned(),
