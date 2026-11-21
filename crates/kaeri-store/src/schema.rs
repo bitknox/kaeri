@@ -1158,6 +1158,16 @@ const MIGRATIONS: &[(&str, &str)] = &[
     ) WITHOUT ROWID;
     "#,
     ),
+    (
+        "0039_read_status_dates",
+        r#"
+    -- When the status and the score were each last set, so setting one never dates the other.
+    -- A tracker compares each with its own last pull. Rows from before take the row's date.
+    ALTER TABLE read_status ADD COLUMN status_at INTEGER;
+    ALTER TABLE read_status ADD COLUMN score_at INTEGER;
+    UPDATE read_status SET status_at = updated_at, score_at = updated_at;
+    "#,
+    ),
 ];
 
 /// How long a statement waits for a lock another connection or process holds before it fails.
