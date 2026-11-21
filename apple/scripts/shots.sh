@@ -54,7 +54,8 @@
 # Subtitles and audio menu open), player-speed, player-picture (Picture and sound), player-episodes
 # (with the playing episode's sources), player-picture-in-picture and Stats for nerds
 # (player-stats, -stats-hidden, -stats-waiting, -stats-stream, -stats-buffering, -stats-hdr,
-# -stats-paused, -stats-copied, -stats-torrent) play the Playing scene's generated episode (apple/scripts/player-media.sh) to that state and shoot the player; "player" is
+# -stats-paused, -stats-copied, -stats-torrent), the Episodes and Sources panel (player-panel-episodes,
+# -sources, -finding, -loading, -landed, -failed, -motion for a recording, -live on the engine's releases) play the Playing scene's generated episode (apple/scripts/player-media.sh) to that state and shoot the player; "player" is
 # all of them. KAERI_POINTED=<row title> draws a menu's row as if the pointer were over it.
 #
 # - mac: the dev harness (apple/Packages/KaeriDev) renders its own window once the store has
@@ -87,7 +88,9 @@ players=(player-starting player-playing player-skip player-up-next player-still-
   player-mark-shares player-mark-noentry player-mark-editing player-mark-previewing player-prompt-opening
   player-prompt-wrong player-prompt-share player-skip-times player-found-skip player-found-controls
   player-found-prompt player-found-saved player-found-never player-found-review player-found-nudged
-  player-found-undo player-found-panel player-found-panel-paused)
+  player-found-undo player-found-panel player-found-panel-paused player-panel-episodes player-panel-sources
+  player-panel-finding player-panel-loading player-panel-landed player-panel-failed player-panel-motion
+  player-panel-live)
 
 usage() {
   echo "usage: apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [<watching|sourceless|unsure|linkopened|fresh|playing|demoonly|demoplayed|demoandstore|demoremoved|subtitlestyled|crashoff|crashsaved|crashheld|storeowner|storeinvited|together|missingepisode|sync-other-group|sync-other-group-offline|sync-other-group-refused|sync-started-over|sync-tv-started-over>[:<section|key=value>]|player|player-<state>]…" >&2

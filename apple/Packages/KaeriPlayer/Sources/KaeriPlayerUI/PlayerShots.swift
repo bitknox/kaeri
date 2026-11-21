@@ -105,6 +105,19 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case foundMotionA = "found-motion-a"
     case foundMotionB = "found-motion-b"
     case foundMotionC = "found-motion-c"
+    /// The Episodes and Sources panel (player panel board), with made-up sources and releases:
+    /// Episodes with the next episode revealed, Sources with a source's releases open, a switch
+    /// to one of them finding, loading over the held picture, landed and failed, and a recording
+    /// that opens the panel and goes through a switch that lands and one that fails. Live asks
+    /// the testing engine for the episode's real releases and switches to one of them.
+    case panelEpisodes = "panel-episodes"
+    case panelSources = "panel-sources"
+    case panelFinding = "panel-finding"
+    case panelLoading = "panel-loading"
+    case panelLanded = "panel-landed"
+    case panelFailed = "panel-failed"
+    case panelMotion = "panel-motion"
+    case panelLive = "panel-live"
 
     /// The engine's fixture for a found times' shot.
     var found: FoundSkipFixture? {
@@ -247,6 +260,8 @@ extension PlayerModel {
             }
             try? await Task.sleep(for: .seconds(0.5))
             if let menu = shot.menu { requestMenu(menu) }
+        case .panelEpisodes, .panelSources, .panelFinding, .panelLoading, .panelLanded, .panelFailed, .panelMotion, .panelLive:
+            there = await stagePanel(shot, id: item.id, episode: String(item.episode), store: store)
         case .fading:
             seek(to: 31)
             there = await waited(10) { self.position >= 31.5 }
@@ -500,7 +515,7 @@ extension PlayerModel {
         loop(from: 22, to: 40)
     }
 
-    private func waited(_ seconds: Int, _ condition: @MainActor () -> Bool) async -> Bool {
+    func waited(_ seconds: Int, _ condition: @MainActor () -> Bool) async -> Bool {
         let deadline = ContinuousClock.now + .seconds(seconds)
         while !condition() {
             guard ContinuousClock.now < deadline else { return false }
