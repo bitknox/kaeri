@@ -167,3 +167,31 @@ describe('the hero clip when the WebM stalls', () => {
 		expect(clip.video.src).toBe(MP4);
 	});
 });
+
+describe('the pause button', () => {
+	// An absolutely placed box with a fixed height keeps its top and drops its bottom when both are
+	// set (CSS 2.1, 10.6.4), so a bottom that comes without top: auto never moves it.
+	test('is placed from the top or the bottom of the clip, never both', () => {
+		const css = component.match(/<style[^>]*>([\s\S]*?)<\/style>/)![1];
+		const media = /@media([^{]*)\{((?:[^{}]*\{[^{}]*\})*)\s*\}/g;
+		const button = (block: string): Record<string, string> =>
+			Object.fromEntries(
+				[...block.matchAll(/\.hero-video-toggle\s*\{([^}]*)\}/g)].flatMap(([, rule]) =>
+					rule
+						.split(';')
+						.filter((declaration) => declaration.includes(':'))
+						.map((declaration) => [declaration.slice(0, declaration.indexOf(':')).trim(), declaration.slice(declaration.indexOf(':') + 1).trim()]),
+				),
+			);
+		const base = button(css.replace(media, ''));
+		expect(base.position).toBe('absolute');
+
+		const contexts: [string, Record<string, string>][] = [['everywhere', base]];
+		for (const [, query, body] of css.matchAll(media)) contexts.push([`@media${query.trimEnd()}`, { ...base, ...button(body) }]);
+		for (const [where, placed] of contexts) {
+			if (!placed.height || placed.height === 'auto') continue;
+			const pinned = ['top', 'bottom'].filter((side) => placed[side] && placed[side] !== 'auto');
+			expect(pinned, where).toHaveLength(1);
+		}
+	});
+});
