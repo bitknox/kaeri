@@ -9542,6 +9542,10 @@ object Strings {
     fun episodeRowPlaying(context: Context, left: String): String =
         context.getString(R.string.episode_row_playing, left)
 
+    /** Episode row in the player's panel: the episode is part story, part filler. */
+    fun episodeRowMixed(context: Context): String =
+        context.getString(R.string.episode_row_mixed)
+
     /** Episode row in the player's panel: the length of an episode nobody has started. */
     fun episodeRowLength(context: Context, minutes: Int): String =
         context.getString(R.string.episode_row_length, minutes)

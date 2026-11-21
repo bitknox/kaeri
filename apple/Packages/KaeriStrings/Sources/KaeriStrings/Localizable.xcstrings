@@ -73837,6 +73837,18 @@
         }
       }
     },
+    "episode-row-mixed" : {
+      "comment" : "Episode row in the player's panel: the episode is part story, part filler.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixed"
+          }
+        }
+      }
+    },
     "episode-row-not-out" : {
       "comment" : "Row note for an episode that has not aired.",
       "extractionState" : "manual",

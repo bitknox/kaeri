@@ -15317,6 +15317,11 @@ pub fn episode_row_playing(left: &str) -> String {
     text("episode-row-playing", &[("left", Arg::Text(left))])
 }
 
+/// Episode row in the player's panel: the episode is part story, part filler.
+pub fn episode_row_mixed() -> String {
+    text("episode-row-mixed", &[])
+}
+
 /// Episode row in the player's panel: the length of an episode nobody has started.
 pub fn episode_row_length(minutes: i64) -> String {
     text("episode-row-length", &[("minutes", Arg::Int(minutes))])

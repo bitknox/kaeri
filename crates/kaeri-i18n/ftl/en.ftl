@@ -9606,6 +9606,9 @@ player-panel = Episodes and sources
 # Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
 episode-row-playing = Playing · { $left }
 
+# Episode row in the player's panel: the episode is part story, part filler.
+episode-row-mixed = Mixed
+
 # Episode row in the player's panel: the length of an episode nobody has started.
 episode-row-length = { $minutes } min
 

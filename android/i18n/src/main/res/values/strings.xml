@@ -5069,6 +5069,8 @@
     <string name="player_panel">Episodes and sources</string>
     <!-- Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left. -->
     <string name="episode_row_playing">Playing · %1$s</string>
+    <!-- Episode row in the player's panel: the episode is part story, part filler. -->
+    <string name="episode_row_mixed">Mixed</string>
     <!-- Episode row in the player's panel: the length of an episode nobody has started. -->
     <string name="episode_row_length">%1$,d min</string>
     <!-- Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it. -->

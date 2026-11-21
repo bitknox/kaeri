@@ -8654,6 +8654,9 @@ public enum L {
         Self.format("episode-row-playing", fallback: "Playing · %1$@", left)
     }
 
+    /// Episode row in the player's panel: the episode is part story, part filler.
+    public static var episodeRowMixed: String { string("episode-row-mixed", fallback: "Mixed") }
+
     /// Episode row in the player's panel: the length of an episode nobody has started.
     public static func episodeRowLength(minutes: Int) -> String {
         Self.format("episode-row-length", fallback: "%1$lld min", minutes)

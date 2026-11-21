@@ -772,6 +772,10 @@ player-panel = Episodes and { -source-pl }
 # @arg left: text
 episode-row-playing = Playing · { $left }
 
+# Episode row in the player's panel: the episode is part story, part filler.
+# @max 16
+episode-row-mixed = Mixed
+
 # Episode row in the player's panel: the length of an episode nobody has started.
 # @arg minutes: int
 episode-row-length = { $minutes } min

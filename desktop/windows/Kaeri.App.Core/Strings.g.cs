@@ -6118,6 +6118,9 @@ public static partial class T
     /// <summary>Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.</summary>
     public static string EpisodeRowPlaying(string left) => Fill(Get("EpisodeRowPlaying"), ("left", left));
 
+    /// <summary>Episode row in the player's panel: the episode is part story, part filler.</summary>
+    public static string EpisodeRowMixed => Get("EpisodeRowMixed");
+
     /// <summary>Episode row in the player's panel: the length of an episode nobody has started.</summary>
     public static string EpisodeRowLength(long minutes) => Fill(Get("EpisodeRowLength"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -14610,6 +14613,7 @@ public static partial class T
         ["PlayerSheetEpisodesLoading"] = "The episode list is on its way.",
         ["PlayerPanel"] = "Episodes and sources",
         ["EpisodeRowPlaying"] = "Playing · {left}",
+        ["EpisodeRowMixed"] = "Mixed",
         ["EpisodeRowLength"] = "{minutes} min",
         ["EpisodeRowDelayed"] = "Delayed, was {when}",
         ["EpisodeRowFrom"] = "From {source}",

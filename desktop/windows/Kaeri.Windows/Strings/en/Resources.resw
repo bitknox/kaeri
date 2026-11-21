@@ -8510,6 +8510,10 @@
     <value>Playing · {left}</value>
     <comment>Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.</comment>
   </data>
+  <data name="EpisodeRowMixed" xml:space="preserve">
+    <value>Mixed</value>
+    <comment>Episode row in the player's panel: the episode is part story, part filler.</comment>
+  </data>
   <data name="EpisodeRowLength" xml:space="preserve">
     <value>{minutes} min</value>
     <comment>Episode row in the player's panel: the length of an episode nobody has started.</comment>
