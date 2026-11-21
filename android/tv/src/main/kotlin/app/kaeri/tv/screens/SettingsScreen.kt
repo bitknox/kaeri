@@ -589,6 +589,16 @@ private fun LazyListScope.torrents(nav: TvNavigator, store: AppStore, view: Sett
                     modifier = Modifier.remembered(memory, "torrent/proxy"),
                 )
                 if (on && check != null && check != ProxyStatus.DIRECT) LastCheckRow(store, check, memory)
+                // UDP trackers bypass the proxy, so through one they are skipped unless this lets them through.
+                val udp = store.settings.isOn(SettingKey.UDP_TRACKERS_WITH_PROXY, view)
+                TvListRow(
+                    stringResource(R.string.torrents_proxy_udp_trackers),
+                    onClick = { store.setSwitch(SettingKey.UDP_TRACKERS_WITH_PROXY, !udp) },
+                    supporting = stringResource(R.string.torrents_proxy_udp_trackers_detail),
+                    switch = udp,
+                    enabled = store.settings.row(SettingKey.UDP_TRACKERS_WITH_PROXY, view) != null,
+                    modifier = Modifier.remembered(memory, "torrent/udp-trackers"),
+                )
             }
         }
     }
