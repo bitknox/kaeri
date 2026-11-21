@@ -313,9 +313,13 @@ pub async fn serve(
             accepted = listener.accept() => match accepted {
                 Ok(accepted) => accepted,
                 // A connection that died between being queued and accepted is not a reason to
-                // stop serving everyone else.
+                // stop serving everyone else. Running out of file descriptors fails every accept
+                // at once, so after that the loop waits a moment instead of spinning on the error.
                 Err(e) => {
                     tracing::debug!(error = %e, "accept failed");
+                    if !one_connection(&e) {
+                        tokio::time::sleep(ACCEPT_BACKOFF).await;
+                    }
                     continue;
                 }
             },
@@ -333,13 +337,23 @@ pub async fn serve(
             let mut builder = http1::Builder::new();
             builder.timer(TokioTimer::new()).header_read_timeout(Duration::from_secs(20));
             let outcome = match tls {
-                Some(acceptor) => match acceptor.accept(stream).await {
-                    Ok(stream) => builder.serve_connection(TokioIo::new(stream), service).await,
-                    Err(e) => {
-                        tracing::debug!(%peer, error = %e, "tls handshake failed");
-                        return;
+                Some(acceptor) => {
+                    let handshake =
+                        tokio::time::timeout(HANDSHAKE_TIMEOUT, acceptor.accept(stream));
+                    match handshake.await {
+                        Ok(Ok(stream)) => {
+                            builder.serve_connection(TokioIo::new(stream), service).await
+                        }
+                        Ok(Err(e)) => {
+                            tracing::debug!(%peer, error = %e, "tls handshake failed");
+                            return;
+                        }
+                        Err(_) => {
+                            tracing::debug!(%peer, "tls handshake timed out");
+                            return;
+                        }
                     }
-                },
+                }
                 None => builder.serve_connection(TokioIo::new(stream), service).await,
             };
             if let Err(e) = outcome {
@@ -347,6 +361,25 @@ pub async fn serve(
             }
         });
     }
+}
+
+/// How long a TLS handshake may take. A client that connects and never says hello is holding
+/// a connection open, like one that never sends its headers.
+const HANDSHAKE_TIMEOUT: Duration = Duration::from_secs(10);
+
+/// How long the accept loop waits after an error that is not about one connection.
+const ACCEPT_BACKOFF: Duration = Duration::from_millis(250);
+
+/// An accept error that ended one queued connection, after which the next accept can succeed.
+fn one_connection(e: &std::io::Error) -> bool {
+    use std::io::ErrorKind;
+    matches!(
+        e.kind(),
+        ErrorKind::ConnectionAborted
+            | ErrorKind::ConnectionReset
+            | ErrorKind::ConnectionRefused
+            | ErrorKind::Interrupted
+    )
 }
 
 pub async fn bind(listen: SocketAddr) -> std::io::Result<(TcpListener, SocketAddr)> {
