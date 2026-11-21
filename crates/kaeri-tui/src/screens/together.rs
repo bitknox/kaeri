@@ -674,12 +674,15 @@ mod tests {
         assert!(text.contains("Episode 9"), "{text}");
     }
 
+    /// A state to draw, by name.
+    type State = (&'static str, fn() -> App);
+
     #[test]
     fn nothing_is_written_below_the_stage_at_any_size() {
         // Drawn into a buffer exactly the stage's size: a line on a row below it lands outside
         // the buffer and panics here, where in a frame it would cover the status line or, at
         // the terminal's last row, take the app down.
-        let states: [(&str, fn() -> App); 4] = [
+        let states: [State; 4] = [
             ("outside a party", outside),
             ("outside a party, with rooms", outside_with_rooms),
             ("alone in a room", alone),

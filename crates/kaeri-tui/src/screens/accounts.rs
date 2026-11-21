@@ -669,12 +669,15 @@ mod tests {
         assert!(text.contains("F A 4 3 3"), "the code is the row to keep: {text}");
     }
 
+    /// A state to draw, by name.
+    type State = (&'static str, fn() -> App);
+
     #[test]
     fn nothing_is_written_below_the_stage_at_any_size() {
         // Drawn into a buffer exactly the stage's size: a row below it lands outside the buffer
         // and panics here, where in a frame it would cover the status line or, at the
         // terminal's last row, take the app down.
-        let states: [(&str, fn() -> App); 4] = [
+        let states: [State; 4] = [
             ("no trackers", no_trackers),
             ("trackers", trackers),
             ("a device code", signing_in),
