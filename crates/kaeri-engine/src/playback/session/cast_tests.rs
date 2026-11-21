@@ -584,6 +584,23 @@ async fn a_tv_playing_something_else_at_launch_drops_the_record_and_is_left_alon
     }
 }
 
+/// Another Kaeri device's Play on TV joins the receiver this cast runs and loads its episode in
+/// the same receiver session. The cast here ends as taken over, and neither its playback's end
+/// nor Stop casting afterwards stops what the other device plays.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_another_kaeri_device_took_over_leaves_its_episode_playing() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    rig.receiver.load_elsewhere_with(serde_json::json!({
+        "kaeriCard": {"id": 900_002, "episode": "2", "title": "Stardust Wayfarer"},
+    }));
+    session_until(&rig.hub, |v| v.state == SessionState::Error).await;
+    let _ = playing.await;
+    rig.hub.disconnect();
+    rig.hub.quits_sent().await;
+    let stops = rig.receiver.heard("STOP");
+    assert!(stops.is_empty(), "what the other device plays was stopped: {stops:?}");
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn a_stale_record_is_dropped_at_launch_without_reaching_the_tv() {
     let (rig, playing) = playing_on_a_tv_that_plays_on().await;

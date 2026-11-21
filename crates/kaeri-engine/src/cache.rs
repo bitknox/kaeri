@@ -1114,6 +1114,22 @@ mod tests {
         assert_eq!(resume.fraction, Some(0.5));
     }
 
+    /// A quit closer to the start than a play resumes from leaves no resume point to offer:
+    /// "Resume" there would start at nought.
+    #[test]
+    fn a_quit_before_the_resume_floor_leaves_nothing_to_resume() {
+        let floor = kaeri_store::MIN_RESUME_SECS;
+        let mut cache = at_episodes(Some((0, 1)), &[]);
+        let played = play(&mut cache, "1");
+        say(&mut cache, &played, tick(floor - 6.0, 1_200.0));
+        say(&mut cache, &played, ended(false, kaeri_model::playback::Ending::Closed));
+        assert_eq!(standing(&cache, SHOW).1, None);
+        let again = play(&mut cache, "1");
+        say(&mut cache, &again, tick(floor, 1_200.0));
+        say(&mut cache, &again, ended(false, kaeri_model::playback::Ending::Closed));
+        assert_eq!(standing(&cache, SHOW).1.map(|r| r.position), Some(floor));
+    }
+
     #[test]
     fn a_play_that_never_played_leaves_the_resume_point_where_it_was() {
         // A cast stopped on the TV while its file loaded ends having said no position: its

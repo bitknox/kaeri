@@ -774,6 +774,9 @@ pub(crate) fn dispatch(
                 low_memory,
             };
             crate::autoplay::device_state(device, engine, tx);
+            // Kaeri's receiver keeps its scenes still too.
+            #[cfg(feature = "cast")]
+            services.casts.set_reduce_motion(reduce_motion);
             // Finding skip times pauses in a power saving mode, which Settings says.
             services.skip_find.set_low_power(low_power);
             crate::skip_find::refresh(&services.skip_find, engine, tx);
