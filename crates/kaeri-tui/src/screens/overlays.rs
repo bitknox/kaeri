@@ -841,16 +841,17 @@ mod tests {
             "The Lantern Ferry and the Long Winter Crossing Past the Lighthouse";
         for overlay in [Overlay::ManualQuery, Overlay::CommandPalette] {
             let mut app = app_with(ContentList::Entries(vec![]));
+            let overlay_name = format!("{overlay:?}");
             app.nav.open_overlay(overlay);
             for c in TYPED.chars() {
                 app.type_char(c);
             }
             let text = text_of(&render_to_buffer(&mut app, 80, 24));
             let heading = text.lines().find(|l| l.contains('▏')).unwrap_or_else(|| {
-                panic!("{overlay:?}: no caret on any row\n{text}");
+                panic!("{overlay_name}: no caret on any row\n{text}");
             });
-            assert!(heading.contains("the Lighthouse▏"), "{overlay:?}: {heading}");
-            assert!(heading.contains('…'), "{overlay:?}: the start gives way: {heading}");
+            assert!(heading.contains("the Lighthouse▏"), "{overlay_name}: {heading}");
+            assert!(heading.contains('…'), "{overlay_name}: the start gives way: {heading}");
         }
     }
 
