@@ -126,6 +126,8 @@ public final class Navigator {
     public var searchRowToEnd = 0
     /// Counts the asks to open the cut synopsis on screen, as its More does, for the motion audit.
     public var synopsisMoreAsked = 0
+    /// The episode whose cut synopsis to open in its row, as its More does, for the motion audit.
+    public var episodeMoreAsked: String?
     /// Whether Downloads is pushed over the Library, as its first row does on iPhone.
     public var downloadsPushed = false
     /// Counts the viewer's own marks of an episode as watched, for the light impact on iPhone:

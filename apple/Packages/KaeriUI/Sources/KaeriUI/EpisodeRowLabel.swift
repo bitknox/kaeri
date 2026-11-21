@@ -1,8 +1,9 @@
 // An episode's row on a title page: its still, title, facts line and up to three lines of synopsis (two where it sits beside the still),
-// on the Mac, the iPad and the iPhone, by the sizes in EpisodeMetrics. The row's height is fixed
+// on the Mac, the iPad and the iPhone, by the sizes in EpisodeMetrics. The row's height is set
 // by its kind, never by whether its text has come, so text that arrives later fades in to room
-// the row already holds. The iPhone's ruled row holds that room only while its text may still
-// come: once its details are known it fits what it has, resizing in the crossfade they arrive in.
+// the row already holds. A row that fits (the iPhone's, and the Mac's below its widest list)
+// holds that room only while its text may still come: once its details are known it fits what
+// it has, resizing in the crossfade they arrive in.
 
 import KaeriDesign
 import KaeriKit
@@ -32,6 +33,10 @@ struct EpisodeRowLabel: View {
     /// The people followed whose progress stops here, in the marks' column before the row's
     /// trailing end; nil when the table has no marks, which leaves the column out.
     var marks: [FollowedMark]? = nil
+    /// Whether a cut synopsis says where its More goes, which the row lays over itself.
+    var expandable = false
+    /// Whether the synopsis shows whole, after its More.
+    var expanded = false
 
     private var stacked: Bool { typeSize.isAccessibilitySize && metrics.text == .under }
 
@@ -58,24 +63,35 @@ struct EpisodeRowLabel: View {
             if numberColumn { number }
             still
             VStack(alignment: .leading, spacing: 0) {
-                title(lines: 1)
+                title(lines: Self.besideTitleLines)
                 factsLine(facts, lines: 1).padding(.top, 2)
-                // About 58 characters a line, however wide the window.
-                synopsis(text, lines: 2)
+                if metrics.holdsText(room: room, protected: hidden, pending: row.synopsisPending, text: text) {
+                    // About 58 characters a line, however wide the window.
+                    synopsis(
+                        text, lines: 2,
+                        reserve: metrics.reservesText(room: room, protected: hidden, pending: row.synopsisPending)
+                    )
                     .padding(.top, 8)
                     .frame(maxWidth: Self.measure, alignment: .leading)
+                    .transition(.opacity)
+                }
             }
-            .frame(maxWidth: .infinity, maxHeight: metrics.still.height, alignment: .topLeading)
+            // The still sets the row's floor; where the row fits, text that runs past it stands
+            // taller, and the row with it.
+            .frame(maxWidth: .infinity, maxHeight: metrics.fits || expanded ? nil : metrics.still.height, alignment: .topLeading)
             if let marks { FollowedMarks(marks: marks) }
             trailing
         }
         .padding(.horizontal, 8)
+        .padding(.vertical, metrics.besideRoom)
         .frame(minHeight: metrics.height(room: room, protected: hidden))
+        .animation(metrics.fits && !reduceMotion ? .fadeIn : nil, value: row.synopsisPending)
     }
 
     private func under(facts: String, text: String?) -> some View {
         VStack(alignment: .leading, spacing: 8) {
-            HStack(alignment: .top, spacing: 12) {
+            // The Mac's gaps, so its words start where its other rows' do; the phone's own.
+            HStack(alignment: .top, spacing: metrics.ruled ? 12 : 14) {
                 if numberColumn { number }
                 // A ruled row carries the marks on the still's corner, so the title has the
                 // row's whole width.
@@ -95,7 +111,7 @@ struct EpisodeRowLabel: View {
             }
         }
         .padding(.top, metrics.pad)
-        .padding(.bottom, metrics.ruled ? metrics.pad : 0)
+        .padding(.bottom, metrics.fits ? metrics.pad : 0)
         .padding(.horizontal, numberColumn ? 8 : 0)
         // The rule under a ruled row is the page's, after anything it adds under the row.
         .frame(minHeight: height - (metrics.ruled ? EpisodeMetrics.rule : 0), alignment: .top)
@@ -198,11 +214,25 @@ struct EpisodeRowLabel: View {
         )
     }
 
-    private func synopsis(_ text: String?, lines: Int) -> some View {
-        SynopsisText(text: text, lines: lines, font: Self.synopsisFont(metrics), delay: asked && metrics.text == .under ? 0.2 : 0)
+    private func synopsis(_ text: String?, lines: Int, reserve: Bool = false) -> some View {
+        SynopsisText(
+            text: text, lines: lines, font: Self.synopsisFont(metrics),
+            delay: asked && metrics.text == .under ? 0.2 : 0, reserve: reserve,
+            expandable: expandable, expanded: expanded
+        )
     }
 
     // MARK: Type
+
+    /// The title's lines where the text sits beside the still: two on the Mac, which they fit
+    /// beside either still with the synopsis's two, one on the iPad.
+    static var besideTitleLines: Int {
+        #if os(macOS)
+        2
+        #else
+        1
+        #endif
+    }
 
     /// The widest a synopsis beside its still sets its lines: about 58 characters of it.
     static var measure: CGFloat {
@@ -255,19 +285,60 @@ struct SynopsisText: View {
     let font: Font
     /// How long its arrival waits: a phone row that grew for it lets it have its room first.
     var delay = 0.0
+    /// Whether it keeps its lines open while its text may still come.
+    var reserve = false
+    /// Whether it says where a More or a Less belongs (`SynopsisMorePlace`), for a row that
+    /// lays the control over itself, outside its own button.
+    var expandable = false
+    /// Whether the whole text shows, uncut, with room under it for Less.
+    var expanded = false
+    @State private var full: CGFloat = 0
+    @State private var shown: CGFloat = 0
 
     var body: some View {
         ZStack(alignment: .topLeading) {
-            if let text, !text.isEmpty {
-                Text(text)
+            if reserve {
+                Text(Array(repeating: " ", count: lines).joined(separator: "\n"))
                     .font(font)
                     .lineSpacing(lineSpacing)
-                    .foregroundStyle(.haze)
                     .lineLimit(lines)
-                    .multilineTextAlignment(.leading)
-                    .environment(\.locale, language(of: text))
-                    .id(text)
-                    .transition(.opacity.animation(.fadeIn.delay(delay)))
+                    .hidden()
+            }
+            if let text, !text.isEmpty {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(text)
+                        .font(font)
+                        .lineSpacing(lineSpacing)
+                        .foregroundStyle(.haze)
+                        .lineLimit(expanded ? nil : lines)
+                        .multilineTextAlignment(.leading)
+                        .environment(\.locale, language(of: text))
+                        // More and Less crossfade the cut and the whole text, never moving a word.
+                        .contentTransition(.opacity)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { shown = $0 }
+                        // The whole text at the same width, measured unseen: more than what shows
+                        // means the text is cut.
+                        .background(alignment: .topLeading) {
+                            if expandable {
+                                Text(text)
+                                    .font(font)
+                                    .lineSpacing(lineSpacing)
+                                    .fixedSize(horizontal: false, vertical: true)
+                                    .hidden()
+                                    .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { full = $0 }
+                            }
+                        }
+                    // Less's line under the whole text.
+                    if expandable && expanded {
+                        Text(L.shellLess).font(font.weight(.semibold)).hidden()
+                    }
+                }
+                .anchorPreference(key: SynopsisMorePlace.self, value: .bounds) { bounds in
+                    expandable && MoreLess.control(expanded: expanded, full: full, shown: shown) != nil
+                        ? SynopsisMorePlace.Place(bounds: bounds, expanded: expanded) : nil
+                }
+                .id(text)
+                .transition(.opacity.animation(.fadeIn.delay(delay)))
             }
         }
         .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -285,6 +356,77 @@ struct SynopsisText: View {
 
     @MainActor private func language(of text: String) -> Locale {
         EpisodeLanguage.of(text).map(Locale.init(identifier:)) ?? Locale.current
+    }
+}
+
+/// Where a cut synopsis's More goes, at the end of its last line, or an expanded one's Less, on
+/// the line under it: the row lays the control over itself from here, so it is a button of its
+/// own beside the row's, never inside it.
+struct SynopsisMorePlace: PreferenceKey {
+    struct Place {
+        let bounds: Anchor<CGRect>
+        let expanded: Bool
+    }
+
+    static let defaultValue: Place? = nil
+
+    static func reduce(value: inout Place?, nextValue: () -> Place?) {
+        value = value ?? nextValue()
+    }
+}
+
+/// The More at the end of a cut synopsis in an episode row, or the Less under an expanded one,
+/// as the title page's synopsis has them. `fill` is what lies under the row (the current row's
+/// selection), which More's fade over the last line's end carries.
+struct SynopsisMoreButton: View {
+    let place: SynopsisMorePlace.Place
+    let font: Font
+    let fill: Color
+    var dimmed = false
+    let toggle: () -> Void
+
+    var body: some View {
+        GeometryReader { proxy in
+            let rect = proxy[place.bounds]
+            Color.clear
+                .frame(width: rect.width, height: rect.height)
+                .overlay(alignment: place.expanded ? .bottomLeading : .bottomTrailing) {
+                    // Each its own: the one going leaves at once, where it stood, and the one
+                    // coming fades in once the row has its new height.
+                    if place.expanded {
+                        button.transition(.asymmetric(insertion: .opacity.animation(.fadeIn.delay(0.25)), removal: .identity))
+                    } else {
+                        button.transition(.asymmetric(insertion: .opacity.animation(.fadeIn.delay(0.25)), removal: .identity))
+                    }
+                }
+                .offset(x: rect.minX, y: rect.minY)
+        }
+    }
+
+    private var button: some View {
+        Button(place.expanded ? L.shellLess : L.actionMore, action: toggle)
+            .buttonStyle(.plain)
+            .font(font.weight(.semibold))
+            .foregroundStyle(Palette.silk.opacity(dimmed ? 0.55 : 1))
+            .padding(.leading, place.expanded ? 0 : 28)
+            // The text fades out over the 28 pt before the word, which sits on the row's own
+            // ground alone.
+            .background {
+                if !place.expanded {
+                    ZStack { Palette.ground; fill }
+                        .mask {
+                            HStack(spacing: 0) {
+                                LinearGradient(colors: [.clear, .black], startPoint: .leading, endPoint: .trailing)
+                                    .frame(width: 28)
+                                Color.black
+                            }
+                        }
+                }
+            }
+            .contentShape(.rect.inset(by: -6))
+            .pointerHover()
+            // The page's menu is More too: this one says what it does.
+            .accessibilityLabel(place.expanded ? L.shellLess : L.titleSynopsisMore)
     }
 }
 
