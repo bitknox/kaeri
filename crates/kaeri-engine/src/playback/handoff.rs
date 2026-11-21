@@ -41,14 +41,6 @@ impl Handoff {
         self.previous.as_ref().is_some_and(|p| !p.is_closed())
     }
 
-    /// Ask for the window without waiting: nothing can fail between here and playing.
-    pub fn now(self) {
-        if let Some(previous) = self.previous {
-            let _ =
-                previous.send(kaeri_model::command::PlayerCommand::Handover(self.successor));
-        }
-    }
-
     /// Ask for the window and wait until it is parked: claiming it any earlier finds the slot
     /// empty and opens a second window beside it.
     pub async fn complete(self) {

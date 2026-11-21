@@ -2806,6 +2806,45 @@ mod tests {
         engine.shutdown().await;
     }
 
+    /// A position carried over to a cast while private is held in memory as a private play's
+    /// place is: never written to the history or the sync log.
+    #[cfg(feature = "cast")]
+    #[tokio::test]
+    async fn a_position_carried_to_a_cast_while_private_is_never_written() {
+        let dir = tempfile::tempdir().unwrap();
+        let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        let mut store = None;
+        let (engine, mut events) = engine_with(dir.path(), host, |options| {
+            options.hosted_player = true;
+            store = Some(options.store.clone());
+        })
+        .await;
+        let store = store.unwrap();
+        events.launch().await;
+        engine.send(Command::SetPrivate { on: true });
+        engine.casts().found(kaeri_cast::CastDevice {
+            instance: "Chromecast-test".into(),
+            id: "tv-1".into(),
+            name: "Living room".into(),
+            model: "Chromecast".into(),
+            address: "127.0.0.2:8009".parse().unwrap(),
+            video: true,
+            group: false,
+        });
+        let id = kaeri_core::ids::AnilistId::new(1);
+
+        engine.send(Command::CastTo {
+            device: "tv-1".into(),
+            id,
+            episode: "1".into(),
+            position: Some(120.0),
+        });
+        seen_until(&mut events, |e| matches!(e, Event::PlaybackEnded { .. })).await;
+        assert_eq!(store.events_for(id, 10).unwrap().len(), 0, "no history row");
+        assert_eq!(store.resume_position(id, "1").unwrap(), None);
+        engine.shutdown().await;
+    }
+
     #[tokio::test]
     async fn quitting_with_nothing_playing_does_not_wait() {
         let dir = tempfile::tempdir().unwrap();
