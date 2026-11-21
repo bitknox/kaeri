@@ -31,7 +31,7 @@ public static class SettingsCatalog
         SettingKey.DownloadsOnCellular, SettingKey.TorrentsOnCellular, SettingKey.EpisodeNotifications,
         SettingKey.ChapterDownloadsOnCellular, SettingKey.KeepChaptersReady, SettingKey.DeleteAfterReading, SettingKey.ShowVolumes, SettingKey.OpdsFeed,
         SettingKey.SeriesChoicesFollow, SettingKey.LookFollows, SettingKey.ChapterNotifications, SettingKey.DownloadsFinished,
-        SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting, SettingKey.AdultTitles,
+        SettingKey.EpisodeDiscussions, SettingKey.CommentImages, SettingKey.CastTvs, SettingKey.TorrentsWhileCasting, SettingKey.UdpTrackersWithProxy, SettingKey.AdultTitles,
         SettingKey.ShowFollowing,
     ];
 
