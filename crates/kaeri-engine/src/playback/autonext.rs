@@ -189,7 +189,7 @@ pub fn follow(
                     .episode_title
                     .clone()
                     .or_else(|| cache.episode_title(front.id, &front.episode)),
-                at: None,
+                at: cache.playhead(front.serial),
             })
         }
         _ => None,
@@ -388,6 +388,28 @@ mod tests {
         assert_eq!(next.episode_title.as_deref(), Some("The fourth"));
         let (_, next) = follow(&pick, None, Some(&on_screen(1, "Title 0", "4")), &cache, false);
         assert_eq!(next.and_then(|next| next.episode_title).as_deref(), Some("Episode 4"));
+    }
+
+    #[test]
+    fn sub_or_dub_picked_in_the_player_restarts_at_the_playhead_not_where_it_was_left() {
+        use kaeri_core::media::Translation;
+        let mut cache = with_table(1, &[]);
+        let playing = on_screen(1, "Title 0", "4");
+        let pick = Event::PlayerTranslation(Translation::Sub);
+        // Picked before the first frame said where it was: where the episode was left.
+        let played = from_title(1, 1, "4");
+        cache.started(&played);
+        let (_, next) = follow(&pick, None, Some(&playing), &cache, false);
+        assert_eq!(next.expect("restarted").at, None);
+        // Ten minutes in: from there.
+        let at = Event::Playback { position: 600.0, duration: Some(1440.0), paused: false };
+        cache.observe(&at, Some(&played));
+        let (_, next) = follow(&pick, None, Some(&playing), &cache, false);
+        assert_eq!(next.expect("restarted").at, Some(600.0));
+        // An episode picked in the player starts where that episode was left.
+        let picked = Event::PlayerPlayEpisode { episode: "5".into(), title: None };
+        let (_, next) = follow(&picked, None, Some(&playing), &cache, false);
+        assert_eq!(next.expect("picked").at, None);
     }
 
     #[test]

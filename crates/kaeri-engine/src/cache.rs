@@ -454,6 +454,13 @@ impl TitleCache {
             .is_some_and(|playhead| playhead.duration.is_some() && !playhead.ended)
     }
 
+    /// Where playback `serial` last said it was, while it plays: the playhead a restart of its
+    /// episode in the other translation opens at.
+    pub(crate) fn playhead(&self, serial: PlaybackId) -> Option<f64> {
+        let playhead = self.playbacks.get(&serial)?;
+        (playhead.played && !playhead.ended).then_some(playhead.position)
+    }
+
     /// A playback under way: started, and not yet ended.
     fn playing(&mut self, played: &Played) -> Option<&mut Playhead> {
         self.playbacks.get_mut(&played.serial).filter(|playhead| !playhead.ended)
