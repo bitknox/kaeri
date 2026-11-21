@@ -709,9 +709,11 @@ pub(crate) fn dispatch(
         Command::AppPhase { phase } => {
             services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine);
-            if phase != kaeri_model::command::AppState::Foreground {
-                let EngineState { config, reader, .. } = engine;
-                let cx = reader.cx(config, services, tx);
+            let EngineState { config, reader, .. } = engine;
+            let cx = reader.cx(config, services, tx);
+            if phase == kaeri_model::command::AppState::Foreground {
+                reader.foreground(&cx);
+            } else {
                 reader.background(&cx);
             }
             ahead::resume(engine, services, tx);

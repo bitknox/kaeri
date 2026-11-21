@@ -35,7 +35,10 @@ use kaeri_model::{
     reading::{ReadingAbout, ReadingEvent, ReadingFailure},
 };
 use kaeri_pages::{ColourChoice, Look, Target, layout::SpreadOnSingle};
-use kaeri_store::{reading::ReadEvent, shelf::BookWorkKind};
+use kaeri_store::{
+    reading::{ReadChapter, ReadEvent},
+    shelf::BookWorkKind,
+};
 use tokio::time::Instant;
 
 use super::{
@@ -227,6 +230,9 @@ pub struct Session {
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
     moved_back: Option<ReadPlace>,
+    /// Another device's place opened another chapter: the move is said once that chapter is
+    /// open, at the page it opened at.
+    moving: Option<Moving>,
     read_fired: bool,
     /// A chapter read that the trackers hear of when the reader closes, when progress is sent
     /// then.
@@ -269,6 +275,15 @@ pub struct Session {
     gone: crate::reading::feed::Gone,
     /// Held while a private series is open: its addresses stay out of the log.
     _private_log: Option<crate::private::redact::Open<'static>>,
+}
+
+/// Another device's place that moved the reader, said with `Moved` and its notice.
+#[derive(Debug)]
+struct Moving {
+    /// The device's name, when sync knows one.
+    name: Option<String>,
+    /// Where Go back returns to.
+    back: ReadPlace,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -699,6 +714,7 @@ impl Reader {
             first_page: None,
             back_to: None,
             moved_back: None,
+            moving: None,
             read_fired: false,
             unsent: None,
             end_page_said: false,
@@ -757,12 +773,24 @@ impl Reader {
         }
     }
 
-    /// The app left the foreground: the place is written and the read rule waits.
+    /// The app left the foreground: the place is written and the read rule waits. Where its
+    /// wait started stays known, so the wait starts over when the app is back.
     pub fn background(&mut self, cx: &Cx<'_>) {
         if let Some(s) = self.session.as_mut() {
             s.read_timer += 1;
-            s.read_wait = None;
             s.flush_leaving(cx);
+        }
+    }
+
+    /// The app is in the foreground again: a read rule's wait that going away stopped starts
+    /// over, since the reader is still on the page it started from.
+    pub fn foreground(&mut self, cx: &Cx<'_>) {
+        if let Some(s) = self.session.as_mut()
+            && s.read_wait.is_some()
+            && !s.read_fired
+        {
+            s.read_timer += 1;
+            after(cx.tx, READ_AFTER, s.id, ReaderWake::ReadRule(s.read_timer));
         }
     }
 
@@ -915,6 +943,45 @@ struct Start {
     of: Option<u32>,
 }
 
+/// Where in a chapter it opens: the page, in a long strip how far into that page's image, and
+/// the pages the chapter had where a kept place was read, so that a place kept in a copy with
+/// other pages goes to the same point of this one.
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+struct OpensAt {
+    page: u32,
+    strip: Option<StripPos>,
+    of: Option<u32>,
+}
+
+impl OpensAt {
+    /// At `page` as asked, with nothing to move.
+    fn page(page: u32) -> Self {
+        Self { page, ..Self::default() }
+    }
+}
+
+/// The kept place of unfinished chapter `id`: its page, and in a long strip how far into that
+/// page's image. A strip read partway down its first image is a place too. A place a private
+/// read held in `memory` comes first: it is the newer.
+fn left_at(
+    memory: Option<&ReadEvent>,
+    kept: &[ReadChapter],
+    id: &ChapterId,
+) -> Option<OpensAt> {
+    let (page, strip, of) = match memory.filter(|m| m.chapter == id.as_str() && !m.completed) {
+        Some(m) => (m.page, m.strip_image.zip(m.strip_offset), m.of_pages),
+        None => {
+            let k = kept.iter().find(|k| k.chapter == id.as_str() && !k.read)?;
+            (k.last_page, k.strip_image.zip(k.strip_offset), k.of_pages)
+        }
+    };
+    let strip = strip
+        .map(|(image, offset)| StripPos { image, offset: (offset as f32).clamp(0.0, 1.0) });
+    let page = page.or(strip.map(|s| s.image)).unwrap_or(0);
+    let strip = strip.filter(|s| s.image == page);
+    (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some(OpensAt { page, strip, of })
+}
+
 /// Which chapter to open and at which page, and whether that resumes a place.
 fn start_of(
     cx: &Cx<'_>,
@@ -932,30 +999,7 @@ fn start_of(
     let marks = folds.marks(store.read_marks(work.as_str()).unwrap_or_default());
     let kept = folds.places(store.read_chapters(work.as_str()).unwrap_or_default(), &marks);
     let index_of = |id: &ChapterId| chapters.iter().position(|c| &c.id == id);
-    // The kept place of an unfinished chapter: its page, and in a long strip how far into that
-    // page's image. A strip read partway down its first image is a place too.
-    // A place a private read held in memory comes first: it is the newer.
     let memory = cx.services.privacy.read_kept(work.as_str());
-    let left_at = |id: &ChapterId| {
-        if let Some(m) = memory.as_ref().filter(|m| m.chapter == id.as_str() && !m.completed) {
-            let strip = m.strip_image.zip(m.strip_offset).map(|(image, offset)| StripPos {
-                image,
-                offset: (offset as f32).clamp(0.0, 1.0),
-            });
-            let page = m.page.or(strip.map(|s| s.image)).unwrap_or(0);
-            let strip = strip.filter(|s| s.image == page);
-            return (page > 0 || strip.is_some_and(|s| s.offset > 0.0))
-                .then_some((page, strip, m.of_pages));
-        }
-        let k = kept.iter().find(|k| k.chapter == id.as_str() && !k.read)?;
-        let strip = k
-            .strip_image
-            .zip(k.strip_offset)
-            .map(|(image, offset)| StripPos { image, offset: (offset as f32).clamp(0.0, 1.0) });
-        let page = k.last_page.or(strip.map(|s| s.image)).unwrap_or(0);
-        let strip = strip.filter(|s| s.image == page);
-        (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some((page, strip, k.of_pages))
-    };
     let at_page = |index, page| Start { index, page, strip: None, resumed: false, of: None };
     // A chapter asked for and not in the list opens nothing: never another chapter in its place.
     let asked = || match chapter {
@@ -1006,8 +1050,10 @@ fn start_of(
                     }
                 }
             };
-            match left_at(&chapters[index].id) {
-                Some((page, strip, of)) => Start { index, page, strip, resumed: true, of },
+            match left_at(memory.as_ref(), &kept, &chapters[index].id) {
+                Some(OpensAt { page, strip, of }) => {
+                    Start { index, page, strip, resumed: true, of }
+                }
                 None => at_page(index, 0),
             }
         }
@@ -1393,6 +1439,10 @@ impl Session {
         {
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, eink));
         }
+        // Another device's place opened this chapter: the move is said at the page it opened at.
+        if let Some(moving) = self.moving.take() {
+            self.say_moved(cx, self.start.clone(), moving);
+        }
         let start = match self.start.strip {
             Some(at) if !self.cuts.is_empty() => self.leaf_of_strip(at),
             _ => self.leaf_of_page(self.start.page.unwrap_or(0)),
@@ -1410,9 +1460,18 @@ impl Session {
         // A report stops the read rule's wait, and the one that keeps it starts it again. One
         // from where the wait started, such as a novel's scroll within its last page, keeps it
         // going: reports every half second would otherwise never let it end.
+        // Asking for a page again, or a count of a novel's pages, moves the reader nowhere and
+        // leaves the wait as it is.
         let spot = Spot::of(&command);
         self.reporting = spot.clone();
-        if spot.is_none() || spot != self.read_wait {
+        let stays = matches!(
+            command,
+            C::NeedPage { .. }
+                | C::Retry { page: Some(_), .. }
+                | C::NovelCounted { .. }
+                | C::FixedRendered { .. }
+        );
+        if !stays && (spot.is_none() || spot != self.read_wait) {
             self.read_timer += 1;
             self.read_wait = None;
         }
@@ -1488,15 +1547,18 @@ impl Session {
                 // A strip flows into the next chapter in the same scroll, under its marker:
                 // it starts at its first image, never at a place kept from before.
                 let flowing = self.mode == ReaderMode::Strip && index == self.at + 1;
+                // Any other open takes the chapter's kept place as an open from the series page
+                // does: the one a private read held in memory first, within its strip image,
+                // and moved to the same point of a copy of the chapter with other pages.
                 let store = &cx.services.store;
-                let page = crate::read_catalog::chapters::read_state(store, self.work.as_str())
-                    .1
-                    .into_iter()
-                    .find(|k| k.chapter == chapter.as_str() && !k.read && !flowing)
-                    .and_then(|k| k.last_page)
-                    .unwrap_or(0);
+                let (_, kept) =
+                    crate::read_catalog::chapters::read_state(store, self.work.as_str());
+                let memory = cx.services.privacy.read_kept(self.work.as_str());
+                let at = left_at(memory.as_ref(), &kept, &chapter)
+                    .filter(|_| !flowing)
+                    .unwrap_or_default();
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
-                self.open_chapter(cx, pages, index, page, novel, flowing);
+                self.open_chapter(cx, pages, index, at, novel, flowing);
             }
             C::BackTo { .. } => {
                 if let Some(back) = self.back_to.clone() {
@@ -2014,7 +2076,7 @@ impl Session {
         cx: &mut Cx<'_>,
         pages: &Pages,
         index: usize,
-        page: u32,
+        at: OpensAt,
         novel: Option<NovelPos>,
         flowing: bool,
     ) {
@@ -2029,18 +2091,22 @@ impl Session {
         self.at = index;
         self.opened = false;
         self.read_fired = false;
+        // The read rule's wait ends with the chapter it started in, whatever opens the next.
+        self.read_timer += 1;
         self.read_wait = None;
         self.end_page_said = false;
         self.peeked = false;
         self.moved = false;
+        self.moving = None;
         self.back_to = None;
         self.place = None;
-        self.kept_of = None;
+        self.kept_of = at.of;
         // A chapter fetched ahead and not the one opening stops fetching.
         self.ahead = self.ahead.take().filter(|a| a.chapter == self.chapters[index].id);
         self.first_page = None;
-        self.start = place(&self.work, &self.chapters[index].id, Some(page));
-        self.lay_out(cx, pages, page);
+        let chapter = &self.chapters[index].id;
+        self.start = ReadPlace { strip: at.strip, ..place(&self.work, chapter, Some(at.page)) };
+        self.lay_out(cx, pages, at.page);
     }
 
     /// Show `to`: in the open chapter with `GoTo`, else by opening its chapter.
@@ -2048,7 +2114,8 @@ impl Session {
         if to.chapter == self.chapter().id {
             cx.send(ReaderEvent::GoTo { session: self.id, place: to });
         } else if let Some(index) = self.index_of(cx, &to.chapter) {
-            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone(), false);
+            let at = OpensAt::page(to.page.unwrap_or(0));
+            self.open_chapter(cx, pages, index, at, to.novel.clone(), false);
         } else {
             self.not_found(cx);
         }
@@ -2110,13 +2177,14 @@ impl Session {
         };
         // Until the reader says a place, it is at the page the chapter opened at.
         let mine = self.page_now();
-        // Their page at the same point of the chapter as laid out here, as the open's start
-        // was moved: a chapter split into more or fewer pages there (another source's, or with
-        // the credit pages kept) is not a page further on.
+        // In the open chapter, their page at the same point of it as laid out here, as the
+        // open's start was moved: a chapter split into more or fewer pages there (another
+        // source's, or with the credit pages kept) is not a page further on. A place in another
+        // chapter is moved by that chapter's own pages as it opens.
         let page = theirs.last_page.unwrap_or(0);
         let page = theirs
             .of_pages
-            .filter(|_| self.pages_total > 0)
+            .filter(|_| self.pages_total > 0 && index == self.at)
             .and_then(|of| {
                 kept_past_credits(page, None, of, (self.pages_total, &self.credit_pages))
             })
@@ -2144,15 +2212,31 @@ impl Session {
             .place
             .clone()
             .unwrap_or_else(|| place(&self.work, &self.chapter().id, Some(mine)));
-        let mut to = place(&self.work, &self.chapters[index].id, Some(page));
-        to.novel = their_pos;
-        let label = self.chapters[index].label.clone();
         self.moved_back = Some(back.clone());
         self.drop_back(cx);
-        self.go_to(cx, pages, to.clone());
+        let moving = Moving { name, back };
+        if index == self.at {
+            let mut to = place(&self.work, &self.chapters[index].id, Some(page));
+            to.novel = their_pos;
+            self.go_to(cx, pages, to.clone());
+            self.say_moved(cx, to, moving);
+            return;
+        }
+        // Another chapter opens at their place as an open of it from the series page does, and
+        // the move is said once it is open, at the page it opened at.
+        let at = left_at(None, std::slice::from_ref(&theirs), &self.chapters[index].id);
+        self.open_chapter(cx, pages, index, at.unwrap_or_default(), their_pos, false);
+        self.moving = Some(moving);
+    }
+
+    /// Say that another device's place moved the reader to `to` in the open chapter, with Go
+    /// back to where it was.
+    fn say_moved(&self, cx: &Cx<'_>, to: ReadPlace, moving: Moving) {
+        let Moving { name, back } = moving;
+        let page = to.page.unwrap_or(0);
         let from_device = name.clone().unwrap_or_default();
         cx.send(ReaderEvent::Moved { session: self.id, to, from_device, back });
-        let msg = moved_msg(self.mode, &label, i64::from(page) + 1, name);
+        let msg = moved_msg(self.mode, &self.chapter().label, i64::from(page) + 1, name);
         cx.send(notice(msg, Some(ReaderAction::GoBack), MOVED_MS, self.eink()));
     }
 }
@@ -2548,6 +2632,16 @@ mod tests {
         fn synced(&mut self) {
             let mut cx = self.reader.cx(&mut self.config, &self.services, &self.tx);
             self.reader.synced(&mut cx);
+        }
+
+        /// The app goes to the background (`away`) or comes back, as `AppPhase` tells the reader.
+        fn phase(&mut self, away: bool) {
+            let cx = self.reader.cx(&mut self.config, &self.services, &self.tx);
+            if away {
+                self.reader.background(&cx);
+            } else {
+                self.reader.foreground(&cx);
+            }
         }
 
         /// The device goes off line or comes back, as `NetworkPath` tells the reader.
@@ -2999,6 +3093,37 @@ mod tests {
         }
         assert_eq!(read, 1, "counted read once");
         assert!(h.kept("1").unwrap().read);
+    }
+
+    /// Going away from the last page and coming back, or a page asked for again there, stop the
+    /// read rule's wait only for the moment: the reader is still on the last page, and the wait
+    /// runs out.
+    #[tokio::test(start_paused = true)]
+    async fn the_last_pages_wait_outlasts_going_away_and_a_page_asked_for_again() {
+        let read = |said: Vec<ReaderEvent>| {
+            said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. }))
+        };
+        // Away within the wait, and back.
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER / 2).await;
+        h.phase(true);
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(!read(h.drain()), "not while away");
+        h.phase(false);
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(read(h.drain()), "back on the last page");
+        assert!(h.kept("1").unwrap().read);
+
+        // A page asked for again, as the page grid does for one not made yet.
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        let session = h.session();
+        h.send(ReaderCommand::NeedPage { session, chapter: ChapterId::new("1"), page: 0 });
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(read(h.drain()), "a page asked for moves nothing");
     }
 
     #[tokio::test(start_paused = true)]
@@ -3456,6 +3581,43 @@ mod tests {
             })
             .await;
         assert_eq!((back.0.as_str(), back.1), ("1", Some(1)));
+    }
+
+    /// Another device's place moves the reader on from the last page while the read rule waits
+    /// there: the wait goes with the chapter it started in, and the chapter moved to is not
+    /// counted read by it.
+    #[tokio::test(start_paused = true)]
+    async fn a_move_to_another_chapter_ends_the_last_pages_wait() {
+        let mine = Store::open_in_memory().unwrap();
+        mine.sync_enable("phone").unwrap();
+        let desk = Store::open_in_memory().unwrap();
+        desk.set_sync_clock(|| 4_000_000_000_000);
+        desk.sync_enable("desk").unwrap();
+        mine.sync_device_add("desk", "Desk", "").unwrap();
+        let mut h = harness(mine.clone());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        let mut ahead = ReadEvent::new(WORK, "2", 2);
+        ahead.page = Some(0);
+        desk.record_read(&ahead, Vec::new()).unwrap();
+        let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+        mine.apply_ops(ops).unwrap();
+        h.synced();
+        h.until(|e| match e {
+            ReaderEvent::Opened(view) if view.chapter.id.as_str() == "2" => Some(()),
+            _ => None,
+        })
+        .await;
+        tokio::time::sleep(READ_AFTER * 2).await;
+        let read: Vec<ChapterId> = h
+            .drain()
+            .into_iter()
+            .filter_map(|e| match e {
+                ReaderEvent::ChapterRead { chapter, .. } => Some(chapter),
+                _ => None,
+            })
+            .collect();
+        assert!(!read.contains(&ChapterId::new("2")), "{read:?}");
     }
 
     #[tokio::test(start_paused = true)]

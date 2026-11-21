@@ -5,11 +5,17 @@ use super::*;
 
 /// Two chapters of twelve pages, read in `mode`.
 fn twelve_pages_in(store: Store, mode: &str) -> Harness {
+    chapters_of(store, mode, [12, 12])
+}
+
+/// Two chapters of `pages` pages each, read in `mode`.
+fn chapters_of(store: Store, mode: &str, pages: [u8; 2]) -> Harness {
     let h = harness_of(store, "manga", |books| {
         (1..=2)
             .map(|n| {
                 let path = books.join(format!("Chapter {n}.cbz"));
-                cbz(&path, 12);
+                let count = pages[n as usize - 1];
+                cbz(&path, count);
                 ShelfFile {
                     path: path.display().to_string(),
                     chapter: None,
@@ -17,7 +23,7 @@ fn twelve_pages_in(store: Store, mode: &str) -> Harness {
                     volume: None,
                     number_milli: Some(n * 1000),
                     format: "cbz".into(),
-                    pages: Some(12),
+                    pages: Some(count.into()),
                     comicinfo: None,
                     source: None,
                 }
@@ -200,6 +206,62 @@ async fn another_devices_place_in_a_shorter_copy_opens_there_with_no_move_back()
     );
 }
 
+/// Opened from inside the reader, a chapter's place kept in a longer copy of it goes to the same
+/// point here, as an open from the series page does: page 21 of 24 there is page 11 of the 12
+/// here, short of the last page, so the chapter is not counted read on landing.
+#[tokio::test(start_paused = true)]
+async fn a_place_in_a_longer_copy_opens_at_the_same_point_from_inside_the_reader() {
+    let mut h = twelve_pages("paged");
+    let mut there = ReadEvent::new(WORK, "2", 1);
+    there.page = Some(20);
+    there.of_pages = Some(24);
+    h.services.store.record_read(&there, Vec::new()).unwrap();
+    h.open(OpenAt::Start).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("2") });
+    let start = h
+        .until(|e| match e {
+            ReaderEvent::Opened(view) => view.start.page,
+            _ => None,
+        })
+        .await;
+    h.shown(start, TurnHow::Placed).await;
+    tokio::time::sleep(READ_AFTER * 2).await;
+    let read = h.drain().iter().any(
+        |e| matches!(e, ReaderEvent::ChapterRead { chapter, .. } if chapter.as_str() == "2"),
+    );
+    assert_eq!((start, read), (10, false));
+}
+
+/// A private read's place, held in memory, is where the chapter opens from inside the reader
+/// too, partway into its strip image.
+#[tokio::test(start_paused = true)]
+async fn a_place_held_in_memory_opens_the_chapter_from_inside_the_reader() {
+    let mut h = twelve_pages("strip");
+    h.services.privacy.set(true);
+    let mut held = ReadEvent::new(WORK, "1", 1);
+    held.page = Some(7);
+    held.strip_image = Some(7);
+    held.strip_offset = Some(0.5);
+    h.services.privacy.keep_read(held);
+    // Back from chapter 2: a strip flows into the next chapter from its start instead.
+    let work = WorkId::new(WORK);
+    let chapter = Some(ChapterId::new("2"));
+    h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Start, surface: surface() });
+    h.until(|e| matches!(e, ReaderEvent::Leaves { .. }).then_some(())).await;
+    let session = h.session();
+    h.send(ReaderCommand::OpenChapter { session, chapter: ChapterId::new("1") });
+    let start = h
+        .until(|e| match e {
+            ReaderEvent::Opened(view) if view.chapter.id.as_str() == "1" => {
+                Some(view.start.clone())
+            }
+            _ => None,
+        })
+        .await;
+    assert_eq!((start.page, start.strip), (Some(7), Some(StripPos { image: 7, offset: 0.5 })));
+}
+
 /// In a strip the Moved notice counts images, as every other line there does.
 #[tokio::test(start_paused = true)]
 async fn another_devices_place_in_a_strip_is_an_image() {
@@ -220,6 +282,43 @@ async fn another_devices_place_in_a_strip_is_an_image() {
     h.until(|e| matches!(e, ReaderEvent::Opened(_)).then_some(())).await;
     let said: Vec<&str> = notices(&h.drain()).iter().map(ReadingMsg::id).collect();
     assert_eq!(said, ["reader-moved-number-image"]);
+}
+
+/// Another device's place in a later chapter is read by that chapter's own pages, never by the
+/// open chapter's: page 10 of 12 there opens page 10 of the 12 here, though the chapter open
+/// has 24, short of the last page and so not counted read, and the notice names that page.
+#[tokio::test(start_paused = true)]
+async fn another_devices_place_in_a_later_chapter_goes_by_that_chapters_pages() {
+    let mine = Store::open_in_memory().unwrap();
+    mine.sync_enable("phone").unwrap();
+    let desk = Store::open_in_memory().unwrap();
+    desk.set_sync_clock(|| 4_000_000_000_000);
+    desk.sync_enable("desk").unwrap();
+    mine.sync_device_add("desk", "Desk", "").unwrap();
+    let mut there = ReadEvent::new(WORK, "2", 2);
+    there.page = Some(9);
+    there.of_pages = Some(12);
+    desk.record_read(&there, Vec::new()).unwrap();
+    let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+    mine.apply_ops(ops).unwrap();
+    let mut h = chapters_of(mine, "paged", [24, 12]);
+    let work = WorkId::new(WORK);
+    let chapter = Some(ChapterId::new("1"));
+    h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Resume, surface: surface() });
+    let start = h
+        .until(|e| match e {
+            ReaderEvent::Opened(view) if view.chapter.id.as_str() == "2" => view.start.page,
+            _ => None,
+        })
+        .await;
+    h.shown(start, TurnHow::Placed).await;
+    tokio::time::sleep(READ_AFTER * 2).await;
+    let said = h.drain();
+    let read = said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. }));
+    assert_eq!((start, read), (9, false));
+    let moved =
+        ReadingMsg::ReaderMovedNumber { chapter: "2".into(), page: 10, device: "Desk".into() };
+    assert_eq!(notices(&said), [moved]);
 }
 
 #[tokio::test(start_paused = true)]

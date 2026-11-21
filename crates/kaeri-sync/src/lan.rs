@@ -282,6 +282,14 @@ impl Listener {
     pub async fn next_session(&mut self) -> Option<Result<PeerReport>> {
         self.done.recv().await
     }
+
+    /// The sessions as they end, for a watcher of its own where the listener is shared, so
+    /// reading them never holds the listener: [`Self::next_session`] finds none after.
+    pub fn take_sessions(
+        &mut self,
+    ) -> tokio::sync::mpsc::UnboundedReceiver<Result<PeerReport>> {
+        std::mem::replace(&mut self.done, tokio::sync::mpsc::unbounded_channel().1)
+    }
 }
 
 impl Drop for Listener {

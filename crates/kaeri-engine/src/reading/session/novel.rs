@@ -506,17 +506,23 @@ fn kept_counts(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId, key: &str) -> Ve
     counts.split(',').map(str::parse).collect::<Result<_, _>>().unwrap_or_default()
 }
 
-/// The place a person left a novel chapter at, when not read through.
+/// The place a person left a novel chapter at, when not read through. A place a private read
+/// held in memory comes first, as it does for pages: it is the newer, and nothing was stored.
 pub(super) fn kept_novel(cx: &Cx<'_>, work: &WorkId, chapter: &ChapterId) -> Option<NovelPos> {
-    cx.services
-        .store
-        .read_chapters(work.as_str())
-        .ok()?
-        .into_iter()
-        .find(|k| k.chapter == chapter.as_str() && !k.read)?
-        .novel_pos
-        .as_deref()
-        .and_then(NovelPos::decode)
+    let memory = cx.services.privacy.read_kept(work.as_str());
+    let pos = match memory.filter(|m| m.chapter == chapter.as_str() && !m.completed) {
+        Some(m) => m.novel_pos,
+        None => {
+            cx.services
+                .store
+                .read_chapters(work.as_str())
+                .ok()?
+                .into_iter()
+                .find(|k| k.chapter == chapter.as_str() && !k.read)?
+                .novel_pos
+        }
+    };
+    pos.as_deref().and_then(NovelPos::decode)
 }
 
 /// A source's chapters as the reader orders them.
@@ -1124,6 +1130,13 @@ impl Session {
         if std::mem::take(&mut self.novel_resumed) && shown > 0 {
             let msg = ReadingMsg::ReaderResumed { page: i64::from(shown) + 1 };
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, self.eink()));
+        }
+        // Another device's place opened this chapter: the move is said at the page it landed
+        // on, as the resumed notice is.
+        if let Some(moving) = self.moving.take()
+            && let Some(to) = self.place.clone()
+        {
+            self.say_moved(cx, to, moving);
         }
         if last_doc && page + 1 >= pages {
             self.say_end_page(cx);
