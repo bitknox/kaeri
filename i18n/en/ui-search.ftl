@@ -341,10 +341,11 @@ count-out = { $count ->
 # @max 12
 count-out-short = { $count } out
 
-# The count line of a show that has not started and has a date. The date is the day and short month, already formatted from the months below.
-# @arg date: text
+# The count line of a show that has not started and has a date: the day of the month and the month it starts, such as "Starts 9 Jan". The month is the short month name from the months below. Write the day and the month in the order the language writes a date.
+# @arg day: plain
+# @arg month: text
 # @max 24
-count-starts = Starts { $date }
+count-starts = Starts { $day } { $month }
 
 # The count line of a show that has not started and has no date.
 # @max 24
@@ -384,9 +385,10 @@ count-spoken-out = { $count ->
    *[other] { $count } episodes out
  }
 
-# What a screen reader says for a show not out yet, with a date. The date is the day and the full month name.
-# @arg date: text
-count-spoken-starts = Starts { $date }
+# What a screen reader says for a show not out yet, with a date: the day of the month and the month it starts. The month is the full month name from the months below. Write the day and the month in the order the language writes a date.
+# @arg day: plain
+# @arg month: text
+count-spoken-starts = Starts { $day } { $month }
 
 # What a screen reader says for a show the viewer is part way through.
 # @arg episode: plain
