@@ -112,6 +112,7 @@ import app.kaeri.engine.model.NextEpisode
 import app.kaeri.engine.model.PlayerChoice
 import app.kaeri.engine.model.TimeRange
 import app.kaeri.player.Device
+import app.kaeri.player.PanelTab
 import app.kaeri.player.PlayerModel
 import app.kaeri.player.SeekSegment
 import app.kaeri.player.Track
@@ -149,7 +150,7 @@ enum class PlayerPanel { Episodes, Tracks, Sources, Info, SkipTimes }
 val LocalAddStore = compositionLocalOf<(() -> Unit)?> { null }
 
 /** What the chrome puts focus on as it comes up. */
-private enum class ChromeFocus { Play, SeekBar, Episodes, React }
+private enum class ChromeFocus { Play, SeekBar, Episodes, Source, React }
 
 /** Previous goes to the episode before within its first 3 s; after, to this one's start. */
 private const val PREVIOUS_WITHIN = 3.0
@@ -174,6 +175,7 @@ fun TvPlayerScreen(
     val playFocus = remember { FocusRequester() }
     val barFocus = remember { FocusRequester() }
     val episodesFocus = remember { FocusRequester() }
+    val sourceFocus = remember { FocusRequester() }
     val reactFocus = remember { FocusRequester() }
     val store = LocalAppStore.current
     val inParty = store.party.view.collectAsStateWithLifecycle().value != null
@@ -194,7 +196,7 @@ fun TvPlayerScreen(
     LaunchedEffect(screenReader) { model.assisted = screenReader }
 
     // A playback that failed keeps the starting screen up, saying so.
-    val starting = model.starting != null || !model.hasPicture || model.failure != null
+    val starting = model.starting != null || !model.hasPicture && !model.holding || model.failure != null
     val chrome = !starting && (model.paused || panel != null || model.marking != null || headAt != null || model.clock - model.lastInput < CHROME_HIDE || model.assisted)
     val skip = model.skip?.takeIf { model.corner == PlayerModel.Corner.Skip }
     val skipFresh = skip != null && model.clock - skip.since < SKIP_FRESH
@@ -207,6 +209,12 @@ fun TvPlayerScreen(
     fun openPanel(which: PlayerPanel) {
         panel = which
         model.hold("panel", true)
+        // Episodes and Source open the Episodes and Sources panel, on the tab they name.
+        when (which) {
+            PlayerPanel.Episodes -> model.openPanel(PanelTab.Episodes)
+            PlayerPanel.Sources -> model.openPanel(PanelTab.Sources)
+            else -> {}
+        }
     }
 
     fun closeTray() {
@@ -216,9 +224,21 @@ fun TvPlayerScreen(
     }
 
     fun closePanel() {
+        val was = panel
         panel = null
         model.hold("panel", false)
-        wanted = ChromeFocus.Play
+        model.closePanel()
+        // The Episodes and Sources panel hands focus back to the button that opened it.
+        wanted = when (was) {
+            PlayerPanel.Episodes -> ChromeFocus.Episodes
+            PlayerPanel.Sources -> ChromeFocus.Source
+            else -> ChromeFocus.Play
+        }
+    }
+    // The panel's own Play closes it.
+    val panelOpen = model.panelOpen
+    LaunchedEffect(panelOpen) {
+        if (!panelOpen && (panel == PlayerPanel.Episodes || panel == PlayerPanel.Sources)) closePanel()
     }
 
     fun nextEpisode() {
@@ -297,6 +317,7 @@ fun TvPlayerScreen(
             ChromeFocus.Play -> playFocus
             ChromeFocus.SeekBar -> barFocus
             ChromeFocus.Episodes -> episodesFocus
+            ChromeFocus.Source -> sourceFocus
             ChromeFocus.React -> reactFocus
         }
         repeat(5) {
@@ -405,9 +426,12 @@ fun TvPlayerScreen(
             .focusable(),
     ) {
         video(Modifier.fillMaxSize())
+        TvHeldPicture(model, Modifier.fillMaxSize())
         StartingLayer(model, starting, startFocus, onClose = { model.viewerClosed() })
+        // The Episodes and Sources panel stands over the picture alone, as the board draws it.
+        val sidePanel = panel == PlayerPanel.Episodes || panel == PlayerPanel.Sources
         AnimatedVisibility(
-            visible = chrome,
+            visible = chrome && !sidePanel,
             // A panel over it is all a screen reader reaches.
             modifier = if (panel != null) Modifier.clearAndSetSemantics { } else Modifier,
             enter = enterFade(),
@@ -419,6 +443,7 @@ fun TvPlayerScreen(
                 playFocus = playFocus,
                 barFocus = barFocus,
                 episodesFocus = episodesFocus,
+                sourceFocus = sourceFocus,
                 reactFocus = reactFocus,
                 ticks = if (chatOn) remember(partyMarks) { partyMarks.map { it.at }.distinct().sorted() } else emptyList(),
                 onReact = if (chatOn) ({
@@ -511,7 +536,11 @@ fun TvPlayerScreen(
         // Live stats, top leading under the show's name, staying put as the chrome comes and goes.
         app.kaeri.design.KeptFade(model.statsPanel, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = 104.dp)) { LivePanel(it) }
         panel?.let { open ->
-            Panel(model, open, onDone = { closePanel() }, modifier = Modifier.align(Alignment.CenterEnd))
+            if (open == PlayerPanel.Episodes || open == PlayerPanel.Sources) {
+                TvPlayerPanel(model, Modifier.align(Alignment.CenterEnd))
+            } else {
+                Panel(model, open, onDone = { closePanel() }, modifier = Modifier.align(Alignment.CenterEnd))
+            }
         }
         if (model.choosingSource) {
             ReleasesPanel(model.sourceChoices, onPick = model::play, onClose = model::cancelChoosingSource, modifier = Modifier.align(Alignment.CenterEnd))
@@ -538,15 +567,23 @@ fun VideoSurface(model: PlayerModel, modifier: Modifier) {
         AndroidView(
             factory = { context ->
                 SurfaceView(context).apply {
+                    val view = this
                     holder.addCallback(object : SurfaceHolder.Callback {
-                        override fun surfaceCreated(holder: SurfaceHolder) = model.surfaceCreated(holder.surface)
+                        override fun surfaceCreated(holder: SurfaceHolder) {
+                            model.surfaceCreated(holder.surface)
+                            // A switch of source copies the picture on screen, to hold it while the new stream loads.
+                            model.snapshot = { app.kaeri.player.FrameCopy.of(view) }
+                        }
 
                         override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
                             model.surfaceChanged(width, height)
                             display?.let { model.surfaceDisplay(Device.display(it, density)) }
                         }
 
-                        override fun surfaceDestroyed(holder: SurfaceHolder) = model.surfaceDestroyed()
+                        override fun surfaceDestroyed(holder: SurfaceHolder) {
+                            model.snapshot = null
+                            model.surfaceDestroyed()
+                        }
                     })
                 }
             },
@@ -577,6 +614,7 @@ private fun Chrome(
     playFocus: FocusRequester,
     barFocus: FocusRequester,
     episodesFocus: FocusRequester,
+    sourceFocus: FocusRequester,
     reactFocus: FocusRequester,
     ticks: List<Double>,
     onReact: (() -> Unit)?,
@@ -649,7 +687,7 @@ private fun Chrome(
                     ButtonLabel(stringResource(R.string.player_episodes))
                 }
                 TonalButton(onClick = { onPanel(PlayerPanel.Tracks) }, icon = icon(TvIcons.Subtitles), padding = pad) { ButtonLabel(stringResource(R.string.player_subtitles_and_audio)) }
-                TonalButton(onClick = { onPanel(PlayerPanel.Sources) }, icon = icon(TvIcons.Source), padding = pad) { ButtonLabel(stringResource(R.string.show_settings_source)) }
+                TonalButton(onClick = { onPanel(PlayerPanel.Sources) }, icon = icon(TvIcons.Source), padding = pad, modifier = Modifier.focusRequester(sourceFocus)) { ButtonLabel(stringResource(R.string.show_settings_source)) }
                 TonalButton(onClick = { onPanel(PlayerPanel.Info) }, icon = icon(TvIcons.Info), padding = pad) { ButtonLabel(stringResource(R.string.player_info)) }
                 TonalButton(onClick = { onPanel(PlayerPanel.SkipTimes) }, icon = icon(TvIcons.SkipNext), padding = pad) { ButtonLabel(stringResource(R.string.player_skip_times)) }
                 Spacer(Modifier.weight(1f))

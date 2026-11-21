@@ -17,6 +17,8 @@
 //   join      store opens the plugin store's join page over the section
 //   update    a made-up release staged for the update's page, which opens over the section:
 //             available, allowing, downloading, failed or storage; nothing is fetched or installed
+//   panel     live: the player panel's Sources tab lists made-up sources, and a switch to one
+//             lands or fails as scripted (PanelDemo), on the playing scene
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatreact, chatloop and the rest; the log says "KAERI_PARTY ready <shot>"
 //             once it is there. chatloop waits for `am broadcast -a app.kaeri.fixtures.PARTY_GO`
@@ -34,6 +36,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.engine.model.DeviceCodePrompt
 import app.kaeri.engine.model.Event
+import app.kaeri.player.PanelDemo
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
@@ -108,6 +111,10 @@ internal object Flavour {
      * has no tracker to answer with one. `expires=<seconds>` sets how long its code has left, 0 for
      * one already expired, 899 unless it says.
      */
+    /** A player command on its way to the engine: the panel demo answers the panel's own. */
+    fun playerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) =
+        PanelDemo.send(command, send)
+
     fun started(context: Context, store: AppStore, intent: Intent, player: app.kaeri.player.PlayerModel, host: app.kaeri.player.PlayerHost? = null) {
         StartReplay.from(context, store, player, intent)
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
@@ -117,6 +124,7 @@ internal object Flavour {
                 if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
             }
         }
+        if (intent.getStringExtra("panel") == "live") PanelDemo.start(store, player)
         intent.getStringExtra("found")?.let { which -> host?.let { FoundDemo.run(it, store, MainScope(), which) } }
         intent.getStringExtra("day")?.toIntOrNull()?.let { store.calendar.opensOn = it }
         // Episodes of the first fixture marked watched, 1,2,3: playback would also have the engine
