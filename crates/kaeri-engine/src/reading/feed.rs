@@ -350,7 +350,7 @@ pub(crate) async fn start(
     tokio::fs::create_dir_all(&dir)
         .await
         .map_err(|e| ReadingFailure::Other { reason: e.to_string() })?;
-    mark(&dir).await;
+    mark(&dir, &gone).await;
     let spans = opened.spans();
     let (edges, mut pending) = edge_pages((&sources, &kept), &mut opened, &spans, now).await;
     let mine: Vec<PagePrint> = edges
@@ -820,15 +820,22 @@ const MARK: &str = ".feed";
 /// and change time move with each page that lands, so the page cache knows it by its mark
 /// instead (see [`mark_of`]). A folder filled again at the same path, later in the session or in
 /// a later run as session numbers start again, is marked anew, so the pages kept for the earlier
-/// feed are never taken for the new one's.
-async fn mark(dir: &Path) {
+/// feed are never taken for the new one's. As with a page, the write runs to its end even when
+/// the feed stops, and a mark written after the session closed goes with its folder.
+async fn mark(dir: &Path, gone: &Gone) {
     let path = dir.join(MARK);
-    let written = tokio::fs::write(&path, format!("{:016x}", rand::random::<u64>())).await;
-    if let Err(e) = written {
-        tracing::debug!(error = %e, "a feed's folder was not marked");
-        // An earlier feed's mark is not this feed's: without one, the folder goes by its state.
-        let _ = tokio::fs::remove_file(&path).await;
-    }
+    let gone = gone.clone();
+    let marked = tokio::task::spawn_blocking(move || {
+        let written = std::fs::write(&path, format!("{:016x}", rand::random::<u64>()));
+        if let Err(e) = written {
+            tracing::debug!(error = %e, "a feed's folder was not marked");
+            // An earlier feed's mark is not this feed's: without one, the folder goes by its
+            // state.
+            let _ = std::fs::remove_file(&path);
+        }
+        gone.swept();
+    });
+    let _ = marked.await;
 }
 
 /// The mark the feed filling `dir` left there, if one did.
@@ -861,5 +868,35 @@ impl Feed {
     /// Page `index` landed or failed, as the fetcher would say.
     pub(crate) fn put(&self, index: usize, page: FeedPage) {
         self.set(index, page);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// The session closed while its folder was still being made, so the folder came back after
+    /// the close took it away: the mark written into it then goes with it.
+    #[tokio::test]
+    async fn a_mark_written_after_the_close_goes_with_the_folder() {
+        let temp = tempfile::tempdir().unwrap();
+        let root = temp.path().join("1");
+        let dir = root.join("chapter");
+        std::fs::create_dir_all(&dir).unwrap();
+        let gone = Gone::new(root.clone());
+        gone.set();
+        std::fs::create_dir_all(&dir).unwrap();
+        mark(&dir, &gone).await;
+        assert!(!root.exists(), "left behind: {:?}", std::fs::read_dir(&dir).ok());
+    }
+
+    /// While the session is open, the mark stays and names the folder.
+    #[tokio::test]
+    async fn a_mark_stays_while_the_session_is_open() {
+        let temp = tempfile::tempdir().unwrap();
+        let dir = temp.path().join("1").join("chapter");
+        std::fs::create_dir_all(&dir).unwrap();
+        mark(&dir, &Gone::new(temp.path().join("1"))).await;
+        assert!(mark_of(&dir).is_some());
     }
 }
