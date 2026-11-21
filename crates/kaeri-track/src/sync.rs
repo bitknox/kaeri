@@ -1615,9 +1615,15 @@ mod tests {
             rereading: false,
             score: None,
         };
-        let report =
-            reconcile_read(&store, "anilist", &[remote], 400, 200, WhenTrackersDisagree::Latest)
-                .unwrap();
+        let report = reconcile_read(
+            &store,
+            "anilist",
+            &[remote],
+            400,
+            200,
+            WhenTrackersDisagree::Latest,
+        )
+        .unwrap();
         let outbox = store.read_outbox("anilist").unwrap();
         assert!(
             !outbox.iter().any(|op| matches!(op, TrackOp::SetReadStatus { .. })),
