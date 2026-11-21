@@ -55,10 +55,6 @@ impl ProxyState {
 /// What [`ProviderError::Unavailable`] says while the torrent sources wait for the proxy check.
 pub const CHECK_PENDING: &str = "The proxy check failed";
 
-/// Why a `socks5h://` proxy cannot carry torrents: the session asks for `socks5://`, which
-/// leaves tracker names to be looked up on this device rather than by the proxy.
-const SOCKS5H_REFUSED: &str = "torrents need a socks5:// proxy; socks5h:// is not supported";
-
 /// Where torrent traffic goes, shared with the torrent session and the interface: directly, or
 /// through the proxy, with the check's latest answer.
 #[derive(Clone)]
@@ -81,15 +77,14 @@ impl std::fmt::Debug for TorrentRoute {
 
 impl TorrentRoute {
     /// The route `proxy` names: directly when it is `None`, else through that SOCKS5 URL.
+    ///
+    /// A `socks5h://` URL is taken as `socks5://`: the torrent session takes `socks5://` only and
+    /// refuses anything else once it starts, after the check here has passed. Tracker names are
+    /// then looked up on this device, as with `socks5://`.
     pub fn new(proxy: Option<String>) -> Result<Self, String> {
-        let url = proxy.filter(|url| !url.trim().is_empty());
+        let url = proxy.filter(|url| !url.trim().is_empty()).map(|url| as_socks5(&url));
         if let Some(url) = &url {
             target(url)?;
-            // The torrent session takes `socks5://` only and refuses `socks5h://` once it
-            // starts, after the check here has passed. Said now, without the URL.
-            if url.trim().starts_with("socks5h://") {
-                return Err(SOCKS5H_REFUSED.into());
-            }
         }
         let state = if url.is_some() { ProxyState::Unchecked } else { ProxyState::Direct };
         Ok(Self { url, state: Arc::new(RwLock::new(state)), fixed: false })
@@ -155,6 +150,17 @@ impl TorrentRoute {
         tracing::debug!(state = ?next, "torrent proxy checked");
         self.set(next.clone());
         next
+    }
+}
+
+/// `url` with a `socks5h://` scheme written as `socks5://`, the one the torrent session takes.
+fn as_socks5(url: &str) -> String {
+    let url = url.trim();
+    match url.get(..10) {
+        Some(scheme) if scheme.eq_ignore_ascii_case("socks5h://") => {
+            format!("socks5://{}", &url[10..])
+        }
+        _ => url.to_owned(),
     }
 }
 
@@ -332,14 +338,16 @@ mod tests {
     }
 
     #[test]
-    fn a_socks5h_proxy_is_refused_before_any_check_passes() {
+    fn a_socks5h_proxy_is_taken_as_socks5() {
         // The torrent session takes socks5:// only: a socks5h:// route passed the check and
         // then never started.
-        let err = TorrentRoute::new(Some("socks5h://mika:lantern@127.0.0.1:1080".into()))
-            .unwrap_err();
-        assert!(err.contains("socks5h") && !err.contains("lantern"), "{err}");
-        assert!(TorrentRoute::fixed(Some("socks5h://127.0.0.1:1080".into())).is_err());
-        assert!(TorrentRoute::new(Some("socks5://mika:lantern@127.0.0.1:1080".into())).is_ok());
+        let route =
+            TorrentRoute::new(Some(" socks5h://mika:lantern@127.0.0.1:1080".into())).unwrap();
+        assert_eq!(route.proxy_url(), Some("socks5://mika:lantern@127.0.0.1:1080"));
+        let fixed = TorrentRoute::fixed(Some("SOCKS5H://127.0.0.1:1080".into())).unwrap();
+        assert_eq!(fixed.proxy_url(), Some("socks5://127.0.0.1:1080"));
+        let plain = TorrentRoute::new(Some("socks5://mika:lantern@127.0.0.1:1080".into()));
+        assert_eq!(plain.unwrap().proxy_url(), Some("socks5://mika:lantern@127.0.0.1:1080"));
     }
 
     #[test]
