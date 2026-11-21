@@ -211,3 +211,4 @@ player-subs-bg-outline = Obrys
 player-subs-bg-shadow = Cień
 player-subs-bg-box = Tło
 player-subs-more = Więcej w Ustawieniach…
+player-sheet-episodes-loading = Lista odcinków właśnie się wczytuje.

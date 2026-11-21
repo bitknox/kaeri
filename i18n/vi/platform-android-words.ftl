@@ -193,7 +193,6 @@ episode-number-title-text = Tập { $number } · { $title }
 player-position-state = { $at } trên { $total }
 player-sheet-finding = Đang tìm { -source-pl }…
 player-sheet-none = Không tìm thấy { -source-pl } cho tập này.
-player-sheet-episodes-loading = Danh sách tập đang được tải.
 player-dual-audio = { -subbed-cap } và { -dubbed }
 notif-new-episodes = { $count ->
    *[other] { $count } tập mới

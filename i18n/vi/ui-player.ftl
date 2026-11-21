@@ -205,3 +205,4 @@ player-subs-bg-outline = Viền
 player-subs-bg-shadow = Bóng đổ
 player-subs-bg-box = Khung
 player-subs-more = Thêm trong Cài đặt…
+player-sheet-episodes-loading = Danh sách tập đang được tải.

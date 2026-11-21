@@ -6389,6 +6389,9 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Plus dans les paramètres…</value>
   </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>La liste des épisodes arrive.</value>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Mode privé</value>
   </data>

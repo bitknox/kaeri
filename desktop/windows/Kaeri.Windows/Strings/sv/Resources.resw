@@ -6173,6 +6173,9 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Mer i Inställningar…</value>
   </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>Avsnittslistan är på väg.</value>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Privat läge</value>
   </data>
