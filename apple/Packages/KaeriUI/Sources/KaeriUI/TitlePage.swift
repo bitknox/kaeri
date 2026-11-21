@@ -932,7 +932,7 @@ struct EpisodeList: View {
     @State private var lastRows: (id: AnilistId, height: CGFloat)?
     /// Whether the rows keep room for text, settled when the table is laid out.
     @State private var room = EpisodeRoom()
-    /// How wide the list stands, which sets whether text sits beside the stills or under them.
+    /// How wide the list stands, which sets the size of the stills the text sits beside.
     @State private var listWidth: CGFloat?
     /// Where the pickers stand from the top of the page's visible area. Kept out of the view's
     /// state, so scrolling redraws nothing.
@@ -1186,6 +1186,8 @@ struct EpisodeRowView: View {
     let room: Bool
     /// Whether the table keeps a column for the marks of people followed.
     var marked = false
+    /// Whether the viewer asked for the whole synopsis, past where the row cuts it.
+    @State private var expanded = false
 
     private var next: UInt32 { entry.progress?.next ?? 1 }
 
@@ -1208,6 +1210,21 @@ struct EpisodeRowView: View {
                     #if os(macOS)
                     // A synopsis cut at three lines is whole here, as a cut title is.
                     .tooltip(helpText)
+                    // More at a cut synopsis's end, Less under a whole one: a button of its own
+                    // over the row, so it never plays the episode.
+                    .overlayPreferenceValue(SynopsisMorePlace.self) { place in
+                        if let place {
+                            SynopsisMoreButton(
+                                place: place, font: EpisodeRowLabel.synopsisFont(metrics), fill: rowFill,
+                                dimmed: dimmed
+                            ) {
+                                withAnimation(.standard) { expanded.toggle() }
+                            }
+                        }
+                    }
+                    .onChange(of: navigator.episodeMoreAsked) {
+                        if navigator.episodeMoreAsked == row.number { withAnimation(.standard) { expanded = true } }
+                    }
                     #endif
                 DiscussionLine(entry: entry, row: row, inset: textInset)
             }
@@ -1216,7 +1233,7 @@ struct EpisodeRowView: View {
 
     /// Where the row's words start, from its leading edge.
     private var textInset: CGFloat {
-        8 + 22 + 14 + metrics.still.width + (metrics.text == .beside ? 14 : 12)
+        8 + 22 + 14 + metrics.still.width + 14
     }
 
     #if os(macOS)
@@ -1296,15 +1313,35 @@ struct EpisodeRowView: View {
         EpisodeRowLabel(
             entry: entry, row: row, metrics: metrics, room: room, hidden: hidden, current: current,
             numberColumn: true, asked: navigator.synopsisIsShown(entry.id, row.number), external: external,
-            marks: marked ? row.followed : nil
+            marks: marked ? row.followed : nil, expandable: Self.expandable, expanded: expanded
         )
-        .opacity(row.unsourced && store.licensed.episodeLink(entry.id, UInt32(row.number) ?? 0) == nil ? 0.55 : 1)
-        .background(current ? Palette.selection : landed ? Palette.raisedSelected : .clear, in: .rect(cornerRadius: 8))
+        .opacity(dimmed ? 0.55 : 1)
+        .background(rowFill(current: current), in: .rect(cornerRadius: 8))
         .contentShape(.rect(cornerRadius: 8))
     }
 
     /// The row Go to episode landed on keeps the selection fill until another lands or the page goes.
     private var landed: Bool { navigator.goToRow[entry.id]?.number == row.number }
+
+    /// An episode no source lists, and no service either, stands back.
+    private var dimmed: Bool {
+        row.unsourced && store.licensed.episodeLink(entry.id, UInt32(row.number) ?? 0) == nil
+    }
+
+    private func rowFill(current: Bool) -> Color {
+        current ? Palette.selection : landed ? Palette.raisedSelected : .clear
+    }
+
+    private var rowFill: Color { rowFill(current: (UInt32(row.number) ?? 0) == next) }
+
+    /// Whether a cut synopsis offers More: on the Mac, where the row's text is cut at any width.
+    private static var expandable: Bool {
+        #if os(macOS)
+        true
+        #else
+        false
+        #endif
+    }
 }
 
 /// The next episode still to air: no button, since nothing can play it; the show's banner crop in
@@ -1339,7 +1376,9 @@ struct UnairedEpisodeRow: View {
                 .foregroundStyle(.water)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
-            Color.clear.frame(width: 14)
+            // The check's column, with no height of its own: a clear colour would take all the
+            // height offered, and the row would stand as tall as the column beside the list.
+            Color.clear.frame(width: 14, height: 0)
         }
         .padding(.horizontal, 8)
         .frame(minHeight: metrics.short)

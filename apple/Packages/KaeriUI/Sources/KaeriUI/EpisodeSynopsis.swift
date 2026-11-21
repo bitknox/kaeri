@@ -30,51 +30,92 @@ struct EpisodeMetrics: Equatable {
     /// each episode reads as one unit where the text sits under the still. The heights include
     /// the rule.
     var ruled = false
-
-    /// The room over the still, and under the text of a ruled row.
-    var pad: CGFloat { ruled ? 16 : 8 }
+    /// Whether a row fits what it holds once its details are known, rather than keeping its
+    /// kind's room for text: the room stays only while a lookup may still bring some.
+    var fits = false
+    /// The room over the still, and under the text of a row that fits.
+    var pad: CGFloat = 8
 
     /// The hairline's own height.
     static let rule: CGFloat = 1
 
-    /// The Mac with a list 560 pt wide or more: a 178 x 100 still, three lines beside it.
+    /// The Mac with a list 560 pt wide or more: a 178 x 100 still, 10 over and under it, the
+    /// title and two lines of text beside it.
     static let macWide = EpisodeMetrics(text: .beside, still: CGSize(width: 178, height: 100), tall: 120, short: 120)
-    /// The Mac with a narrower list: a 144 x 81 still, the text under.
-    static let macNarrow = EpisodeMetrics(text: .under, still: CGSize(width: 144, height: 81), tall: 164, short: 100)
+    /// The Mac with a list from 500 pt to 560: a 144 x 81 still with the same room over and under
+    /// it, the text beside. The still is the row's floor; a title on two lines and a synopsis
+    /// under it can stand taller, which the row then fits.
+    static let macMiddle = macBeside(width: 144, height: 81)
+    /// The Mac with a list from 454 pt to 500: a 120 x 68 still, the text beside.
+    static let macSmall = macBeside(width: 120, height: 68)
+    /// The Mac with a list under 454 pt, down to the window's least (396 pt): a 96 x 54 still,
+    /// the text beside. No smaller still: under 430 pt the text column narrows instead, to 206 pt
+    /// at 396.
+    static let macSmaller = macBeside(width: 96, height: 54)
     /// An iPad at regular width: the Mac's row at touch sizes, a 192 x 108 still.
     static let pad = EpisodeMetrics(text: .beside, still: CGSize(width: 192, height: 108), tall: 128, short: 128)
     /// An iPhone, and an iPad at compact width: 16 over the still, the still, three lines of
     /// text, 16 under them and the rule (182), or the still alone between them (114).
     static let phone = EpisodeMetrics(
-        text: .under, still: CGSize(width: 144, height: 81), tall: 182, short: 114, ruled: true
+        text: .under, still: CGSize(width: 144, height: 81), tall: 182, short: 114, ruled: true, fits: true, pad: 16
     )
 
-    /// The Mac's list is wide enough for text beside the still from this width.
+    /// The Mac's list is wide enough for the big still from this width.
     static let wideFrom: CGFloat = 560
+    /// The Mac's stills, each from the list width where the text column beside it is still about
+    /// 240 pt or more (the list less 94 pt for the padding, the number, the check and the gaps,
+    /// less the still): 262 pt beside 144 at 500, 240 beside 120 at 454 and beside 96 at 430.
+    /// 96 x 54 is the smallest; below 430 the column narrows, to 206 pt at the window's least
+    /// list, 396 pt. The text is always beside the still on the Mac: under it, it read as a
+    /// different list.
+    static let macSteps: [(from: CGFloat, metrics: EpisodeMetrics)] = [
+        (wideFrom, .macWide), (500, .macMiddle), (454, .macSmall),
+    ]
+    /// The width the Mac's rows take that is not the still or the text column: 8 either side,
+    /// the number's 22, the check's 14 and three gaps of 14.
+    static let macFixed: CGFloat = 2 * 8 + 22 + 14 + 3 * 14
 
     /// The Mac's metrics for a list `width` points wide.
     static func mac(listWidth width: CGFloat) -> EpisodeMetrics {
-        width >= wideFrom ? .macWide : .macNarrow
+        macSteps.first { width >= $0.from }?.metrics ?? .macSmaller
     }
+
+    /// A Mac row with the text beside a still of this size, 10 over and under it as on the
+    /// widest, fitting its text.
+    private static func macBeside(width: CGFloat, height: CGFloat) -> EpisodeMetrics {
+        EpisodeMetrics(
+            text: .beside, still: CGSize(width: width, height: height),
+            tall: height + 20, short: height + 20, fits: true
+        )
+    }
+
+    /// The room over and under the still where the text sits beside it.
+    var besideRoom: CGFloat { (short - still.height) / 2 }
 
     /// The row's height: tall where the table has room kept for text and this row can show it.
     func height(room: Bool, protected: Bool) -> CGFloat {
         room && !protected ? tall : short
     }
 
-    /// The least a row is laid out at. A ruled row keeps `height`'s room only while a lookup may
-    /// still bring its text (`pending`), so nothing moves as the details load; once they are
+    /// The least a row is laid out at. A row that fits keeps `height`'s room only while a lookup
+    /// may still bring its text (`pending`), so nothing moves as the details load; once they are
     /// known it fits what it holds: `short` for the still, title and facts, and the synopsis's own
     /// lines under them, up to `tall`'s three. Other rows keep `height` either way.
     func least(room: Bool, protected: Bool, pending: Bool) -> CGFloat {
-        ruled && !pending ? short : height(room: room, protected: protected)
+        fits && !pending ? short : height(room: room, protected: protected)
     }
 
-    /// Whether a row lays out its synopsis's place: where it has room, and on a ruled row only
-    /// while text may still come or once it has, so a row with none ends at its facts.
+    /// Whether a row lays out its synopsis's place: where it has room, and on a row that fits
+    /// only while text may still come or once it has, so a row with none ends at its facts.
     func holdsText(room: Bool, protected: Bool, pending: Bool, text: String?) -> Bool {
         guard room && !protected else { return false }
-        return !ruled || pending || !(text ?? "").isEmpty
+        return !fits || pending || !(text ?? "").isEmpty
+    }
+
+    /// Whether a row keeps its synopsis's lines open while they load, beside the still where its
+    /// title runs to two lines: the text that comes then lands in room already there.
+    func reservesText(room: Bool, protected: Bool, pending: Bool) -> Bool {
+        fits && text == .beside && room && !protected && pending
     }
 }
 

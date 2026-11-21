@@ -35,9 +35,9 @@ struct OtherTitlesLine: View {
     }
 }
 
-/// Text cut at `lines` with "More" at the end of its last line, which shows the rest in place.
-/// No "Less": the page goes on below it. The "More" takes a 44 pt target on touch. A screen
-/// reader reads the whole text either way.
+/// Text cut at `lines` with "More" at the end of its last line, which shows the rest in place,
+/// and "Less" under the whole text, which cuts it again, as `ClampedText` has them. Each takes a
+/// 44 pt target on touch. A screen reader reads the whole text either way.
 struct InlineMoreText: View {
     @Environment(Navigator.self) private var navigator
     let text: String
@@ -54,6 +54,19 @@ struct InlineMoreText: View {
     @State private var shown: CGFloat = 0
 
     var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            synopsis
+            if MoreLess.control(expanded: expanded, full: full, shown: shown) == .less {
+                Button(L.shellLess) { withAnimation(.standard) { expanded = false } }
+                    .buttonStyle(.plain)
+                    .font(font.weight(.semibold))
+                    .foregroundStyle(.silk)
+                    .contentShape(.rect.inset(by: -12))
+            }
+        }
+    }
+
+    private var synopsis: some View {
         Text(text)
             .font(font)
             .fixedLineHeight(lineHeight, style: lineStyle, everywhere: lineHeightEverywhere)
@@ -61,7 +74,9 @@ struct InlineMoreText: View {
             .lineLimit(expanded ? nil : lines)
             .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { shown = $0 }
             .onChange(of: navigator.synopsisMoreAsked) {
-                if full > shown + 1 { withAnimation(.standard) { expanded = true } }
+                if MoreLess.control(expanded: expanded, full: full, shown: shown) == .more {
+                    withAnimation(.standard) { expanded = true }
+                }
             }
             .background(alignment: .topLeading) {
                 Text(text)
@@ -72,7 +87,7 @@ struct InlineMoreText: View {
                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { full = $0 }
             }
             .overlay(alignment: .bottomTrailing) {
-                if !expanded, full > shown + 1 {
+                if MoreLess.control(expanded: expanded, full: full, shown: shown) == .more {
                     Button(L.actionMore) { withAnimation(.standard) { expanded = true } }
                         .buttonStyle(.plain)
                         .font(font.weight(.semibold))
@@ -93,6 +108,19 @@ struct InlineMoreText: View {
                         .accessibilityLabel(L.titleSynopsisMore)
                 }
             }
+    }
+}
+
+/// What a cut text offers: More while what shows is shorter than the whole text, Less once the
+/// whole text shows after More, nothing for a text that fits.
+enum MoreLess: Equatable {
+    case more
+    case less
+
+    /// `full` is the whole text's height at the width it has, `shown` the height of what shows.
+    static func control(expanded: Bool, full: CGFloat, shown: CGFloat) -> MoreLess? {
+        if expanded { return .less }
+        return full > shown + 1 ? .more : nil
     }
 }
 
