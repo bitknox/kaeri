@@ -294,6 +294,8 @@ struct SynopsisText: View {
     var expanded = false
     @State private var full: CGFloat = 0
     @State private var shown: CGFloat = 0
+    /// The cut text's height, kept while the whole text shows, so Less goes back to it.
+    @State private var cut: CGFloat = 0
 
     var body: some View {
         ZStack(alignment: .topLeading) {
@@ -315,7 +317,12 @@ struct SynopsisText: View {
                         .environment(\.locale, language(of: text))
                         // More and Less crossfade the cut and the whole text, never moving a word.
                         .contentTransition(.opacity)
-                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { shown = $0 }
+                        // An expandable text keeps its own height; the window below cuts it.
+                        .fixedSize(horizontal: false, vertical: expandable)
+                        .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { height in
+                            shown = height
+                            if !expanded { cut = height }
+                        }
                         // The whole text at the same width, measured unseen: more than what shows
                         // means the text is cut.
                         .background(alignment: .topLeading) {
@@ -328,6 +335,10 @@ struct SynopsisText: View {
                                     .onGeometryChange(for: CGFloat.self) { $0.size.height } action: { full = $0 }
                             }
                         }
+                        // The text sits at its own height at once and shows through a window
+                        // that grows and shrinks with the row, in the row's own animation, so no
+                        // line ever lies past the row's edge.
+                        .modifier(SynopsisReveal(height: revealHeight))
                     // Less's line under the whole text.
                     if expandable && expanded {
                         Text(L.shellLess).font(font.weight(.semibold)).hidden()
@@ -345,6 +356,14 @@ struct SynopsisText: View {
         .animation(.fadeIn, value: text)
     }
 
+    /// The window's height while a row can expand: the whole text's or the cut one's, once
+    /// measured; the text's own height otherwise.
+    private var revealHeight: CGFloat? {
+        guard expandable else { return nil }
+        let height = expanded ? full : cut
+        return height > 0 ? height : nil
+    }
+
     /// 13 pt on 18 on the Mac; the text styles carry their own leading elsewhere.
     private var lineSpacing: CGFloat {
         #if os(macOS)
@@ -356,6 +375,38 @@ struct SynopsisText: View {
 
     @MainActor private func language(of text: String) -> Locale {
         EpisodeLanguage.of(text).map(Locale.init(identifier:)) ?? Locale.current
+    }
+}
+
+/// A synopsis's window: the given height, top-aligned, clipped by a shape whose height animates
+/// frame by frame in the same transaction as the row's layout, so the row and the text grow and
+/// shrink together.
+private struct SynopsisReveal: ViewModifier {
+    let height: CGFloat?
+
+    func body(content: Content) -> some View {
+        if let height {
+            content
+                .frame(height: height, alignment: .topLeading)
+                .clipShape(TopWindow(height: height))
+        } else {
+            content
+        }
+    }
+}
+
+/// The top of a view, `height` tall; the height animates.
+private struct TopWindow: Shape {
+    var height: CGFloat
+
+    var animatableData: CGFloat {
+        get { height }
+        set { height = newValue }
+    }
+
+    func path(in rect: CGRect) -> Path {
+        // A little room either side so a glyph's overhang is never cut.
+        Path(CGRect(x: rect.minX - 4, y: rect.minY - 4, width: rect.width + 8, height: height + 4))
     }
 }
 
