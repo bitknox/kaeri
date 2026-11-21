@@ -20,7 +20,11 @@ using Microsoft.UI.Xaml.Media;
 using Microsoft.UI.Xaml.Media.Animation;
 using Microsoft.UI.Xaml.Media.Imaging;
 using Microsoft.UI.Xaml.Shapes;
-using Windows.System;
+using DispatcherQueueTimer = Microsoft.UI.Dispatching.DispatcherQueueTimer;
+using SourceGroup = Kaeri.App.SourceGroup;
+using SourceSwitch = Kaeri.Engine.Model.SourceSwitch;
+using VirtualKey = global::Windows.System.VirtualKey;
+using VirtualKeyModifiers = global::Windows.System.VirtualKeyModifiers;
 
 namespace Kaeri.Windows.Player;
 
@@ -1135,7 +1139,7 @@ public sealed partial class PlayerView
     /// <summary>Subtitled or Dubbed: the engine restarts the episode in the other at the playhead.</summary>
     FrameworkElement TranslationSwitch(Ctx c)
     {
-        var current = menus?.Translation ?? Translation.Sub;
+        var current = menus?.Translation ?? Engine.Core.Translation.Sub;
         var dub = c.Known.Dubs.GetValueOrDefault(playingId);
         var pastDub = PanelWords.PastDub(dub, playingEpisode);
         var block = new StackPanel { Padding = new Thickness(8, 8, 8, 4), Spacing = 8 };
@@ -1144,21 +1148,21 @@ public sealed partial class PlayerView
         track.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         AutomationProperties.SetName(track, T.PlayerTranslation);
         var at = 0;
-        foreach (var option in new[] { Translation.Sub, Translation.Dub })
+        foreach (var option in new[] { Engine.Core.Translation.Sub, Engine.Core.Translation.Dub })
         {
             var segment = new RadioButton
             {
                 Style = (Style)Application.Current.Resources["PanelSegmentStyle"],
-                Content = option == Translation.Sub ? T.PlayerStartSubtitled : T.AudioDubbed,
+                Content = option == Engine.Core.Translation.Sub ? T.PlayerStartSubtitled : T.AudioDubbed,
                 GroupName = "panel-translation",
                 IsChecked = current == option,
-                IsEnabled = current == option || !(option == Translation.Dub && pastDub),
-                Tag = option == Translation.Sub ? "translation/sub" : "translation/dub",
+                IsEnabled = current == option || !(option == Engine.Core.Translation.Dub && pastDub),
+                Tag = option == Engine.Core.Translation.Sub ? "translation/sub" : "translation/dub",
             };
             var chosen = option;
             segment.Checked += (_, _) =>
             {
-                if ((menus?.Translation ?? Translation.Sub) != chosen)
+                if ((menus?.Translation ?? Engine.Core.Translation.Sub) != chosen)
                     Send(new PlayerCommand.Choose(new PlayerChoice.Translation(chosen)));
             };
             Grid.SetColumn(segment, at++);
