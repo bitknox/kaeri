@@ -175,6 +175,14 @@ impl BookRegistry {
         read(&self.sources).iter().find(|s| s.manifest().id == id).cloned()
     }
 
+    /// A cover as an image view fetches it: as the source it came from shows it (with the
+    /// sign-in a Kavita server's covers need), or as it is.
+    pub fn shown_cover(&self, cover: Option<String>) -> Option<String> {
+        let cover = cover?;
+        let sources = read(&self.sources);
+        Some(sources.iter().find_map(|s| s.shown_cover(&cover)).unwrap_or(cover))
+    }
+
     pub fn manifest(&self, id: &str) -> Option<BookSourceManifest> {
         self.get(id).map(|s| s.manifest().clone())
     }

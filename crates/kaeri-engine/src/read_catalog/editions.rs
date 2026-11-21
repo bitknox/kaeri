@@ -194,12 +194,12 @@ fn tied_elsewhere(kit: &Kit, source: &str, series: &str, work: &WorkId) -> bool 
     )
 }
 
-fn choice(hit: SeriesHit, confidence: u8) -> SourceSeriesChoice {
+fn choice(kit: &Kit, hit: SeriesHit, confidence: u8) -> SourceSeriesChoice {
     SourceSeriesChoice {
         confidence,
         series_ref: hit.id,
         title: hit.title,
-        cover: hit.cover,
+        cover: kit.sources.registry.shown_cover(hit.cover),
         year: hit.year,
         language: hit.language,
     }
@@ -348,7 +348,7 @@ async fn ask_one(kit: &Kit, source: &str, id: &WorkId, work: &fit::Work, now: i6
         }
     }
     if let Some((hit, query)) = possible {
-        return Answer::Possible { choice: choice(hit, 70), query };
+        return Answer::Possible { choice: choice(kit, hit, 70), query };
     }
     let query = closest.or_else(|| work.romaji.clone()).or_else(|| work.names.first().cloned());
     Answer::Missed { reason: Msg::Reading(ReadingMsg::ReadingMissNoSeries), query }
@@ -838,7 +838,7 @@ pub(crate) fn search_there(
             .into_iter()
             .map(|hit| {
                 let sure = confidence(&about, &hit);
-                choice(hit, sure)
+                choice(&kit, hit, sure)
             })
             .collect();
         choices.sort_by_key(|c| std::cmp::Reverse(c.confidence));

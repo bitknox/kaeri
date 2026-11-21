@@ -617,7 +617,7 @@ impl Home {
             cover: tiles::anilist(work)
                 .is_none()
                 .then(|| self.store.book_work(work).ok().flatten().and_then(|w| w.cover))
-                .flatten(),
+                .and_then(|cover| self.sources.registry.shown_cover(cover)),
             format_label: None,
             progress: None,
             next: None,

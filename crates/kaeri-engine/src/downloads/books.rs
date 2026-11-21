@@ -316,6 +316,8 @@ struct Inner {
     requeued: std::sync::atomic::AtomicBool,
     /// Downloads that failed in a row, by work and chapter: how many times, and when last.
     failed: Mutex<HashMap<(String, String), (u32, i64)>>,
+    /// The sources, which show the series' kept covers as an image view fetches them.
+    covers: std::sync::OnceLock<kaeri_providers::books::BookRegistry>,
 }
 
 impl std::fmt::Debug for BookDownloads {
@@ -369,7 +371,13 @@ impl BookDownloads {
             shares: shared::Shares::default(),
             requeued: std::sync::atomic::AtomicBool::new(false),
             failed: Mutex::default(),
+            covers: std::sync::OnceLock::new(),
         }))
+    }
+
+    /// Show the series' covers as `sources` show them: a Kavita server's with its key.
+    pub(crate) fn show_covers_from(&self, sources: kaeri_providers::books::BookRegistry) {
+        let _ = self.0.covers.set(sources);
     }
 
     /// Put back in the queue the fetches from `source` that failed for want of a sign-in, now
@@ -600,7 +608,12 @@ impl BookDownloads {
         }
         let (used, chapters) = store.book_download_totals().unwrap_or((0, 0));
         let free = self.free().unwrap_or(0);
-        let (series, read_bytes, kept) = sizes::series(store, &rows, (wifi, room), form);
+        let (mut series, read_bytes, kept) = sizes::series(store, &rows, (wifi, room), form);
+        if let Some(sources) = self.0.covers.get() {
+            for one in &mut series {
+                one.cover = sources.shown_cover(one.cover.take());
+            }
+        }
         BookDownloadsView {
             rows: shown,
             meter: StorageMeter { used, free, chapters, read_bytes },

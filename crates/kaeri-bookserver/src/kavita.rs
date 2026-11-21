@@ -520,7 +520,6 @@ impl BookSource for KavitaSource {
             .signed(|http| async move { http.json(path).await })
             .await
             .map_err(|e| self.aim(e))?;
-        let key = encode(&self.api_key());
         Ok(found
             .series
             .into_iter()
@@ -534,15 +533,26 @@ impl BookSource for KavitaSource {
                 {
                     hit.synonyms = vec![local];
                 }
+                // Without the key, which only a shown cover gets: see `shown_cover`.
                 hit.cover = Some(format!(
-                    "{}?seriesId={}&apiKey={}",
+                    "{}?seriesId={}",
                     self.http.url("api/Image/series-cover"),
-                    s.id,
-                    key
+                    s.id
                 ));
                 hit
             })
             .collect())
+    }
+
+    /// Kavita's images are asked with the account's API key in the address, which an image
+    /// view can send. Covers are named without it and get it here.
+    fn shown_cover(&self, cover: &str) -> Option<String> {
+        let ours = cover.strip_prefix(&self.http.url("api/Image/"))?;
+        if ours.contains("apiKey=") {
+            return None;
+        }
+        let join = if ours.contains('?') { '&' } else { '?' };
+        Some(format!("{cover}{join}apiKey={}", encode(&self.api_key())))
     }
 
     async fn series(

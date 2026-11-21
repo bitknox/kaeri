@@ -378,6 +378,14 @@ pub trait BookSource: Send + Sync {
     async fn fetch_page(&self, _page: &PageRef) -> Result<Vec<u8>, PageError> {
         Err(PageError::Unsupported)
     }
+
+    /// A cover this source named, as an image view fetches it, or `None` when it is not this
+    /// source's or needs nothing added. A source whose images need its sign-in in the address
+    /// (Kavita's API key) names covers without it and adds it only here, as the cover is
+    /// shown, so a cover kept in the database never holds the key.
+    fn shown_cover(&self, _cover: &str) -> Option<String> {
+        None
+    }
 }
 
 /// Why a page image could not be fetched.
