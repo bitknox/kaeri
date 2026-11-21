@@ -977,7 +977,7 @@ public sealed partial class PlayerView
 
     void TurnChevron(string provider, bool open)
     {
-        if (Tagged(PanelSources, $"source/{provider}") is not { } row || row.Content is not Grid line)
+        if (Tagged(PanelSources, $"source/{provider}") is not ContentControl { Content: Grid line })
             return;
         foreach (var chevron in line.Children.OfType<StackPanel>().SelectMany(p => p.Children.OfType<FontIcon>()))
             Spin(chevron, open ? 0 : 90, open ? 90 : 0);
