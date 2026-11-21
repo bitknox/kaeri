@@ -48,10 +48,8 @@ fn the_words_come_in_the_language_the_app_starts_in() {
     english.shutdown();
 
     let second = tempfile::tempdir().expect("a temporary directory");
-    let german = started(
-        second.path(),
-        FfiStart { language: Some("de".into()), ..FfiStart::default() },
-    );
+    let german =
+        started(second.path(), FfiStart { language: Some("de".into()), ..FfiStart::default() });
     assert_eq!(TrendPeriod::Today.label(), "Heute im Trend");
     assert_eq!(TrendPeriod::Week.choice(), "Diese Woche");
 
