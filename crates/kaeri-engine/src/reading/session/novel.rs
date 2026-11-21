@@ -1125,6 +1125,13 @@ impl Session {
             let msg = ReadingMsg::ReaderResumed { page: i64::from(shown) + 1 };
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, self.eink()));
         }
+        // Another device's place opened this chapter: the move is said at the page it landed
+        // on, as the resumed notice is.
+        if let Some(moving) = self.moving.take()
+            && let Some(to) = self.place.clone()
+        {
+            self.say_moved(cx, to, moving);
+        }
         if last_doc && page + 1 >= pages {
             self.say_end_page(cx);
             self.wait_to_read(cx);

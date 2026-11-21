@@ -230,6 +230,9 @@ pub struct Session {
     back_to: Option<ReadPlace>,
     /// The place before another device moved the reader, for Go back.
     moved_back: Option<ReadPlace>,
+    /// Another device's place opened another chapter: the move is said once that chapter is
+    /// open, at the page it opened at.
+    moving: Option<Moving>,
     read_fired: bool,
     /// A chapter read that the trackers hear of when the reader closes, when progress is sent
     /// then.
@@ -272,6 +275,15 @@ pub struct Session {
     gone: crate::reading::feed::Gone,
     /// Held while a private series is open: its addresses stay out of the log.
     _private_log: Option<crate::private::redact::Open<'static>>,
+}
+
+/// Another device's place that moved the reader, said with `Moved` and its notice.
+#[derive(Debug)]
+struct Moving {
+    /// The device's name, when sync knows one.
+    name: Option<String>,
+    /// Where Go back returns to.
+    back: ReadPlace,
 }
 
 fn place(work: &WorkId, chapter: &ChapterId, page: Option<u32>) -> ReadPlace {
@@ -702,6 +714,7 @@ impl Reader {
             first_page: None,
             back_to: None,
             moved_back: None,
+            moving: None,
             read_fired: false,
             unsent: None,
             end_page_said: false,
@@ -1414,6 +1427,10 @@ impl Session {
         {
             cx.send(notice(msg, Some(ReaderAction::StartOver), RESUMED_MS, eink));
         }
+        // Another device's place opened this chapter: the move is said at the page it opened at.
+        if let Some(moving) = self.moving.take() {
+            self.say_moved(cx, self.start.clone(), moving);
+        }
         let start = match self.start.strip {
             Some(at) if !self.cuts.is_empty() => self.leaf_of_strip(at),
             _ => self.leaf_of_page(self.start.page.unwrap_or(0)),
@@ -2057,6 +2074,7 @@ impl Session {
         self.end_page_said = false;
         self.peeked = false;
         self.moved = false;
+        self.moving = None;
         self.back_to = None;
         self.place = None;
         self.kept_of = at.of;
@@ -2136,13 +2154,14 @@ impl Session {
         };
         // Until the reader says a place, it is at the page the chapter opened at.
         let mine = self.page_now();
-        // Their page at the same point of the chapter as laid out here, as the open's start
-        // was moved: a chapter split into more or fewer pages there (another source's, or with
-        // the credit pages kept) is not a page further on.
+        // In the open chapter, their page at the same point of it as laid out here, as the
+        // open's start was moved: a chapter split into more or fewer pages there (another
+        // source's, or with the credit pages kept) is not a page further on. A place in another
+        // chapter is moved by that chapter's own pages as it opens.
         let page = theirs.last_page.unwrap_or(0);
         let page = theirs
             .of_pages
-            .filter(|_| self.pages_total > 0)
+            .filter(|_| self.pages_total > 0 && index == self.at)
             .and_then(|of| {
                 kept_past_credits(page, None, of, (self.pages_total, &self.credit_pages))
             })
@@ -2170,15 +2189,31 @@ impl Session {
             .place
             .clone()
             .unwrap_or_else(|| place(&self.work, &self.chapter().id, Some(mine)));
-        let mut to = place(&self.work, &self.chapters[index].id, Some(page));
-        to.novel = their_pos;
-        let label = self.chapters[index].label.clone();
         self.moved_back = Some(back.clone());
         self.drop_back(cx);
-        self.go_to(cx, pages, to.clone());
+        let moving = Moving { name, back };
+        if index == self.at {
+            let mut to = place(&self.work, &self.chapters[index].id, Some(page));
+            to.novel = their_pos;
+            self.go_to(cx, pages, to.clone());
+            self.say_moved(cx, to, moving);
+            return;
+        }
+        // Another chapter opens at their place as an open of it from the series page does, and
+        // the move is said once it is open, at the page it opened at.
+        let at = left_at(None, std::slice::from_ref(&theirs), &self.chapters[index].id);
+        self.open_chapter(cx, pages, index, at.unwrap_or_default(), their_pos, false);
+        self.moving = Some(moving);
+    }
+
+    /// Say that another device's place moved the reader to `to` in the open chapter, with Go
+    /// back to where it was.
+    fn say_moved(&self, cx: &Cx<'_>, to: ReadPlace, moving: Moving) {
+        let Moving { name, back } = moving;
+        let page = to.page.unwrap_or(0);
         let from_device = name.clone().unwrap_or_default();
         cx.send(ReaderEvent::Moved { session: self.id, to, from_device, back });
-        let msg = moved_msg(self.mode, &label, i64::from(page) + 1, name);
+        let msg = moved_msg(self.mode, &self.chapter().label, i64::from(page) + 1, name);
         cx.send(notice(msg, Some(ReaderAction::GoBack), MOVED_MS, self.eink()));
     }
 }

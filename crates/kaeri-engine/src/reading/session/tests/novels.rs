@@ -125,7 +125,12 @@ fn shelf_file(path: &Path, n: i64, format: &str) -> ShelfFile {
 
 /// A novel work of two EPUB volumes.
 fn novel_harness() -> Harness {
-    harness_of(Store::open_in_memory().unwrap(), "novel", |books| {
+    novel_harness_in(Store::open_in_memory().unwrap())
+}
+
+/// As [`novel_harness`], over `store`.
+fn novel_harness_in(store: Store) -> Harness {
+    harness_of(store, "novel", |books| {
         (1..=2)
             .map(|n| {
                 let path = books.join(format!("Volume {n}.epub"));
@@ -344,6 +349,39 @@ async fn novel_places_are_text_positions_that_resume_with_back_to_page() {
     h.open_novel(OpenAt::Resume).await;
     h.at(pos(first, &[], 0), 0, 4, TurnHow::Turn);
     assert!(notices(&h.drain()).is_empty(), "no Resumed at page 1");
+}
+
+/// Another device's place in a later volume opens that volume at its text position, and the move
+/// is said at the page it lands on here: page numbers differ between screens.
+#[tokio::test(start_paused = true)]
+async fn another_devices_place_in_a_later_volume_is_said_at_the_page_it_lands_on() {
+    let mine = Store::open_in_memory().unwrap();
+    mine.sync_enable("phone").unwrap();
+    let desk = Store::open_in_memory().unwrap();
+    desk.set_sync_clock(|| 4_000_000_000_000);
+    desk.sync_enable("desk").unwrap();
+    mine.sync_device_add("desk", "Desk", "").unwrap();
+    let mut h = novel_harness_in(mine.clone());
+    let (_, novel) = h.open_novel(OpenAt::Start).await;
+    let first = novel.spine.iter().position(|s| s.linear).unwrap() as u32;
+    let mut there = ReadEvent::new(WORK, "2", 2);
+    there.page = Some(5);
+    there.novel_pos = Some(pos(first, &[3], 12).encode());
+    desk.record_read(&there, Vec::new()).unwrap();
+    let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+    mine.apply_ops(ops).unwrap();
+    h.synced();
+    let opened = h
+        .until(|e| match e {
+            ReaderEvent::NovelOpen(view) => Some(view.clone()),
+            _ => None,
+        })
+        .await;
+    assert_eq!((opened.chapter.as_str(), opened.restore), ("2", Some(pos(first, &[3], 12))));
+    h.at(pos(first, &[3], 12), 2, 4, TurnHow::Placed);
+    let moved =
+        ReadingMsg::ReaderMovedNumber { chapter: "2".into(), page: 3, device: "Desk".into() };
+    assert_eq!(notices(&h.drain()), [moved]);
 }
 
 #[tokio::test(start_paused = true)]

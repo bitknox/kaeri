@@ -5,11 +5,17 @@ use super::*;
 
 /// Two chapters of twelve pages, read in `mode`.
 fn twelve_pages_in(store: Store, mode: &str) -> Harness {
+    chapters_of(store, mode, [12, 12])
+}
+
+/// Two chapters of `pages` pages each, read in `mode`.
+fn chapters_of(store: Store, mode: &str, pages: [u8; 2]) -> Harness {
     let h = harness_of(store, "manga", |books| {
         (1..=2)
             .map(|n| {
                 let path = books.join(format!("Chapter {n}.cbz"));
-                cbz(&path, 12);
+                let count = pages[n as usize - 1];
+                cbz(&path, count);
                 ShelfFile {
                     path: path.display().to_string(),
                     chapter: None,
@@ -17,7 +23,7 @@ fn twelve_pages_in(store: Store, mode: &str) -> Harness {
                     volume: None,
                     number_milli: Some(n * 1000),
                     format: "cbz".into(),
-                    pages: Some(12),
+                    pages: Some(count.into()),
                     comicinfo: None,
                     source: None,
                 }
@@ -276,6 +282,43 @@ async fn another_devices_place_in_a_strip_is_an_image() {
     h.until(|e| matches!(e, ReaderEvent::Opened(_)).then_some(())).await;
     let said: Vec<&str> = notices(&h.drain()).iter().map(ReadingMsg::id).collect();
     assert_eq!(said, ["reader-moved-number-image"]);
+}
+
+/// Another device's place in a later chapter is read by that chapter's own pages, never by the
+/// open chapter's: page 10 of 12 there opens page 10 of the 12 here, though the chapter open
+/// has 24, short of the last page and so not counted read, and the notice names that page.
+#[tokio::test(start_paused = true)]
+async fn another_devices_place_in_a_later_chapter_goes_by_that_chapters_pages() {
+    let mine = Store::open_in_memory().unwrap();
+    mine.sync_enable("phone").unwrap();
+    let desk = Store::open_in_memory().unwrap();
+    desk.set_sync_clock(|| 4_000_000_000_000);
+    desk.sync_enable("desk").unwrap();
+    mine.sync_device_add("desk", "Desk", "").unwrap();
+    let mut there = ReadEvent::new(WORK, "2", 2);
+    there.page = Some(9);
+    there.of_pages = Some(12);
+    desk.record_read(&there, Vec::new()).unwrap();
+    let ops = desk.ops_after(&mine.version_vector().unwrap(), usize::MAX).unwrap();
+    mine.apply_ops(ops).unwrap();
+    let mut h = chapters_of(mine, "paged", [24, 12]);
+    let work = WorkId::new(WORK);
+    let chapter = Some(ChapterId::new("1"));
+    h.send(ReaderCommand::Open { work, chapter, at: OpenAt::Resume, surface: surface() });
+    let start = h
+        .until(|e| match e {
+            ReaderEvent::Opened(view) if view.chapter.id.as_str() == "2" => view.start.page,
+            _ => None,
+        })
+        .await;
+    h.shown(start, TurnHow::Placed).await;
+    tokio::time::sleep(READ_AFTER * 2).await;
+    let said = h.drain();
+    let read = said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. }));
+    assert_eq!((start, read), (9, false));
+    let moved =
+        ReadingMsg::ReaderMovedNumber { chapter: "2".into(), page: 10, device: "Desk".into() };
+    assert_eq!(notices(&said), [moved]);
 }
 
 #[tokio::test(start_paused = true)]
