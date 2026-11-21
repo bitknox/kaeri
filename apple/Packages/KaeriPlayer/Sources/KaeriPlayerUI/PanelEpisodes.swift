@@ -63,6 +63,15 @@ struct PanelEpisodes: View {
                 guard rows != nil, let current else { return }
                 proxy.scrollTo(current, anchor: UnitPoint(x: 0.5, y: 0.25))
             }
+            .task(id: RevealScroll(
+                row: revealed, listed: rows != nil,
+                text: rows?.first(where: { $0.number == revealed })?.description)) {
+                // A revealed row's synopsis and buttons in view once it has grown, scrolled no
+                // further than that takes.
+                guard let revealed, rows != nil else { return }
+                try? await Task.sleep(for: .milliseconds(350))
+                withAnimation(.standard) { proxy.scrollTo(revealed) }
+            }
         }
         .onChange(of: model.panelShot, initial: true) { _, shot in
             if let shot { revealed = shot.revealed }
@@ -74,6 +83,13 @@ struct PanelEpisodes: View {
             try? await Task.sleep(for: .seconds(4))
             slow = true
         }
+    }
+
+    private struct RevealScroll: Hashable {
+        var row: String?
+        var listed: Bool
+        /// The row's synopsis: a listing that brings one grows the row again.
+        var text: String?
     }
 
     private func reveal(_ number: String) {
