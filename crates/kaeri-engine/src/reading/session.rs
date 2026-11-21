@@ -35,7 +35,10 @@ use kaeri_model::{
     reading::{ReadingAbout, ReadingEvent, ReadingFailure},
 };
 use kaeri_pages::{ColourChoice, Look, Target, layout::SpreadOnSingle};
-use kaeri_store::{reading::ReadEvent, shelf::BookWorkKind};
+use kaeri_store::{
+    reading::{ReadChapter, ReadEvent},
+    shelf::BookWorkKind,
+};
 use tokio::time::Instant;
 
 use super::{
@@ -915,6 +918,45 @@ struct Start {
     of: Option<u32>,
 }
 
+/// Where in a chapter it opens: the page, in a long strip how far into that page's image, and
+/// the pages the chapter had where a kept place was read, so that a place kept in a copy with
+/// other pages goes to the same point of this one.
+#[derive(Debug, Clone, Copy, Default, PartialEq)]
+struct OpensAt {
+    page: u32,
+    strip: Option<StripPos>,
+    of: Option<u32>,
+}
+
+impl OpensAt {
+    /// At `page` as asked, with nothing to move.
+    fn page(page: u32) -> Self {
+        Self { page, ..Self::default() }
+    }
+}
+
+/// The kept place of unfinished chapter `id`: its page, and in a long strip how far into that
+/// page's image. A strip read partway down its first image is a place too. A place a private
+/// read held in `memory` comes first: it is the newer.
+fn left_at(
+    memory: Option<&ReadEvent>,
+    kept: &[ReadChapter],
+    id: &ChapterId,
+) -> Option<OpensAt> {
+    let (page, strip, of) = match memory.filter(|m| m.chapter == id.as_str() && !m.completed) {
+        Some(m) => (m.page, m.strip_image.zip(m.strip_offset), m.of_pages),
+        None => {
+            let k = kept.iter().find(|k| k.chapter == id.as_str() && !k.read)?;
+            (k.last_page, k.strip_image.zip(k.strip_offset), k.of_pages)
+        }
+    };
+    let strip = strip
+        .map(|(image, offset)| StripPos { image, offset: (offset as f32).clamp(0.0, 1.0) });
+    let page = page.or(strip.map(|s| s.image)).unwrap_or(0);
+    let strip = strip.filter(|s| s.image == page);
+    (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some(OpensAt { page, strip, of })
+}
+
 /// Which chapter to open and at which page, and whether that resumes a place.
 fn start_of(
     cx: &Cx<'_>,
@@ -932,30 +974,7 @@ fn start_of(
     let marks = folds.marks(store.read_marks(work.as_str()).unwrap_or_default());
     let kept = folds.places(store.read_chapters(work.as_str()).unwrap_or_default(), &marks);
     let index_of = |id: &ChapterId| chapters.iter().position(|c| &c.id == id);
-    // The kept place of an unfinished chapter: its page, and in a long strip how far into that
-    // page's image. A strip read partway down its first image is a place too.
-    // A place a private read held in memory comes first: it is the newer.
     let memory = cx.services.privacy.read_kept(work.as_str());
-    let left_at = |id: &ChapterId| {
-        if let Some(m) = memory.as_ref().filter(|m| m.chapter == id.as_str() && !m.completed) {
-            let strip = m.strip_image.zip(m.strip_offset).map(|(image, offset)| StripPos {
-                image,
-                offset: (offset as f32).clamp(0.0, 1.0),
-            });
-            let page = m.page.or(strip.map(|s| s.image)).unwrap_or(0);
-            let strip = strip.filter(|s| s.image == page);
-            return (page > 0 || strip.is_some_and(|s| s.offset > 0.0))
-                .then_some((page, strip, m.of_pages));
-        }
-        let k = kept.iter().find(|k| k.chapter == id.as_str() && !k.read)?;
-        let strip = k
-            .strip_image
-            .zip(k.strip_offset)
-            .map(|(image, offset)| StripPos { image, offset: (offset as f32).clamp(0.0, 1.0) });
-        let page = k.last_page.or(strip.map(|s| s.image)).unwrap_or(0);
-        let strip = strip.filter(|s| s.image == page);
-        (page > 0 || strip.is_some_and(|s| s.offset > 0.0)).then_some((page, strip, k.of_pages))
-    };
     let at_page = |index, page| Start { index, page, strip: None, resumed: false, of: None };
     // A chapter asked for and not in the list opens nothing: never another chapter in its place.
     let asked = || match chapter {
@@ -1006,8 +1025,10 @@ fn start_of(
                     }
                 }
             };
-            match left_at(&chapters[index].id) {
-                Some((page, strip, of)) => Start { index, page, strip, resumed: true, of },
+            match left_at(memory.as_ref(), &kept, &chapters[index].id) {
+                Some(OpensAt { page, strip, of }) => {
+                    Start { index, page, strip, resumed: true, of }
+                }
                 None => at_page(index, 0),
             }
         }
@@ -1496,7 +1517,7 @@ impl Session {
                     .and_then(|k| k.last_page)
                     .unwrap_or(0);
                 let novel = novel::kept_novel(cx, &self.work, &chapter);
-                self.open_chapter(cx, pages, index, page, novel, flowing);
+                self.open_chapter(cx, pages, index, OpensAt::page(page), novel, flowing);
             }
             C::BackTo { .. } => {
                 if let Some(back) = self.back_to.clone() {
@@ -2014,7 +2035,7 @@ impl Session {
         cx: &mut Cx<'_>,
         pages: &Pages,
         index: usize,
-        page: u32,
+        at: OpensAt,
         novel: Option<NovelPos>,
         flowing: bool,
     ) {
@@ -2035,12 +2056,13 @@ impl Session {
         self.moved = false;
         self.back_to = None;
         self.place = None;
-        self.kept_of = None;
+        self.kept_of = at.of;
         // A chapter fetched ahead and not the one opening stops fetching.
         self.ahead = self.ahead.take().filter(|a| a.chapter == self.chapters[index].id);
         self.first_page = None;
-        self.start = place(&self.work, &self.chapters[index].id, Some(page));
-        self.lay_out(cx, pages, page);
+        let chapter = &self.chapters[index].id;
+        self.start = ReadPlace { strip: at.strip, ..place(&self.work, chapter, Some(at.page)) };
+        self.lay_out(cx, pages, at.page);
     }
 
     /// Show `to`: in the open chapter with `GoTo`, else by opening its chapter.
@@ -2048,7 +2070,8 @@ impl Session {
         if to.chapter == self.chapter().id {
             cx.send(ReaderEvent::GoTo { session: self.id, place: to });
         } else if let Some(index) = self.index_of(cx, &to.chapter) {
-            self.open_chapter(cx, pages, index, to.page.unwrap_or(0), to.novel.clone(), false);
+            let at = OpensAt::page(to.page.unwrap_or(0));
+            self.open_chapter(cx, pages, index, at, to.novel.clone(), false);
         } else {
             self.not_found(cx);
         }
