@@ -19,6 +19,107 @@ use crate::sys::{
     mpv_node_list, mpv_node_u,
 };
 
+/// A picture as mpv's `screenshot-raw` gives it: `height` rows of `stride` bytes, four to a
+/// pixel in `format`'s order (`bgr0` unless asked otherwise).
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct RawFrame {
+    pub width: u32,
+    pub height: u32,
+    pub stride: u32,
+    pub format: String,
+    pub data: Vec<u8>,
+}
+
+impl RawFrame {
+    /// The pixels as straight BGRA with every pixel opaque, for an app's bitmap: `bgr0` leaves
+    /// the fourth byte at zero, which a bitmap reads as see-through. `None` for a format in
+    /// another order, or rows that do not fit the data.
+    #[must_use]
+    pub fn into_bgra(mut self) -> Option<Self> {
+        if !matches!(self.format.as_str(), "bgr0" | "bgra")
+            || self.width == 0
+            || self.height == 0
+        {
+            return None;
+        }
+        let row = usize::try_from(self.width).ok()?.checked_mul(4)?;
+        let stride = usize::try_from(self.stride).ok()?;
+        let rows = usize::try_from(self.height).ok()?;
+        if stride < row || self.data.len() < stride.checked_mul(rows)? {
+            return None;
+        }
+        if self.format == "bgr0" {
+            for line in self.data.chunks_mut(stride).take(rows) {
+                for pixel in line[..row].as_chunks_mut::<4>().0 {
+                    pixel[3] = u8::MAX;
+                }
+            }
+            "bgra".clone_into(&mut self.format);
+        }
+        Some(self)
+    }
+}
+
+/// The picture in a `screenshot-raw` answer: a map of `w`, `h`, `stride`, `format` and `data`, the
+/// last a byte array. `None` when any of them is missing.
+///
+/// # Safety
+///
+/// `node` must be a valid node, as mpv hands one out, for the length of the call.
+pub unsafe fn raw_frame(node: &mpv_node) -> Option<RawFrame> {
+    if node.format != MPV_FORMAT_NODE_MAP {
+        return None;
+    }
+    // SAFETY: a map's list holds `num` values and keys, valid with the node; the byte array's
+    // `size` bytes are valid with it too.
+    unsafe {
+        let list = node.u.list;
+        if list.is_null() {
+            return None;
+        }
+        let list = &*list;
+        let len = usize::try_from(list.num).ok()?;
+        if len == 0 {
+            return None;
+        }
+        let keys = std::slice::from_raw_parts(list.keys, len);
+        let values = std::slice::from_raw_parts(list.values, len);
+        let (mut width, mut height, mut stride, mut format, mut data) =
+            (None, None, None, None, None);
+        for (key, value) in keys.iter().zip(values) {
+            let number = || {
+                (value.format == MPV_FORMAT_INT64)
+                    .then(|| u32::try_from(value.u.int64).ok())
+                    .flatten()
+            };
+            match text(*key).as_str() {
+                "w" => width = number(),
+                "h" => height = number(),
+                "stride" => stride = number(),
+                "format" if value.format == MPV_FORMAT_STRING => {
+                    format = Some(text(value.u.string))
+                }
+                "data" if value.format == MPV_FORMAT_BYTE_ARRAY && !value.u.ba.is_null() => {
+                    let bytes = &*value.u.ba;
+                    data = Some(if bytes.size == 0 || bytes.data.is_null() {
+                        Vec::new()
+                    } else {
+                        std::slice::from_raw_parts(bytes.data.cast::<u8>(), bytes.size).to_vec()
+                    });
+                }
+                _ => {}
+            }
+        }
+        Some(RawFrame {
+            width: width?,
+            height: height?,
+            stride: stride?,
+            format: format?,
+            data: data?,
+        })
+    }
+}
+
 /// A node mpv reads and Rust owns: the strings, lists and keys it points into live as long as
 /// it, so it can be handed to any call that takes an `mpv_node *` and only reads it.
 pub struct OwnedNode {
@@ -238,6 +339,71 @@ mod tests {
     #[test]
     fn a_nul_cuts_a_string_rather_than_failing_it() {
         assert_eq!(round_trip(json!("before\0after")), json!("before"));
+    }
+
+    /// A `screenshot-raw` answer as mpv builds it: two pixels of `bgr0` in rows padded to 12 bytes.
+    #[test]
+    fn a_screenshot_answer_reads_as_an_opaque_bgra_picture() {
+        use crate::sys::mpv_byte_array;
+
+        let mut pixels: Vec<u8> =
+            vec![1, 2, 3, 0, 4, 5, 6, 0, 9, 9, 9, 9, 7, 8, 9, 0, 10, 11, 12, 0, 9, 9, 9, 9];
+        let mut bytes = mpv_byte_array { data: pixels.as_mut_ptr().cast(), size: pixels.len() };
+        let format = CString::new("bgr0").unwrap();
+        let names: Vec<CString> = ["w", "h", "stride", "format", "data"]
+            .iter()
+            .map(|k| CString::new(*k).unwrap())
+            .collect();
+        let mut keys: Vec<*mut c_char> = names.iter().map(|k| k.as_ptr().cast_mut()).collect();
+        let mut values = vec![
+            mpv_node { u: mpv_node_u { int64: 2 }, format: MPV_FORMAT_INT64 },
+            mpv_node { u: mpv_node_u { int64: 2 }, format: MPV_FORMAT_INT64 },
+            mpv_node { u: mpv_node_u { int64: 12 }, format: MPV_FORMAT_INT64 },
+            mpv_node {
+                u: mpv_node_u { string: format.as_ptr().cast_mut() },
+                format: MPV_FORMAT_STRING,
+            },
+            mpv_node { u: mpv_node_u { ba: &raw mut bytes }, format: MPV_FORMAT_BYTE_ARRAY },
+        ];
+        let mut list =
+            mpv_node_list { num: 5, values: values.as_mut_ptr(), keys: keys.as_mut_ptr() };
+        let node =
+            mpv_node { u: mpv_node_u { list: &raw mut list }, format: MPV_FORMAT_NODE_MAP };
+        // SAFETY: the node and everything it points into are alive for the call.
+        let frame = unsafe { raw_frame(&node) }.expect("a picture");
+        assert_eq!(
+            (frame.width, frame.height, frame.stride, frame.format.as_str()),
+            (2, 2, 12, "bgr0")
+        );
+        let frame = frame.into_bgra().expect("bgr0 turns into bgra");
+        assert_eq!(frame.format, "bgra");
+        // Every pixel opaque, the padding at each row's end left as it was.
+        assert_eq!(
+            frame.data,
+            vec![
+                1, 2, 3, 255, 4, 5, 6, 255, 9, 9, 9, 9, 7, 8, 9, 255, 10, 11, 12, 255, 9, 9, 9,
+                9
+            ]
+        );
+        // A scalar is no picture.
+        let scalar = mpv_node { u: mpv_node_u { int64: 1 }, format: MPV_FORMAT_INT64 };
+        // SAFETY: a scalar node, alive for the call.
+        assert_eq!(unsafe { raw_frame(&scalar) }, None);
+    }
+
+    #[test]
+    fn a_picture_in_another_order_or_short_of_its_rows_is_none() {
+        let frame = |format: &str, stride: u32, len: usize| RawFrame {
+            width: 2,
+            height: 2,
+            stride,
+            format: format.into(),
+            data: vec![0; len],
+        };
+        assert!(frame("rgba", 8, 16).into_bgra().is_none());
+        assert!(frame("bgr0", 8, 15).into_bgra().is_none());
+        assert!(frame("bgr0", 4, 16).into_bgra().is_none());
+        assert!(frame("bgra", 8, 16).into_bgra().is_some());
     }
 
     #[test]

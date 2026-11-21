@@ -142,6 +142,16 @@ pub fn player_audio_tap() -> bool {
     kaeri_mpv_host::audio_tap_available()
 }
 
+/// A picture copied off the screen: `height` rows of `stride` bytes, each pixel four bytes of
+/// blue, green, red and alpha, every one opaque.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct FfiSnapshot {
+    pub width: u32,
+    pub height: u32,
+    pub stride: u32,
+    pub pixels: Vec<u8>,
+}
+
 /// One mpv core driven by the engine's ops, for as long as the app holds it.
 #[derive(uniffi::Object)]
 pub struct FfiPlayer {
@@ -246,6 +256,21 @@ impl FfiPlayer {
             .mpv()
             .command(&[add_command(kind), &path, "select"])
             .map_err(|e| FfiError::player(Msg::StartFailedPlayer { reason: e.to_string() }))
+    }
+
+    /// The picture on screen as it stands, subtitles and all, for the app to hold over the
+    /// video while a source switch loads: libmpv clears the picture on `loadfile`. `None` while
+    /// nothing is drawn. mpv answers from its video thread, so the app asks from a thread of its
+    /// own, with a deadline; the lock is let go first, as for [`Self::swapchain`].
+    pub fn snapshot(&self) -> Option<FfiSnapshot> {
+        let mpv = self.player().as_ref().map(|p| p.mpv().clone())?;
+        let frame = mpv.screenshot_window().ok().flatten()?.into_bgra()?;
+        Some(FfiSnapshot {
+            width: frame.width,
+            height: frame.height,
+            stride: frame.stride,
+            pixels: frame.data,
+        })
     }
 
     /// The controls' state as it stands.
