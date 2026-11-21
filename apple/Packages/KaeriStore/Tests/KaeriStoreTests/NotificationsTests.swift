@@ -273,6 +273,73 @@ private func ledger() -> NoticeLedger {
         #expect(file.pathExtension == "jpg")
         #expect(NoticePictures.stage(Data("not a picture".utf8), in: staging) == nil)
     }
+
+    @Test(.timeLimit(.minutes(1)))
+    func aShowSwitchedOffWhileTheWeekIsSchedulingStaysOff() async {
+        let centre = CountingCentre()
+        let held = HeldPicture("https://img.example/2.png")
+        let scheduler = NoticeScheduler(centre: centre, ledger: ledger()) { await held.fetch($0) }
+        // New episodes turned on: the week schedules show 1, then waits for show 2's picture.
+        let first = Task {
+            await scheduler.reschedule(week([airing(1, 2, in: hour), airing(2, 3, in: 2 * hour)]), now: now)
+        }
+        await held.reached()
+        // Meanwhile show 2 is switched off.
+        let second = Task {
+            await scheduler.reschedule(week([airing(1, 2, in: hour), airing(2, 3, in: 2 * hour, .switchedOff)]), now: now)
+        }
+        #expect(await second.value.map(\.identifier) == ["ep.1.2.sub"])
+        held.release()
+        #expect(await first.value.map(\.identifier) == ["ep.1.2.sub"], "the older call ends with the newer week")
+        #expect(await centre.pending() == ["ep.1.2.sub"], "show 2 stays off")
+    }
+}
+
+/// A picture that waits until released or until the task asking for it is stopped, and says
+/// when it is first asked for.
+private final class HeldPicture: @unchecked Sendable {
+    let address: String
+    private let lock = NSLock()
+    private var waiting: CheckedContinuation<Void, Never>?
+    private var released = false
+    private let asked: AsyncStream<Void>
+    private let ask: AsyncStream<Void>.Continuation
+
+    init(_ address: String) {
+        self.address = address
+        (self.asked, self.ask) = AsyncStream.makeStream(of: Void.self)
+    }
+
+    func fetch(_ url: String) async -> Data? {
+        guard url == address else { return nil }
+        await withTaskCancellationHandler {
+            await withCheckedContinuation { (continuation: CheckedContinuation<Void, Never>) in
+                let free = lock.withLock {
+                    if !released { waiting = continuation }
+                    return released
+                }
+                ask.yield()
+                if free { continuation.resume() }
+            }
+        } onCancel: {
+            release()
+        }
+        return nil
+    }
+
+    /// Once the picture is asked for.
+    func reached() async {
+        for await _ in asked { return }
+    }
+
+    func release() {
+        let continuation = lock.withLock {
+            released = true
+            defer { waiting = nil }
+            return waiting
+        }
+        continuation?.resume()
+    }
 }
 
 @MainActor

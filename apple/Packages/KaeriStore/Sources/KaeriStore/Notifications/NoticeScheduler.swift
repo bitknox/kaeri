@@ -73,6 +73,8 @@ public actor NoticeScheduler {
     let fetch: @Sendable (String) async -> Data?
     /// Where pictures wait for the centre to take them.
     let staging: URL
+    /// The newest week's reschedule, running or done. The next week stops it and follows it.
+    private var newest: Task<[PlannedNotice], Never>?
 
     public init(
         centre: any NoticeCentre,
@@ -87,9 +89,31 @@ public actor NoticeScheduler {
     }
 
     /// Make the pending notifications the week's: take back what no longer notifies, and
-    /// schedule what is new or has changed. Nothing without permission. What is scheduled.
+    /// schedule what is new or has changed. Nothing without permission. One week at a time, the
+    /// newest winning: a newer week stops this one before its next notice and starts once it has
+    /// ended. Stopping the caller stops its week the same way. What is scheduled, once the newest
+    /// week asked for is in place.
     @discardableResult
     public func reschedule(_ week: UpcomingNotices, now: Date = .now) async -> [PlannedNotice] {
+        let older = newest
+        older?.cancel()
+        let task = Task<[PlannedNotice], Never> {
+            _ = await older?.value
+            guard !Task.isCancelled else { return [] }
+            return await apply(week, now: now)
+        }
+        newest = task
+        var current = task
+        var plan = await withTaskCancellationHandler { await task.value } onCancel: { task.cancel() }
+        while let latest = newest, latest != current {
+            current = latest
+            plan = await latest.value
+        }
+        return plan
+    }
+
+    /// Reschedule to `week`, up to the notice its task is stopped at.
+    private func apply(_ week: UpcomingNotices, now: Date) async -> [PlannedNotice] {
         let pending = Set(await centre.pending().filter { $0.hasPrefix(NoticePlan.prefix) })
         guard await centre.permission() == .allowed else {
             await centre.cancel(Array(pending))
@@ -101,6 +125,7 @@ public actor NoticeScheduler {
         ledger.forget(gone)
         var scheduled: [PlannedNotice] = []
         for notice in plan {
+            if Task.isCancelled { break }
             if pending.contains(notice.identifier), ledger.fingerprint(notice.identifier) == notice.fingerprint {
                 continue
             }
