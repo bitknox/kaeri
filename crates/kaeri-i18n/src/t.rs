@@ -655,6 +655,11 @@ pub fn notice_audio_now_dubbed() -> String {
     text("notice-audio-now-dubbed", &[])
 }
 
+/// Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+pub fn player_panel_switch_failed(source: &str, current: &str) -> String {
+    text("player-panel-switch-failed", &[("source", Arg::Text(source)), ("current", Arg::Text(current))])
+}
+
 /// Toast when the previous-episode control is used on the first episode.
 pub fn notice_already_first_episode() -> String {
     text("notice-already-first-episode", &[])

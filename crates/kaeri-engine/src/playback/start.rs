@@ -30,6 +30,7 @@ use crate::{
         shaders::shader_dir,
         slot::PlayerSlot,
         starting::Starting,
+        switch::SwitchInbox,
     },
     services::Services,
     show_settings,
@@ -103,7 +104,7 @@ pub fn play(
     };
     let billing = named(id, &episode, engine);
     let staged = play_staged(
-        id, episode, None, from_start, false, billing, opener, job, engine, services, tx,
+        id, episode, None, from_start, false, false, billing, opener, job, engine, services, tx,
     );
     let _ = tx.send(staged);
 }
@@ -199,7 +200,7 @@ pub fn play_source(
     let billing = named(id, &episode, engine);
     let pick = Some(Pick::Release { provider_id, source_id });
     let staged = play_staged(
-        id, episode, pick, false, false, billing, opener, job, engine, services, tx,
+        id, episode, pick, false, false, false, billing, opener, job, engine, services, tx,
     );
     let _ = tx.send(staged);
 }
@@ -217,13 +218,57 @@ pub(crate) fn play_following(
 ) -> Event {
     let Follow { id, episode, title, episode_title } = follow;
     let billing = (title, episode_title);
-    play_staged(id, episode, None, false, false, billing, opener, job, engine, services, tx)
+    play_staged(
+        id, episode, None, false, false, true, billing, opener, job, engine, services, tx,
+    )
 }
 
 /// What a play the front end asked for is staged as: the name the engine's record of the titles
 /// gives it, and the episode's own name from the table it holds when that is this title's.
 fn named(id: AnilistId, episode: &str, engine: &EngineState) -> (String, Option<String>) {
     (engine.cache.name_for(id, PlayKind::Staged), engine.cache.episode_title(id, episode))
+}
+
+/// The config a play of `id` runs under: the one in effect with what the show sets for itself
+/// put in it, and sub or dub as the player last picked it for this title over the show's own.
+pub(crate) fn play_config(
+    engine: &EngineState,
+    store: &kaeri_store::Store,
+    id: AnilistId,
+) -> Config {
+    picked_over(
+        show_settings::for_show(engine.config.effective(), store, id),
+        id,
+        engine.translation_picked,
+    )
+}
+
+/// `config` for a play of `id`, with sub or dub as `picked` says when it was picked for `id`.
+fn picked_over(
+    mut config: Config,
+    id: AnilistId,
+    picked: Option<(AnilistId, kaeri_core::media::Translation)>,
+) -> Config {
+    if let Some((_, translation)) = picked.filter(|(picked, _)| *picked == id) {
+        config.playback.translation = translation;
+    }
+    config
+}
+
+/// Whether Now Playing shows a play of `id` already, which a new play of it follows on from:
+/// rolled on, picked in the player, or started again in sub or dub. Its player has the table.
+fn table_told(id: AnilistId, engine: &EngineState) -> bool {
+    engine.staging.front().is_some_and(|front| front.id == id)
+}
+
+/// Say title `id`'s episode table as the engine's record holds it, with what has been watched
+/// since it loaded, for the player's Episodes panel: a play from Continue, a widget or a link
+/// opens on a title whose page was never opened. Nothing when the record holds another title's
+/// table; the play loads its own and says that.
+fn say_table(id: AnilistId, engine: &EngineState, tx: &Outbox) {
+    if let Some(rows) = engine.cache.table_now(id) {
+        let _ = tx.send(Event::Episodes { id, rows, failed: None });
+    }
 }
 
 /// Stage a playback for Now Playing as `title`, with `episode_title`: the name the episode
@@ -311,6 +356,7 @@ pub fn play_opened(
         pick,
         false,
         false,
+        false,
         (title, episode_title),
         opener,
         job,
@@ -352,6 +398,7 @@ pub fn play_opened_untracked(
         pick,
         true,
         false,
+        false,
         (name, None),
         opener,
         job,
@@ -374,6 +421,9 @@ fn play_staged(
     from_start: bool,
     // Asked for by a party: an episode with no source here says so for the party's dialog.
     party: bool,
+    // Led to by a playback of the same title, whose player has the title's table: rolled on,
+    // picked in the player, or started again in sub or dub.
+    follows: bool,
     (title, episode_title): (String, Option<String>),
     opener: Arc<dyn PlayerOpener>,
     job: Option<JobGuard>,
@@ -383,6 +433,7 @@ fn play_staged(
 ) -> Event {
     let Services { paths, sync, prefetch, store, .. } = services;
     let played = engine.next_playback(id, &episode);
+    let told = follows || table_told(id, engine);
     // Where the episode was left, for the starting screen to say it resumes there. Not for a
     // play from the beginning, or one that records nothing.
     let resume = (!from_start && id != kaeri_model::opened::UNTRACKED)
@@ -392,9 +443,14 @@ fn play_staged(
     let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine, private);
     // What the show sets for itself, over the config in effect: sub or dub, quality, what is
     // skipped.
-    let for_show = show_settings::for_show(engine.config.effective(), store, id);
+    let for_show = play_config(engine, store, id);
     let hints =
         hints_for(id, &episode, PlayKind::Staged, for_show.playback.skip_filler, engine);
+    // The player's Episodes panel has the title's whole table from the start.
+    if !told && !Pick::untracked(pick.as_ref()) {
+        say_table(id, engine, tx);
+    }
+    let switches = engine.switches.open(played.serial);
     let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     let config = &for_show;
     // A fresh channel per playback. The one playing gives up its window only once
@@ -416,7 +472,7 @@ fn play_staged(
     let tracker_ids = signed_in_tracker_ids(sync);
     // An untracked play has no title to list the episodes of.
     if hints.episodes.is_empty() && !Pick::untracked(pick.as_ref()) {
-        fill_episodes(id, &episode, services, player_tx);
+        fill_episodes(id, &episode, told, services, player_tx, tx);
     }
     spawn_playback(
         id,
@@ -427,7 +483,7 @@ fn play_staged(
         prx,
         stopped,
         skip,
-        begin,
+        (begin, switches),
         handoff,
         config,
         services,
@@ -460,8 +516,9 @@ pub fn play_party(
     // From the start: the room opens an episode at 0:00 and brings a member who joins late to
     // its own position. This device's resume point would put it ahead of the room, and near the
     // end of a file it ended at once and moved the whole room on.
-    let staged =
-        play_staged(id, episode, None, true, true, billing, opener, job, engine, services, tx);
+    let staged = play_staged(
+        id, episode, None, true, true, false, billing, opener, job, engine, services, tx,
+    );
     let _ = tx.send(staged);
 }
 
@@ -482,7 +539,8 @@ pub fn play_local(
     };
     let Services { paths, http, store, sync, .. } = services;
     let played = engine.next_playback(id, &episode);
-    let for_show = show_settings::for_show(engine.config.effective(), store, id);
+    let told = table_told(id, engine);
+    let for_show = play_config(engine, store, id);
     let hints =
         engine.cache.hints(id, &episode, for_show.playback.skip_filler, PlayKind::Staged);
     // Named by the download it plays: the Downloads screen says what its rows are called.
@@ -491,7 +549,11 @@ pub fn play_local(
     let private = services.privacy.holds_show(played.id);
     let staged =
         stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine, private);
+    if !told {
+        say_table(id, engine, tx);
+    }
     let _ = tx.send(staged);
+    let switches = engine.switches.open(played.serial);
     let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     // Nothing to find: it opens at once, and a Stop is its session's from the start.
     *finding = None;
@@ -510,7 +572,7 @@ pub fn play_local(
     handoff.now();
     let tracker_ids = signed_in_tracker_ids(sync);
     if episodes.is_empty() {
-        fill_episodes(id, &episode, services, player_tx);
+        fill_episodes(id, &episode, told, services, player_tx, tx);
     }
     let shaders = write_shaders(config, paths);
     let party = services.party.clone();
@@ -553,6 +615,7 @@ pub fn play_local(
         let settings = playback::PlaySettings {
             shader_dir: shaders.await.ok().flatten(),
             find_skip_times: find,
+            switches,
             ..play_settings(&config, tracker_ids, party)
         };
         playback::play(vec![stream], context, store, http, machine, settings, tx, prx).await;
@@ -728,8 +791,9 @@ fn spawn_playback(
     mut stopped: watch::Receiver<bool>,
     // The count the walk through the sources watches for a skip of the source it is asking.
     skip: watch::Receiver<u64>,
-    // Whether the viewer asked to begin at 0: see `PlayerCommand::PlayFromBeginning`.
-    begin: Arc<std::sync::atomic::AtomicBool>,
+    // Whether the viewer asked to begin at 0: see `PlayerCommand::PlayFromBeginning`; and the
+    // playback's end of its door, where a release picked in the player reaches it.
+    (begin, switches): (Arc<std::sync::atomic::AtomicBool>, SwitchInbox),
     handoff: Handoff,
     config: &Config,
     services: &Services,
@@ -1009,6 +1073,7 @@ fn spawn_playback(
             find_skip_times: find,
             swarm: crate::playback::starting::Swarm::of(torrents),
             begin,
+            switches,
             ahead,
             privacy: privacy.gate(id),
             further,
@@ -1174,6 +1239,7 @@ pub fn play_settings(
         ahead: Default::default(),
         privacy: Default::default(),
         further: Default::default(),
+        switches: Default::default(),
     }
 }
 
@@ -1183,23 +1249,32 @@ pub fn play_settings(
 /// had no episode list: the player's Episodes menu was empty and, with no next episode known,
 /// there was no Up Next card, no fetching ahead and no keeping the window for the binge.
 /// Loaded in the background after playback starts, never in front of it, and handed to the
-/// playback through its controls.
+/// playback through its controls, and said to the front end unless `told`, as [`table_told`]
+/// has it.
 fn fill_episodes(
     id: kaeri_core::ids::AnilistId,
     episode: &str,
+    told: bool,
     services: &Services,
     controls: &Option<mpsc::UnboundedSender<kaeri_model::command::PlayerCommand>>,
+    tx: &Outbox,
 ) {
     let Some(controls) = controls.clone() else { return };
-    let (meta, store, registry, episode) = (
+    let (meta, store, registry, episode, tx) = (
         services.meta.clone(),
         services.store.clone(),
         services.registry.clone(),
         episode.to_owned(),
+        tx.clone(),
     );
     tokio::spawn(async move {
         match load_episodes(&meta, &store, &registry, id).await {
             Ok(EpisodeLoad::Rows(rows)) if !rows.is_empty() => {
+                // The front end's table too, for the player's Episodes panel, unless the
+                // play follows on from one that has it.
+                if !told {
+                    let _ = tx.send(Event::Episodes { id, rows: rows.clone(), failed: None });
+                }
                 let next = following(&rows, &episode);
                 let _ =
                     controls.send(kaeri_model::command::PlayerCommand::Episodes { rows, next });
@@ -1219,6 +1294,29 @@ fn following(rows: &[EpisodeRow], episode: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn sub_or_dub_picked_in_the_player_holds_over_the_show_s_own_for_that_title_only() {
+        use kaeri_core::media::Translation;
+        let (id, other) = (AnilistId::new(7), AnilistId::new(8));
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+        store.set_show_setting(id, "translation", Some("dub"), 0).unwrap();
+        let show = show_settings::for_show(&Config::default(), &store, id);
+        assert_eq!(show.playback.translation, Translation::Dub, "the show's own setting");
+
+        let picked = Some((id, Translation::Sub));
+        assert_eq!(
+            picked_over(show.clone(), id, picked).playback.translation,
+            Translation::Sub
+        );
+        // A pick for another title leaves this one's as the show has it.
+        let elsewhere = Some((other, Translation::Sub));
+        assert_eq!(
+            picked_over(show.clone(), id, elsewhere).playback.translation,
+            Translation::Dub
+        );
+        assert_eq!(picked_over(show, id, None).playback.translation, Translation::Dub);
+    }
 
     #[test]
     fn the_following_episode_is_only_offered_when_the_list_has_it() {

@@ -635,6 +635,19 @@ pub(crate) fn dispatch(
             crate::party::join_by_default(engine, services, tx);
             play_source(id, episode, provider_id, source_id, job, engine, services, tx)
         }
+        // Another release of the episode playing, from where it is: see `playback::switch`.
+        Command::SwitchSource { id, episode, provider_id, source_id } => {
+            crate::playback::switch::ask(
+                id,
+                episode,
+                provider_id,
+                source_id,
+                job,
+                engine,
+                services,
+                tx,
+            );
+        }
         // Watch parties, where this build has them: see `party`.
         #[cfg(feature = "party")]
         Command::PlayParty { id, episode, server, room, name } => {

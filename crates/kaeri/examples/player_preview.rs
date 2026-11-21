@@ -117,6 +117,7 @@ async fn main() -> anyhow::Result<()> {
             begin: Default::default(),
             ahead: Default::default(),
             further: Default::default(),
+            switches: Default::default(),
         };
         let stream = Stream {
             provider_id: "preview".into(),

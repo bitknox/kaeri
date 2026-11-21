@@ -414,6 +414,22 @@ impl TitleCache {
         self.table.as_ref().filter(|(table, _)| *table == id).map(|(_, rows)| rows.as_slice())
     }
 
+    /// Title `id`'s whole table as it stands now, when the record holds it: the rows as they
+    /// loaded, with every watch and mark since, for a front end that has not asked for them,
+    /// such as the player's Episodes panel. `None` while the record holds another title's.
+    pub(crate) fn table_now(&self, id: AnilistId) -> Option<Vec<EpisodeRow>> {
+        let mut rows = self.rows(id)?.to_vec();
+        if let Some(listed) = self.episodes.get(&id) {
+            for row in &mut rows {
+                if let Some(now) = listed.iter().find(|episode| episode.number == row.number) {
+                    (row.watched, row.completed) = (now.watched, now.completed);
+                    row.spoiler_ahead = now.spoiler_ahead;
+                }
+            }
+        }
+        Some(rows)
+    }
+
     /// [`Self::rows`], when a source listed them: what a play takes of a title's episodes, its
     /// next one, its filler and its names. A table from AniList's data alone lists what no
     /// source here has, and numbers it as no source may, so a play is told of none of it and
@@ -724,6 +740,22 @@ mod tests {
             cache.hints(id, "3", false, PlayKind::Staged).title,
             "Hoshikuzu (downloaded)"
         );
+    }
+
+    #[test]
+    fn the_whole_table_is_said_as_it_stands_and_only_for_its_own_title() {
+        let id = AnilistId::new(7);
+        let mut cache = TitleCache::default();
+        assert_eq!(cache.table_now(id), None, "no table loaded");
+        cache.observe(&Event::Detail(Box::new(Entry::new(id, "Hoshikuzu no Tabibito"))), None);
+        cache.observe(&Event::Episodes { id, rows: rows(1..=3), failed: None }, None);
+        cache.marked(id, &["2".into()], true, |_| true);
+
+        let table = cache.table_now(id).expect("the title's table");
+        let done: Vec<_> = table.iter().map(|r| (r.number.as_str(), r.completed)).collect();
+        assert_eq!(done, [("1", false), ("2", true), ("3", false)]);
+        assert_eq!(table[0].title.as_deref(), Some("Part 1"), "every row, whole");
+        assert_eq!(cache.table_now(AnilistId::new(8)), None, "another title's is never said");
     }
 
     #[test]

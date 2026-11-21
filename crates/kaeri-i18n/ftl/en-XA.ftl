@@ -406,6 +406,9 @@ notice-audio-now-subbed = [Åüðîö îš ñöŵ šüƀƀéð.~~~~~~]
 # Toast after switching the audio while playing.
 notice-audio-now-dubbed = [Åüðîö îš ñöŵ ðüƀƀéð.~~~~~~]
 
+# Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+player-panel-switch-failed = [Çöüļðñ'ţ šţàŕţ ƒŕöɱ { $source }. Šţîļļ þļàýîñĝ ƒŕöɱ { $current }.~~~~~~~~~~~~~~~]
+
 # Toast when the previous-episode control is used on the first episode.
 notice-already-first-episode = [Åļŕéàðý àţ ţĥé ƒîŕšţ éþîšöðé.~~~~~~~~~]
 

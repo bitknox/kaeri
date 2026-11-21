@@ -182665,6 +182665,18 @@
         }
       }
     },
+    "player-panel-switch-failed" : {
+      "comment" : "Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source. Argument 1: source (Text). Argument 2: current (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't start from %1$@. Still playing from %2$@."
+          }
+        }
+      }
+    },
     "player-picture-and-sound" : {
       "comment" : "Heading and menu item for the picture options.",
       "extractionState" : "manual",

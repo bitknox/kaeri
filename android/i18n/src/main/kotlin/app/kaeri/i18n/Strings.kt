@@ -529,6 +529,10 @@ object Strings {
     fun noticeAudioNowDubbed(context: Context): String =
         context.getString(R.string.notice_audio_now_dubbed)
 
+    /** Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source. */
+    fun playerPanelSwitchFailed(context: Context, source: String, current: String): String =
+        context.getString(R.string.player_panel_switch_failed, source, current)
+
     /** Toast when the previous-episode control is used on the first episode. */
     fun noticeAlreadyFirstEpisode(context: Context): String =
         context.getString(R.string.notice_already_first_episode)

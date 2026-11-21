@@ -274,6 +274,8 @@
     <string name="notice_audio_now_subbed">Audio is now subbed.</string>
     <!-- Toast after switching the audio while playing. -->
     <string name="notice_audio_now_dubbed">Audio is now dubbed.</string>
+    <!-- Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source. -->
+    <string name="player_panel_switch_failed">Couldn\'t start from %1$s. Still playing from %2$s.</string>
     <!-- Toast when the previous-episode control is used on the first episode. -->
     <string name="notice_already_first_episode">Already at the first episode.</string>
     <!-- Toast when the next-episode control is used on the last known episode. -->

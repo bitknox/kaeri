@@ -159,6 +159,7 @@ pub(super) fn settings() -> PlaySettings {
         untracked: false,
         privacy: Default::default(),
         further: Default::default(),
+        switches: Default::default(),
         swarm: Default::default(),
         begin: Default::default(),
         ahead: Default::default(),
@@ -221,6 +222,25 @@ impl Rig {
         settings: PlaySettings,
         commands: mpsc::UnboundedReceiver<PlayerCommand>,
     ) -> Vec<Event> {
+        let (tx, mut rx) = mpsc::unbounded_channel();
+        self.play_heard(streams, context, settings, commands, tx).await;
+        let mut events = Vec::new();
+        while let Ok(event) = rx.try_recv() {
+            events.push(event);
+        }
+        events
+    }
+
+    /// Play `streams` steered by `commands`, saying what the playback says on `tx` as it says
+    /// it, for a test that waits on it.
+    async fn play_heard(
+        &self,
+        streams: Vec<Stream>,
+        context: PlaybackContext,
+        settings: PlaySettings,
+        commands: mpsc::UnboundedReceiver<PlayerCommand>,
+        tx: mpsc::UnboundedSender<Event>,
+    ) {
         let http = HttpClient::offline(&kaeri_core::config::NetworkConfig::default()).unwrap();
         let machine = Machine {
             opener: self.opener.clone(),
@@ -230,7 +250,6 @@ impl Rig {
             offline: Default::default(),
             sources: None,
         };
-        let (tx, mut rx) = mpsc::unbounded_channel();
         let playing = play(
             streams,
             context,
@@ -244,11 +263,6 @@ impl Rig {
         tokio::time::timeout(std::time::Duration::from_secs(30), playing)
             .await
             .expect("the playback ends");
-        let mut events = Vec::new();
-        while let Ok(event) = rx.try_recv() {
-            events.push(event);
-        }
-        events
     }
 }
 
@@ -2130,4 +2144,232 @@ async fn a_torrent_s_stats_say_the_swarm() {
     assert_eq!(rows[at - 1].0, "Buffer");
     // The TV's summary has no swarm line.
     assert!(stats.summary.iter().all(|line| !line.contains("connected")));
+}
+
+/// What the playback said of switches, in order.
+fn switches(events: &[Event]) -> Vec<kaeri_model::playback::SourceSwitch> {
+    events
+        .iter()
+        .filter_map(|event| match event {
+            Event::PlayerSwitch { state, .. } => Some(state.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+/// The release the viewer picks in the Sources panel, from the source `kodama`.
+fn kodama_release() -> kaeri_model::playback::SwitchTo {
+    kaeri_model::playback::SwitchTo {
+        provider_id: "kodama".into(),
+        name: "kodama".into(),
+        release: Some("release-2".into()),
+        stream: None,
+    }
+}
+
+/// The first stream plays from 600 s; the engine then says what `news` has of the release the
+/// viewer picked, and the test waits for the playback to say `heard` of it before the window
+/// reports `after`. The files after the first are `files`, failing at `failing`, counted from
+/// the first. What the playback did and said.
+async fn switched(
+    news: Vec<super::super::switch::SwitchNews>,
+    heard: impl Fn(&kaeri_model::playback::SourceSwitch) -> bool,
+    after: Vec<PlaybackEvent>,
+    files: Vec<Vec<PlaybackEvent>>,
+    failing: &[usize],
+) -> (Rig, Vec<Event>) {
+    let rig = failing_rig([vec![opening(&[])], files].concat(), failing);
+    let (door, inbox) = super::super::switch::SwitchInbox::pair();
+    let settings = PlaySettings { switches: inbox, ..settings() };
+    let (_controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
+    let (tx, mut rx) = mpsc::unbounded_channel();
+    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let playing = rig.play_heard(streams, context("1", None), settings, commands, tx);
+    let driving = async {
+        until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
+        let window = rig.opener.window().expect("a window is open");
+        window.send(at_second(600.0)).unwrap();
+        until_called(&rig, |call| *call == Call::Overlay(Overlay::Playing)).await;
+        for news in news {
+            door.send(news).unwrap();
+        }
+        let mut events = Vec::new();
+        while let Some(event) = rx.recv().await {
+            let done = matches!(&event, Event::PlayerSwitch { state, .. } if heard(state));
+            events.push(event);
+            if done {
+                break;
+            }
+        }
+        for event in after {
+            window.send(event).unwrap();
+        }
+        events
+    };
+    let ((), mut events) = tokio::join!(playing, driving);
+    while let Ok(event) = rx.try_recv() {
+        events.push(event);
+    }
+    (rig, events)
+}
+
+/// A file the new release opens with, replacing the one that played, that ends in an error
+/// before its first frame.
+fn no_frame() -> Vec<PlaybackEvent> {
+    vec![
+        PlaybackEvent::Replaced,
+        PlaybackEvent::Loaded,
+        PlaybackEvent::Ended { complete: false },
+    ]
+}
+
+#[tokio::test]
+async fn a_release_picked_in_the_player_plays_from_the_playhead_in_the_same_playback() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let to = kodama_release();
+    let found = vec![from("kodama", "cdn-b.example", 1080)];
+    let news = vec![SwitchNews::Finding(to.clone()), SwitchNews::Found(to.clone(), found)];
+    let next = [vec![PlaybackEvent::Replaced], taking_over(600.0)].concat();
+    let (rig, events) = switched(
+        news,
+        |s| matches!(s, SourceSwitch::Landed { .. }),
+        Vec::new(),
+        vec![next],
+        &[],
+    )
+    .await;
+
+    // The release opens where the episode was, in the same window and the same playback.
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert_eq!(loads[1].2.as_deref(), Some("600"));
+    assert_eq!(calls.iter().filter(|c| matches!(c, Call::Open { .. })).count(), 1);
+    // Said in order: found, then loading, the picture held, then landed with its first frame.
+    assert_eq!(
+        switches(&events),
+        [
+            SourceSwitch::Finding { to: to.clone() },
+            SourceSwitch::Loading { to: to.clone(), at: 600.0 },
+            SourceSwitch::Landed { to, at: 600.0 },
+        ]
+    );
+    let ended = events.iter().filter(|e| matches!(e, Event::PlaybackEnded { .. })).count();
+    assert_eq!(ended, 1, "the playback ends once, at the end of the episode");
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+    assert!(toasts(&events).is_empty(), "{:?}", toasts(&events));
+}
+
+#[tokio::test]
+async fn a_release_that_shows_no_frame_goes_back_to_what_played_where_it_was() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let to = kodama_release();
+    let found = vec![from("kodama", "cdn-b.example", 1080)];
+    let news = vec![SwitchNews::Finding(to.clone()), SwitchNews::Found(to.clone(), found)];
+    let files = vec![no_frame(), taking_over(600.0)];
+    let (rig, events) =
+        switched(news, |s| matches!(s, SourceSwitch::Failed { .. }), Vec::new(), files, &[1])
+            .await;
+
+    let loads = loads(&rig.opener.calls());
+    assert_eq!(loads.len(), 3, "{loads:?}");
+    assert!(loads[2].1.contains("cdn-a.example"), "back on the first: {loads:?}");
+    assert_eq!(loads[2].2.as_deref(), Some("600"));
+    let said = switches(&events);
+    assert!(!said.iter().any(|s| matches!(s, SourceSwitch::Landed { .. })), "{said:?}");
+    let Some(SourceSwitch::Failed { to: failed, at, text, .. }) = said.last() else {
+        panic!("{said:?}")
+    };
+    assert_eq!((failed, *at), (&to, 600.0));
+    assert_eq!(
+        *text,
+        kaeri_model::Msg::PlayerPanelSwitchFailed {
+            source: "kodama".into(),
+            current: "yamabiko".into()
+        }
+    );
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn another_stream_of_the_release_is_tried_before_going_back() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let to = kodama_release();
+    let found =
+        vec![from("kodama", "cdn-b.example", 1080), from("kodama", "cdn-c.example", 720)];
+    let news = vec![SwitchNews::Finding(to.clone()), SwitchNews::Found(to.clone(), found)];
+    let files = vec![no_frame(), taking_over(600.0)];
+    let (rig, events) =
+        switched(news, |s| matches!(s, SourceSwitch::Landed { .. }), Vec::new(), files, &[1])
+            .await;
+
+    let loads = loads(&rig.opener.calls());
+    assert_eq!(loads.len(), 3, "{loads:?}");
+    assert!(loads[2].1.contains("cdn-c.example"), "{loads:?}");
+    assert_eq!(loads[2].2.as_deref(), Some("600"));
+    let said = switches(&events);
+    assert_eq!(said.last(), Some(&SourceSwitch::Landed { to, at: 600.0 }), "{said:?}");
+    assert!(!said.iter().any(|s| matches!(s, SourceSwitch::Failed { .. })), "{said:?}");
+}
+
+#[tokio::test]
+async fn a_release_that_cannot_be_found_leaves_the_episode_playing() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let to = kodama_release();
+    let why = kaeri_model::Msg::verbatim("kodama has no episode 1.");
+    let news =
+        vec![SwitchNews::Finding(to.clone()), SwitchNews::Failed(to.clone(), why.clone())];
+    let after = vec![at_second(601.0), PlaybackEvent::Ended { complete: true }];
+    let (rig, events) =
+        switched(news, |s| matches!(s, SourceSwitch::Failed { .. }), after, Vec::new(), &[])
+            .await;
+
+    assert_eq!(loads(&rig.opener.calls()).len(), 1, "nothing else loaded");
+    let text = kaeri_model::Msg::PlayerPanelSwitchFailed {
+        source: "kodama".into(),
+        current: "yamabiko".into(),
+    };
+    assert_eq!(
+        switches(&events),
+        [
+            SourceSwitch::Finding { to: to.clone() },
+            SourceSwitch::Failed { to, at: 600.0, text, reason: Some(why) },
+        ]
+    );
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn a_stream_picked_from_the_menu_that_shows_no_frame_goes_back() {
+    use kaeri_model::playback::SourceSwitch;
+
+    let picked = [
+        plays(0.0, 3),
+        vec![PlaybackEvent::Script(ScriptEvent::Choose(kaeri_playback::Choice::Source(
+            "1".into(),
+        )))],
+    ]
+    .concat();
+    let broke = vec![PlaybackEvent::Loaded, PlaybackEvent::Ended { complete: false }];
+    let rig = failing_rig(vec![picked, broke, taking_over(2.0)], &[1]);
+    let streams =
+        vec![from("yamabiko", "cdn-a.example", 1080), from("kodama", "cdn-b.example", 720)];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+
+    let hosts: Vec<String> = loads(&rig.opener.calls()).into_iter().map(|l| l.1).collect();
+    assert_eq!(hosts.len(), 3, "{hosts:?}");
+    assert!(hosts[2].contains("cdn-a.example"), "back on the first: {hosts:?}");
+    let said = switches(&events);
+    assert!(matches!(said.first(), Some(SourceSwitch::Loading { .. })), "{said:?}");
+    assert!(matches!(said.last(), Some(SourceSwitch::Failed { .. })), "{said:?}");
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
 }

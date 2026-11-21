@@ -893,6 +893,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::Resumed { .. } => "Resumed",
         Event::PlayerOps { .. } => "PlayerOps",
         Event::PlayerUi { .. } => "PlayerUi",
+        Event::PlayerSwitch { .. } => "PlayerSwitch",
         Event::PlayerTimeline { .. } => "PlayerTimeline",
         Event::PlayerBuffered { .. } => "PlayerBuffered",
         Event::PlayerStats { .. } => "PlayerStats",
@@ -1176,6 +1177,9 @@ fn copy(update: &Event) -> Event {
         }
         Event::PlayerUi { playback, ui } => {
             Event::PlayerUi { playback: *playback, ui: ui.clone() }
+        }
+        Event::PlayerSwitch { playback, state } => {
+            Event::PlayerSwitch { playback: *playback, state: state.clone() }
         }
         Event::PlayerTimeline { playback, marks } => {
             Event::PlayerTimeline { playback: *playback, marks: marks.clone() }

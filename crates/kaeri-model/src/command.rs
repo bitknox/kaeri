@@ -644,6 +644,21 @@ pub enum Command {
         provider_id: String,
         source_id: String,
     },
+    /// Play another release of the episode playing, picked in the player's Sources panel from
+    /// [`Event::Sources`](crate::event::Event::Sources), from where its playhead is when the
+    /// release is found. The episode plays on while it is found, stays one playback, and says
+    /// how the switch goes on [`Event::PlayerSwitch`](crate::event::Event::PlayerSwitch): a
+    /// release that cannot start leaves it playing.
+    ///
+    /// For this episode only: the title's pinned source and release stay as they are, and the
+    /// next episode is found as it would have been. With no playback of `episode` of `id` under
+    /// way, it plays as [`Command::PlaySource`] does.
+    SwitchSource {
+        id: AnilistId,
+        episode: String,
+        provider_id: String,
+        source_id: String,
+    },
     /// Something for the live mpv session.
     Player(PlayerCommand),
     /// What the player a front end hosts says of `playback`: see [`crate::hosted`]. Taken in

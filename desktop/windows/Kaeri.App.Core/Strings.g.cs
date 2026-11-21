@@ -405,6 +405,9 @@ public static partial class T
     /// <summary>Toast after switching the audio while playing.</summary>
     public static string NoticeAudioNowDubbed => Get("NoticeAudioNowDubbed");
 
+    /// <summary>Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.</summary>
+    public static string PlayerPanelSwitchFailed(string source, string current) => Fill(Get("PlayerPanelSwitchFailed"), ("source", source), ("current", current));
+
     /// <summary>Toast when the previous-episode control is used on the first episode.</summary>
     public static string NoticeAlreadyFirstEpisode => Get("NoticeAlreadyFirstEpisode");
 
@@ -12561,6 +12564,7 @@ public static partial class T
         ["NoticeFillerSkipped"] = "Skipped filler. Up next is episode {episode}.",
         ["NoticeAudioNowSubbed"] = "Audio is now subbed.",
         ["NoticeAudioNowDubbed"] = "Audio is now dubbed.",
+        ["PlayerPanelSwitchFailed"] = "Couldn't start from {source}. Still playing from {current}.",
         ["NoticeAlreadyFirstEpisode"] = "Already at the first episode.",
         ["NoticeLastEpisode"] = "There's no next episode. Episode {episode} is the last.",
         ["NoticeNoNextEpisode"] = "There's no next episode.",

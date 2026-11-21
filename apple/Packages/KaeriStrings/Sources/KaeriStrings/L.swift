@@ -525,6 +525,11 @@ public enum L {
     /// Toast after switching the audio while playing.
     public static var noticeAudioNowDubbed: String { string("notice-audio-now-dubbed", fallback: "Audio is now dubbed.") }
 
+    /// Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+    public static func playerPanelSwitchFailed(source: String, current: String) -> String {
+        Self.format("player-panel-switch-failed", fallback: "Couldn't start from %1$@. Still playing from %2$@.", source, current)
+    }
+
     /// Toast when the previous-episode control is used on the first episode.
     public static var noticeAlreadyFirstEpisode: String { string("notice-already-first-episode", fallback: "Already at the first episode.") }
 

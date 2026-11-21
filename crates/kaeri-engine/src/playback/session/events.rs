@@ -11,6 +11,7 @@ use kaeri_model::{
     event::Event,
     hosted::TrackKind as TrackChoice,
     notice::{Notice, NoticeHint},
+    playback::SourceSwitch,
     starting::StartStep,
 };
 use kaeri_playback::{
@@ -35,6 +36,7 @@ use crate::playback::{
     seat::{SeatCue, SeatReport},
     shaders::{self, Look},
     slot::Player,
+    switch::SwitchNews,
 };
 
 /// How long mpv may go without reporting a position before we say something.
@@ -130,6 +132,9 @@ impl Run<'_> {
         // The starting screen's Skip, heard until the first frame: with another stream to go to,
         // in the pool or from the sources beyond it, the file is let go for it.
         let mut skipping = self.skipping.take();
+        // What the engine says of a release it finds for this playback: heard while the file
+        // plays, which plays on until the release is found.
+        let mut news = self.news.take();
         // The picture: what the file is, and what the GPU is saying about the chain.
         let mut source: Option<shaders::Source> = None;
         let mut video_params = serde_json::Value::Null;
@@ -237,6 +242,36 @@ impl Run<'_> {
                             break FileOutcome::Skipped;
                         }
                         Ok(()) => tracing::info!("a skip with no other stream to go to"),
+                    }
+                    continue;
+                }
+                heard = async { news.as_mut().expect("guarded").recv().await }, if news.is_some() => {
+                    match heard {
+                        // The engine let go of this playback's door: no switch is coming.
+                        None => news = None,
+                        Some(SwitchNews::Finding(to)) => {
+                            self.say_switch(SourceSwitch::Finding { to: to.clone() });
+                            self.finding = Some(to);
+                        }
+                        // Only the release asked for last: one asked past is let go.
+                        Some(SwitchNews::Found(to, found)) if self.finding.as_ref() == Some(&to) => {
+                            self.finding = None;
+                            if !found.is_empty() {
+                                let at = ever_played.then(|| tracker.position());
+                                break FileOutcome::Swap { to, streams: found, at };
+                            }
+                        }
+                        Some(SwitchNews::Failed(to, reason)) if self.finding.as_ref() == Some(&to) => {
+                            self.finding = None;
+                            tracing::info!(provider = %to.provider_id, "a switch found nothing; playing on");
+                            let text = Msg::PlayerPanelSwitchFailed {
+                                source: to.name.clone(),
+                                current: self.source_name(stream),
+                            };
+                            let at = tracker.position();
+                            self.say_switch(SourceSwitch::Failed { to, at, text, reason: Some(reason) });
+                        }
+                        Some(_) => {}
                     }
                     continue;
                 }
@@ -732,6 +767,17 @@ impl Run<'_> {
                     }
                     if !ever_played {
                         ever_played = true;
+                        // A switch lands with this frame, or one that failed is back on what
+                        // played before.
+                        if let Some(switching) = self.switching.take() {
+                            self.say_switch(SourceSwitch::Landed {
+                                to: switching.to,
+                                at: switching.at,
+                            });
+                        }
+                        if let Some(failed) = self.restoring.take() {
+                            self.say_switch(failed);
+                        }
                         // A skip from here on is not this file's: the screen offers none.
                         if let Some(skipping) = skipping.as_mut() {
                             skipping.mark_unchanged();
@@ -922,6 +968,7 @@ impl Run<'_> {
         self.still_fetch = still_fetch;
         self.seat = seat;
         self.skipping = skipping;
+        self.news = news;
         // Cleared before anything else, so quitting never leaves a stale "watching" up.
         rpc.finish().await;
         if let Some(report) = report.filter(|_| !settings.privacy.holds()) {
