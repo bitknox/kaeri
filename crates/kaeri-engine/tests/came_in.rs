@@ -223,17 +223,21 @@ async fn a_folder_of_books_kaeri_cannot_open_says_so_by_format() {
 }
 
 /// A folder the platform opens, as a picked Android folder: a folder on disk named by
-/// references under a scheme of its own, which `refused` can close.
+/// references under a scheme of its own, which `refused` can close, or `closed` one reference
+/// in it.
 struct PickedFolder {
     root: std::path::PathBuf,
     refused: std::sync::atomic::AtomicBool,
+    closed: std::sync::Mutex<Vec<String>>,
 }
 
 const PICKED: &str = "picked-books://shelf";
 
 impl PickedFolder {
     fn path_of(&self, reference: &str) -> std::io::Result<std::path::PathBuf> {
-        if self.refused.load(Ordering::Relaxed) {
+        if self.refused.load(Ordering::Relaxed)
+            || self.closed.lock().unwrap().iter().any(|c| c == reference)
+        {
             return Err(std::io::ErrorKind::PermissionDenied.into());
         }
         let rest = reference.strip_prefix(PICKED).ok_or(std::io::ErrorKind::NotFound)?;
@@ -311,7 +315,11 @@ async fn a_folder_the_platform_opens_is_scanned_and_its_books_read_through_it() 
     let shelf = dir.path().join("Shelf");
     cbz(&shelf.join("Paper Lantern/Paper Lantern ch001.cbz"), 3);
     cbz(&shelf.join("Paper Lantern/Paper Lantern ch002.cbz"), 2);
-    let tree = Arc::new(PickedFolder { root: shelf, refused: false.into() });
+    let tree = Arc::new(PickedFolder {
+        root: shelf,
+        refused: false.into(),
+        closed: Default::default(),
+    });
     sources.open_folders_through(Some(tree.clone()));
 
     let came = came_in(&mut run(&sources, picked(), 1_000)).await;
@@ -332,6 +340,44 @@ async fn a_folder_the_platform_opens_is_scanned_and_its_books_read_through_it() 
     let came = came_in(&mut run(&sources, picked(), 2_000)).await;
     assert!(matches!(&came, CameIn::Empty(NothingCameIn::FolderUnreadable { .. })), "{came:?}");
     assert_eq!(folder_scan(&sources), kaeri_model::book_sources::BookFolderScan::Missing);
+    sources.open_folders_through(None);
+}
+
+#[tokio::test]
+async fn a_series_folder_that_cannot_be_read_keeps_its_series() {
+    let dir = tempfile::tempdir().unwrap();
+    let sources = sources(dir.path());
+    let shelf = dir.path().join("Shelf");
+    cbz(&shelf.join("Paper Lantern/Paper Lantern ch001.cbz"), 2);
+    cbz(&shelf.join("Moon Harbour/Moon Harbour ch001.cbz"), 2);
+    cbz(&shelf.join("Moon Harbour/Moon Harbour ch002.cbz"), 2);
+    let tree = Arc::new(PickedFolder {
+        root: shelf.clone(),
+        refused: false.into(),
+        closed: Default::default(),
+    });
+    sources.open_folders_through(Some(tree.clone()));
+    let series = || sources.view(&BookPlugins::default(), |_| None).folders[0].series;
+
+    let came = came_in(&mut run(&sources, picked(), 1_000)).await;
+    let CameIn::Folder(report) = came else { panic!("{came:?}") };
+    assert_eq!((report.series, report.books), (2, 3));
+    assert_eq!(series(), 2);
+
+    // The next scan reads the shelf but not one series' folder, as a share that drops
+    // partway through: that series stays.
+    tree.closed.lock().unwrap().push(format!("{PICKED}/Moon Harbour"));
+    let came = came_in(&mut run(&sources, picked(), 2_000)).await;
+    assert!(matches!(&came, CameIn::Folder(_)), "{came:?}");
+    assert_eq!(series(), 2, "a series went with the folder that could not be read");
+    assert_eq!(folder_scan(&sources), kaeri_model::book_sources::BookFolderScan::Done);
+
+    // Once the whole shelf reads again, a series that is really gone goes.
+    tree.closed.lock().unwrap().clear();
+    std::fs::remove_dir_all(shelf.join("Moon Harbour")).unwrap();
+    let came = came_in(&mut run(&sources, picked(), 3_000)).await;
+    assert!(matches!(&came, CameIn::Folder(_)), "{came:?}");
+    assert_eq!(series(), 1);
     sources.open_folders_through(None);
 }
 
