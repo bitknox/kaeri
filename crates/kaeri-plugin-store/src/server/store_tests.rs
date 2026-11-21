@@ -1088,7 +1088,9 @@ impl Database for FailsAfterClaim {
         let sql = sql.trim_start();
         let claim = sql.starts_with("UPDATE invites SET used_at")
             || sql.starts_with("UPDATE admin_links SET used_at = ?1");
-        if claim && self.claims.fetch_update(SeqCst, SeqCst, |n| n.checked_sub(1)).is_ok() {
+        let left = self.claims.load(SeqCst);
+        if claim && left > 0 {
+            self.claims.store(left - 1, SeqCst);
             self.armed.store(true, SeqCst);
         }
         self.db.query(sql, params).await
