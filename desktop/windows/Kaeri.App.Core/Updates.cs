@@ -149,6 +149,26 @@ public static class Updates
 
     static UpdateState Failed(string version, string reason) => new(UpdateStep.Failed, version, Reason: reason);
 
+    /// <summary>Removes what earlier updates left in <paramref name="dir"/>, apart from <paramref name="keep"/>.</summary>
+    public static void Tidy(string dir, string? keep)
+    {
+        try
+        {
+            if (!Directory.Exists(dir))
+                return;
+            foreach (var file in Directory.EnumerateFiles(dir))
+                if (keep is null || !System.IO.Path.GetFileName(file).StartsWith(keep, StringComparison.Ordinal))
+                    File.Delete(file);
+        }
+        catch (IOException)
+        {
+            // Left for the next update to clear.
+        }
+        catch (UnauthorizedAccessException)
+        {
+        }
+    }
+
     /// <summary>
     /// Inno Setup's switches for an update nobody watches: no pages, no message boxes, no restart
     /// of Windows, the running app closed, and a log beside the download.

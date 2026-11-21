@@ -93,7 +93,7 @@ sealed class Updater
             end = await Rehearse(r.Version, asset, mine.Token);
         else
         {
-            Tidy(asset.Name);
+            Updates.Tidy(dir, asset.Name);
             end = await Task.Run(() => Updates.Fetch(http, asset, r.Version, dir,
                 step => ui.TryEnqueue(() => { if (cancel == mine) Set(step); }), mine.Token));
         }
@@ -172,7 +172,7 @@ sealed class Updater
         {
             var installed = !Updates.Older(Current, version);
             if (installed)
-                Tidy(null);
+                Updates.Tidy(dir, null);
             return (installed, version);
         }
         catch (Exception e)
@@ -186,26 +186,6 @@ sealed class Updater
     {
         State = state;
         Changed?.Invoke();
-    }
-
-    /// <summary>Removes what earlier updates left, apart from <paramref name="keep"/>.</summary>
-    void Tidy(string? keep)
-    {
-        try
-        {
-            if (!Directory.Exists(dir))
-                return;
-            foreach (var file in Directory.EnumerateFiles(dir))
-                if (keep is null || !Path.GetFileName(file).StartsWith(keep, StringComparison.Ordinal))
-                    File.Delete(file);
-        }
-        catch (IOException)
-        {
-            // Left for the next update to clear.
-        }
-        catch (UnauthorizedAccessException)
-        {
-        }
     }
 
     /// <summary>A fixture run's download: the steps at a believable pace, and nothing fetched.</summary>
