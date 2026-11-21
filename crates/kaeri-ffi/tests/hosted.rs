@@ -1536,3 +1536,43 @@ fn a_release_picked_by_hand_plays_its_servers_as_it_lists_them() {
     app.stop();
     app.shutdown();
 }
+
+/// A download of the finished fixture title's `episode`, played from disk as Downloads plays
+/// it, with the file at `path`.
+fn play_download(app: &App, episode: &str, path: &str) {
+    app.engine.send(Command::PlayLocal {
+        id: FINISHED,
+        episode: episode.into(),
+        title: "Stardust Wayfarer".into(),
+        path: path.into(),
+    });
+}
+
+#[test]
+fn a_download_played_while_private_is_held_in_memory_as_any_private_play() {
+    let mut app = App::fixtures("[playback]\nauto_next = false\n");
+    app.engine.send(Command::SetPrivate { on: true });
+    let path = app.root.path().join("Stardust Wayfarer 12.mp4").display().to_string();
+
+    play_download(&app, "12", &path);
+    let load = app.load();
+    assert_eq!(load.url, path);
+    // The window, and the system's media controls that read it, name no show.
+    let title = load.option("force-media-title").unwrap_or_default().to_owned();
+    assert!(!title.is_empty() && !title.contains("Stardust Wayfarer"), "{title}");
+    app.opened(load.playback, &[]);
+    app.tick(load.playback, 0, 60);
+    app.stop();
+    assert_eq!(app.history("12"), Vec::<f64>::new(), "nothing written while private");
+
+    // Played again, it opens where the private play left it, from memory.
+    play_download(&app, "12", &path);
+    let load = app.load();
+    assert_eq!(load.option("start"), Some("60"));
+    app.opened(load.playback, &[]);
+    app.tick(load.playback, 60, 119);
+    app.report(load.playback, PlayerReport::Ended { reason: PlayerEnd::Eof });
+    assert!(matches!(app.ended(), Ending::Complete { .. }));
+    assert_eq!(app.history("12"), Vec::<f64>::new(), "nor once it played to the end");
+    app.shutdown();
+}

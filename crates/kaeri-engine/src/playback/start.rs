@@ -514,7 +514,10 @@ pub fn play_local(
     }
     let shaders = write_shaders(config, paths);
     let party = services.party.clone();
-    let find = services.skip_find.runs(config);
+    // Private as any play is: what it would record of the show is held while the show is, and
+    // nothing is listened for to find skip times.
+    let privacy = services.privacy.gate(id);
+    let find = !services.privacy.holds_show(id) && services.skip_find.runs(config);
     let (config, store, http, machine, tx) = (
         config.clone(),
         store.clone(),
@@ -526,11 +529,7 @@ pub fn play_local(
         let _job = job;
         let playback = config.playback.clone();
         let stream = kaeri_core::stream::Stream::new(path, kaeri_core::stream::StreamKind::Mp4);
-        // Best-effort, exactly as the streaming path treats them.
-        let resume_at = store
-            .resume_position(id, &episode)
-            .inspect_err(|e| tracing::warn!(error = %e, "could not read resume position"))
-            .unwrap_or(None);
+        // Best-effort, exactly as the streaming path treats it.
         let mal_id = store.mapping_for(id).ok().flatten().and_then(|m| m.mal_id);
         let context = playback::PlaybackContext {
             anilist_id: id,
@@ -538,7 +537,8 @@ pub fn play_local(
             episode,
             title,
             translation: playback.translation,
-            resume_at,
+            // Where it was staged from: a place a private play kept in memory comes first.
+            resume_at: resume,
             // A local file's real length is knowable, but the hint only serves
             // the aniskip fallback and a lie would filter its answers.
             runtime_secs: None,
@@ -551,6 +551,7 @@ pub fn play_local(
             episode_total,
         };
         let settings = playback::PlaySettings {
+            privacy,
             shader_dir: shaders.await.ok().flatten(),
             find_skip_times: find,
             ..play_settings(&config, tracker_ids, party)
