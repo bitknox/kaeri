@@ -27,10 +27,18 @@ struct EpisodeSynopsisTests {
 
     // MARK: Sizes
 
-    @Test func theMacSetsTextBesideTheStillFromFiveSixtyPoints() {
+    @Test func theMacSetsTextBesideTheStillDownToFiveHundredPoints() {
         #expect(EpisodeMetrics.mac(listWidth: 560) == .macWide)
-        #expect(EpisodeMetrics.mac(listWidth: 559) == .macNarrow)
+        #expect(EpisodeMetrics.mac(listWidth: 559) == .macMiddle)
+        #expect(EpisodeMetrics.mac(listWidth: 553) == .macMiddle)
+        #expect(EpisodeMetrics.mac(listWidth: 500) == .macMiddle)
+        #expect(EpisodeMetrics.mac(listWidth: 499) == .macNarrow)
+        #expect(EpisodeMetrics.mac(listWidth: 450) == .macNarrow)
+        #expect(EpisodeMetrics.macWide.text == .beside)
+        #expect(EpisodeMetrics.macMiddle.text == .beside)
+        #expect(EpisodeMetrics.macNarrow.text == .under)
         #expect(EpisodeMetrics.macWide.still == CGSize(width: 178, height: 100))
+        #expect(EpisodeMetrics.macMiddle.still == CGSize(width: 144, height: 81))
         #expect(EpisodeMetrics.macNarrow.still == CGSize(width: 144, height: 81))
         #expect(EpisodeMetrics.pad.still == CGSize(width: 192, height: 108))
         #expect(EpisodeMetrics.phone.still == CGSize(width: 144, height: 81))
@@ -41,8 +49,8 @@ struct EpisodeSynopsisTests {
         #expect(phone.height(room: true, protected: false) == 182)
         #expect(phone.height(room: true, protected: true) == 114, "protected rows are short")
         #expect(phone.height(room: false, protected: false) == 114, "no text coming")
-        #expect(EpisodeMetrics.macNarrow.height(room: true, protected: false) == 164)
-        #expect(EpisodeMetrics.macNarrow.height(room: false, protected: false) == 100)
+        #expect(EpisodeMetrics.macNarrow.height(room: true, protected: false) == 161)
+        #expect(EpisodeMetrics.macNarrow.height(room: false, protected: false) == 101)
     }
 
     @Test func aPhoneRowEndsInARuleSixteenPointsUnderItsText() {
@@ -53,12 +61,37 @@ struct EpisodeSynopsisTests {
         #expect(phone.tall == phone.pad + phone.still.height + 8 + 3 * 20 + phone.pad + EpisodeMetrics.rule)
         // A short row is the still between the same room and the rule.
         #expect(phone.short == phone.pad + phone.still.height + phone.pad + EpisodeMetrics.rule)
-        // The Mac and the iPad keep their rows: no rule, 8 over a narrow Mac's still.
-        for metrics in [EpisodeMetrics.macWide, .macNarrow, .pad] {
+        // The Mac and the iPad have no rule.
+        for metrics in [EpisodeMetrics.macWide, .macMiddle, .macNarrow, .pad] {
             #expect(!metrics.ruled)
-            #expect(metrics.pad == 8)
         }
-        #expect(EpisodeMetrics.macNarrow.tall == 164)
+    }
+
+    @Test func aNarrowMacRowKeepsTheWideRowsRoomOverAndUnderItsStill() {
+        let narrow = EpisodeMetrics.macNarrow
+        let wide = EpisodeMetrics.macWide
+        #expect(narrow.pad == wide.besideRoom)
+        #expect(wide.besideRoom == 10)
+        // 10 over the still, the still, 10 under it.
+        #expect(narrow.short == narrow.pad + narrow.still.height + narrow.pad)
+        // 10, the still, 8, three lines of 13 on 18 (16 each and 2 between), 10.
+        let lines: CGFloat = 3 * 16 + 2 * 2
+        #expect(narrow.tall == narrow.pad + narrow.still.height + 8 + lines + narrow.pad)
+    }
+
+    @Test func theMiddleMacRowIsItsStillWithTheWideRowsRoom() {
+        let middle = EpisodeMetrics.macMiddle
+        #expect(middle.besideRoom == EpisodeMetrics.macWide.besideRoom)
+        #expect(middle.short == middle.still.height + 2 * middle.besideRoom)
+        #expect(middle.tall == middle.short)
+        // The text column beside the smaller still from the switch: the list less its padding,
+        // the number, the still, the check and three gaps of 14.
+        let fixed: CGFloat = 2 * 8 + 22 + 14 + 3 * 14
+        let column: CGFloat = EpisodeMetrics.besideFrom - middle.still.width - fixed
+        #expect(column >= 260)
+        // A title and facts on a line each and two lines of synopsis fit beside the still.
+        let words: CGFloat = 17 + 2 + 15 + 8 + 34
+        #expect(words <= middle.still.height)
     }
 
     @Test func aPhoneRowKeepsItsRoomOnlyWhileItsTextMayStillCome() {
@@ -76,15 +109,52 @@ struct EpisodeSynopsisTests {
         #expect(phone.least(room: true, protected: true, pending: true) == 114)
         #expect(!phone.holdsText(room: true, protected: true, pending: false, text: "A storm."))
         #expect(!phone.holdsText(room: false, protected: false, pending: true, text: nil))
-        // The Mac and the iPad keep the room their kind sets, text or not.
-        for metrics in [EpisodeMetrics.macWide, .macNarrow, .pad] {
+        // The widest Mac row and the iPad keep the room their kind sets, text or not.
+        for metrics in [EpisodeMetrics.macWide, .pad] {
+            #expect(!metrics.fits)
             #expect(metrics.least(room: true, protected: false, pending: false) == metrics.tall)
             #expect(metrics.holdsText(room: true, protected: false, pending: false, text: nil))
+            #expect(!metrics.reservesText(room: true, protected: false, pending: true))
         }
     }
 
+    @Test func aNarrowMacRowFitsItsTextOnceItsDetailsAreKnown() {
+        let narrow = EpisodeMetrics.macNarrow
+        #expect(narrow.fits)
+        // Loading: three lines' room, so nothing moves while the details come.
+        #expect(narrow.least(room: true, protected: false, pending: true) == 161)
+        #expect(narrow.holdsText(room: true, protected: false, pending: true, text: nil))
+        // Known with no synopsis: the still alone, no band under it.
+        #expect(narrow.least(room: true, protected: false, pending: false) == 101)
+        #expect(!narrow.holdsText(room: true, protected: false, pending: false, text: nil))
+        #expect(!narrow.holdsText(room: true, protected: false, pending: false, text: ""))
+        // Known with a short synopsis: from the short row, as tall as its own lines.
+        #expect(narrow.holdsText(room: true, protected: false, pending: false, text: "A storm."))
+        // Protected rows stay short and hold none.
+        #expect(narrow.least(room: true, protected: true, pending: true) == 101)
+        #expect(!narrow.holdsText(room: true, protected: true, pending: false, text: "A storm."))
+    }
+
+    @Test func aMiddleMacRowKeepsItsLinesOpenOnlyWhileTheyMayCome() {
+        let middle = EpisodeMetrics.macMiddle
+        #expect(middle.fits)
+        // The still is the floor, pending or not.
+        #expect(middle.least(room: true, protected: false, pending: true) == 101)
+        #expect(middle.least(room: true, protected: false, pending: false) == 101)
+        // Loading: the synopsis's two lines stay open beside the still.
+        #expect(middle.reservesText(room: true, protected: false, pending: true))
+        #expect(middle.holdsText(room: true, protected: false, pending: true, text: nil))
+        // Known: the row holds only the text it has.
+        #expect(!middle.reservesText(room: true, protected: false, pending: false))
+        #expect(!middle.holdsText(room: true, protected: false, pending: false, text: nil))
+        #expect(middle.holdsText(room: true, protected: false, pending: false, text: "A storm."))
+        // Protected rows and tables with no text coming keep nothing open.
+        #expect(!middle.reservesText(room: true, protected: true, pending: true))
+        #expect(!middle.reservesText(room: false, protected: false, pending: true))
+    }
+
     @Test func whereTextSitsBesideTheStillTheRowDoesNotChangeHeight() {
-        for metrics in [EpisodeMetrics.macWide, .pad] {
+        for metrics in [EpisodeMetrics.macWide, .macMiddle, .pad] {
             let heights = Set([true, false].flatMap { room in
                 [true, false].map { metrics.height(room: room, protected: $0) }
             })
