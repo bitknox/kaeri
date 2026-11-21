@@ -33,7 +33,7 @@ public sealed partial class PlayerView : UserControl
     FfiPlayer? player;
     readonly DispatcherQueueTimer tick;
     readonly DispatcherQueueTimer idle;
-    nint bound;
+    readonly SwapchainFit fit = new();
     bool paused, fromPlayer, overBar, keepControls;
     double position, duration, volume = 100;
     Coming? upNext;
@@ -84,6 +84,7 @@ public sealed partial class PlayerView : UserControl
     public PlayerView()
     {
         InitializeComponent();
+        VideoPanel.CompositionScaleChanged += OnPanelScaleChanged;
         TitleArea.SizeChanged += (_, _) => FitEpisodeLine();
         Timeline.Spoken = () => T.PlayerPositionSpoken(SpokenClock(position), SpokenClock(duration));
         VolumeSlider.Spoken = () => T.PlayerVolumeSpoken((long)Math.Round(VolumeSlider.Value));
@@ -1341,16 +1342,13 @@ public sealed partial class PlayerView : UserControl
         swapchainAsk ??= new SwapchainAsk(DispatcherQueue);
         swapchainAsk.Ask(asked, swapchain =>
         {
-            // The answer for a player since closed or replaced is not this one's.
-            if (player != asked || swapchain == bound)
+            // The answer for a player since closed or replaced is not this one's. A swapchain
+            // already bound gets its matrix again when the panel's scale has changed.
+            if (player != asked)
                 return;
             try
             {
-                Dxgi.SetSwapChain(VideoPanel, swapchain);
-                var scale = VideoPanel.CompositionScaleX;
-                if (Math.Abs(scale - 1) > 0.001)
-                    Dxgi.SetInverseScale(swapchain, VideoPanel.CompositionScaleX, VideoPanel.CompositionScaleY);
-                bound = swapchain;
+                Dxgi.Fit(VideoPanel, swapchain, fit);
             }
             catch (COMException e)
             {
@@ -1369,12 +1367,21 @@ public sealed partial class PlayerView : UserControl
     /// rebuild its swapchain and draw again. The first size goes at once, then at most one
     /// every 50 ms, and the last always; between them the panel stretches the last frame.
     /// </summary>
-    void OnPanelSizeChanged(object sender, SizeChangedEventArgs e)
+    void OnPanelSizeChanged(object sender, SizeChangedEventArgs e) => AskPanelSize(e.NewSize.Width, e.NewSize.Height);
+
+    /// <summary>
+    /// The panel's scale changed: the window went to another display, or the display's scale
+    /// changed. mpv is sent the panel's size at the new scale, and the next poll sets the
+    /// swapchain's matrix to match (<see cref="Dxgi.Fit"/>).
+    /// </summary>
+    void OnPanelScaleChanged(SwapChainPanel sender, object args) => AskPanelSize(VideoPanel.ActualWidth, VideoPanel.ActualHeight);
+
+    void AskPanelSize(double width, double height)
     {
-        if (player is null || e.NewSize.Width < 1 || e.NewSize.Height < 1)
+        if (player is null || width < 1 || height < 1)
             return;
         var scale = XamlRoot?.RasterizationScale ?? 1.0;
-        panelAsked = ((uint)Math.Max(1, Math.Round(e.NewSize.Width * scale)), (uint)Math.Max(1, Math.Round(e.NewSize.Height * scale)), scale);
+        panelAsked = ((uint)Math.Max(1, Math.Round(width * scale)), (uint)Math.Max(1, Math.Round(height * scale)), scale);
         if (panelPace is null)
         {
             panelPace = DispatcherQueue.CreateTimer();
