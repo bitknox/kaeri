@@ -55,6 +55,10 @@ impl ProxyState {
 /// What [`ProviderError::Unavailable`] says while the torrent sources wait for the proxy check.
 pub const CHECK_PENDING: &str = "The proxy check failed";
 
+/// Why a `socks5h://` proxy cannot carry torrents: the session asks for `socks5://`, which
+/// leaves tracker names to be looked up on this device rather than by the proxy.
+const SOCKS5H_REFUSED: &str = "torrents need a socks5:// proxy; socks5h:// is not supported";
+
 /// Where torrent traffic goes, shared with the torrent session and the interface: directly, or
 /// through the proxy, with the check's latest answer.
 #[derive(Clone)]
@@ -81,6 +85,11 @@ impl TorrentRoute {
         let url = proxy.filter(|url| !url.trim().is_empty());
         if let Some(url) = &url {
             target(url)?;
+            // The torrent session takes `socks5://` only and refuses `socks5h://` once it
+            // starts, after the check here has passed. Said now, without the URL.
+            if url.trim().starts_with("socks5h://") {
+                return Err(SOCKS5H_REFUSED.into());
+            }
         }
         let state = if url.is_some() { ProxyState::Unchecked } else { ProxyState::Direct };
         Ok(Self { url, state: Arc::new(RwLock::new(state)), fixed: false })
@@ -320,6 +329,17 @@ mod tests {
             }
             other => panic!("{other:?}"),
         }
+    }
+
+    #[test]
+    fn a_socks5h_proxy_is_refused_before_any_check_passes() {
+        // The torrent session takes socks5:// only: a socks5h:// route passed the check and
+        // then never started.
+        let err = TorrentRoute::new(Some("socks5h://mika:lantern@127.0.0.1:1080".into()))
+            .unwrap_err();
+        assert!(err.contains("socks5h") && !err.contains("lantern"), "{err}");
+        assert!(TorrentRoute::fixed(Some("socks5h://127.0.0.1:1080".into())).is_err());
+        assert!(TorrentRoute::new(Some("socks5://mika:lantern@127.0.0.1:1080".into())).is_ok());
     }
 
     #[test]

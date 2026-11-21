@@ -439,6 +439,25 @@ async fn add_within<T, E: std::fmt::Display>(
     }
 }
 
+/// `text` without the proxy's URL or the password in it. librqbit names the URL in some of its
+/// errors, and the reason a session did not start reaches the log and the screen.
+fn without_proxy(text: &str, url: Option<&str>) -> String {
+    let Some(url) = url.map(str::trim).filter(|url| !url.is_empty()) else {
+        return text.to_owned();
+    };
+    let mut text = text.replace(url, "[proxy]");
+    let password = url
+        .split_once("://")
+        .and_then(|(_, rest)| rest.rsplit_once('@'))
+        .and_then(|(credentials, _)| credentials.split_once(':'))
+        .map(|(_, password)| password)
+        .filter(|password| !password.is_empty());
+    if let Some(password) = password {
+        text = text.replace(password, "[removed]");
+    }
+    text
+}
+
 /// Stream servers kept at once: the episode playing and the next one, fetched ahead.
 const KEPT_SERVERS: usize = 2;
 
@@ -518,9 +537,11 @@ impl TorrentSession {
             ProviderError::Other(format!("cannot create download directory: {e}"))
         })?;
 
-        let session = Session::new_with_opts(download_dir.clone(), options)
-            .await
-            .map_err(|e| ProviderError::Other(format!("starting torrent session: {e}")))?;
+        let session =
+            Session::new_with_opts(download_dir.clone(), options).await.map_err(|e| {
+                let reason = without_proxy(&format!("{e:#}"), route.proxy_url());
+                ProviderError::Other(format!("starting torrent session: {reason}"))
+            })?;
 
         Ok(Self {
             session,
@@ -1333,6 +1354,25 @@ mod tests {
                 .await;
 
         assert!(matches!(result, Err(ProviderError::Unavailable(_))));
+    }
+
+    #[tokio::test]
+    async fn a_session_that_will_not_start_never_repeats_the_proxy_password() {
+        // Kaeri's own check reads this URL; librqbit's parser refuses it, naming the URL.
+        let route = TorrentRoute::fixed(Some("socks5://mika:lantern@[::1:1".into())).unwrap();
+        route.verify().await;
+
+        let scratch = tempfile::tempdir().unwrap();
+        let dir = scratch.path().to_path_buf();
+        let Err(error) =
+            TorrentSession::start(route, dir.join("dl"), dir.join("dht.json"), "tok".into())
+                .await
+        else {
+            panic!("librqbit took a proxy URL it cannot parse");
+        };
+        let reason = error.to_string();
+        assert!(reason.contains("starting torrent session"), "{reason}");
+        assert!(!reason.contains("lantern"), "{reason}");
     }
 
     #[tokio::test]
