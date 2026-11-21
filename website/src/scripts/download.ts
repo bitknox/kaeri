@@ -93,7 +93,7 @@ function openNext(link: HTMLElement) {
 	}
 	panel.classList.add('open');
 	panel.inert = false;
-	const heading = panel.querySelector<HTMLElement>('h4');
+	const heading = panel.querySelector<HTMLElement>('.dl-next-title');
 	// Focus once the panel has room, so the page does not jump to a closed one.
 	window.setTimeout(() => heading?.focus({ preventScroll: false }), 30);
 }

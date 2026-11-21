@@ -36,6 +36,7 @@ Run these from `website/`:
 | `bun run build`                  | Builds the site into `./dist/`               |
 | `bun run preview`                | Serves the production build locally          |
 | `bun run test`                   | Runs the unit tests under `src/`             |
+| `bun run test:built`             | Checks the built pages after a build         |
 | `bun run build:pseudo`           | Builds a pseudo-locale copy to check strings |
 
 The copy follows [docs/writing.md](../docs/writing.md).

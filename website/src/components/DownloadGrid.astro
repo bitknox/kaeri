@@ -16,6 +16,8 @@ interface Props {
 }
 
 const { steps, heading: Heading = 'h3' } = Astro.props;
+// The panel a file link opens is headed one level below its card.
+const PanelHeading = Heading === 'h2' ? 'h3' : 'h4';
 const { t } = useSite(Astro);
 
 // One row per platform, Apple's first, the terminal last.
@@ -59,7 +61,7 @@ const kind: Record<Id, { asset?: string; link?: string }> = {
 						<div class="dl-next" data-panel={id}>
 							<div class="dl-next-in">
 								<div class="dl-next-body">
-									<h4 tabindex="-1">{t('dl.next.title')}</h4>
+									<PanelHeading class="dl-next-title" tabindex="-1">{t('dl.next.title')}</PanelHeading>
 									<ol set:html={t(`dl.next.${id}.list`)} />
 									<p><a href={stepsHref}>{t('dl.next.more')}</a></p>
 								</div>

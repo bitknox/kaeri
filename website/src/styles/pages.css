@@ -467,10 +467,12 @@
 	line-height: 1.5;
 }
 
-.dl-next-body h4 {
+/* An h3 under the Download page's cards and an h4 on Home, and the same on both. */
+.dl-next-body .dl-next-title {
 	margin: 0;
 	font-size: 15px;
 	font-weight: 600;
+	line-height: inherit;
 }
 
 .dl-next-body ol {
