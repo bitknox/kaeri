@@ -207,3 +207,4 @@ player-subs-bg-outline = Kontur
 player-subs-bg-shadow = Skugga
 player-subs-bg-box = Ruta
 player-subs-more = Mer i Inställningar…
+player-sheet-episodes-loading = Avsnittslistan är på väg.

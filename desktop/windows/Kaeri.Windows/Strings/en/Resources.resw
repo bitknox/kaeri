@@ -8498,6 +8498,82 @@
     <value>More in Settings…</value>
     <comment>Button in the subtitles panel that opens Settings.</comment>
   </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>The episode list is on its way.</value>
+    <comment>Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.</comment>
+  </data>
+  <data name="PlayerPanel" xml:space="preserve">
+    <value>Episodes and sources</value>
+    <comment>Accessibility label of the player's side panel with the Episodes and Sources tabs.</comment>
+  </data>
+  <data name="EpisodeRowPlaying" xml:space="preserve">
+    <value>Playing · {left}</value>
+    <comment>Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.</comment>
+  </data>
+  <data name="EpisodeRowLength" xml:space="preserve">
+    <value>{minutes} min</value>
+    <comment>Episode row in the player's panel: the length of an episode nobody has started.</comment>
+  </data>
+  <data name="EpisodeRowDelayed" xml:space="preserve">
+    <value>Delayed, was {when}</value>
+    <comment>Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.</comment>
+  </data>
+  <data name="EpisodeRowFrom" xml:space="preserve">
+    <value>From {source}</value>
+    <comment>Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.</comment>
+  </data>
+  <data name="ActionResume" xml:space="preserve">
+    <value>Resume</value>
+    <comment>Button on a partly watched episode: plays it from where it was left.</comment>
+  </data>
+  <data name="PlayerPanelMetadataOnly" xml:space="preserve">
+    <value>No source lists this show yet. Episodes can still be marked watched.</value>
+    <comment>Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.</comment>
+  </data>
+  <data name="PlayerPanelPlayingNow" xml:space="preserve">
+    <value>Playing now</value>
+    <comment>Player panel, Sources tab: heading over the source and streams playing now.</comment>
+  </data>
+  <data name="PlayerPanelOtherSources" xml:space="preserve">
+    <value>Other sources</value>
+    <comment>Player panel, Sources tab: heading over the other sources, in the order they are tried.</comment>
+  </data>
+  <data name="PlayerPanelReleases_one" xml:space="preserve">
+    <value>One release</value>
+    <comment>Player panel, Sources tab: the folded list of a source's releases for this episode.</comment>
+  </data>
+  <data name="PlayerPanelReleases_other" xml:space="preserve">
+    <value>{count} releases</value>
+    <comment>Player panel, Sources tab: the folded list of a source's releases for this episode.</comment>
+  </data>
+  <data name="PlayerReleaseAutomatic" xml:space="preserve">
+    <value>Automatic picks this</value>
+    <comment>Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.</comment>
+  </data>
+  <data name="PlayerPanelOrder" xml:space="preserve">
+    <value>Tried in the order set in Sources.</value>
+    <comment>Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.</comment>
+  </data>
+  <data name="PlayerPanelPickScope" xml:space="preserve">
+    <value>A pick here is for this episode only.</value>
+    <comment>Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.</comment>
+  </data>
+  <data name="PlayerTranslation" xml:space="preserve">
+    <value>Subbed or dubbed</value>
+    <comment>Accessibility label of the subtitled or dubbed switch in the player panel.</comment>
+  </data>
+  <data name="PlayerPanelStarting" xml:space="preserve">
+    <value>Starting · {seconds} s</value>
+    <comment>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</comment>
+  </data>
+  <data name="NoticePlayingFromSource" xml:space="preserve">
+    <value>Playing from {source} at {clock}</value>
+    <comment>Notice when another source started playing while the player panel was closed.</comment>
+  </data>
+  <data name="PartyVersionOwn" xml:space="preserve">
+    <value>Only your player switches. The room keeps playing.</value>
+    <comment>Player panel, under the subtitled or dubbed switch during a watch party.</comment>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Private mode</value>
     <comment>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</comment>

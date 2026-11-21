@@ -193,7 +193,6 @@ episode-number-title-text = エピソード { $number } · { $title }
 player-position-state = { $at } / { $total }
 player-sheet-finding = { -source-pl }を検索中…
 player-sheet-none = このエピソードの{ -source-pl }は見つかりませんでした。
-player-sheet-episodes-loading = エピソード一覧を読み込んでいます。
 player-dual-audio = { -subbed-cap }と{ -dubbed }
 notif-new-episodes = { $count ->
    *[other] 新しいエピソードが{ $count }件

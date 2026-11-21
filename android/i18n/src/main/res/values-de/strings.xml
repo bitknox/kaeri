@@ -1210,7 +1210,6 @@
     <string name="player_position_state">%1$s von %2$s</string>
     <string name="player_sheet_finding">Quellen werden gesucht…</string>
     <string name="player_sheet_none">Für diese Episode wurden keine Quellen gefunden.</string>
-    <string name="player_sheet_episodes_loading">Die Episodenliste ist unterwegs.</string>
     <string name="player_dual_audio">Untertitelt und synchronisiert</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">Eine neue Episode</item>
@@ -2475,6 +2474,7 @@
     <string name="player_subs_bg_shadow">Schatten</string>
     <string name="player_subs_bg_box">Box</string>
     <string name="player_subs_more">Mehr in den Einstellungen…</string>
+    <string name="player_sheet_episodes_loading">Die Episodenliste ist unterwegs.</string>
     <string name="private_mode">Privater Modus</string>
     <string name="private_mode_detail">Nichts, was du schaust oder liest, wird gespeichert oder abgeglichen, bis du ihn ausschaltest oder Kaeri beendest.</string>
     <string name="private_mode_limits">Deine Quellen und Watchpartys sehen weiterhin, was du öffnest.</string>

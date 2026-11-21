@@ -205,7 +205,6 @@ episode-number-title-text = Bölüm { $number } · { $title }
 player-position-state = { $at } / { $total }
 player-sheet-finding = { -source-pl } aranıyor…
 player-sheet-none = Bu bölüm için { -source } bulunamadı.
-player-sheet-episodes-loading = Bölüm listesi geliyor.
 player-dual-audio = { -subbed-cap } ve { -dubbed }
 notif-new-episodes = { $count ->
     [one] Yeni bir bölüm
