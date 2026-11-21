@@ -1054,6 +1054,50 @@ async fn back_after_the_session_ended_away_the_receiver_is_joined_and_plays_on()
     assert!(rig.hub.disconnect());
 }
 
+/// The `count`th message of `kind` the receiver heard, once it has.
+async fn heard_until(receiver: &FakeReceiver, kind: &str, count: usize) -> serde_json::Value {
+    let deadline = tokio::time::Instant::now() + Duration::from_secs(5);
+    loop {
+        let heard = receiver.heard(kind);
+        if let Some(message) = heard.get(count - 1) {
+            return message.clone();
+        }
+        assert!(
+            tokio::time::Instant::now() < deadline,
+            "the receiver heard {} {kind}, not {count}",
+            heard.len()
+        );
+        tokio::time::sleep(Duration::from_millis(50)).await;
+    }
+}
+
+/// Away from a paused cast, and back while the connection to the TV held: the receiver hears
+/// that the iPhone is back, so it stops showing that it waits for it, and the episode stays
+/// paused.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn back_to_a_paused_cast_the_receiver_hears_this_device_is_back() {
+    let (rig, playing) = playing_on_a_tv_that_plays_on().await;
+    let (sender, _sent) = sender_on(&rig);
+    sender.cast_set_device("iphone");
+    let player = rig.hub.held(&rig.device().id).expect("the TV is held");
+    player.set_paused(true).await.unwrap();
+    session_until(&rig.hub, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
+
+    // The app leaves the screen: the receiver shows that it waits for the iPhone.
+    sender.cast_away(true);
+    heard_until(&rig.receiver, "sender-away", 1).await;
+    let hellos = rig.receiver.heard("hello").len();
+    let plays = rig.receiver.heard("PLAY").len();
+
+    sender.cast_away(false);
+    let hello = heard_until(&rig.receiver, "hello", hellos + 1).await;
+    assert_eq!(hello["device"], "iphone");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    assert_eq!(rig.receiver.heard("PLAY").len(), plays, "paused before it left, it stays so");
+    assert!(rig.hub.session().item.is_some_and(|i| i.paused));
+    playing.abort();
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn each_fall_back_to_the_tvs_own_player_is_said_and_the_next_connect_tries_kaeris_first()
 {
