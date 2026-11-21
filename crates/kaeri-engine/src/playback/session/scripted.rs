@@ -2264,6 +2264,38 @@ async fn a_release_picked_in_the_player_plays_from_the_playhead_in_the_same_play
 }
 
 #[tokio::test]
+async fn once_a_release_lands_sources_lists_only_its_streams() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let to = kodama_release();
+    let found =
+        vec![from("kodama", "cdn-b.example", 1080), from("kodama", "cdn-c.example", 720)];
+    let news = vec![SwitchNews::Finding(to.clone()), SwitchNews::Found(to, found)];
+    let next = [vec![PlaybackEvent::Replaced], taking_over(600.0)].concat();
+    let (rig, _) = switched(
+        news,
+        |s| matches!(s, SourceSwitch::Landed { .. }),
+        Vec::new(),
+        vec![next],
+        &[],
+    )
+    .await;
+
+    // The menu said last, as the release landed: its two streams, the one playing current,
+    // and nothing of the stream it replaced.
+    let calls = rig.opener.calls();
+    let Some(menus) = calls.iter().rev().find_map(|call| match call {
+        Call::Overlay(Overlay::Menus(menus)) => Some(menus),
+        _ => None,
+    }) else {
+        panic!("no menus: {calls:#?}")
+    };
+    let listed: Vec<_> = menus.sources.iter().map(|s| (s.label.as_str(), s.current)).collect();
+    assert_eq!(listed, [("kodama", true), ("kodama", false)], "{:#?}", menus.sources);
+}
+
+#[tokio::test]
 async fn a_release_that_shows_no_frame_goes_back_to_what_played_where_it_was() {
     use super::super::switch::SwitchNews;
     use kaeri_model::playback::SourceSwitch;

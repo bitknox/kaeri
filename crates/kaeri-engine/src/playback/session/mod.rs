@@ -393,6 +393,7 @@ pub async fn play(
         finding: None,
         switching: None,
         restoring: None,
+        pool_from: 0,
         sources: sources.clone(),
     };
 
@@ -669,6 +670,25 @@ pub async fn play(
                 events::Beside { late, finder },
             )
             .await;
+
+        // A release that landed is the pool from here: the streams it replaced are let go, so
+        // failover, the Sources menu and the next switch go by what plays now.
+        let from = std::mem::take(&mut run.pool_from);
+        let outcome = if from > 0 && from <= index {
+            streams.drain(..from);
+            tried.drain(..from);
+            localised.drain(..from);
+            total = streams.len();
+            index -= from;
+            match outcome {
+                FileOutcome::Switch { to, at } => {
+                    FileOutcome::Switch { to: to.checked_sub(from).unwrap_or(index), at }
+                }
+                outcome => outcome,
+            }
+        } else {
+            outcome
+        };
 
         // What the viewer chose in this file is where the next file of the episode starts.
         let (carried, owed) = current.tracks.carried();
@@ -1262,6 +1282,9 @@ struct Run<'a> {
     switching: Option<Switching>,
     /// A switch that failed, said once the stream it went back to shows a frame again.
     restoring: Option<SourceSwitch>,
+    /// Where the streams of a release that landed start: the streams before it are let go once
+    /// its file is over, and the Sources menu lists only the release's streams until then.
+    pool_from: usize,
     /// The sources, for the names a switch says.
     sources: Option<kaeri_providers::ProviderRegistry>,
 }

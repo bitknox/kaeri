@@ -125,7 +125,7 @@ impl Run<'_> {
                 }
                 Choice::Source(id) => {
                     if let Ok(to) = id.parse::<usize>()
-                        && to < streams.len()
+                        && (self.pool_from..streams.len()).contains(&to)
                         && to != index
                     {
                         return Some(FileOutcome::Switch { to, at: tracker.position() });

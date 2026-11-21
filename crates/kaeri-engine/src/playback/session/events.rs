@@ -770,6 +770,12 @@ impl Run<'_> {
                         // A switch lands with this frame, or one that failed is back on what
                         // played before.
                         if let Some(switching) = self.switching.take() {
+                            // A release replaces the streams that played: Sources lists its own.
+                            if switching.to.release.is_some() {
+                                self.pool_from = switching.streams.start;
+                                let menus = self.menus(streams, index);
+                                let _ = link.overlay(Overlay::Menus(menus)).await;
+                            }
                             self.say_switch(SourceSwitch::Landed {
                                 to: switching.to,
                                 at: switching.at,
