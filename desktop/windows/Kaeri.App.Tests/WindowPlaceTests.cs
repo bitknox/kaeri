@@ -101,4 +101,13 @@ public class WindowPlaceTests
         Assert.Equal(new WindowFrame(43, 0, 1280, 728), WindowPlace.First(new WindowFrame(0, 0, 1366, 728), 1.0));
         Assert.Equal(new WindowFrame(2176, 96, 2048, 1200), WindowPlace.First(new WindowFrame(1920, 0, 2560, 1392), 1.5));
     }
+
+    [Fact]
+    public void TheMinimumIs500By420EffectivePixelsAtTheDisplaysScale()
+    {
+        Assert.Equal((500, 420), WindowPlace.Minimum(1.0));
+        Assert.Equal((625, 525), WindowPlace.Minimum(1.25));
+        Assert.Equal((750, 630), WindowPlace.Minimum(1.5));
+        Assert.Equal((875, 735), WindowPlace.Minimum(1.75));
+    }
 }

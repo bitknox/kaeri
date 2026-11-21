@@ -251,6 +251,8 @@ public sealed partial class MainWindow : Window
             // Kept half a second after a drag or resize settles, not on every pixel of it.
             if (e.DidPositionChange || e.DidSizeChange || e.DidPresenterChange)
             {
+                // A new presenter, or a move to a display with another scale.
+                ApplyMinimum();
                 placeLater ??= PlaceTimer();
                 placeLater.Stop();
                 placeLater.Start();
@@ -287,6 +289,22 @@ public sealed partial class MainWindow : Window
     }
 
     /// <summary>
+    /// The window's minimum, <see cref="WindowPlace.Minimum"/>, on the presenter it has now and at
+    /// the scale of the display it is on now. Leaving full screen or the mini player gives the
+    /// window a new presenter without one, and another display's scale needs another.
+    /// </summary>
+    void ApplyMinimum()
+    {
+        if (AppWindow.Presenter is not OverlappedPresenter overlapped)
+            return;
+        var (width, height) = WindowPlace.Minimum(GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0);
+        if (overlapped.PreferredMinimumWidth != width)
+            overlapped.PreferredMinimumWidth = width;
+        if (overlapped.PreferredMinimumHeight != height)
+            overlapped.PreferredMinimumHeight = height;
+    }
+
+    /// <summary>
     /// The window where it was last left (size, position and maximised), when that still lies on
     /// a display; otherwise the first launch's frame, <see cref="WindowPlace.First"/>.
     /// The minimum is 500 by 420.
@@ -295,11 +313,7 @@ public sealed partial class MainWindow : Window
     {
         var area = DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Primary).WorkArea;
         var scale = GetDpiForWindow(WinRT.Interop.WindowNative.GetWindowHandle(this)) / 96.0;
-        if (AppWindow.Presenter is OverlappedPresenter overlapped)
-        {
-            overlapped.PreferredMinimumWidth = (int)(500 * scale);
-            overlapped.PreferredMinimumHeight = (int)(420 * scale);
-        }
+        ApplyMinimum();
         if (options.Width is null && Place.Read(PlacePath) is { } place && place.Opening(scale) is { } frame)
         {
             AppWindow.MoveAndResize(frame);

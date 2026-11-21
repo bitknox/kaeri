@@ -69,6 +69,13 @@ public static class WindowPlace
         && frame.Width - workArea.Width <= 128 && frame.Height - workArea.Height <= 128;
 
     /// <summary>
+    /// The window's minimum, 500 by 420 effective pixels, in the physical pixels the presenter
+    /// takes at <paramref name="scale"/>, the scale of the display the window is on now.
+    /// </summary>
+    public static (int Width, int Height) Minimum(double scale) =>
+        ((int)Math.Round(500 * scale), (int)Math.Round(420 * scale));
+
+    /// <summary>
     /// The first launch's frame: 80% of the work area, at least 1280 by 800 effective pixels at
     /// <paramref name="scale"/> and at most the work area, centred on it.
     /// </summary>
