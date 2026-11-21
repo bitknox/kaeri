@@ -79,6 +79,9 @@ checks it, and puts it in place of the AppImage when you choose Restart to Updat
 in Settings. AppImageUpdate, AppImageLauncher and Gear Lever can update it in place too, from the
 release's `.zsync` file. Without FUSE, run it with `--appimage-extract-and-run`.
 
+A Linux app from 0.5.2 or older can't update itself to this version, because the AppImage's
+file name changed. Download the new AppImage once by hand, and later versions update as usual.
+
 ### Checking a download
 
 Each file has a `.sha256` beside it. With both in one folder, run
