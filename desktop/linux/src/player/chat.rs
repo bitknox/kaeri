@@ -566,7 +566,9 @@ impl Chat {
                             // the line goes once that walk is over.
                             let column = chat.column.clone();
                             glib::idle_add_local_once(move || {
-                                if revealer.parent().as_ref() == Some(column.upcast_ref::<gtk::Widget>()) {
+                                if revealer.parent().as_ref()
+                                    == Some(column.upcast_ref::<gtk::Widget>())
+                                {
                                     column.remove(&revealer);
                                 }
                             });
