@@ -725,6 +725,42 @@ async fn another_sender_loading_on_the_same_receiver_session_takes_the_tv() {
     assert!(!player.is_alive());
 }
 
+/// Another Kaeri device's Play on TV joins the receiver app this cast launched and loads its
+/// episode in the same receiver session. The cast taken over that way leaves the session to
+/// them, when the playback lets it go and when Stop casting quits it.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn a_cast_taken_over_on_its_receiver_session_leaves_that_session_running() {
+    let file = matroska(&Fixture { audio: Some(FixtureAudio::aac()), ..Fixture::default() });
+    let base = serve(HashMap::from([("/episode.mkv".to_owned(), file)])).await;
+    // A TV keeps its app from one sender to the next, so the check below joins what runs.
+    let receiver = FakeReceiver::start(FakeOptions {
+        duration: 600.0,
+        remembers: true,
+        ..FakeOptions::default()
+    })
+    .await
+    .unwrap();
+    let (player, mut events) =
+        connect_standard(setup(&receiver, Arc::new(CastMemory::memory()), Arc::new(NoEncoder)))
+            .await
+            .unwrap();
+    player.load(torrent(format!("{base}/episode.mkv")));
+    next(&mut events, |e| *e == PlaybackEvent::Loaded).await;
+    receiver.load_elsewhere();
+    next(&mut events, |e| matches!(e, PlaybackEvent::Ended { complete: false })).await;
+    assert_eq!(player.failure(), Some(CastFailure::TakenOver));
+
+    // A held link stops its file as the playback ends; a link of its own quits.
+    player.stop().await.unwrap();
+    player.quit().await.unwrap();
+    let stops = receiver.heard("STOP");
+    assert!(stops.is_empty(), "their file or their receiver session was stopped: {stops:?}");
+    let (tv, _incoming) =
+        Device::connect(receiver.address, Duration::from_secs(5)).await.unwrap();
+    let running = tv.status().await.unwrap().app;
+    assert!(running.is_some(), "the TV still runs the app the other device plays in");
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn the_speed_asked_for_before_a_load_is_set_once_it_plays() {
     let file = matroska(&Fixture::default());

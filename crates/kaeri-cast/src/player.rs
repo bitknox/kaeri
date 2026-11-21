@@ -1415,14 +1415,15 @@ impl CastPlayer {
             self.inner.publish();
         }
         let Some(media) = self.inner.media() else { return Ok(()) };
-        if media.media_session_id.is_none() {
+        // A cast that ended by itself has no file of its own left on the TV, as `close` says.
+        if media.media_session_id.is_none() || lock(&self.inner.state).closed {
             return Ok(());
         }
         answered(async move { media.stop().await.map(|_| ()) }).await
     }
 
     /// Stop playing and close the receiver app, so the TV goes back to what it showed. The
-    /// event stream ends with it.
+    /// event stream ends with it. A cast that ended by itself leaves the TV as it is.
     pub async fn quit(&self) -> Result<(), CastError> {
         if let Some(attempt) = lock(&self.inner.attempt).take() {
             attempt.abort();
@@ -1490,11 +1491,21 @@ async fn answered(
     }
 }
 
-/// Stop the media and the app, when one runs.
+/// Stop the media and the app, when one runs. A cast that ended by itself sends neither: taken
+/// over, the receiver session can be another Kaeri device's, which joined the app this cast
+/// launched and plays in it now, and a stop would close it under them. Stopped on the TV or
+/// lost, nothing of this cast's runs there to stop.
 async fn close(inner: &Inner) -> Result<(), CastError> {
     let media = lock(&inner.media).take();
     let Some(media) = media else { return Ok(()) };
-    lock(&inner.state).app = None;
+    let ended = {
+        let mut state = lock(&inner.state);
+        state.app = None;
+        state.closed
+    };
+    if ended {
+        return Ok(());
+    }
     let device = inner.device();
     answered(async move {
         if media.media_session_id.is_some() {
