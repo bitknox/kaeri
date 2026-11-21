@@ -53,6 +53,11 @@ public sealed partial class MainWindow : Window
     readonly DispatcherQueue ui;
     readonly EngineSession session;
     readonly FfiPlayer? player;
+
+#if KAERI_TESTING
+    /// <summary>The player, for the testing build's demos that answer the engine's part.</summary>
+    internal PlayerView PlayerView => Player;
+#endif
     readonly FfiDirs dirs;
     readonly Ctx ctx;
     readonly NetworkWatch network;
@@ -165,7 +170,9 @@ public sealed partial class MainWindow : Window
         Player.ControlsChanged += shown =>
         {
             if (Player.Showing)
-                AppWindow.TitleBar.PreferredHeightOption = shown ? TitleBarHeightOption.Tall : TitleBarHeightOption.Collapsed;
+                // Under the open panel the caption buttons stay, at the standard height the panel sits below.
+                AppWindow.TitleBar.PreferredHeightOption = !shown ? TitleBarHeightOption.Collapsed
+                    : Player.PanelOpen ? TitleBarHeightOption.Standard : TitleBarHeightOption.Tall;
         };
         Player.MiniRequested += Mini;
         // A dialog doesn't fit the 480 by 270 mini window: the window is its size again first.
@@ -180,7 +187,7 @@ public sealed partial class MainWindow : Window
                 return true;
             // --show=synopsis...: the title's table with synopses and rows ahead (synopsis-ranges: 250 of
             // them); --show=player-episodes...: the playing title's, for the Episodes panel.
-            if (options.Show is { } synopsisShot && (synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes", StringComparison.Ordinal))
+            if (options.Show is { } synopsisShot && (synopsisShot.StartsWith("synopsis", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes", StringComparison.Ordinal) || synopsisShot.StartsWith("player-panel", StringComparison.Ordinal))
                 && e is Event.Episodes synopsisTable && synopsisTable.Rows.Length > 0)
             {
                 var playerShot = synopsisShot.StartsWith("player-", StringComparison.Ordinal);
@@ -189,7 +196,25 @@ public sealed partial class MainWindow : Window
                     var next = playerShot ? ctx.Known.Entry(synopsisTable.Id)?.Progress?.Next ?? 4 : 7;
                     var ranged = synopsisShot is "synopsis-ranges" || synopsisShot.StartsWith("synopsis-go", StringComparison.Ordinal) || synopsisShot.StartsWith("player-episodes-ranges", StringComparison.Ordinal);
                     var shown = new Event[] { Showcase.Synopses(synopsisTable, ranged ? 230 : next, ranged, synopsisShot == "synopsis-go-not-out") };
+                    if (synopsisShot.StartsWith("player-panel", StringComparison.Ordinal))
+                        shown[0] = Player.PanelDemoTable((Event.Episodes)shown[0]);
                     ctx.Known.Take(shown[0]);
+                    if (playerShot)
+                        Player.Heard(shown);
+                    Heard(shown);
+                    ctx.Heard(shown);
+                });
+                return true;
+            }
+            // --show=player-panel...: the made-up sources after the fixture's own, for the panel's Sources tab.
+            if (options.Show?.StartsWith("player-panel", StringComparison.Ordinal) == true && e is Event.SourceOptions listed
+                && !listed.Options.Any(o => o.ProviderId == PanelDemoData.Marker))
+            {
+                DispatcherQueue.TryEnqueue(() =>
+                {
+                    var shown = new Event[] { listed with { Options = [.. listed.Options, .. PanelDemoData.Sources] } };
+                    ctx.Known.Take(shown[0]);
+                    Player.Heard(shown);
                     Heard(shown);
                     ctx.Heard(shown);
                 });
@@ -208,6 +233,15 @@ public sealed partial class MainWindow : Window
                 return true;
             }
 #endif
+            // A switch of source loading: the picture on screen is copied before its load reaches
+            // mpv, to hold over the video until the new stream's first frame.
+            if (e is Event.PlayerSwitch { State: SourceSwitch.Loading } && player is { } holding)
+            {
+                var copy = Task.Run(holding.Snapshot);
+                if (copy.Wait(PanelState.HoldWait) && copy.Result is { } frame)
+                    ui.TryEnqueue(() => Player.TookSnapshot(frame));
+                return false;
+            }
             if (e is not Event.PlayerOps ops)
                 return false;
             Player.NoteLoad(ops.PlaybackValue, ops.Ops);

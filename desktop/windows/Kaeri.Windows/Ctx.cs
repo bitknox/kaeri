@@ -168,6 +168,13 @@ sealed class Ctx
         }
         if ((command is Command.ManualSearch && Options.Show == "match-menu") || (command is Command.FixMatch && Options.Show == "match-picking"))
             return null;
+        // --show=player-panel...: the panel's releases and switches are answered by its demo, as
+        // the testing engine has one source with one stream.
+        if (Options.Show?.StartsWith("player-panel", StringComparison.Ordinal) == true && command is Command.LoadSources or Command.SwitchSource)
+        {
+            Window.PlayerView.PanelDemoSend(command);
+            return null;
+        }
         // The source picker's shots: the listing is the one the showcase invented, or none at all.
         if (command is Command.LoadSourceOptions listing && Options.Show?.StartsWith("source-picker", StringComparison.Ordinal) == true)
         {

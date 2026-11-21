@@ -45,6 +45,8 @@ public sealed partial class PlayerView : UserControl
 #endif
     readonly StillWatching still = new();
     bool pictureSeen, pointerHidden, mini, miniTipShown;
+    /// <summary>Whether mpv's last state had a picture.</summary>
+    bool pictureNow;
     SeekPreview? preview;
     PreviewSource? stream, thumbs, previewSource;
 
@@ -173,7 +175,7 @@ public sealed partial class PlayerView : UserControl
             return;
         if (XamlRoot is null || FocusManager.GetFocusedElement(XamlRoot) is not Control focused || focused is not (ButtonBase or Slider))
             return;
-        if (!Within(focused, Chrome) && !Within(focused, Corner))
+        if (!Within(focused, Chrome) && !Within(focused, Corner) && !InPanel(focused))
             return;
         e.Handled = true;
         if (e.KeyStatus.WasKeyDown)
@@ -293,6 +295,9 @@ public sealed partial class PlayerView : UserControl
         pauseAsked = null;
         upNextStill = null;
         discussion?.Close();
+        ClosePanel(animated: false);
+        panel.LetGo();
+        ReleaseHeld();
         marking = null;
         skipPrompt = null;
         DrawMarking();
@@ -411,6 +416,7 @@ public sealed partial class PlayerView : UserControl
     {
         foreach (var e in batch)
         {
+            PanelHeard(e);
             switch (e)
             {
                 case Event.PlayerUi ui:
@@ -770,6 +776,8 @@ public sealed partial class PlayerView : UserControl
                 ShowTitle.Text = s.Title;
                 EpisodeTitle.Text = Lines.EpisodeNamed(s.EpisodeValue, s.EpisodeTitle);
                 playingEpisode = s.EpisodeValue;
+                panelBanner = s.BannerUrl ?? s.CoverUrl;
+                PanelEpisodeIs(s.Id, s.EpisodeValue, starting: true);
                 ShowTvButton();
                 if (fromStaged && start is { } open && open.Id == s.Id && open.Episode == s.EpisodeValue)
                 {
@@ -804,12 +812,14 @@ public sealed partial class PlayerView : UserControl
                 break;
             case PlayerUi.Episode ep:
                 playingEpisode = ep.Number;
+                PanelEpisodeIs(playingId, ep.Number, starting: false);
                 ShowTitle.Text = ep.Show;
                 EpisodeTitle.Text = Lines.Episode(ep.Label, ep.Title, ep.Translation);
                 break;
             case PlayerUi.Menus m:
                 menus = m;
                 BuildMenus();
+                PanelMenus();
                 break;
             case PlayerUi.Skip skip:
                 SkipCard.Content = skip.Kind switch { SkipKind.Ending => T.PlayerSkipEnding, SkipKind.Recap => T.PlayerSkipRecap, _ => T.PlayerSkipOpening };
@@ -1202,6 +1212,7 @@ public sealed partial class PlayerView : UserControl
         // The first frame comes in under the starting screen, which leaves for it.
         if (state.HasPicture && startingShown && !startingHeld && !startLeaving)
             FirstFrameUnderStart();
+        pictureNow = state.HasPicture;
         if (state.HasPicture && !pictureSeen)
         {
             pictureSeen = true;
@@ -1215,8 +1226,9 @@ public sealed partial class PlayerView : UserControl
             ShowControls();
         else if (chromeShown && !idle.IsRunning)
             idle.Start();
+        // While a switch loads, the line stays where the episode was: the new stream starts there.
         if (state.Position is { } p)
-            position = p;
+            position = panel.Holding && panel.HoldAt is { } held ? held : p;
         if (state.Volume is { } level)
             TookVolume(level);
         if (state.Duration is { } d && d > 0 && d != duration)
@@ -1224,7 +1236,7 @@ public sealed partial class PlayerView : UserControl
             duration = d;
             DrawTimeline();
         }
-        if (state.Buffering && pictureSeen && !startingShown)
+        if (state.Buffering && pictureSeen && !startingShown && !panel.Holding)
         {
             if (!bufferingSince.IsRunning)
                 bufferingSince.Restart();
@@ -1371,6 +1383,9 @@ public sealed partial class PlayerView : UserControl
     /// </summary>
     void OnPanelSizeChanged(object sender, SizeChangedEventArgs e)
     {
+        // In and out of fullscreen, the panel keeps under the caption buttons only while they are there.
+        if (panel.Open)
+            PanelPane.Margin = new Thickness(0, FullscreenOn?.Invoke() == true ? 0 : PanelTop, 0, 0);
         if (player is null || e.NewSize.Width < 1 || e.NewSize.Height < 1)
             return;
         var scale = XamlRoot?.RasterizationScale ?? 1.0;
@@ -1403,7 +1418,8 @@ public sealed partial class PlayerView : UserControl
     void ShowControls()
     {
         ShowPointer();
-        if (still.Asking)
+        // Under the open panel the controls stay faded; closing it brings them back.
+        if (still.Asking || panel.Open)
             return;
         if (!chromeShown)
         {
@@ -1435,7 +1451,7 @@ public sealed partial class PlayerView : UserControl
 
     void HideControlsIfIdle()
     {
-        if (keepControls || paused || overBar || MenuOpen || Marking)
+        if (keepControls || paused || overBar || MenuOpen || Marking || panel.Open)
             return;
         if (ChatFieldHolds())
         {
@@ -1569,7 +1585,8 @@ public sealed partial class PlayerView : UserControl
             Add(skip, () => SendControl(new PlayerCommand.TakeSkip()), "S");
         menu.Items.Add(new MenuFlyoutSeparator());
         Add(T.PlayerSubtitlesAndAudio, () => OpenMenu(TracksButton), "T");
-        Add(T.PlayerEpisodes, () => OpenMenu(EpisodesButton), "E", EpisodesButton.IsEnabled);
+        Add(T.PlayerEpisodes, () => OpenPanel(PanelTab.Episodes, keyboard: false), "E", EpisodesButton.IsEnabled);
+        Add(T.PlayerSources, () => OpenPanel(PanelTab.Sources, keyboard: false), "Ctrl+2");
         AddSkipMenu(menu);
         // The skip entries go first in a menu of their own; here they follow the tracks.
         foreach (var item in menu.Items.Where(i => i.Tag as string == "skips").ToList())
@@ -2235,45 +2252,21 @@ public sealed partial class PlayerView : UserControl
         return track.External ? T.PlayerTrackAdded(name) : name;
     }
 
-    EpisodesPanel? episodesPanel;
     bool? ownSpoilers;
-
-    /// <summary>The Episodes panel: compact rows and a footer, from the engine's menu entries and the title's table.</summary>
-    void EnsureEpisodesPanel()
-    {
-        if (episodesPanel is not null)
-            return;
-        episodesPanel = new EpisodesPanel(
-            () => (PanelEpisodes(), ctx?.Known.Episodes.GetValueOrDefault(playingId) ?? [],
-                ownSpoilers ?? SettingsCatalog.IsOn(ctx?.Known.Setting(SettingKey.SpoilerProtection))),
-            ChooseEpisode);
-        episodesPanel.Flyout.Opened += OnMenuOpened;
-        episodesPanel.Flyout.Closed += OnMenuClosed;
-        EpisodesButton.Flyout = episodesPanel.Flyout;
-    }
 
     void BuildMenus()
     {
         if (menus is null)
             return;
-        EnsureEpisodesPanel();
-        EpisodesButton.IsEnabled = menus.Episodes.Length > 0;
+        EpisodesButton.IsEnabled = menus.Episodes.Length > 0 || menus.Sources.Length > 0;
 
         BuildTracks();
 
         SettingsMenu.Items.Clear();
-        if (menus.Sources.Length > 0)
-        {
-            var sources = new MenuFlyoutSubItem { Text = T.PlayerSources };
-            foreach (var source in menus.Sources)
-            {
-                var item = new RadioMenuFlyoutItem { Text = source.Detail is { Length: > 0 } d ? $"{source.Label} · {d}" : source.Label, GroupName = "source", IsChecked = source.Current };
-                var id = source.Id;
-                item.Click += (_, _) => Send(new PlayerCommand.Choose(new PlayerChoice.Source(id)));
-                sources.Items.Add(item);
-            }
-            SettingsMenu.Items.Add(sources);
-        }
+        // Sources lives in the panel: the item opens it there.
+        var sources = new MenuFlyoutItem { Text = T.PlayerSources, KeyboardAcceleratorTextOverride = "Ctrl+2" };
+        sources.Click += (_, _) => OpenPanel(PanelTab.Sources, keyboard: false);
+        SettingsMenu.Items.Add(sources);
         var upscaling = new MenuFlyoutSubItem { Text = T.PlayerUpscaling };
         foreach (var choice in menus.Upscaling.Options ?? [])
         {
@@ -2465,6 +2458,9 @@ public sealed partial class PlayerView : UserControl
         // Nor is typing in the chat's field, over the video or in the people flyout.
         if (Typing())
             return;
+        // The arrows and Enter move and pick in the panel while the keyboard is in it.
+        if (PanelTakes(e))
+            return;
         e.Handled = true;
         if (show)
             ShowControls();
@@ -2483,7 +2479,7 @@ public sealed partial class PlayerView : UserControl
     void OnKeyMute(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, Mute, show: false);
     void OnKeyUndo(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, Undo, show: false);
     void OnKeySpeedNormal(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SpeedTo(1));
-    void OnKeyEpisodes(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => OpenMenu(EpisodesButton));
+    void OnKeyEpisodes(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, TogglePanel, show: false);
     void OnKeyTracks(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => OpenMenu(TracksButton));
 
     /// <summary>A seek by key or scroll, with the time it lands on in the flash.</summary>
@@ -2596,7 +2592,9 @@ public sealed partial class PlayerView : UserControl
     /// <summary>Esc: cancel Up next or the stall prompt, then leave fullscreen, then close.</summary>
     void OnKeyEscape(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () =>
     {
-        if (still.Asking)
+        if (panel.Open)
+            ClosePanel();
+        else if (still.Asking)
             StillStopNow();
         else if (Marking)
             Send(new PlayerCommand.CancelSkipMark());
@@ -2631,6 +2629,7 @@ public sealed partial class PlayerView : UserControl
 
     void AskStillWatching()
     {
+        ClosePanel(animated: false);
         StillLine.Text = T.PlayerStillWatchingDetail(still.After);
         Motion.Show(StillLayer);
         HideChrome();
@@ -2659,17 +2658,6 @@ public sealed partial class PlayerView : UserControl
 
     void OnStillContinue(object sender, RoutedEventArgs e) => ContinueWatching();
     void OnStillStop(object sender, RoutedEventArgs e) => StillStopNow();
-
-    /// <summary>The panel's rows: the player's menu, or on a ranged shot one per row of the table.</summary>
-    MenuEpisode[] PanelEpisodes()
-    {
-#if KAERI_TESTING
-        if (ctx?.Options.Show is { } show && show.StartsWith("player-episodes-ranges", StringComparison.Ordinal)
-            && ctx.Known.Episodes.GetValueOrDefault(playingId) is { Length: > 100 } table)
-            return table.Select(r => new MenuEpisode(r.Number, T.EpisodeNumber(long.Parse(r.Number, System.Globalization.CultureInfo.InvariantCulture)), r.Title, r.Watched >= 0.9, false, r.Number == "230")).ToArray();
-#endif
-        return menus?.Episodes ?? [];
-    }
 
 #if KAERI_TESTING
     /// <summary>
@@ -2801,27 +2789,8 @@ public sealed partial class PlayerView : UserControl
             case "mini":
                 ToggleMini();
                 break;
-            case "player-episodes-ranges":
-            case "player-episodes-ranges-menu":
-                // 250 episodes in ranges, 230 playing; with -menu, the range menu open on Go to episode.
-                ShowControls();
-                OpenMenu(EpisodesButton);
-                if (what == "player-episodes-ranges-menu")
-                {
-                    await Task.Delay(900);
-                    episodesPanel?.OpenRanges();
-                }
-                break;
-            case "player-episodes":
-            case "player-episodes-focus":
-                // The Episodes panel open; with -focus, the keyboard then on its second row.
-                ShowControls();
-                OpenMenu(EpisodesButton);
-                if (what == "player-episodes-focus")
-                {
-                    await Task.Delay(800);
-                    episodesPanel?.FocusRow(1);
-                }
+            case var shot when shot.StartsWith("player-panel", StringComparison.Ordinal):
+                await PanelDemo(shot);
                 break;
             case "discussion-player":
                 if (ctx is { } talk && uint.TryParse(playingEpisode, out var talked))
@@ -3021,6 +2990,9 @@ public sealed partial class PlayerView : UserControl
     void ToggleMini()
     {
         var on = !mini;
+        // The mini player has no room for the panel.
+        if (on)
+            ClosePanel(animated: false);
         SetMini(on);
         MiniRequested?.Invoke(on);
         if (on && !miniTipShown)

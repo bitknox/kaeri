@@ -762,6 +762,12 @@
               <SolidColorBrush x:Key="ScrimBrush" Color="#161A2E" Opacity="0.6" />
               <!-- A spoiler still: blurred under a light ground tint; raised when the blur is off. -->
               <AcrylicBrush x:Key="SpoilerBrush" TintColor="#161A2E" TintOpacity="0.25" TintLuminosityOpacity="0.3" FallbackColor="#222638" />
+              <!-- The player's Episodes and Sources panel: in-app acrylic over the video, the raised
+                   tint at 78%, with a faint silk edge on its leading side. -->
+              <AcrylicBrush x:Key="PlayerPanelBrush" TintColor="#1E2234" TintOpacity="0.78" TintLuminosityOpacity="0.85" FallbackColor="#1E2234" />
+              <SolidColorBrush x:Key="PlayerPanelEdgeBrush" Color="#14FFFFFF" />
+              <!-- A row the panel has selected: silk at 6%. -->
+              <SolidColorBrush x:Key="PlayerPanelSelectedBrush" Color="#0FE4E0D6" />
             </ResourceDictionary>
 
             <!-- Under a Windows contrast theme the user's own colours rule: the app's brushes map to
@@ -788,6 +794,9 @@
               <SolidColorBrush x:Key="ScrimBrush" Color="{ThemeResource SystemColorWindowColor}" Opacity="0.9" />
               <SolidColorBrush x:Key="PopupLightDismissOverlayBackground" Color="{ThemeResource SystemColorWindowColor}" Opacity="0.9" />
               <SolidColorBrush x:Key="SpoilerBrush" Color="{ThemeResource SystemColorWindowColor}" />
+              <SolidColorBrush x:Key="PlayerPanelBrush" Color="{ThemeResource SystemColorWindowColor}" />
+              <SolidColorBrush x:Key="PlayerPanelEdgeBrush" Color="{ThemeResource SystemColorWindowTextColor}" />
+              <SolidColorBrush x:Key="PlayerPanelSelectedBrush" Color="{ThemeResource SystemColorWindowColor}" />
               <LinearGradientBrush x:Key="PlayerScrimBrush" StartPoint="0,0" EndPoint="0,1">
                 <GradientStop Color="{ThemeResource SystemColorWindowColor}" Offset="0" />
                 <GradientStop Color="#99000000" Offset="0.2" />

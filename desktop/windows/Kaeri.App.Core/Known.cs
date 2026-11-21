@@ -25,6 +25,9 @@ public sealed class Known
     /// </summary>
     public Dictionary<uint, bool> Dubbed { get; } = [];
 
+    /// <summary>How far a title's dub reaches, by AniList id, once the engine has said; null for a title without one.</summary>
+    public Dictionary<uint, DubExtent?> Dubs { get; } = [];
+
     /// <summary>
     /// The comments in an episode's discussion, by title and episode number, once the engine has
     /// found one. An episode with none is absent.
@@ -471,6 +474,7 @@ public sealed class Known
                 break;
             case Event.TitleDub td:
                 Dubbed[td.Id] = td.Dub is not null;
+                Dubs[td.Id] = td.Dub;
                 break;
             case Event.Progress p:
                 if (Entries.TryGetValue(p.Id, out var known))
