@@ -65,7 +65,9 @@ where
     S: AsyncRead + AsyncWrite + Unpin + Send,
 {
     let (mut rd, mut wr) = tokio::io::split(stream);
-    let mine = store.version_vector()?;
+    // This device's own number is the one last sent back as written here, so the other sends
+    // back what it holds after it, and another copy's op under the same number shows.
+    let mine = store.sync_vector_to_say()?;
     let send =
         async { put(&mut wr, &Frame::Hello { device: device.to_owned(), vector: mine }).await };
     let recv = get(&mut rd);
@@ -109,6 +111,7 @@ where
                     applied.notes.extend(a.notes);
                     applied.titles.extend(a.titles);
                     applied.watches.extend(a.watches);
+                    applied.second_copy |= a.second_copy;
                 }
                 Frame::Done => break,
                 Frame::Hello { .. } => return Err(SyncError::Damaged("second hello")),

@@ -48,7 +48,13 @@ pub(crate) fn push_op(
     stamp: Stamp,
     body: &OpBody,
 ) -> Result<Op> {
-    let seq: u64 = meta(tx, "seq")?.and_then(|v| v.parse().ok()).unwrap_or(0) + 1;
+    let counted: u64 = meta(tx, "seq")?.and_then(|v| v.parse().ok()).unwrap_or(0);
+    // Ops under this id can come back from another copy of this device, a restored backup or a
+    // database moved to a new computer, as the other devices relay them. The next one goes after
+    // every op held under the id, so a local change never collides with one of those.
+    let held: Option<i64> =
+        tx.query_row("SELECT MAX(seq) FROM sync_op WHERE device = ?1", [device], |r| r.get(0))?;
+    let seq = counted.max(held.unwrap_or(0).max(0) as u64) + 1;
     let json = serde_json::to_string(body)
         .map_err(|source| StoreError::Encode { what: "sync op", source })?;
     tx.execute(
