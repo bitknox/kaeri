@@ -26,3 +26,4 @@ player-volume-spoken = { $percent } procent
 player-volume-muted = Volym, ljud av
 player-exit-fullscreen = Avsluta helskärm
 accounts-pane-name = Konto, { $state }
+player-panel-dual-audio = { -subbed } och { -dubbed }

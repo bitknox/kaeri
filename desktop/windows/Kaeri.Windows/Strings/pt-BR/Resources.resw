@@ -2006,6 +2006,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Conta, {state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>legendado e dublado</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Ajustes do leitor</value>
   </data>

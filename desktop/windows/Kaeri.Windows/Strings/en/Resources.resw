@@ -2691,6 +2691,10 @@
     <value>Account, {state}</value>
     <comment>Name of the account entry in the navigation pane, followed by its state.</comment>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>Subbed and dubbed</value>
+    <comment>Part of a release's detail line in the player's Sources panel: a release with both the original and the dubbed audio.</comment>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Reader settings</value>
     <comment>Name and tooltip of the Aa button in the reader's group, which opens the reader's settings.</comment>

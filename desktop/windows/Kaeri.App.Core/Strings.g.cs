@@ -1878,6 +1878,9 @@ public static partial class T
     /// <summary>Name of the account entry in the navigation pane, followed by its state.</summary>
     public static string AccountsPaneName(string state) => Fill(Get("AccountsPaneName"), ("state", state));
 
+    /// <summary>Part of a release's detail line in the player's Sources panel: a release with both the original and the dubbed audio.</summary>
+    public static string PlayerPanelDualAudio => Get("PlayerPanelDualAudio");
+
     /// <summary>Name and tooltip of the Aa button in the reader's group, which opens the reader's settings.</summary>
     public static string WindowsReaderSettingsOpen => Get("WindowsReaderSettingsOpen");
 
@@ -13157,6 +13160,7 @@ public static partial class T
         ["PlayerVolumeMuted"] = "Volume, muted",
         ["PlayerExitFullscreen"] = "Exit full screen",
         ["AccountsPaneName"] = "Account, {state}",
+        ["PlayerPanelDualAudio"] = "Subbed and dubbed",
         ["WindowsReaderSettingsOpen"] = "Reader settings",
         ["WindowsReaderOpening"] = "Opening {chapter}",
         ["WindowsReaderOpeningSlow"] = "Finding a source · {seconds} s",

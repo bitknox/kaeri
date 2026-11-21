@@ -1889,6 +1889,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Konto, {state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>untertitelt und synchronisiert</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Leseeinstellungen</value>
   </data>

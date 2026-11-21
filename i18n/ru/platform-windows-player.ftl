@@ -32,3 +32,4 @@ player-volume-spoken = { $percent } %
 player-volume-muted = Громкость, звук выключен
 player-exit-fullscreen = Выйти из полноэкранного режима
 accounts-pane-name = Аккаунт, { $state }
+player-panel-dual-audio = { -subbed } и { -dubbed }

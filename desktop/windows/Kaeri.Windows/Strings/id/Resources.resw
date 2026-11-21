@@ -1772,6 +1772,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Akun, {state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>bersubtitle dan berdubbing</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Pengaturan pembaca</value>
   </data>
