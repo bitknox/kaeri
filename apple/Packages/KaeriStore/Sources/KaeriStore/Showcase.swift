@@ -27,10 +27,13 @@ import UIKit
 /// told it before it said held changes and a rejection apart; `cards`, the wide art's every step
 /// on Home's Continue cards: 900001's banner, 900005's seen still, 900002 with a cover large
 /// enough to crop, 900006's full-size cover, which a 3x phone blurs, and 900004 with no cover at
-/// all. `all` leaves these out too.
+/// all; `synopsis`, 920001, the first of a franchise whose seasons scroll on a line of their
+/// own, and 920021, whose episodes have synopses, given 900006's five-paragraph synopsis and,
+/// where 920001's page is here, its seasons, for More and Less beside the episodes. `all`
+/// leaves these out too.
 public enum Showcase: String, CaseIterable, Sendable {
     case sources, stores, downloads, invite, update, pale, trailer, offline, stranded, failed, messages, calendar,
-         signin, expired, proxy, checking, unsaved, picker, held, stuck, cards, all
+         signin, expired, proxy, checking, unsaved, picker, held, stuck, cards, synopsis, all
 
     /// The one the launch arguments name.
     public static func from(arguments: [String]) -> Showcase? {
@@ -80,6 +83,22 @@ public enum Showcase: String, CaseIterable, Sendable {
                 if let bytes = Self.paleBanner, let title = entry(Self.paleTitle) {
                     events.append(.artworkReady(url: Self.paleBannerUrl, bytes: bytes))
                     events.append(.detail(Self.pale(title)))
+                }
+            case .synopsis:
+                if let long = entry(Self.longSynopsisTitle)?.synopsis {
+                    let franchise = entry(Self.synopsisTitles[0])
+                    for id in Self.synopsisTitles {
+                        guard var title = entry(id) else { continue }
+                        title.synopsis = long
+                        // The franchise's seasons and Related over the episodes, as on 920001.
+                        if let franchise, title.detail?.seasons?.isEmpty ?? true {
+                            title.related = franchise.related
+                            title.detail = title.detail ?? franchise.detail
+                            title.detail?.seasons = franchise.detail?.seasons
+                            title.detail?.partial = false
+                        }
+                        events.append(.detail(title))
+                    }
                 }
             case .cards:
                 // The large cover first, so the card finds it here and never asks the engine.
@@ -344,6 +363,11 @@ public enum Showcase: String, CaseIterable, Sendable {
     /// The title `pale` restyles: the one the shots open most.
     static let paleTitle: AnilistId = 900_001
     static let paleBannerUrl = "https://img.example/banner/pale.png"
+
+    /// The franchise's first season and a later one whose episodes have synopses, and the title
+    /// with the longest synopsis.
+    static let synopsisTitles: [AnilistId] = [920_001, 920_021]
+    static let longSynopsisTitle: AnilistId = 900_006
 
     /// `entry` with a made-up title long enough to wrap to two lines at any width, and the
     /// near-white banner.

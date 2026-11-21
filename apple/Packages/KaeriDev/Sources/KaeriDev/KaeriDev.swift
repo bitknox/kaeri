@@ -146,6 +146,11 @@ final class Delegate: NSObject, NSApplicationDelegate {
         _ = player
         var settled = await store.settle()
         if store.applyGoOfflineArgument() { settled = await store.settle() }
+        // The synopsis showcase lends 920001's seasons to 920021: its page has to be here first.
+        if Showcase.from(arguments: ProcessInfo.processInfo.arguments) == .synopsis {
+            store.loadDetail(920_001)
+            for _ in 0..<50 where store.titles[920_001] == nil { try? await Task.sleep(for: .milliseconds(100)) }
+        }
         store.applyShowcase()
         if let scene = SyncScene.named() { _ = await store.sync.stage(scene, store: store) }
         if let scene = PrivateScene.named() { await store.stage(scene) }
@@ -265,6 +270,14 @@ final class Delegate: NSObject, NSApplicationDelegate {
             let moving = Task { await ScrollClip.run(scroll, path: path) }
             await frames(of: nil, in: window, to: url)
             await moving.value
+        }
+        if !options.clicks.isEmpty, !options.frames.isEmpty, let window = Snapshot.window {
+            // Controls clicked as the frames are taken.
+            let clicking = Task { await Clicks.run(options.clicks, in: window) }
+            await frames(of: nil, in: window, to: url)
+            await clicking.value
+            exitAfterSnapshot()
+            return
         }
         if options.fullScreenCycles > 0, let window = Snapshot.window {
             await fullScreenCycles(window: window, url: url)

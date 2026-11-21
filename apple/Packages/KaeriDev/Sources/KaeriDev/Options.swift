@@ -59,6 +59,12 @@ import Foundation
 ///                                                     a step, on every section, while the
 ///                                                     toolbar's items change; prints
 ///                                                     KAERI_SWEEP_PASSED and quits, or crashes
+///     swift run KaeriDev -KaeriTitle 920021 --clicks "3000:@742,595;4300:scroll=500" \
+///         --snapshot shot.png --frames 2900,4200,4600 clicks at points in the window (from
+///                                                     its content's top left) and the page
+///                                                     scrolled as the frames are taken, with
+///                                                     mouse events posted to the window: the
+///                                                     pointer stays
 ///     swift run KaeriDev --home <dir>             keep the files in <dir> instead
 ///     swift run KaeriDev --real                   the app's own engine, real sources and
 ///                                                     AniList, in a new temporary home
@@ -73,6 +79,8 @@ struct Options {
     var engine: Engine = .fixtures(.watching)
     /// The override root, when given.
     var home: URL?
+    /// Controls clicked while the frames are taken (`Clicks`).
+    var clicks: [Clicks.Step] = []
     /// Whether to run on the terminal's own directories.
     var shared = false
     /// Where to write the snapshot, when one is asked for.
@@ -126,7 +134,7 @@ struct Options {
                             [--detail-delay <ms>] [--list-delay <ms>] [--visit <id>,…] [--open-menu <x>,<y>]
                             [--app-menu <x>,<y>]
                             [--frames <ms>,… [--scroll-path <ms>:<points>,…]]
-                            [--reduce-motion] [--toolbar-sweep <points>]
+                            [--reduce-motion] [--toolbar-sweep <points>] [--clicks <ms>:@<x>,<y>|<ms>:scroll=<y>;…]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
         """
 
@@ -236,6 +244,10 @@ struct Options {
                 let ms = try value(flag)
                 guard let delay = Int(ms), delay >= 0 else { throw Problem.bad(flag, ms) }
                 searchDelay = .milliseconds(delay)
+            case "--clicks":
+                let spec = try value(flag)
+                guard let steps = Clicks.parse(spec) else { throw Problem.bad(flag, spec) }
+                clicks = steps
             case "--size":
                 let size = try value(flag)
                 let parts = size.split(separator: "x").compactMap { Double($0) }
