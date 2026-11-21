@@ -78,9 +78,11 @@ public struct EngineQuestions: Sendable {
         self.send = send
     }
 
-    /// What aired since the last check, each said once (`CheckNewEpisodes`).
+    /// What aired since the last check, each said once (`CheckNewEpisodes`). The engine answers
+    /// within 25 seconds, 15 for AniList and 8 for the dubs, and keeps what it said as said before
+    /// it answers, so the wait outlasts that: an answer after it would be lost for good.
     public func newEpisodes() async -> [NewEpisode]? {
-        await answers.ask(send: { send(.checkNewEpisodes) }) { event in
+        await answers.ask(timeout: .seconds(30), send: { send(.checkNewEpisodes) }) { event in
             if case .newEpisodes(let said) = event { return said }
             return nil
         }
