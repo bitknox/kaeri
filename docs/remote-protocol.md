@@ -353,8 +353,9 @@ not a backlog.
 
 ### Android phone (a client)
 
-- `NsdManager` discovery, with `registerServiceInfoCallback` to resolve (API 34, within the
-  phone app's minSdk 35).
+- `NsdManager` discovery. From API 34 `registerServiceInfoCallback` resolves a found service and
+  follows it; below 34 the older `resolveService` resolves it, one resolve at a time across the
+  app (`NsdLink.kt`).
 - On Android 17 with API 37 targets, outgoing LAN connections need `ACCESS_LOCAL_NETWORK` too.
   The alternative is the system picker (`DiscoveryRequest` with `FLAG_SHOW_PICKER`): the user
   picks one device, and connections to the addresses it returns need no permission. Whether that

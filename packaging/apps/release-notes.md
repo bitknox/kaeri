@@ -5,7 +5,7 @@ it, the apps host no content and supply no sources. You add the sources you are 
 
 ### Android
 
-`kaeri-@VERSION@-android-arm64.apk`, for Android 15 or later on a 64-bit ARM phone or tablet.
+`kaeri-@VERSION@-android-arm64.apk`, for Android 11 or later on a 64-bit ARM phone or tablet.
 
 Open the APK on the device. Android asks once whether the app you opened it from, your browser or
 file manager, may install apps: allow it, then choose Install. The APK is signed with Kaeri's
