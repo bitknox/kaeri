@@ -311,6 +311,67 @@ check('theatre-contrast', "Text in the player's dark room reads at 4.5:1 or more
 	await shot('theatre-contrast');
 });
 
+check('phone-menu', "On a phone the menu's links come right after the Menu button, and focus moving on past them shuts the menu", async () => {
+	// Where the focus is, in the bar's terms.
+	const focus = () =>
+		js<string>(String.raw`(() => {
+			const a = document.activeElement;
+			const link = [...document.querySelectorAll('#bar-nav a')].indexOf(a);
+			if (link >= 0) return 'link ' + (link + 1);
+			if (a?.matches('[data-bar-menu]')) return 'Menu';
+			if (a?.matches('site-search button')) return 'Search';
+			if (a?.matches('[data-theme-toggle]')) return 'theme';
+			return (a?.tagName.toLowerCase() ?? 'nothing') + (a?.closest('main') ? ' in main' : '');
+		})()`);
+	const menuOpen = () => js<boolean>(`document.querySelector('[data-bar-menu]').getAttribute('aria-expanded') === 'true' && document.getElementById('bar-nav').classList.contains('open')`);
+
+	await open('/', phone);
+	const count = await js<number>(`document.querySelectorAll('#bar-nav a').length`);
+	const links = Array.from({ length: count }, (_, i) => `link ${i + 1}`);
+	expect(
+		await js<boolean>(String.raw`(() => {
+			const menu = document.querySelector('[data-bar-menu]');
+			const left = menu.getBoundingClientRect().left;
+			return [...menu.parentElement.children].every((e) => e === menu || getComputedStyle(e).position === 'absolute' || e.getBoundingClientRect().right <= left + 1);
+		})()`),
+		'the Menu button is the last thing in the bar',
+	);
+
+	await js(`document.querySelector('[data-bar-menu]').focus()`);
+	await press('Enter');
+	expect(await menuOpen(), 'Enter on Menu opens the menu');
+	const path: string[] = [];
+	for (let i = 0; i < count; i++) {
+		await press('Tab');
+		path.push(await focus());
+		if (i === 0) await shot('phone-menu');
+	}
+	expect(path.join() === links.join(), `Tab goes from Menu through the ${count} links in order (went to ${path.join(', ')})`);
+	expect(await menuOpen(), 'the menu stays open while the focus is in it');
+	await press('Tab');
+	const after = await focus();
+	expect(after === 'Search' && !(await menuOpen()), `Tab past the last link goes on to Search and shuts the menu (went to ${after})`);
+
+	await js(`document.querySelector('[data-bar-menu]').focus()`);
+	await press('Enter');
+	await press('Tab');
+	await press('Tab', { shift: true });
+	const back = await focus();
+	expect(back === 'Menu' && (await menuOpen()), `Shift-Tab from the first link goes back to Menu, and the menu stays open (went to ${back})`);
+	await press('Escape');
+	expect(!(await menuOpen()) && (await focus()) === 'Menu', 'Escape shuts the menu and leaves the focus on Menu');
+
+	// A wide window has no menu: Tab goes through the bar in the order it shows.
+	await open('/', wide);
+	await js(`document.querySelector('.site-brand').focus()`);
+	const bar: string[] = [];
+	for (let i = 0; i < count + 2; i++) {
+		await press('Tab');
+		bar.push(await focus());
+	}
+	expect(bar.join() === [...links, 'Search', 'theme'].join(), `on a wide window Tab goes from the name through the links, Search and the theme switch (went to ${bar.join(', ')})`);
+});
+
 // ---------- Run ----------
 
 const unknown = only?.filter((name) => !checks.some((c) => c.name === name)) ?? [];

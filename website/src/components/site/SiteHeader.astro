@@ -1,7 +1,9 @@
 ---
 // The top bar every page shares: the icon and name, Features, Download and Docs, search and the
-// theme switch, and the language picker once there is more than one language. On a docs page the
-// menu button is Starlight's own, which opens the sidebar.
+// theme switch, and the language picker once there is more than one language. On a phone the links
+// fold into a menu. Its button comes right before them, so Tab and a screen reader's next item go
+// from the button into the links, and the bar shows it last (site.css). On a docs page the menu
+// button is Starlight's own, which opens the sidebar.
 import '../../styles/starlight-tokens.css';
 import Search from '@astrojs/starlight/components/Search.astro';
 import iconUrl from '../../assets/icon-32.svg?url';
@@ -30,21 +32,22 @@ const here = (path: string) => (path === '/docs/' ? pagePath.startsWith('/docs/'
 		<span>Kaeri</span>
 	</a>
 	<div class="bar-right">
+		<button type="button" class="bar-icon bar-menu" data-bar-menu aria-controls="bar-nav" aria-expanded="false" aria-label={t('site.nav.menu')}>
+			<svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"></path></svg>
+		</button>
 		<nav class="bar-nav" id="bar-nav" aria-label={t('site.nav.label')}>
 			{links.map(([path, key]) => <a href={href(path)} aria-current={here(path) ? 'page' : undefined}>{t(key)}</a>)}
 		</nav>
 		<div class="bar-search"><Search /></div>
 		<ThemeToggle />
 		<LanguagePicker />
-		<button type="button" class="bar-icon bar-menu" data-bar-menu aria-controls="bar-nav" aria-expanded="false" aria-label={t('site.nav.menu')}>
-			<svg aria-hidden="true" width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M3 6h14M3 10h14M3 14h14"></path></svg>
-		</button>
 	</div>
 </div>
 
 <script>
-	// The phone menu: the button opens and shuts it; Escape, a tap outside it and a link inside it
-	// shut it too. Escape puts the focus back on the button.
+	// The phone menu: the button opens and shuts it. Escape, a tap outside it, a link inside it and
+	// focus moving on past it shut it too, so the open menu never covers what has the focus. Escape
+	// puts the focus back on the button.
 	for (const button of document.querySelectorAll<HTMLButtonElement>('[data-bar-menu]')) {
 		const nav = document.getElementById(button.getAttribute('aria-controls')!);
 		if (!nav) continue;
@@ -53,18 +56,26 @@ const here = (path: string) => (path === '/docs/' ? pagePath.startsWith('/docs/'
 			button.setAttribute('aria-expanded', String(open));
 		};
 		const isOpen = () => nav.classList.contains('open');
+		const inMenu = (node: Node) => nav.contains(node) || button.contains(node);
 		button.addEventListener('click', () => set(!isOpen()));
 		nav.addEventListener('click', (e) => {
 			if ((e.target as HTMLElement).closest('a')) set(false);
 		});
+		// Only focus that lands somewhere else on the page counts: none lands when the window loses
+		// the focus, or a tap leaves it nowhere, and the tap is handled below.
+		for (const part of [button, nav]) {
+			part.addEventListener('focusout', (e) => {
+				const to = e.relatedTarget as Node | null;
+				if (isOpen() && to && !inMenu(to)) set(false);
+			});
+		}
 		document.addEventListener('keydown', (e) => {
 			if (e.key !== 'Escape' || !isOpen()) return;
 			set(false);
 			button.focus();
 		});
 		document.addEventListener('pointerdown', (e) => {
-			const target = e.target as Node;
-			if (isOpen() && !nav.contains(target) && !button.contains(target)) set(false);
+			if (isOpen() && !inMenu(e.target as Node)) set(false);
 		});
 	}
 </script>

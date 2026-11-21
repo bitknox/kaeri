@@ -548,8 +548,11 @@ body.k-body {
 		display: none !important;
 	}
 
+	/* The menu button sits right before its links in the page, for the keyboard and screen readers,
+	   and at the end of the bar on screen. */
 	.bar-menu {
 		display: flex;
+		order: 1;
 	}
 
 	.bar-nav {
