@@ -158,7 +158,7 @@ struct ContinueSmall: View {
     }
 
     private var play: some View {
-        PlayCircle(id: item.id, episode: item.episode, label: L.widgetStartLabel(episode: item.episode, title: item.title), intent: true)
+        PlayCircle(id: item.id, episode: item.episode, label: L.widgetStartLabel(episode: item.episode, title: item.title))
     }
 
     private var text: some View {

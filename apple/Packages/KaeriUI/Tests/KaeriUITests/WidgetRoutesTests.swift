@@ -26,6 +26,15 @@ struct WidgetRoutesTests {
         #expect(store.sentLog == ["play"])
     }
 
+    @Test func aPlayLinkFromAPageOrAMessageOnlyOpensItsTitle() throws {
+        let store = AppStore()
+        let navigator = Navigator(route: LaunchRoute())
+        let link = try #require(WidgetLink(url: URL(string: "kaeri://play/900001/7")!))
+        navigator.openWidgetLink(link, store: store)
+        #expect(navigator.titleOnMac == 900_001)
+        #expect(store.sentLog.isEmpty, "nothing plays until the viewer presses Play")
+    }
+
     @Test func theHeaderOpensTheCalendarOnThisWeek() {
         let navigator = Navigator(route: LaunchRoute())
         navigator.calendarWeek = 2

@@ -237,26 +237,22 @@ struct WatchedCheck: View {
     }
 }
 
-/// The dimmed glass circle with a play glyph, over art, that plays the episode: a link where the
-/// widget takes links, and the play intent in the small size, which takes none.
+/// The dimmed glass circle with a play glyph, over art, that plays the episode through the play
+/// intent in every size. A link would not do: any page or message can open the app's links.
 struct PlayCircle: View {
     let id: Int
     let episode: Int
     let label: String
     var size: CGFloat = 32
-    var intent = false
 
     @Environment(\.widgetDrawsTaps) private var drawsTaps
 
     var body: some View {
         if !drawsTaps {
             glyph
-        } else if intent {
+        } else {
             Button(intent: PlayEpisodeIntent(titleID: id, episode: episode)) { glyph }
                 .buttonStyle(.plain)
-                .accessibilityLabel(label)
-        } else {
-            Link(destination: WidgetLink.play(id, episode: episode).url) { glyph }
                 .accessibilityLabel(label)
         }
     }

@@ -1,5 +1,5 @@
 // Where the widgets' taps land: a title's page, the player on an episode, the Calendar on today,
-// and Settings › Accounts; and the Live Activity's Play, on a downloaded episode. They come as kaeri:// links, and the small widget's play button as
+// and Settings › Accounts; and the Live Activity's Play, on a downloaded episode. They come as kaeri:// links, and the widgets' play button as
 // an App Intent that runs in the app.
 
 import KaeriKit
