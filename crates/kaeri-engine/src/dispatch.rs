@@ -5,7 +5,7 @@
 //! [`dispatch`] for each command, [`receive`] for each event on its way to the front end, and
 //! [`handle_internal`] for each message the engine side left itself. No front end calls them.
 
-use kaeri_meta::Meta;
+use kaeri_meta::{Meta, Priority};
 use kaeri_model::StoreMsg;
 use kaeri_model::{
     Msg, Span,
@@ -24,6 +24,7 @@ use crate::{
     catalog::{
         browse,
         calendar::{load_calendar, load_calendar_ahead, load_calendar_past},
+        cards,
         detail::{load_detail, open_external, play_trailer},
         home::{self, HomeAsk, HomeMemory},
         lists::{hide_from_continue, load_continue, load_seasonal},
@@ -267,10 +268,11 @@ async fn after_dismissal(
     }
 }
 
-/// A title's episode table; `low` when nobody is waiting on it, as for a card's stills.
+/// A title's episode table: for its page, or with `stills` for a card's stills, asked at low
+/// priority and holding that title's claim until it is done.
 fn episodes_job(
     id: kaeri_core::ids::AnilistId,
-    low: bool,
+    stills: Option<crate::catalog::cards::Claim>,
     job: Option<JobGuard>,
     engine: &mut EngineState,
     services: &Services,
@@ -284,12 +286,13 @@ fn episodes_job(
     let ticket = engine.listed.ticket(id);
     spawn(job, services, tx, move |lent| async move {
         let listing = list_episodes(lent, id, naming, ticket, true, true);
-        if low {
+        if stills.is_some() {
             kaeri_meta::in_background(listing).await;
         } else {
             listing.await;
         }
         drop(table);
+        drop(stills);
     })
 }
 
@@ -445,12 +448,35 @@ pub(crate) fn dispatch(
             let both = engine.reading.answer() == kaeri_model::medium::KaeriIsFor::Both;
             spawn(job, services, tx, move |lent| load_detail(lent, id, both))
         }
+        // A cover hovered again while its card or its screen's tables are still asked joins
+        // that ask: no request, and its job ends here. The card is asked as work for the page
+        // on screen (see `load_cards`), and the screen's ask it joins is raised to match.
         Command::LoadCards { ids } => {
-            spawn(job, services, tx, move |lent| crate::catalog::cards::load_cards(lent, ids))
+            let hover = &engine.hover;
+            let wanted = cards::at_most(ids)
+                .into_iter()
+                .filter(|id| !hover.tables.join(*id, Priority::OnScreen));
+            let claim = hover.cards.claim(wanted, Priority::OnScreen);
+            if claim.ids().is_empty() {
+                return;
+            }
+            let ids = claim.ids().to_vec();
+            spawn(job, services, tx, move |lent| async move {
+                cards::load_cards(lent, ids).await;
+                drop(claim);
+            })
         }
-        Command::PrepareCards { ids } => spawn(job, services, tx, move |lent| {
-            crate::catalog::cards::prepare_cards(lent, ids)
-        }),
+        Command::PrepareCards { ids } => {
+            let claim = engine.hover.tables.claim(cards::at_most(ids), Priority::Background);
+            if claim.ids().is_empty() {
+                return;
+            }
+            let (ids, lane) = (claim.ids().to_vec(), claim.lane());
+            spawn(job, services, tx, move |lent| async move {
+                lane.run(cards::prepare_cards(lent, ids)).await;
+                drop(claim);
+            })
+        }
         Command::LoadTitleLanguage => load_title_language(services, tx),
         Command::PlayTrailer { url, title } => {
             play_trailer(url, title, job, engine, services, tx)
@@ -563,13 +589,19 @@ pub(crate) fn dispatch(
         // Quietly, with no job, and never in the way of the table or a play: see
         // `titles::dub`.
         Command::LoadDub(id) => engine.dubs.ask(id, engine.network.offline, services, tx),
-        Command::LoadEpisodes(id) => episodes_job(id, false, job, engine, services, tx),
+        Command::LoadEpisodes(id) => episodes_job(id, None, job, engine, services, tx),
         // An aired episode no source lists, looked for again as the person asked.
         Command::Missing(kaeri_model::missing::MissingCommand::CheckAgain { id, episode }) => {
             crate::titles::recheck::check_again(id, episode, engine, services, tx)
         }
         // The same table for a card's stills, asked of AniList at low priority.
-        Command::LoadStills(id) => episodes_job(id, true, job, engine, services, tx),
+        // Once at a time for each title: hovered again, the listing under way answers.
+        Command::LoadStills(id) => {
+            let claim = engine.hover.stills.claim([id], Priority::Background);
+            if !claim.ids().is_empty() {
+                episodes_job(id, Some(claim), job, engine, services, tx);
+            }
+        }
         Command::SetWatched { id, episodes, watched } => {
             set_watched(id, &episodes, watched, engine, services, tx);
             // One episode marked watched by hand is one finished: that show, topped up. A mark
