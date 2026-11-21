@@ -132,7 +132,10 @@ pub fn cast_to(
     let from_start = match position {
         Some(at) if at >= CARRY_FROM => {
             let event = kaeri_store::WatchEvent::new(id, episode.clone(), at);
-            if let Err(e) = services.store.record_event(&event) {
+            // While private, held in memory as any private play's place is, and never written.
+            if services.privacy.holds_show(id) {
+                services.privacy.keep_watch(event);
+            } else if let Err(e) = services.store.record_event(&event) {
                 tx.not_kept("the position carried over to the cast", &e);
             }
             false
