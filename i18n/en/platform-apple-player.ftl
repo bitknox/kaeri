@@ -12,10 +12,10 @@ player-releases-finding = Finding { -release-pl }…
 player-releases-none = No { -release-pl } found
 
 # Part of a release's detail line: a release in the dubbed audio.
-player-release-dub = dub
+player-release-dub = { -dubbed-cap }
 
 # Part of a release's detail line: a release with both the original and the dubbed audio.
-player-release-dual-audio = { -subbed } and { -dubbed }
+player-release-dual-audio = { -subbed-cap } and { -dubbed }
 
 # VoiceOver label of the countdown bar of the up next card.
 # @arg episode: text

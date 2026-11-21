@@ -9597,6 +9597,64 @@ player-subs-bg-box = Box
 # Button in the subtitles panel that opens Settings.
 player-subs-more = More in Settings…
 
+# Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+player-sheet-episodes-loading = The episode list is on its way.
+
+# Accessibility label of the player's side panel with the Episodes and Sources tabs.
+player-panel = Episodes and sources
+
+# Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+episode-row-playing = Playing · { $left }
+
+# Episode row in the player's panel: the length of an episode nobody has started.
+episode-row-length = { $minutes } min
+
+# Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+episode-row-delayed = Delayed, was { $when }
+
+# Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+episode-row-from = From { $source }
+
+# Button on a partly watched episode: plays it from where it was left.
+action-resume = Resume
+
+# Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+player-panel-metadata-only = No source lists this show yet. Episodes can still be marked watched.
+
+# Player panel, Sources tab: heading over the source and streams playing now.
+player-panel-playing-now = Playing now
+
+# Player panel, Sources tab: heading over the other sources, in the order they are tried.
+player-panel-other-sources = Other sources
+
+# Player panel, Sources tab: the folded list of a source's releases for this episode.
+player-panel-releases =
+    { $count ->
+        [one] One release
+       *[other] { $count } releases
+    }
+
+# Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+player-release-automatic = Automatic picks this
+
+# Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+player-panel-order = Tried in the order set in Sources.
+
+# Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+player-panel-pick-scope = A pick here is for this episode only.
+
+# Accessibility label of the subtitled or dubbed switch in the player panel.
+player-translation = Subbed or dubbed
+
+# Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+player-panel-starting = Starting · { $seconds } s
+
+# Notice when another source started playing while the player panel was closed.
+notice-playing-from-source = Playing from { $source } at { $clock }
+
+# Player panel, under the subtitled or dubbed switch during a watch party.
+party-version-own = Only your player switches. The room keeps playing.
+
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = Private mode
 

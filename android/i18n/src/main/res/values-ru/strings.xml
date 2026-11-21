@@ -1334,7 +1334,6 @@
     <string name="player_position_state">%1$s из %2$s</string>
     <string name="player_sheet_finding">Ищем источники…</string>
     <string name="player_sheet_none">Источников для этого эпизода не найдено.</string>
-    <string name="player_sheet_episodes_loading">Список эпизодов скоро появится.</string>
     <string name="player_dual_audio">С субтитрами и с дубляжом</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">%1$,d новый эпизод</item>
@@ -2651,6 +2650,7 @@
     <string name="player_subs_bg_shadow">Тень</string>
     <string name="player_subs_bg_box">Рамка</string>
     <string name="player_subs_more">Больше в настройках…</string>
+    <string name="player_sheet_episodes_loading">Список эпизодов скоро появится.</string>
     <string name="private_mode">Приватный режим</string>
     <string name="private_mode_detail">Ничего из того, что вы смотрите или читаете, не сохраняется и не синхронизируется, пока вы не выключите режим или не закроете Kaeri.</string>
     <string name="private_mode_limits">Ваши источники и совместные просмотры по-прежнему видят, что вы открываете.</string>

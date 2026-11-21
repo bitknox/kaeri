@@ -1272,7 +1272,6 @@
     <string name="player_position_state">%1$s de %2$s</string>
     <string name="player_sheet_finding">Buscando fuentes…</string>
     <string name="player_sheet_none">No se encontró ninguna fuente para este episodio.</string>
-    <string name="player_sheet_episodes_loading">La lista de episodios está en camino.</string>
     <string name="player_dual_audio">Subtitulado y doblado</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">Un episodio nuevo</item>
@@ -2563,6 +2562,7 @@
     <string name="player_subs_bg_shadow">Sombra</string>
     <string name="player_subs_bg_box">Caja</string>
     <string name="player_subs_more">Más en Ajustes…</string>
+    <string name="player_sheet_episodes_loading">La lista de episodios está en camino.</string>
     <string name="private_mode">Modo privado</string>
     <string name="private_mode_detail">Nada de lo que ves o lees se guarda ni se sincroniza hasta que lo desactives o cierres Kaeri.</string>
     <string name="private_mode_limits">Tus fuentes y watch parties siguen viendo lo que abres.</string>

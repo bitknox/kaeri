@@ -193,7 +193,6 @@ episode-number-title-text = Episode { $number } · { $title }
 player-position-state = { $at } dari { $total }
 player-sheet-finding = Mencari { -source-pl }…
 player-sheet-none = Tidak ada { -source-pl } untuk episode ini.
-player-sheet-episodes-loading = Daftar episode sedang dimuat.
 player-dual-audio = { -subbed-cap } dan { -dubbed }
 notif-new-episodes = { $count ->
    *[other] { $count } episode baru

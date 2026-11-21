@@ -205,7 +205,6 @@ episode-number-title-text = Avsnitt { $number } · { $title }
 player-position-state = { $at } av { $total }
 player-sheet-finding = Hittar { -source-pl }…
 player-sheet-none = Inga { -source-pl } hittades för det här avsnittet.
-player-sheet-episodes-loading = Avsnittslistan är på väg.
 player-dual-audio = { -subbed-cap } och { -dubbed }
 notif-new-episodes = { $count ->
     [one] Ett nytt avsnitt

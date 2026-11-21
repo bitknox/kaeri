@@ -1210,7 +1210,6 @@
     <string name="player_position_state">%1$s av %2$s</string>
     <string name="player_sheet_finding">Hittar källor…</string>
     <string name="player_sheet_none">Inga källor hittades för det här avsnittet.</string>
-    <string name="player_sheet_episodes_loading">Avsnittslistan är på väg.</string>
     <string name="player_dual_audio">Textat och dubbat</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">Ett nytt avsnitt</item>
@@ -2475,6 +2474,7 @@
     <string name="player_subs_bg_shadow">Skugga</string>
     <string name="player_subs_bg_box">Ruta</string>
     <string name="player_subs_more">Mer i Inställningar…</string>
+    <string name="player_sheet_episodes_loading">Avsnittslistan är på väg.</string>
     <string name="private_mode">Privat läge</string>
     <string name="private_mode_detail">Inget du tittar på eller läser sparas eller synkas förrän du stänger av det eller avslutar Kaeri.</string>
     <string name="private_mode_limits">Dina källor och watch partyn ser fortfarande vad du öppnar.</string>

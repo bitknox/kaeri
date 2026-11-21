@@ -205,3 +205,4 @@ player-subs-bg-outline = Garis tepi
 player-subs-bg-shadow = Bayangan
 player-subs-bg-box = Kotak
 player-subs-more = Selengkapnya di Pengaturan…
+player-sheet-episodes-loading = Daftar episode sedang dimuat.
