@@ -480,10 +480,16 @@ struct State {
     reduce_motion: Option<bool>,
 }
 
-/// The hello Kaeri's receiver is greeted with: the language for its strings and the word for
-/// this device.
+/// The hello Kaeri's receiver is greeted with: the language for its strings, the word for this
+/// device and, once the device said, whether its scenes keep still. Without `motion` the
+/// receiver goes by the TV's own setting, which a TV seldom has.
 fn greeting(state: &State) -> Value {
-    json!({"type": "hello", "language": state.language, "device": state.device_word})
+    let mut hello =
+        json!({"type": "hello", "language": state.language, "device": state.device_word});
+    if let Some(reduce) = state.reduce_motion {
+        hello["motion"] = json!(if reduce { "reduce" } else { "full" });
+    }
+    hello
 }
 
 /// The receiver app left the TV: its connection closed, or the receiver's status stopped

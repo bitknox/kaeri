@@ -1917,6 +1917,20 @@ async fn a_stop_on_the_tv_a_takeover_and_a_lost_tv_each_end_the_cast_their_own_w
     assert!(matches!(ended.failure, Some(CastFailure::Lost(_))), "{:?}", ended.failure);
 }
 
+/// The device's Reduce Motion reaches Kaeri's receiver in its hello, at once while it runs and
+/// on every greeting after, so the TV's scenes keep still too.
+#[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+async fn kaeris_receiver_hears_the_devices_reduce_motion() {
+    let (receiver, player, _events) = cast_with_own_receiver(CustomReceiver::Runs).await;
+    assert_eq!(receiver.heard("hello").len(), 1);
+    player.set_greeting(Some("sv".into()), Some("phone".into()), Some(true));
+    let hello = receiver_heard_soon(&receiver, "hello", 2).await;
+    assert_eq!(hello[1]["motion"], "reduce");
+    assert_eq!(hello[1]["device"], "phone");
+    player.set_greeting(Some("sv".into()), Some("phone".into()), Some(false));
+    assert_eq!(receiver_heard_soon(&receiver, "hello", 3).await[2]["motion"], "full");
+}
+
 #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
 async fn kaeris_receiver_is_greeted_and_its_messages_are_heard() {
     let (receiver, player, mut events) = cast_with_own_receiver(CustomReceiver::Runs).await;
