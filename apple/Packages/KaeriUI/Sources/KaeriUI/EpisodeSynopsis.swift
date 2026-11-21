@@ -48,11 +48,10 @@ struct EpisodeMetrics: Equatable {
     static let macMiddle = macBeside(width: 144, height: 81)
     /// The Mac with a list from 454 pt to 500: a 120 x 68 still, the text beside.
     static let macSmall = macBeside(width: 120, height: 68)
-    /// The Mac with a list from 430 pt to 454: a 96 x 54 still, the text beside.
+    /// The Mac with a list under 454 pt, down to the window's least (396 pt): a 96 x 54 still,
+    /// the text beside. No smaller still: under 430 pt the text column narrows instead, to 206 pt
+    /// at 396.
     static let macSmaller = macBeside(width: 96, height: 54)
-    /// The Mac with a narrower list, down to the window's least (396 pt): a 64 x 36 still, the
-    /// text beside.
-    static let macSmallest = macBeside(width: 64, height: 36)
     /// An iPad at regular width: the Mac's row at touch sizes, a 192 x 108 still.
     static let pad = EpisodeMetrics(text: .beside, still: CGSize(width: 192, height: 108), tall: 128, short: 128)
     /// An iPhone, and an iPad at compact width: 16 over the still, the still, three lines of
@@ -63,13 +62,14 @@ struct EpisodeMetrics: Equatable {
 
     /// The Mac's list is wide enough for the big still from this width.
     static let wideFrom: CGFloat = 560
-    /// The Mac's smaller stills, each from the list width where the text column beside it is
-    /// still about 240 pt or more (the list less 94 pt for the padding, the number, the check
-    /// and the gaps, less the still): 262 pt beside 144 at 500, 240 beside 120 at 454 and beside
-    /// 96 at 430, and 238 beside 64 at the window's least list, 396 pt. The text is always beside
-    /// the still on the Mac: under it, it read as a different list.
+    /// The Mac's stills, each from the list width where the text column beside it is still about
+    /// 240 pt or more (the list less 94 pt for the padding, the number, the check and the gaps,
+    /// less the still): 262 pt beside 144 at 500, 240 beside 120 at 454 and beside 96 at 430.
+    /// 96 x 54 is the smallest; below 430 the column narrows, to 206 pt at the window's least
+    /// list, 396 pt. The text is always beside the still on the Mac: under it, it read as a
+    /// different list.
     static let macSteps: [(from: CGFloat, metrics: EpisodeMetrics)] = [
-        (wideFrom, .macWide), (500, .macMiddle), (454, .macSmall), (430, .macSmaller),
+        (wideFrom, .macWide), (500, .macMiddle), (454, .macSmall),
     ]
     /// The width the Mac's rows take that is not the still or the text column: 8 either side,
     /// the number's 22, the check's 14 and three gaps of 14.
@@ -77,7 +77,7 @@ struct EpisodeMetrics: Equatable {
 
     /// The Mac's metrics for a list `width` points wide.
     static func mac(listWidth width: CGFloat) -> EpisodeMetrics {
-        macSteps.first { width >= $0.from }?.metrics ?? .macSmallest
+        macSteps.first { width >= $0.from }?.metrics ?? .macSmaller
     }
 
     /// A Mac row with the text beside a still of this size, 10 over and under it as on the

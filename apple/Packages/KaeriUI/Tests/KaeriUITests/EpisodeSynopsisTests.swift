@@ -42,7 +42,7 @@ struct EpisodeSynopsisTests {
         (500, CGSize(width: 144, height: 81)), (499, CGSize(width: 120, height: 68)),
         (454, CGSize(width: 120, height: 68)), (453, CGSize(width: 96, height: 54)),
         (450, CGSize(width: 96, height: 54)), (430, CGSize(width: 96, height: 54)),
-        (429, CGSize(width: 64, height: 36)), (396, CGSize(width: 64, height: 36)),
+        (429, CGSize(width: 96, height: 54)), (396, CGSize(width: 96, height: 54)),
     ]
 
     /// The Mac's size at each step's narrowest list, down to the window's least (396 pt).
@@ -61,14 +61,15 @@ struct EpisodeSynopsisTests {
         #expect(EpisodeMetrics.phone.text == .under)
     }
 
-    @Test func theMacsTextColumnStaysAbout240PointsWideAtEveryStep() {
+    @Test func theMacsTextColumnStaysAbout240PointsWideDownTo430Points() {
         // The list less 8 either side, the number's 22, the check's 14, three gaps of 14 and the
-        // still: at least 240 down to 430 pt, and 238 at the window's least list.
+        // still: at least 240 down to 430 pt. 96 x 54 is the smallest still, so at the window's
+        // least list the column narrows to 206.
         let fixed: CGFloat = 2 * 8 + 22 + 14 + 3 * 14
         for width in Self.macNarrowest {
             let still: CGFloat = EpisodeMetrics.mac(listWidth: width).still.width
             let column: CGFloat = width - fixed - still
-            #expect(column >= (width < 430 ? 238 : 240), "the column at \(width) is \(column)")
+            #expect(column >= (width < 430 ? 206 : 240), "the column at \(width) is \(column)")
         }
     }
 
