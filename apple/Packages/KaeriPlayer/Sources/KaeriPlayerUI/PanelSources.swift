@@ -160,6 +160,7 @@ struct PanelSources: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .controlSize(metrics.touch ? .large : .regular)
+            .buttonSizing(.flexible)
             .frame(maxWidth: .infinity)
             if !notes.isEmpty {
                 VStack(alignment: .leading, spacing: 2) {

@@ -169,6 +169,8 @@ struct PlayerPanel: View {
             .pickerStyle(.segmented)
             .labelsHidden()
             .controlSize(metrics.touch ? .large : .regular)
+            // The segments share the board's width on the Mac too, as they do on touch.
+            .buttonSizing(.flexible)
             .frame(width: metrics.tabWidth)
             .frame(maxWidth: metrics.tabWidth == nil ? .infinity : nil)
             if metrics.tabWidth != nil { Spacer(minLength: 0) }
