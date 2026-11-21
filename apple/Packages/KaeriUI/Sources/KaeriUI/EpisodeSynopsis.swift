@@ -45,15 +45,14 @@ struct EpisodeMetrics: Equatable {
     /// The Mac with a list from 500 pt to 560: a 144 x 81 still with the same room over and under
     /// it, the text beside. The still is the row's floor; a title on two lines and a synopsis
     /// under it can stand taller, which the row then fits.
-    static let macMiddle = EpisodeMetrics(
-        text: .beside, still: CGSize(width: 144, height: 81), tall: 101, short: 101, fits: true
-    )
-    /// The Mac with a narrower list: a 144 x 81 still, the text under it. 10 over the still, the
-    /// still, 8, three lines of 13 on 18 and 10 under them (161), or the still alone between
-    /// them (101); a row fits its synopsis's own lines once its details are known.
-    static let macNarrow = EpisodeMetrics(
-        text: .under, still: CGSize(width: 144, height: 81), tall: 161, short: 101, fits: true, pad: 10
-    )
+    static let macMiddle = macBeside(width: 144, height: 81)
+    /// The Mac with a list from 454 pt to 500: a 120 x 68 still, the text beside.
+    static let macSmall = macBeside(width: 120, height: 68)
+    /// The Mac with a list from 430 pt to 454: a 96 x 54 still, the text beside.
+    static let macSmaller = macBeside(width: 96, height: 54)
+    /// The Mac with a narrower list, down to the window's least (396 pt): a 64 x 36 still, the
+    /// text beside.
+    static let macSmallest = macBeside(width: 64, height: 36)
     /// An iPad at regular width: the Mac's row at touch sizes, a 192 x 108 still.
     static let pad = EpisodeMetrics(text: .beside, still: CGSize(width: 192, height: 108), tall: 128, short: 128)
     /// An iPhone, and an iPad at compact width: 16 over the still, the still, three lines of
@@ -64,14 +63,30 @@ struct EpisodeMetrics: Equatable {
 
     /// The Mac's list is wide enough for the big still from this width.
     static let wideFrom: CGFloat = 560
-    /// The Mac's list is wide enough for text beside the smaller still from this width: a text
-    /// column of about 260 pt, some 43 characters of the synopsis a line.
-    static let besideFrom: CGFloat = 500
+    /// The Mac's smaller stills, each from the list width where the text column beside it is
+    /// still about 240 pt or more (the list less 94 pt for the padding, the number, the check
+    /// and the gaps, less the still): 262 pt beside 144 at 500, 240 beside 120 at 454 and beside
+    /// 96 at 430, and 238 beside 64 at the window's least list, 396 pt. The text is always beside
+    /// the still on the Mac: under it, it read as a different list.
+    static let macSteps: [(from: CGFloat, metrics: EpisodeMetrics)] = [
+        (wideFrom, .macWide), (500, .macMiddle), (454, .macSmall), (430, .macSmaller),
+    ]
+    /// The width the Mac's rows take that is not the still or the text column: 8 either side,
+    /// the number's 22, the check's 14 and three gaps of 14.
+    static let macFixed: CGFloat = 2 * 8 + 22 + 14 + 3 * 14
 
     /// The Mac's metrics for a list `width` points wide.
     static func mac(listWidth width: CGFloat) -> EpisodeMetrics {
-        if width >= wideFrom { return .macWide }
-        return width >= besideFrom ? .macMiddle : .macNarrow
+        macSteps.first { width >= $0.from }?.metrics ?? .macSmallest
+    }
+
+    /// A Mac row with the text beside a still of this size, 10 over and under it as on the
+    /// widest, fitting its text.
+    private static func macBeside(width: CGFloat, height: CGFloat) -> EpisodeMetrics {
+        EpisodeMetrics(
+            text: .beside, still: CGSize(width: width, height: height),
+            tall: height + 20, short: height + 20, fits: true
+        )
     }
 
     /// The room over and under the still where the text sits beside it.

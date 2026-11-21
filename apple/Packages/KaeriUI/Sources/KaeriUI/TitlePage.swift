@@ -932,7 +932,7 @@ struct EpisodeList: View {
     @State private var lastRows: (id: AnilistId, height: CGFloat)?
     /// Whether the rows keep room for text, settled when the table is laid out.
     @State private var room = EpisodeRoom()
-    /// How wide the list stands, which sets whether text sits beside the stills or under them.
+    /// How wide the list stands, which sets the size of the stills the text sits beside.
     @State private var listWidth: CGFloat?
     /// Where the pickers stand from the top of the page's visible area. Kept out of the view's
     /// state, so scrolling redraws nothing.
