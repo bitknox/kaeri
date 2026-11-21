@@ -128,6 +128,29 @@ impl Store {
         series: &[(LocalSeries, Vec<LocalFile>)],
         at: i64,
     ) -> Result<()> {
+        self.keep_book_scan(folder, series, at, false)
+    }
+
+    /// Add a scan that could not read all of a folder to what was scanned from it before:
+    /// the series and files it found are written as [`Store::replace_book_scan`] writes them,
+    /// and every series and file it did not find stays as it was, with its match and the
+    /// person's choice, until a scan that reads the whole folder.
+    pub fn merge_book_scan(
+        &self,
+        folder: &str,
+        series: &[(LocalSeries, Vec<LocalFile>)],
+        at: i64,
+    ) -> Result<()> {
+        self.keep_book_scan(folder, series, at, true)
+    }
+
+    fn keep_book_scan(
+        &self,
+        folder: &str,
+        series: &[(LocalSeries, Vec<LocalFile>)],
+        at: i64,
+        partial: bool,
+    ) -> Result<()> {
         self.with_tx(|tx| {
             let kept: Vec<LocalSeries> = {
                 let mut stmt = tx.prepare(
@@ -148,12 +171,14 @@ impl Store {
                 })?
                 .collect::<std::result::Result<_, _>>()?
             };
-            tx.execute(
-                "DELETE FROM book_local_file WHERE series IN
-                    (SELECT id FROM book_local_series WHERE folder = ?1)",
-                [folder],
-            )?;
-            tx.execute("DELETE FROM book_local_series WHERE folder = ?1", [folder])?;
+            if !partial {
+                tx.execute(
+                    "DELETE FROM book_local_file WHERE series IN
+                        (SELECT id FROM book_local_series WHERE folder = ?1)",
+                    [folder],
+                )?;
+                tx.execute("DELETE FROM book_local_series WHERE folder = ?1", [folder])?;
+            }
             for (s, files) in series {
                 let old = kept.iter().find(|k| k.id == s.id);
                 let (work, state, confidence, reason) = match old {
@@ -163,7 +188,7 @@ impl Store {
                     _ => (s.work.clone(), s.state.clone(), s.confidence, s.reason.clone()),
                 };
                 tx.execute(
-                    "INSERT INTO book_local_series
+                    "INSERT OR REPLACE INTO book_local_series
                          (id, folder, name, medium, work, state, confidence, reason)
                      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)",
                     params![s.id, folder, s.name, s.medium, work, state, confidence, reason],

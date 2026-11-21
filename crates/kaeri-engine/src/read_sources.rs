@@ -854,7 +854,18 @@ impl BookSources {
                 let report = added::folder_report(&folder, &scan);
                 self.keep_folder_meta(&report);
                 let rows: Vec<_> = scan.series.iter().map(|s| to_rows(&folder.id, s)).collect();
-                if let Err(e) = self.store.replace_book_scan(&folder.id, &rows, now) {
+                // A folder inside that could not be read leaves its series out of this scan,
+                // not out of the library: what an earlier scan found stays.
+                let kept = if scan.unread.is_empty() {
+                    self.store.replace_book_scan(&folder.id, &rows, now)
+                } else {
+                    tracing::info!(
+                        unread = scan.unread.len(),
+                        "folders inside a book folder could not be read"
+                    );
+                    self.store.merge_book_scan(&folder.id, &rows, now)
+                };
+                if let Err(e) = kept {
                     tracing::warn!(error = %e, "the scan was not kept");
                 }
                 // Each series is findable by its work, so chapters and editions can be asked,

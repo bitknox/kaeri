@@ -98,6 +98,11 @@ pub struct Scan {
     /// The files behind `unsupported` and `locked`, for a screen that shows them; at most
     /// [`MAX_LISTED`].
     pub unsupported_files: Vec<String>,
+    /// Folders inside the scanned one that could not be read, as the scan names them: one
+    /// that refused its listing, broke off partway through it, or held an entry whose details
+    /// could not be read. Series under them may be missing or short, so a scan with any of
+    /// these is not the folder's whole story.
+    pub unread: Vec<String>,
 }
 
 /// The most unsupported files a scan lists by path.
@@ -197,6 +202,8 @@ struct Node {
     file: bool,
     /// A link to a folder, which could lead back into this one.
     link: bool,
+    /// Its details could not be read, so whether it is a book or a folder is not known.
+    unread: bool,
     size: u64,
     mtime: i64,
 }
@@ -210,24 +217,30 @@ impl Node {
 impl Place<'_> {
     fn list(self, dir: &Node) -> std::io::Result<Vec<Node>> {
         let mut nodes = match self {
+            // A listing that breaks off partway is an unread folder, not a shorter one.
             Place::Disk => fs::read_dir(&dir.at)?
-                .filter_map(Result::ok)
                 .map(|entry| {
+                    let entry = entry?;
                     let path = entry.path();
-                    let is_dir = path.is_dir();
+                    let meta = fs::metadata(&path);
+                    // A link to nothing, or a file gone since the listing, is not there at all.
+                    let unread =
+                        meta.as_ref().is_err_and(|e| e.kind() != std::io::ErrorKind::NotFound);
+                    let meta = meta.ok();
+                    let is_dir = meta.as_ref().is_some_and(fs::Metadata::is_dir);
                     let link = entry.file_type().is_ok_and(|t| t.is_symlink()) && is_dir;
-                    let meta = fs::metadata(&path).ok();
-                    Node {
+                    Ok(Node {
                         at: path.clone(),
                         dir: is_dir,
                         file: meta.as_ref().is_some_and(fs::Metadata::is_file),
                         link,
+                        unread,
                         size: meta.as_ref().map_or(0, fs::Metadata::len),
                         mtime: meta.as_ref().map_or(0, mtime_of),
                         path,
-                    }
+                    })
                 })
-                .collect::<Vec<_>>(),
+                .collect::<std::io::Result<Vec<_>>>()?,
             Place::Tree(tree) => tree
                 .entries(&dir.at.to_string_lossy())?
                 .into_iter()
@@ -244,6 +257,7 @@ impl Place<'_> {
                     dir: e.folder,
                     file: !e.folder,
                     link: false,
+                    unread: false,
                     size: e.size,
                     mtime: e.modified,
                 })
@@ -299,6 +313,7 @@ pub fn scan_until(
                 dir: true,
                 file: false,
                 link: false,
+                unread: false,
                 size: 0,
                 mtime: entry.modified,
             };
@@ -318,6 +333,7 @@ pub fn scan_until(
                 dir: true,
                 file: false,
                 link: false,
+                unread: false,
                 size: 0,
                 mtime: mtime_of(&meta),
             };
@@ -412,10 +428,20 @@ fn walk(
         if hidden(&name) || entry.link {
             continue;
         }
+        if entry.unread {
+            out.unread.push(slash(&entry.path));
+            continue;
+        }
         if entry.dir {
             if depth < MAX_DEPTH {
-                // An unreadable subfolder is skipped, not fatal to the rest.
-                let _ = walk(place, &entry, depth + 1, known, limits, stop, emit, out, root);
+                // An unreadable subfolder is skipped, not fatal to the rest, and the scan says
+                // so. A stop ends the whole scan, which says so itself.
+                match walk(place, &entry, depth + 1, known, limits, stop, emit, out, root) {
+                    Err(e) if e.kind() != std::io::ErrorKind::Interrupted => {
+                        out.unread.push(slash(&entry.path));
+                    }
+                    _ => {}
+                }
             }
         } else if extension(&entry.path)
             .is_some_and(|x| naming::BOOK_EXTENSIONS.contains(&x.as_str()))
