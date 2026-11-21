@@ -9606,6 +9606,9 @@ player-panel = [Éþîšöðéš àñð šöüŕçéš~~~~~~]
 # Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
 episode-row-playing = [Þļàýîñĝ · { $left }~~~~]
 
+# Episode row in the player's panel: the episode is part story, part filler.
+episode-row-mixed = [Ṁîẋéð~~]
+
 # Episode row in the player's panel: the length of an episode nobody has started.
 episode-row-length = [{ $minutes } ɱîñ~~~]
 
@@ -9654,6 +9657,12 @@ notice-playing-from-source = [Þļàýîñĝ ƒŕöɱ { $source } àţ { $clock 
 
 # Player panel, under the subtitled or dubbed switch during a watch party.
 party-version-own = [Öñļý ýöüŕ þļàýéŕ šŵîţçĥéš. Ţĥé ŕööɱ ķééþš þļàýîñĝ.~~~~~~~~~~~~~~~]
+
+# Player panel: button under a synopsis cut to three lines, that shows it whole.
+player-panel-more = [Ṁöŕé~~]
+
+# Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+player-panel-less = [Ļéšš~~]
 
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = [Þŕîṽàţé ɱöðé~~~~]

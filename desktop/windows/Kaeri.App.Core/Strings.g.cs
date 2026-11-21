@@ -6118,6 +6118,9 @@ public static partial class T
     /// <summary>Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.</summary>
     public static string EpisodeRowPlaying(string left) => Fill(Get("EpisodeRowPlaying"), ("left", left));
 
+    /// <summary>Episode row in the player's panel: the episode is part story, part filler.</summary>
+    public static string EpisodeRowMixed => Get("EpisodeRowMixed");
+
     /// <summary>Episode row in the player's panel: the length of an episode nobody has started.</summary>
     public static string EpisodeRowLength(long minutes) => Fill(Get("EpisodeRowLength"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
@@ -6162,6 +6165,12 @@ public static partial class T
 
     /// <summary>Player panel, under the subtitled or dubbed switch during a watch party.</summary>
     public static string PartyVersionOwn => Get("PartyVersionOwn");
+
+    /// <summary>Player panel: button under a synopsis cut to three lines, that shows it whole.</summary>
+    public static string PlayerPanelMore => Get("PlayerPanelMore");
+
+    /// <summary>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</summary>
+    public static string PlayerPanelLess => Get("PlayerPanelLess");
 
     /// <summary>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</summary>
     public static string PrivateMode => Get("PrivateMode");
@@ -14610,6 +14619,7 @@ public static partial class T
         ["PlayerSheetEpisodesLoading"] = "The episode list is on its way.",
         ["PlayerPanel"] = "Episodes and sources",
         ["EpisodeRowPlaying"] = "Playing · {left}",
+        ["EpisodeRowMixed"] = "Mixed",
         ["EpisodeRowLength"] = "{minutes} min",
         ["EpisodeRowDelayed"] = "Delayed, was {when}",
         ["EpisodeRowFrom"] = "From {source}",
@@ -14626,6 +14636,8 @@ public static partial class T
         ["PlayerPanelStarting"] = "Starting · {seconds} s",
         ["NoticePlayingFromSource"] = "Playing from {source} at {clock}",
         ["PartyVersionOwn"] = "Only your player switches. The room keeps playing.",
+        ["PlayerPanelMore"] = "More",
+        ["PlayerPanelLess"] = "Less",
         ["PrivateMode"] = "Private mode",
         ["PrivateModeDetail"] = "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.",
         ["PrivateModeLimits"] = "Your sources and watch parties still see what you open.",

@@ -772,6 +772,10 @@ player-panel = Episodes and { -source-pl }
 # @arg left: text
 episode-row-playing = Playing · { $left }
 
+# Episode row in the player's panel: the episode is part story, part filler.
+# @max 16
+episode-row-mixed = Mixed
+
 # Episode row in the player's panel: the length of an episode nobody has started.
 # @arg minutes: int
 episode-row-length = { $minutes } min
@@ -826,3 +830,11 @@ notice-playing-from-source = Playing from { $source } at { $clock }
 
 # Player panel, under the subtitled or dubbed switch during a watch party.
 party-version-own = Only your player switches. The room keeps playing.
+
+# Player panel: button under a synopsis cut to three lines, that shows it whole.
+# @max 16
+player-panel-more = More
+
+# Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+# @max 16
+player-panel-less = Less
