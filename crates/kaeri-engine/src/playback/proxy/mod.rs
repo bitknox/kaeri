@@ -238,17 +238,22 @@ impl Upstream {
 
     /// Remember which URLs a playlist names as keys and segments, when the stream's source
     /// transforms either. A subtitle playlist's segments are subtitles, and are left out.
+    ///
+    /// Only parts on a host the source could fetch itself, one of its allowed hosts and never a
+    /// loopback or private address, are handed to it. The playlist is the source's own, so it
+    /// could otherwise name any address the device reaches and be given what answered there.
+    /// The rest are served as they came.
     fn note_parts(&self, body: &str, base: &str) {
-        let Some((_, transforms)) = &self.source else { return };
+        let Some((source, transforms)) = &self.source else { return };
         if lock(&self.subtitles).contains(base) {
             return;
         }
+        let allowed = &source.manifest().allowed_hosts;
         let named = playlist::part_uris(body, base);
-        lock(&self.parts).extend(
-            named
-                .into_iter()
-                .filter_map(|(part, url)| transforms.covers(part).then_some((url, part))),
-        );
+        lock(&self.parts).extend(named.into_iter().filter_map(|(part, url)| {
+            (transforms.covers(part) && kaeri_plugin::sandbox::is_allowed(&url, allowed))
+                .then_some((url, part))
+        }));
     }
 
     /// `fetched` as the stream's source transforms it, when it is a part the source covers;
@@ -1139,6 +1144,25 @@ mod tests {
             *lock(&source.headers),
             [("referer".to_owned(), "https://media.example/".to_owned())]
         );
+    }
+
+    #[tokio::test]
+    async fn a_part_off_the_sources_hosts_is_never_handed_to_it() {
+        // A service on this machine, which the source cannot fetch from itself.
+        let (_service, origin) = serve_files(vec![("/key.bin", "LOCAL".into())]).await;
+        let local = origin.replace("media.example", "127.0.0.1");
+        let mut stream = transformed_stream();
+        stream[1].1 = stream[1].1.replace("key.bin", &format!("{local}/key.bin"));
+        let both = StreamTransforms { keys: true, segments: true };
+        let source = Prefixing::new(both, false);
+        let (server, _) = serve_files_for(stream, Some(source.clone())).await;
+
+        let master = get(server.url()).await;
+        let variant = get(&proxied_ending(&master, "/720.m3u8")).await;
+        assert_eq!(get(&proxied_ending(&variant, "/key.bin")).await, "LOCAL");
+        assert_eq!(source.asked(), 0, "the source was handed what a local service answered");
+        assert_eq!(get(&proxied_ending(&variant, "/seg-1.m4s")).await, "s:SEG-1");
+        assert_eq!(source.asked(), 1);
     }
 
     #[tokio::test]
