@@ -21,6 +21,8 @@ import SwiftUI
 ///
 /// `key` is what the item shows: words, counts, which buttons are there. A new key lets the item
 /// take its new size at once.
+///
+/// The item's size is in whole points (`ToolbarWidths.whole`), as the toolbar lays it out.
 struct ToolbarItemWidth: Layout {
     var site: String
     /// What the item shows, by its hash.
@@ -28,7 +30,7 @@ struct ToolbarItemWidth: Layout {
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
         guard let content = subviews.first else { return .zero }
-        let size = content.sizeThatFits(proposal)
+        let size = ToolbarWidths.whole(content.sizeThatFits(proposal))
         let width = ToolbarWidths.answer(site: site, key: key, asked: proposal, width: size.width)
         return CGSize(width: width, height: size.height)
     }
@@ -61,6 +63,20 @@ enum ToolbarWidths {
     }
 
     private static let items = Mutex<[String: Item]>([:])
+
+    /// A toolbar item's size in whole points, rounded up.
+    ///
+    /// The toolbar lays its items out at whole points, while the item's hosting view holds it at
+    /// the size SwiftUI answers. Text, and a width in the middle of an animation, come out between
+    /// whole points (301.5), so the two disagree: the toolbar sets the item to 302, the hosting
+    /// view takes the new frame as a change and asks for an update-constraints pass, its
+    /// constraint puts the item back at 301.5, and the toolbar lays it out at 302 again, within
+    /// one display cycle, until AppKit ends the app ("more Update Constraints in Window passes
+    /// than there are views"). At a whole width both agree after one pass. The content inside
+    /// still moves and clips at any width, so an animated width keeps its motion.
+    static func whole(_ size: CGSize) -> CGSize {
+        CGSize(width: size.width.rounded(.up), height: size.height.rounded(.up))
+    }
 
     /// The width the item at `site` answers to `asked`, its content measuring `width` now.
     static func answer(site: String, key: Int, asked proposal: ProposedViewSize, width: CGFloat) -> CGFloat {
