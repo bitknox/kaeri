@@ -103,8 +103,9 @@ pub fn play(
         return playback::refuse(job, tx);
     };
     let billing = named(id, &episode, engine);
+    let start = if from_start { Start::Beginning } else { Start::Resume };
     let staged = play_staged(
-        id, episode, None, from_start, false, false, billing, opener, job, engine, services, tx,
+        id, episode, None, start, false, false, billing, opener, job, engine, services, tx,
     );
     let _ = tx.send(staged);
 }
@@ -200,7 +201,18 @@ pub fn play_source(
     let billing = named(id, &episode, engine);
     let pick = Some(Pick::Release { provider_id, source_id });
     let staged = play_staged(
-        id, episode, pick, false, false, false, billing, opener, job, engine, services, tx,
+        id,
+        episode,
+        pick,
+        Start::Resume,
+        false,
+        false,
+        billing,
+        opener,
+        job,
+        engine,
+        services,
+        tx,
     );
     let _ = tx.send(staged);
 }
@@ -216,10 +228,11 @@ pub(crate) fn play_following(
     services: &Services,
     tx: &Outbox,
 ) -> Event {
-    let Follow { id, episode, title, episode_title } = follow;
+    let Follow { id, episode, title, episode_title, at } = follow;
     let billing = (title, episode_title);
+    let start = at.map_or(Start::Resume, Start::At);
     play_staged(
-        id, episode, None, false, false, true, billing, opener, job, engine, services, tx,
+        id, episode, None, start, false, true, billing, opener, job, engine, services, tx,
     )
 }
 
@@ -354,7 +367,7 @@ pub fn play_opened(
         id,
         episode,
         pick,
-        false,
+        Start::Resume,
         false,
         false,
         (title, episode_title),
@@ -396,7 +409,7 @@ pub fn play_opened_untracked(
         id,
         episode,
         pick,
-        true,
+        Start::Beginning,
         false,
         false,
         (name, None),
@@ -409,16 +422,40 @@ pub fn play_opened_untracked(
     let _ = tx.send(staged);
 }
 
+/// Where a play opens its episode.
+#[derive(Debug, Clone, Copy, PartialEq)]
+pub(crate) enum Start {
+    /// Where the episode was left.
+    Resume,
+    /// At the beginning, whatever position it was left at.
+    Beginning,
+    /// At this second: the playhead of the playback it takes over from, as a sub or dub picked
+    /// in the player does.
+    At(f64),
+}
+
+impl Start {
+    /// The second the player opens at: `stored` is where the store says the episode was left,
+    /// `kept` where a private play left it, held in memory and newer than any row.
+    pub(crate) fn opens_at(self, stored: Option<f64>, kept: Option<f64>) -> Option<f64> {
+        match self {
+            Self::Resume => kept.or(stored),
+            Self::Beginning => None,
+            Self::At(at) => Some(at),
+        }
+    }
+}
+
 /// Play an episode staged for Now Playing as `billing` says, its title and its episode's own
-/// name, from the release `pick` names or whichever the resolution ladder chooses, and from the
-/// beginning when `from_start`. Returns what it was staged as.
+/// name, from the release `pick` names or whichever the resolution ladder chooses, and from where
+/// `start` says. Returns what it was staged as.
 #[allow(clippy::too_many_arguments)]
 fn play_staged(
     id: AnilistId,
     episode: String,
     // The release the user picked in the Sources overlay, or the link they opened.
     pick: Option<Pick>,
-    from_start: bool,
+    start: Start,
     // Asked for by a party: an episode with no source here says so for the party's dialog.
     party: bool,
     // Led to by a playback of the same title, whose player has the title's table: rolled on,
@@ -434,11 +471,14 @@ fn play_staged(
     let Services { paths, sync, prefetch, store, .. } = services;
     let played = engine.next_playback(id, &episode);
     let told = follows || table_told(id, engine);
-    // Where the episode was left, for the starting screen to say it resumes there. Not for a
-    // play from the beginning, or one that records nothing.
-    let resume = (!from_start && id != kaeri_model::opened::UNTRACKED)
-        .then(|| resume_of(services, id, &episode))
-        .flatten();
+    // Where the episode opens, for the starting screen to say it resumes there. Not for a play
+    // from the beginning, or one that records nothing.
+    let resume = match start {
+        _ if id == kaeri_model::opened::UNTRACKED => None,
+        Start::Resume => resume_of(services, id, &episode),
+        Start::Beginning => None,
+        Start::At(at) => Some(at),
+    };
     let private = services.privacy.holds_show(played.id);
     let staged = stage(&played, title, episode_title, resume, opener.as_ref(), engine, private);
     // What the show sets for itself, over the config in effect: sub or dub, quality, what is
@@ -478,7 +518,7 @@ fn play_staged(
         id,
         episode,
         pick,
-        from_start,
+        start,
         party,
         prx,
         stopped,
@@ -517,7 +557,18 @@ pub fn play_party(
     // its own position. This device's resume point would put it ahead of the room, and near the
     // end of a file it ended at once and moved the whole room on.
     let staged = play_staged(
-        id, episode, None, true, true, false, billing, opener, job, engine, services, tx,
+        id,
+        episode,
+        None,
+        Start::Beginning,
+        true,
+        false,
+        billing,
+        opener,
+        job,
+        engine,
+        services,
+        tx,
     );
     let _ = tx.send(staged);
 }
@@ -781,8 +832,8 @@ fn spawn_playback(
     // The release the user picked in the Sources overlay, or the link they opened; `None`
     // lets the resolution ladder choose.
     pick: Option<Pick>,
-    // Open at the beginning, whatever position the episode was left at.
-    from_start: bool,
+    // Where the player opens the episode.
+    start: Start,
     // Asked for by a party: an episode with no source here says so, for the party's dialog
     // that offers Choose source.
     party: bool,
@@ -1044,12 +1095,8 @@ fn spawn_playback(
         }
         // Played from the beginning: no resume point, so the player opens at nought, nothing
         // says it resumed, and the history it writes as it plays is where it is left next.
-        if from_start {
-            context.resume_at = None;
-        } else if let Some(kept) = privacy.resume_kept(id, &context.episode) {
-            // Where a private play left it, held in memory: newer than any row.
-            context.resume_at = Some(kept);
-        }
+        context.resume_at =
+            start.opens_at(context.resume_at, privacy.resume_kept(id, &context.episode));
         let PlayHints { next, episodes, cover_url, banner_url, episode_total, .. } = hints;
         (context.next, context.episodes) = (next, episodes);
         // The art the title's lookup found, else what its page or a list showed.
@@ -1294,6 +1341,18 @@ fn following(rows: &[EpisodeRow], episode: &str) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_play_opens_where_it_was_left_at_the_beginning_or_at_a_playhead_it_takes_over() {
+        let (stored, kept) = (Some(300.0), Some(420.0));
+        // A private play's point, held in memory, is newer than the store's.
+        assert_eq!(Start::Resume.opens_at(stored, kept), Some(420.0));
+        assert_eq!(Start::Resume.opens_at(stored, None), Some(300.0));
+        assert_eq!(Start::Beginning.opens_at(stored, kept), None);
+        // A sub or dub picked in the player opens at the playhead it left, whatever was stored.
+        assert_eq!(Start::At(612.5).opens_at(stored, kept), Some(612.5));
+        assert_eq!(Start::At(612.5).opens_at(None, None), Some(612.5));
+    }
 
     #[test]
     fn sub_or_dub_picked_in_the_player_holds_over_the_show_s_own_for_that_title_only() {

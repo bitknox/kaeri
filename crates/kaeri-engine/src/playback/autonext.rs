@@ -125,6 +125,8 @@ pub struct Follow {
     pub episode: String,
     pub title: String,
     pub episode_title: Option<String>,
+    /// The second it opens at, when not where the episode was left.
+    pub at: Option<f64>,
 }
 
 /// What `event` leads the engine to start, from the playback `finished` Now Playing showed
@@ -164,6 +166,7 @@ pub fn follow(
                     episode_title: cache.episode_title(finished.id, &episode),
                     episode,
                     title: finished.title,
+                    at: None,
                 }
             }),
         Event::PlayerPlayEpisode { episode, title } => front.map(|front| Follow {
@@ -171,6 +174,7 @@ pub fn follow(
             episode: episode.clone(),
             title: front.title.clone(),
             episode_title: title.clone().or_else(|| cache.episode_title(front.id, episode)),
+            at: None,
         }),
         Event::PlayerTranslation(translation) => {
             said.push(Event::Toast(Notice::info(match translation {
@@ -185,6 +189,7 @@ pub fn follow(
                     .episode_title
                     .clone()
                     .or_else(|| cache.episode_title(front.id, &front.episode)),
+                at: None,
             })
         }
         _ => None,
@@ -303,6 +308,7 @@ mod tests {
             episode: "2".into(),
             title: "Title 0".into(),
             episode_title: Some("Episode 2".into()),
+            at: None,
         };
         assert_eq!(next, Some(expected));
     }
@@ -356,6 +362,7 @@ mod tests {
             episode: "5".into(),
             title: "Title 1".into(),
             episode_title: Some("Fifth".into()),
+            at: None,
         };
         assert_eq!(next, Some(expected));
 
