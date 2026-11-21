@@ -712,7 +712,7 @@ async fn main() {
             }
         };
     player.use_receiver(Some(args.app.clone()));
-    player.set_greeting(Some("en".into()), Some("mac".into()));
+    player.set_greeting(Some("en".into()), Some("mac".into()), None);
     let was = quiet(&player, args.volume).await;
     if let Err(e) = player.launch().await {
         say!("the receiver didn't launch: {e}");

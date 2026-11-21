@@ -1924,7 +1924,7 @@ async fn kaeris_receiver_is_greeted_and_its_messages_are_heard() {
     assert_eq!(hello.len(), 1);
     assert_eq!(hello[0]["version"], KAERI_PROTOCOL);
     let mut heard = player.heard();
-    player.set_greeting(Some("sv".into()), Some("phone".into()));
+    player.set_greeting(Some("sv".into()), Some("phone".into()), None);
     assert_eq!(receiver_heard_soon(&receiver, "hello", 2).await[1]["device"], "phone");
     player.tell_skipped("opening");
     assert_eq!(receiver_heard_soon(&receiver, "skipped", 1).await[0]["part"], "opening");
