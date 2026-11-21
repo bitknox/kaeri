@@ -65,6 +65,11 @@ import Foundation
 ///                                                     scrolled as the frames are taken, with
 ///                                                     mouse events posted to the window: the
 ///                                                     pointer stays
+///     swift run KaeriDev --cursor "gutter=arrow@40,700;poster=hand@120,200"
+///                                                     the pointer's shape at points in the
+///                                                     window (CursorProbe), in front, with mouse
+///                                                     moves posted to it: the pointer stays;
+///                                                     prints KAERI_CURSOR_PASSED, or quits 1
 ///     swift run KaeriDev --home <dir>             keep the files in <dir> instead
 ///     swift run KaeriDev --real                   the app's own engine, real sources and
 ///                                                     AniList, in a new temporary home
@@ -81,6 +86,8 @@ struct Options {
     var home: URL?
     /// Controls clicked while the frames are taken (`Clicks`).
     var clicks: [Clicks.Step] = []
+    /// Points where the pointer's shape is read once the scene is up (`CursorProbe`).
+    var cursor: [CursorProbe.Step] = []
     /// Whether to run on the terminal's own directories.
     var shared = false
     /// Where to write the snapshot, when one is asked for.
@@ -135,6 +142,7 @@ struct Options {
                             [--app-menu <x>,<y>]
                             [--frames <ms>,… [--scroll-path <ms>:<points>,…]]
                             [--reduce-motion] [--toolbar-sweep <points>] [--clicks <ms>:@<x>,<y>|<ms>:scroll=<y>;…]
+                            [--cursor <name>=arrow|hand|ibeam@<x>,<y>|go=<section>|title=<id>|back|read=<work>|click@<x>,<y>|type=<text>;…]
         the player's states: \(PlayerShot.allCases.map(\.rawValue).joined(separator: ", "))
         """
 
@@ -248,6 +256,10 @@ struct Options {
                 let spec = try value(flag)
                 guard let steps = Clicks.parse(spec) else { throw Problem.bad(flag, spec) }
                 clicks = steps
+            case "--cursor":
+                let spec = try value(flag)
+                guard let steps = CursorProbe.parse(spec) else { throw Problem.bad(flag, spec) }
+                cursor = steps
             case "--size":
                 let size = try value(flag)
                 let parts = size.split(separator: "x").compactMap { Double($0) }

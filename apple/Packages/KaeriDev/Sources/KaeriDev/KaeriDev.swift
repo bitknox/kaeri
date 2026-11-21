@@ -93,7 +93,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
         // what you are doing, so a snapshot shows the window as it looks when it is not key.
         // Only an app in the Dock goes full screen, so `--full-screen` runs as one.
         // KAERI_SHOT_ACTIVE=1 runs a snapshot as the app in front, for the window as it looks key.
-        let active = ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1"
+        // The cursor probe runs in front too: only the key window sets the pointer's shape.
+        let active = ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1" || !options.cursor.isEmpty
         // The toolbar sweep stays out of the Dock and out of the way too.
         let regular = (options.snapshot == nil && options.toolbarSweep == nil) || options.fullScreenCycles > 0 || active
         NSApp.setActivationPolicy(regular ? .regular : .accessory)
@@ -191,7 +192,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
             store.apply(.toast(Notice(kind: .alert, text: "could not reach the source list", hint: nil)))
             try? await Task.sleep(for: .milliseconds(300))
         }
-        if ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1", let window = Snapshot.window {
+        if ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1" || !options.cursor.isEmpty, let window = Snapshot.window {
             // Asked for outright: macOS's cooperative activation leaves a process started from a
             // terminal behind the app in front.
             NSApp.activate(ignoringOtherApps: true)
@@ -209,6 +210,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
             print("KAERI_SWEEP_PASSED")
             NSApp.terminate(nil)
             return
+        }
+        if !options.cursor.isEmpty, options.playerShot == nil, let window = Snapshot.window {
+            let passed = await CursorProbe.run(options.cursor, in: window, navigate: probeNavigate)
+            finish(passed)
         }
         if let shot = options.playerShot {
             let there: Bool
@@ -239,6 +244,14 @@ final class Delegate: NSObject, NSApplicationDelegate {
         if CastScene.named() != nil, !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
             if options.reduceMotion { navigator.motionReduced = true }
             await frames(of: nil, in: window, to: url)
+        }
+        if !options.cursor.isEmpty, options.playerShot != nil, let window = Snapshot.window {
+            // Over the player, at its shot.
+            let passed = await CursorProbe.run(options.cursor, in: window, navigate: probeNavigate)
+            store.party.leave()
+            player.viewerClosed()
+            try? await Task.sleep(for: .milliseconds(300))
+            finish(passed)
         }
         // `KAERI_PROBE_TOOLTIPS=1`: every tooltip the window could show now (TooltipProbe).
         if TooltipProbe.asked, let window = Snapshot.window {
@@ -614,6 +627,30 @@ final class Delegate: NSObject, NSApplicationDelegate {
     private func exitAfterSnapshot() {
         NSApp.terminate(nil)
         Task { @MainActor in await self.end() }
+    }
+
+    /// The cursor probe's steps that move the scene on.
+    private func probeNavigate(_ step: CursorProbe.Step) async {
+        switch step {
+        case .section(let name):
+            if let section = AppSection(rawValue: name) { navigator.section = section }
+        case .title(let id):
+            if let id = AnilistId(id) { navigator.openTitle(id) }
+        case .back:
+            if player.inMainWindow { player.requestBack() } else { navigator.back() }
+        case .read(let work):
+            if work == "close" { store.reader.close() } else { store.reader.open(work: work) }
+            try? await Task.sleep(for: .milliseconds(2500))
+        default:
+            break
+        }
+    }
+
+    /// The cursor probe's end: the process's status says whether it passed.
+    private func finish(_ passed: Bool) -> Never {
+        store.shutdown()
+        if let temporary { try? FileManager.default.removeItem(at: temporary) }
+        exit(passed ? 0 : 1)
     }
 
     private func end() async {
