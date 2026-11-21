@@ -773,17 +773,26 @@ impl Reader {
         }
     }
 
-    /// The app left the foreground: the place is written and the read rule waits.
+    /// The app left the foreground: the place is written and the read rule waits. Where its
+    /// wait started stays known, so the wait starts over when the app is back.
     pub fn background(&mut self, cx: &Cx<'_>) {
         if let Some(s) = self.session.as_mut() {
             s.read_timer += 1;
-            s.read_wait = None;
             s.flush_leaving(cx);
         }
     }
 
-    /// The app is in the foreground again.
-    pub fn foreground(&mut self, _cx: &Cx<'_>) {}
+    /// The app is in the foreground again: a read rule's wait that going away stopped starts
+    /// over, since the reader is still on the page it started from.
+    pub fn foreground(&mut self, cx: &Cx<'_>) {
+        if let Some(s) = self.session.as_mut()
+            && s.read_wait.is_some()
+            && !s.read_fired
+        {
+            s.read_timer += 1;
+            after(cx.tx, READ_AFTER, s.id, ReaderWake::ReadRule(s.read_timer));
+        }
+    }
 
     /// The device went off line or came back: an end page already said follows the connection,
     /// since what it leads into, and why it has nothing, depend on it.
@@ -1451,9 +1460,18 @@ impl Session {
         // A report stops the read rule's wait, and the one that keeps it starts it again. One
         // from where the wait started, such as a novel's scroll within its last page, keeps it
         // going: reports every half second would otherwise never let it end.
+        // Asking for a page again, or a count of a novel's pages, moves the reader nowhere and
+        // leaves the wait as it is.
         let spot = Spot::of(&command);
         self.reporting = spot.clone();
-        if spot.is_none() || spot != self.read_wait {
+        let stays = matches!(
+            command,
+            C::NeedPage { .. }
+                | C::Retry { page: Some(_), .. }
+                | C::NovelCounted { .. }
+                | C::FixedRendered { .. }
+        );
+        if !stays && (spot.is_none() || spot != self.read_wait) {
             self.read_timer += 1;
             self.read_wait = None;
         }
@@ -2616,6 +2634,16 @@ mod tests {
             self.reader.synced(&mut cx);
         }
 
+        /// The app goes to the background (`away`) or comes back, as `AppPhase` tells the reader.
+        fn phase(&mut self, away: bool) {
+            let cx = self.reader.cx(&mut self.config, &self.services, &self.tx);
+            if away {
+                self.reader.background(&cx);
+            } else {
+                self.reader.foreground(&cx);
+            }
+        }
+
         /// The device goes off line or comes back, as `NetworkPath` tells the reader.
         fn network(&mut self, offline: bool) {
             let was = self.services.offline.swap(offline, std::sync::atomic::Ordering::Relaxed);
@@ -3065,6 +3093,37 @@ mod tests {
         }
         assert_eq!(read, 1, "counted read once");
         assert!(h.kept("1").unwrap().read);
+    }
+
+    /// Going away from the last page and coming back, or a page asked for again there, stop the
+    /// read rule's wait only for the moment: the reader is still on the last page, and the wait
+    /// runs out.
+    #[tokio::test(start_paused = true)]
+    async fn the_last_pages_wait_outlasts_going_away_and_a_page_asked_for_again() {
+        let read = |said: Vec<ReaderEvent>| {
+            said.iter().any(|e| matches!(e, ReaderEvent::ChapterRead { .. }))
+        };
+        // Away within the wait, and back.
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        tokio::time::sleep(READ_AFTER / 2).await;
+        h.phase(true);
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(!read(h.drain()), "not while away");
+        h.phase(false);
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(read(h.drain()), "back on the last page");
+        assert!(h.kept("1").unwrap().read);
+
+        // A page asked for again, as the page grid does for one not made yet.
+        let mut h = harness(Store::open_in_memory().unwrap());
+        h.open(OpenAt::Resume).await;
+        h.shown(2, TurnHow::Turn).await;
+        let session = h.session();
+        h.send(ReaderCommand::NeedPage { session, chapter: ChapterId::new("1"), page: 0 });
+        tokio::time::sleep(READ_AFTER * 2).await;
+        assert!(read(h.drain()), "a page asked for moves nothing");
     }
 
     #[tokio::test(start_paused = true)]
