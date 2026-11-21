@@ -158,7 +158,10 @@ fn tile_of(kit: &Kit, work: &str) -> Option<WorkTile> {
         work: WorkId::new(work.to_owned()),
         title: tiles::title_of(&kit.store, work, form),
         medium,
-        cover: kit.store.book_work(work).ok().flatten().and_then(|w| w.cover),
+        cover: kit
+            .sources
+            .registry
+            .shown_cover(kit.store.book_work(work).ok().flatten().and_then(|w| w.cover)),
         format_label: None,
         progress: None,
         next: None,

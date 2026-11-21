@@ -429,6 +429,7 @@ impl BookSources {
             plugins: Arc::default(),
         };
         this.registry.put(Arc::new(FolderSource::new(this.store.clone())));
+        this.downloads.show_covers_from(this.registry.clone());
         this.restore();
         this
     }
@@ -2026,7 +2027,7 @@ impl BookSources {
             work: WorkId::new(work),
             title: hit.title,
             medium,
-            cover: hit.cover,
+            cover: self.registry.shown_cover(hit.cover),
             format_label: hit.format.map(|f| f.as_str().to_owned()),
             progress: None,
             next: None,

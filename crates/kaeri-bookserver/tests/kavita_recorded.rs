@@ -70,7 +70,9 @@ async fn kavita_signs_in_lists_opens_and_writes_progress_back() {
 
     let hits = source.search("lantern", &hints).await.unwrap();
     assert_eq!((hits[0].id.as_str(), hits[0].title.as_str()), ("7", "Lantern Keeper"));
-    assert!(hits[0].cover.as_deref().unwrap().contains("apiKey=key-one"));
+    // The key is not in the cover a hit names, which may be kept: only a shown cover has it.
+    let cover = hits[0].cover.clone().unwrap();
+    assert!(!cover.contains("key-one"), "{cover}");
 
     let detail = source.series("7", &hints).await.unwrap();
     assert_eq!(detail.description.as_deref(), Some("A keeper of lanterns."));

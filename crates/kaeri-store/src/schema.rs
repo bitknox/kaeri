@@ -1168,6 +1168,16 @@ const MIGRATIONS: &[(&str, &str)] = &[
     UPDATE read_status SET status_at = updated_at, score_at = updated_at;
     "#,
     ),
+    (
+        "0040_book_cover_without_key",
+        r#"
+    -- A Kavita server's covers were kept with the account's API key in the address, which
+    -- signs in to that account. They are kept without it now, and the key is added only as a
+    -- cover is shown.
+    UPDATE book_work SET cover = substr(cover, 1, instr(cover, '&apiKey=') - 1)
+     WHERE instr(cover, '&apiKey=') > 0;
+    "#,
+    ),
 ];
 
 /// How long a statement waits for a lock another connection or process holds before it fails.
@@ -1426,6 +1436,29 @@ mod tests {
             rows,
             [("l:m:the long ferry".to_owned(), r#"["The Long Ferry"]"#.to_owned())]
         );
+    }
+
+    #[test]
+    fn kavita_covers_kept_before_lose_the_api_key() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0040_book_cover_without_key")).unwrap();
+        let kavita = "https://kavita.home.example/api/Image/series-cover?seriesId=7";
+        for (work, cover) in [
+            ("l:m:lantern keeper", format!("{kavita}&apiKey=a-secret-key")),
+            ("l:m:the long ferry", "https://books.example/cover/1".to_owned()),
+        ] {
+            conn.execute(
+                "INSERT INTO book_work (work, medium, titles, cover, fetched_at)
+                 VALUES (?1, 'manga', '[]', ?2, 1)",
+                rusqlite::params![work, cover],
+            )
+            .unwrap();
+        }
+        migrate(&conn).unwrap();
+        let mut stmt = conn.prepare("SELECT cover FROM book_work ORDER BY work").unwrap();
+        let covers: Vec<String> =
+            stmt.query_map([], |r| r.get(0)).unwrap().map(Result::unwrap).collect();
+        assert_eq!(covers, [kavita, "https://books.example/cover/1"]);
     }
 
     #[test]
