@@ -474,7 +474,8 @@ fn admit<T>(
 pub struct DownloadHandle {
     /// librqbit's id for this torrent, for polling and for pausing it individually.
     pub id: usize,
-    /// The chosen file, relative to the session's output directory.
+    /// The chosen file, relative to the session's output directory: in a batch, under the
+    /// torrent's own folder there.
     pub name: String,
     pub total: u64,
 }
@@ -752,7 +753,11 @@ impl TorrentSession {
             self.held.lock().unwrap_or_else(|e| e.into_inner()).insert(handle.id());
         }
 
-        Ok(DownloadHandle { id: handle.id(), name: file.name.clone(), total: file.length })
+        // A batch is written under a folder of its own, which the file's name in the torrent
+        // leaves out.
+        let path = written_to(&self.session, handle.id())?.join(&file.name);
+        let name = path.strip_prefix(&self.output_dir).unwrap_or(&path).to_string_lossy();
+        Ok(DownloadHandle { id: handle.id(), name: name.into_owned(), total: file.length })
     }
 
     /// How the stream served at `url` is doing: its peers, its speeds and what it has sent,
@@ -1519,6 +1524,51 @@ mod tests {
         // Every torrent waits again once the window ends.
         session.set_hold(Hold::EVERYTHING).await.unwrap();
         assert!(paused(&session));
+        session.session.stop().await;
+    }
+
+    /// Serves `bytes` as a .torrent file on loopback, and says at which address.
+    async fn serve_torrent(bytes: Vec<u8>) -> String {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("http://{}/batch.torrent", listener.local_addr().unwrap());
+        tokio::spawn(async move {
+            while let Ok((mut stream, _)) = listener.accept().await {
+                let mut request = [0_u8; 4096];
+                let _ = stream.read(&mut request).await;
+                let head = format!(
+                    "HTTP/1.1 200 OK\r\nContent-Type: application/x-bittorrent\r\n\
+                     Content-Length: {}\r\nConnection: close\r\n\r\n",
+                    bytes.len()
+                );
+                let _ = stream.write_all(head.as_bytes()).await;
+                let _ = stream.write_all(&bytes).await;
+            }
+        });
+        url
+    }
+
+    /// The .torrent of the batch `session_with_local_torrent` wrote at `root/<name>`.
+    async fn batch_torrent(root: &std::path::Path, name: &str) -> Vec<u8> {
+        let options =
+            librqbit::CreateTorrentOptions { name: Some(name), piece_length: Some(16 * 1024) };
+        let torrent = librqbit::create_torrent(&root.join(name), options).await.unwrap();
+        torrent.as_bytes().unwrap().to_vec()
+    }
+
+    #[tokio::test]
+    async fn a_download_from_a_batch_names_the_file_where_it_is_written() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) = session_with_local_torrent(root.path(), "Kept Batch", &BATCH).await;
+        let url = serve_torrent(batch_torrent(root.path(), "Kept Batch").await).await;
+
+        let handle = session.download(&url, Some(2)).await.unwrap();
+
+        assert_eq!(handle.id, id, "the same torrent");
+        let path = session.output_dir().join(&handle.name);
+        assert!(path.exists(), "{}", path.display());
+        let written = root.path().join("Kept Batch").join("ep02.mkv");
+        assert_eq!(path.canonicalize().unwrap(), written.canonicalize().unwrap());
         session.session.stop().await;
     }
 
