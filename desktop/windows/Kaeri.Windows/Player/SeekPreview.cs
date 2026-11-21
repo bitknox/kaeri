@@ -30,7 +30,8 @@ sealed class SeekPreview : IDisposable
     readonly SwapchainAsk ask;
     FfiPlayer? player;
     PreviewSource? source;
-    nint bound;
+    readonly SwapchainFit fit = new();
+    double openedScale;
     double? target;
     bool opened;
     DateTime lastSeek;
@@ -54,7 +55,8 @@ sealed class SeekPreview : IDisposable
     /// <summary>Show the frame at <paramref name="seconds"/> of <paramref name="from"/>.</summary>
     public void Show(double seconds, PreviewSource from, double scale)
     {
-        if (player is null || source != from)
+        // Its buffers are sized for the scale it opened at, so another display's scale opens it again.
+        if (player is null || source != from || Math.Abs(scale - openedScale) > 0.001)
             Open(from, seconds, scale);
         target = seconds;
         if (!pump.IsRunning)
@@ -87,6 +89,7 @@ sealed class SeekPreview : IDisposable
             player.CompositionSize((uint)(160 * scale), (uint)(90 * scale));
             player.Display((uint)(160 * scale), (uint)(90 * scale), scale, null);
             source = from;
+            openedScale = scale;
             MpvOption[] options = [.. from.Options, new MpvOption("start", seconds.ToString(System.Globalization.CultureInfo.InvariantCulture))];
             player.Apply(Playback, [new PlayerOp.Open(false, null, null), new PlayerOp.Load(from.Url, options)]);
             opened = true;
@@ -122,19 +125,22 @@ sealed class SeekPreview : IDisposable
         }
     }
 
-    /// <summary>Hand mpv's swapchain to the panel once it has made one, asked off the UI thread.</summary>
+    /// <summary>
+    /// Hand mpv's swapchain to the panel once it has made one, asked off the UI thread. Its
+    /// buffers are in physical pixels, so it gets the inverse of the panel's scale, as the
+    /// player's does (<see cref="Dxgi.Fit"/>).
+    /// </summary>
     void Bind()
     {
         if (player is not { } asked)
             return;
         ask.Ask(asked, swapchain =>
         {
-            if (player != asked || swapchain == bound)
+            if (player != asked)
                 return;
             try
             {
-                Dxgi.SetSwapChain(panel, swapchain);
-                bound = swapchain;
+                Dxgi.Fit(panel, swapchain, fit);
             }
             catch (Exception e)
             {
@@ -149,7 +155,7 @@ sealed class SeekPreview : IDisposable
         pump.Stop();
         target = null;
         opened = false;
-        bound = 0;
+        fit.Reset();
         source = null;
         if (player is { } old)
         {
