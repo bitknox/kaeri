@@ -353,7 +353,11 @@ fn a_restored_device_takes_its_old_ops_back_and_writes_on_after_them() {
     assert_eq!(restored.store.completed_episodes(SHOW).unwrap().len(), 2);
 
     let sent = send(&restored, &b);
-    assert_eq!((sent.ops, sent.duplicates), (1, 0), "the new change is not taken for an old one");
+    assert_eq!(
+        (sent.ops, sent.duplicates),
+        (1, 0),
+        "the new change is not taken for an old one"
+    );
     assert_eq!(b.store.completed_episodes(OTHER).unwrap().len(), 1);
 }
 
