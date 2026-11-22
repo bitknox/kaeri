@@ -8761,6 +8761,14 @@ object Strings {
     fun playerStartRowHeldTorrentsOff(context: Context): String =
         context.getString(R.string.player_start_row_held_torrents_off)
 
+    /** Details row for a source not asked because torrent playback is on and still starting. The name goes before it. */
+    fun playerStartRowHeldTorrentsStarting(context: Context): String =
+        context.getString(R.string.player_start_row_held_torrents_starting)
+
+    /** Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it. */
+    fun playerStartRowHeldTorrentsFailed(context: Context): String =
+        context.getString(R.string.player_start_row_held_torrents_failed)
+
     /** Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it. */
     fun playerStartRowHeldProxy(context: Context): String =
         context.getString(R.string.player_start_row_held_proxy)
@@ -8904,6 +8912,14 @@ object Strings {
     /** Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app. */
     fun playerStartNotAskedTorrentsOff(context: Context, count: Int, names: String): String =
         context.resources.getQuantityString(R.plurals.player_start_not_asked_torrents_off, count, count, names)
+
+    /** Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app. */
+    fun playerStartNotAskedTorrentsStarting(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_torrents_starting, count, count, names)
+
+    /** Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app. */
+    fun playerStartNotAskedTorrentsFailed(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_torrents_failed, count, count, names)
 
     /** Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app. */
     fun playerStartNotAskedProxy(context: Context, count: Int, names: String): String =
@@ -9449,6 +9465,14 @@ object Strings {
     /** Line of the picker for a source not asked while torrent playback is off. */
     fun sourcePickerHeldTorrentsOff(context: Context, name: String): String =
         context.getString(R.string.source_picker_held_torrents_off, name)
+
+    /** Line of the picker for a source not asked while torrent playback is on and still starting. */
+    fun sourcePickerHeldTorrentsStarting(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_torrents_starting, name)
+
+    /** Line of the picker for a source not asked because torrent playback is on and couldn't start. */
+    fun sourcePickerHeldTorrentsFailed(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_torrents_failed, name)
 
     /** Line of the picker for a source not asked while the proxy check for torrents hasn't passed. */
     fun sourcePickerHeldProxy(context: Context, name: String): String =
@@ -14296,6 +14320,14 @@ object Strings {
     fun sourceNoteTorrentsOff(context: Context): String =
         context.getString(R.string.source_note_torrents_off)
 
+    /** Under a source that names torrents while torrent playback is on and still starting. */
+    fun sourceNoteTorrentsStarting(context: Context): String =
+        context.getString(R.string.source_note_torrents_starting)
+
+    /** Under a source that names torrents while torrent playback is on and couldn't start. */
+    fun sourceNoteTorrentsFailed(context: Context): String =
+        context.getString(R.string.source_note_torrents_failed)
+
     /** Heading over one source's releases, for a source that offers several (a batch, single episodes). */
     fun sourcePickerReleases(context: Context): String =
         context.getString(R.string.source_picker_releases)
@@ -14388,6 +14420,14 @@ object Strings {
     fun sourcesStatusTorrentsOff(context: Context): String =
         context.getString(R.string.sources_status_torrents_off)
 
+    /** Status: a source that names torrents, while torrent playback is on and still starting. */
+    fun sourcesStatusTorrentsStarting(context: Context): String =
+        context.getString(R.string.sources_status_torrents_starting)
+
+    /** Status: a source that names torrents, while torrent playback is on and couldn't start. */
+    fun sourcesStatusTorrentsFailed(context: Context): String =
+        context.getString(R.string.sources_status_torrents_failed)
+
     /** Status: slow. */
     fun sourcesStatusSlow(context: Context): String =
         context.getString(R.string.sources_status_slow)
@@ -14411,6 +14451,14 @@ object Strings {
     /** Status line: torrent playback is off. */
     fun sourcesDetailTorrentsOff(context: Context): String =
         context.getString(R.string.sources_detail_torrents_off)
+
+    /** Status line: torrent playback is on and still starting. */
+    fun sourcesDetailTorrentsStarting(context: Context): String =
+        context.getString(R.string.sources_detail_torrents_starting)
+
+    /** Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes. */
+    fun sourcesDetailTorrentsFailed(context: Context): String =
+        context.getString(R.string.sources_detail_torrents_failed)
 
     /** Status line: disabled. */
     fun sourcesDetailDisabled(context: Context): String =

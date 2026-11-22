@@ -30,6 +30,12 @@ pub enum SourceMiss {
 pub enum SourceHold {
     /// Torrent playback is switched off, so a source that names torrents is not asked.
     TorrentsOff,
+    /// Torrent playback is on and its session is still starting, so a source that names
+    /// torrents is not asked yet.
+    TorrentsStarting,
+    /// Torrent playback is on and its session could not start, so a source that names torrents
+    /// is not asked.
+    TorrentsFailed,
     /// A proxy is set for torrents and its check has not passed yet.
     ProxyCheck,
     /// The device is on cellular and torrents don't run on cellular.

@@ -785,10 +785,15 @@ pub fn provider_rows(
     rows
 }
 
-/// Names why a source is held back. Anything but playback being off is the proxy's check.
+/// Names why a source is held back. Anything but torrent playback being off, starting or failed
+/// to start is the proxy's check.
 fn hold_reason(reason: &str) -> HoldReason {
     if reason == kaeri_providers::torrent::bridge::PLAYBACK_OFF {
         HoldReason::TorrentsOff
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_STARTING {
+        HoldReason::TorrentsStarting
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_FAILED {
+        HoldReason::TorrentsFailed
     } else {
         HoldReason::ProxyCheck
     }
@@ -1326,6 +1331,16 @@ mod tests {
         assert_eq!(
             hold_reason(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
             HoldReason::TorrentsOff
+        );
+        assert_eq!(
+            hold_reason(kaeri_providers::torrent::bridge::PLAYBACK_STARTING),
+            HoldReason::TorrentsStarting,
+            "on and starting is not off"
+        );
+        assert_eq!(
+            hold_reason(kaeri_providers::torrent::bridge::PLAYBACK_FAILED),
+            HoldReason::TorrentsFailed,
+            "on and failed to start is not off"
         );
         assert_eq!(hold_reason("proxy check failed"), HoldReason::ProxyCheck);
     }

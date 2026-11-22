@@ -571,6 +571,12 @@ pub struct SourceChip {
 pub enum HoldReason {
     /// Torrent playback is switched off, so a source that names torrents is passed over.
     TorrentsOff,
+    /// Torrent playback is on and its session is still starting, so a source that names
+    /// torrents is passed over for now.
+    TorrentsStarting,
+    /// Torrent playback is on and its session could not start, so a source that names torrents
+    /// is passed over.
+    TorrentsFailed,
     /// A proxy is set and its check has not passed.
     ProxyCheck,
 }

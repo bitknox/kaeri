@@ -93,10 +93,25 @@ public static class ProviderRows
     public static string? StandingLine(this ProviderStanding standing, ProviderRow? row = null) => standing switch
     {
         ProviderStanding.Failing => T.SourcesStatusNotAnswering,
-        ProviderStanding.HeldBack => row?.HeldBackFor == HoldReason.TorrentsOff ? T.SourcesStatusTorrentsOff : T.SourcesStatusHeldBack,
+        ProviderStanding.HeldBack => row?.HeldBackFor switch
+        {
+            HoldReason.TorrentsOff => T.SourcesStatusTorrentsOff,
+            HoldReason.TorrentsStarting => T.SourcesStatusTorrentsStarting,
+            HoldReason.TorrentsFailed => T.SourcesStatusTorrentsFailed,
+            _ => T.SourcesStatusHeldBack,
+        },
         ProviderStanding.Off => T.SourceNoteOff,
         ProviderStanding.Slow => T.SourcesStatusSlow,
         _ => null,
+    };
+
+    /// <summary>The line under a source held back, by why: torrents off, starting or failed to start, or the proxy's check.</summary>
+    public static string HeldDetail(HoldReason? why) => why switch
+    {
+        HoldReason.TorrentsOff => T.SourcesDetailTorrentsOff,
+        HoldReason.TorrentsStarting => T.SourcesDetailTorrentsStarting,
+        HoldReason.TorrentsFailed => T.SourcesDetailTorrentsFailed,
+        _ => T.SourcesDetailHeldBack,
     };
 }
 

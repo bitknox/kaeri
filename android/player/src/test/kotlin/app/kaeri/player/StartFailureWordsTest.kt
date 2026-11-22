@@ -46,6 +46,21 @@ class StartFailureWordsTest {
     }
 
     @Test
+    fun aSourceHeldWhileTorrentsStartIsNotSaidToBeOff() {
+        val starting = HeldSources(listOf("Harbor"), SourceHold.TORRENTS_STARTING) // i18n-skip
+        val failure = PlaybackFailure(
+            1u, "7", msg = Msg.NoticeReason(Cause.SourcesNotAsked(1L, "Harbor", "7")), why = NoSourceWhy.NOT_FOUND, // i18n-skip
+            asked = listOf("Brook"), heldBack = listOf(starting), // i18n-skip
+        )
+        assertEquals(
+            "Brook doesn't have episode 7. Harbor isn't asked until torrent playback has started.", // i18n-skip
+            failureDetail(context, failure),
+        )
+        assertEquals("Not asked · Torrent playback is starting", heldNote(context, SourceHold.TORRENTS_STARTING)) // i18n-skip
+        assertEquals("Not asked · Torrent playback couldn't start", heldNote(context, SourceHold.TORRENTS_FAILED)) // i18n-skip
+    }
+
+    @Test
     fun thePickerLineClaimsOnlyWhatTheSourcesThatAnsweredSaid() {
         val answered = listOf(MissedListing("Brook", ListingMiss.NoEpisode), MissedListing("Kumo", ListingMiss.NoMatch)) // i18n-skip
         assertEquals("No source lists episode 7.", noneListsText(context, answered, "7")) // i18n-skip

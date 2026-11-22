@@ -109,6 +109,11 @@ impl TorrentTasks {
         let generation = self.generation;
         let check = Arc::clone(&self.check);
         let fixture = services.fixture_route;
+        // A fixture build starts no session, so none is on its way.
+        if !fixture {
+            services.registry.torrents().starting();
+        }
+        let playback = services.registry.torrents().clone();
         let teardown = self.teardown.take();
         let (config, paths, store, tx, arrivals) = (
             // With the proxy's password, which only this copy holds.
@@ -133,7 +138,8 @@ impl TorrentTasks {
                 return;
             }
             let outcome =
-                sources::bring_up_torrent(config, paths, store, tx, check, fixture).await;
+                sources::bring_up_torrent(config, paths, store, tx, check, &playback, fixture)
+                    .await;
             let _ = arrivals.send((generation, outcome));
         }));
     }
@@ -161,6 +167,8 @@ impl TorrentTasks {
             Ok(up) => up,
             Err(reason) => {
                 tracing::warn!(reason = %reason.english(), "torrent playback not started");
+                // No session is coming: the sources that name torrents say it could not start.
+                services.registry.torrents().failed();
                 let _ = tx.send(Event::ProviderNote(reason));
                 return;
             }

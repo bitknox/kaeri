@@ -528,6 +528,10 @@ public class SourcesTests
         Assert.Equal(ProviderStanding.HeldBack, (Plugin("a") with { HeldBack = true }).Standing());
         Assert.Null(ProviderStanding.Working.StandingLine());
         Assert.Equal("Not answering", ProviderStanding.Failing.StandingLine());
+        var held = Plugin("a") with { HeldBack = true, HeldBackFor = HoldReason.TorrentsStarting };
+        Assert.Equal("Torrents starting", ProviderStanding.HeldBack.StandingLine(held));
+        Assert.Equal("Torrents off", ProviderStanding.HeldBack.StandingLine(held with { HeldBackFor = HoldReason.TorrentsOff }));
+        Assert.Equal("Torrents didn't start", ProviderStanding.HeldBack.StandingLine(held with { HeldBackFor = HoldReason.TorrentsFailed }));
     }
 }
 

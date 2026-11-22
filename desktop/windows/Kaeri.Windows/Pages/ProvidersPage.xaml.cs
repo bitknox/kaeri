@@ -481,7 +481,7 @@ public sealed partial class ProvidersPage : Page
         if (row.State == "down" && row.LastError is not null)
             facts.Children.Add(Ui.Haze(T.SourcesDetailSite));
         if (row.HeldBack)
-            facts.Children.Add(Ui.Haze(row.HeldBackFor == HoldReason.TorrentsOff ? T.SourcesDetailTorrentsOff : T.SourcesDetailHeldBack));
+            facts.Children.Add(Ui.Haze(ProviderRows.HeldDetail(row.HeldBackFor)));
         var hosts = info.Hosts.Count > 0 ? info.Hosts : row.Hosts ?? [];
         facts.Children.Add(Ui.Haze(hosts.Count > 0 ? T.SourcesContactsOne(string.Join(", ", hosts)) : T.SourcesContactsNone));
         if (row.Torrents)

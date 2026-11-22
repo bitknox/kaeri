@@ -188765,6 +188765,40 @@
         }
       }
     },
+    "player-start-not-asked-torrents-failed" : {
+      "comment" : "Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app. Argument 1: count (Int). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ isn't asked because torrent playback couldn't start."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ aren't asked because torrent playback couldn't start."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "player-start-not-asked-torrents-off" : {
       "comment" : "Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app. Argument 1: count (Int). Argument 2: names (Text).",
       "extractionState" : "manual",
@@ -188790,6 +188824,40 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%2$@ aren't asked while torrent playback is off."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "player-start-not-asked-torrents-starting" : {
+      "comment" : "Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app. Argument 1: count (Int). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ isn't asked until torrent playback has started."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%2$@ aren't asked until torrent playback has started."
                     }
                   }
                 }
@@ -189991,6 +190059,18 @@
         }
       }
     },
+    "player-start-row-held-torrents-failed" : {
+      "comment" : "Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not asked · Torrent playback couldn't start"
+          }
+        }
+      }
+    },
     "player-start-row-held-torrents-off" : {
       "comment" : "Details row for a source not asked while torrent playback is off. The name goes before it.",
       "extractionState" : "manual",
@@ -189999,6 +190079,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Not asked · Torrent playback is off"
+          }
+        }
+      }
+    },
+    "player-start-row-held-torrents-starting" : {
+      "comment" : "Details row for a source not asked because torrent playback is on and still starting. The name goes before it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not asked · Torrent playback is starting"
           }
         }
       }
@@ -320573,6 +320665,18 @@
         }
       }
     },
+    "source-note-torrents-failed" : {
+      "comment" : "Under a source that names torrents while torrent playback is on and couldn't start.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents couldn't start"
+          }
+        }
+      }
+    },
     "source-note-torrents-off" : {
       "comment" : "Under a source that names torrents while torrent playback is off in Settings.",
       "extractionState" : "manual",
@@ -320653,6 +320757,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phát torrent đang tắt"
+          }
+        }
+      }
+    },
+    "source-note-torrents-starting" : {
+      "comment" : "Under a source that names torrents while torrent playback is on and still starting.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents are starting"
           }
         }
       }
@@ -322481,6 +322597,18 @@
         }
       }
     },
+    "source-picker-held-torrents-failed" : {
+      "comment" : "Line of the picker for a source not asked because torrent playback is on and couldn't start. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't asked because torrent playback couldn't start"
+          }
+        }
+      }
+    },
     "source-picker-held-torrents-off" : {
       "comment" : "Line of the picker for a source not asked while torrent playback is off. Argument 1: name (Text).",
       "extractionState" : "manual",
@@ -322489,6 +322617,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ isn't asked while torrent playback is off"
+          }
+        }
+      }
+    },
+    "source-picker-held-torrents-starting" : {
+      "comment" : "Line of the picker for a source not asked while torrent playback is on and still starting. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ isn't asked until torrent playback has started"
           }
         }
       }
@@ -328045,6 +328185,18 @@
         }
       }
     },
+    "sources-detail-torrents-failed" : {
+      "comment" : "Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes."
+          }
+        }
+      }
+    },
     "sources-detail-torrents-off" : {
       "comment" : "Status line: torrent playback is off.",
       "extractionState" : "manual",
@@ -328125,6 +328277,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Phát torrent đang tắt. Bạn có thể bật trong Cài đặt, ở mục Các nguồn."
+          }
+        }
+      }
+    },
+    "sources-detail-torrents-starting" : {
+      "comment" : "Status line: torrent playback is on and still starting.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrent playback is starting. This source is asked once it has started."
           }
         }
       }
@@ -332813,6 +332977,18 @@
         }
       }
     },
+    "sources-status-torrents-failed" : {
+      "comment" : "Status: a source that names torrents, while torrent playback is on and couldn't start.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents didn't start"
+          }
+        }
+      }
+    },
     "sources-status-torrents-off" : {
       "comment" : "Status: a source that names torrents, while torrent playback is off.",
       "extractionState" : "manual",
@@ -332893,6 +333069,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Torrent đang tắt"
+          }
+        }
+      }
+    },
+    "sources-status-torrents-starting" : {
+      "comment" : "Status: a source that names torrents, while torrent playback is on and still starting.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Torrents starting"
           }
         }
       }

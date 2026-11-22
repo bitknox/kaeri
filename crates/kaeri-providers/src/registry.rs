@@ -445,6 +445,28 @@ impl ProviderRegistry {
         }
     }
 
+    /// [`Self::hold`], once a torrent session on its way has had [`SESSION_WAIT`] to come up when
+    /// `id` names torrents. Only such a source waits, and only when it is the one being asked.
+    ///
+    /// [`SESSION_WAIT`]: crate::torrent::bridge::SESSION_WAIT
+    pub async fn hold_when_asked(&self, id: &str, now: i64) -> Option<ProviderError> {
+        if self.get(id).is_some_and(|provider| waits_for_session(provider.is_available())) {
+            self.torrents.up_within(crate::torrent::bridge::SESSION_WAIT).await;
+        }
+        self.hold(id, now)
+    }
+
+    /// Whether `provider` may be asked, once a torrent session on its way has had a moment to
+    /// come up: see [`Self::hold_when_asked`].
+    async fn ready(&self, provider: &Arc<dyn Provider>) -> Result<(), ProviderError> {
+        let ready = provider.is_available();
+        if !waits_for_session(ready.clone()) {
+            return ready;
+        }
+        self.torrents.up_within(crate::torrent::bridge::SESSION_WAIT).await;
+        provider.is_available()
+    }
+
     /// Providers that are worth trying right now, in preference order: none switched off, and
     /// none resting unless this view asks those too.
     fn candidates(&self) -> Vec<Arc<dyn Provider>> {
@@ -475,7 +497,7 @@ impl ProviderRegistry {
             // Asked every time rather than remembered, because a hold is a statement about the
             // present. Recording it and then skipping the provider forever meant a proxy that
             // recovered never got to say so.
-            match provider.is_available() {
+            match self.ready(&provider).await {
                 Err(reason) => {
                     self.health.record_failure(&id, &reason, now);
                     failures.push((id, reason));
@@ -587,7 +609,7 @@ impl ProviderRegistry {
         now: i64,
     ) -> Result<Vec<SourceCandidate>, ProviderError> {
         let id = provider.manifest().id.clone();
-        provider.is_available()?;
+        self.ready(&provider).await?;
         let started = kaeri_store::instant_now();
         match provider.sources(key, episode, translation).await {
             Ok(candidates) => {
@@ -619,7 +641,7 @@ impl ProviderRegistry {
             .into_iter()
             .find(|p| p.manifest().id == provider_id)
             .ok_or(ProviderError::NotFound)?;
-        provider.is_available()?;
+        self.ready(&provider).await?;
         let started = kaeri_store::instant_now();
         match provider.resolve_source(key, episode, translation, source_id).await {
             Ok(streams) if streams.is_empty() => Err(ProviderError::NotFound),
@@ -678,6 +700,12 @@ impl ProviderRegistry {
         });
         futures::future::join_all(probes).await;
     }
+}
+
+/// Whether a source's hold is a torrent session on its way, which is worth a moment's wait.
+fn waits_for_session(hold: Result<(), ProviderError>) -> bool {
+    matches!(hold, Err(ProviderError::Unavailable(reason))
+        if reason == crate::torrent::bridge::PLAYBACK_STARTING)
 }
 
 #[cfg(test)]

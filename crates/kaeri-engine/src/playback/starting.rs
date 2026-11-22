@@ -287,6 +287,10 @@ pub fn told(step: walk::Step) -> (StartStep, Option<Msg>) {
 pub fn hold_of(reason: &str) -> SourceHold {
     if reason == kaeri_providers::torrent::bridge::PLAYBACK_OFF {
         SourceHold::TorrentsOff
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_STARTING {
+        SourceHold::TorrentsStarting
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_FAILED {
+        SourceHold::TorrentsFailed
     } else if reason == kaeri_providers::proxy::CHECK_PENDING {
         SourceHold::ProxyCheck
     } else if reason == crate::phases::CELLULAR {
@@ -652,6 +656,14 @@ mod tests {
         assert_eq!(
             hold_of(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
             SourceHold::TorrentsOff
+        );
+        assert_eq!(
+            hold_of(kaeri_providers::torrent::bridge::PLAYBACK_STARTING),
+            SourceHold::TorrentsStarting
+        );
+        assert_eq!(
+            hold_of(kaeri_providers::torrent::bridge::PLAYBACK_FAILED),
+            SourceHold::TorrentsFailed
         );
         assert_eq!(hold_of(kaeri_providers::proxy::CHECK_PENDING), SourceHold::ProxyCheck);
         assert_eq!(hold_of(crate::phases::CELLULAR), SourceHold::Cellular);

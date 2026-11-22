@@ -79,6 +79,8 @@ struct PartyTests {
         #expect(PartyWords.missed(MissedListing(name: "Brook", miss: .noEpisode), episode: "7") == "Brook doesn't have episode 7")
         #expect(PartyWords.missed(MissedListing(name: "Harbor", miss: .heldBack(why: .torrentsOff)), episode: "7")
             == "Harbor isn't asked while torrent playback is off")
+        #expect(PartyWords.missed(MissedListing(name: "Harbor", miss: .heldBack(why: .torrentsStarting)), episode: "7")
+            == "Harbor isn't asked until torrent playback has started")
         #expect(PartyWords.unreached(.failed) && PartyWords.unreached(.heldBack(why: .proxyCheck)))
         #expect(!PartyWords.unreached(.noEpisode))
     }

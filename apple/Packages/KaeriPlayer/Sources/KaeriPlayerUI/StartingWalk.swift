@@ -268,6 +268,8 @@ public struct StartingWalk: Equatable, Sendable {
     static func heldNote(_ why: SourceHold) -> String {
         switch why {
         case .torrentsOff: L.playerStartRowHeldTorrentsOff
+        case .torrentsStarting: L.playerStartRowHeldTorrentsStarting
+        case .torrentsFailed: L.playerStartRowHeldTorrentsFailed
         case .proxyCheck: L.playerStartRowHeldProxy
         case .cellular: L.playerStartRowHeldCellular
         case .other: L.playerStartRowHeldOther
@@ -477,6 +479,8 @@ public struct StartFailureView: Equatable, Sendable {
             let count = group.names.count
             switch group.why {
             case .torrentsOff: return L.playerStartNotAskedTorrentsOff(count: count, names: names)
+            case .torrentsStarting: return L.playerStartNotAskedTorrentsStarting(count: count, names: names)
+            case .torrentsFailed: return L.playerStartNotAskedTorrentsFailed(count: count, names: names)
             case .proxyCheck: return L.playerStartNotAskedProxy(count: count, names: names)
             case .cellular: return L.playerStartNotAskedCellular(count: count, names: names)
             case .other: return L.playerStartNotAskedOther(count: count, names: names)

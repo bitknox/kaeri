@@ -513,6 +513,8 @@ public sealed class StartScreen(uint id, string episode, double? resume)
             line.Add(group.Why switch
             {
                 SourceHold.TorrentsOff => T.PlayerStartNotAskedTorrentsOff(count, names),
+                SourceHold.TorrentsStarting => T.PlayerStartNotAskedTorrentsStarting(count, names),
+                SourceHold.TorrentsFailed => T.PlayerStartNotAskedTorrentsFailed(count, names),
                 SourceHold.ProxyCheck => T.PlayerStartNotAskedProxy(count, names),
                 SourceHold.Cellular => T.PlayerStartNotAskedCellular(count, names),
                 _ => T.PlayerStartNotAskedOther(count, names),
@@ -525,6 +527,8 @@ public sealed class StartScreen(uint id, string episode, double? resume)
     public static string HeldNote(SourceHold why) => why switch
     {
         SourceHold.TorrentsOff => T.PlayerStartRowHeldTorrentsOff,
+        SourceHold.TorrentsStarting => T.PlayerStartRowHeldTorrentsStarting,
+        SourceHold.TorrentsFailed => T.PlayerStartRowHeldTorrentsFailed,
         SourceHold.ProxyCheck => T.PlayerStartRowHeldProxy,
         SourceHold.Cellular => T.PlayerStartRowHeldCellular,
         _ => T.PlayerStartRowHeldOther,

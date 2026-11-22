@@ -377,6 +377,8 @@ pub(crate) fn missed_line(missed: &MissedListing, episode: &str) -> String {
         ListingMiss::TimedOut => t::player_start_miss_timed_out(name),
         ListingMiss::HeldBack { why } => match why {
             SourceHold::TorrentsOff => t::source_picker_held_torrents_off(name),
+            SourceHold::TorrentsStarting => t::source_picker_held_torrents_starting(name),
+            SourceHold::TorrentsFailed => t::source_picker_held_torrents_failed(name),
             SourceHold::ProxyCheck => t::source_picker_held_proxy(name),
             SourceHold::Cellular => t::source_picker_held_cellular(name),
             SourceHold::Other => t::source_picker_held_other(name),

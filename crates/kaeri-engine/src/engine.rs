@@ -245,7 +245,7 @@ impl Engine {
                 tokio::task::spawn_blocking(move || prune::sweep_at_launch(&paths));
             }
             // With torrents off nothing else would ever prune what an earlier run streamed. With
-            // them on, the session prunes on its way up, before it writes anything.
+            // them on, the session's cache watch prunes once it is up.
             if !config.providers.torrent.enabled {
                 let (dir, limit) = (
                     paths.cache_dir.join("torrents"),

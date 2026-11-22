@@ -528,6 +528,39 @@ impl std::fmt::Debug for TorrentSession {
     }
 }
 
+/// Whether starting a session failed for a port another process holds.
+fn port_taken(error: &(dyn std::error::Error + 'static)) -> bool {
+    let mut cause = Some(error);
+    while let Some(error) = cause {
+        if error
+            .downcast_ref::<std::io::Error>()
+            .is_some_and(|io| io.kind() == std::io::ErrorKind::AddrInUse)
+        {
+            return true;
+        }
+        cause = error.source();
+    }
+    false
+}
+
+/// Have the DHT pick a free port next time it starts from `dht_state`, keeping the nodes it
+/// knows. A state that cannot be read or written is left as it is.
+fn forget_dht_port(dht_state: &std::path::Path) {
+    let Ok(text) = std::fs::read_to_string(dht_state) else { return };
+    let Ok(mut state) = serde_json::from_str::<serde_json::Value>(&text) else { return };
+    let Some(addr) = state.get_mut("addr") else { return };
+    let any_port = match addr.as_str().and_then(|a| a.parse::<std::net::SocketAddr>().ok()) {
+        Some(std::net::SocketAddr::V6(_)) => "[::]:0",
+        _ => "0.0.0.0:0",
+    };
+    *addr = serde_json::Value::String(any_port.into());
+    if let Ok(text) = serde_json::to_string(&state)
+        && let Err(e) = std::fs::write(dht_state, text)
+    {
+        tracing::warn!(error = %e, "could not write the DHT's state");
+    }
+}
+
 impl TorrentSession {
     /// Start a session on `route`, refusing outright while its proxy has not passed its check.
     pub async fn start(
@@ -538,27 +571,30 @@ impl TorrentSession {
     ) -> Result<Self, ProviderError> {
         route.permit()?;
 
-        let mut options = SessionOptions {
-            // Through a proxy, peers come from trackers: DHT's UDP may not go through it.
-            disable_dht: route.must_disable_dht(),
-            disable_dht_persistence: route.must_disable_dht(),
-            // Without this librqbit writes its routing table to the user's own cache folder,
-            // outside Kaeri's, so the state is kept beside the rest of our cache.
-            dht_config: Some(librqbit::dht::PersistentDhtConfig {
-                config_filename: Some(dht_state),
+        let options = || {
+            let mut options = SessionOptions {
+                // Through a proxy, peers come from trackers: DHT's UDP may not go through it.
+                disable_dht: route.must_disable_dht(),
+                disable_dht_persistence: route.must_disable_dht(),
+                // Without this librqbit writes its routing table to the user's own cache folder,
+                // outside Kaeri's, so the state is kept beside the rest of our cache.
+                dht_config: Some(librqbit::dht::PersistentDhtConfig {
+                    config_filename: Some(dht_state.clone()),
+                    ..Default::default()
+                }),
+                // No port forwarding: Kaeri does not open the router to peers.
+                enable_upnp_port_forwarding: false,
+                // No inbound listener. librqbit binds `0.0.0.0` when this is `Some`, and an
+                // inbound connection does not go through a proxy. `None` is librqbit's default,
+                // stated here so it stays that way.
+                listen_port_range: None,
                 ..Default::default()
-            }),
-            // No port forwarding: Kaeri does not open the router to peers.
-            enable_upnp_port_forwarding: false,
-            // No inbound listener. librqbit binds `0.0.0.0` when this is `Some`, and an
-            // inbound connection does not go through a proxy. `None` is librqbit's default,
-            // stated here so it stays that way.
-            listen_port_range: None,
-            ..Default::default()
+            };
+            if let Some(url) = route.proxy_url() {
+                options.socks_proxy_url = Some(url.to_owned());
+            }
+            options
         };
-        if let Some(url) = route.proxy_url() {
-            options.socks_proxy_url = Some(url.to_owned());
-        }
 
         if route.must_disable_dht() {
             tracing::info!("DHT off: torrents go through a proxy, so peers come from trackers");
@@ -568,11 +604,20 @@ impl TorrentSession {
             ProviderError::Other(format!("cannot create download directory: {e}"))
         })?;
 
-        let session =
-            Session::new_with_opts(download_dir.clone(), options).await.map_err(|e| {
-                let reason = without_proxy(&format!("{e:#}"), route.proxy_url());
-                ProviderError::Other(format!("starting torrent session: {reason}"))
-            })?;
+        let session = match Session::new_with_opts(download_dir.clone(), options()).await {
+            // The DHT binds the port it had last time, which another process may hold now:
+            // another copy of the app, or one still quitting. A port of its own does as well.
+            Err(e) if port_taken(&*e) => {
+                tracing::warn!("the DHT's port from last time is taken; starting on a new one");
+                forget_dht_port(&dht_state);
+                Session::new_with_opts(download_dir.clone(), options()).await
+            }
+            started => started,
+        }
+        .map_err(|e| {
+            let reason = without_proxy(&format!("{e:#}"), route.proxy_url());
+            ProviderError::Other(format!("starting torrent session: {reason}"))
+        })?;
 
         Ok(Self {
             session,
@@ -1492,6 +1537,41 @@ mod tests {
             // Binding a listener can fail in a sandbox; that is not what this test is about.
             Err(e) => eprintln!("session start unavailable in this environment: {e}"),
         }
+    }
+
+    #[tokio::test]
+    async fn a_session_starts_when_another_holds_the_dhts_port_from_last_time() {
+        // One session keeps the DHT's state, port and all; a second from the same state finds
+        // the port taken, as with another copy of the app or one still quitting.
+        let scratch = tempfile::tempdir().unwrap();
+        let dir = scratch.path().to_path_buf();
+        let start = || async {
+            let route = TorrentRoute::new(None).unwrap();
+            route.verify().await;
+            TorrentSession::start(route, dir.join("dl"), dir.join("dht.json"), "tok".into())
+                .await
+        };
+        let first = match start().await {
+            Ok(first) => first,
+            // Binding a socket can fail in a sandbox; that is not what this test is about.
+            Err(e) => return eprintln!("session start unavailable in this environment: {e}"),
+        };
+        // The state is written every three seconds.
+        let saved = tokio::time::Instant::now();
+        while !dir.join("dht.json").exists() {
+            assert!(
+                saved.elapsed() < std::time::Duration::from_secs(10),
+                "the DHT's state was never written"
+            );
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        }
+        let second = start().await;
+        assert!(second.is_ok(), "{:?}", second.err());
+        let state: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(dir.join("dht.json")).unwrap())
+                .unwrap();
+        assert!(state.get("table").is_some(), "the nodes it knew are kept");
+        first.close().await;
     }
 
     /// Two files, so librqbit treats the torrent as a batch and writes it to a folder of its own.

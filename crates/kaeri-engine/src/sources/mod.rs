@@ -468,14 +468,15 @@ pub async fn bring_up_torrent(
     store: kaeri_store::Store,
     tx: crate::outbox::Outbox,
     check: std::sync::Arc<tokio::sync::Notify>,
+    playback: &kaeri_providers::torrent::TorrentPlayback,
     fixture: bool,
 ) -> std::result::Result<TorrentUp, Msg> {
     use kaeri_model::event::Event;
 
+    let began = std::time::Instant::now();
     let route = prepare_torrent(&config, fixture)?;
-    // Before the wait rather than after it: a cache left full by an earlier run should not stay
-    // full for as long as the proxy is down.
-    sweep_before_session(&config, &paths, &store).await;
+    // The stream cache is swept once the session is up, leaving alone what it holds, so a large
+    // cache does not hold the session back: see `prune::torrent_cache_watch`.
 
     let mut said = false;
     let mut wait = Duration::from_secs(5);
@@ -487,15 +488,22 @@ pub async fn bring_up_torrent(
         if state.is_ready() {
             if said {
                 tracing::info!("the torrent proxy check passed");
+                playback.starting();
             }
             break;
         }
+        // A failed check may take a long while to pass, or never: the sources that name torrents
+        // are held for the check meanwhile, and nothing waits on it.
+        playback.checking();
         if !said {
             said = true;
             tracing::warn!(
                 reason = state.reason().unwrap_or("-"),
                 "the torrent proxy check failed"
             );
+            // A cache left full by an earlier run should not stay full for as long as the proxy
+            // is down. No session holds anything yet.
+            sweep_before_session(&config, &paths, &store).await;
             let _ = tx.send(Event::ProviderNote(Msg::Store(StoreMsg::TorrentProxyWaiting)));
         }
         tokio::select! {
@@ -505,7 +513,9 @@ pub async fn bring_up_torrent(
         wait = (wait * 2).min(RETRY_CEILING);
     }
 
-    start_torrent_session(&paths, route, &store).await
+    let up = start_torrent_session(&paths, route, &store).await;
+    tracing::info!(elapsed = ?began.elapsed(), ok = up.is_ok(), "torrent session brought up");
+    up
 }
 
 /// The check's answer as the interface is told it, without its reasons, which are the log's.
@@ -546,9 +556,15 @@ async fn start_torrent_session(
     );
     // Downloads kept from earlier runs, which a torrent of the same batch must leave when it
     // goes with its files.
-    let downloads = store.downloads().unwrap_or_default();
-    session
-        .keep_files(downloads.into_iter().filter_map(|d| d.path).map(std::path::PathBuf::from));
+    // Read beside the session rather than before it, so a busy library does not hold the
+    // session back: nothing goes with its files until a stream ends.
+    let (kept, store) = (Arc::clone(&session), store.clone());
+    tokio::task::spawn_blocking(move || {
+        let downloads = store.downloads().unwrap_or_default();
+        kept.keep_files(
+            downloads.into_iter().filter_map(|d| d.path).map(std::path::PathBuf::from),
+        );
+    });
 
     Ok(TorrentUp { route, session })
 }
@@ -712,6 +728,93 @@ mod tests {
                 "{unusable}"
             );
         }
+    }
+
+    /// How long torrent playback takes to come up without a proxy, from the call to the
+    /// session lent, over a large stream cache: each stage, and the whole. A measurement, not a
+    /// check, and it reaches the DHT's bootstrap nodes as the app does, so it is left out of runs:
+    /// `cargo test -p kaeri-engine --lib bring_up_timings -- --ignored --nocapture`.
+    #[tokio::test(flavor = "multi_thread")]
+    #[ignore = "a measurement that reaches the DHT"]
+    async fn bring_up_timings() {
+        use std::time::Instant;
+        let dir = tempfile::tempdir().unwrap();
+        let paths = Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        // 400 torrents of 25 files, 2 GB each as the sizes say, sparse on disk: 800 GB against a
+        // 100 GB limit, so the sweep reads every file and takes most of them away.
+        let cache = paths.cache_dir.join("torrents");
+        let fill = || {
+            for torrent in 0..400 {
+                let folder = cache.join(format!("Batch {torrent:03}"));
+                std::fs::create_dir_all(&folder).unwrap();
+                for file in 0..25 {
+                    let file =
+                        std::fs::File::create(folder.join(format!("ep{file:02}.mkv"))).unwrap();
+                    file.set_len(80_000_000).unwrap();
+                }
+            }
+        };
+        let mut config = Config::default();
+        config.providers.torrent.enabled = true;
+        config.providers.torrent.cache_limit_gb = 100;
+        let store = kaeri_store::Store::open_in_memory().unwrap();
+
+        // Each stage on its own.
+        fill();
+        let stage = Instant::now();
+        let route = prepare_torrent(&config, false).unwrap();
+        let prepared = stage.elapsed();
+        let stage = Instant::now();
+        sweep_before_session(&config, &paths, &store).await;
+        let swept = stage.elapsed();
+        let stage = Instant::now();
+        let state = route.verify().await;
+        assert!(state.is_ready());
+        let checked = stage.elapsed();
+        let stage = Instant::now();
+        let session = kaeri_providers::torrent::TorrentSession::start(
+            route,
+            cache.clone(),
+            paths.cache_dir.join("dht.json"),
+            random_token(),
+        )
+        .await
+        .unwrap();
+        let started = stage.elapsed();
+        let stage = Instant::now();
+        let downloads = store.downloads().unwrap_or_default();
+        session.keep_files(downloads.into_iter().filter_map(|d| d.path).map(Into::into));
+        let kept = stage.elapsed();
+        session.close().await;
+        eprintln!(
+            "stages: route {prepared:?}, cache sweep {swept:?}, check {checked:?}, session start {started:?}, downloads kept {kept:?}"
+        );
+        fill();
+        let playback = kaeri_providers::torrent::TorrentPlayback::default();
+        let (tx, mut rx) = tokio::sync::mpsc::unbounded_channel();
+        let tx: crate::outbox::Outbox = tx.into();
+        tokio::spawn(async move { while rx.recv().await.is_some() {} });
+
+        let began = Instant::now();
+        let up = bring_up_torrent(
+            config.clone(),
+            paths.clone(),
+            store.clone(),
+            tx,
+            Default::default(),
+            &playback,
+            false,
+        )
+        .await
+        .expect("a session");
+        let whole = began.elapsed();
+        let left = kaeri_providers::torrent::cache::scan(&cache).map(|e| e.len()).unwrap_or(0);
+        eprintln!("bring-up {whole:?}; {left} torrents left in the cache");
+        up.session.close().await;
     }
 
     /// A preview shows the line and toast the interface would, so the proxy's check has to

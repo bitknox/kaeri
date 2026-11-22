@@ -397,8 +397,17 @@ where
     // A source local policy holds back is not asked at all, and says why once, up front.
     let mut usable = Vec::new();
     let mut held: Vec<(String, Vec<String>)> = Vec::new();
+    // A source that names torrents, held only while the session is on its way, keeps its place
+    // and waits for the session when its turn comes: see `ProviderRegistry::hold_when_asked`.
+    let mut on_its_way = Vec::new();
     for provider_id in registry.usable_ids().into_iter().chain(resting) {
         match registry.hold(&provider_id, now) {
+            Some(kaeri_core::error::ProviderError::Unavailable(reason))
+                if reason == crate::torrent::bridge::PLAYBACK_STARTING =>
+            {
+                on_its_way.push(provider_id.clone());
+                usable.push(provider_id);
+            }
             Some(reason) => {
                 let reason = match reason {
                     kaeri_core::error::ProviderError::Unavailable(reason) => reason,
@@ -426,6 +435,19 @@ where
             continue;
         }
         let name = display_name(registry, &provider_id);
+        if on_its_way.contains(&provider_id)
+            && let Some(reason) = registry.hold_when_asked(&provider_id, now).await
+        {
+            let reason = match reason {
+                kaeri_core::error::ProviderError::Unavailable(reason) => reason,
+                other => other.to_string(),
+            };
+            tracing::info!(provider = %provider_id, %reason, "held back, not asked");
+            walk.say(Step::HeldBack { names: vec![name], reason });
+            reasons.push(format!("{provider_id}: held back"));
+            held_ids.push(provider_id);
+            continue;
+        }
         walk.say(Step::Asking {
             name: name.clone(),
             place: index + 1,
