@@ -2266,16 +2266,6 @@ mod tests {
             },
             Msg::NoticeNoPlayer.english(),
         )];
-        // A release picked in the player with nothing of that episode playing is a play of it.
-        plays.push((
-            Command::SwitchSource {
-                id,
-                episode: episode(),
-                provider_id: "yamabiko".into(),
-                source_id: "a".into(),
-            },
-            Msg::NoticeNoPlayer.english(),
-        ));
         if cfg!(not(feature = "party")) {
             plays.push((
                 Command::play_party(id, episode()),
@@ -2294,6 +2284,20 @@ mod tests {
                 "{seen:?}"
             );
         }
+
+        // A release picked in the player with nothing of that episode playing is a play of it.
+        // A switch is no job, so the refusal is all it says.
+        engine.send(Command::SwitchSource {
+            id,
+            episode: episode(),
+            provider_id: "yamabiko".into(),
+            source_id: "a".into(),
+        });
+        let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
+        assert!(
+            matches!(&seen[..], [Event::Toast(n)] if n.text == Msg::NoticeNoPlayer.english()),
+            "{seen:?}"
+        );
     }
 
     /// A play says the title's whole table as the engine holds it, for the player's Episodes
