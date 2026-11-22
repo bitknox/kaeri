@@ -35,7 +35,7 @@ use crate::{
     book::Book,
     log,
     mpv::{Mpv, MpvError, MpvEvent},
-    ops::{self, MpvCall, REPORTED_PROPERTIES, Step},
+    ops::{self, MpvCall, REPORTED_PROPERTIES, SUBTITLE_PROPERTIES, Step},
 };
 
 /// How the core starts: the decoding, mpv's directories, and anything else, set before
@@ -238,7 +238,8 @@ impl Player {
             resolved.iter().map(|(k, v)| (k.as_str(), v.as_str())),
             &options.log_level,
         )?;
-        for (id, property) in REPORTED_PROPERTIES.iter().enumerate() {
+        for (id, property) in REPORTED_PROPERTIES.iter().chain(SUBTITLE_PROPERTIES).enumerate()
+        {
             mpv.observe(property, id as u64 + 1)?;
         }
         // Audio for finding skip times, where this libmpv can tap it; the engine turns the tap
@@ -535,7 +536,13 @@ fn read_events(shared: &Shared) {
                 }
             }
             MpvEvent::Property { name, value } => {
-                let state = update(shared, &name, &value);
+                // An ASS track's header, read as the track changes, before the book is locked.
+                let header = (name == "current-tracks/sub"
+                    && ops::subtitle_codec(&value) == Some("ass"))
+                .then(|| shared.mpv.get("sub-ass-extradata"))
+                .flatten();
+                let header = header.as_ref().and_then(Value::as_str);
+                let state = update(shared, &name, &value, header);
                 if REPORTED_PROPERTIES.contains(&name.as_str()) {
                     shared.report(PlayerReport::Property { name, json: value.to_string() });
                 }
@@ -548,8 +555,14 @@ fn read_events(shared: &Shared) {
     }
 }
 
-/// The controls' state after `name` changed to `value`, when that changes it.
-fn update(shared: &Shared, name: &str, value: &Value) -> Option<PlayerState> {
+/// The controls' state after `name` changed to `value`, when that changes it. `header` is the
+/// subtitle track's ASS header, for `current-tracks/sub`.
+fn update(
+    shared: &Shared,
+    name: &str,
+    value: &Value,
+    header: Option<&str>,
+) -> Option<PlayerState> {
     let mut book = shared.book();
     let state = &mut book.state;
     let before = state.clone();
@@ -562,6 +575,8 @@ fn update(shared: &Shared, name: &str, value: &Value) -> Option<PlayerState> {
         "frame-drop-count" => state.frame_drops = value.as_i64().unwrap_or(0),
         "volume" => state.volume = value.as_f64(),
         "track-list" => state.tracks = ops::tracks(value),
+        "osd-dimensions" => state.subtitle_frame = ops::subtitle_frame(value),
+        "current-tracks/sub" => state.subtitle_placement = ops::subtitle_track(value, header),
         _ => return None,
     }
     (*state != before).then(|| state.clone())

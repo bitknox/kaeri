@@ -96,6 +96,10 @@ public let reportedProperties = [
     "frame-drop-count", "seeking", "demuxer-cache-state", "hwdec-current", "cache-buffering-state",
 ]
 
+/// What the host observes for itself, not the engine: where the subtitles sit, which the lift
+/// above the controls reads (`subtitleLift`).
+public let subtitleProperties = ["osd-dimensions", "current-tracks/sub"]
+
 extension PlayerReport {
     /// The report for one of mpv's events, when the engine reads it: a property it observes,
     /// a file loaded, a file ended.

@@ -1,3 +1,6 @@
+using Kaeri.Engine.Ffi;
+using Kaeri.Engine.Model;
+
 namespace Kaeri.App;
 
 /// <summary>
@@ -22,6 +25,22 @@ public sealed class SubtitleLift(Func<TimeSpan> clock)
     /// </summary>
     public static double Position(double bar, double height) =>
         height > 0 ? Math.Round(Bottom - Math.Clamp(bar / height, 0, 0.5) * 100, 1) : Bottom;
+
+    /// <summary>
+    /// Where <c>sub-pos</c> puts the subtitles only as far up as they need to clear the bar: the
+    /// engine's <c>subtitle_lift</c> for mpv's <paramref name="frame"/> (<c>osd-dimensions</c>) and
+    /// the track's <paramref name="placement"/>, on top of the style's own raise, which
+    /// <c>SubtitleStyling.Position</c> takes off again. Subtitles that already sit clear stay put;
+    /// without a style, a frame or a placement, the whole bar, as <see cref="Position(double, double)"/>.
+    /// </summary>
+    public static double Position(double bar, double height, SubtitleStyle? style, SystemCaptionStyle? system,
+        SubtitleFrame? frame, SubtitlePlacement? placement)
+    {
+        if (style is null || height <= 0 || bar <= 0)
+            return Position(bar, height);
+        var lift = KaeriFfiMethods.SubtitleLift(style, system, bar / height, frame, placement ?? new SubtitlePlacement.Unknown());
+        return Math.Round(Bottom - lift, 1);
+    }
 
     /// <summary>Where they are headed.</summary>
     public double Target => to;

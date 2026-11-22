@@ -86,6 +86,7 @@ pub mod show;
 pub mod sources;
 pub mod starting;
 pub mod stores;
+pub mod subtitle_lift;
 pub mod subtitle_style;
 pub mod sync;
 pub mod tap_zones;
