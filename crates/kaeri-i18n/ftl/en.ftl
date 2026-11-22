@@ -1980,6 +1980,9 @@ discussion-like-named =
        *[other] Like, { $count } likes
     }
 
+# Player panel, Sources tab: part of a release's detail line, a release with both the original and the dubbed audio.
+player-panel-dual-audio = Subbed and dubbed
+
 # Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
 linux-store-invite-chip = Invite ••••{ $last }
 

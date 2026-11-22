@@ -122,6 +122,7 @@ fn rules(platform: Platform) -> Rules {
                 "fixtures.rs",
                 "fixtures_reading.rs",
                 "fixture.rs",
+                "panel_demo.rs",
             ]),
             patterns: Vec::new(),
             stop_at_tests: true,

@@ -3005,6 +3005,11 @@ pub fn discussion_like_named(count: i64) -> String {
     text("discussion-like-named", &[("count", Arg::Int(count))])
 }
 
+/// Player panel, Sources tab: part of a release's detail line, a release with both the original and the dubbed audio.
+pub fn player_panel_dual_audio() -> String {
+    text("player-panel-dual-audio", &[])
+}
+
 /// Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
 pub fn linux_store_invite_chip(last: &str) -> String {
     text("linux-store-invite-chip", &[("last", Arg::Text(last))])

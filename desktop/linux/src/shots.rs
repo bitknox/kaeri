@@ -19,7 +19,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 118] = [
+pub const ALL: [&str; 123] = [
     "home",
     "welcome",
     "offline",
@@ -125,10 +125,15 @@ pub const ALL: [&str; 118] = [
     "player",
     "player-marks",
     "player-tracks",
-    "player-episodes",
-    "player-episodes-focus",
-    "player-episodes-ranges",
-    "player-episodes-ranges-menu",
+    "player-panel",
+    "player-panel-revealed",
+    "player-panel-more",
+    "player-panel-sources",
+    "player-panel-releases",
+    "player-panel-starting",
+    "player-panel-failed",
+    "player-panel-landed",
+    "player-panel-ranges",
     "first-play-style",
     "player-undo",
     "mini",
@@ -1309,14 +1314,91 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }
             10.0
         }
-        "player-episodes"
-        | "player-episodes-focus"
-        | "player-episodes-ranges"
-        | "player-episodes-ranges-menu" => {
+        // The walkthrough's start: the board's show playing and the app left open for an hour,
+        // for a person or xdotool to use. Never in the list of all shots.
+        #[cfg(feature = "fixtures")]
+        "player-panel-walk" => {
+            close_dialogs(&shell.ctx.window);
+            play(shell);
+            let player = Rc::clone(&shell.player);
+            player.qa_widgets();
+            glib::timeout_add_local_once(Duration::from_secs(5), move || {
+                player.shot_panel_board(false);
+            });
+            3600.0
+        }
+        // The recording: the panel opening, a row revealed, Sources, then a release that fails
+        // and the same release landing on its second try, with the video playing under it. Never in the list of all shots.
+        #[cfg(feature = "fixtures")]
+        "player-panel-motion" => {
+            close_dialogs(&shell.ctx.window);
+            play(shell);
+            let player = Rc::clone(&shell.player);
+            let hub = Rc::clone(&shell.ctx.hub);
+            let at = |s: f64, f: Box<dyn FnOnce()>| {
+                glib::timeout_add_local_once(Duration::from_secs_f64(s), f);
+            };
+            at(
+                5.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_panel_board(false)
+                }),
+            );
+            // The scene pauses at 7 s; the recording wants it playing.
+            at(
+                8.0,
+                Box::new(move || {
+                    hub.send(Command::Player(kaeri_model::command::PlayerCommand::TogglePause));
+                }),
+            );
+            at(
+                10.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_panel("episodes")
+                }),
+            );
+            at(
+                12.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_side().select("8")
+                }),
+            );
+            at(
+                14.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_panel("sources")
+                }),
+            );
+            at(
+                15.5,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_side().unfold("index")
+                }),
+            );
+            at(
+                17.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_pick_release("r2")
+                }),
+            );
+            // Its second try lands, as Try again does.
+            at(24.0, Box::new(move || player.shot_pick_release("r2")));
+            32.0
+        }
+        shot if shot.starts_with("player-panel") => {
+            close_dialogs(&shell.ctx.window);
             play(shell);
             #[cfg(feature = "fixtures")]
-            stage_player_episodes(shell, shot);
-            10.5
+            let wait = stage_player_panel(shell, shot);
+            #[cfg(not(feature = "fixtures"))]
+            let wait = 10.5;
+            wait
         }
         "player-tracks" => {
             play(shell);
@@ -1582,13 +1664,15 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
                 nav.pop();
             }
         }
-        "player-tracks"
-        | "player-episodes"
-        | "player-episodes-focus"
-        | "player-episodes-ranges"
-        | "player-episodes-ranges-menu" => {
+        "player-tracks" => {
             shell.player.close_menus();
             shell.player.close();
+        }
+        shot if shot.starts_with("player-panel") => {
+            shell.player.close_menus();
+            shell.player.close();
+            #[cfg(feature = "fixtures")]
+            shell.ctx.hub.panel_answer.take();
         }
         "player" | "player-marks" | "player-undo" | "mini" | "pad-help-player"
         | "demo-starting" => shell.player.close(),
@@ -2175,9 +2259,6 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
             let over = match shot.as_str() {
                 "player-marks" => player.shot_popover(),
                 "player-tracks" => player.shot_tracks_popover(),
-                "player-episodes" | "player-episodes-focus" | "player-episodes-ranges" => {
-                    player.shot_episodes_popover()
-                }
                 "synopsis-ranges" => range_popover(&window),
                 #[cfg(feature = "fixtures")]
                 "sync-more" => crate::sync::devices::shot_more_popover(&window),
@@ -2262,6 +2343,11 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "pad" => PAD.iter().map(|p| (*p).to_owned()).collect(),
                 "stats" => STATS.iter().map(|p| (*p).to_owned()).collect(),
                 "tv" => TV.iter().map(|p| (*p).to_owned()).collect(),
+                "panel" => ALL
+                    .iter()
+                    .filter(|p| p.starts_with("player-panel"))
+                    .map(|p| (*p).to_owned())
+                    .collect(),
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
                 "cast-states" => {
@@ -4456,76 +4542,63 @@ const LINES: [&str; 11] = [
     "A clock that runs four minutes slow is the only witness to a theft on Lantern Street.",
 ];
 
-/// The player's Episodes panel with synopses: the playing title's table is sent again with text
-/// and the rows ahead, and the panel opened. With `focus`, the keyboard then moves to the second
-/// row, and the footer follows it.
+/// The player's Episodes and Sources panel on the board's show: the panel dressed once the
+/// player has its table and menus, then each shot's state staged on it. Returns the seconds the
+/// shot waits before it is taken.
 #[cfg(feature = "fixtures")]
-fn stage_player_episodes(shell: &Rc<Shell>, shot: &str) {
-    let focus = shot == "player-episodes-focus";
-    let ranged = shot.starts_with("player-episodes-ranges");
-    let menu = shot == "player-episodes-ranges-menu";
-    use kaeri_model::episodes::EpisodeRow;
-    let hub = Rc::clone(&shell.ctx.hub);
-    let seen: Rc<std::cell::RefCell<Vec<EpisodeRow>>> = Rc::default();
-    let listening = hub.listen({
-        let seen = Rc::clone(&seen);
-        move |event| {
-            if let Event::Episodes { id, rows, .. } = event
-                && id.get() == PLAYING.0
-            {
-                seen.replace(rows.clone());
-            }
-        }
-    });
+fn stage_player_panel(shell: &Rc<Shell>, shot: &str) -> f64 {
+    let wait = match shot {
+        "player-panel-starting" => 9.7,
+        "player-panel-failed" => 11.5,
+        "player-panel-landed" => 12.0,
+        _ => 8.0,
+    };
     let player = Rc::clone(&shell.player);
-    glib::timeout_add_local_once(Duration::from_secs(4), move || {
-        hub.forget(listening);
-        let base = seen.borrow().clone();
-        // A long series for the ranges: 250 rows, 230 playing.
-        let mut rows: Vec<EpisodeRow> = if ranged && !base.is_empty() {
-            (1..=250)
-                .map(|n| {
-                    let mut row = base[(n - 1) % base.len()].clone();
-                    row.number = n.to_string();
-                    row.title = Some(format!("Letter number {n}"));
-                    row
-                })
-                .collect()
-        } else {
-            base
+    let shot = shot.to_owned();
+    glib::timeout_add_local_once(Duration::from_secs(5), move || {
+        player.shot_panel_board(shot == "player-panel-ranges");
+        let tab = match shot.as_str() {
+            "player-panel"
+            | "player-panel-revealed"
+            | "player-panel-more"
+            | "player-panel-ranges" => "episodes",
+            _ => "sources",
         };
-        let next = if ranged { 230 } else { 4 };
-        for (i, row) in rows.iter_mut().enumerate() {
-            let n = i + 1;
-            row.completed = n < next;
-            row.watched = if n == next { 0.42 } else { 0.0 };
-            row.past_progress = n > next;
-            row.spoiler_ahead = n > next;
-            row.description = Some(LINES[i % LINES.len()].to_owned());
+        player.shot_panel(tab);
+        let side = player.shot_side();
+        let later = move |ms: u64, f: Box<dyn FnOnce()>| {
+            glib::timeout_add_local_once(Duration::from_millis(ms), f);
+        };
+        match shot.as_str() {
+            "player-panel-revealed" => later(500, Box::new(move || side.select("8"))),
+            "player-panel-more" => later(
+                500,
+                Box::new(move || {
+                    side.select("4");
+                    glib::timeout_add_local_once(Duration::from_millis(700), move || {
+                        side.more();
+                    });
+                }),
+            ),
+            "player-panel-releases" => later(1200, Box::new(move || side.unfold("index"))),
+            "player-panel-starting" | "player-panel-failed" => later(
+                1200,
+                Box::new(move || {
+                    side.unfold("index");
+                    player.shot_pick_release("r2");
+                }),
+            ),
+            "player-panel-landed" => later(
+                1200,
+                Box::new(move || {
+                    side.unfold("index");
+                    player.shot_pick_release("r1");
+                }),
+            ),
+            _ => {}
         }
-        hub.take(vec![Event::Episodes {
-            id: kaeri_core::ids::AnilistId::new(PLAYING.0),
-            rows,
-            failed: None,
-        }]);
-        glib::timeout_add_local_once(Duration::from_millis(1200), move || {
-            if ranged {
-                player.shot_ranged_rows();
-            }
-            player.shot_episodes();
-            if menu {
-                let player = Rc::clone(&player);
-                glib::timeout_add_local_once(Duration::from_millis(900), move || {
-                    player.shot_episodes_ranges()
-                });
-            }
-            if focus {
-                glib::timeout_add_local_once(Duration::from_millis(800), move || {
-                    player.shot_episodes_focus(1)
-                });
-            }
-        });
     });
+    wait
 }
 
 /// The title page with synopses on its episodes, as the fixture scene has none of its own: the
