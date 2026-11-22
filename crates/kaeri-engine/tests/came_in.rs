@@ -225,22 +225,33 @@ async fn a_folder_of_books_kaeri_cannot_open_says_so_by_format() {
 /// A folder the platform opens, as a picked Android folder: a folder on disk named by
 /// references under a scheme of its own, which `refused` can close, or `closed` one reference
 /// in it.
+///
+/// Each test's folder has a reference of its own: the trees a platform opens are kept for the
+/// whole process, and a test running beside another would otherwise read through the other's.
 struct PickedFolder {
+    at: &'static str,
     root: std::path::PathBuf,
     refused: std::sync::atomic::AtomicBool,
     closed: std::sync::Mutex<Vec<String>>,
 }
 
-const PICKED: &str = "picked-books://shelf";
-
 impl PickedFolder {
+    fn at(at: &'static str, root: std::path::PathBuf) -> Self {
+        Self { at, root, refused: false.into(), closed: Default::default() }
+    }
+
+    /// The reference of `rel` in this folder.
+    fn reference(&self, rel: &str) -> String {
+        format!("{}/{rel}", self.at)
+    }
+
     fn path_of(&self, reference: &str) -> std::io::Result<std::path::PathBuf> {
         if self.refused.load(Ordering::Relaxed)
             || self.closed.lock().unwrap().iter().any(|c| c == reference)
         {
             return Err(std::io::ErrorKind::PermissionDenied.into());
         }
-        let rest = reference.strip_prefix(PICKED).ok_or(std::io::ErrorKind::NotFound)?;
+        let rest = reference.strip_prefix(self.at).ok_or(std::io::ErrorKind::NotFound)?;
         Ok(self.root.join(rest.trim_start_matches('/')))
     }
 
@@ -248,7 +259,7 @@ impl PickedFolder {
         let meta = std::fs::metadata(path)?;
         let rel = path.strip_prefix(&self.root).unwrap_or(path).to_string_lossy();
         Ok(FolderEntry {
-            reference: format!("{PICKED}/{rel}"),
+            reference: self.reference(&rel),
             name: path.file_name().unwrap_or_default().to_string_lossy().into_owned(),
             folder: meta.is_dir(),
             size: meta.len(),
@@ -259,7 +270,9 @@ impl PickedFolder {
 
 impl FolderTree for PickedFolder {
     fn claims(&self, reference: &str) -> bool {
-        reference.starts_with(PICKED)
+        reference
+            .strip_prefix(self.at)
+            .is_some_and(|rest| rest.is_empty() || rest.starts_with('/'))
     }
 
     fn entries(&self, reference: &str) -> std::io::Result<Vec<FolderEntry>> {
@@ -293,10 +306,10 @@ fn cbz(path: &std::path::Path, pages: usize) {
     zip.finish().unwrap();
 }
 
-fn picked() -> BookSourceCommand {
+fn picked(tree: &PickedFolder) -> BookSourceCommand {
     BookSourceCommand::AddFolder {
         folder: FolderRef {
-            tree_uri: Some(PICKED.into()),
+            tree_uri: Some(tree.at.into()),
             name: Some("Shelf".into()),
             ..FolderRef::default()
         },
@@ -315,21 +328,17 @@ async fn a_folder_the_platform_opens_is_scanned_and_its_books_read_through_it() 
     let shelf = dir.path().join("Shelf");
     cbz(&shelf.join("Paper Lantern/Paper Lantern ch001.cbz"), 3);
     cbz(&shelf.join("Paper Lantern/Paper Lantern ch002.cbz"), 2);
-    let tree = Arc::new(PickedFolder {
-        root: shelf,
-        refused: false.into(),
-        closed: Default::default(),
-    });
+    let tree = Arc::new(PickedFolder::at("picked-books://read-through", shelf));
     sources.open_folders_through(Some(tree.clone()));
 
-    let came = came_in(&mut run(&sources, picked(), 1_000)).await;
+    let came = came_in(&mut run(&sources, picked(&tree), 1_000)).await;
     let CameIn::Folder(report) = came else { panic!("{came:?}") };
     assert_eq!((report.name.as_str(), report.series, report.books), ("Shelf", 1, 2));
     assert_eq!(folder_scan(&sources), kaeri_model::book_sources::BookFolderScan::Done);
 
     // The books are kept by the platform's references, and open through it.
     let path =
-        std::path::PathBuf::from(format!("{PICKED}/Paper Lantern/Paper Lantern ch002.cbz"));
+        std::path::PathBuf::from(tree.reference("Paper Lantern/Paper Lantern ch002.cbz"));
     let book = kaeri_books::open(&path, &kaeri_books::Limits::default()).unwrap();
     let kaeri_books::Book::Comic(comic) = book else { panic!("not pages") };
     assert_eq!(comic.pages().len(), 2);
@@ -337,7 +346,7 @@ async fn a_folder_the_platform_opens_is_scanned_and_its_books_read_through_it() 
     // Once the platform no longer lets Kaeri in, a scan says so and the folder shows as not
     // found, rather than waiting.
     tree.refused.store(true, Ordering::Relaxed);
-    let came = came_in(&mut run(&sources, picked(), 2_000)).await;
+    let came = came_in(&mut run(&sources, picked(&tree), 2_000)).await;
     assert!(matches!(&came, CameIn::Empty(NothingCameIn::FolderUnreadable { .. })), "{came:?}");
     assert_eq!(folder_scan(&sources), kaeri_model::book_sources::BookFolderScan::Missing);
     sources.open_folders_through(None);
@@ -351,23 +360,20 @@ async fn a_series_folder_that_cannot_be_read_keeps_its_series() {
     cbz(&shelf.join("Paper Lantern/Paper Lantern ch001.cbz"), 2);
     cbz(&shelf.join("Moon Harbour/Moon Harbour ch001.cbz"), 2);
     cbz(&shelf.join("Moon Harbour/Moon Harbour ch002.cbz"), 2);
-    let tree = Arc::new(PickedFolder {
-        root: shelf.clone(),
-        refused: false.into(),
-        closed: Default::default(),
-    });
+    let tree = Arc::new(PickedFolder::at("picked-books://kept-series", shelf.clone()));
     sources.open_folders_through(Some(tree.clone()));
     let series = || sources.view(&BookPlugins::default(), |_| None).folders[0].series;
 
-    let came = came_in(&mut run(&sources, picked(), 1_000)).await;
+    let came = came_in(&mut run(&sources, picked(&tree), 1_000)).await;
     let CameIn::Folder(report) = came else { panic!("{came:?}") };
     assert_eq!((report.series, report.books), (2, 3));
     assert_eq!(series(), 2);
 
     // The next scan reads the shelf but not one series' folder, as a share that drops
     // partway through: that series stays.
-    tree.closed.lock().unwrap().push(format!("{PICKED}/Moon Harbour"));
-    let came = came_in(&mut run(&sources, picked(), 2_000)).await;
+    let closed = tree.reference("Moon Harbour");
+    tree.closed.lock().unwrap().push(closed);
+    let came = came_in(&mut run(&sources, picked(&tree), 2_000)).await;
     assert!(matches!(&came, CameIn::Folder(_)), "{came:?}");
     assert_eq!(series(), 2, "a series went with the folder that could not be read");
     assert_eq!(folder_scan(&sources), kaeri_model::book_sources::BookFolderScan::Done);
@@ -375,7 +381,7 @@ async fn a_series_folder_that_cannot_be_read_keeps_its_series() {
     // Once the whole shelf reads again, a series that is really gone goes.
     tree.closed.lock().unwrap().clear();
     std::fs::remove_dir_all(shelf.join("Moon Harbour")).unwrap();
-    let came = came_in(&mut run(&sources, picked(), 3_000)).await;
+    let came = came_in(&mut run(&sources, picked(&tree), 3_000)).await;
     assert!(matches!(&came, CameIn::Folder(_)), "{came:?}");
     assert_eq!(series(), 1);
     sources.open_folders_through(None);
