@@ -4741,10 +4741,6 @@ object Strings {
     fun playerSheetNone(context: Context): String =
         context.getString(R.string.player_sheet_none)
 
-    /** Player, episodes sheet: shown before the list arrives. */
-    fun playerSheetEpisodesLoading(context: Context): String =
-        context.getString(R.string.player_sheet_episodes_loading)
-
     /** Player, sources sheet: a stream with both languages. */
     fun playerDualAudio(context: Context): String =
         context.getString(R.string.player_dual_audio)
@@ -9533,6 +9529,82 @@ object Strings {
     /** Button in the subtitles panel that opens Settings. */
     fun playerSubsMore(context: Context): String =
         context.getString(R.string.player_subs_more)
+
+    /** Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives. */
+    fun playerSheetEpisodesLoading(context: Context): String =
+        context.getString(R.string.player_sheet_episodes_loading)
+
+    /** Accessibility label of the player's side panel with the Episodes and Sources tabs. */
+    fun playerPanel(context: Context): String =
+        context.getString(R.string.player_panel)
+
+    /** Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left. */
+    fun episodeRowPlaying(context: Context, left: String): String =
+        context.getString(R.string.episode_row_playing, left)
+
+    /** Episode row in the player's panel: the episode is part story, part filler. */
+    fun episodeRowMixed(context: Context): String =
+        context.getString(R.string.episode_row_mixed)
+
+    /** Episode row in the player's panel: the length of an episode nobody has started. */
+    fun episodeRowLength(context: Context, minutes: Int): String =
+        context.getString(R.string.episode_row_length, minutes)
+
+    /** Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it. */
+    fun episodeRowDelayed(context: Context, `when`: String): String =
+        context.getString(R.string.episode_row_delayed, `when`)
+
+    /** Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one. */
+    fun episodeRowFrom(context: Context, source: String): String =
+        context.getString(R.string.episode_row_from, source)
+
+    /** Button on a partly watched episode: plays it from where it was left. */
+    fun actionResume(context: Context): String =
+        context.getString(R.string.action_resume)
+
+    /** Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play. */
+    fun playerPanelMetadataOnly(context: Context): String =
+        context.getString(R.string.player_panel_metadata_only)
+
+    /** Player panel, Sources tab: heading over the source and streams playing now. */
+    fun playerPanelPlayingNow(context: Context): String =
+        context.getString(R.string.player_panel_playing_now)
+
+    /** Player panel, Sources tab: heading over the other sources, in the order they are tried. */
+    fun playerPanelOtherSources(context: Context): String =
+        context.getString(R.string.player_panel_other_sources)
+
+    /** Player panel, Sources tab: the folded list of a source's releases for this episode. */
+    fun playerPanelReleases(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.player_panel_releases, count, count)
+
+    /** Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better. */
+    fun playerReleaseAutomatic(context: Context): String =
+        context.getString(R.string.player_release_automatic)
+
+    /** Player panel, Sources tab, foot of the list: the panel never sorts the sources itself. */
+    fun playerPanelOrder(context: Context): String =
+        context.getString(R.string.player_panel_order)
+
+    /** Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is. */
+    fun playerPanelPickScope(context: Context): String =
+        context.getString(R.string.player_panel_pick_scope)
+
+    /** Accessibility label of the subtitled or dubbed switch in the player panel. */
+    fun playerTranslation(context: Context): String =
+        context.getString(R.string.player_translation)
+
+    /** Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. */
+    fun playerPanelStarting(context: Context, seconds: Int): String =
+        context.getString(R.string.player_panel_starting, seconds)
+
+    /** Notice when another source started playing while the player panel was closed. */
+    fun noticePlayingFromSource(context: Context, source: String, clock: String): String =
+        context.getString(R.string.notice_playing_from_source, source, clock)
+
+    /** Player panel, under the subtitled or dubbed switch during a watch party. */
+    fun partyVersionOwn(context: Context): String =
+        context.getString(R.string.party_version_own)
 
     /** The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. */
     fun privateMode(context: Context): String =

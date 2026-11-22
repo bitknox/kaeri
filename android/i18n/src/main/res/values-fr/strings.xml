@@ -1272,7 +1272,6 @@
     <string name="player_position_state">%1$s sur %2$s</string>
     <string name="player_sheet_finding">Recherche des sources…</string>
     <string name="player_sheet_none">Aucune sources trouvée pour cet épisode.</string>
-    <string name="player_sheet_episodes_loading">La liste des épisodes arrive.</string>
     <string name="player_dual_audio">Sous-titré et doublé</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">%1$,d nouvel épisode</item>
@@ -2563,6 +2562,7 @@
     <string name="player_subs_bg_shadow">Ombre</string>
     <string name="player_subs_bg_box">Boîte</string>
     <string name="player_subs_more">Plus dans les paramètres…</string>
+    <string name="player_sheet_episodes_loading">La liste des épisodes arrive.</string>
     <string name="private_mode">Mode privé</string>
     <string name="private_mode_detail">Rien de ce que vous regardez ou lisez n’est enregistré ni synchronisé tant que vous ne le désactivez pas ou ne quittez pas Kaeri.</string>
     <string name="private_mode_limits">Vos sources et vos visionnages en groupe voient toujours ce que vous ouvrez.</string>

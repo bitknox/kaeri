@@ -209,3 +209,4 @@ player-subs-bg-outline = Contour
 player-subs-bg-shadow = Ombre
 player-subs-bg-box = Boîte
 player-subs-more = Plus dans les paramètres…
+player-sheet-episodes-loading = La liste des épisodes arrive.

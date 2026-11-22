@@ -34,7 +34,7 @@ public final class PlayerModel {
 
     // MARK: Wiring
 
-    @ObservationIgnored private let send: Send
+    @ObservationIgnored let send: Send
     @ObservationIgnored private let makeBackend: (@MainActor () -> any PlayerBackend)?
     @ObservationIgnored private var backend: (any PlayerBackend)?
     @ObservationIgnored private var work: AsyncStream<Work>.Continuation?
@@ -68,6 +68,8 @@ public final class PlayerModel {
         case mark(Int)
         /// A subtitle or audio file the viewer picked, added and selected (`loadTrack`).
         case trackFile(Track.Kind, path: String)
+        /// The picture on screen, taken before a switch's load clears it.
+        case hold(Int)
     }
 
     /// A load on its way to mpv, and the playlist entry mpv made for it once it answers.
@@ -176,6 +178,33 @@ public final class PlayerModel {
     @ObservationIgnored private var rollOnTimer: Task<Void, Never>?
     public private(set) var episode: EpisodeOnScreen?
     public private(set) var menus: PlayerMenus?
+
+    // MARK: The Episodes and Sources panel
+
+    /// The panel is open: a switch that lands while it is closed says so in a notice.
+    public var panelOpen = false
+    /// The episode's releases across every source, as the panel last asked for them.
+    public internal(set) var panelReleases: PanelReleases?
+    /// The switch picked in the panel, from the pick until it lands, or its failure until the
+    /// next pick.
+    public internal(set) var panelSwitch: PanelSwitch?
+    /// The name the source playing goes by: from the start's Found, then from each switch that
+    /// lands.
+    public internal(set) var playingSource: String?
+    /// The release playing, when one was picked in the panel and landed.
+    public internal(set) var playingRelease: SourceCandidate?
+    /// What a screenshot or recording puts the panel in (PlayerShots).
+    public internal(set) var panelShot: PanelShot?
+    /// Holding the picture over the video while a switch loads (`PlayerSwitch` Loading to
+    /// Landed or Failed): the starting screen stays away and the seek line stays at `holdAt`.
+    public internal(set) var holding = false
+    /// Where the switch loads at, while holding.
+    @ObservationIgnored var holdAt: Double?
+    /// The picture held, once mpv has handed it over; it stays a moment after the hold ends, for
+    /// the crossfade.
+    public internal(set) var heldPicture: HeldPicture?
+    @ObservationIgnored var holdSerial = 0
+    @ObservationIgnored var heldRelease: Task<Void, Never>?
     public private(set) var skip: SkipOffer?
     public internal(set) var undo: UndoOffer?
     /// The marking bar of the playback on screen, as the engine last said it (skip intro).
@@ -422,11 +451,13 @@ public final class PlayerModel {
             sourceChoices = nil
             verdictPending = false
             partySaysWhy = false
+            if staged?.id != id || staged?.episode != episode { panelEpisodeChanged() }
             staged = StagedPlayback(
                 id: id, title: title, episode: episode, episodeTitle: episodeTitle, alwaysPrivate: alwaysPrivate)
             present()
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
+            if case .found(_, let source, _, _) = step, let source { playingSource = source }
             walk?.take(step, line: line, at: time.now())
             holdLine()
         case .playbackEnded(_, let ending, let rollingOn, let said):
@@ -450,10 +481,16 @@ public final class PlayerModel {
             // failure would say it twice, under it.
             partySaysWhy = true
         case .sources(let id, let episode, let candidates, let missed):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.candidates = candidates
+            }
             guard choosingSource else { return }
             Self.note(.info, "\(candidates.count) sources for \(id) episode \(episode)")
             sourceChoices = candidates
             sourceMisses = missed
+        case .playerSwitch(let playback, let state):
+            guard accepts(playback) else { return }
+            switched(state)
         case .playbackKept:
             // The playback staged found nothing; the one before plays on.
             starting = nil
@@ -705,6 +742,9 @@ public final class PlayerModel {
                             await backend.resized()
                         case .mark(let mark):
                             self?.marks.removeValue(forKey: mark)?.resume()
+                        case .hold(let serial):
+                            let image = await backend.snapshot()
+                            self?.took(image, forHold: serial)
                         case .trackFile(let kind, let path):
                             do {
                                 _ = try await backend.perform(.command([Self.addCommand(kind), path, "select"]))
@@ -944,6 +984,9 @@ public final class PlayerModel {
         staged = nil
         starting = nil
         walk = nil
+        panelEpisodeChanged()
+        playingSource = nil
+        releaseHold(fade: false)
         holdRelease?.cancel()
         rollOnAt = nil
         rollOnShowsAt = nil
@@ -979,9 +1022,10 @@ public final class PlayerModel {
 
     private func resetFile() {
         discussionWatch = PlayerDiscussion()
-        position = 0
-        playhead = 0
-        duration = nil
+        // A switch loads the episode again where it was: the seek line stays there meanwhile.
+        position = holding ? holdAt ?? 0 : 0
+        playhead = position
+        if !holding { duration = nil }
         paused = false
         chapters = []
         buffered = []
@@ -1360,6 +1404,7 @@ public final class PlayerModel {
         case .resized: "a resize"
         case .mark: "a mark"
         case .trackFile(let kind, _): kind == .audio ? "an audio file" : "a subtitle file"
+        case .hold: "the picture to hold"
         }
     }
 
@@ -2132,5 +2177,154 @@ extension Track {
         self.init(
             kind: kind, id: id, language: entry["lang"].string, title: entry["title"].string,
             selected: entry["selected"].bool ?? false, external: entry["external"].bool ?? false)
+    }
+}
+
+// MARK: The Episodes and Sources panel
+
+extension PlayerModel {
+    /// The episode playing, as the panel lists its releases for.
+    var panelEpisode: (id: AnilistId, episode: String)? {
+        guard let staged else { return nil }
+        return (staged.id, staged.episode)
+    }
+
+    /// Ask for the playing episode's releases across every source, for the Sources tab. Asked
+    /// again only for another episode, or when `again`.
+    public func loadPanelReleases(again: Bool = false) {
+        guard let (id, episode) = panelEpisode else { return }
+        if !again, panelReleases?.id == id, panelReleases?.episode == episode { return }
+        panelReleases = PanelReleases(id: id, episode: episode, candidates: nil)
+        send(.loadSources(id: id, episode: episode))
+    }
+
+    /// Play `candidate` from the playhead, for this episode only: the engine finds it while the
+    /// episode plays on, and says how it goes on `PlayerSwitch`.
+    public func switchTo(_ candidate: SourceCandidate) {
+        input()
+        guard let (id, episode) = panelEpisode else { return }
+        let name = candidate.providerName.isEmpty ? candidate.providerId : candidate.providerName
+        Self.note(.info, "switching episode \(episode) to a release of \(candidate.providerId)")
+        panelSwitch = PanelSwitch(
+            target: SwitchTarget(providerId: candidate.providerId, name: name, release: candidate.id),
+            phase: .asked, since: time.now(), candidate: candidate)
+        send(.switchSource(id: id, episode: episode, providerId: candidate.providerId, sourceId: candidate.id))
+    }
+
+    /// Another stream of the source playing, from the playhead.
+    public func switchTo(stream: MenuSource) {
+        input()
+        guard !stream.current else { return }
+        panelSwitch = PanelSwitch(
+            target: SwitchTarget(providerId: "", name: playingSource ?? "", stream: stream.id),
+            phase: .asked, since: time.now())
+        control(.choose(.source(stream.id)))
+    }
+
+    /// Play another episode of the title from the panel: where the history left it, or from
+    /// the beginning.
+    public func playEpisode(_ number: String, fromStart: Bool) {
+        input()
+        guard fromStart, let id = staged?.id else {
+            control(.choose(.episode(number)))
+            return
+        }
+        send(.play(id: id, episode: number, fromStart: true))
+    }
+
+    /// Try the failed pick again.
+    public func retrySwitch() {
+        guard let failed = panelSwitch else { return }
+        if let candidate = failed.candidate {
+            switchTo(candidate)
+        } else if let stream = failed.target.stream, let row = menus?.sources.first(where: { $0.id == stream }) {
+            switchTo(stream: row)
+        }
+    }
+
+    /// What the engine says of a switch.
+    func switched(_ state: SourceSwitch) {
+        let now = time.now()
+        switch state {
+        case .finding(let to):
+            Self.note(.info, "switch: finding \(to.providerId)")
+            track(SwitchTarget(to), .finding, at: now)
+        case .loading(let to, let at):
+            Self.note(.info, "switch: loading \(to.providerId) at \(Int(at)) s, holding the picture")
+            track(SwitchTarget(to), .loading, at: now)
+            hold(at: at)
+        case .landed(let to, let at):
+            Self.note(.info, "switch: landed on \(to.providerId) at \(Int(at)) s")
+            let target = SwitchTarget(to)
+            playingSource = to.name
+            if let release = to.release {
+                playingRelease = panelReleases?.candidates?.first { $0.providerId == to.providerId && $0.id == release }
+                    ?? panelSwitch?.candidate
+            }
+            if panelSwitch?.on(target) ?? true { panelSwitch = nil }
+            releaseHold(fade: true)
+            if !panelOpen, to.release != nil {
+                say(L.noticePlayingFromSource(source: to.name, clock: PlayerClock.label(at)))
+            }
+        case .failed(let to, let at, let text, let reason):
+            Self.note(.warn, "switch: \(to.providerId) did not start at \(Int(at)) s\(reason.map { ": \(AppLog.redacting($0.text))" } ?? "")")
+            track(SwitchTarget(to), .failed(text.text), at: now)
+            releaseHold(fade: true)
+        }
+    }
+
+    /// The row's switch moves on to `phase`; a switch the panel did not pick (a stream from the
+    /// old menu, a pick on another device's remote) gets a row of its own.
+    private func track(_ target: SwitchTarget, _ phase: PanelSwitch.Phase, at now: ContinuousClock.Instant) {
+        if var known = panelSwitch, known.on(target) {
+            known.phase = phase
+            panelSwitch = known
+        } else {
+            panelSwitch = PanelSwitch(target: target, phase: phase, since: now)
+        }
+    }
+
+    /// Hold what is on screen: mpv is asked for it before the switch's load, which comes next
+    /// in the queue and clears it.
+    private func hold(at: Double) {
+        holding = true
+        holdAt = at
+        heldRelease?.cancel()
+        holdSerial += 1
+        enqueue(.hold(holdSerial))
+    }
+
+    /// mpv's picture for hold `serial`, if that hold is still on.
+    fileprivate func took(_ image: CGImage?, forHold serial: Int) {
+        guard holding, serial == holdSerial, let image else {
+            if holding, serial == holdSerial { Self.note(.info, "switch: no picture to hold") }
+            return
+        }
+        heldPicture = HeldPicture(image: image, serial: serial)
+    }
+
+    /// Let the held picture go: the new picture is up (or the old one again), and the held one
+    /// crossfades away over it before it is dropped.
+    func releaseHold(fade: Bool) {
+        guard holding || heldPicture != nil else { return }
+        holding = false
+        holdAt = nil
+        heldRelease?.cancel()
+        guard fade else {
+            heldPicture = nil
+            return
+        }
+        heldRelease = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled, let self, !self.holding else { return }
+            self.heldPicture = nil
+        }
+    }
+
+    /// Another episode: its releases and picks are its own.
+    func panelEpisodeChanged() {
+        panelReleases = nil
+        panelSwitch = nil
+        playingRelease = nil
     }
 }

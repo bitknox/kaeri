@@ -6173,6 +6173,9 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Ayarlar'da daha fazlası…</value>
   </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>Bölüm listesi geliyor.</value>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Gizli mod</value>
   </data>

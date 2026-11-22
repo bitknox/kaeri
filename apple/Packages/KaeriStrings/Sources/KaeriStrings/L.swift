@@ -2642,10 +2642,10 @@ public enum L {
     public static var playerReleasesNone: String { string("player-releases-none", fallback: "No releases found") }
 
     /// Part of a release's detail line: a release in the dubbed audio.
-    public static var playerReleaseDub: String { string("player-release-dub", fallback: "dub") }
+    public static var playerReleaseDub: String { string("player-release-dub", fallback: "Dubbed") }
 
     /// Part of a release's detail line: a release with both the original and the dubbed audio.
-    public static var playerReleaseDualAudio: String { string("player-release-dual-audio", fallback: "subbed and dubbed") }
+    public static var playerReleaseDualAudio: String { string("player-release-dual-audio", fallback: "Subbed and dubbed") }
 
     /// VoiceOver label of the countdown bar of the up next card.
     public static func playerCountdownLabel(episode: String) -> String {
@@ -8642,6 +8642,77 @@ public enum L {
 
     /// Button in the subtitles panel that opens Settings.
     public static var playerSubsMore: String { string("player-subs-more", fallback: "More in Settings…") }
+
+    /// Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+    public static var playerSheetEpisodesLoading: String { string("player-sheet-episodes-loading", fallback: "The episode list is on its way.") }
+
+    /// Accessibility label of the player's side panel with the Episodes and Sources tabs.
+    public static var playerPanel: String { string("player-panel", fallback: "Episodes and sources") }
+
+    /// Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+    public static func episodeRowPlaying(left: String) -> String {
+        Self.format("episode-row-playing", fallback: "Playing · %1$@", left)
+    }
+
+    /// Episode row in the player's panel: the episode is part story, part filler.
+    public static var episodeRowMixed: String { string("episode-row-mixed", fallback: "Mixed") }
+
+    /// Episode row in the player's panel: the length of an episode nobody has started.
+    public static func episodeRowLength(minutes: Int) -> String {
+        Self.format("episode-row-length", fallback: "%1$lld min", minutes)
+    }
+
+    /// Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+    public static func episodeRowDelayed(when: String) -> String {
+        Self.format("episode-row-delayed", fallback: "Delayed, was %1$@", when)
+    }
+
+    /// Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+    public static func episodeRowFrom(source: String) -> String {
+        Self.format("episode-row-from", fallback: "From %1$@", source)
+    }
+
+    /// Button on a partly watched episode: plays it from where it was left.
+    public static var actionResume: String { string("action-resume", fallback: "Resume") }
+
+    /// Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+    public static var playerPanelMetadataOnly: String { string("player-panel-metadata-only", fallback: "No source lists this show yet. Episodes can still be marked watched.") }
+
+    /// Player panel, Sources tab: heading over the source and streams playing now.
+    public static var playerPanelPlayingNow: String { string("player-panel-playing-now", fallback: "Playing now") }
+
+    /// Player panel, Sources tab: heading over the other sources, in the order they are tried.
+    public static var playerPanelOtherSources: String { string("player-panel-other-sources", fallback: "Other sources") }
+
+    /// Player panel, Sources tab: the folded list of a source's releases for this episode.
+    public static func playerPanelReleases(count: Int) -> String {
+        Self.format("player-panel-releases", fallback: "%1$lld releases", count)
+    }
+
+    /// Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+    public static var playerReleaseAutomatic: String { string("player-release-automatic", fallback: "Automatic picks this") }
+
+    /// Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+    public static var playerPanelOrder: String { string("player-panel-order", fallback: "Tried in the order set in Sources.") }
+
+    /// Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+    public static var playerPanelPickScope: String { string("player-panel-pick-scope", fallback: "A pick here is for this episode only.") }
+
+    /// Accessibility label of the subtitled or dubbed switch in the player panel.
+    public static var playerTranslation: String { string("player-translation", fallback: "Subbed or dubbed") }
+
+    /// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+    public static func playerPanelStarting(seconds: Int) -> String {
+        Self.format("player-panel-starting", fallback: "Starting · %1$lld s", seconds)
+    }
+
+    /// Notice when another source started playing while the player panel was closed.
+    public static func noticePlayingFromSource(source: String, clock: String) -> String {
+        Self.format("notice-playing-from-source", fallback: "Playing from %1$@ at %2$@", source, clock)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch during a watch party.
+    public static var partyVersionOwn: String { string("party-version-own", fallback: "Only your player switches. The room keeps playing.") }
 
     /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
     public static var privateMode: String { string("private-mode", fallback: "Private mode") }

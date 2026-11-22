@@ -17,6 +17,9 @@ import SwiftUI
 public struct MacPlayerView: View {
     let model: PlayerModel
     @State private var panel: Panel?
+    /// The Episodes and Sources panel at the trailing edge, and its tab.
+    @State private var sidePanel = false
+    @State private var sideTab: PanelTab = .episodes
     /// Whether the Subtitles and audio panel's Style submenu is open beside it.
     @State private var styleOpen = false
     @State private var overBar = false
@@ -62,24 +65,28 @@ public struct MacPlayerView: View {
 
     private var visible: Bool {
         (model.controlsVisible || panel != nil || partyOpen || overBar) && !model.stillWatching && model.failure == nil
-            && !curtain && !leavingFullScreen && !model.returning
+            && !curtain && !leavingFullScreen && !model.returning && !sidePanel
     }
 
     /// Whether the pointer may hide over the video (PlayerPointer).
     private var pointerIdle: Bool {
         PlayerPointer.idle(
-            controlsShown: model.controlsVisible || panel != nil || partyOpen || overBar,
+            controlsShown: model.controlsVisible || panel != nil || partyOpen || overBar || sidePanel,
             loading: curtain, failed: model.failure != nil, askingStillWatching: model.stillWatching)
     }
 
     /// The banner holds until the first frame, and comes back between episodes. A roll-on's
     /// starting screen also stays its 0.6 s.
-    private var curtain: Bool { model.starting != nil || !model.hasPicture || model.holdsCurtain || model.startingHeld }
+    private var curtain: Bool {
+        // A switch to another release holds the old picture instead (`PlayerModel.holding`).
+        model.starting != nil || (!model.hasPicture && !model.holding) || model.holdsCurtain || model.startingHeld
+    }
 
     public var body: some View {
         ZStack {
             Color.black
             PlayerPicture(model: model)
+            HeldPictureView(model: model)
             // Clicks on the video, beneath the controls: on the player's root they came before
             // every button's own, and a click on Full Screen paused instead.
             Color.clear
@@ -98,6 +105,9 @@ public struct MacPlayerView: View {
                 .animation(visible ? .fadeIn : .fadeOut, value: visible)
                 .allowsHitTesting(visible)
             cards
+            PlayerPanelLayer(
+                model: model, metrics: .mac, open: sidePanel && !leavingFullScreen && !model.returning,
+                tab: $sideTab, close: closeSidePanel)
             if model.stillWatching {
                 Palette.controlsDim
                 StillWatchingDialog(model: model, metrics: metrics)
@@ -135,7 +145,14 @@ public struct MacPlayerView: View {
             model.hostWindow = window
         }
         .onChange(of: model.backRequests) { back() }
-        .onChange(of: model.menuRequests) { panel = model.requestedMenu }
+        .onChange(of: model.menuRequests) {
+            if model.requestedMenu == .episodes {
+                panel = nil
+                openSidePanel()
+            } else {
+                panel = model.requestedMenu
+            }
+        }
         // A panel opens with its footer on the playing episode, whatever was pointed at last time.
         .onChange(of: panel) {
             pointedEpisode = nil
@@ -143,6 +160,7 @@ public struct MacPlayerView: View {
         }
         .onChange(of: store.party.panelRequests) {
             panel = nil
+            sidePanel = false
             partyOpen = store.party.inParty
         }
         // The party is over: its popover goes with it.
@@ -339,7 +357,7 @@ public struct MacPlayerView: View {
                 HStack(spacing: 0) {
                 partyButton
                 capsuleButton("captions.bubble", L.playerSubtitlesAndAudio, on: panel == .tracks) { toggle(.tracks) }
-                capsuleButton("list.bullet", L.playerEpisodes, on: panel == .episodes) { toggle(.episodes) }
+                capsuleButton("list.bullet", L.playerEpisodes, on: sidePanel) { toggle(.episodes) }
                 }
                 .padding(2)
                 .background(.overVideo(0.62), in: .capsule)
@@ -453,8 +471,29 @@ public struct MacPlayerView: View {
     // MARK: Panels
 
     private func toggle(_ which: Panel) {
+        // Episodes is the side panel's (player panel board).
+        if which == .episodes {
+            panel = nil
+            partyOpen = false
+            if sidePanel { closeSidePanel() } else { openSidePanel() }
+            return
+        }
         panel = panel == which ? nil : which
+        sidePanel = false
         partyOpen = false
+        model.poke()
+    }
+
+    /// The Episodes and Sources panel opens on Episodes.
+    private func openSidePanel() {
+        sideTab = .episodes
+        sidePanel = true
+        model.poke()
+    }
+
+    private func closeSidePanel() {
+        sidePanel = false
+        focused = true
         model.poke()
     }
 
@@ -518,6 +557,7 @@ public struct MacPlayerView: View {
 
     private func people() {
         panel = nil
+        sidePanel = false
         if store.party.inParty {
             partyOpen.toggle()
         } else {
@@ -672,7 +712,9 @@ public struct MacPlayerView: View {
             default: return .ignored
             }
         case .escape:
-            if panel != nil {
+            if sidePanel {
+                closeSidePanel()
+            } else if panel != nil {
                 panel = nil
             } else if model.corner == .upNext {
                 model.cancelNext()

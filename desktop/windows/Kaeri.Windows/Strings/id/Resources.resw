@@ -5957,6 +5957,9 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Selengkapnya di Pengaturan…</value>
   </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>Daftar episode sedang dimuat.</value>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Mode pribadi</value>
   </data>

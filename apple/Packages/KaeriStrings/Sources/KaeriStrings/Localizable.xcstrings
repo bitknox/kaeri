@@ -15171,6 +15171,18 @@
         }
       }
     },
+    "action-resume" : {
+      "comment" : "Button on a partly watched episode: plays it from where it was left.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Resume"
+          }
+        }
+      }
+    },
     "action-save" : {
       "comment" : "Button that stores what was typed or chosen.",
       "extractionState" : "manual",
@@ -73789,6 +73801,54 @@
         }
       }
     },
+    "episode-row-delayed" : {
+      "comment" : "Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it. Argument 1: when (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delayed, was %1$@"
+          }
+        }
+      }
+    },
+    "episode-row-from" : {
+      "comment" : "Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one. Argument 1: source (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "From %1$@"
+          }
+        }
+      }
+    },
+    "episode-row-length" : {
+      "comment" : "Episode row in the player's panel: the length of an episode nobody has started. Argument 1: minutes (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min"
+          }
+        }
+      }
+    },
+    "episode-row-mixed" : {
+      "comment" : "Episode row in the player's panel: the episode is part story, part filler.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mixed"
+          }
+        }
+      }
+    },
     "episode-row-not-out" : {
       "comment" : "Row note for an episode that has not aired.",
       "extractionState" : "manual",
@@ -73869,6 +73929,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa phát sóng"
+          }
+        }
+      }
+    },
+    "episode-row-playing" : {
+      "comment" : "Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left. Argument 1: left (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playing · %1$@"
           }
         }
       }
@@ -133533,6 +133605,18 @@
         }
       }
     },
+    "notice-playing-from-source" : {
+      "comment" : "Notice when another source started playing while the player panel was closed. Argument 1: source (Text). Argument 2: clock (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playing from %1$@ at %2$@"
+          }
+        }
+      }
+    },
     "notice-proxy-not-checked" : {
       "comment" : "Toast when the proxy could not be checked. The cause says why. Argument 1: cause (Cause).",
       "extractionState" : "manual",
@@ -173761,6 +173845,18 @@
         }
       }
     },
+    "party-version-own" : {
+      "comment" : "Player panel, under the subtitled or dubbed switch during a watch party.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only your player switches. The room keeps playing."
+          }
+        }
+      }
+    },
     "party-wait-many" : {
       "comment" : "Line when more than two members are still to be ready. Argument 1: count (Int).",
       "extractionState" : "manual",
@@ -182665,6 +182761,124 @@
         }
       }
     },
+    "player-panel" : {
+      "comment" : "Accessibility label of the player's side panel with the Episodes and Sources tabs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episodes and sources"
+          }
+        }
+      }
+    },
+    "player-panel-metadata-only" : {
+      "comment" : "Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No source lists this show yet. Episodes can still be marked watched."
+          }
+        }
+      }
+    },
+    "player-panel-order" : {
+      "comment" : "Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Tried in the order set in Sources."
+          }
+        }
+      }
+    },
+    "player-panel-other-sources" : {
+      "comment" : "Player panel, Sources tab: heading over the other sources, in the order they are tried.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Other sources"
+          }
+        }
+      }
+    },
+    "player-panel-pick-scope" : {
+      "comment" : "Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A pick here is for this episode only."
+          }
+        }
+      }
+    },
+    "player-panel-playing-now" : {
+      "comment" : "Player panel, Sources tab: heading over the source and streams playing now.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playing now"
+          }
+        }
+      }
+    },
+    "player-panel-releases" : {
+      "comment" : "Player panel, Sources tab: the folded list of a source's releases for this episode. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One release"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld releases"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "player-panel-starting" : {
+      "comment" : "Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting · %1$lld s"
+          }
+        }
+      }
+    },
     "player-panel-switch-failed" : {
       "comment" : "Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source. Argument 1: source (Text). Argument 2: current (Text).",
       "extractionState" : "manual",
@@ -183349,86 +183563,26 @@
         }
       }
     },
+    "player-release-automatic" : {
+      "comment" : "Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Automatic picks this"
+          }
+        }
+      }
+    },
     "player-release-dual-audio" : {
       "comment" : "Part of a release's detail line: a release with both the original and the dubbed audio.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "untertitelt und synchronisiert"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "subbed and dubbed"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "subtitulado y doblado"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sous-titré et doublé"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "bersubtitle dan berdubbing"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "sottotitolato e doppiato"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "字幕版と吹替版"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "z napisami i z dubbingiem"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "legendado e dublado"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "с субтитрами и с дубляжом"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "textat och dubbat"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "altyazılı ve dublajlı"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "có phụ đề và lồng tiếng"
+            "value" : "Subbed and dubbed"
           }
         }
       }
@@ -183437,82 +183591,10 @@
       "comment" : "Part of a release's detail line: a release in the dubbed audio.",
       "extractionState" : "manual",
       "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "synchronisiert"
-          }
-        },
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "dub"
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "doblaje"
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "doublage"
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dubbing"
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "doppiaggio"
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "吹替版"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dubbing"
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dublagem"
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "дубляж"
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dubbat"
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "dublaj"
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "lồng tiếng"
+            "value" : "Dubbed"
           }
         }
       }
@@ -184605,6 +184687,90 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chia sẻ"
+          }
+        }
+      }
+    },
+    "player-sheet-episodes-loading" : {
+      "comment" : "Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Episodenliste ist unterwegs."
+          }
+        },
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The episode list is on its way."
+          }
+        },
+        "es-419" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La lista de episodios está en camino."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La liste des épisodes arrive."
+          }
+        },
+        "id" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Daftar episode sedang dimuat."
+          }
+        },
+        "it" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'elenco degli episodi sta arrivando."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "エピソード一覧を読み込んでいます。"
+          }
+        },
+        "pl" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Lista odcinków właśnie się wczytuje."
+          }
+        },
+        "pt-BR" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "A lista de episódios está a caminho."
+          }
+        },
+        "ru" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Список эпизодов скоро появится."
+          }
+        },
+        "sv" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Avsnittslistan är på väg."
+          }
+        },
+        "tr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Bölüm listesi geliyor."
+          }
+        },
+        "vi" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Danh sách tập đang được tải."
           }
         }
       }
@@ -194035,6 +194201,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Rãnh chưa đặt tên"
+          }
+        }
+      }
+    },
+    "player-translation" : {
+      "comment" : "Accessibility label of the subtitled or dubbed switch in the player panel.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Subbed or dubbed"
           }
         }
       }

@@ -209,3 +209,4 @@ player-subs-bg-outline = Contorno
 player-subs-bg-shadow = Ombra
 player-subs-bg-box = Riquadro
 player-subs-more = Altro in Impostazioni…
+player-sheet-episodes-loading = L'elenco degli episodi sta arrivando.

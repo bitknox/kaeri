@@ -1210,7 +1210,6 @@
     <string name="player_position_state">%1$s / %2$s</string>
     <string name="player_sheet_finding">kaynaklar aranıyor…</string>
     <string name="player_sheet_none">Bu bölüm için kaynak bulunamadı.</string>
-    <string name="player_sheet_episodes_loading">Bölüm listesi geliyor.</string>
     <string name="player_dual_audio">Altyazılı ve dublajlı</string>
     <plurals name="notif_new_episodes">
         <item quantity="one">Yeni bir bölüm</item>
@@ -2475,6 +2474,7 @@
     <string name="player_subs_bg_shadow">Gölge</string>
     <string name="player_subs_bg_box">Kutu</string>
     <string name="player_subs_more">Ayarlar\'da daha fazlası…</string>
+    <string name="player_sheet_episodes_loading">Bölüm listesi geliyor.</string>
     <string name="private_mode">Gizli mod</string>
     <string name="private_mode_detail">İzlediğiniz veya okuduğunuz hiçbir şey, modu kapatana ya da Kaeri uygulamasından çıkana kadar kaydedilmez veya eşitlenmez.</string>
     <string name="private_mode_limits">kaynaklarınız ve birlikte izlemeleriniz açtığınız şeyleri yine de görür.</string>

@@ -871,10 +871,6 @@ player-sheet-finding = Finding { -source-pl }…
 # @only android
 player-sheet-none = No { -source-pl } found for this episode.
 
-# Player, episodes sheet: shown before the list arrives.
-# @only android
-player-sheet-episodes-loading = The episode list is on its way.
-
 # Player, sources sheet: a stream with both languages.
 # @only android
 player-dual-audio = { -subbed-cap } and { -dubbed }

@@ -1148,7 +1148,6 @@
     <string name="player_position_state">%1$s / %2$s</string>
     <string name="player_sheet_finding">ソースを検索中…</string>
     <string name="player_sheet_none">このエピソードのソースは見つかりませんでした。</string>
-    <string name="player_sheet_episodes_loading">エピソード一覧を読み込んでいます。</string>
     <string name="player_dual_audio">字幕版と吹替版</string>
     <plurals name="notif_new_episodes">
         <item quantity="other">新しいエピソードが%1$,d件</item>
@@ -2387,6 +2386,7 @@
     <string name="player_subs_bg_shadow">影</string>
     <string name="player_subs_bg_box">ボックス</string>
     <string name="player_subs_more">設定でさらに表示…</string>
+    <string name="player_sheet_episodes_loading">エピソード一覧を読み込んでいます。</string>
     <string name="private_mode">プライベートモード</string>
     <string name="private_mode_detail">オフにするかKaeriを終了するまで、視聴や閲覧の記録は保存も同期もされません。</string>
     <string name="private_mode_limits">ソースや同時視聴には、開いたものが引き続き見えます。</string>
