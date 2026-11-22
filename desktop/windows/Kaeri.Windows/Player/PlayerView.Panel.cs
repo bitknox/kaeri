@@ -81,6 +81,7 @@ public sealed partial class PlayerView
             return;
         panelReady = true;
         PanelEpisodes.ItemTemplate = new PanelRowFactory(this);
+        PanelEpisodes.GettingFocus += OnEpisodesGettingFocus;
         ElementCompositionPreview.SetIsTranslationEnabled(PanelPane, true);
         panelTick = DispatcherQueue.CreateTimer();
         panelTick.Interval = TimeSpan.FromMilliseconds(250);
@@ -362,6 +363,17 @@ public sealed partial class PlayerView
                 e.Handled = true;
                 var options = new FindNextElementOptions { SearchRoot = PanelPane };
                 FocusManager.TryMoveFocus(e.Key == VirtualKey.Right ? FocusNavigationDirection.Right : FocusNavigationDirection.Left, options);
+                return;
+            }
+            case VirtualKey.Tab when EpisodeOf(focused) is { } row && row.Number == panelSelected:
+            {
+                // The list is one tab stop; inside the revealed row, Tab walks its More and buttons.
+                var stops = RowStops(row);
+                var at = focused is Control control ? stops.IndexOf(control) : -1;
+                var back = Microsoft.UI.Input.InputKeyboardSource.GetKeyStateForCurrentThread(VirtualKey.Shift).HasFlag(global::Windows.UI.Core.CoreVirtualKeyStates.Down);
+                var next = at < 0 ? -1 : at + (back ? -1 : 1);
+                if (next >= 0 && next < stops.Count && stops[next].Focus(FocusState.Keyboard))
+                    e.Handled = true;
                 return;
             }
             case VirtualKey.Enter:
@@ -690,6 +702,30 @@ public sealed partial class PlayerView
                 BindEpisode(view);
         };
         board.Begin();
+    }
+
+    /// <summary>A revealed row's tab stops in order: its head, More while it shows, then its buttons.</summary>
+    static List<Control> RowStops(PanelEpisodeView row)
+    {
+        List<Control> stops = [row.Head];
+        if (row.More.Visibility == Visibility.Visible)
+            stops.Add(row.More);
+        foreach (var child in row.Buttons.Children)
+            if (child is Control { Visibility: Visibility.Visible, IsEnabled: true, IsTabStop: true } button)
+                stops.Add(button);
+        return stops;
+    }
+
+    /// <summary>Tab into the list lands on the revealed row, else the playing one, not the first row.</summary>
+    void OnEpisodesGettingFocus(UIElement sender, GettingFocusEventArgs args)
+    {
+        if (args.Direction is not (FocusNavigationDirection.Next or FocusNavigationDirection.Previous)
+            || args.OldFocusedElement is DependencyObject old && Within(old, PanelEpisodes))
+            return;
+        var number = panelSelected ?? (panelMetadataOnly ? null : playingEpisode);
+        var at = number is null ? -1 : Array.IndexOf(panelNumbers, number);
+        if (at >= 0 && PanelEpisodes.TryGetElement(at) is FrameworkElement { Tag: PanelEpisodeView view } && args.NewFocusedElement != view.Head)
+            args.TrySetNewFocusedElement(view.Head);
     }
 
     PanelEpisodeView? EpisodeOf(DependencyObject? element)
