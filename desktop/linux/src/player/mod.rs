@@ -2582,9 +2582,12 @@ impl PlayerView {
         let weak = Rc::downgrade(self);
         click.connect_pressed(move |gesture, presses, x, y| {
             let Some(view) = weak.upgrade() else { return };
-            // Only on the video, not on a card.
+            // Only on the video, not on a card or the panel: a double-click that plays a row
+            // closes the panel, and its second press is not the video's.
             let picked = view.ui.stage.pick(x, y, gtk::PickFlags::DEFAULT);
-            if picked.is_some_and(|w| w.is_ancestor(&view.ui.cards) || w == view.ui.cards) {
+            if picked.is_some_and(|w| {
+                w.is_ancestor(&view.ui.cards) || w == view.ui.cards || view.ui.side.holds(&w)
+            }) {
                 return;
             }
             if gesture.current_event().is_some_and(|e| {
