@@ -246,6 +246,14 @@ fun PlayerScreen(
     // A hardware keyboard, or a switch interface that sends keys: the player answers them, and any
     // key brings the controls up. Keys act on the player only while it holds focus itself; a
     // focused button or the seek bar keeps its own Space and arrows.
+    // A switch of source copies the picture on screen to hold it while the new stream loads.
+    DisposableEffect(surfaceView) {
+        val view = surfaceView
+        val take: (suspend () -> android.graphics.Bitmap?)? = view?.let { { app.kaeri.player.FrameCopy.of(it) } }
+        model.snapshot = take
+        onDispose { if (model.snapshot === take) model.snapshot = null }
+    }
+
     val keys = remember { FocusRequester() }
     var keysFocused by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { runCatching { keys.requestFocus() } }
@@ -257,6 +265,14 @@ fun PlayerScreen(
             .onFocusChanged { keysFocused = it.isFocused }
             .onPreviewKeyEvent { event ->
                 if (event.type != KeyEventType.KeyDown || model.inPip) return@onPreviewKeyEvent false
+                if (model.panelOpen) {
+                    // The panel takes the keys; Escape closes it, as Back does.
+                    if (event.key == Key.Escape) {
+                        model.closePanel()
+                        return@onPreviewKeyEvent true
+                    }
+                    return@onPreviewKeyEvent false
+                }
                 model.poke()
                 if (sheet != null) return@onPreviewKeyEvent false
                 when (event.key) {
@@ -275,14 +291,20 @@ fun PlayerScreen(
         val rect = videoRect(maxWidth, maxHeight, model.aspect ?: (16.0 / 9.0))
         val density = LocalDensity.current
         val pip = model.inPip
-        val chromeVisible = model.controlsVisible && model.hasPicture && !closing && still.frame == null && !pip
+        // The panel takes the controls' place while it is open; a switch's held picture keeps them.
+        val chromeVisible = model.controlsVisible && (model.hasPicture || model.holding) && !closing && still.frame == null && !pip && !model.panelOpen
         // Where the video sits in the window, the hint the window grows from. Said once it has
         // settled: while the player grows (T2), closes (T3) or turns, it changes every frame, and
         // each change would set the window's parameters again across the binder.
         var videoBounds by remember { mutableStateOf<android.graphics.Rect?>(null) }
         PictureInPicture(model, videoBounds)
         // In the window the video shows alone: what was open closes, at once.
-        LaunchedEffect(pip) { if (pip) sheet = null }
+        LaunchedEffect(pip) {
+            if (pip) {
+                sheet = null
+                model.closePanel()
+            }
+        }
 
         // The picture, where mpv draws it.
         Box(
@@ -292,6 +314,7 @@ fun PlayerScreen(
             },
         ) {
             video(model, Modifier.fillMaxSize()) { surfaceView = it }
+            HeldPictureLayer(model, Modifier.fillMaxSize())
         }
 
         // The ground the picture fades through between episodes.
@@ -440,7 +463,7 @@ fun PlayerScreen(
                 model,
                 onClose = { still.freeze(surfaceView) { close() } },
                 onTracks = { sheet = PlayerSheet.Tracks },
-                onEpisodes = { sheet = PlayerSheet.Episodes },
+                onEpisodes = { model.openPanel(app.kaeri.player.PanelTab.Episodes) },
                 onSkipTimes = { sheet = PlayerSheet.SkipTimes },
                 preview = preview.takeIf { previewSource != null && !Device.power(context).lowPower },
                 onPlayOnTv = playOnTv,
@@ -523,6 +546,7 @@ fun PlayerScreen(
             TypingBar(onClose = { typing = false })
         }
         PlayerSheets(model, sheet, onMoreSubtitleSettings = { sheet = null; openSubtitleSettings() }) { sheet = null }
+        PlayerPanelLayer(model)
 
         // A drag or a back gesture moves a still of the frame over the ground, the bars with it.
         // The gesture is read in the layer alone, so following the finger redraws the still and

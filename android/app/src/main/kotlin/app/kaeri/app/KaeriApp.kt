@@ -116,7 +116,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
      */
     override val player: PlayerModel by lazy {
         PlayerModel(
-            send = { store.send(it) },
+            send = { command -> Flavour.playerSend(command) { store.send(it) } },
             backend = { MpvBackend(this) },
             scope = scope,
             power = { Device.power(this) },
@@ -125,6 +125,7 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
                     ?.let { Device.display(it, resources.displayMetrics.density) }
             },
             systemCaptionStyle = { SystemCaptions.read(this) },
+            context = this,
         ).also { player ->
             store.onPlayback = player::apply
             store.onPlayAsked = player::asked

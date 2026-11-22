@@ -77,7 +77,7 @@ class TvApp : Application(), PlayerHost {
     /** The player, for the life of the process: mpv and the media session outlive the activity. */
     override val player: PlayerModel by lazy {
         PlayerModel(
-            send = { store.send(it) },
+            send = { command -> Flavour.playerSend(command) { store.send(it) } },
             backend = { MpvBackend(this) },
             scope = scope,
             power = { Device.power(this) },
@@ -86,6 +86,7 @@ class TvApp : Application(), PlayerHost {
                     ?.let { Device.display(it, resources.displayMetrics.density) }
             },
             systemCaptionStyle = { SystemCaptions.read(this) },
+            context = this,
         ).also { player ->
             store.onPlayback = player::apply
             store.onPlayAsked = player::asked

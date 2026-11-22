@@ -830,3 +830,11 @@ notice-playing-from-source = Playing from { $source } at { $clock }
 
 # Player panel, under the subtitled or dubbed switch during a watch party.
 party-version-own = Only your player switches. The room keeps playing.
+
+# Player panel: button under a synopsis cut to three lines, that shows it whole.
+# @max 16
+player-panel-more = More
+
+# Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+# @max 16
+player-panel-less = Less

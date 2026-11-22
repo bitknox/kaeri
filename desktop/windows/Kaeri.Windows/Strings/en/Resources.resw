@@ -8578,6 +8578,14 @@
     <value>Only your player switches. The room keeps playing.</value>
     <comment>Player panel, under the subtitled or dubbed switch during a watch party.</comment>
   </data>
+  <data name="PlayerPanelMore" xml:space="preserve">
+    <value>More</value>
+    <comment>Player panel: button under a synopsis cut to three lines, that shows it whole.</comment>
+  </data>
+  <data name="PlayerPanelLess" xml:space="preserve">
+    <value>Less</value>
+    <comment>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</comment>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Private mode</value>
     <comment>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</comment>

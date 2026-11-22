@@ -67,5 +67,7 @@ internal object Flavour {
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean = true
 
     /** A reader command on its way to the engine, as it is. */
+    fun playerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) = send(command)
+
     fun readerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) = send(command)
 }

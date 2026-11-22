@@ -96,6 +96,8 @@ class PlayerModel(
     private val display: () -> DisplayInfo? = { null },
     /** The system's caption style as it is now, or null while captions are off; a made-up one in the tests. */
     private val systemCaptionStyle: () -> SystemCaptionStyle? = { null },
+    /** The app's, for the few notices the player words itself: a switch that landed while the panel was closed. */
+    private val context: Context? = null,
 ) {
     // Wiring
 
@@ -110,6 +112,8 @@ class PlayerModel(
 
     private sealed interface Work {
         data class Call(val call: MpvCall) : Work
+        /** Copy the picture on screen for hold [serial], before the switch's load clears it. */
+        data class Hold(val serial: Int) : Work
     }
 
     // The player
@@ -522,6 +526,7 @@ class PlayerModel(
                 choosingSource = false
                 sourceChoices = null
                 verdictPending = false
+                if (staged?.id != event.id || staged?.episode != event.episode) panelEpisodeChanged()
                 staged = StagedPlayback(event.id, event.title, event.episode, event.episodeTitle)
                 stagedAlwaysPrivate = event.alwaysPrivate
                 titleOnScreen = event.id
@@ -563,10 +568,14 @@ class PlayerModel(
                     dismiss()
                 }
             }
-            is Event.Sources -> if (choosingSource) {
-                sourceChoices = event.candidates
-                sourceMisses = event.missed
+            is Event.Sources -> {
+                panelReleases?.let { if (it.id == event.id && it.episode == event.episode) panelReleases = it.copy(candidates = event.candidates) }
+                if (choosingSource) {
+                    sourceChoices = event.candidates
+                    sourceMisses = event.missed
+                }
             }
+            is Event.PlayerSwitch -> if (accepts(event.playback)) switched(event.state)
             // The summary the engine says as it changes, and the panel's rows while it is up.
             is Event.PlayerStats -> if (accepts(event.playback) && event.playback >= (playback ?: event.playback)) {
                 statsSummary = event.stats.summary
@@ -584,7 +593,13 @@ class PlayerModel(
                 progress = null
                 rollingOn = false
             }
-            is Event.StartingStep -> progress = progress?.takeIf { it.id == event.id && it.episode == event.episode }?.heard(event.step, event.line, now()) ?: progress
+            is Event.StartingStep -> {
+                val step = event.step
+                if (isPresented && step is app.kaeri.engine.model.StartStep.Found && staged?.let { it.id == event.id && it.episode == event.episode } == true) {
+                    step.source?.let { playingSource = it }
+                }
+                progress = progress?.takeIf { it.id == event.id && it.episode == event.episode }?.heard(event.step, event.line, now()) ?: progress
+            }
             is Event.Connectivity -> offline = event.offline
             is Event.Private -> if (privateMode != event.v1) {
                 privateMode = event.v1
@@ -815,6 +830,7 @@ class PlayerModel(
             }
             for (item in work) {
                 when (item) {
+                    is Work.Hold -> took(snapshot?.let { take -> withTimeoutOrNull(HOLD_WAIT) { runCatching { take() }.getOrNull() } }, item.serial)
                     is Work.Call -> try {
                         when (val call = if (item.call is MpvCall.Load) ready(item.call) else item.call) {
                             is MpvCall.Load -> loadedAs(mpv, mpv.load(call))
@@ -1038,6 +1054,10 @@ class PlayerModel(
         rollOnQuietUntil = null
         titleOnScreen = null
         progress = null
+        panelEpisodeChanged()
+        playingSource = null
+        panelOpen = false
+        releaseHold(fade = false)
         episode = null
         menus = null
         skip = null
@@ -1063,9 +1083,10 @@ class PlayerModel(
     }
 
     private fun resetFile() {
-        position = 0.0
-        playhead = 0.0
-        duration = null
+        // A switch loads the episode again where it was: the seek line stays there meanwhile.
+        position = if (holding) holdAt ?: 0.0 else 0.0
+        playhead = position
+        if (!holding) duration = null
         durationChanges = 0
         passedDuration = false
         paused = false
@@ -1439,7 +1460,7 @@ class PlayerModel(
      * sits there; a key ([poke]) or anything that changes the state moves it on again.
      */
     private fun resting(now: Long): Boolean = failure != null ||
-        paused && starting == null && progress == null && stall == null && upNext == null && skip == null && undo == null &&
+        paused && starting == null && (panelSwitch == null || panelSwitch?.failed != null) && progress == null && stall == null && upNext == null && skip == null && undo == null &&
         alert == null && skipNotice == null && skipPrompt == null && marking == null && holds.isEmpty() && scrubbing == null &&
         statsCopiedAt == null && (!statsShown || statsWaitingSince == null) && now - lastInput >= PlayerTiming.CONTROLS_HIDE
 
@@ -1553,6 +1574,230 @@ class PlayerModel(
 
     /** The episode starting, as the starting screen names it. */
     val startingEpisode: String? get() = starting?.episode ?: staged?.episode ?: failure?.episode
+
+    // The Episodes and Sources panel
+
+    /** The panel is open: a switch that lands while it is closed says so in a notice. */
+    var panelOpen by mutableStateOf(false)
+
+    /** The panel's tab. It opens on Episodes, or on Sources from the TV's Source button. */
+    var panelTab by mutableStateOf(PanelTab.Episodes)
+
+    /** The episode's releases across every source, as the panel last asked for them. */
+    var panelReleases by mutableStateOf<PanelReleases?>(null)
+        private set
+
+    /** The switch picked in the panel, from the pick until it lands, or its failure until the next pick. */
+    var panelSwitch by mutableStateOf<PanelSwitch?>(null)
+        private set
+
+    /** The source the episode plays from: what the start found, then what each switch landed on. */
+    var playingSource by mutableStateOf<String?>(null)
+        private set
+
+    /** The release playing, when one was picked in the panel and landed. */
+    var playingRelease by mutableStateOf<SourceCandidate?>(null)
+        private set
+
+    /** Bumped as a switch lands: the Sources tab scrolls back to Playing now. */
+    var landings by mutableIntStateOf(0)
+        private set
+
+    /**
+     * A switch is loading (from its Loading until Landed or Failed): the starting screen stays away
+     * and the seek line stays at [holdAt].
+     */
+    var holding by mutableStateOf(false)
+        private set
+
+    /** Where the switch loads at, while holding. */
+    private var holdAt: Double? = null
+
+    /** The picture held over the video while a switch loads, and for the crossfade after it. */
+    var heldPicture by mutableStateOf<HeldPicture?>(null)
+        private set
+
+    private var holdSerial = 0
+    private var heldRelease: Job? = null
+
+    /**
+     * Copies the picture on screen, from the screen showing the video: set by the phone's and the
+     * TV's player while their surface is up. With none, a switch shows no held picture.
+     */
+    var snapshot: (suspend () -> android.graphics.Bitmap?)? = null
+
+    /** The episode playing, as the panel lists its releases for. */
+    private val panelEpisode: Pair<AnilistId, String>?
+        get() = staged?.let { it.id to it.episode }
+
+    /** Open the panel on [tab]. */
+    fun openPanel(tab: PanelTab = PanelTab.Episodes) {
+        panelTab = tab
+        panelOpen = true
+        input()
+    }
+
+    /** Close the panel: the controls come back. */
+    fun closePanel() {
+        if (!panelOpen) return
+        panelOpen = false
+        poke()
+    }
+
+    /**
+     * Ask for the playing episode's releases across every source, for the Sources tab. Asked again
+     * only for another episode, or when [again].
+     */
+    fun loadPanelReleases(again: Boolean = false) {
+        val (id, episode) = panelEpisode ?: return
+        if (!again && panelReleases?.let { it.id == id && it.episode == episode } == true) return
+        panelReleases = PanelReleases(id, episode, null)
+        send(Command.LoadSources(id, episode))
+    }
+
+    /**
+     * Play [candidate] from the playhead, for this episode only: the engine finds it while the
+     * episode plays on, and says how it goes on `PlayerSwitch`.
+     */
+    fun switchTo(candidate: SourceCandidate) {
+        input()
+        val (id, episode) = panelEpisode ?: return
+        val name = candidate.providerName.ifEmpty { candidate.providerId }
+        note("switching episode $episode to a release of ${candidate.providerId}")
+        panelSwitch = PanelSwitch(SwitchTarget(candidate.providerId, name, release = candidate.id), PanelSwitch.Phase.Asked, now(), candidate)
+        clock = now()
+        send(Command.SwitchSource(id, episode, candidate.providerId, candidate.id))
+    }
+
+    /** Another stream of the source playing, from the playhead. */
+    fun switchTo(stream: app.kaeri.engine.model.MenuSource) {
+        input()
+        if (stream.current) return
+        panelSwitch = PanelSwitch(SwitchTarget("", playingSource.orEmpty(), stream = stream.id), PanelSwitch.Phase.Asked, now())
+        clock = now()
+        control(PlayerCommand.Choose(PlayerChoice.Source(stream.id)))
+    }
+
+    /** Play another episode of the title from the panel: where the history left it, or from the beginning. */
+    fun playEpisode(number: String, fromStart: Boolean) {
+        input()
+        val id = staged?.id
+        if (!fromStart || id == null) {
+            control(PlayerCommand.Choose(PlayerChoice.Episode(number)))
+            return
+        }
+        send(Command.Play(id, number, true))
+    }
+
+    /** Mark an episode of the title playing watched, from its revealed row. */
+    fun markWatched(number: String) {
+        input()
+        val id = staged?.id ?: return
+        send(Command.SetWatched(id, listOf(number), true))
+    }
+
+    /** Try the failed pick again. */
+    fun retrySwitch() {
+        val failed = panelSwitch ?: return
+        val candidate = failed.candidate
+        val stream = failed.target.stream
+        when {
+            candidate != null -> switchTo(candidate)
+            stream != null -> menus?.sources?.firstOrNull { it.id == stream }?.let { switchTo(it) }
+        }
+    }
+
+    /** What the engine says of a switch. */
+    private fun switched(state: app.kaeri.engine.model.SourceSwitch) {
+        val now = now()
+        clock = now
+        when (state) {
+            is app.kaeri.engine.model.SourceSwitch.Finding -> {
+                note("switch: finding ${state.to.providerId}")
+                track(SwitchTarget(state.to), PanelSwitch.Phase.Finding, now)
+            }
+            is app.kaeri.engine.model.SourceSwitch.Loading -> {
+                note("switch: loading ${state.to.providerId} at ${state.at.toInt()} s, holding the picture")
+                track(SwitchTarget(state.to), PanelSwitch.Phase.Loading, now)
+                hold(state.at)
+            }
+            is app.kaeri.engine.model.SourceSwitch.Landed -> {
+                note("switch: landed on ${state.to.providerId} at ${state.at.toInt()} s")
+                val target = SwitchTarget(state.to)
+                playingSource = state.to.name
+                state.to.release?.let { release ->
+                    playingRelease = panelReleases?.candidates?.firstOrNull { it.providerId == state.to.providerId && it.id == release }
+                        ?: panelSwitch?.candidate
+                }
+                if (panelSwitch?.on(target) != false) panelSwitch = null
+                landings += 1
+                releaseHold(fade = true)
+                if (!panelOpen && state.to.release != null && context != null) {
+                    alert = PlayerAlert(Strings.noticePlayingFromSource(context, state.to.name, PlayerClock.label(state.at)), NoticeKind.INFO, now)
+                }
+            }
+            is app.kaeri.engine.model.SourceSwitch.Failed -> {
+                note("switch: ${state.to.providerId} did not start at ${state.at.toInt()} s")
+                track(SwitchTarget(state.to), PanelSwitch.Phase.Failed(state.text), now)
+                releaseHold(fade = true)
+            }
+        }
+    }
+
+    /**
+     * The row's switch moves on to [phase]; a switch the panel did not pick (a stream from the
+     * old menu, a pick from a remote) gets a row of its own.
+     */
+    private fun track(target: SwitchTarget, phase: PanelSwitch.Phase, now: Long) {
+        val known = panelSwitch
+        panelSwitch = if (known != null && known.on(target)) known.copy(phase = phase) else PanelSwitch(target, phase, now)
+    }
+
+    /** Hold what is on screen: the picture is copied before the switch's load, which comes next in the queue and clears it. */
+    private fun hold(at: Double) {
+        holding = true
+        holdAt = at
+        heldRelease?.cancel()
+        holdSerial += 1
+        work?.trySend(Work.Hold(holdSerial))
+    }
+
+    /** The picture for hold [serial], if that hold is still on. */
+    private fun took(bitmap: android.graphics.Bitmap?, serial: Int) {
+        if (!holding || serial != holdSerial) return
+        if (bitmap == null) {
+            note("switch: no picture to hold")
+            return
+        }
+        heldPicture = HeldPicture(bitmap, serial)
+    }
+
+    /**
+     * Let the held picture go: the new picture is up (or the old one again), and the held one
+     * crossfades away over it before it is dropped.
+     */
+    private fun releaseHold(fade: Boolean) {
+        if (!holding && heldPicture == null) return
+        holding = false
+        holdAt = null
+        heldRelease?.cancel()
+        if (!fade) {
+            heldPicture = null
+            return
+        }
+        // The new stream's first frame shows from here, or the old one's again: hasPicture says so.
+        heldRelease = scope.launch {
+            delay(HELD_FADE)
+            if (!holding) heldPicture = null
+        }
+    }
+
+    /** Another episode: its releases and picks are its own. */
+    private fun panelEpisodeChanged() {
+        panelReleases = null
+        panelSwitch = null
+        playingRelease = null
+    }
 
     // When it could not play
 
@@ -2024,6 +2269,15 @@ class PlayerModel(
         val DEMO_ANILIST_ID: AnilistId = 4_294_000_001u
 
         const val TAG = "player"
+
+        /** How long the held picture stays over the new one once a switch lands: the crossfade's length. */
+        const val HELD_FADE = 400L
+
+        /**
+         * How long a switch's load waits for the picture to be copied before it goes ahead without
+         * one: a copy takes tens of milliseconds on a phone, and over 300 on a busy emulator.
+         */
+        const val HOLD_WAIT = 600L
 
         /** A file whose length changed more often than this is still being written, or a live stream. */
         private const val DURATION_CHANGES_MAX = 5

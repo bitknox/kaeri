@@ -32,6 +32,8 @@
 //             match-found or match-empty open the match picker on the first fixture (unsure scene)
 //   player    a player state to shoot (from A3)
 //   found     flow or settings: the found skip times demo, the engine's part scripted, for recording motion
+//   panel     live: the player panel's Sources tab lists made-up sources, and a switch to one
+//             lands or fails as scripted (PanelDemo), on the playing scene
 //   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
 //             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   code      a tracker whose device-code sheet opens, with a made-up code that expires in 15 minutes
@@ -162,6 +164,10 @@ internal object Flavour {
             send(command)
         }
     }
+
+    /** A player command on its way to the engine: the panel demo answers the panel's own. */
+    fun playerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) =
+        app.kaeri.player.PanelDemo.send(command, send)
 
     fun launch(context: Context, intent: Intent): EngineLaunch {
         launched?.let { return it }
@@ -505,6 +511,7 @@ internal object Flavour {
             store.apply(Event.DeviceCode(DeviceCodePrompt(tracker, "4F2K9QX1", "https://activate.example/pin", expiresAt)))
         }
         intent.getStringExtra("player")?.let { Log.w(KaeriApp.TAG, "player=$it is not in this build yet") }
+        if (intent.getStringExtra("panel") == "live") app.kaeri.player.PanelDemo.start(store, player)
         intent.getStringExtra("found")?.let { FoundDemo.run(context.applicationContext as app.kaeri.player.PlayerHost, store, MainScope(), it) }
     }
 

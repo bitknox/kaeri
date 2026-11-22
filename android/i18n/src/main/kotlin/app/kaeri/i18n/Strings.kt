@@ -9606,6 +9606,14 @@ object Strings {
     fun partyVersionOwn(context: Context): String =
         context.getString(R.string.party_version_own)
 
+    /** Player panel: button under a synopsis cut to three lines, that shows it whole. */
+    fun playerPanelMore(context: Context): String =
+        context.getString(R.string.player_panel_more)
+
+    /** Player panel: button under a synopsis shown whole after More, that folds it back to three lines. */
+    fun playerPanelLess(context: Context): String =
+        context.getString(R.string.player_panel_less)
+
     /** The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. */
     fun privateMode(context: Context): String =
         context.getString(R.string.private_mode)

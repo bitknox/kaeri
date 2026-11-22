@@ -8714,6 +8714,12 @@ public enum L {
     /// Player panel, under the subtitled or dubbed switch during a watch party.
     public static var partyVersionOwn: String { string("party-version-own", fallback: "Only your player switches. The room keeps playing.") }
 
+    /// Player panel: button under a synopsis cut to three lines, that shows it whole.
+    public static var playerPanelMore: String { string("player-panel-more", fallback: "More") }
+
+    /// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+    public static var playerPanelLess: String { string("player-panel-less", fallback: "Less") }
+
     /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
     public static var privateMode: String { string("private-mode", fallback: "Private mode") }
 

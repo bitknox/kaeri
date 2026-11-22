@@ -6166,6 +6166,12 @@ public static partial class T
     /// <summary>Player panel, under the subtitled or dubbed switch during a watch party.</summary>
     public static string PartyVersionOwn => Get("PartyVersionOwn");
 
+    /// <summary>Player panel: button under a synopsis cut to three lines, that shows it whole.</summary>
+    public static string PlayerPanelMore => Get("PlayerPanelMore");
+
+    /// <summary>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</summary>
+    public static string PlayerPanelLess => Get("PlayerPanelLess");
+
     /// <summary>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</summary>
     public static string PrivateMode => Get("PrivateMode");
 
@@ -14639,6 +14645,8 @@ public static partial class T
         ["PlayerPanelStarting"] = "Starting · {seconds} s",
         ["NoticePlayingFromSource"] = "Playing from {source} at {clock}",
         ["PartyVersionOwn"] = "Only your player switches. The room keeps playing.",
+        ["PlayerPanelMore"] = "More",
+        ["PlayerPanelLess"] = "Less",
         ["PrivateMode"] = "Private mode",
         ["PrivateModeDetail"] = "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.",
         ["PrivateModeLimits"] = "Your sources and watch parties still see what you open.",

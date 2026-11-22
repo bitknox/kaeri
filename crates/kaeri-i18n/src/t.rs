@@ -15397,6 +15397,16 @@ pub fn party_version_own() -> String {
     text("party-version-own", &[])
 }
 
+/// Player panel: button under a synopsis cut to three lines, that shows it whole.
+pub fn player_panel_more() -> String {
+    text("player-panel-more", &[])
+}
+
+/// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+pub fn player_panel_less() -> String {
+    text("player-panel-less", &[])
+}
+
 /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 pub fn private_mode() -> String {
     text("private-mode", &[])
