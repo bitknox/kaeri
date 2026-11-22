@@ -4,6 +4,7 @@
 use std::collections::{HashSet, VecDeque};
 
 use kaeri_model::playback::PlaybackId;
+use kaeri_model::subtitle_lift::{SubtitleFrame, SubtitlePlacement};
 
 use crate::ops;
 
@@ -23,6 +24,10 @@ pub struct PlayerState {
     pub volume: Option<f64>,
     /// The file's audio and subtitle tracks, from `track-list`.
     pub tracks: Vec<ops::PlayerTrack>,
+    /// The picture's place in the frame, from `osd-dimensions`, and where the subtitle track's
+    /// bottom lines rest: what the lift above the controls reads.
+    pub subtitle_frame: Option<SubtitleFrame>,
+    pub subtitle_placement: SubtitlePlacement,
 }
 
 /// Which playback the core's file and reports belong to.

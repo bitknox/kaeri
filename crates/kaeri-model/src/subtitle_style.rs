@@ -145,6 +145,17 @@ struct Look {
     border_style: &'static str,
 }
 
+/// mpv's `sub-scale` for `style`, with the system's caption size when the style follows it.
+pub(crate) fn subtitle_scale(
+    style: &SubtitleStyle,
+    system: Option<&SystemCaptionStyle>,
+) -> f64 {
+    let system = system.filter(|_| style.follow_system);
+    let size =
+        f64::from(style.size) / 100.0 * system.and_then(|s| s.relative_size).unwrap_or(1.0);
+    size.clamp(0.25, 3.0)
+}
+
 /// The options that draw subtitles in `style`, with the system's caption style over it when the
 /// style follows it, and the picture raised by `style.raise` and `controls_lift` together, both
 /// percent of the picture's height.
@@ -156,8 +167,6 @@ pub fn mpv_subtitle_options(
     controls_lift: f64,
 ) -> Vec<MpvOption> {
     let system = system.filter(|_| style.follow_system);
-    let size =
-        f64::from(style.size) / 100.0 * system.and_then(|s| s.relative_size).unwrap_or(1.0);
     let plate = match style.opacity {
         50 => 0x80,
         75 => 0xBF,
@@ -176,7 +185,7 @@ pub fn mpv_subtitle_options(
             SubtitleFont::Serif => Some("serif".into()),
             SubtitleFont::Monospace => Some("monospace".into()),
         },
-        scale: size.clamp(0.25, 3.0),
+        scale: subtitle_scale(style, system),
         text: argb(
             match style.colour {
                 SubtitleColour::White => 0xFFFFFF,

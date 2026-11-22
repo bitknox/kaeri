@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using Kaeri.App;
+using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
 using Microsoft.UI.Dispatching;
 using Microsoft.UI.Xaml;
@@ -23,7 +24,8 @@ public sealed partial class PlayerView
     {
         var up = Showing && chromeShown;
         var target = up && BottomBar.ActualHeight > 0
-            ? SubtitleLift.Position(BottomBar.ActualHeight, VideoPanel.ActualHeight)
+            ? SubtitleLift.Position(BottomBar.ActualHeight, VideoPanel.ActualHeight, ctx?.Known.Settings?.SubtitleStyle,
+                SubtitleStyling.System, subtitleFrame, subtitlePlacement)
             : SubtitleLift.Bottom;
         // A move across the picture, so with animation effects off it is at once; the fade stays.
         var time = !animated || !Motion.Enabled ? TimeSpan.Zero : up ? Motion.FadeInTime : Motion.FadeOutTime;
@@ -89,7 +91,26 @@ public sealed partial class PlayerView
     {
         lifting?.Stop();
         lift.Forget();
+        subtitleFrame = null;
+        subtitlePlacement = null;
     }
 
     void OnBottomBarSized(object sender, SizeChangedEventArgs e) => LiftSubtitles(animated: false);
+
+    /// <summary>mpv's <c>osd-dimensions</c> and where the subtitle track's lines rest, as last said.</summary>
+    SubtitleFrame? subtitleFrame;
+    SubtitlePlacement? subtitlePlacement;
+
+    /// <summary>
+    /// A new subtitle track, size or full screen, as mpv reports it: the lift is worked out again,
+    /// at once.
+    /// </summary>
+    void SubtitlesPlaced(FfiPlayerState state)
+    {
+        if (Equals(state.SubtitleFrame, subtitleFrame) && Equals(state.SubtitlePlacement, subtitlePlacement))
+            return;
+        subtitleFrame = state.SubtitleFrame;
+        subtitlePlacement = state.SubtitlePlacement;
+        LiftSubtitles(animated: false);
+    }
 }

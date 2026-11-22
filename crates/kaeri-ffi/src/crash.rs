@@ -9,6 +9,9 @@ use kaeri_model::qr::{QrMatrix, qr_half_blocks as half_blocks, qr_matrix as matr
 use kaeri_model::sources::{
     DemoInfo, ReadingDemoInfo, demo_info as info, reading_demo_info as reading_info,
 };
+use kaeri_model::subtitle_lift::{
+    SubtitleFrame, SubtitlePlacement, subtitle_lift as lift, subtitle_placement as placement,
+};
 use kaeri_model::subtitle_style::{
     MpvOption, SubtitleStyle, SystemCaptionStyle, mpv_subtitle_options as mpv_options,
     terminal_subtitle_options as terminal_options,
@@ -49,6 +52,29 @@ pub fn mpv_subtitle_options(
     controls_lift: f64,
 ) -> Vec<MpvOption> {
     mpv_options(&style, system.as_ref(), controls_lift)
+}
+
+/// How far the controls lift the subtitles, percent on top of the viewer's Raise, for
+/// `mpv_subtitle_options`' `controls_lift`: only as far as they need to clear the controls.
+/// `controls` is the share of the frame's height the controls take, zero while they are away;
+/// `frame` is mpv's `osd-dimensions` and `placement` the track's, from `subtitle_placement`.
+/// Without either the controls' whole height.
+#[uniffi::export]
+pub fn subtitle_lift(
+    style: SubtitleStyle,
+    system: Option<SystemCaptionStyle>,
+    controls: f64,
+    frame: Option<SubtitleFrame>,
+    placement: SubtitlePlacement,
+) -> f64 {
+    lift(&style, system.as_ref(), controls, frame.as_ref(), &placement)
+}
+
+/// Where a subtitle track's bottom lines rest, from mpv's `current-tracks/sub/codec` and, for
+/// ASS, its `sub-ass-extradata`.
+#[uniffi::export]
+pub fn subtitle_placement(codec: Option<String>, header: Option<String>) -> SubtitlePlacement {
+    placement(codec.as_deref(), header.as_deref())
 }
 
 /// The options for the terminal's player, which has no system caption style.

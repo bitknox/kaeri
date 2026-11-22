@@ -159,6 +159,66 @@ struct LiftTests {
         }
         #expect(values == values.sorted(), "it only goes down: \(values)")
     }
+
+    /// An ASS header whose dialogue rests `margin` of 1080 up, with a sign style at the top.
+    private func header(margin: Int) -> String {
+        """
+        [Script Info]
+        PlayResX: 1920
+        PlayResY: 1080
+
+        [V4+ Styles]
+        Format: Name, Alignment, MarginV
+        Style: Default,2,\(margin)
+        Style: Sign,8,10
+        """
+    }
+
+    private func positions(_ rig: Rig) -> [Double] {
+        rig.mpv.calls.compactMap { call in
+            if case .set("sub-pos", .double(let value)) = call { value } else { nil }
+        }
+    }
+
+    @Test func subtitlesAlreadyClearOfTheControlsStayPut() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        var style = rig.model.subtitleStyle
+        style.followSystem = false
+        rig.model.subtitleStyle = style
+        await rig.handedOver()
+        let frame: KaeriPlayer.MpvValue = .map(["w": .int(1280), "h": .int(720), "mt": .int(0), "mb": .int(0), "ml": .int(0), "mr": .int(0)])
+        rig.mpv.emit(.property(name: "osd-dimensions", value: frame))
+        try await until("the frame") { rig.model.subtitleFrame != nil }
+
+        // Placed 133 px up at 720, clear of 90 px of controls: nothing moves.
+        rig.mpv.answer("sub-ass-extradata", .string(header(margin: 200)))
+        rig.mpv.emit(.property(name: "current-tracks/sub", value: .map(["codec": .string("ass")])))
+        try await until("the placement") { rig.model.subtitlePlacement != .unknown }
+        let before = positions(rig).count
+        rig.model.liftSubtitles(90.0 / 720, animated: false)
+        await rig.handedOver()
+        #expect(positions(rig).count == before, "\(positions(rig))")
+
+        // Another track placed 60 px up: lifted part of the way, at once.
+        rig.mpv.answer("sub-ass-extradata", .string(header(margin: 90)))
+        rig.mpv.emit(.property(name: "current-tracks/sub", value: .map(["codec": .string("ass")])))
+        try await until("the low track") { rig.model.subtitlePlacement == .styled(margin: 90, playHeight: 1080) }
+        await rig.handedOver()
+        let partly = try #require(positions(rig).last)
+        #expect(partly > 88 && partly < 100, "\(partly)")
+
+        // Plain text rises by the whole bar, as before.
+        rig.mpv.emit(.property(name: "current-tracks/sub", value: .map(["codec": .string("subrip")])))
+        try await until("the plain track") { rig.model.subtitlePlacement == .plain }
+        await rig.handedOver()
+        #expect(positions(rig).last == 88)
+
+        // The controls away: back to mpv's own place.
+        rig.model.liftSubtitles(0, animated: false)
+        await rig.handedOver()
+        #expect(positions(rig).last == 100)
+    }
 }
 
 struct StartingLineTests {

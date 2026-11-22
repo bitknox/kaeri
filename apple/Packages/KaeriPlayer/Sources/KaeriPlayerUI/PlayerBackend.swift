@@ -38,7 +38,7 @@ struct HandedLayer: Sendable {
 extension MpvClient: PlayerBackend {
     public func begin(on layer: MpvLayer) throws {
         try start(on: layer)
-        try observe(reportedProperties)
+        try observe(reportedProperties + subtitleProperties)
     }
 
     public func perform(_ call: MpvCall) throws -> [PlayerReport] {

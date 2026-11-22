@@ -68,6 +68,8 @@ public final class PlayerModel {
         case mark(Int)
         /// A subtitle or audio file the viewer picked, added and selected (`loadTrack`).
         case trackFile(Track.Kind, path: String)
+        /// The ASS header of subtitle track `track`, read for where its lines rest.
+        case subtitleHeader(track: Int)
     }
 
     /// A load on its way to mpv, and the playlist entry mpv made for it once it answers.
@@ -378,6 +380,14 @@ public final class PlayerModel {
     @ObservationIgnored private(set) var controlsLift: Double = 0
     /// The lift easing `sub-pos` there, while it runs.
     @ObservationIgnored private(set) var subtitleTween: Task<Void, Never>?
+    /// The share of the picture's height the controls take while they are up, zero while they
+    /// are away: what the lift is worked out from again when the track or the size changes.
+    @ObservationIgnored private var controlsShare: Double = 0
+    /// mpv's `osd-dimensions`, and where the subtitle track's lines rest, as mpv last said.
+    @ObservationIgnored private(set) var subtitleFrame: SubtitleFrame?
+    @ObservationIgnored private(set) var subtitlePlacement: SubtitlePlacement = .unknown
+    /// Counts subtitle track changes, so a header read for an earlier track is dropped.
+    @ObservationIgnored private var subtitleTrackChanges = 0
     /// The Details list is open on the starting screen, remembered on this device.
     public var startDetailsOpen = UserDefaults.standard.bool(forKey: PlayerModel.detailsKey) {
         didSet { UserDefaults.standard.set(startDetailsOpen, forKey: Self.detailsKey) }
@@ -705,6 +715,13 @@ public final class PlayerModel {
                             await backend.resized()
                         case .mark(let mark):
                             self?.marks.removeValue(forKey: mark)?.resume()
+                        case .subtitleHeader(let track):
+                            let reports = try? await backend.perform(.restate(property: "sub-ass-extradata"))
+                            var header: String?
+                            if case .property(_, let json) = reports?.first {
+                                header = (try? KaeriPlayer.MpvValue(json: json))?.string
+                            }
+                            self?.subtitlesPlaced(KaeriKit.subtitlePlacement(codec: "ass", header: header), track: track)
                         case .trackFile(let kind, let path):
                             do {
                                 _ = try await backend.perform(.command([Self.addCommand(kind), path, "select"]))
@@ -941,6 +958,9 @@ public final class PlayerModel {
         videoOff = false
         subtitleTween?.cancel()
         controlsLift = 0
+        controlsShare = 0
+        subtitleFrame = nil
+        subtitlePlacement = .unknown
         staged = nil
         starting = nil
         walk = nil
@@ -1116,6 +1136,25 @@ public final class PlayerModel {
             }
             if value["w"].int != nil {
                 Self.note(.info, "video \(value["w"].int ?? 0)×\(value["h"].int ?? 0) \(value["pixelformat"].string ?? "")")
+            }
+        case "osd-dimensions":
+            let frame = SubtitleFrame(
+                width: value["w"].double ?? 0, height: value["h"].double ?? 0,
+                top: value["mt"].double ?? 0, bottom: value["mb"].double ?? 0,
+                left: value["ml"].double ?? 0, right: value["mr"].double ?? 0)
+            let known = frame.width > 0 && frame.height > 0 ? frame : nil
+            if known != subtitleFrame {
+                subtitleFrame = known
+                relift()
+            }
+        case "current-tracks/sub":
+            subtitleTrackChanges += 1
+            let codec = value["codec"].string
+            if codec == "ass" {
+                // Where an ASS track's lines rest is in its header, read off the main thread.
+                enqueue(.subtitleHeader(track: subtitleTrackChanges))
+            } else {
+                subtitlesPlaced(KaeriKit.subtitlePlacement(codec: codec, header: nil), track: subtitleTrackChanges)
             }
         case "aid":
             audioTrack = value.int
@@ -1360,6 +1399,7 @@ public final class PlayerModel {
         case .resized: "a resize"
         case .mark: "a mark"
         case .trackFile(let kind, _): kind == .audio ? "an audio file" : "a subtitle file"
+        case .subtitleHeader: "the subtitle header"
         }
     }
 
@@ -1982,12 +2022,19 @@ public final class PlayerModel {
         enqueue(.call(.set(property: "panscan", value: .double(fill ? 1 : 0))))
     }
 
-    /// Lift the subtitles by `fraction` of the picture's height, above the controls while they
-    /// are up, and back down with them: `sub-pos`, which libass applies to the dialogue at the
-    /// bottom of ASS subtitles and leaves signs where they are. The viewer's Raise is added by
-    /// the engine (`mpv_subtitle_options`). Eased over the controls' fade, or at once.
+    /// Lift the subtitles clear of controls that take `fraction` of the picture's height while
+    /// they are up, and back down with them: `sub-pos`, which libass applies to the dialogue at
+    /// the bottom of ASS subtitles and leaves signs where they are. The engine works out how far
+    /// (`subtitleLift`): only as far as the track's lines need to clear the controls, nothing for
+    /// lines that already sit clear of them, and the whole height while that is not known. The
+    /// viewer's Raise is added by the engine (`mpv_subtitle_options`). Eased over the controls'
+    /// fade, or at once.
     public func liftSubtitles(_ fraction: Double, animated: Bool) {
-        let lift = (min(0.5, max(0, fraction)) * 100).rounded(toPlaces: 1)
+        controlsShare = fraction
+        let needed = subtitleLift(
+            style: subtitleStyle, system: systemCaptions(), controls: fraction, frame: subtitleFrame,
+            placement: subtitlePlacement)
+        let lift = needed.rounded(toPlaces: 1)
         guard lift != controlsLift else { return }
         let from = controlsLift
         controlsLift = lift
@@ -2010,6 +2057,19 @@ public final class PlayerModel {
                 if Task.isCancelled { return }
             }
         }
+    }
+
+    /// A new subtitle track, size or full screen: the lift is worked out again, at once.
+    private func relift() {
+        liftSubtitles(controlsShare, animated: false)
+    }
+
+    /// Where the lines of subtitle track `track` rest, once known; dropped for a track since left.
+    private func subtitlesPlaced(_ placement: SubtitlePlacement, track: Int) {
+        guard track == subtitleTrackChanges, placement != subtitlePlacement else { return }
+        subtitlePlacement = placement
+        Self.note(.debug, "subtitles rest: \(placement)")
+        relift()
     }
 
     /// `sub-pos` for the controls taking `lift` percent of the picture, with the viewer's Raise.
@@ -2085,6 +2145,8 @@ public final class PlayerModel {
         for option in options {
             enqueue(.call(.set(property: option.name, value: .string(option.value))))
         }
+        // The Raise and the size change how far the subtitles need to lift.
+        relift()
     }
 
     /// The system changed its caption style.

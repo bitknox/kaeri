@@ -1200,6 +1200,7 @@ public sealed partial class PlayerView : UserControl
 
     void ShowState(FfiPlayerState state)
     {
+        SubtitlesPlaced(state);
         // The first frame comes in under the starting screen, which leaves for it.
         if (state.HasPicture && startingShown && !startingHeld && !startLeaving)
             FirstFrameUnderStart();

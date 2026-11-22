@@ -1773,7 +1773,16 @@ impl PlayerView {
         }
         self.read_speed();
         let paused_now = state.paused && !self.state.borrow().paused;
+        let moved = {
+            let before = self.state.borrow();
+            before.subtitle_frame != state.subtitle_frame
+                || before.subtitle_placement != state.subtitle_placement
+        };
         self.state.replace(state);
+        // A new subtitle track, size or full screen: the lift is worked out again.
+        if moved {
+            self.lift(self.shown.get());
+        }
         self.show_up_next();
         // Controls stay up while paused.
         if paused_now {
@@ -1919,7 +1928,7 @@ impl PlayerView {
         self.animate(false);
     }
 
-    /// Subtitles above the bottom bar while it shows, at once: never under it.
+    /// Subtitles above the bottom bar while it shows, as far as they need to clear it, at once.
     fn lift(&self, up: bool) {
         let Some(player) = &self.player else { return };
         let bar = if up && self.mini.get().is_none() {
@@ -1933,7 +1942,14 @@ impl PlayerView {
             0
         };
         let style = self.subtitle_style();
-        timeline::lift_subtitles(player.mpv(), bar, self.ui.stage.height(), style.as_ref());
+        let state = self.state.borrow();
+        timeline::lift_subtitles(
+            player.mpv(),
+            bar,
+            self.ui.stage.height(),
+            style.as_ref(),
+            (state.subtitle_frame.as_ref(), &state.subtitle_placement),
+        );
     }
 
     /// The viewer's subtitle style, as the engine last said Settings.
