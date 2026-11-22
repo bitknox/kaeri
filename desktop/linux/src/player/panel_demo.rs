@@ -39,7 +39,7 @@ const SYNOPSES: [&str; 10] = [
     "A lamp seller arrives in a valley town the night its last streetlight goes out, and offers to light the road for free.",
     "The ferry runs late. Mina counts the lamps on the far bank and finds one more than there should be.",
     "At the night market every stall sells light of a different colour. One sells darkness, by the hour.",
-    "The thaw brings the river up to the doorsteps, and with it everything the mountain kept through the winter: boots, letters, a lamp still burning.",
+    "The thaw brings the river up to the doorsteps, and with it everything the mountain kept through the winter: boots, letters, a lamp still burning. Mina fishes the lamp out of the shallows and carries it home, and it will not go out. The lamp seller says it is not one of his, and then, after a long look, that it used to be.",
     "A festival day in town. The lamp seller teaches the children to fold paper wicks while the adults argue about the price of oil.",
     "Mina follows the paper lanterns upstream to see where they are launched from, and meets the one who launches them.",
     "The lamp seller refuses a sale for the first time. Mina wants to know why, and the answer takes them out past the last house on the road.",
