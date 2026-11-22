@@ -38,7 +38,10 @@ use crate::{
 mod chat;
 mod coming;
 mod marking;
-mod panel;
+#[cfg(feature = "fixtures")]
+mod panel_demo;
+mod panel_state;
+mod side_panel;
 mod start_model;
 mod start_view;
 mod stats;
@@ -46,6 +49,8 @@ mod style_panel;
 mod timeline;
 pub(crate) mod tracks;
 
+use panel_state::{EpisodeAction, PanelTab, Phase, Playhead, SwitchTarget};
+use side_panel::{Act, SidePanel};
 use timeline::{Marked, Preview};
 
 /// The mini player's size.
@@ -212,6 +217,16 @@ pub struct PlayerView {
     /// Whether the episode is far enough on (85%) for the More menu to offer its discussion.
     late: Cell<bool>,
     has_dub: Cell<Option<bool>>,
+    /// How far the title's dub goes, for the panel's Dubbed.
+    dub: RefCell<Option<kaeri_model::episodes::DubExtent>>,
+    /// The episode the panel last asked the sources about.
+    panel_asked: RefCell<Option<(AnilistId, String)>>,
+    /// Where a switch to another source loads at, while the picture is held for it.
+    hold_at: Cell<Option<f64>>,
+    held_fade: RefCell<Option<adw::TimedAnimation>>,
+    /// For the panel's scripted switches: the last file the engine loaded, to load it again.
+    #[cfg(feature = "fixtures")]
+    last_load: RefCell<Option<(PlaybackId, String, Vec<kaeri_model::hosted::MpvOption>)>>,
     /// The episode on screen, and its translation, for its line and the Up Next card's.
     episode_line: RefCell<(String, Option<String>, Option<Translation>)>,
     /// The speed mpv plays at, as the speed button and the media controls show it.
@@ -313,7 +328,12 @@ struct Ui {
     stall_line: gtk::Label,
     resumed: gtk::Box,
     resumed_line: gtk::Label,
-    episodes: gtk::MenuButton,
+    /// Episodes and Sources: the button, the side panel, the picture held over the video while
+    /// a switch loads, and what takes a click on the dimmed video beside the panel.
+    episodes: gtk::Button,
+    side: Rc<SidePanel>,
+    held: gtk::Picture,
+    catcher: gtk::Box,
     tracks: gtk::MenuButton,
     /// Watch together: the form that starts a party, or the party's panel once in one, with a
     /// dot on the people while in one.
@@ -456,6 +476,12 @@ impl PlayerView {
             own_spoilers: Cell::new(None),
             late: Cell::new(false),
             has_dub: Cell::new(None),
+            dub: RefCell::default(),
+            panel_asked: RefCell::default(),
+            hold_at: Cell::new(None),
+            held_fade: RefCell::default(),
+            #[cfg(feature = "fixtures")]
+            last_load: RefCell::default(),
             episode_line: RefCell::default(),
             speed: Cell::new(1.0),
             speed_asked: Cell::new(None),
@@ -751,6 +777,12 @@ impl PlayerView {
                 for op in ops {
                     match op {
                         PlayerOp::Load { url, options } => {
+                            #[cfg(feature = "fixtures")]
+                            self.last_load.replace(Some((
+                                *playback,
+                                url.clone(),
+                                options.clone(),
+                            )));
                             let options = options
                                 .iter()
                                 .map(|o| (o.name.clone(), o.value.clone()))
@@ -802,23 +834,32 @@ impl PlayerView {
             }
             Event::TitleDub { id, dub } if Some(*id) == self.title_id.get() => {
                 let had = self.has_dub.replace(Some(dub.is_some()));
+                self.dub.replace(*dub);
                 if had != Some(dub.is_some()) && self.ui.tracks.is_active() {
                     self.fill_tracks();
                 }
+                self.refresh_panel();
             }
             Event::Episodes { id, rows, failed: None } if Some(*id) == self.title_id.get() => {
                 self.table.replace(rows.clone());
-                if !self.ui.episodes.is_active() {
-                    self.rebuild_menus();
-                }
+                self.rebuild_menus();
             }
+            Event::Sources { id, episode, candidates, .. }
+                if self.panel_asked.borrow().as_ref() == Some(&(*id, episode.clone())) =>
+            {
+                self.ui.side.set_releases(Some(candidates.clone()));
+            }
+            Event::SourceOptions { id, options } if Some(*id) == self.title_id.get() => {
+                self.ui.side.set_options(Some(options.clone()));
+            }
+            Event::PlayerSwitch { state, .. } => self.switched(state),
             Event::ShowSettings(view) if Some(view.id) == self.title_id.get() => {
                 let own = view
                     .rows
                     .iter()
                     .find(|row| row.key == kaeri_model::show::ShowSettingKey::SpoilerProtection)
                     .map(|row| row.value == "on");
-                if own != self.own_spoilers.replace(own) && !self.ui.episodes.is_active() {
+                if own != self.own_spoilers.replace(own) {
                     self.rebuild_menus();
                 }
             }
@@ -1100,6 +1141,9 @@ impl PlayerView {
             };
             start.step(step, line, at);
         }
+        if let kaeri_model::starting::StartStep::Found { source: Some(source), .. } = step {
+            self.playing_from(source);
+        }
         if matches!(step, kaeri_model::starting::StartStep::WaitingForConnection) {
             self.announce(&t::player_start_offline_detail(&self.start_episode()));
         }
@@ -1232,10 +1276,14 @@ impl PlayerView {
             } => {
                 // Whether the title has a dub, for the Sub and Dub switch: asked once a title.
                 // An opened link played without tracking has no title behind it to ask about.
+                self.close_panel();
+                self.panel_asked.take();
                 if self.title_id.replace(Some(*id)) != Some(*id) {
                     self.has_dub.set(None);
+                    self.dub.take();
                     self.table.take();
                     self.own_spoilers.set(None);
+                    self.ui.side.set_data(side_panel::Data::default());
                     if *id != kaeri_model::opened::UNTRACKED {
                         self.ctx.hub.send(Command::LoadDub(*id));
                         // The synopses for the Episodes panel, and the show's own protection.
@@ -1714,7 +1762,12 @@ impl PlayerView {
         if let Some(duration) = state.duration {
             ui.timeline.set_range(0.0, duration.max(0.1));
         }
-        if let Some(position) = state.position {
+        // While a switch loads, the clock stays where the held picture is.
+        let position = self.hold_at.get().or(state.position);
+        if let Some(position) = position {
+            ui.side.set_playhead(Playhead { position, duration: state.duration });
+        }
+        if let Some(position) = position {
             ui.position.set_label(&say::clock(position));
             if let Some(duration) = state.duration {
                 let left = (duration - position).max(0.0);
@@ -1886,7 +1939,8 @@ impl PlayerView {
     fn rest(&self) {
         let menu_open = self.ui.menu_buttons.iter().any(|b| b.is_active())
             || self.party.popover.is_visible()
-            || self.ui.chat.holds_controls();
+            || self.ui.chat.holds_controls()
+            || self.ui.side.is_open();
         let card = self.ui.stall.shown() || self.marking.borrow().is_some();
         if self.state.borrow().paused
             || self.over_bar.get()
@@ -2001,6 +2055,9 @@ impl PlayerView {
     /// The mini player: the window itself, small, undecorated and with three controls, or back
     /// to what it was.
     pub fn set_mini(&self, on: bool) {
+        if on {
+            self.close_panel();
+        }
         let window = &self.ctx.window;
         self.mini_at.set(Some(Instant::now()));
         match (on, self.mini.get()) {
@@ -2064,7 +2121,8 @@ impl PlayerView {
         if self.mini.get().is_some() {
             return vec![self.ui.mini.clone().upcast(), self.ui.dim.clone().upcast()];
         }
-        if self.start.borrow().is_some() {
+        // The panel keeps the header and the dim; the bottom bar stays away under it.
+        if self.start.borrow().is_some() || self.ui.side.is_open() {
             return vec![self.ui.top.clone().upcast(), self.ui.dim.clone().upcast()];
         }
         vec![
@@ -2124,16 +2182,7 @@ impl PlayerView {
         let Some((episodes, sources, upscaling, night)) = self.menus.borrow().clone() else {
             return;
         };
-        // The episodes are compact rows with a footer, not a menu: the pick is the action's state.
-        let protect = self.own_spoilers.get().unwrap_or_else(|| {
-            self.ctx
-                .hub
-                .known
-                .borrow()
-                .setting(kaeri_model::settings::SettingKey::SpoilerProtection)
-                .is_none_or(|r| crate::catalog::is_on(&r))
-        });
-        panel::fill(&self.ui.episodes, &episodes, &self.table.borrow(), protect);
+        self.refresh_panel_with(&episodes, self.protecting());
         let current = episodes.iter().find(|e| e.current).map(|e| e.number.clone());
         self.episode_action.set_state(&current.unwrap_or_default().to_variant());
 
@@ -2204,6 +2253,35 @@ impl PlayerView {
                 }
             })
         });
+        // The Episodes and Sources panel: its button, what it asks for, and a click on the dimmed
+        // video beside it, which closes it.
+        ui.side.connect_act({
+            let weak = Rc::downgrade(self);
+            move |act| {
+                if let Some(view) = weak.upgrade() {
+                    view.panel_act(act);
+                }
+            }
+        });
+        ui.episodes.connect_clicked({
+            let weak = Rc::downgrade(self);
+            move |_| {
+                if let Some(view) = weak.upgrade() {
+                    view.toggle_panel();
+                }
+            }
+        });
+        let catch = gtk::GestureClick::new();
+        catch.connect_released({
+            let weak = Rc::downgrade(self);
+            move |gesture, _, _, _| {
+                gesture.set_state(gtk::EventSequenceState::Claimed);
+                if let Some(view) = weak.upgrade() {
+                    view.close_panel();
+                }
+            }
+        });
+        ui.catcher.add_controller(catch);
         let weak = Rc::downgrade(self);
         let act = move |f: fn(&PlayerView)| {
             let weak = weak.clone();
@@ -2669,92 +2747,257 @@ impl PlayerView {
         self.wake();
     }
 
-    /// For a shot: the Episodes panel open.
+    /// For a shot or the walkthrough: the board's show in the panel, the 7th of 13 playing from
+    /// Example source, and the engine's side of its sources and switches scripted here. With
+    /// `long`, 250 rows and the 230th playing, so the Episodes tab shows its ranges.
     #[cfg(feature = "fixtures")]
-    pub fn shot_episodes(&self) {
-        self.ui.episodes.popup();
-        self.wake();
-    }
-
-    /// For a shot: the panel's rows one per row of the table, the 230th playing, so a long
-    /// series shows its ranges.
-    #[cfg(feature = "fixtures")]
-    pub fn shot_ranged_rows(&self) {
-        let table = self.table.borrow().clone();
-        if let Some(menus) = self.menus.borrow_mut().as_mut() {
-            menus.0 = table
-                .iter()
-                .map(|row| MenuEpisode {
-                    number: row.number.clone(),
-                    label: kaeri_i18n::t::episode_number(row.number.parse().unwrap_or(0)),
-                    title: row.title.clone(),
-                    watched: row.completed,
-                    filler: false,
-                    current: row.number == "230",
+    pub fn shot_panel_board(&self, long: bool) {
+        use kaeri_model::playback::SwitchTo;
+        // The first launch's question would sit over the panel.
+        crate::shots::close_dialogs(&self.ctx.window);
+        let Some(id) = self.title_id.get() else { return };
+        let stills: Vec<Option<String>> =
+            self.table.borrow().iter().map(|row| row.thumbnail.clone()).collect();
+        let mut rows = panel_demo::table(&stills);
+        if long {
+            let base = rows.clone();
+            rows = (1..=250)
+                .map(|n| {
+                    let mut row = base[(n - 1) % 9].clone();
+                    row.number = n.to_string();
+                    row.title = Some(format!("Lamp number {n}")); // i18n-skip
+                    row.completed = n < 230;
+                    row.watched = if n < 230 {
+                        1.0
+                    } else if n == 230 {
+                        0.5
+                    } else {
+                        0.0
+                    };
+                    row.past_progress = n > 230;
+                    row.spoiler_ahead = n > 230;
+                    row.airs_at = None;
+                    row.delayed_from = None;
+                    row
                 })
                 .collect();
         }
+        let now = if long { "230".to_owned() } else { panel_demo::NOW.to_string() };
+        let mut menu = panel_demo::menu(&rows);
+        if long {
+            menu = rows
+                .iter()
+                .map(|row| MenuEpisode {
+                    number: row.number.clone(),
+                    label: t::episode_number(row.number.parse().unwrap_or(0)),
+                    title: row.title.clone(),
+                    watched: row.completed,
+                    filler: false,
+                    current: row.number == now,
+                })
+                .collect();
+        }
+        let rows = Rc::new(RefCell::new(rows));
+        self.table.replace(rows.borrow().clone());
+        self.has_dub.set(Some(true));
+        self.dub
+            .replace(Some(kaeri_model::episodes::DubExtent { through: 8, complete: false }));
+        {
+            let mut line = self.episode_line.borrow_mut();
+            line.0 = now.clone();
+            line.1 =
+                rows.borrow().iter().find(|r| r.number == now).and_then(|r| r.title.clone());
+        }
+        self.ui.show.set_label(panel_demo::SHOW);
+        self.show_episode_line();
+        if let Some(menus) = self.menus.borrow_mut().as_mut() {
+            menus.0 = menu;
+            menus.1 = panel_demo::streams("s2");
+        }
+        self.playing_from(panel_demo::PLAYING);
         self.rebuild_menus();
-    }
 
-    /// For a shot: the Episodes panel's range menu open.
-    #[cfg(feature = "fixtures")]
-    pub fn shot_episodes_ranges(&self) {
-        let Some(popover) = self.ui.episodes.popover() else { return };
-        let mut stack = vec![popover.upcast::<gtk::Widget>()];
-        while let Some(widget) = stack.pop() {
-            if let Some(button) = widget.downcast_ref::<gtk::MenuButton>() {
-                button.popup();
-                return;
-            }
-            let mut child = widget.first_child();
-            while let Some(next) = child {
-                stack.push(next.clone());
-                child = next.next_sibling();
-            }
-        }
-    }
-
-    /// For a shot: the keyboard on the Episodes panel's row `at`, with its focus showing.
-    #[cfg(feature = "fixtures")]
-    pub fn shot_episodes_focus(&self, at: i32) {
-        fn list(widget: &gtk::Widget) -> Option<gtk::ListBox> {
-            if let Some(list) = widget.downcast_ref::<gtk::ListBox>() {
-                return Some(list.clone());
-            }
-            let mut child = widget.first_child();
-            while let Some(next) = child {
-                if let Some(found) = list(&next) {
-                    return Some(found);
+        // The engine's side: the listing and the releases, a watched mark, and each switch as
+        // the script has it. A landing loads the same file again from where it was, as the
+        // engine does, behind the held picture.
+        let attempts: Rc<RefCell<std::collections::HashMap<String, u32>>> = Rc::default();
+        let weak = self.self_weak();
+        let answer = move |command: &Command| -> Option<Vec<(u64, Event)>> {
+            let view = weak.upgrade()?;
+            let playback = view.last_load.borrow().as_ref().map(|(p, ..)| *p)?;
+            let at = view.state.borrow().position.unwrap_or(panel_demo::AT);
+            let to = match command {
+                Command::LoadSourceOptions(_) => {
+                    return Some(vec![(
+                        300,
+                        Event::SourceOptions { id, options: panel_demo::options() },
+                    )]);
                 }
-                child = next.next_sibling();
+                Command::LoadSources { episode, .. } => {
+                    return Some(vec![(
+                        700,
+                        Event::Sources {
+                            id,
+                            episode: episode.clone(),
+                            candidates: panel_demo::releases(),
+                            missed: Vec::new(),
+                        },
+                    )]);
+                }
+                Command::SetWatched { episodes, watched, .. } => {
+                    for row in rows.borrow_mut().iter_mut() {
+                        if episodes.contains(&row.number) {
+                            row.completed = *watched;
+                            row.watched = if *watched { 1.0 } else { 0.0 };
+                        }
+                    }
+                    return Some(vec![(
+                        200,
+                        Event::Episodes { id, rows: rows.borrow().clone(), failed: None },
+                    )]);
+                }
+                Command::SwitchSource { provider_id, source_id, .. } => SwitchTo {
+                    provider_id: provider_id.clone(),
+                    name: panel_demo::releases()
+                        .into_iter()
+                        .find(|c| &c.id == source_id)
+                        .map(|c| c.provider_name)
+                        .unwrap_or_default(),
+                    release: Some(source_id.clone()),
+                    stream: None,
+                },
+                Command::Player(PlayerCommand::Choose(PlayerChoice::Source(stream))) => {
+                    SwitchTo {
+                        provider_id: "example".into(),
+                        name: panel_demo::PLAYING.into(),
+                        release: None,
+                        stream: Some(stream.clone()),
+                    }
+                }
+                _ => return None,
+            };
+            let key = SwitchTarget::from(&to).key();
+            let attempt = {
+                let mut attempts = attempts.borrow_mut();
+                let n = attempts.entry(key.clone()).or_default();
+                *n += 1;
+                *n
+            };
+            let ending = panel_demo::ending(&key, attempt);
+            let mut events = Vec::new();
+            for (ms, state) in panel_demo::script(&to, at, ending) {
+                let lands = matches!(state, kaeri_model::playback::SourceSwitch::Landed { .. });
+                if lands {
+                    // The engine loads the new stream, and it lands once it plays.
+                    if let Some((_, url, options)) = view.last_load.borrow().clone() {
+                        let mut options = options;
+                        options.retain(|o| o.name != "start");
+                        options.push(kaeri_model::hosted::MpvOption {
+                            name: "start".into(),
+                            value: format!("{at:.3}"),
+                        });
+                        events.push((
+                            ms.saturating_sub(900),
+                            Event::PlayerOps {
+                                playback,
+                                ops: vec![PlayerOp::Load { url, options }],
+                            },
+                        ));
+                    }
+                    if let Some(stream) = &to.stream {
+                        let (weak, stream) = (view.self_weak(), stream.clone());
+                        glib::timeout_add_local_once(Duration::from_millis(ms), move || {
+                            if let Some(view) = weak.upgrade() {
+                                if let Some(menus) = view.menus.borrow_mut().as_mut() {
+                                    menus.1 = panel_demo::streams(&stream);
+                                }
+                                view.rebuild_menus();
+                            }
+                        });
+                    }
+                }
+                events.push((ms, Event::PlayerSwitch { playback, state }));
             }
-            None
-        }
-        let Some(popover) = self.ui.episodes.popover() else { return };
-        if let Some(row) = list(popover.upcast_ref()).and_then(|list| list.row_at_index(at)) {
-            row.grab_focus();
-            // The headless display has no active window, so the focus ring is drawn by hand.
-            row.set_state_flags(
-                gtk::StateFlags::FOCUSED | gtk::StateFlags::FOCUS_VISIBLE,
-                false,
-            );
-        }
-        self.wake();
+            Some(events)
+        };
+        self.ctx.hub.panel_answer.replace(Some(Rc::new(answer)));
     }
 
-    /// For a shot: the Episodes panel's popover, under its button, over the window.
-    pub fn shot_episodes_popover(&self) -> Option<(gtk::Widget, f32, f32)> {
-        let popover = self.ui.episodes.popover()?;
-        if !popover.is_visible() {
-            return None;
+    /// For the walkthrough: while `KAERI_QA_WIDGETS` names a file, the window's visible
+    /// buttons, labels and rows with their bounds, and the focus, written to it twice a second,
+    /// so a pointer can click what the app itself says is where. AT-SPI's extents sit off by up
+    /// to 25 px in this GTK.
+    #[cfg(feature = "fixtures")]
+    pub fn qa_widgets(&self) {
+        let Some(path) = std::env::var_os("KAERI_QA_WIDGETS") else { return };
+        let window = self.ctx.window.clone();
+        glib::timeout_add_local(Duration::from_millis(500), move || {
+            let mut out = String::new();
+            // Bounds are from the window widget; X clicks are from the surface, shadow included.
+            let (sx, sy) = window.surface_transform();
+            let focus = GtkWindowExt::focus(&window);
+            if let Some(focus) = &focus {
+                out.push_str(&format!("focus\t{}\t{}\n", focus.type_().name(), qa_text(focus)));
+            }
+            let mut stack = vec![window.clone().upcast::<gtk::Widget>()];
+            while let Some(widget) = stack.pop() {
+                if !widget.is_mapped() || !widget.is_child_visible() {
+                    continue;
+                }
+                let kind = if widget.is::<gtk::ListBoxRow>() {
+                    Some("row")
+                } else if widget.is::<gtk::Button>() || widget.is::<gtk::ToggleButton>() {
+                    Some("button")
+                } else if widget.is::<gtk::Label>() {
+                    Some("label")
+                } else {
+                    None
+                };
+                if let (Some(kind), Some(b)) = (kind, widget.compute_bounds(&window)) {
+                    out.push_str(&format!(
+                        "{kind}\t{:.0}\t{:.0}\t{:.0}\t{:.0}\t{}\t{}\n",
+                        b.x() as f64 + sx,
+                        b.y() as f64 + sy,
+                        b.width(),
+                        b.height(),
+                        widget.widget_name(),
+                        qa_text(&widget),
+                    ));
+                }
+                let mut child = widget.last_child();
+                while let Some(next) = child {
+                    stack.push(next.clone());
+                    child = next.prev_sibling();
+                }
+            }
+            let _ = std::fs::write(&path, out);
+            glib::ControlFlow::Continue
+        });
+    }
+
+    /// For a shot or the walkthrough: the panel open on `tab`.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_panel(&self, tab: &str) {
+        let tab = PanelTab::from_name(tab);
+        if self.ui.side.is_open() {
+            self.ui.side.show_tab(tab, true);
+        } else {
+            self.open_panel(tab);
         }
-        let window = &self.ctx.window;
-        let button = self.ui.episodes.compute_bounds(window)?;
-        let width = popover.width() as f32;
-        let x = (button.x() + button.width() - width)
-            .clamp(0.0, (window.width() as f32 - width).max(0.0));
-        Some((popover.upcast(), x, button.y() + button.height()))
+    }
+
+    /// For a shot: the panel itself, to stage its states.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_side(&self) -> Rc<SidePanel> {
+        Rc::clone(&self.ui.side)
+    }
+
+    /// For a shot: a pick in the Sources tab, as a click on it says it.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_pick_release(&self, id: &str) {
+        if let Some(candidate) = panel_demo::releases().into_iter().find(|c| c.id == id) {
+            self.panel_act(Act::Release(candidate));
+        }
     }
 
     /// For a shot: the notice an automatic skip of the opening shows, with its Undo.
@@ -2796,10 +3039,8 @@ impl PlayerView {
 
     /// Close whichever of the player's menus is open.
     pub fn close_menus(&self) {
-        for button in &self.ui.menu_buttons {
-            button.popdown();
-        }
-        self.party.popover.popdown();
+        self.close_menus_only();
+        self.close_panel();
     }
 
     /// Play on TV from the player: paused here, and carried on from here on the TV once it has
@@ -2845,13 +3086,17 @@ impl PlayerView {
     /// The people button as the party stands: a dot while in one, and its name.
     fn show_party_button(&self) {
         let in_party = self.ctx.hub.known.borrow().party.is_some();
-        // The room moves on together: no Next, no Episodes, and the card has no buttons.
+        // The room moves on together: no Next, no Episodes and Sources panel, and the card has
+        // no buttons.
         self.ui.up_buttons.set_visible(!in_party);
+        if in_party {
+            self.close_panel();
+        }
         self.ui.episodes.set_sensitive(!in_party);
         self.ui.episodes.set_tooltip_text(Some(&if in_party {
             t::party_next_off()
         } else {
-            t::player_episodes()
+            t::player_panel()
         }));
         // Faded rather than added, so nothing moves.
         self.ui.people_dot.set_opacity(if in_party { 1.0 } else { 0.0 });
@@ -2899,6 +3144,21 @@ impl PlayerView {
             self.wake();
             return true;
         }
+        // Ctrl+1 and Ctrl+2: the panel on Episodes or on Sources, opened or switched to.
+        if modifiers == gdk::ModifierType::CONTROL_MASK
+            && let Some(tab) = match key {
+                Key::_1 | Key::KP_1 => Some(PanelTab::Episodes),
+                Key::_2 | Key::KP_2 => Some(PanelTab::Sources),
+                _ => None,
+            }
+        {
+            if self.ui.side.is_open() {
+                self.ui.side.show_tab(tab, true);
+            } else {
+                self.open_panel(tab);
+            }
+            return true;
+        }
         if modifiers.intersects(gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK) {
             return false;
         }
@@ -2910,6 +3170,40 @@ impl PlayerView {
         // The keys of a text field, an open party form or a focused button are its own.
         if self.party.popover.is_visible() {
             return false;
+        }
+        // With the panel open, Escape and E close it first. Inside it, the arrows, Enter and
+        // the paging keys move through its lists; Space on a row still plays and pauses.
+        if self.ui.side.is_open() {
+            if matches!(key, Key::Escape | Key::e | Key::E) {
+                self.close_panel();
+                return true;
+            }
+            if let Some(focus) = GtkWindowExt::focus(&self.ctx.window)
+                && self.ui.side.holds(&focus)
+            {
+                if key == Key::space {
+                    if !focus.is::<gtk::ListBoxRow>() {
+                        return false;
+                    }
+                    self.send(PlayerCommand::TogglePause);
+                    return true;
+                }
+                if matches!(
+                    key,
+                    Key::Up
+                        | Key::Down
+                        | Key::Left
+                        | Key::Right
+                        | Key::Return
+                        | Key::KP_Enter
+                        | Key::Home
+                        | Key::End
+                        | Key::Page_Up
+                        | Key::Page_Down
+                ) {
+                    return false;
+                }
+            }
         }
         if let Some(focus) = GtkWindowExt::focus(&self.ctx.window) {
             let button_key = matches!(key, Key::space | Key::Return | Key::KP_Enter);
@@ -2937,7 +3231,6 @@ impl PlayerView {
         if let Some(open) = self.ui.menu_buttons.iter().find(|b| b.is_active()) {
             let toggles = match key {
                 Key::t | Key::T => open == &self.ui.tracks,
-                Key::e | Key::E => open == &self.ui.episodes,
                 _ => false,
             };
             if toggles {
@@ -2969,7 +3262,7 @@ impl PlayerView {
             Key::bracketright => self.step_speed(true),
             Key::BackSpace => self.ask_speed(1.0),
             Key::e | Key::E if self.in_party() => {}
-            Key::e | Key::E => self.ui.episodes.popup(),
+            Key::e | Key::E => self.toggle_panel(),
             Key::c | Key::C if self.in_party() => {
                 if !self.ui.chat.open_field() {
                     return false;
@@ -3057,7 +3350,7 @@ impl PlayerView {
     pub fn pad_panel(&self, panel: PlayerPanel) {
         match panel {
             PlayerPanel::Tracks => self.ui.tracks.popup(),
-            PlayerPanel::Episodes => self.ui.episodes.popup(),
+            PlayerPanel::Episodes => self.open_panel(PanelTab::Episodes),
             PlayerPanel::More => self.ui.settings.popup(),
             PlayerPanel::Stats => self.toggle_stats(),
         }
@@ -3188,6 +3481,345 @@ fn card() -> gtk::Box {
     card
 }
 
+/// The Episodes and Sources panel: opening and closing it, what it is handed, what it asks
+/// for, and a switch to another source with the picture held while it loads.
+impl PlayerView {
+    fn toggle_panel(&self) {
+        if self.ui.side.is_open() {
+            self.close_panel();
+        } else {
+            self.open_panel(PanelTab::Episodes);
+        }
+    }
+
+    /// Slide the panel in on `tab`: the header stays, the bottom bar goes, the video dims.
+    fn open_panel(&self, tab: PanelTab) {
+        if self.in_party() || self.start.borrow().is_some() || self.mini.get().is_some() {
+            return;
+        }
+        self.close_menus_only();
+        let side = &self.ui.side;
+        if !side.is_open() {
+            self.refresh_panel();
+            // Under the header bar, which stays: its natural height, as a hidden bar has none.
+            let head = self.ui.top.measure(gtk::Orientation::Vertical, -1).1;
+            side.widget.set_margin_top(head.max(self.ui.top.height()));
+            self.ui.catcher.set_visible(true);
+            self.ui.episodes.update_state(&[gtk::accessible::State::Expanded(Some(true))]);
+            self.wake();
+            // The bottom bar fades out; the controls stay up while the panel is open.
+            let bottom = self.ui.bottom.clone();
+            let fade = crate::motion::timed(
+                &bottom,
+                bottom.opacity(),
+                0.0,
+                FADE_OUT_MS,
+                crate::motion::opacity(&bottom),
+            );
+            fade.connect_done(move |_| bottom.set_visible(false));
+            fade.play();
+            self.ui.side.widget.set_visible(true);
+        }
+        side.open(tab);
+    }
+
+    pub fn close_panel(&self) {
+        let side = &self.ui.side;
+        if !side.is_open() {
+            return;
+        }
+        let focus_was_in =
+            GtkWindowExt::focus(&self.ctx.window).is_some_and(|f| side.holds(&f));
+        side.close();
+        self.ui.catcher.set_visible(false);
+        self.ui.episodes.update_state(&[gtk::accessible::State::Expanded(Some(false))]);
+        if self.shown.get() && self.mini.get().is_none() && self.start.borrow().is_none() {
+            self.ui.bottom.set_visible(true);
+            let to = self.ui.top.opacity();
+            let fade = crate::motion::timed(
+                &self.ui.bottom,
+                0.0,
+                to,
+                FADE_IN_MS,
+                crate::motion::opacity(&self.ui.bottom),
+            );
+            fade.play();
+        }
+        if focus_was_in {
+            self.ui.episodes.grab_focus();
+        }
+        self.wake();
+    }
+
+    /// The other menus closed, the panel left as it is.
+    fn close_menus_only(&self) {
+        for button in &self.ui.menu_buttons {
+            button.popdown();
+        }
+        self.party.popover.popdown();
+    }
+
+    /// Whether spoiler protection is on for the show playing.
+    fn protecting(&self) -> bool {
+        self.own_spoilers.get().unwrap_or_else(|| {
+            self.ctx
+                .hub
+                .known
+                .borrow()
+                .setting(kaeri_model::settings::SettingKey::SpoilerProtection)
+                .is_none_or(|r| crate::catalog::is_on(&r))
+        })
+    }
+
+    fn refresh_panel(&self) {
+        let episodes = self.menus.borrow().as_ref().map(|m| m.0.clone()).unwrap_or_default();
+        self.refresh_panel_with(&episodes, self.protecting());
+    }
+
+    /// Hand the panel the table, the menus and what is known of the title's sources.
+    fn refresh_panel_with(&self, episodes: &[MenuEpisode], protect: bool) {
+        let old = self.ui.side.data().clone();
+        let current =
+            episodes.iter().find(|e| e.current).map(|e| e.number.clone()).or_else(|| {
+                Some(self.episode_line.borrow().0.clone()).filter(|n| !n.is_empty())
+            });
+        let streams = self.menus.borrow().as_ref().map(|m| m.1.clone()).unwrap_or_default();
+        let translation = match self.translation_action.state().and_then(|s| s.get::<String>())
+        {
+            Some(name) if name == "dub" => Translation::Dub,
+            _ => Translation::Sub,
+        };
+        let episode_changed = old.current != current;
+        self.ui.side.set_data(side_panel::Data {
+            table: self.table.borrow().clone(),
+            current,
+            protect,
+            streams,
+            translation,
+            options: old.options,
+            releases: if episode_changed { None } else { old.releases },
+            playing_source: old.playing_source,
+            playing_release: if episode_changed { None } else { old.playing_release },
+            has_dub: self.has_dub.get(),
+            dub: *self.dub.borrow(),
+        });
+        if episode_changed && self.ui.side.is_open() && self.ui.side.tab() == PanelTab::Sources
+        {
+            self.load_panel_sources();
+        }
+    }
+
+    /// The Sources tab came up: the title's sources and the episode's releases, asked once an
+    /// episode.
+    fn load_panel_sources(&self) {
+        let Some(id) = self.title_id.get() else { return };
+        let episode = self.episode_line.borrow().0.clone();
+        if episode.is_empty() || id == kaeri_model::opened::UNTRACKED {
+            return;
+        }
+        let asked = (id, episode.clone());
+        if self.panel_asked.borrow().as_ref() == Some(&asked) {
+            return;
+        }
+        self.panel_asked.replace(Some(asked));
+        self.ui.side.set_releases(None);
+        self.ctx.hub.send(Command::LoadSourceOptions(id));
+        self.ctx.hub.send(Command::LoadSources { id, episode });
+    }
+
+    /// What the panel asks for.
+    fn panel_act(&self, act: Act) {
+        let id = self.title_id.get();
+        match act {
+            Act::Close => self.close_panel(),
+            Act::Tab(PanelTab::Sources) => self.load_panel_sources(),
+            Act::Tab(PanelTab::Episodes) => {}
+            Act::Episode(action, number) => {
+                match action {
+                    EpisodeAction::MarkWatched => {
+                        if let Some(id) = id {
+                            self.ctx.hub.send(Command::SetWatched {
+                                id,
+                                episodes: vec![number],
+                                watched: true,
+                            });
+                        }
+                    }
+                    EpisodeAction::FromBeginningPlaying => {
+                        self.send(PlayerCommand::SeekTo(0.0));
+                    }
+                    EpisodeAction::Play | EpisodeAction::Resume => {
+                        self.send(PlayerCommand::Choose(PlayerChoice::Episode(number)));
+                    }
+                    EpisodeAction::FromBeginning => match id {
+                        Some(id) => self.ctx.hub.send(Command::Play {
+                            id,
+                            episode: number,
+                            from_start: true,
+                        }),
+                        None => self.send(PlayerCommand::Choose(PlayerChoice::Episode(number))),
+                    },
+                }
+                if action.plays() {
+                    self.close_panel();
+                }
+            }
+            Act::Release(candidate) => {
+                let Some(id) = id else { return };
+                let episode = self.episode_line.borrow().0.clone();
+                self.ui.side.asked(SwitchTarget::release(&candidate), Some(candidate.clone()));
+                self.ctx.hub.send(Command::SwitchSource {
+                    id,
+                    episode,
+                    provider_id: candidate.provider_id,
+                    source_id: candidate.id,
+                });
+            }
+            Act::Stream(stream) => {
+                let name = self.ui.side.data().playing_source.clone().unwrap_or_default();
+                self.ui.side.asked(SwitchTarget::stream(&stream, &name), None);
+                self.send(PlayerCommand::Choose(PlayerChoice::Source(stream)));
+            }
+            Act::Translation(translation) => {
+                self.send(PlayerCommand::Choose(PlayerChoice::Translation(translation)));
+            }
+        }
+    }
+
+    /// What the engine says of a switch to another source: the panel's row follows it, and the
+    /// picture holds from its load until it lands or fails.
+    fn switched(&self, state: &kaeri_model::playback::SourceSwitch) {
+        use kaeri_model::playback::SourceSwitch;
+        match state {
+            SourceSwitch::Finding { to } => {
+                tracing::info!(provider = %to.provider_id, "switch: finding");
+                self.ui.side.switching(SwitchTarget::from(to), Phase::Finding);
+            }
+            SourceSwitch::Loading { to, at } => {
+                tracing::info!(provider = %to.provider_id, at, "switch: loading, holding the picture");
+                self.ui.side.switching(SwitchTarget::from(to), Phase::Loading);
+                self.hold_picture(*at);
+            }
+            SourceSwitch::Landed { to, at } => {
+                tracing::info!(provider = %to.provider_id, at, "switch: landed");
+                let target = SwitchTarget::from(to);
+                {
+                    let mut data = self.ui.side.data().clone();
+                    data.playing_source = Some(to.name.clone());
+                    if let Some(release) = &to.release {
+                        let known = data
+                            .releases
+                            .as_ref()
+                            .and_then(|all| {
+                                all.iter().find(|c| {
+                                    c.provider_id == to.provider_id && &c.id == release
+                                })
+                            })
+                            .cloned()
+                            .or_else(|| self.ui.side.failed_pick().and_then(|s| s.candidate));
+                        data.playing_release = known;
+                    }
+                    self.ui.side.set_data(data);
+                }
+                self.ui.side.landed(&target);
+                self.release_hold(*at);
+                if !self.ui.side.is_open() && to.release.is_some() {
+                    self.ctx.toast(&t::notice_playing_from_source(&to.name, &say::clock(*at)));
+                }
+            }
+            SourceSwitch::Failed { to, at, text, .. } => {
+                tracing::info!(provider = %to.provider_id, at, "switch: did not start");
+                self.ui.side.switching(SwitchTarget::from(to), Phase::Failed(text.clone()));
+                self.release_hold(*at);
+            }
+        }
+    }
+
+    /// Copy the picture on screen over the video: mpv clears it as the switch loads.
+    fn hold_picture(&self, at: f64) {
+        self.hold_at.set(Some(at));
+        if let Some(fade) = self.held_fade.take() {
+            fade.pause();
+        }
+        let Some(video) = self.ui.stage.child() else { return };
+        let (width, height) = (video.width(), video.height());
+        if width <= 0 || height <= 0 {
+            return;
+        }
+        let paintable = gtk::WidgetPaintable::new(Some(&video));
+        let snapshot = gtk::Snapshot::new();
+        paintable.snapshot(&snapshot, f64::from(width), f64::from(height));
+        let Some(node) = snapshot.to_node() else { return };
+        let Some(renderer) = video.native().and_then(|n| n.renderer()) else { return };
+        let bounds = gtk::graphene::Rect::new(0.0, 0.0, width as f32, height as f32);
+        let texture = renderer.render_texture(&node, Some(&bounds));
+        self.ui.held.set_paintable(Some(&texture));
+        self.ui.held.set_opacity(1.0);
+        self.ui.held.set_visible(true);
+    }
+
+    /// The new picture is up, or the old one again: the held one crossfades away over it.
+    fn release_hold(&self, _at: f64) {
+        self.hold_at.set(None);
+        if !self.ui.held.is_visible() {
+            return;
+        }
+        let held = self.ui.held.clone();
+        let fade = crate::motion::timed(
+            &held,
+            held.opacity(),
+            0.0,
+            300,
+            crate::motion::opacity(&held),
+        );
+        fade.set_easing(adw::Easing::EaseOutCubic);
+        let weak = self.self_weak();
+        fade.connect_done(move |_| {
+            if let Some(view) = weak.upgrade()
+                && view.hold_at.get().is_none()
+            {
+                view.ui.held.set_visible(false);
+                view.ui.held.set_paintable(None::<&gdk::Paintable>);
+            }
+        });
+        fade.play();
+        self.held_fade.replace(Some(fade));
+    }
+
+    /// The source a start found, named for the panel's Playing now.
+    fn playing_from(&self, source: &str) {
+        let mut data = self.ui.side.data().clone();
+        if data.playing_source.as_deref() != Some(source) {
+            data.playing_source = Some(source.to_owned());
+            data.playing_release = None;
+            self.ui.side.set_data(data);
+        }
+    }
+}
+
+/// For the walkthrough: what a widget says, its own text or its labels', and its tooltip.
+#[cfg(feature = "fixtures")]
+fn qa_text(widget: &gtk::Widget) -> String {
+    let mut words = Vec::new();
+    let mut stack = vec![widget.clone()];
+    while let Some(w) = stack.pop() {
+        if let Some(label) = w.downcast_ref::<gtk::Label>()
+            && w.is_visible()
+        {
+            words.push(label.text().to_string());
+        }
+        let mut child = w.last_child();
+        while let Some(next) = child {
+            stack.push(next.clone());
+            child = next.prev_sibling();
+        }
+    }
+    if let Some(tip) = widget.tooltip_text() {
+        words.push(tip.to_string());
+    }
+    words.join(" | ").replace(['\n', '\t'], " ")
+}
+
 fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     // The top bar: back, the show and the episode, and at the end episodes, settings and
     // fullscreen, with the window's own close button.
@@ -3209,12 +3841,15 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     episode_row.append(&episode);
     episode_row.append(&private);
     titles.append(&episode_row);
-    let episodes = gtk::MenuButton::builder()
+    let episodes = gtk::Button::builder()
         .icon_name("view-list-symbolic")
-        .tooltip_text(t::player_episodes())
+        .tooltip_text(t::player_panel())
+        .name("player-panel-button")
         .valign(gtk::Align::Center)
         .build();
     episodes.add_css_class("flat");
+    episodes.update_property(&[gtk::accessible::Property::Label(&t::player_panel())]);
+    episodes.update_state(&[gtk::accessible::State::Expanded(Some(false))]);
     let tracks = gtk::MenuButton::builder()
         .icon_name("media-view-subtitles-symbolic")
         .tooltip_text(t::player_subtitles_and_audio())
@@ -3529,9 +4164,21 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     }
     mini.append(&middle_row);
 
+    // The picture held over the video while a switch to another source loads.
+    let held = gtk::Picture::new();
+    held.set_content_fit(gtk::ContentFit::Fill);
+    held.set_can_target(false);
+    held.set_visible(false);
+    // The side panel, and beside it what closes it on a click on the dimmed video.
+    let side = SidePanel::new(&ctx.hub);
+    let catcher = gtk::Box::new(gtk::Orientation::Vertical, 0);
+    catcher.add_css_class("panel-catcher");
+    catcher.set_visible(false);
+
     let stage = gtk::Overlay::new();
     stage.add_css_class("player");
     stage.set_child(Some(video));
+    stage.add_overlay(&held);
     stage.add_overlay(&dim);
     stage.add_overlay(&starting);
     stage.add_overlay(&cards);
@@ -3540,6 +4187,8 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     stage.add_overlay(&chat.field);
     stage.add_overlay(&mark_bar);
     stage.add_overlay(&resumed);
+    stage.add_overlay(&catcher);
+    stage.add_overlay(&side.widget);
     stage.add_overlay(&mini);
 
     // The bars over the video, which fills the page under them.
@@ -3553,7 +4202,6 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     page.set_focusable(true);
 
     let menu_buttons = vec![
-        episodes.clone(),
         tracks.clone(),
         settings.clone(),
         style.clone(),
@@ -3617,6 +4265,9 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
         resumed,
         resumed_line,
         episodes,
+        side,
+        held,
+        catcher,
         tracks,
         people,
         people_dot,

@@ -536,7 +536,15 @@ pub struct Hub {
     /// when the shot answered it and the engine never hears it.
     #[cfg(feature = "fixtures")]
     pub reader_answer: RefCell<Option<ReaderAnswer>>,
+    /// For a shot: the player panel's commands answered here, each event after its delay in
+    /// ms, as the fixture engine has no releases or switches to show.
+    #[cfg(feature = "fixtures")]
+    pub panel_answer: RefCell<Option<PanelAnswer>>,
 }
+
+/// What a shot answers a command with in place of the engine: events and their delays in ms.
+#[cfg(feature = "fixtures")]
+pub type PanelAnswer = Rc<dyn Fn(&Command) -> Option<Vec<(u64, Event)>>>;
 
 /// What a shot does with a reader command: true when it answered it in place of the engine.
 #[cfg(feature = "fixtures")]
@@ -591,6 +599,8 @@ impl Hub {
             dress: RefCell::default(),
             #[cfg(feature = "fixtures")]
             reader_answer: RefCell::default(),
+            #[cfg(feature = "fixtures")]
+            panel_answer: RefCell::default(),
         })
     }
 
@@ -619,6 +629,25 @@ impl Hub {
                 }
             });
             return None;
+        }
+        // A player panel shot's own answers.
+        #[cfg(feature = "fixtures")]
+        {
+            let answer = self.panel_answer.borrow().clone();
+            if let Some(events) = answer.and_then(|answer| answer(&command)) {
+                for (ms, event) in events {
+                    let me = self.me.clone();
+                    glib::timeout_add_local_once(
+                        std::time::Duration::from_millis(ms),
+                        move || {
+                            if let Some(hub) = me.upgrade() {
+                                hub.take(vec![event]);
+                            }
+                        },
+                    );
+                }
+                return None;
+            }
         }
         // A reader shot's own answers.
         #[cfg(feature = "fixtures")]
