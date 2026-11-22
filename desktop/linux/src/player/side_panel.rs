@@ -160,6 +160,9 @@ pub struct SidePanel {
     range: Cell<Option<usize>>,
     /// Set while the panel builds or selects by itself: no reveal animates, nothing is said.
     quiet: Cell<bool>,
+    /// Where the keyboard waits in the panel while the Sources rows load, to move onto the
+    /// first of them once they are in.
+    parked: RefCell<Option<gtk::Widget>>,
     act: RefCell<Option<ActFn>>,
 }
 
@@ -269,6 +272,7 @@ impl SidePanel {
             expanded: RefCell::default(),
             range: Cell::new(None),
             quiet: Cell::new(false),
+            parked: RefCell::new(None),
             act: RefCell::default(),
         });
         view.wire();
@@ -452,22 +456,43 @@ impl SidePanel {
                 }
             }
             PanelTab::Sources => {
-                let first = self
-                    .src_does
-                    .borrow()
-                    .iter()
-                    .map(|(row, _)| row.clone())
-                    .find(|row| row.is_visible());
-                match first {
-                    Some(row) => {
-                        row.grab_focus();
-                    }
-                    None => {
-                        self.tabs.grab_focus();
-                    }
+                if !self.focus_first_source() {
+                    // Nothing to land on yet: wait on the tabs, and move on when the rows fill.
+                    self.park();
                 }
             }
         }
+    }
+
+    /// The keyboard onto the first Sources row that takes it, when there is one.
+    fn focus_first_source(&self) -> bool {
+        let rows: Vec<gtk::ListBoxRow> =
+            self.src_does.borrow().iter().map(|(row, _)| row.clone()).collect();
+        let landed = rows
+            .iter()
+            .any(|row| row.is_visible() && row.is_focusable() && row.grab_focus());
+        if landed {
+            self.parked.replace(None);
+        }
+        landed
+    }
+
+    /// Keep the keyboard in the panel on its tabs, or on Close, and remember where.
+    fn park(&self) {
+        let root = self.widget.root();
+        let on_tabs = self.tabs.child_focus(gtk::DirectionType::TabForward);
+        if !on_tabs {
+            self.close.grab_focus();
+        }
+        let now = root.and_then(|r| gtk::prelude::RootExt::focus(&r));
+        self.parked.replace(now.filter(|w| self.holds(w)));
+    }
+
+    /// Whether the keyboard still waits where `park` left it.
+    fn still_parked(&self) -> bool {
+        let Some(parked) = self.parked.borrow().clone() else { return false };
+        let now = self.widget.root().and_then(|r| gtk::prelude::RootExt::focus(&r));
+        self.is_open() && self.tab() == PanelTab::Sources && now.as_ref() == Some(&parked)
     }
 
     // What the player hands in
@@ -1085,6 +1110,12 @@ impl SidePanel {
         let data = self.data.borrow().clone();
         // The keyboard's row, by its key, to put it back on after.
         let focus_key = self.src_focus_key();
+        // The keyboard on a Sources row that is not a pick, such as Try again or a fold.
+        let in_list = self
+            .src_list
+            .root()
+            .and_then(|r| gtk::prelude::RootExt::focus(&r))
+            .is_some_and(|f| f.is_ancestor(&self.src_list));
         self.choices.borrow_mut().clear();
         self.src_does.borrow_mut().clear();
         self.folds.borrow_mut().clear();
@@ -1311,10 +1342,11 @@ impl SidePanel {
         wrap(&foot);
         self.src_list.append(&still_row(&foot));
         self.show_switch();
-        if let Some(key) = focus_key
-            && let Some((_, row)) = keys.iter().find(|(k, _)| *k == key)
-        {
-            row.grab_focus();
+        let kept = focus_key
+            .and_then(|key| keys.iter().find(|(k, _)| *k == key).map(|(_, row)| row.clone()))
+            .is_some_and(|row| row.grab_focus());
+        if !kept && (in_list || self.still_parked()) {
+            self.focus_first_source();
         }
     }
 
