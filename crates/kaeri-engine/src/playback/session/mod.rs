@@ -34,7 +34,7 @@ use kaeri_model::{
     command::PlayerCommand,
     event::Event,
     notice::Notice,
-    playback::{Ending, Successor},
+    playback::{Ending, SourceSwitch, Successor, SwitchTo},
 };
 // What the episode table says of the episodes around this one: the front end sends them ahead
 // of a play, so they are the model's, and still named from here for whatever plays.
@@ -58,6 +58,7 @@ use crate::{
         seat::{PartyHub, Seat, SeatReport},
         shaders::Look,
         slot::{Player, PlayerSlot},
+        switch::SwitchNews,
     },
 };
 
@@ -180,6 +181,9 @@ pub struct PlaySettings {
     /// beyond the streams found: where Skip and Switch source go once the pool has nothing
     /// left. See [`crate::playback::further`].
     pub further: crate::playback::further::Further,
+    /// The playback's end of its door, where a release picked in the player's Sources panel
+    /// reaches it: see [`crate::playback::switch`].
+    pub switches: crate::playback::switch::SwitchInbox,
 }
 
 impl PlaySettings {
@@ -265,6 +269,9 @@ enum FileOutcome {
     },
     /// The viewer picked another stream from the menu, or asked for the same one again.
     Switch { to: usize, at: f64 },
+    /// The release the viewer picked in the Sources panel was found: its streams, to play from
+    /// `at`, where the file was, or where it opened when it has shown no frame yet.
+    Swap { to: SwitchTo, streams: Vec<Stream>, at: Option<f64> },
     /// The viewer accepted the stall prompt's offer of another stream.
     Stalled { at: f64 },
     /// The viewer skipped the stream before it showed a frame, from the starting screen.
@@ -396,6 +403,12 @@ pub async fn play(
         in_party: false,
         failed_over_from: None,
         skipping: settings.further.skips(),
+        news: settings.switches.take(),
+        finding: None,
+        switching: None,
+        restoring: None,
+        pool_from: 0,
+        sources: sources.clone(),
     };
 
     // Read once: every stream this playback tries is the same series in the same translation.
@@ -672,6 +685,25 @@ pub async fn play(
             )
             .await;
 
+        // A release that landed is the pool from here: the streams it replaced are let go, so
+        // failover, the Sources menu and the next switch go by what plays now.
+        let from = std::mem::take(&mut run.pool_from);
+        let outcome = if from > 0 && from <= index {
+            streams.drain(..from);
+            tried.drain(..from);
+            localised.drain(..from);
+            total = streams.len();
+            index -= from;
+            match outcome {
+                FileOutcome::Switch { to, at } => {
+                    FileOutcome::Switch { to: to.checked_sub(from).unwrap_or(index), at }
+                }
+                outcome => outcome,
+            }
+        } else {
+            outcome
+        };
+
         // What the viewer chose in this file is where the next file of the episode starts.
         let (carried, owed) = current.tracks.carried();
         for action in owed {
@@ -752,8 +784,37 @@ pub async fn play(
         };
 
         match outcome {
+            FileOutcome::Swap { to: asked, streams: found, at } => {
+                let at = at.or(resume_at).unwrap_or_default();
+                let from = streams.len();
+                streams.extend(found);
+                total = streams.len();
+                tried.resize(total, false);
+                localised.resize(total, false);
+                tracing::info!(
+                    from = index,
+                    provider = %asked.provider_id,
+                    at,
+                    "switching to another release in place"
+                );
+                run.begin_switch(asked, at, index, from..total);
+                index = from;
+                resume_at = Some(at);
+                target = streams[index].quality;
+                run.failed_over_from = None;
+            }
             FileOutcome::Switch { to, at } => {
                 tracing::info!(from = index, to, at, "switching stream in place");
+                // Picked by the viewer, not the same stream opened again where it was.
+                if to != index {
+                    let asked = SwitchTo {
+                        provider_id: streams[to].provider_id.clone(),
+                        name: run.source_name(&streams[to]),
+                        release: None,
+                        stream: Some(to.to_string()),
+                    };
+                    run.begin_switch(asked, at, index, to..to + 1);
+                }
                 index = to;
                 resume_at = Some(at);
                 // A stream picked by hand sets the quality later failovers keep to.
@@ -848,6 +909,45 @@ pub async fn play(
                     run.servers.unplayed(&store, &streams[index], stopped || quit, refused);
                 }
 
+                // A switch that showed no frame: another of its release's streams, and then
+                // back to what played before, where it was. The viewer is told once that one
+                // shows a frame again.
+                if no_frames
+                    && !stopped
+                    && !exited
+                    && !quit
+                    && let Some(switching) = run.switching.take()
+                {
+                    if let Some(next) = switching.streams.clone().find(|i| !tried[*i]) {
+                        tracing::warn!(
+                            to = next,
+                            "the switch showed no frame; trying another of its streams"
+                        );
+                        index = next;
+                        resume_at = Some(switching.at);
+                        run.switching = Some(switching);
+                        continue;
+                    }
+                    tracing::warn!(
+                        back_to = switching.back_to,
+                        "the switch showed no frame; going back"
+                    );
+                    let text = Msg::PlayerPanelSwitchFailed {
+                        source: switching.to.name.clone(),
+                        current: run.source_name(&streams[switching.back_to]),
+                    };
+                    let reason = notice.clone().or_else(|| {
+                        reported
+                            .clone()
+                            .map(|line| Msg::NoticePlayerCouldNotPlay { reason: line })
+                    });
+                    let Switching { to, at, back_to, .. } = switching;
+                    run.restoring = Some(SourceSwitch::Failed { to, at, text, reason });
+                    index = back_to;
+                    resume_at = Some(at);
+                    target = streams[index].quality;
+                    continue;
+                }
                 if no_frames && !stopped && !exited && !last {
                     // The point of carrying alternates: whether segments actually decode is
                     // knowable only in front of a player, so a stream that never showed a frame
@@ -1188,6 +1288,66 @@ struct Run<'a> {
     /// The starting screen's Skip, heard until a file shows its first frame: see
     /// [`PlaySettings::further`].
     skipping: Option<tokio::sync::watch::Receiver<u64>>,
+    /// What the engine says of a release it finds for this playback, and the release it is
+    /// finding: see [`crate::playback::switch`].
+    news: Option<mpsc::UnboundedReceiver<SwitchNews>>,
+    finding: Option<SwitchTo>,
+    /// A switch loading, until its first frame: what it is and what it goes back to.
+    switching: Option<Switching>,
+    /// A switch that failed, said once the stream it went back to shows a frame again.
+    restoring: Option<SourceSwitch>,
+    /// Where the streams of a release that landed start: the streams before it are let go once
+    /// its file is over, and the Sources menu lists only the release's streams until then.
+    pool_from: usize,
+    /// The sources, for the names a switch says.
+    sources: Option<kaeri_providers::ProviderRegistry>,
+}
+
+/// A switch the viewer asked for, loading.
+struct Switching {
+    to: SwitchTo,
+    /// Where the episode was, which it plays from.
+    at: f64,
+    /// The stream it played before, which it goes back to when the switch shows no frame.
+    back_to: usize,
+    /// The streams the switch may play, the release's own: another of them is tried before
+    /// going back.
+    streams: std::ops::Range<usize>,
+}
+
+impl Run<'_> {
+    /// The name the source of `stream` goes by.
+    fn source_name(&self, stream: &Stream) -> String {
+        match &self.sources {
+            Some(sources) => {
+                crate::playback::resolve::display_name(sources, &stream.provider_id)
+            }
+            None => stream.provider_id.clone(),
+        }
+    }
+
+    /// Say how the switch goes, for this playback.
+    fn say_switch(&self, state: SourceSwitch) {
+        let playback = self.tx.playback().unwrap_or(kaeri_model::playback::PlaybackId::new(0));
+        let _ = self.tx.send(Event::PlayerSwitch { playback, state });
+    }
+
+    /// A switch to `to`, at `at`, from the stream `back_to`, about to load the first of
+    /// `streams`: held from here until it lands or fails.
+    fn begin_switch(
+        &mut self,
+        to: SwitchTo,
+        at: f64,
+        back_to: usize,
+        streams: std::ops::Range<usize>,
+    ) {
+        // One that failed and has not yet said so is over: a newer switch takes its place.
+        if let Some(failed) = self.restoring.take() {
+            self.say_switch(failed);
+        }
+        self.say_switch(SourceSwitch::Loading { to: to.clone(), at });
+        self.switching = Some(Switching { to, at, back_to, streams });
+    }
 }
 
 #[cfg(all(test, feature = "cast"))]

@@ -233,6 +233,8 @@ pub enum Msg {
     NoticeAudioNowSubbed,
     /// Toast after switching the audio while playing.
     NoticeAudioNowDubbed,
+    /// Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+    PlayerPanelSwitchFailed { source: String, current: String },
     /// Toast when the previous-episode control is used on the first episode.
     NoticeAlreadyFirstEpisode,
     /// Toast when the next-episode control is used on the last known episode.
@@ -594,6 +596,7 @@ impl Msg {
             Self::NoticeFillerSkipped { .. } => "notice-filler-skipped",
             Self::NoticeAudioNowSubbed => "notice-audio-now-subbed",
             Self::NoticeAudioNowDubbed => "notice-audio-now-dubbed",
+            Self::PlayerPanelSwitchFailed { .. } => "player-panel-switch-failed",
             Self::NoticeAlreadyFirstEpisode => "notice-already-first-episode",
             Self::NoticeLastEpisode { .. } => "notice-last-episode",
             Self::NoticeNoNextEpisode => "notice-no-next-episode",
@@ -833,6 +836,7 @@ impl Msg {
             Self::NoticeFillerSkipped { episode } => vec![("episode", Value::Text(episode.clone()))],
             Self::NoticeAudioNowSubbed => Vec::new(),
             Self::NoticeAudioNowDubbed => Vec::new(),
+            Self::PlayerPanelSwitchFailed { source, current } => vec![("source", Value::Text(source.clone())), ("current", Value::Text(current.clone()))],
             Self::NoticeAlreadyFirstEpisode => Vec::new(),
             Self::NoticeLastEpisode { episode } => vec![("episode", Value::Text(episode.clone()))],
             Self::NoticeNoNextEpisode => Vec::new(),

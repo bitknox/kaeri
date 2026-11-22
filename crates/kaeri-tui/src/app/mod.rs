@@ -869,6 +869,7 @@ impl App {
             // drives itself.
             Event::PlayerOps { .. }
             | Event::PlayerUi { .. }
+            | Event::PlayerSwitch { .. }
             | Event::PlayerTimeline { .. }
             | Event::PlayerBuffered { .. }
             | Event::PlayerStats { .. }

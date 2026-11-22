@@ -467,6 +467,14 @@ pub enum Event {
         playback: PlaybackId,
         ui: PlayerUi,
     },
+    /// A switch of the episode `playback` plays to another source, release or stream, from
+    /// where its playhead is: see [`SourceSwitch`](crate::playback::SourceSwitch), which says
+    /// when to hold the picture. An event of its own rather than a `PlayerUi`, so an app that
+    /// does not draw the Sources panel yet passes over it.
+    PlayerSwitch {
+        playback: PlaybackId,
+        state: crate::playback::SourceSwitch,
+    },
     // The openings and endings the timeline of `playback` marks, whole, replacing what was
     // said before: the times the skip button and auto-skip use, from the file's own chapters
     // when they name them and otherwise from community times. Said when the file starts and

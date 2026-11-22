@@ -1317,6 +1317,13 @@ impl Actor {
     /// count, and staged like one: it is announced, then said as `PlaybackStaged`.
     fn follow(&mut self, event: &mut Event, played: Option<&Played>) -> Vec<Event> {
         let finished = self.state.staging.observe(event, played);
+        // Sub or dub picked in the player goes for this title over the show's own setting, as
+        // the restart below and every play of it after.
+        if let Event::PlayerTranslation(translation) = event
+            && let Some(front) = self.state.staging.front()
+        {
+            self.state.translation_picked = Some((front.id, *translation));
+        }
         // The room starts or moves on: this device opens the episode from its own sources.
         #[cfg(feature = "party")]
         if let Event::PartyStarted { id, episode, .. } = event {
@@ -2259,6 +2266,16 @@ mod tests {
             },
             Msg::NoticeNoPlayer.english(),
         )];
+        // A release picked in the player with nothing of that episode playing is a play of it.
+        plays.push((
+            Command::SwitchSource {
+                id,
+                episode: episode(),
+                provider_id: "yamabiko".into(),
+                source_id: "a".into(),
+            },
+            Msg::NoticeNoPlayer.english(),
+        ));
         if cfg!(not(feature = "party")) {
             plays.push((
                 Command::play_party(id, episode()),
@@ -2277,6 +2294,57 @@ mod tests {
                 "{seen:?}"
             );
         }
+    }
+
+    /// A play says the title's whole table as the engine holds it, for the player's Episodes
+    /// panel, though the front end never asked for it.
+    #[cfg(feature = "testing")]
+    #[tokio::test]
+    async fn a_play_says_its_title_s_episode_table() {
+        let dir = tempfile::tempdir().unwrap();
+        let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        let (engine, mut events) =
+            engine_with(dir.path(), host, |options| options.hosted_player = true).await;
+        events.launch().await;
+        let id = kaeri_core::ids::AnilistId::new(1);
+        let row = |number: &str| kaeri_model::episodes::EpisodeRow {
+            number: number.into(),
+            title: Some(format!("Part {number}")),
+            thumbnail: None,
+            description: None,
+            duration_secs: Some(1_440),
+            watched: 0.0,
+            completed: false,
+            kind: None,
+            skippable: false,
+            airs_at: None,
+            delayed_from: None,
+            metadata_only: false,
+            source: None,
+            unsourced: false,
+            past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
+            followed: Vec::new(),
+        };
+        let rows = vec![row("1"), row("2"), row("3")];
+        engine.inject(Event::Episodes { id, rows: rows.clone(), failed: None });
+        until(&mut events, |e| matches!(e, Event::Episodes { .. })).await;
+
+        let job = engine.send(Command::play(id, "2")).expect("a job");
+        let mut seen = Vec::new();
+        while !seen.iter().any(|e| matches!(e, Event::JobDone(done) if *done == job)) {
+            match tokio::time::timeout(Duration::from_secs(10), events.next_events()).await {
+                Ok(batch) if !batch.is_empty() => seen.extend(batch),
+                _ => panic!("nothing more, having seen {seen:?}"),
+            }
+        }
+        let said = seen.iter().find_map(|e| match e {
+            Event::Episodes { id: of, rows, failed: None } if *of == id => Some(rows.clone()),
+            _ => None,
+        });
+        assert_eq!(said, Some(rows), "{seen:?}");
+        engine.shutdown().await;
     }
 
     /// [`until`], for an event anywhere in what comes, not only last in its batch: what a

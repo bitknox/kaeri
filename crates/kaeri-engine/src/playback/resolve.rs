@@ -756,10 +756,11 @@ pub fn load_sources(
     tx: &Outbox,
 ) {
     let Services { meta, store, registry, .. } = services;
-    let config = engine.config.effective();
+    // Sub or dub as a play of the title goes: the show's own, or what the player last picked.
+    let translation =
+        crate::playback::start::play_config(engine, store, id).playback.translation;
     let (store, registry, meta, tx) =
         (store.clone(), registry.clone(), meta.clone(), tx.clone());
-    let translation = config.playback.translation;
     tokio::spawn(async move {
         let _job = job;
         let update =
@@ -1042,6 +1043,72 @@ mod tests {
                 MissedListing { name: "Cove".into(), miss: ListingMiss::NoEpisode },
             ]
         );
+    }
+
+    #[tokio::test]
+    async fn the_picker_keeps_each_source_s_own_order_with_its_pick_marked() {
+        let release = |id: &str, quality, auto_pick| kaeri_core::traits::SourceCandidate {
+            id: id.into(),
+            provider_id: "brook".into(),
+            provider_name: String::new(),
+            title: format!("The Hidden Star - 03 ({quality}p)"),
+            quality: Some(quality),
+            label: None,
+            size: None,
+            dual_audio: false,
+            dubbed: false,
+            auto_pick,
+        };
+        // The source lists its releases best first by its own lights, not by quality.
+        let given = vec![
+            release("r1", 480, false),
+            release("r2", 1080, false),
+            release("r3", 720, true),
+        ];
+        let (listed, _) =
+            slate(vec![lacking("brook").named("Brook").with_sources(given)]).await;
+        let order: Vec<_> = listed.iter().map(|c| (c.id.as_str(), c.auto_pick)).collect();
+        assert_eq!(order, [("r1", false), ("r2", false), ("r3", true)]);
+    }
+
+    /// Meta, store and sources for the cached show, offline.
+    fn offline(sources: Vec<MockProvider>) -> (Meta, Store, ProviderRegistry) {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
+            .unwrap();
+        let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store.clone());
+        let registry =
+            ProviderRegistry::new(sources.into_iter().map(MockProvider::arc).collect());
+        (meta, store, registry)
+    }
+
+    #[tokio::test]
+    async fn a_release_found_for_a_switch_is_its_source_s_and_written_down_nowhere() {
+        let id = AnilistId::new(900_201);
+        let url = "https://brook.example/r2/3.m3u8";
+        let stream = kaeri_core::stream::Stream::new(url, kaeri_core::stream::StreamKind::Hls);
+        let (meta, store, registry) = offline(vec![
+            lacking("alpha").named("Alpha"),
+            lacking("brook").named("Brook").with_source_streams("r2", vec![stream]),
+        ]);
+        let playback = kaeri_core::config::PlaybackConfig::default();
+        let find = |release| {
+            crate::playback::switch::find(&meta, &store, &registry, id, "3", release, &playback)
+        };
+
+        let found = find(("brook", "r2")).await.expect("the release plays");
+        let urls: Vec<_> = found.iter().map(|s| s.url.as_str()).collect();
+        assert_eq!(urls, [url]);
+        // A pick in the player is for this episode only: no source or release is pinned.
+        assert_eq!(store.provider_preference(id).unwrap(), None);
+        assert_eq!(store.release_preference(id).unwrap(), None);
+
+        // A release the source refuses says why, and still pins nothing.
+        let refused = find(("brook", "r9")).await.expect_err("no such release");
+        assert!(!refused.english().is_empty());
+        assert_eq!(store.provider_preference(id).unwrap(), None);
     }
 
     /// A title whose episode `next` airs `in_secs` after the moment `now` it was asked for.

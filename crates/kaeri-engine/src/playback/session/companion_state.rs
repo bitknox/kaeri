@@ -187,6 +187,9 @@ impl Run<'_> {
 
     pub(super) fn menus(&self, streams: &[Stream], current: usize) -> companion::Menus {
         let context = self.context;
+        // The streams of what plays now: a release that landed has let the others go.
+        let from = self.pool_from.min(streams.len());
+        let pool = &streams[from..];
         companion::Menus {
             episodes: self
                 .episodes
@@ -200,11 +203,12 @@ impl Run<'_> {
                     current: e.number == context.episode,
                 })
                 .collect(),
-            sources: streams
+            sources: pool
                 .iter()
-                .zip(source_details(streams))
+                .zip(source_details(pool))
                 .enumerate()
-                .map(|(i, (s, detail))| companion::SourceItem {
+                .map(|(i, (s, detail))| (from + i, s, detail))
+                .map(|(i, s, detail)| companion::SourceItem {
                     id: i.to_string(),
                     label: s.provider_id.clone(),
                     detail: Some(detail),
