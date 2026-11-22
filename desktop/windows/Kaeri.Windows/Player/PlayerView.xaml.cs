@@ -35,8 +35,8 @@ public sealed partial class PlayerView : UserControl
     readonly DispatcherQueueTimer idle;
     nint bound;
     bool paused, fromPlayer, overBar, keepControls;
-    /// <summary>Where the mouse last moved over the player, to ask again at idle whether it rests on a bar.</summary>
-    global::Windows.Foundation.Point? mouseAt;
+    /// <summary>Whether the last pointer over the player was a mouse, whose resting place idle asks about.</summary>
+    bool byMouse;
     double position, duration, volume = 100;
     Coming? upNext;
     PlayerUi.Menus? menus;
@@ -1455,9 +1455,10 @@ public sealed partial class PlayerView : UserControl
     {
         if (keepControls || paused || overBar || MenuOpen || Marking || panel.Open)
             return;
-        // The move that brought the controls up came before the bars were laid out, so it could not
-        // tell; a mouse resting on a bar keeps them, or a click there falls through to the video and pauses.
-        if (mouseAt is { } at && (Holds(TopBar, at) || Holds(BottomBar, at)))
+        // A mouse resting on a bar keeps them, wherever the events left overBar: showing the controls
+        // makes the title bar tall, its caption area slides under a still mouse at the top and the
+        // player hears it leave. Hidden there, a click on a button falls through to the video and pauses.
+        if (byMouse && CursorOn(TopBar, BottomBar))
         {
             overBar = true;
             return;
@@ -1534,17 +1535,44 @@ public sealed partial class PlayerView : UserControl
     void OnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
         overBar = chromeShown && (Under(TopBar, e) || Under(BottomBar, e));
-        mouseAt = e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse ? e.GetCurrentPoint(Root).Position : null;
+        byMouse = e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse;
         ShowControls();
     }
 
-    bool Holds(FrameworkElement bar, global::Windows.Foundation.Point at)
+    /// <summary>Whether the system's cursor is over one of the bars, asked of Windows rather than of the pointer events.</summary>
+    bool CursorOn(params FrameworkElement[] bars)
     {
-        if (bar.ActualWidth <= 0 || bar.ActualHeight <= 0)
+        if (XamlRoot?.ContentIslandEnvironment is not { } island || !GetCursorPos(out var cursor))
             return false;
-        var p = Root.TransformToVisual(bar).TransformPoint(at);
-        return p.X >= 0 && p.Y >= 0 && p.X < bar.ActualWidth && p.Y < bar.ActualHeight;
+        var window = Microsoft.UI.Win32Interop.GetWindowFromWindowId(island.AppWindowId);
+        if (window == 0 || !ScreenToClient(window, ref cursor))
+            return false;
+        var scale = XamlRoot.RasterizationScale;
+        var at = new global::Windows.Foundation.Point(cursor.X / scale, cursor.Y / scale);
+        foreach (var bar in bars)
+        {
+            if (bar.ActualWidth <= 0 || bar.ActualHeight <= 0)
+                continue;
+            var box = bar.TransformToVisual(null).TransformBounds(new global::Windows.Foundation.Rect(0, 0, bar.ActualWidth, bar.ActualHeight));
+            if (box.Contains(at))
+                return true;
+        }
+        return false;
     }
+
+    [StructLayout(LayoutKind.Sequential)]
+    struct CursorPoint
+    {
+        public int X, Y;
+    }
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool GetCursorPos(out CursorPoint point);
+
+    [LibraryImport("user32.dll")]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool ScreenToClient(nint window, ref CursorPoint point);
 
     static bool Under(FrameworkElement bar, PointerRoutedEventArgs e)
     {
@@ -1555,7 +1583,6 @@ public sealed partial class PlayerView : UserControl
     void OnRootExited(object sender, PointerRoutedEventArgs e)
     {
         overBar = false;
-        mouseAt = null;
     }
     /// <summary>
     /// The flyouts open now, each by itself: the style panel opens from the Tracks menu, and E or
