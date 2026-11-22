@@ -186,6 +186,26 @@ public class PlayerPanelTests
     }
 
     [Fact]
+    public void AnotherSourceFoundLetsGoOfTheLandedRelease()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases();
+        var picked = Release("tidewater", "b");
+        panel.Listed(7, "5", [Release("harbor", "a"), picked]);
+        panel.Picked(SwitchTarget.Of(picked), 100, picked);
+        var to = new SwitchTo("tidewater", "Tidewater", "b", null);
+        panel.Switched(new SourceSwitch.Landed(to, 313), 1500);
+        // The same source said again keeps the release.
+        panel.PlayingSource = "Tidewater";
+        Assert.Equal(picked, panel.PlayingRelease);
+        // The episode started again elsewhere, as for a dub.
+        panel.PlayingSource = "Harbor Mirror";
+        Assert.Equal("Harbor Mirror", panel.PlayingSource);
+        Assert.Null(panel.PlayingRelease);
+    }
+
+    [Fact]
     public void ALandingWithThePanelClosedIsSaidInANotice()
     {
         var panel = new PanelState();

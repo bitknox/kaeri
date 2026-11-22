@@ -308,8 +308,23 @@ public sealed class PanelState
     /// <summary>The switch picked in the panel, from the pick until it lands, or its failure until the next pick.</summary>
     public PanelSwitch? Switch { get; private set; }
 
-    /// <summary>The source the episode plays from: what the start found, then what each switch landed on.</summary>
-    public string? PlayingSource { get; set; }
+    /// <summary>
+    /// The source the episode plays from: what the start found, then what each switch landed on.
+    /// Another source found, as when the episode starts again for a dub, lets go of the release
+    /// picked on the last one, so Playing now never names one source with another's release.
+    /// </summary>
+    public string? PlayingSource
+    {
+        get => playingSource;
+        set
+        {
+            if (value != playingSource)
+                PlayingRelease = null;
+            playingSource = value;
+        }
+    }
+
+    string? playingSource;
 
     /// <summary>The release playing, when one was picked in the panel and landed.</summary>
     public SourceCandidate? PlayingRelease { get; private set; }
