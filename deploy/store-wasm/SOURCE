@@ -14,7 +14,7 @@ digest v0.11.3 alloc,block-api,default,oid
 displaydoc v0.2.6 (proc-macro) 
 ed25519 v2.2.3 alloc,std
 ed25519-dalek v2.2.0 alloc,std,zeroize
-form_urlencoded v1.2.2 alloc,std
+form_urlencoded v1.2.3 alloc,std
 futures-core v0.3.34 alloc,std
 futures-task v0.3.34 alloc,std
 futures-util v0.3.34 alloc,slab,std
@@ -67,7 +67,7 @@ tracing-attributes v0.1.31 (proc-macro)
 tracing-core v0.1.36 once_cell,std
 typenum v1.20.1 const-generics
 unicode-ident v1.0.24 
-url v2.5.8 default,std
+url v2.5.9 default,std
 utf8_iter v1.0.4 
 version_check v0.9.5 
 wasm-bindgen v0.2.126 default,std
