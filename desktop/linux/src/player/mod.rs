@@ -3152,11 +3152,7 @@ impl PlayerView {
                 _ => None,
             }
         {
-            if self.ui.side.is_open() {
-                self.ui.side.show_tab(tab, true);
-            } else {
-                self.open_panel(tab);
-            }
+            self.panel_shortcut(tab);
             return true;
         }
         if modifiers.intersects(gdk::ModifierType::CONTROL_MASK | gdk::ModifierType::ALT_MASK) {
@@ -3489,6 +3485,25 @@ impl PlayerView {
             self.close_panel();
         } else {
             self.open_panel(PanelTab::Episodes);
+        }
+    }
+
+    /// Ctrl+1 and Ctrl+2: the panel on `tab`, opened or switched to, with the keyboard in it.
+    fn panel_shortcut(&self, tab: PanelTab) {
+        if self.ui.side.is_open() {
+            self.ui.side.show_tab(tab, true);
+        } else {
+            self.open_panel(tab);
+        }
+    }
+
+    /// The window's Ctrl and a number, which pick a section outside the player: here 1 and 2
+    /// bring up the panel's tabs, and the others do nothing.
+    pub fn section_shortcut(&self, n: i32) {
+        match n {
+            1 => self.panel_shortcut(PanelTab::Episodes),
+            2 => self.panel_shortcut(PanelTab::Sources),
+            _ => {}
         }
     }
 

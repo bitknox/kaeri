@@ -468,9 +468,8 @@ impl SidePanel {
     fn focus_first_source(&self) -> bool {
         let rows: Vec<gtk::ListBoxRow> =
             self.src_does.borrow().iter().map(|(row, _)| row.clone()).collect();
-        let landed = rows
-            .iter()
-            .any(|row| row.is_visible() && row.is_focusable() && row.grab_focus());
+        let landed =
+            rows.iter().any(|row| row.is_visible() && row.is_focusable() && row.grab_focus());
         if landed {
             self.parked.replace(None);
         }
