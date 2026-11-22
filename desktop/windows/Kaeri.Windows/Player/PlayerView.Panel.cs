@@ -802,9 +802,11 @@ public sealed partial class PlayerView
             return;
         string? focusKey = null;
         var focusState = FocusState.Unfocused;
-        if (XamlRoot is not null && FocusManager.GetFocusedElement(XamlRoot) is Control { Tag: string tag } held && Within(held, PanelSources))
+        var focusHeld = false;
+        if (XamlRoot is not null && FocusManager.GetFocusedElement(XamlRoot) is Control held && Within(held, PanelSources))
         {
-            focusKey = tag;
+            focusHeld = true;
+            focusKey = held.Tag as string;
             focusState = held.FocusState;
         }
         PanelSources.Children.Clear();
@@ -856,12 +858,33 @@ public sealed partial class PlayerView
             TextWrapping = TextWrapping.Wrap,
             Foreground = Res("HazeBrush"),
         });
-        if (focusKey is not null)
-            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () =>
-            {
-                if (Tagged(PanelSources, focusKey) is { } again)
-                    again.Focus(focusState == FocusState.Unfocused ? FocusState.Programmatic : focusState);
-            });
+        if (focusHeld)
+            DispatcherQueue.TryEnqueue(DispatcherQueuePriority.Low, () => RefocusSources(focusKey, focusState == FocusState.Unfocused ? FocusState.Programmatic : focusState));
+    }
+
+    /// <summary>
+    /// The keyboard back on the row it was on after Sources is laid out again. A row that went (a
+    /// Try again once pressed, a release now playing) hands it to its source's row, else to the
+    /// first control in Sources, so it never falls back to the tabs.
+    /// </summary>
+    void RefocusSources(string? key, FocusState state)
+    {
+        foreach (var tag in FocusFallbacks(key))
+            if (Tagged(PanelSources, tag) is { IsEnabled: true, IsTabStop: true } row && row.Focus(state))
+                return;
+        FirstFocusable(PanelSources)?.Focus(state);
+    }
+
+    static IEnumerable<string> FocusFallbacks(string? key)
+    {
+        if (key is null)
+            yield break;
+        yield return key;
+        if (key.EndsWith("/retry", StringComparison.Ordinal))
+            yield return key[..^"/retry".Length];
+        var parts = key.Split('/');
+        if (parts.Length >= 2 && parts[0] is "release" or "source")
+            yield return $"source/{parts[1]}";
     }
 
     static Control? Tagged(DependencyObject root, string tag)
