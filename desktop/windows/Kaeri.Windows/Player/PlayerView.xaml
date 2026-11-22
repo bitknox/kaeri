@@ -536,7 +536,7 @@
               <ColumnDefinition Width="Auto" />
             </Grid.ColumnDefinitions>
             <SelectorBar x:Name="PanelTabs" VerticalAlignment="Center" Margin="-12,0,0,0" SelectionChanged="OnPanelTab">
-              <SelectorBarItem x:Name="PanelEpisodesTab" Text="{x:Bind app:T.PlayerEpisodes}" IsSelected="True" />
+              <SelectorBarItem x:Name="PanelEpisodesTab" Text="{x:Bind app:T.PlayerEpisodes}" />
               <SelectorBarItem x:Name="PanelSourcesTab" Text="{x:Bind app:T.PlayerSources}" />
             </SelectorBar>
             <Button x:Name="PanelClose" Grid.Column="1" Style="{StaticResource SubtleButtonStyle}" Width="32" Height="32" Padding="0"

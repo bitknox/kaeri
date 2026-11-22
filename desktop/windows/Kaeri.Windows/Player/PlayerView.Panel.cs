@@ -265,6 +265,9 @@ public sealed partial class PlayerView
     {
         panel.Tab = tab;
         settingTabs = true;
+        // Both the bar's selection and each item's own flag, so the bar's first layout keeps the tab asked for.
+        PanelEpisodesTab.IsSelected = tab == PanelTab.Episodes;
+        PanelSourcesTab.IsSelected = tab == PanelTab.Sources;
         PanelTabs.SelectedItem = tab == PanelTab.Episodes ? PanelEpisodesTab : PanelSourcesTab;
         settingTabs = false;
         var show = tab == PanelTab.Episodes ? PanelEpisodesScroll : PanelSourcesScroll;
@@ -300,6 +303,14 @@ public sealed partial class PlayerView
     {
         if (settingTabs || !panel.Open)
             return;
+        if (sender.SelectedItem is null)
+        {
+            // A tab is always chosen: the one showing stays.
+            settingTabs = true;
+            sender.SelectedItem = panel.Tab == PanelTab.Episodes ? PanelEpisodesTab : PanelSourcesTab;
+            settingTabs = false;
+            return;
+        }
         var tab = sender.SelectedItem == PanelSourcesTab ? PanelTab.Sources : PanelTab.Episodes;
         if (tab != panel.Tab)
             ShowPanelTab(tab, animated: true);
