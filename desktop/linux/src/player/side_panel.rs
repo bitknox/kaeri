@@ -1452,7 +1452,10 @@ impl SidePanel {
             block.append(&note);
         }
         self.translation.replace(Some(toggles));
-        still_row(&block)
+        // A stop for the arrows, as the other rows are; Tab goes on into the switch.
+        let row = still_row(&block);
+        row.set_focusable(true);
+        row
     }
 
     /// A stream, source or release row: the check on what plays, a spinner on a switch past
