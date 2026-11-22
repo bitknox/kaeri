@@ -335,6 +335,15 @@
       }
      },
      {
+      "key": "UDP_TRACKERS_WITH_PROXY",
+      "value": "off",
+      "change": {
+       "@type": "Steps",
+       "back": false,
+       "forward": true
+      }
+     },
+     {
       "key": "SEED_RATIO",
       "value": "off",
       "change": {
