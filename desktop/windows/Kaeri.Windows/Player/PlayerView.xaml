@@ -530,10 +530,12 @@
             <RowDefinition Height="52" />
             <RowDefinition Height="*" />
           </Grid.RowDefinitions>
-          <Grid Padding="16,0,12,0" ColumnSpacing="8">
+          <Grid Padding="16,0,12,0" ColumnSpacing="12">
+            <!-- The close button sits beside the tabs, as on the board. -->
             <Grid.ColumnDefinitions>
-              <ColumnDefinition Width="*" />
               <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
             </Grid.ColumnDefinitions>
             <SelectorBar x:Name="PanelTabs" VerticalAlignment="Center" Margin="-12,0,0,0" SelectionChanged="OnPanelTab">
               <SelectorBarItem x:Name="PanelEpisodesTab" Text="{x:Bind app:T.PlayerEpisodes}" />
