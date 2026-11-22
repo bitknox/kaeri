@@ -35,6 +35,8 @@ public sealed partial class PlayerView : UserControl
     readonly DispatcherQueueTimer idle;
     nint bound;
     bool paused, fromPlayer, overBar, keepControls;
+    /// <summary>Where the mouse last moved over the player, to ask again at idle whether it rests on a bar.</summary>
+    global::Windows.Foundation.Point? mouseAt;
     double position, duration, volume = 100;
     Coming? upNext;
     PlayerUi.Menus? menus;
@@ -1453,6 +1455,13 @@ public sealed partial class PlayerView : UserControl
     {
         if (keepControls || paused || overBar || MenuOpen || Marking || panel.Open)
             return;
+        // The move that brought the controls up came before the bars were laid out, so it could not
+        // tell; a mouse resting on a bar keeps them, or a click there falls through to the video and pauses.
+        if (mouseAt is { } at && (Holds(TopBar, at) || Holds(BottomBar, at)))
+        {
+            overBar = true;
+            return;
+        }
         if (ChatFieldHolds())
         {
             idle.Start();
@@ -1525,7 +1534,16 @@ public sealed partial class PlayerView : UserControl
     void OnPointerMoved(object sender, PointerRoutedEventArgs e)
     {
         overBar = chromeShown && (Under(TopBar, e) || Under(BottomBar, e));
+        mouseAt = e.Pointer.PointerDeviceType == Microsoft.UI.Input.PointerDeviceType.Mouse ? e.GetCurrentPoint(Root).Position : null;
         ShowControls();
+    }
+
+    bool Holds(FrameworkElement bar, global::Windows.Foundation.Point at)
+    {
+        if (bar.ActualWidth <= 0 || bar.ActualHeight <= 0)
+            return false;
+        var p = Root.TransformToVisual(bar).TransformPoint(at);
+        return p.X >= 0 && p.Y >= 0 && p.X < bar.ActualWidth && p.Y < bar.ActualHeight;
     }
 
     static bool Under(FrameworkElement bar, PointerRoutedEventArgs e)
@@ -1534,7 +1552,11 @@ public sealed partial class PlayerView : UserControl
         return at.X >= 0 && at.Y >= 0 && at.X < bar.ActualWidth && at.Y < bar.ActualHeight;
     }
 
-    void OnRootExited(object sender, PointerRoutedEventArgs e) => overBar = false;
+    void OnRootExited(object sender, PointerRoutedEventArgs e)
+    {
+        overBar = false;
+        mouseAt = null;
+    }
     /// <summary>
     /// The flyouts open now, each by itself: the style panel opens from the Tracks menu, and E or
     /// T can open one over another, so one closing after the next opened leaves the other counted.
