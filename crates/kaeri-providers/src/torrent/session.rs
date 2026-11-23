@@ -1629,8 +1629,12 @@ mod tests {
     ) -> (TorrentSession, usize) {
         let pack = root.join(name);
         std::fs::create_dir_all(&pack).unwrap();
-        for (file, bytes) in files {
-            std::fs::write(pack.join(file), vec![7_u8; *bytes]).unwrap();
+        // Each file its own byte. librqbit on Windows reads a short file without an error and
+        // hashes what its buffer held from the file before, so files of one byte would pass
+        // its check with a file missing.
+        for (n, (file, bytes)) in files.iter().enumerate() {
+            let byte = 7_u8.wrapping_add(u8::try_from(n).unwrap());
+            std::fs::write(pack.join(file), vec![byte; *bytes]).unwrap();
         }
         let torrent = librqbit::create_torrent(
             &pack,
