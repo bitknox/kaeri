@@ -1070,6 +1070,10 @@ public final class PlayerModel {
             // Another file: its previews are another file's too.
             preview.close()
             let keepPause = paused
+            // A later file of the play that showed a picture (a switch, a failover, the way back
+            // from a failed switch): any starting screen it shows counts from now, with nothing
+            // of the first file's peers or clock.
+            if walk?.pictured == true { walk?.anotherFile(at: time.now()) }
             resetFile()
             paused = keepPause
         case .playbackRestart:
@@ -1128,6 +1132,7 @@ public final class PlayerModel {
     /// The file's first picture is up: the starting screen fades from it.
     private func firstFrame() {
         hasPicture = true
+        walk?.sawPicture()
         let size = layer.map { "\(Int($0.drawableSize.width))×\(Int($0.drawableSize.height))" } ?? "no layer"
         Self.note(.info, "#\(current.map(String.init) ?? "?") first frame, drawn at \(size)\(elapsed)")
         if let starting, current.map({ $0 >= starting.playback }) ?? true {

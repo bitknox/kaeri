@@ -451,7 +451,12 @@ pub async fn play(
         // Before mpv opens the file, so the tracks are on disk by the time it asks for them,
         // but no longer than a moment: the tracks still on their way follow as they arrive.
         let mut late = None;
+        // Not for a switch's file, which has no starting screen: see `Run::file`.
+        let quiet = run.switching.is_some() || run.restoring.is_some();
         let say = |step, line| {
+            if quiet {
+                return;
+            }
             crate::playback::starting::say(
                 &tx,
                 context.anilist_id,
