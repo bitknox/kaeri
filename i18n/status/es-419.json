@@ -18660,6 +18660,12 @@
     "at": "2026-10-31",
     "back": "{ $note } · { $seconds } s"
   },
+  "player-panel-dual-audio": {
+    "source": "213b56b17175",
+    "state": "draft",
+    "by": "agent",
+    "at": "2026-11-21"
+  },
   "player-picture-and-sound": {
     "source": "5fc5a0517241",
     "state": "draft",

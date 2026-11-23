@@ -23,6 +23,8 @@ mod node;
 pub mod ops;
 mod sys;
 
+pub use crate::node::RawFrame;
+
 #[cfg(feature = "libmpv")]
 pub mod mpv;
 #[cfg(feature = "libmpv")]

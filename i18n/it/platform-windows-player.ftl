@@ -29,3 +29,4 @@ player-volume-spoken = { $percent } per cento
 player-volume-muted = Volume, disattivato
 player-exit-fullscreen = Esci dallo schermo intero
 accounts-pane-name = Account, { $state }
+player-panel-dual-audio = { -subbed } e { -dubbed }

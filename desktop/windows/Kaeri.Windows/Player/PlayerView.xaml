@@ -32,6 +32,8 @@
     <KeyboardAccelerator Key="U" Invoked="OnKeyUndo" />
     <KeyboardAccelerator Key="Z" Modifiers="Control" Invoked="OnKeyUndo" />
     <KeyboardAccelerator Key="E" Invoked="OnKeyEpisodes" />
+    <KeyboardAccelerator Key="Number1" Modifiers="Control" Invoked="OnKeyPanelEpisodes" />
+    <KeyboardAccelerator Key="Number2" Modifiers="Control" Invoked="OnKeyPanelSources" />
     <KeyboardAccelerator Key="T" Invoked="OnKeyTracks" />
     <KeyboardAccelerator Key="I" Invoked="OnKeyStats" />
     <KeyboardAccelerator Key="Back" Invoked="OnKeySpeedNormal" />
@@ -48,6 +50,11 @@
     <!-- The video is the bottom layer; the bars are XAML inside the SwapChainPanel, which
          composition draws under with no airspace. -->
     <SwapChainPanel x:Name="VideoPanel" SizeChanged="OnPanelSizeChanged">
+
+      <!-- The picture held while a switch of source loads: the last frame over the video until
+           the new stream's first one, then faded away over it. -->
+      <Image x:Name="HeldPicture" Stretch="Fill" Visibility="Collapsed" IsHitTestVisible="False"
+             AutomationProperties.AccessibilityView="Raw" />
 
       <!-- The controls on a 35% dim of the ground, collapsed when they fade so nothing sits
            over the video. -->
@@ -111,7 +118,7 @@
                 <MenuFlyout x:Name="TracksMenu" Placement="BottomEdgeAlignedRight" Opened="OnMenuOpened" Closed="OnMenuClosed" />
               </Button.Flyout>
             </Button>
-            <Button x:Name="EpisodesButton" Style="{StaticResource PlayerButtonStyle}" AutomationProperties.Name="{x:Bind app:T.PlayerEpisodes}">
+            <Button x:Name="EpisodesButton" Style="{StaticResource PlayerButtonStyle}" Click="OnEpisodesButton" AutomationProperties.Name="{x:Bind app:T.PlayerEpisodes}">
               <FontIcon Glyph="&#xE8FD;" FontSize="16" />
             </Button>
             <Button x:Name="MiniButton" Style="{StaticResource PlayerButtonStyle}" Click="OnMini" AutomationProperties.Name="{x:Bind app:T.PlayerMiniPlayer}">
@@ -506,6 +513,59 @@
         <TextBlock x:Name="FlashText" Style="{StaticResource BodyStrongTextBlockStyle}" Typography.NumeralAlignment="Tabular"
                    AutomationProperties.LiveSetting="Polite" />
       </Border>
+
+      <!-- The Episodes and Sources panel: Acrylic on the trailing edge, under the caption buttons,
+           over a dim of the video that closes it when clicked. Built in PlayerView.Panel.cs. -->
+      <Grid x:Name="PanelLayer" Visibility="Collapsed">
+        <Rectangle x:Name="PanelDim" Fill="{ThemeResource DimBrush}" Tapped="OnPanelDimTapped" />
+        <Grid x:Name="PanelPane" Width="380" Margin="0,32,0,0" HorizontalAlignment="Right"
+              Background="{ThemeResource PlayerPanelBrush}" BorderBrush="{ThemeResource PlayerPanelEdgeBrush}" BorderThickness="1,0,0,0"
+              TabFocusNavigation="Cycle" XYFocusKeyboardNavigation="Enabled" PreviewKeyDown="OnPanelKey"
+              AutomationProperties.Name="{x:Bind app:T.PlayerPanel}" AutomationProperties.LandmarkType="Custom">
+          <Grid.Resources>
+            <!-- The tab's pill is silk here, the panel's one accent kept for Play. -->
+            <SolidColorBrush x:Key="SelectorBarItemPillFill" Color="#E4E0D6" />
+          </Grid.Resources>
+          <Grid.RowDefinitions>
+            <RowDefinition Height="52" />
+            <RowDefinition Height="*" />
+          </Grid.RowDefinitions>
+          <Grid Padding="16,0,12,0" ColumnSpacing="12">
+            <!-- The close button sits beside the tabs, as on the board. -->
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="Auto" />
+              <ColumnDefinition Width="*" />
+            </Grid.ColumnDefinitions>
+            <SelectorBar x:Name="PanelTabs" VerticalAlignment="Center" Margin="-12,0,0,0" SelectionChanged="OnPanelTab">
+              <SelectorBarItem x:Name="PanelEpisodesTab" Text="{x:Bind app:T.PlayerEpisodes}" />
+              <SelectorBarItem x:Name="PanelSourcesTab" Text="{x:Bind app:T.PlayerSources}" />
+            </SelectorBar>
+            <Button x:Name="PanelClose" Grid.Column="1" Style="{StaticResource SubtleButtonStyle}" Width="32" Height="32" Padding="0"
+                    CornerRadius="4" VerticalAlignment="Center" Click="OnPanelClose"
+                    ToolTipService.ToolTip="{x:Bind app:T.ActionClose}" AutomationProperties.Name="{x:Bind app:T.ActionClose}">
+              <FontIcon Glyph="&#xE711;" FontSize="12" Foreground="{ThemeResource HazeBrush}" />
+            </Button>
+          </Grid>
+          <Grid Grid.Row="1">
+            <ScrollViewer x:Name="PanelEpisodesScroll" Padding="16,0,16,16" VerticalScrollBarVisibility="Auto" XYFocusKeyboardNavigation="Enabled">
+              <StackPanel>
+                <TextBlock x:Name="PanelMetadataOnly" Visibility="Collapsed" Margin="8,4,8,12" FontSize="12" LineHeight="16"
+                           Foreground="{ThemeResource HazeBrush}" TextWrapping="WrapWholeWords" Text="{x:Bind app:T.PlayerPanelMetadataOnly}" />
+                <StackPanel x:Name="PanelLoading" Visibility="Collapsed" AutomationProperties.Name="{x:Bind app:T.PlayerSheetEpisodesLoading}" />
+                <ItemsRepeater x:Name="PanelEpisodes" AutomationProperties.Name="{x:Bind app:T.PlayerEpisodes}">
+                  <ItemsRepeater.Layout>
+                    <StackLayout Spacing="2" />
+                  </ItemsRepeater.Layout>
+                </ItemsRepeater>
+              </StackPanel>
+            </ScrollViewer>
+            <ScrollViewer x:Name="PanelSourcesScroll" Padding="16,0,16,16" VerticalScrollBarVisibility="Auto" Visibility="Collapsed" XYFocusKeyboardNavigation="Enabled">
+              <StackPanel x:Name="PanelSources" AutomationProperties.Name="{x:Bind app:T.PlayerSources}" />
+            </ScrollViewer>
+          </Grid>
+        </Grid>
+      </Grid>
     </SwapChainPanel>
   </Grid>
 </UserControl>

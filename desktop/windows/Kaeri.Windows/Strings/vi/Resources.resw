@@ -1772,6 +1772,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Tài khoản, {state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>có phụ đề và lồng tiếng</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Cài đặt trình đọc</value>
   </data>

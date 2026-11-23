@@ -26,3 +26,4 @@ player-volume-spoken = yüzde { $percent }
 player-volume-muted = Ses, kapalı
 player-exit-fullscreen = Tam ekrandan çık
 accounts-pane-name = Hesap, { $state }
+player-panel-dual-audio = { -subbed } ve { -dubbed }

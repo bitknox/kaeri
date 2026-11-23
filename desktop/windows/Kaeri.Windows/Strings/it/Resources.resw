@@ -2006,6 +2006,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Account, {state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>sottotitolato e doppiato</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Impostazioni del lettore</value>
   </data>

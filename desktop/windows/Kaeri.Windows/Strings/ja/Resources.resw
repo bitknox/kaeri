@@ -1772,6 +1772,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>アカウント、{state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>字幕版と吹替版</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>リーダーの設定</value>
   </data>
