@@ -903,12 +903,19 @@ pub fn enrich_episodes(
     tidy_synopses(episodes, &media.plain_description());
     let length = media
         .duration
-        .filter(|minutes| *minutes > 0)
-        .map(|minutes| std::time::Duration::from_secs(60 * u64::from(minutes)));
-    for episode in episodes.iter_mut().filter(|e| e.duration.is_none_or(|d| d.is_zero())) {
-        episode.duration = length;
+        .map(|minutes| std::time::Duration::from_secs(60 * u64::from(minutes)))
+        .and_then(runtime);
+    for episode in episodes.iter_mut() {
+        episode.duration = episode.duration.and_then(runtime).or(length);
     }
     numbering
+}
+
+/// `length`, when it can be how long an episode runs: over a minute. A source that says 0, a
+/// handful of seconds or a minute flat has put minutes where seconds go, or a placeholder, and
+/// that would read as "1 min". Unknown is said as nothing.
+pub(crate) fn runtime(length: std::time::Duration) -> Option<std::time::Duration> {
+    (length.as_secs() > 60).then_some(length)
 }
 
 /// Fill in episode titles and stills a source could not supply, from metadata keyed by the
@@ -1144,7 +1151,7 @@ pub fn episode_rows_with_filler(
         .map(|episode| {
             // Latest observation for this episode; the log is newest-first.
             let event = watched.iter().find(|e| e.episode == episode.number.as_str());
-            let duration = episode.duration.map(|d| d.as_secs());
+            let duration = episode.duration.and_then(runtime).map(|d| d.as_secs());
             let fraction = event
                 .and_then(|e| {
                     let total = e.duration_secs.or(duration.map(|d| d as f64))?;
@@ -1320,6 +1327,46 @@ mod naming_tests {
         let mut episodes = vec![Episode::new(EpisodeNumber::new("12"))];
         name_episodes(&mut episodes, &none(), &none());
         assert!(episodes[0].title.is_none());
+    }
+
+    #[test]
+    fn a_length_of_a_minute_or_less_is_unknown_and_never_reads_as_one_minute() {
+        use std::time::Duration;
+        let said = |secs: &[u64]| -> Vec<Episode> {
+            secs.iter()
+                .zip(1u32..)
+                .map(|(secs, n)| Episode::new(n).with_duration(Duration::from_secs(*secs)))
+                .collect()
+        };
+        let lengths = |episodes: &[Episode]| -> Vec<Option<u64>> {
+            let store = kaeri_store::Store::open_in_memory().unwrap();
+            let id = kaeri_core::ids::AnilistId::new(1);
+            super::episode_rows(episodes, &store, id).iter().map(|r| r.duration_secs).collect()
+        };
+        let media = |minutes: Option<u32>| -> super::Media {
+            serde_json::from_value(serde_json::json!({
+                "id": 1, "title": {"romaji": "Kazamidori no Uta"}, "format": "TV",
+                "episodes": 4, "duration": minutes,
+            }))
+            .unwrap()
+        };
+
+        // A source's 0, 24 and 60 seconds are minutes or placeholders: the title's length
+        // stands in, and a source's own length over a minute stands.
+        let mut episodes = said(&[0, 24, 60, 1_425]);
+        super::enrich_episodes(&mut episodes, &media(Some(24)), 0);
+        assert_eq!(lengths(&episodes), [Some(1_440), Some(1_440), Some(1_440), Some(1_425)]);
+
+        // With no length for the title, nothing is said rather than "1 min".
+        let mut episodes = said(&[0, 24, 60, 1_425]);
+        super::enrich_episodes(&mut episodes, &media(None), 0);
+        assert_eq!(lengths(&episodes), [None, None, None, Some(1_425)]);
+
+        // Nor from a title whose length is a minute, or rows made without the title.
+        let mut episodes = said(&[0, 61]);
+        super::enrich_episodes(&mut episodes, &media(Some(1)), 0);
+        assert_eq!(lengths(&episodes), [None, Some(61)]);
+        assert_eq!(lengths(&said(&[60, 0])), [None, None]);
     }
 }
 

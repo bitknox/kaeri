@@ -271,10 +271,17 @@ fn picked_over(
     config
 }
 
-/// Whether Now Playing shows a play of `id` already, which a new play of it follows on from:
-/// rolled on, picked in the player, or started again in sub or dub. Its player has the table.
+/// Whether the front end has title `id`'s table already, so a play of it says none of its own:
+/// Now Playing shows a play of `id` that this one follows on from (rolled on, picked in the
+/// player, or started again in sub or dub), or the title was listed for the front end since
+/// the engine started (its page, a card, Continue), even while the record holds another title's
+/// table or that listing is still on its way.
+///
+/// A listing names the rows its source left without a title, a still or a synopsis from another
+/// source and the synopsis fill, which a play's own load does not wait for. Said over it, the
+/// play's table would take those away from the page and the player's Episodes panel alike.
 fn table_told(id: AnilistId, engine: &EngineState) -> bool {
-    engine.staging.front().is_some_and(|front| front.id == id)
+    engine.staging.front().is_some_and(|front| front.id == id) || engine.listed.ever(id)
 }
 
 /// Say title `id`'s episode table as the engine's record holds it, with what has been watched
