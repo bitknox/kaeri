@@ -2459,6 +2459,122 @@ mod tests {
         engine.shutdown().await;
     }
 
+    /// A title's page lists its episodes, named from another source where its own left titles,
+    /// stills and synopses out. A card's table loads for another title after, as Home and
+    /// Continue load them, so the engine's record no longer holds the page's. A play of the
+    /// title then loads its episodes for the player, which names nothing: that load must never
+    /// stand in for the table the front end has, which the player's Episodes panel shows while
+    /// it plays and the page shows after.
+    #[cfg(feature = "testing")]
+    #[tokio::test]
+    async fn a_play_never_takes_a_titles_named_episodes_away() {
+        use kaeri_core::{
+            demo::{DEMO_ANILIST_ID, DEMO_TITLE, DEMO_TITLE_ROMAJI},
+            ids::{AnilistId, ProviderKey},
+            media::{Episode, MediaFormat, SearchHit},
+        };
+        use std::collections::HashMap;
+
+        use kaeri_model::episodes::EpisodeRow;
+        use kaeri_providers::MockProvider;
+
+        /// What a row shows of itself beyond its number.
+        type Shown = (Option<String>, Option<String>, Option<String>, Option<u64>);
+        fn shown(rows: &[EpisodeRow]) -> Vec<Shown> {
+            let row = |r: &EpisodeRow| {
+                (r.title.clone(), r.thumbnail.clone(), r.description.clone(), r.duration_secs)
+            };
+            rows.iter().map(row).collect()
+        }
+        /// Every table told replaces the one the front end held of its title, as the apps
+        /// keep them.
+        fn take(batch: &[Event], held: &mut HashMap<AnilistId, Vec<EpisodeRow>>) {
+            for event in batch {
+                if let Event::Episodes { id, rows, failed: None } = event {
+                    held.insert(*id, rows.clone());
+                }
+            }
+        }
+
+        let id = DEMO_ANILIST_ID;
+        let hit = |key: &ProviderKey| SearchHit {
+            key: key.clone(),
+            title: DEMO_TITLE.into(),
+            synonyms: vec![DEMO_TITLE_ROMAJI.into()],
+            episode_count: Some(2),
+            year: None,
+            format: Some(MediaFormat::Ona),
+        };
+        // The source a play uses lists the episodes by number alone. Another names them.
+        let bare_key = ProviderKey::new("numbers-only");
+        let bare = MockProvider::new("bare")
+            .with_hits(vec![hit(&bare_key)])
+            .with_episodes_for(bare_key, vec![Episode::new(1), Episode::new(2)]);
+        let named_key = ProviderKey::new("catalogue");
+        let catalogue = (1..=2)
+            .map(|n| Episode {
+                title: Some(format!("The Ledger, part {n}")),
+                thumbnail: Some(format!("https://stills.example/{n}.jpg")),
+                description: Some(format!("The office audits ledger number {n} by hand.")),
+                ..Episode::new(n)
+            })
+            .collect();
+        let named = MockProvider::new("named")
+            .with_hits(vec![hit(&named_key)])
+            .with_episodes_for(named_key, catalogue);
+        let registry = ProviderRegistry::new(vec![bare.arc(), named.arc()]);
+
+        let dir = tempfile::tempdir().unwrap();
+        let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        let (engine, mut events) = engine_with(dir.path(), host, |options| {
+            options.hosted_player = true;
+            options.sources = Some(registry);
+        })
+        .await;
+        events.launch().await;
+        let mut held = HashMap::new();
+
+        // The page: its table, then the same rows named from the other source.
+        engine.send(Command::LoadEpisodes(id));
+        let page = loop {
+            let batch = tokio::time::timeout(Duration::from_secs(10), events.next_events())
+                .await
+                .expect("the page's table, named");
+            take(&batch, &mut held);
+            let rows: Option<&Vec<EpisodeRow>> = held.get(&id);
+            if rows.is_some_and(|rows| rows.iter().all(|r| r.thumbnail.is_some())) {
+                break held[&id].clone();
+            }
+        };
+        assert!(
+            shown(&page).iter().all(|(title, still, synopsis, length)| title.is_some()
+                && still.is_some()
+                && synopsis.is_some()
+                && *length == Some(14 * 60)),
+            "named, with the title's length: {page:?}"
+        );
+
+        // A card's table for another title, as Home and Continue load them.
+        let other = AnilistId::new(77);
+        engine.inject(Event::Episodes { id: other, rows: page.clone(), failed: None });
+        until(&mut events, |e| matches!(e, Event::Episodes { id, .. } if *id == other)).await;
+
+        // The play, and a while for what it loads behind it.
+        let job = engine.send(Command::play(id, "1")).expect("a job");
+        let mut played = false;
+        let quiet = tokio::time::Instant::now() + Duration::from_secs(3);
+        while let Ok(batch) = tokio::time::timeout_at(quiet, events.next_events()).await {
+            played |= batch.iter().any(|e| matches!(e, Event::JobDone(done) if *done == job));
+            take(&batch, &mut held);
+            // While it plays, as the panel shows it.
+            assert_eq!(shown(&held[&id]), shown(&page), "while it plays: {batch:?}");
+        }
+        assert!(played, "the play's job ended");
+        // And after, as the page shows it again.
+        assert_eq!(shown(&held[&id]), shown(&page), "after the play");
+        engine.shutdown().await;
+    }
+
     /// [`until`], for an event anywhere in what comes, not only last in its batch: what a
     /// party says comes in bursts. The wait between batches only guards against an engine that
     /// stopped, so it is long: Windows takes about two seconds to refuse a connection to a
