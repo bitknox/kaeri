@@ -93,9 +93,9 @@ pub async fn torrent_cache_watch(
     store: Store,
     config: crate::SharedConfig,
 ) {
+    // The first tick fires at once: the session comes up before the cache is swept, so a large
+    // cache does not hold it back, and the sweep leaves alone what it has started since.
     let mut ticker = tokio::time::interval(TORRENT_SWEEP_EVERY);
-    // The first tick fires at once, and the session has only just been swept on its way up.
-    ticker.tick().await;
     loop {
         ticker.tick().await;
         let limit = config

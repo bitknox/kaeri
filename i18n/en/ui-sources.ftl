@@ -99,6 +99,14 @@ source-note-held-back = Waiting for the proxy check
 # @max 36
 source-note-torrents-off = Torrent playback is off
 
+# Under a source that names torrents while torrent playback is on and still starting.
+# @max 36
+source-note-torrents-starting = Torrents are starting
+
+# Under a source that names torrents while torrent playback is on and couldn't start.
+# @max 36
+source-note-torrents-failed = Torrents couldn't start
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 # @max 20
 source-picker-releases = { -release-cap-pl }
@@ -176,6 +184,12 @@ sources-status-held-back = Held back
 # Status: a source that names torrents, while torrent playback is off.
 sources-status-torrents-off = Torrents off
 
+# Status: a source that names torrents, while torrent playback is on and still starting.
+sources-status-torrents-starting = Torrents starting
+
+# Status: a source that names torrents, while torrent playback is on and couldn't start.
+sources-status-torrents-failed = Torrents didn't start
+
 # Status: slow.
 sources-status-slow = Slow
 
@@ -194,6 +208,12 @@ sources-detail-held-back = Waiting until the proxy check passes.
 
 # Status line: torrent playback is off.
 sources-detail-torrents-off = Torrent playback is off. You can turn it on in Settings, under { -source-cap-pl }.
+
+# Status line: torrent playback is on and still starting.
+sources-detail-torrents-starting = Torrent playback is starting. This { -source } is asked once it has started.
+
+# Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+sources-detail-torrents-failed = Torrent playback couldn't start. It tries again when { -app-name } opens or a torrent setting changes.
 
 # Status line: disabled.
 sources-detail-disabled = Off. It keeps its place and isn't tried.

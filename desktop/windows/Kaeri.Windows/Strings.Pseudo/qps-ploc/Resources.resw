@@ -7705,6 +7705,14 @@
     <value>[Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~]</value>
     <comment>Details row for a source not asked while torrent playback is off. The name goes before it.</comment>
   </data>
+  <data name="PlayerStartRowHeldTorrentsStarting" xml:space="preserve">
+    <value>[Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš šţàŕţîñĝ~~~~~~~~~~~~]</value>
+    <comment>Details row for a source not asked because torrent playback is on and still starting. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldTorrentsFailed" xml:space="preserve">
+    <value>[Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ~~~~~~~~~~~~~]</value>
+    <comment>Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.</comment>
+  </data>
   <data name="PlayerStartRowHeldProxy" xml:space="preserve">
     <value>[Ñöţ àšķéð · Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~~~~]</value>
     <comment>Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.</comment>
@@ -7860,6 +7868,22 @@
   <data name="PlayerStartNotAskedTorrentsOff_other" xml:space="preserve">
     <value>[{names} àŕéñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~~]</value>
     <comment>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsStarting_one" xml:space="preserve">
+    <value>[{names} îšñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~]</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsStarting_other" xml:space="preserve">
+    <value>[{names} àŕéñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~]</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsFailed_one" xml:space="preserve">
+    <value>[{names} îšñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsFailed_other" xml:space="preserve">
+    <value>[{names} àŕéñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</comment>
   </data>
   <data name="PlayerStartNotAskedProxy_one" xml:space="preserve">
     <value>[{names} îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš.~~~~~~~~~~~~~~]</value>
@@ -8421,6 +8445,14 @@
   <data name="SourcePickerHeldTorrentsOff" xml:space="preserve">
     <value>[{name} îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~~~~]</value>
     <comment>Line of the picker for a source not asked while torrent playback is off.</comment>
+  </data>
+  <data name="SourcePickerHeldTorrentsStarting" xml:space="preserve">
+    <value>[{name} îšñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð~~~~~~~~~~~~~~~]</value>
+    <comment>Line of the picker for a source not asked while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcePickerHeldTorrentsFailed" xml:space="preserve">
+    <value>[{name} îšñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line of the picker for a source not asked because torrent playback is on and couldn't start.</comment>
   </data>
   <data name="SourcePickerHeldProxy" xml:space="preserve">
     <value>[{name} îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš~~~~~~~~~~~~~~]</value>
@@ -13584,6 +13616,14 @@
     <value>[Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~]</value>
     <comment>Under a source that names torrents while torrent playback is off in Settings.</comment>
   </data>
+  <data name="SourceNoteTorrentsStarting" xml:space="preserve">
+    <value>[Ţöŕŕéñţš àŕé šţàŕţîñĝ~~~~~~~]</value>
+    <comment>Under a source that names torrents while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourceNoteTorrentsFailed" xml:space="preserve">
+    <value>[Ţöŕŕéñţš çöüļðñ'ţ šţàŕţ~~~~~~~]</value>
+    <comment>Under a source that names torrents while torrent playback is on and couldn't start.</comment>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>[Ŕéļéàšéš~~~]</value>
     <comment>Heading over one source's releases, for a source that offers several (a batch, single episodes).</comment>
@@ -13676,6 +13716,14 @@
     <value>[Ţöŕŕéñţš öƒƒ~~~~]</value>
     <comment>Status: a source that names torrents, while torrent playback is off.</comment>
   </data>
+  <data name="SourcesStatusTorrentsStarting" xml:space="preserve">
+    <value>[Ţöŕŕéñţš šţàŕţîñĝ~~~~~~]</value>
+    <comment>Status: a source that names torrents, while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcesStatusTorrentsFailed" xml:space="preserve">
+    <value>[Ţöŕŕéñţš ðîðñ'ţ šţàŕţ~~~~~~~]</value>
+    <comment>Status: a source that names torrents, while torrent playback is on and couldn't start.</comment>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>[Šļöŵ~~]</value>
     <comment>Status: slow.</comment>
@@ -13699,6 +13747,14 @@
   <data name="SourcesDetailTorrentsOff" xml:space="preserve">
     <value>[Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ. Ýöü çàñ ţüŕñ îţ öñ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Status line: torrent playback is off.</comment>
+  </data>
+  <data name="SourcesDetailTorrentsStarting" xml:space="preserve">
+    <value>[Ţöŕŕéñţ þļàýƀàçķ îš šţàŕţîñĝ. Ţĥîš šöüŕçé îš àšķéð öñçé îţ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status line: torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcesDetailTorrentsFailed" xml:space="preserve">
+    <value>[Ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ. Îţ ţŕîéš àĝàîñ ŵĥéñ Ķàéŕî öþéñš öŕ à ţöŕŕéñţ šéţţîñĝ çĥàñĝéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.</comment>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>[Öƒƒ. Îţ ķééþš îţš þļàçé àñð îšñ'ţ ţŕîéð.~~~~~~~~~~~~]</value>

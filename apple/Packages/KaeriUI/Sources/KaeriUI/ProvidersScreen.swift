@@ -357,6 +357,28 @@ struct SourceLine: View {
     }
 }
 
+/// The words for a source held back, by why: torrents off, starting or failed to start, or
+/// the proxy's check.
+enum HeldWords {
+    static func status(_ why: HoldReason?) -> String {
+        switch why {
+        case .torrentsOff: L.sourcesStatusTorrentsOff
+        case .torrentsStarting: L.sourcesStatusTorrentsStarting
+        case .torrentsFailed: L.sourcesStatusTorrentsFailed
+        case .proxyCheck, nil: L.sourcesStatusHeldBack
+        }
+    }
+
+    static func detail(_ why: HoldReason?) -> String {
+        switch why {
+        case .torrentsOff: L.sourcesDetailTorrentsOff
+        case .torrentsStarting: L.sourcesDetailTorrentsStarting
+        case .torrentsFailed: L.sourcesDetailTorrentsFailed
+        case .proxyCheck, nil: L.sourcesDetailHeldBack
+        }
+    }
+}
+
 /// How a source stands, beside its name: failing, held back, slow, or with an update waiting.
 struct ProviderStandingLabel: View {
     let info: ProviderInfo
@@ -370,8 +392,7 @@ struct ProviderStandingLabel: View {
             // wrong, and red text would only shout it.
             label(L.sourcesStatusNotAnswering, dot: .vermilion, color: .silk)
         case .heldBack:
-            label(info.row.heldBackFor == .torrentsOff ? L.sourcesStatusTorrentsOff : L.sourcesStatusHeldBack,
-                  ring: true, color: .haze)
+            label(HeldWords.status(info.row.heldBackFor), ring: true, color: .haze)
         case .off:
             label(L.valueOff, ring: true, color: .silk)
         case .slow:
@@ -456,8 +477,7 @@ struct ProviderDetail: View {
         switch info.row.standing {
         // The site's own error is in Messages and the bug report, not here (copy rule 5).
         case .failing: L.sourcesDetailNotAnsweringPlain
-        case .heldBack:
-            info.row.heldBackFor == .torrentsOff ? L.sourcesDetailTorrentsOff : L.sourcesDetailHeldBack
+        case .heldBack: HeldWords.detail(info.row.heldBackFor)
         default: nil
         }
     }

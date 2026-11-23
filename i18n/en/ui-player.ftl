@@ -82,6 +82,12 @@ player-start-miss-skipped = You skipped { $name }
 # Details row for a source not asked while torrent playback is off. The name goes before it.
 player-start-row-held-torrents-off = Not asked · Torrent playback is off
 
+# Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+player-start-row-held-torrents-starting = Not asked · Torrent playback is starting
+
+# Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+player-start-row-held-torrents-failed = Not asked · Torrent playback couldn't start
+
 # Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
 player-start-row-held-proxy = Not asked · Waiting for the proxy check
 
@@ -227,6 +233,22 @@ player-start-unreached = Couldn't reach { $names }.
 player-start-not-asked-torrents-off = { $count ->
     [one] { $names } isn't asked while torrent playback is off.
    *[other] { $names } aren't asked while torrent playback is off.
+ }
+
+# Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-torrents-starting = { $count ->
+    [one] { $names } isn't asked until torrent playback has started.
+   *[other] { $names } aren't asked until torrent playback has started.
+ }
+
+# Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-torrents-failed = { $count ->
+    [one] { $names } isn't asked because torrent playback couldn't start.
+   *[other] { $names } aren't asked because torrent playback couldn't start.
  }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -692,6 +714,14 @@ source-picker-none-answered-lists = No { -source } that answered lists episode {
 # Line of the picker for a source not asked while torrent playback is off.
 # @arg name: text
 source-picker-held-torrents-off = { $name } isn't asked while torrent playback is off
+
+# Line of the picker for a source not asked while torrent playback is on and still starting.
+# @arg name: text
+source-picker-held-torrents-starting = { $name } isn't asked until torrent playback has started
+
+# Line of the picker for a source not asked because torrent playback is on and couldn't start.
+# @arg name: text
+source-picker-held-torrents-failed = { $name } isn't asked because torrent playback couldn't start
 
 # Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
 # @arg name: text

@@ -9001,6 +9001,12 @@ player-start-miss-skipped = You skipped { $name }
 # Details row for a source not asked while torrent playback is off. The name goes before it.
 player-start-row-held-torrents-off = Not asked · Torrent playback is off
 
+# Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+player-start-row-held-torrents-starting = Not asked · Torrent playback is starting
+
+# Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+player-start-row-held-torrents-failed = Not asked · Torrent playback couldn't start
+
 # Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
 player-start-row-held-proxy = Not asked · Waiting for the proxy check
 
@@ -9119,6 +9125,20 @@ player-start-not-asked-torrents-off =
     { $count ->
         [one] { $names } isn't asked while torrent playback is off.
        *[other] { $names } aren't asked while torrent playback is off.
+    }
+
+# Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+player-start-not-asked-torrents-starting =
+    { $count ->
+        [one] { $names } isn't asked until torrent playback has started.
+       *[other] { $names } aren't asked until torrent playback has started.
+    }
+
+# Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+player-start-not-asked-torrents-failed =
+    { $count ->
+        [one] { $names } isn't asked because torrent playback couldn't start.
+       *[other] { $names } aren't asked because torrent playback couldn't start.
     }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -9539,6 +9559,12 @@ source-picker-none-answered-lists = No source that answered lists episode { $epi
 
 # Line of the picker for a source not asked while torrent playback is off.
 source-picker-held-torrents-off = { $name } isn't asked while torrent playback is off
+
+# Line of the picker for a source not asked while torrent playback is on and still starting.
+source-picker-held-torrents-starting = { $name } isn't asked until torrent playback has started
+
+# Line of the picker for a source not asked because torrent playback is on and couldn't start.
+source-picker-held-torrents-failed = { $name } isn't asked because torrent playback couldn't start
 
 # Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
 source-picker-held-proxy = { $name } isn't asked until the proxy check passes
@@ -13478,6 +13504,12 @@ source-note-held-back = Waiting for the proxy check
 # Under a source that names torrents while torrent playback is off in Settings.
 source-note-torrents-off = Torrent playback is off
 
+# Under a source that names torrents while torrent playback is on and still starting.
+source-note-torrents-starting = Torrents are starting
+
+# Under a source that names torrents while torrent playback is on and couldn't start.
+source-note-torrents-failed = Torrents couldn't start
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Releases
 
@@ -13547,6 +13579,12 @@ sources-status-held-back = Held back
 # Status: a source that names torrents, while torrent playback is off.
 sources-status-torrents-off = Torrents off
 
+# Status: a source that names torrents, while torrent playback is on and still starting.
+sources-status-torrents-starting = Torrents starting
+
+# Status: a source that names torrents, while torrent playback is on and couldn't start.
+sources-status-torrents-failed = Torrents didn't start
+
 # Status: slow.
 sources-status-slow = Slow
 
@@ -13564,6 +13602,12 @@ sources-detail-held-back = Waiting until the proxy check passes.
 
 # Status line: torrent playback is off.
 sources-detail-torrents-off = Torrent playback is off. You can turn it on in Settings, under Sources.
+
+# Status line: torrent playback is on and still starting.
+sources-detail-torrents-starting = Torrent playback is starting. This source is asked once it has started.
+
+# Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+sources-detail-torrents-failed = Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.
 
 # Status line: disabled.
 sources-detail-disabled = Off. It keeps its place and isn't tried.

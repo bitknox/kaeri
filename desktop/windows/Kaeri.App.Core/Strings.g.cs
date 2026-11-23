@@ -5541,6 +5541,12 @@ public static partial class T
     /// <summary>Details row for a source not asked while torrent playback is off. The name goes before it.</summary>
     public static string PlayerStartRowHeldTorrentsOff => Get("PlayerStartRowHeldTorrentsOff");
 
+    /// <summary>Details row for a source not asked because torrent playback is on and still starting. The name goes before it.</summary>
+    public static string PlayerStartRowHeldTorrentsStarting => Get("PlayerStartRowHeldTorrentsStarting");
+
+    /// <summary>Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.</summary>
+    public static string PlayerStartRowHeldTorrentsFailed => Get("PlayerStartRowHeldTorrentsFailed");
+
     /// <summary>Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.</summary>
     public static string PlayerStartRowHeldProxy => Get("PlayerStartRowHeldProxy");
 
@@ -5648,6 +5654,12 @@ public static partial class T
 
     /// <summary>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</summary>
     public static string PlayerStartNotAskedTorrentsOff(long count, string names) => Fill(GetPlural("PlayerStartNotAskedTorrentsOff", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+
+    /// <summary>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</summary>
+    public static string PlayerStartNotAskedTorrentsStarting(long count, string names) => Fill(GetPlural("PlayerStartNotAskedTorrentsStarting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+
+    /// <summary>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</summary>
+    public static string PlayerStartNotAskedTorrentsFailed(long count, string names) => Fill(GetPlural("PlayerStartNotAskedTorrentsFailed", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
 
     /// <summary>Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.</summary>
     public static string PlayerStartNotAskedProxy(long count, string names) => Fill(GetPlural("PlayerStartNotAskedProxy", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
@@ -6051,6 +6063,12 @@ public static partial class T
 
     /// <summary>Line of the picker for a source not asked while torrent playback is off.</summary>
     public static string SourcePickerHeldTorrentsOff(string name) => Fill(Get("SourcePickerHeldTorrentsOff"), ("name", name));
+
+    /// <summary>Line of the picker for a source not asked while torrent playback is on and still starting.</summary>
+    public static string SourcePickerHeldTorrentsStarting(string name) => Fill(Get("SourcePickerHeldTorrentsStarting"), ("name", name));
+
+    /// <summary>Line of the picker for a source not asked because torrent playback is on and couldn't start.</summary>
+    public static string SourcePickerHeldTorrentsFailed(string name) => Fill(Get("SourcePickerHeldTorrentsFailed"), ("name", name));
 
     /// <summary>Line of the picker for a source not asked while the proxy check for torrents hasn't passed.</summary>
     public static string SourcePickerHeldProxy(string name) => Fill(Get("SourcePickerHeldProxy"), ("name", name));
@@ -9722,6 +9740,12 @@ public static partial class T
     /// <summary>Under a source that names torrents while torrent playback is off in Settings.</summary>
     public static string SourceNoteTorrentsOff => Get("SourceNoteTorrentsOff");
 
+    /// <summary>Under a source that names torrents while torrent playback is on and still starting.</summary>
+    public static string SourceNoteTorrentsStarting => Get("SourceNoteTorrentsStarting");
+
+    /// <summary>Under a source that names torrents while torrent playback is on and couldn't start.</summary>
+    public static string SourceNoteTorrentsFailed => Get("SourceNoteTorrentsFailed");
+
     /// <summary>Heading over one source's releases, for a source that offers several (a batch, single episodes).</summary>
     public static string SourcePickerReleases => Get("SourcePickerReleases");
 
@@ -9791,6 +9815,12 @@ public static partial class T
     /// <summary>Status: a source that names torrents, while torrent playback is off.</summary>
     public static string SourcesStatusTorrentsOff => Get("SourcesStatusTorrentsOff");
 
+    /// <summary>Status: a source that names torrents, while torrent playback is on and still starting.</summary>
+    public static string SourcesStatusTorrentsStarting => Get("SourcesStatusTorrentsStarting");
+
+    /// <summary>Status: a source that names torrents, while torrent playback is on and couldn't start.</summary>
+    public static string SourcesStatusTorrentsFailed => Get("SourcesStatusTorrentsFailed");
+
     /// <summary>Status: slow.</summary>
     public static string SourcesStatusSlow => Get("SourcesStatusSlow");
 
@@ -9808,6 +9838,12 @@ public static partial class T
 
     /// <summary>Status line: torrent playback is off.</summary>
     public static string SourcesDetailTorrentsOff => Get("SourcesDetailTorrentsOff");
+
+    /// <summary>Status line: torrent playback is on and still starting.</summary>
+    public static string SourcesDetailTorrentsStarting => Get("SourcesDetailTorrentsStarting");
+
+    /// <summary>Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.</summary>
+    public static string SourcesDetailTorrentsFailed => Get("SourcesDetailTorrentsFailed");
 
     /// <summary>Status line: disabled.</summary>
     public static string SourcesDetailDisabled => Get("SourcesDetailDisabled");
@@ -14424,6 +14460,8 @@ public static partial class T
         ["PlayerStartMissTimedOut"] = "{name} took too long",
         ["PlayerStartMissSkipped"] = "You skipped {name}",
         ["PlayerStartRowHeldTorrentsOff"] = "Not asked · Torrent playback is off",
+        ["PlayerStartRowHeldTorrentsStarting"] = "Not asked · Torrent playback is starting",
+        ["PlayerStartRowHeldTorrentsFailed"] = "Not asked · Torrent playback couldn't start",
         ["PlayerStartRowHeldProxy"] = "Not asked · Waiting for the proxy check",
         ["PlayerStartRowHeldCellular"] = "Not asked · Torrents are off on cellular",
         ["PlayerStartRowHeldOther"] = "Not asked · Not available right now",
@@ -14463,6 +14501,10 @@ public static partial class T
         ["PlayerStartUnreached"] = "Couldn't reach {names}.",
         ["PlayerStartNotAskedTorrentsOff_one"] = "{names} isn't asked while torrent playback is off.",
         ["PlayerStartNotAskedTorrentsOff_other"] = "{names} aren't asked while torrent playback is off.",
+        ["PlayerStartNotAskedTorrentsStarting_one"] = "{names} isn't asked until torrent playback has started.",
+        ["PlayerStartNotAskedTorrentsStarting_other"] = "{names} aren't asked until torrent playback has started.",
+        ["PlayerStartNotAskedTorrentsFailed_one"] = "{names} isn't asked because torrent playback couldn't start.",
+        ["PlayerStartNotAskedTorrentsFailed_other"] = "{names} aren't asked because torrent playback couldn't start.",
         ["PlayerStartNotAskedProxy_one"] = "{names} isn't asked until the proxy check passes.",
         ["PlayerStartNotAskedProxy_other"] = "{names} aren't asked until the proxy check passes.",
         ["PlayerStartNotAskedCellular_one"] = "{names} isn't asked on cellular.",
@@ -14609,6 +14651,8 @@ public static partial class T
         ["SourcePickerNoneLists"] = "No source lists episode {episode}.",
         ["SourcePickerNoneAnsweredLists"] = "No source that answered lists episode {episode}.",
         ["SourcePickerHeldTorrentsOff"] = "{name} isn't asked while torrent playback is off",
+        ["SourcePickerHeldTorrentsStarting"] = "{name} isn't asked until torrent playback has started",
+        ["SourcePickerHeldTorrentsFailed"] = "{name} isn't asked because torrent playback couldn't start",
         ["SourcePickerHeldProxy"] = "{name} isn't asked until the proxy check passes",
         ["SourcePickerHeldCellular"] = "{name} isn't asked on cellular",
         ["SourcePickerHeldOther"] = "{name} isn't available right now",
@@ -15900,6 +15944,8 @@ public static partial class T
         ["SourceNoteAmbiguous"] = "Couldn't match this title",
         ["SourceNoteHeldBack"] = "Waiting for the proxy check",
         ["SourceNoteTorrentsOff"] = "Torrent playback is off",
+        ["SourceNoteTorrentsStarting"] = "Torrents are starting",
+        ["SourceNoteTorrentsFailed"] = "Torrents couldn't start",
         ["SourcePickerReleases"] = "Releases",
         ["SourcePickerChosen"] = "Chosen",
         ["SourcePinUnavailable"] = "{name} isn't available right now, so this title's episodes come from your other sources.",
@@ -15923,12 +15969,16 @@ public static partial class T
         ["SourcesStatusNotAnswering"] = "Not answering",
         ["SourcesStatusHeldBack"] = "Held back",
         ["SourcesStatusTorrentsOff"] = "Torrents off",
+        ["SourcesStatusTorrentsStarting"] = "Torrents starting",
+        ["SourcesStatusTorrentsFailed"] = "Torrents didn't start",
         ["SourcesStatusSlow"] = "Slow",
         ["SourcesStatusUpdate"] = "Update available",
         ["SourcesDetailNotAnswering"] = "Not answering. {why}",
         ["SourcesDetailNotAnsweringPlain"] = "Not answering.",
         ["SourcesDetailHeldBack"] = "Waiting until the proxy check passes.",
         ["SourcesDetailTorrentsOff"] = "Torrent playback is off. You can turn it on in Settings, under Sources.",
+        ["SourcesDetailTorrentsStarting"] = "Torrent playback is starting. This source is asked once it has started.",
+        ["SourcesDetailTorrentsFailed"] = "Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.",
         ["SourcesDetailDisabled"] = "Off. It keeps its place and isn't tried.",
         ["SourcesDetailGone"] = "This source is no longer here.",
         ["SourcesDetailSite"] = "The source didn't answer.",

@@ -281,6 +281,8 @@ public static class ReleasePicker
         ListingMiss.Failed => T.PlayerStartMissFailed(m.Name),
         ListingMiss.TimedOut => T.PlayerStartMissTimedOut(m.Name),
         ListingMiss.HeldBack { Why: SourceHold.TorrentsOff } => T.SourcePickerHeldTorrentsOff(m.Name),
+        ListingMiss.HeldBack { Why: SourceHold.TorrentsStarting } => T.SourcePickerHeldTorrentsStarting(m.Name),
+        ListingMiss.HeldBack { Why: SourceHold.TorrentsFailed } => T.SourcePickerHeldTorrentsFailed(m.Name),
         ListingMiss.HeldBack { Why: SourceHold.ProxyCheck } => T.SourcePickerHeldProxy(m.Name),
         ListingMiss.HeldBack { Why: SourceHold.Cellular } => T.SourcePickerHeldCellular(m.Name),
         _ => T.SourcePickerHeldOther(m.Name),

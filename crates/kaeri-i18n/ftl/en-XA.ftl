@@ -9001,6 +9001,12 @@ player-start-miss-skipped = [Ýöü šķîþþéð { $name }~~~~~]
 # Details row for a source not asked while torrent playback is off. The name goes before it.
 player-start-row-held-torrents-off = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~]
 
+# Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+player-start-row-held-torrents-starting = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš šţàŕţîñĝ~~~~~~~~~~~~]
+
+# Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+player-start-row-held-torrents-failed = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ~~~~~~~~~~~~~]
+
 # Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
 player-start-row-held-proxy = [Ñöţ àšķéð · Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~~~~]
 
@@ -9119,6 +9125,20 @@ player-start-not-asked-torrents-off =
     { $count ->
         [one] [{ $names } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~]
        *[other] [{ $names } àŕéñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+player-start-not-asked-torrents-starting =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+player-start-not-asked-torrents-failed =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ.~~~~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ.~~~~~~~~~~~~~~~~~~]
     }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -9539,6 +9559,12 @@ source-picker-none-answered-lists = [Ñö šöüŕçé ţĥàţ àñšŵéŕéð
 
 # Line of the picker for a source not asked while torrent playback is off.
 source-picker-held-torrents-off = [{ $name } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked while torrent playback is on and still starting.
+source-picker-held-torrents-starting = [{ $name } îšñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð~~~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked because torrent playback is on and couldn't start.
+source-picker-held-torrents-failed = [{ $name } îšñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ~~~~~~~~~~~~~~~~~]
 
 # Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
 source-picker-held-proxy = [{ $name } îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš~~~~~~~~~~~~~~]
@@ -13478,6 +13504,12 @@ source-note-held-back = [Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~
 # Under a source that names torrents while torrent playback is off in Settings.
 source-note-torrents-off = [Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~]
 
+# Under a source that names torrents while torrent playback is on and still starting.
+source-note-torrents-starting = [Ţöŕŕéñţš àŕé šţàŕţîñĝ~~~~~~~]
+
+# Under a source that names torrents while torrent playback is on and couldn't start.
+source-note-torrents-failed = [Ţöŕŕéñţš çöüļðñ'ţ šţàŕţ~~~~~~~]
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = [Ŕéļéàšéš~~~]
 
@@ -13547,6 +13579,12 @@ sources-status-held-back = [Ĥéļð ƀàçķ~~~]
 # Status: a source that names torrents, while torrent playback is off.
 sources-status-torrents-off = [Ţöŕŕéñţš öƒƒ~~~~]
 
+# Status: a source that names torrents, while torrent playback is on and still starting.
+sources-status-torrents-starting = [Ţöŕŕéñţš šţàŕţîñĝ~~~~~~]
+
+# Status: a source that names torrents, while torrent playback is on and couldn't start.
+sources-status-torrents-failed = [Ţöŕŕéñţš ðîðñ'ţ šţàŕţ~~~~~~~]
+
 # Status: slow.
 sources-status-slow = [Šļöŵ~~]
 
@@ -13564,6 +13602,12 @@ sources-detail-held-back = [Ŵàîţîñĝ üñţîļ ţĥé þŕöẋý çĥé�
 
 # Status line: torrent playback is off.
 sources-detail-torrents-off = [Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ. Ýöü çàñ ţüŕñ îţ öñ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status line: torrent playback is on and still starting.
+sources-detail-torrents-starting = [Ţöŕŕéñţ þļàýƀàçķ îš šţàŕţîñĝ. Ţĥîš šöüŕçé îš àšķéð öñçé îţ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+sources-detail-torrents-failed = [Ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ. Îţ ţŕîéš àĝàîñ ŵĥéñ Ķàéŕî öþéñš öŕ à ţöŕŕéñţ šéţţîñĝ çĥàñĝéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Status line: disabled.
 sources-detail-disabled = [Öƒƒ. Îţ ķééþš îţš þļàçé àñð îšñ'ţ ţŕîéð.~~~~~~~~~~~~]

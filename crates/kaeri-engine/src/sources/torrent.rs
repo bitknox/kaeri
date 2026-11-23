@@ -26,6 +26,17 @@ const TEARDOWN_WAIT: std::time::Duration = std::time::Duration::from_secs(30);
 /// Grouped so they can be stopped and started as one. Playback the user has just switched
 /// off must stop *seeding*, not merely stop being offered — and that means the tasks
 /// holding its session have to end with it.
+/// What bringing torrent playback up needs of the engine: the source chain it is lent to, where
+/// the session keeps its files, the store, and the host for a proxy's password.
+pub(crate) struct TorrentGround<'a> {
+    pub registry: &'a kaeri_providers::ProviderRegistry,
+    pub paths: &'a kaeri_core::config::Paths,
+    pub store: &'a Store,
+    pub host: &'a dyn crate::host::Host,
+    /// A fixture build, which starts no session.
+    pub fixture: bool,
+}
+
 #[derive(Default)]
 pub struct TorrentTasks {
     /// Bringing the session up, waiting for a proxy's check to pass when there is one.
@@ -96,6 +107,25 @@ impl TorrentTasks {
         tx: &Outbox,
         arrivals: &mpsc::UnboundedSender<(u64, std::result::Result<sources::TorrentUp, Msg>)>,
     ) {
+        let ground = TorrentGround {
+            registry: &services.registry,
+            paths: &services.paths,
+            store: &services.store,
+            host: services.host.as_ref(),
+            fixture: services.fixture_route,
+        };
+        self.bring_up_on(config, &ground, tx, arrivals);
+    }
+
+    /// [`Self::bring_up`], on the parts it needs, which launch has before the engine's services:
+    /// so torrent playback starts coming up as the engine starts, beside the rest of launch.
+    pub(crate) fn bring_up_on(
+        &mut self,
+        config: &Config,
+        ground: &TorrentGround<'_>,
+        tx: &Outbox,
+        arrivals: &mpsc::UnboundedSender<(u64, std::result::Result<sources::TorrentUp, Msg>)>,
+    ) {
         self.generation += 1;
         if !sources::torrent_wanted(config) {
             return;
@@ -108,13 +138,18 @@ impl TorrentTasks {
         let _ = tx.send(Event::TorrentProxy(Some(starting)));
         let generation = self.generation;
         let check = Arc::clone(&self.check);
-        let fixture = services.fixture_route;
+        let fixture = ground.fixture;
+        // A fixture build starts no session, so none is on its way.
+        if !fixture {
+            ground.registry.torrents().starting();
+        }
+        let playback = ground.registry.torrents().clone();
         let teardown = self.teardown.take();
         let (config, paths, store, tx, arrivals) = (
             // With the proxy's password, which only this copy holds.
-            crate::proxy::with_proxy_password(config, services),
-            services.paths.clone(),
-            services.store.clone(),
+            crate::proxy::with_proxy_password_from(config, ground.host, ground.paths),
+            ground.paths.clone(),
+            ground.store.clone(),
             tx.clone(),
             arrivals.clone(),
         );
@@ -133,7 +168,8 @@ impl TorrentTasks {
                 return;
             }
             let outcome =
-                sources::bring_up_torrent(config, paths, store, tx, check, fixture).await;
+                sources::bring_up_torrent(config, paths, store, tx, check, &playback, fixture)
+                    .await;
             let _ = arrivals.send((generation, outcome));
         }));
     }
@@ -161,6 +197,8 @@ impl TorrentTasks {
             Ok(up) => up,
             Err(reason) => {
                 tracing::warn!(reason = %reason.english(), "torrent playback not started");
+                // No session is coming: the sources that name torrents say it could not start.
+                services.registry.torrents().failed();
                 let _ = tx.send(Event::ProviderNote(reason));
                 return;
             }

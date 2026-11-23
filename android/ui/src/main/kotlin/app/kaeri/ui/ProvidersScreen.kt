@@ -126,7 +126,7 @@ internal data class ProviderInfo(val row: ProviderRow, val context: Context, val
             row.disabled -> Strings.valueOff(context) to StateKind.Off
             row.standing == ProviderStanding.Failing && !offline -> Strings.sourcesStatusNotAnswering(context) to StateKind.Problem
             row.standing == ProviderStanding.HeldBack ->
-                (if (row.heldBackFor == HoldReason.TORRENTS_OFF) Strings.sourcesStatusTorrentsOff(context) else Strings.sourcesStatusHeldBack(context)) to StateKind.Off
+                heldStatus(context, row.heldBackFor) to StateKind.Off
             row.update != null -> Strings.sourcesStatusUpdate(context) to StateKind.Update
             else -> null
         }
@@ -727,7 +727,7 @@ private fun stateLine(context: Context, info: ProviderInfo, offline: Boolean): P
     info.row.standing == ProviderStanding.Failing ->
         (info.row.lastError?.let { Strings.sourcesDetailNotAnswering(context, providerReason(context, it)) } ?: Strings.sourcesDetailNotAnsweringPlain(context)) to true
     info.row.standing == ProviderStanding.HeldBack ->
-        (if (info.row.heldBackFor == HoldReason.TORRENTS_OFF) Strings.sourcesDetailTorrentsOff(context) else Strings.sourcesDetailHeldBack(context)) to false
+        heldDetail(context, info.row.heldBackFor) to false
     else -> null
 }
 
@@ -775,4 +775,20 @@ internal fun providerReason(context: Context, raw: String): String {
         "error sending request" in lower || "connect" in lower -> Strings.reasonSourceUnreachable(context)
         else -> firstClause(context, raw)
     }
+}
+
+/** The word for a source held back, by why: torrents off, starting or failed to start, or the proxy's check. */
+fun heldStatus(context: Context, why: HoldReason?): String = when (why) {
+    HoldReason.TORRENTS_OFF -> Strings.sourcesStatusTorrentsOff(context)
+    HoldReason.TORRENTS_STARTING -> Strings.sourcesStatusTorrentsStarting(context)
+    HoldReason.TORRENTS_FAILED -> Strings.sourcesStatusTorrentsFailed(context)
+    HoldReason.PROXY_CHECK, null -> Strings.sourcesStatusHeldBack(context)
+}
+
+/** The line under a source held back, by why. */
+fun heldDetail(context: Context, why: HoldReason?): String = when (why) {
+    HoldReason.TORRENTS_OFF -> Strings.sourcesDetailTorrentsOff(context)
+    HoldReason.TORRENTS_STARTING -> Strings.sourcesDetailTorrentsStarting(context)
+    HoldReason.TORRENTS_FAILED -> Strings.sourcesDetailTorrentsFailed(context)
+    HoldReason.PROXY_CHECK, null -> Strings.sourcesDetailHeldBack(context)
 }

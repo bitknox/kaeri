@@ -640,6 +640,8 @@ fn missed_line(missed: &MissedListing, episode: &str) -> String {
         ListingMiss::TimedOut => t::player_start_miss_timed_out(name),
         ListingMiss::HeldBack { why } => match why {
             SourceHold::TorrentsOff => t::source_picker_held_torrents_off(name),
+            SourceHold::TorrentsStarting => t::source_picker_held_torrents_starting(name),
+            SourceHold::TorrentsFailed => t::source_picker_held_torrents_failed(name),
             SourceHold::ProxyCheck => t::source_picker_held_proxy(name),
             SourceHold::Cellular => t::source_picker_held_cellular(name),
             SourceHold::Other => t::source_picker_held_other(name),
@@ -1611,12 +1613,17 @@ mod tests {
                     name: "Harbor".into(),
                     miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
                 },
+                MissedListing {
+                    name: "Swarm".into(),
+                    miss: ListingMiss::HeldBack { why: SourceHold::TorrentsStarting },
+                },
             ],
         });
         let said: Vec<&str> = a.toasts.iter().map(|t| t.notice.text.as_str()).collect();
         let said = said.join("\n");
         assert!(said.contains(&t::player_start_miss_failed("Alpha")), "{said}");
         assert!(said.contains(&t::source_picker_held_torrents_off("Harbor")), "{said}");
+        assert!(said.contains(&t::source_picker_held_torrents_starting("Swarm")), "{said}");
         assert!(!said.contains("alpha"), "a raw id: {said}");
     }
 

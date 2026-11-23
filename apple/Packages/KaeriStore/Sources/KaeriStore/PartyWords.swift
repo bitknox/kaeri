@@ -191,6 +191,8 @@ public enum PartyWords {
         case .heldBack(let why):
             switch why {
             case .torrentsOff: return L.sourcePickerHeldTorrentsOff(name: name)
+            case .torrentsStarting: return L.sourcePickerHeldTorrentsStarting(name: name)
+            case .torrentsFailed: return L.sourcePickerHeldTorrentsFailed(name: name)
             case .proxyCheck: return L.sourcePickerHeldProxy(name: name)
             case .cellular: return L.sourcePickerHeldCellular(name: name)
             case .other: return L.sourcePickerHeldOther(name: name)

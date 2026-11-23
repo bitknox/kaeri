@@ -14340,6 +14340,16 @@ pub fn player_start_row_held_torrents_off() -> String {
     text("player-start-row-held-torrents-off", &[])
 }
 
+/// Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+pub fn player_start_row_held_torrents_starting() -> String {
+    text("player-start-row-held-torrents-starting", &[])
+}
+
+/// Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+pub fn player_start_row_held_torrents_failed() -> String {
+    text("player-start-row-held-torrents-failed", &[])
+}
+
 /// Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
 pub fn player_start_row_held_proxy() -> String {
     text("player-start-row-held-proxy", &[])
@@ -14518,6 +14528,16 @@ pub fn player_start_unreached(names: &str) -> String {
 /// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
 pub fn player_start_not_asked_torrents_off(count: i64, names: &str) -> String {
     text("player-start-not-asked-torrents-off", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+pub fn player_start_not_asked_torrents_starting(count: i64, names: &str) -> String {
+    text("player-start-not-asked-torrents-starting", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+pub fn player_start_not_asked_torrents_failed(count: i64, names: &str) -> String {
+    text("player-start-not-asked-torrents-failed", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
 }
 
 /// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -15205,6 +15225,16 @@ pub fn source_picker_none_answered_lists(episode: &str) -> String {
 /// Line of the picker for a source not asked while torrent playback is off.
 pub fn source_picker_held_torrents_off(name: &str) -> String {
     text("source-picker-held-torrents-off", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source not asked while torrent playback is on and still starting.
+pub fn source_picker_held_torrents_starting(name: &str) -> String {
+    text("source-picker-held-torrents-starting", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source not asked because torrent playback is on and couldn't start.
+pub fn source_picker_held_torrents_failed(name: &str) -> String {
+    text("source-picker-held-torrents-failed", &[("name", Arg::Text(name))])
 }
 
 /// Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
@@ -21325,6 +21355,16 @@ pub fn source_note_torrents_off() -> String {
     text("source-note-torrents-off", &[])
 }
 
+/// Under a source that names torrents while torrent playback is on and still starting.
+pub fn source_note_torrents_starting() -> String {
+    text("source-note-torrents-starting", &[])
+}
+
+/// Under a source that names torrents while torrent playback is on and couldn't start.
+pub fn source_note_torrents_failed() -> String {
+    text("source-note-torrents-failed", &[])
+}
+
 /// Heading over one source's releases, for a source that offers several (a batch, single episodes).
 pub fn source_picker_releases() -> String {
     text("source-picker-releases", &[])
@@ -21440,6 +21480,16 @@ pub fn sources_status_torrents_off() -> String {
     text("sources-status-torrents-off", &[])
 }
 
+/// Status: a source that names torrents, while torrent playback is on and still starting.
+pub fn sources_status_torrents_starting() -> String {
+    text("sources-status-torrents-starting", &[])
+}
+
+/// Status: a source that names torrents, while torrent playback is on and couldn't start.
+pub fn sources_status_torrents_failed() -> String {
+    text("sources-status-torrents-failed", &[])
+}
+
 /// Status: slow.
 pub fn sources_status_slow() -> String {
     text("sources-status-slow", &[])
@@ -21468,6 +21518,16 @@ pub fn sources_detail_held_back() -> String {
 /// Status line: torrent playback is off.
 pub fn sources_detail_torrents_off() -> String {
     text("sources-detail-torrents-off", &[])
+}
+
+/// Status line: torrent playback is on and still starting.
+pub fn sources_detail_torrents_starting() -> String {
+    text("sources-detail-torrents-starting", &[])
+}
+
+/// Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+pub fn sources_detail_torrents_failed() -> String {
+    text("sources-detail-torrents-failed", &[])
 }
 
 /// Status line: disabled.

@@ -683,7 +683,7 @@ async fn source_slate(
             continue;
         };
         let name = display_name(registry, &provider_id);
-        let miss = match registry.hold(&provider_id, now) {
+        let miss = match registry.hold_when_asked(&provider_id, now).await {
             Some(reason) => Some(ListingMiss::HeldBack { why: hold_of_error(&reason) }),
             None => {
                 match kaeri_providers::resolve(store, &source, id, &target, translation, now)
@@ -805,17 +805,27 @@ mod tests {
         episode: &str,
         sources: Vec<MockProvider>,
     ) -> std::result::Result<Resolved, Unplayable> {
+        let registry =
+            ProviderRegistry::new(sources.into_iter().map(MockProvider::arc).collect());
+        play_from(&registry, media, episode).await
+    }
+
+    /// [`play`] against a chain the test holds.
+    #[allow(clippy::result_large_err)]
+    async fn play_from(
+        registry: &ProviderRegistry,
+        media: serde_json::Value,
+        episode: &str,
+    ) -> std::result::Result<Resolved, Unplayable> {
         let store = Store::open_in_memory().unwrap();
         store.cache_media(AnilistId::new(900_201), &media.to_string(), now_epoch()).unwrap();
         let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
         let meta = Meta::new(AniList::new(http, 30), None, store.clone());
-        let registry =
-            ProviderRegistry::new(sources.into_iter().map(MockProvider::arc).collect());
         let playback = kaeri_core::config::PlaybackConfig::default();
         resolve_for_playback(
             &meta,
             &store,
-            &registry,
+            registry,
             AnilistId::new(900_201),
             episode,
             None,
@@ -986,18 +996,25 @@ mod tests {
     async fn slate(
         sources: Vec<MockProvider>,
     ) -> (Vec<kaeri_core::traits::SourceCandidate>, Vec<MissedListing>) {
+        let registry =
+            ProviderRegistry::new(sources.into_iter().map(MockProvider::arc).collect());
+        slate_from(&registry).await
+    }
+
+    /// [`slate`] against a chain the test holds.
+    async fn slate_from(
+        registry: &ProviderRegistry,
+    ) -> (Vec<kaeri_core::traits::SourceCandidate>, Vec<MissedListing>) {
         let store = Store::open_in_memory().unwrap();
         store
             .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
             .unwrap();
         let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
         let meta = Meta::new(AniList::new(http, 30), None, store.clone());
-        let registry =
-            ProviderRegistry::new(sources.into_iter().map(MockProvider::arc).collect());
         source_slate(
             &meta,
             &store,
-            &registry,
+            registry,
             AnilistId::new(900_201),
             "3",
             kaeri_core::media::Translation::Sub,
@@ -1109,6 +1126,150 @@ mod tests {
         let refused = find(("brook", "r9")).await.expect_err("no such release");
         assert!(!refused.english().is_empty());
         assert_eq!(store.provider_preference(id).unwrap(), None);
+    }
+
+    /// A torrent session that reaches nothing: through a fixture proxy, whose check passes
+    /// without connecting, so DHT is off, and with no torrent in it.
+    async fn quiet_session(
+        dir: &std::path::Path,
+    ) -> std::sync::Arc<kaeri_providers::torrent::TorrentSession> {
+        let route =
+            kaeri_providers::proxy::TorrentRoute::fixed(Some("socks5://127.0.0.1:9".into()))
+                .unwrap();
+        route.verify().await;
+        std::sync::Arc::new(
+            kaeri_providers::torrent::TorrentSession::start(
+                route,
+                dir.join("torrents"),
+                dir.join("dht.json"),
+                "tok".into(),
+            )
+            .await
+            .expect("a session with nothing to reach"),
+        )
+    }
+
+    /// A chain of one source that names torrents, Harbor, which has episode 3 as a web stream
+    /// and one release of it.
+    fn harbor() -> ProviderRegistry {
+        let release = kaeri_core::traits::SourceCandidate {
+            id: "r1".into(),
+            provider_id: "harbor".into(),
+            provider_name: String::new(),
+            title: "The Hidden Star - 03 (1080p)".into(),
+            quality: Some(1080),
+            label: None,
+            size: None,
+            dual_audio: false,
+            dubbed: false,
+            auto_pick: true,
+        };
+        let source =
+            searched("harbor", true).named("Harbor").torrents().with_sources(vec![release]);
+        ProviderRegistry::new(vec![source.arc()])
+    }
+
+    #[tokio::test]
+    async fn with_torrents_on_and_starting_a_play_waits_for_the_session_then_asks() {
+        let registry = harbor();
+        registry.torrents().starting();
+        let scratch = tempfile::tempdir().unwrap();
+        let session = quiet_session(scratch.path()).await;
+        let torrents = registry.torrents().clone();
+        let up = tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+            torrents.set(Some(session), Vec::new());
+        });
+        let (streams, _) =
+            play_from(&registry, show(false), "3").await.expect("Harbor plays it");
+        up.await.unwrap();
+        let urls: Vec<_> = streams.iter().map(|s| s.url.as_str()).collect();
+        assert_eq!(urls, ["https://harbor.example/3.m3u8"]);
+    }
+
+    #[tokio::test]
+    async fn with_torrents_on_and_starting_the_picker_waits_for_the_session_then_asks() {
+        let registry = harbor();
+        registry.torrents().starting();
+        let scratch = tempfile::tempdir().unwrap();
+        let session = quiet_session(scratch.path()).await;
+        let torrents = registry.torrents().clone();
+        let up = tokio::spawn(async move {
+            tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+            torrents.set(Some(session), Vec::new());
+        });
+        let (listed, missed) = slate_from(&registry).await;
+        up.await.unwrap();
+        assert_eq!(listed.len(), 1, "{missed:?}");
+        assert!(missed.is_empty(), "{missed:?}");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_session_still_starting_after_the_wait_is_said_to_be_starting_not_off() {
+        let registry = harbor();
+        registry.torrents().starting();
+        let began = tokio::time::Instant::now();
+        let (listed, missed) = slate_from(&registry).await;
+        assert!(
+            began.elapsed() >= kaeri_providers::torrent::bridge::SESSION_WAIT,
+            "it waited for the session"
+        );
+        assert!(listed.is_empty());
+        assert_eq!(
+            missed,
+            [MissedListing {
+                name: "Harbor".into(),
+                miss: ListingMiss::HeldBack { why: SourceHold::TorrentsStarting },
+            }]
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_source_ahead_of_one_that_names_torrents_plays_without_waiting_for_the_session() {
+        let web = searched("brook", true).named("Brook");
+        let registry = ProviderRegistry::new(vec![web.arc(), harbor().all().remove(0)]);
+        registry.torrents().starting();
+        let began = tokio::time::Instant::now();
+        let (streams, _) =
+            play_from(&registry, show(false), "3").await.expect("Brook plays it");
+        assert_eq!(began.elapsed(), std::time::Duration::ZERO, "nothing waited");
+        let urls: Vec<_> = streams.iter().map(|s| s.url.as_str()).collect();
+        assert_eq!(urls, ["https://brook.example/3.m3u8"]);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_session_that_could_not_start_is_said_so_not_off() {
+        let registry = harbor();
+        registry.torrents().failed();
+        let began = tokio::time::Instant::now();
+        let (_, missed) = slate_from(&registry).await;
+        assert_eq!(began.elapsed(), std::time::Duration::ZERO, "nothing is coming to wait for");
+        assert_eq!(
+            missed,
+            [MissedListing {
+                name: "Harbor".into(),
+                miss: ListingMiss::HeldBack { why: SourceHold::TorrentsFailed },
+            }]
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn with_torrents_off_a_source_that_names_them_is_said_off_at_once() {
+        let registry = harbor();
+        let began = tokio::time::Instant::now();
+        let (listed, missed) = slate_from(&registry).await;
+        assert!(
+            began.elapsed() < std::time::Duration::from_secs(1),
+            "nothing is coming to wait for"
+        );
+        assert!(listed.is_empty());
+        assert_eq!(
+            missed,
+            [MissedListing {
+                name: "Harbor".into(),
+                miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
+            }]
+        );
     }
 
     /// A title whose episode `next` airs `in_secs` after the moment `now` it was asked for.

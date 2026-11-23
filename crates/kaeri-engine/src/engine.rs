@@ -245,7 +245,7 @@ impl Engine {
                 tokio::task::spawn_blocking(move || prune::sweep_at_launch(&paths));
             }
             // With torrents off nothing else would ever prune what an earlier run streamed. With
-            // them on, the session prunes on its way up, before it writes anything.
+            // them on, the session's cache watch prunes once it is up.
             if !config.providers.torrent.enabled {
                 let (dir, limit) = (
                     paths.cache_dir.join("torrents"),
@@ -282,6 +282,43 @@ impl Engine {
         };
         // A chain given whole too: a plugin switched off by name is in it, and not tried.
         registry.set_disabled(config.providers.disabled.iter().cloned());
+
+        // Where torrent playback reports in once it is up, tagged with the bring-up it answers.
+        let (arrivals_tx, arrivals) = mpsc::unbounded_channel();
+        // The engine side's own state, on the config the app was launched with.
+        let mut state = EngineState::new(config.clone(), saved, &paths, arrivals_tx);
+        if let Some(overlay) = crate::profile::overlay_of(&store, &paths) {
+            state.config.use_overlay(Some(overlay), &paths);
+        }
+        state.config.set_sync(store.clone());
+        state.config.set_handheld(handheld);
+        state.config.set_phone(phone);
+        state.config.set_terminal(terminal);
+        // Background work reports through this, each piece holding its own sender, and the
+        // engine side's messages to itself ride it too, each in its place among the events.
+        let mut inbox = Inbox::default();
+
+        // Torrent playback starts coming up here, beside the rest of launch, which can wait on
+        // the keychain: a Mac asks whether to allow an update the keychain has not seen. The
+        // stack's live parts are held so a settings change can tear them down and stand them
+        // back up without a restart. A chain given whole has torrent playback in it already, or
+        // none.
+        if own_chain {
+            #[cfg(feature = "testing")]
+            let fixture = parts.as_ref().is_some_and(|parts| parts.fixture_route);
+            #[cfg(not(feature = "testing"))]
+            let fixture = false;
+            let ground = crate::sources::torrent::TorrentGround {
+                registry: &registry,
+                paths: &paths,
+                store: &store,
+                host: host.as_ref(),
+                fixture,
+            };
+            let tx = inbox.sender();
+            let EngineState { config, torrent_tasks, arrivals, .. } = &mut state;
+            torrent_tasks.bring_up_on(config.effective(), &ground, &tx, arrivals);
+        }
 
         // The trackers as an app's own sign-in clients turn them on; the file keeps none of it.
         let tracked = crate::tracking::native::with_app_clients(&config, &app_clients);
@@ -397,19 +434,8 @@ impl Engine {
         #[cfg(feature = "cast")]
         let casts = Arc::clone(&services.casts);
 
-        // Where torrent playback reports in once it is up, tagged with the bring-up it answers.
-        let (arrivals_tx, arrivals) = mpsc::unbounded_channel();
-        // The engine side's own state, on the config the app was launched with.
-        let mut state = EngineState::new(config, saved, &services.paths, arrivals_tx);
-        if let Some(overlay) = crate::profile::overlay_of(&services.store, &services.paths) {
-            state.config.use_overlay(Some(overlay), &services.paths);
-        }
-        state.config.set_sync(services.store.clone());
         state.cache.use_privacy(services.privacy.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
-        state.config.set_handheld(handheld);
-        state.config.set_phone(phone);
-        state.config.set_terminal(terminal);
         let account = {
             use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
             let store = &services.store;
@@ -490,10 +516,6 @@ impl Engine {
             launch.push_back(Event::Providers(rows));
         }
         launch.push_back(Event::Demo(crate::demo::state(&state, &services)));
-
-        // Background work reports through this, each piece holding its own sender, and the
-        // engine side's messages to itself ride it too, each in its place among the events.
-        let mut inbox = Inbox::default();
 
         // The daily update check: one cached request, one quiet toast when a release exists.
         // The setting starts and stops it from here on, see `settings::set_setting`.
@@ -590,17 +612,6 @@ impl Engine {
                 services.http.clone(),
                 inbox.sender(),
             ));
-        }
-
-        // The torrent stack's live parts, held so a settings change can tear them down and
-        // stand them back up without a restart. They are replaced together: the download
-        // manager and seeding hold a session alive, and leaving one behind would mean traffic
-        // outliving the source it belongs to. A chain
-        // given whole has torrent playback in it already, or none.
-        if own_chain {
-            let tx = inbox.sender();
-            let EngineState { config, torrent_tasks, arrivals, .. } = &mut state;
-            torrent_tasks.bring_up(config.effective(), &services, &tx, arrivals);
         }
 
         // The player is checked last, as launch always has, and not waited for. Only the
@@ -1710,6 +1721,103 @@ mod tests {
         fn storage_for(&self, _: &str) -> Storage {
             Storage::Keychain
         }
+    }
+
+    /// A host whose keychain takes `wait` to give the engine its store, as a Mac's does when an
+    /// update is new to the keychain and asks whether to allow it.
+    struct SlowKeychain {
+        wait: std::time::Duration,
+        tokens: Arc<dyn SecretStore>,
+    }
+
+    impl Host for SlowKeychain {
+        fn open_url(&self, _: &str) -> Result<(), String> {
+            Err("a test opens nothing".into())
+        }
+
+        fn notify(&self, _: &str, _: &str) {}
+
+        fn secrets(&self) -> Option<Arc<dyn SecretStore>> {
+            std::thread::sleep(self.wait);
+            Some(self.tokens.clone())
+        }
+    }
+
+    /// A SOCKS5 proxy on this machine that lets every client in, and when the first one came.
+    async fn open_proxy() -> (String, Arc<std::sync::OnceLock<std::time::Instant>>) {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("socks5://{}", listener.local_addr().unwrap());
+        let first = Arc::new(std::sync::OnceLock::new());
+        let seen = Arc::clone(&first);
+        tokio::spawn(async move {
+            while let Ok((mut stream, _)) = listener.accept().await {
+                let _ = seen.set(std::time::Instant::now());
+                tokio::spawn(async move {
+                    let mut offer = [0u8; 3];
+                    if stream.read_exact(&mut offer).await.is_ok() {
+                        let _ = stream.write_all(&[5, 0]).await;
+                    }
+                });
+            }
+        });
+        (url, first)
+    }
+
+    /// Torrent playback starts coming up as the engine starts, beside the rest of launch, so a
+    /// keychain slow to answer holds back the first frame but not the torrent session.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn torrent_playback_comes_up_beside_a_keychain_slow_to_answer() {
+        use kaeri_model::sources::ProxyStatus;
+        let dir = tempfile::tempdir().unwrap();
+        let (proxy, first) = open_proxy().await;
+        let wait = std::time::Duration::from_millis(1500);
+        let host = Arc::new(SlowKeychain {
+            wait,
+            tokens: crate::host::file_secrets(&Paths {
+                config_file: dir.path().join("config.toml"),
+                data_dir: dir.path().join("data"),
+                cache_dir: dir.path().join("cache"),
+            }),
+        });
+        let began = std::time::Instant::now();
+        let (engine, mut events) = engine_with(dir.path(), host, |o| {
+            o.sources = None;
+            o.config.providers.torrent.enabled = true;
+            o.config.providers.torrent.proxy = Some(proxy);
+        })
+        .await;
+        let started = began.elapsed();
+        let checked = first.get().map(|at| at.duration_since(began));
+        // The check passing is said twice: once by the bring-up, and again as the engine lends
+        // the session it brought.
+        let lent = tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            let mut passed = 0;
+            loop {
+                match events.recv().await {
+                    Some(Event::TorrentProxy(Some(ProxyStatus::Passed))) => {
+                        passed += 1;
+                        if passed == 2 {
+                            break began.elapsed();
+                        }
+                    }
+                    Some(_) => {}
+                    None => panic!("the engine stopped"),
+                }
+            }
+        })
+        .await
+        .expect("the session was lent");
+        eprintln!(
+            "keychain {wait:?}: engine started {started:?}, proxy checked {checked:?}, session lent {lent:?}"
+        );
+        assert!(started >= wait, "the keychain was asked as the engine started");
+        let checked = checked.expect("the bring-up checked the proxy");
+        assert!(
+            checked < wait / 3,
+            "the bring-up waited on the keychain: checked at {checked:?}"
+        );
+        engine.shutdown().await;
     }
 
     #[tokio::test]

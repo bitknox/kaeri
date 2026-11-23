@@ -7970,6 +7970,12 @@ public enum L {
     /// Details row for a source not asked while torrent playback is off. The name goes before it.
     public static var playerStartRowHeldTorrentsOff: String { string("player-start-row-held-torrents-off", fallback: "Not asked · Torrent playback is off") }
 
+    /// Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+    public static var playerStartRowHeldTorrentsStarting: String { string("player-start-row-held-torrents-starting", fallback: "Not asked · Torrent playback is starting") }
+
+    /// Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+    public static var playerStartRowHeldTorrentsFailed: String { string("player-start-row-held-torrents-failed", fallback: "Not asked · Torrent playback couldn't start") }
+
     /// Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
     public static var playerStartRowHeldProxy: String { string("player-start-row-held-proxy", fallback: "Not asked · Waiting for the proxy check") }
 
@@ -8112,6 +8118,16 @@ public enum L {
     /// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
     public static func playerStartNotAskedTorrentsOff(count: Int, names: String) -> String {
         Self.format("player-start-not-asked-torrents-off", fallback: "%2$@ aren't asked while torrent playback is off.", count, names)
+    }
+
+    /// Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+    public static func playerStartNotAskedTorrentsStarting(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-torrents-starting", fallback: "%2$@ aren't asked until torrent playback has started.", count, names)
+    }
+
+    /// Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+    public static func playerStartNotAskedTorrentsFailed(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-torrents-failed", fallback: "%2$@ aren't asked because torrent playback couldn't start.", count, names)
     }
 
     /// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -8567,6 +8583,16 @@ public enum L {
     /// Line of the picker for a source not asked while torrent playback is off.
     public static func sourcePickerHeldTorrentsOff(name: String) -> String {
         Self.format("source-picker-held-torrents-off", fallback: "%1$@ isn't asked while torrent playback is off", name)
+    }
+
+    /// Line of the picker for a source not asked while torrent playback is on and still starting.
+    public static func sourcePickerHeldTorrentsStarting(name: String) -> String {
+        Self.format("source-picker-held-torrents-starting", fallback: "%1$@ isn't asked until torrent playback has started", name)
+    }
+
+    /// Line of the picker for a source not asked because torrent playback is on and couldn't start.
+    public static func sourcePickerHeldTorrentsFailed(name: String) -> String {
+        Self.format("source-picker-held-torrents-failed", fallback: "%1$@ isn't asked because torrent playback couldn't start", name)
     }
 
     /// Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
@@ -12900,6 +12926,12 @@ public enum L {
     /// Under a source that names torrents while torrent playback is off in Settings.
     public static var sourceNoteTorrentsOff: String { string("source-note-torrents-off", fallback: "Torrent playback is off") }
 
+    /// Under a source that names torrents while torrent playback is on and still starting.
+    public static var sourceNoteTorrentsStarting: String { string("source-note-torrents-starting", fallback: "Torrents are starting") }
+
+    /// Under a source that names torrents while torrent playback is on and couldn't start.
+    public static var sourceNoteTorrentsFailed: String { string("source-note-torrents-failed", fallback: "Torrents couldn't start") }
+
     /// Heading over one source's releases, for a source that offers several (a batch, single episodes).
     public static var sourcePickerReleases: String { string("source-picker-releases", fallback: "Releases") }
 
@@ -12975,6 +13007,12 @@ public enum L {
     /// Status: a source that names torrents, while torrent playback is off.
     public static var sourcesStatusTorrentsOff: String { string("sources-status-torrents-off", fallback: "Torrents off") }
 
+    /// Status: a source that names torrents, while torrent playback is on and still starting.
+    public static var sourcesStatusTorrentsStarting: String { string("sources-status-torrents-starting", fallback: "Torrents starting") }
+
+    /// Status: a source that names torrents, while torrent playback is on and couldn't start.
+    public static var sourcesStatusTorrentsFailed: String { string("sources-status-torrents-failed", fallback: "Torrents didn't start") }
+
     /// Status: slow.
     public static var sourcesStatusSlow: String { string("sources-status-slow", fallback: "Slow") }
 
@@ -12994,6 +13032,12 @@ public enum L {
 
     /// Status line: torrent playback is off.
     public static var sourcesDetailTorrentsOff: String { string("sources-detail-torrents-off", fallback: "Torrent playback is off. You can turn it on in Settings, under Sources.") }
+
+    /// Status line: torrent playback is on and still starting.
+    public static var sourcesDetailTorrentsStarting: String { string("sources-detail-torrents-starting", fallback: "Torrent playback is starting. This source is asked once it has started.") }
+
+    /// Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+    public static var sourcesDetailTorrentsFailed: String { string("sources-detail-torrents-failed", fallback: "Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.") }
 
     /// Status line: disabled.
     public static var sourcesDetailDisabled: String { string("sources-detail-disabled", fallback: "Off. It keeps its place and isn't tried.") }

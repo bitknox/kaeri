@@ -7705,6 +7705,14 @@
     <value>Not asked · Torrent playback is off</value>
     <comment>Details row for a source not asked while torrent playback is off. The name goes before it.</comment>
   </data>
+  <data name="PlayerStartRowHeldTorrentsStarting" xml:space="preserve">
+    <value>Not asked · Torrent playback is starting</value>
+    <comment>Details row for a source not asked because torrent playback is on and still starting. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldTorrentsFailed" xml:space="preserve">
+    <value>Not asked · Torrent playback couldn't start</value>
+    <comment>Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.</comment>
+  </data>
   <data name="PlayerStartRowHeldProxy" xml:space="preserve">
     <value>Not asked · Waiting for the proxy check</value>
     <comment>Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.</comment>
@@ -7860,6 +7868,22 @@
   <data name="PlayerStartNotAskedTorrentsOff_other" xml:space="preserve">
     <value>{names} aren't asked while torrent playback is off.</value>
     <comment>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsStarting_one" xml:space="preserve">
+    <value>{names} isn't asked until torrent playback has started.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsStarting_other" xml:space="preserve">
+    <value>{names} aren't asked until torrent playback has started.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsFailed_one" xml:space="preserve">
+    <value>{names} isn't asked because torrent playback couldn't start.</value>
+    <comment>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsFailed_other" xml:space="preserve">
+    <value>{names} aren't asked because torrent playback couldn't start.</value>
+    <comment>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</comment>
   </data>
   <data name="PlayerStartNotAskedProxy_one" xml:space="preserve">
     <value>{names} isn't asked until the proxy check passes.</value>
@@ -8421,6 +8445,14 @@
   <data name="SourcePickerHeldTorrentsOff" xml:space="preserve">
     <value>{name} isn't asked while torrent playback is off</value>
     <comment>Line of the picker for a source not asked while torrent playback is off.</comment>
+  </data>
+  <data name="SourcePickerHeldTorrentsStarting" xml:space="preserve">
+    <value>{name} isn't asked until torrent playback has started</value>
+    <comment>Line of the picker for a source not asked while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcePickerHeldTorrentsFailed" xml:space="preserve">
+    <value>{name} isn't asked because torrent playback couldn't start</value>
+    <comment>Line of the picker for a source not asked because torrent playback is on and couldn't start.</comment>
   </data>
   <data name="SourcePickerHeldProxy" xml:space="preserve">
     <value>{name} isn't asked until the proxy check passes</value>
@@ -13584,6 +13616,14 @@
     <value>Torrent playback is off</value>
     <comment>Under a source that names torrents while torrent playback is off in Settings.</comment>
   </data>
+  <data name="SourceNoteTorrentsStarting" xml:space="preserve">
+    <value>Torrents are starting</value>
+    <comment>Under a source that names torrents while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourceNoteTorrentsFailed" xml:space="preserve">
+    <value>Torrents couldn't start</value>
+    <comment>Under a source that names torrents while torrent playback is on and couldn't start.</comment>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Releases</value>
     <comment>Heading over one source's releases, for a source that offers several (a batch, single episodes).</comment>
@@ -13676,6 +13716,14 @@
     <value>Torrents off</value>
     <comment>Status: a source that names torrents, while torrent playback is off.</comment>
   </data>
+  <data name="SourcesStatusTorrentsStarting" xml:space="preserve">
+    <value>Torrents starting</value>
+    <comment>Status: a source that names torrents, while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcesStatusTorrentsFailed" xml:space="preserve">
+    <value>Torrents didn't start</value>
+    <comment>Status: a source that names torrents, while torrent playback is on and couldn't start.</comment>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>Slow</value>
     <comment>Status: slow.</comment>
@@ -13699,6 +13747,14 @@
   <data name="SourcesDetailTorrentsOff" xml:space="preserve">
     <value>Torrent playback is off. You can turn it on in Settings, under Sources.</value>
     <comment>Status line: torrent playback is off.</comment>
+  </data>
+  <data name="SourcesDetailTorrentsStarting" xml:space="preserve">
+    <value>Torrent playback is starting. This source is asked once it has started.</value>
+    <comment>Status line: torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcesDetailTorrentsFailed" xml:space="preserve">
+    <value>Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.</value>
+    <comment>Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.</comment>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Off. It keeps its place and isn't tried.</value>
