@@ -270,6 +270,15 @@ impl TorrentPlayback {
             session.drop_stream(url).await;
         }
     }
+
+    /// Let go of a torrent the player has switched away from, mid-episode: its loopback server,
+    /// and the torrent as a watched one is let go (seeding when the settings ask for it), unless
+    /// another stream or a download still uses it.
+    pub async fn let_go(&self, url: &str) {
+        if let Some(session) = self.session() {
+            session.let_go_of_stream(url).await;
+        }
+    }
 }
 
 /// Add each tracker `link` does not already carry.

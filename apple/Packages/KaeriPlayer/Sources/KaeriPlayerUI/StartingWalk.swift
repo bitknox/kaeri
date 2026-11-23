@@ -43,7 +43,8 @@ public struct StartingWalk: Equatable, Sendable {
 
     public let id: AnilistId
     public let episode: String
-    public let began: ContinuousClock.Instant
+    /// When this file's wait began: the start, or the load of a later file of the same play.
+    public private(set) var began: ContinuousClock.Instant
 
     /// The step line as shown, and when it took its place.
     public private(set) var line: String
@@ -184,6 +185,32 @@ public struct StartingWalk: Equatable, Sendable {
             next = Self.bufferingLine(percent: Int(percent))
         }
         if let next { say(next, at: now) }
+    }
+
+    /// The play has shown a picture: a file loaded after it is another attempt of its own.
+    public private(set) var pictured = false
+
+    /// The first picture of the play is up.
+    public mutating func sawPicture() { pictured = true }
+
+    /// A later file of the same play, after one showed a picture: a switch to another release
+    /// or stream, a failover, or the way back from a switch that failed. Its wait starts now,
+    /// on the stream being opened, with nothing of the last file's swarm, speed or buffering,
+    /// and no resume line, as the episode goes on where it was.
+    public mutating func anotherFile(at now: ContinuousClock.Instant) {
+        began = now
+        activeSince = now
+        rungSince = now
+        phase = .opening
+        peers = nil
+        bytesPerSecond = nil
+        percent = nil
+        noVideo = false
+        resume = nil
+        line = Msg.startOpeningStream.text
+        lineSince = now
+        queued = nil
+        open(Msg.startOpeningStream.text, at: now)
     }
 
     /// The viewer switched the translation: the streams found are for the other one.

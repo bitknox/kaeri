@@ -1130,6 +1130,39 @@ impl TorrentSession {
         self.discard(id).await;
     }
 
+    /// Let go of the stream served at `url`, which played and which the player has switched
+    /// away from, unless another stream serves from the same torrent: its server, and the
+    /// torrent. A whole one is retired as a watched one is (kept seeding when the settings ask
+    /// for it); one still fetching is removed, as it would go on fetching and share the
+    /// connection with the stream that took over. The download queue's are never touched.
+    pub async fn let_go_of_stream(&self, url: &str) {
+        let (id, shared) = {
+            let mut servers = self.active.lock().unwrap_or_else(|e| e.into_inner());
+            let Some(at) = servers.iter().position(|active| active.url() == url) else {
+                return;
+            };
+            let Some(dropped) = servers.remove(at) else { return };
+            let id = dropped.key.0;
+            (id, servers.iter().any(|active| active.key.0 == id))
+        };
+        if shared || self.owned_by_downloads(id) {
+            return;
+        }
+        if let Ok(mut history) = self.stream_history.lock() {
+            history.retain(|kept| *kept != id);
+        }
+        tracing::info!(id, "a torrent the player switched away from was let go");
+        let whole = self
+            .session
+            .get(TorrentIdOrHash::Id(id))
+            .is_some_and(|handle| handle.stats().finished);
+        if whole {
+            self.retire_stream(id).await;
+        } else {
+            self.discard(id).await;
+        }
+    }
+
     /// Whether the download queue owns this torrent, and so whether its files are the user's.
     fn owned_by_downloads(&self, id: usize) -> bool {
         self.download_ids.lock().unwrap_or_else(|e| e.into_inner()).contains(&id)
@@ -1584,6 +1617,16 @@ mod tests {
         name: &str,
         files: &[(&str, usize)],
     ) -> (TorrentSession, usize) {
+        session_with_torrent_missing(root, name, files, &[]).await
+    }
+
+    /// [`session_with_local_torrent`], with the files named in `missing` not yet fetched.
+    async fn session_with_torrent_missing(
+        root: &std::path::Path,
+        name: &str,
+        files: &[(&str, usize)],
+        missing: &[&str],
+    ) -> (TorrentSession, usize) {
         let pack = root.join(name);
         std::fs::create_dir_all(&pack).unwrap();
         for (file, bytes) in files {
@@ -1595,6 +1638,9 @@ mod tests {
         )
         .await
         .unwrap();
+        for file in missing {
+            std::fs::remove_file(pack.join(file)).unwrap();
+        }
         let route = TorrentRoute::new(None).unwrap();
         route.verify().await;
         let session = TorrentSession::start(
@@ -1809,6 +1855,84 @@ mod tests {
         let batch = root.path().join("Kept Batch");
         assert!(batch.join("ep01.mkv").exists(), "the downloaded episode stays");
         assert!(!batch.join("ep02.mkv").exists(), "what only the stream wanted goes");
+        session.session.stop().await;
+    }
+
+    /// Serve file `index` of torrent `id` as the player's stream, and the URL it plays.
+    async fn serving(session: &TorrentSession, id: usize, index: usize) -> String {
+        let handle = session.session.get(TorrentIdOrHash::Id(id)).unwrap();
+        let file = files_of(&handle).into_iter().find(|f| f.index == index).unwrap();
+        let source = TorrentFileSource {
+            handle: Arc::clone(&handle),
+            index,
+            length: file.length,
+            name: file.name.clone(),
+        };
+        let server = serve(source, &session.token).await.unwrap();
+        let active = Arc::new(ActiveStream {
+            server,
+            key: (id, index),
+            file,
+            torrent_id: TorrentIdOrHash::Id(id),
+            verified: None,
+        });
+        let url = active.url().to_owned();
+        session.active.lock().unwrap().push_back(active);
+        session.stream_history.lock().unwrap().push_back(id);
+        url
+    }
+
+    const SEEDING: SeedingConfig = SeedingConfig { ratio: 1.0, hours: 24, upload_limit_kib: 0 };
+
+    #[tokio::test]
+    async fn a_torrent_switched_away_from_mid_fetch_stops_fetching_even_when_seeding() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) =
+            session_with_torrent_missing(root.path(), "Half Batch", &BATCH, &["ep02.mkv"])
+                .await;
+        session.configure_seeding(&SEEDING).await;
+        let url = serving(&session, id, 1).await;
+
+        session.let_go_of_stream(&url).await;
+
+        assert!(session.active.lock().unwrap().is_empty(), "its server goes");
+        assert!(session.progress_of(id).is_none(), "and the torrent with it");
+        assert!(session.seeding.lock().unwrap().is_empty(), "half a file is no seed");
+        assert!(session.stream_history.lock().unwrap().is_empty());
+        session.session.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_whole_torrent_switched_away_from_seeds_when_the_settings_ask() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) =
+            session_with_local_torrent(root.path(), "Whole Batch", &BATCH).await;
+        session.configure_seeding(&SEEDING).await;
+        let url = serving(&session, id, 1).await;
+
+        session.let_go_of_stream(&url).await;
+
+        assert!(session.active.lock().unwrap().is_empty());
+        assert!(session.progress_of(id).is_some(), "kept for seeding");
+        let pool: Vec<_> = session.seeding.lock().unwrap().iter().map(|s| s.id).collect();
+        assert_eq!(pool, [id]);
+        session.session.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_torrent_switched_away_from_that_the_download_queue_owns_stays() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) =
+            session_with_torrent_missing(root.path(), "Queued Batch", &BATCH, &["ep02.mkv"])
+                .await;
+        session.download_ids.lock().unwrap().insert(id);
+        let url = serving(&session, id, 1).await;
+
+        session.let_go_of_stream(&url).await;
+
+        assert!(session.active.lock().unwrap().is_empty(), "the player's server goes");
+        assert!(session.progress_of(id).is_some(), "the download goes on");
+        assert!(root.path().join("Queued Batch/ep01.mkv").exists());
         session.session.stop().await;
     }
 

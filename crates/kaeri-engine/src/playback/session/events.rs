@@ -149,7 +149,14 @@ impl Run<'_> {
         let mut picture_tick = tokio::time::interval(Duration::from_secs(1));
         // Until the first frame, once a second: how fast data arrives, for the starting screen.
         let mut pace_tick = tokio::time::interval(Duration::from_secs(1));
+        // A file a switch loads, or the one a failed switch goes back to, plays behind the held
+        // picture with no starting screen: its steps would land on the screen the episode
+        // started with, and show that start's peers and clock on the next one.
+        let quiet = self.switching.is_some() || self.restoring.is_some();
         let say = |step, line| {
+            if quiet {
+                return;
+            }
             crate::playback::starting::say(
                 tx,
                 context.anilist_id,
@@ -773,6 +780,14 @@ impl Run<'_> {
                             // A release replaces the streams that played: Sources lists its own.
                             if switching.to.release.is_some() {
                                 self.pool_from = switching.streams.start;
+                                // The torrents it replaced are let go now, not when this file
+                                // is over: they would go on fetching beside it.
+                                let replaced = &streams[..switching.streams.start];
+                                for old in replaced.iter().filter(|old| {
+                                    old.kind == StreamKind::TorrentHttp && old.url != stream.url
+                                }) {
+                                    settings.swarm.let_go(&old.url);
+                                }
                                 let menus = self.menus(streams, index);
                                 let _ = link.overlay(Overlay::Menus(menus)).await;
                             }

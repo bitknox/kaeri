@@ -130,21 +130,25 @@ struct PlayerPanel: View {
     @Environment(\.accessibilityReduceTransparency) private var reduceTransparency
 
     var body: some View {
-        ZStack(alignment: .top) {
-            PanelEpisodes(model: model, metrics: metrics, close: close)
-                .opacity(tab == .episodes ? 1 : 0)
-                .allowsHitTesting(tab == .episodes)
-                .accessibilityHidden(tab != .episodes)
-            PanelSources(model: model, metrics: metrics)
-                .opacity(tab == .sources ? 1 : 0)
-                .allowsHitTesting(tab == .sources)
-                .accessibilityHidden(tab != .sources)
+        // The rows end at the header's lower edge and never pass behind the tabs or Close; the
+        // system's edge effect softens them as they go.
+        VStack(spacing: 0) {
+            header
+            ZStack(alignment: .top) {
+                PanelEpisodes(model: model, metrics: metrics, close: close)
+                    .opacity(tab == .episodes ? 1 : 0)
+                    .allowsHitTesting(tab == .episodes)
+                    .accessibilityHidden(tab != .episodes)
+                PanelSources(model: model, metrics: metrics)
+                    .opacity(tab == .sources ? 1 : 0)
+                    .allowsHitTesting(tab == .sources)
+                    .accessibilityHidden(tab != .sources)
+            }
+            // Old and new together, never through empty.
+            .animation(.standard, value: tab)
+            .scrollEdgeEffectStyle(.soft, for: .top)
+            .clipped()
         }
-        // Old and new together, never through empty.
-        .animation(.standard, value: tab)
-        // The rows scroll on under the header, softened by the system's edge effect as they go.
-        .safeAreaBar(edge: .top, spacing: 0) { header }
-        .scrollEdgeEffectStyle(.soft, for: .top)
         .padding(.top, metrics.top)
         .padding(.trailing, metrics.trailing)
         .frame(width: metrics.width)

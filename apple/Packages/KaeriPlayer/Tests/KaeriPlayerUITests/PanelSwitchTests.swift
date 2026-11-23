@@ -98,6 +98,38 @@ struct PanelSwitchTests {
         #expect(rig.model.playingRelease == nil)
     }
 
+    @Test func aFileAfterThePictureStartsItsOwnWaitWithNoneOfTheTorrentsPeers() async throws {
+        let rig = try await playing()
+        let step = { (step: StartStep, line: Msg?) in
+            rig.model.apply(.startingStep(id: 900_001, episode: "7", step: step, line: line))
+        }
+        step(.findingPeers(name: "Harbor Archive"), .startFindingPeers)
+        step(.found(count: 1, source: "Harbor Archive", quality: 1080, translation: .sub), .startOpeningStream)
+        step(.swarm(peers: 12, bytesPerSecond: 3_400_000), nil)
+        rig.mpv.emit(.playbackRestart)
+        try await until("the picture") { rig.model.hasPicture }
+        #expect(rig.model.walk?.pictured == true)
+        rig.step(.seconds(300))
+        let first = rig.model.walk?.began
+
+        // The switch's file, or the way back from one, or a failover: another file in mpv.
+        rig.model.apply(.playerSwitch(playback: 1, state: .loading(to: Self.to, at: 312)))
+        rig.ops(1, [.load(url: "https://cdn-b.example/7.m3u8", options: [])])
+        await rig.handedOver()
+        rig.mpv.startFile()
+        // mpv's events come on their own stream, after the load's own reset.
+        try await until("the file started") { rig.model.walk?.began != first }
+
+        let walk = try #require(rig.model.walk)
+        let now = rig.model.clock
+        #expect(walk.began == now, "its wait counts from its own load")
+        #expect(walk.stepLine(at: now) == Msg.startOpeningStream.text)
+        let later = now + .seconds(4)
+        #expect(!walk.detail(at: later).contains("12"), "\(walk.detail(at: later))")
+        #expect(walk.detail(at: later).hasSuffix(L.playerStartSeconds(seconds: 4)), "\(walk.detail(at: later))")
+        #expect(walk.speedFact == nil)
+    }
+
     @Test func aSwitchPausesForNothingBeforeItsSpinner() {
         let start = ContinuousClock.now
         let pick = PanelSwitch(target: SwitchTarget(providerId: "harbor", name: "Harbor Archive", release: "r2"), phase: .finding, since: start)

@@ -31,6 +31,7 @@ use crate::{
         power::{PowerSource, ReportedPower},
         shaders::{self, Budget, Display, Look, Source},
         slot::PlayerSlot,
+        starting::Swarm,
     },
 };
 
@@ -2097,7 +2098,7 @@ async fn skip_past_the_last_source_fails_the_start_as_the_walk_would() {
 /// than read from mpv's pace on the loopback server, and says nothing of the release.
 #[tokio::test]
 async fn a_torrent_s_stats_say_the_swarm() {
-    use crate::playback::starting::{Held, Pace, Swarm};
+    use crate::playback::starting::{Held, Pace};
     use kaeri_model::hosted::PlayerStats;
 
     let rig = Rig::new(vec![opening(&[])]);
@@ -2197,12 +2198,26 @@ async fn switched(
     files: Vec<Vec<PlaybackEvent>>,
     failing: &[usize],
 ) -> (Rig, Vec<Event>) {
+    let first = from("yamabiko", "cdn-a.example", 1080);
+    switched_from(first, Swarm::default(), news, heard, after, files, failing).await
+}
+
+/// [`switched`] from the stream `first`, with `swarm` answering for torrents.
+async fn switched_from(
+    first: Stream,
+    swarm: Swarm,
+    news: Vec<super::super::switch::SwitchNews>,
+    heard: impl Fn(&kaeri_model::playback::SourceSwitch) -> bool,
+    after: Vec<PlaybackEvent>,
+    files: Vec<Vec<PlaybackEvent>>,
+    failing: &[usize],
+) -> (Rig, Vec<Event>) {
     let rig = failing_rig([vec![opening(&[])], files].concat(), failing);
     let (door, inbox) = super::super::switch::SwitchInbox::pair();
-    let settings = PlaySettings { switches: inbox, ..settings() };
+    let settings = PlaySettings { switches: inbox, swarm, ..settings() };
     let (_controls, commands) = mpsc::unbounded_channel::<PlayerCommand>();
     let (tx, mut rx) = mpsc::unbounded_channel();
-    let streams = vec![from("yamabiko", "cdn-a.example", 1080)];
+    let streams = vec![first];
     let playing = rig.play_heard(streams, context("1", None), settings, commands, tx);
     let driving = async {
         until_called(&rig, |call| matches!(call, Call::Load { .. })).await;
@@ -2280,6 +2295,123 @@ async fn a_release_picked_in_the_player_plays_from_the_playhead_in_the_same_play
     assert_eq!(ended, 1, "the playback ends once, at the end of the episode");
     assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
     assert!(toasts(&events).is_empty(), "{:?}", toasts(&events));
+}
+
+/// A swarm of seven peers, whose let-goes are written down in the returned list.
+fn swarm_letting_go() -> (Swarm, Arc<Mutex<Vec<String>>>) {
+    use crate::playback::starting::Pace;
+    let gone = Arc::new(Mutex::new(Vec::new()));
+    let pace = Pace {
+        peers: 7,
+        bytes_per_second: 1_200_000,
+        found: 31,
+        upload_bytes_per_second: 0,
+        uploaded_bytes: 0,
+        pieces: None,
+    };
+    let written = Arc::clone(&gone);
+    let swarm = Swarm::fixed(pace).letting_go(move |url| {
+        written.lock().unwrap().push(url.to_owned());
+    });
+    (swarm, gone)
+}
+
+/// The starting steps said after the switch began loading.
+fn steps_after_loading(events: &[Event]) -> Vec<kaeri_model::starting::StartStep> {
+    use kaeri_model::playback::SourceSwitch;
+    let Some(loading) = events.iter().position(|event| {
+        matches!(event, Event::PlayerSwitch { state: SourceSwitch::Loading { .. }, .. })
+    }) else {
+        panic!("no switch loaded: {events:#?}")
+    };
+    events[loading..]
+        .iter()
+        .filter_map(|event| match event {
+            Event::StartingStep { step, .. } => Some(step.clone()),
+            _ => None,
+        })
+        .collect()
+}
+
+#[tokio::test]
+async fn a_switch_from_a_torrent_to_a_stream_lets_the_torrent_go_and_says_no_start() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let torrent = Stream {
+        provider_id: "yamabiko".into(),
+        ..Stream::new("http://127.0.0.1:9/s/0f3a", StreamKind::TorrentHttp)
+    };
+    let (swarm, gone) = swarm_letting_go();
+    let to = kodama_release();
+    let found = vec![from("kodama", "cdn-b.example", 1080)];
+    let news = vec![SwitchNews::Finding(to.clone()), SwitchNews::Found(to.clone(), found)];
+    let next = [vec![PlaybackEvent::Replaced], taking_over(600.0)].concat();
+    let (rig, events) = switched_from(
+        torrent,
+        swarm,
+        news,
+        |s| matches!(s, SourceSwitch::Landed { .. }),
+        Vec::new(),
+        vec![next],
+        &[],
+    )
+    .await;
+
+    assert_eq!(loads(&rig.opener.calls()).len(), 2);
+    assert_eq!(
+        switches(&events),
+        [
+            SourceSwitch::Finding { to: to.clone() },
+            SourceSwitch::Loading { to: to.clone(), at: 600.0 },
+            SourceSwitch::Landed { to, at: 600.0 },
+        ]
+    );
+    // The switch plays behind the held picture: nothing lands on the starting screen the
+    // episode began with, neither the torrent's peers nor an opening stream.
+    assert_eq!(steps_after_loading(&events), []);
+    // The torrent the release replaced stops fetching beside the stream once it lands.
+    assert_eq!(*gone.lock().unwrap(), ["http://127.0.0.1:9/s/0f3a"]);
+}
+
+#[tokio::test]
+async fn a_switch_from_a_stream_to_a_torrent_says_no_start_and_lets_nothing_go() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let (swarm, gone) = swarm_letting_go();
+    let to = kodama_release();
+    let found = vec![Stream {
+        provider_id: "kodama".into(),
+        ..Stream::new("http://127.0.0.1:9/s/7c21", StreamKind::TorrentHttp)
+    }];
+    let news = vec![SwitchNews::Finding(to.clone()), SwitchNews::Found(to.clone(), found)];
+    let next = [vec![PlaybackEvent::Replaced], taking_over(600.0)].concat();
+    let (rig, events) = switched_from(
+        from("yamabiko", "cdn-a.example", 1080),
+        swarm,
+        news,
+        |s| matches!(s, SourceSwitch::Landed { .. }),
+        Vec::new(),
+        vec![next],
+        &[],
+    )
+    .await;
+
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("/s/7c21"), "{loads:?}");
+    assert_eq!(
+        switches(&events),
+        [
+            SourceSwitch::Finding { to: to.clone() },
+            SourceSwitch::Loading { to: to.clone(), at: 600.0 },
+            SourceSwitch::Landed { to, at: 600.0 },
+        ]
+    );
+    assert_eq!(steps_after_loading(&events), []);
+    assert!(gone.lock().unwrap().is_empty(), "{:?}", gone.lock().unwrap());
 }
 
 #[tokio::test]
