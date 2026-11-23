@@ -367,7 +367,7 @@ pub fn release_detail(candidate: &SourceCandidate) -> String {
     if candidate.dubbed {
         parts.push(t::audio_dubbed());
     } else if candidate.dual_audio {
-        parts.push(t::player_panel_dual_audio());
+        parts.push(t::player_panel_release_dual_audio());
     }
     if candidate.auto_pick {
         parts.push(t::player_release_automatic());

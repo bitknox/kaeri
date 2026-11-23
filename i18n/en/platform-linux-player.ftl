@@ -139,4 +139,4 @@ discussion-like-named = { $count ->
 # Player panel, Sources tab: part of a release's detail line, a release with both the original and the dubbed audio.
 # @only linux
 # @max 30
-player-panel-dual-audio = { -subbed-cap } and { -dubbed }
+player-panel-release-dual-audio = { -subbed-cap } and { -dubbed }
