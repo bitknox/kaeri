@@ -406,6 +406,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         return settle;
     }
     #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_sources_loading::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_private::stage(shell, shot) {
         return settle;
     }
@@ -2388,6 +2392,11 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "missing" => {
                     crate::shots_missing::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
+                #[cfg(feature = "fixtures")]
+                "sources-loading" => crate::shots_sources_loading::NAMES
+                    .iter()
+                    .map(|p| (*p).to_owned())
+                    .collect(),
                 #[cfg(feature = "fixtures")]
                 "prelaunch-demo" => {
                     crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()

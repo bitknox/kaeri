@@ -849,6 +849,11 @@ impl PlayerView {
             {
                 self.ui.side.set_releases(Some(candidates.clone()));
             }
+            Event::SourcesProgress { id, episode, rows }
+                if self.panel_asked.borrow().as_ref() == Some(&(*id, episode.clone())) =>
+            {
+                self.ui.side.set_progress(rows.clone());
+            }
             Event::SourceOptions { id, options } if Some(*id) == self.title_id.get() => {
                 self.ui.side.set_options(Some(options.clone()));
             }
@@ -3661,7 +3666,7 @@ impl PlayerView {
             return;
         }
         self.panel_asked.replace(Some(asked));
-        self.ui.side.set_releases(None);
+        self.ui.side.listing_asked();
         self.ctx.hub.send(Command::LoadSourceOptions(id));
         self.ctx.hub.send(Command::LoadSources { id, episode });
     }

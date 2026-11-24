@@ -26,11 +26,12 @@ use kaeri_model::{
     episodes::{DubExtent, EpisodeRow, episode_ranges},
     hosted::MenuSource,
     sources::SourceOption,
+    starting::{ListingState, SourceListing},
 };
 
 use super::panel_state::{
-    self as state, Clock, EpisodeAction, PanelSwitch, PanelTab, Phase, Playhead, SwitchTarget,
-    VersionSwitch,
+    self as state, Clock, EpisodeAction, Listing, ListingLine, PanelSwitch, PanelTab, Phase,
+    Playhead, SwitchTarget, VersionSwitch,
 };
 use crate::{hub::Hub, motion, say, synopsis};
 
@@ -50,6 +51,8 @@ const SYNOPSIS_LINES: i32 = 3;
 const RANGE: usize = 100;
 /// How often a pending switch's row is redrawn: its spinner from 600 ms, its count from 3 s.
 const TICK: Duration = Duration::from_millis(250);
+/// The fade-in token: a loading source's line crossfading in place.
+const FADE_MS: u32 = 200;
 
 /// What the panel asks the player to do.
 #[derive(Debug, Clone, PartialEq)]
@@ -108,6 +111,8 @@ struct EpRow {
 struct Choice {
     target: SwitchTarget,
     on: bool,
+    /// A source's row while the tab loads: its detail line is held one line high.
+    held: bool,
     check: gtk::Stack,
     spinner: gtk::Spinner,
     line: gtk::Stack,
@@ -158,6 +163,12 @@ pub struct SidePanel {
     src_does: RefCell<Vec<(gtk::ListBoxRow, RowDoes)>>,
     /// Each folding source's releases, by its id: their rows.
     folds: RefCell<HashMap<String, (gtk::Image, Vec<gtk::ListBoxRow>)>>,
+    /// The Sources tab's sources while they answer, from when it asked.
+    listing: RefCell<Option<Listing>>,
+    /// Their rows, in order, each changed in place as its source answers.
+    listing_rows: RefCell<Vec<ListingRow>>,
+    /// The source playing as Sources was last drawn, by its id and name: not among the others.
+    playing: RefCell<(Option<String>, Option<String>)>,
     translation: RefCell<Option<VersionRow>>,
     data: RefCell<Data>,
     playhead: Cell<Playhead>,
@@ -276,6 +287,9 @@ impl SidePanel {
             choices: RefCell::default(),
             src_does: RefCell::default(),
             folds: RefCell::default(),
+            listing: RefCell::default(),
+            listing_rows: RefCell::default(),
+            playing: RefCell::default(),
             translation: RefCell::default(),
             data: RefCell::default(),
             playhead: Cell::default(),
@@ -512,12 +526,16 @@ impl SidePanel {
     // What the player hands in
 
     /// The episodes, the menus and the title's sources changed: the lists are drawn again,
-    /// keeping the row revealed, the folds open and the keyboard where it was.
+    /// keeping the row revealed, the folds open and the keyboard where it was. Sources is left
+    /// as it is when nothing it draws changed, so its rows' fades and spinners run on.
     pub fn set_data(&self, data: Data) {
         let episode_changed = self.data.borrow().current != data.current;
-        let table_changed = {
+        let (table_changed, sources_changed) = {
             let old = self.data.borrow();
-            old.table != data.table || old.protect != data.protect || episode_changed
+            (
+                old.table != data.table || old.protect != data.protect || episode_changed,
+                !same_sources(&old, &data),
+            )
         };
         if episode_changed {
             // Another episode: its releases and picks are its own.
@@ -525,21 +543,55 @@ impl SidePanel {
             self.switch.replace(None);
             self.revealed.replace(None);
             self.range.set(None);
+            self.listing.replace(None);
         }
         self.data.replace(data);
         if table_changed {
             self.fill_episodes(episode_changed);
         }
-        self.fill_sources();
+        if sources_changed || episode_changed {
+            self.fill_sources();
+        }
     }
 
     pub fn data(&self) -> std::cell::Ref<'_, Data> {
         self.data.borrow()
     }
 
-    /// The releases for the episode playing, from the engine.
+    /// The tab asked for the episode's releases: every source's row comes with the engine's
+    /// first progress, silent for 600 ms.
+    pub fn listing_asked(&self) {
+        self.listing.replace(Some(Listing::asked(Instant::now())));
+        self.data.borrow_mut().releases = None;
+        self.fill_sources();
+    }
+
+    /// Every source's row as the engine says it now, whole. A row that changed changes in place.
+    pub fn set_progress(&self, rows: Vec<SourceListing>) {
+        {
+            let mut listing = self.listing.borrow_mut();
+            let Some(listing) = listing.as_mut() else { return };
+            listing.took(rows, Instant::now());
+        }
+        if self.refresh_listing() {
+            self.show_switch();
+        } else {
+            self.fill_sources();
+        }
+    }
+
+    /// The releases for the episode playing, from the engine. Once the rows came from its
+    /// progress they stay drawn from it, and the releases are kept for the picks.
     pub fn set_releases(&self, releases: Option<Vec<SourceCandidate>>) {
+        let from_progress = self.listing.borrow().as_ref().is_some_and(|l| l.rows.is_some());
+        let answered = releases.is_some();
         self.data.borrow_mut().releases = releases;
+        if from_progress && answered {
+            return;
+        }
+        if answered {
+            self.listing.replace(None);
+        }
         self.fill_sources();
     }
 
@@ -674,12 +726,13 @@ impl SidePanel {
                 }
                 None => {
                     choice.line.set_visible_child_name("detail");
-                    choice.line.set_visible(choice.line.child_by_name("detail").is_some_and(
-                        |d| {
-                            d.downcast_ref::<gtk::Label>()
-                                .is_some_and(|l| !l.label().is_empty())
-                        },
-                    ));
+                    choice.line.set_visible(
+                        choice.held
+                            || choice.line.child_by_name("detail").is_some_and(|d| {
+                                d.downcast_ref::<gtk::Label>()
+                                    .is_some_and(|l| !l.label().is_empty())
+                            }),
+                    );
                 }
             }
             if let Some(text) = failed {
@@ -700,7 +753,9 @@ impl SidePanel {
             }
         }
         self.show_version(now);
-        // A switch under way redraws its row until it lands or fails.
+        self.show_listing(now);
+        // A switch under way redraws its row until it lands or fails, and a source still asked
+        // its line.
         let pending = self.pending();
         if pending && self.tick.borrow().is_none() {
             let me = self.me.clone();
@@ -721,10 +776,11 @@ impl SidePanel {
         }
     }
 
-    /// Whether a switch, of source or version, is on its way.
+    /// Whether a switch, of source or version, is on its way, or a source is still asked.
     fn pending(&self) -> bool {
         self.switch.borrow().as_ref().is_some_and(|s| s.failed().is_none())
             || self.version.borrow().as_ref().is_some_and(|v| v.failed().is_none())
+            || self.listing.borrow().as_ref().is_some_and(Listing::busy)
     }
 
     /// The Subtitled or Dubbed switch follows the switch to the other version: the picked half
@@ -1198,6 +1254,7 @@ impl SidePanel {
         self.choices.borrow_mut().clear();
         self.src_does.borrow_mut().clear();
         self.folds.borrow_mut().clear();
+        self.listing_rows.borrow_mut().clear();
         self.translation.replace(None);
         while let Some(child) = self.src_list.first_child() {
             self.src_list.remove(&child);
@@ -1283,6 +1340,14 @@ impl SidePanel {
         self.src_list.append(&still_row(&rule));
         self.src_list.append(&heading(&t::player_panel_other_sources()));
 
+        // While the tab loads, every other source's row from the engine's progress, each
+        // changed in place as it answers.
+        self.playing.replace((playing_provider.clone(), name.clone()));
+        let others = self.listing_others(&data);
+        let loading = others.is_some();
+        for (provider_id, source, listing) in others.into_iter().flatten() {
+            self.listing_row(provider_id, &source, listing, &mut keys);
+        }
         // Every other source, in the order set in Sources; before their lines come, the
         // releases' own sources.
         struct Group {
@@ -1292,6 +1357,7 @@ impl SidePanel {
         }
         let releases = data.releases.as_deref();
         let groups: Vec<Group> = match options {
+            _ if loading => Vec::new(),
             Some(all) => all
                 .iter()
                 .filter(|o| Some(&o.provider_id) != playing_provider.as_ref())
@@ -1347,29 +1413,8 @@ impl SidePanel {
                 self.src_list.append(&row);
                 let chevron = row_chevron(&row);
                 let mut rows = Vec::new();
-                for release in own {
-                    let target = SwitchTarget::release(release);
-                    let inner = self.choice_row(
-                        &release.title,
-                        Some(&state::release_detail(release)),
-                        target.clone(),
-                        Look { sub: true, inset: true, ..Look::default() },
-                    );
-                    // The release row folds: a revealer inside a row that hides once shut.
-                    let content = inner.child();
-                    inner.set_child(None::<&gtk::Widget>);
-                    let fold = gtk::Revealer::new();
-                    fold.set_transition_type(gtk::RevealerTransitionType::SlideDown);
-                    fold.set_transition_duration(0);
-                    fold.set_child(content.as_ref());
-                    fold.set_reveal_child(open);
-                    inner.set_child(Some(&fold));
-                    inner.set_visible(open);
-                    self.src_does
-                        .borrow_mut()
-                        .push((inner.clone(), RowDoes::Release(release.clone())));
-                    keys.push((target.key(), inner.clone()));
-                    self.src_list.append(&inner);
+                for (key, inner) in self.release_rows(own, open, None) {
+                    keys.push((key, inner.clone()));
                     rows.push(inner);
                 }
                 if let Some(chevron) = chevron {
@@ -1427,6 +1472,227 @@ impl SidePanel {
         if !kept && (in_list || self.still_parked()) {
             self.focus_first_source();
         }
+    }
+
+    /// A source's releases folded under its row, at `at` in the list or at its end, shown when
+    /// `open`: their keys and rows.
+    fn release_rows<'a>(
+        &self,
+        releases: impl IntoIterator<Item = &'a SourceCandidate>,
+        open: bool,
+        at: Option<i32>,
+    ) -> Vec<(String, gtk::ListBoxRow)> {
+        let mut made = Vec::new();
+        for (n, release) in releases.into_iter().enumerate() {
+            let target = SwitchTarget::release(release);
+            let inner = self.choice_row(
+                &release.title,
+                Some(&state::release_detail(release)),
+                target.clone(),
+                Look { sub: true, inset: true, ..Look::default() },
+            );
+            // The release row folds: a revealer inside a row that hides once shut.
+            let content = inner.child();
+            inner.set_child(None::<&gtk::Widget>);
+            let fold = gtk::Revealer::new();
+            fold.set_transition_type(gtk::RevealerTransitionType::SlideDown);
+            fold.set_transition_duration(0);
+            fold.set_child(content.as_ref());
+            fold.set_reveal_child(open);
+            inner.set_child(Some(&fold));
+            inner.set_visible(open);
+            self.src_does.borrow_mut().push((inner.clone(), RowDoes::Release(release.clone())));
+            match at {
+                Some(at) => self.src_list.insert(&inner, at + n as i32),
+                None => self.src_list.append(&inner),
+            }
+            made.push((target.key(), inner));
+        }
+        made
+    }
+
+    /// The other sources while the tab loads, in the order set in Sources, without the one
+    /// playing: each with what the engine last said of it, or, until it has said, the title's
+    /// sources with nothing said yet. `None` when the tab is not loading.
+    fn listing_others(
+        &self,
+        data: &Data,
+    ) -> Option<Vec<(String, String, Option<ListingState>)>> {
+        let listing = self.listing.borrow();
+        let listing = listing.as_ref()?;
+        let (playing, name) = self.playing.borrow().clone();
+        let other = |id: &str, source: &str| {
+            playing.as_deref() != Some(id) && name.as_deref() != Some(source)
+        };
+        Some(match &listing.rows {
+            Some(rows) => rows
+                .iter()
+                .filter(|r| other(&r.provider_id, &r.name))
+                .map(|r| (r.provider_id.clone(), r.name.clone(), Some(r.state.clone())))
+                .collect(),
+            None => data
+                .options
+                .iter()
+                .flatten()
+                .filter(|o| other(&o.provider_id, &o.name))
+                .map(|o| (o.provider_id.clone(), o.name.clone(), None))
+                .collect(),
+        })
+    }
+
+    /// A source's row while the tab loads, at the list's end: its name and a detail line held
+    /// one line high from the first frame, a spinner in the check slot while it is asked, and
+    /// the release count and chevron at its end once it lists more than one.
+    fn listing_row(
+        &self,
+        provider_id: String,
+        name: &str,
+        listing: Option<ListingState>,
+        keys: &mut Vec<(String, gtk::ListBoxRow)>,
+    ) {
+        let releases = state::listed(listing.as_ref()).to_vec();
+        let target = match releases.as_slice() {
+            [one] => SwitchTarget::release(one),
+            _ => SwitchTarget {
+                provider_id: provider_id.clone(),
+                name: name.to_owned(),
+                release: None,
+                stream: None,
+            },
+        };
+        let (row, parts) = self.choice_parts(
+            name,
+            None,
+            target.clone(),
+            Look { held: true, ..Look::default() },
+        );
+        let Some(parts) = parts else { return };
+        self.src_list.append(&row);
+        keys.push((target.key(), row.clone()));
+        keys.extend(self.pickable(&row, &provider_id, &releases, &parts.chevron, None));
+        self.listing_rows.borrow_mut().push(ListingRow {
+            provider_id,
+            name: name.to_owned(),
+            row,
+            parts,
+            state: listing,
+            shown: None,
+        });
+    }
+
+    /// A source's row can be picked once it has listed a release: one plays from the row, more
+    /// fold under it, at `at` in the list or at its end.
+    fn pickable(
+        &self,
+        row: &gtk::ListBoxRow,
+        provider_id: &str,
+        releases: &[SourceCandidate],
+        chevron: &gtk::Image,
+        at: Option<i32>,
+    ) -> Vec<(String, gtk::ListBoxRow)> {
+        row.set_activatable(!releases.is_empty());
+        row.set_focusable(!releases.is_empty());
+        match releases {
+            [] => Vec::new(),
+            [one] => {
+                self.src_does.borrow_mut().push((row.clone(), RowDoes::Release(one.clone())));
+                Vec::new()
+            }
+            all => {
+                let open = self.expanded.borrow().contains(provider_id);
+                if open {
+                    chevron.add_css_class("open");
+                }
+                row.update_state(&[gtk::accessible::State::Expanded(Some(open))]);
+                self.src_does
+                    .borrow_mut()
+                    .push((row.clone(), RowDoes::Fold(provider_id.to_owned())));
+                let made = self.release_rows(all, open, at);
+                let rows = made.iter().map(|(_, r)| r.clone()).collect();
+                self.folds.borrow_mut().insert(provider_id.to_owned(), (chevron.clone(), rows));
+                made
+            }
+        }
+    }
+
+    /// The engine said the rows again: each row that changed changes in place. False when the
+    /// rows are not the ones drawn, or a row that had listed changed, so the list is drawn again.
+    fn refresh_listing(&self) -> bool {
+        let data = self.data.borrow().clone();
+        let Some(others) = self.listing_others(&data) else { return false };
+        let mut rows = self.listing_rows.borrow_mut();
+        if rows.len() != others.len()
+            || rows.iter().zip(&others).any(|(row, (id, ..))| &row.provider_id != id)
+        {
+            return false;
+        }
+        for (row, (_, _, listing)) in rows.iter_mut().zip(others) {
+            if row.state == listing {
+                continue;
+            }
+            if !state::listed(row.state.as_ref()).is_empty() {
+                return false;
+            }
+            let releases = state::listed(listing.as_ref()).to_vec();
+            if let [one] = releases.as_slice() {
+                // The row plays its one release now: a switch to it shows on this row.
+                let mut choices = self.choices.borrow_mut();
+                let key = format!("source/{}", row.provider_id); // i18n-skip
+                if let Some(mut choice) = choices.remove(&key) {
+                    choice.target = SwitchTarget::release(one);
+                    choices.insert(choice.target.key(), choice);
+                }
+            }
+            let at = row.row.index() + 1;
+            self.pickable(&row.row, &row.provider_id, &releases, &row.parts.chevron, Some(at));
+            row.state = listing;
+        }
+        drop(rows);
+        if self.still_parked() {
+            self.focus_first_source();
+        }
+        true
+    }
+
+    /// Each loading row shows its line at `at`: held empty for 600 ms, then a spinner and
+    /// Asking, the seconds from 3 s, then the answer, each change a crossfade in place.
+    fn show_listing(&self, at: Instant) {
+        let listing = self.listing.borrow();
+        let Some(listing) = listing.as_ref() else { return };
+        let data = self.data.borrow();
+        let episode = data.current.clone().unwrap_or_default();
+        let unix = now();
+        for row in self.listing_rows.borrow_mut().iter_mut() {
+            let said = row.state.as_ref();
+            let (line, spinning) = listing.line(&row.provider_id, said, at);
+            let words = match (line, said) {
+                (ListingLine::Asking, _) => t::player_start_row_asking(),
+                (ListingLine::Counting(seconds), _) => t::player_panel_asking(seconds as i64),
+                (ListingLine::Answered, Some(said)) => {
+                    let coverage = data
+                        .options
+                        .iter()
+                        .flatten()
+                        .find(|o| o.provider_id == row.provider_id && o.note.is_none())
+                        .map(|o| crate::choices::detail(o, unix));
+                    state::listing_words(said, coverage, &episode)
+                }
+                (ListingLine::Held | ListingLine::Answered, _) => String::new(),
+            };
+            let releases = state::listed(said).len();
+            let want = Shown {
+                line,
+                words,
+                spinning,
+                dim: line == ListingLine::Answered && state::listing_dim(said),
+                count: if releases > 1 { releases } else { 0 },
+            };
+            if row.shown.as_ref() != Some(&want) {
+                let was = row.shown.replace(want.clone());
+                row.show(was.as_ref(), &want);
+            }
+        }
+        self.src_list.update_state(&[gtk::accessible::State::Busy(listing.busy())]);
     }
 
     /// The key of the Sources row with the keyboard, when one has it.
@@ -1601,6 +1867,17 @@ impl SidePanel {
         target: SwitchTarget,
         look: Look,
     ) -> gtk::ListBoxRow {
+        self.choice_parts(title, detail, target, look).0
+    }
+
+    /// A choice row, and with `look.held` the parts a loading source's row changes in place.
+    fn choice_parts(
+        &self,
+        title: &str,
+        detail: Option<&str>,
+        target: SwitchTarget,
+        look: Look,
+    ) -> (gtk::ListBoxRow, Option<ListingParts>) {
         let check = gtk::Stack::new();
         check.set_transition_type(gtk::StackTransitionType::Crossfade);
         check.set_transition_duration(200);
@@ -1615,13 +1892,35 @@ impl SidePanel {
         spinner.set_halign(gtk::Align::Center);
         check.add_named(&spinner, Some("spin"));
         check.set_visible_child_name(if look.on { "check" } else { "none" });
+        // A loading source's spinner, over the check slot while it is asked.
+        let asking = gtk::Spinner::new();
+        asking.set_size_request(16, 16);
+        asking.set_halign(gtk::Align::Center);
+        asking.set_valign(gtk::Align::Center);
+        asking.set_can_target(false);
+        asking.set_visible(false);
+        let slot = gtk::Overlay::new();
+        slot.set_child(Some(&check));
+        if look.held {
+            slot.add_overlay(&asking);
+        }
 
-        let name = gtk::Label::new(Some(title));
-        name.add_css_class(if look.sub { "panel-choice-sub" } else { "panel-choice-title" });
-        wrap(&name);
+        let title_label = || {
+            let name = gtk::Label::new(Some(title));
+            name.add_css_class(if look.sub {
+                "panel-choice-sub"
+            } else {
+                "panel-choice-title"
+            });
+            wrap(&name);
+            name
+        };
+        let name = title_label();
         if look.dim {
             name.add_css_class("haze");
         }
+        // A loading source's name, plain and in haze, the one crossfading to the other.
+        let name_swap = look.held.then(|| Swap::new(name.clone(), title_label()));
         let line = gtk::Stack::new();
         line.set_transition_type(gtk::StackTransitionType::Crossfade);
         line.set_transition_duration(200);
@@ -1630,15 +1929,29 @@ impl SidePanel {
         line.set_interpolate_size(true);
         let detail_label = crate::widgets::haze(detail.unwrap_or(""), "panel-row-detail");
         wrap(&detail_label);
-        line.add_named(&detail_label, Some("detail"));
+        // A loading source's line: two labels in one place, held one line high when empty.
+        let line_label = || {
+            let label = crate::widgets::haze("", "panel-row-detail");
+            label.add_css_class("tabular");
+            wrap(&label);
+            label
+        };
+        let line_swap = look.held.then(|| Swap::new(line_label(), line_label()));
+        match &line_swap {
+            Some(swap) => line.add_named(&swap.grid, Some("detail")),
+            None => line.add_named(&detail_label, Some("detail")),
+        };
         let starting = crate::widgets::haze("", "panel-row-detail");
         starting.add_css_class("tabular");
         line.add_named(&starting, Some("starting"));
-        line.set_visible(detail.is_some_and(|d| !d.is_empty()));
+        line.set_visible(look.held || detail.is_some_and(|d| !d.is_empty()));
         let words = gtk::Box::new(gtk::Orientation::Vertical, 1);
         words.set_hexpand(true);
         words.set_valign(gtk::Align::Center);
-        words.append(&name);
+        match &name_swap {
+            Some(swap) => words.append(&swap.grid),
+            None => words.append(&name),
+        }
         words.append(&line);
         if look.waiting {
             let wait = gtk::Spinner::new();
@@ -1651,25 +1964,26 @@ impl SidePanel {
             words.append(&wait);
         }
         let top = gtk::Box::new(gtk::Orientation::Horizontal, 6);
-        top.append(&check);
+        top.append(&slot);
         top.append(&words);
-        if let Some((count, open)) = look.fold {
-            let tail = gtk::Box::new(gtk::Orientation::Horizontal, 4);
-            tail.set_valign(gtk::Align::Center);
-            let releases = crate::widgets::haze(
-                &t::player_panel_releases(count as i64),
-                "panel-row-detail",
-            );
-            releases.set_wrap(false);
-            releases.set_single_line_mode(true);
-            tail.append(&releases);
-            let chevron = gtk::Image::from_icon_name("go-next-symbolic");
-            chevron.add_css_class("panel-chevron");
-            chevron.add_css_class("haze");
-            if open {
-                chevron.add_css_class("open");
-            }
-            tail.append(&chevron);
+        let tail = gtk::Box::new(gtk::Orientation::Horizontal, 4);
+        tail.set_valign(gtk::Align::Center);
+        let (count, open) = look.fold.unwrap_or_default();
+        let releases =
+            crate::widgets::haze(&t::player_panel_releases(count as i64), "panel-row-detail");
+        releases.set_wrap(false);
+        releases.set_single_line_mode(true);
+        tail.append(&releases);
+        let chevron = gtk::Image::from_icon_name("go-next-symbolic");
+        chevron.add_css_class("panel-chevron");
+        chevron.add_css_class("haze");
+        if open {
+            chevron.add_css_class("open");
+        }
+        tail.append(&chevron);
+        if look.fold.is_some() || look.held {
+            // A loading source's count and chevron fade in once it has listed.
+            tail.set_visible(look.fold.is_some());
             top.append(&tail);
         }
 
@@ -1725,9 +2039,29 @@ impl SidePanel {
         row.update_property(&[gtk::accessible::Property::Label(&spoken)]);
         self.choices.borrow_mut().insert(
             target.key(),
-            Choice { target, on: look.on, check, spinner, line, starting, alert, alert_line },
+            Choice {
+                target,
+                on: look.on,
+                held: look.held,
+                check,
+                spinner,
+                line,
+                starting,
+                alert,
+                alert_line,
+            },
         );
-        row
+        let parts = name_swap.zip(line_swap).map(|(title, line)| ListingParts {
+            spinner: asking,
+            spin: motion::Fader::always(),
+            title,
+            line,
+            tail,
+            count: releases,
+            chevron,
+            tail_fade: motion::Fader::always(),
+        });
+        (row, parts)
     }
 
     /// Try the failed pick again.
@@ -1815,8 +2149,187 @@ struct Look {
     dim: bool,
     /// Its releases have not come yet.
     waiting: bool,
+    /// A source's row while the tab loads: its line held one line high, its parts changed in
+    /// place.
+    held: bool,
     /// A source that folds its releases: how many, and whether they show.
     fold: Option<(usize, bool)>,
+}
+
+/// Two labels in one place, one shown: a change crossfades from the one shown to the other on
+/// the fade-in token, old and new on screen together, and the place is as tall as the taller
+/// while both show. The fades play under Reduce Animation too, where a fade is what reduced
+/// motion keeps.
+struct Swap {
+    grid: gtk::Grid,
+    labels: [gtk::Label; 2],
+    /// The one shown, or coming in.
+    front: Cell<usize>,
+    fades: RefCell<Vec<adw::TimedAnimation>>,
+}
+
+impl Swap {
+    fn new(first: gtk::Label, second: gtk::Label) -> Self {
+        let grid = gtk::Grid::new();
+        grid.set_hexpand(true);
+        // Both in the one cell: a grid draws them over each other.
+        grid.attach(&first, 0, 0, 1, 1);
+        grid.attach(&second, 0, 0, 1, 1);
+        second.set_visible(false);
+        Self { grid, labels: [first, second], front: Cell::new(0), fades: RefCell::default() }
+    }
+
+    /// The label shown, or coming in.
+    fn shown(&self) -> &gtk::Label {
+        &self.labels[self.front.get()]
+    }
+
+    /// `change` made to the other label, which then takes the place: crossfading when `fade`
+    /// and the place is on screen, else at once.
+    fn to(&self, fade: bool, change: impl FnOnce(&gtk::Label)) {
+        for running in self.fades.borrow_mut().drain(..) {
+            running.pause();
+        }
+        let old = self.labels[self.front.get()].clone();
+        let new = self.labels[1 - self.front.get()].clone();
+        self.front.set(1 - self.front.get());
+        new.set_opacity(0.0);
+        change(&new);
+        new.set_visible(true);
+        if !fade || !self.grid.is_mapped() || !old.is_visible() {
+            new.set_opacity(1.0);
+            old.set_visible(false);
+            old.set_opacity(1.0);
+            return;
+        }
+        let fade = |label: &gtk::Label, from: f64, to: f64| {
+            let animation = motion::timed(label, from, to, FADE_MS, motion::opacity(label));
+            animation.set_easing(adw::Easing::EaseOutCubic);
+            animation.set_follow_enable_animations_setting(false);
+            animation
+        };
+        let going = fade(&old, old.opacity(), 0.0);
+        going.connect_done(move |_| {
+            old.set_visible(false);
+            old.set_opacity(1.0);
+        });
+        let coming = fade(&new, 0.0, 1.0);
+        going.play();
+        coming.play();
+        self.fades.replace(vec![going, coming]);
+    }
+}
+
+/// The parts of a source's row that change while the tab loads.
+struct ListingParts {
+    /// In the check slot while the source is asked.
+    spinner: gtk::Spinner,
+    spin: motion::Fader,
+    /// The name, plain or in haze once it answered with nothing to pick.
+    title: Swap,
+    line: Swap,
+    /// The release count and chevron, once it lists more than one.
+    tail: gtk::Box,
+    count: gtk::Label,
+    chevron: gtk::Image,
+    tail_fade: motion::Fader,
+}
+
+/// What a loading source's row shows.
+#[derive(Debug, Clone, PartialEq)]
+struct Shown {
+    line: ListingLine,
+    words: String,
+    spinning: bool,
+    dim: bool,
+    /// Its releases when it folds them, else 0.
+    count: usize,
+}
+
+/// A source's row while the Sources tab loads: drawn from the first frame, in the order set in
+/// Sources, and changed in place as the source answers, so no row moves.
+struct ListingRow {
+    provider_id: String,
+    name: String,
+    row: gtk::ListBoxRow,
+    parts: ListingParts,
+    /// What the engine last said of it; `None` before it has said.
+    state: Option<ListingState>,
+    /// What it shows; `None` until first drawn, which is at once.
+    shown: Option<Shown>,
+}
+
+impl ListingRow {
+    /// Show `want`, from `was`: each change one crossfade in place, the spinner fading out as
+    /// the answer fades in. The first drawing is at once.
+    fn show(&self, was: Option<&Shown>, want: &Shown) {
+        let parts = &self.parts;
+        let fade = was.is_some();
+        let kind = |s: &Shown| match s.line {
+            ListingLine::Counting(_) => ListingLine::Counting(0),
+            line => line,
+        };
+        let same_line = was.is_some_and(|was| {
+            kind(was) == kind(want)
+                && (want.line != ListingLine::Answered || was.words == want.words)
+        });
+        if !same_line {
+            parts.line.to(fade, |label| label.set_label(&want.words));
+        } else if parts.line.shown().label() != want.words {
+            // The seconds count on in place.
+            parts.line.shown().set_label(&want.words);
+        }
+        match was {
+            Some(was) if was.spinning != want.spinning => {
+                if want.spinning {
+                    parts.spinner.set_spinning(true);
+                }
+                parts.spin.set(&parts.spinner, want.spinning);
+            }
+            Some(_) => {}
+            None => {
+                parts.spinner.set_spinning(want.spinning);
+                parts.spinner.set_visible(want.spinning);
+            }
+        }
+        if was.is_none_or(|was| was.dim != want.dim) {
+            parts.title.to(fade, |label| {
+                if want.dim {
+                    label.add_css_class("haze");
+                } else {
+                    label.remove_css_class("haze");
+                }
+            });
+        }
+        if want.count > 0 {
+            parts.count.set_label(&t::player_panel_releases(want.count as i64));
+        }
+        let listed = want.count > 0;
+        match was {
+            Some(was) if (was.count > 0) != listed => parts.tail_fade.set(&parts.tail, listed),
+            Some(_) => {}
+            None => parts.tail.set_visible(listed),
+        }
+        let spoken = if want.words.is_empty() {
+            self.name.clone()
+        } else {
+            format!("{}, {}", self.name, want.words) // i18n-skip
+        };
+        self.row.update_property(&[gtk::accessible::Property::Label(&spoken)]);
+    }
+}
+
+/// Whether Sources draws the same from `a` as from `b`.
+fn same_sources(a: &Data, b: &Data) -> bool {
+    a.current == b.current
+        && a.streams == b.streams
+        && a.translation == b.translation
+        && a.options == b.options
+        && a.releases == b.releases
+        && a.playing_source == b.playing_source
+        && a.playing_release == b.playing_release
+        && a.has_dub == b.has_dub
+        && a.dub == b.dub
 }
 
 /// The chevron of a folding source's row.
@@ -2209,6 +2722,157 @@ mod tests {
             }
             panel.try_again();
             assert_eq!(acts.borrow().last(), Some(&Act::Release(candidate)));
+            window.destroy();
+        });
+    }
+
+    fn listing(id: &str, name: &str, state: ListingState) -> SourceListing {
+        SourceListing { provider_id: id.into(), name: name.into(), state }
+    }
+
+    /// The other sources as the engine says them, the one playing first.
+    fn said(
+        home: ListingState,
+        index: ListingState,
+        archive: ListingState,
+    ) -> Vec<SourceListing> {
+        use kaeri_model::starting::ListingMiss;
+        vec![
+            listing(
+                "example",
+                "Example source",
+                ListingState::Missed { miss: ListingMiss::NoEpisode },
+            ),
+            listing("home", "Home server", home),
+            listing("index", "Example index", index),
+            listing("archive", "Archive example", archive),
+            listing("old", "Old example", ListingState::Off),
+        ]
+    }
+
+    /// Each loading row: its source, what its line shows, whether its spinner shows, whether
+    /// its name is in haze, and its height.
+    fn loading_rows(panel: &SidePanel) -> Vec<(String, String, bool, bool, i32)> {
+        panel
+            .listing_rows
+            .borrow()
+            .iter()
+            .map(|r| {
+                (
+                    r.provider_id.clone(),
+                    r.parts.line.shown().label().to_string(),
+                    r.parts.spinner.is_visible() && r.parts.spinner.opacity() > 0.99,
+                    r.parts.title.shown().has_css_class("haze"),
+                    r.row.height(),
+                )
+            })
+            .collect()
+    }
+
+    fn age(panel: &SidePanel, by: Duration) {
+        panel.listing.borrow_mut().as_mut().expect("loading").age(by);
+        panel.show_switch();
+    }
+
+    #[test]
+    fn each_source_answers_in_its_own_row_which_never_moves() {
+        use kaeri_model::starting::ListingMiss;
+        run(|| {
+            let (panel, window, acts) = panel_in_window();
+            panel.open(PanelTab::Sources);
+            panel.listing_asked();
+            let asking = || ListingState::Asking;
+            panel.set_progress(said(asking(), asking(), asking()));
+            pump(400);
+            let first = loading_rows(&panel);
+            let ids: Vec<&str> = first.iter().map(|r| r.0.as_str()).collect();
+            assert_eq!(
+                ids,
+                ["home", "index", "archive", "old"],
+                "in order, the one playing apart"
+            );
+            // Silent for 600 ms: no spinner and an empty line; switched off says so at once.
+            assert_eq!(first[0].1, "");
+            assert!(!first[0].2 && !first[0].3);
+            assert_eq!(first[3].1, "Switched off");
+            assert!(!first[3].2 && first[3].3, "off: no spinner, its name in haze");
+            let heights: Vec<i32> = first.iter().map(|r| r.4).collect();
+            assert!(heights.iter().all(|h| *h > 0), "{heights:?}");
+
+            // From 600 ms a spinner and Asking, in rows of the same height.
+            age(&panel, Duration::from_millis(700));
+            pump(400);
+            let now = loading_rows(&panel);
+            assert_eq!(now[0].1, "Asking");
+            assert!(now[0].2, "the spinner shows");
+            assert!(!now[3].2, "never one for a source switched off");
+            assert_eq!(now.iter().map(|r| r.4).collect::<Vec<_>>(), heights);
+            let home = panel.listing_rows.borrow()[0].row.clone();
+            assert!(!home.is_activatable() && !home.is_focusable(), "nothing to pick yet");
+
+            // Home server lists one release and Example index three: the one plays from its
+            // row, the three fold under theirs, its count and chevron at the row's end.
+            let index =
+                vec![release("r1", "index"), release("r2", "index"), release("r3", "index")];
+            panel.set_progress(said(
+                ListingState::Listed { releases: vec![release("h1", "home")] },
+                ListingState::Listed { releases: index },
+                asking(),
+            ));
+            pump(400);
+            let now = loading_rows(&panel);
+            assert_eq!(now[0].1, "1080p · 1.4 GiB", "the one release's own detail");
+            assert!(!now[0].2, "the spinner went as the answer came");
+            assert_eq!(now.iter().map(|r| r.4).collect::<Vec<_>>(), heights, "no row moved");
+            assert!(home.is_activatable() && home.is_focusable());
+            {
+                let rows = panel.listing_rows.borrow();
+                let index = &rows[1];
+                assert!(index.parts.tail.is_visible());
+                assert_eq!(index.parts.count.label(), "3 releases");
+            }
+            let keys = panel.choice_keys();
+            assert!(keys.contains(&"release/home/h1".to_owned()), "{keys:?}");
+            assert!(keys.contains(&"release/index/r2".to_owned()), "{keys:?}");
+            let shown = panel
+                .folds
+                .borrow()
+                .get("index")
+                .map(|(_, rows)| rows.iter().any(|r| r.is_visible()));
+            assert_eq!(shown, Some(false), "releases never open by themselves");
+            home.emit_activate();
+            assert_eq!(acts.borrow().last(), Some(&Act::Release(release("h1", "home"))));
+
+            // From 3 s the one still asked counts its seconds, then it fails.
+            age(&panel, Duration::from_millis(2500));
+            pump(300);
+            let counting = loading_rows(&panel)[2].1.clone();
+            assert!(
+                counting.starts_with("Asking · ") && counting.ends_with(" s"),
+                "{counting}"
+            );
+            panel.set_progress(said(
+                ListingState::Listed { releases: vec![release("h1", "home")] },
+                ListingState::Listed {
+                    releases: vec![
+                        release("r1", "index"),
+                        release("r2", "index"),
+                        release("r3", "index"),
+                    ],
+                },
+                ListingState::Missed { miss: ListingMiss::Failed },
+            ));
+            pump(400);
+            let now = loading_rows(&panel);
+            assert_eq!(now[2].1, "Didn't answer");
+            assert!(!now[2].2 && now[2].3, "no spinner, its name in haze");
+            assert_eq!(now.iter().map(|r| r.4).collect::<Vec<_>>(), heights);
+            assert!(!panel.pending(), "nothing is asked now");
+
+            // The final answer leaves the rows as they are drawn.
+            let drawn = panel.listing_rows.borrow()[0].row.clone();
+            panel.set_releases(Some(vec![release("h1", "home"), release("r1", "index")]));
+            assert_eq!(panel.listing_rows.borrow()[0].row, drawn);
             window.destroy();
         });
     }

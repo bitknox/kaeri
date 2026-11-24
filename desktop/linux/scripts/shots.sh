@@ -71,6 +71,9 @@ runs=(
   # SIZES="missing missingsrc".
   "missing 1280x900 ${SHOTS:-missing}"
   "missingsrc 1280x900 ${SHOTS:-missing-sources}"
+  # The player panel's Sources tab while its sources answer, 0.3 s to 21 s after it asks:
+  # SIZES=sourcesloading.
+  "sourcesloading 1280x800 ${SHOTS:-sources-loading}"
 )
 for run in "${runs[@]}"; do
   read -r name size shots <<<"$run"
@@ -88,6 +91,7 @@ for run in "${runs[@]}"; do
     following) extra=(--scene following) ;;
     followingslow) extra=(--scene following-slow) ;;
     missing | missingsrc) extra=(--scene missing-episode) ;;
+    sourcesloading) extra=(--scene sourcesloading) ;;
   esac
   case ",$shots," in *,downloads,*|*,all,*) extra+=(--downloading) ;; esac
   # The match picker's shots need the finished title's source to be unsure of its match.
