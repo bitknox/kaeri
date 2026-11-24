@@ -360,6 +360,11 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>, s
             wide_widgets(&child, 0, shell.ctx.window.width());
         }
         for shot in &shots {
+            // A start plays over Home: a fresh scene's first-run question (what Kaeri is for)
+            // would cover it.
+            if shot.starts_with("start-") {
+                close_dialogs(&shell.ctx.window);
+            }
             #[cfg(feature = "fixtures")]
             let settle = match StartShot::named(shot).filter(|_| still) {
                 Some(start) => still_start(&shell, start).await,
