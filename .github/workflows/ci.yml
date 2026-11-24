@@ -24,6 +24,16 @@ env:
   # As rust-cache sets it, for the jobs without one too: incremental compilation only adds to a
   # build that runs once.
   CARGO_INCREMENTAL: "0"
+  # Which runs save the Rust, Gradle, libmpv and package caches: main's pushes, whose caches every
+  # pull request restores. The engines, kept by what they are built from, are saved by pull
+  # requests too (tools/ci-cache-room.sh says when there is room), so a pull request's next push
+  # that leaves the engine's sources alone builds no engine. Every save first deletes the entry of
+  # its family it replaces (tools/ci-cache-room.sh), which keeps the caches inside their 10 GB:
+  # above it every save fails, and from 14 to 25 November 2026 none landed and every job compiled
+  # all its crates.
+  # PROOF ONLY: this branch's pull request saves like main while its runs measure warm caches.
+  SAVE_CACHES: ${{ github.ref == 'refs/heads/main' || github.head_ref == 'perf/ci-build-times' }}
+  CACHE_ROOM_PR_MB: ${{ github.head_ref == 'perf/ci-build-times' && '9600' || '8800' }}
 
 jobs:
   # Which parts a pull request touches, so a change to the apps alone does not wait on the whole
@@ -46,7 +56,7 @@ jobs:
       native: ${{ steps.diff.outputs.native }}
       engine: ${{ steps.diff.outputs.engine }}
       apple: ${{ steps.diff.outputs.apple }}
-      android: ${{ github.event_name == 'push' || steps.filter.outputs.rust == 'true' || steps.filter.outputs.android == 'true' }}
+      android: ${{ github.event_name == 'push' || steps.diff.outputs.android == 'true' }}
       windows: ${{ steps.filter.outputs.windows == 'true' || steps.diff.outputs.engine == 'true' }}
       desktop-linux: ${{ github.event_name == 'push' || steps.filter.outputs.rust == 'true' || steps.filter.outputs.desktop-linux == 'true' }}
       admin: ${{ steps.filter.outputs.admin == 'true' }}
@@ -83,8 +93,6 @@ jobs:
               - 'rustfmt.toml'
               - 'deny.toml'
               - '.github/workflows/ci.yml'
-            android:
-              - 'android/**'
             windows:
               - 'desktop/windows/**'
               - '.github/workflows/ci.yml'
@@ -127,6 +135,9 @@ jobs:
       #           is in the filter from the commit that adds it), or the FFI's own tests.
       #   apple   the Apple jobs: the engine, the Swift, the shaders the player's tests read, and
       #           what builds them here.
+      #   android the Android job: the engine, the FFI's own tests (the JVM tests run on the
+      #           engine), android/, and what builds them here. Rust the engine is not built from,
+      #           such as the terminal, the store's server or a crate's tests, cannot change it.
       #
       # On a push the same questions are asked of what a cache is made from, so only a push that
       # moves one builds it: the Rust cache's key (the manifests, the lock file, the toolchain
@@ -164,19 +175,21 @@ jobs:
             native=$(grep -Ev '^(crates/kaeri-store-core/admin/|crates/kaeri-store-wasm/)' "$RUNNER_TEMP/changed.txt" | grep -Ec "$native_re" || true)
             engine=$(tools/engine-touched.sh crates/kaeri-ffi/ < "$RUNNER_TEMP/changed.txt")
             apple=$(tools/engine-touched.sh crates/kaeri-ffi/ apple/ assets/ "${ci[@]}" < "$RUNNER_TEMP/changed.txt")
+            android=$(tools/engine-touched.sh crates/kaeri-ffi/ android/ "${ci[@]}" < "$RUNNER_TEMP/changed.txt")
           else
             native=$(grep -Ec "$cache_re" "$RUNNER_TEMP/changed.txt" || true)
             apple=$(tools/engine-touched.sh apple/scripts/engine.sh apple/scripts/mpv.sh apple/patches/ android/mpv/patches/mpv/ "${ci[@]}" < "$RUNNER_TEMP/changed.txt")
           fi
           [[ "$native" != 0 ]] && native=true || native=false
-          if [[ "$everything" == true ]]; then native=true; engine=true; apple=true; fi
+          if [[ "$everything" == true ]]; then native=true; engine=true; apple=true; android=true; fi
           # A push runs the Apple job to build its caches, and the job finds by the caches
           # themselves which it lacks; it tests nothing.
           [[ "$EVENT" == push ]] && engine=$apple
           echo "native=$native" >> "$GITHUB_OUTPUT"
           echo "engine=$engine" >> "$GITHUB_OUTPUT"
           echo "apple=$apple" >> "$GITHUB_OUTPUT"
-          echo "::notice::Mac and Windows tests: $native. Apple jobs: $apple. Engine changed: $engine."
+          echo "android=${android:-true}" >> "$GITHUB_OUTPUT"
+          echo "::notice::Mac and Windows tests: $native. Apple jobs: $apple. Android: ${android:-true}. Engine changed: $engine."
 
       # The repository's caches share 10 GB. Over it, every save in every workflow fails with
       # "Unable to reserve cache", the jobs that restore from main find nothing, and a pull
@@ -204,6 +217,11 @@ jobs:
     if: needs.changes.outputs.native == 'true'
     name: ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    # actions: write for tools/ci-cache-room.sh, which deletes the Rust cache's entry this job's
+    # save replaces.
+    permissions:
+      contents: read
+      actions: write
     strategy:
       fail-fast: false
       matrix:
@@ -223,8 +241,10 @@ jobs:
       # Only main saves. Pull requests restore main's cache, and letting each of them upload
       # its own pushed main's out of the repository's cache quota.
       - uses: Swatinem/rust-cache@v2
+        id: rust
         with:
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          shared-key: test
+          save-if: ${{ env.SAVE_CACHES == 'true' }}
 
       # aws-lc-sys assembles its own primitives and needs NASM on Windows. It is not on the
       # runner image, and without it the build fails inside a C dependency rather than anywhere
@@ -276,6 +296,14 @@ jobs:
       - name: Clippy, the engine without the desktop feature
         if: ${{ !cancelled() && github.event_name == 'pull_request' && matrix.os == 'macos-latest' }}
         run: cargo clippy -p kaeri-engine --no-default-features --all-targets -- -D warnings
+      # Last, as rust-cache saves after the job: room for its new entry, by deleting the one it
+      # replaces. Only when the job passed, as only then does rust-cache save.
+      - name: Room for the Rust cache
+        if: env.SAVE_CACHES == 'true' && steps.rust.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh --rust test 1300
 
   # The workspace's tests on Linux, built once and archived for the mpv jobs below, which run
   # theirs from the archive rather than compiling the workspace each. On 24.04, the older of the
@@ -285,6 +313,9 @@ jobs:
     if: needs.changes.outputs.rust == 'true'
     name: ubuntu-24.04
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: write
     steps:
       # The workspace's tests, the engine built a second way and Clippy outgrew the runner's
       # free disk. The image's .NET, Android and Haskell toolchains are never used here.
@@ -297,7 +328,9 @@ jobs:
         run: cargo fmt --all --check
       # The Rust plugins are their own workspaces, so their targets are cached with the rest.
       - uses: Swatinem/rust-cache@v2
+        id: rust
         with:
+          shared-key: linux
           workspaces: |
             .
             plugins/example-rust
@@ -305,7 +338,7 @@ jobs:
             plugins/test-hostile
             plugins/test-hostile-books
             plugins/test-torrent-source
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: ${{ env.SAVE_CACHES == 'true' }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest
@@ -351,16 +384,27 @@ jobs:
       - name: Clippy, the engine without the desktop feature
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         run: cargo clippy -p kaeri-engine --no-default-features --all-targets -- -D warnings
+      - name: Room for the Rust cache
+        if: env.SAVE_CACHES == 'true' && steps.rust.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh --rust linux 1300
 
   # The Linux desktop app, its own workspace over the engine: built, tested with the fixture
   # scene and without it, and linted. On 26.04, whose GTK 4.20 and libadwaita 1.8 are past the 4.16
   # and 1.7 the app asks for; 24.04 ships 4.14 and 1.5. The tests run under a virtual display,
-  # since GTK wants one even to start. On main, only built, for the cache pull requests restore.
+  # since GTK wants one even to start.
+  #
+  # No Rust cache: its 740 MB of the repository's 10 GB went to a job that ends long before the
+  # Android and Apple ones, cold or warm. On main only the packages are fetched, for their cache.
   desktop-linux:
     needs: changes
     if: needs.changes.outputs.desktop-linux == 'true'
     name: Linux app
     runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+      actions: write
     env:
       IMAGE: ubuntu-26.04
       PACKAGES: >-
@@ -397,20 +441,25 @@ jobs:
           sudo apt-get install -y --no-install-recommends --download-only -o Dir::Cache::archives="$HOME/apt-archives" $PACKAGES
       - name: Install the packages
         run: sudo apt-get install -y --no-install-recommends -o Dir::Cache::archives="$HOME/apt-archives" $PACKAGES
+      - name: Room for the packages
+        id: debs-room
+        if: env.SAVE_CACHES == 'true' && steps.debs-cache.outputs.cache-hit != 'true'
+        working-directory: .
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh "${{ steps.debs.outputs.key }}" 150
       - name: Keep the packages
-        if: github.ref == 'refs/heads/main' && steps.debs-cache.outputs.cache-hit != 'true'
+        if: steps.debs-room.outputs.save == 'true'
         uses: actions/cache/save@v6
         with:
           path: ~/apt-archives/*.deb
           key: ${{ steps.debs-cache.outputs.cache-primary-key }}
-      - uses: Swatinem/rust-cache@v2
-        with:
-          workspaces: desktop/linux
-          save-if: ${{ github.ref == 'refs/heads/main' }}
       - name: Test with the fixture scene
-        run: ${{ github.event_name == 'push' && 'cargo test --locked --features fixtures --no-run' || 'xvfb-run -a cargo test --locked --features fixtures' }}
+        if: github.event_name == 'pull_request'
+        run: xvfb-run -a cargo test --locked --features fixtures
       - name: Test without it
-        run: ${{ github.event_name == 'push' && 'cargo test --locked --no-run' || 'xvfb-run -a cargo test --locked' }}
+        if: github.event_name == 'pull_request'
+        run: xvfb-run -a cargo test --locked
       - name: Clippy with the fixture scene
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         run: cargo clippy --locked --all-targets --features fixtures -- -D warnings
@@ -435,6 +484,9 @@ jobs:
     if: needs.changes.outputs.rust == 'true'
     name: mpv (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: read
+      actions: write
     strategy:
       fail-fast: false
       matrix:
@@ -471,8 +523,14 @@ jobs:
           archives=(-o Dir::Cache::archives="$HOME/apt-archives")
           sudo apt-get install -y --no-install-recommends --download-only "${archives[@]}" mpv
           sudo apt-get install -y --no-install-recommends "${archives[@]}" mpv
+      - name: Room for mpv's packages
+        id: debs-room
+        if: env.SAVE_CACHES == 'true' && steps.debs-cache.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh "${{ steps.debs.outputs.key }}" 100
       - name: Keep mpv's packages
-        if: github.ref == 'refs/heads/main' && steps.debs-cache.outputs.cache-hit != 'true'
+        if: steps.debs-room.outputs.save == 'true'
         uses: actions/cache/save@v6
         with:
           path: ~/apt-archives/*.deb
@@ -582,18 +640,24 @@ jobs:
   # break is the Swift, which the cargo profile beneath it does not change, and a second engine
   # in the release profile took ten minutes. The apps' release builds that one.
   #
-  # The testing engines, the release engines and libmpv are saved from main, for the next pull
-  # request, keyed by what their scripts build them from: a pull request that leaves the engine's
-  # crates alone takes the engines from there and compiles no Rust at all. A push to main runs
-  # one job, caches, which builds what those caches lack, every slice in one Rust build that it
-  # saves for the three jobs above, and the FFI test build's dependencies with it, and tests
-  # nothing. It runs only when its change would make a new cache (the changes job).
+  # The engines are kept by what they are built from (engine.sh --cache-key): the testing engine
+  # for macOS, which the swift job builds on, and the release engines for macOS and iOS, which the
+  # apps job builds on, each its own cache, saved by the job that built it, on main and on pull
+  # requests both. A pull request that leaves the engine's sources alone, or a push to one whose
+  # previous push had the same, takes the engines from there and compiles no Rust for them.
+  # libmpv and the Rust cache are saved from main. A push to main runs one job, caches, which
+  # builds what those caches lack, every slice in one Rust build that it saves for the jobs above,
+  # and the FFI test build's dependencies with it, and tests nothing. It runs only when its change
+  # would make a new cache (the changes job).
   apple:
     needs: changes
     if: needs.changes.outputs.apple == 'true'
     name: apple (${{ matrix.part }})
     # Xcode 27.1, the build the app is developed with, so CI compiles what a local build does.
     runs-on: xcode-27
+    permissions:
+      contents: read
+      actions: write
     strategy:
       fail-fast: false
       matrix:
@@ -606,27 +670,48 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - run: tools/ci-toolchain.sh
-      # What the engines are built from, as engine.sh hashes it: only the crates it compiles.
-      - name: The engines' sources
-        id: sources
-        run: hash="$(apple/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
-      # engine.sh's own cache of each slice it built (~/.cache/kaeri-engine), by that hash.
-      # Saved below, from main only, which only looks.
-      - name: Restore the engines
-        id: engine
+      # Each engine cache's key and folder, as engine.sh names them: what the slices are built
+      # from (only the crates they compile), the flavour, the profile, the slices and the Xcode.
+      - name: The engines' keys
+        id: keys
+        run: |
+          {
+            echo "testing=$(apple/scripts/engine.sh --cache-key testing macos)"
+            echo "testing-dir=$(apple/scripts/engine.sh --cache-dir testing macos)"
+            echo "release=$(apple/scripts/engine.sh --cache-key release macos ios)"
+            echo "release-dir=$(apple/scripts/engine.sh --cache-dir release macos ios)"
+          } >> "$GITHUB_OUTPUT"
+      # The testing engine for macOS, which test.sh builds on: the swift job's, and the caches
+      # job's to build when it lacks it. engine.sh takes it from its own cache, which this fills.
+      - name: Restore the testing engine
+        id: engine-testing
+        if: env.PART != 'apps'
         uses: actions/cache/restore@v6
         with:
-          path: ~/.cache/kaeri-engine/apple
-          key: ci-apple-engines-xcode${{ env.XCODE }}-${{ steps.sources.outputs.hash }}
-          lookup-only: ${{ github.event_name == 'push' }}
-      # Not read when every engine came from the cache above and the Rust tests below are
-      # skipped, since nothing here compiles but engine.sh. One cache for every job here, saved
-      # by the caches job, which builds every slice.
+          path: ${{ steps.keys.outputs.testing-dir }}
+          key: ${{ steps.keys.outputs.testing }}
+          lookup-only: ${{ env.PART == 'caches' }}
+      # The release engines for macOS and iOS, which the apps are built on.
+      - name: Restore the release engines
+        id: engine-release
+        if: env.PART != 'swift'
+        uses: actions/cache/restore@v6
+        with:
+          path: ${{ steps.keys.outputs.release-dir }}
+          key: ${{ steps.keys.outputs.release }}
+          lookup-only: ${{ env.PART == 'caches' }}
+      # Read only when some engine this job needs is missing, or the apps job runs the FFI's tests
+      # (an engine change), since nothing here compiles but engine.sh. One cache for every job
+      # here, saved by the caches job, which builds every slice.
       - uses: Swatinem/rust-cache@v2
-        if: steps.engine.outputs.cache-hit != 'true' || (env.PART == 'apps' && needs.changes.outputs.engine == 'true')
+        id: rust
+        if: >-
+          (env.PART != 'apps' && steps.engine-testing.outputs.cache-hit != 'true')
+          || (env.PART != 'swift' && steps.engine-release.outputs.cache-hit != 'true')
+          || (env.PART == 'apps' && needs.changes.outputs.engine == 'true')
         with:
           shared-key: apple
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          save-if: ${{ env.SAVE_CACHES == 'true' && env.PART != 'swift' }}
       - if: env.PART != 'caches'
         run: xcodebuild -version
       - if: env.PART != 'caches'
@@ -645,12 +730,24 @@ jobs:
       - name: libmpv
         if: env.PART != 'caches' || steps.mpv.outputs.cache-hit != 'true'
         run: apple/scripts/mpv.sh macos ios
+      - name: Room for libmpv
+        id: mpv-room
+        if: env.SAVE_CACHES == 'true' && env.PART != 'swift' && steps.mpv.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh "${{ steps.mpv.outputs.cache-primary-key }}" 300
       - name: Keep libmpv
-        if: github.ref == 'refs/heads/main' && steps.mpv.outputs.cache-hit != 'true'
+        if: steps.mpv-room.outputs.save == 'true'
         uses: actions/cache/save@v6
         with:
           path: apple/.mpv/${{ env.MPV_PIN }}
           key: ${{ steps.mpv.outputs.cache-primary-key }}
+
+      # The caches job's testing engine, when the cache lacks it; the swift job builds its own in
+      # test.sh below.
+      - name: The testing engine
+        if: env.PART == 'caches' && steps.engine-testing.outputs.cache-hit != 'true'
+        run: apple/scripts/engine.sh testing macos
 
       # Swift: the player's tests play media apple/scripts/player-media.sh makes with ffmpeg.
       - name: Swift, ffmpeg for the player's media
@@ -662,6 +759,27 @@ jobs:
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
         run: apple/scripts/test.sh
+      # The testing engine test.sh or the step above built, kept for the runs after this one. Also
+      # when the tests failed: the engine is whole once engine.sh has written its entry.
+      - name: Room for the testing engine
+        id: testing-room
+        if: ${{ !cancelled() && env.PART != 'apps' && steps.engine-testing.outputs.cache-hit != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIR: ${{ steps.keys.outputs.testing-dir }}
+          KEY: ${{ steps.keys.outputs.testing }}
+        run: |
+          if ls "$DIR"/macos/*/libkaeri_ffi.a >/dev/null 2>&1; then
+            tools/ci-cache-room.sh "$KEY" 300
+          else
+            echo "save=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Keep the testing engine
+        if: ${{ !cancelled() && steps.testing-room.outputs.save == 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ steps.keys.outputs.testing-dir }}
+          key: ${{ steps.keys.outputs.testing }}
       # The Mac toolbar narrowed past where its items go into the overflow menu and widened
       # again, on every section and a title's page, while the sync capsule, the activity line and
       # private mode change (KaeriDev's ToolbarSweep). AppKit ends the app when an item's size
@@ -726,8 +844,28 @@ jobs:
       # Apple: the engines the apps ship, the schemes' pre-actions build these too, but quietly,
       # into a log; built here, a failure says why in the job.
       - name: Apple, the engines
-        if: ${{ !cancelled() && (env.PART == 'apps' || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
+        if: ${{ !cancelled() && (env.PART == 'apps' || (env.PART == 'caches' && steps.engine-release.outputs.cache-hit != 'true')) }}
         run: apple/scripts/engine.sh release macos ios
+      # The release engines, kept for the runs after this one, once both slices are whole.
+      - name: Room for the release engines
+        id: release-room
+        if: ${{ !cancelled() && env.PART != 'swift' && steps.engine-release.outputs.cache-hit != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DIR: ${{ steps.keys.outputs.release-dir }}
+          KEY: ${{ steps.keys.outputs.release }}
+        run: |
+          if ls "$DIR"/macos/*/libkaeri_ffi.a "$DIR"/ios/*/libkaeri_ffi.a >/dev/null 2>&1; then
+            tools/ci-cache-room.sh "$KEY" 500
+          else
+            echo "save=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Keep the release engines
+        if: ${{ !cancelled() && steps.release-room.outputs.save == 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ steps.keys.outputs.release-dir }}
+          key: ${{ steps.keys.outputs.release }}
       # The apps build the engine without the desktop feature, so its hosted player has to pass
       # its contract in that build too: the FFI's own tests in the build engine.sh just made for
       # the Mac's slice, with its target and profile, so little beneath the FFI compiles again but
@@ -739,20 +877,13 @@ jobs:
       - name: Swift, Rust tests, the apps' build
         if: >-
           ${{ !cancelled() && ((env.PART == 'apps' && needs.changes.outputs.engine == 'true')
-          || (env.PART == 'caches' && steps.engine.outputs.cache-hit != 'true')) }}
+          || (env.PART == 'caches' && steps.engine-release.outputs.cache-hit != 'true')) }}
         env:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
         run: >-
           env -u ANDROID_NDK_HOME
           cargo test -p kaeri-ffi --no-default-features --features testing,cli
           --target aarch64-apple-darwin --profile app-dev${{ env.PART == 'caches' && ' --no-run' || '' }}
-      # Every slice above, testing and release, for the pull requests after this push.
-      - name: Keep the engines
-        if: github.ref == 'refs/heads/main' && steps.engine.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v6
-        with:
-          path: ~/.cache/kaeri-engine/apple
-          key: ${{ steps.engine.outputs.cache-primary-key }}
       # The CJK subtitle font the iOS app bundles, which its iOS builds check for.
       - name: Apple, the subtitle font
         if: ${{ !cancelled() && env.PART == 'apps' }}
@@ -769,6 +900,14 @@ jobs:
         run: >-
           xcodebuild -project apple/Kaeri.xcodeproj -scheme Kaeri -configuration Release
           -destination platform=macOS build CODE_SIGNING_ALLOWED=NO KAERI_ENGINE_PROFILE=app-dev
+      # Last, as rust-cache saves after the job: room for its new entry. The swift job saves none.
+      - name: Room for the Rust cache
+        if: >-
+          env.SAVE_CACHES == 'true' && env.PART != 'swift'
+          && steps.rust.outcome == 'success' && steps.rust.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh --rust apple 1300
 
   # The Android app: its engine and Kotlin bindings as android/scripts/engine.sh builds them, with
   # the runner's newest NDK through cargo-ndk, which points every C build at the NDK's clang for
@@ -776,16 +915,30 @@ jobs:
   # fixtures APK; and the JVM unit tests, which start the testing engine on this runner's own build
   # of the library through JNA. Emulator tests come later.
   #
-  # The app's engine comes from a cache saved on main, keyed by what engine.sh builds it from, so
-  # a pull request that leaves the engine's crates alone compiles none.
+  # The app's engine comes from a cache keyed by what engine.sh builds it from (engine.sh
+  # --cache-key), saved by main and by pull requests, so a pull request that leaves the engine's
+  # crates alone, or a push to one whose previous push had the same, compiles none.
+  #
+  # For arm64 alone: the APKs' 32-bit ARM library is only ever loaded on a TV box, which no check
+  # here runs on, and a second Android build of the engine took twelve minutes. The release
+  # workflow builds every ABI. KAERI_ANDROID_ABIS narrows engine.sh's testing build and the
+  # Gradle build's check of it alike.
   # The Windows app: the engine for x86_64-pc-windows-msvc and the C# bindings generated from it,
   # the C# tests of the engine's bindings and of the app's logic, then the app itself built
   # against them. Its libmpv is the pinned download libmpv.ps1 checks by SHA-256. The windows-latest
   # runner is x64, so the app is built here for x64; the ARM64 build is the same code.
+  #
+  # The testing engine and its bindings are kept by what they are built from (bindings.sh
+  # --cache-key), on main and on pull requests, so a change to the C# alone, or a push whose
+  # previous push had the same engine sources, builds no Rust. No Rust cache: bindings.sh builds in
+  # a target folder of its own, which the one this job had never held.
   windows:
     needs: changes
     if: needs.changes.outputs.windows == 'true'
     runs-on: windows-latest
+    permissions:
+      contents: read
+      actions: write
     steps:
       - uses: actions/checkout@v7
       - run: tools/ci-toolchain.sh
@@ -794,11 +947,6 @@ jobs:
       - uses: actions/setup-dotnet@v6
         with:
           dotnet-version: 10.0.x
-      # Only main saves, as in the jobs above.
-      - uses: Swatinem/rust-cache@v2
-        with:
-          key: windows-app
-          save-if: ${{ github.ref == 'refs/heads/main' }}
       # The bindings generator, built once per pin and patch series: bindings.sh keeps it in
       # ~/.cache/kaeri-bindgen-cs, by a key of that pin and those patches. Saved from main only,
       # below, as every cache here is: a pull request's own copy only took room from main's.
@@ -820,20 +968,65 @@ jobs:
       - name: libmpv
         run: ./desktop/windows/scripts/libmpv.ps1 -Arch x64
         shell: pwsh
+      - name: Room for libmpv
+        id: libmpv-room
+        if: env.SAVE_CACHES == 'true' && steps.libmpv.outputs.cache-hit != 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh "${{ steps.libmpv.outputs.cache-primary-key }}" 100
       - name: Keep libmpv
-        if: github.ref == 'refs/heads/main' && steps.libmpv.outputs.cache-hit != 'true'
+        if: steps.libmpv-room.outputs.save == 'true'
         uses: actions/cache/save@v6
         with:
           path: desktop/windows/.libmpv
           key: ${{ steps.libmpv.outputs.cache-primary-key }}
+      # The testing engine's key, as bindings.sh names it, after libmpv, which it is made from too.
+      - name: The engine's key
+        id: keys
+        shell: bash
+        run: echo "key=$(desktop/windows/scripts/bindings.sh --cache-key testing)" >> "$GITHUB_OUTPUT"
+      - name: Restore the testing engine
+        id: engine
+        uses: actions/cache/restore@v6
+        with:
+          path: desktop/windows/.engine/testing
+          key: ${{ steps.keys.outputs.key }}
       # The testing engine, the generated bindings and both C# test projects, under a temporary
       # profile, as scripts/test.sh does everywhere.
       - name: Test
         run: desktop/windows/scripts/test.sh
         shell: bash
+      # The engine test.sh built, kept for the runs after this one once bindings.sh stamped it
+      # whole, also when a test failed.
+      - name: Room for the testing engine
+        id: engine-room
+        if: ${{ !cancelled() && steps.engine.outputs.cache-hit != 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ -f desktop/windows/.engine/testing/stamp ]]; then
+            tools/ci-cache-room.sh "${{ steps.keys.outputs.key }}" 200
+          else
+            echo "save=false" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Keep the testing engine
+        if: ${{ !cancelled() && steps.engine-room.outputs.save == 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: desktop/windows/.engine/testing
+          key: ${{ steps.keys.outputs.key }}
       # The generator the step above built, when it had to.
+      - name: Room for the bindings generator
+        id: bindgen-room
+        if: ${{ !cancelled() && env.SAVE_CACHES == 'true' && steps.bindgen.outputs.cache-hit != 'true' }}
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh "${{ steps.bindgen.outputs.cache-primary-key }}" 50
       - name: Keep the bindings generator
-        if: ${{ !cancelled() && github.ref == 'refs/heads/main' && steps.bindgen.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && steps.bindgen-room.outputs.save == 'true' }}
         uses: actions/cache/save@v6
         with:
           path: ~/.cache/kaeri-bindgen-cs
@@ -850,10 +1043,17 @@ jobs:
     needs: changes
     if: needs.changes.outputs.android == 'true'
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      actions: write
+    env:
+      KAERI_ANDROID_ABIS: arm64-v8a
+      # A JVM per test class, four at once: the runner's four cores, which Gradle's workers cap
+      # across every module's tests anyway (android/build-logic, kaeri.engine.flavours).
+      KAERI_TEST_FORKS: "4"
     steps:
       - uses: actions/checkout@v7
-      # Both of the APKs' ABIs, as engine.sh builds them: arm64 and the TV boxes' 32-bit ARM.
-      - run: tools/ci-toolchain.sh aarch64-linux-android armv7-linux-androideabi
+      - run: tools/ci-toolchain.sh aarch64-linux-android
       # The newest NDK the runner has, which links 16 KB aligned (r28 and later), where
       # ANDROID_NDK_HOME may name an older one.
       - name: The NDK
@@ -863,24 +1063,29 @@ jobs:
             echo "ANDROID_NDK_HOME=$ndk"
             echo "NDK_VERSION=$(basename "$ndk")"
           } >> "$GITHUB_ENV"
-      # What the engine is built from, as engine.sh hashes it: only the crates it compiles.
-      - name: The engine's sources
-        id: sources
-        run: hash="$(android/scripts/engine.sh --sources-hash)" && echo "hash=$hash" >> "$GITHUB_OUTPUT"
-      # engine.sh's own cache of the testing engine (~/.cache/kaeri-engine), by that hash and
-      # the NDK that built it. Saved below, from main only.
+      # The engine's cache key, as engine.sh names it: what it is built from (only the crates it
+      # compiles), the flavour, the profile, the ABIs, this machine and the NDK; and the entry in
+      # engine.sh's own cache (~/.cache/kaeri-engine) that holds such a build.
+      - name: The engine's key
+        id: keys
+        run: |
+          {
+            echo "key=$(android/scripts/engine.sh --cache-key testing)"
+            echo "entry=$(android/scripts/engine.sh --cache-entry testing)"
+          } >> "$GITHUB_OUTPUT"
       - name: Restore the app's engine
         id: engine
         uses: actions/cache/restore@v6
         with:
-          path: ~/.cache/kaeri-engine/android
-          key: ci-android-engine-ndk${{ env.NDK_VERSION }}-${{ steps.sources.outputs.hash }}
+          path: ${{ steps.keys.outputs.entry }}
+          key: ${{ steps.keys.outputs.key }}
       # Not read when the engine came from the cache above, since nothing compiles.
       - uses: Swatinem/rust-cache@v2
+        id: rust
         if: steps.engine.outputs.cache-hit != 'true'
         with:
-          key: android
-          save-if: ${{ github.ref == 'refs/heads/main' }}
+          shared-key: android
+          save-if: ${{ env.SAVE_CACHES == 'true' }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-ndk
@@ -920,12 +1125,26 @@ jobs:
           if "$bin/llvm-objdump" -p "$so" | grep LOAD | grep -vq 'align 2\*\*14'; then
             echo "a LOAD segment is not 16 KB aligned"; exit 1
           fi
+      # The engine just built, kept for the runs after this one, once engine.sh has written its
+      # entry whole.
+      - name: Room for the app's engine
+        id: engine-room
+        if: ${{ !cancelled() && steps.engine.outputs.cache-hit != 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          ENTRY: ${{ steps.keys.outputs.entry }}
+        run: |
+          if [[ -f "$ENTRY/stamp" ]]; then
+            tools/ci-cache-room.sh "${{ steps.keys.outputs.key }}" 200
+          else
+            echo "save=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Keep the app's engine
-        if: github.ref == 'refs/heads/main' && steps.engine.outputs.cache-hit != 'true'
+        if: ${{ !cancelled() && steps.engine-room.outputs.save == 'true' }}
         uses: actions/cache/save@v6
         with:
-          path: ~/.cache/kaeri-engine/android
-          key: ${{ steps.engine.outputs.cache-primary-key }}
+          path: ${{ steps.keys.outputs.entry }}
+          key: ${{ steps.keys.outputs.key }}
       - name: The app's fonts
         run: android/scripts/fonts.sh
       # The Android builds Robolectric draws the screenshot tests on, which it fetches itself.
@@ -977,8 +1196,14 @@ jobs:
           ./gradlew --console=plain -x :engine:checkAppEngine compileAppReleaseKotlin
         env:
           KAERI_PLAYER_NATIVE: "off"
+      - name: Room for Robolectric's Android builds
+        id: robolectric-room
+        if: env.SAVE_CACHES == 'true' && steps.robolectric.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh "${{ steps.robolectric.outputs.cache-primary-key }}" 300
       - name: Keep Robolectric's Android builds
-        if: github.ref == 'refs/heads/main' && steps.robolectric.outputs.cache-hit != 'true'
+        if: steps.robolectric-room.outputs.save == 'true'
         uses: actions/cache/save@v6
         with:
           path: ~/.m2/repository/org/robolectric
@@ -991,6 +1216,14 @@ jobs:
           name: android-screenshots
           path: android/.shots/roborazzi/
           if-no-files-found: ignore
+      # Last, as rust-cache saves after the job: room for its new entry.
+      - name: Room for the Rust cache
+        if: >-
+          env.SAVE_CACHES == 'true' && steps.rust.outcome == 'success'
+          && steps.rust.outputs.cache-hit != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: tools/ci-cache-room.sh --rust android 1300
 
   # The plugin store's admin page is committed as built output, so building the server never
   # needs bun. This rebuilds it from source and fails if the two have drifted apart. Its runner

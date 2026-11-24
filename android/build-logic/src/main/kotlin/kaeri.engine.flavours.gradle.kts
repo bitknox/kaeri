@@ -23,9 +23,13 @@ pluginManager.withPlugin("com.android.library") {
 // ui module's screenshot classes alone took five minutes of CI's Android job, most of it each JVM
 // starting Robolectric while the other cores sat idle. Each JVM is a process of its own, so the
 // one table of callbacks per process still holds.
+//
+// KAERI_TEST_FORKS sets the number instead: CI's runner has four cores and nothing else to do,
+// and Gradle's workers (one per core) cap the JVMs of every module's tests together anyway.
 tasks.withType<Test>().configureEach {
     forkEvery = 1
-    maxParallelForks = (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
+    maxParallelForks = System.getenv("KAERI_TEST_FORKS")?.toIntOrNull()?.coerceAtLeast(1)
+        ?: (Runtime.getRuntime().availableProcessors() / 2).coerceIn(1, 4)
 }
 pluginManager.withPlugin("com.android.application") {
     extensions.configure<com.android.build.api.dsl.ApplicationExtension> {

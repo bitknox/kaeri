@@ -4,6 +4,7 @@
 # with the patches in bindgen-cs/patches applied.
 #
 #   desktop/windows/scripts/bindings.sh [--check] <release|testing>
+#   desktop/windows/scripts/bindings.sh --cache-key <release|testing>
 #
 #   release   the engine the app ships: --no-default-features, so without mpv's child process,
 #             with watch parties (`party`) and Play on TV's sender (`remote`)
@@ -44,15 +45,19 @@ set -euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
 
 usage() {
-  echo "usage: desktop/windows/scripts/bindings.sh [--check] <release|testing>" >&2
+  echo "usage: desktop/windows/scripts/bindings.sh [--check | --cache-key] <release|testing>" >&2
   exit 2
 }
 
 check=0
+cache_key=0
 flavour=""
 for arg in "$@"; do
   case "$arg" in
     --check) check=1 ;;
+    # The name a build of the flavour is kept under outside this machine (an Actions cache): what
+    # the stamp is made from, the flavour, the profile and the machine, so one name is one build.
+    --cache-key) cache_key=1 ;;
     release | testing)
       [[ -z "$flavour" ]] || usage
       flavour="$arg"
@@ -136,19 +141,15 @@ generator_key="$(
 generator_cache="${KAERI_BINDGEN_CS_CACHE:-$HOME/.cache/kaeri-bindgen-cs}"
 generator="$generator_cache/$generator_key/bin/uniffi-bindgen-cs$exe"
 
-# What the build is made from: every file under crates/ and wit/, tracked or not but not ignored,
-# the workspace's manifests and lock file, the toolchain pin, this script and the generator's pin.
+# What the build is made from: the files tools/engine-sources.sh lists, as for the Apple and
+# Android engines (each crate kaeri-ffi builds on, without its tests, benches and examples, with
+# the workspace's manifests, lock file, toolchain pin and .cargo), this script, the generator's
+# pin, the features and the libmpv it links.
 sources_hash() {
   (
     cd "$root"
     {
-      git ls-files -co --exclude-standard -- crates wit Cargo.toml Cargo.lock rust-toolchain.toml \
-        .cargo desktop/windows/scripts/bindings.sh |
-        LC_ALL=C sort -u |
-        while IFS= read -r file; do
-          [[ -f "$file" ]] && printf '%s\n' "$file"
-        done |
-        git hash-object --stdin-paths
+      tools/engine-sources.sh desktop/windows/scripts/bindings.sh | git hash-object --stdin-paths
       echo "$generator_key"
       echo "$features"
       [[ -z "${libmpv:-}" ]] || cat "$libmpv/stamp" 2>/dev/null || true
@@ -157,6 +158,10 @@ sources_hash() {
 }
 
 hash="$(sources_hash)"
+if ((cache_key)); then
+  echo "engine-windows-$flavour-$profile-$(uname -m)-$hash"
+  exit 0
+fi
 if [[ -f "$out/stamp" && -d "$out/bindings" && -f "$out/native/$library" ]]; then
   if [[ "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" &&
     "$(sed -n 's/^profile //p' "$out/stamp")" == "$profile" ]]; then

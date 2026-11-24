@@ -5,6 +5,7 @@
 #
 #   android/scripts/engine.sh [--check] <release|testing>
 #   android/scripts/engine.sh --sources-hash
+#   android/scripts/engine.sh --cache-key|--cache-entry <release|testing>
 #
 #   release   the engine the app flavour ships: --no-default-features, so without mpv's child
 #             process, and with the TV's remote (`startRemote`), which the TV app shares the
@@ -52,12 +53,22 @@ usage() {
 }
 
 # --sources-hash prints the hash of what the engine is built from, which its stamp and caches
-# are keyed by, CI's too, and builds nothing.
+# are keyed by, CI's too, and builds nothing. --cache-key prints the name a build of the flavour
+# is kept under outside this machine (an Actions cache, a slot artifact): the sources' hash, the
+# flavour, the profile, the ABIs, this machine and the NDK, so that one name always means one
+# build. --cache-entry prints the folder in the shared cache below that such a build is kept in.
 sources_only=0
-if [[ "${1:-}" == --sources-hash ]]; then
-  sources_only=1
-  set -- release
-fi
+print=""
+case "${1:-}" in
+  --sources-hash)
+    sources_only=1
+    set -- release
+    ;;
+  --cache-key | --cache-entry)
+    print="${1#--}"
+    shift
+    ;;
+esac
 check=0
 flavour=""
 for arg in "$@"; do
@@ -135,6 +146,22 @@ if (( sources_only )); then
   echo "$hash"
   exit 0
 fi
+
+# The shared cache's entry for these sources, and whether some worktree has built it already.
+cache="${KAERI_ENGINE_CACHE:-$HOME/.cache/kaeri-engine}/android"
+machine="$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
+entry="$cache/$flavour/$profile/$abis-$machine/$hash"
+case "$print" in
+  cache-key)
+    # An Actions cache's key takes no commas.
+    echo "engine-android-$flavour-$profile-${abis//,/+}-$machine-ndk$(basename "${ndk:-none}")-$hash"
+    exit 0
+    ;;
+  cache-entry)
+    echo "$entry"
+    exit 0
+    ;;
+esac
 if [[ -f "$out/stamp" && -d "$out/kotlin" && -d "$out/host" ]]; then
   fresh=1
   [[ "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" ]] || fresh=0
@@ -164,11 +191,6 @@ if (( check )); then
   echo "error: run KAERI_ENGINE_PROFILE=$profile android/scripts/engine.sh $flavour" >&2
   exit 1
 fi
-
-# The shared cache's entry for these sources, and whether some worktree has built it already.
-cache="${KAERI_ENGINE_CACHE:-$HOME/.cache/kaeri-engine}/android"
-machine="$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
-entry="$cache/$flavour/$profile/$abis-$machine/$hash"
 
 # Entries unused for 14 days, the leftovers of a store that was cut off, and in each slice's
 # folder every entry but the newest $keep. Each set of sources costs from under a GB to several,
