@@ -2798,6 +2798,20 @@ mod tests {
             assert!(!first[3].2 && first[3].3, "off: no spinner, its name in haze");
             let heights: Vec<i32> = first.iter().map(|r| r.4).collect();
             assert!(heights.iter().all(|h| *h > 0), "{heights:?}");
+            {
+                let rows = panel.listing_rows.borrow();
+                let r = &rows[0];
+                let g = &r.parts.title.grid;
+                eprintln!(
+                    "DIAG row {}x{} grid {}x{} label {}x{} line {}x{} parent {:?} {}x{} panel {}x{}",
+                    r.row.width(), r.row.height(), g.width(), g.height(),
+                    r.parts.title.shown().width(), r.parts.title.shown().height(),
+                    r.parts.line.grid.width(), r.parts.line.grid.height(),
+                    g.parent().map(|p| p.type_().name()), g.parent().map_or(0, |p| p.width()),
+                    g.parent().map_or(0, |p| p.height()), panel.widget.width(), panel.widget.height(),
+                );
+                eprintln!("DIAG measure {:?} {:?}", g.measure(gtk::Orientation::Horizontal, -1), g.measure(gtk::Orientation::Vertical, 300));
+            }
 
             // From 600 ms a spinner and Asking, in rows of the same height.
             age(&panel, Duration::from_millis(700));
