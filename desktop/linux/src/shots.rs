@@ -4,7 +4,12 @@
 //!
 //!   kaeri-desktop --fixtures --shots <dir> --shot home,title,... [--size 1280x800]
 
-use std::{path::PathBuf, rc::Rc, time::Duration};
+use std::{
+    path::PathBuf,
+    rc::Rc,
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 
 use adw::prelude::*;
 use gtk::glib;
@@ -332,8 +337,18 @@ pub const STATS: [&str; 5] = [
     "player-stats-copied",
 ];
 
-/// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit.
-pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
+/// How many shots of the run did not save: the app then exits with a failure.
+static UNSAVED: AtomicUsize = AtomicUsize::new(0);
+
+/// How many shots did not save.
+pub fn unsaved() -> usize {
+    UNSAVED.load(Ordering::Relaxed)
+}
+
+/// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit. With `still`, the
+/// starting screen's `start-` shots are taken on the engine's still clock (see `still_start`);
+/// without it, as recordings need, on the wall clock.
+pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>, still: bool) {
     #[cfg(feature = "fixtures")]
     crate::shots_missing::saving_to(dir.clone());
     #[cfg(feature = "fixtures")]
@@ -345,7 +360,16 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
             wide_widgets(&child, 0, shell.ctx.window.width());
         }
         for shot in &shots {
-            let settle = stage(&shell, shot);
+            #[cfg(feature = "fixtures")]
+            let settle = match StartShot::named(shot).filter(|_| still) {
+                Some(start) => still_start(&shell, start).await,
+                None => stage(&shell, shot),
+            };
+            #[cfg(not(feature = "fixtures"))]
+            let settle = {
+                let _ = still;
+                stage(&shell, shot)
+            };
             wait(settle).await;
             let path = dir.join(format!("{prefix}{shot}.png"));
             let mut taken = Err(String::new());
@@ -362,7 +386,10 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
             }
             match taken {
                 Ok(()) => tracing::info!(path = %path.display(), "a shot"),
-                Err(e) => tracing::error!(shot, error = %e, "a shot did not save"),
+                Err(e) => {
+                    UNSAVED.fetch_add(1, Ordering::Relaxed);
+                    tracing::error!(shot, error = %e, "a shot did not save");
+                }
             }
             unstage(&shell, shot);
             wait(0.5).await;
@@ -930,33 +957,17 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         // With `-details` after the state, Details opens 5 s in; with `-beginning`, Play from the
         // beginning is pressed 4 s in.
         start if start.starts_with("start-") => {
-            let details = start.contains("-details-");
-            let beginning = start.contains("-beginning-");
-            let name = start.replace("-details-", "-").replace("-beginning-", "-");
-            let Some((state, seconds)) = start_state(&name) else {
+            let Some(start) = StartShot::named(start) else {
                 return 0.1;
             };
             shell.go(Dest::Home);
-            if details {
-                let player = Rc::clone(&shell.player);
-                glib::timeout_add_local_once(Duration::from_secs(5), move || {
-                    player.shot_start_details();
+            for (at_ms, step) in start.steps {
+                let shell = Rc::clone(shell);
+                glib::timeout_add_local_once(Duration::from_millis(at_ms), move || {
+                    step.apply(&shell);
                 });
             }
-            if beginning {
-                let player = Rc::clone(&shell.player);
-                glib::timeout_add_local_once(Duration::from_secs(4), move || {
-                    player.shot_start_from_beginning();
-                });
-            }
-            let hub = Rc::clone(&shell.ctx.hub);
-            for fixture in kaeri_engine::playback::starting::fixture(state) {
-                let hub = Rc::clone(&hub);
-                glib::timeout_add_local_once(Duration::from_millis(fixture.at_ms), move || {
-                    hub.take(vec![fixture.event]);
-                });
-            }
-            seconds
+            start.seconds
         }
         "demo-removed" => {
             shell.go(Dest::Home);
@@ -1402,6 +1413,122 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
 }
 
 /// Leave the state a shot put the window in.
+/// A `start-` shot: what happens on its made-up start, when, and the seconds it is taken at.
+struct StartShot {
+    /// In their order, each with its moment in milliseconds from the start.
+    steps: Vec<(u64, StartStep)>,
+    seconds: f64,
+}
+
+/// Something that happens on a shot's made-up start.
+enum StartStep {
+    /// What the engine says, boxed as events are large.
+    Event(Box<Event>),
+    /// Details opened, as the viewer opens it.
+    Details,
+    /// Play from the beginning, pressed as the viewer presses it.
+    FromBeginning,
+}
+
+impl StartShot {
+    /// `start-<state>-<seconds>`: the state's events on their own clock. With `-details-` after
+    /// the state, Details opens 5 s in; with `-beginning-`, Play from the beginning is pressed
+    /// 4 s in.
+    fn named(shot: &str) -> Option<Self> {
+        let name = shot.replace("-details-", "-").replace("-beginning-", "-");
+        let (state, seconds) = start_state(&name)?;
+        let mut steps: Vec<(u64, StartStep)> = kaeri_engine::playback::starting::fixture(state)
+            .into_iter()
+            .map(|fixture| (fixture.at_ms, StartStep::Event(Box::new(fixture.event))))
+            .collect();
+        if shot.contains("-details-") {
+            steps.push((5_000, StartStep::Details));
+        }
+        if shot.contains("-beginning-") {
+            steps.push((4_000, StartStep::FromBeginning));
+        }
+        // Stable, so events at the same moment keep the engine's order.
+        steps.sort_by_key(|(at, _)| *at);
+        Some(Self { steps, seconds })
+    }
+}
+
+impl StartStep {
+    fn apply(self, shell: &Rc<Shell>) {
+        match self {
+            Self::Event(event) => shell.ctx.hub.take(vec![*event]),
+            Self::Details => shell.player.shot_start_details(),
+            Self::FromBeginning => shell.player.shot_start_from_beginning(),
+        }
+    }
+}
+
+/// How often the starting screen's clock ticks, as `Player` ticks it.
+#[cfg(feature = "fixtures")]
+const START_TICK_MS: u64 = 100;
+
+/// How long a still shot lets the screen's motion settle once its clock is held at the moment,
+/// in real time: the step line's 0.6 s hold between crossfades and the crossfade itself.
+#[cfg(feature = "fixtures")]
+const STILL_SETTLE: f64 = 1.5;
+
+/// A `start-` shot taken still (`--still`): the made-up start's steps on the engine's still clock
+/// rather than the wall clock. Each step is applied once the clock is held at its moment, the
+/// screen ticks on that clock every 100 ms of it as it does on the wall clock, and the clock
+/// stops at the shot's moment. Only the screen's motion then has to settle, in real time, so the
+/// shot shows the same seconds and wording on every run, however slow the machine, and a 24 s
+/// shot takes about 2 s rather than 24. Says how long to let it settle.
+#[cfg(feature = "fixtures")]
+async fn still_start(shell: &Rc<Shell>, start: StartShot) -> f64 {
+    use kaeri_providers::still;
+    // The clock only moves on, so a shot counts from where the one before held it. The first
+    // still shot turns it on.
+    let base = still::clock().map_or(0, |clock| clock.held().as_millis());
+    let base = u64::try_from(base).unwrap_or(u64::MAX);
+    let moment = (start.seconds * 1000.0).round().max(0.0) as u64;
+    shell.go(Dest::Home);
+    let mut steps = start.steps.into_iter().peekable();
+    let mut at = 0;
+    loop {
+        reach(base + at).await;
+        while let Some((_, step)) = steps.next_if(|(due, _)| *due <= at) {
+            step.apply(shell);
+            // The window takes what the step changed before the next.
+            glib::timeout_future(Duration::from_millis(16)).await;
+        }
+        if at % START_TICK_MS == 0 || at >= moment {
+            shell.player.shot_start_tick();
+        }
+        if at >= moment {
+            break;
+        }
+        // The next tick, or a step due before it.
+        let tick = ((at / START_TICK_MS + 1) * START_TICK_MS).min(moment);
+        at = match steps.peek() {
+            Some((due, _)) if *due < tick => *due,
+            _ => tick,
+        };
+    }
+    tracing::info!(held_ms = moment, "a still start");
+    STILL_SETTLE
+}
+
+/// Hold the still clock at `at_ms` and wait, briefly, for it to get there: it walks through any
+/// of the scene's own made-up waits on the way.
+#[cfg(feature = "fixtures")]
+async fn reach(at_ms: u64) {
+    use kaeri_providers::still;
+    let at = Duration::from_millis(at_ms);
+    still::hold(at);
+    for _ in 0..500 {
+        if still::now().is_some_and(|now| now >= at) {
+            return;
+        }
+        glib::timeout_future(Duration::from_millis(10)).await;
+    }
+    tracing::warn!(at_ms, "the still clock did not reach the moment in 5 s");
+}
+
 /// The made-up start and the seconds a `start-<state>-<seconds>` shot names.
 fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f64)> {
     use kaeri_model::starting::StartingFixture as S;

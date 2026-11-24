@@ -36,6 +36,7 @@ use crate::{
 };
 
 mod chat;
+mod clock;
 mod coming;
 mod marking;
 mod panel;
@@ -158,7 +159,8 @@ pub struct PlayerView {
     /// The start in progress, what the starting screen says of it, since when it has waited
     /// and the clock that moves it on.
     start: RefCell<Option<start_model::Start>>,
-    start_since: Cell<Option<Instant>>,
+    /// On the starting screen's clock: the still clock in a Fixtures build's still shot.
+    start_since: Cell<Option<clock::Moment>>,
     start_tick: RefCell<Option<glib::SourceId>>,
     /// When the app or the engine rolled on to the next episode, until that start begins.
     roll_on: Cell<Option<Instant>>,
@@ -1015,7 +1017,7 @@ impl PlayerView {
         if let Some(start) = self.start.borrow_mut().as_mut() {
             start.details_open = self.ctx.prefs.starting_details();
         }
-        self.start_since.set(Some(Instant::now()));
+        self.start_since.set(Some(clock::Moment::now()));
         self.ui.show.set_label(title);
         self.late.set(false);
         let translation = self.episode_line.borrow().2;
@@ -1061,18 +1063,24 @@ impl PlayerView {
                 view.start_tick.borrow_mut().take();
                 return glib::ControlFlow::Break;
             }
-            let at = view.start_elapsed();
-            if let Some(start) = view.start.borrow_mut().as_mut() {
-                start.tick(at);
-            }
-            let slow = view.start.borrow_mut().as_mut().and_then(|s| s.slow_announcement(at));
-            if let Some(slow) = slow {
-                view.announce(&slow);
-            }
-            view.show_start();
+            view.tick_start();
             glib::ControlFlow::Continue
         });
         self.start_tick.replace(Some(tick));
+    }
+
+    /// The starting screen's clock moved: a waiting line whose turn has come shows, and the
+    /// screen is drawn for now.
+    fn tick_start(&self) {
+        let at = self.start_elapsed();
+        if let Some(start) = self.start.borrow_mut().as_mut() {
+            start.tick(at);
+        }
+        let slow = self.start.borrow_mut().as_mut().and_then(|s| s.slow_announcement(at));
+        if let Some(slow) = slow {
+            self.announce(&slow);
+        }
+        self.show_start();
     }
 
     /// Draw what the model says now.
@@ -2614,6 +2622,15 @@ impl PlayerView {
     /// For a shot: Play from the beginning on the starting screen, pressed as the viewer presses it.
     pub fn shot_start_from_beginning(&self) {
         self.start_action(start_model::Action::FromBeginning);
+    }
+
+    /// For a still shot: the starting screen as its clock's tick leaves it, at once, after the
+    /// shot has moved the still clock on.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_start_tick(&self) {
+        if self.start.borrow().is_some() && self.ui.starting.is_visible() {
+            self.tick_start();
+        }
     }
 
     /// For a shot: the subtitle style panel, or with a subtitle, that on screen first.

@@ -303,8 +303,23 @@ fn world_asked() -> bool {
     std::env::var(HOME_WORLD_VAR).is_ok_and(|v| v == "1")
 }
 
+/// The environment variable that holds the scene's made-up waits at a moment, in seconds from
+/// when the scene starts (`4`, `0.3`), as `FfiEngine.start_scene` does for the other apps: a
+/// still shot of what the scene shows that long in. See [`kaeri_providers::still`].
+const STILL_AT_VAR: &str = "KAERI_STILL_AT";
+
+/// The moment `KAERI_STILL_AT` holds the scene's waits at, if it does.
+fn still_at() -> Option<std::time::Duration> {
+    let seconds: f64 = std::env::var(STILL_AT_VAR).ok()?.trim().parse().ok()?;
+    (seconds.is_finite() && seconds >= 0.0).then(|| std::time::Duration::from_secs_f64(seconds))
+}
+
 /// Start the engine on the scene, its files under `root`.
 pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<Started, String> {
+    if let Some(at) = still_at() {
+        kaeri_providers::still::hold(at);
+        tracing::info!(at = ?at, "the scene's made-up waits held still");
+    }
     let paths = paths_under(root);
     let signed_in = scene.home.signed_in();
     if signed_in {
