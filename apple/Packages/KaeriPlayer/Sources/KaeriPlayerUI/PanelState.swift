@@ -139,6 +139,9 @@ public struct PanelReleases: Equatable, Sendable {
     public var rows: [SourceListing]?
     /// When each source's row first said Asking, by its id: what its seconds count from.
     public var askingSince: [String: ContinuousClock.Instant] = [:]
+    /// Why the engine asked no source for this episode, from `SourcesFailed`: none is set up,
+    /// the title's details could not be read, or the episode has not aired. Ends the loading.
+    public var failed: String?
 
     public init(
         id: AnilistId, episode: String, candidates: [SourceCandidate]? = nil, asked: ContinuousClock.Instant = .now

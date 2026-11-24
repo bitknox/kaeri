@@ -235,7 +235,13 @@ struct PanelSources: View {
     @ViewBuilder
     private var others: some View {
         // Asked and not answered whole yet, or answering row by row: each source's own line.
-        if let releases = model.panelReleases, releases.rows != nil || releases.candidates == nil {
+        if let why = model.panelReleases?.failed {
+            // No source was asked: why, in place of the rows.
+            PanelText(text: why, size: metrics.detail, line: metrics.detailLine, color: Palette.haze)
+                .padding(.horizontal, metrics.rowPad)
+                .frame(maxWidth: .infinity, minHeight: metrics.choice, alignment: .leading)
+                .transition(.opacity)
+        } else if let releases = model.panelReleases, releases.rows != nil || releases.candidates == nil {
             loadingRows(releases)
         } else {
             answeredRows
@@ -251,7 +257,9 @@ struct PanelSources: View {
             let row = releases.rows?.first { $0.providerId == group.providerId }
             let listed: [SourceCandidate] = if case .listed(let listed)? = row?.state { listed } else { [] }
             let open = expanded.contains(group.providerId)
-            let line = group.option.map(Self.line) ?? listed.first.flatMap { listed.count == 1 ? ReleaseWords.detail($0) : nil }
+            // A source that listed releases now: its coverage, never an older note of it resting or failing.
+            let coverage = group.option.flatMap { $0.note == nil ? Self.line($0) : nil }
+            let line = coverage ?? listed.first.flatMap { listed.count == 1 ? ReleaseWords.detail($0) : nil }
             let loading = row.map { releases.loading($0, listed: line) } ?? RowLoading(asked: releases.asked, since: releases.asked)
             let dim: Bool = switch row?.state {
             case .missed?, .off?: true
@@ -505,6 +513,8 @@ struct PanelChoiceRow: View {
                 if let text = phase.text, !text.isEmpty {
                     PanelText(text: text, size: metrics.detail, line: metrics.detailLine, color: Palette.haze)
                         .monospacedDigit()
+                        // Read as Asking, so the row is not read out again each second it counts.
+                        .accessibilityLabel(loading.asking ? L.playerStartRowAsking : text)
                         .id(phase.key)
                         .transition(.opacity)
                 }

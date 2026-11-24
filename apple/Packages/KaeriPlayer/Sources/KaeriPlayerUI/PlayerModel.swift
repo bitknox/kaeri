@@ -472,9 +472,12 @@ public final class PlayerModel {
             // A play staged anew, as the episode started again in the other version is when
             // nothing played yet: no switch of it is on its way.
             versionSwitch = nil
-            if staged?.id != id || staged?.episode != episode { panelEpisodeChanged() }
+            let anotherEpisode = staged?.id != id || staged?.episode != episode
+            if anotherEpisode { panelEpisodeChanged() }
             staged = StagedPlayback(
                 id: id, title: title, episode: episode, episodeTitle: episodeTitle, alwaysPrivate: alwaysPrivate)
+            // An open panel asks for the next episode's sources at once, as it does when it opens.
+            if anotherEpisode, panelOpen { loadPanelReleases() }
             present()
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
@@ -504,6 +507,10 @@ public final class PlayerModel {
         case .sourcesProgress(let id, let episode, let rows):
             if panelReleases?.id == id, panelReleases?.episode == episode {
                 panelReleases?.progressed(rows, at: time.now())
+            }
+        case .sourcesFailed(let id, let episode, let why):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.failed = why.text
             }
         case .sources(let id, let episode, let candidates, let missed):
             if panelReleases?.id == id, panelReleases?.episode == episode {
@@ -2272,10 +2279,10 @@ extension PlayerModel {
     }
 
     /// Ask for the playing episode's releases across every source, for the Sources tab. Asked
-    /// again only for another episode, or when `again`.
+    /// again only for another episode, after a listing that asked no source, or when `again`.
     public func loadPanelReleases(again: Bool = false) {
         guard let (id, episode) = panelEpisode else { return }
-        if !again, panelReleases?.id == id, panelReleases?.episode == episode { return }
+        if !again, panelReleases?.id == id, panelReleases?.episode == episode, panelReleases?.failed == nil { return }
         #if FIXTURES
         if holdsPanelAsk { return }
         #endif

@@ -63,6 +63,28 @@ struct PanelSourcesLoadingTests {
         #expect(rig.model.panelReleases?.rows == nil)
     }
 
+    @Test func anOpenPanelAsksForTheNextEpisodesSourcesAtOnce() async throws {
+        let rig = try await asked()
+        rig.model.panelOpen = true
+        rig.model.apply(.playbackStaged(id: 900_001, title: "Stardust Wayfarer", episode: "8", episodeTitle: nil, speed: 1))
+        #expect(rig.sent.contains { $0 == .loadSources(id: 900_001, episode: "8") })
+        #expect(rig.model.panelReleases?.episode == "8")
+        #expect(rig.model.panelReleases?.rows == nil, "nothing of episode 7's rows is left")
+    }
+
+    @Test func aListingThatAskedNoSourceEndsAndIsAskedAgainOnTheNextLook() async throws {
+        let rig = try await asked()
+        rig.model.apply(.sourcesFailed(id: 900_001, episode: "8", why: .startLookingUpTitle))
+        #expect(rig.model.panelReleases?.failed == nil, "another episode's end is left alone")
+        rig.model.apply(.sourcesFailed(id: 900_001, episode: "7", why: .startLookingUpTitle))
+        #expect(rig.model.panelReleases?.failed == Msg.startLookingUpTitle.text)
+
+        let before = rig.sent.count
+        rig.model.loadPanelReleases()
+        #expect(rig.sent[before...].contains { $0 == .loadSources(id: 900_001, episode: "7") })
+        #expect(rig.model.panelReleases?.failed == nil)
+    }
+
     @Test func aRowIsSilentThenAsksThenCountsTheSeconds() {
         let asked = ContinuousClock.now
         let row = RowLoading(asked: asked, since: asked + .milliseconds(20))
