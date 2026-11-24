@@ -8,10 +8,11 @@ extension EngineLaunch {
     /// The launch argument that names the scene: `-KaeriScene watching`, `fresh`,
     /// `sourceless` (Watching with no source set up), `unsure` (Watching with a source ahead that
     /// cannot choose 900001's match), `linkopened` (a magnet link opened, on the confirm step),
-    /// `playing`, `licensed` (Sourceless with a licensed service chosen), `servers` (a Jellyfin
-    /// server saved), `library` (a folder of episodes added), `storeowner` (a plugin store of
-    /// yours, with invites in use, used up and cancelled), `storeinvited` (a link for five people
-    /// to join), or one of the demo and crash scenes: `demoonly`, `demoplayed`, `demoandstore`,
+    /// `playing`, `switching` (Playing with two more sources, one named for its group, four
+    /// releases and the dub, each switch's file served slowly), `licensed` (Sourceless with a licensed service chosen),
+    /// `servers` (a Jellyfin server saved), `library` (a folder of episodes added), `storeowner`
+    /// (a plugin store of yours, with invites in use, used up and cancelled), `storeinvited` (a
+    /// link for five people to join), or one of the demo and crash scenes: `demoonly`, `demoplayed`, `demoandstore`,
     /// `demoremoved`, `subtitlestyled`, `crashoff`, `crashsaved`, `crashheld`, or `missingepisode`
     /// (900002's episode 6 aired 25 minutes ago and no source lists it yet), or one of sync's
     /// start-over scenes: `syncothergroup` (sync off, and Google Drive's folder holds another
@@ -84,6 +85,7 @@ extension EngineLaunch {
         case "together": return .together
         case "missingepisode": return .missingEpisode
         case "playing": return .playing(media: media(arguments: arguments))
+        case "switching": return .switching(media: media(arguments: arguments))
         case "storeowner": return .storeOwner
         case "storeinvited": return .storeInvited
         case "readingfirstrun": return .readingFirstRun

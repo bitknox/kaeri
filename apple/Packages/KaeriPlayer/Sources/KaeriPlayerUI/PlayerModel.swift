@@ -198,6 +198,9 @@ public final class PlayerModel {
     /// The switch to the other version, subtitled or dubbed, from the pick until it lands, or
     /// its failure until the next pick.
     public internal(set) var versionSwitch: VersionSwitch?
+    /// What the next file mpv starts comes from, from a switch's Loading, or the engine moving
+    /// on by itself, until it lands or fails.
+    private var nextFile: NextFile?
     /// What a screenshot or recording puts the panel in (PlayerShots).
     public internal(set) var panelShot: PanelShot?
     /// Holding the picture over the video while a switch loads (`PlayerSwitch` Loading to
@@ -454,6 +457,7 @@ public final class PlayerModel {
             // Said again for the same play (idempotent), it keeps what the start has told.
             if walk?.id != id || walk?.episode != episode {
                 walk = StartingWalk(id: id, episode: episode, resume: resume, at: since ?? time.now())
+                nextFile = nil
                 holdRelease?.cancel()
                 stagedRollOn(at: since ?? time.now())
             }
@@ -474,6 +478,9 @@ public final class PlayerModel {
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
             if case .found(_, let source, _, _) = step, let source { startFound(source) }
+            // A stream that broke off: the engine tries another, from a source it says once the
+            // stream plays.
+            if case .tryingAnotherStream = step, walk?.pictured == true { nextFile = NextFile(source: nil) }
             walk?.take(step, line: line, at: time.now())
             holdLine()
         case .playbackEnded(_, let ending, let rollingOn, let said):
@@ -1079,11 +1086,15 @@ public final class PlayerModel {
             // A later file of the play that showed a picture (a switch, a failover, the way back
             // from a failed switch): any starting screen it shows counts from now, with nothing
             // of the first file's peers or clock.
-            if walk?.pictured == true { walk?.anotherFile(at: time.now()) }
+            if walk?.pictured == true { anotherFile() }
             resetFile()
             paused = keepPause
         case .playbackRestart:
-            if !hasPicture { firstFrame() }
+            if !hasPicture {
+                // A file that shows a picture is the one playing: the next is another's.
+                nextFile = nil
+                firstFrame()
+            }
         case .fileLoaded:
             Self.note(.info, "#\(current.map(String.init) ?? "?") file loaded\(elapsed)")
             if !hasPicture, walk != nil {
@@ -2043,6 +2054,7 @@ public final class PlayerModel {
     public func switchSource() {
         input()
         stall = nil
+        nextFile = NextFile(source: nil)
         control(.stallSwitch)
     }
 
@@ -2356,6 +2368,7 @@ extension PlayerModel {
             } else {
                 track(SwitchTarget(to), .loading, at: now)
             }
+            nextFile = NextFile(source: to.name.isEmpty ? nil : to.name, translation: to.translation)
             hold(at: at)
         case .landed(let to, let at):
             Self.note(.info, "switch: landed on \(to.providerId) at \(Int(at)) s")
@@ -2376,6 +2389,10 @@ extension PlayerModel {
             } else if panelSwitch?.on(target) ?? true {
                 panelSwitch = nil
             }
+            // Any starting screen still up over its file names it.
+            nextFile = nil
+            if !to.name.isEmpty { walk?.playsFrom(to.name) }
+            if let version = to.translation { walk?.choseTranslation(version) }
             releaseHold(fade: true)
             if !panelOpen, to.release != nil {
                 say(L.noticePlayingFromSource(source: to.name, clock: PlayerClock.label(at)))
@@ -2389,8 +2406,28 @@ extension PlayerModel {
             } else {
                 track(SwitchTarget(to), .failed(text.text), at: now)
             }
+            // Back on what played before, in the version it played in.
+            nextFile = nil
+            walk?.playsFrom(playingSource)
+            if let version = to.translation { walk?.choseTranslation(version == .dub ? .sub : .dub) }
             releaseHold(fade: true)
         }
+    }
+
+    /// A later file of the play started: its starting screen counts from now and names where
+    /// it comes from. The first file a switch loads is the switch's; one after it, before the
+    /// switch lands or fails, is another stream or the way back, from a source not yet said.
+    /// A file nothing announced is the source playing's.
+    private func anotherFile() {
+        var source = playingSource
+        var translation: KaeriKit.Translation?
+        if var next = nextFile {
+            source = next.started ? nil : next.source
+            translation = next.started ? nil : next.translation
+            next.started = true
+            nextFile = next
+        }
+        walk?.anotherFile(at: time.now(), from: source, translation: translation)
     }
 
     /// The row's switch moves on to `phase`; a switch the panel did not pick (a stream from the
@@ -2459,4 +2496,14 @@ extension PlayerModel {
         playingRelease = nil
         versionSwitch = nil
     }
+}
+
+/// Where the next file of a play comes from, as a switch's Loading said it: its source's name
+/// (`nil` when the engine moves on by itself, and says where only once it plays) and the version
+/// it plays in, when the switch is to the other one.
+private struct NextFile {
+    var source: String?
+    var translation: KaeriKit.Translation?
+    /// mpv has started the file: one after it is not the switch's own.
+    var started = false
 }

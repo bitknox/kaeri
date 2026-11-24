@@ -196,8 +196,15 @@ public struct StartingWalk: Equatable, Sendable {
     /// A later file of the same play, after one showed a picture: a switch to another release
     /// or stream, a failover, or the way back from a switch that failed. Its wait starts now,
     /// on the stream being opened, with nothing of the last file's swarm, speed or buffering,
-    /// and no resume line, as the episode goes on where it was.
-    public mutating func anotherFile(at now: ContinuousClock.Instant) {
+    /// and no resume line, as the episode goes on where it was. It comes from `source`, `nil`
+    /// while that is not known, and plays in `translation` when that changed: nothing the
+    /// start's own lookup found, asked or missed is said of it.
+    public mutating func anotherFile(
+        at now: ContinuousClock.Instant, from source: String?, translation: Translation? = nil
+    ) {
+        playsFrom(source)
+        pinMissed = nil
+        if let translation { self.translation = translation }
         began = now
         activeSince = now
         rungSince = now
@@ -215,6 +222,13 @@ public struct StartingWalk: Equatable, Sendable {
 
     /// The viewer switched the translation: the streams found are for the other one.
     public mutating func choseTranslation(_ translation: Translation) { self.translation = translation }
+
+    /// The file loading comes from `source`, as a switch or the engine said: the source the
+    /// start asked, when it is another, is not the one waited for or skipped.
+    public mutating func playsFrom(_ source: String?) {
+        from = source
+        if asked?.name != source { asked = nil }
+    }
 
     /// mpv loaded the file and has not shown a frame: waiting for data, with no number to give.
     public mutating func loaded(at now: ContinuousClock.Instant) {
