@@ -43,6 +43,10 @@ pub struct MockProvider {
     no_dub: bool,
     streams_for: HashMap<ProviderKey, Vec<Stream>>,
     sources: Vec<SourceCandidate>,
+    /// How a listing of `sources` answers, apart from every other call: after how long, and
+    /// with which error in place of the list. See [`MockProvider::listing_after`].
+    sources_after: Duration,
+    sources_error: Option<ProviderError>,
     /// What each release in `sources` resolves to, by its id, for a pick by hand.
     source_streams: HashMap<String, Vec<Stream>>,
     error: Option<ProviderError>,
@@ -76,6 +80,8 @@ impl MockProvider {
             no_dub: false,
             streams_for: HashMap::new(),
             sources: Vec::new(),
+            sources_after: Duration::ZERO,
+            sources_error: None,
             source_streams: HashMap::new(),
             error: None,
             unavailable: None,
@@ -163,6 +169,16 @@ impl MockProvider {
     /// Fail every call with this error.
     pub fn with_sources(mut self, sources: Vec<SourceCandidate>) -> Self {
         self.sources = sources;
+        self
+    }
+
+    /// Answer a listing of the releases (`sources`) only after `wait`, and with `error` in
+    /// place of the list when one is given. Searches and every other call answer as they
+    /// otherwise would, so a source can match a title at once and then be slow, or fail, to
+    /// list an episode's releases.
+    pub fn listing_after(mut self, wait: Duration, error: Option<ProviderError>) -> Self {
+        self.sources_after = wait;
+        self.sources_error = error;
         self
     }
 
@@ -302,8 +318,14 @@ impl Provider for MockProvider {
         _episode: &str,
         _translation: Translation,
     ) -> Result<Vec<SourceCandidate>, ProviderError> {
+        if !self.sources_after.is_zero() {
+            tokio::time::sleep(self.sources_after).await;
+        }
         self.record().await?;
-        Ok(self.sources.clone())
+        match &self.sources_error {
+            Some(error) => Err(error.clone()),
+            None => Ok(self.sources.clone()),
+        }
     }
 
     async fn resolve_source(

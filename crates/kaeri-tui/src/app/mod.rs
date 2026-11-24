@@ -800,6 +800,8 @@ impl App {
             Event::Sources { id, episode, candidates, missed } => {
                 self.apply_sources(id, episode, candidates, &missed)
             }
+            // The terminal's picker opens once every source has answered.
+            Event::SourcesProgress { .. } => {}
             Event::MatchChoices { id, provider_id, candidates, answers, .. } => {
                 self.apply_match_choices(id, provider_id, candidates, answers)
             }

@@ -21,9 +21,9 @@ use crate::{dispatch, outbox::Outbox, services::Services, state::EngineState};
 const RECENT: usize = 3;
 
 /// The titles whose episodes were listed lately, newest last, and which listing of each is the
-/// current one.
+/// current one: of its episodes, of its sources' coverage, and of an episode's releases.
 #[derive(Debug, Default)]
-pub struct Listed(Vec<AnilistId>, Generations, Generations);
+pub struct Listed(Vec<AnilistId>, Generations, Generations, Generations);
 
 /// Which listing of each title is the newest. A load, a pin and a source change each start one,
 /// and a slow earlier one must not land over a newer table.
@@ -93,6 +93,15 @@ impl Listed {
         let n = map.entry(id).or_insert(0);
         *n += 1;
         Ticket { id, n: *n, generations: self.2.clone() }
+    }
+
+    /// Start a listing of an episode's releases of title `id`, for the Sources tab: only the
+    /// newest says anything, so a tab closed and opened again is not drawn by two at once.
+    pub fn sources_ticket(&self, id: AnilistId) -> Ticket {
+        let mut map = self.3.0.lock().unwrap();
+        let n = map.entry(id).or_insert(0);
+        *n += 1;
+        Ticket { id, n: *n, generations: self.3.clone() }
     }
 
     pub fn has(&self, id: AnilistId) -> bool {

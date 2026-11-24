@@ -8989,6 +8989,9 @@ player-start-pinned = Your pick for this show
 # Detail line when a source has no match for the show.
 player-start-miss-no-match = { $name } doesn't have this show
 
+# Detail line when a source found titles like the show and could not tell which one it is.
+player-start-miss-ambiguous = { $name } couldn't match this title
+
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } doesn't have episode { $episode }
 
@@ -9686,6 +9689,9 @@ player-translation = Subbed or dubbed
 
 # Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
 player-panel-starting = Starting · { $seconds } s
+
+# Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.
+player-panel-asking = Asking · { $seconds } s
 
 # Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
 player-finding-version-seconds = Finding episode { $episode } dubbed · { $seconds } s

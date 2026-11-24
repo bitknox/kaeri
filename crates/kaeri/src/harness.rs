@@ -865,6 +865,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::MatchFixFailed { .. } => "MatchFixFailed",
         Event::TitleMatch { .. } => "TitleMatch",
         Event::Sources { .. } => "Sources",
+        Event::SourcesProgress { .. } => "SourcesProgress",
         Event::SourceOptions { .. } => "SourceOptions",
         Event::PinUnavailable { .. } => "PinUnavailable",
         Event::PlaybackVolume(_) => "PlaybackVolume",
@@ -1094,6 +1095,9 @@ fn copy(update: &Event) -> Event {
             candidates: candidates.clone(),
             missed: missed.clone(),
         },
+        Event::SourcesProgress { id, episode, rows } => {
+            Event::SourcesProgress { id: *id, episode: episode.clone(), rows: rows.clone() }
+        }
         Event::PinUnavailable { id, provider_id, name } => Event::PinUnavailable {
             id: *id,
             provider_id: provider_id.clone(),

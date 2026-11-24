@@ -16,6 +16,7 @@ use kaeri_model::{
     search::SearchQuery,
     settings::SettingKey,
     sources::MatchQuestion,
+    starting::ListingState,
 };
 use kaeri_providers::{MockProvider, ProviderRegistry};
 use kaeri_store::ResolutionRung;
@@ -532,11 +533,27 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
 
-    assert_eq!(names(&updates), ["Sources", "JobDone"]);
-    let Event::Sources { id, episode, candidates, missed } = &updates[0] else {
+    // The source's row as it is asked, as it answered, then the slate.
+    assert_eq!(names(&updates), ["SourcesProgress", "SourcesProgress", "Sources", "JobDone"]);
+    let rows = |update: &Event| match update {
+        Event::SourcesProgress { id, episode, rows } => {
+            assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
+            rows.iter()
+                .map(|row| (row.provider_id.clone(), row.state.clone()))
+                .collect::<Vec<_>>()
+        }
+        other => panic!("not progress: {other:?}"),
+    };
+    assert_eq!(rows(&updates[0]), [(sources::PROVIDER_ID.to_owned(), ListingState::Asking)]);
+    let answered = rows(&updates[1]);
+    let [(_, ListingState::Listed { releases })] = answered.as_slice() else {
+        panic!("the source listed its release: {:?}", updates[1])
+    };
+    assert_eq!(releases.len(), 1);
+    let Event::Sources { id, episode, candidates, missed } = &updates[2] else {
         unreachable!()
     };
-    assert!(missed.is_empty(), "with releases listed, no source's miss is said");
+    assert!(missed.is_empty(), "the one source listed a release");
     assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
     let listed: Vec<_> = candidates.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(listed, ["release-1"]);
@@ -560,11 +577,11 @@ async fn releases_that_cannot_be_listed_say_why() {
     let mut h = harness(unsure()).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
-    assert_eq!(names(&updates), ["Sources", "JobDone"]);
-    let Event::Sources { candidates, missed, .. } = &updates[0] else { unreachable!() };
+    assert_eq!(names(&updates), ["SourcesProgress", "SourcesProgress", "Sources", "JobDone"]);
+    let Event::Sources { candidates, missed, .. } = &updates[2] else { unreachable!() };
     assert!(candidates.is_empty());
     let said: Vec<_> = missed.iter().map(|m| (m.name.as_str(), m.miss)).collect();
-    assert_eq!(said, [(sources::PROVIDER_ID, kaeri_model::starting::ListingMiss::NoMatch)]);
+    assert_eq!(said, [(sources::PROVIDER_ID, kaeri_model::starting::ListingMiss::Ambiguous)]);
     ends(&updates, job);
 }
 

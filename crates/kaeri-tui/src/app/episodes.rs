@@ -635,6 +635,7 @@ fn missed_line(missed: &MissedListing, episode: &str) -> String {
     let name = missed.name.as_str();
     match &missed.miss {
         ListingMiss::NoMatch => t::player_start_miss_no_match(name),
+        ListingMiss::Ambiguous => t::player_start_miss_ambiguous(name),
         ListingMiss::NoEpisode => t::player_start_miss_no_episode(name, episode),
         ListingMiss::Failed => t::player_start_miss_failed(name),
         ListingMiss::TimedOut => t::player_start_miss_timed_out(name),

@@ -8745,6 +8745,10 @@ object Strings {
     fun playerStartMissNoMatch(context: Context, name: String): String =
         context.getString(R.string.player_start_miss_no_match, name)
 
+    /** Detail line when a source found titles like the show and could not tell which one it is. */
+    fun playerStartMissAmbiguous(context: Context, name: String): String =
+        context.getString(R.string.player_start_miss_ambiguous, name)
+
     /** Detail line when a source has the show and not the episode. The episode is its label. */
     fun playerStartMissNoEpisode(context: Context, name: String, episode: String): String =
         context.getString(R.string.player_start_miss_no_episode, name, episode)
@@ -9629,6 +9633,10 @@ object Strings {
     /** Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. */
     fun playerPanelStarting(context: Context, seconds: Int): String =
         context.getString(R.string.player_panel_starting, seconds)
+
+    /** Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow. */
+    fun playerPanelAsking(context: Context, seconds: Int): String =
+        context.getString(R.string.player_panel_asking, seconds)
 
     /** Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. */
     fun playerFindingVersionSeconds(context: Context, episode: String, seconds: Int): String =

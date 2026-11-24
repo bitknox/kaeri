@@ -7689,6 +7689,10 @@
     <value>{name} doesn't have this show</value>
     <comment>Detail line when a source has no match for the show.</comment>
   </data>
+  <data name="PlayerStartMissAmbiguous" xml:space="preserve">
+    <value>{name} couldn't match this title</value>
+    <comment>Detail line when a source found titles like the show and could not tell which one it is.</comment>
+  </data>
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} doesn't have episode {episode}</value>
     <comment>Detail line when a source has the show and not the episode. The episode is its label.</comment>
@@ -8613,6 +8617,10 @@
   <data name="PlayerPanelStarting" xml:space="preserve">
     <value>Starting · {seconds} s</value>
     <comment>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</comment>
+  </data>
+  <data name="PlayerPanelAsking" xml:space="preserve">
+    <value>Asking · {seconds} s</value>
+    <comment>Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.</comment>
   </data>
   <data name="PlayerFindingVersionSeconds" xml:space="preserve">
     <value>Finding episode {episode} dubbed · {seconds} s</value>
