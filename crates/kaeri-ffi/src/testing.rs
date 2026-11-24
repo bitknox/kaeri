@@ -284,3 +284,33 @@ pub(crate) fn options(
     });
     Ok(options)
 }
+
+/// Hold the scene's made-up waits at `at_ms` from now, or move the hold on to it: the still clock
+/// ([`kaeri_providers::still`]). The first call turns the clock on at nought; from then on the
+/// fixture scenes' slow answers end on it, all the ones due by the hold at once and in their
+/// order, and none after it until the hold moves on. It never goes back. An app's shot calls this
+/// for its launch argument before the scene starts (`KAERI_STILL_AT` does the same from the
+/// environment), steps it for a made-up start it replays, and reads
+/// [`testing_still_clock_now_ms`] for its own timing. Only in a build with the `testing` feature.
+#[uniffi::export]
+pub fn testing_still_clock_hold(at_ms: u64) {
+    kaeri_providers::still::hold(std::time::Duration::from_millis(at_ms));
+}
+
+/// [`testing_still_clock_hold`] at `seconds` as a launch argument says them (`4`, `0.3`); false,
+/// and the clock left as it was, when they are not a number of seconds. Only in a build with the
+/// `testing` feature.
+#[uniffi::export]
+pub fn testing_still_clock_hold_seconds(seconds: String) -> bool {
+    let Some(at) = crate::scenes::parse_still_at(&seconds) else { return false };
+    kaeri_providers::still::hold(at);
+    true
+}
+
+/// Now on the still clock, in milliseconds since it was turned on: what an app's timing of a
+/// still shot reads in place of its own clock. `None` while the clock is off, as it is in a
+/// recording and in every app. Only in a build with the `testing` feature.
+#[uniffi::export]
+pub fn testing_still_clock_now_ms() -> Option<u64> {
+    kaeri_providers::still::now().map(|now| u64::try_from(now.as_millis()).unwrap_or(u64::MAX))
+}

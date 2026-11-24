@@ -373,6 +373,23 @@ fn scenes_at() -> Option<i64> {
     std::env::var(SCENES_AT_VAR).ok()?.trim().parse().ok().filter(|at| *at > 0)
 }
 
+/// The environment variable that holds the scene's made-up waits at a moment, in seconds from
+/// when the scene starts (`4`, `0.3`): a still shot of what shows that long in, taken at once
+/// and the same on every run. See [`kaeri_providers::still`], and `testing_still_clock_hold`,
+/// which an app calls for its own launch argument.
+pub const STILL_AT_VAR: &str = "KAERI_STILL_AT";
+
+/// The moment the environment holds the scene's waits at, if it does.
+fn still_at() -> Option<std::time::Duration> {
+    parse_still_at(&std::env::var(STILL_AT_VAR).ok()?)
+}
+
+/// Seconds, as `KAERI_STILL_AT` and the apps' launch arguments say them.
+pub(crate) fn parse_still_at(seconds: &str) -> Option<std::time::Duration> {
+    let seconds: f64 = seconds.trim().parse().ok()?;
+    (seconds.is_finite() && seconds >= 0.0).then(|| std::time::Duration::from_secs_f64(seconds))
+}
+
 /// What Check this server shows for a made-up server at home whose certificate this device
 /// does not trust: the host, the address to pass back with Allow this certificate, and the
 /// fingerprint in groups of four. For the apps' fixture shots of that step, which no scene can
@@ -549,6 +566,9 @@ impl FfiEngine {
         let world = home_world_asked();
         if let Some(at) = scenes_at() {
             kaeri_engine::clock::stop_at(at);
+        }
+        if let Some(at) = still_at() {
+            kaeri_providers::still::hold(at);
         }
         Self::start_scene_from(dirs, host, scene, &start, Clock::default(), world)
     }
