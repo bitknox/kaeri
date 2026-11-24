@@ -277,6 +277,7 @@ public static class ReleasePicker
     public static string Missed(MissedListing m, string episode) => m.Miss switch
     {
         ListingMiss.NoMatch => T.PlayerStartMissNoMatch(m.Name),
+        ListingMiss.Ambiguous => T.PlayerStartMissAmbiguous(m.Name),
         ListingMiss.NoEpisode => T.PlayerStartMissNoEpisode(m.Name, episode),
         ListingMiss.Failed => T.PlayerStartMissFailed(m.Name),
         ListingMiss.TimedOut => T.PlayerStartMissTimedOut(m.Name),

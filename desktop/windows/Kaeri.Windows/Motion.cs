@@ -108,6 +108,21 @@ static class Motion
         Fade(from, from.Opacity, 0, Standard, Curve.Spring, done);
     }
 
+    /// <summary>
+    /// One line changing in place on the fade-in token: the new one comes as the old one goes, both
+    /// on screen together, whether or not animation effects are on. <paramref name="done"/> runs
+    /// when the old one has gone, unless another fade took it over.
+    /// </summary>
+    public static void Swap(UIElement from, UIElement to, Action? done = null)
+    {
+        Fade(to, to.Opacity, 1, FadeInTime, Curve.FadeIn, null);
+        Fade(from, from.Opacity, 0, FadeInTime, Curve.FadeIn, done);
+    }
+
+    /// <summary>A part of a line coming or going in step with <see cref="Swap"/>: the fade-in token, whichever way.</summary>
+    public static void FadeLine(UIElement element, double to, Action? done = null) =>
+        Fade(element, element.Opacity, to, FadeInTime, Curve.FadeIn, done);
+
     /// <summary>Fades an element that keeps its place to <paramref name="to"/>, whether or not animation effects are on.</summary>
     public static void FadeTo(UIElement element, double to, TimeSpan time) =>
         Fade(element, element.Opacity, to, time, to > element.Opacity ? Curve.FadeIn : Curve.FadeOut, null);

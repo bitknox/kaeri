@@ -452,6 +452,7 @@ public sealed partial class MainWindow : Window
                 "store-owner" => new FfiScene.StoreOwner(),
                 "store-invited" => new FfiScene.StoreInvited(),
                 "playing" => new FfiScene.Playing(options.Media ?? @"C:\setup\sdr-testsrc.mp4"),
+                "sourcesloading" => new FfiScene.SourcesLoading(options.Media ?? @"C:\setup\sdr-testsrc.mp4"),
                 "demo-only" => new FfiScene.DemoOnly(),
                 "demo-played" => new FfiScene.DemoPlayed(),
                 "demo-and-store" => new FfiScene.DemoAndStore(),
