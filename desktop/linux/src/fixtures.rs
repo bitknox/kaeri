@@ -317,7 +317,7 @@ fn still_at() -> Option<std::time::Duration> {
 /// Start the engine on the scene, its files under `root`.
 pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<Started, String> {
     if let Some(at) = still_at() {
-        kaeri_providers::still::hold(at);
+        kaeri_providers::still::hold_from_start(at);
         tracing::info!(at = ?at, "the scene's made-up waits held still");
     }
     let paths = paths_under(root);
