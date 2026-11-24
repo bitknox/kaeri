@@ -9,6 +9,10 @@
 # spike's report.txt and mpv.log land in -Out as well. A mark that could not be taken (the program
 # had exited, the capture failed) is reported as FAILED and the rest are still taken; the script
 # then exits 1, so a caller never mistakes a run with missing shots for a good one.
+#
+# For the Fixtures app's time-dependent screens, pass --still=<seconds> in -Arguments (with
+# --show=starting-<state>, say) and take one mark once it has settled, about 5 s after its window
+# shows, instead of a mark at the moment on the wall clock.
 param(
   [Parameter(Mandatory)][string]$Exe,
   [Parameter(Mandatory)][string]$Out,

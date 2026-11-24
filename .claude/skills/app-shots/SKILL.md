@@ -30,6 +30,22 @@ android/scripts/shots.sh <phone|phone-37|tablet|fold> [shot…]
 Same shot syntax: `watching`, `fresh`, or `app` (real AniList), then `:calendar`, `:seasonal`,
 `title=<id>` and so on. Roborazzi JVM shots (`:ui` tests) cover most boards without an emulator.
 
+## Windows
+
+The Fixtures build (`-p:EngineFlavour=testing`, the `windows` kind on slot) takes the same scenes
+as launch arguments: `Kaeri.exe --scene=watching --page=calendar`, `--show=<state>` and the rest
+in `desktop/windows/Kaeri.Windows/Options.cs`. Shots run in the PC's test VM (`vm.ps1 shot`
+under `slot with gui --wsl`, see the slot README) or with `desktop/windows/scripts/spike-shot.ps1`
+on a signed-in desktop; both capture the window at set seconds after launch, and spike-shot.ps1
+exits 1 when a mark was lost.
+
+- Time-dependent screens are still shots: `--still=<seconds>` holds the engine's still clock
+  there. With `--show=starting-<state>` (or the older `--show=starting-<state>-<seconds>`) the
+  made-up start is stepped to that moment at once and its seconds read the still clock, so one
+  mark about 5 s after the window shows exactly that moment; the app logs "settled" 1.5 s after
+  the hold. With any other scene `--still` holds the scene's made-up waits, as `KAERI_STILL_AT`
+  does. Without it everything runs on the wall clock, which recordings need.
+
 ## Fixture ids
 
 Made-up titles only: 900001–900006 (the base fixtures), 920001–920014 (a 12-season franchise
