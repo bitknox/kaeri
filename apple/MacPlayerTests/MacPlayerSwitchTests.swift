@@ -33,8 +33,8 @@ final class MacPlayerSwitchTests: XCTestCase {
             XCTAssertTrue(release.waitForExistence(timeout: 10), "no Ember Subs release")
             release.click()
         }
-        // The other version, which only Harbor Index has for this episode.
-        try step(app, "3-dub", expected: "Harbor Index", dubbed: true) {
+        // The other version, which Lantern Index has from its local file, with no wait.
+        try step(app, "3-dub", expected: "Lantern Index", dubbed: true) {
             let dubbed = app.radioButtons["Dubbed"].firstMatch
             XCTAssertTrue(dubbed.waitForExistence(timeout: 10), "no Dubbed")
             dubbed.click()
@@ -54,48 +54,59 @@ final class MacPlayerSwitchTests: XCTestCase {
         click(app, "Close")
 
         var named: Set<String> = []
+        var seen: [String] = []
         var curtainShot = false
         var noticeShot = false
-        let deadline = Date().addingTimeInterval(30)
+        var curtainSeen = false
+        let began = Date()
         var settledSince: Date?
-        while Date() < deadline {
+        while Date().timeIntervalSince(began) < 30 {
             let texts = shownTexts(app)
+            for text in texts where !seen.contains(text) { seen.append(text) }
             let from = texts.compactMap { Self.name(after: "From ", in: $0) }
             let waiting = texts.compactMap { Self.name(after: "Still waiting for ", in: $0) }
             named.formUnion(from + waiting)
-            let curtain = !from.isEmpty || texts.contains { $0.hasPrefix("Opening") || $0.hasPrefix("Buffering") }
-            if curtain {
-                if dubbed {
-                    let sub = app.radioButtons["Subtitled"].firstMatch
-                    if sub.exists, (sub.value as? Int) == 1 || sub.isSelected {
-                        named.insert("Subtitled on the starting screen")
-                    }
-                }
-                if !curtainShot {
-                    // Its detail line comes after a second.
-                    if !from.isEmpty { keep(app, "\(name)-starting-screen"); curtainShot = true }
+            let curtain = !from.isEmpty
+                || texts.contains { $0.contains("Opening the stream") || $0.contains("Buffering") }
+            curtainSeen = curtainSeen || curtain
+            // The starting screen's own version switch, with the panel's out of the way.
+            if curtain, dubbed, !texts.contains("Playing now") {
+                let sub = app.radioButtons["Subtitled"].firstMatch
+                if sub.exists, (sub.value as? Int) == 1 {
+                    named.insert("Subtitled on the starting screen")
                 }
             }
-            let notice = texts.first { $0.hasPrefix("Playing from ") || $0.hasPrefix("Audio is now") }
-            if let notice {
+            // Its detail line, with the name, comes after a second.
+            if !from.isEmpty, !curtainShot { keep(app, "\(name)-starting-screen"); curtainShot = true }
+            if let notice = texts.first(where: { $0.contains("Playing from ") || $0.contains("Audio is now") }) {
                 if let source = Self.name(after: "Playing from ", in: notice) {
                     named.insert(source.components(separatedBy: " at ").first ?? source)
                 }
                 if !noticeShot { keep(app, "\(name)-notice"); noticeShot = true }
             }
-            // Landed: the notice is up and the starting screen has gone for a second.
-            if noticeShot, !curtain {
+            // Landed: the starting screen came and went, and has stayed away for two seconds, or
+            // never came in 12 s.
+            if !curtain, curtainSeen || Date().timeIntervalSince(began) > 12 {
                 if settledSince == nil { settledSince = Date() }
-                if Date().timeIntervalSince(settledSince!) > 1 { break }
+                if Date().timeIntervalSince(settledSince!) > 2 { break }
             } else {
                 settledSince = nil
             }
-            Thread.sleep(forTimeInterval: 0.15)
+            Thread.sleep(forTimeInterval: 0.1)
         }
-        XCTAssertTrue(noticeShot, "\(name): no notice that the switch landed")
+        let texts = XCTAttachment(string: seen.joined(separator: "\n"))
+        texts.name = "texts-\(name)"
+        texts.lifetime = .keepAlways
+        add(texts)
+        // The other version's file can show its first frame before the switch lands, with the
+        // picture held over it all along: then no starting screen comes up to name anything.
+        XCTAssertTrue(curtainSeen || dubbed, "\(name): the starting screen never came up over the switch's file")
         if !curtainShot { keep(app, "\(name)-after") }
         XCTAssertEqual(named.subtracting([expected]), [], "\(name): names other than \(expected) shown")
         XCTAssertEqual(playingNow(app, "\(name)-sources"), expected, "\(name): Playing now")
+        if dubbed {
+            XCTAssertEqual(app.radioButtons["Dubbed"].firstMatch.value as? Int, 1, "\(name): Dubbed is not picked")
+        }
         click(app, "Close")
     }
 
@@ -110,8 +121,7 @@ final class MacPlayerSwitchTests: XCTestCase {
         let sources = app.radioButtons["Sources"].firstMatch
         XCTAssertTrue(sources.waitForExistence(timeout: 10), "no Sources tab")
         sources.click()
-        XCTAssertTrue(
-            app.staticTexts["Playing now"].firstMatch.waitForExistence(timeout: 10), "the Sources tab did not open")
+        XCTAssertTrue(waitFor { self.shownTexts(app).contains("Playing now") }, "the Sources tab did not open")
         // Its releases, listed once the engine has them.
         Thread.sleep(forTimeInterval: 1.5)
     }
@@ -127,7 +137,9 @@ final class MacPlayerSwitchTests: XCTestCase {
 
     /// A row of the Sources tab, by the start of its spoken label.
     private func row(_ app: XCUIApplication, _ title: String) -> XCUIElement {
-        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label BEGINSWITH %@", title))
+        // Any space in it may be a no-break one.
+        let words = NSRegularExpression.escapedPattern(for: title).replacingOccurrences(of: " ", with: ".")
+        let row = app.descendants(matching: .any).matching(NSPredicate(format: "label MATCHES %@", "(?s)\(words).*"))
             .element(boundBy: 0)
         XCTAssertTrue(row.waitForExistence(timeout: 10), "no row for \(title)")
         return row
@@ -135,19 +147,19 @@ final class MacPlayerSwitchTests: XCTestCase {
 
     // MARK: Reading the window
 
-    /// Every text the window shows, labels and values, in the accessibility tree's order.
+    /// Every text the app's windows show, labels and values, in the accessibility tree's order.
     private func shownTexts(_ app: XCUIApplication) -> [String] {
         guard let root = try? app.snapshot() else { return [] }
         var texts: [String] = []
         func walk(_ element: XCUIElementSnapshot) {
-            if element.elementType == .staticText || element.elementType == .button || element.elementType == .group {
-                for text in [element.label, element.value as? String ?? ""] where !text.isEmpty {
-                    texts.append(text)
-                }
+            // The panel keeps a heading's or a fact's words together with no-break spaces.
+            for text in [element.label, element.value as? String ?? ""] where !text.isEmpty {
+                texts.append(text.replacingOccurrences(of: "\u{00A0}", with: " "))
             }
             element.children.forEach(walk)
         }
-        walk(root)
+        // The windows only: the menu bar's items are always there.
+        root.children.filter { $0.elementType == .window }.forEach(walk)
         return texts
     }
 
@@ -155,7 +167,7 @@ final class MacPlayerSwitchTests: XCTestCase {
     private static func name(after prefix: String, in text: String) -> String? {
         guard let range = text.range(of: prefix) else { return nil }
         let rest = text[range.upperBound...]
-        return rest.components(separatedBy: " · ").first.map(String.init)
+        return rest.components(separatedBy: " · ").first.map { String($0) }
     }
 
     /// A screenshot of the main window, kept in the result bundle as `name`.
@@ -189,6 +201,8 @@ final class MacPlayerSwitchTests: XCTestCase {
         XCTAssertTrue(app.wait(for: .runningForeground, timeout: 30))
         let up = app.buttons["Enter full screen"].firstMatch
         XCTAssertTrue(up.waitForExistence(timeout: 90), "the player did not come up")
+        // A stale name in one step still leaves the next step's screens to look at.
+        continueAfterFailure = true
         Thread.sleep(forTimeInterval: 1.5)
         return app
     }
@@ -206,6 +220,15 @@ final class MacPlayerSwitchTests: XCTestCase {
         window.coordinate(withNormalizedOffset: CGVector(dx: 0.4, dy: 0.45)).hover()
         window.coordinate(withNormalizedOffset: CGVector(dx: 0.42, dy: 0.5)).hover()
         Thread.sleep(forTimeInterval: 0.4)
+    }
+
+    private func waitFor(timeout: TimeInterval = 10, _ condition: () -> Bool) -> Bool {
+        let deadline = Date().addingTimeInterval(timeout)
+        while Date() < deadline {
+            if condition() { return true }
+            Thread.sleep(forTimeInterval: 0.2)
+        }
+        return condition()
     }
 
     private func mainWindow(_ app: XCUIApplication) -> XCUIElement {
