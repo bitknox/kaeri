@@ -57,6 +57,15 @@ internal object Flavour {
         if (named != null && FixtureScene.named(named) == null) Log.w(TvApp.TAG, "no scene named $named")
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
         fixtureMedia = intent.getStringExtra("media") ?: File(context.cacheDir, EPISODE).path
+        // stillat=<seconds>: a still shot. The engine's still clock goes on before the scene starts, so
+        // its made-up waits run on it: held at the moment for a scene's shot, or at nought for a
+        // `start` replay, which steps it to the moment itself (StartReplay).
+        intent.getStringExtra("stillat")?.let { at ->
+            when {
+                intent.getStringExtra("start") != null && StartReplay.stillMillis(intent) != null -> app.kaeri.player.PlayerTime.hold(0)
+                !app.kaeri.player.PlayerTime.holdSeconds(at) -> Log.w(TvApp.TAG, "stillat takes seconds (24, 0.3), not $at")
+            }
+        }
         return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context))
     }
 

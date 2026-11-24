@@ -187,6 +187,15 @@ internal object Flavour {
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         FixtureCasts.stepsAfter = intent.getStringExtra("castat")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
+        // stillat=<seconds>: a still shot. The engine's still clock goes on before the scene starts, so
+        // its made-up waits run on it: held at the moment for a scene's shot, or at nought for a
+        // `start` replay, which steps it to the moment itself (StartReplay).
+        intent.getStringExtra("stillat")?.let { at ->
+            when {
+                intent.getStringExtra("start") != null && StartReplay.stillMillis(intent) != null -> app.kaeri.player.PlayerTime.hold(0)
+                !app.kaeri.player.PlayerTime.holdSeconds(at) -> Log.w(KaeriApp.TAG, "stillat takes seconds (24, 0.3), not $at")
+            }
+        }
         return EngineLaunch.fixtures(scene, context.cacheDir)
             .copy(
                 platform = enginePlatform(context),
@@ -296,9 +305,11 @@ internal object Flavour {
 
     /**
      * The TV scene the `tv` extra names, set up once Play on TV is, and true once it is on
-     * screen: what announceReady waits on besides the store. True with no scene asked for.
+     * screen: what announceReady waits on besides the store. True with no scene asked for. A
+     * still `start` replay (`stillat`) holds its moment first.
      */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean {
+        if (!StartReplay.held()) return false
         if (!reachedReading(intent, store)) return false
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
             val app = appContext as? KaeriApp ?: return false

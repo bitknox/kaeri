@@ -26,6 +26,8 @@
 # `am instrument`; each logs its marks, and the screen recording's first frame is timed by the
 # device's own clock, so no clock but the emulator's is involved.
 set -euo pipefail
+# Git Bash on the PC turns adb's device paths (/sdcard/...) into Windows paths without this.
+export MSYS_NO_PATHCONV=1
 shopt -s inherit_errexit 2>/dev/null || true
 
 platform="$1"
