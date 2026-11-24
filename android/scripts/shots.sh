@@ -32,6 +32,9 @@
 #
 # KAERI_AVD names another AVD than the table's, for a worktree with its own.
 #
+# KAERI_SHOTS_APK=<apk> installs that Fixtures APK instead of building one, for a slot job that
+# was handed a ready build with --input (fixtures shots only, not app).
+#
 # KAERI_SHOTS_LOCALE=en-XA takes the shots in that app language, to look for clipped or
 # unaccented text.
 #
@@ -49,10 +52,25 @@
 #
 #   android/scripts/shots.sh phone reading-home:medium=both+search+scope=reading+readfilters=set
 #
+# A made-up start on the player's starting screen: start=<state> (slow, source-missed, offline and
+# the other StartingFixture names) replays it on the wall clock, as recordings need. Add
+# stillat=<seconds> for a still: the replay steps the engine's still clock to that moment at once,
+# so the shot shows the screen <seconds> in (its seconds and its wording) however slow the
+# emulator, and the app says KAERI_READY once it is held there. stillat alone holds a scene's own
+# made-up waits (slow sources, a slow AniList) at that moment:
+#
+#   android/scripts/shots.sh phone watching:start=slow+stillat=24
+#
 # The status bar is in demo mode at 19:30, and the system dark. The app says KAERI_READY in the
 # log once its screens have what they asked for, and the shot is taken then.
+#
+# A shot whose app never said KAERI_READY, whose screencap failed or came out empty, or whose
+# system setting did not take is still taken (or tried) and the run goes on to the next; at the
+# end the script prints one line per failed shot and exits 1.
 set -euo pipefail
 shopt -s inherit_errexit 2>/dev/null || true
+# Git Bash on the PC turns adb's device paths (/sdcard/...) into Windows paths without this.
+export MSYS_NO_PATHCONV=1
 
 usage() {
   echo "usage: android/scripts/shots.sh <phone|phone-37|tablet|fold> [<watching|sourceless|fresh|unsure|app>[:<section|key=value>[+…]]]…" >&2
@@ -82,6 +100,20 @@ adb="$sdk/platform-tools/adb"
 emulator="$sdk/emulator/emulator"
 serial="emulator-$port"
 out="$android/.shots/${KAERI_SHOTS_PHASE:-a0}"
+# What went wrong, one line per shot ("setup" before the first, "teardown" after the last):
+# printed at the end, which then exits 1.
+current=setup
+pending=""
+failures=()
+fail() {
+  echo "shots.sh: $current: $*" >&2
+  pending="${pending:+$pending; }$*"
+}
+# The step's failures, as one line, before the next step.
+step_done() {
+  [[ -z "$pending" ]] || failures+=("$current: $pending")
+  pending=""
+}
 
 # The screen that is on, for screencap on a device with more than one, a foldable's inner and
 # outer: without one it warns into the PNG and takes whichever it finds first.
@@ -128,7 +160,12 @@ for shot in "${shots[@]}"; do
 done
 tasks=()
 for flavour in $(printf '%s\n' "${flavours[@]}" | sort -u); do tasks+=(":app:assemble${flavour}Debug"); done
-(
+if [[ -n "${KAERI_SHOTS_APK:-}" ]]; then
+  [[ "${tasks[*]}" == ":app:assembleFixturesDebug" ]] || { echo "shots.sh: KAERI_SHOTS_APK takes fixtures shots only" >&2; exit 2; }
+  [[ -f "$KAERI_SHOTS_APK" ]] || { echo "shots.sh: no APK at $KAERI_SHOTS_APK" >&2; exit 2; }
+  tasks=()
+fi
+(( ${#tasks[@]} == 0 )) || (
   cd "$android"
   export JAVA_HOME="${JAVA_HOME:-/Applications/Android Studio.app/Contents/jbr/Contents/Home}"
   export GRADLE_USER_HOME="${GRADLE_USER_HOME:-$HOME/.gradle}"
@@ -171,7 +208,7 @@ setting() {
     [[ "$(shell settings get "$namespace" "$key" | tr -d '\r')" == "$value" ]] && return 0
     sleep 1
   done
-  echo "shots.sh: $namespace $key did not take $value" >&2
+  fail "$namespace $key did not take $value"
 }
 shell input keyevent KEYCODE_WAKEUP
 shell wm dismiss-keyguard
@@ -196,10 +233,12 @@ demo_mode() {
 
 for flavour in $(printf '%s\n' "${flavours[@]}" | sort -u); do
   lower="$(tr '[:upper:]' '[:lower:]' <<<"$flavour")"
-  "$adb" -s "$serial" install -r "$android/app/build/outputs/apk/$lower/debug/app-$lower-debug.apk" >/dev/null
+  "$adb" -s "$serial" install -r "${KAERI_SHOTS_APK:-$android/app/build/outputs/apk/$lower/debug/app-$lower-debug.apk}" >/dev/null
 done
 
+step_done
 for shot in "${shots[@]}"; do
+  current="$shot"
   if [[ "${shot%%:*}" == app ]]; then package=app.kaeri.app; else package=app.kaeri.fixtures; fi
   args=()
   while IFS= read -r arg; do args+=("$arg"); done < <(extras "$shot")
@@ -211,23 +250,36 @@ for shot in "${shots[@]}"; do
   [[ -z "${KAERI_SHOTS_LOCALE:-}" ]] || shell cmd locale set-app-locales "$package" --locales "$KAERI_SHOTS_LOCALE" >/dev/null
   [[ -z "${KAERI_SHOTS_FONT_SCALE:-}" ]] || shell settings put system font_scale "$KAERI_SHOTS_FONT_SCALE"
   "$adb" -s "$serial" logcat -c
-  shell am start -W -n "$package/app.kaeri.app.MainActivity" "${args[@]}" >/dev/null
+  shell am start -W -n "$package/app.kaeri.app.MainActivity" "${args[@]}" >/dev/null || fail "am start failed"
   # This launch's marker, by its process, never one an earlier shot left in the log.
-  pid="$(shell pidof "$package" | tr -d '\r')"
+  pid="$(shell pidof "$package" | tr -d '\r' || true)"
   ready=0
+  [[ -n "$pid" ]] || fail "the app was not running after the launch"
   # Up to three minutes, as long as the app waits: a machine busy with builds slows the
   # emulator a long way.
-  for _ in $(seq 1 360); do
+  tries=0
+  while [[ -n "$pid" ]] && (( tries++ < 360 )); do
     if "$adb" -s "$serial" logcat -d --pid="$pid" -s kaeri:I | grep -q KAERI_READY; then ready=1; break; fi
     sleep 0.5
   done
-  (( ready )) || echo "shots.sh: the app did not say it was ready; taking the shot anyway" >&2
+  (( ready )) || fail "the app did not say KAERI_READY; taking the shot anyway"
   # The content's crossfade and the art's fade-in, which a busy machine slows.
   sleep 1.5
   file="$out/$device-$(name "$shot").png"
-  "$adb" -s "$serial" exec-out screencap -p $(lit_display) >"$file"
-  echo "shots.sh: wrote $file"
-  shell am force-stop "$package"
+  if "$adb" -s "$serial" exec-out screencap -p $(lit_display) >"$file" && [[ -s "$file" ]]; then
+    echo "shots.sh: wrote $file"
+  else
+    fail "the screencap failed"
+  fi
+  shell am force-stop "$package" || fail "the app did not stop"
+  step_done
 done
-[[ -z "${KAERI_SHOTS_FONT_SCALE:-}" ]] || shell settings put system font_scale 1.0
-demo exit
+current=teardown
+[[ -z "${KAERI_SHOTS_FONT_SCALE:-}" ]] || shell settings put system font_scale 1.0 || fail "font_scale did not go back to 1.0"
+demo exit || true
+step_done
+if (( ${#failures[@]} )); then
+  echo "shots.sh: ${#failures[@]} failed:" >&2
+  printf 'FAILED %s\n' "${failures[@]}" >&2
+  exit 1
+fi
