@@ -1004,7 +1004,9 @@ fn loading_sources(stream: &Stream) -> Vec<MockProvider> {
             .with_hits(hit.iter().cloned().collect())
             .with_episodes_for(key.clone(), sources::episodes(FINISHED))
             .with_streams_for(key.clone(), vec![own.clone()])
-            .listing_after(SOURCES_LOADING_TIMES.get(at).copied().unwrap_or_default(), error);
+            .listing_after(SOURCES_LOADING_TIMES.get(at).copied().unwrap_or_default(), error)
+            // Only the episode playing: the coverage the tab's lines take answers at once.
+            .listing_after_only_for("7");
         for release in &releases {
             source = source.with_source_streams(&release.id, vec![own.clone()]);
         }
