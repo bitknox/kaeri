@@ -26,6 +26,9 @@ class SourcesLoadingShots {
     @Test
     fun sourcesTabAsItsSourcesAnswer() {
         shell("logcat -c")
+        // The system's one-time note on full screen would sit over the player (the emulator's
+        // read-only AVD forgets this when it stops).
+        shell("settings put secure immersive_mode_confirmations confirmed")
         val context = instrumentation.targetContext
         val intent = Intent()
             .setClassName(context.packageName, "app.kaeri.tv.TvActivity")
@@ -34,6 +37,9 @@ class SourcesLoadingShots {
             .putExtra("panel", "sources")
         InstrumentationRegistry.getArguments().getString("media")?.let { intent.putExtra("media", it) }
         context.startActivity(intent)
+        // The first screenshot of a run sets up the capture and took 2 s on the PC's emulator:
+        // taken here, before the moments, so each moment's shot is on time.
+        instrumentation.uiAutomation.takeScreenshot()?.recycle()
         val opened = opened()
         val out = File(context.getExternalFilesDir(null), "sources-loading").apply { mkdirs() }
         val late = mutableListOf<String>()
