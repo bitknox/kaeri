@@ -9,7 +9,11 @@
 # picks the runs. The match picker's run, on a scene where a source cannot choose a match, is
 # SIZES=match. TEXT_SCALE=1.25 draws text as GNOME's Large Text does, through GTK's font
 # resolution.
+#
+# A run that fails (it exits non-zero, as it does when a shot did not save) is said and the rest
+# still run; the script then exits 1. Still shots of the starting screen are starting.sh's.
 set -euo pipefail
+failed=0
 mkdir -p "$HOME/.config/gtk-4.0" /out/media
 dpi=
 if [ -n "${TEXT_SCALE:-}" ]; then
@@ -18,10 +22,14 @@ fi
 printf '[Settings]\ngtk-font-name=Inter 11\n%s\n' "$dpi" \
   >"$HOME/.config/gtk-4.0/settings.ini"
 
-cargo build --manifest-path desktop/linux/Cargo.toml --features fixtures 2>&1 \
-  | grep -E '^(error|warning)|-->' || true
+# A failed build stops the run: an older binary in /target would otherwise be shot.
+if ! cargo build --manifest-path desktop/linux/Cargo.toml --features fixtures >/tmp/kaeri-build.log 2>&1; then
+  grep -E '^error|-->' /tmp/kaeri-build.log | head -40 >&2
+  echo "the app did not build" >&2
+  exit 1
+fi
+grep -E '^warning|-->' /tmp/kaeri-build.log || true
 bin=/target/debug/kaeri-desktop
-[ -x "$bin" ] || { echo "the app did not build" >&2; exit 1; }
 
 # A synthetic test pattern, for the player's shot: every fixture episode streams it.
 media=/out/media/signal-test.mkv
@@ -95,7 +103,7 @@ for run in "${runs[@]}"; do
   echo "run: $name at $size: $shots"
   dbus-run-session -- timeout 240 "$bin" --fixtures --data "$data" --media "$media" "${extra[@]}" \
     --hwdec no --ao null --size "$size" --shots /out --prefix "$name-" --shot "$shots" \
-    >"/out/$name.log" 2>&1 || echo "the $name run exited with $?"
+    >"/out/$name.log" 2>&1 || { echo "the $name run exited with $?" >&2; failed=1; }
 done
 
 # Home, one run per scene of the Home world (--scene): the states the board draws. SCENES picks
@@ -110,7 +118,9 @@ if [ "${SCENES-x}" != "" ]; then
     KAERI_FIXTURES_HOME_WORLD=1 dbus-run-session -- timeout 120 "$bin" --fixtures \
       --scene "$scene" --data "$data" --media "$media" --hwdec no --ao null \
       --size 1280x1700 --shots /out --prefix "scene-$scene-" --shot "$shots" \
-      >"/out/scene-$scene.log" 2>&1 || echo "the $scene run exited with $?"
+      >"/out/scene-$scene.log" 2>&1 || { echo "the $scene run exited with $?" >&2; failed=1; }
   done
 fi
-ls -1 /out/*.png 2>/dev/null || echo "no shots"
+ls -1 /out/*.png 2>/dev/null || { echo "no shots" >&2; failed=1; }
+[ "$failed" = 0 ] || echo "a step failed: see above" >&2
+exit "$failed"
