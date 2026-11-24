@@ -580,6 +580,13 @@ class PlayerModel(
                     clock = now
                 }
             }
+            // No source was asked: why, in place of the rows, and the loading ends.
+            is Event.SourcesFailed -> panelReleases?.let {
+                if (it.id == event.id && it.episode == event.episode) {
+                    panelReleases = it.copy(failed = event.why)
+                    clock = now()
+                }
+            }
             is Event.Sources -> {
                 panelReleases?.let { if (it.id == event.id && it.episode == event.episode) panelReleases = it.copy(candidates = event.candidates) }
                 if (choosingSource) {
@@ -1662,11 +1669,11 @@ class PlayerModel(
 
     /**
      * Ask for the playing episode's releases across every source, for the Sources tab. Asked again
-     * only for another episode, or when [again].
+     * only for another episode, after a listing that asked no source, or when [again].
      */
     fun loadPanelReleases(again: Boolean = false) {
         val (id, episode) = panelEpisode ?: return
-        if (!again && panelReleases?.let { it.id == id && it.episode == episode } == true) return
+        if (!again && panelReleases?.let { it.id == id && it.episode == episode && it.failed == null } == true) return
         val now = now()
         panelReleases = PanelReleases(id, episode, null, asked = now)
         clock = now
@@ -1774,8 +1781,9 @@ class PlayerModel(
                 playingSource = state.to.name
                 val release = state.to.release
                 if (release != null) {
-                    playingRelease = panelReleases?.candidates?.firstOrNull { it.providerId == state.to.providerId && it.id == release }
-                        ?: panelSwitch?.candidate
+                    // Found among its source's releases, said already while slower sources are still asked.
+                    playingRelease = panelReleases?.of(state.to.providerId)?.firstOrNull { it.id == release }
+                        ?: panelSwitch?.candidate?.takeIf { it.providerId == state.to.providerId && it.id == release }
                 } else if (state.to.stream == null || state.to.providerId != playingRelease?.providerId) {
                     // The other version, or a stream of another source the engine moved to: the
                     // release picked before is not what plays.

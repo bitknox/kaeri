@@ -137,6 +137,11 @@ data class PanelReleases(
     val rows: List<SourceListing>? = null,
     /** When each row first said Asking, on the model's clock: what its seconds count from. */
     val asking: Map<String, Long> = emptyMap(),
+    /**
+     * Why the engine asked no source for this episode (`SourcesFailed`): none is set up, the
+     * title's details could not be read, or the episode has not aired. Ends the loading.
+     */
+    val failed: Msg? = null,
 ) {
     /** One source's releases, in the order it gave them. */
     fun of(providerId: String): List<SourceCandidate> {
@@ -145,12 +150,15 @@ data class PanelReleases(
     }
 
     /** Whether any source is still asked: the rows keep time while one is. */
-    val busy: Boolean get() = rows?.any { it.state is ListingState.Asking } == true
+    val busy: Boolean get() = !done && rows?.any { it.state is ListingState.Asking } == true
+
+    /** Whether the engine has ended this listing, with its answer or with why it asked no source: nothing counts on after it. */
+    val done: Boolean get() = candidates != null || failed != null
 
     /** What [providerId]'s detail line says at [now]. */
     fun line(providerId: String, now: Long): ListingLine {
         val row = rows?.firstOrNull { it.providerId == providerId } ?: return ListingLine.Answered
-        if (row.state !is ListingState.Asking) return ListingLine.Answered
+        if (row.state !is ListingState.Asking || done) return ListingLine.Answered
         val since = asking[providerId] ?: asked
         return when {
             now - since >= PanelSwitch.COUNTING -> ListingLine.Counting
@@ -167,9 +175,14 @@ data class PanelReleases(
         if (playingProvider != null) it.providerId != playingProvider else it.name != playingName
     }
 
-    /** The rows as the engine said them now, whole: a row's seconds count from the first time it said Asking. */
+    /**
+     * The rows as the engine said them now, whole: a row's seconds count from the first time it
+     * said Asking. Rows said after an answer are a newer listing's, so that answer is let go.
+     */
     fun said(rows: List<SourceListing>, now: Long): PanelReleases = copy(
         rows = rows,
+        candidates = null,
+        failed = null,
         asking = asking + rows.filter { it.state is ListingState.Asking && it.providerId !in asking }.associate { it.providerId to now },
     )
 }
@@ -286,7 +299,8 @@ object PanelWords {
      */
     fun listing(context: Context, row: SourceListing, option: SourceOption?, episode: String): String? = when (val state = row.state) {
         is ListingState.Asking -> null
-        is ListingState.Listed -> option?.let { source(context, it) }
+        // Its coverage, never an older note of it resting or failing.
+        is ListingState.Listed -> option?.takeIf { it.note == null }?.let { source(context, it) }
             ?: state.releases.singleOrNull()?.let { release(context, it) }
         is ListingState.Missed -> miss(context, state.miss, episode)
         is ListingState.Off -> Strings.sourceNoteOff(context)

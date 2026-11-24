@@ -487,10 +487,9 @@ private fun TvPanelSources(model: PlayerModel, entry: FocusRequester, toTabs: ()
     val optionsAll by store.sourceChoices.options.collectAsStateWithLifecycle()
     val dubs by store.titles.dubLines.collectAsStateWithLifecycle()
     val inParty = store.party.view.collectAsStateWithLifecycle().value != null
-    LaunchedEffect(id) {
-        store.loadSourceOptions(id)
-        model.loadPanelReleases()
-    }
+    LaunchedEffect(id) { store.loadSourceOptions(id) }
+    // Asked again when another episode plays under the open tab.
+    LaunchedEffect(id, model.staged?.episode) { model.loadPanelReleases() }
     var expanded by remember(id, model.staged?.episode) { mutableStateOf(emptySet<String>()) }
     LaunchedEffect(model.panelSwitch?.target) {
         val target = model.panelSwitch?.target ?: return@LaunchedEffect
@@ -677,10 +676,21 @@ private fun LazyListScope.tvOthers(
     expanded: Set<String>,
     toggle: (String) -> Unit,
 ) {
+    model.panelReleases?.failed?.let { why ->
+        // No source was asked: why, in place of the rows.
+        item(key = "sources-failed") { // i18n-skip
+            val context = LocalContext.current
+            Text(why.text(context), style = DetailStyle, color = ObiSilk.Haze, modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp).testTag("tv-panel-sources-failed")) // i18n-skip
+        }
+        return
+    }
     model.panelReleases?.takeIf { it.rows != null }?.let { asked ->
         tvListings(model, asked, options, skip, expanded, toggle)
         return
     }
+    // Asked, the rows not said yet: each source's row with its line held empty, as the first rows
+    // will have it, so no cached line shows for a moment and fades out.
+    val pending = model.panelReleases?.let { it.rows == null && it.candidates == null } == true
     data class Group(val providerId: String, val name: String, val option: SourceOption?)
     val groups = options?.filter { it.providerId != skip }?.map { Group(it.providerId, it.name, it) }
         ?: model.panelReleases?.candidates.orEmpty().filter { it.providerId != skip }.distinctBy { it.providerId }.map { Group(it.providerId, it.providerName, null) }
@@ -724,10 +734,11 @@ private fun LazyListScope.tvOthers(
                 // Resting, or nothing for this episode: said, and focusable so a screen reader and
                 // the D-pad still reach it, with nothing to pick.
                 TvChoiceRow(
-                    model, group.name, group.option?.let { PanelWords.source(context, it) },
+                    model, group.name, group.option?.takeIf { !pending }?.let { PanelWords.source(context, it) },
                     SwitchTarget(group.providerId, group.name),
-                    dim = resting || known,
-                    waiting = !known && !resting,
+                    dim = !pending && (resting || known),
+                    waiting = !pending && !known && !resting,
+                    listing = group.providerId.takeIf { pending },
                     onClick = null,
                 )
             }
@@ -849,7 +860,8 @@ private fun TvChoiceRow(
                         else -> false
                     }
                 }
-                .semantics {
+                // One stop for TalkBack: the name and its line together.
+                .semantics(mergeDescendants = true) {
                     if (on) selected = true
                     if (onClick != null) onClick { onClick(); true }
                 }
@@ -886,22 +898,27 @@ private fun TvChoiceRow(
                 }
                 // While sources answer the line is held one line high, so a row never changes height.
                 val held = if (listing != null) Modifier.heightIn(min = with(LocalDensity.current) { DetailStyle.lineHeight.toDp() }) else Modifier
-                Crossfade(line, modifier = held, animationSpec = Motion.fadeIn(), label = "line") { said -> // i18n-skip
+                // A source's answer crossfades in when its words come later too (its coverage after its releases).
+                val shownDetail = if (listing != null && line == Line.Detail) detail else null
+                Crossfade(line to shownDetail, modifier = held, animationSpec = Motion.fadeIn(), label = "line") { (said, words) -> // i18n-skip
                     when (said) {
                         Line.Starting -> Text(Strings.playerPanelStarting(context, picked?.counting(now) ?: 3), style = DetailStyle, color = soft)
                         Line.Silent -> {}
                         Line.Asking -> Text(Strings.playerStartRowAsking(context), style = DetailStyle, color = soft)
                         Line.Counting -> Text(Strings.playerPanelAsking(context, listing?.let { model.panelReleases?.seconds(it, now) } ?: 3), style = DetailStyle, color = soft)
-                        Line.Detail -> when {
-                            !detail.isNullOrEmpty() -> Text(detail, style = DetailStyle, color = soft)
-                            waiting -> Text("…", style = DetailStyle, color = soft) // i18n-skip
+                        Line.Detail -> when (val shown = if (listing != null) words else detail) {
+                            null, "" -> if (waiting) Text("…", style = DetailStyle, color = soft) // i18n-skip
+                            else -> Text(shown, style = DetailStyle, color = soft)
                         }
                     }
                 }
             }
             // A source's release count and chevron fade in at the end of its row as it lists them.
+            // The last count stays while it fades out.
+            var lastDisclosure by remember { mutableStateOf(disclosure) }
+            if (disclosure != null) lastDisclosure = disclosure
             AnimatedVisibility(disclosure != null, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
-                val (count, open) = disclosure ?: return@AnimatedVisibility
+                val (count, open) = lastDisclosure ?: return@AnimatedVisibility
                 val turn by animateFloatAsState(if (open) 90f else 0f, Motion.standard(), label = "chevron") // i18n-skip
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                     Text(count, style = DetailStyle, color = soft)

@@ -56,6 +56,42 @@ class PlayerPanelTest {
     }
 
     @Test
+    fun aSwitchLandedWhileSlowerSourcesAreAskedPlaysTheReleaseItsSourceListed() = runTest {
+        val rig = Rig(this)
+        rig.model.apply(Event.PlaybackStaged(900_001u, "Stardust Wayfarer", "7", null, 1.0))
+        rig.opened()
+        rig.emit(MpvEvent.of(MpvNative.Event.PLAYBACK_RESTART))
+        rig.playhead(600.0)
+        rig.model.loadPanelReleases()
+        rig.model.apply(
+            Event.SourcesProgress(
+                900_001u, "7",
+                listOf(
+                    app.kaeri.engine.model.SourceListing("harbor", "Harbor Mirror", app.kaeri.engine.model.ListingState.Listed(listOf(harbor))),
+                    app.kaeri.engine.model.SourceListing("tidewater", "Tidewater", app.kaeri.engine.model.ListingState.Asking),
+                ),
+            ),
+        )
+        // Switched from elsewhere (a remote), so no row's pick is on its way.
+        rig.switch(SourceSwitch.Landed(toHarbor, 600.0))
+        assertEquals(harbor, rig.model.playingRelease)
+    }
+
+    @Test
+    fun aLandedReleaseIsNeverAnotherRowsPick() = runTest {
+        val rig = Rig(this)
+        rig.model.apply(Event.PlaybackStaged(900_001u, "Stardust Wayfarer", "7", null, 1.0))
+        rig.opened()
+        rig.emit(MpvEvent.of(MpvNative.Event.PLAYBACK_RESTART))
+        rig.playhead(600.0)
+        rig.model.loadPanelReleases()
+        // Tidewater is picked while the engine still lands on Harbor's release, which no list said.
+        rig.model.switchTo(tidewater)
+        rig.switch(SourceSwitch.Landed(toHarbor, 600.0))
+        assertNull(rig.model.playingRelease)
+    }
+
+    @Test
     fun thePanelAsksForTheEpisodesReleasesOnce() = runTest {
         val rig = playing()
         assertEquals(1, rig.sent.count { it == Command.LoadSources(900_001u, "7") })

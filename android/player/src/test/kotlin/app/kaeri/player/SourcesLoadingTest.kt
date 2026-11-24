@@ -136,6 +136,54 @@ class SourcesLoadingTest {
     }
 
     @Test
+    fun aListingThatAskedNoSourceEndsAndIsAskedAgainOnTheNextLook() = runTest {
+        val rig = asked()
+        rig.model.apply(Event.SourcesFailed(900_001u, "8", app.kaeri.engine.model.Msg.StartLookingUpTitle))
+        assertNull("another episode's end is left alone", rig.model.panelReleases!!.failed)
+        rig.model.apply(Event.SourcesFailed(900_001u, "7", app.kaeri.engine.model.Msg.StartLookingUpTitle))
+        val ended = rig.model.panelReleases!!
+        assertEquals(app.kaeri.engine.model.Msg.StartLookingUpTitle, ended.failed)
+        assertFalse("nothing counts on", ended.busy)
+        assertEquals(ListingLine.Answered, ended.line("second", testScheduler.currentTime + 40_000))
+
+        val before = rig.sent.size
+        rig.model.loadPanelReleases()
+        assertEquals(listOf(Command.LoadSources(900_001u, "7")), rig.sent.drop(before))
+        assertNull(rig.model.panelReleases!!.failed)
+    }
+
+    @Test
+    fun anotherEpisodeIsAskedForItsOwnSources() = runTest {
+        val rig = asked()
+        rig.model.apply(Event.PlaybackStaged(900_001u, "Hoshikuzu no Tabibito", "8", null, 1.0)) // i18n-skip
+        assertNull("nothing of episode 7's rows is left", rig.model.panelReleases)
+        // The open tab asks again as the episode changes under it (its effect is keyed on the episode).
+        rig.model.loadPanelReleases()
+        assertEquals(Command.LoadSources(900_001u, "8"), rig.sent.last())
+        assertEquals("8", rig.model.panelReleases!!.episode)
+    }
+
+    @Test
+    fun rowsSaidAfterAnAnswerAreANewerListings() = runTest {
+        val rig = asked()
+        rig.model.apply(Event.Sources(900_001u, "7", emptyList(), emptyList()))
+        assertFalse(rig.model.panelReleases!!.busy)
+        // Asked again (the other version): a late answer of the older listing doesn't end the newer one.
+        rig.say(first)
+        assertTrue(rig.model.panelReleases!!.busy)
+        assertNull(rig.model.panelReleases!!.candidates)
+    }
+
+    @Test
+    fun aSourceThatListedShowsItsCoverageNeverAnOlderNote() {
+        val listed = row("s", "Source", ListingState.Listed(listOf(release("s", 1), release("s", 2)))) // i18n-skip
+        val resting = SourceOption(providerId = "s", name = "Source", covered = 9u, of = 9u, pinned = false, note = app.kaeri.engine.model.SourceNote.Resting, releases = emptyList()) // i18n-skip
+        assertNull(PanelWords.listing(context, listed, resting, "7"))
+        val one = row("s", "Source", ListingState.Listed(listOf(release("s", 1)))) // i18n-skip
+        assertEquals(PanelWords.release(context, release("s", 1)), PanelWords.listing(context, one, resting, "7"))
+    }
+
+    @Test
     fun eachAnswerIsSaidInTheStartingScreensRowWords() {
         fun said(state: ListingState, option: SourceOption? = null) =
             PanelWords.listing(context, row("s", "Source", state), option, "7") // i18n-skip
