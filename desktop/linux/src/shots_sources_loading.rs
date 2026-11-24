@@ -24,8 +24,9 @@ pub const NAMES: [&str; 6] = [
     "sources-loading-21s",
 ];
 
-/// Each shot's moment after the tab asked, in seconds.
-const MOMENTS: [f64; 5] = [0.3, 1.0, 4.0, 12.0, 21.0];
+/// Each shot's moment after the tab asked, in seconds. The counting ones are 0.3 s past the
+/// whole second: the count is redrawn every 250 ms, so at 4.0 s it can still say 3 s.
+const MOMENTS: [f64; 5] = [0.3, 1.0, 4.3, 12.3, 21.0];
 
 /// How long after the episode is asked to play the tab opens: playback up and the bar settled.
 const OPEN_AFTER: f64 = 5.0;
