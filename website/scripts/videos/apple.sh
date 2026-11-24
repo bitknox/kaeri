@@ -54,13 +54,14 @@ done
 
 now() { /usr/bin/python3 -I -c 'import time; print(f"{time.time():.3f}")'; }
 
-# One flow through xcodebuild, its output in <log>. xcodebuild sometimes lingers for minutes after
-# the test has finished, so once the log says how the test went it gets 20 s to exit by itself.
+# One flow through xcodebuild, its output in <log>. Without -collect-test-diagnostics never,
+# xcodebuild waited up to 600 s after a test for the Simulator's diagnostics; once the log says how
+# the test went it still gets only 20 s to exit by itself.
 run_flow() {
   local clip="$1" destination="$2" log="$3" waited=0
   TEST_RUNNER_KAERI_VIDEO_MEDIA="$media" xcodebuild -project "$apple/Kaeri.xcodeproj" \
     -scheme "Kaeri Video" -destination "$destination" -derivedDataPath "$derived" \
-    test-without-building -only-testing:"KaeriVideoFlows/FeatureVideoFlows/$(flow "$clip")" >"$log" 2>&1 &
+    -collect-test-diagnostics never test-without-building -only-testing:"KaeriVideoFlows/FeatureVideoFlows/$(flow "$clip")" >"$log" 2>&1 &
   local build=$!
   while kill -0 "$build" 2>/dev/null; do
     if grep -q "Executed 1 test" "$log" 2>/dev/null; then

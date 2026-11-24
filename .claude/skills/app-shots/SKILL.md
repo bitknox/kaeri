@@ -20,6 +20,26 @@ caffeinate -u apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [shot…]
   sleeps, hence `caffeinate -u`. `--landscape` and a clean 9:41 status bar are built in for iPad.
 - `KAERI_SIMULATOR` picks the Simulator. Create your own and delete it after; never shut
   down others' (no `simctl shutdown all`).
+- Starting-screen shots (`player-start-<state>-<seconds>`) are stills: the engine's still clock
+  steps through the made-up start and holds at the seconds asked, so `player-start-slow-24` is
+  taken at once and reads the same every run. `KAERI_STILL=0` waits on the wall clock. Any scene
+  shot can be held still: `KAERI_LAUNCH_ARGS="-KaeriStillAt 3"` (Simulator), `KAERI_STILL_AT=3`
+  (Mac harness) holds the scene's made-up waits (slow sources, slow AniList) at 3 s.
+
+### Simulator UI tests
+
+```bash
+apple/scripts/sim-test.sh "<scheme>" [--forms iphone,ipad] [--out <dir>] [-- -only-testing:<id>]
+```
+
+- Builds once (`build-for-testing`), then `test-without-building` per form on Simulators of its
+  own, deleted after; attachments land in `<out>/<form>/` by name, one `STEP <name> rc=<n>` line
+  per step, non-zero exit when any failed.
+- Every Simulator `xcodebuild test` passes `-collect-test-diagnostics never`. Without it Xcode
+  27.1 waits 600 s after the tests for the Simulator's diagnostics ("Failure collecting
+  diagnostics from simulator"). Use the script, or add the flag to any hand-written run.
+- A test that must land on a moment should run its scene on the still clock
+  (`-KaeriStillAt <seconds>` as a launch argument) rather than time screenshots on the wall clock.
 
 ## Android
 
