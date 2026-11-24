@@ -260,7 +260,7 @@ struct PanelEpisodeRow: View {
     private var progress: Double? {
         if metadataOnly { return nil }
         if current {
-            guard let duration = model.duration ?? row.durationSecs.map(Double.init), duration > 0 else { return nil }
+            guard let duration = model.duration ?? row.seconds, duration > 0 else { return nil }
             return model.position / duration
         }
         return !row.completed && row.watched > 0 ? row.watched : nil
@@ -275,7 +275,7 @@ struct PanelEpisodeRow: View {
 
     private var detail: String? {
         if current {
-            let length = model.duration ?? row.durationSecs.map(Double.init) ?? 0
+            let length = model.duration ?? row.seconds ?? 0
             let left = max(1, Int(((length - model.position) / 60).rounded()))
             return L.episodeRowPlaying(left: L.timeMinutesLeft(minutes: left))
         }
@@ -296,16 +296,20 @@ struct PanelEpisodeRow: View {
             parts.append(L.episodeUnsourced)
             return parts.joined(separator: " · ")
         }
-        let seconds = row.durationSecs.map(Double.init)
-        if row.completed {
-            parts.append(L.episodeWatched)
-        } else if row.watched > 0, !metadataOnly, let seconds {
-            parts.append(L.timeMinutesLeft(minutes: max(1, Int((seconds * (1 - row.watched) / 60).rounded()))))
-        } else if let seconds, seconds > 0 {
-            parts.append(L.episodeRowLength(minutes: max(1, Int((seconds / 60).rounded()))))
-        }
+        if let standing = Self.standing(row, metadataOnly: metadataOnly) { parts.append(standing) }
         if let source = row.source, !metadataOnly { parts.append(L.episodeRowFrom(source: source)) }
         return parts.joined(separator: " · ")
+    }
+
+    /// Where the viewer stands with an episode that is not playing: "Watched", what is left of a
+    /// started one ("14 min left"), or its length ("24 min"). Nothing when its length is unknown.
+    static func standing(_ row: EpisodeRow, metadataOnly: Bool) -> String? {
+        if row.completed { return L.episodeWatched }
+        guard let seconds = row.seconds, seconds > 0 else { return nil }
+        if row.watched > 0, !metadataOnly {
+            return L.timeMinutesLeft(minutes: max(1, Int((seconds * (1 - row.watched) / 60).rounded())))
+        }
+        return L.episodeRowLength(minutes: max(1, Int((seconds / 60).rounded())))
     }
 
     // MARK: Revealed
@@ -376,4 +380,11 @@ struct PanelEpisodeRow: View {
         model.playEpisode(row.number, fromStart: fromStart)
         played()
     }
+}
+
+extension EpisodeRow {
+    /// How long the episode runs, in seconds. `Double($0)` and not `map(Double.init)`: on a
+    /// `UInt64` that picks `Double(bitPattern:)`, which reads 1440 s as next to nothing and every
+    /// length as "1 min".
+    var seconds: Double? { durationSecs.map { Double($0) } }
 }
