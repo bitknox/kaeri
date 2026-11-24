@@ -3,7 +3,8 @@
 //! each shot is taken at its moment after the tab asked, 0.3 s to 21 s, as the six sources
 //! answer in their own time. `--shot sources-loading` takes them in order on one run, after a
 //! first shot of the episode playing: a run's first capture is slow, and the tab's first
-//! moments are too short to wait for one.
+//! moments are too short to wait for one. Saving the 0.3 s shot outlasts the wait to 1 s, so
+//! `scripts/shots.sh` takes 0.3 s on a run of its own and the rest on a second.
 
 use std::{cell::Cell, rc::Rc, time::Duration, time::Instant};
 
