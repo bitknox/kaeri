@@ -2811,6 +2811,17 @@ mod tests {
                     g.parent().map_or(0, |p| p.height()), panel.widget.width(), panel.widget.height(),
                 );
                 eprintln!("DIAG measure {:?} {:?}", g.measure(gtk::Orientation::Horizontal, -1), g.measure(gtk::Orientation::Vertical, 300));
+                let words = g.parent().unwrap();
+                let top = words.parent().unwrap();
+                let content = top.parent().unwrap();
+                let v = gtk::Orientation::Vertical;
+                eprintln!("DIAG grid-1 {:?} words {:?} {:?} top {:?} {:?} {:?} content {:?} row {:?} mode {:?} {:?} {:?}",
+                    g.measure(v, -1), words.measure(v, 302), words.measure(v, -1),
+                    top.measure(v, 332), top.measure(v, -1), top.measure(gtk::Orientation::Horizontal, -1),
+                    content.measure(v, 332), r.row.measure(v, 332),
+                    g.request_mode(), words.request_mode(), top.request_mode());
+                let mut c = top.first_child();
+                while let Some(w) = c { eprintln!("DIAG child {} vis {} {:?} {:?} {}x{}", w.type_().name(), w.is_visible(), w.measure(v, -1), w.measure(gtk::Orientation::Horizontal, -1), w.width(), w.height()); c = w.next_sibling(); }
             }
 
             // From 600 ms a spinner and Asking, in rows of the same height.
