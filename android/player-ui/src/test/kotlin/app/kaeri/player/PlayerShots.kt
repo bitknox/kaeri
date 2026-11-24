@@ -33,6 +33,8 @@ import app.kaeri.engine.core.Translation
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -260,7 +262,8 @@ class PlayerShots {
     fun phone_player_sources_loading() = shoot("phone-player-sources-loading", after = { sourcesAnswer(4_000) }) { model, _ ->
         model.openPanel(app.kaeri.player.PanelTab.Sources)
     }.also {
-        compose.onNodeWithText("Asking · 4 s", useUnmergedTree = true).assertExists() // i18n-skip
+        // Second example and Archive example, both still asked.
+        compose.onAllNodesWithText("Asking · 4 s", useUnmergedTree = true).assertCountEquals(2) // i18n-skip
         compose.onNodeWithText("Not asked · Torrents are off on cellular", useUnmergedTree = true).assertExists() // i18n-skip
         compose.onNodeWithText("Couldn't match this title", useUnmergedTree = true).assertExists() // i18n-skip
         compose.onNodeWithTag("panel-asking-Archive example", useUnmergedTree = true).assertExists() // i18n-skip
