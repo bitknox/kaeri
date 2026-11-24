@@ -12,7 +12,9 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case starting
     /// The starting screen on the engine's made-up start: `KAERI_START_STATE` (or
     /// `-KaeriStartState`) names the state, `KAERI_START_AT` the seconds to hold it at,
-    /// `KAERI_START_DETAILS=1` opens Details.
+    /// `KAERI_START_DETAILS=1` opens Details. With the still clock on (`-KaeriStillAt 0`) the
+    /// events are said at once, each at its moment on that clock, and the screen is held at the
+    /// seconds asked for without waiting for them.
     case startFixture = "start-fixture"
     /// Playing, with the controls up (MacPlayer, PhonePlayer), round and round Part A.
     case playing
@@ -193,6 +195,19 @@ extension PlayerModel {
         guard let state = Self.startParameter("state").flatMap({ states[$0] }) else { return false }
         let hold = Self.startParameter("at").flatMap(Double.init) ?? 2
         if Self.startParameter("details") == "1" { startDetailsOpen = true }
+        if testingStillClockNowMs() != nil {
+            // A still: the clock steps to each event's moment and stops at the shot's, at once.
+            for fixture in startingFixture(state: state) where fixture.atMs <= UInt64(hold * 1000) {
+                await stepStill(to: fixture.atMs)
+                store.apply(fixture.event)
+            }
+            await stepStill(to: UInt64(hold * 1000))
+            // The motion the events set off, on the wall clock.
+            try? await Task.sleep(for: .seconds(1))
+            if Self.startParameter("choose") == "1" { chooseSource() }
+            try? await Task.sleep(for: .milliseconds(400))
+            return isPresented
+        }
         let began = ContinuousClock.now
         for fixture in startingFixture(state: state) {
             let at = began + .milliseconds(Int(fixture.atMs))
@@ -204,6 +219,14 @@ extension PlayerModel {
         if Self.startParameter("choose") == "1" { chooseSource() }
         try? await Task.sleep(for: .milliseconds(400))
         return isPresented
+    }
+
+    /// Hold the still clock at `ms`, and let what waits on it, and the ticker, see the moment.
+    private func stepStill(to ms: UInt64) async {
+        testingStillClockHold(atMs: ms)
+        // The waits on the still clock look every 20 ms.
+        try? await Task.sleep(for: .milliseconds(40))
+        tick()
     }
 
     /// Play the first Continue row, the Playing scene's episode 7, and bring the player to

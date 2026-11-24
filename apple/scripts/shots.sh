@@ -48,6 +48,13 @@
 # The starting screen on the engine's made-up starts: player-start-<state>-<seconds>[-details]
 # [-choose], with the state's name from StartingFixture in kebab case (player-start-slow-10,
 # player-start-failed-no-episode-3-details). KAERI_REDUCE_MOTION=1 runs it with Reduce Motion.
+# These are stills: the engine's still clock steps through the start's events and holds at the
+# seconds asked for, so a shot of 24 s in is taken at once and reads the same every run.
+# KAERI_STILL=0 waits for the moment on the wall clock instead, as recordings do.
+#
+# Any other scene shot can be held still too: KAERI_LAUNCH_ARGS="-KaeriStillAt 3" holds the
+# scene's made-up waits (slow sources, a slow AniList) at 3 s; KAERI_STILL_AT=3 does it for the
+# Mac harness.
 #
 # The player's states are shots too: player-starting, player-playing, player-skip, player-up-next,
 # player-still-watching, player-stall, player-buffering, player-scrubbing, player-tracks (the
@@ -139,6 +146,7 @@ arguments() {
     parts=()
     while IFS= read -r line; do parts+=("$line"); done < <(startparts "$shot")
     printf '%s\n' -KaeriScene playing -KaeriPlayerShot start-fixture -KaeriStartState "${parts[0]}" -KaeriStartAt "${parts[1]}"
+    [[ "${KAERI_STILL:-1}" == 0 ]] || printf '%s\n' -KaeriStillAt 0
     [[ "${parts[2]}" != 1 ]] || printf '%s\n' -KaeriStartDetails 1
     [[ "${parts[3]}" != 1 ]] || printf '%s\n' -KaeriStartChoose 1
     return
@@ -218,8 +226,10 @@ if [[ "$device" == mac ]]; then
       parts=()
       while IFS= read -r line; do parts+=("$line"); done < <(startparts "$shot")
       (cd "$apple/Packages/KaeriDev" &&
-        KAERI_START_STATE="${parts[0]}" KAERI_START_AT="${parts[1]}" KAERI_START_DETAILS="${parts[2]}" \
-        KAERI_START_CHOOSE="${parts[3]}" swift run KaeriDev --scene playing --player-shot start-fixture \
+        still=()
+        [[ "${KAERI_STILL:-1}" == 0 ]] || still=(KAERI_STILL_AT=0)
+        env ${still[@]+"${still[@]}"} KAERI_START_STATE="${parts[0]}" KAERI_START_AT="${parts[1]}" \
+        KAERI_START_DETAILS="${parts[2]}" KAERI_START_CHOOSE="${parts[3]}" swift run KaeriDev --scene playing --player-shot start-fixture \
           --snapshot "$out/mac-$shot.png")
       continue
     fi

@@ -61,7 +61,13 @@ final class Delegate: NSObject, NSApplicationDelegate {
     let store = AppStore(artworkCostLimit: options.artCache.map { $0 << 20 } ?? ArtworkStore.costLimit)
     let navigator = Navigator()
     lazy var player: PlayerModel = {
-        let player = PlayerModel(send: { [weak store] command in store?.send(command) })
+        #if FIXTURES
+        // `-KaeriStillAt <seconds>`: a still shot, on the engine's still clock.
+        let time = Timekeeper.stillFromLaunch() ?? .wall
+        #else
+        let time = Timekeeper.wall
+        #endif
+        let player = PlayerModel(send: { [weak store] command in store?.send(command) }, time: time)
         player.skipFindPause = { [weak store] in store?.settings.pausedOverride ?? store?.settings.view?.skipFindPaused }
         #if FIXTURES
         // `-KaeriSkipPause low-power|storage`: a shot of finding paused, whatever the device says.
