@@ -196,14 +196,20 @@ extension PlayerModel {
         let hold = Self.startParameter("at").flatMap(Double.init) ?? 2
         if Self.startParameter("details") == "1" { startDetailsOpen = true }
         if testingStillClockNowMs() != nil {
+            let began = ContinuousClock.now
             // A still: the clock steps to each event's moment and stops at the shot's, at once.
             for fixture in startingFixture(state: state) where fixture.atMs <= UInt64(hold * 1000) {
                 await stepStill(to: fixture.atMs)
                 store.apply(fixture.event)
             }
             await stepStill(to: UInt64(hold * 1000))
-            // The motion the events set off, on the wall clock.
+            // The motion the events set off, on the wall clock. A phone's home indicator, which the
+            // player hides, fades only a few seconds after the screen is up: a shot taken by the
+            // wall clock has always seen it gone, so a still waits for it too.
             try? await Task.sleep(for: .seconds(1))
+            #if os(iOS)
+            try? await Task.sleep(until: began + .seconds(4))
+            #endif
             if Self.startParameter("choose") == "1" { chooseSource() }
             try? await Task.sleep(for: .milliseconds(400))
             return isPresented
