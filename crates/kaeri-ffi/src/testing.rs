@@ -221,6 +221,10 @@ impl FfiEngine {
     }
 }
 
+/// The fake's client's timeout in a scene started on the still clock: long enough for any shot
+/// to be taken first, as its answers wait on the hold rather than the wall clock.
+const STILL_TIMEOUT_SECS: u64 = 600;
+
 /// The options [`FfiEngine::start_testing`] starts from: the harness's in the binary, on the
 /// app's directories rather than a temporary one, asking `testing`'s fake and going by its clock.
 /// `sources` stands in for the fixture provider, whose stills the fake serves, when given.
@@ -236,8 +240,12 @@ pub(crate) fn options(
     server.serve_art();
     // The one forum thread the apps' discussion shots read: episode 7 of the finished title.
     server.add_fixture_thread(kaeri_engine::now_epoch());
+    // On the still clock the fake's slow answers come when the shot's hold reaches them, however
+    // long that takes on the wall clock, so a wall-clock timeout must not cut them off first.
+    let timeout_secs =
+        if kaeri_providers::still::clock().is_some() { STILL_TIMEOUT_SECS } else { 5 };
     let http =
-        HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..config.network.clone() })
+        HttpClient::offline(&NetworkConfig { timeout_secs, ..config.network.clone() })
             .map_err(|e| FfiError::client(Msg::StartFailedNetwork { reason: e.to_string() }))?;
     let meta = Meta::new(
         server.anilist(&http),
