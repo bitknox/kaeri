@@ -858,6 +858,13 @@ impl PlayerView {
             {
                 self.ui.side.set_progress(rows.clone());
             }
+            Event::SourcesFailed { id, episode, why }
+                if self.panel_asked.borrow().as_ref() == Some(&(*id, episode.clone())) =>
+            {
+                // Said in the tab as well as the alert; opening the tab again asks again.
+                self.panel_asked.take();
+                self.ui.side.sources_failed(crate::say::msg(why));
+            }
             Event::SourceOptions { id, options } if Some(*id) == self.title_id.get() => {
                 self.ui.side.set_options(Some(options.clone()));
             }

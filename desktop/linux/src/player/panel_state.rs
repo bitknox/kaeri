@@ -451,6 +451,8 @@ pub fn days_between(now: (i32, i32), at: (i32, i32), days_in_now_year: i32) -> i
 pub struct Listing {
     pub asked: Instant,
     pub rows: Option<Vec<SourceListing>>,
+    /// Why the engine ended the listing before asking any source, once it has.
+    pub ended: Option<String>,
     asking_since: HashMap<String, Instant>,
 }
 
@@ -465,11 +467,18 @@ pub enum ListingLine {
     Counting(u64),
     /// What the source answered: its coverage line, the miss, or Switched off.
     Answered,
+    /// Never asked: the listing ended before the engine asked any source.
+    Ended,
 }
 
 impl Listing {
     pub fn asked(now: Instant) -> Self {
-        Self { asked: now, rows: None, asking_since: HashMap::new() }
+        Self { asked: now, rows: None, ended: None, asking_since: HashMap::new() }
+    }
+
+    /// The engine ended the listing before asking any source, for `why`: no row is asked now.
+    pub fn end(&mut self, why: String) {
+        self.ended = Some(why);
     }
 
     /// The engine said every row again.
@@ -484,9 +493,11 @@ impl Listing {
 
     /// Whether a source is still asked, or the engine has not said the rows yet.
     pub fn busy(&self) -> bool {
-        self.rows
-            .as_ref()
-            .is_none_or(|rows| rows.iter().any(|r| r.state == ListingState::Asking))
+        self.ended.is_none()
+            && self
+                .rows
+                .as_ref()
+                .is_none_or(|rows| rows.iter().any(|r| r.state == ListingState::Asking))
     }
 
     /// The line of the source `provider_id` in `state` at `now`, and whether its spinner shows.
@@ -497,6 +508,9 @@ impl Listing {
         now: Instant,
     ) -> (ListingLine, bool) {
         match state {
+            None | Some(ListingState::Asking) if self.ended.is_some() => {
+                (ListingLine::Ended, false)
+            }
             None => (ListingLine::Held, false),
             Some(ListingState::Asking) => {
                 if now.saturating_duration_since(self.asked) < SILENT {

@@ -580,6 +580,28 @@ impl SidePanel {
         }
     }
 
+    /// The engine ended the listing before asking any source, for `why`: the rows still
+    /// waiting stop and dim in place, and a note under them says why.
+    pub fn sources_failed(&self, why: String) {
+        {
+            let mut listing = self.listing.borrow_mut();
+            let Some(listing) = listing.as_mut() else { return };
+            if listing.ended.is_some() {
+                return;
+            }
+            listing.end(why.clone());
+        }
+        let last = self.listing_rows.borrow().last().map(|r| r.row.index());
+        match last {
+            Some(at) => self.src_list.insert(&ended_note(&why), at + 1),
+            None => {
+                self.fill_sources();
+                return;
+            }
+        }
+        self.show_switch();
+    }
+
     /// The releases for the episode playing, from the engine. Once the rows came from its
     /// progress they stay drawn from it, and the releases are kept for the picks.
     pub fn set_releases(&self, releases: Option<Vec<SourceCandidate>>) {
@@ -1348,6 +1370,9 @@ impl SidePanel {
         for (provider_id, source, listing) in others.into_iter().flatten() {
             self.listing_row(provider_id, &source, listing, &mut keys);
         }
+        if let Some(why) = self.listing.borrow().as_ref().and_then(|l| l.ended.clone()) {
+            self.src_list.append(&ended_note(&why));
+        }
         // Every other source, in the order set in Sources; before their lines come, the
         // releases' own sources.
         struct Group {
@@ -1389,8 +1414,15 @@ impl SidePanel {
                 .iter()
                 .filter(|c| c.provider_id == group.provider_id)
                 .collect();
-            let resting = group.option.as_ref().is_some_and(|o| o.note.is_some());
-            let line = group.option.as_ref().map(|o| crate::choices::detail(o, now));
+            // A source resting or failed before that listed releases now is picked from its
+            // releases, and its old note no longer holds.
+            let resting =
+                own.is_empty() && group.option.as_ref().is_some_and(|o| o.note.is_some());
+            let line = group
+                .option
+                .as_ref()
+                .filter(|o| o.note.is_none() || own.is_empty())
+                .map(|o| crate::choices::detail(o, now));
             if own.len() > 1 && !resting {
                 let open = self.expanded.borrow().contains(&group.provider_id);
                 let target = SwitchTarget {
@@ -1677,14 +1709,17 @@ impl SidePanel {
                         .map(|o| crate::choices::detail(o, unix));
                     state::listing_words(said, coverage, &episode)
                 }
-                (ListingLine::Held | ListingLine::Answered, _) => String::new(),
+                (ListingLine::Held | ListingLine::Answered | ListingLine::Ended, _) => {
+                    String::new()
+                }
             };
             let releases = state::listed(said).len();
             let want = Shown {
                 line,
                 words,
                 spinning,
-                dim: line == ListingLine::Answered && state::listing_dim(said),
+                dim: line == ListingLine::Ended
+                    || line == ListingLine::Answered && state::listing_dim(said),
                 count: if releases > 1 { releases } else { 0 },
             };
             if row.shown.as_ref() != Some(&want) {
@@ -2373,6 +2408,13 @@ fn heading(text: &str) -> gtk::ListBoxRow {
     still_row(&label)
 }
 
+/// Why the listing ended before any source was asked, under the sources' rows.
+fn ended_note(why: &str) -> gtk::ListBoxRow {
+    let note = crate::widgets::haze(why, "panel-row-detail");
+    wrap(&note);
+    still_row(&note)
+}
+
 /// A row that only says something, or holds controls of its own.
 fn still_row(child: &impl IsA<gtk::Widget>) -> gtk::ListBoxRow {
     let row = gtk::ListBoxRow::builder()
@@ -2889,6 +2931,111 @@ mod tests {
             let drawn = panel.listing_rows.borrow()[0].row.clone();
             panel.set_releases(Some(vec![release("h1", "home"), release("r1", "index")]));
             assert_eq!(panel.listing_rows.borrow()[0].row, drawn);
+            window.destroy();
+        });
+    }
+
+    /// Every label's text in Sources, top to bottom, the hidden ones too.
+    fn src_texts(panel: &SidePanel) -> Vec<String> {
+        fn walk(w: &gtk::Widget, out: &mut Vec<String>) {
+            if let Some(label) = w.downcast_ref::<gtk::Label>() {
+                out.push(label.label().to_string());
+            }
+            let mut child = w.first_child();
+            while let Some(c) = child {
+                walk(&c, out);
+                child = c.next_sibling();
+            }
+        }
+        let mut out = Vec::new();
+        walk(panel.src_list.upcast_ref(), &mut out);
+        out
+    }
+
+    #[test]
+    fn a_listing_the_engine_ends_stops_asking_and_says_why() {
+        run(|| {
+            let (panel, window, _) = panel_in_window();
+            panel.open(PanelTab::Sources);
+            panel.listing_asked();
+            let asking = || ListingState::Asking;
+            panel.set_progress(said(asking(), asking(), asking()));
+            pump(300);
+            let heights: Vec<i32> = loading_rows(&panel).iter().map(|r| r.4).collect();
+            age(&panel, Duration::from_millis(3500));
+            pump(300);
+            assert!(loading_rows(&panel)[0].1.starts_with("Asking · "));
+
+            let why = "Episode 7 hasn't aired yet";
+            panel.sources_failed(why.to_owned());
+            pump(400);
+            let now = loading_rows(&panel);
+            assert_eq!(now.iter().map(|r| r.4).collect::<Vec<_>>(), heights, "no row moved");
+            for row in &now[..3] {
+                assert_eq!(row.1, "", "{row:?} no longer asks");
+                assert!(!row.2 && row.3, "{row:?}: no spinner, its name in haze");
+            }
+            assert_eq!(now[3].1, "Switched off");
+            assert!(!panel.pending(), "nothing counts on");
+            let texts = src_texts(&panel);
+            assert_eq!(texts.iter().filter(|t| *t == why).count(), 1, "{texts:?}");
+
+            // Drawn again, the rows and the note stay as they are.
+            panel.set_options(None);
+            pump(100);
+            assert_eq!(src_texts(&panel).iter().filter(|t| *t == why).count(), 1);
+            assert!(!panel.pending());
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_source_resting_before_that_lists_releases_now_can_be_picked() {
+        use kaeri_model::sources::{SourceNote, SourceOption};
+        run(|| {
+            let (panel, window, acts) = panel_in_window();
+            panel.open(PanelTab::Sources);
+            let option = |id: &str, name: &str, note| SourceOption {
+                provider_id: id.into(),
+                name: name.into(),
+                covered: 12,
+                of: 12,
+                pinned: false,
+                note,
+                releases: Vec::new(),
+                pinned_release: None,
+                first: Some(1),
+                last: Some(12),
+                lacking: Vec::new(),
+                lacking_since: None,
+            };
+            panel.set_options(Some(vec![
+                option("home", "Home server", Some(SourceNote::Resting)),
+                option("archive", "Archive example", Some(SourceNote::Resting)),
+            ]));
+            // The final answer alone, without progress: Home server listed a release.
+            panel.set_releases(Some(vec![release("h1", "home")]));
+            pump(300);
+            let texts = src_texts(&panel);
+            let resting = kaeri_i18n::t::source_note_resting();
+            assert_eq!(
+                texts.iter().filter(|t| **t == resting).count(),
+                1,
+                "only Archive example, which listed nothing, rests: {texts:?}"
+            );
+            assert!(texts.iter().any(|t| t == "1080p · 1.4 GiB"), "{texts:?}");
+            let keys = panel.choice_keys();
+            assert!(keys.contains(&"release/home/h1".to_owned()), "{keys:?}");
+            let row = panel
+                .src_does
+                .borrow()
+                .iter()
+                .find(|(_, does)| matches!(does, RowDoes::Release(r) if r.id == "h1"))
+                .map(|(row, _)| row.clone())
+                .expect("Home server's row plays its release");
+            assert!(row.is_activatable());
+            row.emit_activate();
+            assert_eq!(acts.borrow().last(), Some(&Act::Release(release("h1", "home"))));
             window.destroy();
         });
     }
