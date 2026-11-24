@@ -1764,6 +1764,11 @@ public sealed partial class PlayerView
                         BuildSources();
                 }
                 break;
+            case Event.SourcesFailed failed:
+                // No source was asked (the alert says why): the rows still waiting end, their spinners go.
+                if (panel.Failed(failed.Id, failed.Episode) && panel.Open)
+                    UpdateSourceRows();
+                break;
             case Event.SourceOptions o when o.Id == playingId && panel.Open:
                 // While the rows say each source's progress, the coverage lines crossfade in place.
                 if (ctx is { } known && SayPlayingCoverage(known))

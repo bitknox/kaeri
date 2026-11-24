@@ -99,9 +99,10 @@ public sealed record VersionSwitch(Translation To, PanelPhase Phase, long Since)
 /// <summary>
 /// The episode's releases across every source, as <c>LoadSources</c> answered, in the order the
 /// sources gave them; <paramref name="Rows"/> is each source's row as the engine last said it
-/// while it asks, and after.
+/// while it asks, and after. <paramref name="Ended"/>: the listing ended before any source was
+/// asked (none set up, the title unreadable, the episode not out), so no row is asked any more.
 /// </summary>
-public sealed record PanelReleases(uint Id, string Episode, SourceCandidate[]? Candidates, SourceListing[]? Rows = null)
+public sealed record PanelReleases(uint Id, string Episode, SourceCandidate[]? Candidates, SourceListing[]? Rows = null, bool Ended = false)
 {
     /// <summary>One source's releases, in the order it gave them.</summary>
     public SourceCandidate[] Of(string providerId) => [.. (Candidates ?? []).Where(c => c.ProviderId == providerId)];
@@ -258,9 +259,12 @@ public static class PanelWords
     /// <summary>A source's line: why it is resting, or how much of the title it has.</summary>
     public static string Source(SourceOption option) => option.Note switch
     {
-        null => T.SourcePickerCoverage(option.Covered, option.Of),
+        null => Coverage(option),
         _ => SourcePicker.Detail(option),
     };
+
+    /// <summary>How much of the title a source has, whatever its note: the line of a source that listed releases now.</summary>
+    public static string Coverage(SourceOption option) => T.SourcePickerCoverage(option.Covered, option.Of);
 
     /// <summary>
     /// When a broadcast airs: "today at 16:30", "tomorrow at 16:30", "on Thursday at 16:30" within
@@ -313,7 +317,7 @@ public static class PanelWords
     public static SourceGroup[] Others(SourceOption[]? options, PanelReleases? releases, string? skip)
     {
         if (releases?.Rows is { } rows)
-            return [.. rows.Where(r => r.ProviderId != skip).Select(r => Row(r, options?.FirstOrDefault(o => o.ProviderId == r.ProviderId)))];
+            return [.. rows.Where(r => r.ProviderId != skip).Select(r => Row(r, options?.FirstOrDefault(o => o.ProviderId == r.ProviderId), releases.Ended))];
         var known = releases?.Candidates is not null;
         IEnumerable<(string Provider, string Name, SourceOption? Option)> groups = options is not null
             ? options.Where(o => o.ProviderId != skip).Select(o => (o.ProviderId, o.Name, (SourceOption?)o))
@@ -337,8 +341,9 @@ public static class PanelWords
     }
 
     /// <summary>One source's row as the engine said it while it asks, and after.</summary>
-    static SourceGroup Row(SourceListing row, SourceOption? option) => row.State switch
+    static SourceGroup Row(SourceListing row, SourceOption? option, bool ended) => row.State switch
     {
+        ListingState.Asking when ended => new SourceGroup.Dim(row.ProviderId, row.Name, option),
         ListingState.Listed { Releases.Length: > 1 } listed => new SourceGroup.Releases(row.ProviderId, row.Name, option, listed.Releases),
         ListingState.Listed { Releases: [var one] } => new SourceGroup.One(row.ProviderId, row.Name, option, one),
         ListingState.Listed => new SourceGroup.Dim(row.ProviderId, row.Name, option),
@@ -507,7 +512,10 @@ public sealed class PanelState
     /// </summary>
     public SourceLine Line(SourceGroup group, long now)
     {
-        var coverage = group.Option is { } o ? PanelWords.Source(o) : null;
+        // A source that listed releases now says how much it has, never an older resting or failed note.
+        var coverage = group.Option is { } o
+            ? group is SourceGroup.One or SourceGroup.Releases ? PanelWords.Coverage(o) : PanelWords.Source(o)
+            : null;
         switch (group)
         {
             case SourceGroup.Asking or SourceGroup.Waiting:
@@ -538,6 +546,18 @@ public sealed class PanelState
         if (Releases is not { } r || r.Id != id || r.Episode != episode)
             return false;
         Releases = r with { Candidates = candidates };
+        return true;
+    }
+
+    /// <summary>
+    /// The engine ended the listing before asking any source: kept as ended, with no releases,
+    /// when it is for the episode asked for, so no row says it is asked any more.
+    /// </summary>
+    public bool Failed(uint id, string episode)
+    {
+        if (Releases is not { } r || r.Id != id || r.Episode != episode)
+            return false;
+        Releases = r with { Candidates = r.Candidates ?? [], Ended = true };
         return true;
     }
 

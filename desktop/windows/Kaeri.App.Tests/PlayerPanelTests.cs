@@ -500,4 +500,74 @@ public class PlayerPanelTests
         Assert.Equal(SourceLineKind.Empty, panel.Line(PanelWords.Others(null, panel.Releases, null)[0], 5300).Kind);
         Assert.Equal(SourceLineKind.Asking, panel.Line(PanelWords.Others(null, panel.Releases, null)[0], 5700).Kind);
     }
+
+    /// <summary>
+    /// LoadSources couldn't ask any source (none set up, the title unreadable, the episode not
+    /// out): the engine's SourcesFailed ends the listing, and no row spins or counts on.
+    /// </summary>
+    [Fact]
+    public void AListingThatEndsBeforeAskingLeavesNoRowAsked()
+    {
+        SourceOption[] options = [Option("home", "Home server"), Option("index", "Example index")];
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        // No progress came: the rows are the source options, waiting, and they spin from 600 ms.
+        Assert.All(Said(panel, 4000, options), row => Assert.True(row.Spinner));
+        Assert.False(panel.Failed(7, "6"), "another episode's end");
+        Assert.True(panel.Failed(7, "5"));
+        var ended = Said(panel, 40_000, options);
+        Assert.Equal(2, ended.Length);
+        Assert.All(ended, row => Assert.Equal((false, true, false), (row.Spinner, row.Haze, row.Pick)));
+        Assert.All(PanelWords.Others(options, panel.Releases, "fixture"), group => Assert.IsType<SourceGroup.Dim>(group));
+
+        // Rows the engine said before it ended: those still asked end too; the answers stand.
+        panel.AskReleases(again: true, now: 50_000);
+        panel.Progressed(7, "5", [Listing("home", "Home server", Listed(Release("home", "h-1"))), Listing("index", "Example index", Asking)], 50_010);
+        Assert.True(panel.Failed(7, "5"));
+        var rows = Said(panel, 60_000, options);
+        Assert.Equal(("Home server", false, true), (rows[0].Name, rows[0].Spinner, rows[0].Pick));
+        Assert.Equal(("Example index", false, true, false), (rows[1].Name, rows[1].Spinner, rows[1].Haze, rows[1].Pick));
+    }
+
+    /// <summary>
+    /// A source whose saved option rests or failed, asked anyway and listing releases now, says
+    /// how much it has, never the older note, and can be picked.
+    /// </summary>
+    [Fact]
+    public void AListedSourceSaysItsCoverageNotAnOlderNote()
+    {
+        SourceOption[] options = [Option("home", "Home server", new SourceNote.Resting()), Option("index", "Example index", new SourceNote.Resting())];
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        panel.Progressed(7, "5", [Listing("home", "Home server", Listed(Release("home", "h-1"))), Listing("index", "Example index", Listed(Release("index", "i-1"), Release("index", "i-2")))], 10);
+        var coverage = T.SourcePickerCoverage(9, 12);
+        Assert.Equal(
+            [("Home server", coverage, false, false, true), ("Example index", coverage, false, false, true)],
+            Said(panel, 1000, options));
+        // A source that answered with nothing keeps its note.
+        panel.Progressed(7, "5", [Listing("home", "Home server", Listed()), Listing("index", "Example index", Listed(Release("index", "i-1")))], 20);
+        Assert.Equal(T.SourceNoteResting, Said(panel, 1000, options)[0].Words);
+    }
+
+    /// <summary>
+    /// Another episode while the Sources tab is open: its releases are asked anew, and its rows
+    /// start over from the new ask, with nothing of the last episode's left.
+    /// </summary>
+    [Fact]
+    public void AnotherEpisodeWithTheTabOpenAsksAgainFromTheStart()
+    {
+        var panel = new PanelState { Open = true, Tab = PanelTab.Sources };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        panel.Progressed(7, "5", [Listing("home", "Home server", Asking)], 10);
+        panel.Playing(7, "6");
+        Assert.Equal((7u, "6"), panel.AskReleases(now: 20_000));
+        Assert.False(panel.Progressed(7, "5", [Listing("home", "Home server", Asking)], 20_010), "the last episode's rows");
+        Assert.True(panel.Progressed(7, "6", [Listing("home", "Home server", Asking)], 20_010));
+        var home = PanelWords.Others(null, panel.Releases, null)[0];
+        Assert.Equal(SourceLineKind.Empty, panel.Line(home, 20_300).Kind);
+        Assert.Equal(T.PlayerStartRowAsking, panel.Line(home, 21_000).Words);
+    }
 }
