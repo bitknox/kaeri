@@ -221,6 +221,9 @@ pub struct PlayerView {
     dub: RefCell<Option<kaeri_model::episodes::DubExtent>>,
     /// The episode the panel last asked the sources about.
     panel_asked: RefCell<Option<(AnilistId, String)>>,
+    /// The title whose start found its source, and the source's name: a fast start says it
+    /// before the player is told the title starts, and the panel's Playing now keeps it.
+    found_in: RefCell<Option<(AnilistId, String)>>,
     /// Where a switch to another source loads at, while the picture is held for it.
     hold_at: Cell<Option<f64>>,
     held_fade: RefCell<Option<adw::TimedAnimation>>,
@@ -478,6 +481,7 @@ impl PlayerView {
             has_dub: Cell::new(None),
             dub: RefCell::default(),
             panel_asked: RefCell::default(),
+            found_in: RefCell::default(),
             hold_at: Cell::new(None),
             held_fade: RefCell::default(),
             #[cfg(feature = "fixtures")]
@@ -1141,7 +1145,6 @@ impl PlayerView {
         line: Option<&kaeri_model::Msg>,
     ) {
         let at = self.start_elapsed();
-        tracing::info!(?step, has = self.start.borrow().is_some(), "DIAG start step");
         {
             let mut start = self.start.borrow_mut();
             let Some(start) = start.as_mut().filter(|s| s.id == id && s.episode == episode)
@@ -1151,6 +1154,7 @@ impl PlayerView {
             start.step(step, line, at);
         }
         if let kaeri_model::starting::StartStep::Found { source: Some(source), .. } = step {
+            self.found_in.replace(Some((id, source.clone())));
             self.playing_from(source);
         }
         if matches!(step, kaeri_model::starting::StartStep::WaitingForConnection) {
@@ -1292,7 +1296,11 @@ impl PlayerView {
                     self.dub.take();
                     self.table.take();
                     self.own_spoilers.set(None);
-                    self.ui.side.set_data(side_panel::Data::default());
+                    let found = self.found_in.take().filter(|(of, _)| of == id);
+                    self.ui.side.set_data(side_panel::Data {
+                        playing_source: found.map(|(_, source)| source),
+                        ..side_panel::Data::default()
+                    });
                     if *id != kaeri_model::opened::UNTRACKED {
                         self.ctx.hub.send(Command::LoadDub(*id));
                         // The synopses for the Episodes panel, and the show's own protection.

@@ -1,7 +1,9 @@
 //! The player panel's Sources tab while it loads, on the sources loading scene
 //! (`--scene sourcesloading`): episode 7 of the finished title plays, the tab opens 5 s in, and
 //! each shot is taken at its moment after the tab asked, 0.3 s to 21 s, as the six sources
-//! answer in their own time. `--shot sources-loading` takes them in order on one run.
+//! answer in their own time. `--shot sources-loading` takes them in order on one run, after a
+//! first shot of the episode playing: a run's first capture is slow, and the tab's first
+//! moments are too short to wait for one.
 
 use std::{cell::Cell, rc::Rc, time::Duration, time::Instant};
 
@@ -12,8 +14,9 @@ use kaeri_testkit::fixtures::FINISHED;
 
 use crate::window::Shell;
 
-/// The tab's states, in the order one run takes them, each with its moment after the tab asks.
-pub const NAMES: [&str; 5] = [
+/// The tab's states, in the order one run takes them, after the episode playing.
+pub const NAMES: [&str; 6] = [
+    "sources-loading-playing",
     "sources-loading-0s",
     "sources-loading-1s",
     "sources-loading-4s",
@@ -35,17 +38,17 @@ thread_local! {
 /// Put the window in the state `shot` shows, and say how long to let it settle.
 pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
     let at = NAMES.iter().position(|n| *n == shot)?;
-    let opens = match OPENS.with(Cell::get) {
-        Some(opens) => opens,
-        None => {
-            let opens = Instant::now() + Duration::from_secs_f64(OPEN_AFTER);
-            OPENS.with(|o| o.set(Some(opens)));
-            play_and_open(shell);
-            opens
-        }
+    let opens = OPENS.with(Cell::get).unwrap_or_else(|| {
+        let opens = Instant::now() + Duration::from_secs_f64(OPEN_AFTER);
+        OPENS.with(|o| o.set(Some(opens)));
+        play_and_open(shell);
+        opens
+    });
+    let moment = match at.checked_sub(1) {
+        Some(at) => opens + Duration::from_secs_f64(MOMENTS[at]),
+        // The episode playing, before the tab opens.
+        None => opens - Duration::from_millis(1500),
     };
-    let moment = opens + Duration::from_secs_f64(MOMENTS[at]);
-    tracing::info!(shot, "sources-loading: staged");
     Some(moment.saturating_duration_since(Instant::now()).as_secs_f64())
 }
 
@@ -63,7 +66,6 @@ fn play_and_open(shell: &Rc<Shell>) {
     });
     let player = Rc::clone(&shell.player);
     glib::timeout_add_local_once(Duration::from_secs_f64(OPEN_AFTER), move || {
-        tracing::info!("sources-loading: the tab opens");
         player.shot_panel("sources");
     });
 }
