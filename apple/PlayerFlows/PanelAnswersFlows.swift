@@ -4,6 +4,7 @@
 
 import XCTest
 
+@MainActor
 final class PanelAnswersFlows: XCTestCase {
     override func setUp() {
         continueAfterFailure = true
@@ -12,7 +13,7 @@ final class PanelAnswersFlows: XCTestCase {
     /// Episode 7's tab, 3 s into its listing, then episode 8 playing with it open: the tab lists
     /// episode 8's sources, whose releases answer at once.
     func testTheNextEpisodeAsksAgain() throws {
-        try run(shot: "panel-next-episode", moments: [("next-before", -0.5), ("next-after", 4)]) { moment, labels in
+        try run(shot: "panel-next-episode", moments: [("next-before", -0.5), ("next-after", 4)]) { moment in
             switch moment {
             case "next-before": []
             default: [
@@ -26,7 +27,7 @@ final class PanelAnswersFlows: XCTestCase {
     /// The tab asks for an episode that has not aired: no source is asked, and the tab says why in
     /// place of rows that would count on.
     func testAListingThatAsksNoSourceEnds() throws {
-        try run(shot: "panel-sources-failed", moments: [("failed-1s", 1), ("failed-6s", 6)]) { moment, labels in
+        try run(shot: "panel-sources-failed", moments: [("failed-1s", 1), ("failed-6s", 6)]) { moment in
             switch moment {
             case "failed-1s": []
             default: [
@@ -41,7 +42,7 @@ final class PanelAnswersFlows: XCTestCase {
 
     private func run(
         shot: String, moments: [(name: String, at: TimeInterval)],
-        wanted: (String, [String]) -> [(words: String, there: Bool, why: String)]
+        wanted: (String) -> [(words: String, there: Bool, why: String)]
     ) throws {
         let app = launch(shot: shot)
         defer { app.terminate() }
@@ -61,7 +62,7 @@ final class PanelAnswersFlows: XCTestCase {
             picture.lifetime = .keepAlways
             add(picture)
             let labels = self.labels(app)
-            let wrong = wanted(name, labels).filter { want in labels.contains { $0.contains(want.words) } != want.there }
+            let wrong = wanted(name).filter { want in labels.contains { $0.contains(want.words) } != want.there }
             guard !wrong.isEmpty else { continue }
             let said = XCTAttachment(string: labels.joined(separator: "\n"))
             said.name = "\(Self.form)-\(name)-labels"
