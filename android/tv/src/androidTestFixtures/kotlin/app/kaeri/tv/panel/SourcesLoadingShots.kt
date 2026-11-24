@@ -49,6 +49,13 @@ class SourcesLoadingShots {
             shots += "tv-$moment" to instrumentation.uiAutomation.takeScreenshot()
             Log.i(TAG, "KAERI_SHOT tv-$moment at $taken ms")
             if (taken - at !in 0..300) late += "$moment at $taken ms"
+            // Down from the source playing now, past Subtitled and Dubbed and the three that
+            // answer first, onto Second example while it is still asked, as the board's TV frame
+            // has it; the list follows the focus to the slow sources.
+            if (moment == "1s") repeat(5) {
+                instrumentation.sendKeyDownUpSync(android.view.KeyEvent.KEYCODE_DPAD_DOWN)
+                SystemClock.sleep(150)
+            }
         }
         for ((name, shot) in shots) {
             File(out, "$name.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
