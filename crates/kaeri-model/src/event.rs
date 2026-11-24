@@ -289,6 +289,14 @@ pub enum Event {
         episode: String,
         rows: Vec<crate::starting::SourceListing>,
     },
+    /// `LoadSources` for this episode ended before asking any source: none is set up, the
+    /// title's details could not be read, or the episode has not aired. `why` says which, as the
+    /// alert said beside it. Ends what `SourcesProgress` started; no `Sources` follows.
+    SourcesFailed {
+        id: AnilistId,
+        episode: String,
+        why: Msg,
+    },
     /// The sources that could serve a title, each with how much of the title's episodes it has,
     /// in the order they are tried, for a source picker: the answer to
     /// [`Command::LoadSourceOptions`](crate::command::Command::LoadSourceOptions).
