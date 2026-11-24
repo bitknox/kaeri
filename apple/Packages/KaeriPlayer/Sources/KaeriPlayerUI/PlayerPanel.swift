@@ -89,6 +89,17 @@ struct PlayerPanelLayer: View {
 
     var body: some View {
         ZStack(alignment: .trailing) {
+            #if FIXTURES
+            // When a shot's panel asks for the sources, said ahead for a UI test's pictures.
+            if let at = model.panelAsksAt {
+                Color.clear
+                    .frame(width: 1, height: 1)
+                    .allowsHitTesting(false)
+                    .accessibilityElement()
+                    .accessibilityLabel(String(at))
+                    .accessibilityIdentifier("panel-asks-at")
+            }
+            #endif
             if open {
                 Palette.controlsDim
                     .contentShape(.rect)

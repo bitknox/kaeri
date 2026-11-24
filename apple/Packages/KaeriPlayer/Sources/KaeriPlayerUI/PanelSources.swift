@@ -32,6 +32,7 @@ struct PanelSources: View {
                     .padding(.top, 10)
                     .padding(.bottom, 4)
                 PanelHeading(title: L.playerPanelOtherSources, metrics: metrics)
+                    .id(Self.others)
                 others
                 PanelText(
                     text: "\(L.playerPanelOrder) \(L.playerPanelPickScope)", size: metrics.detail,
@@ -39,6 +40,8 @@ struct PanelSources: View {
                     .padding(.horizontal, metrics.rowPad)
                     .padding(.top, 10)
                     .padding(.bottom, 4)
+                    // Under the rows as they come in at once, never sliding over them as they fade in.
+                    .transaction(value: model.panelReleases?.rows == nil) { $0.animation = nil }
             }
             .padding(.horizontal, metrics.pad)
             .padding(.bottom, metrics.pad)
@@ -54,6 +57,10 @@ struct PanelSources: View {
             withAnimation(.standard) { proxy.scrollTo(Self.top, anchor: .top) }
         }
         .onChange(of: model.panelShot, initial: true) { _, shot in
+            // A shot's row at the top as the tab opens, before anything moves.
+            if let row = shot?.scroll {
+                Task { @MainActor in proxy.scrollTo(row, anchor: .top) }
+            }
             // A shot's opened source at the top, its releases under it.
             guard let open = shot?.expanded else { return }
             Task { @MainActor in
@@ -79,6 +86,8 @@ struct PanelSources: View {
     }
 
     private static let top = "playing now"
+    /// The Other sources heading's id.
+    static let others = "other sources"
 
     // MARK: Playing now
 
@@ -203,10 +212,17 @@ struct PanelSources: View {
     // MARK: Other sources
 
     /// Every other source in the order set in Sources, or, before their lines come, the releases'
-    /// own sources in the order the engine found them.
+    /// own sources in the order the engine found them. While the tab loads, the sources' rows as
+    /// the engine last said them, in the same order.
     private var groups: [(providerId: String, name: String, option: SourceOption?)] {
         let skip = playingProvider
-        if let id = model.staged?.id, let options = store.sourceChoices.options[id] {
+        let options = model.staged.flatMap { store.sourceChoices.options[$0.id] }
+        if let rows = model.panelReleases?.rows {
+            return rows.filter { $0.providerId != skip && $0.name != model.playingSource }.map { row in
+                (row.providerId, row.name, options?.first { $0.providerId == row.providerId })
+            }
+        }
+        if let options {
             return options.filter { $0.providerId != skip }.map { ($0.providerId, $0.name, $0) }
         }
         var seen: Set<String> = []
@@ -218,7 +234,62 @@ struct PanelSources: View {
 
     @ViewBuilder
     private var others: some View {
-        let releasesKnown = model.panelReleases?.candidates != nil
+        // Asked and not answered whole yet, or answering row by row: each source's own line.
+        if let releases = model.panelReleases, releases.rows != nil || releases.candidates == nil {
+            loadingRows(releases)
+        } else {
+            answeredRows
+        }
+    }
+
+    /// Every other source's row while the tab loads, from the first frame and in its order, its line
+    /// as the engine last said it: nothing for 600 ms, then Asking and the seconds, then its answer
+    /// crossfaded in place. A source can be picked once it has listed releases.
+    @ViewBuilder
+    private func loadingRows(_ releases: PanelReleases) -> some View {
+        ForEach(groups, id: \.providerId) { group in
+            let row = releases.rows?.first { $0.providerId == group.providerId }
+            let listed: [SourceCandidate] = if case .listed(let listed)? = row?.state { listed } else { [] }
+            let open = expanded.contains(group.providerId)
+            let line = group.option.map(Self.line) ?? listed.first.flatMap { listed.count == 1 ? ReleaseWords.detail($0) : nil }
+            let loading = row.map { releases.loading($0, listed: line) } ?? RowLoading(asked: releases.asked, since: releases.asked)
+            let dim: Bool = switch row?.state {
+            case .missed?, .off?: true
+            default: false
+            }
+            PanelChoiceRow(
+                model: model, metrics: metrics, title: group.name,
+                target: SwitchTarget(providerId: group.providerId, name: group.name, release: listed.count == 1 ? listed.first?.id : nil),
+                dim: dim, loading: loading,
+                disclosure: listed.count > 1 ? (L.playerPanelReleases(count: listed.count), open) : nil,
+                action: pick(group.providerId, listed: listed, open: open))
+                .id(group.providerId)
+            if listed.count > 1, open {
+                VStack(alignment: .leading, spacing: 0) {
+                    ForEach(listed, id: \.id) { release in
+                        PanelChoiceRow(
+                            model: model, metrics: metrics, title: release.title, detail: ReleaseWords.detail(release),
+                            target: SwitchTarget(providerId: release.providerId, name: group.name, release: release.id),
+                            sub: true, inset: true, action: { model.switchTo(release) })
+                    }
+                }
+                .transition(.opacity)
+            }
+        }
+    }
+
+    /// What a click on a source's row does once it has listed: its releases opened or closed, or
+    /// its one release played. Nothing before then.
+    private func pick(_ providerId: String, listed: [SourceCandidate], open: Bool) -> (() -> Void)? {
+        if listed.count > 1 {
+            return { if open { expanded.remove(providerId) } else { expanded.insert(providerId) } }
+        }
+        guard let release = listed.first else { return nil }
+        return { model.switchTo(release) }
+    }
+
+    @ViewBuilder
+    private var answeredRows: some View {
         ForEach(groups, id: \.providerId) { group in
             let releases = model.panelReleases?.of(group.providerId) ?? []
             let open = expanded.contains(group.providerId)
@@ -256,7 +327,7 @@ struct PanelSources: View {
                 PanelChoiceRow(
                     model: model, metrics: metrics, title: group.name, detail: line,
                     target: SwitchTarget(providerId: group.providerId, name: group.name),
-                    dim: resting || releasesKnown, waiting: !releasesKnown && !resting, action: nil)
+                    dim: true, action: nil)
                     .id(group.providerId)
             }
         }
@@ -290,8 +361,9 @@ struct PanelChoiceRow: View {
     /// Under its source, past the check column.
     var inset = false
     var dim = false
-    /// The releases are still being looked for: a quiet spinner on the line.
-    var waiting = false
+    /// While the Sources tab loads, the source's line: a spinner in the check column and Asking
+    /// while it is asked, then its answer, each change crossfaded in place.
+    var loading: RowLoading?
     var disclosure: (count: String, open: Bool)?
     let action: (() -> Void)?
     @State private var hovering = false
@@ -339,6 +411,7 @@ struct PanelChoiceRow: View {
                     .font(.system(size: metrics.detail))
                     .foregroundStyle(.haze)
                     .fixedSize()
+                    .transition(.opacity)
                 }
             }
             if let failed = picked?.failed {
@@ -366,10 +439,7 @@ struct PanelChoiceRow: View {
             if let picked, picked.failed == nil {
                 TimelineView(.periodic(from: .now, by: 0.2)) { _ in
                     let shown = ContinuousClock.now - picked.since >= PanelSwitch.silent
-                    ProgressView()
-                        .controlSize(metrics.touch ? .regular : .small)
-                        .scaleEffect(metrics.touch ? 0.85 : 0.9)
-                        .tint(Palette.silk)
+                    spinner
                         .opacity(shown ? 1 : 0)
                         .animation(.fadeIn, value: shown)
                 }
@@ -377,10 +447,27 @@ struct PanelChoiceRow: View {
                 Image(systemName: "checkmark")
                     .font(.system(size: metrics.touch ? 15 : 12, weight: .semibold))
                     .transition(.opacity)
+            } else if let loading, loading.asking {
+                // From 600 ms; it fades out as the answer fades in.
+                TimelineView(.periodic(from: .now, by: 0.2)) { _ in
+                    let shown = loading.phase(at: ContinuousClock.now).spins
+                    spinner
+                        .opacity(shown ? 1 : 0)
+                        .animation(.fadeIn, value: shown)
+                }
+                .transition(.opacity)
             }
         }
         .frame(width: metrics.check)
         .accessibilityHidden(true)
+    }
+
+    /// The check column's spinner: 16 pt on touch, in the 24 pt column.
+    private var spinner: some View {
+        ProgressView()
+            .controlSize(metrics.touch ? .regular : .small)
+            .scaleEffect(metrics.touch ? 0.8 : 0.9)
+            .tint(Palette.silk)
     }
 
     /// The row's line, crossfading to "Starting · 3 s" once a switch on it takes that long.
@@ -402,8 +489,28 @@ struct PanelChoiceRow: View {
                 }
                 .animation(.fadeIn, value: counting)
             }
+        } else if let loading {
+            loadingLine(loading)
         } else {
             detailText
+        }
+    }
+
+    /// The line while the tab loads, held one line high from the first frame: each change is one
+    /// line crossfading in place, old and new together, and the seconds count on in place.
+    private func loadingLine(_ loading: RowLoading) -> some View {
+        TimelineView(.periodic(from: .now, by: loading.asking ? 0.2 : 3600)) { _ in
+            let phase = loading.phase(at: ContinuousClock.now)
+            ZStack(alignment: .leading) {
+                if let text = phase.text, !text.isEmpty {
+                    PanelText(text: text, size: metrics.detail, line: metrics.detailLine, color: Palette.haze)
+                        .monospacedDigit()
+                        .id(phase.key)
+                        .transition(.opacity)
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: metrics.detailLine, alignment: .leading)
+            .animation(.fadeIn, value: phase.key)
         }
     }
 
@@ -412,8 +519,6 @@ struct PanelChoiceRow: View {
         if let detail, !detail.isEmpty {
             PanelText(text: detail, size: metrics.detail, line: metrics.detailLine, color: Palette.haze)
                 .monospacedDigit()
-        } else if waiting {
-            ProgressView().controlSize(.mini).frame(height: metrics.detailLine)
         }
     }
 }

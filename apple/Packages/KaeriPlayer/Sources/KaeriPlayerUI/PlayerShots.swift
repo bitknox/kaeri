@@ -118,6 +118,9 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case panelFailed = "panel-failed"
     case panelMotion = "panel-motion"
     case panelLive = "panel-live"
+    /// The Sources tab while the SourcesLoading scene's sources answer one by one: the panel
+    /// opens on it as the shot is up, and asks 5 s later, at the moment `panelAsksAt` says.
+    case panelSourcesLoading = "panel-sources-loading"
 
     /// The engine's fixture for a found times' shot.
     var found: FoundSkipFixture? {
@@ -262,6 +265,27 @@ extension PlayerModel {
             if let menu = shot.menu { requestMenu(menu) }
         case .panelEpisodes, .panelSources, .panelFinding, .panelLoading, .panelLanded, .panelFailed, .panelMotion, .panelLive:
             there = await stagePanel(shot, id: item.id, episode: String(item.episode), store: store)
+        case .panelSourcesLoading:
+            seek(to: 31)
+            there = await waited(10) { self.position >= 31.5 && self.menus != nil }
+            togglePause()
+            pinnedControls = true
+            // Scrolled to the other sources where the panel is too short for them all.
+            panelShot = PanelShot(tab: .sources, scroll: PanelSources.others)
+            // Open and settled first, so the pictures show the rows and not the panel sliding in.
+            holdsPanelAsk = true
+            requestMenu(.episodes)
+            let asks = Date.now.addingTimeInterval(5)
+            panelAsksAt = Int((asks.timeIntervalSince1970 * 1000).rounded())
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(asks.timeIntervalSinceNow))
+                self.holdsPanelAsk = false
+                self.loadPanelReleases()
+                // The rows make the tab tall enough to scroll: the other sources to the top once
+                // they are in, where the panel is too short for them all.
+                _ = await self.waited(2) { self.panelReleases?.rows != nil }
+                self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 1)
+            }
         case .fading:
             seek(to: 31)
             there = await waited(10) { self.position >= 31.5 }

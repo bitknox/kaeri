@@ -294,6 +294,11 @@ public final class PlayerModel {
     #if FIXTURES
     /// A shot of a card holds it up, as a screen reader does.
     @ObservationIgnored public var holdsPromptsForShot = false
+    /// When a shot's panel, already open, asks for the episode's sources, in milliseconds since
+    /// 1970, said ahead in the player's accessibility so a UI test counts its pictures from it.
+    public internal(set) var panelAsksAt: Int?
+    /// Until then the panel asks nothing, so it is in place before the clock starts.
+    @ObservationIgnored var holdsPanelAsk = false
     #endif
     @ObservationIgnored public var skipFindPause: @MainActor () -> SkipFindPause? = { nil }
     public private(set) var speed: Double = 1
@@ -496,6 +501,10 @@ public final class PlayerModel {
             // The party's own sheet says why nothing plays and offers its sources: the player's
             // failure would say it twice, under it.
             partySaysWhy = true
+        case .sourcesProgress(let id, let episode, let rows):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.progressed(rows, at: time.now())
+            }
         case .sources(let id, let episode, let candidates, let missed):
             if panelReleases?.id == id, panelReleases?.episode == episode {
                 panelReleases?.candidates = candidates
@@ -2267,7 +2276,10 @@ extension PlayerModel {
     public func loadPanelReleases(again: Bool = false) {
         guard let (id, episode) = panelEpisode else { return }
         if !again, panelReleases?.id == id, panelReleases?.episode == episode { return }
-        panelReleases = PanelReleases(id: id, episode: episode, candidates: nil)
+        #if FIXTURES
+        if holdsPanelAsk { return }
+        #endif
+        panelReleases = PanelReleases(id: id, episode: episode, asked: time.now())
         send(.loadSources(id: id, episode: episode))
     }
 

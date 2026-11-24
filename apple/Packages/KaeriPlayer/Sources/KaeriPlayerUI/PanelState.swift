@@ -126,16 +126,125 @@ public struct VersionSwitch: Equatable, Sendable {
 }
 
 /// The episode's releases across every source, for the panel's Sources tab: the engine's answer
-/// to `LoadSources`, in the order the sources gave them.
+/// to `LoadSources`, in the order the sources gave them, and each source's row while it asks.
 public struct PanelReleases: Equatable, Sendable {
     public let id: AnilistId
     public let episode: String
     /// Nil until the engine answers.
     public var candidates: [SourceCandidate]?
+    /// When the tab asked: a row still asked says nothing for the first 600 ms after it.
+    public var asked: ContinuousClock.Instant
+    /// Every source's row as the last `SourcesProgress` said it, in the order set in Sources;
+    /// nil before the first.
+    public var rows: [SourceListing]?
+    /// When each source's row first said Asking, by its id: what its seconds count from.
+    public var askingSince: [String: ContinuousClock.Instant] = [:]
+
+    public init(
+        id: AnilistId, episode: String, candidates: [SourceCandidate]? = nil, asked: ContinuousClock.Instant = .now
+    ) {
+        self.id = id
+        self.episode = episode
+        self.candidates = candidates
+        self.asked = asked
+    }
 
     /// One source's releases, in the order it gave them.
     public func of(_ providerId: String) -> [SourceCandidate] {
         (candidates ?? []).filter { $0.providerId == providerId }
+    }
+
+    /// A `SourcesProgress` for this episode: its rows replace the last ones whole, and a row that
+    /// says Asking for the first time starts counting.
+    mutating func progressed(_ rows: [SourceListing], at now: ContinuousClock.Instant) {
+        for row in rows where row.state == .asking && askingSince[row.providerId] == nil {
+            askingSince[row.providerId] = now
+        }
+        self.rows = rows
+    }
+
+    /// One source's line while the tab loads, from its row: `listed` is the line a source that
+    /// listed releases shows, its coverage of the title.
+    func loading(_ row: SourceListing, listed: String?) -> RowLoading {
+        switch row.state {
+        case .asking: RowLoading(asked: asked, since: askingSince[row.providerId] ?? asked)
+        case .listed: RowLoading(asked: asked, said: listed ?? "")
+        case .missed(let miss): RowLoading(asked: asked, said: Self.words(miss, episode: episode))
+        case .off: RowLoading(asked: asked, said: L.sourceNoteOff)
+        }
+    }
+
+    /// The starting screen's row words for a source that listed nothing.
+    static func words(_ miss: ListingMiss, episode: String) -> String {
+        switch miss {
+        case .noMatch: L.playerStartRowNoMatch
+        case .ambiguous: L.sourceNoteAmbiguous
+        case .noEpisode: L.playerStartRowNoEpisode(episode: episode)
+        case .failed: L.playerStartRowFailed
+        case .timedOut: L.playerStartRowTimedOut
+        case .heldBack(let why): StartingWalk.heldNote(why)
+        }
+    }
+}
+
+/// A source's line on the Sources tab while it loads: nothing for 600 ms after the tab asked, then
+/// a spinner and Asking, then the seconds from 3 s, until the answer takes its place.
+public struct RowLoading: Equatable, Sendable {
+    public enum Phase: Equatable, Sendable {
+        /// Asked, inside the silent 600 ms: an empty line held one line high.
+        case silent
+        /// "Asking", with a spinner, from 600 ms.
+        case asking
+        /// "Asking · 4 s", with a spinner, from 3 s.
+        case counting(Int)
+        /// The answer, or what the source is without one (switched off, not asked).
+        case said(String)
+
+        /// The line, nil while silent.
+        public var text: String? {
+            switch self {
+            case .silent: nil
+            case .asking: L.playerStartRowAsking
+            case .counting(let seconds): L.playerPanelAsking(seconds: seconds)
+            case .said(let text): text
+            }
+        }
+
+        /// Which line it is: the seconds count on in place, every other change crossfades.
+        var key: String {
+            switch self {
+            case .silent: "silent"
+            case .asking: "asking"
+            case .counting: "counting"
+            case .said(let text): "said " + text
+            }
+        }
+
+        /// The spinner in the check slot.
+        public var spins: Bool {
+            switch self {
+            case .asking, .counting: true
+            case .silent, .said: false
+            }
+        }
+    }
+
+    /// When the tab asked.
+    public var asked: ContinuousClock.Instant
+    /// When the row first said Asking; nil once it has its answer.
+    public var since: ContinuousClock.Instant?
+    /// The answer's line; nil while the source is asked.
+    public var said: String?
+
+    /// Still asked: the line changes with time.
+    public var asking: Bool { said == nil }
+
+    public func phase(at now: ContinuousClock.Instant) -> Phase {
+        if let said { return .said(said) }
+        guard now - asked >= PanelSwitch.silent else { return .silent }
+        let waited = now - (since ?? asked)
+        guard waited >= PanelSwitch.counting else { return .asking }
+        return .counting(Int(waited.components.seconds))
     }
 }
 
@@ -171,12 +280,15 @@ public struct PanelShot: Equatable, Sendable {
     public var tab: PanelTab
     public var revealed: String?
     public var expanded: String?
+    /// The row scrolled to the top as the tab opens, by its id, with nothing opened.
+    public var scroll: String?
     public var serial: Int
 
-    public init(tab: PanelTab, revealed: String? = nil, expanded: String? = nil, serial: Int = 0) {
+    public init(tab: PanelTab, revealed: String? = nil, expanded: String? = nil, scroll: String? = nil, serial: Int = 0) {
         self.tab = tab
         self.revealed = revealed
         self.expanded = expanded
+        self.scroll = scroll
         self.serial = serial
     }
 }
