@@ -16,7 +16,7 @@ use std::{
     sync::{Arc, Mutex},
 };
 
-use kaeri_core::{config::PlaybackConfig, ids::AnilistId, stream::Stream};
+use kaeri_core::{config::PlaybackConfig, ids::AnilistId, media::Translation, stream::Stream};
 use kaeri_meta::Meta;
 use kaeri_model::{Msg, playback::PlaybackId, playback::SwitchTo};
 use kaeri_providers::ProviderRegistry;
@@ -130,7 +130,7 @@ pub fn ask(
         name: display_name(&services.registry, &provider_id),
         provider_id: provider_id.clone(),
         release: Some(source_id.clone()),
-        stream: None,
+        ..SwitchTo::default()
     };
     let _ = door.send(SwitchNews::Finding(to.clone()));
     // Sub or dub as the playback runs it: the show's own, or what the player last picked.
@@ -147,6 +147,46 @@ pub fn ask(
         };
         let _ = door.send(news);
     });
+}
+
+/// Switch the episode playing to `translation`, sub or dub picked in the player: found while
+/// it plays on, then handed to its playback, which loads it at the playhead as it does a
+/// release. False when no playback of the episode Now Playing shows is under way, for the
+/// caller to start the episode again in `translation` instead.
+///
+/// The version is found as a play of the episode would find it, from the title's sources in
+/// their order, with `translation` in place of the title's own. The source is not known until
+/// it is found: `Finding` names none.
+pub fn translate(translation: Translation, engine: &EngineState, services: &Services) -> bool {
+    let Some(front) = engine.staging.front() else { return false };
+    let (id, episode) = (front.id, front.episode.clone());
+    let Some(door) = door_for(engine, id, &episode) else { return false };
+    let to = SwitchTo { translation: Some(translation), ..SwitchTo::default() };
+    let _ = door.send(SwitchNews::Finding(to.clone()));
+    let mut playback =
+        crate::playback::start::play_config(engine, &services.store, id).playback;
+    playback.translation = translation;
+    let Services { meta, store, registry, .. } = services;
+    let (meta, store, registry) = (meta.clone(), store.clone(), registry.clone());
+    tokio::spawn(async move {
+        let resolved = resolve_for_playback(
+            &meta, &store, &registry, id, &episode, None, &playback, None, None,
+        )
+        .await;
+        let news = match resolved {
+            Ok((streams, _)) if !streams.is_empty() => SwitchNews::Found(to, streams),
+            Ok(_) => SwitchNews::Failed(
+                to,
+                crate::playback::resolve::explained(kaeri_model::Cause::NoSources),
+            ),
+            Err(unplayable) => {
+                tracing::info!(reason = %unplayable, "the other version found nothing");
+                SwitchNews::Failed(to, unplayable.text)
+            }
+        };
+        let _ = door.send(news);
+    });
+    true
 }
 
 /// The streams of release `source_id` of source `provider_id` for `episode` of `id`, from that

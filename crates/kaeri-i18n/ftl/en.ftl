@@ -409,6 +409,12 @@ notice-audio-now-dubbed = Audio is now dubbed.
 # Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
 player-panel-switch-failed = Couldn't start from { $source }. Still playing from { $current }.
 
+# Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+player-panel-dub-failed = Couldn't find episode { $episode } dubbed. Still playing subbed.
+
+# Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+player-panel-sub-failed = Couldn't find episode { $episode } subbed. Still playing dubbed.
+
 # Toast when the previous-episode control is used on the first episode.
 notice-already-first-episode = Already at the first episode.
 
@@ -9680,6 +9686,12 @@ player-translation = Subbed or dubbed
 
 # Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
 player-panel-starting = Starting · { $seconds } s
+
+# Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-seconds = Finding episode { $episode } dubbed · { $seconds } s
+
+# Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-subbed-seconds = Finding episode { $episode } subbed · { $seconds } s
 
 # Notice when another source started playing while the player panel was closed.
 notice-playing-from-source = Playing from { $source } at { $clock }

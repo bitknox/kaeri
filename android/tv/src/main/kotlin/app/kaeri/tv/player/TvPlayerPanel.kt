@@ -90,7 +90,6 @@ import app.kaeri.design.PanelGlyphs
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.model.DubExtent
 import app.kaeri.engine.model.EpisodeRow
-import app.kaeri.engine.model.PlayerChoice
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.i18n.Strings
 import app.kaeri.player.HeldPicture
@@ -572,11 +571,17 @@ private fun Heading(text: String) {
     )
 }
 
-/** Subtitled or Dubbed, a two-segment pill 40 high: each segment focuses, OK picks it. */
+/**
+ * Subtitled or Dubbed, a two-segment pill 40 high: each segment focuses, OK picks it. The picked
+ * segment spins from 600 ms while the engine finds that version, a note counts from 3 s, and a
+ * failure says so under the pill.
+ */
 @Composable
 private fun TvTranslationSwitch(model: PlayerModel, dub: DubExtent?, inParty: Boolean, onUp: (() -> Boolean)?, modifier: Modifier) {
     val context = LocalContext.current
-    val current = model.menus?.translation ?: Translation.SUB
+    val pending = model.versionSwitch
+    val current = pending?.takeIf { it.failed == null }?.to ?: model.menus?.translation ?: Translation.SUB
+    val now = model.clock
     val number = (model.menus?.episodes?.firstOrNull { it.current }?.number ?: model.staged?.episode)?.toDoubleOrNull()
     val pastDub = dub != null && !dub.complete && number != null && number > dub.through.toDouble()
     Column(Modifier.padding(horizontal = 12.dp, vertical = 8.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -604,7 +609,7 @@ private fun TvTranslationSwitch(model: PlayerModel, dub: DubExtent?, inParty: Bo
                             if (event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                             when (event.key) {
                                 Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
-                                    if (!selected && enabled) model.choose(PlayerChoice.Translation(option))
+                                    if (!selected && enabled) model.switchTo(option)
                                     true
                                 }
                                 Key.DirectionUp -> onUp?.invoke() ?: false
@@ -619,16 +624,35 @@ private fun TvTranslationSwitch(model: PlayerModel, dub: DubExtent?, inParty: Bo
                         .testTag("tv-panel-${if (option == Translation.SUB) "sub" else "dub"}"), // i18n-skip
                     contentAlignment = Alignment.Center,
                 ) {
+                    val ink = when {
+                        focused -> ObiSilk.Ground
+                        !enabled -> ObiSilk.Silk.copy(alpha = 0.38f)
+                        else -> ObiSilk.Silk
+                    }
+                    val finding = pending?.takeIf { it.to == option && it.failed == null }
+                    if (finding != null) {
+                        // At the segment's leading edge, so its label stays where it was.
+                        val shown by animateFloatAsState(if (finding.spinning(now)) 1f else 0f, Motion.fadeIn(), label = "version-spinner") // i18n-skip
+                        Box(Modifier.align(Alignment.CenterStart).padding(start = 6.dp).graphicsLayer { alpha = shown; scaleX = 0.6f; scaleY = 0.6f }.testTag("tv-panel-version-spinner")) { Spinner() } // i18n-skip
+                    }
                     Text(
                         if (option == Translation.SUB) Strings.playerStartSubtitled(context) else Strings.audioDubbed(context),
                         style = MaterialTheme.typography.labelLarge,
-                        color = when {
-                            focused -> ObiSilk.Ground
-                            !enabled -> ObiSilk.Silk.copy(alpha = 0.38f)
-                            else -> ObiSilk.Silk
-                        },
+                        color = ink,
                     )
                 }
+            }
+        }
+        val episode = model.menus?.episodes?.firstOrNull { it.current }?.number ?: model.staged?.episode
+        val finding = episode?.let { pending?.note(context, it, now) }
+        AnimatedVisibility(finding != null, enter = fadeIn(Motion.fadeIn()) + expandVertically(Motion.standard()), exit = fadeOut(Motion.fadeOut()) + shrinkVertically(Motion.quick())) {
+            Text(finding.orEmpty(), style = DetailStyle, color = ObiSilk.Haze)
+        }
+        val failed = pending?.failed
+        AnimatedVisibility(failed != null, enter = fadeIn(Motion.fadeIn()) + expandVertically(Motion.standard()), exit = fadeOut(Motion.fadeOut()) + shrinkVertically(Motion.quick())) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Icon(PanelGlyphs.Warning, contentDescription = null, tint = ObiSilk.Vermilion, modifier = Modifier.padding(top = 2.dp).size(16.dp))
+                Text(failed?.text(context).orEmpty(), style = DetailStyle, color = ObiSilk.Vermilion)
             }
         }
         dub?.let { Text(it.line(context), style = DetailStyle, color = ObiSilk.Haze) }

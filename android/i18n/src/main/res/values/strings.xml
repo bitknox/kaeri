@@ -276,6 +276,10 @@
     <string name="notice_audio_now_dubbed">Audio is now dubbed.</string>
     <!-- Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source. -->
     <string name="player_panel_switch_failed">Couldn\'t start from %1$s. Still playing from %2$s.</string>
+    <!-- Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled. -->
+    <string name="player_panel_dub_failed">Couldn\'t find episode %1$s dubbed. Still playing subbed.</string>
+    <!-- Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed. -->
+    <string name="player_panel_sub_failed">Couldn\'t find episode %1$s subbed. Still playing dubbed.</string>
     <!-- Toast when the previous-episode control is used on the first episode. -->
     <string name="notice_already_first_episode">Already at the first episode.</string>
     <!-- Toast when the next-episode control is used on the last known episode. -->
@@ -5118,6 +5122,10 @@
     <string name="player_translation">Subbed or dubbed</string>
     <!-- Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. -->
     <string name="player_panel_starting">Starting · %1$,d s</string>
+    <!-- Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. -->
+    <string name="player_finding_version_seconds">Finding episode %1$s dubbed · %2$,d s</string>
+    <!-- Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. -->
+    <string name="player_finding_version_subbed_seconds">Finding episode %1$s subbed · %2$,d s</string>
     <!-- Notice when another source started playing while the player panel was closed. -->
     <string name="notice_playing_from_source">Playing from %1$s at %2$s</string>
     <!-- Player panel, under the subtitled or dubbed switch during a watch party. -->

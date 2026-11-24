@@ -408,6 +408,12 @@ public static partial class T
     /// <summary>Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.</summary>
     public static string PlayerPanelSwitchFailed(string source, string current) => Fill(Get("PlayerPanelSwitchFailed"), ("source", source), ("current", current));
 
+    /// <summary>Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.</summary>
+    public static string PlayerPanelDubFailed(string episode) => Fill(Get("PlayerPanelDubFailed"), ("episode", episode));
+
+    /// <summary>Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.</summary>
+    public static string PlayerPanelSubFailed(string episode) => Fill(Get("PlayerPanelSubFailed"), ("episode", episode));
+
     /// <summary>Toast when the previous-episode control is used on the first episode.</summary>
     public static string NoticeAlreadyFirstEpisode => Get("NoticeAlreadyFirstEpisode");
 
@@ -6180,6 +6186,12 @@ public static partial class T
 
     /// <summary>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</summary>
     public static string PlayerPanelStarting(long seconds) => Fill(Get("PlayerPanelStarting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</summary>
+    public static string PlayerFindingVersionSeconds(string episode, long seconds) => Fill(Get("PlayerFindingVersionSeconds"), ("episode", episode), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</summary>
+    public static string PlayerFindingVersionSubbedSeconds(string episode, long seconds) => Fill(Get("PlayerFindingVersionSubbedSeconds"), ("episode", episode), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Notice when another source started playing while the player panel was closed.</summary>
     public static string NoticePlayingFromSource(string source, string clock) => Fill(Get("NoticePlayingFromSource"), ("source", source), ("clock", clock));
@@ -12676,6 +12688,8 @@ public static partial class T
         ["NoticeAudioNowSubbed"] = "Audio is now subbed.",
         ["NoticeAudioNowDubbed"] = "Audio is now dubbed.",
         ["PlayerPanelSwitchFailed"] = "Couldn't start from {source}. Still playing from {current}.",
+        ["PlayerPanelDubFailed"] = "Couldn't find episode {episode} dubbed. Still playing subbed.",
+        ["PlayerPanelSubFailed"] = "Couldn't find episode {episode} subbed. Still playing dubbed.",
         ["NoticeAlreadyFirstEpisode"] = "Already at the first episode.",
         ["NoticeLastEpisode"] = "There's no next episode. Episode {episode} is the last.",
         ["NoticeNoNextEpisode"] = "There's no next episode.",
@@ -14691,6 +14705,8 @@ public static partial class T
         ["PlayerPanelPickScope"] = "A pick here is for this episode only.",
         ["PlayerTranslation"] = "Subbed or dubbed",
         ["PlayerPanelStarting"] = "Starting · {seconds} s",
+        ["PlayerFindingVersionSeconds"] = "Finding episode {episode} dubbed · {seconds} s",
+        ["PlayerFindingVersionSubbedSeconds"] = "Finding episode {episode} subbed · {seconds} s",
         ["NoticePlayingFromSource"] = "Playing from {source} at {clock}",
         ["PartyVersionOwn"] = "Only your player switches. The room keeps playing.",
         ["PlayerPanelMore"] = "More",

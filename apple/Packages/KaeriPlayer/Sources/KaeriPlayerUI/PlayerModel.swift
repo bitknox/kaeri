@@ -195,6 +195,9 @@ public final class PlayerModel {
     public internal(set) var playingSource: String?
     /// The release playing, when one was picked in the panel and landed.
     public internal(set) var playingRelease: SourceCandidate?
+    /// The switch to the other version, subtitled or dubbed, from the pick until it lands, or
+    /// its failure until the next pick.
+    public internal(set) var versionSwitch: VersionSwitch?
     /// What a screenshot or recording puts the panel in (PlayerShots).
     public internal(set) var panelShot: PanelShot?
     /// Holding the picture over the video while a switch loads (`PlayerSwitch` Loading to
@@ -461,13 +464,16 @@ public final class PlayerModel {
             sourceChoices = nil
             verdictPending = false
             partySaysWhy = false
+            // A play staged anew, as the episode started again in the other version is when
+            // nothing played yet: no switch of it is on its way.
+            versionSwitch = nil
             if staged?.id != id || staged?.episode != episode { panelEpisodeChanged() }
             staged = StagedPlayback(
                 id: id, title: title, episode: episode, episodeTitle: episodeTitle, alwaysPrivate: alwaysPrivate)
             present()
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
-            if case .found(_, let source, _, _) = step, let source { playingSource = source }
+            if case .found(_, let source, _, _) = step, let source { startFound(source) }
             walk?.take(step, line: line, at: time.now())
             holdLine()
         case .playbackEnded(_, let ending, let rollingOn, let said):
@@ -2278,6 +2284,29 @@ extension PlayerModel {
         send(.switchSource(id: id, episode: episode, providerId: candidate.providerId, sourceId: candidate.id))
     }
 
+    /// Play the episode in the other version, from the playhead: the engine finds it while the
+    /// episode plays on, and says how it goes on `PlayerSwitch`.
+    public func switchTo(version: KaeriKit.Translation) {
+        input()
+        // One on its way finishes first: the engine finds a single version at a time.
+        if let pending = versionSwitch, pending.failed == nil { return }
+        guard version != (menus?.translation ?? .sub) else {
+            versionSwitch = nil
+            return
+        }
+        Self.note(.info, "switching to the \(version == .dub ? "dub" : "sub")")
+        versionSwitch = VersionSwitch(to: version, phase: .asked, since: time.now())
+        control(.choose(.translation(version)))
+    }
+
+    /// The source a start found: what plays now. Another source than the one before lets go of
+    /// the release picked on that one, so Playing now never names one source with another's
+    /// release.
+    private func startFound(_ source: String) {
+        if source != playingSource { playingRelease = nil }
+        playingSource = source
+    }
+
     /// Another stream of the source playing, from the playhead.
     public func switchTo(stream: MenuSource) {
         input()
@@ -2315,10 +2344,18 @@ extension PlayerModel {
         switch state {
         case .finding(let to):
             Self.note(.info, "switch: finding \(to.providerId)")
-            track(SwitchTarget(to), .finding, at: now)
+            if let version = to.translation {
+                trackVersion(version, .finding, at: now)
+            } else {
+                track(SwitchTarget(to), .finding, at: now)
+            }
         case .loading(let to, let at):
             Self.note(.info, "switch: loading \(to.providerId) at \(Int(at)) s, holding the picture")
-            track(SwitchTarget(to), .loading, at: now)
+            if let version = to.translation {
+                trackVersion(version, .loading, at: now)
+            } else {
+                track(SwitchTarget(to), .loading, at: now)
+            }
             hold(at: at)
         case .landed(let to, let at):
             Self.note(.info, "switch: landed on \(to.providerId) at \(Int(at)) s")
@@ -2327,15 +2364,31 @@ extension PlayerModel {
             if let release = to.release {
                 playingRelease = panelReleases?.candidates?.first { $0.providerId == to.providerId && $0.id == release }
                     ?? panelSwitch?.candidate
+            } else if to.stream == nil || to.providerId != playingRelease?.providerId {
+                // The other version, or a stream of another source the engine moved to: the
+                // release picked before is not what plays.
+                playingRelease = nil
             }
-            if panelSwitch?.on(target) ?? true { panelSwitch = nil }
+            if to.translation != nil {
+                versionSwitch = nil
+                // The other version's releases are the ones to list now.
+                if panelReleases != nil { loadPanelReleases(again: true) }
+            } else if panelSwitch?.on(target) ?? true {
+                panelSwitch = nil
+            }
             releaseHold(fade: true)
             if !panelOpen, to.release != nil {
                 say(L.noticePlayingFromSource(source: to.name, clock: PlayerClock.label(at)))
             }
         case .failed(let to, let at, let text, let reason):
             Self.note(.warn, "switch: \(to.providerId) did not start at \(Int(at)) s\(reason.map { ": \(AppLog.redacting($0.text))" } ?? "")")
-            track(SwitchTarget(to), .failed(text.text), at: now)
+            if let version = to.translation {
+                trackVersion(version, .failed(text.text), at: now)
+                // Nothing else says it while the panel is closed.
+                if !panelOpen { say(text.text) }
+            } else {
+                track(SwitchTarget(to), .failed(text.text), at: now)
+            }
             releaseHold(fade: true)
         }
     }
@@ -2348,6 +2401,17 @@ extension PlayerModel {
             panelSwitch = known
         } else {
             panelSwitch = PanelSwitch(target: target, phase: phase, since: now)
+        }
+    }
+
+    /// The switch to the other version moves on to `phase`; one picked elsewhere (the start's
+    /// switch, a remote) is tracked from now.
+    private func trackVersion(_ version: KaeriKit.Translation, _ phase: VersionSwitch.Phase, at now: ContinuousClock.Instant) {
+        if var known = versionSwitch, known.to == version {
+            known.phase = phase
+            versionSwitch = known
+        } else {
+            versionSwitch = VersionSwitch(to: version, phase: phase, since: now)
         }
     }
 
@@ -2393,5 +2457,6 @@ extension PlayerModel {
         panelReleases = nil
         panelSwitch = nil
         playingRelease = nil
+        versionSwitch = nil
     }
 }

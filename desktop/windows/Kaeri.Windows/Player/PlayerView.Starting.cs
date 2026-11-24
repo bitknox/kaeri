@@ -75,6 +75,9 @@ public sealed partial class PlayerView
         {
             case Event.PlaybackStaged st:
                 staged = (st.Id, st.Episode, st.Resume);
+                // The episode started again, as it does in the other version when nothing played
+                // yet: no switch of it is on its way.
+                panel.Restarted();
                 if (RollOnAsked)
                     rollOnFrom ??= Stopwatch.GetTimestamp();
                 if (start is { } open && open.Id == st.Id && open.Episode == st.Episode)

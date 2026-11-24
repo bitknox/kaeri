@@ -660,6 +660,16 @@ pub fn player_panel_switch_failed(source: &str, current: &str) -> String {
     text("player-panel-switch-failed", &[("source", Arg::Text(source)), ("current", Arg::Text(current))])
 }
 
+/// Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+pub fn player_panel_dub_failed(episode: &str) -> String {
+    text("player-panel-dub-failed", &[("episode", Arg::Text(episode))])
+}
+
+/// Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+pub fn player_panel_sub_failed(episode: &str) -> String {
+    text("player-panel-sub-failed", &[("episode", Arg::Text(episode))])
+}
+
 /// Toast when the previous-episode control is used on the first episode.
 pub fn notice_already_first_episode() -> String {
     text("notice-already-first-episode", &[])
@@ -15420,6 +15430,16 @@ pub fn player_translation() -> String {
 /// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
 pub fn player_panel_starting(seconds: i64) -> String {
     text("player-panel-starting", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+pub fn player_finding_version_seconds(episode: &str, seconds: i64) -> String {
+    text("player-finding-version-seconds", &[("episode", Arg::Text(episode)), ("seconds", Arg::Int(seconds))])
+}
+
+/// Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+pub fn player_finding_version_subbed_seconds(episode: &str, seconds: i64) -> String {
+    text("player-finding-version-subbed-seconds", &[("episode", Arg::Text(episode)), ("seconds", Arg::Int(seconds))])
 }
 
 /// Notice when another source started playing while the player panel was closed.

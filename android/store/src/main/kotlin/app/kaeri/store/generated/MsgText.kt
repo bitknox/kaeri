@@ -128,6 +128,8 @@ fun Msg.text(context: Context): String =
         is Msg.NoticeAudioNowSubbed -> Strings.noticeAudioNowSubbed(context)
         is Msg.NoticeAudioNowDubbed -> Strings.noticeAudioNowDubbed(context)
         is Msg.PlayerPanelSwitchFailed -> Strings.playerPanelSwitchFailed(context, this.source, this.current)
+        is Msg.PlayerPanelDubFailed -> Strings.playerPanelDubFailed(context, this.episode)
+        is Msg.PlayerPanelSubFailed -> Strings.playerPanelSubFailed(context, this.episode)
         is Msg.NoticeAlreadyFirstEpisode -> Strings.noticeAlreadyFirstEpisode(context)
         is Msg.NoticeLastEpisode -> Strings.noticeLastEpisode(context, this.episode)
         is Msg.NoticeNoNextEpisode -> Strings.noticeNoNextEpisode(context)

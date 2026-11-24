@@ -533,6 +533,14 @@ object Strings {
     fun playerPanelSwitchFailed(context: Context, source: String, current: String): String =
         context.getString(R.string.player_panel_switch_failed, source, current)
 
+    /** Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled. */
+    fun playerPanelDubFailed(context: Context, episode: String): String =
+        context.getString(R.string.player_panel_dub_failed, episode)
+
+    /** Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed. */
+    fun playerPanelSubFailed(context: Context, episode: String): String =
+        context.getString(R.string.player_panel_sub_failed, episode)
+
     /** Toast when the previous-episode control is used on the first episode. */
     fun noticeAlreadyFirstEpisode(context: Context): String =
         context.getString(R.string.notice_already_first_episode)
@@ -9621,6 +9629,14 @@ object Strings {
     /** Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. */
     fun playerPanelStarting(context: Context, seconds: Int): String =
         context.getString(R.string.player_panel_starting, seconds)
+
+    /** Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. */
+    fun playerFindingVersionSeconds(context: Context, episode: String, seconds: Int): String =
+        context.getString(R.string.player_finding_version_seconds, episode, seconds)
+
+    /** Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. */
+    fun playerFindingVersionSubbedSeconds(context: Context, episode: String, seconds: Int): String =
+        context.getString(R.string.player_finding_version_subbed_seconds, episode, seconds)
 
     /** Notice when another source started playing while the player panel was closed. */
     fun noticePlayingFromSource(context: Context, source: String, clock: String): String =

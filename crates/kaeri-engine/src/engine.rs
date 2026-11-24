@@ -1334,6 +1334,22 @@ impl Actor {
             && let Some(front) = self.state.staging.front()
         {
             self.state.translation_picked = Some((front.id, *translation));
+            // Switched in place while the episode plays on, as a release is: said on
+            // `PlayerSwitch`, with nothing restarted.
+            if crate::playback::switch::translate(*translation, &self.state, &self.services) {
+                return Vec::new();
+            }
+        }
+        // The other version did not start, and the episode plays on in the one it was in: that
+        // one goes for the title again.
+        if let Event::PlayerSwitch {
+            state: kaeri_model::playback::SourceSwitch::Failed { to, .. },
+            ..
+        } = event
+            && let Some(picked) = to.translation
+            && let Some(front) = self.state.staging.front()
+        {
+            self.state.translation_picked = Some((front.id, picked.toggled()));
         }
         // The room starts or moves on: this device opens the episode from its own sources.
         #[cfg(feature = "party")]

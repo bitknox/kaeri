@@ -409,6 +409,12 @@ notice-audio-now-dubbed = [Åüðîö îš ñöŵ ðüƀƀéð.~~~~~~]
 # Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
 player-panel-switch-failed = [Çöüļðñ'ţ šţàŕţ ƒŕöɱ { $source }. Šţîļļ þļàýîñĝ ƒŕöɱ { $current }.~~~~~~~~~~~~~~~]
 
+# Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+player-panel-dub-failed = [Çöüļðñ'ţ ƒîñð éþîšöðé { $episode } ðüƀƀéð. Šţîļļ þļàýîñĝ šüƀƀéð.~~~~~~~~~~~~~~~~~]
+
+# Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+player-panel-sub-failed = [Çöüļðñ'ţ ƒîñð éþîšöðé { $episode } šüƀƀéð. Šţîļļ þļàýîñĝ ðüƀƀéð.~~~~~~~~~~~~~~~~~]
+
 # Toast when the previous-episode control is used on the first episode.
 notice-already-first-episode = [Åļŕéàðý àţ ţĥé ƒîŕšţ éþîšöðé.~~~~~~~~~]
 
@@ -9680,6 +9686,12 @@ player-translation = [Šüƀƀéð öŕ ðüƀƀéð~~~~~]
 
 # Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
 player-panel-starting = [Šţàŕţîñĝ · { $seconds } š~~~~~]
+
+# Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-seconds = [Ƒîñðîñĝ éþîšöðé { $episode } ðüƀƀéð · { $seconds } š~~~~~~~~~~~]
+
+# Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-subbed-seconds = [Ƒîñðîñĝ éþîšöðé { $episode } šüƀƀéð · { $seconds } š~~~~~~~~~~~]
 
 # Notice when another source started playing while the player panel was closed.
 notice-playing-from-source = [Þļàýîñĝ ƒŕöɱ { $source } àţ { $clock }~~~~~~~]

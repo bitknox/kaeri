@@ -132,21 +132,27 @@ struct PanelSources: View {
 
     // MARK: Sub or dub
 
+    /// The subtitled or dubbed switch. A pick moves the fill at once; while the engine finds that
+    /// version the episode plays on, the picked segment shows a spinner from 600 ms and the line
+    /// under it counts from 3 s. A failure moves the fill back and says so under the switch.
     private var translation: some View {
         let id = model.staged?.id
         let dub = id.flatMap { store.titles.entries[$0]?.dub }
-        let number = PanelEpisodes.current(model).flatMap { Double($0) }
+        let episode = PanelEpisodes.current(model)
+        let number = episode.flatMap { Double($0) }
         // The dub does not reach this episode yet.
         let pastDub: Bool = {
             guard let dub, !dub.complete, let through = dub.through, let number else { return false }
             return number > Double(through)
         }()
         let current = model.menus?.translation ?? .sub
+        let pending = model.versionSwitch.flatMap { $0.failed == nil ? $0 : nil }
+        let shown = pending?.to ?? current
         let pick = Binding<KaeriKit.Translation>(
-            get: { current },
+            get: { shown },
             set: { picked in
-                guard picked != current, !(picked == .dub && pastDub) else { return }
-                model.choose(.translation(picked))
+                guard picked != shown, !(picked == .dub && pastDub) else { return }
+                model.switchTo(version: picked)
             })
         var notes: [String] = []
         if let id, let line = store.titles.dubLines[id] { notes.append(line) }
@@ -162,18 +168,36 @@ struct PanelSources: View {
             .controlSize(metrics.touch ? .large : .regular)
             .buttonSizing(.flexible)
             .frame(maxWidth: .infinity)
-            if !notes.isEmpty {
-                VStack(alignment: .leading, spacing: 2) {
-                    ForEach(notes, id: \.self) { note in
-                        PanelText(text: note, size: metrics.detail, line: metrics.detailLine, color: Palette.haze)
+            .overlay { VersionSpinner(pending: pending, metrics: metrics) }
+            TimelineView(.periodic(from: .now, by: 1)) { _ in
+                let finding = pending.flatMap { $0.note(episode: episode ?? "", at: ContinuousClock.now) }
+                let lines = notes + (finding.map { [$0] } ?? [])
+                if !lines.isEmpty {
+                    VStack(alignment: .leading, spacing: 2) {
+                        ForEach(lines, id: \.self) { note in
+                            PanelText(text: note, size: metrics.detail, line: metrics.detailLine, color: Palette.haze)
+                                .transition(.opacity)
+                        }
                     }
+                    .monospacedDigit()
+                    .animation(.fadeIn, value: finding != nil)
                 }
-                .monospacedDigit()
+            }
+            if let failed = model.versionSwitch?.failed {
+                HStack(alignment: .firstTextBaseline, spacing: 6) {
+                    Image(systemName: "exclamationmark.triangle")
+                        .font(.system(size: metrics.detail, weight: .medium))
+                    PanelText(text: failed, size: metrics.detail, line: metrics.detailLine, color: Palette.vermilion)
+                }
+                .foregroundStyle(.vermilion)
+                .transition(.opacity.animation(.fadeIn))
+                .accessibilityElement(children: .combine)
             }
         }
         .padding(.horizontal, metrics.rowPad)
         .padding(.top, 8)
         .padding(.bottom, 4)
+        .animation(.fadeIn, value: model.versionSwitch?.failed)
     }
 
     // MARK: Other sources
@@ -391,5 +415,41 @@ struct PanelChoiceRow: View {
         } else if waiting {
             ProgressView().controlSize(.mini).frame(height: metrics.detailLine)
         }
+    }
+}
+
+/// The spinner in the segment of the version being found, from 600 ms: over the segmented
+/// control, which has no place for one, at the start of that segment's half.
+private struct VersionSpinner: View {
+    let pending: VersionSwitch?
+    let metrics: PanelMetrics
+
+    var body: some View {
+        if let pending {
+            TimelineView(.periodic(from: .now, by: 0.2)) { _ in
+                let shown = pending.spins(at: ContinuousClock.now)
+                HStack(spacing: 0) {
+                    slot(on: pending.to == .sub, shown: shown)
+                    slot(on: pending.to == .dub, shown: shown)
+                }
+            }
+            .allowsHitTesting(false)
+            .accessibilityHidden(true)
+        }
+    }
+
+    private func slot(on: Bool, shown: Bool) -> some View {
+        HStack {
+            if on {
+                ProgressView()
+                    .controlSize(metrics.touch ? .small : .mini)
+                    .tint(Palette.silk)
+                    .opacity(shown ? 1 : 0)
+                    .animation(.fadeIn, value: shown)
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.leading, metrics.touch ? 12 : 8)
+        .frame(maxWidth: .infinity)
     }
 }

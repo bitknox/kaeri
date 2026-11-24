@@ -50,6 +50,7 @@ import app.kaeri.engine.model.TimeRange
 import app.kaeri.engine.model.TimelineMark
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.TrackKind
+import app.kaeri.store.text
 
 /** The screen the player is on: its size in pixels, its density and refresh rate. */
 data class DisplayInfo(val width: Int, val height: Int, val scale: Double, val refreshHz: Double?)
@@ -526,6 +527,9 @@ class PlayerModel(
                 choosingSource = false
                 sourceChoices = null
                 verdictPending = false
+                // A play staged anew, as the episode started again in the other version is when
+                // nothing played yet: no switch of it is on its way.
+                versionSwitch = null
                 if (staged?.id != event.id || staged?.episode != event.episode) panelEpisodeChanged()
                 staged = StagedPlayback(event.id, event.title, event.episode, event.episodeTitle)
                 stagedAlwaysPrivate = event.alwaysPrivate
@@ -596,7 +600,7 @@ class PlayerModel(
             is Event.StartingStep -> {
                 val step = event.step
                 if (isPresented && step is app.kaeri.engine.model.StartStep.Found && staged?.let { it.id == event.id && it.episode == event.episode } == true) {
-                    step.source?.let { playingSource = it }
+                    step.source?.let { startFound(it) }
                 }
                 progress = progress?.takeIf { it.id == event.id && it.episode == event.episode }?.heard(event.step, event.line, now()) ?: progress
             }
@@ -1460,7 +1464,7 @@ class PlayerModel(
      * sits there; a key ([poke]) or anything that changes the state moves it on again.
      */
     private fun resting(now: Long): Boolean = failure != null ||
-        paused && starting == null && (panelSwitch == null || panelSwitch?.failed != null) && progress == null && stall == null && upNext == null && skip == null && undo == null &&
+        paused && starting == null && (panelSwitch == null || panelSwitch?.failed != null) && (versionSwitch == null || versionSwitch?.failed != null) && progress == null && stall == null && upNext == null && skip == null && undo == null &&
         alert == null && skipNotice == null && skipPrompt == null && marking == null && holds.isEmpty() && scrubbing == null &&
         statsCopiedAt == null && (!statsShown || statsWaitingSince == null) && now - lastInput >= PlayerTiming.CONTROLS_HIDE
 
@@ -1599,6 +1603,10 @@ class PlayerModel(
     var playingRelease by mutableStateOf<SourceCandidate?>(null)
         private set
 
+    /** The switch to the other version, subtitled or dubbed, from the pick until it lands, or its failure until the next pick. */
+    var versionSwitch by mutableStateOf<VersionSwitch?>(null)
+        private set
+
     /** Bumped as a switch lands: the Sources tab scrolls back to Playing now. */
     var landings by mutableIntStateOf(0)
         private set
@@ -1678,6 +1686,33 @@ class PlayerModel(
         control(PlayerCommand.Choose(PlayerChoice.Source(stream.id)))
     }
 
+    /**
+     * Play the episode in the other version, from the playhead: the engine finds it while the
+     * episode plays on, and says how it goes on `PlayerSwitch`.
+     */
+    fun switchTo(version: app.kaeri.engine.core.Translation) {
+        input()
+        // One on its way finishes first: the engine finds a single version at a time.
+        if (versionSwitch?.let { it.failed == null } == true) return
+        if (version == (menus?.translation ?: app.kaeri.engine.core.Translation.SUB)) {
+            versionSwitch = null
+            return
+        }
+        note("switching to the ${if (version == app.kaeri.engine.core.Translation.DUB) "dub" else "sub"}")
+        versionSwitch = VersionSwitch(version, PanelSwitch.Phase.Asked, now())
+        clock = now()
+        control(PlayerCommand.Choose(PlayerChoice.Translation(version)))
+    }
+
+    /**
+     * The source a start found: what plays now. Another source than the one before lets go of the
+     * release picked on that one, so Playing now never names one source with another's release.
+     */
+    private fun startFound(source: String) {
+        if (source != playingSource) playingRelease = null
+        playingSource = source
+    }
+
     /** Play another episode of the title from the panel: where the history left it, or from the beginning. */
     fun playEpisode(number: String, fromStart: Boolean) {
         input()
@@ -1714,22 +1749,35 @@ class PlayerModel(
         when (state) {
             is app.kaeri.engine.model.SourceSwitch.Finding -> {
                 note("switch: finding ${state.to.providerId}")
-                track(SwitchTarget(state.to), PanelSwitch.Phase.Finding, now)
+                val version = state.to.translation
+                if (version != null) trackVersion(version, PanelSwitch.Phase.Finding, now) else track(SwitchTarget(state.to), PanelSwitch.Phase.Finding, now)
             }
             is app.kaeri.engine.model.SourceSwitch.Loading -> {
                 note("switch: loading ${state.to.providerId} at ${state.at.toInt()} s, holding the picture")
-                track(SwitchTarget(state.to), PanelSwitch.Phase.Loading, now)
+                val version = state.to.translation
+                if (version != null) trackVersion(version, PanelSwitch.Phase.Loading, now) else track(SwitchTarget(state.to), PanelSwitch.Phase.Loading, now)
                 hold(state.at)
             }
             is app.kaeri.engine.model.SourceSwitch.Landed -> {
                 note("switch: landed on ${state.to.providerId} at ${state.at.toInt()} s")
                 val target = SwitchTarget(state.to)
                 playingSource = state.to.name
-                state.to.release?.let { release ->
+                val release = state.to.release
+                if (release != null) {
                     playingRelease = panelReleases?.candidates?.firstOrNull { it.providerId == state.to.providerId && it.id == release }
                         ?: panelSwitch?.candidate
+                } else if (state.to.stream == null || state.to.providerId != playingRelease?.providerId) {
+                    // The other version, or a stream of another source the engine moved to: the
+                    // release picked before is not what plays.
+                    playingRelease = null
                 }
-                if (panelSwitch?.on(target) != false) panelSwitch = null
+                if (state.to.translation != null) {
+                    versionSwitch = null
+                    // The other version's releases are the ones to list now.
+                    if (panelReleases != null) loadPanelReleases(again = true)
+                } else if (panelSwitch?.on(target) != false) {
+                    panelSwitch = null
+                }
                 landings += 1
                 releaseHold(fade = true)
                 if (!panelOpen && state.to.release != null && context != null) {
@@ -1738,7 +1786,14 @@ class PlayerModel(
             }
             is app.kaeri.engine.model.SourceSwitch.Failed -> {
                 note("switch: ${state.to.providerId} did not start at ${state.at.toInt()} s")
-                track(SwitchTarget(state.to), PanelSwitch.Phase.Failed(state.text), now)
+                val version = state.to.translation
+                if (version != null) {
+                    trackVersion(version, PanelSwitch.Phase.Failed(state.text), now)
+                    // Nothing else says it while the panel is closed.
+                    if (!panelOpen && context != null) alert = PlayerAlert(state.text.text(context), NoticeKind.ALERT, now)
+                } else {
+                    track(SwitchTarget(state.to), PanelSwitch.Phase.Failed(state.text), now)
+                }
                 releaseHold(fade = true)
             }
         }
@@ -1751,6 +1806,12 @@ class PlayerModel(
     private fun track(target: SwitchTarget, phase: PanelSwitch.Phase, now: Long) {
         val known = panelSwitch
         panelSwitch = if (known != null && known.on(target)) known.copy(phase = phase) else PanelSwitch(target, phase, now)
+    }
+
+    /** The switch to the other version moves on to [phase]; one picked elsewhere (a remote) is tracked from now. */
+    private fun trackVersion(version: app.kaeri.engine.core.Translation, phase: PanelSwitch.Phase, now: Long) {
+        val known = versionSwitch
+        versionSwitch = if (known != null && known.to == version) known.copy(phase = phase) else VersionSwitch(version, phase, now)
     }
 
     /** Hold what is on screen: the picture is copied before the switch's load, which comes next in the queue and clears it. */
@@ -1797,6 +1858,7 @@ class PlayerModel(
         panelReleases = null
         panelSwitch = null
         playingRelease = null
+        versionSwitch = null
     }
 
     // When it could not play

@@ -88,6 +88,99 @@ struct PanelSwitchTests {
         #expect(rig.model.alert?.text == L.noticePlayingFromSource(source: "Harbor Archive", clock: PlayerClock.label(312)))
     }
 
+    static let dub = SwitchTo(providerId: "", name: "", release: nil, stream: nil, translation: .dub)
+    static let dubFound = SwitchTo(providerId: "quiet", name: "Quiet Shelf", release: nil, stream: nil, translation: .dub)
+
+    @Test func theOtherVersionFollowsFindingLoadingAndLanded() async throws {
+        let rig = try await playing()
+        rig.model.panelOpen = true
+        rig.model.loadPanelReleases()
+        rig.model.switchTo(Self.release)
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: Self.to, at: 30)))
+        rig.model.switchTo(version: .dub)
+        #expect(rig.controls.last == .choose(.translation(.dub)))
+        #expect(rig.model.versionSwitch?.phase == .asked)
+        #expect(rig.model.versionSwitch?.to == .dub)
+
+        rig.model.apply(.playerSwitch(playback: 1, state: .finding(to: Self.dub)))
+        #expect(rig.model.versionSwitch?.phase == .finding)
+        #expect(rig.model.panelSwitch == nil, "no source row shows the version's switch")
+        rig.model.apply(.playerSwitch(playback: 1, state: .loading(to: Self.dubFound, at: 312)))
+        #expect(rig.model.versionSwitch?.phase == .loading)
+        #expect(rig.model.holding, "the picture is held while the other version loads")
+
+        let asked = rig.sent.count
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: Self.dubFound, at: 312)))
+        #expect(rig.model.versionSwitch == nil)
+        #expect(!rig.model.holding)
+        #expect(rig.model.playingSource == "Quiet Shelf")
+        #expect(rig.model.playingRelease == nil, "the release picked was the other version's")
+        #expect(rig.sent[asked...].contains { $0 == .loadSources(id: 900_001, episode: "7") }, "the dub's releases are listed")
+    }
+
+    @Test func aVersionWaitsInSilenceThenSpinsThenCounts() {
+        let start = ContinuousClock.now
+        let version = VersionSwitch(to: .dub, phase: .finding, since: start)
+        #expect(!version.spins(at: start + .milliseconds(500)))
+        #expect(version.spins(at: start + .milliseconds(700)))
+        #expect(version.note(episode: "4", at: start + .seconds(2)) == nil)
+        #expect(version.note(episode: "4", at: start + .seconds(4)) == L.playerFindingVersionSeconds(episode: "4", seconds: 4))
+        let sub = VersionSwitch(to: .sub, phase: .finding, since: start)
+        #expect(sub.note(episode: "4", at: start + .seconds(3)) == L.playerFindingVersionSubbedSeconds(episode: "4", seconds: 3))
+        let failed = VersionSwitch(to: .dub, phase: .failed("no"), since: start)
+        #expect(!failed.spins(at: start + .seconds(5)))
+        #expect(failed.note(episode: "4", at: start + .seconds(5)) == nil)
+    }
+
+    @Test func aVersionThatFailsSaysSoUnderTheSwitchAndPlaysOn() async throws {
+        let rig = try await playing()
+        rig.model.panelOpen = true
+        rig.model.switchTo(version: .dub)
+        rig.model.apply(.playerSwitch(playback: 1, state: .loading(to: Self.dubFound, at: 40)))
+        let text = Msg.playerPanelDubFailed(episode: "7")
+        rig.model.apply(.playerSwitch(playback: 1, state: .failed(to: Self.dubFound, at: 40, text: text, reason: nil)))
+        #expect(rig.model.versionSwitch?.failed == L.playerPanelDubFailed(episode: "7"))
+        #expect(!rig.model.holding)
+        #expect(rig.model.alert == nil, "the open panel says it")
+        // Tried again from the switch.
+        rig.model.switchTo(version: .dub)
+        #expect(rig.model.versionSwitch?.phase == .asked)
+    }
+
+    @Test func aVersionThatFailsWithThePanelClosedSaysSo() async throws {
+        let rig = try await playing()
+        rig.model.panelOpen = false
+        rig.model.switchTo(version: .dub)
+        let text = Msg.playerPanelDubFailed(episode: "7")
+        rig.model.apply(.playerSwitch(playback: 1, state: .failed(to: Self.dub, at: 40, text: text, reason: nil)))
+        #expect(rig.model.alert?.text == L.playerPanelDubFailed(episode: "7"))
+    }
+
+    @Test func anotherSourceTheEngineMovedToIsWhatPlaysNow() async throws {
+        let rig = try await playing()
+        rig.model.panelOpen = true
+        rig.model.loadPanelReleases()
+        rig.model.switchTo(Self.release)
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: Self.to, at: 30)))
+        #expect(rig.model.playingRelease == Self.release)
+        // The release's stream broke off and another source took over.
+        let other = SwitchTo(providerId: "quiet", name: "Quiet Shelf", release: nil, stream: "3")
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: other, at: 400)))
+        #expect(rig.model.playingSource == "Quiet Shelf")
+        #expect(rig.model.playingRelease == nil)
+        #expect(rig.model.alert == nil, "the engine's own notice says it")
+    }
+
+    @Test func anotherStreamOfTheReleasePlayingKeepsTheRelease() async throws {
+        let rig = try await playing()
+        rig.model.loadPanelReleases()
+        rig.model.switchTo(Self.release)
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: Self.to, at: 30)))
+        let stream = SwitchTo(providerId: "harbor", name: "Harbor Archive", release: nil, stream: "2")
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: stream, at: 60)))
+        #expect(rig.model.playingRelease == Self.release)
+    }
+
     @Test func anotherEpisodeForgetsTheReleasesAndThePick() async throws {
         let rig = try await playing()
         rig.model.loadPanelReleases()
