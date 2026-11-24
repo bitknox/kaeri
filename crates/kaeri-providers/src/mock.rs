@@ -47,6 +47,9 @@ pub struct MockProvider {
     /// with which error in place of the list. See [`MockProvider::listing_after`].
     sources_after: Duration,
     sources_error: Option<ProviderError>,
+    /// The one episode whose listing waits and fails as `sources_after` and `sources_error`
+    /// say, when one is named: every other episode's releases answer at once.
+    sources_episode: Option<String>,
     /// What each release in `sources` resolves to, by its id, for a pick by hand.
     source_streams: HashMap<String, Vec<Stream>>,
     error: Option<ProviderError>,
@@ -82,6 +85,7 @@ impl MockProvider {
             sources: Vec::new(),
             sources_after: Duration::ZERO,
             sources_error: None,
+            sources_episode: None,
             source_streams: HashMap::new(),
             error: None,
             unavailable: None,
@@ -179,6 +183,14 @@ impl MockProvider {
     pub fn listing_after(mut self, wait: Duration, error: Option<ProviderError>) -> Self {
         self.sources_after = wait;
         self.sources_error = error;
+        self
+    }
+
+    /// Keep [`MockProvider::listing_after`]'s wait and error to listings of `episode`, so a
+    /// look at another episode's releases, as the source picker's coverage takes, answers at
+    /// once.
+    pub fn listing_after_only_for(mut self, episode: &str) -> Self {
+        self.sources_episode = Some(episode.to_owned());
         self
     }
 
@@ -315,16 +327,17 @@ impl Provider for MockProvider {
     async fn sources(
         &self,
         _key: &ProviderKey,
-        _episode: &str,
+        episode: &str,
         _translation: Translation,
     ) -> Result<Vec<SourceCandidate>, ProviderError> {
-        if !self.sources_after.is_zero() {
+        let held = self.sources_episode.as_deref().is_none_or(|held| held == episode);
+        if held && !self.sources_after.is_zero() {
             tokio::time::sleep(self.sources_after).await;
         }
         self.record().await?;
         match &self.sources_error {
-            Some(error) => Err(error.clone()),
-            None => Ok(self.sources.clone()),
+            Some(error) if held => Err(error.clone()),
+            _ => Ok(self.sources.clone()),
         }
     }
 

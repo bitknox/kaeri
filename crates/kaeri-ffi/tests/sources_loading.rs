@@ -78,18 +78,23 @@ fn states(rows: &[SourceListing]) -> Vec<String> {
         .collect()
 }
 
-#[test]
-fn the_sources_tab_fills_row_by_row_as_each_source_answers() {
-    let root = tempfile::tempdir().expect("a temporary directory");
+/// The scene's engine, on folders of `root`.
+fn scene(root: &tempfile::TempDir) -> Arc<FfiEngine> {
     let dir = |name: &str| root.path().join(name).display().to_string();
     let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
-    let engine = FfiEngine::start_scene_on(
+    FfiEngine::start_scene_on(
         dirs,
         Arc::new(Quiet),
         FfiScene::SourcesLoading { media: "/tmp/episode.mkv".into() },
         kaeri_engine::clock::Clock::default(),
     )
-    .expect("the engine starts");
+    .expect("the engine starts")
+}
+
+#[test]
+fn the_sources_tab_fills_row_by_row_as_each_source_answers() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = scene(&root);
 
     let began = std::time::Instant::now();
     engine.send(Command::LoadSources { id: FINISHED, episode: "7".into() });
@@ -171,4 +176,28 @@ fn the_sources_tab_fills_row_by_row_as_each_source_answers() {
             ("Archive example", ListingMiss::Failed),
         ]
     );
+}
+
+#[test]
+fn each_source_says_its_coverage_at_once_for_the_tab_lines() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = scene(&root);
+
+    // The tab asks for the sources' lines as it opens: only the episode playing is slow.
+    let began = std::time::Instant::now();
+    engine.send(Command::LoadSourceOptions(FINISHED));
+    let read = read_until(&engine, |event| matches!(event, Event::SourceOptions { .. }));
+    let took = began.elapsed();
+    let options = read
+        .into_iter()
+        .find_map(|event| match event {
+            Event::SourceOptions { id, options } if id == FINISHED => Some(options),
+            _ => None,
+        })
+        .expect("the sources' lines");
+    assert!(took < Duration::from_secs(5), "{took:?}");
+    for listed in ["fixture-home-server", "fixture-example-index"] {
+        let option = options.iter().find(|o| o.provider_id == listed).expect(listed);
+        assert!(option.covered > 0 && option.covered == option.of, "{option:?}");
+    }
 }
