@@ -45,6 +45,7 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
         }
     };
     let moment = opens + Duration::from_secs_f64(MOMENTS[at]);
+    tracing::info!(shot, "sources-loading: staged");
     Some(moment.saturating_duration_since(Instant::now()).as_secs_f64())
 }
 
@@ -62,6 +63,7 @@ fn play_and_open(shell: &Rc<Shell>) {
     });
     let player = Rc::clone(&shell.player);
     glib::timeout_add_local_once(Duration::from_secs_f64(OPEN_AFTER), move || {
+        tracing::info!("sources-loading: the tab opens");
         player.shot_panel("sources");
     });
 }

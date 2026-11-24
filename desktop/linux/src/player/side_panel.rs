@@ -1912,7 +1912,14 @@ impl SidePanel {
             } else {
                 "panel-choice-title"
             });
-            wrap(&name);
+            if look.held {
+                // A loading source's row keeps its height: its name on one line, whole in its
+                // tooltip and its spoken label.
+                one_line(&name);
+                name.set_tooltip_text(Some(title));
+            } else {
+                wrap(&name);
+            }
             name
         };
         let name = title_label();
@@ -1933,12 +1940,12 @@ impl SidePanel {
         let line_label = || {
             let label = crate::widgets::haze("", "panel-row-detail");
             label.add_css_class("tabular");
-            wrap(&label);
+            one_line(&label);
             label
         };
         let line_swap = look.held.then(|| Swap::new(line_label(), line_label()));
         match &line_swap {
-            Some(swap) => line.add_named(&swap.place, Some("detail")),
+            Some(swap) => line.add_named(&swap.grid, Some("detail")),
             None => line.add_named(&detail_label, Some("detail")),
         };
         let starting = crate::widgets::haze("", "panel-row-detail");
@@ -1949,7 +1956,7 @@ impl SidePanel {
         words.set_hexpand(true);
         words.set_valign(gtk::Align::Center);
         match &name_swap {
-            Some(swap) => words.append(&swap.place),
+            Some(swap) => words.append(&swap.grid),
             None => words.append(&name),
         }
         words.append(&line);
@@ -2161,7 +2168,7 @@ struct Look {
 /// while both show. The fades play under Reduce Animation too, where a fade is what reduced
 /// motion keeps.
 struct Swap {
-    place: gtk::Overlay,
+    grid: gtk::Grid,
     labels: [gtk::Label; 2],
     /// The one shown, or coming in.
     front: Cell<usize>,
@@ -2170,15 +2177,13 @@ struct Swap {
 
 impl Swap {
     fn new(first: gtk::Label, second: gtk::Label) -> Self {
-        // One over the other, each measured as a label alone is, so the place wraps and sizes
-        // as the plain row's label does.
-        let place = gtk::Overlay::new();
-        place.set_hexpand(true);
-        place.set_child(Some(&first));
-        place.add_overlay(&second);
-        place.set_measure_overlay(&second, true);
+        let grid = gtk::Grid::new();
+        grid.set_hexpand(true);
+        // Both in the one cell: a grid draws them over each other.
+        grid.attach(&first, 0, 0, 1, 1);
+        grid.attach(&second, 0, 0, 1, 1);
         second.set_visible(false);
-        Self { place, labels: [first, second], front: Cell::new(0), fades: RefCell::default() }
+        Self { grid, labels: [first, second], front: Cell::new(0), fades: RefCell::default() }
     }
 
     /// The label shown, or coming in.
@@ -2198,7 +2203,7 @@ impl Swap {
         new.set_opacity(0.0);
         change(&new);
         new.set_visible(true);
-        if !fade || !self.place.is_mapped() || !old.is_visible() {
+        if !fade || !self.grid.is_mapped() || !old.is_visible() {
             new.set_opacity(1.0);
             old.set_visible(false);
             old.set_opacity(1.0);
@@ -2386,6 +2391,15 @@ fn wrap(label: &gtk::Label) {
     label.set_wrap(true);
     label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
     label.set_max_width_chars(1);
+    label.set_hexpand(true);
+}
+
+/// A label held to one line, cut at its end when the panel is too narrow for it.
+fn one_line(label: &gtk::Label) {
+    label.set_xalign(0.0);
+    label.set_wrap(false);
+    label.set_single_line_mode(true);
+    label.set_ellipsize(gtk::pango::EllipsizeMode::End);
     label.set_hexpand(true);
 }
 

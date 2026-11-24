@@ -1141,6 +1141,7 @@ impl PlayerView {
         line: Option<&kaeri_model::Msg>,
     ) {
         let at = self.start_elapsed();
+        tracing::info!(?step, has = self.start.borrow().is_some(), "DIAG start step");
         {
             let mut start = self.start.borrow_mut();
             let Some(start) = start.as_mut().filter(|s| s.id == id && s.episode == episode)

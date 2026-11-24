@@ -748,8 +748,10 @@ fn write_config(file: &Path, demo: bool, home: HomeScene) -> Result<(), String> 
                         }
                         // Watching only, as answered: the page with nothing over it.
                         HomeScene::MissingEpisode => "\n[reading]\nkaeri_is_for = \"watch\"\n",
+                        // Watching only, and the switched-off source.
                         HomeScene::SourcesLoading => {
-                            "\n[providers]\ndisabled = [\"fixture-old-example\"]\n"
+                            "\n[reading]\nkaeri_is_for = \"watch\"\n\n\
+                             [providers]\ndisabled = [\"fixture-old-example\"]\n"
                         }
                         _ => "",
                     }
