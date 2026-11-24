@@ -565,11 +565,14 @@ async fn releases_that_cannot_be_listed_say_why() {
     let mut h = harness(ProviderRegistry::new(Vec::new())).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
-    assert_eq!(names(&updates), ["Toast", "JobDone"]);
+    assert_eq!(names(&updates), ["Toast", "SourcesFailed", "JobDone"]);
     assert_eq!(
         toasts(&updates),
         ["alert: No sources are set up. Add one on the Sources screen."]
     );
+    // The list waiting on it ends too, for the same episode.
+    let Event::SourcesFailed { id, episode, .. } = &updates[1] else { unreachable!() };
+    assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
     ends(&updates, job);
 
     // A source that can't tell which title it is lists nothing, and the picker says so by its

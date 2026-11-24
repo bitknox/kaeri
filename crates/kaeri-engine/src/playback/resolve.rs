@@ -882,12 +882,17 @@ pub fn load_sources(
             progress,
         )
         .await;
-        let update = match slate {
+        match slate {
             // The releases, and what each source that listed none said.
-            Ok((candidates, missed)) => Event::Sources { id, episode, candidates, missed },
-            Err(msg) => Event::Toast(Notice::alert(msg)),
-        };
-        ticket.send(&tx, update);
+            Ok((candidates, missed)) => {
+                ticket.send(&tx, Event::Sources { id, episode, candidates, missed });
+            }
+            // Said as an alert, and ended for a list still waiting on it.
+            Err(why) => {
+                ticket.send(&tx, Event::Toast(Notice::alert(why.clone())));
+                ticket.send(&tx, Event::SourcesFailed { id, episode, why });
+            }
+        }
     });
 }
 
