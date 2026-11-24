@@ -868,6 +868,29 @@ public sealed partial class PlayerView
     /// <summary>The rows under Other sources as laid out, in order, while their sources are asked and after.</summary>
     readonly List<OtherSourceRow> panelSourceRows = [];
 
+    /// <summary>Playing now's coverage line, held empty until the source options come.</summary>
+    TextBlock? panelPlayingDetail;
+
+    /// <summary>
+    /// The source options came while the rows say where each source stands: Playing now's held
+    /// line fades its coverage in, in place. False when Sources has to be laid out again instead.
+    /// </summary>
+    bool SayPlayingCoverage(Ctx c)
+    {
+        if (panel.Releases?.Rows is null || panelSourceRows.Count == 0)
+            return false;
+        var (_, playingOption, _) = SourcesContext(c);
+        if (playingOption is null)
+            return true;
+        if (panelPlayingDetail is not { } held)
+            return false;
+        held.Text = PanelWords.Source(playingOption);
+        held.Opacity = 0;
+        Motion.FadeLine(held, 1);
+        panelPlayingDetail = null;
+        return true;
+    }
+
     /// <summary>The source options and the one playing, as Sources lays its rows out.</summary>
     (SourceOption[]? Options, SourceOption? PlayingOption, string? PlayingProvider) SourcesContext(Ctx c)
     {
@@ -1015,6 +1038,7 @@ public sealed partial class PlayerView
         PanelSources.Children.Clear();
         panelChoices.Clear();
         panelSourceRows.Clear();
+        panelPlayingDetail = null;
         if (ctx is not { } c)
             return;
         var (options, playingOption, playingProvider) = SourcesContext(c);
@@ -1027,6 +1051,14 @@ public sealed partial class PlayerView
             block.Children.Add(new TextBlock { Text = name, FontSize = 15, LineHeight = 22, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, Foreground = Res("SilkBrush") });
             if (playingOption is not null)
                 block.Children.Add(DetailText(PanelWords.Source(playingOption)));
+            else if (c.Known.SourceChoices.Loading(playingId))
+            {
+                // The coverage line comes with the source options, which can wait on the slowest
+                // source: held one line high until then, so nothing below it moves.
+                panelPlayingDetail = DetailText("");
+                panelPlayingDetail.MinHeight = 16;
+                block.Children.Add(panelPlayingDetail);
+            }
             PanelSources.Children.Add(block);
         }
         if (panel.PlayingRelease is { } release)
@@ -1733,6 +1765,12 @@ public sealed partial class PlayerView
                 }
                 break;
             case Event.SourceOptions o when o.Id == playingId && panel.Open:
+                // While the rows say each source's progress, the coverage lines crossfade in place.
+                if (ctx is { } known && SayPlayingCoverage(known))
+                    UpdateSourceRows();
+                else
+                    BuildSources();
+                break;
             case Event.TitleDub td when td.Id == playingId && panel.Open:
             case Event.PartyJoined or Event.PartyLeft when panel.Open:
                 BuildSources();
