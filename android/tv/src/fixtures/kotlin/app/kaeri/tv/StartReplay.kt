@@ -3,7 +3,9 @@
 
 package app.kaeri.tv
 
+import android.app.Activity
 import android.content.Context
+import android.content.res.Configuration
 import android.content.Intent
 import android.util.Log
 import app.kaeri.engine.ffi.startingFixture
@@ -68,7 +70,7 @@ internal object StartReplay {
             withTimeoutOrNull(30_000) { store.titles.entries.first { 900001u in it } }
             val events = startingFixture(state)
             if (still != null) {
-                held.complete(replayStill(player, events, still))
+                held.complete(replayStill(context, player, events, still))
                 return@launch
             }
             held.complete(true)
@@ -83,7 +85,7 @@ internal object StartReplay {
     }
 
     /** The events due by [moment], each on the still clock at its own, then the clock held at [moment]. */
-    private suspend fun replayStill(player: PlayerModel, events: List<FixtureEvent>, moment: Long): Boolean {
+    private suspend fun replayStill(context: Context, player: PlayerModel, events: List<FixtureEvent>, moment: Long): Boolean {
         val began = PlayerTime.still() ?: 0L
         var there = true
         for (fixture in events) {
@@ -93,10 +95,22 @@ internal object StartReplay {
             player.apply(fixture.event)
         }
         there = PlayerTime.reach(began + moment) && there
+        // The player's screen is up, and a phone has turned to landscape for it, which a slow
+        // emulator takes longer over than the shots' settle: then the moment counts as held.
+        there = (withTimeoutOrNull(20_000) { while (!player.isPresented || !turned(context)) delay(50); true } ?: false) && there
         // The starting screen reads the player's clock, which its ticker moves every 250 ms (not
         // poke(), which is a tap and would bring the controls up).
         delay(300)
         Log.i(TvApp.TAG, if (there) "KAERI_STILL_HELD at $moment ms" else "the still clock did not reach $moment ms")
         return there
+    }
+
+    /**
+     * Whether the window is as the player's screen leaves it: a phone's turns to landscape once the
+     * player's page has come in (PlayerScreen); a larger screen stays as it is.
+     */
+    private fun turned(context: Context): Boolean {
+        val configuration = (context as? Activity)?.resources?.configuration ?: return true
+        return configuration.smallestScreenWidthDp >= 600 || configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     }
 }
