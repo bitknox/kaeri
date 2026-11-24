@@ -39,6 +39,7 @@ private fun FixtureScene.ffi(): FfiScene = when (this) {
     FixtureScene.BROWSING -> FfiScene.Browsing
     // What it streams is the player's business, which comes with A3: a path or URL on the device.
     FixtureScene.PLAYING -> FfiScene.Playing(media = fixtureMedia)
+    FixtureScene.SOURCES_LOADING -> FfiScene.SourcesLoading(media = fixtureMedia)
     FixtureScene.SUGGESTED -> FfiScene.Suggested
     FixtureScene.ONE_LEFT -> FfiScene.OneLeft
     FixtureScene.CONTINUE_FULL -> FfiScene.ContinueFull

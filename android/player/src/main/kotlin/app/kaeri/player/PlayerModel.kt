@@ -572,6 +572,14 @@ class PlayerModel(
                     dismiss()
                 }
             }
+            // Every source's row while the Sources tab asks, whole each time one changes.
+            is Event.SourcesProgress -> panelReleases?.let {
+                if (it.id == event.id && it.episode == event.episode) {
+                    val now = now()
+                    panelReleases = it.said(event.rows, now)
+                    clock = now
+                }
+            }
             is Event.Sources -> {
                 panelReleases?.let { if (it.id == event.id && it.episode == event.episode) panelReleases = it.copy(candidates = event.candidates) }
                 if (choosingSource) {
@@ -1464,7 +1472,7 @@ class PlayerModel(
      * sits there; a key ([poke]) or anything that changes the state moves it on again.
      */
     private fun resting(now: Long): Boolean = failure != null ||
-        paused && starting == null && (panelSwitch == null || panelSwitch?.failed != null) && (versionSwitch == null || versionSwitch?.failed != null) && progress == null && stall == null && upNext == null && skip == null && undo == null &&
+        paused && starting == null && panelReleases?.busy != true && (panelSwitch == null || panelSwitch?.failed != null) && (versionSwitch == null || versionSwitch?.failed != null) && progress == null && stall == null && upNext == null && skip == null && undo == null &&
         alert == null && skipNotice == null && skipPrompt == null && marking == null && holds.isEmpty() && scrubbing == null &&
         statsCopiedAt == null && (!statsShown || statsWaitingSince == null) && now - lastInput >= PlayerTiming.CONTROLS_HIDE
 
@@ -1659,7 +1667,9 @@ class PlayerModel(
     fun loadPanelReleases(again: Boolean = false) {
         val (id, episode) = panelEpisode ?: return
         if (!again && panelReleases?.let { it.id == id && it.episode == episode } == true) return
-        panelReleases = PanelReleases(id, episode, null)
+        val now = now()
+        panelReleases = PanelReleases(id, episode, null, asked = now)
+        clock = now
         send(Command.LoadSources(id, episode))
     }
 

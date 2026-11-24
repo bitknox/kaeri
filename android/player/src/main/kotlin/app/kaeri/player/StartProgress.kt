@@ -383,7 +383,11 @@ fun PlayerModel.startWaiting(progress: StartProgress? = this.progress): Boolean 
  * source answered, and that none that answered lists it when any failed, took too long or wasn't asked.
  */
 fun noneListsText(context: Context, missed: List<app.kaeri.engine.model.MissedListing>, episode: String): String =
-    if (missed.any { it.miss !is app.kaeri.engine.model.ListingMiss.NoMatch && it.miss !is app.kaeri.engine.model.ListingMiss.NoEpisode }) {
+    if (missed.any {
+            it.miss !is app.kaeri.engine.model.ListingMiss.NoMatch && it.miss !is app.kaeri.engine.model.ListingMiss.Ambiguous &&
+                it.miss !is app.kaeri.engine.model.ListingMiss.NoEpisode
+        }
+    ) {
         Strings.sourcePickerNoneAnsweredLists(context, episode)
     } else {
         Strings.sourcePickerNoneLists(context, episode)
@@ -393,6 +397,7 @@ fun missedText(context: Context, missed: app.kaeri.engine.model.MissedListing, e
     val name = missed.name
     return when (val miss = missed.miss) {
         is app.kaeri.engine.model.ListingMiss.NoMatch -> Strings.playerStartMissNoMatch(context, name)
+        is app.kaeri.engine.model.ListingMiss.Ambiguous -> Strings.playerStartMissAmbiguous(context, name)
         is app.kaeri.engine.model.ListingMiss.NoEpisode -> Strings.playerStartMissNoEpisode(context, name, episode)
         is app.kaeri.engine.model.ListingMiss.Failed -> Strings.playerStartMissFailed(context, name)
         is app.kaeri.engine.model.ListingMiss.TimedOut -> Strings.playerStartMissTimedOut(context, name)

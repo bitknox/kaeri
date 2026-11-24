@@ -1,7 +1,8 @@
 // The fixtures flavour's launch: the testing engine on a scene, each launch in a directory of its
 // own, steered by intent extras under the names of the Apple app's -Kaeri* arguments:
 //
-//   scene     watching (the default), sourceless (watching with no source set up), fresh or playing
+//   scene     watching (the default), sourceless (watching with no source set up), fresh, playing
+//             or sourcesloading (playing, with six more sources that answer at set times)
 //   media     what the playing scene streams: a path or URL on the device
 //   section   the destination to open on: continue, calendar, seasonal, library or search
 //   watched   episodes to mark watched once the engine is up: 900006:8, or 900001:1,2,3, with more
@@ -34,6 +35,8 @@
 //   found     flow or settings: the found skip times demo, the engine's part scripted, for recording motion
 //   panel     live: the player panel's Sources tab lists made-up sources, and a switch to one
 //             lands or fails as scripted (PanelDemo), on the playing scene
+//             sources: episode 7 plays and the panel opens on Sources once its picture is up,
+//             for the sourcesloading scene's sources answering one by one
 //   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
 //             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   code      a tracker whose device-code sheet opens, with a made-up code that expires in 15 minutes
@@ -511,7 +514,10 @@ internal object Flavour {
             store.apply(Event.DeviceCode(DeviceCodePrompt(tracker, "4F2K9QX1", "https://activate.example/pin", expiresAt)))
         }
         intent.getStringExtra("player")?.let { Log.w(KaeriApp.TAG, "player=$it is not in this build yet") }
-        if (intent.getStringExtra("panel") == "live") app.kaeri.player.PanelDemo.start(store, player)
+        when (intent.getStringExtra("panel")) {
+            "live" -> app.kaeri.player.PanelDemo.start(store, player)
+            "sources" -> app.kaeri.player.PanelDemo.openSources(store, player)
+        }
         intent.getStringExtra("found")?.let { FoundDemo.run(context.applicationContext as app.kaeri.player.PlayerHost, store, MainScope(), it) }
     }
 

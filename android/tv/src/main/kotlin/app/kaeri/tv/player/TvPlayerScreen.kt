@@ -235,10 +235,11 @@ fun TvPlayerScreen(
             else -> ChromeFocus.Play
         }
     }
-    // The panel's own Play closes it.
+    // The panel's own Play closes it; one opened on the model alone (a fixture) shows as its button would.
     val panelOpen = model.panelOpen
     LaunchedEffect(panelOpen) {
         if (!panelOpen && (panel == PlayerPanel.Episodes || panel == PlayerPanel.Sources)) closePanel()
+        if (panelOpen && panel == null) openPanel(if (model.panelTab == PanelTab.Sources) PlayerPanel.Sources else PlayerPanel.Episodes)
     }
 
     fun nextEpisode() {

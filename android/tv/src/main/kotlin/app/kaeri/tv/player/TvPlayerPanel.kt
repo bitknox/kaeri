@@ -10,14 +10,20 @@ package app.kaeri.tv.player
 import android.content.Context
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusGroup
@@ -56,6 +62,7 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.key.Key
 import androidx.compose.ui.input.key.KeyEventType
@@ -64,6 +71,7 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -90,9 +98,11 @@ import app.kaeri.design.PanelGlyphs
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.model.DubExtent
 import app.kaeri.engine.model.EpisodeRow
+import app.kaeri.engine.model.ListingState
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.i18n.Strings
 import app.kaeri.player.HeldPicture
+import app.kaeri.player.ListingLine
 import app.kaeri.player.PanelTab
 import app.kaeri.player.PanelWords
 import app.kaeri.player.PlayerModel
@@ -667,6 +677,10 @@ private fun LazyListScope.tvOthers(
     expanded: Set<String>,
     toggle: (String) -> Unit,
 ) {
+    model.panelReleases?.takeIf { it.rows != null }?.let { asked ->
+        tvListings(model, asked, options, skip, expanded, toggle)
+        return
+    }
     data class Group(val providerId: String, val name: String, val option: SourceOption?)
     val groups = options?.filter { it.providerId != skip }?.map { Group(it.providerId, it.name, it) }
         ?: model.panelReleases?.candidates.orEmpty().filter { it.providerId != skip }.distinctBy { it.providerId }.map { Group(it.providerId, it.providerName, null) }
@@ -721,6 +735,71 @@ private fun LazyListScope.tvOthers(
     }
 }
 
+/**
+ * Every other source's row as the engine says it while the tab asks, in the order set in Sources.
+ * Each is there from the first event and takes focus from the start, so focus never jumps as rows
+ * answer; OK does nothing on a row until it listed a release.
+ */
+private fun LazyListScope.tvListings(
+    model: PlayerModel,
+    asked: app.kaeri.player.PanelReleases,
+    options: List<SourceOption>?,
+    skip: String?,
+    expanded: Set<String>,
+    toggle: (String) -> Unit,
+) {
+    for (row in asked.others(skip, model.playingSource)) {
+        val releases = (row.state as? ListingState.Listed)?.releases.orEmpty()
+        val open = releases.size > 1 && row.providerId in expanded
+        item(key = "source/${row.providerId}") { // i18n-skip
+            val context = LocalContext.current
+            val one = releases.singleOrNull()
+            TvChoiceRow(
+                model, row.name, PanelWords.listing(context, row, options?.firstOrNull { it.providerId == row.providerId }, asked.episode),
+                if (one != null) SwitchTarget(one.providerId, row.name, release = one.id) else SwitchTarget(row.providerId, row.name),
+                dim = row.state !is ListingState.Listed && row.state !is ListingState.Asking,
+                listing = row.providerId,
+                disclosure = if (releases.size > 1) Strings.playerPanelReleases(context, releases.size) to open else null,
+                onClick = when {
+                    releases.size > 1 -> ({ toggle(row.providerId) })
+                    one != null -> ({ model.switchTo(one) })
+                    else -> null
+                },
+            )
+        }
+        if (open) items(releases, key = { "release/${it.providerId}/${it.id}" }) { release -> // i18n-skip
+            val context = LocalContext.current
+            TvChoiceRow(
+                model, release.title, PanelWords.release(context, release),
+                SwitchTarget(release.providerId, row.name, release = release.id),
+                sub = true, inset = true,
+                onClick = { model.switchTo(release) },
+            )
+        }
+    }
+}
+
+/** What a row's detail line says: crossfaded as one, old and new together. */
+private enum class Line { Detail, Starting, Silent, Asking, Counting }
+
+/** The 16 dp spinner in a source's check slot while it is asked: silk, ground on a focused row. */
+@Composable
+private fun AskingSpinner(ink: Color, modifier: Modifier = Modifier) {
+    // A preview, and a screenshot, draws it still.
+    val still = androidx.compose.ui.platform.LocalInspectionMode.current || LocalReducedMotion.current
+    val turning = rememberInfiniteTransition(label = "asking") // i18n-skip
+    val turned by turning.animateFloat(0f, 360f, infiniteRepeatable(tween(900, easing = LinearEasing)), label = "angle") // i18n-skip
+    val angle = if (still) 0f else turned
+    Canvas(modifier.size(16.dp)) {
+        val stroke = 2.dp.toPx()
+        val inset = stroke / 2
+        val arcSize = androidx.compose.ui.geometry.Size(size.width - stroke, size.height - stroke)
+        val at = androidx.compose.ui.geometry.Offset(inset, inset)
+        drawArc(ink.copy(alpha = 0.25f), 0f, 360f, useCenter = false, topLeft = at, size = arcSize, style = Stroke(stroke))
+        drawArc(ink, angle - 90f, 90f, useCenter = false, topLeft = at, size = arcSize, style = Stroke(stroke))
+    }
+}
+
 /** A stream, source or release on the TV: focused silk with ground text at 1.02. */
 @Composable
 private fun TvChoiceRow(
@@ -734,6 +813,8 @@ private fun TvChoiceRow(
     inset: Boolean = false,
     dim: Boolean = false,
     waiting: Boolean = false,
+    /** The source this row says while the tab asks it, by its id: its line follows the engine's rows. */
+    listing: String? = null,
     disclosure: Pair<String, Boolean>? = null,
     onClick: (() -> Unit)?,
     onUp: (() -> Boolean)? = null,
@@ -743,8 +824,11 @@ private fun TvChoiceRow(
     val self = remember { FocusRequester() }
     val picked = model.panelSwitch?.takeIf { it.on(target) }
     val now = model.clock
+    val asking = listing?.let { model.panelReleases?.line(it, now) } ?: ListingLine.Answered
     val scale by animateFloatAsState(if (focused) ROW_SCALE else 1f, Motion.quick(), label = "choice") // i18n-skip
-    val ink = if (focused) ObiSilk.Ground else if (dim) ObiSilk.Haze else ObiSilk.Silk
+    // A source that answered with nothing goes to haze as its answer fades in.
+    val rest by animateColorAsState(if (dim) ObiSilk.Haze else ObiSilk.Silk, Motion.fadeIn(), label = "ink") // i18n-skip
+    val ink = if (focused) ObiSilk.Ground else rest
     val soft = if (focused) ObiSilk.Ground.copy(alpha = 0.72f) else ObiSilk.Haze
     Column(Modifier.padding(vertical = 2.dp)) {
         Row(
@@ -781,6 +865,11 @@ private fun TvChoiceRow(
                 if (picked != null && picked.failed == null) {
                     val shown by animateFloatAsState(if (picked.spinning(now)) 1f else 0f, Motion.fadeIn(), label = "spinner") // i18n-skip
                     Box(Modifier.graphicsLayer { alpha = shown; scaleX = 0.6f; scaleY = 0.6f }) { Spinner() }
+                } else if (listing != null) {
+                    // Asked: from 600 ms, faded out as the answer fades in.
+                    val spins = asking == ListingLine.Asking || asking == ListingLine.Counting
+                    val shown by animateFloatAsState(if (spins) 1f else 0f, Motion.fadeIn(), label = "asking-spinner") // i18n-skip
+                    if (spins || shown > 0f) AskingSpinner(if (focused) ObiSilk.Ground else ObiSilk.Silk, Modifier.graphicsLayer { alpha = shown }.testTag("tv-panel-asking-$title")) // i18n-skip
                 } else if (on) {
                     Icon(PanelGlyphs.Check, contentDescription = null, tint = ink, modifier = Modifier.size(18.dp))
                 }
@@ -788,17 +877,36 @@ private fun TvChoiceRow(
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
                 Text(title, style = if (sub) DetailStyle.copy(fontSize = 15.sp, lineHeight = 22.sp) else TitleStyle.copy(fontWeight = FontWeight.SemiBold), color = ink)
                 val counting = picked?.counting(now)
-                when {
-                    counting != null -> Text(Strings.playerPanelStarting(context, counting), style = DetailStyle, color = soft)
-                    !detail.isNullOrEmpty() -> Text(detail, style = DetailStyle, color = soft)
-                    waiting -> Text("…", style = DetailStyle, color = soft) // i18n-skip
+                val line = when {
+                    counting != null -> Line.Starting
+                    asking == ListingLine.Silent -> Line.Silent
+                    asking == ListingLine.Asking -> Line.Asking
+                    asking == ListingLine.Counting -> Line.Counting
+                    else -> Line.Detail
+                }
+                // While sources answer the line is held one line high, so a row never changes height.
+                val held = if (listing != null) Modifier.heightIn(min = with(LocalDensity.current) { DetailStyle.lineHeight.toDp() }) else Modifier
+                Crossfade(line, modifier = held, animationSpec = Motion.fadeIn(), label = "line") { said -> // i18n-skip
+                    when (said) {
+                        Line.Starting -> Text(Strings.playerPanelStarting(context, picked?.counting(now) ?: 3), style = DetailStyle, color = soft)
+                        Line.Silent -> {}
+                        Line.Asking -> Text(Strings.playerStartRowAsking(context), style = DetailStyle, color = soft)
+                        Line.Counting -> Text(Strings.playerPanelAsking(context, listing?.let { model.panelReleases?.seconds(it, now) } ?: 3), style = DetailStyle, color = soft)
+                        Line.Detail -> when {
+                            !detail.isNullOrEmpty() -> Text(detail, style = DetailStyle, color = soft)
+                            waiting -> Text("…", style = DetailStyle, color = soft) // i18n-skip
+                        }
+                    }
                 }
             }
-            if (disclosure != null) {
-                val (count, open) = disclosure
+            // A source's release count and chevron fade in at the end of its row as it lists them.
+            AnimatedVisibility(disclosure != null, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
+                val (count, open) = disclosure ?: return@AnimatedVisibility
                 val turn by animateFloatAsState(if (open) 90f else 0f, Motion.standard(), label = "chevron") // i18n-skip
-                Text(count, style = DetailStyle, color = soft)
-                Icon(PanelGlyphs.Chevron, contentDescription = null, tint = soft, modifier = Modifier.size(16.dp).rotate(turn))
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text(count, style = DetailStyle, color = soft)
+                    Icon(PanelGlyphs.Chevron, contentDescription = null, tint = soft, modifier = Modifier.size(16.dp).rotate(turn))
+                }
             }
         }
         val failed = picked?.failed

@@ -239,6 +239,13 @@ enum class FixtureScene {
     /** A scene that plays, with the first six episodes of the first fixture watched. */
     PLAYING,
 
+    /**
+     * [PLAYING] with six more sources after the fixture one, which answer the player panel's
+     * Sources tab at set times: one lists a release at once, one can't choose the title, one lists
+     * five, one fails, one takes too long and one is switched off.
+     */
+    SOURCES_LOADING,
+
     /** Home's second case: every episode of the first fixture watched, so the spotlight is from Up next for you. */
     SUGGESTED,
 

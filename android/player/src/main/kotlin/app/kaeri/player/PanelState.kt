@@ -11,7 +11,10 @@ import android.text.format.DateFormat
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.EpisodeKind
 import app.kaeri.engine.model.EpisodeRow
+import app.kaeri.engine.model.ListingMiss
+import app.kaeri.engine.model.ListingState
 import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.SourceListing
 import app.kaeri.engine.model.SourceNote
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.engine.model.SwitchTo
@@ -119,11 +122,63 @@ data class VersionSwitch(
     }
 }
 
-/** The episode's releases across every source: the engine's answer to `LoadSources`, in the order the sources gave them. */
-data class PanelReleases(val id: app.kaeri.engine.core.AnilistId, val episode: String, val candidates: List<SourceCandidate>?) {
+/**
+ * The episode's releases across every source: the engine's answer to `LoadSources`, in the order
+ * the sources gave them, and each source's row while it is asked (`SourcesProgress`), drawn from
+ * the last one said.
+ */
+data class PanelReleases(
+    val id: app.kaeri.engine.core.AnilistId,
+    val episode: String,
+    val candidates: List<SourceCandidate>?,
+    /** When `LoadSources` went, on the model's clock: the rows are silent for 600 ms from here. */
+    val asked: Long = 0,
+    /** Every source's row, in the order set in Sources, as the engine last said them; null until the first. */
+    val rows: List<SourceListing>? = null,
+    /** When each row first said Asking, on the model's clock: what its seconds count from. */
+    val asking: Map<String, Long> = emptyMap(),
+) {
     /** One source's releases, in the order it gave them. */
-    fun of(providerId: String): List<SourceCandidate> = candidates.orEmpty().filter { it.providerId == providerId }
+    fun of(providerId: String): List<SourceCandidate> {
+        val listed = rows?.firstOrNull { it.providerId == providerId }?.state as? ListingState.Listed
+        return listed?.releases ?: candidates.orEmpty().filter { it.providerId == providerId }
+    }
+
+    /** Whether any source is still asked: the rows keep time while one is. */
+    val busy: Boolean get() = rows?.any { it.state is ListingState.Asking } == true
+
+    /** What [providerId]'s detail line says at [now]. */
+    fun line(providerId: String, now: Long): ListingLine {
+        val row = rows?.firstOrNull { it.providerId == providerId } ?: return ListingLine.Answered
+        if (row.state !is ListingState.Asking) return ListingLine.Answered
+        val since = asking[providerId] ?: asked
+        return when {
+            now - since >= PanelSwitch.COUNTING -> ListingLine.Counting
+            now - asked >= PanelSwitch.SILENT -> ListingLine.Asking
+            else -> ListingLine.Silent
+        }
+    }
+
+    /** The whole seconds [providerId] has been asked at [now], for "Asking · 4 s". */
+    fun seconds(providerId: String, now: Long): Int = ((now - (asking[providerId] ?: asked)) / 1000).toInt().coerceAtLeast(0)
+
+    /** The rows with what plays now left out: by its source when known, else by the name it goes by. */
+    fun others(playingProvider: String?, playingName: String?): List<SourceListing> = rows.orEmpty().filter {
+        if (playingProvider != null) it.providerId != playingProvider else it.name != playingName
+    }
+
+    /** The rows as the engine said them now, whole: a row's seconds count from the first time it said Asking. */
+    fun said(rows: List<SourceListing>, now: Long): PanelReleases = copy(
+        rows = rows,
+        asking = asking + rows.filter { it.state is ListingState.Asking && it.providerId !in asking }.associate { it.providerId to now },
+    )
 }
+
+/**
+ * What a source's detail line says while the Sources tab asks it: nothing for 600 ms, then a
+ * spinner and "Asking", then "Asking · 4 s" from 3 s; once it answered, its answer.
+ */
+enum class ListingLine { Silent, Asking, Counting, Answered }
 
 /**
  * The picture on screen just before a switch loads, held over the video until the new stream's
@@ -222,6 +277,29 @@ object PanelWords {
         SourceNote.Gone -> Strings.sourceNoteGone(context)
         SourceNote.Ambiguous -> Strings.sourceNoteAmbiguous(context)
         is SourceNote.Failed -> plainReason(context, note.reason)
+    }
+
+    /**
+     * A source's line in the Sources tab once it answered: how much of the title it has when it
+     * listed releases, else the starting screen's row words for why not, and "Switched off" for one
+     * never asked. Null while it is asked.
+     */
+    fun listing(context: Context, row: SourceListing, option: SourceOption?, episode: String): String? = when (val state = row.state) {
+        is ListingState.Asking -> null
+        is ListingState.Listed -> option?.let { source(context, it) }
+            ?: state.releases.singleOrNull()?.let { release(context, it) }
+        is ListingState.Missed -> miss(context, state.miss, episode)
+        is ListingState.Off -> Strings.sourceNoteOff(context)
+    }
+
+    /** Why a source lists nothing for [episode], as a row says it under the source's name. */
+    fun miss(context: Context, miss: ListingMiss, episode: String): String = when (miss) {
+        is ListingMiss.NoMatch -> Strings.playerStartRowNoMatch(context)
+        is ListingMiss.Ambiguous -> Strings.sourceNoteAmbiguous(context)
+        is ListingMiss.NoEpisode -> Strings.playerStartRowNoEpisode(context, episode)
+        is ListingMiss.Failed -> Strings.playerStartRowFailed(context)
+        is ListingMiss.TimedOut -> Strings.playerStartRowTimedOut(context)
+        is ListingMiss.HeldBack -> heldNote(context, miss.why)
     }
 
     /**
