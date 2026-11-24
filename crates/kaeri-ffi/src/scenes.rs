@@ -80,7 +80,8 @@ pub enum FfiScene {
     /// `media` on the fixture source, named Lantern Index here, which also lists two releases of
     /// it, one subtitled by Lamplight Subs and one by Ember Subs. A second source, Harbor Index,
     /// lists a release by Harbor Subs and has the episode in the dub, which the fixture source
-    /// does not. Every stream but the first comes slowly from loopback ([`slow::serve`]), so the
+    /// does not. A third, Driftwood Subs, lists only that group's release and is named for it,
+    /// so a switch to it is named by a group. Every stream but the first comes slowly from loopback ([`slow::serve`]), so the
     /// starting screen shows while each switch opens its file.
     Switching { media: String },
     /// [`Self::Watching`], with every episode streaming `media` as [`Self::Playing`]'s do: a TV
@@ -954,10 +955,13 @@ fn franchise(art: &str, provided: &[(Media, u32)]) -> MockProvider {
 
 /// [`FfiScene::Switching`]'s second source, by id.
 pub const HARBOR_ID: &str = "harbor";
+/// [`FfiScene::Switching`]'s third source, by id: an index of one group's releases, named for it.
+pub const DRIFTWOOD_ID: &str = "driftwood";
 
-/// [`FfiScene::Switching`]'s two sources: the fixture source, named Lantern Index, whose
-/// episodes start from `media`, and Harbor Index after it. Their releases and Harbor Index's
-/// streams come from `slow`, the address [`slow::serve`] gave.
+/// [`FfiScene::Switching`]'s three sources: the fixture source, named Lantern Index, whose
+/// episodes start from `media`, then Harbor Index, then Driftwood Subs, a source named for the
+/// one group whose releases it lists, as the starting screen then names a group. Their
+/// releases and the other two's streams come from `slow`, the address [`slow::serve`] gave.
 fn switching_sources(art: &str, media: &str, slow: &str) -> ProviderRegistry {
     use kaeri_core::traits::SourceCandidate;
     let stream = |provider: &str, url: String| Stream {
@@ -982,6 +986,7 @@ fn switching_sources(art: &str, media: &str, slow: &str) -> ProviderRegistry {
         };
     const LANTERN: &str = "Lantern Index";
     const HARBOR: &str = "Harbor Index";
+    const DRIFTWOOD: &str = "Driftwood Subs";
     let mut lantern = franchise(art, &[]).named(LANTERN);
     for id in fixtures::ALL {
         lantern = lantern.with_streams_for(
@@ -1033,7 +1038,22 @@ fn switching_sources(art: &str, media: &str, slow: &str) -> ProviderRegistry {
             false,
         )]) // i18n-skip
         .with_source_streams("harbor-subs", vec![harbor_stream]);
-    ProviderRegistry::new(vec![lantern.arc(), harbor.arc()])
+    let driftwood_stream = stream(DRIFTWOOD_ID, format!("{slow}/driftwood/07.mkv"));
+    let driftwood = MockProvider::new(DRIFTWOOD_ID)
+        .named(DRIFTWOOD)
+        .with_hits(sources::hits())
+        .with_episodes_for(sources::key(FINISHED), sources::episodes(FINISHED))
+        .with_streams_for(sources::key(FINISHED), vec![driftwood_stream.clone()])
+        .with_sources(vec![release(
+            DRIFTWOOD_ID,
+            DRIFTWOOD,
+            "driftwood-subs",
+            "Stardust Wayfarer 07 [Driftwood Subs]",
+            DRIFTWOOD,
+            false,
+        )]) // i18n-skip
+        .with_source_streams("driftwood-subs", vec![driftwood_stream]);
+    ProviderRegistry::new(vec![lantern.arc(), harbor.arc(), driftwood.arc()])
 }
 
 /// [`FfiScene::Switching`]'s slow server: the scene's file over HTTP on loopback, as a slow
@@ -2076,7 +2096,7 @@ mod tests {
     }
 
     #[test]
-    fn switching_starts_episode_seven_on_lantern_index_with_harbor_index_after_it() {
+    fn switching_starts_episode_seven_on_lantern_index_with_two_sources_after_it() {
         let dir = tempfile::tempdir().expect("a temporary directory");
         let store = Store::open(dir.path().join("kaeri.db")).expect("a database");
         let scene = FfiScene::Switching { media: "/tmp/episode.mkv".into() };
@@ -2090,13 +2110,13 @@ mod tests {
             "/tmp/episode.mkv",
             "http://127.0.0.1:9",
         );
-        assert_eq!(sources.ids(), [sources::PROVIDER_ID, HARBOR_ID]);
+        assert_eq!(sources.ids(), [sources::PROVIDER_ID, HARBOR_ID, DRIFTWOOD_ID]);
         let names = sources
             .ids()
             .iter()
             .map(|id| sources.get(id).expect("listed").manifest().display_name.clone())
             .collect::<Vec<_>>();
-        assert_eq!(names, ["Lantern Index", "Harbor Index"]);
+        assert_eq!(names, ["Lantern Index", "Harbor Index", "Driftwood Subs"]);
     }
 
     #[test]

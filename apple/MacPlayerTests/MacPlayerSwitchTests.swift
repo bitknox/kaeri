@@ -2,8 +2,8 @@
 // starting screen a slow file brings up, the notice as the switch lands, and Playing now in the
 // Sources tab name the source switched to, never the one the episode started on.
 //
-// The Fixtures app's Switching scene plays episode 7 from Lantern Index, with Harbor Index after
-// it, and serves every switch's file slowly enough that the starting screen comes up over it.
+// The Fixtures app's Switching scene plays episode 7 from Lantern Index, with Harbor Index and
+// Driftwood Subs, a source named for its one group, after it, and serves every switch's file slowly enough that the starting screen comes up over it.
 // Each step keeps screenshots of the starting screen, the notice and the Sources tab in the
 // result bundle:
 //
@@ -26,12 +26,10 @@ final class MacPlayerSwitchTests: XCTestCase {
         try step(app, "1-source", expected: "Harbor Index") {
             self.row(app, "Harbor Index").click()
         }
-        // A release of the first source, under its row.
-        try step(app, "2-release", expected: "Lantern Index") {
-            self.row(app, "Lantern Index").click()
-            let release = self.row(app, "Stardust Wayfarer 07 [Ember Subs]")
-            XCTAssertTrue(release.waitForExistence(timeout: 10), "no Ember Subs release")
-            release.click()
+        // Another group's release, on a source named for that group: the starting screen names
+        // the group, neither Harbor Index's nor the one the episode started on.
+        try step(app, "2-release", expected: "Driftwood Subs") {
+            self.row(app, "Driftwood Subs").click()
         }
         // The other version, which Lantern Index has from its local file, with no wait.
         try step(app, "3-dub", expected: "Lantern Index", dubbed: true) {

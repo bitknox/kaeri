@@ -84,6 +84,26 @@ struct SwitchNamesTests {
         #expect(rig.model.playingSource == Self.first)
     }
 
+    @Test func aReleaseOnASourceNamedForItsGroupIsNamedByThatGroup() async throws {
+        let rig = try await pictured()
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: Self.harbor, at: 100)))
+        _ = try await anotherFile(rig)
+        rig.mpv.emit(.playbackRestart)
+        try await until("the picture") { rig.model.hasPicture }
+
+        // Harbor Subs' release, then Driftwood Subs', from a source named for that group.
+        let driftwood = SwitchTo(providerId: "driftwood", name: "Driftwood Subs", release: "driftwood-subs", stream: nil)
+        rig.model.apply(.playerSwitch(playback: 1, state: .loading(to: driftwood, at: 140)))
+        let walk = try await anotherFile(rig, "https://cdn-c.example/7.m3u8")
+        let now = rig.model.clock
+        #expect(walk.detail(at: now).hasPrefix(L.playerStartFrom(name: "Driftwood Subs")), "\(shown(walk, at: now))")
+        for stale in [Self.first, "Harbor Index"] {
+            #expect(!shown(walk, at: now).contains(stale), "\(shown(walk, at: now))")
+        }
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: driftwood, at: 140)))
+        #expect(rig.model.playingSource == "Driftwood Subs")
+    }
+
     @Test func theOtherVersionsFileIsThatVersionFromItsOwnSource() async throws {
         let rig = try await pictured()
         rig.model.panelOpen = true
