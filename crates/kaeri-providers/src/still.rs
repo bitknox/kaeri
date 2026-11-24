@@ -5,13 +5,20 @@
 //!
 //! The clock is off in every app, in every recording and in every test that does not turn it on:
 //! [`wait`] is then the wall clock's sleep. A Fixtures build turns it on for a shot with
-//! [`hold`] (`testing_still_clock_hold` in the bindings, or `KAERI_STILL_AT` when a scene
-//! starts), and the apps' own timing of a shot, such as a starting screen's seconds, reads
-//! [`now`].
+//! [`hold_from_start`] (`KAERI_STILL_AT` when a scene starts, or
+//! `testing_still_clock_hold_seconds` in the bindings for a launch argument), an app's replay of
+//! made-up events steps it with [`hold`] (`testing_still_clock_hold`), and the apps' own timing of
+//! a shot, such as a starting screen's seconds, reads [`now`].
 //!
 //! Held, the clock moves by itself from the moment one wait ends to the moment the next one does,
 //! resting [`SETTLE`] of real time on each so the work a wait let go has run before the next, and
 //! stops at the hold. A wait that would end past the hold never ends until the hold moves on.
+//!
+//! When the clock goes on to the hold itself depends on how it was held. [`hold`] sends it there
+//! once the waits due on the way have ended. [`hold_from_start`] holds it at nought until the
+//! scene first waits, so what the scene asks for after starting up counts from nought, and goes
+//! on to the hold only once the scene's waits due by then have ended and it has begun no other
+//! for [`QUIET`].
 
 use std::{
     collections::BTreeMap,
@@ -25,6 +32,10 @@ use tokio::sync::watch;
 /// How long a held clock rests on each moment a wait ends at, in real time, before moving on: the
 /// work that wait let go runs first, and a wait it begins is counted from that moment.
 pub const SETTLE: Duration = Duration::from_millis(25);
+
+/// How long a scene held from its start ([`StillClock::held_at`]) must go without a new wait or a
+/// wait ending before the clock goes on to the hold.
+pub const QUIET: Duration = Duration::from_millis(150);
 
 /// A still clock: nought when made, moved only by its holds. Cheap to clone; every clone is the
 /// same clock.
@@ -44,16 +55,28 @@ struct State {
     hold: u64,
     /// The moments waits end at, with how many end at each.
     ends: BTreeMap<u64, usize>,
+    /// Whether the clock may go on to the hold yet: once something has waited on it, or a
+    /// [`StillClock::hold`] has sent it there.
+    started: bool,
+    /// When the clock last saw a wait begin or end, in real time: it goes on to the hold only
+    /// [`QUIET`] after. `None` lets it go at once.
+    busy: Option<std::time::Instant>,
 }
 
 impl StillClock {
-    /// A clock at nought, held at `at`, moved by a thread of its own for as long as a clone of it
-    /// lives.
+    /// A clock at nought, held at `at` from the scene's start: it stays at nought until something
+    /// first waits on it, and goes on to `at` once the waits due by then have ended and the scene
+    /// has been [`QUIET`]. Moved by a thread of its own for as long as a clone of it lives.
     pub fn held_at(at: Duration) -> Self {
         let clock = Self {
             inner: Arc::new(Inner {
                 now: watch::Sender::new(0),
-                state: Mutex::new(State { hold: millis(at), ends: BTreeMap::new() }),
+                state: Mutex::new(State {
+                    hold: millis(at),
+                    ends: BTreeMap::new(),
+                    started: false,
+                    busy: None,
+                }),
             }),
         };
         let weak: Weak<Inner> = Arc::downgrade(&clock.inner);
@@ -82,9 +105,22 @@ impl StillClock {
         Duration::from_millis(self.inner.lock().hold)
     }
 
-    /// Move the hold on to `at`: the clock runs on to it, through each wait that ends on the way,
-    /// and stops there. A hold before the present one changes nothing; the clock never goes back.
+    /// Move the hold on to `at` and send the clock there: it runs on through each wait that ends
+    /// on the way, and stops at the hold, at once when nothing is due before it. A hold before the
+    /// present one moves the clock to the present one; the clock never goes back.
     pub fn hold(&self, at: Duration) {
+        {
+            let mut state = self.inner.lock();
+            state.hold = state.hold.max(millis(at));
+            state.started = true;
+            state.busy = None;
+        }
+        self.inner.step();
+    }
+
+    /// Move the hold on to `at`, as [`StillClock::held_at`] holds it: the clock goes there only
+    /// once the scene has waited and gone quiet.
+    pub fn hold_from_start(&self, at: Duration) {
         {
             let mut state = self.inner.lock();
             state.hold = state.hold.max(millis(at));
@@ -101,6 +137,8 @@ impl StillClock {
                 return;
             }
             *state.ends.entry(end).or_default() += 1;
+            state.started = true;
+            state.busy = Some(std::time::Instant::now());
             end
         };
         let mut now = self.inner.now.subscribe();
@@ -115,15 +153,19 @@ impl Inner {
     }
 
     /// One move: to the first moment a wait ends at, if it is no later than the hold, or else to
-    /// the hold.
+    /// the hold once the clock may go there.
     fn step(&self) {
         let mut state = self.lock();
         let now = *self.now.borrow();
         state.ends.retain(|end, _| *end > now);
-        let next = state.ends.keys().next().copied().filter(|end| *end <= state.hold);
-        let to = next.unwrap_or(state.hold);
-        if to > now {
-            self.now.send_replace(to);
+        if let Some(end) = state.ends.keys().next().copied().filter(|end| *end <= state.hold) {
+            state.busy = Some(std::time::Instant::now());
+            self.now.send_replace(end);
+            return;
+        }
+        let quiet = state.busy.is_none_or(|busy| busy.elapsed() >= QUIET);
+        if state.started && quiet && state.hold > now {
+            self.now.send_replace(state.hold);
         }
     }
 }
@@ -132,17 +174,25 @@ fn millis(length: Duration) -> u64 {
     u64::try_from(length.as_millis()).unwrap_or(u64::MAX)
 }
 
-/// The process's still clock, once [`hold`] has turned it on.
+/// The process's still clock, once [`hold`] or [`hold_from_start`] has turned it on.
 static CLOCK: OnceLock<StillClock> = OnceLock::new();
 
-/// Turn the process's still clock on, held at `at`, or move its hold on to `at`: from then on
-/// every [`wait`] runs on it. For a Fixtures build's shot or a test of one only; nothing turns it
-/// off again.
+/// Turn the process's still clock on and send it to `at` ([`StillClock::hold`]): for an app's
+/// replay of made-up events, stepping the clock to each one's moment. From then on every [`wait`]
+/// runs on it. For a Fixtures build's shot or a test of one only; nothing turns it off again.
 pub fn hold(at: Duration) {
     CLOCK.get_or_init(|| StillClock::held_at(Duration::ZERO)).hold(at);
 }
 
-/// The process's still clock, if [`hold`] has turned it on.
+/// Turn the process's still clock on held at `at` from the scene's start
+/// ([`StillClock::held_at`]), or move its hold on to `at` that way: for a shot of what a scene
+/// shows `at` in, its made-up waits counted from when it first waits. For a Fixtures build's shot
+/// or a test of one only; nothing turns it off again.
+pub fn hold_from_start(at: Duration) {
+    CLOCK.get_or_init(|| StillClock::held_at(Duration::ZERO)).hold_from_start(at);
+}
+
+/// The process's still clock, if [`hold`] or [`hold_from_start`] has turned it on.
 pub fn clock() -> Option<&'static StillClock> {
     CLOCK.get()
 }
@@ -205,7 +255,7 @@ mod tests {
             vec![(450, ms(450)), (1_300, ms(1_300)), (2_400, ms(2_400)), (4_500, ms(4_500)),]
         );
         assert!(started.elapsed() < Duration::from_secs(2), "took {:?}", started.elapsed());
-        tokio::time::sleep(SETTLE * 4).await;
+        tokio::time::sleep(QUIET + SETTLE * 4).await;
         assert_eq!(clock.now(), ms(5_000), "the clock stops at the hold");
     }
 
@@ -217,13 +267,13 @@ mod tests {
             let clock = clock.clone();
             async move { clock.wait(ms(20_000)).await }
         });
-        tokio::time::sleep(SETTLE * 8).await;
+        tokio::time::sleep(QUIET + SETTLE * 4).await;
         assert!(!wait.is_finished(), "a wait past the hold ended");
         assert_eq!(clock.now(), ms(3_000));
         clock.hold(ms(21_000));
         tokio::time::timeout(Duration::from_secs(2), wait).await.unwrap().unwrap();
         assert_eq!(clock.now(), ms(20_000));
-        tokio::time::sleep(SETTLE * 4).await;
+        tokio::time::sleep(QUIET + SETTLE * 4).await;
         assert_eq!(clock.now(), ms(21_000));
     }
 
@@ -241,6 +291,19 @@ mod tests {
         assert_eq!(clock.now(), ms(3_000), "the second wait counted from the first one's end");
         other.await.unwrap();
         assert_eq!(clock.now(), ms(6_000));
+    }
+
+    /// Held from the start, the clock stays at nought until the scene first waits, so its first
+    /// asks count from nought however long it takes to start up.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn held_from_the_start_it_waits_for_the_first_wait() {
+        let clock = StillClock::held_at(ms(5_000));
+        tokio::time::sleep(QUIET * 2).await;
+        assert_eq!(clock.now(), Duration::ZERO, "it went on before the scene waited");
+        clock.wait(ms(4_500)).await;
+        assert_eq!(clock.now(), ms(4_500));
+        tokio::time::sleep(QUIET + SETTLE * 4).await;
+        assert_eq!(clock.now(), ms(5_000));
     }
 
     /// The hold never goes back, and a wait of nought ends at once.

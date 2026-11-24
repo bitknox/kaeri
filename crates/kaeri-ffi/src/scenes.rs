@@ -568,7 +568,7 @@ impl FfiEngine {
             kaeri_engine::clock::stop_at(at);
         }
         if let Some(at) = still_at() {
-            kaeri_providers::still::hold(at);
+            kaeri_providers::still::hold_from_start(at);
         }
         Self::start_scene_from(dirs, host, scene, &start, Clock::default(), world)
     }

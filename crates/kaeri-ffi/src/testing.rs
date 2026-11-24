@@ -285,25 +285,25 @@ pub(crate) fn options(
     Ok(options)
 }
 
-/// Hold the scene's made-up waits at `at_ms` from now, or move the hold on to it: the still clock
-/// ([`kaeri_providers::still`]). The first call turns the clock on at nought; from then on the
-/// fixture scenes' slow answers end on it, all the ones due by the hold at once and in their
-/// order, and none after it until the hold moves on. It never goes back. An app's shot calls this
-/// for its launch argument before the scene starts (`KAERI_STILL_AT` does the same from the
-/// environment), steps it for a made-up start it replays, and reads
+/// Send the still clock ([`kaeri_providers::still`]) to `at_ms` and hold it there: through each
+/// of the fixture scenes' made-up waits due on the way, in order, and at once when none is. It
+/// never goes back. The first call turns the clock on. An app's replay of made-up events (a
+/// starting screen's) steps it to each event's moment with this, and reads
 /// [`testing_still_clock_now_ms`] for its own timing. Only in a build with the `testing` feature.
 #[uniffi::export]
 pub fn testing_still_clock_hold(at_ms: u64) {
     kaeri_providers::still::hold(std::time::Duration::from_millis(at_ms));
 }
 
-/// [`testing_still_clock_hold`] at `seconds` as a launch argument says them (`4`, `0.3`); false,
-/// and the clock left as it was, when they are not a number of seconds. Only in a build with the
-/// `testing` feature.
+/// Hold the scene's made-up waits at `seconds` from its start, as a launch argument says them
+/// (`4`, `0.3`), as `KAERI_STILL_AT` does: the clock stays at nought until the scene first waits,
+/// goes through the waits due by the moment and stops there, so the shot shows what the scene
+/// shows that long in. False, and the clock left as it was, when they are not a number of
+/// seconds. Call it before the scene starts. Only in a build with the `testing` feature.
 #[uniffi::export]
 pub fn testing_still_clock_hold_seconds(seconds: String) -> bool {
     let Some(at) = crate::scenes::parse_still_at(&seconds) else { return false };
-    kaeri_providers::still::hold(at);
+    kaeri_providers::still::hold_from_start(at);
     true
 }
 
