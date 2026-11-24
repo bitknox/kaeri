@@ -72,6 +72,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import app.kaeri.player.PlayerTime
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.MainScope
@@ -192,8 +193,8 @@ internal object Flavour {
         // `start` replay, which steps it to the moment itself (StartReplay).
         intent.getStringExtra("stillat")?.let { at ->
             when {
-                intent.getStringExtra("start") != null && StartReplay.stillMillis(intent) != null -> app.kaeri.player.PlayerTime.hold(0)
-                !app.kaeri.player.PlayerTime.holdSeconds(at) -> Log.w(KaeriApp.TAG, "stillat takes seconds (24, 0.3), not $at")
+                intent.getStringExtra("start") != null && StartReplay.stillMillis(intent) != null -> PlayerTime.hold(0)
+                !PlayerTime.holdSeconds(at) -> Log.w(KaeriApp.TAG, "stillat takes seconds (24, 0.3), not $at")
             }
         }
         return EngineLaunch.fixtures(scene, context.cacheDir)
