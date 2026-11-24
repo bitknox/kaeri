@@ -1938,7 +1938,7 @@ impl SidePanel {
         };
         let line_swap = look.held.then(|| Swap::new(line_label(), line_label()));
         match &line_swap {
-            Some(swap) => line.add_named(&swap.grid, Some("detail")),
+            Some(swap) => line.add_named(&swap.place, Some("detail")),
             None => line.add_named(&detail_label, Some("detail")),
         };
         let starting = crate::widgets::haze("", "panel-row-detail");
@@ -1949,7 +1949,7 @@ impl SidePanel {
         words.set_hexpand(true);
         words.set_valign(gtk::Align::Center);
         match &name_swap {
-            Some(swap) => words.append(&swap.grid),
+            Some(swap) => words.append(&swap.place),
             None => words.append(&name),
         }
         words.append(&line);
@@ -2161,7 +2161,7 @@ struct Look {
 /// while both show. The fades play under Reduce Animation too, where a fade is what reduced
 /// motion keeps.
 struct Swap {
-    grid: gtk::Grid,
+    place: gtk::Overlay,
     labels: [gtk::Label; 2],
     /// The one shown, or coming in.
     front: Cell<usize>,
@@ -2170,13 +2170,15 @@ struct Swap {
 
 impl Swap {
     fn new(first: gtk::Label, second: gtk::Label) -> Self {
-        let grid = gtk::Grid::new();
-        grid.set_hexpand(true);
-        // Both in the one cell: a grid draws them over each other.
-        grid.attach(&first, 0, 0, 1, 1);
-        grid.attach(&second, 0, 0, 1, 1);
+        // One over the other, each measured as a label alone is, so the place wraps and sizes
+        // as the plain row's label does.
+        let place = gtk::Overlay::new();
+        place.set_hexpand(true);
+        place.set_child(Some(&first));
+        place.add_overlay(&second);
+        place.set_measure_overlay(&second, true);
         second.set_visible(false);
-        Self { grid, labels: [first, second], front: Cell::new(0), fades: RefCell::default() }
+        Self { place, labels: [first, second], front: Cell::new(0), fades: RefCell::default() }
     }
 
     /// The label shown, or coming in.
@@ -2196,7 +2198,7 @@ impl Swap {
         new.set_opacity(0.0);
         change(&new);
         new.set_visible(true);
-        if !fade || !self.grid.is_mapped() || !old.is_visible() {
+        if !fade || !self.place.is_mapped() || !old.is_visible() {
             new.set_opacity(1.0);
             old.set_visible(false);
             old.set_opacity(1.0);
@@ -2798,31 +2800,6 @@ mod tests {
             assert!(!first[3].2 && first[3].3, "off: no spinner, its name in haze");
             let heights: Vec<i32> = first.iter().map(|r| r.4).collect();
             assert!(heights.iter().all(|h| *h > 0), "{heights:?}");
-            {
-                let rows = panel.listing_rows.borrow();
-                let r = &rows[0];
-                let g = &r.parts.title.grid;
-                eprintln!(
-                    "DIAG row {}x{} grid {}x{} label {}x{} line {}x{} parent {:?} {}x{} panel {}x{}",
-                    r.row.width(), r.row.height(), g.width(), g.height(),
-                    r.parts.title.shown().width(), r.parts.title.shown().height(),
-                    r.parts.line.grid.width(), r.parts.line.grid.height(),
-                    g.parent().map(|p| p.type_().name()), g.parent().map_or(0, |p| p.width()),
-                    g.parent().map_or(0, |p| p.height()), panel.widget.width(), panel.widget.height(),
-                );
-                eprintln!("DIAG measure {:?} {:?}", g.measure(gtk::Orientation::Horizontal, -1), g.measure(gtk::Orientation::Vertical, 300));
-                let words = g.parent().unwrap();
-                let top = words.parent().unwrap();
-                let content = top.parent().unwrap();
-                let v = gtk::Orientation::Vertical;
-                eprintln!("DIAG grid-1 {:?} words {:?} {:?} top {:?} {:?} {:?} content {:?} row {:?} mode {:?} {:?} {:?}",
-                    g.measure(v, -1), words.measure(v, 302), words.measure(v, -1),
-                    top.measure(v, 332), top.measure(v, -1), top.measure(gtk::Orientation::Horizontal, -1),
-                    content.measure(v, 332), r.row.measure(v, 332),
-                    g.request_mode(), words.request_mode(), top.request_mode());
-                let mut c = top.first_child();
-                while let Some(w) = c { eprintln!("DIAG child {} vis {} {:?} {:?} {}x{}", w.type_().name(), w.is_visible(), w.measure(v, -1), w.measure(gtk::Orientation::Horizontal, -1), w.width(), w.height()); c = w.next_sibling(); }
-            }
 
             // From 600 ms a spinner and Asking, in rows of the same height.
             age(&panel, Duration::from_millis(700));
