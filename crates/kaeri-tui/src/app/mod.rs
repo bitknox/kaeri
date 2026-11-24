@@ -802,6 +802,8 @@ impl App {
             }
             // The terminal's picker opens once every source has answered.
             Event::SourcesProgress { .. } => {}
+            // Its alert beside it says why.
+            Event::SourcesFailed { .. } => {}
             Event::MatchChoices { id, provider_id, candidates, answers, .. } => {
                 self.apply_match_choices(id, provider_id, candidates, answers)
             }
