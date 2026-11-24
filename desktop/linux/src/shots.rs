@@ -1422,8 +1422,8 @@ struct StartShot {
 
 /// Something that happens on a shot's made-up start.
 enum StartStep {
-    /// What the engine says.
-    Event(Event),
+    /// What the engine says, boxed as events are large.
+    Event(Box<Event>),
     /// Details opened, as the viewer opens it.
     Details,
     /// Play from the beginning, pressed as the viewer presses it.
@@ -1439,7 +1439,7 @@ impl StartShot {
         let (state, seconds) = start_state(&name)?;
         let mut steps: Vec<(u64, StartStep)> = kaeri_engine::playback::starting::fixture(state)
             .into_iter()
-            .map(|fixture| (fixture.at_ms, StartStep::Event(fixture.event)))
+            .map(|fixture| (fixture.at_ms, StartStep::Event(Box::new(fixture.event))))
             .collect();
         if shot.contains("-details-") {
             steps.push((5_000, StartStep::Details));
@@ -1456,7 +1456,7 @@ impl StartShot {
 impl StartStep {
     fn apply(self, shell: &Rc<Shell>) {
         match self {
-            Self::Event(event) => shell.ctx.hub.take(vec![event]),
+            Self::Event(event) => shell.ctx.hub.take(vec![*event]),
             Self::Details => shell.player.shot_start_details(),
             Self::FromBeginning => shell.player.shot_start_from_beginning(),
         }
