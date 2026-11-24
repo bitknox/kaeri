@@ -217,7 +217,7 @@ impl Run<'_> {
                 })
                 .collect(),
             translation: companion::TranslationMenu {
-                current: match context.translation {
+                current: match self.translation {
                     Translation::Dub => "dub",
                     _ => "sub",
                 },

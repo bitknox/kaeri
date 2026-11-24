@@ -575,6 +575,14 @@
     <value>[Çöüļðñ'ţ šţàŕţ ƒŕöɱ {source}. Šţîļļ þļàýîñĝ ƒŕöɱ {current}.~~~~~~~~~~~~~~~]</value>
     <comment>Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.</comment>
   </data>
+  <data name="PlayerPanelDubFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ƒîñð éþîšöðé {episode} ðüƀƀéð. Šţîļļ þļàýîñĝ šüƀƀéð.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.</comment>
+  </data>
+  <data name="PlayerPanelSubFailed" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ƒîñð éþîšöðé {episode} šüƀƀéð. Šţîļļ þļàýîñĝ ðüƀƀéð.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.</comment>
+  </data>
   <data name="NoticeAlreadyFirstEpisode" xml:space="preserve">
     <value>[Åļŕéàðý àţ ţĥé ƒîŕšţ éþîšöðé.~~~~~~~~~]</value>
     <comment>Toast when the previous-episode control is used on the first episode.</comment>
@@ -8605,6 +8613,14 @@
   <data name="PlayerPanelStarting" xml:space="preserve">
     <value>[Šţàŕţîñĝ · {seconds} š~~~~~]</value>
     <comment>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</comment>
+  </data>
+  <data name="PlayerFindingVersionSeconds" xml:space="preserve">
+    <value>[Ƒîñðîñĝ éþîšöðé {episode} ðüƀƀéð · {seconds} š~~~~~~~~~~~]</value>
+    <comment>Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</comment>
+  </data>
+  <data name="PlayerFindingVersionSubbedSeconds" xml:space="preserve">
+    <value>[Ƒîñðîñĝ éþîšöðé {episode} šüƀƀéð · {seconds} š~~~~~~~~~~~]</value>
+    <comment>Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</comment>
   </data>
   <data name="NoticePlayingFromSource" xml:space="preserve">
     <value>[Þļàýîñĝ ƒŕöɱ {source} àţ {clock}~~~~~~~]</value>

@@ -134,7 +134,7 @@ impl Run<'_> {
                 Choice::Translation(value) => {
                     let wanted =
                         if value == "dub" { Translation::Dub } else { Translation::Sub };
-                    if wanted != context.translation {
+                    if wanted != self.translation {
                         let _ = tx.send(Event::PlayerTranslation(wanted));
                     }
                 }

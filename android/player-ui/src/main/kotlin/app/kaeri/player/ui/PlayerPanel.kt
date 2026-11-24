@@ -104,7 +104,6 @@ import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.model.EpisodeRow
-import app.kaeri.engine.model.PlayerChoice
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.i18n.Strings
 import app.kaeri.player.HeldPicture
@@ -607,11 +606,17 @@ private fun Heading(text: String) {
     )
 }
 
-/** Subtitled or Dubbed: the engine restarts the episode in the other at the playhead. */
+/**
+ * Subtitled or Dubbed: the engine finds the other version while the episode plays on, then plays
+ * it from the playhead. The picked segment spins from 600 ms, a note counts from 3 s, and a
+ * failure says so under the switch.
+ */
 @Composable
 private fun TranslationSwitch(model: PlayerModel, id: AnilistId, dub: app.kaeri.engine.model.DubExtent?, inParty: Boolean) {
     val context = LocalContext.current
-    val current = model.menus?.translation ?: Translation.SUB
+    val pending = model.versionSwitch
+    val current = pending?.takeIf { it.failed == null }?.to ?: model.menus?.translation ?: Translation.SUB
+    val now = model.clock
     val number = currentEpisode(model)?.toDoubleOrNull()
     // The dub does not reach this episode yet.
     val pastDub = dub != null && !dub.complete && number != null && number > dub.through.toDouble()
@@ -621,7 +626,7 @@ private fun TranslationSwitch(model: PlayerModel, id: AnilistId, dub: app.kaeri.
             for ((index, option) in listOf(Translation.SUB, Translation.DUB).withIndex()) {
                 SegmentedButton(
                     selected = current == option,
-                    onClick = { if (current != option) model.choose(PlayerChoice.Translation(option)) },
+                    onClick = { if (current != option) model.switchTo(option) },
                     shape = SegmentedButtonDefaults.itemShape(index, 2),
                     enabled = current == option || !(option == Translation.DUB && pastDub),
                     colors = SegmentedButtonDefaults.colors(
@@ -633,8 +638,29 @@ private fun TranslationSwitch(model: PlayerModel, id: AnilistId, dub: app.kaeri.
                         inactiveBorderColor = ObiSilk.Edge,
                     ),
                     modifier = Modifier.height(40.dp).testTag("panel-${if (option == Translation.SUB) "sub" else "dub"}"), // i18n-skip
+                    icon = {
+                        val finding = pending?.takeIf { it.to == option && it.failed == null }
+                        if (finding != null) {
+                            val shown by animateFloatAsState(if (finding.spinning(now)) 1f else 0f, Motion.fadeIn(), label = "version-spinner") // i18n-skip
+                            CircularProgressIndicator(Modifier.size(16.dp).graphicsLayer { alpha = shown }.testTag("panel-version-spinner"), color = ObiSilk.Silk, strokeWidth = 2.dp) // i18n-skip
+                        } else {
+                            SegmentedButtonDefaults.Icon(current == option)
+                        }
+                    },
                     label = { Text(if (option == Translation.SUB) Strings.playerStartSubtitled(context) else Strings.audioDubbed(context)) },
                 )
+            }
+        }
+        val episode = currentEpisode(model)
+        val finding = episode?.let { pending?.note(context, it, now) }
+        AnimatedVisibility(finding != null, enter = fadeIn(Motion.fadeIn()) + expandVertically(Motion.standard()), exit = fadeOut(Motion.fadeOut()) + shrinkVertically(Motion.quick())) {
+            Text(finding.orEmpty(), style = DetailStyle, color = ObiSilk.Haze, modifier = Modifier.testTag("panel-version-note")) // i18n-skip
+        }
+        val failed = pending?.failed
+        AnimatedVisibility(failed != null, enter = fadeIn(Motion.fadeIn()) + expandVertically(Motion.standard()), exit = fadeOut(Motion.fadeOut()) + shrinkVertically(Motion.quick())) {
+            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                Icon(PanelGlyphs.Warning, contentDescription = null, tint = ObiSilk.Vermilion, modifier = Modifier.padding(top = 2.dp).size(16.dp))
+                Text(failed?.text(context).orEmpty(), style = DetailStyle, color = ObiSilk.Vermilion)
             }
         }
         val notes = buildList {

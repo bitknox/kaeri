@@ -125,6 +125,8 @@ public static class MsgText
         Msg.NoticeAudioNowSubbed => T.NoticeAudioNowSubbed,
         Msg.NoticeAudioNowDubbed => T.NoticeAudioNowDubbed,
         Msg.PlayerPanelSwitchFailed x => T.PlayerPanelSwitchFailed(x.Source, x.Current),
+        Msg.PlayerPanelDubFailed x => T.PlayerPanelDubFailed(x.Episode),
+        Msg.PlayerPanelSubFailed x => T.PlayerPanelSubFailed(x.Episode),
         Msg.NoticeAlreadyFirstEpisode => T.NoticeAlreadyFirstEpisode,
         Msg.NoticeLastEpisode x => T.NoticeLastEpisode(x.Episode),
         Msg.NoticeNoNextEpisode => T.NoticeNoNextEpisode,

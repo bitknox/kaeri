@@ -1025,6 +1025,9 @@ impl PlayerView {
         episode_title: Option<&str>,
         resume: Option<f64>,
     ) {
+        // The episode started again, as it does in the other version when nothing played yet:
+        // no switch of it is on its way.
+        self.ui.side.version_done();
         self.begin_start(id, title, episode, episode_title, resume);
         let entry = self.ctx.hub.entry(id);
         let art = entry.and_then(|e| e.banner_url.or(e.cover_url));
@@ -2884,6 +2887,7 @@ impl PlayerView {
                         .unwrap_or_default(),
                     release: Some(source_id.clone()),
                     stream: None,
+                    translation: None,
                 },
                 Command::Player(PlayerCommand::Choose(PlayerChoice::Source(stream))) => {
                     SwitchTo {
@@ -2891,6 +2895,7 @@ impl PlayerView {
                         name: panel_demo::PLAYING.into(),
                         release: None,
                         stream: Some(stream.clone()),
+                        translation: None,
                     }
                 }
                 _ => return None,
@@ -3715,7 +3720,10 @@ impl PlayerView {
                 self.send(PlayerCommand::Choose(PlayerChoice::Source(stream)));
             }
             Act::Translation(translation) => {
-                self.send(PlayerCommand::Choose(PlayerChoice::Translation(translation)));
+                // The engine finds the other version while the episode plays on.
+                if self.ui.side.version_asked(translation) {
+                    self.send(PlayerCommand::Choose(PlayerChoice::Translation(translation)));
+                }
             }
         }
     }
@@ -3727,11 +3735,17 @@ impl PlayerView {
         match state {
             SourceSwitch::Finding { to } => {
                 tracing::info!(provider = %to.provider_id, "switch: finding");
-                self.ui.side.switching(SwitchTarget::from(to), Phase::Finding);
+                match to.translation {
+                    Some(version) => self.ui.side.versioning(version, Phase::Finding),
+                    None => self.ui.side.switching(SwitchTarget::from(to), Phase::Finding),
+                }
             }
             SourceSwitch::Loading { to, at } => {
                 tracing::info!(provider = %to.provider_id, at, "switch: loading, holding the picture");
-                self.ui.side.switching(SwitchTarget::from(to), Phase::Loading);
+                match to.translation {
+                    Some(version) => self.ui.side.versioning(version, Phase::Loading),
+                    None => self.ui.side.switching(SwitchTarget::from(to), Phase::Loading),
+                }
                 self.hold_picture(*at);
             }
             SourceSwitch::Landed { to, at } => {
@@ -3752,10 +3766,22 @@ impl PlayerView {
                             .cloned()
                             .or_else(|| self.ui.side.failed_pick().and_then(|s| s.candidate));
                         data.playing_release = known;
+                    } else if !panel_state::keeps_release(to, data.playing_release.as_ref()) {
+                        // The other version, or a stream of another source the engine moved
+                        // to: the release picked before is not what plays.
+                        data.playing_release = None;
                     }
                     self.ui.side.set_data(data);
                 }
-                self.ui.side.landed(&target);
+                if to.translation.is_some() {
+                    self.ui.side.version_done();
+                    // The other version's releases are the ones to list now.
+                    if self.panel_asked.take().is_some() {
+                        self.load_panel_sources();
+                    }
+                } else {
+                    self.ui.side.landed(&target);
+                }
                 self.release_hold(*at);
                 if !self.ui.side.is_open() && to.release.is_some() {
                     self.ctx.toast(&t::notice_playing_from_source(&to.name, &say::clock(*at)));
@@ -3763,7 +3789,19 @@ impl PlayerView {
             }
             SourceSwitch::Failed { to, at, text, .. } => {
                 tracing::info!(provider = %to.provider_id, at, "switch: did not start");
-                self.ui.side.switching(SwitchTarget::from(to), Phase::Failed(text.clone()));
+                match to.translation {
+                    Some(version) => {
+                        self.ui.side.versioning(version, Phase::Failed(text.clone()));
+                        // Nothing else says it while the panel is closed.
+                        if !self.ui.side.is_open() {
+                            self.ctx.toast(&say::msg(text));
+                        }
+                    }
+                    None => self
+                        .ui
+                        .side
+                        .switching(SwitchTarget::from(to), Phase::Failed(text.clone())),
+                }
                 self.release_hold(*at);
             }
         }

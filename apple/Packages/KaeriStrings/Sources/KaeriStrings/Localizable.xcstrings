@@ -177217,6 +177217,30 @@
         }
       }
     },
+    "player-finding-version-seconds" : {
+      "comment" : "Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. Argument 1: episode (Text). Argument 2: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding episode %1$@ dubbed · %2$lld s"
+          }
+        }
+      }
+    },
+    "player-finding-version-subbed-seconds" : {
+      "comment" : "Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. Argument 1: episode (Text). Argument 2: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Finding episode %1$@ subbed · %2$lld s"
+          }
+        }
+      }
+    },
     "player-flash-back" : {
       "comment" : "Line of the player's hint over the picture: how many seconds a jump moves the playhead back. Argument 1: seconds (Int).",
       "extractionState" : "manual",
@@ -182773,6 +182797,18 @@
         }
       }
     },
+    "player-panel-dub-failed" : {
+      "comment" : "Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't find episode %1$@ dubbed. Still playing subbed."
+          }
+        }
+      }
+    },
     "player-panel-less" : {
       "comment" : "Player panel: button under a synopsis shown whole after More, that folds it back to three lines.",
       "extractionState" : "manual",
@@ -182899,6 +182935,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Starting · %1$lld s"
+          }
+        }
+      }
+    },
+    "player-panel-sub-failed" : {
+      "comment" : "Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't find episode %1$@ subbed. Still playing dubbed."
           }
         }
       }

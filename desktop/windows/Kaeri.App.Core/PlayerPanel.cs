@@ -70,6 +70,32 @@ public sealed record PanelSwitch(SwitchTarget Target, PanelPhase Phase, long Sin
     public long? Counting(long now) => Failed is null && now - Since >= CountingFrom ? (now - Since) / 1000 : null;
 }
 
+/// <summary>
+/// A switch to the other version, subtitled or dubbed, from the pick until it lands, or its
+/// failure until the next pick. The picked half of the switch shows it: nothing for 600 ms, then
+/// a spinner, then "Finding episode 7 dubbed · 3 s" under the switch; the picture is held while
+/// it loads.
+/// </summary>
+/// <param name="Since">When it was picked, in milliseconds on the panel's clock.</param>
+public sealed record VersionSwitch(Translation To, PanelPhase Phase, long Since)
+{
+    public Msg? Failed => (Phase as PanelPhase.Failed)?.Text;
+
+    /// <summary>Whether the half's spinner shows at <paramref name="now"/>: past the silent 600 ms, and not failed.</summary>
+    public bool Spinning(long now) => Failed is null && now - Since >= PanelSwitch.Silent;
+
+    /// <summary>"Finding episode 7 dubbed · 3 s" at <paramref name="now"/>, from 3 s; else null.</summary>
+    public string? Note(string episode, long now)
+    {
+        if (Failed is not null || now - Since < PanelSwitch.CountingFrom)
+            return null;
+        var seconds = (now - Since) / 1000;
+        return To == Translation.Dub
+            ? T.PlayerFindingVersionSeconds(episode, seconds)
+            : T.PlayerFindingVersionSubbedSeconds(episode, seconds);
+    }
+}
+
 /// <summary>The episode's releases across every source, as <c>LoadSources</c> answered, in the order the sources gave them.</summary>
 public sealed record PanelReleases(uint Id, string Episode, SourceCandidate[]? Candidates)
 {
@@ -308,6 +334,9 @@ public sealed class PanelState
     /// <summary>The switch picked in the panel, from the pick until it lands, or its failure until the next pick.</summary>
     public PanelSwitch? Switch { get; private set; }
 
+    /// <summary>The switch to the other version, from the pick until it lands, or its failure until the next pick.</summary>
+    public VersionSwitch? Version { get; private set; }
+
     /// <summary>
     /// The source the episode plays from: what the start found, then what each switch landed on.
     /// Another source found, as when the episode starts again for a dub, lets go of the release
@@ -345,7 +374,31 @@ public sealed class PanelState
         Episode = (id, episode);
         Releases = null;
         Switch = null;
+        Version = null;
         PlayingRelease = null;
+    }
+
+    /// <summary>
+    /// The episode started again, as it does in the other version when nothing played yet: no
+    /// switch of it is on its way.
+    /// </summary>
+    public void Restarted() => Version = null;
+
+    /// <summary>
+    /// The other version picked: false while one is still on its way, as the engine finds a single
+    /// version at a time, and for the version playing.
+    /// </summary>
+    public bool PickedVersion(Translation to, Translation playing, long now)
+    {
+        if (Version is { Failed: null })
+            return false;
+        if (to == playing)
+        {
+            Version = null;
+            return false;
+        }
+        Version = new VersionSwitch(to, new PanelPhase.Asked(), now);
+        return true;
     }
 
     /// <summary>
@@ -375,8 +428,12 @@ public sealed class PanelState
     public void Picked(SwitchTarget target, long now, SourceCandidate? candidate = null) =>
         Switch = new PanelSwitch(target, new PanelPhase.Asked(), now, candidate);
 
-    /// <summary>What the engine's word on a switch asks of the player.</summary>
-    public enum Effect { None, Hold, Release, ReleaseAndNotice }
+    /// <summary>
+    /// What the engine's word on a switch asks of the player. <c>ReleaseAndRelist</c> lands the
+    /// other version, whose releases are the ones to list now; <c>ReleaseAndAlert</c> lets go of
+    /// a version that failed with the panel closed, which says so in its place.
+    /// </summary>
+    public enum Effect { None, Hold, Release, ReleaseAndNotice, ReleaseAndRelist, ReleaseAndAlert }
 
     /// <summary>What the engine says of a switch.</summary>
     public Effect Switched(SourceSwitch state, long now)
@@ -384,10 +441,10 @@ public sealed class PanelState
         switch (state)
         {
             case SourceSwitch.Finding f:
-                Track(SwitchTarget.Of(f.To), new PanelPhase.Finding(), now);
+                Track(f.To, new PanelPhase.Finding(), now);
                 return Effect.None;
             case SourceSwitch.Loading l:
-                Track(SwitchTarget.Of(l.To), new PanelPhase.Loading(), now);
+                Track(l.To, new PanelPhase.Loading(), now);
                 Holding = true;
                 HoldAt = l.At;
                 return Effect.Hold;
@@ -398,18 +455,27 @@ public sealed class PanelState
                 if (landed.To.Release is { } release)
                     PlayingRelease = Releases?.Candidates?.FirstOrDefault(c => c.ProviderId == landed.To.ProviderId && c.Id == release)
                         ?? Switch?.Candidate;
-                if (Switch?.On(target) != false)
-                    Switch = null;
+                else if (landed.To.Stream is null || landed.To.ProviderId != PlayingRelease?.ProviderId)
+                    // The other version, or a stream of another source the engine moved to: the
+                    // release picked before is not what plays.
+                    PlayingRelease = null;
                 Landings++;
                 Holding = false;
                 HoldAt = null;
+                if (landed.To.Translation is not null)
+                {
+                    Version = null;
+                    return Releases is not null ? Effect.ReleaseAndRelist : Effect.Release;
+                }
+                if (Switch?.On(target) != false)
+                    Switch = null;
                 return !Open && landed.To.Release is not null ? Effect.ReleaseAndNotice : Effect.Release;
             }
             case SourceSwitch.Failed failed:
-                Track(SwitchTarget.Of(failed.To), new PanelPhase.Failed(failed.Text), now);
+                Track(failed.To, new PanelPhase.Failed(failed.Text), now);
                 Holding = false;
                 HoldAt = null;
-                return Effect.Release;
+                return failed.To.Translation is not null && !Open ? Effect.ReleaseAndAlert : Effect.Release;
         }
         return Effect.None;
     }
@@ -425,6 +491,15 @@ public sealed class PanelState
     /// The row's switch moves on to <paramref name="phase"/>; a switch the panel did not pick (a
     /// stream from the old menu, a pick from a remote) gets a row of its own.
     /// </summary>
-    void Track(SwitchTarget target, PanelPhase phase, long now) =>
+    void Track(SwitchTo to, PanelPhase phase, long now)
+    {
+        if (to.Translation is { } version)
+        {
+            // The other version: one picked elsewhere (a remote) is tracked from now.
+            Version = Version is { } pending && pending.To == version ? pending with { Phase = phase } : new VersionSwitch(version, phase, now);
+            return;
+        }
+        var target = SwitchTarget.Of(to);
         Switch = Switch is { } known && known.On(target) ? known with { Phase = phase } : new PanelSwitch(target, phase, now);
+    }
 }

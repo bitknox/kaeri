@@ -4,14 +4,17 @@
 
 use std::time::Duration;
 
-use kaeri_core::stream::{Stream, StreamKind};
+use kaeri_core::{
+    media::Translation,
+    stream::{Stream, StreamKind},
+};
 use kaeri_model::{
     Msg,
     command::PlayerCommand,
     event::Event,
     hosted::TrackKind as TrackChoice,
     notice::{Notice, NoticeHint},
-    playback::SourceSwitch,
+    playback::{SourceSwitch, SwitchTo},
     starting::StartStep,
 };
 use kaeri_playback::{
@@ -271,10 +274,7 @@ impl Run<'_> {
                         Some(SwitchNews::Failed(to, reason)) if self.finding.as_ref() == Some(&to) => {
                             self.finding = None;
                             tracing::info!(provider = %to.provider_id, "a switch found nothing; playing on");
-                            let text = Msg::PlayerPanelSwitchFailed {
-                                source: to.name.clone(),
-                                current: self.source_name(stream),
-                            };
+                            let text = self.switch_failed(&to, stream);
                             let at = tracker.position();
                             self.say_switch(SourceSwitch::Failed { to, at, text, reason: Some(reason) });
                         }
@@ -777,8 +777,10 @@ impl Run<'_> {
                         // A switch lands with this frame, or one that failed is back on what
                         // played before.
                         if let Some(switching) = self.switching.take() {
-                            // A release replaces the streams that played: Sources lists its own.
-                            if switching.to.release.is_some() {
+                            // A release or the other version replaces the streams that played:
+                            // Sources lists its own.
+                            let version = switching.to.translation;
+                            if switching.to.release.is_some() || version.is_some() {
                                 self.pool_from = switching.streams.start;
                                 // The torrents it replaced are let go now, not when this file
                                 // is over: they would go on fetching beside it.
@@ -791,13 +793,35 @@ impl Run<'_> {
                                 let menus = self.menus(streams, index);
                                 let _ = link.overlay(Overlay::Menus(menus)).await;
                             }
+                            self.said_source.clone_from(&switching.to.provider_id);
                             self.say_switch(SourceSwitch::Landed {
                                 to: switching.to,
                                 at: switching.at,
                             });
+                            if let Some(version) = version {
+                                let said = match version {
+                                    Translation::Sub => Msg::NoticeAudioNowSubbed,
+                                    Translation::Dub => Msg::NoticeAudioNowDubbed,
+                                };
+                                let _ = tx.send(Event::Toast(Notice::info(said)));
+                            }
                         }
                         if let Some(failed) = self.restoring.take() {
                             self.say_switch(failed);
+                        }
+                        // The engine moved on to another source by itself: a stream that showed
+                        // no video, broke off or stalled. What names the source playing follows.
+                        if stream.provider_id != self.said_source {
+                            self.said_source.clone_from(&stream.provider_id);
+                            self.say_switch(SourceSwitch::Landed {
+                                to: SwitchTo {
+                                    provider_id: stream.provider_id.clone(),
+                                    name: self.source_name(stream),
+                                    stream: Some(index.to_string()),
+                                    ..SwitchTo::default()
+                                },
+                                at: *position,
+                            });
                         }
                         // A skip from here on is not this file's: the screen offers none.
                         if let Some(skipping) = skipping.as_mut() {
@@ -809,8 +833,8 @@ impl Run<'_> {
                         self.settings.ahead.landed();
                         // A stream that took over from one that broke off says so as it lands.
                         if let Some(from) = self.failed_over_from.take() {
-                            let source = stream.provider_id.clone();
-                            let said = if from == source {
+                            let source = self.source_name(stream);
+                            let said = if from == stream.provider_id {
                                 Msg::NoticeFailedOverSameSource { source }
                             } else {
                                 Msg::NoticeFailedOver { source }

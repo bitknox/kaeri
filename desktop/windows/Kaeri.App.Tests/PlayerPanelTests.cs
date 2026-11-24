@@ -245,6 +245,98 @@ public class PlayerPanelTests
     }
 
     [Fact]
+    public void TheOtherVersionFollowsFindingLoadingAndLanded()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases();
+        var picked = Release("tidewater", "b");
+        panel.Listed(7, "5", [Release("harbor", "a"), picked]);
+        panel.Picked(SwitchTarget.Of(picked), 0, picked);
+        panel.Switched(new SourceSwitch.Landed(new SwitchTo("tidewater", "Tidewater", "b", null), 5), 0);
+
+        Assert.True(panel.PickedVersion(Translation.Dub, Translation.Sub, 100));
+        Assert.IsType<PanelPhase.Asked>(panel.Version?.Phase);
+        Assert.False(panel.PickedVersion(Translation.Dub, Translation.Sub, 150), "one at a time");
+        var dub = new SwitchTo("", "", null, null, Translation.Dub);
+        Assert.Equal(PanelState.Effect.None, panel.Switched(new SourceSwitch.Finding(dub), 200));
+        Assert.IsType<PanelPhase.Finding>(panel.Version?.Phase);
+        Assert.Equal(100, panel.Version?.Since);
+        Assert.Null(panel.Switch);
+        var found = new SwitchTo("harbor", "Harbor Mirror", null, null, Translation.Dub);
+        Assert.Equal(PanelState.Effect.Hold, panel.Switched(new SourceSwitch.Loading(found, 40), 900));
+        Assert.True(panel.Holding);
+        Assert.Equal(PanelState.Effect.ReleaseAndRelist, panel.Switched(new SourceSwitch.Landed(found, 40), 1500));
+        Assert.Null(panel.Version);
+        Assert.False(panel.Holding);
+        Assert.Equal("Harbor Mirror", panel.PlayingSource);
+        Assert.Null(panel.PlayingRelease);
+    }
+
+    [Fact]
+    public void TheOtherVersionWaitsInSilenceThenSpinsThenCounts()
+    {
+        var version = new VersionSwitch(Translation.Dub, new PanelPhase.Finding(), 0);
+        Assert.False(version.Spinning(599));
+        Assert.True(version.Spinning(600));
+        Assert.Null(version.Note("5", 2_999));
+        Assert.Equal(T.PlayerFindingVersionSeconds("5", 4), version.Note("5", 4_200));
+        var sub = version with { To = Translation.Sub };
+        Assert.Equal(T.PlayerFindingVersionSubbedSeconds("5", 3), sub.Note("5", 3_000));
+    }
+
+    [Fact]
+    public void TheOtherVersionThatFailsSaysSoAndPlaysOn()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.PickedVersion(Translation.Dub, Translation.Sub, 0);
+        var dub = new SwitchTo("harbor", "Harbor Mirror", null, null, Translation.Dub);
+        panel.Switched(new SourceSwitch.Loading(dub, 40), 100);
+        var text = new Msg.PlayerPanelDubFailed("5");
+        Assert.Equal(PanelState.Effect.Release, panel.Switched(new SourceSwitch.Failed(dub, 40, text, null), 5000));
+        Assert.False(panel.Holding);
+        Assert.Equal(text, panel.Version?.Failed);
+        Assert.False(panel.Version!.Spinning(9000));
+        Assert.Null(panel.Version.Note("5", 9000));
+        // Picked again from the switch.
+        Assert.True(panel.PickedVersion(Translation.Dub, Translation.Sub, 9000));
+        // With the panel closed, the player says it.
+        panel.Open = false;
+        Assert.Equal(PanelState.Effect.ReleaseAndAlert, panel.Switched(new SourceSwitch.Failed(dub, 40, text, null), 9500));
+    }
+
+    [Fact]
+    public void AnotherSourceTheEngineMovedToLetsGoOfTheRelease()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases();
+        var picked = Release("tidewater", "b");
+        panel.Listed(7, "5", [picked]);
+        panel.Picked(SwitchTarget.Of(picked), 0, picked);
+        panel.Switched(new SourceSwitch.Landed(new SwitchTo("tidewater", "Tidewater", "b", null), 5), 0);
+        // Another stream of the release keeps it.
+        panel.Switched(new SourceSwitch.Landed(new SwitchTo("tidewater", "Tidewater", null, "2"), 60), 0);
+        Assert.Equal(picked, panel.PlayingRelease);
+        // Its stream broke off and the engine moved to another source.
+        panel.Switched(new SourceSwitch.Landed(new SwitchTo("harbor", "Harbor Mirror", null, "3"), 90), 0);
+        Assert.Equal("Harbor Mirror", panel.PlayingSource);
+        Assert.Null(panel.PlayingRelease);
+    }
+
+    [Fact]
+    public void AStartAgainForgetsTheVersionOnItsWay()
+    {
+        var panel = new PanelState();
+        panel.Playing(7, "5");
+        panel.PickedVersion(Translation.Dub, Translation.Sub, 0);
+        panel.Restarted();
+        Assert.Null(panel.Version);
+        Assert.False(panel.PickedVersion(Translation.Sub, Translation.Sub, 10), "the version playing is no switch");
+    }
+
+    [Fact]
     public void AnotherEpisodeDropsTheReleasesAndThePicks()
     {
         var panel = new PanelState();

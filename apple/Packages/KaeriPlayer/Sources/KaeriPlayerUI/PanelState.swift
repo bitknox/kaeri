@@ -78,6 +78,53 @@ public struct PanelSwitch: Equatable, Sendable {
     public static let counting: Duration = .seconds(3)
 }
 
+/// A switch to the other version, subtitled or dubbed, from the pick until it lands, or its
+/// failure until the next pick. The switch's fill moves at once; its picked segment shows a
+/// spinner from 600 ms, and the line under it counts the seconds from 3 s, as a row's switch does.
+public struct VersionSwitch: Equatable, Sendable {
+    public enum Phase: Equatable, Sendable {
+        /// Sent, and the engine has said nothing yet.
+        case asked
+        /// The other version is being found; the episode plays on.
+        case finding
+        /// Found and loading at the playhead; the picture is held.
+        case loading
+        /// It did not start, and the episode plays on in the version it was in: the engine's
+        /// line, for under the switch.
+        case failed(String)
+    }
+
+    /// The version picked.
+    public var to: KaeriKit.Translation
+    public var phase: Phase
+    /// When it was picked: what the wait counts from.
+    public var since: ContinuousClock.Instant
+
+    public var failed: String? {
+        if case .failed(let text) = phase { return text }
+        return nil
+    }
+
+    /// Whether the picked segment shows a spinner: on its way, and past the silent 600 ms.
+    public func spins(at now: ContinuousClock.Instant) -> Bool {
+        failed == nil && now - since >= PanelSwitch.silent
+    }
+
+    /// The seconds the line under the switch counts, from 3 s; nil before then or once it failed.
+    public func counting(at now: ContinuousClock.Instant) -> Int? {
+        guard failed == nil, now - since >= PanelSwitch.counting else { return nil }
+        return Int((now - since).components.seconds)
+    }
+
+    /// "Finding episode 4 dubbed · 5 s", from 3 s.
+    public func note(episode: String, at now: ContinuousClock.Instant) -> String? {
+        guard let seconds = counting(at: now) else { return nil }
+        return to == .dub
+            ? L.playerFindingVersionSeconds(episode: episode, seconds: seconds)
+            : L.playerFindingVersionSubbedSeconds(episode: episode, seconds: seconds)
+    }
+}
+
 /// The episode's releases across every source, for the panel's Sources tab: the engine's answer
 /// to `LoadSources`, in the order the sources gave them.
 public struct PanelReleases: Equatable, Sendable {

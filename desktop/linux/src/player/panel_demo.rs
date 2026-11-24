@@ -327,6 +327,7 @@ mod tests {
             name: "Example index".into(),
             release: Some("r4".into()),
             stream: None,
+            translation: None,
         };
         let steps = script(&to, AT, ending("release/index/r4", 1));
         assert!(steps.iter().all(|(_, s)| !matches!(s, SourceSwitch::Loading { .. })));

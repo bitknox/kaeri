@@ -5,7 +5,7 @@
 
 use std::time::{Duration, Instant};
 
-use kaeri_core::traits::SourceCandidate;
+use kaeri_core::{media::Translation, traits::SourceCandidate};
 use kaeri_i18n::t;
 use kaeri_model::{
     Msg,
@@ -186,6 +186,65 @@ impl PanelSwitch {
             _ => Self { target, phase, since: now, candidate: None },
         }
     }
+}
+
+/// A switch to the other version, subtitled or dubbed, from the pick until it lands, or its
+/// failure until the next pick. The picked half of the switch shows it: nothing for 600 ms, then
+/// a spinner, then "Finding episode 7 dubbed · 3 s" under the switch.
+#[derive(Debug, Clone, PartialEq)]
+pub struct VersionSwitch {
+    pub to: Translation,
+    pub phase: Phase,
+    /// When it was picked: what the wait counts from.
+    pub since: Instant,
+}
+
+impl VersionSwitch {
+    pub fn asked(to: Translation, now: Instant) -> Self {
+        Self { to, phase: Phase::Asked, since: now }
+    }
+
+    pub fn failed(&self) -> Option<&Msg> {
+        match &self.phase {
+            Phase::Failed(text) => Some(text),
+            _ => None,
+        }
+    }
+
+    /// Whether the switch's spinner shows at `now`: past the silent 600 ms, and not failed.
+    pub fn spinning(&self, now: Instant) -> bool {
+        self.failed().is_none() && now.saturating_duration_since(self.since) >= SILENT
+    }
+
+    /// "Finding episode 7 dubbed · 3 s" at `now`, from 3 s.
+    pub fn note(&self, episode: &str, now: Instant) -> Option<String> {
+        let waited = now.saturating_duration_since(self.since);
+        if self.failed().is_some() || waited < COUNTING {
+            return None;
+        }
+        let seconds = waited.as_secs() as i64;
+        Some(match self.to {
+            Translation::Dub => t::player_finding_version_seconds(episode, seconds),
+            Translation::Sub => t::player_finding_version_subbed_seconds(episode, seconds),
+        })
+    }
+
+    /// The switch moves on to `phase`; one picked elsewhere (a remote) is tracked from now.
+    pub fn track(known: Option<Self>, to: Translation, phase: Phase, now: Instant) -> Self {
+        match known {
+            Some(known) if known.to == to => Self { phase, ..known },
+            _ => Self { to, phase, since: now },
+        }
+    }
+}
+
+/// Whether the release playing still plays once the engine says a switch landed on `to`: a
+/// release names itself, and a stream of the release's own source keeps it. The other version,
+/// or a stream of another source the engine moved to, lets it go.
+pub fn keeps_release(to: &SwitchTo, playing: Option<&SourceCandidate>) -> bool {
+    to.translation.is_none()
+        && to.stream.is_some()
+        && playing.is_some_and(|release| release.provider_id == to.provider_id)
 }
 
 /// A revealed row's buttons.
@@ -422,6 +481,61 @@ mod tests {
             dubbed: false,
             auto_pick: false,
         }
+    }
+
+    #[test]
+    fn the_other_version_is_silent_then_spins_then_counts() {
+        let start = Instant::now();
+        let version = VersionSwitch::asked(Translation::Dub, start);
+        assert!(!version.spinning(start + Duration::from_millis(599)));
+        assert!(version.spinning(start + SILENT));
+        assert_eq!(version.note("7", start + Duration::from_millis(2999)), None);
+        assert_eq!(
+            version.note("7", start + Duration::from_millis(4200)),
+            Some(t::player_finding_version_seconds("7", 4))
+        );
+        let sub = VersionSwitch::asked(Translation::Sub, start);
+        assert_eq!(
+            sub.note("7", start + COUNTING),
+            Some(t::player_finding_version_subbed_seconds("7", 3))
+        );
+    }
+
+    #[test]
+    fn the_other_version_failed_neither_spins_nor_counts_and_keeps_its_wait() {
+        let start = Instant::now();
+        let asked = VersionSwitch::asked(Translation::Dub, start);
+        let later = start + Duration::from_secs(5);
+        let finding =
+            VersionSwitch::track(Some(asked), Translation::Dub, Phase::Finding, later);
+        assert_eq!(finding.since, start, "the wait counts from the pick");
+        let failed = VersionSwitch::track(
+            Some(finding),
+            Translation::Dub,
+            Phase::Failed(Msg::PlayerPanelDubFailed { episode: "7".into() }),
+            later,
+        );
+        assert!(!failed.spinning(later));
+        assert_eq!(failed.note("7", later), None);
+        let other = VersionSwitch::track(Some(failed), Translation::Sub, Phase::Finding, later);
+        assert_eq!(other.since, later, "one picked elsewhere counts from now");
+    }
+
+    #[test]
+    fn a_landing_elsewhere_lets_the_release_go() {
+        let release = candidate("r1");
+        let stream = |provider: &str| SwitchTo {
+            provider_id: provider.into(),
+            name: "Example index".into(),
+            stream: Some("2".into()),
+            ..SwitchTo::default()
+        };
+        assert!(keeps_release(&stream("index"), Some(&release)), "another stream of it");
+        assert!(!keeps_release(&stream("harbor"), Some(&release)), "another source took over");
+        let version = SwitchTo { translation: Some(Translation::Dub), ..stream("index") };
+        assert!(!keeps_release(&version, Some(&release)), "the other version");
+        let source = SwitchTo { stream: None, ..stream("index") };
+        assert!(!keeps_release(&source, Some(&release)), "the source's own pick");
     }
 
     #[test]

@@ -853,6 +853,18 @@ player-translation = { -subbed-cap } or { -dubbed }
 # @arg seconds: int
 player-panel-starting = Starting · { $seconds } s
 
+# Player panel, under the subtitled or dubbed switch while the dubbed version of the episode
+# playing is being found, from 3 s. The episode plays on meanwhile.
+# @arg episode: text
+# @arg seconds: int
+player-finding-version-seconds = Finding episode { $episode } { -dubbed } · { $seconds } s
+
+# Player panel, under the subtitled or dubbed switch while the subbed version of the episode
+# playing is being found, from 3 s. The episode plays on meanwhile.
+# @arg episode: text
+# @arg seconds: int
+player-finding-version-subbed-seconds = Finding episode { $episode } { -subbed } · { $seconds } s
+
 # Notice when another source started playing while the player panel was closed.
 # @arg source: text
 # @arg clock: text

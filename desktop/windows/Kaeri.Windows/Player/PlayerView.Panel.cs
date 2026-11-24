@@ -1206,10 +1206,21 @@ public sealed partial class PlayerView
     /// <summary>The failure last faded in, so a rebuild does not fade it in again.</summary>
     PanelSwitch? panelFailShown;
 
-    /// <summary>Subtitled or Dubbed: the engine restarts the episode in the other at the playhead.</summary>
+    /// <summary>The Subtitled or Dubbed switch's spinner over each half, and its finding note: what the clock moves on.</summary>
+    readonly List<(Engine.Core.Translation Half, FrameworkElement Spinner)> versionSpinners = [];
+    TextBlock? versionNote;
+
+    /// <summary>
+    /// Subtitled or Dubbed: the engine finds the other version while the episode plays on, then
+    /// plays it from the playhead. The picked half spins from 600 ms, a note counts from 3 s, and a
+    /// failure says so under the switch.
+    /// </summary>
     FrameworkElement TranslationSwitch(Ctx c)
     {
-        var current = menus?.Translation ?? Engine.Core.Translation.Sub;
+        var playing = menus?.Translation ?? Engine.Core.Translation.Sub;
+        var pending = panel.Version is { Failed: null } v ? v : null;
+        var current = pending?.To ?? playing;
+        versionSpinners.Clear();
         var dub = c.Known.Dubs.GetValueOrDefault(playingId);
         var pastDub = PanelWords.PastDub(dub, playingEpisode);
         var block = new StackPanel { Padding = new Thickness(8, 8, 8, 4), Spacing = 8 };
@@ -1230,15 +1241,57 @@ public sealed partial class PlayerView
                 Tag = option == Engine.Core.Translation.Sub ? "translation/sub" : "translation/dub",
             };
             var chosen = option;
-            segment.Checked += (_, _) =>
-            {
-                if ((menus?.Translation ?? Engine.Core.Translation.Sub) != chosen)
-                    Send(new PlayerCommand.Choose(new PlayerChoice.Translation(chosen)));
-            };
-            Grid.SetColumn(segment, at++);
+            segment.Checked += (_, _) => PickVersion(chosen);
+            Grid.SetColumn(segment, at);
             track.Children.Add(segment);
+            // At the half's leading edge, over it, so its label stays where it was.
+            var spins = pending is { } p && p.To == option;
+            var ring = new ProgressRing
+            {
+                Width = 14,
+                Height = 14,
+                IsActive = spins,
+                IsHitTestVisible = false,
+                HorizontalAlignment = HorizontalAlignment.Left,
+                Margin = new Thickness(10, 0, 0, 0),
+                Foreground = Res("SilkBrush"),
+                Opacity = 0,
+                Visibility = spins ? Visibility.Visible : Visibility.Collapsed,
+            };
+            if (spins && pending!.Spinning(PanelNow))
+            {
+                ring.Opacity = 1;
+                ring.Tag = "shown";
+            }
+            Grid.SetColumn(ring, at++);
+            track.Children.Add(ring);
+            if (spins)
+                versionSpinners.Add((option, ring));
         }
         block.Children.Add(track);
+        var finding = pending?.Note(playingEpisode, PanelNow);
+        versionNote = DetailText(finding ?? "");
+        versionNote.Visibility = finding is null ? Visibility.Collapsed : Visibility.Visible;
+        block.Children.Add(versionNote);
+        if (panel.Version?.Failed is { } failed)
+        {
+            var said = new Grid { ColumnSpacing = 6 };
+            said.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+            said.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+            said.Children.Add(new FontIcon { Glyph = "", FontSize = 14, Margin = new Thickness(0, 1, 0, 0), VerticalAlignment = VerticalAlignment.Top, Foreground = Res("SystemFillColorCriticalBrush") });
+            var text = DetailText(failed.Text());
+            text.Foreground = Res("SystemFillColorCriticalBrush");
+            AutomationProperties.SetLiveSetting(text, AutomationLiveSetting.Assertive);
+            Grid.SetColumn(text, 1);
+            said.Children.Add(text);
+            block.Children.Add(said);
+            if (versionFailShown != panel.Version)
+            {
+                versionFailShown = panel.Version;
+                said.Opacity = 0;
+                Motion.FadeTo(said, 1, Motion.FadeInTime);
+            }
+        }
         var notes = new StackPanel { Spacing = 2 };
         if (Wording.DubLine(dub) is { } line)
             notes.Children.Add(DetailText(line));
@@ -1249,7 +1302,19 @@ public sealed partial class PlayerView
         return block;
     }
 
+    /// <summary>The version failure last faded in, so a rebuild does not fade it in again.</summary>
+    VersionSwitch? versionFailShown;
+
     // Switching.
+
+    /// <summary>The other version, from the playhead: the engine finds it while the episode plays on.</summary>
+    void PickVersion(Engine.Core.Translation to)
+    {
+        still.Input();
+        if (panel.PickedVersion(to, menus?.Translation ?? Engine.Core.Translation.Sub, PanelNow))
+            Send(new PlayerCommand.Choose(new PlayerChoice.Translation(to)));
+        BuildSources();
+    }
 
     /// <summary>A release from the playhead, for this episode only: the engine finds it while the episode plays on.</summary>
     void SwitchToRelease(SourceCandidate candidate)
@@ -1298,6 +1363,16 @@ public sealed partial class PlayerView
                 ReleaseHeld();
                 Alert(T.NoticePlayingFromSource(landed.To.Name, Wording.Clock(landed.At)));
                 break;
+            case PanelState.Effect.ReleaseAndRelist:
+                ReleaseHeld();
+                // The other version's releases are the ones to list now.
+                if (ctx is { } c && panel.AskReleases(again: true) is { } asked)
+                    c.Send(new Command.LoadSources(asked.Id, asked.Episode));
+                break;
+            case PanelState.Effect.ReleaseAndAlert when state is SourceSwitch.Failed failed:
+                ReleaseHeld();
+                Alert(failed.Text.Text());
+                break;
         }
         if (state is SourceSwitch.Landed)
             PanelSourcesScroll.ChangeView(null, 0, null, !Motion.Enabled);
@@ -1314,6 +1389,27 @@ public sealed partial class PlayerView
             return;
         }
         var now = PanelNow;
+        if (panel.Version is { Failed: null } version)
+        {
+            foreach (var (half, ring) in versionSpinners)
+            {
+                if (half == version.To && version.Spinning(now) && ring.Tag is null)
+                {
+                    ring.Tag = "shown";
+                    Motion.FadeTo(ring, 1, Motion.FadeInTime);
+                }
+            }
+            if (versionNote is { } note && version.Note(playingEpisode, now) is { } line)
+            {
+                note.Text = line;
+                if (note.Visibility != Visibility.Visible)
+                {
+                    note.Visibility = Visibility.Visible;
+                    note.Opacity = 0;
+                    Motion.FadeTo(note, 1, Motion.FadeInTime);
+                }
+            }
+        }
         foreach (var (target, spinner, detail, counting) in panelChoices)
         {
             if (panel.Switch is not { } s || !s.On(target) || s.Failed is not null)

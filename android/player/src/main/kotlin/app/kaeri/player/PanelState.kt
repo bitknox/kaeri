@@ -89,6 +89,36 @@ data class PanelSwitch(
     }
 }
 
+/**
+ * A switch to the other version, subtitled or dubbed, from the pick until it lands, or its failure
+ * until the next pick. The picked segment shows it: nothing for 600 ms, then a spinner, then
+ * "Finding episode 7 dubbed · 3 s" under the switch; the picture is held while it loads.
+ */
+data class VersionSwitch(
+    val to: app.kaeri.engine.core.Translation,
+    val phase: PanelSwitch.Phase,
+    /** When it was picked, on the model's clock. */
+    val since: Long,
+) {
+    val failed: Msg? get() = (phase as? PanelSwitch.Phase.Failed)?.text
+
+    /** Whether the segment's spinner shows at [now]: past the silent 600 ms, and not failed. */
+    fun spinning(now: Long): Boolean = failed == null && now - since >= PanelSwitch.SILENT
+
+    /** The whole seconds waited at [now], once the note shows under the switch; else null. */
+    fun counting(now: Long): Int? =
+        if (failed == null && now - since >= PanelSwitch.COUNTING) ((now - since) / 1000).toInt() else null
+
+    /** "Finding episode 7 dubbed · 3 s" at [now], from 3 s; else null. */
+    fun note(context: Context, episode: String, now: Long): String? = counting(now)?.let { seconds ->
+        if (to == app.kaeri.engine.core.Translation.DUB) {
+            Strings.playerFindingVersionSeconds(context, episode, seconds)
+        } else {
+            Strings.playerFindingVersionSubbedSeconds(context, episode, seconds)
+        }
+    }
+}
+
 /** The episode's releases across every source: the engine's answer to `LoadSources`, in the order the sources gave them. */
 data class PanelReleases(val id: app.kaeri.engine.core.AnilistId, val episode: String, val candidates: List<SourceCandidate>?) {
     /** One source's releases, in the order it gave them. */

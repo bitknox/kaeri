@@ -30,6 +30,7 @@ use kaeri_model::{
 
 use super::panel_state::{
     self as state, Clock, EpisodeAction, PanelSwitch, PanelTab, Phase, Playhead, SwitchTarget,
+    VersionSwitch,
 };
 use crate::{hub::Hub, motion, say, synopsis};
 
@@ -115,6 +116,17 @@ struct Choice {
     alert_line: gtk::Label,
 }
 
+/// The Subtitled or Dubbed switch's widgets: a spinner over each half, the finding note and a
+/// failure under it.
+struct VersionRow {
+    toggles: adw::ToggleGroup,
+    spinners: [gtk::Spinner; 2],
+    note: gtk::Revealer,
+    note_line: gtk::Label,
+    alert: gtk::Revealer,
+    alert_line: gtk::Label,
+}
+
 /// What a Sources row does when it is activated.
 enum RowDoes {
     Release(SourceCandidate),
@@ -146,10 +158,12 @@ pub struct SidePanel {
     src_does: RefCell<Vec<(gtk::ListBoxRow, RowDoes)>>,
     /// Each folding source's releases, by its id: their rows.
     folds: RefCell<HashMap<String, (gtk::Image, Vec<gtk::ListBoxRow>)>>,
-    translation: RefCell<Option<adw::ToggleGroup>>,
+    translation: RefCell<Option<VersionRow>>,
     data: RefCell<Data>,
     playhead: Cell<Playhead>,
     switch: RefCell<Option<PanelSwitch>>,
+    /// The switch to the other version, from the pick until it lands or its failure.
+    version: RefCell<Option<VersionSwitch>>,
     tick: RefCell<Option<glib::SourceId>>,
     /// The row revealed, by its number, and the synopses shown whole.
     revealed: RefCell<Option<String>>,
@@ -266,6 +280,7 @@ impl SidePanel {
             data: RefCell::default(),
             playhead: Cell::default(),
             switch: RefCell::default(),
+            version: RefCell::default(),
             tick: RefCell::default(),
             revealed: RefCell::default(),
             whole: RefCell::default(),
@@ -602,6 +617,32 @@ impl SidePanel {
         }
     }
 
+    /// The other version was picked: false while one is still on its way, as the engine finds
+    /// a single version at a time.
+    pub fn version_asked(&self, to: Translation) -> bool {
+        if self.version.borrow().as_ref().is_some_and(|v| v.failed().is_none()) {
+            return false;
+        }
+        self.version.replace(Some(VersionSwitch::asked(to, Instant::now())));
+        self.show_switch();
+        true
+    }
+
+    /// The engine says how the switch to the other version goes.
+    pub fn versioning(&self, to: Translation, phase: Phase) {
+        let known = self.version.take();
+        self.version.replace(Some(VersionSwitch::track(known, to, phase, Instant::now())));
+        self.show_switch();
+    }
+
+    /// The other version landed, or the episode started again: no switch of it is on its way.
+    pub fn version_done(&self) {
+        if self.version.take().is_some() {
+            self.fill_sources();
+            self.show_switch();
+        }
+    }
+
     /// The failed pick, for Try again.
     pub fn failed_pick(&self) -> Option<PanelSwitch> {
         self.switch.borrow().clone().filter(|s| s.failed().is_some())
@@ -658,14 +699,14 @@ impl SidePanel {
                 }
             }
         }
+        self.show_version(now);
         // A switch under way redraws its row until it lands or fails.
-        let pending = switch.as_ref().is_some_and(|s| s.failed().is_none());
+        let pending = self.pending();
         if pending && self.tick.borrow().is_none() {
             let me = self.me.clone();
             let source = glib::timeout_add_local(TICK, move || {
                 let Some(panel) = me.upgrade() else { return glib::ControlFlow::Break };
-                let pending =
-                    panel.switch.borrow().as_ref().is_some_and(|s| s.failed().is_none());
+                let pending = panel.pending();
                 if !pending {
                     panel.tick.replace(None);
                     panel.show_switch();
@@ -677,6 +718,45 @@ impl SidePanel {
             self.tick.replace(Some(source));
         } else if !pending && let Some(source) = self.tick.take() {
             source.remove();
+        }
+    }
+
+    /// Whether a switch, of source or version, is on its way.
+    fn pending(&self) -> bool {
+        self.switch.borrow().as_ref().is_some_and(|s| s.failed().is_none())
+            || self.version.borrow().as_ref().is_some_and(|v| v.failed().is_none())
+    }
+
+    /// The Subtitled or Dubbed switch follows the switch to the other version: the picked half
+    /// spins from 600 ms, the note counts from 3 s, and a failure says so under it.
+    fn show_version(&self, now: Instant) {
+        let version = self.version.borrow().clone();
+        let row = self.translation.borrow();
+        let Some(row) = row.as_ref() else { return };
+        for (spinner, half) in row.spinners.iter().zip([Translation::Sub, Translation::Dub]) {
+            let spinning = version.as_ref().is_some_and(|v| v.to == half && v.spinning(now));
+            spinner.set_spinning(spinning);
+            spinner.set_visible(spinning);
+        }
+        let episode = self.data.borrow().current.clone().unwrap_or_default();
+        let note = version.as_ref().and_then(|v| v.note(&episode, now));
+        if let Some(note) = &note {
+            row.note_line.set_label(note);
+        }
+        if row.note.reveals_child() != note.is_some() {
+            row.note.set_reveal_child(note.is_some());
+        }
+        let failed = version.as_ref().and_then(|v| v.failed().cloned());
+        if let Some(text) = &failed {
+            row.alert_line.set_label(&say::msg(text));
+            // The switch goes back to what plays.
+            let playing = self.data.borrow().translation;
+            if row.toggles.active_name().as_deref() != Some(playing.as_str()) {
+                row.toggles.set_active_name(Some(playing.as_str()));
+            }
+        }
+        if row.alert.reveals_child() != failed.is_some() {
+            row.alert.set_reveal_child(failed.is_some());
         }
     }
 
@@ -1427,7 +1507,14 @@ impl SidePanel {
             .is_some_and(|d| !d.complete && number.is_some_and(|n| n > f64::from(d.through)));
         dub.set_enabled(data.translation == Translation::Dub || !past);
         toggles.add(dub);
-        toggles.set_active_name(Some(data.translation.as_str()));
+        // The half picked shows while that version is found.
+        let shown = self
+            .version
+            .borrow()
+            .as_ref()
+            .filter(|v| v.failed().is_none())
+            .map_or(data.translation, |v| v.to);
+        toggles.set_active_name(Some(shown.as_str()));
         toggles
             .upcast_ref::<gtk::Widget>()
             .update_property(&[gtk::accessible::Property::Label(&t::player_translation())]);
@@ -1443,15 +1530,61 @@ impl SidePanel {
                 panel.say(Act::Translation(picked));
             }
         });
+        // A spinner at the leading edge of each half, over the switch, so its labels stay put.
+        let spinners = [gtk::Spinner::new(), gtk::Spinner::new()];
+        let halves = gtk::Box::new(gtk::Orientation::Horizontal, 0);
+        halves.set_homogeneous(true);
+        halves.set_can_target(false);
+        for spinner in &spinners {
+            spinner.set_size_request(14, 14);
+            spinner.set_halign(gtk::Align::Start);
+            spinner.set_valign(gtk::Align::Center);
+            spinner.set_margin_start(12);
+            spinner.set_visible(false);
+            halves.append(spinner);
+        }
+        let over = gtk::Overlay::new();
+        over.set_child(Some(&toggles));
+        over.add_overlay(&halves);
+        let note_line = crate::widgets::haze("", "panel-row-detail");
+        wrap(&note_line);
+        let note = gtk::Revealer::new();
+        note.set_transition_type(gtk::RevealerTransitionType::SlideDown);
+        note.set_transition_duration(if motion::reduced() { 0 } else { REVEAL_MS });
+        note.set_child(Some(&note_line));
+        let alert_line = gtk::Label::new(None);
+        alert_line.add_css_class("panel-alert");
+        wrap(&alert_line);
+        alert_line.set_accessible_role(gtk::AccessibleRole::Alert);
+        let icon = gtk::Image::from_icon_name("dialog-warning-symbolic");
+        icon.add_css_class("panel-alert");
+        icon.set_valign(gtk::Align::Start);
+        icon.set_margin_top(2);
+        let said = gtk::Box::new(gtk::Orientation::Horizontal, 6);
+        said.append(&icon);
+        said.append(&alert_line);
+        let alert = gtk::Revealer::new();
+        alert.set_transition_type(gtk::RevealerTransitionType::SlideDown);
+        alert.set_transition_duration(if motion::reduced() { 0 } else { REVEAL_MS });
+        alert.set_child(Some(&said));
         let block = gtk::Box::new(gtk::Orientation::Vertical, 8);
         block.add_css_class("panel-translation-block");
-        block.append(&toggles);
+        block.append(&over);
+        block.append(&note);
+        block.append(&alert);
         if let Some(line) = say::dub_line(data.dub.as_ref()) {
             let note = crate::widgets::haze(&line, "panel-row-detail");
             wrap(&note);
             block.append(&note);
         }
-        self.translation.replace(Some(toggles));
+        self.translation.replace(Some(VersionRow {
+            toggles,
+            spinners,
+            note,
+            note_line,
+            alert,
+            alert_line,
+        }));
         // A stop for the arrows, as the other rows are; Tab goes on into the switch.
         let row = still_row(&block);
         row.set_focusable(true);

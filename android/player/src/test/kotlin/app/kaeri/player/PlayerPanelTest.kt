@@ -6,6 +6,7 @@ package app.kaeri.player
 
 import android.graphics.Bitmap
 import app.kaeri.engine.core.SourceCandidate
+import app.kaeri.engine.core.Translation
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.MpvOption
@@ -169,6 +170,84 @@ class PlayerPanelTest {
         assertNull(rig.model.panelReleases)
         assertNull(rig.model.panelSwitch)
         assertNull("a pick is for its episode only", rig.model.playingRelease)
+    }
+
+    private val toDub = SwitchTo("", "", null, null, Translation.DUB)
+    private val dubOnQuiet = SwitchTo("quiet", "Quiet Shelf", null, null, Translation.DUB)
+
+    @Test
+    fun theOtherVersionFollowsFindingLoadingAndLanded() = runTest {
+        val rig = playing()
+        rig.model.switchTo(harbor)
+        rig.switch(SourceSwitch.Landed(toHarbor, 600.0))
+        val picked = testScheduler.currentTime
+        rig.model.switchTo(Translation.DUB)
+        assertEquals(PlayerCommand.Choose(PlayerChoice.Translation(Translation.DUB)), rig.controls.last())
+        assertEquals(PanelSwitch.Phase.Asked, rig.model.versionSwitch?.phase)
+        assertFalse("silent at first", rig.model.versionSwitch!!.spinning(picked + 599))
+        assertTrue(rig.model.versionSwitch!!.spinning(picked + 600))
+        assertNull(rig.model.versionSwitch!!.counting(picked + 2_999))
+        assertEquals(3, rig.model.versionSwitch!!.counting(picked + 3_000))
+
+        rig.switch(SourceSwitch.Finding(toDub))
+        assertEquals(PanelSwitch.Phase.Finding, rig.model.versionSwitch?.phase)
+        assertEquals("the wait counts from the pick", picked, rig.model.versionSwitch?.since)
+        assertNull("no source row shows the version's switch", rig.model.panelSwitch)
+        rig.switch(SourceSwitch.Loading(dubOnQuiet, 600.0))
+        assertTrue("the picture is held while the other version loads", rig.model.holding)
+
+        val asked = rig.sent.size
+        rig.switch(SourceSwitch.Landed(dubOnQuiet, 600.0))
+        assertNull(rig.model.versionSwitch)
+        assertFalse(rig.model.holding)
+        assertEquals("Quiet Shelf", rig.model.playingSource)
+        assertNull("the release picked was the other version's", rig.model.playingRelease)
+        assertEquals("the dub's releases are listed", listOf(Command.LoadSources(900_001u, "7")), rig.sent.drop(asked).filterIsInstance<Command.LoadSources>())
+    }
+
+    @Test
+    fun aVersionThatFailsSaysSoUnderTheSwitchAndPlaysOn() = runTest {
+        val rig = playing()
+        rig.model.switchTo(Translation.DUB)
+        rig.switch(SourceSwitch.Loading(dubOnQuiet, 600.0))
+        val text = Msg.PlayerPanelDubFailed("7")
+        rig.switch(SourceSwitch.Failed(dubOnQuiet, 600.0, text, null))
+        assertEquals(text, rig.model.versionSwitch?.failed)
+        assertFalse(rig.model.versionSwitch!!.spinning(testScheduler.currentTime + 10_000))
+        assertFalse(rig.model.holding)
+        // Picked again from the switch.
+        rig.model.switchTo(Translation.DUB)
+        assertEquals(PanelSwitch.Phase.Asked, rig.model.versionSwitch?.phase)
+    }
+
+    @Test
+    fun oneVersionSwitchAtATime() = runTest {
+        val rig = playing()
+        rig.model.switchTo(Translation.DUB)
+        val sent = rig.controls.size
+        rig.model.switchTo(Translation.DUB)
+        assertEquals(sent, rig.controls.size)
+    }
+
+    @Test
+    fun anotherSourceTheEngineMovedToIsWhatPlaysNow() = runTest {
+        val rig = playing()
+        rig.model.switchTo(harbor)
+        rig.switch(SourceSwitch.Landed(toHarbor, 600.0))
+        assertEquals(harbor, rig.model.playingRelease)
+        // The release's stream broke off and another source took over.
+        rig.switch(SourceSwitch.Landed(SwitchTo("quiet", "Quiet Shelf", null, "3"), 700.0))
+        assertEquals("Quiet Shelf", rig.model.playingSource)
+        assertNull(rig.model.playingRelease)
+    }
+
+    @Test
+    fun anotherStreamOfTheReleasePlayingKeepsTheRelease() = runTest {
+        val rig = playing()
+        rig.model.switchTo(harbor)
+        rig.switch(SourceSwitch.Landed(toHarbor, 600.0))
+        rig.switch(SourceSwitch.Landed(SwitchTo("harbor", "Harbor Mirror", null, "2"), 700.0))
+        assertEquals(harbor, rig.model.playingRelease)
     }
 
     @Test

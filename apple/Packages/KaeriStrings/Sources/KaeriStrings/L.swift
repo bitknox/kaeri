@@ -530,6 +530,16 @@ public enum L {
         Self.format("player-panel-switch-failed", fallback: "Couldn't start from %1$@. Still playing from %2$@.", source, current)
     }
 
+    /// Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+    public static func playerPanelDubFailed(episode: String) -> String {
+        Self.format("player-panel-dub-failed", fallback: "Couldn't find episode %1$@ dubbed. Still playing subbed.", episode)
+    }
+
+    /// Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+    public static func playerPanelSubFailed(episode: String) -> String {
+        Self.format("player-panel-sub-failed", fallback: "Couldn't find episode %1$@ subbed. Still playing dubbed.", episode)
+    }
+
     /// Toast when the previous-episode control is used on the first episode.
     public static var noticeAlreadyFirstEpisode: String { string("notice-already-first-episode", fallback: "Already at the first episode.") }
 
@@ -8730,6 +8740,16 @@ public enum L {
     /// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
     public static func playerPanelStarting(seconds: Int) -> String {
         Self.format("player-panel-starting", fallback: "Starting · %1$lld s", seconds)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+    public static func playerFindingVersionSeconds(episode: String, seconds: Int) -> String {
+        Self.format("player-finding-version-seconds", fallback: "Finding episode %1$@ dubbed · %2$lld s", episode, seconds)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+    public static func playerFindingVersionSubbedSeconds(episode: String, seconds: Int) -> String {
+        Self.format("player-finding-version-subbed-seconds", fallback: "Finding episode %1$@ subbed · %2$lld s", episode, seconds)
     }
 
     /// Notice when another source started playing while the player panel was closed.

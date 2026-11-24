@@ -409,6 +409,8 @@ pub async fn play(
         restoring: None,
         pool_from: 0,
         sources: sources.clone(),
+        translation: context.translation,
+        said_source: first.provider_id.clone(),
     };
 
     // Read once: every stream this playback tries is the same series in the same translation.
@@ -428,6 +430,10 @@ pub async fn play(
     } else {
         None
     };
+
+    // The tracks the viewer chose before a switch to the other version, which plays with its
+    // own: back to them when the version shows no frame.
+    let mut before_version = None;
 
     // Grows when the sources after the pool are asked: see `Further`.
     let mut total = streams.len();
@@ -564,7 +570,7 @@ pub async fn play(
             subtitle_language: settings.subtitle_language.clone(),
             speed: context.speed,
             volume: context.volume,
-            dub: context.translation == Translation::Dub,
+            dub: run.translation == Translation::Dub,
             fullscreen: settings.fullscreen,
             mpv_options: settings.mpv_options.clone(),
         };
@@ -616,11 +622,11 @@ pub async fn play(
         // The track policy belongs to the process; point it at this series before the file
         // loads, and settle what it still owed the previous one.
         let preferences = TrackPreferences {
-            translation: context.translation,
+            translation: run.translation,
             language: settings.subtitle_language.clone(),
         };
         let owed = current.tracks.prepare(preferences, memory.clone());
-        let key = (context.anilist_id, context.translation);
+        let key = (context.anilist_id, run.translation);
         if let Some(previous) = current.tracks_for.replace(key) {
             for action in owed {
                 if let TrackAction::Remember(memory) = action {
@@ -649,7 +655,7 @@ pub async fn play(
                 .and_then(|e| e.title.clone()),
             image: context.banner_url.clone().or_else(|| context.cover_url.clone()),
             subtitle_language: settings.subtitle_language.clone(),
-            dub: context.translation == Translation::Dub,
+            dub: run.translation == Translation::Dub,
             audio_memory: current.tracks.memory().audio.clone(),
         });
         // The audio of this file's head and tail, for finding its skip times: listened for
@@ -789,8 +795,16 @@ pub async fn play(
         };
 
         match outcome {
-            FileOutcome::Swap { to: asked, streams: found, at } => {
+            FileOutcome::Swap { to: mut asked, streams: found, at } => {
                 let at = at.or(resume_at).unwrap_or_default();
+                // The other version names its source once it is found.
+                if asked.translation.is_some()
+                    && let Some(first) = found.first()
+                {
+                    asked.name = run.source_name(first);
+                    asked.provider_id.clone_from(&first.provider_id);
+                    before_version = Some(memory.take());
+                }
                 let from = streams.len();
                 streams.extend(found);
                 total = streams.len();
@@ -815,8 +829,8 @@ pub async fn play(
                     let asked = SwitchTo {
                         provider_id: streams[to].provider_id.clone(),
                         name: run.source_name(&streams[to]),
-                        release: None,
                         stream: Some(to.to_string()),
+                        ..SwitchTo::default()
                     };
                     run.begin_switch(asked, at, index, to..to + 1);
                 }
@@ -937,16 +951,19 @@ pub async fn play(
                         back_to = switching.back_to,
                         "the switch showed no frame; going back"
                     );
-                    let text = Msg::PlayerPanelSwitchFailed {
-                        source: switching.to.name.clone(),
-                        current: run.source_name(&streams[switching.back_to]),
-                    };
+                    let text = run.switch_failed(&switching.to, &streams[switching.back_to]);
                     let reason = notice.clone().or_else(|| {
                         reported
                             .clone()
                             .map(|line| Msg::NoticePlayerCouldNotPlay { reason: line })
                     });
-                    let Switching { to, at, back_to, .. } = switching;
+                    let Switching { to, at, back_to, was, .. } = switching;
+                    run.translation = was;
+                    if to.translation.is_some()
+                        && let Some(kept) = before_version.take()
+                    {
+                        memory = kept;
+                    }
                     run.restoring = Some(SourceSwitch::Failed { to, at, text, reason });
                     index = back_to;
                     resume_at = Some(at);
@@ -1306,6 +1323,11 @@ struct Run<'a> {
     pool_from: usize,
     /// The sources, for the names a switch says.
     sources: Option<kaeri_providers::ProviderRegistry>,
+    /// Sub or dub, as the episode plays now: the context's until the other version lands.
+    translation: Translation,
+    /// The source a front end was last told plays: the first stream's, which the start's
+    /// `Found` named, then each switch's that landed.
+    said_source: String,
 }
 
 /// A switch the viewer asked for, loading.
@@ -1318,6 +1340,8 @@ struct Switching {
     /// The streams the switch may play, the release's own: another of them is tried before
     /// going back.
     streams: std::ops::Range<usize>,
+    /// Sub or dub before the switch, which going back plays in again.
+    was: Translation,
 }
 
 impl Run<'_> {
@@ -1328,6 +1352,20 @@ impl Run<'_> {
                 crate::playback::resolve::display_name(sources, &stream.provider_id)
             }
             None => stream.provider_id.clone(),
+        }
+    }
+
+    /// What a row says of a switch to `to` that did not start, with `playing` playing on: the
+    /// names of both sources, or for the other version, which one plays on.
+    fn switch_failed(&self, to: &SwitchTo, playing: &Stream) -> Msg {
+        let episode = self.context.episode.clone();
+        match to.translation {
+            Some(Translation::Dub) => Msg::PlayerPanelDubFailed { episode },
+            Some(Translation::Sub) => Msg::PlayerPanelSubFailed { episode },
+            None => Msg::PlayerPanelSwitchFailed {
+                source: to.name.clone(),
+                current: self.source_name(playing),
+            },
         }
     }
 
@@ -1351,7 +1389,11 @@ impl Run<'_> {
             self.say_switch(failed);
         }
         self.say_switch(SourceSwitch::Loading { to: to.clone(), at });
-        self.switching = Some(Switching { to, at, back_to, streams });
+        let was = self.translation;
+        if let Some(translation) = to.translation {
+            self.translation = translation;
+        }
+        self.switching = Some(Switching { to, at, back_to, streams, was });
     }
 }
 

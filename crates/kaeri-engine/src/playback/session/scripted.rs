@@ -2183,8 +2183,37 @@ fn kodama_release() -> kaeri_model::playback::SwitchTo {
         provider_id: "kodama".into(),
         name: "kodama".into(),
         release: Some("release-2".into()),
-        stream: None,
+        ..Default::default()
     }
+}
+
+/// The other version, dubbed, as the engine asks for it: no source until it is found.
+fn dubbed() -> kaeri_model::playback::SwitchTo {
+    kaeri_model::playback::SwitchTo {
+        translation: Some(Translation::Dub),
+        ..Default::default()
+    }
+}
+
+/// The dubbed version once found, from the source `kodama`.
+fn dubbed_from_kodama() -> kaeri_model::playback::SwitchTo {
+    kaeri_model::playback::SwitchTo {
+        provider_id: "kodama".into(),
+        name: "kodama".into(),
+        ..dubbed()
+    }
+}
+
+/// The last Sources and sub or dub menus the playback said.
+fn last_menus(calls: &[Call]) -> companion::Menus {
+    calls
+        .iter()
+        .rev()
+        .find_map(|call| match call {
+            Call::Overlay(Overlay::Menus(menus)) => Some(menus.clone()),
+            _ => None,
+        })
+        .unwrap_or_else(|| panic!("no menus: {calls:#?}"))
 }
 
 /// The first stream plays from 600 s; the engine then says what `news` has of the release the
@@ -2555,4 +2584,143 @@ async fn a_stream_picked_from_the_menu_that_shows_no_frame_goes_back() {
     assert!(matches!(said.first(), Some(SourceSwitch::Loading { .. })), "{said:?}");
     assert!(matches!(said.last(), Some(SourceSwitch::Failed { .. })), "{said:?}");
     assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn a_stream_of_another_source_taking_over_says_the_episode_plays_from_it() {
+    use kaeri_model::playback::{SourceSwitch, SwitchTo};
+
+    let (_, events) = choices_then(vec![PlaybackEvent::Ended { complete: false }], &[0]).await;
+
+    // Not a switch anyone asked for, so nothing is held: only where the episode plays now.
+    let kodama = SwitchTo {
+        provider_id: "kodama".into(),
+        name: "kodama".into(),
+        stream: Some("1".into()),
+        ..SwitchTo::default()
+    };
+    assert_eq!(switches(&events), [SourceSwitch::Landed { to: kodama, at: 612.0 }]);
+}
+
+#[tokio::test]
+async fn a_start_whose_first_source_shows_no_video_says_the_source_that_played() {
+    use kaeri_model::playback::{SourceSwitch, SwitchTo};
+
+    let nothing = vec![PlaybackEvent::Loaded, PlaybackEvent::Ended { complete: false }];
+    let rig = failing_rig(vec![nothing, taking_over(0.0)], &[0]);
+    let streams =
+        vec![from("yamabiko", "cdn-a.example", 1080), from("kodama", "cdn-b.example", 1080)];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+
+    // The start named yamabiko; kodama is what played.
+    let kodama = SwitchTo {
+        provider_id: "kodama".into(),
+        name: "kodama".into(),
+        stream: Some("1".into()),
+        ..SwitchTo::default()
+    };
+    assert_eq!(switches(&events), [SourceSwitch::Landed { to: kodama, at: 0.0 }]);
+}
+
+#[tokio::test]
+async fn a_start_on_the_source_it_named_says_no_switch() {
+    let rig = failing_rig(vec![taking_over(0.0)], &[]);
+    let streams =
+        vec![from("yamabiko", "cdn-a.example", 1080), from("kodama", "cdn-b.example", 1080)];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+    assert!(switches(&events).is_empty(), "{:?}", switches(&events));
+}
+
+#[tokio::test]
+async fn the_other_version_plays_from_the_playhead_in_the_same_playback() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let found = vec![from("kodama", "cdn-b.example", 1080)];
+    let news = vec![SwitchNews::Finding(dubbed()), SwitchNews::Found(dubbed(), found)];
+    let next = [vec![PlaybackEvent::Replaced], taking_over(600.0)].concat();
+    let (rig, events) = switched(
+        news,
+        |s| matches!(s, SourceSwitch::Landed { .. }),
+        Vec::new(),
+        vec![next],
+        &[],
+    )
+    .await;
+
+    // Found while the episode played on, then loaded where it was, in the same window.
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 2, "{calls:#?}");
+    assert!(loads[1].1.contains("cdn-b.example"), "{loads:?}");
+    assert_eq!(loads[1].2.as_deref(), Some("600"));
+    assert_eq!(calls.iter().filter(|c| matches!(c, Call::Open { .. })).count(), 1);
+    // The source is named once it is found.
+    assert_eq!(
+        switches(&events),
+        [
+            SourceSwitch::Finding { to: dubbed() },
+            SourceSwitch::Loading { to: dubbed_from_kodama(), at: 600.0 },
+            SourceSwitch::Landed { to: dubbed_from_kodama(), at: 600.0 },
+        ]
+    );
+    // The menus say dub, with the dub's stream alone, and the notice says so as it lands.
+    let menus = last_menus(&calls);
+    assert_eq!(menus.translation.current, "dub");
+    let listed: Vec<_> = menus.sources.iter().map(|s| s.label.as_str()).collect();
+    assert_eq!(listed, ["kodama"]);
+    assert_eq!(toasts(&events), ["Audio is now dubbed."]);
+    let ended = events.iter().filter(|e| matches!(e, Event::PlaybackEnded { .. })).count();
+    assert_eq!(ended, 1, "the playback ends once, at the end of the episode");
+}
+
+#[tokio::test]
+async fn the_other_version_that_cannot_be_found_leaves_the_episode_playing() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let why = kaeri_model::Msg::verbatim("No source has episode 1 dubbed.");
+    let news = vec![SwitchNews::Finding(dubbed()), SwitchNews::Failed(dubbed(), why.clone())];
+    let after = vec![at_second(601.0), PlaybackEvent::Ended { complete: true }];
+    let (rig, events) =
+        switched(news, |s| matches!(s, SourceSwitch::Failed { .. }), after, Vec::new(), &[])
+            .await;
+
+    assert_eq!(loads(&rig.opener.calls()).len(), 1, "nothing else loaded");
+    let text = kaeri_model::Msg::PlayerPanelDubFailed { episode: "1".into() };
+    assert_eq!(
+        switches(&events),
+        [
+            SourceSwitch::Finding { to: dubbed() },
+            SourceSwitch::Failed { to: dubbed(), at: 600.0, text, reason: Some(why) },
+        ]
+    );
+    assert!(toasts(&events).is_empty(), "{:?}", toasts(&events));
+    assert_eq!(ending(&events), Some(Ending::Complete { next: None }));
+}
+
+#[tokio::test]
+async fn the_other_version_that_shows_no_frame_goes_back_to_the_one_playing() {
+    use super::super::switch::SwitchNews;
+    use kaeri_model::playback::SourceSwitch;
+
+    let found = vec![from("kodama", "cdn-b.example", 1080)];
+    let news = vec![SwitchNews::Finding(dubbed()), SwitchNews::Found(dubbed(), found)];
+    let files = vec![no_frame(), taking_over(600.0)];
+    let (rig, events) =
+        switched(news, |s| matches!(s, SourceSwitch::Failed { .. }), Vec::new(), files, &[1])
+            .await;
+
+    let calls = rig.opener.calls();
+    let loads = loads(&calls);
+    assert_eq!(loads.len(), 3, "{loads:?}");
+    assert!(loads[2].1.contains("cdn-a.example"), "back on the first: {loads:?}");
+    let said = switches(&events);
+    let Some(SourceSwitch::Failed { to, at, text, .. }) = said.last() else {
+        panic!("{said:?}")
+    };
+    assert_eq!((to, *at), (&dubbed_from_kodama(), 600.0));
+    assert_eq!(*text, kaeri_model::Msg::PlayerPanelDubFailed { episode: "1".into() });
+    assert_eq!(last_menus(&calls).translation.current, "sub");
+    assert!(toasts(&events).is_empty(), "{:?}", toasts(&events));
 }
