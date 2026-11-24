@@ -57,6 +57,9 @@ with a film and an OVA). Never real shows.
 
 ## Rules
 
+- A job script that takes shots or runs UI tests exits with its failed steps' status, never a
+  bare `exit 0`, and prints one `STEP <name> rc=<n>` line per step. Under Git Bash on the PC,
+  export `MSYS_NO_PATHCONV=1` before running adb, or device paths turn into Windows ones.
 - Only the Fixtures app or a re-identified copy runs. Never launch `app.kaeri.app`; never post
   real notifications on the Mac.
 - One emulator at a time, your own AVD name and port, selected by `-avd`/`-port` in any script
