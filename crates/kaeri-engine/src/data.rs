@@ -887,10 +887,8 @@ pub(crate) fn whole(number: &kaeri_core::media::EpisodeNumber) -> Option<u32> {
 ///
 /// Titles and stills by number, through [`Numbering`], from the streaming listings; the
 /// length AniList gives the title's episodes, which needs no number. What the source said
-/// itself stands, with one exception: a length under half of AniList's for the title is not
-/// how long the episode runs (a preview's length, minutes said as seconds, a placeholder), and
-/// AniList's stands in for it, as [`length_of`] has it. Every title loses the numbering put in
-/// front of it, the source's as well as AniList's.
+/// itself always stands: AniList only fills what is missing. Every title loses the numbering
+/// put in front of it, the source's as well as AniList's.
 pub fn enrich_episodes(
     episodes: &mut [kaeri_core::media::Episode],
     media: &Media,
@@ -905,35 +903,12 @@ pub fn enrich_episodes(
     tidy_synopses(episodes, &media.plain_description());
     let length = media
         .duration
-        .map(|minutes| std::time::Duration::from_secs(60 * u64::from(minutes)))
-        .and_then(runtime);
-    for episode in episodes.iter_mut() {
-        episode.duration = length_of(episode.duration, length);
+        .filter(|minutes| *minutes > 0)
+        .map(|minutes| std::time::Duration::from_secs(60 * u64::from(minutes)));
+    for episode in episodes.iter_mut().filter(|e| e.duration.is_none_or(|d| d.is_zero())) {
+        episode.duration = length;
     }
     numbering
-}
-
-/// How long an episode runs, from what its source said and the length AniList gives the
-/// title's episodes. AniList's length is the check on the source's: one under half of it is
-/// not this episode's (a preview's or a trailer's length, minutes said as seconds, a
-/// placeholder), and AniList's stands in. With nothing to check it against, a source's length
-/// stands when it is over a minute: 0, a handful of seconds or a minute flat is a placeholder
-/// or minutes said as seconds, and would read as "1 min". Unknown is said as nothing.
-fn length_of(
-    said: Option<std::time::Duration>,
-    anilist: Option<std::time::Duration>,
-) -> Option<std::time::Duration> {
-    match (said, anilist) {
-        (Some(said), Some(length)) if said >= length / 2 => Some(said),
-        (_, Some(length)) => Some(length),
-        (said, None) => said.filter(|said| said.as_secs() > 60),
-    }
-}
-
-/// `length`, when it can be how long an episode runs: a minute or more. Anything shorter
-/// rounds to no minutes, and a row that said it would read "1 min" for a length nobody knows.
-pub(crate) fn runtime(length: std::time::Duration) -> Option<std::time::Duration> {
-    (length.as_secs() >= 60).then_some(length)
 }
 
 /// Fill in episode titles and stills a source could not supply, from metadata keyed by the
@@ -1169,7 +1144,7 @@ pub fn episode_rows_with_filler(
         .map(|episode| {
             // Latest observation for this episode; the log is newest-first.
             let event = watched.iter().find(|e| e.episode == episode.number.as_str());
-            let duration = episode.duration.and_then(runtime).map(|d| d.as_secs());
+            let duration = episode.duration.map(|d| d.as_secs());
             let fraction = event
                 .and_then(|e| {
                     let total = e.duration_secs.or(duration.map(|d| d as f64))?;
@@ -1347,15 +1322,11 @@ mod naming_tests {
         assert!(episodes[0].title.is_none());
     }
 
+    /// A source's own lengths stand, short ones too: a one-minute short says "1 min". The
+    /// length AniList gives the title's episodes fills only a row with none, or with 0.
     #[test]
-    fn a_length_of_a_minute_or_less_is_unknown_and_never_reads_as_one_minute() {
+    fn a_sources_lengths_stand_and_the_titles_fills_the_missing_ones() {
         use std::time::Duration;
-        let said = |secs: &[u64]| -> Vec<Episode> {
-            secs.iter()
-                .zip(1u32..)
-                .map(|(secs, n)| Episode::new(n).with_duration(Duration::from_secs(*secs)))
-                .collect()
-        };
         let lengths = |episodes: &[Episode]| -> Vec<Option<u64>> {
             let store = kaeri_store::Store::open_in_memory().unwrap();
             let id = kaeri_core::ids::AnilistId::new(1);
@@ -1368,61 +1339,29 @@ mod naming_tests {
             }))
             .unwrap()
         };
+        let mut episodes: Vec<Episode> = [Some(60), Some(75), Some(1_425), Some(0), None]
+            .into_iter()
+            .zip(1u32..)
+            .map(|(secs, n)| match secs {
+                Some(secs) => Episode::new(n).with_duration(Duration::from_secs(secs)),
+                None => Episode::new(n),
+            })
+            .collect();
+        let mut bare = episodes.clone();
 
-        // A source's 0, 24 and 60 seconds are minutes or placeholders: the title's length
-        // stands in, and a source's own length near the title's stands.
-        let mut episodes = said(&[0, 24, 60, 1_425]);
         super::enrich_episodes(&mut episodes, &media(Some(24)), 0);
-        assert_eq!(lengths(&episodes), [Some(1_440), Some(1_440), Some(1_440), Some(1_425)]);
-
-        // With no length for the title, nothing is said rather than "1 min".
-        let mut episodes = said(&[0, 24, 60, 1_425]);
-        super::enrich_episodes(&mut episodes, &media(None), 0);
-        assert_eq!(lengths(&episodes), [None, None, None, Some(1_425)]);
-
-        // A title whose episodes run a minute says so, and a source's length near it stands.
-        let mut episodes = said(&[0, 61]);
-        super::enrich_episodes(&mut episodes, &media(Some(1)), 0);
-        assert_eq!(lengths(&episodes), [Some(60), Some(61)]);
-        // Rows made without the title: under a minute is nothing.
-        assert_eq!(lengths(&said(&[59, 0, 60])), [None, None, Some(60)]);
-    }
-
-    /// A source that lists the newest episodes with a preview's length (or minutes said as
-    /// seconds) over a minute put "1 min" on the player's panel while the title page, listed
-    /// from another source, said "24 min". The length under half of the title's is not the
-    /// episode's: the title's stands in, so every table of the title says the same.
-    #[test]
-    fn a_source_length_far_under_the_titles_never_reads_as_the_episodes() {
-        use std::time::Duration;
-        let said = |secs: &[u64]| -> Vec<Episode> {
-            secs.iter()
-                .zip(1u32..)
-                .map(|(secs, n)| Episode::new(n).with_duration(Duration::from_secs(*secs)))
-                .collect()
-        };
-        let lengths = |episodes: &[Episode]| -> Vec<Option<u64>> {
-            let store = kaeri_store::Store::open_in_memory().unwrap();
-            let id = kaeri_core::ids::AnilistId::new(1);
-            super::episode_rows(episodes, &store, id).iter().map(|r| r.duration_secs).collect()
-        };
-        let media: super::Media = serde_json::from_value(serde_json::json!({
-            "id": 1, "title": {"romaji": "Kazamidori no Uta"}, "format": "TV",
-            "episodes": 4, "duration": 24,
-        }))
-        .unwrap();
-
-        // 75 s, 89 s and 11 min against 24: none is the episode's. 12 min and 23:45 can be.
-        let mut episodes = said(&[75, 89, 660, 720, 1_425]);
-        super::enrich_episodes(&mut episodes, &media, 0);
         assert_eq!(
             lengths(&episodes),
-            [Some(1_440), Some(1_440), Some(1_440), Some(720), Some(1_425)]
+            [Some(60), Some(75), Some(1_425), Some(1_440), Some(1_440)]
         );
-        // Without a length of its own, the episode takes the title's.
-        let mut bare = vec![Episode::new(1u32)];
-        super::enrich_episodes(&mut bare, &media, 0);
-        assert_eq!(lengths(&bare), [Some(1_440)]);
+
+        // A title of one-minute shorts says a minute; one with no length leaves the gaps, a
+        // source's 0 among them.
+        let mut shorts = vec![Episode::new(1u32)];
+        super::enrich_episodes(&mut shorts, &media(Some(1)), 0);
+        assert_eq!(lengths(&shorts), [Some(60)]);
+        super::enrich_episodes(&mut bare, &media(None), 0);
+        assert_eq!(lengths(&bare), [Some(60), Some(75), Some(1_425), None, None]);
     }
 }
 
