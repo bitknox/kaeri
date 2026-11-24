@@ -4,7 +4,7 @@
 #![cfg(feature = "testing")]
 
 use std::{
-    sync::Arc,
+    sync::{Arc, mpsc},
     thread,
     time::{Duration, Instant},
 };
@@ -41,10 +41,11 @@ impl FfiHost for Quiet {
     }
 }
 
-/// The Homes the engine sends within `patience`, until one has nothing left on its way.
-fn homes_within(engine: &Arc<FfiEngine>, patience: Duration) -> (Vec<HomeView>, bool) {
+/// The Homes the engine sends, read by one thread for the whole test: a second reader would
+/// take events the first one dropped.
+fn homes(engine: &Arc<FfiEngine>) -> mpsc::Receiver<HomeView> {
     let engine = Arc::clone(engine);
-    let (tx, rx) = std::sync::mpsc::channel();
+    let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
         loop {
             let batch = futures::executor::block_on(engine.next_events());
@@ -60,6 +61,11 @@ fn homes_within(engine: &Arc<FfiEngine>, patience: Duration) -> (Vec<HomeView>, 
             }
         }
     });
+    rx
+}
+
+/// The Homes that come within `patience`, until one has nothing left on its way.
+fn homes_within(rx: &mpsc::Receiver<HomeView>, patience: Duration) -> (Vec<HomeView>, bool) {
     let until = Instant::now() + patience;
     let mut homes = Vec::new();
     while let Some(left) = until.checked_duration_since(Instant::now()) {
@@ -90,8 +96,9 @@ fn a_held_slow_scene_waits_for_the_hold_and_answers_once_it_moves_on() {
         kaeri_engine::clock::Clock::default(),
     )
     .expect("the engine starts");
+    let rx = homes(&engine);
     engine.send(Command::LoadHome { refresh: false });
-    let (homes, settled) = homes_within(&engine, Duration::from_secs(8));
+    let (homes, settled) = homes_within(&rx, Duration::from_secs(8));
     assert!(!settled, "the discovery answered before its moment: {:?}", homes.last());
     let first = homes.iter().find(|h| h.section(SectionKind::Continue).is_some());
     assert!(first.is_some_and(|h| !h.pending.is_empty()), "no Continue first: {homes:?}");
@@ -100,9 +107,10 @@ fn a_held_slow_scene_waits_for_the_hold_and_answers_once_it_moves_on() {
     // On to 5 s: past the answers' 4.5 s, which come in at once.
     let moved = Instant::now();
     testing_still_clock_hold(5_000);
-    let (homes, settled) = homes_within(&engine, Duration::from_secs(20));
+    let (homes, settled) = homes_within(&rx, Duration::from_secs(20));
+    let took = moved.elapsed();
     assert!(settled, "the discovery did not answer once the hold moved on: {:?}", homes.last());
-    assert!(moved.elapsed() < Duration::from_secs(4), "it waited on the wall clock");
+    assert!(took < Duration::from_secs(4), "it waited on the wall clock: {took:?}");
     let home = homes.last().unwrap();
     assert!(!home.failed, "{home:?}");
     assert_eq!(testing_still_clock_now_ms(), Some(5_000));
