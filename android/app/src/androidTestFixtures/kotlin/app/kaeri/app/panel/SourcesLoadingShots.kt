@@ -37,21 +37,33 @@ class SourcesLoadingShots {
             .putExtra("panel", "sources")
         InstrumentationRegistry.getArguments().getString("media")?.let { intent.putExtra("media", it) }
         context.startActivity(intent)
-        // The first screenshot of a run sets up the capture and took 2 s on the PC's emulator:
-        // taken here, before the moments, so each moment's shot is on time.
-        instrumentation.uiAutomation.takeScreenshot()?.recycle()
         val opened = opened()
         val out = File(context.getExternalFilesDir(null), "sources-loading").apply { mkdirs() }
         val late = mutableListOf<String>()
+        // Each shot is written once all are taken: a full-screen PNG took over a second to encode
+        // on the PC's emulator, which pushed the next moment past its 0.3 s.
+        val shots = mutableListOf<Pair<String, android.graphics.Bitmap>>()
         for ((moment, at) in MOMENTS) {
             SystemClock.sleep((opened + at - SystemClock.uptimeMillis()).coerceAtLeast(0))
             val taken = SystemClock.uptimeMillis() - opened
-            val shot = instrumentation.uiAutomation.takeScreenshot()
-            File(out, "phone-$moment.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
+            shots += "phone-$moment" to instrumentation.uiAutomation.takeScreenshot()
             Log.i(TAG, "KAERI_SHOT phone-$moment at $taken ms")
             if (taken - at !in 0..300) late += "$moment at $taken ms"
+            // The sheet shows the first two other sources; the rest are a scroll down, as a
+            // person would look, before the 4 s moment.
+            if (moment == "1s") scrollSheet()
+        }
+        for ((name, shot) in shots) {
+            File(out, "$name.png").outputStream().use { shot.compress(android.graphics.Bitmap.CompressFormat.PNG, 100, it) }
         }
         assertTrue("taken outside 0.3 s of the moment: $late", late.isEmpty())
+    }
+
+    /** A slow drag up the side sheet, which stops where the finger lifts. */
+    private fun scrollSheet() {
+        val device = androidx.test.uiautomator.UiDevice.getInstance(instrumentation)
+        val x = device.displayWidth - (180 * instrumentation.targetContext.resources.displayMetrics.density).toInt()
+        device.swipe(x, device.displayHeight * 9 / 10, x, device.displayHeight * 3 / 10, 40)
     }
 
     /** The uptime the app logged when it opened Sources, waited for while the scene starts. */
