@@ -1,6 +1,6 @@
 // The player panel's Sources tab while its sources answer, shot on a device: the Fixtures app on
 // the SourcesLoading scene plays episode 7, opens Sources once the picture shows, and this test
-// takes the screen 0.3, 1, 4, 12 and 21 s after the tab opened. The app logs that moment as
+// takes the screen 0.3, 1, 4, 12 and 21 s after the tab asked its sources. The app logs that moment as
 // "KAERI_PANEL sources <uptime ms>" under the tag KaeriPanel (PanelDemo.openSources).
 //
 // The shots land in the app's external files, sources-loading/phone-<moment>.png, for adb pull.

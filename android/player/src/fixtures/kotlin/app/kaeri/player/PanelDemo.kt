@@ -101,7 +101,7 @@ object PanelDemo {
     /**
      * `--es panel sources`, on the sourcesloading scene: plays the first fixture's episode 7 and,
      * once its picture is up, opens the panel on Sources, which asks every source then. The log
-     * says "KAERI_PANEL sources <ms>" (the device's uptime) as it opens.
+     * says "KAERI_PANEL sources <ms>" (the device's uptime) once the tab has asked.
      */
     fun openSources(store: AppStore, player: PlayerModel) {
         scope.launch {
@@ -113,6 +113,8 @@ object PanelDemo {
             }
             delay(1_000)
             player.openPanel(PanelTab.Sources)
+            // The moment the tab asks its sources, which on TV is a frame or more after it opens.
+            withTimeoutOrNull(10_000) { while (player.panelReleases == null) delay(5) }
             Log.w(TAG, "KAERI_PANEL sources ${android.os.SystemClock.uptimeMillis()}")
         }
     }
