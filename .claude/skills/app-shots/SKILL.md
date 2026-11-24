@@ -28,7 +28,16 @@ android/scripts/shots.sh <phone|phone-37|tablet|fold> [shot…]
 ```
 
 Same shot syntax: `watching`, `fresh`, or `app` (real AniList), then `:calendar`, `:seasonal`,
-`title=<id>` and so on. Roborazzi JVM shots (`:ui` tests) cover most boards without an emulator.
+`title=<id>` and so on. Roborazzi JVM shots (`:ui` tests) cover most boards without an emulator,
+on a clock the test sets.
+
+- Timed screens are stills: `watching:start=slow+stillat=24` replays the made-up start on the
+  engine's still clock and holds it at 24 s, so the shot shows the starting screen 24 s in (its
+  seconds and wording) at once, however slow the emulator. `stillat=<seconds>` alone holds a
+  scene's own made-up waits there. Without `stillat` the replay runs on the wall clock, which
+  recordings and feature videos need. The TV app takes the same `--es stillat` extra.
+- The script exits 1 when a shot failed (no `KAERI_READY`, a failed or empty screencap, a
+  setting that did not take), after taking the rest, with one `FAILED <shot>: …` line each.
 
 ## Fixture ids
 
