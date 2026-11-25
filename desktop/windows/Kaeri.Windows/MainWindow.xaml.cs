@@ -733,6 +733,8 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(2000);
                 Notice(NoticeKind.Info, new Msg.NoticeSignInNotWaiting("AniList")); // i18n-skip
             });
+        if (options.Show?.StartsWith("room-", StringComparison.Ordinal) == true)
+            RehearseRoom(options.Show);
         if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
             RehearseParty(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)

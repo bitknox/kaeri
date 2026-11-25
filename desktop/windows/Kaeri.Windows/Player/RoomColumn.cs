@@ -42,10 +42,13 @@ sealed class RoomColumn : Grid
     readonly Button send = new() { Content = RoomWords.Send, Height = 32, Padding = new Thickness(12, 0, 12, 0) };
     readonly Button inviteButton, detailsButton, leaveButton;
     readonly Dictionary<string, PersonRow> rows = [];
+    /// <summary>People whose Left row has closed, while the room still lists them as Left.</summary>
+    readonly HashSet<string> closed = [];
     readonly TextBlock announcer = new() { Width = 1, Height = 1, Opacity = 0 };
     StackPanel shownLine;
     string lineKind = "";
     RoomAsk ask;
+    bool asking;
     int chatCount = -1;
 
     public event Action<RoomAsk>? Asked;
@@ -224,16 +227,9 @@ sealed class RoomColumn : Grid
             shownLine = target;
             Canvas.SetZIndex(target, 1);
             Canvas.SetZIndex(old, 0);
-            if (Motion.Enabled)
-            {
-                Motion.FadeTo(target, 1, Motion.FadeInTime);
-                Motion.FadeTo(old, 0, Motion.FadeOutTime);
-            }
-            else
-            {
-                target.Opacity = 1;
-                old.Opacity = 0;
-            }
+            // A fade, so it stays with Reduce Motion: nothing here moves.
+            Motion.FadeTo(target, 1, Motion.FadeInTime);
+            Motion.FadeTo(old, 0, Motion.FadeOutTime);
             announcer.Text = $"{line.Title}. {line.Detail}";
         }
         else if (lineKind.Length == 0)
@@ -247,13 +243,13 @@ sealed class RoomColumn : Grid
         ask = line.Ask;
         if (line.Ask == RoomAsk.None)
         {
-            if (wasAsking)
-            {
-                if (Motion.Enabled)
-                    Motion.FadeOutThen(asks, () => { if (ask == RoomAsk.None) asks.Visibility = Visibility.Collapsed; });
-                else
-                    asks.Visibility = Visibility.Collapsed;
-            }
+            asking = false;
+            if (wasAsking && asks.Opacity > 0)
+                Motion.FadeOutThen(asks, () =>
+                {
+                    if (ask == RoomAsk.None)
+                        asks.Visibility = Visibility.Collapsed;
+                });
             return;
         }
         if (askButton.Content as string != line.AskText)
@@ -261,17 +257,13 @@ sealed class RoomColumn : Grid
         secondButton.Visibility = line.SecondText is null ? Visibility.Collapsed : Visibility.Visible;
         if (line.SecondText is { } second && secondButton.Content as string != second)
             secondButton.Content = second;
-        if (!wasAsking || asks.Opacity < 1)
+        if (!asking)
         {
             asks.Visibility = Visibility.Visible;
-            if (Motion.Enabled)
-            {
-                asks.Opacity = 0;
-                Motion.FadeTo(asks, 1, Motion.FadeInTime);
-            }
-            else
-                asks.Opacity = 1;
+            asks.Opacity = 0;
+            Motion.FadeTo(asks, 1, Motion.FadeInTime);
         }
+        asking = true;
     }
 
     static void Set(StackPanel line, RoomLine words)
@@ -288,15 +280,18 @@ sealed class RoomColumn : Grid
         var now = Rooms.Rows(scene, muted);
         var seen = new HashSet<string>();
         var index = 0;
-        foreach (var r in now)
+        foreach (var r in now.Where(r => !(r.Left && closed.Contains(r.Id))))
         {
             seen.Add(r.Id);
+            // Back after leaving: a rejoin gets its row again.
+            if (!r.Left)
+                closed.Remove(r.Id);
             if (!rows.TryGetValue(r.Id, out var row))
             {
                 row = new PersonRow(this, r);
                 rows[r.Id] = row;
                 people.Children.Insert(Math.Min(index, people.Children.Count), row.Element);
-                row.Enter(Motion.Enabled && IsLoaded);
+                row.Enter(IsLoaded);
             }
             row.Show(r);
             // Rows keep their place: a row that leaves holds its gap until it closes.
@@ -320,6 +315,7 @@ sealed class RoomColumn : Grid
                 {
                     people.Children.Remove(row.Element);
                     rows.Remove(r.Id);
+                    closed.Add(r.Id);
                 });
     }
 
@@ -337,7 +333,7 @@ sealed class RoomColumn : Grid
         {
             var block = ChatLine(lines[i]);
             chat.Children.Add(block);
-            if (chatCount > 0 && Motion.Enabled)
+            if (chatCount > 0)
             {
                 block.Opacity = 0;
                 Motion.FadeTo(block, 1, Motion.FadeInTime);
@@ -466,12 +462,11 @@ sealed class RoomColumn : Grid
         {
             Leaving = true;
             await Task.Delay(Rooms.LeftRowHold);
+            // The row fades; the gap closes on standard, or at once with Reduce Motion.
+            Motion.FadeTo(Element, 0, Motion.FadeOutTime);
             if (Motion.Enabled)
-            {
                 Motion.Height(Element, Element.ActualHeight, 0);
-                Motion.FadeTo(Element, 0, Motion.FadeOutTime);
-                await Task.Delay(Motion.Standard);
-            }
+            await Task.Delay(Motion.Scaled(Motion.FadeOutTime));
             gone();
         }
     }
