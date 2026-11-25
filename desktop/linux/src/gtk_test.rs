@@ -72,6 +72,19 @@ pub fn pump(for_ms: u64) {
     }
 }
 
+/// Run GTK's main loop until `done` says so, for at most `ms`. Waits on what a test needs
+/// rather than a fixed time, which a loaded machine can outlast.
+pub fn pump_until(ms: u64, done: impl Fn() -> bool) -> bool {
+    let until = Instant::now() + Duration::from_millis(ms);
+    while Instant::now() < until {
+        if done() {
+            return true;
+        }
+        pump(5);
+    }
+    done()
+}
+
 /// Fills memory with a pattern as it is freed, so a read of a freed object crashes every time
 /// rather than now and then. Set before GTK starts.
 fn poison_freed_memory() {

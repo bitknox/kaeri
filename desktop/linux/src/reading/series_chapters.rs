@@ -331,7 +331,7 @@ mod tests {
     use kaeri_model::reading::ChapterReadState;
 
     use super::*;
-    use crate::gtk_test::{pump, run};
+    use crate::gtk_test::{pump_until, run};
 
     fn chapter(n: usize) -> ChapterRow {
         ChapterRow {
@@ -405,10 +405,13 @@ mod tests {
             list.show(&one_volume(1200), None, ORDER);
             assert_eq!(rows(column.upcast_ref()).len(), CHUNK);
             window.present();
-            pump(200);
             let adjustment = scroll.vadjustment();
+            // Laid out first: before that the list has no end to scroll to.
+            let laid_out =
+                || adjustment.upper() > adjustment.page_size() && adjustment.page_size() > 0.0;
+            assert!(pump_until(5000, laid_out), "the list was never laid out");
             adjustment.set_value(adjustment.upper());
-            pump(200);
+            pump_until(5000, || list.rows() > CHUNK);
             assert!(list.rows() > CHUNK, "{}", list.rows());
             assert!(list.rows() < 1200, "{}", list.rows());
             window.destroy();

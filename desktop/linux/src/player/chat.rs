@@ -788,20 +788,7 @@ impl Chat {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gtk_test::{pump, run};
-    use std::time::{Duration, Instant};
-
-    /// Run the main loop until `done` says so, for at most `ms`.
-    fn pump_until(ms: u64, done: impl Fn() -> bool) -> bool {
-        let until = Instant::now() + Duration::from_millis(ms);
-        while Instant::now() < until {
-            if done() {
-                return true;
-            }
-            pump(5);
-        }
-        done()
-    }
+    use crate::gtk_test::{pump, pump_until, run};
 
     #[test]
     fn leaving_the_party_while_a_line_slides_away_clears_the_column() {
