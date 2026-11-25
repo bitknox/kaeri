@@ -416,7 +416,7 @@ internal fun NameSheet() {
 
 /** A QR code, drawn from the engine's matrix: silk on the ground's own colour, with its quiet zone. */
 @Composable
-internal fun QrCode(text: String, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 168.dp, label: String) {
+fun QrCode(text: String, modifier: Modifier = Modifier, size: androidx.compose.ui.unit.Dp = 168.dp, label: String) {
     val matrix = remember(text) { qrMatrix(text) }
     val dark = MaterialTheme.colorScheme.onSurface
     val light = MaterialTheme.colorScheme.surfaceContainerHighest
