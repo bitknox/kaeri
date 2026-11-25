@@ -1,7 +1,7 @@
 // The fixtures flavour's launch: the testing engine on a scene, steered by intent extras under
 // the phone's names:
 //
-//   scene     watching (the default), sourceless, fresh or playing
+//   scene     watching (the default), sourceless, fresh, playing or sourcesloading
 //   media     what every episode streams: a path or URL on the device, by default the
 //             flavour's own episode.mp4, which seeks, so a resume starts where it should at once
 //   section   the destination to open on: search, continue, calendar, seasonal, library or settings
@@ -17,6 +17,10 @@
 //   join      store opens the plugin store's join page over the section
 //   update    a made-up release staged for the update's page, which opens over the section:
 //             available, allowing, downloading, failed or storage; nothing is fetched or installed
+//   panel     live: the player panel's Sources tab lists made-up sources, and a switch to one
+//             lands or fails as scripted (PanelDemo), on the playing scene
+//             sources: episode 7 plays and the panel opens on Sources once its picture is up,
+//             for the sourcesloading scene's sources answering one by one
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatreact, chatloop and the rest; the log says "KAERI_PARTY ready <shot>"
 //             once it is there. chatloop waits for `am broadcast -a app.kaeri.fixtures.PARTY_GO`
@@ -26,6 +30,7 @@ package app.kaeri.tv
 import android.content.Context
 import android.content.Intent
 import android.util.Log
+import app.kaeri.player.PlayerTime
 import java.io.File
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.MainScope
@@ -34,6 +39,7 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import app.kaeri.engine.model.DeviceCodePrompt
 import app.kaeri.engine.model.Event
+import app.kaeri.player.PanelDemo
 import app.kaeri.store.AppStore
 import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
@@ -57,6 +63,15 @@ internal object Flavour {
         if (named != null && FixtureScene.named(named) == null) Log.w(TvApp.TAG, "no scene named $named")
         if (intent.getStringExtra("world") == "1") android.system.Os.setenv("KAERI_FIXTURES_HOME_WORLD", "1", true)
         fixtureMedia = intent.getStringExtra("media") ?: File(context.cacheDir, EPISODE).path
+        // stillat=<seconds>: a still shot. The engine's still clock goes on before the scene starts, so
+        // its made-up waits run on it: held at the moment for a scene's shot, or at nought for a
+        // `start` replay, which steps it to the moment itself (StartReplay).
+        intent.getStringExtra("stillat")?.let { at ->
+            when {
+                intent.getStringExtra("start") != null && StartReplay.stillMillis(intent) != null -> PlayerTime.hold(0)
+                !PlayerTime.holdSeconds(at) -> Log.w(TvApp.TAG, "stillat takes seconds (24, 0.3), not $at")
+            }
+        }
         return EngineLaunch.fixtures(scene, context.cacheDir).copy(platform = enginePlatform(context))
     }
 
@@ -108,6 +123,10 @@ internal object Flavour {
      * has no tracker to answer with one. `expires=<seconds>` sets how long its code has left, 0 for
      * one already expired, 899 unless it says.
      */
+    /** A player command on its way to the engine: the panel demo answers the panel's own. */
+    fun playerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) =
+        PanelDemo.send(command, send)
+
     fun started(context: Context, store: AppStore, intent: Intent, player: app.kaeri.player.PlayerModel, host: app.kaeri.player.PlayerHost? = null) {
         StartReplay.from(context, store, player, intent)
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
@@ -116,6 +135,10 @@ internal object Flavour {
             MainScope().launch {
                 if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
             }
+        }
+        when (intent.getStringExtra("panel")) {
+            "live" -> PanelDemo.start(store, player)
+            "sources" -> PanelDemo.openSources(store, player)
         }
         intent.getStringExtra("found")?.let { which -> host?.let { FoundDemo.run(it, store, MainScope(), which) } }
         intent.getStringExtra("day")?.toIntOrNull()?.let { store.calendar.opensOn = it }

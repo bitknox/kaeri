@@ -12,6 +12,11 @@
 //! run on, the source reports itself [`ProviderError::Unavailable`], as the built-in torrent source
 //! did: policy, not a failure, so the registry passes it over without contacting it and nothing
 //! counts against its health. It is asked again each time, so it comes back with the session.
+//!
+//! Empty is not always off: with the setting on, the session is on its way at launch and after a
+//! settings change, and the hold says so ([`PLAYBACK_STARTING`]) rather than calling it off, as
+//! it does when the session could not start ([`PLAYBACK_FAILED`]). A source asked while the
+//! session is on its way waits for it briefly: see [`SESSION_WAIT`].
 
 use std::sync::{Arc, RwLock};
 
@@ -42,15 +47,55 @@ fn naming_only() -> bool {
     NAMED_ONLY.try_with(|_| ()).is_ok()
 }
 
-/// What [`ProviderError::Unavailable`] says while torrent playback is off or waiting for the
-/// check. The engine words it for the person; this is for the log.
+/// What [`ProviderError::Unavailable`] says while torrent playback is off. The engine words it
+/// for the person; this is for the log.
 pub const PLAYBACK_OFF: &str = "torrent playback is off";
+
+/// What [`ProviderError::Unavailable`] says while torrent playback is on and its session is still
+/// coming up.
+pub const PLAYBACK_STARTING: &str = "torrent playback is starting";
+
+/// What [`ProviderError::Unavailable`] says while torrent playback is on and its session could
+/// not start.
+pub const PLAYBACK_FAILED: &str = "torrent playback could not start";
+
+/// How long a source that names torrents, asked while the session is on its way, waits for it.
+/// The session is up within milliseconds of the bring-up, so this covers only a source asked in
+/// that moment, and is short because whatever is asked after it waits too.
+pub const SESSION_WAIT: std::time::Duration = std::time::Duration::from_secs(2);
 
 /// The engine's torrent session as sources see it: there while torrent playback is on and the
 /// protection check has passed, and gone otherwise.
-#[derive(Clone, Default)]
+#[derive(Clone)]
 pub struct TorrentPlayback {
     inner: Arc<RwLock<Playback>>,
+    /// Where playback stands, watched by a lookup waiting for the session.
+    phase: Arc<tokio::sync::watch::Sender<Phase>>,
+}
+
+impl Default for TorrentPlayback {
+    fn default() -> Self {
+        Self {
+            inner: Arc::default(),
+            phase: Arc::new(tokio::sync::watch::Sender::new(Phase::Off)),
+        }
+    }
+}
+
+/// Where torrent playback stands.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+enum Phase {
+    /// Switched off: no session is coming.
+    Off,
+    /// On, and the session is on its way.
+    Starting,
+    /// On, and waiting for a proxy's check that has failed: it comes up once the check passes,
+    /// which may be never.
+    Checking,
+    /// On, and the session could not start.
+    Failed,
+    /// The session is up.
+    Up,
 }
 
 #[derive(Default)]
@@ -67,11 +112,74 @@ impl std::fmt::Debug for TorrentPlayback {
 }
 
 impl TorrentPlayback {
-    /// Hand sources the session that has just come up, or take it away.
+    /// Hand sources the session that has just come up, or take it away. Without one, playback
+    /// is off until [`Self::starting`] says a session is on its way.
     pub fn set(&self, session: Option<Arc<TorrentSession>>, trackers: Vec<String>) {
-        let mut playback = self.inner.write().unwrap_or_else(|e| e.into_inner());
-        playback.session = session;
-        playback.trackers = trackers;
+        let phase = if session.is_some() { Phase::Up } else { Phase::Off };
+        {
+            let mut playback = self.inner.write().unwrap_or_else(|e| e.into_inner());
+            playback.session = session;
+            playback.trackers = trackers;
+        }
+        self.phase.send_replace(phase);
+    }
+
+    /// Say that torrent playback is on and its session is on its way, as at launch, after a
+    /// settings change, or once a proxy's check has passed.
+    pub fn starting(&self) {
+        self.move_to(Phase::Starting);
+    }
+
+    /// Say that the session could not start, and will not until the settings change or the app
+    /// starts again.
+    pub fn failed(&self) {
+        self.move_to(Phase::Failed);
+    }
+
+    /// Say that the session waits for a proxy's check that has failed. Sources are held back
+    /// for the check, and a lookup does not wait for it.
+    pub fn checking(&self) {
+        self.move_to(Phase::Checking);
+    }
+
+    /// Move to `phase` while no session is up: one that is up stays until [`Self::set`] lets it
+    /// go.
+    fn move_to(&self, phase: Phase) {
+        self.phase.send_if_modified(|now| {
+            let moved = *now != Phase::Up && *now != phase;
+            if moved {
+                *now = phase;
+            }
+            moved
+        });
+    }
+
+    /// Whether torrent playback is on and its session is on its way.
+    pub fn is_starting(&self) -> bool {
+        *self.phase.borrow() == Phase::Starting
+    }
+
+    /// Wait for a session on its way, for at most `within`. Returns whether one is up.
+    pub async fn up_within(&self, within: std::time::Duration) -> bool {
+        let mut phase = self.phase.subscribe();
+        let _ = tokio::time::timeout(within, phase.wait_for(|phase| *phase != Phase::Starting))
+            .await;
+        self.session().is_some()
+    }
+
+    /// The session, or why there is none, as a source that names torrents reports it.
+    fn up(&self) -> Result<Arc<TorrentSession>, ProviderError> {
+        if let Some(session) = self.session() {
+            return Ok(session);
+        }
+        let reason = match *self.phase.borrow() {
+            Phase::Starting => PLAYBACK_STARTING,
+            Phase::Checking => crate::proxy::CHECK_PENDING,
+            Phase::Failed => PLAYBACK_FAILED,
+            // Up with no session is a session let go of a moment ago.
+            Phase::Off | Phase::Up => PLAYBACK_OFF,
+        };
+        Err(ProviderError::Unavailable(reason.into()))
     }
 
     pub fn session(&self) -> Option<Arc<TorrentSession>> {
@@ -92,8 +200,7 @@ impl TorrentPlayback {
     /// The magnet, not the loopback URL, is what a download keeps: the loopback address stops
     /// existing the moment the session does.
     pub async fn start(&self, named: &Stream, episode: &str) -> Result<Stream, ProviderError> {
-        let session =
-            self.session().ok_or_else(|| ProviderError::Unavailable(PLAYBACK_OFF.into()))?;
+        let session = self.up()?;
         let magnet = self.with_trackers(&named.url);
         // The metadata comes from peers, which can take a minute and a half: the walk asking
         // this source says so, so the screen is not left saying it searches.
@@ -161,6 +268,15 @@ impl TorrentPlayback {
     pub async fn drop_started(&self, url: &str) {
         if let Some(session) = self.session() {
             session.drop_stream(url).await;
+        }
+    }
+
+    /// Let go of a torrent the player has switched away from, mid-episode: its loopback server,
+    /// and the torrent as a watched one is let go (seeding when the settings ask for it), unless
+    /// another stream or a download still uses it.
+    pub async fn let_go(&self, url: &str) {
+        if let Some(session) = self.session() {
+            session.let_go_of_stream(url).await;
         }
     }
 }
@@ -289,10 +405,7 @@ impl Provider for TorrentBridge {
 
     fn is_available(&self) -> Result<(), ProviderError> {
         self.inner.is_available()?;
-        let session = self
-            .playback
-            .session()
-            .ok_or_else(|| ProviderError::Unavailable(PLAYBACK_OFF.into()))?;
+        let session = self.playback.up()?;
         session.route().permit()?;
         session.network_permit()
     }
@@ -328,6 +441,41 @@ mod tests {
         let err = bridged(vec![torrent(LINK)]).is_available().unwrap_err();
         assert_eq!(err, ProviderError::Unavailable(PLAYBACK_OFF.into()));
         assert!(!err.counts_against_health(), "policy is not a broken source");
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn on_and_starting_is_held_as_starting_and_waited_for_within_a_limit() {
+        let source = bridged(vec![torrent(LINK)]);
+        source.playback.starting();
+        assert!(source.playback.is_starting());
+        let err = source.is_available().unwrap_err();
+        assert_eq!(err, ProviderError::Unavailable(PLAYBACK_STARTING.into()));
+        assert!(!err.counts_against_health(), "policy is not a broken source");
+        let began = tokio::time::Instant::now();
+        assert!(!source.playback.up_within(std::time::Duration::from_secs(5)).await);
+        assert!(began.elapsed() >= std::time::Duration::from_secs(5), "waited the whole limit");
+
+        // A failed proxy check holds it for the check, and is not waited for.
+        source.playback.checking();
+        assert!(!source.playback.is_starting());
+        assert_eq!(
+            source.is_available(),
+            Err(ProviderError::Unavailable(crate::proxy::CHECK_PENDING.into()))
+        );
+        let began = tokio::time::Instant::now();
+        assert!(!source.playback.up_within(std::time::Duration::from_secs(5)).await);
+        assert_eq!(began.elapsed(), std::time::Duration::ZERO);
+
+        // A session that could not start is said so.
+        source.playback.failed();
+        assert_eq!(
+            source.is_available(),
+            Err(ProviderError::Unavailable(PLAYBACK_FAILED.into()))
+        );
+
+        // Let go of, it is off again.
+        source.playback.set(None, Vec::new());
+        assert_eq!(source.is_available(), Err(ProviderError::Unavailable(PLAYBACK_OFF.into())));
     }
 
     #[tokio::test]

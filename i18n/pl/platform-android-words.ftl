@@ -229,7 +229,6 @@ episode-number-title-text = Odcinek { $number } · { $title }
 player-position-state = { $at } z { $total }
 player-sheet-finding = Trwa wyszukiwanie…
 player-sheet-none = Nic nie znaleziono dla tego odcinka.
-player-sheet-episodes-loading = Lista odcinków właśnie się wczytuje.
 player-dual-audio = { -subbed-cap } i { -dubbed }
 notif-new-episodes = { $count ->
     [one] Jeden nowy odcinek

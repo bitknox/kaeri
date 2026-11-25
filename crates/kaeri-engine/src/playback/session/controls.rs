@@ -125,7 +125,7 @@ impl Run<'_> {
                 }
                 Choice::Source(id) => {
                     if let Ok(to) = id.parse::<usize>()
-                        && to < streams.len()
+                        && (self.pool_from..streams.len()).contains(&to)
                         && to != index
                     {
                         return Some(FileOutcome::Switch { to, at: tracker.position() });
@@ -134,7 +134,7 @@ impl Run<'_> {
                 Choice::Translation(value) => {
                     let wanted =
                         if value == "dub" { Translation::Dub } else { Translation::Sub };
-                    if wanted != context.translation {
+                    if wanted != self.translation {
                         let _ = tx.send(Event::PlayerTranslation(wanted));
                     }
                 }

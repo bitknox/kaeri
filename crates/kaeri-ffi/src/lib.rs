@@ -76,8 +76,8 @@ pub use party::{
 };
 #[cfg(feature = "mpv-host")]
 pub use player::{
-    FfiPlayer, FfiPlayerEvent, FfiPlayerOptions, FfiPlayerSink, FfiPlayerState, FfiVideo,
-    player_audio_tap,
+    FfiPlayer, FfiPlayerEvent, FfiPlayerOptions, FfiPlayerSink, FfiPlayerState, FfiSnapshot,
+    FfiVideo, player_audio_tap,
 };
 #[cfg(feature = "remote")]
 pub use remote::{FfiAdvert, FfiLinkSent, FfiPairedPhone, FfiScreen, FfiTvRemote, FfiTxtPair};
@@ -101,6 +101,10 @@ pub use start::{
     FfiBackground, FfiDirs, FfiError, FfiPlatform, FfiStart, SecretsMode, audio_tap_callback,
 };
 pub use sync_network::{FfiSyncAdvert, FfiSyncNetwork, FfiSyncSink, FfiSyncTxt};
+#[cfg(feature = "testing")]
+pub use testing::{
+    testing_still_clock_hold, testing_still_clock_hold_seconds, testing_still_clock_now_ms,
+};
 
 /// Each command and event, written as the bindings write it and read back: what a front end sends
 /// is what the engine receives, and what the engine says is what the front end reads. The Swift

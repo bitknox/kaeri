@@ -23,3 +23,4 @@ player-volume-spoken = { $percent }パーセント
 player-volume-muted = 音量、ミュート中
 player-exit-fullscreen = 全画面表示を終了
 accounts-pane-name = アカウント、{ $state }
+player-panel-dual-audio = { -subbed }と{ -dubbed }

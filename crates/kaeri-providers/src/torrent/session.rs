@@ -528,6 +528,39 @@ impl std::fmt::Debug for TorrentSession {
     }
 }
 
+/// Whether starting a session failed for a port another process holds.
+fn port_taken(error: &(dyn std::error::Error + 'static)) -> bool {
+    let mut cause = Some(error);
+    while let Some(error) = cause {
+        if error
+            .downcast_ref::<std::io::Error>()
+            .is_some_and(|io| io.kind() == std::io::ErrorKind::AddrInUse)
+        {
+            return true;
+        }
+        cause = error.source();
+    }
+    false
+}
+
+/// Have the DHT pick a free port next time it starts from `dht_state`, keeping the nodes it
+/// knows. A state that cannot be read or written is left as it is.
+fn forget_dht_port(dht_state: &std::path::Path) {
+    let Ok(text) = std::fs::read_to_string(dht_state) else { return };
+    let Ok(mut state) = serde_json::from_str::<serde_json::Value>(&text) else { return };
+    let Some(addr) = state.get_mut("addr") else { return };
+    let any_port = match addr.as_str().and_then(|a| a.parse::<std::net::SocketAddr>().ok()) {
+        Some(std::net::SocketAddr::V6(_)) => "[::]:0",
+        _ => "0.0.0.0:0",
+    };
+    *addr = serde_json::Value::String(any_port.into());
+    if let Ok(text) = serde_json::to_string(&state)
+        && let Err(e) = std::fs::write(dht_state, text)
+    {
+        tracing::warn!(error = %e, "could not write the DHT's state");
+    }
+}
+
 impl TorrentSession {
     /// Start a session on `route`, refusing outright while its proxy has not passed its check.
     pub async fn start(
@@ -538,27 +571,30 @@ impl TorrentSession {
     ) -> Result<Self, ProviderError> {
         route.permit()?;
 
-        let mut options = SessionOptions {
-            // Through a proxy, peers come from trackers: DHT's UDP may not go through it.
-            disable_dht: route.must_disable_dht(),
-            disable_dht_persistence: route.must_disable_dht(),
-            // Without this librqbit writes its routing table to the user's own cache folder,
-            // outside Kaeri's, so the state is kept beside the rest of our cache.
-            dht_config: Some(librqbit::dht::PersistentDhtConfig {
-                config_filename: Some(dht_state),
+        let options = || {
+            let mut options = SessionOptions {
+                // Through a proxy, peers come from trackers: DHT's UDP may not go through it.
+                disable_dht: route.must_disable_dht(),
+                disable_dht_persistence: route.must_disable_dht(),
+                // Without this librqbit writes its routing table to the user's own cache folder,
+                // outside Kaeri's, so the state is kept beside the rest of our cache.
+                dht_config: Some(librqbit::dht::PersistentDhtConfig {
+                    config_filename: Some(dht_state.clone()),
+                    ..Default::default()
+                }),
+                // No port forwarding: Kaeri does not open the router to peers.
+                enable_upnp_port_forwarding: false,
+                // No inbound listener. librqbit binds `0.0.0.0` when this is `Some`, and an
+                // inbound connection does not go through a proxy. `None` is librqbit's default,
+                // stated here so it stays that way.
+                listen_port_range: None,
                 ..Default::default()
-            }),
-            // No port forwarding: Kaeri does not open the router to peers.
-            enable_upnp_port_forwarding: false,
-            // No inbound listener. librqbit binds `0.0.0.0` when this is `Some`, and an
-            // inbound connection does not go through a proxy. `None` is librqbit's default,
-            // stated here so it stays that way.
-            listen_port_range: None,
-            ..Default::default()
+            };
+            if let Some(url) = route.proxy_url() {
+                options.socks_proxy_url = Some(url.to_owned());
+            }
+            options
         };
-        if let Some(url) = route.proxy_url() {
-            options.socks_proxy_url = Some(url.to_owned());
-        }
 
         if route.must_disable_dht() {
             tracing::info!("DHT off: torrents go through a proxy, so peers come from trackers");
@@ -568,11 +604,20 @@ impl TorrentSession {
             ProviderError::Other(format!("cannot create download directory: {e}"))
         })?;
 
-        let session =
-            Session::new_with_opts(download_dir.clone(), options).await.map_err(|e| {
-                let reason = without_proxy(&format!("{e:#}"), route.proxy_url());
-                ProviderError::Other(format!("starting torrent session: {reason}"))
-            })?;
+        let session = match Session::new_with_opts(download_dir.clone(), options()).await {
+            // The DHT binds the port it had last time, which another process may hold now:
+            // another copy of the app, or one still quitting. A port of its own does as well.
+            Err(e) if port_taken(&*e) => {
+                tracing::warn!("the DHT's port from last time is taken; starting on a new one");
+                forget_dht_port(&dht_state);
+                Session::new_with_opts(download_dir.clone(), options()).await
+            }
+            started => started,
+        }
+        .map_err(|e| {
+            let reason = without_proxy(&format!("{e:#}"), route.proxy_url());
+            ProviderError::Other(format!("starting torrent session: {reason}"))
+        })?;
 
         Ok(Self {
             session,
@@ -1085,6 +1130,39 @@ impl TorrentSession {
         self.discard(id).await;
     }
 
+    /// Let go of the stream served at `url`, which played and which the player has switched
+    /// away from, unless another stream serves from the same torrent: its server, and the
+    /// torrent. A whole one is retired as a watched one is (kept seeding when the settings ask
+    /// for it); one still fetching is removed, as it would go on fetching and share the
+    /// connection with the stream that took over. The download queue's are never touched.
+    pub async fn let_go_of_stream(&self, url: &str) {
+        let (id, shared) = {
+            let mut servers = self.active.lock().unwrap_or_else(|e| e.into_inner());
+            let Some(at) = servers.iter().position(|active| active.url() == url) else {
+                return;
+            };
+            let Some(dropped) = servers.remove(at) else { return };
+            let id = dropped.key.0;
+            (id, servers.iter().any(|active| active.key.0 == id))
+        };
+        if shared || self.owned_by_downloads(id) {
+            return;
+        }
+        if let Ok(mut history) = self.stream_history.lock() {
+            history.retain(|kept| *kept != id);
+        }
+        tracing::info!(id, "a torrent the player switched away from was let go");
+        let whole = self
+            .session
+            .get(TorrentIdOrHash::Id(id))
+            .is_some_and(|handle| handle.stats().finished);
+        if whole {
+            self.retire_stream(id).await;
+        } else {
+            self.discard(id).await;
+        }
+    }
+
     /// Whether the download queue owns this torrent, and so whether its files are the user's.
     fn owned_by_downloads(&self, id: usize) -> bool {
         self.download_ids.lock().unwrap_or_else(|e| e.into_inner()).contains(&id)
@@ -1494,6 +1572,41 @@ mod tests {
         }
     }
 
+    #[tokio::test]
+    async fn a_session_starts_when_another_holds_the_dhts_port_from_last_time() {
+        // One session keeps the DHT's state, port and all; a second from the same state finds
+        // the port taken, as with another copy of the app or one still quitting.
+        let scratch = tempfile::tempdir().unwrap();
+        let dir = scratch.path().to_path_buf();
+        let start = || async {
+            let route = TorrentRoute::new(None).unwrap();
+            route.verify().await;
+            TorrentSession::start(route, dir.join("dl"), dir.join("dht.json"), "tok".into())
+                .await
+        };
+        let first = match start().await {
+            Ok(first) => first,
+            // Binding a socket can fail in a sandbox; that is not what this test is about.
+            Err(e) => return eprintln!("session start unavailable in this environment: {e}"),
+        };
+        // The state is written every three seconds.
+        let saved = tokio::time::Instant::now();
+        while !dir.join("dht.json").exists() {
+            assert!(
+                saved.elapsed() < std::time::Duration::from_secs(10),
+                "the DHT's state was never written"
+            );
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        }
+        let second = start().await;
+        assert!(second.is_ok(), "{:?}", second.err());
+        let state: serde_json::Value =
+            serde_json::from_str(&std::fs::read_to_string(dir.join("dht.json")).unwrap())
+                .unwrap();
+        assert!(state.get("table").is_some(), "the nodes it knew are kept");
+        first.close().await;
+    }
+
     /// Two files, so librqbit treats the torrent as a batch and writes it to a folder of its own.
     const BATCH: [(&str, usize); 2] = [("ep01.mkv", 40_000), ("ep02.mkv", 30_000)];
 
@@ -1504,10 +1617,24 @@ mod tests {
         name: &str,
         files: &[(&str, usize)],
     ) -> (TorrentSession, usize) {
+        session_with_torrent_missing(root, name, files, &[]).await
+    }
+
+    /// [`session_with_local_torrent`], with the files named in `missing` not yet fetched.
+    async fn session_with_torrent_missing(
+        root: &std::path::Path,
+        name: &str,
+        files: &[(&str, usize)],
+        missing: &[&str],
+    ) -> (TorrentSession, usize) {
         let pack = root.join(name);
         std::fs::create_dir_all(&pack).unwrap();
-        for (file, bytes) in files {
-            std::fs::write(pack.join(file), vec![7_u8; *bytes]).unwrap();
+        // Each file its own byte. librqbit on Windows reads a short file without an error and
+        // hashes what its buffer held from the file before, so files of one byte would pass
+        // its check with a file missing.
+        for (n, (file, bytes)) in files.iter().enumerate() {
+            let byte = 7_u8.wrapping_add(u8::try_from(n).unwrap());
+            std::fs::write(pack.join(file), vec![byte; *bytes]).unwrap();
         }
         let torrent = librqbit::create_torrent(
             &pack,
@@ -1515,6 +1642,9 @@ mod tests {
         )
         .await
         .unwrap();
+        for file in missing {
+            std::fs::remove_file(pack.join(file)).unwrap();
+        }
         let route = TorrentRoute::new(None).unwrap();
         route.verify().await;
         let session = TorrentSession::start(
@@ -1729,6 +1859,84 @@ mod tests {
         let batch = root.path().join("Kept Batch");
         assert!(batch.join("ep01.mkv").exists(), "the downloaded episode stays");
         assert!(!batch.join("ep02.mkv").exists(), "what only the stream wanted goes");
+        session.session.stop().await;
+    }
+
+    /// Serve file `index` of torrent `id` as the player's stream, and the URL it plays.
+    async fn serving(session: &TorrentSession, id: usize, index: usize) -> String {
+        let handle = session.session.get(TorrentIdOrHash::Id(id)).unwrap();
+        let file = files_of(&handle).into_iter().find(|f| f.index == index).unwrap();
+        let source = TorrentFileSource {
+            handle: Arc::clone(&handle),
+            index,
+            length: file.length,
+            name: file.name.clone(),
+        };
+        let server = serve(source, &session.token).await.unwrap();
+        let active = Arc::new(ActiveStream {
+            server,
+            key: (id, index),
+            file,
+            torrent_id: TorrentIdOrHash::Id(id),
+            verified: None,
+        });
+        let url = active.url().to_owned();
+        session.active.lock().unwrap().push_back(active);
+        session.stream_history.lock().unwrap().push_back(id);
+        url
+    }
+
+    const SEEDING: SeedingConfig = SeedingConfig { ratio: 1.0, hours: 24, upload_limit_kib: 0 };
+
+    #[tokio::test]
+    async fn a_torrent_switched_away_from_mid_fetch_stops_fetching_even_when_seeding() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) =
+            session_with_torrent_missing(root.path(), "Half Batch", &BATCH, &["ep02.mkv"])
+                .await;
+        session.configure_seeding(&SEEDING).await;
+        let url = serving(&session, id, 1).await;
+
+        session.let_go_of_stream(&url).await;
+
+        assert!(session.active.lock().unwrap().is_empty(), "its server goes");
+        assert!(session.progress_of(id).is_none(), "and the torrent with it");
+        assert!(session.seeding.lock().unwrap().is_empty(), "half a file is no seed");
+        assert!(session.stream_history.lock().unwrap().is_empty());
+        session.session.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_whole_torrent_switched_away_from_seeds_when_the_settings_ask() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) =
+            session_with_local_torrent(root.path(), "Whole Batch", &BATCH).await;
+        session.configure_seeding(&SEEDING).await;
+        let url = serving(&session, id, 1).await;
+
+        session.let_go_of_stream(&url).await;
+
+        assert!(session.active.lock().unwrap().is_empty());
+        assert!(session.progress_of(id).is_some(), "kept for seeding");
+        let pool: Vec<_> = session.seeding.lock().unwrap().iter().map(|s| s.id).collect();
+        assert_eq!(pool, [id]);
+        session.session.stop().await;
+    }
+
+    #[tokio::test]
+    async fn a_torrent_switched_away_from_that_the_download_queue_owns_stays() {
+        let root = tempfile::tempdir().unwrap();
+        let (session, id) =
+            session_with_torrent_missing(root.path(), "Queued Batch", &BATCH, &["ep02.mkv"])
+                .await;
+        session.download_ids.lock().unwrap().insert(id);
+        let url = serving(&session, id, 1).await;
+
+        session.let_go_of_stream(&url).await;
+
+        assert!(session.active.lock().unwrap().is_empty(), "the player's server goes");
+        assert!(session.progress_of(id).is_some(), "the download goes on");
+        assert!(root.path().join("Queued Batch/ep01.mkv").exists());
         session.session.stop().await;
     }
 

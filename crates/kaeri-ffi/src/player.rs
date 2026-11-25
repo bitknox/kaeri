@@ -14,6 +14,7 @@ use kaeri_model::{
     command::Command,
     hosted::{MpvOption, PlayerOp, TrackKind},
     playback::PlaybackId,
+    subtitle_lift::{SubtitleFrame, SubtitlePlacement},
 };
 use kaeri_mpv_host::{
     HostEvent, Player, PlayerOptions, PlayerState, VideoOutput, swapchain_of,
@@ -71,6 +72,12 @@ pub struct FfiPlayerState {
     /// The file's audio and subtitle tracks, for the Tracks menu; a pick goes to the engine as
     /// `PlayerCommand::ChooseTrack`, which keeps it for the series.
     pub tracks: Vec<FfiTrack>,
+    /// The picture's place in the frame, mpv's `osd-dimensions`, for `subtitle_lift`.
+    #[uniffi(default = None)]
+    pub subtitle_frame: Option<SubtitleFrame>,
+    /// Where the subtitle track's bottom lines rest, for `subtitle_lift`; `None` before mpv says.
+    #[uniffi(default = None)]
+    pub subtitle_placement: Option<SubtitlePlacement>,
 }
 
 /// One of the file's audio or subtitle tracks.
@@ -109,6 +116,8 @@ impl From<PlayerState> for FfiPlayerState {
                     external: t.external,
                 })
                 .collect(),
+            subtitle_frame: s.subtitle_frame,
+            subtitle_placement: Some(s.subtitle_placement),
         }
     }
 }
@@ -140,6 +149,16 @@ pub trait FfiPlayerSink: Send + Sync {
 #[uniffi::export]
 pub fn player_audio_tap() -> bool {
     kaeri_mpv_host::audio_tap_available()
+}
+
+/// A picture copied off the screen: `height` rows of `stride` bytes, each pixel four bytes of
+/// blue, green, red and alpha, every one opaque.
+#[derive(Debug, Clone, PartialEq, Eq, uniffi::Record)]
+pub struct FfiSnapshot {
+    pub width: u32,
+    pub height: u32,
+    pub stride: u32,
+    pub pixels: Vec<u8>,
 }
 
 /// One mpv core driven by the engine's ops, for as long as the app holds it.
@@ -246,6 +265,21 @@ impl FfiPlayer {
             .mpv()
             .command(&[add_command(kind), &path, "select"])
             .map_err(|e| FfiError::player(Msg::StartFailedPlayer { reason: e.to_string() }))
+    }
+
+    /// The picture on screen as it stands, subtitles and all, for the app to hold over the
+    /// video while a source switch loads: libmpv clears the picture on `loadfile`. `None` while
+    /// nothing is drawn. mpv answers from its video thread, so the app asks from a thread of its
+    /// own, with a deadline; the lock is let go first, as for [`Self::swapchain`].
+    pub fn snapshot(&self) -> Option<FfiSnapshot> {
+        let mpv = self.player().as_ref().map(|p| p.mpv().clone())?;
+        let frame = mpv.screenshot_window().ok().flatten()?.into_bgra()?;
+        Some(FfiSnapshot {
+            width: frame.width,
+            height: frame.height,
+            stride: frame.stride,
+            pixels: frame.data,
+        })
     }
 
     /// The controls' state as it stands.

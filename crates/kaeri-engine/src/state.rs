@@ -53,6 +53,13 @@ pub struct EngineState {
     /// Whether the viewer asked this playback to begin at 0 (`PlayFromBeginning`). Set where
     /// `finding` is.
     pub beginning: Option<std::sync::Arc<std::sync::atomic::AtomicBool>>,
+    /// Each playback's door, where a release picked in the player is handed to it: see
+    /// [`crate::playback::switch`].
+    pub switches: crate::playback::switch::Doors,
+    /// Sub or dub as last picked in the player, and for which title: a play of that title goes
+    /// by it over the show's own setting, as the rest go by the session's.
+    pub translation_picked:
+        Option<(kaeri_core::ids::AnilistId, kaeri_core::media::Translation)>,
     /// The copy of the config the background tasks read: the download manager, the seeding
     /// watch and the stream cache's. Brought up to `config` whenever a setting is written, so
     /// "saved" and "in effect" are the same moment.
@@ -173,6 +180,8 @@ impl EngineState {
             finding: None,
             skipping: None,
             beginning: None,
+            switches: Default::default(),
+            translation_picked: None,
             torrent_tasks: TorrentTasks::default(),
             torrent_route: None,
             arrivals,

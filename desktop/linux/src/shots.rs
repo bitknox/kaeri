@@ -4,7 +4,12 @@
 //!
 //!   kaeri-desktop --fixtures --shots <dir> --shot home,title,... [--size 1280x800]
 
-use std::{path::PathBuf, rc::Rc, time::Duration};
+use std::{
+    path::PathBuf,
+    rc::Rc,
+    sync::atomic::{AtomicUsize, Ordering},
+    time::Duration,
+};
 
 use adw::prelude::*;
 use gtk::glib;
@@ -19,7 +24,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 118] = [
+pub const ALL: [&str; 123] = [
     "home",
     "welcome",
     "offline",
@@ -125,10 +130,15 @@ pub const ALL: [&str; 118] = [
     "player",
     "player-marks",
     "player-tracks",
-    "player-episodes",
-    "player-episodes-focus",
-    "player-episodes-ranges",
-    "player-episodes-ranges-menu",
+    "player-panel",
+    "player-panel-revealed",
+    "player-panel-more",
+    "player-panel-sources",
+    "player-panel-releases",
+    "player-panel-starting",
+    "player-panel-failed",
+    "player-panel-landed",
+    "player-panel-ranges",
     "first-play-style",
     "player-undo",
     "mini",
@@ -332,8 +342,18 @@ pub const STATS: [&str; 5] = [
     "player-stats-copied",
 ];
 
-/// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit.
-pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
+/// How many shots of the run did not save: the app then exits with a failure.
+static UNSAVED: AtomicUsize = AtomicUsize::new(0);
+
+/// How many shots did not save.
+pub fn unsaved() -> usize {
+    UNSAVED.load(Ordering::Relaxed)
+}
+
+/// Take `shots` into `dir`, each named `<prefix><shot>.png`, then quit. With `still`, the
+/// starting screen's `start-` shots are taken on the engine's still clock (see `still_start`);
+/// without it, as recordings need, on the wall clock.
+pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>, still: bool) {
     #[cfg(feature = "fixtures")]
     crate::shots_missing::saving_to(dir.clone());
     #[cfg(feature = "fixtures")]
@@ -345,7 +365,21 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
             wide_widgets(&child, 0, shell.ctx.window.width());
         }
         for shot in &shots {
-            let settle = stage(&shell, shot);
+            // A start plays over Home: a fresh scene's first-run question (what Kaeri is for)
+            // would cover it.
+            if shot.starts_with("start-") {
+                close_dialogs(&shell.ctx.window);
+            }
+            #[cfg(feature = "fixtures")]
+            let settle = match StartShot::named(shot).filter(|_| still) {
+                Some(start) => still_start(&shell, start).await,
+                None => stage(&shell, shot),
+            };
+            #[cfg(not(feature = "fixtures"))]
+            let settle = {
+                let _ = still;
+                stage(&shell, shot)
+            };
             wait(settle).await;
             let path = dir.join(format!("{prefix}{shot}.png"));
             let mut taken = Err(String::new());
@@ -362,7 +396,10 @@ pub fn run(shell: Rc<Shell>, dir: PathBuf, prefix: String, shots: Vec<String>) {
             }
             match taken {
                 Ok(()) => tracing::info!(path = %path.display(), "a shot"),
-                Err(e) => tracing::error!(shot, error = %e, "a shot did not save"),
+                Err(e) => {
+                    UNSAVED.fetch_add(1, Ordering::Relaxed);
+                    tracing::error!(shot, error = %e, "a shot did not save");
+                }
             }
             unstage(&shell, shot);
             wait(0.5).await;
@@ -398,6 +435,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     }
     #[cfg(feature = "fixtures")]
     if let Some(settle) = crate::shots_missing::stage(shell, shot) {
+        return settle;
+    }
+    #[cfg(feature = "fixtures")]
+    if let Some(settle) = crate::shots_sources_loading::stage(shell, shot) {
         return settle;
     }
     #[cfg(feature = "fixtures")]
@@ -930,33 +971,17 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         // With `-details` after the state, Details opens 5 s in; with `-beginning`, Play from the
         // beginning is pressed 4 s in.
         start if start.starts_with("start-") => {
-            let details = start.contains("-details-");
-            let beginning = start.contains("-beginning-");
-            let name = start.replace("-details-", "-").replace("-beginning-", "-");
-            let Some((state, seconds)) = start_state(&name) else {
+            let Some(start) = StartShot::named(start) else {
                 return 0.1;
             };
             shell.go(Dest::Home);
-            if details {
-                let player = Rc::clone(&shell.player);
-                glib::timeout_add_local_once(Duration::from_secs(5), move || {
-                    player.shot_start_details();
+            for (at_ms, step) in start.steps {
+                let shell = Rc::clone(shell);
+                glib::timeout_add_local_once(Duration::from_millis(at_ms), move || {
+                    step.apply(&shell);
                 });
             }
-            if beginning {
-                let player = Rc::clone(&shell.player);
-                glib::timeout_add_local_once(Duration::from_secs(4), move || {
-                    player.shot_start_from_beginning();
-                });
-            }
-            let hub = Rc::clone(&shell.ctx.hub);
-            for fixture in kaeri_engine::playback::starting::fixture(state) {
-                let hub = Rc::clone(&hub);
-                glib::timeout_add_local_once(Duration::from_millis(fixture.at_ms), move || {
-                    hub.take(vec![fixture.event]);
-                });
-            }
-            seconds
+            start.seconds
         }
         "demo-removed" => {
             shell.go(Dest::Home);
@@ -1309,14 +1334,91 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             }
             10.0
         }
-        "player-episodes"
-        | "player-episodes-focus"
-        | "player-episodes-ranges"
-        | "player-episodes-ranges-menu" => {
+        // The walkthrough's start: the board's show playing and the app left open for an hour,
+        // for a person or xdotool to use. Never in the list of all shots.
+        #[cfg(feature = "fixtures")]
+        "player-panel-walk" => {
+            close_dialogs(&shell.ctx.window);
+            play(shell);
+            let player = Rc::clone(&shell.player);
+            player.qa_widgets();
+            glib::timeout_add_local_once(Duration::from_secs(5), move || {
+                player.shot_panel_board(false);
+            });
+            3600.0
+        }
+        // The recording: the panel opening, a row revealed, Sources, then a release that fails
+        // and the same release landing on its second try, with the video playing under it. Never in the list of all shots.
+        #[cfg(feature = "fixtures")]
+        "player-panel-motion" => {
+            close_dialogs(&shell.ctx.window);
+            play(shell);
+            let player = Rc::clone(&shell.player);
+            let hub = Rc::clone(&shell.ctx.hub);
+            let at = |s: f64, f: Box<dyn FnOnce()>| {
+                glib::timeout_add_local_once(Duration::from_secs_f64(s), f);
+            };
+            at(
+                5.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_panel_board(false)
+                }),
+            );
+            // The scene pauses at 7 s; the recording wants it playing.
+            at(
+                8.0,
+                Box::new(move || {
+                    hub.send(Command::Player(kaeri_model::command::PlayerCommand::TogglePause));
+                }),
+            );
+            at(
+                10.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_panel("episodes")
+                }),
+            );
+            at(
+                12.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_side().select("8")
+                }),
+            );
+            at(
+                14.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_panel("sources")
+                }),
+            );
+            at(
+                15.5,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_side().unfold("index")
+                }),
+            );
+            at(
+                17.0,
+                Box::new({
+                    let player = Rc::clone(&player);
+                    move || player.shot_pick_release("r2")
+                }),
+            );
+            // Its second try lands, as Try again does.
+            at(24.0, Box::new(move || player.shot_pick_release("r2")));
+            32.0
+        }
+        shot if shot.starts_with("player-panel") => {
+            close_dialogs(&shell.ctx.window);
             play(shell);
             #[cfg(feature = "fixtures")]
-            stage_player_episodes(shell, shot);
-            10.5
+            let wait = stage_player_panel(shell, shot);
+            #[cfg(not(feature = "fixtures"))]
+            let wait = 10.5;
+            wait
         }
         "player-tracks" => {
             play(shell);
@@ -1402,6 +1504,122 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
 }
 
 /// Leave the state a shot put the window in.
+/// A `start-` shot: what happens on its made-up start, when, and the seconds it is taken at.
+struct StartShot {
+    /// In their order, each with its moment in milliseconds from the start.
+    steps: Vec<(u64, StartStep)>,
+    seconds: f64,
+}
+
+/// Something that happens on a shot's made-up start.
+enum StartStep {
+    /// What the engine says, boxed as events are large.
+    Event(Box<Event>),
+    /// Details opened, as the viewer opens it.
+    Details,
+    /// Play from the beginning, pressed as the viewer presses it.
+    FromBeginning,
+}
+
+impl StartShot {
+    /// `start-<state>-<seconds>`: the state's events on their own clock. With `-details-` after
+    /// the state, Details opens 5 s in; with `-beginning-`, Play from the beginning is pressed
+    /// 4 s in.
+    fn named(shot: &str) -> Option<Self> {
+        let name = shot.replace("-details-", "-").replace("-beginning-", "-");
+        let (state, seconds) = start_state(&name)?;
+        let mut steps: Vec<(u64, StartStep)> = kaeri_engine::playback::starting::fixture(state)
+            .into_iter()
+            .map(|fixture| (fixture.at_ms, StartStep::Event(Box::new(fixture.event))))
+            .collect();
+        if shot.contains("-details-") {
+            steps.push((5_000, StartStep::Details));
+        }
+        if shot.contains("-beginning-") {
+            steps.push((4_000, StartStep::FromBeginning));
+        }
+        // Stable, so events at the same moment keep the engine's order.
+        steps.sort_by_key(|(at, _)| *at);
+        Some(Self { steps, seconds })
+    }
+}
+
+impl StartStep {
+    fn apply(self, shell: &Rc<Shell>) {
+        match self {
+            Self::Event(event) => shell.ctx.hub.take(vec![*event]),
+            Self::Details => shell.player.shot_start_details(),
+            Self::FromBeginning => shell.player.shot_start_from_beginning(),
+        }
+    }
+}
+
+/// How often the starting screen's clock ticks, as `Player` ticks it.
+#[cfg(feature = "fixtures")]
+const START_TICK_MS: u64 = 100;
+
+/// How long a still shot lets the screen's motion settle once its clock is held at the moment,
+/// in real time: the step line's 0.6 s hold between crossfades and the crossfade itself.
+#[cfg(feature = "fixtures")]
+const STILL_SETTLE: f64 = 1.5;
+
+/// A `start-` shot taken still (`--still`): the made-up start's steps on the engine's still clock
+/// rather than the wall clock. Each step is applied once the clock is held at its moment, the
+/// screen ticks on that clock every 100 ms of it as it does on the wall clock, and the clock
+/// stops at the shot's moment. Only the screen's motion then has to settle, in real time, so the
+/// shot shows the same seconds and wording on every run, however slow the machine, and a 24 s
+/// shot takes about 2 s rather than 24. Says how long to let it settle.
+#[cfg(feature = "fixtures")]
+async fn still_start(shell: &Rc<Shell>, start: StartShot) -> f64 {
+    use kaeri_providers::still;
+    // The clock only moves on, so a shot counts from where the one before held it. The first
+    // still shot turns it on.
+    let base = still::clock().map_or(0, |clock| clock.held().as_millis());
+    let base = u64::try_from(base).unwrap_or(u64::MAX);
+    let moment = (start.seconds * 1000.0).round().max(0.0) as u64;
+    shell.go(Dest::Home);
+    let mut steps = start.steps.into_iter().peekable();
+    let mut at = 0;
+    loop {
+        reach(base + at).await;
+        while let Some((_, step)) = steps.next_if(|(due, _)| *due <= at) {
+            step.apply(shell);
+            // The window takes what the step changed before the next.
+            glib::timeout_future(Duration::from_millis(16)).await;
+        }
+        if at % START_TICK_MS == 0 || at >= moment {
+            shell.player.shot_start_tick();
+        }
+        if at >= moment {
+            break;
+        }
+        // The next tick, or a step due before it.
+        let tick = ((at / START_TICK_MS + 1) * START_TICK_MS).min(moment);
+        at = match steps.peek() {
+            Some((due, _)) if *due < tick => *due,
+            _ => tick,
+        };
+    }
+    tracing::info!(held_ms = moment, "a still start");
+    STILL_SETTLE
+}
+
+/// Hold the still clock at `at_ms` and wait, briefly, for it to get there: it walks through any
+/// of the scene's own made-up waits on the way.
+#[cfg(feature = "fixtures")]
+async fn reach(at_ms: u64) {
+    use kaeri_providers::still;
+    let at = Duration::from_millis(at_ms);
+    still::hold(at);
+    for _ in 0..500 {
+        if still::now().is_some_and(|now| now >= at) {
+            return;
+        }
+        glib::timeout_future(Duration::from_millis(10)).await;
+    }
+    tracing::warn!(at_ms, "the still clock did not reach the moment in 5 s");
+}
+
 /// The made-up start and the seconds a `start-<state>-<seconds>` shot names.
 fn start_state(shot: &str) -> Option<(kaeri_model::starting::StartingFixture, f64)> {
     use kaeri_model::starting::StartingFixture as S;
@@ -1582,13 +1800,15 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
                 nav.pop();
             }
         }
-        "player-tracks"
-        | "player-episodes"
-        | "player-episodes-focus"
-        | "player-episodes-ranges"
-        | "player-episodes-ranges-menu" => {
+        "player-tracks" => {
             shell.player.close_menus();
             shell.player.close();
+        }
+        shot if shot.starts_with("player-panel") => {
+            shell.player.close_menus();
+            shell.player.close();
+            #[cfg(feature = "fixtures")]
+            shell.ctx.hub.panel_answer.take();
         }
         "player" | "player-marks" | "player-undo" | "mini" | "pad-help-player"
         | "demo-starting" => shell.player.close(),
@@ -2175,9 +2395,6 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
             let over = match shot.as_str() {
                 "player-marks" => player.shot_popover(),
                 "player-tracks" => player.shot_tracks_popover(),
-                "player-episodes" | "player-episodes-focus" | "player-episodes-ranges" => {
-                    player.shot_episodes_popover()
-                }
                 "synopsis-ranges" => range_popover(&window),
                 #[cfg(feature = "fixtures")]
                 "sync-more" => crate::sync::devices::shot_more_popover(&window),
@@ -2262,6 +2479,11 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "pad" => PAD.iter().map(|p| (*p).to_owned()).collect(),
                 "stats" => STATS.iter().map(|p| (*p).to_owned()).collect(),
                 "tv" => TV.iter().map(|p| (*p).to_owned()).collect(),
+                "panel" => ALL
+                    .iter()
+                    .filter(|p| p.starts_with("player-panel"))
+                    .map(|p| (*p).to_owned())
+                    .collect(),
                 "cast" => CAST.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
                 "cast-states" => {
@@ -2302,6 +2524,11 @@ pub fn named(list: Option<&str>) -> Vec<String> {
                 "missing" => {
                     crate::shots_missing::NAMES.iter().map(|p| (*p).to_owned()).collect()
                 }
+                #[cfg(feature = "fixtures")]
+                "sources-loading" => crate::shots_sources_loading::NAMES
+                    .iter()
+                    .map(|p| (*p).to_owned())
+                    .collect(),
                 #[cfg(feature = "fixtures")]
                 "prelaunch-demo" => {
                     crate::shots_prelaunch::DEMO.iter().map(|p| (*p).to_owned()).collect()
@@ -4456,76 +4683,63 @@ const LINES: [&str; 11] = [
     "A clock that runs four minutes slow is the only witness to a theft on Lantern Street.",
 ];
 
-/// The player's Episodes panel with synopses: the playing title's table is sent again with text
-/// and the rows ahead, and the panel opened. With `focus`, the keyboard then moves to the second
-/// row, and the footer follows it.
+/// The player's Episodes and Sources panel on the board's show: the panel dressed once the
+/// player has its table and menus, then each shot's state staged on it. Returns the seconds the
+/// shot waits before it is taken.
 #[cfg(feature = "fixtures")]
-fn stage_player_episodes(shell: &Rc<Shell>, shot: &str) {
-    let focus = shot == "player-episodes-focus";
-    let ranged = shot.starts_with("player-episodes-ranges");
-    let menu = shot == "player-episodes-ranges-menu";
-    use kaeri_model::episodes::EpisodeRow;
-    let hub = Rc::clone(&shell.ctx.hub);
-    let seen: Rc<std::cell::RefCell<Vec<EpisodeRow>>> = Rc::default();
-    let listening = hub.listen({
-        let seen = Rc::clone(&seen);
-        move |event| {
-            if let Event::Episodes { id, rows, .. } = event
-                && id.get() == PLAYING.0
-            {
-                seen.replace(rows.clone());
-            }
-        }
-    });
+fn stage_player_panel(shell: &Rc<Shell>, shot: &str) -> f64 {
+    let wait = match shot {
+        "player-panel-starting" => 9.7,
+        "player-panel-failed" => 11.5,
+        "player-panel-landed" => 12.0,
+        _ => 8.0,
+    };
     let player = Rc::clone(&shell.player);
-    glib::timeout_add_local_once(Duration::from_secs(4), move || {
-        hub.forget(listening);
-        let base = seen.borrow().clone();
-        // A long series for the ranges: 250 rows, 230 playing.
-        let mut rows: Vec<EpisodeRow> = if ranged && !base.is_empty() {
-            (1..=250)
-                .map(|n| {
-                    let mut row = base[(n - 1) % base.len()].clone();
-                    row.number = n.to_string();
-                    row.title = Some(format!("Letter number {n}"));
-                    row
-                })
-                .collect()
-        } else {
-            base
+    let shot = shot.to_owned();
+    glib::timeout_add_local_once(Duration::from_secs(5), move || {
+        player.shot_panel_board(shot == "player-panel-ranges");
+        let tab = match shot.as_str() {
+            "player-panel"
+            | "player-panel-revealed"
+            | "player-panel-more"
+            | "player-panel-ranges" => "episodes",
+            _ => "sources",
         };
-        let next = if ranged { 230 } else { 4 };
-        for (i, row) in rows.iter_mut().enumerate() {
-            let n = i + 1;
-            row.completed = n < next;
-            row.watched = if n == next { 0.42 } else { 0.0 };
-            row.past_progress = n > next;
-            row.spoiler_ahead = n > next;
-            row.description = Some(LINES[i % LINES.len()].to_owned());
+        player.shot_panel(tab);
+        let side = player.shot_side();
+        let later = move |ms: u64, f: Box<dyn FnOnce()>| {
+            glib::timeout_add_local_once(Duration::from_millis(ms), f);
+        };
+        match shot.as_str() {
+            "player-panel-revealed" => later(500, Box::new(move || side.select("8"))),
+            "player-panel-more" => later(
+                500,
+                Box::new(move || {
+                    side.select("4");
+                    glib::timeout_add_local_once(Duration::from_millis(700), move || {
+                        side.more();
+                    });
+                }),
+            ),
+            "player-panel-releases" => later(1200, Box::new(move || side.unfold("index"))),
+            "player-panel-starting" | "player-panel-failed" => later(
+                1200,
+                Box::new(move || {
+                    side.unfold("index");
+                    player.shot_pick_release("r2");
+                }),
+            ),
+            "player-panel-landed" => later(
+                1200,
+                Box::new(move || {
+                    side.unfold("index");
+                    player.shot_pick_release("r1");
+                }),
+            ),
+            _ => {}
         }
-        hub.take(vec![Event::Episodes {
-            id: kaeri_core::ids::AnilistId::new(PLAYING.0),
-            rows,
-            failed: None,
-        }]);
-        glib::timeout_add_local_once(Duration::from_millis(1200), move || {
-            if ranged {
-                player.shot_ranged_rows();
-            }
-            player.shot_episodes();
-            if menu {
-                let player = Rc::clone(&player);
-                glib::timeout_add_local_once(Duration::from_millis(900), move || {
-                    player.shot_episodes_ranges()
-                });
-            }
-            if focus {
-                glib::timeout_add_local_once(Duration::from_millis(800), move || {
-                    player.shot_episodes_focus(1)
-                });
-            }
-        });
     });
+    wait
 }
 
 /// The title page with synopses on its episodes, as the fixture scene has none of its own: the

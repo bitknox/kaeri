@@ -12,7 +12,9 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case starting
     /// The starting screen on the engine's made-up start: `KAERI_START_STATE` (or
     /// `-KaeriStartState`) names the state, `KAERI_START_AT` the seconds to hold it at,
-    /// `KAERI_START_DETAILS=1` opens Details.
+    /// `KAERI_START_DETAILS=1` opens Details. With the still clock on (`-KaeriStillAt 0`) the
+    /// events are said at once, each at its moment on that clock, and the screen is held at the
+    /// seconds asked for without waiting for them.
     case startFixture = "start-fixture"
     /// Playing, with the controls up (MacPlayer, PhonePlayer), round and round Part A.
     case playing
@@ -105,6 +107,28 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case foundMotionA = "found-motion-a"
     case foundMotionB = "found-motion-b"
     case foundMotionC = "found-motion-c"
+    /// The Episodes and Sources panel (player panel board), with made-up sources and releases:
+    /// Episodes with the next episode revealed, Sources with a source's releases open, a switch
+    /// to one of them finding, loading over the held picture, landed and failed, and a recording
+    /// that opens the panel and goes through a switch that lands and one that fails. Live asks
+    /// the testing engine for the episode's real releases and switches to one of them.
+    case panelEpisodes = "panel-episodes"
+    case panelSources = "panel-sources"
+    case panelFinding = "panel-finding"
+    case panelLoading = "panel-loading"
+    case panelLanded = "panel-landed"
+    case panelFailed = "panel-failed"
+    case panelMotion = "panel-motion"
+    case panelLive = "panel-live"
+    /// The Sources tab while the SourcesLoading scene's sources answer one by one: the panel
+    /// opens on it as the shot is up, and asks 5 s later, at the moment `panelAsksAt` says.
+    case panelSourcesLoading = "panel-sources-loading"
+    /// The same tab, open on episode 7 as its sources answer, when the next episode plays 3 s after
+    /// it asked, at the moment `panelAsksAt` says: the tab asks again for episode 8.
+    case panelNextEpisode = "panel-next-episode"
+    /// The same tab asking for an episode that has not aired (900002's sixth), at the moment
+    /// `panelAsksAt` says: the engine asks no source, and the tab says why.
+    case panelSourcesFailed = "panel-sources-failed"
 
     /// The engine's fixture for a found times' shot.
     var found: FoundSkipFixture? {
@@ -193,6 +217,28 @@ extension PlayerModel {
         guard let state = Self.startParameter("state").flatMap({ states[$0] }) else { return false }
         let hold = Self.startParameter("at").flatMap(Double.init) ?? 2
         if Self.startParameter("details") == "1" { startDetailsOpen = true }
+        if testingStillClockNowMs() != nil {
+            let began = ContinuousClock.now
+            // A still: the clock steps to each event's moment and stops at the shot's, at once. It
+            // counts from where it stands: a scene held by -KaeriStillAt goes on to that first.
+            testingStillClockHold(atMs: testingStillClockNowMs() ?? 0)
+            let nought = testingStillClockNowMs() ?? 0
+            for fixture in startingFixture(state: state) where fixture.atMs <= UInt64(hold * 1000) {
+                await stepStill(to: nought + fixture.atMs)
+                store.apply(fixture.event)
+            }
+            await stepStill(to: nought + UInt64(hold * 1000))
+            // The motion the events set off, on the wall clock. A phone's home indicator, which the
+            // player hides, fades only a few seconds after the screen is up: a shot taken by the
+            // wall clock has always seen it gone, so a still waits for it too.
+            try? await Task.sleep(for: .seconds(1))
+            #if os(iOS)
+            try? await Task.sleep(until: began + .seconds(4))
+            #endif
+            if Self.startParameter("choose") == "1" { chooseSource() }
+            try? await Task.sleep(for: .milliseconds(400))
+            return isPresented
+        }
         let began = ContinuousClock.now
         for fixture in startingFixture(state: state) {
             let at = began + .milliseconds(Int(fixture.atMs))
@@ -204,6 +250,32 @@ extension PlayerModel {
         if Self.startParameter("choose") == "1" { chooseSource() }
         try? await Task.sleep(for: .milliseconds(400))
         return isPresented
+    }
+
+    /// Step the still clock on to `ms`, through each moment on the way where a step line waiting
+    /// out the last one's hold takes its place, as the wall clock would pass it.
+    private func stepStill(to ms: UInt64) async {
+        for _ in 0..<64 {
+            guard let release = walk?.releaseAt, let now = testingStillClockNowMs() else { break }
+            let left = max(0, (release - time.now()) / .milliseconds(1))
+            let due = now + UInt64(left.rounded(.up))
+            guard due < ms else { break }
+            await holdStill(at: due)
+        }
+        await holdStill(at: ms)
+    }
+
+    /// Hold the still clock at `ms`, wait until it is there (at most a second), and let what waits
+    /// on it, and the ticker, see the moment.
+    private func holdStill(at ms: UInt64) async {
+        testingStillClockHold(atMs: ms)
+        let until = ContinuousClock.now + .seconds(1)
+        while (testingStillClockNowMs() ?? ms) < ms, ContinuousClock.now < until {
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        // The waits on the still clock (a held line's release among them) look every 20 ms.
+        try? await Task.sleep(for: .milliseconds(40))
+        tick()
     }
 
     /// Play the first Continue row, the Playing scene's episode 7, and bring the player to
@@ -247,6 +319,63 @@ extension PlayerModel {
             }
             try? await Task.sleep(for: .seconds(0.5))
             if let menu = shot.menu { requestMenu(menu) }
+        case .panelEpisodes, .panelSources, .panelFinding, .panelLoading, .panelLanded, .panelFailed, .panelMotion, .panelLive:
+            there = await stagePanel(shot, id: item.id, episode: String(item.episode), store: store)
+        case .panelSourcesLoading:
+            seek(to: 31)
+            there = await waited(10) { self.position >= 31.5 && self.menus != nil }
+            togglePause()
+            pinnedControls = true
+            // Scrolled to the other sources where the panel is too short for them all.
+            panelShot = PanelShot(tab: .sources, scroll: PanelSources.others)
+            // Open and settled first, so the pictures show the rows and not the panel sliding in.
+            holdsPanelAsk = true
+            requestMenu(.episodes)
+            let asks = Date.now.addingTimeInterval(5)
+            panelAsksAt = Int((asks.timeIntervalSince1970 * 1000).rounded())
+            // For pictures taken from outside the app, where its accessibility is out of reach.
+            Self.note(.info, "shot: the panel asks at \(panelAsksAt ?? 0)")
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(asks.timeIntervalSinceNow))
+                self.holdsPanelAsk = false
+                self.loadPanelReleases()
+                // The rows make the tab tall enough to scroll: the other sources to the top once
+                // they are in, where the panel is too short for them all.
+                _ = await self.waited(2) { self.panelReleases?.rows != nil }
+                self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 1)
+            }
+        case .panelNextEpisode, .panelSourcesFailed:
+            seek(to: 31)
+            there = await waited(10) { self.position >= 31.5 && self.menus != nil }
+            togglePause()
+            pinnedControls = true
+            panelShot = PanelShot(tab: .sources, scroll: PanelSources.others)
+            holdsPanelAsk = true
+            requestMenu(.episodes)
+            let asks = Date.now.addingTimeInterval(5)
+            let moment = shot == .panelNextEpisode ? asks.addingTimeInterval(3) : asks
+            panelAsksAt = Int((moment.timeIntervalSince1970 * 1000).rounded())
+            Self.note(.info, "shot: the panel's moment is at \(panelAsksAt ?? 0)")
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(asks.timeIntervalSinceNow))
+                if shot == .panelNextEpisode {
+                    self.holdsPanelAsk = false
+                    self.loadPanelReleases()
+                    _ = await self.waited(2) { self.panelReleases?.rows != nil }
+                    self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 1)
+                    try? await Task.sleep(for: .seconds(moment.timeIntervalSinceNow))
+                    // What N, Up Next and a media key send, with the tab open.
+                    self.control(.playNext)
+                    // The other sources to the top again once episode 8's are in, if they come.
+                    _ = await self.waited(3) { self.panelReleases?.episode == "8" && self.panelReleases?.rows != nil }
+                    self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 2)
+                } else {
+                    // Still held, so nothing else asks: one ask, for an episode not out yet.
+                    let (id, episode): (AnilistId, String) = (900_002, "6")
+                    self.panelReleases = PanelReleases(id: id, episode: episode, asked: self.time.now())
+                    self.send(.loadSources(id: id, episode: episode))
+                }
+            }
         case .fading:
             seek(to: 31)
             there = await waited(10) { self.position >= 31.5 }
@@ -500,7 +629,7 @@ extension PlayerModel {
         loop(from: 22, to: 40)
     }
 
-    private func waited(_ seconds: Int, _ condition: @MainActor () -> Bool) async -> Bool {
+    func waited(_ seconds: Int, _ condition: @MainActor () -> Bool) async -> Bool {
         let deadline = ContinuousClock.now + .seconds(seconds)
         while !condition() {
             guard ContinuousClock.now < deadline else { return false }

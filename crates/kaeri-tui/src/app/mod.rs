@@ -385,6 +385,8 @@ pub struct App {
     pub sources: Vec<SourceCandidate>,
     /// Which title and episode the pending source list is for.
     pub source_context: Option<(AnilistId, String)>,
+    /// The screen the pending source list was asked from: its answer opens only there.
+    pub source_asked_on: Option<crate::nav::StageView>,
     /// Which title a manual search would re-match.
     pub manual_target: Option<AnilistId>,
     /// Which text-valued setting the editor is writing.
@@ -561,6 +563,7 @@ impl App {
             match_context: None,
             sources: Vec::new(),
             source_context: None,
+            source_asked_on: None,
             manual_target: None,
             edit_target: None,
             stores: Vec::new(),
@@ -800,6 +803,11 @@ impl App {
             Event::Sources { id, episode, candidates, missed } => {
                 self.apply_sources(id, episode, candidates, &missed)
             }
+            // The terminal's picker opens once every source has answered.
+            Event::SourcesProgress { .. } => {}
+            // Its alert beside it says why. The question is answered: a replay of it later
+            // must not open the picker over another screen.
+            Event::SourcesFailed { id, episode, .. } => self.sources_failed(id, &episode),
             Event::MatchChoices { id, provider_id, candidates, answers, .. } => {
                 self.apply_match_choices(id, provider_id, candidates, answers)
             }
@@ -869,6 +877,7 @@ impl App {
             // drives itself.
             Event::PlayerOps { .. }
             | Event::PlayerUi { .. }
+            | Event::PlayerSwitch { .. }
             | Event::PlayerTimeline { .. }
             | Event::PlayerBuffered { .. }
             | Event::PlayerStats { .. }

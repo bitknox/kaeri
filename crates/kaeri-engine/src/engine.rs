@@ -245,7 +245,7 @@ impl Engine {
                 tokio::task::spawn_blocking(move || prune::sweep_at_launch(&paths));
             }
             // With torrents off nothing else would ever prune what an earlier run streamed. With
-            // them on, the session prunes on its way up, before it writes anything.
+            // them on, the session's cache watch prunes once it is up.
             if !config.providers.torrent.enabled {
                 let (dir, limit) = (
                     paths.cache_dir.join("torrents"),
@@ -282,6 +282,43 @@ impl Engine {
         };
         // A chain given whole too: a plugin switched off by name is in it, and not tried.
         registry.set_disabled(config.providers.disabled.iter().cloned());
+
+        // Where torrent playback reports in once it is up, tagged with the bring-up it answers.
+        let (arrivals_tx, arrivals) = mpsc::unbounded_channel();
+        // The engine side's own state, on the config the app was launched with.
+        let mut state = EngineState::new(config.clone(), saved, &paths, arrivals_tx);
+        if let Some(overlay) = crate::profile::overlay_of(&store, &paths) {
+            state.config.use_overlay(Some(overlay), &paths);
+        }
+        state.config.set_sync(store.clone());
+        state.config.set_handheld(handheld);
+        state.config.set_phone(phone);
+        state.config.set_terminal(terminal);
+        // Background work reports through this, each piece holding its own sender, and the
+        // engine side's messages to itself ride it too, each in its place among the events.
+        let mut inbox = Inbox::default();
+
+        // Torrent playback starts coming up here, beside the rest of launch, which can wait on
+        // the keychain: a Mac asks whether to allow an update the keychain has not seen. The
+        // stack's live parts are held so a settings change can tear them down and stand them
+        // back up without a restart. A chain given whole has torrent playback in it already, or
+        // none.
+        if own_chain {
+            #[cfg(feature = "testing")]
+            let fixture = parts.as_ref().is_some_and(|parts| parts.fixture_route);
+            #[cfg(not(feature = "testing"))]
+            let fixture = false;
+            let ground = crate::sources::torrent::TorrentGround {
+                registry: &registry,
+                paths: &paths,
+                store: &store,
+                host: host.as_ref(),
+                fixture,
+            };
+            let tx = inbox.sender();
+            let EngineState { config, torrent_tasks, arrivals, .. } = &mut state;
+            torrent_tasks.bring_up_on(config.effective(), &ground, &tx, arrivals);
+        }
 
         // The trackers as an app's own sign-in clients turn them on; the file keeps none of it.
         let tracked = crate::tracking::native::with_app_clients(&config, &app_clients);
@@ -397,19 +434,8 @@ impl Engine {
         #[cfg(feature = "cast")]
         let casts = Arc::clone(&services.casts);
 
-        // Where torrent playback reports in once it is up, tagged with the bring-up it answers.
-        let (arrivals_tx, arrivals) = mpsc::unbounded_channel();
-        // The engine side's own state, on the config the app was launched with.
-        let mut state = EngineState::new(config, saved, &services.paths, arrivals_tx);
-        if let Some(overlay) = crate::profile::overlay_of(&services.store, &services.paths) {
-            state.config.use_overlay(Some(overlay), &services.paths);
-        }
-        state.config.set_sync(services.store.clone());
         state.cache.use_privacy(services.privacy.clone());
         crate::tracking::commands::announce_signed_in(&services.store, &services.sync);
-        state.config.set_handheld(handheld);
-        state.config.set_phone(phone);
-        state.config.set_terminal(terminal);
         let account = {
             use kaeri_store::sync::kinds::MEDIUM_ACCOUNT;
             let store = &services.store;
@@ -490,10 +516,6 @@ impl Engine {
             launch.push_back(Event::Providers(rows));
         }
         launch.push_back(Event::Demo(crate::demo::state(&state, &services)));
-
-        // Background work reports through this, each piece holding its own sender, and the
-        // engine side's messages to itself ride it too, each in its place among the events.
-        let mut inbox = Inbox::default();
 
         // The daily update check: one cached request, one quiet toast when a release exists.
         // The setting starts and stops it from here on, see `settings::set_setting`.
@@ -590,17 +612,6 @@ impl Engine {
                 services.http.clone(),
                 inbox.sender(),
             ));
-        }
-
-        // The torrent stack's live parts, held so a settings change can tear them down and
-        // stand them back up without a restart. They are replaced together: the download
-        // manager and seeding hold a session alive, and leaving one behind would mean traffic
-        // outliving the source it belongs to. A chain
-        // given whole has torrent playback in it already, or none.
-        if own_chain {
-            let tx = inbox.sender();
-            let EngineState { config, torrent_tasks, arrivals, .. } = &mut state;
-            torrent_tasks.bring_up(config.effective(), &services, &tx, arrivals);
         }
 
         // The player is checked last, as launch always has, and not waited for. Only the
@@ -1317,6 +1328,29 @@ impl Actor {
     /// count, and staged like one: it is announced, then said as `PlaybackStaged`.
     fn follow(&mut self, event: &mut Event, played: Option<&Played>) -> Vec<Event> {
         let finished = self.state.staging.observe(event, played);
+        // Sub or dub picked in the player goes for this title over the show's own setting, as
+        // the restart below and every play of it after.
+        if let Event::PlayerTranslation(translation) = event
+            && let Some(front) = self.state.staging.front()
+        {
+            self.state.translation_picked = Some((front.id, *translation));
+            // Switched in place while the episode plays on, as a release is: said on
+            // `PlayerSwitch`, with nothing restarted.
+            if crate::playback::switch::translate(*translation, &self.state, &self.services) {
+                return Vec::new();
+            }
+        }
+        // The other version did not start, and the episode plays on in the one it was in: that
+        // one goes for the title again.
+        if let Event::PlayerSwitch {
+            state: kaeri_model::playback::SourceSwitch::Failed { to, .. },
+            ..
+        } = event
+            && let Some(picked) = to.translation
+            && let Some(front) = self.state.staging.front()
+        {
+            self.state.translation_picked = Some((front.id, picked.toggled()));
+        }
         // The room starts or moves on: this device opens the episode from its own sources.
         #[cfg(feature = "party")]
         if let Event::PartyStarted { id, episode, .. } = event {
@@ -1703,6 +1737,103 @@ mod tests {
         fn storage_for(&self, _: &str) -> Storage {
             Storage::Keychain
         }
+    }
+
+    /// A host whose keychain takes `wait` to give the engine its store, as a Mac's does when an
+    /// update is new to the keychain and asks whether to allow it.
+    struct SlowKeychain {
+        wait: std::time::Duration,
+        tokens: Arc<dyn SecretStore>,
+    }
+
+    impl Host for SlowKeychain {
+        fn open_url(&self, _: &str) -> Result<(), String> {
+            Err("a test opens nothing".into())
+        }
+
+        fn notify(&self, _: &str, _: &str) {}
+
+        fn secrets(&self) -> Option<Arc<dyn SecretStore>> {
+            std::thread::sleep(self.wait);
+            Some(self.tokens.clone())
+        }
+    }
+
+    /// A SOCKS5 proxy on this machine that lets every client in, and when the first one came.
+    async fn open_proxy() -> (String, Arc<std::sync::OnceLock<std::time::Instant>>) {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let listener = tokio::net::TcpListener::bind("127.0.0.1:0").await.unwrap();
+        let url = format!("socks5://{}", listener.local_addr().unwrap());
+        let first = Arc::new(std::sync::OnceLock::new());
+        let seen = Arc::clone(&first);
+        tokio::spawn(async move {
+            while let Ok((mut stream, _)) = listener.accept().await {
+                let _ = seen.set(std::time::Instant::now());
+                tokio::spawn(async move {
+                    let mut offer = [0u8; 3];
+                    if stream.read_exact(&mut offer).await.is_ok() {
+                        let _ = stream.write_all(&[5, 0]).await;
+                    }
+                });
+            }
+        });
+        (url, first)
+    }
+
+    /// Torrent playback starts coming up as the engine starts, beside the rest of launch, so a
+    /// keychain slow to answer holds back the first frame but not the torrent session.
+    #[tokio::test(flavor = "multi_thread", worker_threads = 4)]
+    async fn torrent_playback_comes_up_beside_a_keychain_slow_to_answer() {
+        use kaeri_model::sources::ProxyStatus;
+        let dir = tempfile::tempdir().unwrap();
+        let (proxy, first) = open_proxy().await;
+        let wait = std::time::Duration::from_millis(1500);
+        let host = Arc::new(SlowKeychain {
+            wait,
+            tokens: crate::host::file_secrets(&Paths {
+                config_file: dir.path().join("config.toml"),
+                data_dir: dir.path().join("data"),
+                cache_dir: dir.path().join("cache"),
+            }),
+        });
+        let began = std::time::Instant::now();
+        let (engine, mut events) = engine_with(dir.path(), host, |o| {
+            o.sources = None;
+            o.config.providers.torrent.enabled = true;
+            o.config.providers.torrent.proxy = Some(proxy);
+        })
+        .await;
+        let started = began.elapsed();
+        let checked = first.get().map(|at| at.duration_since(began));
+        // The check passing is said twice: once by the bring-up, and again as the engine lends
+        // the session it brought.
+        let lent = tokio::time::timeout(std::time::Duration::from_secs(10), async {
+            let mut passed = 0;
+            loop {
+                match events.recv().await {
+                    Some(Event::TorrentProxy(Some(ProxyStatus::Passed))) => {
+                        passed += 1;
+                        if passed == 2 {
+                            break began.elapsed();
+                        }
+                    }
+                    Some(_) => {}
+                    None => panic!("the engine stopped"),
+                }
+            }
+        })
+        .await
+        .expect("the session was lent");
+        eprintln!(
+            "keychain {wait:?}: engine started {started:?}, proxy checked {checked:?}, session lent {lent:?}"
+        );
+        assert!(started >= wait, "the keychain was asked as the engine started");
+        let checked = checked.expect("the bring-up checked the proxy");
+        assert!(
+            checked < wait / 3,
+            "the bring-up waited on the keychain: checked at {checked:?}"
+        );
+        engine.shutdown().await;
     }
 
     #[tokio::test]
@@ -2277,6 +2408,187 @@ mod tests {
                 "{seen:?}"
             );
         }
+
+        // A release picked in the player with nothing of that episode playing is a play of it.
+        // A switch is no job, so the refusal is all it says.
+        engine.send(Command::SwitchSource {
+            id,
+            episode: episode(),
+            provider_id: "yamabiko".into(),
+            source_id: "a".into(),
+        });
+        let seen = until(&mut events, |e| matches!(e, Event::Toast(_))).await;
+        assert!(
+            matches!(&seen[..], [Event::Toast(n)] if n.text == Msg::NoticeNoPlayer.english()),
+            "{seen:?}"
+        );
+    }
+
+    /// A play says the title's whole table as the engine holds it, for the player's Episodes
+    /// panel, though the front end never asked for it.
+    #[cfg(feature = "testing")]
+    #[tokio::test]
+    async fn a_play_says_its_title_s_episode_table() {
+        let dir = tempfile::tempdir().unwrap();
+        let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        let (engine, mut events) =
+            engine_with(dir.path(), host, |options| options.hosted_player = true).await;
+        events.launch().await;
+        let id = kaeri_core::ids::AnilistId::new(1);
+        let row = |number: &str| kaeri_model::episodes::EpisodeRow {
+            number: number.into(),
+            title: Some(format!("Part {number}")),
+            thumbnail: None,
+            description: None,
+            duration_secs: Some(1_440),
+            watched: 0.0,
+            completed: false,
+            kind: None,
+            skippable: false,
+            airs_at: None,
+            delayed_from: None,
+            metadata_only: false,
+            source: None,
+            unsourced: false,
+            past_progress: false,
+            spoiler_ahead: false,
+            synopsis_pending: false,
+            followed: Vec::new(),
+        };
+        let rows = vec![row("1"), row("2"), row("3")];
+        engine.inject(Event::Episodes { id, rows: rows.clone(), failed: None });
+        until(&mut events, |e| matches!(e, Event::Episodes { .. })).await;
+
+        let job = engine.send(Command::play(id, "2")).expect("a job");
+        let mut seen = Vec::new();
+        while !seen.iter().any(|e| matches!(e, Event::JobDone(done) if *done == job)) {
+            match tokio::time::timeout(Duration::from_secs(10), events.next_events()).await {
+                Ok(batch) if !batch.is_empty() => seen.extend(batch),
+                _ => panic!("nothing more, having seen {seen:?}"),
+            }
+        }
+        let said = seen.iter().find_map(|e| match e {
+            Event::Episodes { id: of, rows, failed: None } if *of == id => Some(rows.clone()),
+            _ => None,
+        });
+        assert_eq!(said, Some(rows), "{seen:?}");
+        engine.shutdown().await;
+    }
+
+    /// A title's page lists its episodes, named from another source where its own left titles,
+    /// stills and synopses out. A card's table loads for another title after, as Home and
+    /// Continue load them, so the engine's record no longer holds the page's. A play of the
+    /// title then loads its episodes for the player, which names nothing: that load must never
+    /// stand in for the table the front end has, which the player's Episodes panel shows while
+    /// it plays and the page shows after.
+    #[cfg(feature = "testing")]
+    #[tokio::test]
+    async fn a_play_never_takes_a_titles_named_episodes_away() {
+        use kaeri_core::{
+            demo::{DEMO_ANILIST_ID, DEMO_TITLE, DEMO_TITLE_ROMAJI},
+            ids::{AnilistId, ProviderKey},
+            media::{Episode, MediaFormat, SearchHit},
+        };
+        use std::collections::HashMap;
+
+        use kaeri_model::episodes::EpisodeRow;
+        use kaeri_providers::MockProvider;
+
+        /// What a row shows of itself beyond its number.
+        type Shown = (Option<String>, Option<String>, Option<String>, Option<u64>);
+        fn shown(rows: &[EpisodeRow]) -> Vec<Shown> {
+            let row = |r: &EpisodeRow| {
+                (r.title.clone(), r.thumbnail.clone(), r.description.clone(), r.duration_secs)
+            };
+            rows.iter().map(row).collect()
+        }
+        /// Every table told replaces the one the front end held of its title, as the apps
+        /// keep them.
+        fn take(batch: &[Event], held: &mut HashMap<AnilistId, Vec<EpisodeRow>>) {
+            for event in batch {
+                if let Event::Episodes { id, rows, failed: None } = event {
+                    held.insert(*id, rows.clone());
+                }
+            }
+        }
+
+        let id = DEMO_ANILIST_ID;
+        let hit = |key: &ProviderKey| SearchHit {
+            key: key.clone(),
+            title: DEMO_TITLE.into(),
+            synonyms: vec![DEMO_TITLE_ROMAJI.into()],
+            episode_count: Some(2),
+            year: None,
+            format: Some(MediaFormat::Ona),
+        };
+        // The source a play uses lists the episodes by number alone. Another names them.
+        let bare_key = ProviderKey::new("numbers-only");
+        let bare = MockProvider::new("bare")
+            .with_hits(vec![hit(&bare_key)])
+            .with_episodes_for(bare_key, vec![Episode::new(1), Episode::new(2)]);
+        let named_key = ProviderKey::new("catalogue");
+        let catalogue = (1..=2)
+            .map(|n| Episode {
+                title: Some(format!("The Ledger, part {n}")),
+                thumbnail: Some(format!("https://stills.example/{n}.jpg")),
+                description: Some(format!("The office audits ledger number {n} by hand.")),
+                ..Episode::new(n)
+            })
+            .collect();
+        let named = MockProvider::new("named")
+            .with_hits(vec![hit(&named_key)])
+            .with_episodes_for(named_key, catalogue);
+        let registry = ProviderRegistry::new(vec![bare.arc(), named.arc()]);
+
+        let dir = tempfile::tempdir().unwrap();
+        let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
+        let (engine, mut events) = engine_with(dir.path(), host, |options| {
+            options.hosted_player = true;
+            options.sources = Some(registry);
+        })
+        .await;
+        events.launch().await;
+        let mut held = HashMap::new();
+
+        // The page: its table, then the same rows named from the other source.
+        engine.send(Command::LoadEpisodes(id));
+        let page = loop {
+            let batch = tokio::time::timeout(Duration::from_secs(10), events.next_events())
+                .await
+                .expect("the page's table, named");
+            take(&batch, &mut held);
+            let rows: Option<&Vec<EpisodeRow>> = held.get(&id);
+            if rows.is_some_and(|rows| rows.iter().all(|r| r.thumbnail.is_some())) {
+                break held[&id].clone();
+            }
+        };
+        assert!(
+            shown(&page).iter().all(|(title, still, synopsis, length)| title.is_some()
+                && still.is_some()
+                && synopsis.is_some()
+                && *length == Some(14 * 60)),
+            "named, with the title's length: {page:?}"
+        );
+
+        // A card's table for another title, as Home and Continue load them.
+        let other = AnilistId::new(77);
+        engine.inject(Event::Episodes { id: other, rows: page.clone(), failed: None });
+        until(&mut events, |e| matches!(e, Event::Episodes { id, .. } if *id == other)).await;
+
+        // The play, and a while for what it loads behind it.
+        let job = engine.send(Command::play(id, "1")).expect("a job");
+        let mut played = false;
+        let quiet = tokio::time::Instant::now() + Duration::from_secs(3);
+        while let Ok(batch) = tokio::time::timeout_at(quiet, events.next_events()).await {
+            played |= batch.iter().any(|e| matches!(e, Event::JobDone(done) if *done == job));
+            take(&batch, &mut held);
+            // While it plays, as the panel shows it.
+            assert_eq!(shown(&held[&id]), shown(&page), "while it plays: {batch:?}");
+        }
+        assert!(played, "the play's job ended");
+        // And after, as the page shows it again.
+        assert_eq!(shown(&held[&id]), shown(&page), "after the play");
+        engine.shutdown().await;
     }
 
     /// [`until`], for an event anywhere in what comes, not only last in its batch: what a

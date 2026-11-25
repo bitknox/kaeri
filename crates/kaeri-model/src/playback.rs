@@ -577,6 +577,66 @@ pub struct Successor {
     pub banner_url: Option<String>,
 }
 
+/// What a switch of the playing episode goes to: a release picked from
+/// [`Event::Sources`](crate::event::Event::Sources) and asked for with
+/// [`Command::SwitchSource`](crate::command::Command::SwitchSource), a stream picked from the
+/// player's Sources menu with `PlayerChoice::Source`, the other version picked with
+/// `PlayerChoice::Translation`, or the stream the engine itself moved to.
+#[derive(Debug, Clone, PartialEq, Eq, Default)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SwitchTo {
+    /// The source, by id, as `SourceCandidate::provider_id` names it.
+    pub provider_id: String,
+    /// The name the source goes by.
+    pub name: String,
+    /// The release, by its `SourceCandidate::id`. `None` for a stream from the Sources menu.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub release: Option<String>,
+    /// The stream, by its `MenuSource::id`. `None` for a release.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub stream: Option<String>,
+    /// The version a switch between subtitled and dubbed goes to; `None` for any other switch.
+    /// While it is `Finding`, the source is not known yet and `provider_id` and `name` are
+    /// empty. From `Loading` on they name the source of the stream that was found.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub translation: Option<kaeri_core::media::Translation>,
+}
+
+/// How a switch of the playing episode to another source, release or stream goes, said on
+/// [`Event::PlayerSwitch`](crate::event::Event::PlayerSwitch). The episode stays one playback
+/// throughout: the same `PlaybackId`, its history and its place kept, and no starting screen.
+///
+/// A front end holds the picture it shows from [`SourceSwitch::Loading`] until the next
+/// [`SourceSwitch::Landed`] or [`SourceSwitch::Failed`], and crossfades from it then. A switch
+/// that fails before anything loads says `Failed` with the episode still playing under it.
+///
+/// `Landed` is also said alone, with no `Finding` or `Loading` before it, when the engine itself
+/// moves the episode to a stream of another source: a stream that showed no video, broke off
+/// or stalled. Whatever names the source playing follows the last `Landed`.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+// Not boxed: the bindings carry records by value.
+#[allow(clippy::large_enum_variant)]
+pub enum SourceSwitch {
+    /// The release, or the other version, is being found. The episode plays on meanwhile.
+    Finding { to: SwitchTo },
+    /// Found: the player is about to load it at `at`, in seconds. The next `PlayerOp::Load` of
+    /// this playback is this one; the picture on screen is held until it lands.
+    Loading { to: SwitchTo, at: f64 },
+    /// Its first frame: the episode plays from `to` now, from `at`.
+    Landed { to: SwitchTo, at: f64 },
+    /// It could not start, and the episode plays on from what it played before, from `at`.
+    /// `text` says so with both names, for the row that failed; `reason` is why, when the
+    /// source said.
+    Failed {
+        to: SwitchTo,
+        at: f64,
+        text: crate::Msg,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        reason: Option<crate::Msg>,
+    },
+}
+
 /// The episode that follows, as the Up Next card names it.
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]

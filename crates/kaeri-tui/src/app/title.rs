@@ -528,6 +528,10 @@ impl App {
             }
             if row.held_back_for == Some(HoldReason::TorrentsOff) {
                 push_column(&mut label, &t::source_note_torrents_off());
+            } else if row.held_back_for == Some(HoldReason::TorrentsStarting) {
+                push_column(&mut label, &t::source_note_torrents_starting());
+            } else if row.held_back_for == Some(HoldReason::TorrentsFailed) {
+                push_column(&mut label, &t::source_note_torrents_failed());
             } else if row.held_back {
                 push_column(&mut label, &t::source_note_held_back());
             } else if !row.usable {
@@ -957,10 +961,14 @@ mod tests {
         a.apply(Event::Providers(vec![
             held("index", HoldReason::TorrentsOff),
             held("proxied", HoldReason::ProxyCheck),
+            held("swarm", HoldReason::TorrentsStarting),
+            held("pier", HoldReason::TorrentsFailed),
         ]));
         let labels: Vec<_> = a.provider_choices().into_iter().map(|(_, l)| l).collect();
         assert!(labels[1].ends_with(&t::source_note_torrents_off()), "{labels:?}");
         assert!(labels[2].ends_with(&t::source_note_held_back()), "{labels:?}");
+        assert!(labels[3].ends_with(&t::source_note_torrents_starting()), "{labels:?}");
+        assert!(labels[4].ends_with(&t::source_note_torrents_failed()), "{labels:?}");
     }
 
     #[test]

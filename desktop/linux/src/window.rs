@@ -1144,6 +1144,10 @@ impl Shell {
                     return;
                 }
                 let n = a.and_then(|a| a.get::<i32>()).unwrap_or(0);
+                if s.is_player() {
+                    s.player.section_shortcut(n);
+                    return;
+                }
                 let sections = Dest::numbered(pages::answer());
                 if let Some(dest) = usize::try_from(n - 1).ok().and_then(|i| sections.get(i)) {
                     s.go(*dest);

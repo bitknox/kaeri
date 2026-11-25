@@ -23,3 +23,4 @@ player-volume-spoken = { $percent } phần trăm
 player-volume-muted = Âm lượng, đã tắt tiếng
 player-exit-fullscreen = Thoát toàn màn hình
 accounts-pane-name = Tài khoản, { $state }
+player-panel-dual-audio = { -subbed } và { -dubbed }

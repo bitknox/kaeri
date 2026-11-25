@@ -406,6 +406,15 @@ notice-audio-now-subbed = Audio is now subbed.
 # Toast after switching the audio while playing.
 notice-audio-now-dubbed = Audio is now dubbed.
 
+# Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+player-panel-switch-failed = Couldn't start from { $source }. Still playing from { $current }.
+
+# Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+player-panel-dub-failed = Couldn't find episode { $episode } dubbed. Still playing subbed.
+
+# Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+player-panel-sub-failed = Couldn't find episode { $episode } subbed. Still playing dubbed.
+
 # Toast when the previous-episode control is used on the first episode.
 notice-already-first-episode = Already at the first episode.
 
@@ -1976,6 +1985,9 @@ discussion-like-named =
         [one] Like, one like
        *[other] Like, { $count } likes
     }
+
+# Player panel, Sources tab: part of a release's detail line, a release with both the original and the dubbed audio.
+player-panel-release-dual-audio = Subbed and dubbed
 
 # Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
 linux-store-invite-chip = Invite ••••{ $last }
@@ -8977,6 +8989,9 @@ player-start-pinned = Your pick for this show
 # Detail line when a source has no match for the show.
 player-start-miss-no-match = { $name } doesn't have this show
 
+# Detail line when a source found titles like the show and could not tell which one it is.
+player-start-miss-ambiguous = { $name } couldn't match this title
+
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = { $name } doesn't have episode { $episode }
 
@@ -8994,6 +9009,12 @@ player-start-miss-skipped = You skipped { $name }
 
 # Details row for a source not asked while torrent playback is off. The name goes before it.
 player-start-row-held-torrents-off = Not asked · Torrent playback is off
+
+# Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+player-start-row-held-torrents-starting = Not asked · Torrent playback is starting
+
+# Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+player-start-row-held-torrents-failed = Not asked · Torrent playback couldn't start
 
 # Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
 player-start-row-held-proxy = Not asked · Waiting for the proxy check
@@ -9113,6 +9134,20 @@ player-start-not-asked-torrents-off =
     { $count ->
         [one] { $names } isn't asked while torrent playback is off.
        *[other] { $names } aren't asked while torrent playback is off.
+    }
+
+# Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+player-start-not-asked-torrents-starting =
+    { $count ->
+        [one] { $names } isn't asked until torrent playback has started.
+       *[other] { $names } aren't asked until torrent playback has started.
+    }
+
+# Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+player-start-not-asked-torrents-failed =
+    { $count ->
+        [one] { $names } isn't asked because torrent playback couldn't start.
+       *[other] { $names } aren't asked because torrent playback couldn't start.
     }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -9534,6 +9569,12 @@ source-picker-none-answered-lists = No source that answered lists episode { $epi
 # Line of the picker for a source not asked while torrent playback is off.
 source-picker-held-torrents-off = { $name } isn't asked while torrent playback is off
 
+# Line of the picker for a source not asked while torrent playback is on and still starting.
+source-picker-held-torrents-starting = { $name } isn't asked until torrent playback has started
+
+# Line of the picker for a source not asked because torrent playback is on and couldn't start.
+source-picker-held-torrents-failed = { $name } isn't asked because torrent playback couldn't start
+
 # Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
 source-picker-held-proxy = { $name } isn't asked until the proxy check passes
 
@@ -9593,6 +9634,82 @@ player-subs-bg-box = Box
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = More in Settings…
+
+# Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+player-sheet-episodes-loading = The episode list is on its way.
+
+# Accessibility label of the player's side panel with the Episodes and Sources tabs.
+player-panel = Episodes and sources
+
+# Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+episode-row-playing = Playing · { $left }
+
+# Episode row in the player's panel: the episode is part story, part filler.
+episode-row-mixed = Mixed
+
+# Episode row in the player's panel: the length of an episode nobody has started.
+episode-row-length = { $minutes } min
+
+# Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+episode-row-delayed = Delayed, was { $when }
+
+# Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+episode-row-from = From { $source }
+
+# Button on a partly watched episode: plays it from where it was left.
+action-resume = Resume
+
+# Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+player-panel-metadata-only = No source lists this show yet. Episodes can still be marked watched.
+
+# Player panel, Sources tab: heading over the source and streams playing now.
+player-panel-playing-now = Playing now
+
+# Player panel, Sources tab: heading over the other sources, in the order they are tried.
+player-panel-other-sources = Other sources
+
+# Player panel, Sources tab: the folded list of a source's releases for this episode.
+player-panel-releases =
+    { $count ->
+        [one] One release
+       *[other] { $count } releases
+    }
+
+# Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+player-release-automatic = Automatic picks this
+
+# Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+player-panel-order = Tried in the order set in Sources.
+
+# Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+player-panel-pick-scope = A pick here is for this episode only.
+
+# Accessibility label of the subtitled or dubbed switch in the player panel.
+player-translation = Subbed or dubbed
+
+# Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+player-panel-starting = Starting · { $seconds } s
+
+# Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.
+player-panel-asking = Asking · { $seconds } s
+
+# Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-seconds = Finding episode { $episode } dubbed · { $seconds } s
+
+# Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-subbed-seconds = Finding episode { $episode } subbed · { $seconds } s
+
+# Notice when another source started playing while the player panel was closed.
+notice-playing-from-source = Playing from { $source } at { $clock }
+
+# Player panel, under the subtitled or dubbed switch during a watch party.
+party-version-own = Only your player switches. The room keeps playing.
+
+# Player panel: button under a synopsis cut to three lines, that shows it whole.
+player-panel-more = More
+
+# Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+player-panel-less = Less
 
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = Private mode
@@ -13405,6 +13522,12 @@ source-note-held-back = Waiting for the proxy check
 # Under a source that names torrents while torrent playback is off in Settings.
 source-note-torrents-off = Torrent playback is off
 
+# Under a source that names torrents while torrent playback is on and still starting.
+source-note-torrents-starting = Torrents are starting
+
+# Under a source that names torrents while torrent playback is on and couldn't start.
+source-note-torrents-failed = Torrents couldn't start
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = Releases
 
@@ -13474,6 +13597,12 @@ sources-status-held-back = Held back
 # Status: a source that names torrents, while torrent playback is off.
 sources-status-torrents-off = Torrents off
 
+# Status: a source that names torrents, while torrent playback is on and still starting.
+sources-status-torrents-starting = Torrents starting
+
+# Status: a source that names torrents, while torrent playback is on and couldn't start.
+sources-status-torrents-failed = Torrents didn't start
+
 # Status: slow.
 sources-status-slow = Slow
 
@@ -13491,6 +13620,12 @@ sources-detail-held-back = Waiting until the proxy check passes.
 
 # Status line: torrent playback is off.
 sources-detail-torrents-off = Torrent playback is off. You can turn it on in Settings, under Sources.
+
+# Status line: torrent playback is on and still starting.
+sources-detail-torrents-starting = Torrent playback is starting. This source is asked once it has started.
+
+# Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+sources-detail-torrents-failed = Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.
 
 # Status line: disabled.
 sources-detail-disabled = Off. It keeps its place and isn't tried.

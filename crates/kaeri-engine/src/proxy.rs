@@ -178,6 +178,16 @@ fn secrets(services: &Services) -> Arc<dyn SecretStore> {
 /// its URL when the file names a user and no password and the secret store keeps one. Only
 /// this copy holds it: the file never does, nor the config in effect.
 pub(crate) fn with_proxy_password(config: &Config, services: &Services) -> Config {
+    with_proxy_password_from(config, services.host.as_ref(), &services.paths)
+}
+
+/// [`with_proxy_password`], from the host's secret store, or files under `paths` for a host
+/// with none: before the engine's services exist, as torrent playback starts coming up.
+pub(crate) fn with_proxy_password_from(
+    config: &Config,
+    host: &dyn crate::host::Host,
+    paths: &kaeri_core::config::Paths,
+) -> Config {
     let wanted = config
         .providers
         .torrent
@@ -190,7 +200,8 @@ pub(crate) fn with_proxy_password(config: &Config, services: &Services) -> Confi
     if !wanted {
         return config.clone();
     }
-    put_password(config, secrets(services).as_ref())
+    let secrets = host.secrets().unwrap_or_else(|| crate::host::file_secrets(paths));
+    put_password(config, secrets.as_ref())
 }
 
 /// [`with_proxy_password`], from `secrets`.

@@ -43,7 +43,8 @@ public struct StartingWalk: Equatable, Sendable {
 
     public let id: AnilistId
     public let episode: String
-    public let began: ContinuousClock.Instant
+    /// When this file's wait began: the start, or the load of a later file of the same play.
+    public private(set) var began: ContinuousClock.Instant
 
     /// The step line as shown, and when it took its place.
     public private(set) var line: String
@@ -186,8 +187,48 @@ public struct StartingWalk: Equatable, Sendable {
         if let next { say(next, at: now) }
     }
 
+    /// The play has shown a picture: a file loaded after it is another attempt of its own.
+    public private(set) var pictured = false
+
+    /// The first picture of the play is up.
+    public mutating func sawPicture() { pictured = true }
+
+    /// A later file of the same play, after one showed a picture: a switch to another release
+    /// or stream, a failover, or the way back from a switch that failed. Its wait starts now,
+    /// on the stream being opened, with nothing of the last file's swarm, speed or buffering,
+    /// and no resume line, as the episode goes on where it was. It comes from `source`, `nil`
+    /// while that is not known, and plays in `translation` when that changed: nothing the
+    /// start's own lookup found, asked or missed is said of it.
+    public mutating func anotherFile(
+        at now: ContinuousClock.Instant, from source: String?, translation: Translation? = nil
+    ) {
+        playsFrom(source)
+        pinMissed = nil
+        if let translation { self.translation = translation }
+        began = now
+        activeSince = now
+        rungSince = now
+        phase = .opening
+        peers = nil
+        bytesPerSecond = nil
+        percent = nil
+        noVideo = false
+        resume = nil
+        line = Msg.startOpeningStream.text
+        lineSince = now
+        queued = nil
+        open(Msg.startOpeningStream.text, at: now)
+    }
+
     /// The viewer switched the translation: the streams found are for the other one.
     public mutating func choseTranslation(_ translation: Translation) { self.translation = translation }
+
+    /// The file loading comes from `source`, as a switch or the engine said: the source the
+    /// start asked, when it is another, is not the one waited for or skipped.
+    public mutating func playsFrom(_ source: String?) {
+        from = source
+        if asked?.name != source { asked = nil }
+    }
 
     /// mpv loaded the file and has not shown a frame: waiting for data, with no number to give.
     public mutating func loaded(at now: ContinuousClock.Instant) {
@@ -268,6 +309,8 @@ public struct StartingWalk: Equatable, Sendable {
     static func heldNote(_ why: SourceHold) -> String {
         switch why {
         case .torrentsOff: L.playerStartRowHeldTorrentsOff
+        case .torrentsStarting: L.playerStartRowHeldTorrentsStarting
+        case .torrentsFailed: L.playerStartRowHeldTorrentsFailed
         case .proxyCheck: L.playerStartRowHeldProxy
         case .cellular: L.playerStartRowHeldCellular
         case .other: L.playerStartRowHeldOther
@@ -477,6 +520,8 @@ public struct StartFailureView: Equatable, Sendable {
             let count = group.names.count
             switch group.why {
             case .torrentsOff: return L.playerStartNotAskedTorrentsOff(count: count, names: names)
+            case .torrentsStarting: return L.playerStartNotAskedTorrentsStarting(count: count, names: names)
+            case .torrentsFailed: return L.playerStartNotAskedTorrentsFailed(count: count, names: names)
             case .proxyCheck: return L.playerStartNotAskedProxy(count: count, names: names)
             case .cellular: return L.playerStartNotAskedCellular(count: count, names: names)
             case .other: return L.playerStartNotAskedOther(count: count, names: names)

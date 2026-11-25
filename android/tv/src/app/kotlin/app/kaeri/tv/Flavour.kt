@@ -36,5 +36,7 @@ internal object Flavour {
     const val UPDATES = true
 
     /** Nothing to set up for the app. */
+    fun playerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) = send(command)
+
     fun started(context: android.content.Context, store: AppStore, intent: Intent, player: app.kaeri.player.PlayerModel, host: app.kaeri.player.PlayerHost? = null) = Unit
 }

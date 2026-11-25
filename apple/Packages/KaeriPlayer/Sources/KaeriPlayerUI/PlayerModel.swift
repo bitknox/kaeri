@@ -34,7 +34,7 @@ public final class PlayerModel {
 
     // MARK: Wiring
 
-    @ObservationIgnored private let send: Send
+    @ObservationIgnored let send: Send
     @ObservationIgnored private let makeBackend: (@MainActor () -> any PlayerBackend)?
     @ObservationIgnored private var backend: (any PlayerBackend)?
     @ObservationIgnored private var work: AsyncStream<Work>.Continuation?
@@ -68,6 +68,10 @@ public final class PlayerModel {
         case mark(Int)
         /// A subtitle or audio file the viewer picked, added and selected (`loadTrack`).
         case trackFile(Track.Kind, path: String)
+        /// The picture on screen, taken before a switch's load clears it.
+        case hold(Int)
+        /// The ASS header of subtitle track `track`, read for where its lines rest.
+        case subtitleHeader(track: Int)
     }
 
     /// A load on its way to mpv, and the playlist entry mpv made for it once it answers.
@@ -176,6 +180,39 @@ public final class PlayerModel {
     @ObservationIgnored private var rollOnTimer: Task<Void, Never>?
     public private(set) var episode: EpisodeOnScreen?
     public private(set) var menus: PlayerMenus?
+
+    // MARK: The Episodes and Sources panel
+
+    /// The panel is open: a switch that lands while it is closed says so in a notice.
+    public var panelOpen = false
+    /// The episode's releases across every source, as the panel last asked for them.
+    public internal(set) var panelReleases: PanelReleases?
+    /// The switch picked in the panel, from the pick until it lands, or its failure until the
+    /// next pick.
+    public internal(set) var panelSwitch: PanelSwitch?
+    /// The name the source playing goes by: from the start's Found, then from each switch that
+    /// lands.
+    public internal(set) var playingSource: String?
+    /// The release playing, when one was picked in the panel and landed.
+    public internal(set) var playingRelease: SourceCandidate?
+    /// The switch to the other version, subtitled or dubbed, from the pick until it lands, or
+    /// its failure until the next pick.
+    public internal(set) var versionSwitch: VersionSwitch?
+    /// What the next file mpv starts comes from, from a switch's Loading, or the engine moving
+    /// on by itself, until it lands or fails.
+    private var nextFile: NextFile?
+    /// What a screenshot or recording puts the panel in (PlayerShots).
+    public internal(set) var panelShot: PanelShot?
+    /// Holding the picture over the video while a switch loads (`PlayerSwitch` Loading to
+    /// Landed or Failed): the starting screen stays away and the seek line stays at `holdAt`.
+    public internal(set) var holding = false
+    /// Where the switch loads at, while holding.
+    @ObservationIgnored var holdAt: Double?
+    /// The picture held, once mpv has handed it over; it stays a moment after the hold ends, for
+    /// the crossfade.
+    public internal(set) var heldPicture: HeldPicture?
+    @ObservationIgnored var holdSerial = 0
+    @ObservationIgnored var heldRelease: Task<Void, Never>?
     public private(set) var skip: SkipOffer?
     public internal(set) var undo: UndoOffer?
     /// The marking bar of the playback on screen, as the engine last said it (skip intro).
@@ -260,6 +297,11 @@ public final class PlayerModel {
     #if FIXTURES
     /// A shot of a card holds it up, as a screen reader does.
     @ObservationIgnored public var holdsPromptsForShot = false
+    /// When a shot's panel, already open, asks for the episode's sources, in milliseconds since
+    /// 1970, said ahead in the player's accessibility so a UI test counts its pictures from it.
+    public internal(set) var panelAsksAt: Int?
+    /// Until then the panel asks nothing, so it is in place before the clock starts.
+    @ObservationIgnored var holdsPanelAsk = false
     #endif
     @ObservationIgnored public var skipFindPause: @MainActor () -> SkipFindPause? = { nil }
     public private(set) var speed: Double = 1
@@ -378,6 +420,14 @@ public final class PlayerModel {
     @ObservationIgnored private(set) var controlsLift: Double = 0
     /// The lift easing `sub-pos` there, while it runs.
     @ObservationIgnored private(set) var subtitleTween: Task<Void, Never>?
+    /// The share of the picture's height the controls take while they are up, zero while they
+    /// are away: what the lift is worked out from again when the track or the size changes.
+    @ObservationIgnored private var controlsShare: Double = 0
+    /// mpv's `osd-dimensions`, and where the subtitle track's lines rest, as mpv last said.
+    @ObservationIgnored private(set) var subtitleFrame: SubtitleFrame?
+    @ObservationIgnored private(set) var subtitlePlacement: SubtitlePlacement = .unknown
+    /// Counts subtitle track changes, so a header read for an earlier track is dropped.
+    @ObservationIgnored private var subtitleTrackChanges = 0
     /// The Details list is open on the starting screen, remembered on this device.
     public var startDetailsOpen = UserDefaults.standard.bool(forKey: PlayerModel.detailsKey) {
         didSet { UserDefaults.standard.set(startDetailsOpen, forKey: Self.detailsKey) }
@@ -412,6 +462,7 @@ public final class PlayerModel {
             // Said again for the same play (idempotent), it keeps what the start has told.
             if walk?.id != id || walk?.episode != episode {
                 walk = StartingWalk(id: id, episode: episode, resume: resume, at: since ?? time.now())
+                nextFile = nil
                 holdRelease?.cancel()
                 stagedRollOn(at: since ?? time.now())
             }
@@ -422,11 +473,22 @@ public final class PlayerModel {
             sourceChoices = nil
             verdictPending = false
             partySaysWhy = false
+            // A play staged anew, as the episode started again in the other version is when
+            // nothing played yet: no switch of it is on its way.
+            versionSwitch = nil
+            let anotherEpisode = staged?.id != id || staged?.episode != episode
+            if anotherEpisode { panelEpisodeChanged() }
             staged = StagedPlayback(
                 id: id, title: title, episode: episode, episodeTitle: episodeTitle, alwaysPrivate: alwaysPrivate)
+            // An open panel asks for the next episode's sources at once, as it does when it opens.
+            if anotherEpisode, panelOpen { loadPanelReleases() }
             present()
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
+            if case .found(_, let source, _, _) = step, let source { startFound(source) }
+            // A stream that broke off: the engine tries another, from a source it says once the
+            // stream plays.
+            if case .tryingAnotherStream = step, walk?.pictured == true { nextFile = NextFile(source: nil) }
             walk?.take(step, line: line, at: time.now())
             holdLine()
         case .playbackEnded(_, let ending, let rollingOn, let said):
@@ -449,11 +511,25 @@ public final class PlayerModel {
             // The party's own sheet says why nothing plays and offers its sources: the player's
             // failure would say it twice, under it.
             partySaysWhy = true
+        case .sourcesProgress(let id, let episode, let rows):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.progressed(rows, at: time.now())
+            }
+        case .sourcesFailed(let id, let episode, let why):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.failed = why.text
+            }
         case .sources(let id, let episode, let candidates, let missed):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.candidates = candidates
+            }
             guard choosingSource else { return }
             Self.note(.info, "\(candidates.count) sources for \(id) episode \(episode)")
             sourceChoices = candidates
             sourceMisses = missed
+        case .playerSwitch(let playback, let state):
+            guard accepts(playback) else { return }
+            switched(state)
         case .playbackKept:
             // The playback staged found nothing; the one before plays on.
             starting = nil
@@ -705,6 +781,16 @@ public final class PlayerModel {
                             await backend.resized()
                         case .mark(let mark):
                             self?.marks.removeValue(forKey: mark)?.resume()
+                        case .hold(let serial):
+                            let image = await backend.snapshot()
+                            self?.took(image, forHold: serial)
+                        case .subtitleHeader(let track):
+                            let reports = try? await backend.perform(.restate(property: "sub-ass-extradata"))
+                            var header: String?
+                            if case .property(_, let json) = reports?.first {
+                                header = (try? KaeriPlayer.MpvValue(json: json))?.string
+                            }
+                            self?.subtitlesPlaced(KaeriKit.subtitlePlacement(codec: "ass", header: header), track: track)
                         case .trackFile(let kind, let path):
                             do {
                                 _ = try await backend.perform(.command([Self.addCommand(kind), path, "select"]))
@@ -941,9 +1027,15 @@ public final class PlayerModel {
         videoOff = false
         subtitleTween?.cancel()
         controlsLift = 0
+        controlsShare = 0
+        subtitleFrame = nil
+        subtitlePlacement = .unknown
         staged = nil
         starting = nil
         walk = nil
+        panelEpisodeChanged()
+        playingSource = nil
+        releaseHold(fade: false)
         holdRelease?.cancel()
         rollOnAt = nil
         rollOnShowsAt = nil
@@ -979,9 +1071,10 @@ public final class PlayerModel {
 
     private func resetFile() {
         discussionWatch = PlayerDiscussion()
-        position = 0
-        playhead = 0
-        duration = nil
+        // A switch loads the episode again where it was: the seek line stays there meanwhile.
+        position = holding ? holdAt ?? 0 : 0
+        playhead = position
+        if !holding { duration = nil }
         paused = false
         chapters = []
         buffered = []
@@ -1006,10 +1099,18 @@ public final class PlayerModel {
             // Another file: its previews are another file's too.
             preview.close()
             let keepPause = paused
+            // A later file of the play that showed a picture (a switch, a failover, the way back
+            // from a failed switch): any starting screen it shows counts from now, with nothing
+            // of the first file's peers or clock.
+            if walk?.pictured == true { anotherFile() }
             resetFile()
             paused = keepPause
         case .playbackRestart:
-            if !hasPicture { firstFrame() }
+            if !hasPicture {
+                // A file that shows a picture is the one playing: the next is another's.
+                nextFile = nil
+                firstFrame()
+            }
         case .fileLoaded:
             Self.note(.info, "#\(current.map(String.init) ?? "?") file loaded\(elapsed)")
             if !hasPicture, walk != nil {
@@ -1064,6 +1165,7 @@ public final class PlayerModel {
     /// The file's first picture is up: the starting screen fades from it.
     private func firstFrame() {
         hasPicture = true
+        walk?.sawPicture()
         let size = layer.map { "\(Int($0.drawableSize.width))×\(Int($0.drawableSize.height))" } ?? "no layer"
         Self.note(.info, "#\(current.map(String.init) ?? "?") first frame, drawn at \(size)\(elapsed)")
         if let starting, current.map({ $0 >= starting.playback }) ?? true {
@@ -1116,6 +1218,25 @@ public final class PlayerModel {
             }
             if value["w"].int != nil {
                 Self.note(.info, "video \(value["w"].int ?? 0)×\(value["h"].int ?? 0) \(value["pixelformat"].string ?? "")")
+            }
+        case "osd-dimensions":
+            let frame = SubtitleFrame(
+                width: value["w"].double ?? 0, height: value["h"].double ?? 0,
+                top: value["mt"].double ?? 0, bottom: value["mb"].double ?? 0,
+                left: value["ml"].double ?? 0, right: value["mr"].double ?? 0)
+            let known = frame.width > 0 && frame.height > 0 ? frame : nil
+            if known != subtitleFrame {
+                subtitleFrame = known
+                relift()
+            }
+        case "current-tracks/sub":
+            subtitleTrackChanges += 1
+            let codec = value["codec"].string
+            if codec == "ass" {
+                // Where an ASS track's lines rest is in its header, read off the main thread.
+                enqueue(.subtitleHeader(track: subtitleTrackChanges))
+            } else {
+                subtitlesPlaced(KaeriKit.subtitlePlacement(codec: codec, header: nil), track: subtitleTrackChanges)
             }
         case "aid":
             audioTrack = value.int
@@ -1360,6 +1481,8 @@ public final class PlayerModel {
         case .resized: "a resize"
         case .mark: "a mark"
         case .trackFile(let kind, _): kind == .audio ? "an audio file" : "a subtitle file"
+        case .hold: "the picture to hold"
+        case .subtitleHeader: "the subtitle header"
         }
     }
 
@@ -1947,6 +2070,7 @@ public final class PlayerModel {
     public func switchSource() {
         input()
         stall = nil
+        nextFile = NextFile(source: nil)
         control(.stallSwitch)
     }
 
@@ -1982,12 +2106,19 @@ public final class PlayerModel {
         enqueue(.call(.set(property: "panscan", value: .double(fill ? 1 : 0))))
     }
 
-    /// Lift the subtitles by `fraction` of the picture's height, above the controls while they
-    /// are up, and back down with them: `sub-pos`, which libass applies to the dialogue at the
-    /// bottom of ASS subtitles and leaves signs where they are. The viewer's Raise is added by
-    /// the engine (`mpv_subtitle_options`). Eased over the controls' fade, or at once.
+    /// Lift the subtitles clear of controls that take `fraction` of the picture's height while
+    /// they are up, and back down with them: `sub-pos`, which libass applies to the dialogue at
+    /// the bottom of ASS subtitles and leaves signs where they are. The engine works out how far
+    /// (`subtitleLift`): only as far as the track's lines need to clear the controls, nothing for
+    /// lines that already sit clear of them, and the whole height while that is not known. The
+    /// viewer's Raise is added by the engine (`mpv_subtitle_options`). Eased over the controls'
+    /// fade, or at once.
     public func liftSubtitles(_ fraction: Double, animated: Bool) {
-        let lift = (min(0.5, max(0, fraction)) * 100).rounded(toPlaces: 1)
+        controlsShare = fraction
+        let needed = subtitleLift(
+            style: subtitleStyle, system: systemCaptions(), controls: fraction, frame: subtitleFrame,
+            placement: subtitlePlacement)
+        let lift = needed.rounded(toPlaces: 1)
         guard lift != controlsLift else { return }
         let from = controlsLift
         controlsLift = lift
@@ -2010,6 +2141,19 @@ public final class PlayerModel {
                 if Task.isCancelled { return }
             }
         }
+    }
+
+    /// A new subtitle track, size or full screen: the lift is worked out again, at once.
+    private func relift() {
+        liftSubtitles(controlsShare, animated: false)
+    }
+
+    /// Where the lines of subtitle track `track` rest, once known; dropped for a track since left.
+    private func subtitlesPlaced(_ placement: SubtitlePlacement, track: Int) {
+        guard track == subtitleTrackChanges, placement != subtitlePlacement else { return }
+        subtitlePlacement = placement
+        Self.note(.debug, "subtitles rest: \(placement)")
+        relift()
     }
 
     /// `sub-pos` for the controls taking `lift` percent of the picture, with the viewer's Raise.
@@ -2085,6 +2229,8 @@ public final class PlayerModel {
         for option in options {
             enqueue(.call(.set(property: option.name, value: .string(option.value))))
         }
+        // The Raise and the size change how far the subtitles need to lift.
+        relift()
     }
 
     /// The system changed its caption style.
@@ -2133,4 +2279,251 @@ extension Track {
             kind: kind, id: id, language: entry["lang"].string, title: entry["title"].string,
             selected: entry["selected"].bool ?? false, external: entry["external"].bool ?? false)
     }
+}
+
+// MARK: The Episodes and Sources panel
+
+extension PlayerModel {
+    /// The episode playing, as the panel lists its releases for.
+    var panelEpisode: (id: AnilistId, episode: String)? {
+        guard let staged else { return nil }
+        return (staged.id, staged.episode)
+    }
+
+    /// Ask for the playing episode's releases across every source, for the Sources tab. Asked
+    /// again only for another episode, after a listing that asked no source, or when `again`.
+    public func loadPanelReleases(again: Bool = false) {
+        guard let (id, episode) = panelEpisode else { return }
+        if !again, panelReleases?.id == id, panelReleases?.episode == episode, panelReleases?.failed == nil { return }
+        #if FIXTURES
+        if holdsPanelAsk { return }
+        #endif
+        panelReleases = PanelReleases(id: id, episode: episode, asked: time.now())
+        send(.loadSources(id: id, episode: episode))
+    }
+
+    /// Play `candidate` from the playhead, for this episode only: the engine finds it while the
+    /// episode plays on, and says how it goes on `PlayerSwitch`.
+    public func switchTo(_ candidate: SourceCandidate) {
+        input()
+        guard let (id, episode) = panelEpisode else { return }
+        let name = candidate.providerName.isEmpty ? candidate.providerId : candidate.providerName
+        Self.note(.info, "switching episode \(episode) to a release of \(candidate.providerId)")
+        panelSwitch = PanelSwitch(
+            target: SwitchTarget(providerId: candidate.providerId, name: name, release: candidate.id),
+            phase: .asked, since: time.now(), candidate: candidate)
+        send(.switchSource(id: id, episode: episode, providerId: candidate.providerId, sourceId: candidate.id))
+    }
+
+    /// Play the episode in the other version, from the playhead: the engine finds it while the
+    /// episode plays on, and says how it goes on `PlayerSwitch`.
+    public func switchTo(version: KaeriKit.Translation) {
+        input()
+        // One on its way finishes first: the engine finds a single version at a time.
+        if let pending = versionSwitch, pending.failed == nil { return }
+        guard version != (menus?.translation ?? .sub) else {
+            versionSwitch = nil
+            return
+        }
+        Self.note(.info, "switching to the \(version == .dub ? "dub" : "sub")")
+        versionSwitch = VersionSwitch(to: version, phase: .asked, since: time.now())
+        control(.choose(.translation(version)))
+    }
+
+    /// The source a start found: what plays now. Another source than the one before lets go of
+    /// the release picked on that one, so Playing now never names one source with another's
+    /// release.
+    private func startFound(_ source: String) {
+        if source != playingSource { playingRelease = nil }
+        playingSource = source
+    }
+
+    /// Another stream of the source playing, from the playhead.
+    public func switchTo(stream: MenuSource) {
+        input()
+        guard !stream.current else { return }
+        panelSwitch = PanelSwitch(
+            target: SwitchTarget(providerId: "", name: playingSource ?? "", stream: stream.id),
+            phase: .asked, since: time.now())
+        control(.choose(.source(stream.id)))
+    }
+
+    /// Play another episode of the title from the panel: where the history left it, or from
+    /// the beginning.
+    public func playEpisode(_ number: String, fromStart: Bool) {
+        input()
+        guard fromStart, let id = staged?.id else {
+            control(.choose(.episode(number)))
+            return
+        }
+        send(.play(id: id, episode: number, fromStart: true))
+    }
+
+    /// Try the failed pick again.
+    public func retrySwitch() {
+        guard let failed = panelSwitch else { return }
+        if let candidate = failed.candidate {
+            switchTo(candidate)
+        } else if let stream = failed.target.stream, let row = menus?.sources.first(where: { $0.id == stream }) {
+            switchTo(stream: row)
+        }
+    }
+
+    /// What the engine says of a switch.
+    func switched(_ state: SourceSwitch) {
+        let now = time.now()
+        switch state {
+        case .finding(let to):
+            Self.note(.info, "switch: finding \(to.providerId)")
+            if let version = to.translation {
+                trackVersion(version, .finding, at: now)
+            } else {
+                track(SwitchTarget(to), .finding, at: now)
+            }
+        case .loading(let to, let at):
+            Self.note(.info, "switch: loading \(to.providerId) at \(Int(at)) s, holding the picture")
+            if let version = to.translation {
+                trackVersion(version, .loading, at: now)
+            } else {
+                track(SwitchTarget(to), .loading, at: now)
+            }
+            nextFile = NextFile(source: to.name.isEmpty ? nil : to.name, translation: to.translation)
+            hold(at: at)
+        case .landed(let to, let at):
+            Self.note(.info, "switch: landed on \(to.providerId) at \(Int(at)) s")
+            let target = SwitchTarget(to)
+            playingSource = to.name
+            if let release = to.release {
+                // While the tab loads the row that listed it has it; else the pick, if it is this one.
+                playingRelease = panelReleases?.release(to.providerId, release)
+                    ?? panelSwitch?.candidate.flatMap { $0.providerId == to.providerId && $0.id == release ? $0 : nil }
+            } else if to.stream == nil || to.providerId != playingRelease?.providerId {
+                // The other version, or a stream of another source the engine moved to: the
+                // release picked before is not what plays.
+                playingRelease = nil
+            }
+            if to.translation != nil {
+                versionSwitch = nil
+                // The other version's releases are the ones to list now.
+                if panelReleases != nil { loadPanelReleases(again: true) }
+            } else if panelSwitch?.on(target) ?? true {
+                panelSwitch = nil
+            }
+            // Any starting screen still up over its file names it.
+            nextFile = nil
+            if !to.name.isEmpty { walk?.playsFrom(to.name) }
+            if let version = to.translation { walk?.choseTranslation(version) }
+            releaseHold(fade: true)
+            if !panelOpen, to.release != nil {
+                say(L.noticePlayingFromSource(source: to.name, clock: PlayerClock.label(at)))
+            }
+        case .failed(let to, let at, let text, let reason):
+            Self.note(.warn, "switch: \(to.providerId) did not start at \(Int(at)) s\(reason.map { ": \(AppLog.redacting($0.text))" } ?? "")")
+            if let version = to.translation {
+                trackVersion(version, .failed(text.text), at: now)
+                // Nothing else says it while the panel is closed.
+                if !panelOpen { say(text.text) }
+            } else {
+                track(SwitchTarget(to), .failed(text.text), at: now)
+            }
+            // Back on what played before, in the version it played in.
+            nextFile = nil
+            walk?.playsFrom(playingSource)
+            if let version = to.translation { walk?.choseTranslation(version == .dub ? .sub : .dub) }
+            releaseHold(fade: true)
+        }
+    }
+
+    /// A later file of the play started: its starting screen counts from now and names where
+    /// it comes from. The first file a switch loads is the switch's; one after it, before the
+    /// switch lands or fails, is another stream or the way back, from a source not yet said.
+    /// A file nothing announced is the source playing's.
+    private func anotherFile() {
+        var source = playingSource
+        var translation: KaeriKit.Translation?
+        if var next = nextFile {
+            source = next.started ? nil : next.source
+            translation = next.started ? nil : next.translation
+            next.started = true
+            nextFile = next
+        }
+        walk?.anotherFile(at: time.now(), from: source, translation: translation)
+    }
+
+    /// The row's switch moves on to `phase`; a switch the panel did not pick (a stream from the
+    /// old menu, a pick on another device's remote) gets a row of its own.
+    private func track(_ target: SwitchTarget, _ phase: PanelSwitch.Phase, at now: ContinuousClock.Instant) {
+        if var known = panelSwitch, known.on(target) {
+            known.phase = phase
+            panelSwitch = known
+        } else {
+            panelSwitch = PanelSwitch(target: target, phase: phase, since: now)
+        }
+    }
+
+    /// The switch to the other version moves on to `phase`; one picked elsewhere (the start's
+    /// switch, a remote) is tracked from now.
+    private func trackVersion(_ version: KaeriKit.Translation, _ phase: VersionSwitch.Phase, at now: ContinuousClock.Instant) {
+        if var known = versionSwitch, known.to == version {
+            known.phase = phase
+            versionSwitch = known
+        } else {
+            versionSwitch = VersionSwitch(to: version, phase: phase, since: now)
+        }
+    }
+
+    /// Hold what is on screen: mpv is asked for it before the switch's load, which comes next
+    /// in the queue and clears it.
+    private func hold(at: Double) {
+        holding = true
+        holdAt = at
+        heldRelease?.cancel()
+        holdSerial += 1
+        enqueue(.hold(holdSerial))
+    }
+
+    /// mpv's picture for hold `serial`, if that hold is still on.
+    fileprivate func took(_ image: CGImage?, forHold serial: Int) {
+        guard holding, serial == holdSerial, let image else {
+            if holding, serial == holdSerial { Self.note(.info, "switch: no picture to hold") }
+            return
+        }
+        heldPicture = HeldPicture(image: image, serial: serial)
+    }
+
+    /// Let the held picture go: the new picture is up (or the old one again), and the held one
+    /// crossfades away over it before it is dropped.
+    func releaseHold(fade: Bool) {
+        guard holding || heldPicture != nil else { return }
+        holding = false
+        holdAt = nil
+        heldRelease?.cancel()
+        guard fade else {
+            heldPicture = nil
+            return
+        }
+        heldRelease = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(400))
+            guard !Task.isCancelled, let self, !self.holding else { return }
+            self.heldPicture = nil
+        }
+    }
+
+    /// Another episode: its releases and picks are its own.
+    func panelEpisodeChanged() {
+        panelReleases = nil
+        panelSwitch = nil
+        playingRelease = nil
+        versionSwitch = nil
+    }
+}
+
+/// Where the next file of a play comes from, as a switch's Loading said it: its source's name
+/// (`nil` when the engine moves on by itself, and says where only once it plays) and the version
+/// it plays in, when the switch is to the other one.
+private struct NextFile {
+    var source: String?
+    var translation: KaeriKit.Translation?
+    /// mpv has started the file: one after it is not the switch's own.
+    var started = false
 }

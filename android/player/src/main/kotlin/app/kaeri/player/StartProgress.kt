@@ -383,7 +383,11 @@ fun PlayerModel.startWaiting(progress: StartProgress? = this.progress): Boolean 
  * source answered, and that none that answered lists it when any failed, took too long or wasn't asked.
  */
 fun noneListsText(context: Context, missed: List<app.kaeri.engine.model.MissedListing>, episode: String): String =
-    if (missed.any { it.miss !is app.kaeri.engine.model.ListingMiss.NoMatch && it.miss !is app.kaeri.engine.model.ListingMiss.NoEpisode }) {
+    if (missed.any {
+            it.miss !is app.kaeri.engine.model.ListingMiss.NoMatch && it.miss !is app.kaeri.engine.model.ListingMiss.Ambiguous &&
+                it.miss !is app.kaeri.engine.model.ListingMiss.NoEpisode
+        }
+    ) {
         Strings.sourcePickerNoneAnsweredLists(context, episode)
     } else {
         Strings.sourcePickerNoneLists(context, episode)
@@ -393,11 +397,14 @@ fun missedText(context: Context, missed: app.kaeri.engine.model.MissedListing, e
     val name = missed.name
     return when (val miss = missed.miss) {
         is app.kaeri.engine.model.ListingMiss.NoMatch -> Strings.playerStartMissNoMatch(context, name)
+        is app.kaeri.engine.model.ListingMiss.Ambiguous -> Strings.playerStartMissAmbiguous(context, name)
         is app.kaeri.engine.model.ListingMiss.NoEpisode -> Strings.playerStartMissNoEpisode(context, name, episode)
         is app.kaeri.engine.model.ListingMiss.Failed -> Strings.playerStartMissFailed(context, name)
         is app.kaeri.engine.model.ListingMiss.TimedOut -> Strings.playerStartMissTimedOut(context, name)
         is app.kaeri.engine.model.ListingMiss.HeldBack -> when (miss.why) {
             SourceHold.TORRENTS_OFF -> Strings.sourcePickerHeldTorrentsOff(context, name)
+            SourceHold.TORRENTS_STARTING -> Strings.sourcePickerHeldTorrentsStarting(context, name)
+            SourceHold.TORRENTS_FAILED -> Strings.sourcePickerHeldTorrentsFailed(context, name)
             SourceHold.PROXY_CHECK -> Strings.sourcePickerHeldProxy(context, name)
             SourceHold.CELLULAR -> Strings.sourcePickerHeldCellular(context, name)
             SourceHold.OTHER -> Strings.sourcePickerHeldOther(context, name)
@@ -408,6 +415,8 @@ fun missedText(context: Context, missed: app.kaeri.engine.model.MissedListing, e
 /** A held-back source's row note: not asked, and why. */
 fun heldNote(context: Context, why: SourceHold): String = when (why) {
     SourceHold.TORRENTS_OFF -> Strings.playerStartRowHeldTorrentsOff(context)
+    SourceHold.TORRENTS_STARTING -> Strings.playerStartRowHeldTorrentsStarting(context)
+    SourceHold.TORRENTS_FAILED -> Strings.playerStartRowHeldTorrentsFailed(context)
     SourceHold.PROXY_CHECK -> Strings.playerStartRowHeldProxy(context)
     SourceHold.CELLULAR -> Strings.playerStartRowHeldCellular(context)
     SourceHold.OTHER -> Strings.playerStartRowHeldOther(context)
@@ -441,6 +450,8 @@ internal fun failureDetail(context: Context, failure: PlaybackFailure): String {
         val count = group.names.size
         line += when (group.why) {
             SourceHold.TORRENTS_OFF -> Strings.playerStartNotAskedTorrentsOff(context, count, names)
+            SourceHold.TORRENTS_STARTING -> Strings.playerStartNotAskedTorrentsStarting(context, count, names)
+            SourceHold.TORRENTS_FAILED -> Strings.playerStartNotAskedTorrentsFailed(context, count, names)
             SourceHold.PROXY_CHECK -> Strings.playerStartNotAskedProxy(context, count, names)
             SourceHold.CELLULAR -> Strings.playerStartNotAskedCellular(context, count, names)
             SourceHold.OTHER -> Strings.playerStartNotAskedOther(context, count, names)

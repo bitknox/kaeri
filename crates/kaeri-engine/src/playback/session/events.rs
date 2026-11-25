@@ -4,13 +4,17 @@
 
 use std::time::Duration;
 
-use kaeri_core::stream::{Stream, StreamKind};
+use kaeri_core::{
+    media::Translation,
+    stream::{Stream, StreamKind},
+};
 use kaeri_model::{
     Msg,
     command::PlayerCommand,
     event::Event,
     hosted::TrackKind as TrackChoice,
     notice::{Notice, NoticeHint},
+    playback::{SourceSwitch, SwitchTo},
     starting::StartStep,
 };
 use kaeri_playback::{
@@ -35,6 +39,7 @@ use crate::playback::{
     seat::{SeatCue, SeatReport},
     shaders::{self, Look},
     slot::Player,
+    switch::SwitchNews,
 };
 
 /// How long mpv may go without reporting a position before we say something.
@@ -130,6 +135,9 @@ impl Run<'_> {
         // The starting screen's Skip, heard until the first frame: with another stream to go to,
         // in the pool or from the sources beyond it, the file is let go for it.
         let mut skipping = self.skipping.take();
+        // What the engine says of a release it finds for this playback: heard while the file
+        // plays, which plays on until the release is found.
+        let mut news = self.news.take();
         // The picture: what the file is, and what the GPU is saying about the chain.
         let mut source: Option<shaders::Source> = None;
         let mut video_params = serde_json::Value::Null;
@@ -144,7 +152,14 @@ impl Run<'_> {
         let mut picture_tick = tokio::time::interval(Duration::from_secs(1));
         // Until the first frame, once a second: how fast data arrives, for the starting screen.
         let mut pace_tick = tokio::time::interval(Duration::from_secs(1));
+        // A file a switch loads, or the one a failed switch goes back to, plays behind the held
+        // picture with no starting screen: its steps would land on the screen the episode
+        // started with, and show that start's peers and clock on the next one.
+        let quiet = self.switching.is_some() || self.restoring.is_some();
         let say = |step, line| {
+            if quiet {
+                return;
+            }
             crate::playback::starting::say(
                 tx,
                 context.anilist_id,
@@ -237,6 +252,33 @@ impl Run<'_> {
                             break FileOutcome::Skipped;
                         }
                         Ok(()) => tracing::info!("a skip with no other stream to go to"),
+                    }
+                    continue;
+                }
+                heard = async { news.as_mut().expect("guarded").recv().await }, if news.is_some() => {
+                    match heard {
+                        // The engine let go of this playback's door: no switch is coming.
+                        None => news = None,
+                        Some(SwitchNews::Finding(to)) => {
+                            self.say_switch(SourceSwitch::Finding { to: to.clone() });
+                            self.finding = Some(to);
+                        }
+                        // Only the release asked for last: one asked past is let go.
+                        Some(SwitchNews::Found(to, found)) if self.finding.as_ref() == Some(&to) => {
+                            self.finding = None;
+                            if !found.is_empty() {
+                                let at = ever_played.then(|| tracker.position());
+                                break FileOutcome::Swap { to, streams: found, at };
+                            }
+                        }
+                        Some(SwitchNews::Failed(to, reason)) if self.finding.as_ref() == Some(&to) => {
+                            self.finding = None;
+                            tracing::info!(provider = %to.provider_id, "a switch found nothing; playing on");
+                            let text = self.switch_failed(&to, stream);
+                            let at = tracker.position();
+                            self.say_switch(SourceSwitch::Failed { to, at, text, reason: Some(reason) });
+                        }
+                        Some(_) => {}
                     }
                     continue;
                 }
@@ -732,6 +774,55 @@ impl Run<'_> {
                     }
                     if !ever_played {
                         ever_played = true;
+                        // A switch lands with this frame, or one that failed is back on what
+                        // played before.
+                        if let Some(switching) = self.switching.take() {
+                            // A release or the other version replaces the streams that played:
+                            // Sources lists its own.
+                            let version = switching.to.translation;
+                            if switching.to.release.is_some() || version.is_some() {
+                                self.pool_from = switching.streams.start;
+                                // The torrents it replaced are let go now, not when this file
+                                // is over: they would go on fetching beside it.
+                                let replaced = &streams[..switching.streams.start];
+                                for old in replaced.iter().filter(|old| {
+                                    old.kind == StreamKind::TorrentHttp && old.url != stream.url
+                                }) {
+                                    settings.swarm.let_go(&old.url);
+                                }
+                                let menus = self.menus(streams, index);
+                                let _ = link.overlay(Overlay::Menus(menus)).await;
+                            }
+                            self.said_source.clone_from(&switching.to.provider_id);
+                            self.say_switch(SourceSwitch::Landed {
+                                to: switching.to,
+                                at: switching.at,
+                            });
+                            if let Some(version) = version {
+                                let said = match version {
+                                    Translation::Sub => Msg::NoticeAudioNowSubbed,
+                                    Translation::Dub => Msg::NoticeAudioNowDubbed,
+                                };
+                                let _ = tx.send(Event::Toast(Notice::info(said)));
+                            }
+                        }
+                        if let Some(failed) = self.restoring.take() {
+                            self.say_switch(failed);
+                        }
+                        // The engine moved on to another source by itself: a stream that showed
+                        // no video, broke off or stalled. What names the source playing follows.
+                        if stream.provider_id != self.said_source {
+                            self.said_source.clone_from(&stream.provider_id);
+                            self.say_switch(SourceSwitch::Landed {
+                                to: SwitchTo {
+                                    provider_id: stream.provider_id.clone(),
+                                    name: self.source_name(stream),
+                                    stream: Some(index.to_string()),
+                                    ..SwitchTo::default()
+                                },
+                                at: *position,
+                            });
+                        }
                         // A skip from here on is not this file's: the screen offers none.
                         if let Some(skipping) = skipping.as_mut() {
                             skipping.mark_unchanged();
@@ -742,8 +833,8 @@ impl Run<'_> {
                         self.settings.ahead.landed();
                         // A stream that took over from one that broke off says so as it lands.
                         if let Some(from) = self.failed_over_from.take() {
-                            let source = stream.provider_id.clone();
-                            let said = if from == source {
+                            let source = self.source_name(stream);
+                            let said = if from == stream.provider_id {
                                 Msg::NoticeFailedOverSameSource { source }
                             } else {
                                 Msg::NoticeFailedOver { source }
@@ -922,6 +1013,7 @@ impl Run<'_> {
         self.still_fetch = still_fetch;
         self.seat = seat;
         self.skipping = skipping;
+        self.news = news;
         // Cleared before anything else, so quitting never leaves a stale "watching" up.
         rpc.finish().await;
         if let Some(report) = report.filter(|_| !settings.privacy.holds()) {

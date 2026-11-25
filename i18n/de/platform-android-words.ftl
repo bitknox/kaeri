@@ -205,7 +205,6 @@ episode-number-title-text = Episode { $number } · { $title }
 player-position-state = { $at } von { $total }
 player-sheet-finding = { -source-pl } werden gesucht…
 player-sheet-none = Für diese Episode wurden keine { -source-pl } gefunden.
-player-sheet-episodes-loading = Die Episodenliste ist unterwegs.
 player-dual-audio = { -subbed-cap } und { -dubbed }
 notif-new-episodes = { $count ->
     [one] Eine neue Episode

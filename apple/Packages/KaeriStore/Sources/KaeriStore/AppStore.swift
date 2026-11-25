@@ -1241,7 +1241,7 @@ public final class AppStore {
             party.apply(event)
             onPlayback?(event)
         case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard,
-             .startingStep, .playerSkipMark, .playerSkipPrompt, .playerSkipNotice:
+             .startingStep, .playerSkipMark, .playerSkipPrompt, .playerSkipNotice, .playerSwitch, .sourcesProgress, .sourcesFailed:
             onPlayback?(event)
 
         case .partyForm, .partyJoined, .partyState, .partyMembers, .partyLeft, .partyRecent, .partyGlimpse,

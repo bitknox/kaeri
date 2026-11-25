@@ -9,8 +9,9 @@ use std::{
 };
 
 use kaeri_model::{
-    hosted::{MpvOption, PlayerEnd, PlayerOp, PlayerReport},
+    hosted::{MpvOption, MpvValue, PlayerEnd, PlayerOp, PlayerReport},
     playback::PlaybackId,
+    subtitle_lift::SubtitlePlacement,
 };
 use kaeri_mpv_host::{HostEvent, Player, PlayerOptions};
 
@@ -230,4 +231,53 @@ fn the_state_has_the_volume_a_session_starts_at_and_each_change() {
     rig.player.apply(one, &PlayerOp::Add { property: "volume".into(), delta: 5.0 });
     rig.until(|e| matches!(e, HostEvent::State(s) if s.volume == Some(30.0)));
     assert_eq!(rig.player.state().volume, Some(30.0));
+}
+
+#[test]
+fn the_state_says_where_each_subtitle_track_rests() {
+    let rig = rig();
+    let dir = tempfile::tempdir().unwrap();
+    let ass = dir.path().join("high.ass");
+    std::fs::write(
+        &ass,
+        "[Script Info]\nScriptType: v4.00+\nPlayResX: 1920\nPlayResY: 1080\n\n[V4+ Styles]\n\
+         Format: Name, Fontname, Fontsize, PrimaryColour, SecondaryColour, OutlineColour, \
+         BackColour, Bold, Italic, Underline, StrikeOut, ScaleX, ScaleY, Spacing, Angle, \
+         BorderStyle, Outline, Shadow, Alignment, MarginL, MarginR, MarginV, Encoding\n\
+         Style: Default,Sans,60,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,\
+         1,2,1,2,40,40,220,1\n\
+         Style: Sign,Sans,60,&H00FFFFFF,&H000000FF,&H00000000,&H80000000,0,0,0,0,100,100,0,0,\
+         1,2,1,8,40,40,10,1\n\n[Events]\nFormat: Layer, Start, End, Style, Name, MarginL, \
+         MarginR, MarginV, Effect, Text\nDialogue: 0,0:00:00.00,0:00:30.00,Default,,0,0,0,,A line\n",
+    )
+    .unwrap();
+    let srt = dir.path().join("plain.srt");
+    std::fs::write(&srt, "1\n00:00:00,000 --> 00:00:30,000\nA line\n").unwrap();
+
+    let one = PlaybackId::new(5);
+    rig.player.apply(one, &PlayerOp::Open { fullscreen: false, speed: None, volume: None });
+    rig.player.apply(
+        one,
+        &PlayerOp::Load {
+            url: PATTERN.replace("duration=2", "duration=30"),
+            options: vec![MpvOption {
+                name: "sub-files".into(),
+                value: ass.display().to_string(),
+            }],
+        },
+    );
+    let styled = SubtitlePlacement::Styled { margin: 220.0, play_height: 1080.0 };
+    rig.until(|e| matches!(e, HostEvent::State(s) if s.subtitle_placement == styled));
+
+    // Another track: the placement follows it.
+    rig.player.apply(
+        one,
+        &PlayerOp::AddSubtitle { url: srt.display().to_string(), title: None, language: None },
+    );
+    rig.player.apply(one, &PlayerOp::Set { property: "sid".into(), value: MpvValue::Int(2) });
+    rig.until(|e| {
+        matches!(e, HostEvent::State(s) if s.subtitle_placement == SubtitlePlacement::Plain)
+    });
+    rig.player.apply(one, &PlayerOp::Set { property: "sid".into(), value: MpvValue::Int(1) });
+    rig.until(|e| matches!(e, HostEvent::State(s) if s.subtitle_placement == styled));
 }

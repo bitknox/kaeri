@@ -316,6 +316,15 @@ pub fn remember(
             playback.translation = *translation;
             None
         }
+        // The other version did not start: the episode plays on in the one it was in.
+        Event::PlayerSwitch {
+            state: kaeri_model::playback::SourceSwitch::Failed { to, .. },
+            ..
+        } => {
+            let Some(picked) = to.translation else { return };
+            playback.translation = picked.toggled();
+            None
+        }
         Event::PlayerSubtitleStyle { setting, value } => {
             let Some((key, value)) =
                 subtitle_style_kept(engine.config.effective_mut(), setting, value)

@@ -9113,6 +9113,9 @@ player-subs-bg-box = ボックス
 # Button in the subtitles panel that opens Settings.
 player-subs-more = 設定でさらに表示…
 
+# Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+player-sheet-episodes-loading = エピソード一覧を読み込んでいます。
+
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = プライベートモード
 

@@ -707,8 +707,12 @@ private fun providerOrigin(context: Context, row: ProviderRow): String = when (v
 /** A source's word, only for a problem: "Not answering", "Held back". */
 private fun providerProblem(context: Context, row: ProviderRow): String? = when (row.standing) {
     ProviderStanding.Failing -> Strings.sourcesStatusNotAnswering(context)
-    ProviderStanding.HeldBack ->
-        if (row.heldBackFor == HoldReason.TORRENTS_OFF) Strings.sourcesStatusTorrentsOff(context) else Strings.sourcesStatusHeldBack(context)
+    ProviderStanding.HeldBack -> when (row.heldBackFor) {
+        HoldReason.TORRENTS_OFF -> Strings.sourcesStatusTorrentsOff(context)
+        HoldReason.TORRENTS_STARTING -> Strings.sourcesStatusTorrentsStarting(context)
+        HoldReason.TORRENTS_FAILED -> Strings.sourcesStatusTorrentsFailed(context)
+        HoldReason.PROXY_CHECK, null -> Strings.sourcesStatusHeldBack(context)
+    }
     else -> null
 }
 

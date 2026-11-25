@@ -5,7 +5,8 @@
 //!   kaeri-desktop [--hwdec <mode>] [--ao <output>] [kaeri://…]
 //!   kaeri-desktop --fixtures [--data <dir>] [--media <file>] [--downloading] [--unsure] [--showcase]
 //!                     [--scene <home scene>]
-//!                     [--shots <dir> [--shot <a,b,...>] [--prefix <name>]] [--size <w>x<h>]
+//!                     [--shots <dir> [--shot <a,b,...>] [--prefix <name>] [--still]]
+//!                     [--size <w>x<h>]
 
 mod cards_layout;
 mod catalog;
@@ -54,6 +55,8 @@ mod shots_reading;
 #[cfg(feature = "fixtures")]
 mod shots_reading_credits;
 #[cfg(feature = "fixtures")]
+mod shots_sources_loading;
+#[cfg(feature = "fixtures")]
 mod showcase;
 mod squeeze;
 mod states;
@@ -98,6 +101,8 @@ struct Args {
     scene: Option<String>,
     shots: Option<PathBuf>,
     shot: Option<String>,
+    /// The starting screen's `start-` shots on the engine's still clock, not the wall clock.
+    still: bool,
     prefix: String,
     size: Option<(i32, i32)>,
     hwdec: Option<String>,
@@ -121,6 +126,7 @@ fn args() -> Args {
             "--scene" => args.scene = it.next(),
             "--shots" => args.shots = it.next().map(PathBuf::from),
             "--shot" => args.shot = it.next(),
+            "--still" => args.still = true,
             "--prefix" => args.prefix = it.next().unwrap_or_default(),
             "--size" => {
                 args.size = it.next().and_then(|s| {
@@ -283,6 +289,8 @@ fn main() -> glib::ExitCode {
         }
     });
     let code = app.run_with_args(&argv);
+    // A shot run with a shot that did not save failed, so the script running it can say so.
+    let code = if shots::unsaved() > 0 { glib::ExitCode::FAILURE } else { code };
     shell_slot.replace(None);
 
     match Arc::try_unwrap(engine) {
@@ -484,7 +492,7 @@ fn build(
     shell.ctx.window.present();
     if let Some(dir) = &args.shots {
         let shots = shots::named(args.shot.as_deref());
-        shots::run(Rc::clone(&shell), dir.clone(), args.prefix.clone(), shots);
+        shots::run(Rc::clone(&shell), dir.clone(), args.prefix.clone(), shots, args.still);
     }
     shell
 }

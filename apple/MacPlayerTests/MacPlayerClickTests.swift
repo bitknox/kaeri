@@ -98,12 +98,24 @@ final class MacPlayerClickTests: XCTestCase {
         XCTAssertTrue(waitFor { self.button(app, "Off").isSelected }, "Off was not picked")
         click(app, "Subtitles and audio")
         XCTAssertTrue(gone(app, "Remembered for this show", in: app.staticTexts))
+        // Episodes opens the Episodes and Sources panel on its Episodes tab. A row reads "E12"
+        // and the episode's name, or "Episode 12" without one.
         click(app, "Episodes")
-        let last = app.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Episode 12'")).firstMatch
-        XCTAssertTrue(last.waitForExistence(timeout: 5), "no episodes menu")
-        XCTAssertTrue(app.staticTexts["Source"].exists, "no sources under the episode playing")
-        click(app, "Episodes")
-        XCTAssertTrue(waitFor { !last.exists }, "the episodes menu stayed open")
+        let any = app.descendants(matching: .any)
+        let last = any.matching(NSPredicate(format: "label MATCHES '(?s)(E12|Episode 12)\\\\b.*'")).firstMatch
+        XCTAssertTrue(last.waitForExistence(timeout: 5), "no episodes panel")
+        let playingNow = any["Playing now"].firstMatch
+        XCTAssertFalse(playingNow.exists, "the panel opened on Sources")
+        // Its Sources tab, the segment beside Episodes.
+        let sources = app.radioButtons["Sources"].exists ? app.radioButtons["Sources"] : any["Sources"].firstMatch
+        XCTAssertTrue(sources.waitForExistence(timeout: 5), "no Sources tab")
+        sources.hover()
+        sources.click()
+        XCTAssertTrue(playingNow.waitForExistence(timeout: 5), "the Sources tab did not open")
+        // Esc closes the panel and leaves the player up.
+        app.typeKey(.escape, modifierFlags: [])
+        XCTAssertTrue(waitFor { !playingNow.exists && !last.exists }, "the panel stayed open")
+        XCTAssertTrue(button(app, "Play").exists, "Esc left the player")
 
         click(app, "Play")
         XCTAssertTrue(button(app, "Pause").waitForExistence(timeout: 5), "Play did not play")

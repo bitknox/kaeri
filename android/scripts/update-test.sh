@@ -22,6 +22,8 @@
 # real use, and they never read the release key. SERIAL names the emulator, emulator-5640 unless it
 # says otherwise. KAERI_PLAYER_NATIVE=off leaves libmpv out, which the update does not need.
 set -euo pipefail
+# Git Bash on the PC turns adb's device paths (/sdcard/...) into Windows paths without this.
+export MSYS_NO_PATHCONV=1
 shopt -s inherit_errexit 2>/dev/null || true
 
 android="$(cd "$(dirname "$0")/.." && pwd)"

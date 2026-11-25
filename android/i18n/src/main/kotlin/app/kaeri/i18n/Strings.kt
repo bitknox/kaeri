@@ -529,6 +529,18 @@ object Strings {
     fun noticeAudioNowDubbed(context: Context): String =
         context.getString(R.string.notice_audio_now_dubbed)
 
+    /** Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source. */
+    fun playerPanelSwitchFailed(context: Context, source: String, current: String): String =
+        context.getString(R.string.player_panel_switch_failed, source, current)
+
+    /** Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled. */
+    fun playerPanelDubFailed(context: Context, episode: String): String =
+        context.getString(R.string.player_panel_dub_failed, episode)
+
+    /** Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed. */
+    fun playerPanelSubFailed(context: Context, episode: String): String =
+        context.getString(R.string.player_panel_sub_failed, episode)
+
     /** Toast when the previous-episode control is used on the first episode. */
     fun noticeAlreadyFirstEpisode(context: Context): String =
         context.getString(R.string.notice_already_first_episode)
@@ -4737,10 +4749,6 @@ object Strings {
     fun playerSheetNone(context: Context): String =
         context.getString(R.string.player_sheet_none)
 
-    /** Player, episodes sheet: shown before the list arrives. */
-    fun playerSheetEpisodesLoading(context: Context): String =
-        context.getString(R.string.player_sheet_episodes_loading)
-
     /** Player, sources sheet: a stream with both languages. */
     fun playerDualAudio(context: Context): String =
         context.getString(R.string.player_dual_audio)
@@ -8737,6 +8745,10 @@ object Strings {
     fun playerStartMissNoMatch(context: Context, name: String): String =
         context.getString(R.string.player_start_miss_no_match, name)
 
+    /** Detail line when a source found titles like the show and could not tell which one it is. */
+    fun playerStartMissAmbiguous(context: Context, name: String): String =
+        context.getString(R.string.player_start_miss_ambiguous, name)
+
     /** Detail line when a source has the show and not the episode. The episode is its label. */
     fun playerStartMissNoEpisode(context: Context, name: String, episode: String): String =
         context.getString(R.string.player_start_miss_no_episode, name, episode)
@@ -8760,6 +8772,14 @@ object Strings {
     /** Details row for a source not asked while torrent playback is off. The name goes before it. */
     fun playerStartRowHeldTorrentsOff(context: Context): String =
         context.getString(R.string.player_start_row_held_torrents_off)
+
+    /** Details row for a source not asked because torrent playback is on and still starting. The name goes before it. */
+    fun playerStartRowHeldTorrentsStarting(context: Context): String =
+        context.getString(R.string.player_start_row_held_torrents_starting)
+
+    /** Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it. */
+    fun playerStartRowHeldTorrentsFailed(context: Context): String =
+        context.getString(R.string.player_start_row_held_torrents_failed)
 
     /** Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it. */
     fun playerStartRowHeldProxy(context: Context): String =
@@ -8904,6 +8924,14 @@ object Strings {
     /** Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app. */
     fun playerStartNotAskedTorrentsOff(context: Context, count: Int, names: String): String =
         context.resources.getQuantityString(R.plurals.player_start_not_asked_torrents_off, count, count, names)
+
+    /** Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app. */
+    fun playerStartNotAskedTorrentsStarting(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_torrents_starting, count, count, names)
+
+    /** Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app. */
+    fun playerStartNotAskedTorrentsFailed(context: Context, count: Int, names: String): String =
+        context.resources.getQuantityString(R.plurals.player_start_not_asked_torrents_failed, count, count, names)
 
     /** Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app. */
     fun playerStartNotAskedProxy(context: Context, count: Int, names: String): String =
@@ -9450,6 +9478,14 @@ object Strings {
     fun sourcePickerHeldTorrentsOff(context: Context, name: String): String =
         context.getString(R.string.source_picker_held_torrents_off, name)
 
+    /** Line of the picker for a source not asked while torrent playback is on and still starting. */
+    fun sourcePickerHeldTorrentsStarting(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_torrents_starting, name)
+
+    /** Line of the picker for a source not asked because torrent playback is on and couldn't start. */
+    fun sourcePickerHeldTorrentsFailed(context: Context, name: String): String =
+        context.getString(R.string.source_picker_held_torrents_failed, name)
+
     /** Line of the picker for a source not asked while the proxy check for torrents hasn't passed. */
     fun sourcePickerHeldProxy(context: Context, name: String): String =
         context.getString(R.string.source_picker_held_proxy, name)
@@ -9529,6 +9565,102 @@ object Strings {
     /** Button in the subtitles panel that opens Settings. */
     fun playerSubsMore(context: Context): String =
         context.getString(R.string.player_subs_more)
+
+    /** Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives. */
+    fun playerSheetEpisodesLoading(context: Context): String =
+        context.getString(R.string.player_sheet_episodes_loading)
+
+    /** Accessibility label of the player's side panel with the Episodes and Sources tabs. */
+    fun playerPanel(context: Context): String =
+        context.getString(R.string.player_panel)
+
+    /** Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left. */
+    fun episodeRowPlaying(context: Context, left: String): String =
+        context.getString(R.string.episode_row_playing, left)
+
+    /** Episode row in the player's panel: the episode is part story, part filler. */
+    fun episodeRowMixed(context: Context): String =
+        context.getString(R.string.episode_row_mixed)
+
+    /** Episode row in the player's panel: the length of an episode nobody has started. */
+    fun episodeRowLength(context: Context, minutes: Int): String =
+        context.getString(R.string.episode_row_length, minutes)
+
+    /** Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it. */
+    fun episodeRowDelayed(context: Context, `when`: String): String =
+        context.getString(R.string.episode_row_delayed, `when`)
+
+    /** Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one. */
+    fun episodeRowFrom(context: Context, source: String): String =
+        context.getString(R.string.episode_row_from, source)
+
+    /** Button on a partly watched episode: plays it from where it was left. */
+    fun actionResume(context: Context): String =
+        context.getString(R.string.action_resume)
+
+    /** Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play. */
+    fun playerPanelMetadataOnly(context: Context): String =
+        context.getString(R.string.player_panel_metadata_only)
+
+    /** Player panel, Sources tab: heading over the source and streams playing now. */
+    fun playerPanelPlayingNow(context: Context): String =
+        context.getString(R.string.player_panel_playing_now)
+
+    /** Player panel, Sources tab: heading over the other sources, in the order they are tried. */
+    fun playerPanelOtherSources(context: Context): String =
+        context.getString(R.string.player_panel_other_sources)
+
+    /** Player panel, Sources tab: the folded list of a source's releases for this episode. */
+    fun playerPanelReleases(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.player_panel_releases, count, count)
+
+    /** Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better. */
+    fun playerReleaseAutomatic(context: Context): String =
+        context.getString(R.string.player_release_automatic)
+
+    /** Player panel, Sources tab, foot of the list: the panel never sorts the sources itself. */
+    fun playerPanelOrder(context: Context): String =
+        context.getString(R.string.player_panel_order)
+
+    /** Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is. */
+    fun playerPanelPickScope(context: Context): String =
+        context.getString(R.string.player_panel_pick_scope)
+
+    /** Accessibility label of the subtitled or dubbed switch in the player panel. */
+    fun playerTranslation(context: Context): String =
+        context.getString(R.string.player_translation)
+
+    /** Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. */
+    fun playerPanelStarting(context: Context, seconds: Int): String =
+        context.getString(R.string.player_panel_starting, seconds)
+
+    /** Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow. */
+    fun playerPanelAsking(context: Context, seconds: Int): String =
+        context.getString(R.string.player_panel_asking, seconds)
+
+    /** Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. */
+    fun playerFindingVersionSeconds(context: Context, episode: String, seconds: Int): String =
+        context.getString(R.string.player_finding_version_seconds, episode, seconds)
+
+    /** Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. */
+    fun playerFindingVersionSubbedSeconds(context: Context, episode: String, seconds: Int): String =
+        context.getString(R.string.player_finding_version_subbed_seconds, episode, seconds)
+
+    /** Notice when another source started playing while the player panel was closed. */
+    fun noticePlayingFromSource(context: Context, source: String, clock: String): String =
+        context.getString(R.string.notice_playing_from_source, source, clock)
+
+    /** Player panel, under the subtitled or dubbed switch during a watch party. */
+    fun partyVersionOwn(context: Context): String =
+        context.getString(R.string.party_version_own)
+
+    /** Player panel: button under a synopsis cut to three lines, that shows it whole. */
+    fun playerPanelMore(context: Context): String =
+        context.getString(R.string.player_panel_more)
+
+    /** Player panel: button under a synopsis shown whole after More, that folds it back to three lines. */
+    fun playerPanelLess(context: Context): String =
+        context.getString(R.string.player_panel_less)
 
     /** The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. */
     fun privateMode(context: Context): String =
@@ -14296,6 +14428,14 @@ object Strings {
     fun sourceNoteTorrentsOff(context: Context): String =
         context.getString(R.string.source_note_torrents_off)
 
+    /** Under a source that names torrents while torrent playback is on and still starting. */
+    fun sourceNoteTorrentsStarting(context: Context): String =
+        context.getString(R.string.source_note_torrents_starting)
+
+    /** Under a source that names torrents while torrent playback is on and couldn't start. */
+    fun sourceNoteTorrentsFailed(context: Context): String =
+        context.getString(R.string.source_note_torrents_failed)
+
     /** Heading over one source's releases, for a source that offers several (a batch, single episodes). */
     fun sourcePickerReleases(context: Context): String =
         context.getString(R.string.source_picker_releases)
@@ -14388,6 +14528,14 @@ object Strings {
     fun sourcesStatusTorrentsOff(context: Context): String =
         context.getString(R.string.sources_status_torrents_off)
 
+    /** Status: a source that names torrents, while torrent playback is on and still starting. */
+    fun sourcesStatusTorrentsStarting(context: Context): String =
+        context.getString(R.string.sources_status_torrents_starting)
+
+    /** Status: a source that names torrents, while torrent playback is on and couldn't start. */
+    fun sourcesStatusTorrentsFailed(context: Context): String =
+        context.getString(R.string.sources_status_torrents_failed)
+
     /** Status: slow. */
     fun sourcesStatusSlow(context: Context): String =
         context.getString(R.string.sources_status_slow)
@@ -14411,6 +14559,14 @@ object Strings {
     /** Status line: torrent playback is off. */
     fun sourcesDetailTorrentsOff(context: Context): String =
         context.getString(R.string.sources_detail_torrents_off)
+
+    /** Status line: torrent playback is on and still starting. */
+    fun sourcesDetailTorrentsStarting(context: Context): String =
+        context.getString(R.string.sources_detail_torrents_starting)
+
+    /** Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes. */
+    fun sourcesDetailTorrentsFailed(context: Context): String =
+        context.getString(R.string.sources_detail_torrents_failed)
 
     /** Status line: disabled. */
     fun sourcesDetailDisabled(context: Context): String =

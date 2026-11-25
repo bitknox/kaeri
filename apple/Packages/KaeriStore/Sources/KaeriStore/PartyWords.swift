@@ -185,12 +185,15 @@ public enum PartyWords {
         let name = missed.name
         switch missed.miss {
         case .noMatch: return L.playerStartMissNoMatch(name: name)
+        case .ambiguous: return L.playerStartMissAmbiguous(name: name)
         case .noEpisode: return L.playerStartMissNoEpisode(name: name, episode: episode)
         case .failed: return L.playerStartMissFailed(name: name)
         case .timedOut: return L.playerStartMissTimedOut(name: name)
         case .heldBack(let why):
             switch why {
             case .torrentsOff: return L.sourcePickerHeldTorrentsOff(name: name)
+            case .torrentsStarting: return L.sourcePickerHeldTorrentsStarting(name: name)
+            case .torrentsFailed: return L.sourcePickerHeldTorrentsFailed(name: name)
             case .proxyCheck: return L.sourcePickerHeldProxy(name: name)
             case .cellular: return L.sourcePickerHeldCellular(name: name)
             case .other: return L.sourcePickerHeldOther(name: name)
@@ -203,7 +206,7 @@ public enum PartyWords {
     public static func unreached(_ miss: ListingMiss) -> Bool {
         switch miss {
         case .failed, .timedOut, .heldBack: true
-        case .noMatch, .noEpisode: false
+        case .noMatch, .ambiguous, .noEpisode: false
         }
     }
 

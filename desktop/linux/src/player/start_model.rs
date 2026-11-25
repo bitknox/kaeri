@@ -658,6 +658,12 @@ fn failure_line(failure: &StartFailure, episode: &str) -> String {
         let count = held.names.len() as i64;
         line.push(match held.why {
             SourceHold::TorrentsOff => t::player_start_not_asked_torrents_off(count, &listed),
+            SourceHold::TorrentsStarting => {
+                t::player_start_not_asked_torrents_starting(count, &listed)
+            }
+            SourceHold::TorrentsFailed => {
+                t::player_start_not_asked_torrents_failed(count, &listed)
+            }
             SourceHold::ProxyCheck => t::player_start_not_asked_proxy(count, &listed),
             SourceHold::Cellular => t::player_start_not_asked_cellular(count, &listed),
             SourceHold::Other => t::player_start_not_asked_other(count, &listed),
@@ -670,6 +676,8 @@ fn failure_line(failure: &StartFailure, episode: &str) -> String {
 fn held_note(why: SourceHold) -> String {
     match why {
         SourceHold::TorrentsOff => t::player_start_row_held_torrents_off(),
+        SourceHold::TorrentsStarting => t::player_start_row_held_torrents_starting(),
+        SourceHold::TorrentsFailed => t::player_start_row_held_torrents_failed(),
         SourceHold::ProxyCheck => t::player_start_row_held_proxy(),
         SourceHold::Cellular => t::player_start_row_held_cellular(),
         SourceHold::Other => t::player_start_row_held_other(),
@@ -1085,6 +1093,19 @@ mod tests {
         let held = f.rows.iter().find(|row| row.name == "Harbor").expect("a held row");
         assert_eq!(held.note, "Not asked · Torrent playback is off");
         assert!(held.time.is_empty(), "never asked, so no seconds");
+    }
+
+    #[test]
+    fn a_source_held_while_torrents_start_is_not_said_to_be_off() {
+        assert_eq!(
+            held_note(SourceHold::TorrentsStarting),
+            t::player_start_row_held_torrents_starting()
+        );
+        assert_eq!(
+            held_note(SourceHold::TorrentsFailed),
+            t::player_start_row_held_torrents_failed()
+        );
+        assert_ne!(held_note(SourceHold::TorrentsStarting), held_note(SourceHold::TorrentsOff));
     }
 
     #[test]

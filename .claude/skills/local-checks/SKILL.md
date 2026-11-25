@@ -48,7 +48,8 @@ commit **outside** it (the temporary HOME hides `~/.gitconfig`, so commits come 
   the TV, and CI builds both.
 - **Apple:** `apple/scripts/engine.sh testing`, then per touched package `swift test` and
   `swift build -c release` (Release catches concurrency errors). iPhone-only code: build the
-  Fixtures app for the iOS Simulator. Mac Release app: build with signing off, then
+  Fixtures app for the iOS Simulator. Simulator UI tests: `apple/scripts/sim-test.sh <scheme>`
+  (built once, run per form, `-collect-test-diagnostics never`; see `app-shots`). Mac Release app: build with signing off, then
   `apple/scripts/signing-keychain.sh sign $real/.kaeri-signing/mac <app>` must verify. It signs
   with Kaeri's certificate through a throwaway keychain, as a release is signed, so a review
   build keeps its keychain access; `apple/scripts/adhoc-sign.sh <app>` alone signs ad hoc.

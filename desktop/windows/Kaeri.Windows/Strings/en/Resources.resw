@@ -571,6 +571,18 @@
     <value>Audio is now dubbed.</value>
     <comment>Toast after switching the audio while playing.</comment>
   </data>
+  <data name="PlayerPanelSwitchFailed" xml:space="preserve">
+    <value>Couldn't start from {source}. Still playing from {current}.</value>
+    <comment>Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.</comment>
+  </data>
+  <data name="PlayerPanelDubFailed" xml:space="preserve">
+    <value>Couldn't find episode {episode} dubbed. Still playing subbed.</value>
+    <comment>Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.</comment>
+  </data>
+  <data name="PlayerPanelSubFailed" xml:space="preserve">
+    <value>Couldn't find episode {episode} subbed. Still playing dubbed.</value>
+    <comment>Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.</comment>
+  </data>
   <data name="NoticeAlreadyFirstEpisode" xml:space="preserve">
     <value>Already at the first episode.</value>
     <comment>Toast when the previous-episode control is used on the first episode.</comment>
@@ -2686,6 +2698,10 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Account, {state}</value>
     <comment>Name of the account entry in the navigation pane, followed by its state.</comment>
+  </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>Subbed and dubbed</value>
+    <comment>Part of a release's detail line in the player's Sources panel: a release with both the original and the dubbed audio.</comment>
   </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Reader settings</value>
@@ -7673,6 +7689,10 @@
     <value>{name} doesn't have this show</value>
     <comment>Detail line when a source has no match for the show.</comment>
   </data>
+  <data name="PlayerStartMissAmbiguous" xml:space="preserve">
+    <value>{name} couldn't match this title</value>
+    <comment>Detail line when a source found titles like the show and could not tell which one it is.</comment>
+  </data>
   <data name="PlayerStartMissNoEpisode" xml:space="preserve">
     <value>{name} doesn't have episode {episode}</value>
     <comment>Detail line when a source has the show and not the episode. The episode is its label.</comment>
@@ -7696,6 +7716,14 @@
   <data name="PlayerStartRowHeldTorrentsOff" xml:space="preserve">
     <value>Not asked · Torrent playback is off</value>
     <comment>Details row for a source not asked while torrent playback is off. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldTorrentsStarting" xml:space="preserve">
+    <value>Not asked · Torrent playback is starting</value>
+    <comment>Details row for a source not asked because torrent playback is on and still starting. The name goes before it.</comment>
+  </data>
+  <data name="PlayerStartRowHeldTorrentsFailed" xml:space="preserve">
+    <value>Not asked · Torrent playback couldn't start</value>
+    <comment>Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.</comment>
   </data>
   <data name="PlayerStartRowHeldProxy" xml:space="preserve">
     <value>Not asked · Waiting for the proxy check</value>
@@ -7852,6 +7880,22 @@
   <data name="PlayerStartNotAskedTorrentsOff_other" xml:space="preserve">
     <value>{names} aren't asked while torrent playback is off.</value>
     <comment>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsStarting_one" xml:space="preserve">
+    <value>{names} isn't asked until torrent playback has started.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsStarting_other" xml:space="preserve">
+    <value>{names} aren't asked until torrent playback has started.</value>
+    <comment>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsFailed_one" xml:space="preserve">
+    <value>{names} isn't asked because torrent playback couldn't start.</value>
+    <comment>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</comment>
+  </data>
+  <data name="PlayerStartNotAskedTorrentsFailed_other" xml:space="preserve">
+    <value>{names} aren't asked because torrent playback couldn't start.</value>
+    <comment>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</comment>
   </data>
   <data name="PlayerStartNotAskedProxy_one" xml:space="preserve">
     <value>{names} isn't asked until the proxy check passes.</value>
@@ -8414,6 +8458,14 @@
     <value>{name} isn't asked while torrent playback is off</value>
     <comment>Line of the picker for a source not asked while torrent playback is off.</comment>
   </data>
+  <data name="SourcePickerHeldTorrentsStarting" xml:space="preserve">
+    <value>{name} isn't asked until torrent playback has started</value>
+    <comment>Line of the picker for a source not asked while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcePickerHeldTorrentsFailed" xml:space="preserve">
+    <value>{name} isn't asked because torrent playback couldn't start</value>
+    <comment>Line of the picker for a source not asked because torrent playback is on and couldn't start.</comment>
+  </data>
   <data name="SourcePickerHeldProxy" xml:space="preserve">
     <value>{name} isn't asked until the proxy check passes</value>
     <comment>Line of the picker for a source not asked while the proxy check for torrents hasn't passed.</comment>
@@ -8493,6 +8545,106 @@
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>More in Settings…</value>
     <comment>Button in the subtitles panel that opens Settings.</comment>
+  </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>The episode list is on its way.</value>
+    <comment>Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.</comment>
+  </data>
+  <data name="PlayerPanel" xml:space="preserve">
+    <value>Episodes and sources</value>
+    <comment>Accessibility label of the player's side panel with the Episodes and Sources tabs.</comment>
+  </data>
+  <data name="EpisodeRowPlaying" xml:space="preserve">
+    <value>Playing · {left}</value>
+    <comment>Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.</comment>
+  </data>
+  <data name="EpisodeRowMixed" xml:space="preserve">
+    <value>Mixed</value>
+    <comment>Episode row in the player's panel: the episode is part story, part filler.</comment>
+  </data>
+  <data name="EpisodeRowLength" xml:space="preserve">
+    <value>{minutes} min</value>
+    <comment>Episode row in the player's panel: the length of an episode nobody has started.</comment>
+  </data>
+  <data name="EpisodeRowDelayed" xml:space="preserve">
+    <value>Delayed, was {when}</value>
+    <comment>Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.</comment>
+  </data>
+  <data name="EpisodeRowFrom" xml:space="preserve">
+    <value>From {source}</value>
+    <comment>Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.</comment>
+  </data>
+  <data name="ActionResume" xml:space="preserve">
+    <value>Resume</value>
+    <comment>Button on a partly watched episode: plays it from where it was left.</comment>
+  </data>
+  <data name="PlayerPanelMetadataOnly" xml:space="preserve">
+    <value>No source lists this show yet. Episodes can still be marked watched.</value>
+    <comment>Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.</comment>
+  </data>
+  <data name="PlayerPanelPlayingNow" xml:space="preserve">
+    <value>Playing now</value>
+    <comment>Player panel, Sources tab: heading over the source and streams playing now.</comment>
+  </data>
+  <data name="PlayerPanelOtherSources" xml:space="preserve">
+    <value>Other sources</value>
+    <comment>Player panel, Sources tab: heading over the other sources, in the order they are tried.</comment>
+  </data>
+  <data name="PlayerPanelReleases_one" xml:space="preserve">
+    <value>One release</value>
+    <comment>Player panel, Sources tab: the folded list of a source's releases for this episode.</comment>
+  </data>
+  <data name="PlayerPanelReleases_other" xml:space="preserve">
+    <value>{count} releases</value>
+    <comment>Player panel, Sources tab: the folded list of a source's releases for this episode.</comment>
+  </data>
+  <data name="PlayerReleaseAutomatic" xml:space="preserve">
+    <value>Automatic picks this</value>
+    <comment>Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.</comment>
+  </data>
+  <data name="PlayerPanelOrder" xml:space="preserve">
+    <value>Tried in the order set in Sources.</value>
+    <comment>Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.</comment>
+  </data>
+  <data name="PlayerPanelPickScope" xml:space="preserve">
+    <value>A pick here is for this episode only.</value>
+    <comment>Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.</comment>
+  </data>
+  <data name="PlayerTranslation" xml:space="preserve">
+    <value>Subbed or dubbed</value>
+    <comment>Accessibility label of the subtitled or dubbed switch in the player panel.</comment>
+  </data>
+  <data name="PlayerPanelStarting" xml:space="preserve">
+    <value>Starting · {seconds} s</value>
+    <comment>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</comment>
+  </data>
+  <data name="PlayerPanelAsking" xml:space="preserve">
+    <value>Asking · {seconds} s</value>
+    <comment>Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.</comment>
+  </data>
+  <data name="PlayerFindingVersionSeconds" xml:space="preserve">
+    <value>Finding episode {episode} dubbed · {seconds} s</value>
+    <comment>Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</comment>
+  </data>
+  <data name="PlayerFindingVersionSubbedSeconds" xml:space="preserve">
+    <value>Finding episode {episode} subbed · {seconds} s</value>
+    <comment>Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</comment>
+  </data>
+  <data name="NoticePlayingFromSource" xml:space="preserve">
+    <value>Playing from {source} at {clock}</value>
+    <comment>Notice when another source started playing while the player panel was closed.</comment>
+  </data>
+  <data name="PartyVersionOwn" xml:space="preserve">
+    <value>Only your player switches. The room keeps playing.</value>
+    <comment>Player panel, under the subtitled or dubbed switch during a watch party.</comment>
+  </data>
+  <data name="PlayerPanelMore" xml:space="preserve">
+    <value>More</value>
+    <comment>Player panel: button under a synopsis cut to three lines, that shows it whole.</comment>
+  </data>
+  <data name="PlayerPanelLess" xml:space="preserve">
+    <value>Less</value>
+    <comment>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</comment>
   </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Private mode</value>
@@ -13488,6 +13640,14 @@
     <value>Torrent playback is off</value>
     <comment>Under a source that names torrents while torrent playback is off in Settings.</comment>
   </data>
+  <data name="SourceNoteTorrentsStarting" xml:space="preserve">
+    <value>Torrents are starting</value>
+    <comment>Under a source that names torrents while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourceNoteTorrentsFailed" xml:space="preserve">
+    <value>Torrents couldn't start</value>
+    <comment>Under a source that names torrents while torrent playback is on and couldn't start.</comment>
+  </data>
   <data name="SourcePickerReleases" xml:space="preserve">
     <value>Releases</value>
     <comment>Heading over one source's releases, for a source that offers several (a batch, single episodes).</comment>
@@ -13580,6 +13740,14 @@
     <value>Torrents off</value>
     <comment>Status: a source that names torrents, while torrent playback is off.</comment>
   </data>
+  <data name="SourcesStatusTorrentsStarting" xml:space="preserve">
+    <value>Torrents starting</value>
+    <comment>Status: a source that names torrents, while torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcesStatusTorrentsFailed" xml:space="preserve">
+    <value>Torrents didn't start</value>
+    <comment>Status: a source that names torrents, while torrent playback is on and couldn't start.</comment>
+  </data>
   <data name="SourcesStatusSlow" xml:space="preserve">
     <value>Slow</value>
     <comment>Status: slow.</comment>
@@ -13603,6 +13771,14 @@
   <data name="SourcesDetailTorrentsOff" xml:space="preserve">
     <value>Torrent playback is off. You can turn it on in Settings, under Sources.</value>
     <comment>Status line: torrent playback is off.</comment>
+  </data>
+  <data name="SourcesDetailTorrentsStarting" xml:space="preserve">
+    <value>Torrent playback is starting. This source is asked once it has started.</value>
+    <comment>Status line: torrent playback is on and still starting.</comment>
+  </data>
+  <data name="SourcesDetailTorrentsFailed" xml:space="preserve">
+    <value>Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.</value>
+    <comment>Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.</comment>
   </data>
   <data name="SourcesDetailDisabled" xml:space="preserve">
     <value>Off. It keeps its place and isn't tried.</value>

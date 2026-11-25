@@ -14,7 +14,7 @@ impl Run<'_> {
     /// Carry out what the track policy decided.
     pub(super) async fn apply_track(&self, action: TrackAction, link: &dyn PlayerLink) {
         if let TrackAction::Remember(memory) = action {
-            let key = (self.context.anilist_id, self.context.translation);
+            let key = (self.context.anilist_id, self.translation);
             let enabled = self.settings.remember_tracks && !self.settings.privacy.holds();
             remember_tracks(self.store, enabled, key, memory).await;
             return;
@@ -42,7 +42,7 @@ impl Run<'_> {
                     duration_secs: duration,
                     watched_secs,
                     provider_id: Some(stream.provider_id.clone()),
-                    translation: Some(context.translation),
+                    translation: Some(self.translation),
                     completed,
                     ..WatchEvent::new(context.anilist_id, &context.episode, position)
                 };
@@ -112,7 +112,7 @@ impl Run<'_> {
                     duration_secs: duration,
                     watched_secs: tracker.watched_secs(),
                     provider_id: Some(stream.provider_id.clone()),
-                    translation: Some(self.context.translation),
+                    translation: Some(self.translation),
                     completed,
                     ..WatchEvent::new(self.context.anilist_id, &self.context.episode, position)
                 };

@@ -34,7 +34,7 @@ use kaeri_model::{
     command::PlayerCommand,
     event::Event,
     notice::Notice,
-    playback::{Ending, Successor},
+    playback::{Ending, SourceSwitch, Successor, SwitchTo},
 };
 // What the episode table says of the episodes around this one: the front end sends them ahead
 // of a play, so they are the model's, and still named from here for whatever plays.
@@ -58,6 +58,7 @@ use crate::{
         seat::{PartyHub, Seat, SeatReport},
         shaders::Look,
         slot::{Player, PlayerSlot},
+        switch::SwitchNews,
     },
 };
 
@@ -180,6 +181,9 @@ pub struct PlaySettings {
     /// beyond the streams found: where Skip and Switch source go once the pool has nothing
     /// left. See [`crate::playback::further`].
     pub further: crate::playback::further::Further,
+    /// The playback's end of its door, where a release picked in the player's Sources panel
+    /// reaches it: see [`crate::playback::switch`].
+    pub switches: crate::playback::switch::SwitchInbox,
 }
 
 impl PlaySettings {
@@ -265,6 +269,9 @@ enum FileOutcome {
     },
     /// The viewer picked another stream from the menu, or asked for the same one again.
     Switch { to: usize, at: f64 },
+    /// The release the viewer picked in the Sources panel was found: its streams, to play from
+    /// `at`, where the file was, or where it opened when it has shown no frame yet.
+    Swap { to: SwitchTo, streams: Vec<Stream>, at: Option<f64> },
     /// The viewer accepted the stall prompt's offer of another stream.
     Stalled { at: f64 },
     /// The viewer skipped the stream before it showed a frame, from the starting screen.
@@ -396,6 +403,14 @@ pub async fn play(
         in_party: false,
         failed_over_from: None,
         skipping: settings.further.skips(),
+        news: settings.switches.take(),
+        finding: None,
+        switching: None,
+        restoring: None,
+        pool_from: 0,
+        sources: sources.clone(),
+        translation: context.translation,
+        said_source: first.provider_id.clone(),
     };
 
     // Read once: every stream this playback tries is the same series in the same translation.
@@ -415,6 +430,10 @@ pub async fn play(
     } else {
         None
     };
+
+    // The tracks the viewer chose before a switch to the other version, which plays with its
+    // own: back to them when the version shows no frame.
+    let mut before_version = None;
 
     // Grows when the sources after the pool are asked: see `Further`.
     let mut total = streams.len();
@@ -438,7 +457,12 @@ pub async fn play(
         // Before mpv opens the file, so the tracks are on disk by the time it asks for them,
         // but no longer than a moment: the tracks still on their way follow as they arrive.
         let mut late = None;
+        // Not for a switch's file, which has no starting screen: see `Run::file`.
+        let quiet = run.switching.is_some() || run.restoring.is_some();
         let say = |step, line| {
+            if quiet {
+                return;
+            }
             crate::playback::starting::say(
                 &tx,
                 context.anilist_id,
@@ -546,7 +570,7 @@ pub async fn play(
             subtitle_language: settings.subtitle_language.clone(),
             speed: context.speed,
             volume: context.volume,
-            dub: context.translation == Translation::Dub,
+            dub: run.translation == Translation::Dub,
             fullscreen: settings.fullscreen,
             mpv_options: settings.mpv_options.clone(),
         };
@@ -598,11 +622,11 @@ pub async fn play(
         // The track policy belongs to the process; point it at this series before the file
         // loads, and settle what it still owed the previous one.
         let preferences = TrackPreferences {
-            translation: context.translation,
+            translation: run.translation,
             language: settings.subtitle_language.clone(),
         };
         let owed = current.tracks.prepare(preferences, memory.clone());
-        let key = (context.anilist_id, context.translation);
+        let key = (context.anilist_id, run.translation);
         if let Some(previous) = current.tracks_for.replace(key) {
             for action in owed {
                 if let TrackAction::Remember(memory) = action {
@@ -631,7 +655,7 @@ pub async fn play(
                 .and_then(|e| e.title.clone()),
             image: context.banner_url.clone().or_else(|| context.cover_url.clone()),
             subtitle_language: settings.subtitle_language.clone(),
-            dub: context.translation == Translation::Dub,
+            dub: run.translation == Translation::Dub,
             audio_memory: current.tracks.memory().audio.clone(),
         });
         // The audio of this file's head and tail, for finding its skip times: listened for
@@ -671,6 +695,25 @@ pub async fn play(
                 events::Beside { late, finder },
             )
             .await;
+
+        // A release that landed is the pool from here: the streams it replaced are let go, so
+        // failover, the Sources menu and the next switch go by what plays now.
+        let from = std::mem::take(&mut run.pool_from);
+        let outcome = if from > 0 && from <= index {
+            streams.drain(..from);
+            tried.drain(..from);
+            localised.drain(..from);
+            total = streams.len();
+            index -= from;
+            match outcome {
+                FileOutcome::Switch { to, at } => {
+                    FileOutcome::Switch { to: to.checked_sub(from).unwrap_or(index), at }
+                }
+                outcome => outcome,
+            }
+        } else {
+            outcome
+        };
 
         // What the viewer chose in this file is where the next file of the episode starts.
         let (carried, owed) = current.tracks.carried();
@@ -752,8 +795,45 @@ pub async fn play(
         };
 
         match outcome {
+            FileOutcome::Swap { to: mut asked, streams: found, at } => {
+                let at = at.or(resume_at).unwrap_or_default();
+                // The other version names its source once it is found.
+                if asked.translation.is_some()
+                    && let Some(first) = found.first()
+                {
+                    asked.name = run.source_name(first);
+                    asked.provider_id.clone_from(&first.provider_id);
+                    before_version = Some(memory.take());
+                }
+                let from = streams.len();
+                streams.extend(found);
+                total = streams.len();
+                tried.resize(total, false);
+                localised.resize(total, false);
+                tracing::info!(
+                    from = index,
+                    provider = %asked.provider_id,
+                    at,
+                    "switching to another release in place"
+                );
+                run.begin_switch(asked, at, index, from..total);
+                index = from;
+                resume_at = Some(at);
+                target = streams[index].quality;
+                run.failed_over_from = None;
+            }
             FileOutcome::Switch { to, at } => {
                 tracing::info!(from = index, to, at, "switching stream in place");
+                // Picked by the viewer, not the same stream opened again where it was.
+                if to != index {
+                    let asked = SwitchTo {
+                        provider_id: streams[to].provider_id.clone(),
+                        name: run.source_name(&streams[to]),
+                        stream: Some(to.to_string()),
+                        ..SwitchTo::default()
+                    };
+                    run.begin_switch(asked, at, index, to..to + 1);
+                }
                 index = to;
                 resume_at = Some(at);
                 // A stream picked by hand sets the quality later failovers keep to.
@@ -848,6 +928,48 @@ pub async fn play(
                     run.servers.unplayed(&store, &streams[index], stopped || quit, refused);
                 }
 
+                // A switch that showed no frame: another of its release's streams, and then
+                // back to what played before, where it was. The viewer is told once that one
+                // shows a frame again.
+                if no_frames
+                    && !stopped
+                    && !exited
+                    && !quit
+                    && let Some(switching) = run.switching.take()
+                {
+                    if let Some(next) = switching.streams.clone().find(|i| !tried[*i]) {
+                        tracing::warn!(
+                            to = next,
+                            "the switch showed no frame; trying another of its streams"
+                        );
+                        index = next;
+                        resume_at = Some(switching.at);
+                        run.switching = Some(switching);
+                        continue;
+                    }
+                    tracing::warn!(
+                        back_to = switching.back_to,
+                        "the switch showed no frame; going back"
+                    );
+                    let text = run.switch_failed(&switching.to, &streams[switching.back_to]);
+                    let reason = notice.clone().or_else(|| {
+                        reported
+                            .clone()
+                            .map(|line| Msg::NoticePlayerCouldNotPlay { reason: line })
+                    });
+                    let Switching { to, at, back_to, was, .. } = switching;
+                    run.translation = was;
+                    if to.translation.is_some()
+                        && let Some(kept) = before_version.take()
+                    {
+                        memory = kept;
+                    }
+                    run.restoring = Some(SourceSwitch::Failed { to, at, text, reason });
+                    index = back_to;
+                    resume_at = Some(at);
+                    target = streams[index].quality;
+                    continue;
+                }
                 if no_frames && !stopped && !exited && !last {
                     // The point of carrying alternates: whether segments actually decode is
                     // knowable only in front of a player, so a stream that never showed a frame
@@ -1188,6 +1310,96 @@ struct Run<'a> {
     /// The starting screen's Skip, heard until a file shows its first frame: see
     /// [`PlaySettings::further`].
     skipping: Option<tokio::sync::watch::Receiver<u64>>,
+    /// What the engine says of a release it finds for this playback, and the release it is
+    /// finding: see [`crate::playback::switch`].
+    news: Option<mpsc::UnboundedReceiver<SwitchNews>>,
+    finding: Option<SwitchTo>,
+    /// A switch loading, until its first frame: what it is and what it goes back to.
+    switching: Option<Switching>,
+    /// A switch that failed, said once the stream it went back to shows a frame again.
+    restoring: Option<SourceSwitch>,
+    /// Where the streams of a release that landed start: the streams before it are let go once
+    /// its file is over, and the Sources menu lists only the release's streams until then.
+    pool_from: usize,
+    /// The sources, for the names a switch says.
+    sources: Option<kaeri_providers::ProviderRegistry>,
+    /// Sub or dub, as the episode plays now: the context's until the other version lands.
+    translation: Translation,
+    /// The source a front end was last told plays: the first stream's, which the start's
+    /// `Found` named, then each switch's that landed.
+    said_source: String,
+}
+
+/// A switch the viewer asked for, loading.
+struct Switching {
+    to: SwitchTo,
+    /// Where the episode was, which it plays from.
+    at: f64,
+    /// The stream it played before, which it goes back to when the switch shows no frame.
+    back_to: usize,
+    /// The streams the switch may play, the release's own: another of them is tried before
+    /// going back.
+    streams: std::ops::Range<usize>,
+    /// Sub or dub before the switch, which going back plays in again.
+    was: Translation,
+}
+
+impl Run<'_> {
+    /// The name the source of `stream` goes by.
+    fn source_name(&self, stream: &Stream) -> String {
+        match &self.sources {
+            Some(sources) => {
+                crate::playback::resolve::display_name(sources, &stream.provider_id)
+            }
+            None => stream.provider_id.clone(),
+        }
+    }
+
+    /// What a row says of a switch to `to` that did not start, with `playing` playing on: the
+    /// names of both sources, or for the other version, which one plays on.
+    fn switch_failed(&self, to: &SwitchTo, playing: &Stream) -> Msg {
+        let episode = self.context.episode.clone();
+        match to.translation {
+            Some(Translation::Dub) => Msg::PlayerPanelDubFailed { episode },
+            Some(Translation::Sub) => Msg::PlayerPanelSubFailed { episode },
+            None => Msg::PlayerPanelSwitchFailed {
+                source: to.name.clone(),
+                current: self.source_name(playing),
+            },
+        }
+    }
+
+    /// Say how the switch goes, for this playback.
+    fn say_switch(&self, state: SourceSwitch) {
+        let playback = self.tx.playback().unwrap_or(kaeri_model::playback::PlaybackId::new(0));
+        let _ = self.tx.send(Event::PlayerSwitch { playback, state });
+    }
+
+    /// A switch to `to`, at `at`, from the stream `back_to`, about to load the first of
+    /// `streams`: held from here until it lands or fails.
+    fn begin_switch(
+        &mut self,
+        to: SwitchTo,
+        at: f64,
+        back_to: usize,
+        streams: std::ops::Range<usize>,
+    ) {
+        // One that failed and has not yet said so is over: a newer switch takes its place.
+        if let Some(failed) = self.restoring.take() {
+            self.say_switch(failed);
+        }
+        self.say_switch(SourceSwitch::Loading { to: to.clone(), at });
+        // One still loading is over too, but what it would have gone back to stays: the stream
+        // it left last showed a frame, and the one it was loading never did.
+        let (back_to, was) = match self.switching.take() {
+            Some(earlier) => (earlier.back_to, earlier.was),
+            None => (back_to, self.translation),
+        };
+        if let Some(translation) = to.translation {
+            self.translation = translation;
+        }
+        self.switching = Some(Switching { to, at, back_to, streams, was });
+    }
 }
 
 #[cfg(all(test, feature = "cast"))]

@@ -69,19 +69,23 @@ fun TonalButton(
     }
 }
 
-/** The one amber action per screen, 56 high: amber with a ground label, a silk ring when focused. */
+/**
+ * The one amber action per screen, 56 high: amber with a ground label, a silk ring when focused.
+ * A smaller [height] keeps the label centred inside it.
+ */
 @Composable
 fun AmberButton(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     icon: ImageVector? = TvIcons.Play,
     enabled: Boolean = true,
+    height: Dp = 56.dp,
     content: @Composable RowScope.() -> Unit,
 ) {
     val ring = Border(BorderStroke(2.dp, ObiSilk.Silk), inset = 2.dp, shape = CircleShape)
     Button(
         onClick = onClick,
-        modifier = modifier.heightIn(min = 56.dp),
+        modifier = modifier.heightIn(min = height),
         enabled = enabled,
         scale = ButtonDefaults.scale(focusedScale = FOCUSED_SCALE),
         glow = ButtonDefaults.glow(),
@@ -97,7 +101,7 @@ fun AmberButton(
             disabledContentColor = ObiSilk.Ground,
         ),
         border = ButtonDefaults.border(focusedBorder = ring, focusedDisabledBorder = ring),
-        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 16.dp),
+        contentPadding = PaddingValues(horizontal = 28.dp, vertical = 16.dp + (height - 56.dp) / 2),
     ) {
         ButtonContent(icon, content)
     }

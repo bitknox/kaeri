@@ -210,6 +210,24 @@ public class StartScreenTests
     }
 
     [Fact]
+    public void ASourceHeldWhileTorrentsStartIsNotSaidToBeOff()
+    {
+        var start = Start();
+        start.Step(new StartStep.SourcesHeldBack(["Harbor"], SourceHold.TorrentsStarting), null, Ms(100));
+        start.Fail(new StartFailure(
+            NoSourceWhy.NotFound,
+            new Msg.NoticeReason(new Cause.SourcesNotAsked(1, "Harbor", "7")),
+            ["Brook"],
+            [],
+            [new HeldSources(Names: ["Harbor"], Why: SourceHold.TorrentsStarting)]));
+        var frame = start.Frame(Ms(3000));
+        Assert.Equal("Brook doesn't have episode 7. Harbor isn't asked until torrent playback has started.", frame.Failure?.Reason);
+        var row = Assert.Single(frame.Rows, r => r.Name == "Harbor");
+        Assert.Equal("Not asked · Torrent playback is starting", row.Note);
+        Assert.Equal("Not asked · Torrent playback couldn't start", StartScreen.HeldNote(SourceHold.TorrentsFailed));
+    }
+
+    [Fact]
     public void AFailureOnAHalfEpisodeNamesItAndNoSourcesOffersNoTryAgain()
     {
         var start = new StartScreen(1, "7.5", null);

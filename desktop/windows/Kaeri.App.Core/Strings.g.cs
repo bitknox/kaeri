@@ -405,6 +405,15 @@ public static partial class T
     /// <summary>Toast after switching the audio while playing.</summary>
     public static string NoticeAudioNowDubbed => Get("NoticeAudioNowDubbed");
 
+    /// <summary>Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.</summary>
+    public static string PlayerPanelSwitchFailed(string source, string current) => Fill(Get("PlayerPanelSwitchFailed"), ("source", source), ("current", current));
+
+    /// <summary>Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.</summary>
+    public static string PlayerPanelDubFailed(string episode) => Fill(Get("PlayerPanelDubFailed"), ("episode", episode));
+
+    /// <summary>Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.</summary>
+    public static string PlayerPanelSubFailed(string episode) => Fill(Get("PlayerPanelSubFailed"), ("episode", episode));
+
     /// <summary>Toast when the previous-episode control is used on the first episode.</summary>
     public static string NoticeAlreadyFirstEpisode => Get("NoticeAlreadyFirstEpisode");
 
@@ -1874,6 +1883,9 @@ public static partial class T
 
     /// <summary>Name of the account entry in the navigation pane, followed by its state.</summary>
     public static string AccountsPaneName(string state) => Fill(Get("AccountsPaneName"), ("state", state));
+
+    /// <summary>Part of a release's detail line in the player's Sources panel: a release with both the original and the dubbed audio.</summary>
+    public static string PlayerPanelDualAudio => Get("PlayerPanelDualAudio");
 
     /// <summary>Name and tooltip of the Aa button in the reader's group, which opens the reader's settings.</summary>
     public static string WindowsReaderSettingsOpen => Get("WindowsReaderSettingsOpen");
@@ -5517,6 +5529,9 @@ public static partial class T
     /// <summary>Detail line when a source has no match for the show.</summary>
     public static string PlayerStartMissNoMatch(string name) => Fill(Get("PlayerStartMissNoMatch"), ("name", name));
 
+    /// <summary>Detail line when a source found titles like the show and could not tell which one it is.</summary>
+    public static string PlayerStartMissAmbiguous(string name) => Fill(Get("PlayerStartMissAmbiguous"), ("name", name));
+
     /// <summary>Detail line when a source has the show and not the episode. The episode is its label.</summary>
     public static string PlayerStartMissNoEpisode(string name, string episode) => Fill(Get("PlayerStartMissNoEpisode"), ("name", name), ("episode", episode));
 
@@ -5534,6 +5549,12 @@ public static partial class T
 
     /// <summary>Details row for a source not asked while torrent playback is off. The name goes before it.</summary>
     public static string PlayerStartRowHeldTorrentsOff => Get("PlayerStartRowHeldTorrentsOff");
+
+    /// <summary>Details row for a source not asked because torrent playback is on and still starting. The name goes before it.</summary>
+    public static string PlayerStartRowHeldTorrentsStarting => Get("PlayerStartRowHeldTorrentsStarting");
+
+    /// <summary>Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.</summary>
+    public static string PlayerStartRowHeldTorrentsFailed => Get("PlayerStartRowHeldTorrentsFailed");
 
     /// <summary>Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.</summary>
     public static string PlayerStartRowHeldProxy => Get("PlayerStartRowHeldProxy");
@@ -5642,6 +5663,12 @@ public static partial class T
 
     /// <summary>Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.</summary>
     public static string PlayerStartNotAskedTorrentsOff(long count, string names) => Fill(GetPlural("PlayerStartNotAskedTorrentsOff", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+
+    /// <summary>Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.</summary>
+    public static string PlayerStartNotAskedTorrentsStarting(long count, string names) => Fill(GetPlural("PlayerStartNotAskedTorrentsStarting", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
+
+    /// <summary>Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.</summary>
+    public static string PlayerStartNotAskedTorrentsFailed(long count, string names) => Fill(GetPlural("PlayerStartNotAskedTorrentsFailed", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
 
     /// <summary>Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.</summary>
     public static string PlayerStartNotAskedProxy(long count, string names) => Fill(GetPlural("PlayerStartNotAskedProxy", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("names", names));
@@ -6046,6 +6073,12 @@ public static partial class T
     /// <summary>Line of the picker for a source not asked while torrent playback is off.</summary>
     public static string SourcePickerHeldTorrentsOff(string name) => Fill(Get("SourcePickerHeldTorrentsOff"), ("name", name));
 
+    /// <summary>Line of the picker for a source not asked while torrent playback is on and still starting.</summary>
+    public static string SourcePickerHeldTorrentsStarting(string name) => Fill(Get("SourcePickerHeldTorrentsStarting"), ("name", name));
+
+    /// <summary>Line of the picker for a source not asked because torrent playback is on and couldn't start.</summary>
+    public static string SourcePickerHeldTorrentsFailed(string name) => Fill(Get("SourcePickerHeldTorrentsFailed"), ("name", name));
+
     /// <summary>Line of the picker for a source not asked while the proxy check for torrents hasn't passed.</summary>
     public static string SourcePickerHeldProxy(string name) => Fill(Get("SourcePickerHeldProxy"), ("name", name));
 
@@ -6105,6 +6138,78 @@ public static partial class T
 
     /// <summary>Button in the subtitles panel that opens Settings.</summary>
     public static string PlayerSubsMore => Get("PlayerSubsMore");
+
+    /// <summary>Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.</summary>
+    public static string PlayerSheetEpisodesLoading => Get("PlayerSheetEpisodesLoading");
+
+    /// <summary>Accessibility label of the player's side panel with the Episodes and Sources tabs.</summary>
+    public static string PlayerPanel => Get("PlayerPanel");
+
+    /// <summary>Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.</summary>
+    public static string EpisodeRowPlaying(string left) => Fill(Get("EpisodeRowPlaying"), ("left", left));
+
+    /// <summary>Episode row in the player's panel: the episode is part story, part filler.</summary>
+    public static string EpisodeRowMixed => Get("EpisodeRowMixed");
+
+    /// <summary>Episode row in the player's panel: the length of an episode nobody has started.</summary>
+    public static string EpisodeRowLength(long minutes) => Fill(Get("EpisodeRowLength"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.</summary>
+    public static string EpisodeRowDelayed(string when) => Fill(Get("EpisodeRowDelayed"), ("when", when));
+
+    /// <summary>Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.</summary>
+    public static string EpisodeRowFrom(string source) => Fill(Get("EpisodeRowFrom"), ("source", source));
+
+    /// <summary>Button on a partly watched episode: plays it from where it was left.</summary>
+    public static string ActionResume => Get("ActionResume");
+
+    /// <summary>Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.</summary>
+    public static string PlayerPanelMetadataOnly => Get("PlayerPanelMetadataOnly");
+
+    /// <summary>Player panel, Sources tab: heading over the source and streams playing now.</summary>
+    public static string PlayerPanelPlayingNow => Get("PlayerPanelPlayingNow");
+
+    /// <summary>Player panel, Sources tab: heading over the other sources, in the order they are tried.</summary>
+    public static string PlayerPanelOtherSources => Get("PlayerPanelOtherSources");
+
+    /// <summary>Player panel, Sources tab: the folded list of a source's releases for this episode.</summary>
+    public static string PlayerPanelReleases(long count) => Fill(GetPlural("PlayerPanelReleases", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.</summary>
+    public static string PlayerReleaseAutomatic => Get("PlayerReleaseAutomatic");
+
+    /// <summary>Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.</summary>
+    public static string PlayerPanelOrder => Get("PlayerPanelOrder");
+
+    /// <summary>Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.</summary>
+    public static string PlayerPanelPickScope => Get("PlayerPanelPickScope");
+
+    /// <summary>Accessibility label of the subtitled or dubbed switch in the player panel.</summary>
+    public static string PlayerTranslation => Get("PlayerTranslation");
+
+    /// <summary>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</summary>
+    public static string PlayerPanelStarting(long seconds) => Fill(Get("PlayerPanelStarting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.</summary>
+    public static string PlayerPanelAsking(long seconds) => Fill(Get("PlayerPanelAsking"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</summary>
+    public static string PlayerFindingVersionSeconds(string episode, long seconds) => Fill(Get("PlayerFindingVersionSeconds"), ("episode", episode), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</summary>
+    public static string PlayerFindingVersionSubbedSeconds(string episode, long seconds) => Fill(Get("PlayerFindingVersionSubbedSeconds"), ("episode", episode), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Notice when another source started playing while the player panel was closed.</summary>
+    public static string NoticePlayingFromSource(string source, string clock) => Fill(Get("NoticePlayingFromSource"), ("source", source), ("clock", clock));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch during a watch party.</summary>
+    public static string PartyVersionOwn => Get("PartyVersionOwn");
+
+    /// <summary>Player panel: button under a synopsis cut to three lines, that shows it whole.</summary>
+    public static string PlayerPanelMore => Get("PlayerPanelMore");
+
+    /// <summary>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</summary>
+    public static string PlayerPanelLess => Get("PlayerPanelLess");
 
     /// <summary>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</summary>
     public static string PrivateMode => Get("PrivateMode");
@@ -9653,6 +9758,12 @@ public static partial class T
     /// <summary>Under a source that names torrents while torrent playback is off in Settings.</summary>
     public static string SourceNoteTorrentsOff => Get("SourceNoteTorrentsOff");
 
+    /// <summary>Under a source that names torrents while torrent playback is on and still starting.</summary>
+    public static string SourceNoteTorrentsStarting => Get("SourceNoteTorrentsStarting");
+
+    /// <summary>Under a source that names torrents while torrent playback is on and couldn't start.</summary>
+    public static string SourceNoteTorrentsFailed => Get("SourceNoteTorrentsFailed");
+
     /// <summary>Heading over one source's releases, for a source that offers several (a batch, single episodes).</summary>
     public static string SourcePickerReleases => Get("SourcePickerReleases");
 
@@ -9722,6 +9833,12 @@ public static partial class T
     /// <summary>Status: a source that names torrents, while torrent playback is off.</summary>
     public static string SourcesStatusTorrentsOff => Get("SourcesStatusTorrentsOff");
 
+    /// <summary>Status: a source that names torrents, while torrent playback is on and still starting.</summary>
+    public static string SourcesStatusTorrentsStarting => Get("SourcesStatusTorrentsStarting");
+
+    /// <summary>Status: a source that names torrents, while torrent playback is on and couldn't start.</summary>
+    public static string SourcesStatusTorrentsFailed => Get("SourcesStatusTorrentsFailed");
+
     /// <summary>Status: slow.</summary>
     public static string SourcesStatusSlow => Get("SourcesStatusSlow");
 
@@ -9739,6 +9856,12 @@ public static partial class T
 
     /// <summary>Status line: torrent playback is off.</summary>
     public static string SourcesDetailTorrentsOff => Get("SourcesDetailTorrentsOff");
+
+    /// <summary>Status line: torrent playback is on and still starting.</summary>
+    public static string SourcesDetailTorrentsStarting => Get("SourcesDetailTorrentsStarting");
+
+    /// <summary>Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.</summary>
+    public static string SourcesDetailTorrentsFailed => Get("SourcesDetailTorrentsFailed");
 
     /// <summary>Status line: disabled.</summary>
     public static string SourcesDetailDisabled => Get("SourcesDetailDisabled");
@@ -12570,6 +12693,9 @@ public static partial class T
         ["NoticeFillerSkipped"] = "Skipped filler. Up next is episode {episode}.",
         ["NoticeAudioNowSubbed"] = "Audio is now subbed.",
         ["NoticeAudioNowDubbed"] = "Audio is now dubbed.",
+        ["PlayerPanelSwitchFailed"] = "Couldn't start from {source}. Still playing from {current}.",
+        ["PlayerPanelDubFailed"] = "Couldn't find episode {episode} dubbed. Still playing subbed.",
+        ["PlayerPanelSubFailed"] = "Couldn't find episode {episode} subbed. Still playing dubbed.",
         ["NoticeAlreadyFirstEpisode"] = "Already at the first episode.",
         ["NoticeLastEpisode"] = "There's no next episode. Episode {episode} is the last.",
         ["NoticeNoNextEpisode"] = "There's no next episode.",
@@ -13099,6 +13225,7 @@ public static partial class T
         ["PlayerVolumeMuted"] = "Volume, muted",
         ["PlayerExitFullscreen"] = "Exit full screen",
         ["AccountsPaneName"] = "Account, {state}",
+        ["PlayerPanelDualAudio"] = "Subbed and dubbed",
         ["WindowsReaderSettingsOpen"] = "Reader settings",
         ["WindowsReaderOpening"] = "Opening {chapter}",
         ["WindowsReaderOpeningSlow"] = "Finding a source · {seconds} s",
@@ -14347,12 +14474,15 @@ public static partial class T
         ["PlayerStartPlace"] = "{place} of {total} sources",
         ["PlayerStartPinned"] = "Your pick for this show",
         ["PlayerStartMissNoMatch"] = "{name} doesn't have this show",
+        ["PlayerStartMissAmbiguous"] = "{name} couldn't match this title",
         ["PlayerStartMissNoEpisode"] = "{name} doesn't have episode {episode}",
         ["PlayerStartPinMissed"] = "{name} doesn't have episode {episode} yet. Playing from the next source.",
         ["PlayerStartMissFailed"] = "{name} didn't answer",
         ["PlayerStartMissTimedOut"] = "{name} took too long",
         ["PlayerStartMissSkipped"] = "You skipped {name}",
         ["PlayerStartRowHeldTorrentsOff"] = "Not asked · Torrent playback is off",
+        ["PlayerStartRowHeldTorrentsStarting"] = "Not asked · Torrent playback is starting",
+        ["PlayerStartRowHeldTorrentsFailed"] = "Not asked · Torrent playback couldn't start",
         ["PlayerStartRowHeldProxy"] = "Not asked · Waiting for the proxy check",
         ["PlayerStartRowHeldCellular"] = "Not asked · Torrents are off on cellular",
         ["PlayerStartRowHeldOther"] = "Not asked · Not available right now",
@@ -14392,6 +14522,10 @@ public static partial class T
         ["PlayerStartUnreached"] = "Couldn't reach {names}.",
         ["PlayerStartNotAskedTorrentsOff_one"] = "{names} isn't asked while torrent playback is off.",
         ["PlayerStartNotAskedTorrentsOff_other"] = "{names} aren't asked while torrent playback is off.",
+        ["PlayerStartNotAskedTorrentsStarting_one"] = "{names} isn't asked until torrent playback has started.",
+        ["PlayerStartNotAskedTorrentsStarting_other"] = "{names} aren't asked until torrent playback has started.",
+        ["PlayerStartNotAskedTorrentsFailed_one"] = "{names} isn't asked because torrent playback couldn't start.",
+        ["PlayerStartNotAskedTorrentsFailed_other"] = "{names} aren't asked because torrent playback couldn't start.",
         ["PlayerStartNotAskedProxy_one"] = "{names} isn't asked until the proxy check passes.",
         ["PlayerStartNotAskedProxy_other"] = "{names} aren't asked until the proxy check passes.",
         ["PlayerStartNotAskedCellular_one"] = "{names} isn't asked on cellular.",
@@ -14538,6 +14672,8 @@ public static partial class T
         ["SourcePickerNoneLists"] = "No source lists episode {episode}.",
         ["SourcePickerNoneAnsweredLists"] = "No source that answered lists episode {episode}.",
         ["SourcePickerHeldTorrentsOff"] = "{name} isn't asked while torrent playback is off",
+        ["SourcePickerHeldTorrentsStarting"] = "{name} isn't asked until torrent playback has started",
+        ["SourcePickerHeldTorrentsFailed"] = "{name} isn't asked because torrent playback couldn't start",
         ["SourcePickerHeldProxy"] = "{name} isn't asked until the proxy check passes",
         ["SourcePickerHeldCellular"] = "{name} isn't asked on cellular",
         ["SourcePickerHeldOther"] = "{name} isn't available right now",
@@ -14558,6 +14694,31 @@ public static partial class T
         ["PlayerSubsBgShadow"] = "Shadow",
         ["PlayerSubsBgBox"] = "Box",
         ["PlayerSubsMore"] = "More in Settings…",
+        ["PlayerSheetEpisodesLoading"] = "The episode list is on its way.",
+        ["PlayerPanel"] = "Episodes and sources",
+        ["EpisodeRowPlaying"] = "Playing · {left}",
+        ["EpisodeRowMixed"] = "Mixed",
+        ["EpisodeRowLength"] = "{minutes} min",
+        ["EpisodeRowDelayed"] = "Delayed, was {when}",
+        ["EpisodeRowFrom"] = "From {source}",
+        ["ActionResume"] = "Resume",
+        ["PlayerPanelMetadataOnly"] = "No source lists this show yet. Episodes can still be marked watched.",
+        ["PlayerPanelPlayingNow"] = "Playing now",
+        ["PlayerPanelOtherSources"] = "Other sources",
+        ["PlayerPanelReleases_one"] = "One release",
+        ["PlayerPanelReleases_other"] = "{count} releases",
+        ["PlayerReleaseAutomatic"] = "Automatic picks this",
+        ["PlayerPanelOrder"] = "Tried in the order set in Sources.",
+        ["PlayerPanelPickScope"] = "A pick here is for this episode only.",
+        ["PlayerTranslation"] = "Subbed or dubbed",
+        ["PlayerPanelStarting"] = "Starting · {seconds} s",
+        ["PlayerPanelAsking"] = "Asking · {seconds} s",
+        ["PlayerFindingVersionSeconds"] = "Finding episode {episode} dubbed · {seconds} s",
+        ["PlayerFindingVersionSubbedSeconds"] = "Finding episode {episode} subbed · {seconds} s",
+        ["NoticePlayingFromSource"] = "Playing from {source} at {clock}",
+        ["PartyVersionOwn"] = "Only your player switches. The room keeps playing.",
+        ["PlayerPanelMore"] = "More",
+        ["PlayerPanelLess"] = "Less",
         ["PrivateMode"] = "Private mode",
         ["PrivateModeDetail"] = "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.",
         ["PrivateModeLimits"] = "Your sources and watch parties still see what you open.",
@@ -15807,6 +15968,8 @@ public static partial class T
         ["SourceNoteAmbiguous"] = "Couldn't match this title",
         ["SourceNoteHeldBack"] = "Waiting for the proxy check",
         ["SourceNoteTorrentsOff"] = "Torrent playback is off",
+        ["SourceNoteTorrentsStarting"] = "Torrents are starting",
+        ["SourceNoteTorrentsFailed"] = "Torrents couldn't start",
         ["SourcePickerReleases"] = "Releases",
         ["SourcePickerChosen"] = "Chosen",
         ["SourcePinUnavailable"] = "{name} isn't available right now, so this title's episodes come from your other sources.",
@@ -15830,12 +15993,16 @@ public static partial class T
         ["SourcesStatusNotAnswering"] = "Not answering",
         ["SourcesStatusHeldBack"] = "Held back",
         ["SourcesStatusTorrentsOff"] = "Torrents off",
+        ["SourcesStatusTorrentsStarting"] = "Torrents starting",
+        ["SourcesStatusTorrentsFailed"] = "Torrents didn't start",
         ["SourcesStatusSlow"] = "Slow",
         ["SourcesStatusUpdate"] = "Update available",
         ["SourcesDetailNotAnswering"] = "Not answering. {why}",
         ["SourcesDetailNotAnsweringPlain"] = "Not answering.",
         ["SourcesDetailHeldBack"] = "Waiting until the proxy check passes.",
         ["SourcesDetailTorrentsOff"] = "Torrent playback is off. You can turn it on in Settings, under Sources.",
+        ["SourcesDetailTorrentsStarting"] = "Torrent playback is starting. This source is asked once it has started.",
+        ["SourcesDetailTorrentsFailed"] = "Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.",
         ["SourcesDetailDisabled"] = "Off. It keeps its place and isn't tried.",
         ["SourcesDetailGone"] = "This source is no longer here.",
         ["SourcesDetailSite"] = "The source didn't answer.",

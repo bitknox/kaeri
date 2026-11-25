@@ -170,6 +170,26 @@ impl Mpv {
         }
     }
 
+    /// The picture in the window as it stands, subtitles and all, from `screenshot-raw`'s
+    /// `window` mode: what the viewer sees, at the window's size. `None` while nothing is drawn.
+    /// mpv answers from its video thread, so this can wait behind a frame being drawn.
+    pub fn screenshot_window(&self) -> Result<Option<crate::RawFrame>, MpvError> {
+        let mut node = OwnedNode::from_json(&serde_json::json!({
+            "name": "screenshot-raw",
+            "flags": "window",
+        }));
+        let mut out =
+            sys::mpv_node { u: sys::mpv_node_u { int64: 0 }, format: sys::MPV_FORMAT_NONE };
+        // SAFETY: as in `command_node_answered`: `out` is read, then freed, only on success.
+        unsafe {
+            let code = sys::mpv_command_node(self.raw(), node.as_ptr(), &raw mut out);
+            checked(code, || "screenshot-raw".to_owned())?;
+            let frame = node::raw_frame(&out);
+            sys::mpv_free_node_contents(&raw mut out);
+            Ok(frame)
+        }
+    }
+
     /// Sets a property to `value`, as mpv's own format for it: a flag, an integer, a double, a
     /// string, or a node for a list or a map. `null` sets nothing.
     pub fn set(&self, property: &str, value: &Value) -> Result<(), MpvError> {

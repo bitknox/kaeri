@@ -322,9 +322,9 @@ fn fixture_fake(ctx: &Ctx) -> bool {
 ///
 /// Google's desktop and TV clients come with a client secret. Google documents that an installed
 /// app can't keep one, so it isn't treated as a secret there:
-/// <https://developers.google.com/identity/protocols/oauth2#installed>. Until those secrets are
-/// built in, Kaeri has no Google client of its own on desktops and TVs, and Google stays hidden
-/// there unless the app names its own. Dropbox (PKCE) and OneDrive (a public client) have none.
+/// <https://developers.google.com/identity/protocols/oauth2#installed>. Without them Kaeri would
+/// have no Google client of its own on desktops and TVs. Dropbox (PKCE) and OneDrive (a public
+/// client) have none.
 mod built_in {
     /// iPhone, iPad and Mac.
     pub const GOOGLE_IOS: &str =
@@ -335,11 +335,11 @@ mod built_in {
     /// Windows, Linux and the terminal.
     pub const GOOGLE_DESKTOP: &str =
         "206293095288-1rem63756776feni5pd62f283n3a222t.apps.googleusercontent.com";
-    pub const GOOGLE_DESKTOP_SECRET: Option<&str> = None;
+    pub const GOOGLE_DESKTOP_SECRET: Option<&str> = Some("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");
     /// Android TV, through Google's device flow.
     pub const GOOGLE_TV: &str =
         "206293095288-thhdr2a11mbeq1e125k45ictid2tm1dh.apps.googleusercontent.com";
-    pub const GOOGLE_TV_SECRET: Option<&str> = None;
+    pub const GOOGLE_TV_SECRET: Option<&str> = Some("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");
     pub const DROPBOX: &str = "miisqg43cochyzu";
     pub const ONEDRIVE: &str = "1ddf77ce-b123-4483-9c8b-9596e8459a9c";
 }

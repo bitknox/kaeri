@@ -56,6 +56,10 @@ player-start-pinned = Your pick for this show
 # @arg name: text
 player-start-miss-no-match = { $name } doesn't have this show
 
+# Detail line when a source found titles like the show and could not tell which one it is.
+# @arg name: text
+player-start-miss-ambiguous = { $name } couldn't match this title
+
 # Detail line when a source has the show and not the episode. The episode is its label.
 # @arg name: text
 # @arg episode: text
@@ -81,6 +85,12 @@ player-start-miss-skipped = You skipped { $name }
 
 # Details row for a source not asked while torrent playback is off. The name goes before it.
 player-start-row-held-torrents-off = Not asked · Torrent playback is off
+
+# Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+player-start-row-held-torrents-starting = Not asked · Torrent playback is starting
+
+# Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+player-start-row-held-torrents-failed = Not asked · Torrent playback couldn't start
 
 # Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
 player-start-row-held-proxy = Not asked · Waiting for the proxy check
@@ -227,6 +237,22 @@ player-start-unreached = Couldn't reach { $names }.
 player-start-not-asked-torrents-off = { $count ->
     [one] { $names } isn't asked while torrent playback is off.
    *[other] { $names } aren't asked while torrent playback is off.
+ }
+
+# Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-torrents-starting = { $count ->
+    [one] { $names } isn't asked until torrent playback has started.
+   *[other] { $names } aren't asked until torrent playback has started.
+ }
+
+# Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+# @arg count: int
+# @arg names: text
+player-start-not-asked-torrents-failed = { $count ->
+    [one] { $names } isn't asked because torrent playback couldn't start.
+   *[other] { $names } aren't asked because torrent playback couldn't start.
  }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -693,6 +719,14 @@ source-picker-none-answered-lists = No { -source } that answered lists episode {
 # @arg name: text
 source-picker-held-torrents-off = { $name } isn't asked while torrent playback is off
 
+# Line of the picker for a source not asked while torrent playback is on and still starting.
+# @arg name: text
+source-picker-held-torrents-starting = { $name } isn't asked until torrent playback has started
+
+# Line of the picker for a source not asked because torrent playback is on and couldn't start.
+# @arg name: text
+source-picker-held-torrents-failed = { $name } isn't asked because torrent playback couldn't start
+
 # Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
 # @arg name: text
 source-picker-held-proxy = { $name } isn't asked until the proxy check passes
@@ -761,3 +795,97 @@ player-subs-bg-box = Box
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = More in Settings…
+
+# Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+player-sheet-episodes-loading = The episode list is on its way.
+
+# Accessibility label of the player's side panel with the Episodes and Sources tabs.
+player-panel = Episodes and { -source-pl }
+
+# Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+# @arg left: text
+episode-row-playing = Playing · { $left }
+
+# Episode row in the player's panel: the episode is part story, part filler.
+# @max 16
+episode-row-mixed = Mixed
+
+# Episode row in the player's panel: the length of an episode nobody has started.
+# @arg minutes: int
+episode-row-length = { $minutes } min
+
+# Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+# @arg when: text
+episode-row-delayed = Delayed, was { $when }
+
+# Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+# @arg source: text
+episode-row-from = From { $source }
+
+# Button on a partly watched episode: plays it from where it was left.
+action-resume = Resume
+
+# Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+player-panel-metadata-only = No { -source } lists this show yet. Episodes can still be marked watched.
+
+# Player panel, Sources tab: heading over the source and streams playing now.
+player-panel-playing-now = Playing now
+
+# Player panel, Sources tab: heading over the other sources, in the order they are tried.
+player-panel-other-sources = Other { -source-pl }
+
+# Player panel, Sources tab: the folded list of a source's releases for this episode.
+# @arg count: int
+player-panel-releases = { $count ->
+    [one] One { -release }
+   *[other] { $count } { -release-pl }
+}
+
+# Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+player-release-automatic = Automatic picks this
+
+# Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+player-panel-order = Tried in the order set in { -source-cap-pl }.
+
+# Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+player-panel-pick-scope = A pick here is for this episode only.
+
+# Accessibility label of the subtitled or dubbed switch in the player panel.
+player-translation = { -subbed-cap } or { -dubbed }
+
+# Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+# @arg seconds: int
+player-panel-starting = Starting · { $seconds } s
+
+# Player panel, Sources tab: in place of a source's detail while it is still being asked for the
+# episode's releases, from 3 s. A slow source is only said to be slow.
+# @arg seconds: int
+player-panel-asking = Asking · { $seconds } s
+
+# Player panel, under the subtitled or dubbed switch while the dubbed version of the episode
+# playing is being found, from 3 s. The episode plays on meanwhile.
+# @arg episode: text
+# @arg seconds: int
+player-finding-version-seconds = Finding episode { $episode } { -dubbed } · { $seconds } s
+
+# Player panel, under the subtitled or dubbed switch while the subbed version of the episode
+# playing is being found, from 3 s. The episode plays on meanwhile.
+# @arg episode: text
+# @arg seconds: int
+player-finding-version-subbed-seconds = Finding episode { $episode } { -subbed } · { $seconds } s
+
+# Notice when another source started playing while the player panel was closed.
+# @arg source: text
+# @arg clock: text
+notice-playing-from-source = Playing from { $source } at { $clock }
+
+# Player panel, under the subtitled or dubbed switch during a watch party.
+party-version-own = Only your player switches. The room keeps playing.
+
+# Player panel: button under a synopsis cut to three lines, that shows it whole.
+# @max 16
+player-panel-more = More
+
+# Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+# @max 16
+player-panel-less = Less

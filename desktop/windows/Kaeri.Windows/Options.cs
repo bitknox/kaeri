@@ -6,8 +6,8 @@ namespace Kaeri.Windows;
 /// <c>kaeri.exe --scene=watching --page=calendar</c>, or
 /// <c>kaeri.exe --scene=playing --media=C:\clip.mp4 --play</c>.
 /// </summary>
-/// <param name="Scene">fresh, watching, sourceless, unsure (a source ahead cannot choose the finished title's match), playing, demo-only, demo-played, demo-and-store, demo-removed, subtitle-styled, crash-off, crash-saved, crash-held, missing-episode (title 900002's episode 6 aired 25 minutes ago and no source has it), sync-other-group, sync-other-group-offline, sync-other-group-refused (a Google Drive folder that holds another group, for Start over without the key) or sync-started-over (another device started sync over): the testing engine's scenes.</param>
-/// <param name="Media">The file every episode streams in the playing scene.</param>
+/// <param name="Scene">fresh, watching, sourceless, unsure (a source ahead cannot choose the finished title's match), playing, sourcesloading (playing, with six more sources that answer the Sources tab at set times), demo-only, demo-played, demo-and-store, demo-removed, subtitle-styled, crash-off, crash-saved, crash-held, missing-episode (title 900002's episode 6 aired 25 minutes ago and no source has it), sync-other-group, sync-other-group-offline, sync-other-group-refused (a Google Drive folder that holds another group, for Start over without the key) or sync-started-over (another device started sync over): the testing engine's scenes.</param>
+/// <param name="Media">The file every episode streams in the playing and sourcesloading scenes.</param>
 /// <param name="Page">The destination to open: home, downloads, providers, stores, search, seasonal, calendar, library or settings.</param>
 /// <param name="Title">An AniList id whose title page opens over the page.</param>
 /// <param name="Query">What the search page searches for.</param>
@@ -33,20 +33,26 @@ namespace Kaeri.Windows;
 /// <param name="Read">Testing build: open the reader on a series, <c>work</c> or <c>work,chapter</c>, where it was left.</param>
 /// <param name="Send">Testing build: a Send to e-reader dialog in a state for a screenshot: preparing, waiting, failed or ready.</param>
 /// <param name="Feed">Testing build: the feed pane told as on or paused, never switched on.</param>
+/// <param name="Still">Testing build: a still shot at that many seconds (<c>24</c>, <c>0.3</c>) on the engine's still clock. With <c>--show=starting-&lt;state&gt;</c> the made-up start is held at that moment, as a <c>-&lt;seconds&gt;</c> suffix holds it; with any other scene the scene's made-up waits (mock sources, a slow fake AniList) are held there from the start, as <c>KAERI_STILL_AT</c> holds them. Without it everything runs on the wall clock, as recordings need.</param>
 /// <param name="Opens">The link the app was opened with, a <c>kaeri://</c> link, a magnet link or a torrent file, as the installer's <c>kaeri.exe "%1"</c> hands it over.</param>
 public sealed record Options(
     string? Scene, string? Media, string? Page, uint? Title, string? Query, bool Play,
     string? Pane, int? Width, int? Height, bool KeepControls, bool Downloads, bool AskClose,
     bool Showcase = false, bool Join = false, string? Select = null, string? Show = null,
     bool Welcome = false, bool Offline = false, bool Shortcuts = false, string? Opens = null, string? UpdateFrom = null, string? Language = null, string? Hide = null, string? UpNext = null, bool CrashProbe = false,
-    string? Work = null, string? Read = null, string? Send = null, string? Feed = null)
+    string? Work = null, string? Read = null, string? Send = null, string? Feed = null, string? Still = null)
 {
     public bool Fixture => Scene is not null;
+
+    /// <summary><c>--still</c>'s seconds, or none when it is missing or not a number of seconds.</summary>
+    public static double? StillSeconds(string? still) =>
+        double.TryParse(still, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var seconds)
+        && double.IsFinite(seconds) && seconds >= 0 ? seconds : null;
 
     public static Options Parse(IEnumerable<string> args)
     {
         string? scene = null, media = null, page = null, query = null, pane = null, select = null, show = null, updateFrom = null, language = null, hide = null, upNext = null;
-        string? work = null, read = null, send = null, feed = null;
+        string? work = null, read = null, send = null, feed = null, still = null;
         uint? title = null;
         int? width = null, height = null;
         bool play = false, keep = false, downloads = false, askClose = false, showcase = false, join = false;
@@ -84,6 +90,7 @@ public sealed record Options(
                 case "--read": read = value; break;
                 case "--send": send = value; break;
                 case "--feed": feed = value; break;
+                case "--still": still = value; break;
                 // A change AniList kept refusing until it stopped being sent, which the scene
                 // reads from the environment, for the one-time notice's shots.
                 case "--dropped": Environment.SetEnvironmentVariable("KAERI_FIXTURES_DROPPED", "1"); break;
@@ -94,6 +101,6 @@ public sealed record Options(
                     break;
             }
         }
-        return new(scene, media, page, title, query, play, pane, width, height, keep, downloads, askClose, showcase, join, select, show, welcome, offline, shortcuts, opens, updateFrom, language, hide, upNext, crashProbe, work, read, send, feed);
+        return new(scene, media, page, title, query, play, pane, width, height, keep, downloads, askClose, showcase, join, select, show, welcome, offline, shortcuts, opens, updateFrom, language, hide, upNext, crashProbe, work, read, send, feed, still);
     }
 }

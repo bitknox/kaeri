@@ -62,6 +62,10 @@ impl App {
             // The first run's question has no Skip: it is answered.
             Action::Back if self.medium_must_answer() => return None,
             Action::Back => {
+                // The picker dismissed: its question is over.
+                if *overlay == Overlay::Sources {
+                    self.source_context = None;
+                }
                 self.nav.close_overlay();
                 return None;
             }

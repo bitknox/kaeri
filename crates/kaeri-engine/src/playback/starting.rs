@@ -214,9 +214,16 @@ impl Starting {
 /// The pace of the stream at a URL, with how much of its file is held when asked.
 type PaceOf = std::sync::Arc<dyn Fn(&str, bool) -> Option<Pace> + Send + Sync>;
 
-/// What a playback asks how a torrent stream it plays is doing. Answers nothing by default.
+/// What lets go of the torrent served at a URL.
+type LetGoOf = std::sync::Arc<dyn Fn(&str) + Send + Sync>;
+
+/// What a playback asks how a torrent stream it plays is doing, and what lets go of one it has
+/// switched away from. Answers nothing and lets go of nothing by default.
 #[derive(Clone, Default)]
-pub struct Swarm(Option<PaceOf>);
+pub struct Swarm {
+    pace: Option<PaceOf>,
+    let_go: Option<LetGoOf>,
+}
 
 pub use kaeri_providers::torrent::{pieces::Held, session::Pace};
 
@@ -229,27 +236,50 @@ impl std::fmt::Debug for Swarm {
 impl Swarm {
     /// A probe that asks the torrent session `torrents` currently holds.
     pub fn of(torrents: kaeri_providers::torrent::bridge::TorrentPlayback) -> Self {
-        Self(Some(std::sync::Arc::new(move |url, pieces| {
-            torrents.session()?.pace_of(url, pieces)
-        })))
+        let asked = torrents.clone();
+        let pace: PaceOf =
+            std::sync::Arc::new(move |url: &str, pieces| asked.session()?.pace_of(url, pieces));
+        let let_go: LetGoOf = std::sync::Arc::new(move |url: &str| {
+            let (torrents, url) = (torrents.clone(), url.to_owned());
+            if let Ok(runtime) = tokio::runtime::Handle::try_current() {
+                runtime.spawn(async move { torrents.let_go(&url).await });
+            }
+        });
+        Self { pace: Some(pace), let_go: Some(let_go) }
     }
 
     /// A probe that answers with `pace`, for a test.
     #[cfg(any(test, feature = "testing"))]
     pub fn fixed(pace: Pace) -> Self {
-        Self(Some(std::sync::Arc::new(move |_, pieces| {
+        let pace: PaceOf = std::sync::Arc::new(move |_: &str, pieces| {
             Some(Pace { pieces: pace.pieces.filter(|_| pieces), ..pace })
-        })))
+        });
+        Self { pace: Some(pace), let_go: None }
+    }
+
+    /// The same, letting go of torrents through `let_go`, for a test.
+    #[cfg(test)]
+    pub fn letting_go(self, let_go: impl Fn(&str) + Send + Sync + 'static) -> Self {
+        Self { let_go: Some(std::sync::Arc::new(let_go)), ..self }
     }
 
     /// How the stream served at `url` is doing, when it is a torrent's and live.
     pub fn pace(&self, url: &str) -> Option<Pace> {
-        self.0.as_ref()?(url, false)
+        self.pace.as_ref()?(url, false)
     }
 
     /// [`Self::pace`] with how much of the file is held, for Stats for nerds.
     pub fn stats(&self, url: &str) -> Option<Pace> {
-        self.0.as_ref()?(url, true)
+        self.pace.as_ref()?(url, true)
+    }
+
+    /// Let go of the torrent served at `url`, which the playback has switched away from: its
+    /// peers, its server and its share of the connection go with it, and the stream it switched
+    /// to has the line to itself. Kept seeding when the settings ask for it.
+    pub fn let_go(&self, url: &str) {
+        if let Some(let_go) = &self.let_go {
+            let_go(url);
+        }
     }
 }
 
@@ -287,6 +317,10 @@ pub fn told(step: walk::Step) -> (StartStep, Option<Msg>) {
 pub fn hold_of(reason: &str) -> SourceHold {
     if reason == kaeri_providers::torrent::bridge::PLAYBACK_OFF {
         SourceHold::TorrentsOff
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_STARTING {
+        SourceHold::TorrentsStarting
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_FAILED {
+        SourceHold::TorrentsFailed
     } else if reason == kaeri_providers::proxy::CHECK_PENDING {
         SourceHold::ProxyCheck
     } else if reason == crate::phases::CELLULAR {
@@ -652,6 +686,14 @@ mod tests {
         assert_eq!(
             hold_of(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
             SourceHold::TorrentsOff
+        );
+        assert_eq!(
+            hold_of(kaeri_providers::torrent::bridge::PLAYBACK_STARTING),
+            SourceHold::TorrentsStarting
+        );
+        assert_eq!(
+            hold_of(kaeri_providers::torrent::bridge::PLAYBACK_FAILED),
+            SourceHold::TorrentsFailed
         );
         assert_eq!(hold_of(kaeri_providers::proxy::CHECK_PENDING), SourceHold::ProxyCheck);
         assert_eq!(hold_of(crate::phases::CELLULAR), SourceHold::Cellular);

@@ -23,3 +23,4 @@ player-volume-spoken = { $percent } persen
 player-volume-muted = Volume, senyap
 player-exit-fullscreen = Keluar dari layar penuh
 accounts-pane-name = Akun, { $state }
+player-panel-dual-audio = { -subbed } dan { -dubbed }

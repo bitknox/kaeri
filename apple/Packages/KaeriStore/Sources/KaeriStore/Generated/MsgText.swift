@@ -120,6 +120,9 @@ extension Msg {
         case .noticeFillerSkipped(let episode): L.noticeFillerSkipped(episode: episode)
         case .noticeAudioNowSubbed: L.noticeAudioNowSubbed
         case .noticeAudioNowDubbed: L.noticeAudioNowDubbed
+        case .playerPanelSwitchFailed(let source, let current): L.playerPanelSwitchFailed(source: source, current: current)
+        case .playerPanelDubFailed(let episode): L.playerPanelDubFailed(episode: episode)
+        case .playerPanelSubFailed(let episode): L.playerPanelSubFailed(episode: episode)
         case .noticeAlreadyFirstEpisode: L.noticeAlreadyFirstEpisode
         case .noticeLastEpisode(let episode): L.noticeLastEpisode(episode: episode)
         case .noticeNoNextEpisode: L.noticeNoNextEpisode

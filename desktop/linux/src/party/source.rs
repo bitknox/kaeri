@@ -372,11 +372,14 @@ pub(crate) fn missed_line(missed: &MissedListing, episode: &str) -> String {
     let name = missed.name.as_str();
     match &missed.miss {
         ListingMiss::NoMatch => t::player_start_miss_no_match(name),
+        ListingMiss::Ambiguous => t::player_start_miss_ambiguous(name),
         ListingMiss::NoEpisode => t::player_start_miss_no_episode(name, episode),
         ListingMiss::Failed => t::player_start_miss_failed(name),
         ListingMiss::TimedOut => t::player_start_miss_timed_out(name),
         ListingMiss::HeldBack { why } => match why {
             SourceHold::TorrentsOff => t::source_picker_held_torrents_off(name),
+            SourceHold::TorrentsStarting => t::source_picker_held_torrents_starting(name),
+            SourceHold::TorrentsFailed => t::source_picker_held_torrents_failed(name),
             SourceHold::ProxyCheck => t::source_picker_held_proxy(name),
             SourceHold::Cellular => t::source_picker_held_cellular(name),
             SourceHold::Other => t::source_picker_held_other(name),

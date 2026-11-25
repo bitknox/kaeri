@@ -681,15 +681,54 @@ dialog.go-to button.suggested:disabled, dialog.go-to button.suggested-action:dis
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
 }
 
-/* The player's Episodes panel: compact rows, and a footer for the one under the pointer. */
-popover.ep-panel > contents { padding: 0; }
-.ep-panel-list { background: transparent; padding: 6px 4px; }
-.ep-panel-list row { border-radius: 6px; padding: 6px 8px; min-height: 0; }
-.ep-panel-list row:hover, .ep-panel-list row:focus-visible { background: alpha(white, 0.07); }
-.ep-row .ep-current { color: var(--amber); }
-.ep-foot { border-top: 1px solid var(--faint-rule); padding: 8px 12px 10px; }
-.ep-foot .ep-foot-title { font-size: 0.92em; }
-.ep-foot .ep-foot-text { color: #C9CAD6; font-size: 0.95em; margin-top: 2px; }
+/* The player's side panel, Episodes and Sources (player panel board, Linux frame): 360 wide under
+   the header bar, on the raised fill with a silk hairline at its left edge. */
+.player-side-panel { background: var(--raised); box-shadow: inset 1px 0 0 alpha(var(--silk), 0.1); }
+.panel-head { min-height: 58px; padding: 0 12px; }
+.panel-tabs { min-height: 34px; border-radius: 9px; background: alpha(var(--silk), 0.08); }
+.panel-tabs > toggle { border-radius: 7px; font-size: 15px; font-weight: 500; }
+.panel-tabs > toggle:checked { background: alpha(var(--silk), 0.16); font-weight: 600; }
+.panel-close { min-width: 34px; min-height: 34px; padding: 0; background: alpha(var(--silk), 0.12); color: var(--haze); }
+.panel-body { padding: 0 12px 12px; }
+.panel-note { font-size: 13px; padding: 4px 8px 12px; }
+.panel-body list.navigation-sidebar { background: none; padding: 0; }
+.panel-body list.navigation-sidebar > row { margin: 0; padding: 8px; border-radius: 9px; min-height: 0; }
+list.panel-episodes > row:selected { background: alpha(var(--silk), 0.06); }
+list.panel-episodes > row.playing,
+list.panel-episodes > row.playing:selected { background: var(--raised-selected); }
+list.panel-episodes > row:hover:not(:selected):not(.playing) { background: alpha(var(--silk), 0.04); }
+.panel-plate { background: alpha(var(--silk), 0.07); border-radius: 6px; }
+.panel-still-frame { border-radius: 6px; }
+.panel-row-title { font-size: 15px; line-height: 1.33; font-weight: 600; }
+.panel-row-detail { font-size: 13px; }
+.panel-synopsis { font-size: 13px; }
+.panel-synopsis.italic { font-style: italic; }
+.panel-reveal { padding-top: 12px; }
+.panel-more { min-height: 28px; padding: 0 6px; margin-left: -6px; font-size: 13px; font-weight: 600; color: var(--silk); }
+.panel-action { min-height: 34px; font-size: 15px; font-weight: 700; padding: 0 16px; }
+list.panel-sources > row.panel-still-row,
+list.panel-sources > row.panel-still-row:hover { background: none; padding: 0; }
+.panel-heading { font-size: 13px; font-weight: 600; color: var(--haze); padding: 10px 8px 4px; }
+.panel-playing { padding: 2px 8px 4px; }
+.panel-playing-name { font-size: 16px; font-weight: 600; }
+list.panel-sources > row.panel-choice-row { min-height: 28px; padding: 8px 8px 8px 2px; }
+.panel-choice.inset { margin-left: 24px; }
+.panel-choice-title { font-size: 15px; font-weight: 600; }
+.panel-choice-sub { font-size: 14px; }
+.panel-check { color: var(--silk); }
+.panel-chevron { transition: transform 300ms cubic-bezier(0.25, 0.46, 0.45, 0.94); -gtk-icon-size: 12px; }
+.panel-chevron.open { transform: rotate(90deg); }
+.panel-alert { color: var(--vermilion); font-size: 13px; }
+.panel-translation-block { padding: 8px 8px 4px; }
+.panel-translation { min-height: 32px; border-radius: 9px; background: alpha(var(--silk), 0.1); }
+.panel-translation > toggle { border-radius: 7px; font-size: 14px; font-weight: 500; }
+.panel-translation > toggle:checked { background: alpha(var(--silk), 0.22); font-weight: 600; }
+.panel-rule { background: var(--faint-rule); margin: 10px 8px 4px; min-height: 1px; }
+.panel-foot { font-size: 13px; padding: 10px 8px 4px; }
+.panel-loading-row { padding: 8px; }
+.panel-loading-bar { background: alpha(var(--silk), 0.08); border-radius: 4px; }
+/* A click on the dimmed video beside the panel closes it. */
+.panel-catcher { background: none; }
 
 /* The reader's Chapters popover: the chapter's name, the page grid with the open page ringed,
    and the chapters with the open one on the selected fill. */

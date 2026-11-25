@@ -3,6 +3,7 @@
 //! `HostedOps.kt` and the Apple app's `HostedOps.swift`, so all three hosts agree.
 
 use kaeri_model::hosted::{MpvValue, PlayerEnd, PlayerOp, TrackKind};
+use kaeri_model::subtitle_lift::{SubtitleFrame, SubtitlePlacement, subtitle_placement};
 use serde_json::{Value, json};
 
 /// How `seek` lands: exactly where asked, or on the keyframe nearest, for scrubbing.
@@ -213,6 +214,34 @@ pub const REPORTED_PROPERTIES: &[&str] = &[
     "hwdec-current",
 ];
 
+/// What the host observes for the app alone, not the engine: where the subtitles sit, which the
+/// lift above the controls reads (`kaeri_model::subtitle_lift`).
+pub const SUBTITLE_PROPERTIES: &[&str] = &["osd-dimensions", "current-tracks/sub"];
+
+/// mpv's `osd-dimensions`, when it has a size.
+pub fn subtitle_frame(value: &Value) -> Option<SubtitleFrame> {
+    let number = |key: &str| value.get(key).and_then(Value::as_f64).unwrap_or(0.0);
+    let frame = SubtitleFrame {
+        width: number("w"),
+        height: number("h"),
+        top: number("mt"),
+        bottom: number("mb"),
+        left: number("ml"),
+        right: number("mr"),
+    };
+    (frame.width > 0.0 && frame.height > 0.0).then_some(frame)
+}
+
+/// The codec of the subtitle track in `current-tracks/sub`, whose ASS header the host then reads.
+pub fn subtitle_codec(value: &Value) -> Option<&str> {
+    value.get("codec").and_then(Value::as_str)
+}
+
+/// Where the track in `current-tracks/sub` rests, with its `sub-ass-extradata` for ASS.
+pub fn subtitle_track(value: &Value, header: Option<&str>) -> SubtitlePlacement {
+    subtitle_placement(subtitle_codec(value), header)
+}
+
 /// One of the file's audio or subtitle tracks, as a Tracks menu lists it.
 #[derive(Debug, Clone, PartialEq)]
 pub struct PlayerTrack {
@@ -284,6 +313,29 @@ mod tests {
 
     fn option(name: &str, value: &str) -> MpvOption {
         MpvOption { name: name.into(), value: value.into() }
+    }
+
+    #[test]
+    fn the_subtitles_frame_and_track_come_from_mpvs_nodes() {
+        let osd = json!({"w": 1920, "h": 1080, "par": 1.0, "aspect": 1.78,
+                         "mt": 138, "mb": 138, "ml": 0, "mr": 0});
+        let frame = subtitle_frame(&osd).expect("a frame");
+        assert_eq!((frame.width, frame.height, frame.bottom), (1920.0, 1080.0, 138.0));
+        assert_eq!(subtitle_frame(&json!({"w": 0, "h": 0})), None);
+        assert_eq!(subtitle_frame(&json!(null)), None);
+
+        let srt = json!({"id": 1, "type": "sub", "codec": "subrip"});
+        assert_eq!(subtitle_track(&srt, None), SubtitlePlacement::Plain);
+        let ass = json!({"id": 2, "type": "sub", "codec": "ass"});
+        assert_eq!(subtitle_codec(&ass), Some("ass"));
+        let header = "[Script Info]\nPlayResY: 720\n[V4+ Styles]\nFormat: Name, Alignment, \
+                      MarginV\nStyle: Default,2,40\n";
+        assert_eq!(
+            subtitle_track(&ass, Some(header)),
+            SubtitlePlacement::Styled { margin: 40.0, play_height: 720.0 }
+        );
+        assert_eq!(subtitle_track(&ass, None), SubtitlePlacement::Unknown);
+        assert_eq!(subtitle_track(&json!(null), None), SubtitlePlacement::Unknown);
     }
 
     #[test]

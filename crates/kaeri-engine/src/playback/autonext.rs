@@ -125,6 +125,8 @@ pub struct Follow {
     pub episode: String,
     pub title: String,
     pub episode_title: Option<String>,
+    /// The second it opens at, when not where the episode was left.
+    pub at: Option<f64>,
 }
 
 /// What `event` leads the engine to start, from the playback `finished` Now Playing showed
@@ -164,6 +166,7 @@ pub fn follow(
                     episode_title: cache.episode_title(finished.id, &episode),
                     episode,
                     title: finished.title,
+                    at: None,
                 }
             }),
         Event::PlayerPlayEpisode { episode, title } => front.map(|front| Follow {
@@ -171,6 +174,7 @@ pub fn follow(
             episode: episode.clone(),
             title: front.title.clone(),
             episode_title: title.clone().or_else(|| cache.episode_title(front.id, episode)),
+            at: None,
         }),
         Event::PlayerTranslation(translation) => {
             said.push(Event::Toast(Notice::info(match translation {
@@ -185,6 +189,7 @@ pub fn follow(
                     .episode_title
                     .clone()
                     .or_else(|| cache.episode_title(front.id, &front.episode)),
+                at: cache.playhead(front.serial),
             })
         }
         _ => None,
@@ -303,6 +308,7 @@ mod tests {
             episode: "2".into(),
             title: "Title 0".into(),
             episode_title: Some("Episode 2".into()),
+            at: None,
         };
         assert_eq!(next, Some(expected));
     }
@@ -356,6 +362,7 @@ mod tests {
             episode: "5".into(),
             title: "Title 1".into(),
             episode_title: Some("Fifth".into()),
+            at: None,
         };
         assert_eq!(next, Some(expected));
 
@@ -381,6 +388,28 @@ mod tests {
         assert_eq!(next.episode_title.as_deref(), Some("The fourth"));
         let (_, next) = follow(&pick, None, Some(&on_screen(1, "Title 0", "4")), &cache, false);
         assert_eq!(next.and_then(|next| next.episode_title).as_deref(), Some("Episode 4"));
+    }
+
+    #[test]
+    fn sub_or_dub_picked_in_the_player_restarts_at_the_playhead_not_where_it_was_left() {
+        use kaeri_core::media::Translation;
+        let mut cache = with_table(1, &[]);
+        let playing = on_screen(1, "Title 0", "4");
+        let pick = Event::PlayerTranslation(Translation::Sub);
+        // Picked before the first frame said where it was: where the episode was left.
+        let played = from_title(1, 1, "4");
+        cache.started(&played);
+        let (_, next) = follow(&pick, None, Some(&playing), &cache, false);
+        assert_eq!(next.expect("restarted").at, None);
+        // Ten minutes in: from there.
+        let at = Event::Playback { position: 600.0, duration: Some(1440.0), paused: false };
+        cache.observe(&at, Some(&played));
+        let (_, next) = follow(&pick, None, Some(&playing), &cache, false);
+        assert_eq!(next.expect("restarted").at, Some(600.0));
+        // An episode picked in the player starts where that episode was left.
+        let picked = Event::PlayerPlayEpisode { episode: "5".into(), title: None };
+        let (_, next) = follow(&picked, None, Some(&playing), &cache, false);
+        assert_eq!(next.expect("picked").at, None);
     }
 
     #[test]

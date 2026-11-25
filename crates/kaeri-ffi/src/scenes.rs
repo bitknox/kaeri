@@ -76,6 +76,28 @@ pub enum FfiScene {
     /// `media` is: a recap from 0:00 to 0:08 and an opening from 0:10 to 0:40. The seek line
     /// marks them as yours and Skip recap, then Skip opening, are offered as each comes.
     SkipMarked { media: String, length_secs: u32 },
+    /// [`Self::Playing`] for switching what plays from the player's panel. Episode 7 starts from
+    /// `media` on the fixture source, named Lantern Index here, which also lists two releases of
+    /// it, one subtitled by Lamplight Subs and one by Ember Subs. A second source, Harbor Index,
+    /// lists a release by Harbor Subs and has the episode in the dub, which the fixture source
+    /// does not. A third, Driftwood Subs, lists only that group's release and is named for it,
+    /// so a switch to it is named by a group. Every stream but the first comes slowly from loopback ([`slow::serve`]), so the
+    /// starting screen shows while each switch opens its file.
+    Switching { media: String },
+    /// [`Self::Playing`], with six more sources after the fixture one, in this order, for the
+    /// player panel's Sources tab while it loads. Each matches Hoshikuzu no Tabibito at once and
+    /// then takes its time over episode 7's releases, from when the tab asks
+    /// ([`SOURCES_LOADING_TIMES`]):
+    ///
+    /// - Home server lists one release at 0.45 s, inside the panel's silent 600 ms;
+    /// - Media folder cannot tell which title it is, at 1.3 s;
+    /// - Example index lists five releases at 2.4 s;
+    /// - Second example takes too long: its plugin call times out at 20 s;
+    /// - Archive example answers with an error at 6.2 s;
+    /// - Old example is switched off and never asked.
+    ///
+    /// Every release plays `media`, as the fixture source does.
+    SourcesLoading { media: String },
     /// [`Self::Watching`], with every episode streaming `media` as [`Self::Playing`]'s do: a TV
     /// on a fixture resumes episode 7 at once from a file it can seek, where the test kit's clip
     /// is a test pattern mpv must play through to the resume point.
@@ -373,6 +395,23 @@ fn scenes_at() -> Option<i64> {
     std::env::var(SCENES_AT_VAR).ok()?.trim().parse().ok().filter(|at| *at > 0)
 }
 
+/// The environment variable that holds the scene's made-up waits at a moment, in seconds from
+/// when the scene starts (`4`, `0.3`): a still shot of what shows that long in, taken at once
+/// and the same on every run. See [`kaeri_providers::still`], and `testing_still_clock_hold`,
+/// which an app calls for its own launch argument.
+pub const STILL_AT_VAR: &str = "KAERI_STILL_AT";
+
+/// The moment the environment holds the scene's waits at, if it does.
+fn still_at() -> Option<std::time::Duration> {
+    parse_still_at(&std::env::var(STILL_AT_VAR).ok()?)
+}
+
+/// Seconds, as `KAERI_STILL_AT` and the apps' launch arguments say them.
+pub(crate) fn parse_still_at(seconds: &str) -> Option<std::time::Duration> {
+    let seconds: f64 = seconds.trim().parse().ok()?;
+    (seconds.is_finite() && seconds >= 0.0).then(|| std::time::Duration::from_secs_f64(seconds))
+}
+
 /// What Check this server shows for a made-up server at home whose certificate this device
 /// does not trust: the host, the address to pass back with Allow this certificate, and the
 /// fingerprint in groups of four. For the apps' fixture shots of that step, which no scene can
@@ -550,6 +589,9 @@ impl FfiEngine {
         if let Some(at) = scenes_at() {
             kaeri_engine::clock::stop_at(at);
         }
+        if let Some(at) = still_at() {
+            kaeri_providers::still::hold_from_start(at);
+        }
         Self::start_scene_from(dirs, host, scene, &start, Clock::default(), world)
     }
 }
@@ -597,7 +639,13 @@ impl FfiEngine {
         if scene.signed_in() {
             sign_in_config(&dirs)?;
         }
-        if matches!(scene, FfiScene::Playing { .. } | FfiScene::SkipMarked { .. }) {
+        if matches!(
+            scene,
+            FfiScene::Playing { .. }
+                | FfiScene::SkipMarked { .. }
+                | FfiScene::Switching { .. }
+                | FfiScene::SourcesLoading { .. }
+        ) {
             offer_skips(&dirs)?;
         }
         let now = clock.now();
@@ -700,7 +748,15 @@ impl FfiEngine {
                 _ => {}
             }
             let provided = world.as_ref().map(HomeWorld::provided).unwrap_or_default();
-            let sources = Some(scene_sources(&scene, &server.art_base(), &provided));
+            let sources = Some(match &scene {
+                FfiScene::Switching { media } => {
+                    let slow = slow::serve(media.into()).await.map_err(|e| {
+                        FfiError::engine(Msg::StartFailed { reason: e.to_string() })
+                    })?;
+                    switching_sources(&server.art_base(), media, &slow)
+                }
+                _ => scene_sources(&scene, &server.art_base(), &provided),
+            });
             let store_invite = match scene {
                 FfiScene::StoreOwner | FfiScene::StoreInvited => Some(
                     stores::serve(&opened, scene == FfiScene::StoreOwner)
@@ -877,23 +933,9 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
             MockProvider::new(sources::PROVIDER_ID).with_hits(Vec::new()).arc(),
         ]);
     }
-    let franchise = || {
-        let mut titles = provided.to_vec();
-        titles.extend(fixtures::synopsis_shows_media().into_iter().map(|media| {
-            // The long runner is still airing: the source lists what is out.
-            let episodes = if media.id == fixtures::LONG_RUNNER {
-                fixtures::LONG_RUNNER_AIRED
-            } else {
-                media.episodes.unwrap_or(1)
-            };
-            (media, episodes)
-        }));
-        sources::with_synopsis_episodes(sources::with_long_franchise_and(
-            sources::provider_with_art(art),
-            &titles,
-        ))
-    };
+    let franchise = || franchise(art, provided);
     let (FfiScene::Playing { media }
+    | FfiScene::SourcesLoading { media }
     | FfiScene::SkipMarked { media, .. }
     | FfiScene::WatchingMedia { media }) = scene
     else {
@@ -927,7 +969,327 @@ fn fixture_sources(scene: &FfiScene, art: &str, provided: &[(Media, u32)]) -> Pr
     for id in fixtures::ALL {
         provider = provider.with_streams_for(sources::key(id), vec![stream.clone()]);
     }
+    if matches!(scene, FfiScene::SourcesLoading { .. }) {
+        let mut chain = vec![provider.arc()];
+        chain.extend(loading_sources(&stream).into_iter().map(MockProvider::arc));
+        return ProviderRegistry::new(chain);
+    }
     ProviderRegistry::new(vec![provider.arc()])
+}
+
+/// The fixture source as every scene with one has it: the six, the long franchise and the
+/// synopsis shows, and `provided` beside them.
+fn franchise(art: &str, provided: &[(Media, u32)]) -> MockProvider {
+    let mut titles = provided.to_vec();
+    titles.extend(fixtures::synopsis_shows_media().into_iter().map(|media| {
+        // The long runner is still airing: the source lists what is out.
+        let episodes = if media.id == fixtures::LONG_RUNNER {
+            fixtures::LONG_RUNNER_AIRED
+        } else {
+            media.episodes.unwrap_or(1)
+        };
+        (media, episodes)
+    }));
+    sources::with_synopsis_episodes(sources::with_long_franchise_and(
+        sources::provider_with_art(art),
+        &titles,
+    ))
+}
+
+/// [`FfiScene::Switching`]'s second source, by id.
+pub const HARBOR_ID: &str = "harbor";
+/// [`FfiScene::Switching`]'s third source, by id: an index of one group's releases, named for it.
+pub const DRIFTWOOD_ID: &str = "driftwood";
+
+/// [`FfiScene::Switching`]'s three sources: the fixture source, named Lantern Index, whose
+/// episodes start from `media`, then Harbor Index, then Driftwood Subs, a source named for the
+/// one group whose releases it lists, as the starting screen then names a group. Their
+/// releases and the other two's streams come from `slow`, the address [`slow::serve`] gave.
+fn switching_sources(art: &str, media: &str, slow: &str) -> ProviderRegistry {
+    use kaeri_core::traits::SourceCandidate;
+    let stream = |provider: &str, url: String| Stream {
+        provider_id: provider.into(),
+        quality: Some(1080),
+        ..Stream::new(url, StreamKind::Mp4)
+    };
+    let release =
+        |provider: &str, name: &str, id: &str, title: &str, group: &str, dub: bool| {
+            SourceCandidate {
+                id: id.into(),
+                provider_id: provider.into(),
+                provider_name: name.into(),
+                title: title.into(),
+                quality: Some(1080),
+                label: Some(group.into()),
+                size: Some("1.4 GiB".into()),
+                dual_audio: false,
+                dubbed: dub,
+                auto_pick: false,
+            }
+        };
+    const LANTERN: &str = "Lantern Index";
+    const HARBOR: &str = "Harbor Index";
+    const DRIFTWOOD: &str = "Driftwood Subs";
+    let mut lantern = franchise(art, &[]).named(LANTERN);
+    for id in fixtures::ALL {
+        lantern = lantern.with_streams_for(
+            sources::key(id),
+            vec![stream(sources::PROVIDER_ID, media.to_owned())],
+        );
+    }
+    let lantern = lantern
+        .with_sources(vec![
+            release(
+                sources::PROVIDER_ID,
+                LANTERN,
+                "lamplight",
+                "Stardust Wayfarer 07 [Lamplight Subs]",
+                "Lamplight Subs",
+                false,
+            ), // i18n-skip
+            release(
+                sources::PROVIDER_ID,
+                LANTERN,
+                "ember",
+                "Stardust Wayfarer 07 [Ember Subs]",
+                "Ember Subs",
+                false,
+            ), // i18n-skip
+        ])
+        .with_source_streams(
+            "lamplight",
+            vec![stream(sources::PROVIDER_ID, format!("{slow}/lamplight/07.mkv"))],
+        )
+        .with_source_streams(
+            "ember",
+            vec![stream(sources::PROVIDER_ID, format!("{slow}/ember/07.mkv"))],
+        );
+    let harbor_stream = stream(HARBOR_ID, format!("{slow}/harbor/07.mkv"));
+    let episodes = sources::episodes(FINISHED);
+    let harbor = MockProvider::new(HARBOR_ID)
+        .named(HARBOR)
+        .with_hits(sources::hits())
+        .with_episodes_for(sources::key(FINISHED), episodes.clone())
+        .with_dub_for(sources::key(FINISHED), episodes)
+        .with_streams_for(sources::key(FINISHED), vec![harbor_stream.clone()])
+        .with_sources(vec![release(
+            HARBOR_ID,
+            HARBOR,
+            "harbor-subs",
+            "Stardust Wayfarer 07 [Harbor Subs]",
+            "Harbor Subs",
+            false,
+        )]) // i18n-skip
+        .with_source_streams("harbor-subs", vec![harbor_stream]);
+    let driftwood_stream = stream(DRIFTWOOD_ID, format!("{slow}/driftwood/07.mkv"));
+    let driftwood = MockProvider::new(DRIFTWOOD_ID)
+        .named(DRIFTWOOD)
+        .with_hits(sources::hits())
+        .with_episodes_for(sources::key(FINISHED), sources::episodes(FINISHED))
+        .with_streams_for(sources::key(FINISHED), vec![driftwood_stream.clone()])
+        .with_sources(vec![release(
+            DRIFTWOOD_ID,
+            DRIFTWOOD,
+            "driftwood-subs",
+            "Stardust Wayfarer 07 [Driftwood Subs]",
+            DRIFTWOOD,
+            false,
+        )]) // i18n-skip
+        .with_source_streams("driftwood-subs", vec![driftwood_stream]);
+    ProviderRegistry::new(vec![lantern.arc(), harbor.arc(), driftwood.arc()])
+}
+
+/// [`FfiScene::Switching`]'s slow server: the scene's file over HTTP on loopback, as a slow
+/// source serves an episode. A request from the file's first byte is answered at once and one
+/// from further in after [`WAIT`], and every body comes at [`RATE`] bytes a second: the player
+/// opens the file quickly, then waits for the picture at the playhead, with the starting screen
+/// up. Any path serves the same file.
+mod slow {
+    use std::{io::SeekFrom, path::PathBuf, time::Duration};
+
+    use tokio::{
+        io::{AsyncReadExt, AsyncSeekExt, AsyncWriteExt},
+        net::{TcpListener, TcpStream},
+    };
+
+    /// How long a request from past the first byte waits for its answer.
+    pub(super) const WAIT: Duration = Duration::from_millis(2_500);
+    /// How fast a body comes, in bytes a second.
+    pub(super) const RATE: u64 = 1 << 20;
+    /// A body comes in pieces this far apart.
+    const TICK: Duration = Duration::from_millis(50);
+
+    /// Serve `file` on loopback for as long as the runtime runs, and say where: `http://127.0.0.1:<port>`.
+    pub(super) async fn serve(file: PathBuf) -> std::io::Result<String> {
+        let listener = TcpListener::bind("127.0.0.1:0").await?;
+        let base = format!("http://{}", listener.local_addr()?);
+        tokio::spawn(async move {
+            while let Ok((socket, _)) = listener.accept().await {
+                tokio::spawn(answer(socket, file.clone()));
+            }
+        });
+        Ok(base)
+    }
+
+    /// The first and last byte a `Range: bytes=a-b` header asks for, the last when it names one.
+    pub(super) fn range(value: &str) -> Option<(u64, Option<u64>)> {
+        let (start, end) = value.trim().strip_prefix("bytes=")?.split_once('-')?;
+        let end = end.trim();
+        Some((start.trim().parse().ok()?, if end.is_empty() { None } else { end.parse().ok() }))
+    }
+
+    async fn answer(mut socket: TcpStream, file: PathBuf) {
+        let mut head = Vec::new();
+        let mut piece = [0u8; 4096];
+        while !head.windows(4).any(|w| w == b"\r\n\r\n") {
+            match socket.read(&mut piece).await {
+                Ok(0) | Err(_) => return,
+                Ok(n) => head.extend_from_slice(&piece[..n]),
+            }
+            if head.len() > 64 * 1024 {
+                return;
+            }
+        }
+        let head = String::from_utf8_lossy(&head).into_owned();
+        let Ok(mut body) = tokio::fs::File::open(&file).await else { return };
+        let Ok(total) = body.metadata().await.map(|m| m.len()) else { return };
+        let asked = head.lines().find_map(|line| {
+            let (name, value) = line.split_once(':')?;
+            name.trim().eq_ignore_ascii_case("range").then(|| range(value)).flatten()
+        });
+        let (start, end) = asked.map_or((0, total.saturating_sub(1)), |(start, end)| {
+            (start, end.unwrap_or(u64::MAX).min(total.saturating_sub(1)))
+        });
+        if start >= total || end < start {
+            let _ = socket
+                .write_all(format!("HTTP/1.1 416 Range Not Satisfiable\r\nContent-Range: bytes */{total}\r\nContent-Length: 0\r\nConnection: close\r\n\r\n").as_bytes())
+                .await;
+            return;
+        }
+        if start > 0 {
+            tokio::time::sleep(WAIT).await;
+        }
+        let length = end - start + 1;
+        let mut reply = format!(
+            "HTTP/1.1 {}\r\nContent-Type: video/x-matroska\r\nAccept-Ranges: bytes\r\nContent-Length: {length}\r\nConnection: close\r\n",
+            if asked.is_some() { "206 Partial Content" } else { "200 OK" }
+        );
+        if asked.is_some() {
+            reply.push_str(&format!("Content-Range: bytes {start}-{end}/{total}\r\n"));
+        }
+        reply.push_str("\r\n");
+        if socket.write_all(reply.as_bytes()).await.is_err() || head.starts_with("HEAD ") {
+            return;
+        }
+        if body.seek(SeekFrom::Start(start)).await.is_err() {
+            return;
+        }
+        let each = usize::try_from(RATE * TICK.as_millis() as u64 / 1_000).unwrap_or(65_536);
+        let mut data = vec![0; each];
+        let mut left = length;
+        while left > 0 {
+            let n = usize::try_from(left).map_or(each, |left| left.min(each));
+            if body.read_exact(&mut data[..n]).await.is_err()
+                || socket.write_all(&data[..n]).await.is_err()
+            {
+                return;
+            }
+            left -= n as u64;
+            tokio::time::sleep(TICK).await;
+        }
+    }
+}
+
+/// [`FfiScene::SourcesLoading`]'s sources after the fixture one: id, name, and when each answers
+/// the Sources tab, from when it asks.
+pub const LOADING_SOURCES: [(&str, &str); 6] = [
+    ("fixture-home-server", "Home server"),
+    ("fixture-media-folder", "Media folder"),
+    ("fixture-example-index", "Example index"),
+    ("fixture-second-example", "Second example"),
+    ("fixture-archive-example", "Archive example"),
+    ("fixture-old-example", "Old example"),
+];
+
+/// When each of [`LOADING_SOURCES`] answers, in the same order: listed, could not choose the
+/// title, listed, timed out, failed. The last is never
+/// asked.
+pub const SOURCES_LOADING_TIMES: [std::time::Duration; 5] = [
+    std::time::Duration::from_millis(450),
+    std::time::Duration::from_millis(1_300),
+    std::time::Duration::from_millis(2_400),
+    std::time::Duration::from_secs(20),
+    std::time::Duration::from_millis(6_200),
+];
+
+/// [`LOADING_SOURCES`] as sources whose releases of every episode play `stream`.
+fn loading_sources(stream: &Stream) -> Vec<MockProvider> {
+    use kaeri_core::error::ProviderError;
+    use kaeri_core::traits::SourceCandidate;
+    let key = sources::key(FINISHED);
+    let hit = sources::hits().into_iter().find(|hit| hit.key == key);
+    let release =
+        |provider: &str, n: u32, title: &str, quality: u32, auto_pick: bool| SourceCandidate {
+            id: format!("{provider}-r{n}"),
+            provider_id: provider.into(),
+            provider_name: String::new(),
+            title: title.into(),
+            quality: Some(quality),
+            label: None,
+            size: None,
+            dual_audio: false,
+            dubbed: false,
+            auto_pick,
+        };
+    let source = |at: usize, releases: Vec<SourceCandidate>, error: Option<ProviderError>| {
+        let (id, name) = LOADING_SOURCES[at];
+        let own = Stream { provider_id: id.into(), ..stream.clone() };
+        let mut source = MockProvider::new(id)
+            .named(name)
+            .with_hits(hit.iter().cloned().collect())
+            .with_episodes_for(key.clone(), sources::episodes(FINISHED))
+            .with_streams_for(key.clone(), vec![own.clone()])
+            .listing_after(SOURCES_LOADING_TIMES.get(at).copied().unwrap_or_default(), error)
+            // Only the episode playing: the coverage the tab's lines take answers at once.
+            .listing_after_only_for("7");
+        for release in &releases {
+            source = source.with_source_streams(&release.id, vec![own.clone()]);
+        }
+        source.with_sources(releases)
+    };
+    let home = LOADING_SOURCES[0].0;
+    let index = LOADING_SOURCES[2].0;
+    let vague = |n: u32, title: &str, year: u16| SearchHit {
+        episode_count: Some(12),
+        year: Some(year),
+        format: Some(MediaFormat::Tv),
+        ..SearchHit::new(format!("{}:{n}", LOADING_SOURCES[1].0), title)
+    };
+    vec![
+        source(0, vec![release(home, 1, "Episode 07 [1080p]", 1080, true)], None),
+        // Two titles like it and neither sure: a match it cannot choose, after its one search.
+        MockProvider::new(LOADING_SOURCES[1].0)
+            .named(LOADING_SOURCES[1].1)
+            .with_hits(vec![
+                vague(1, "Hoshi Tabi Diaries", 2024),
+                vague(2, "Tabibito to Hoshikuzu", 2025),
+            ])
+            .with_latency(SOURCES_LOADING_TIMES[1]),
+        source(
+            2,
+            vec![
+                release(index, 1, "Episode 07 [1080p]", 1080, true),
+                release(index, 2, "Episode 07 [720p]", 720, false),
+                release(index, 3, "Episode 07 (1080p, second audio)", 1080, false),
+                release(index, 4, "Episode 07 [480p]", 480, false),
+                release(index, 5, "Episodes 01-12 batch [1080p]", 1080, false),
+            ],
+            None,
+        ),
+        source(3, Vec::new(), Some(ProviderError::Other("plugin timed out".into()))),
+        source(4, Vec::new(), Some(ProviderError::Transport("HTTP 503".into()))),
+        source(5, Vec::new(), None),
+    ]
 }
 
 /// How far [`FfiScene::MissingEpisode`] moves the fake's broadcasts back: from the fixtures'
@@ -1049,6 +1411,12 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
              colour = \"yellow\"\nedge = \"outline\"\nbackground = \"each-line\"\n\
              opacity = 75\nraise = 8\nstyled = \"restyle\"\n"
             .to_owned(),
+        // Watch already answered: a config written without it reads as an update from before
+        // reading, which asks Watch, read or both over the player.
+        FfiScene::SourcesLoading { .. } => format!(
+            "[reading]\nkaeri_is_for = \"watch\"\n\n[providers]\ndisabled = [\"{}\"]\n",
+            LOADING_SOURCES[5].0
+        ),
         FfiScene::CrashSaved => crash_config(now),
         FfiScene::CrashHeld => crash_config(now - 24 * 3_600),
         FfiScene::ReadingUpdateSheet => "[sources]\ndemo = true\n".to_owned(),
@@ -1202,7 +1570,22 @@ fn seed_scene(store: &Store, scene: &FfiScene, now: i64) {
         FfiScene::DemoPlayed => {
             seed::watched(store, kaeri_core::demo::DEMO_ANILIST_ID, 1, now - HOUR);
         }
-        FfiScene::Playing { .. } => seed::watched(store, FINISHED, 6, now - HOUR),
+        FfiScene::Playing { .. } | FfiScene::SourcesLoading { .. } => {
+            seed::watched(store, FINISHED, 6, now - HOUR)
+        }
+        FfiScene::Switching { .. } => {
+            seed::watched(store, FINISHED, 6, now - HOUR);
+            // The dub reaches episode 7, as Harbor Index has it: the panel offers Dubbed.
+            let row = kaeri_store::DubRow {
+                has_dub: true,
+                through: None,
+                complete: true,
+                aired: None,
+                said_at: now,
+                until: now + 24 * HOUR,
+            };
+            store.put_dub(FINISHED, "franchise", &row).expect("seeding a dub");
+        }
         FfiScene::SkipMarked { length_secs, .. } => {
             seed::watched(store, FINISHED, 6, now - HOUR);
             seed::skip_marks(store, FINISHED, "7", f64::from(*length_secs), now - HOUR);
@@ -1853,6 +2236,68 @@ mod tests {
         let watching =
             scene_sources(&FfiScene::Watching, "http://127.0.0.1:9/art/", &world().provided());
         assert_eq!(watching.ids(), [sources::PROVIDER_ID]);
+    }
+
+    #[test]
+    fn switching_starts_episode_seven_on_lantern_index_with_two_sources_after_it() {
+        let dir = tempfile::tempdir().expect("a temporary directory");
+        let store = Store::open(dir.path().join("kaeri.db")).expect("a database");
+        let scene = FfiScene::Switching { media: "/tmp/episode.mkv".into() };
+        seed_scene(&store, &scene, 1_800_000_000);
+        let continuing = store.continue_list(15).expect("the rail");
+        assert_eq!(continuing.iter().map(|p| p.anilist_id).collect::<Vec<_>>(), [FINISHED]);
+        let dub = store.dub_row(FINISHED, "franchise").expect("a read").expect("the dub");
+        assert!(dub.complete, "the panel offers Dubbed for episode 7");
+        let sources = switching_sources(
+            "http://127.0.0.1:9/art/",
+            "/tmp/episode.mkv",
+            "http://127.0.0.1:9",
+        );
+        assert_eq!(sources.ids(), [sources::PROVIDER_ID, HARBOR_ID, DRIFTWOOD_ID]);
+        let names = sources
+            .ids()
+            .iter()
+            .map(|id| sources.get(id).expect("listed").manifest().display_name.clone())
+            .collect::<Vec<_>>();
+        assert_eq!(names, ["Lantern Index", "Harbor Index", "Driftwood Subs"]);
+    }
+
+    #[test]
+    fn a_range_names_its_first_byte_and_its_last_when_it_has_one() {
+        assert_eq!(slow::range("bytes=0-"), Some((0, None)));
+        assert_eq!(slow::range(" bytes=100-199"), Some((100, Some(199))));
+        assert_eq!(slow::range("items=0-1"), None);
+    }
+
+    #[tokio::test]
+    async fn the_slow_server_answers_the_first_byte_at_once_and_the_rest_after_a_wait() {
+        use tokio::io::{AsyncReadExt, AsyncWriteExt};
+        let dir = tempfile::tempdir().expect("a temporary directory");
+        let file = dir.path().join("07.mkv");
+        std::fs::write(&file, b"0123456789").expect("the file");
+        let base = slow::serve(file).await.expect("a server");
+        let address = base.trim_start_matches("http://").to_owned();
+        let ask = |range: &'static str| {
+            let address = address.clone();
+            async move {
+                let started = std::time::Instant::now();
+                let mut socket =
+                    tokio::net::TcpStream::connect(address).await.expect("a socket");
+                let request = format!("GET /harbor/07.mkv HTTP/1.1\r\nRange: {range}\r\n\r\n");
+                socket.write_all(request.as_bytes()).await.expect("sent");
+                let mut reply = String::new();
+                socket.read_to_string(&mut reply).await.expect("read");
+                (reply, started.elapsed())
+            }
+        };
+        let (reply, took) = ask("bytes=0-3").await;
+        assert!(reply.starts_with("HTTP/1.1 206"), "{reply}");
+        assert!(reply.contains("Content-Range: bytes 0-3/10"), "{reply}");
+        assert!(reply.ends_with("\r\n\r\n0123"), "{reply}");
+        assert!(took < slow::WAIT, "{took:?}");
+        let (reply, took) = ask("bytes=4-").await;
+        assert!(reply.ends_with("456789"), "{reply}");
+        assert!(took >= slow::WAIT, "{took:?}");
     }
 
     #[test]

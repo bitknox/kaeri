@@ -16,6 +16,7 @@ use kaeri_model::{
     search::SearchQuery,
     settings::SettingKey,
     sources::MatchQuestion,
+    starting::ListingState,
 };
 use kaeri_providers::{MockProvider, ProviderRegistry};
 use kaeri_store::ResolutionRung;
@@ -532,11 +533,27 @@ async fn an_episodes_releases_are_listed_for_the_picker() {
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
 
-    assert_eq!(names(&updates), ["Sources", "JobDone"]);
-    let Event::Sources { id, episode, candidates, missed } = &updates[0] else {
+    // The source's row as it is asked, as it answered, then the slate.
+    assert_eq!(names(&updates), ["SourcesProgress", "SourcesProgress", "Sources", "JobDone"]);
+    let rows = |update: &Event| match update {
+        Event::SourcesProgress { id, episode, rows } => {
+            assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
+            rows.iter()
+                .map(|row| (row.provider_id.clone(), row.state.clone()))
+                .collect::<Vec<_>>()
+        }
+        other => panic!("not progress: {other:?}"),
+    };
+    assert_eq!(rows(&updates[0]), [(sources::PROVIDER_ID.to_owned(), ListingState::Asking)]);
+    let answered = rows(&updates[1]);
+    let [(_, ListingState::Listed { releases })] = answered.as_slice() else {
+        panic!("the source listed its release: {:?}", updates[1])
+    };
+    assert_eq!(releases.len(), 1);
+    let Event::Sources { id, episode, candidates, missed } = &updates[2] else {
         unreachable!()
     };
-    assert!(missed.is_empty(), "with releases listed, no source's miss is said");
+    assert!(missed.is_empty(), "the one source listed a release");
     assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
     let listed: Vec<_> = candidates.iter().map(|c| c.id.as_str()).collect();
     assert_eq!(listed, ["release-1"]);
@@ -548,11 +565,14 @@ async fn releases_that_cannot_be_listed_say_why() {
     let mut h = harness(ProviderRegistry::new(Vec::new())).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
-    assert_eq!(names(&updates), ["Toast", "JobDone"]);
+    assert_eq!(names(&updates), ["Toast", "SourcesFailed", "JobDone"]);
     assert_eq!(
         toasts(&updates),
         ["alert: No sources are set up. Add one on the Sources screen."]
     );
+    // The list waiting on it ends too, for the same episode.
+    let Event::SourcesFailed { id, episode, .. } = &updates[1] else { unreachable!() };
+    assert_eq!((*id, episode.as_str()), (FINISHED, "1"));
     ends(&updates, job);
 
     // A source that can't tell which title it is lists nothing, and the picker says so by its
@@ -560,12 +580,63 @@ async fn releases_that_cannot_be_listed_say_why() {
     let mut h = harness(unsure()).await;
     let job = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
     let updates = h.settle().await;
-    assert_eq!(names(&updates), ["Sources", "JobDone"]);
-    let Event::Sources { candidates, missed, .. } = &updates[0] else { unreachable!() };
+    assert_eq!(names(&updates), ["SourcesProgress", "SourcesProgress", "Sources", "JobDone"]);
+    let Event::Sources { candidates, missed, .. } = &updates[2] else { unreachable!() };
     assert!(candidates.is_empty());
     let said: Vec<_> = missed.iter().map(|m| (m.name.as_str(), m.miss)).collect();
-    assert_eq!(said, [(sources::PROVIDER_ID, kaeri_model::starting::ListingMiss::NoMatch)]);
+    assert_eq!(said, [(sources::PROVIDER_ID, kaeri_model::starting::ListingMiss::Ambiguous)]);
     ends(&updates, job);
+}
+
+#[tokio::test]
+async fn each_episode_s_releases_are_listed_and_a_newer_listing_lets_the_older_go() {
+    let release = SourceCandidate {
+        id: "release-1".into(),
+        provider_id: sources::PROVIDER_ID.into(),
+        provider_name: String::new(),
+        title: "Stardust Wayfarer (1080p)".into(),
+        quality: Some(1080),
+        label: None,
+        size: None,
+        dual_audio: false,
+        dubbed: false,
+        auto_pick: true,
+    };
+    // Slow enough that every listing is still asking when the next one is sent.
+    let provider = sources::provider()
+        .with_sources(vec![release])
+        .with_latency(std::time::Duration::from_millis(400));
+    let mut h = harness(ProviderRegistry::new(vec![provider.arc()])).await;
+    let first = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
+    let other = h.send(Command::LoadSources { id: FINISHED, episode: "2".into() });
+    let again = h.send(Command::LoadSources { id: FINISHED, episode: "1".into() });
+    let updates = h.settle().await;
+
+    // Another episode's listing is its own: both episodes are answered, the first once.
+    let answered: Vec<_> = updates
+        .iter()
+        .filter_map(|update| match update {
+            Event::Sources { episode, .. } => Some(episode.as_str()),
+            _ => None,
+        })
+        .collect();
+    assert_eq!(answered.len(), 2, "{:?}", names(&updates));
+    assert!(answered.contains(&"1") && answered.contains(&"2"), "{answered:?}");
+    // The listing asked again stops at once and lets its job go, before any source answers.
+    let at = |wanted: &dyn Fn(&Event) -> bool| updates.iter().position(wanted).unwrap();
+    let let_go = at(&|update| matches!(update, Event::JobDone(job) if Some(*job) == first));
+    let answer = at(&|update| {
+        matches!(update, Event::SourcesProgress { rows, .. }
+            if rows.iter().any(|row| row.state != ListingState::Asking))
+    });
+    assert!(let_go < answer, "{:?}", names(&updates));
+    for job in [other, again] {
+        assert!(
+            updates
+                .iter()
+                .any(|update| matches!(update, Event::JobDone(done) if Some(*done) == job))
+        );
+    }
 }
 
 #[tokio::test]

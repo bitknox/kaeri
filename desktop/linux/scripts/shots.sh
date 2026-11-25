@@ -9,7 +9,11 @@
 # picks the runs. The match picker's run, on a scene where a source cannot choose a match, is
 # SIZES=match. TEXT_SCALE=1.25 draws text as GNOME's Large Text does, through GTK's font
 # resolution.
+#
+# A run that fails (it exits non-zero, as it does when a shot did not save) is said and the rest
+# still run; the script then exits 1. Still shots of the starting screen are starting.sh's.
 set -euo pipefail
+failed=0
 mkdir -p "$HOME/.config/gtk-4.0" /out/media
 dpi=
 if [ -n "${TEXT_SCALE:-}" ]; then
@@ -18,10 +22,14 @@ fi
 printf '[Settings]\ngtk-font-name=Inter 11\n%s\n' "$dpi" \
   >"$HOME/.config/gtk-4.0/settings.ini"
 
-cargo build --manifest-path desktop/linux/Cargo.toml --features fixtures 2>&1 \
-  | grep -E '^(error|warning)|-->' || true
+# A failed build stops the run: an older binary in /target would otherwise be shot.
+if ! cargo build --manifest-path desktop/linux/Cargo.toml --features fixtures >/tmp/kaeri-build.log 2>&1; then
+  grep -E '^error|-->' /tmp/kaeri-build.log | head -40 >&2
+  echo "the app did not build" >&2
+  exit 1
+fi
+grep -E '^warning|-->' /tmp/kaeri-build.log || true
 bin=/target/debug/kaeri-desktop
-[ -x "$bin" ] || { echo "the app did not build" >&2; exit 1; }
 
 # A synthetic test pattern, for the player's shot: every fixture episode streams it.
 media=/out/media/signal-test.mkv
@@ -71,6 +79,16 @@ runs=(
   # SIZES="missing missingsrc".
   "missing 1280x900 ${SHOTS:-missing}"
   "missingsrc 1280x900 ${SHOTS:-missing-sources}"
+  # The player panel's Sources tab while its sources answer, 0.3 s to 21 s after it asks:
+  # SIZES="sourcesloading sourcesloadingon". Two runs, as saving the 0.3 s shot takes longer
+  # than the wait to 1 s.
+  "sourcesloading 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-0s}"
+  "sourcesloadingon 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-1s,sources-loading-4s,sources-loading-12s,sources-loading-21s}"
+  # The same tab with a long source name, a listing the engine ended, and a resting source that
+  # lists from the final answer: SIZES="sourceslong sourcesended sourcesresting".
+  "sourceslong 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-long}"
+  "sourcesended 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-ended}"
+  "sourcesresting 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-resting}"
 )
 for run in "${runs[@]}"; do
   read -r name size shots <<<"$run"
@@ -88,6 +106,9 @@ for run in "${runs[@]}"; do
     following) extra=(--scene following) ;;
     followingslow) extra=(--scene following-slow) ;;
     missing | missingsrc) extra=(--scene missing-episode) ;;
+    sourcesloading | sourcesloadingon | sourceslong | sourcesended | sourcesresting)
+      extra=(--scene sourcesloading)
+      ;;
   esac
   case ",$shots," in *,downloads,*|*,all,*) extra+=(--downloading) ;; esac
   # The match picker's shots need the finished title's source to be unsure of its match.
@@ -95,7 +116,7 @@ for run in "${runs[@]}"; do
   echo "run: $name at $size: $shots"
   dbus-run-session -- timeout 240 "$bin" --fixtures --data "$data" --media "$media" "${extra[@]}" \
     --hwdec no --ao null --size "$size" --shots /out --prefix "$name-" --shot "$shots" \
-    >"/out/$name.log" 2>&1 || echo "the $name run exited with $?"
+    >"/out/$name.log" 2>&1 || { echo "the $name run exited with $?" >&2; failed=1; }
 done
 
 # Home, one run per scene of the Home world (--scene): the states the board draws. SCENES picks
@@ -110,7 +131,9 @@ if [ "${SCENES-x}" != "" ]; then
     KAERI_FIXTURES_HOME_WORLD=1 dbus-run-session -- timeout 120 "$bin" --fixtures \
       --scene "$scene" --data "$data" --media "$media" --hwdec no --ao null \
       --size 1280x1700 --shots /out --prefix "scene-$scene-" --shot "$shots" \
-      >"/out/scene-$scene.log" 2>&1 || echo "the $scene run exited with $?"
+      >"/out/scene-$scene.log" 2>&1 || { echo "the $scene run exited with $?" >&2; failed=1; }
   done
 fi
-ls -1 /out/*.png 2>/dev/null || echo "no shots"
+ls -1 /out/*.png 2>/dev/null || { echo "no shots" >&2; failed=1; }
+[ "$failed" = 0 ] || echo "a step failed: see above" >&2
+exit "$failed"

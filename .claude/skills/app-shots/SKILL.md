@@ -20,6 +20,26 @@ caffeinate -u apple/scripts/shots.sh <mac|iphone|ipad> [--landscape] [shot…]
   sleeps, hence `caffeinate -u`. `--landscape` and a clean 9:41 status bar are built in for iPad.
 - `KAERI_SIMULATOR` picks the Simulator. Create your own and delete it after; never shut
   down others' (no `simctl shutdown all`).
+- Starting-screen shots (`player-start-<state>-<seconds>`) are stills: the engine's still clock
+  steps through the made-up start and holds at the seconds asked, so `player-start-slow-24` is
+  taken at once and reads the same every run. `KAERI_STILL=0` waits on the wall clock. Any scene
+  shot can be held still: `KAERI_LAUNCH_ARGS="-KaeriStillAt 3"` (Simulator), `KAERI_STILL_AT=3`
+  (Mac harness) holds the scene's made-up waits (slow sources, slow AniList) at 3 s.
+
+### Simulator UI tests
+
+```bash
+apple/scripts/sim-test.sh "<scheme>" [--forms iphone,ipad] [--out <dir>] [-- -only-testing:<id>]
+```
+
+- Builds once (`build-for-testing`), then `test-without-building` per form on Simulators of its
+  own, deleted after; attachments land in `<out>/<form>/` by name, one `STEP <name> rc=<n>` line
+  per step, non-zero exit when any failed.
+- Every Simulator `xcodebuild test` passes `-collect-test-diagnostics never`. Without it Xcode
+  27.1 waits 600 s after the tests for the Simulator's diagnostics ("Failure collecting
+  diagnostics from simulator"). Use the script, or add the flag to any hand-written run.
+- A test that must land on a moment should run its scene on the still clock
+  (`-KaeriStillAt <seconds>` as a launch argument) rather than time screenshots on the wall clock.
 
 ## Android
 
@@ -28,7 +48,49 @@ android/scripts/shots.sh <phone|phone-37|tablet|fold> [shot…]
 ```
 
 Same shot syntax: `watching`, `fresh`, or `app` (real AniList), then `:calendar`, `:seasonal`,
-`title=<id>` and so on. Roborazzi JVM shots (`:ui` tests) cover most boards without an emulator.
+`title=<id>` and so on. Roborazzi JVM shots (`:ui` tests) cover most boards without an emulator,
+on a clock the test sets.
+
+- Timed screens are stills: `watching:start=slow+stillat=24` replays the made-up start on the
+  engine's still clock and holds it at 24 s, so the shot shows the starting screen 24 s in (its
+  seconds and wording) at once, however slow the emulator. `stillat=<seconds>` alone holds a
+  scene's own made-up waits there. Without `stillat` the replay runs on the wall clock, which
+  recordings and feature videos need. The TV app takes the same `--es stillat` extra.
+- The script exits 1 when a shot failed (no `KAERI_READY`, a failed or empty screencap, a
+  setting that did not take), after taking the rest, with one `FAILED <shot>: …` line each.
+
+## Windows
+
+The Fixtures build (`-p:EngineFlavour=testing`, the `windows` kind on slot) takes the same scenes
+as launch arguments: `Kaeri.exe --scene=watching --page=calendar`, `--show=<state>` and the rest
+in `desktop/windows/Kaeri.Windows/Options.cs`. Shots run in the PC's test VM (`vm.ps1 shot`
+under `slot with gui --wsl`, see the slot README) or with `desktop/windows/scripts/spike-shot.ps1`
+on a signed-in desktop; both capture the window at set seconds after launch, and spike-shot.ps1
+exits 1 when a mark was lost.
+
+- Time-dependent screens are still shots: `--still=<seconds>` holds the engine's still clock
+  there. With `--show=starting-<state>` (or the older `--show=starting-<state>-<seconds>`) the
+  made-up start is stepped to that moment at once and its seconds read the still clock, so one
+  mark about 5 s after the window shows exactly that moment; the app logs "settled" 1.5 s after
+  the hold. With any other scene `--still` holds the scene's made-up waits, as `KAERI_STILL_AT`
+  does. Without it everything runs on the wall clock, which recordings need.
+
+## Linux
+
+```bash
+OUT=<dir> desktop/linux/scripts/docker.sh desktop/linux/scripts/shots.sh     # pages
+OUT=<dir> desktop/linux/scripts/docker.sh desktop/linux/scripts/starting.sh  # starting screen
+```
+
+- In the build box (docker.sh) or on slot's `--kind linux` lane under `xvfb-run`; the app takes
+  `--fixtures --shots <dir> --shot <a,b,…>`. The scripts' headers list the runs and variables.
+- Starting screen shots are `start-<state>-<seconds>`. With `--still` (starting.sh's default)
+  they are stills: the made-up events step the engine's still clock to the moment, so
+  `start-slow-24` shows 24 s on every run and takes about 2 s. `STILL=0` takes them on the wall
+  clock; recordings (`RECORD`) always do. `KAERI_STILL_AT=<seconds>` holds a whole scene's
+  made-up waits (a slow source, the slow Home), as on the other apps.
+- A run exits 1 when a shot did not save; the scripts run every step and then exit 1 if any
+  failed.
 
 ## Fixture ids
 
@@ -37,6 +99,9 @@ with a film and an OVA). Never real shows.
 
 ## Rules
 
+- A job script that takes shots or runs UI tests exits with its failed steps' status, never a
+  bare `exit 0`, and prints one `STEP <name> rc=<n>` line per step. Under Git Bash on the PC,
+  export `MSYS_NO_PATHCONV=1` before running adb, or device paths turn into Windows ones.
 - Only the Fixtures app or a re-identified copy runs. Never launch `app.kaeri.app`; never post
   real notifications on the Mac.
 - One emulator at a time, your own AVD name and port, selected by `-avd`/`-port` in any script

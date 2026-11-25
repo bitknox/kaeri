@@ -655,6 +655,21 @@ pub fn notice_audio_now_dubbed() -> String {
     text("notice-audio-now-dubbed", &[])
 }
 
+/// Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+pub fn player_panel_switch_failed(source: &str, current: &str) -> String {
+    text("player-panel-switch-failed", &[("source", Arg::Text(source)), ("current", Arg::Text(current))])
+}
+
+/// Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+pub fn player_panel_dub_failed(episode: &str) -> String {
+    text("player-panel-dub-failed", &[("episode", Arg::Text(episode))])
+}
+
+/// Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+pub fn player_panel_sub_failed(episode: &str) -> String {
+    text("player-panel-sub-failed", &[("episode", Arg::Text(episode))])
+}
+
 /// Toast when the previous-episode control is used on the first episode.
 pub fn notice_already_first_episode() -> String {
     text("notice-already-first-episode", &[])
@@ -2998,6 +3013,11 @@ pub fn player_announce_undo(line: &str) -> String {
 /// Accessible name of a comment's like button: the word Like and how many likes it has.
 pub fn discussion_like_named(count: i64) -> String {
     text("discussion-like-named", &[("count", Arg::Int(count))])
+}
+
+/// Player panel, Sources tab: part of a release's detail line, a release with both the original and the dubbed audio.
+pub fn player_panel_release_dual_audio() -> String {
+    text("player-panel-release-dual-audio", &[])
 }
 
 /// Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
@@ -14300,6 +14320,11 @@ pub fn player_start_miss_no_match(name: &str) -> String {
     text("player-start-miss-no-match", &[("name", Arg::Text(name))])
 }
 
+/// Detail line when a source found titles like the show and could not tell which one it is.
+pub fn player_start_miss_ambiguous(name: &str) -> String {
+    text("player-start-miss-ambiguous", &[("name", Arg::Text(name))])
+}
+
 /// Detail line when a source has the show and not the episode. The episode is its label.
 pub fn player_start_miss_no_episode(name: &str, episode: &str) -> String {
     text("player-start-miss-no-episode", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
@@ -14328,6 +14353,16 @@ pub fn player_start_miss_skipped(name: &str) -> String {
 /// Details row for a source not asked while torrent playback is off. The name goes before it.
 pub fn player_start_row_held_torrents_off() -> String {
     text("player-start-row-held-torrents-off", &[])
+}
+
+/// Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+pub fn player_start_row_held_torrents_starting() -> String {
+    text("player-start-row-held-torrents-starting", &[])
+}
+
+/// Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+pub fn player_start_row_held_torrents_failed() -> String {
+    text("player-start-row-held-torrents-failed", &[])
 }
 
 /// Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
@@ -14508,6 +14543,16 @@ pub fn player_start_unreached(names: &str) -> String {
 /// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
 pub fn player_start_not_asked_torrents_off(count: i64, names: &str) -> String {
     text("player-start-not-asked-torrents-off", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+pub fn player_start_not_asked_torrents_starting(count: i64, names: &str) -> String {
+    text("player-start-not-asked-torrents-starting", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
+}
+
+/// Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+pub fn player_start_not_asked_torrents_failed(count: i64, names: &str) -> String {
+    text("player-start-not-asked-torrents-failed", &[("count", Arg::Int(count)), ("names", Arg::Text(names))])
 }
 
 /// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -15197,6 +15242,16 @@ pub fn source_picker_held_torrents_off(name: &str) -> String {
     text("source-picker-held-torrents-off", &[("name", Arg::Text(name))])
 }
 
+/// Line of the picker for a source not asked while torrent playback is on and still starting.
+pub fn source_picker_held_torrents_starting(name: &str) -> String {
+    text("source-picker-held-torrents-starting", &[("name", Arg::Text(name))])
+}
+
+/// Line of the picker for a source not asked because torrent playback is on and couldn't start.
+pub fn source_picker_held_torrents_failed(name: &str) -> String {
+    text("source-picker-held-torrents-failed", &[("name", Arg::Text(name))])
+}
+
 /// Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
 pub fn source_picker_held_proxy(name: &str) -> String {
     text("source-picker-held-proxy", &[("name", Arg::Text(name))])
@@ -15295,6 +15350,126 @@ pub fn player_subs_bg_box() -> String {
 /// Button in the subtitles panel that opens Settings.
 pub fn player_subs_more() -> String {
     text("player-subs-more", &[])
+}
+
+/// Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+pub fn player_sheet_episodes_loading() -> String {
+    text("player-sheet-episodes-loading", &[])
+}
+
+/// Accessibility label of the player's side panel with the Episodes and Sources tabs.
+pub fn player_panel() -> String {
+    text("player-panel", &[])
+}
+
+/// Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+pub fn episode_row_playing(left: &str) -> String {
+    text("episode-row-playing", &[("left", Arg::Text(left))])
+}
+
+/// Episode row in the player's panel: the episode is part story, part filler.
+pub fn episode_row_mixed() -> String {
+    text("episode-row-mixed", &[])
+}
+
+/// Episode row in the player's panel: the length of an episode nobody has started.
+pub fn episode_row_length(minutes: i64) -> String {
+    text("episode-row-length", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+pub fn episode_row_delayed(when: &str) -> String {
+    text("episode-row-delayed", &[("when", Arg::Text(when))])
+}
+
+/// Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+pub fn episode_row_from(source: &str) -> String {
+    text("episode-row-from", &[("source", Arg::Text(source))])
+}
+
+/// Button on a partly watched episode: plays it from where it was left.
+pub fn action_resume() -> String {
+    text("action-resume", &[])
+}
+
+/// Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+pub fn player_panel_metadata_only() -> String {
+    text("player-panel-metadata-only", &[])
+}
+
+/// Player panel, Sources tab: heading over the source and streams playing now.
+pub fn player_panel_playing_now() -> String {
+    text("player-panel-playing-now", &[])
+}
+
+/// Player panel, Sources tab: heading over the other sources, in the order they are tried.
+pub fn player_panel_other_sources() -> String {
+    text("player-panel-other-sources", &[])
+}
+
+/// Player panel, Sources tab: the folded list of a source's releases for this episode.
+pub fn player_panel_releases(count: i64) -> String {
+    text("player-panel-releases", &[("count", Arg::Int(count))])
+}
+
+/// Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+pub fn player_release_automatic() -> String {
+    text("player-release-automatic", &[])
+}
+
+/// Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+pub fn player_panel_order() -> String {
+    text("player-panel-order", &[])
+}
+
+/// Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+pub fn player_panel_pick_scope() -> String {
+    text("player-panel-pick-scope", &[])
+}
+
+/// Accessibility label of the subtitled or dubbed switch in the player panel.
+pub fn player_translation() -> String {
+    text("player-translation", &[])
+}
+
+/// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+pub fn player_panel_starting(seconds: i64) -> String {
+    text("player-panel-starting", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.
+pub fn player_panel_asking(seconds: i64) -> String {
+    text("player-panel-asking", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+pub fn player_finding_version_seconds(episode: &str, seconds: i64) -> String {
+    text("player-finding-version-seconds", &[("episode", Arg::Text(episode)), ("seconds", Arg::Int(seconds))])
+}
+
+/// Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+pub fn player_finding_version_subbed_seconds(episode: &str, seconds: i64) -> String {
+    text("player-finding-version-subbed-seconds", &[("episode", Arg::Text(episode)), ("seconds", Arg::Int(seconds))])
+}
+
+/// Notice when another source started playing while the player panel was closed.
+pub fn notice_playing_from_source(source: &str, clock: &str) -> String {
+    text("notice-playing-from-source", &[("source", Arg::Text(source)), ("clock", Arg::Text(clock))])
+}
+
+/// Player panel, under the subtitled or dubbed switch during a watch party.
+pub fn party_version_own() -> String {
+    text("party-version-own", &[])
+}
+
+/// Player panel: button under a synopsis cut to three lines, that shows it whole.
+pub fn player_panel_more() -> String {
+    text("player-panel-more", &[])
+}
+
+/// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+pub fn player_panel_less() -> String {
+    text("player-panel-less", &[])
 }
 
 /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
@@ -21210,6 +21385,16 @@ pub fn source_note_torrents_off() -> String {
     text("source-note-torrents-off", &[])
 }
 
+/// Under a source that names torrents while torrent playback is on and still starting.
+pub fn source_note_torrents_starting() -> String {
+    text("source-note-torrents-starting", &[])
+}
+
+/// Under a source that names torrents while torrent playback is on and couldn't start.
+pub fn source_note_torrents_failed() -> String {
+    text("source-note-torrents-failed", &[])
+}
+
 /// Heading over one source's releases, for a source that offers several (a batch, single episodes).
 pub fn source_picker_releases() -> String {
     text("source-picker-releases", &[])
@@ -21325,6 +21510,16 @@ pub fn sources_status_torrents_off() -> String {
     text("sources-status-torrents-off", &[])
 }
 
+/// Status: a source that names torrents, while torrent playback is on and still starting.
+pub fn sources_status_torrents_starting() -> String {
+    text("sources-status-torrents-starting", &[])
+}
+
+/// Status: a source that names torrents, while torrent playback is on and couldn't start.
+pub fn sources_status_torrents_failed() -> String {
+    text("sources-status-torrents-failed", &[])
+}
+
 /// Status: slow.
 pub fn sources_status_slow() -> String {
     text("sources-status-slow", &[])
@@ -21353,6 +21548,16 @@ pub fn sources_detail_held_back() -> String {
 /// Status line: torrent playback is off.
 pub fn sources_detail_torrents_off() -> String {
     text("sources-detail-torrents-off", &[])
+}
+
+/// Status line: torrent playback is on and still starting.
+pub fn sources_detail_torrents_starting() -> String {
+    text("sources-detail-torrents-starting", &[])
+}
+
+/// Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+pub fn sources_detail_torrents_failed() -> String {
+    text("sources-detail-torrents-failed", &[])
 }
 
 /// Status line: disabled.

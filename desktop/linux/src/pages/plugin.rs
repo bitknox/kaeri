@@ -173,6 +173,12 @@ fn fill(ctx: &Rc<Ctx>, column: &gtk::Box, info: &Info) {
             Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsOff) => {
                 Some(t::sources_detail_torrents_off())
             }
+            Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsStarting) => {
+                Some(t::sources_detail_torrents_starting())
+            }
+            Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsFailed) => {
+                Some(t::sources_detail_torrents_failed())
+            }
             Standing::HeldBack => Some(t::sources_detail_held_back()),
             Standing::Off => Some(t::sources_detail_disabled()),
             _ => None,

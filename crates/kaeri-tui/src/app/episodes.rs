@@ -179,6 +179,12 @@ impl App {
         if self.source_context.as_ref() != Some(&(id, episode.clone())) {
             return;
         }
+        // Asked from another screen than the one now shown: the user went elsewhere meanwhile,
+        // and the picker must not open over it.
+        if self.source_asked_on.as_ref() != Some(self.nav.current()) {
+            self.source_context = None;
+            return;
+        }
         if candidates.is_empty() {
             self.source_context = None;
             // What each source said, when one said something: a source that failed is not one
@@ -573,7 +579,15 @@ impl App {
             }
         };
         self.source_context = Some((id, episode.clone()));
+        self.source_asked_on = Some(self.nav.current().clone());
         Some(Command::LoadSources { id, episode })
+    }
+
+    /// The releases of `episode` of `id` could not be listed: the question asked is over.
+    pub(super) fn sources_failed(&mut self, id: AnilistId, episode: &str) {
+        if self.source_context.as_ref().is_some_and(|(i, e)| *i == id && e == episode) {
+            self.source_context = None;
+        }
     }
 
     /// The release picked, played.
@@ -635,11 +649,14 @@ fn missed_line(missed: &MissedListing, episode: &str) -> String {
     let name = missed.name.as_str();
     match &missed.miss {
         ListingMiss::NoMatch => t::player_start_miss_no_match(name),
+        ListingMiss::Ambiguous => t::player_start_miss_ambiguous(name),
         ListingMiss::NoEpisode => t::player_start_miss_no_episode(name, episode),
         ListingMiss::Failed => t::player_start_miss_failed(name),
         ListingMiss::TimedOut => t::player_start_miss_timed_out(name),
         ListingMiss::HeldBack { why } => match why {
             SourceHold::TorrentsOff => t::source_picker_held_torrents_off(name),
+            SourceHold::TorrentsStarting => t::source_picker_held_torrents_starting(name),
+            SourceHold::TorrentsFailed => t::source_picker_held_torrents_failed(name),
             SourceHold::ProxyCheck => t::source_picker_held_proxy(name),
             SourceHold::Cellular => t::source_picker_held_cellular(name),
             SourceHold::Other => t::source_picker_held_other(name),
@@ -1611,13 +1628,76 @@ mod tests {
                     name: "Harbor".into(),
                     miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
                 },
+                MissedListing {
+                    name: "Swarm".into(),
+                    miss: ListingMiss::HeldBack { why: SourceHold::TorrentsStarting },
+                },
             ],
         });
         let said: Vec<&str> = a.toasts.iter().map(|t| t.notice.text.as_str()).collect();
         let said = said.join("\n");
         assert!(said.contains(&t::player_start_miss_failed("Alpha")), "{said}");
         assert!(said.contains(&t::source_picker_held_torrents_off("Harbor")), "{said}");
+        assert!(said.contains(&t::source_picker_held_torrents_starting("Swarm")), "{said}");
         assert!(!said.contains("alpha"), "a raw id: {said}");
+    }
+
+    #[test]
+    fn a_listing_that_failed_leaves_no_question_to_open_later() {
+        let mut a = app_at_episodes();
+        a.handle(Action::ShowSources, 20);
+        let (id, episode) = a.source_context.clone().expect("a pending question");
+        // Another episode's failure is not this question's.
+        a.apply(Event::SourcesFailed {
+            id,
+            episode: format!("{episode}0"),
+            why: kaeri_model::Msg::NoticeTitleLoadFailed,
+        });
+        assert!(a.source_context.is_some());
+        a.apply(Event::SourcesFailed {
+            id,
+            episode: episode.clone(),
+            why: kaeri_model::Msg::NoticeTitleLoadFailed,
+        });
+        assert!(a.source_context.is_none(), "a failed question is not left pending");
+        // The same listing replayed once back online opens nothing over the screen.
+        a.apply(Event::Sources {
+            id,
+            episode,
+            candidates: vec![source("[A] Show - 1 (1080p)", true)],
+            missed: Vec::new(),
+        });
+        assert_ne!(a.nav.overlay(), Some(&Overlay::Sources));
+    }
+
+    #[test]
+    fn an_answer_after_leaving_or_dismissing_opens_nothing() {
+        // Gone to another screen while the sources were asked.
+        let mut a = app_at_episodes();
+        a.handle(Action::ShowSources, 20);
+        let answer = a.sources_here(vec![source("[A] Show - 1 (1080p)", true)]);
+        a.handle(Action::Back, 5);
+        assert!(!a.in_episodes(), "left the list");
+        a.apply(answer);
+        assert_ne!(a.nav.overlay(), Some(&Overlay::Sources), "opened over another screen");
+        assert!(a.source_context.is_none(), "a question nobody waits on is not kept");
+
+        // The picker dismissed, then the same listing replayed.
+        let mut a = app_at_episodes();
+        a.handle(Action::ShowSources, 20);
+        let answer = |a: &App| a.sources_here(vec![source("[A] Show - 1 (1080p)", true)]);
+        let (id, episode) = a.source_context.clone().expect("a pending question");
+        a.apply(answer(&a));
+        assert_eq!(a.nav.overlay(), Some(&Overlay::Sources));
+        a.handle(Action::Back, 20);
+        assert!(a.source_context.is_none(), "a dismissed question is over");
+        a.apply(Event::Sources {
+            id,
+            episode,
+            candidates: vec![source("[A] Show - 1 (1080p)", true)],
+            missed: Vec::new(),
+        });
+        assert_ne!(a.nav.overlay(), Some(&Overlay::Sources));
     }
 
     #[test]

@@ -106,3 +106,8 @@ player-exit-fullscreen = Exit full screen
 # @only windows
 # @arg state: text
 accounts-pane-name = Account, { $state }
+
+# Part of a release's detail line in the player's Sources panel: a release with both the original
+# and the dubbed audio.
+# @only windows
+player-panel-dual-audio = { -subbed-cap } and { -dubbed }

@@ -242,4 +242,133 @@
     </Setter>
   </Style>
 
+  <!-- The player panel's rows (an episode's head, a source or a release): no chrome of their own,
+       the panel's radius, Fluent's subtle fill under the pointer and the system's focus ring. The
+       row's own fill (playing, selected) is on the row under it. -->
+  <Style x:Key="PanelRowButtonStyle" TargetType="Button">
+    <Setter Property="Padding" Value="8" />
+    <Setter Property="BorderThickness" Value="0" />
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{ThemeResource SilkBrush}" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="UseSystemFocusVisuals" Value="True" />
+    <Setter Property="FocusVisualMargin" Value="0" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="Button">
+          <ContentPresenter x:Name="ContentPresenter" Background="{TemplateBinding Background}" Padding="{TemplateBinding Padding}"
+                            CornerRadius="{TemplateBinding CornerRadius}" HorizontalContentAlignment="{TemplateBinding HorizontalContentAlignment}"
+                            VerticalContentAlignment="{TemplateBinding VerticalContentAlignment}" Foreground="{TemplateBinding Foreground}">
+            <ContentPresenter.BackgroundTransition>
+              <BrushTransition Duration="0:0:0.083" />
+            </ContentPresenter.BackgroundTransition>
+            <VisualStateManager.VisualStateGroups>
+              <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver">
+                  <VisualState.Setters>
+                    <Setter Target="ContentPresenter.Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Pressed">
+                  <VisualState.Setters>
+                    <Setter Target="ContentPresenter.Background" Value="{ThemeResource SubtleFillColorTertiaryBrush}" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Disabled" />
+              </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+          </ContentPresenter>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
+
+  <!-- The panel's buttons: 32 high at radius 4, the amber one for Play and Resume, and beside it
+       the faint fill with a hairline edge. -->
+  <Style x:Key="PanelPrimaryButtonStyle" TargetType="Button" BasedOn="{StaticResource AccentButtonStyle}">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="SemiBold" />
+    <Setter Property="CornerRadius" Value="4" />
+  </Style>
+  <Style x:Key="PanelSecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource DefaultButtonStyle}">
+    <Setter Property="MinHeight" Value="32" />
+    <Setter Property="Padding" Value="12,0" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="CornerRadius" Value="4" />
+    <Setter Property="Background" Value="#0FFFFFFF" />
+    <Setter Property="BorderBrush" Value="#14FFFFFF" />
+    <Setter Property="BorderThickness" Value="1" />
+  </Style>
+
+  <!-- One half of the panel's Subtitled and Dubbed switch: the words on the track, and the
+       raised thumb under the one chosen. -->
+  <Style x:Key="PanelSegmentStyle" TargetType="RadioButton">
+    <Setter Property="Background" Value="Transparent" />
+    <Setter Property="Foreground" Value="{ThemeResource SilkBrush}" />
+    <Setter Property="FontSize" Value="14" />
+    <Setter Property="FontWeight" Value="Medium" />
+    <Setter Property="HorizontalAlignment" Value="Stretch" />
+    <Setter Property="VerticalAlignment" Value="Stretch" />
+    <Setter Property="HorizontalContentAlignment" Value="Center" />
+    <Setter Property="VerticalContentAlignment" Value="Center" />
+    <Setter Property="MinWidth" Value="0" />
+    <Setter Property="Padding" Value="8,0" />
+    <Setter Property="CornerRadius" Value="3" />
+    <Setter Property="UseSystemFocusVisuals" Value="True" />
+    <Setter Property="FocusVisualMargin" Value="-2" />
+    <Setter Property="Template">
+      <Setter.Value>
+        <ControlTemplate TargetType="RadioButton">
+          <Grid x:Name="Root" Background="{TemplateBinding Background}" CornerRadius="{TemplateBinding CornerRadius}">
+            <Grid.BackgroundTransition>
+              <BrushTransition Duration="0:0:0.083" />
+            </Grid.BackgroundTransition>
+            <Border x:Name="Thumb" Background="#38E4E0D6" CornerRadius="{TemplateBinding CornerRadius}" Opacity="0">
+              <Border.OpacityTransition>
+                <ScalarTransition Duration="0:0:0.2" />
+              </Border.OpacityTransition>
+            </Border>
+            <ContentPresenter x:Name="ContentPresenter" Padding="{TemplateBinding Padding}" Foreground="{TemplateBinding Foreground}"
+                              HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" VerticalAlignment="{TemplateBinding VerticalContentAlignment}" />
+            <VisualStateManager.VisualStateGroups>
+              <VisualStateGroup x:Name="CommonStates">
+                <VisualState x:Name="Normal" />
+                <VisualState x:Name="PointerOver">
+                  <VisualState.Setters>
+                    <Setter Target="Root.Background" Value="#0FE4E0D6" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Pressed">
+                  <VisualState.Setters>
+                    <Setter Target="Root.Background" Value="#1AE4E0D6" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Disabled">
+                  <VisualState.Setters>
+                    <Setter Target="ContentPresenter.Opacity" Value="0.38" />
+                  </VisualState.Setters>
+                </VisualState>
+              </VisualStateGroup>
+              <VisualStateGroup x:Name="CheckStates">
+                <VisualState x:Name="Checked">
+                  <VisualState.Setters>
+                    <Setter Target="Thumb.Opacity" Value="1" />
+                    <Setter Target="ContentPresenter.FontWeight" Value="SemiBold" />
+                  </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="Unchecked" />
+                <VisualState x:Name="Indeterminate" />
+              </VisualStateGroup>
+            </VisualStateManager.VisualStateGroups>
+          </Grid>
+        </ControlTemplate>
+      </Setter.Value>
+    </Setter>
+  </Style>
 </ResourceDictionary>

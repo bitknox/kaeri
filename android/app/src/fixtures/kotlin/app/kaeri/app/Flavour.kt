@@ -1,7 +1,8 @@
 // The fixtures flavour's launch: the testing engine on a scene, each launch in a directory of its
 // own, steered by intent extras under the names of the Apple app's -Kaeri* arguments:
 //
-//   scene     watching (the default), sourceless (watching with no source set up), fresh or playing
+//   scene     watching (the default), sourceless (watching with no source set up), fresh, playing
+//             or sourcesloading (playing, with six more sources that answer at set times)
 //   media     what the playing scene streams: a path or URL on the device
 //   section   the destination to open on: continue, calendar, seasonal, library or search
 //   watched   episodes to mark watched once the engine is up: 900006:8, or 900001:1,2,3, with more
@@ -32,6 +33,10 @@
 //             match-found or match-empty open the match picker on the first fixture (unsure scene)
 //   player    a player state to shoot (from A3)
 //   found     flow or settings: the found skip times demo, the engine's part scripted, for recording motion
+//   panel     live: the player panel's Sources tab lists made-up sources, and a switch to one
+//             lands or fails as scripted (PanelDemo), on the playing scene
+//             sources: episode 7 plays and the panel opens on Sources once its picture is up,
+//             for the sourcesloading scene's sources answering one by one
 //   start     a made-up start (StartingFixture, as `slow` or `failed-no-episode`) said to the real
 //             player screen on its own clock; `details` 1 opens Details, `startdelay` ms waits first
 //   code      a tracker whose device-code sheet opens, with a made-up code that expires in 15 minutes
@@ -72,6 +77,7 @@ import android.os.Environment
 import android.util.Log
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.WorkManager
+import app.kaeri.player.PlayerTime
 import java.util.UUID
 import java.util.concurrent.TimeUnit
 import kotlinx.coroutines.MainScope
@@ -163,6 +169,10 @@ internal object Flavour {
         }
     }
 
+    /** A player command on its way to the engine: the panel demo answers the panel's own. */
+    fun playerSend(command: app.kaeri.engine.model.Command, send: (app.kaeri.engine.model.Command) -> Unit) =
+        app.kaeri.player.PanelDemo.send(command, send)
+
     fun launch(context: Context, intent: Intent): EngineLaunch {
         launched?.let { return it }
         appContext = context.applicationContext
@@ -187,6 +197,15 @@ internal object Flavour {
         FixtureCasts.scene = CastScene.named(intent.getStringExtra("cast"))
         FixtureCasts.stepsAfter = intent.getStringExtra("castat")?.toLongOrNull()?.coerceAtLeast(0) ?: 0L
         if (intent.getStringExtra("downloads") != null) fixtureDownloadClip = downloadClip(context)
+        // stillat=<seconds>: a still shot. The engine's still clock goes on before the scene starts, so
+        // its made-up waits run on it: held at the moment for a scene's shot, or at nought for a
+        // `start` replay, which steps it to the moment itself (StartReplay).
+        intent.getStringExtra("stillat")?.let { at ->
+            when {
+                intent.getStringExtra("start") != null && StartReplay.stillMillis(intent) != null -> PlayerTime.hold(0)
+                !PlayerTime.holdSeconds(at) -> Log.w(KaeriApp.TAG, "stillat takes seconds (24, 0.3), not $at")
+            }
+        }
         return EngineLaunch.fixtures(scene, context.cacheDir)
             .copy(
                 platform = enginePlatform(context),
@@ -296,9 +315,11 @@ internal object Flavour {
 
     /**
      * The TV scene the `tv` extra names, set up once Play on TV is, and true once it is on
-     * screen: what announceReady waits on besides the store. True with no scene asked for.
+     * screen: what announceReady waits on besides the store. True with no scene asked for. A
+     * still `start` replay (`stillat`) holds its moment first.
      */
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean {
+        if (!StartReplay.held()) return false
         if (!reachedReading(intent, store)) return false
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
             val app = appContext as? KaeriApp ?: return false
@@ -505,6 +526,10 @@ internal object Flavour {
             store.apply(Event.DeviceCode(DeviceCodePrompt(tracker, "4F2K9QX1", "https://activate.example/pin", expiresAt)))
         }
         intent.getStringExtra("player")?.let { Log.w(KaeriApp.TAG, "player=$it is not in this build yet") }
+        when (intent.getStringExtra("panel")) {
+            "live" -> app.kaeri.player.PanelDemo.start(store, player)
+            "sources" -> app.kaeri.player.PanelDemo.openSources(store, player)
+        }
         intent.getStringExtra("found")?.let { FoundDemo.run(context.applicationContext as app.kaeri.player.PlayerHost, store, MainScope(), it) }
     }
 

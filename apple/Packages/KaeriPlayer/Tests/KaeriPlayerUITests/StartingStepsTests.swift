@@ -239,6 +239,19 @@ struct StartingStepsTests {
         #expect(view.lead == .tryAgain)
     }
 
+    @Test func aSourceHeldWhileTorrentsStartIsNotSaidToBeOff() {
+        let view = StartFailureView(
+            why: .notFound,
+            text: .noticeReason(reason: .sourcesNotAsked(count: 1, names: "Harbor", episode: "7")),
+            episode: "7",
+            asked: ["Brook"],
+            heldBack: [HeldSources(names: ["Harbor"], why: .torrentsStarting)]
+        )
+        #expect(view.detail == "Brook doesn't have episode 7. Harbor isn't asked until torrent playback has started.")
+        #expect(StartingWalk.heldNote(.torrentsStarting) == "Not asked · Torrent playback is starting")
+        #expect(StartingWalk.heldNote(.torrentsFailed) == "Not asked · Torrent playback couldn't start")
+    }
+
     @Test func offlineWaitsOnTheEnginesStepAndStartsOnReconnect() {
         let waiting = run(.offline, to: 3)
         #expect(waiting.model.walk?.waiting == true)

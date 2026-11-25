@@ -11,7 +11,10 @@ use std::{
 use adw::prelude::*;
 use gtk::gdk;
 use kaeri_i18n::t;
-use kaeri_model::subtitle_style::{SubtitleStyle, mpv_subtitle_options};
+use kaeri_model::{
+    subtitle_lift::{SubtitleFrame, SubtitlePlacement, subtitle_lift},
+    subtitle_style::{SubtitleStyle, mpv_subtitle_options},
+};
 use kaeri_mpv_host::Mpv;
 use serde_json::{Value, json};
 
@@ -567,17 +570,36 @@ pub fn x_at(scale: &gtk::Scale, fraction: f64) -> Option<f64> {
     Some(f64::from(track.x()) + f64::from(track.width()) * fraction.clamp(0.0, 1.0))
 }
 
-/// Raise the subtitles by `bar` of `height`, or put them back with zero, over the viewer's own
-/// raise: the engine's `sub-pos` for both, at once, with no animation.
-pub fn lift_subtitles(mpv: &Mpv, bar: i32, height: i32, style: Option<&SubtitleStyle>) {
-    let lift = if height > 0 { f64::from(bar.max(0)) / f64::from(height) } else { 0.0 };
-    let lift = lift.clamp(0.0, 0.5) * 100.0;
+/// Raise the subtitles clear of a bottom bar `bar` tall over a picture `height` tall, or put them
+/// back with zero, over the viewer's own raise: the engine's `sub-pos` for both, at once, with no
+/// animation. `placed` is mpv's `osd-dimensions` and where the track's lines rest.
+pub fn lift_subtitles(
+    mpv: &Mpv,
+    bar: i32,
+    height: i32,
+    style: Option<&SubtitleStyle>,
+    placed: (Option<&SubtitleFrame>, &SubtitlePlacement),
+) {
+    let position = subtitle_position(bar, height, style, placed);
+    let _ = mpv.set("sub-pos", &json!(position));
+}
+
+/// The `sub-pos` for [`lift_subtitles`]: the engine's lift, only as far as the subtitles need to
+/// clear the bar.
+fn subtitle_position(
+    bar: i32,
+    height: i32,
+    style: Option<&SubtitleStyle>,
+    (frame, placement): (Option<&SubtitleFrame>, &SubtitlePlacement),
+) -> f64 {
+    let controls = if height > 0 { f64::from(bar.max(0)) / f64::from(height) } else { 0.0 };
     let style = style.cloned().unwrap_or_default();
-    for option in mpv_subtitle_options(&style, None, lift) {
-        if option.name == "sub-pos" {
-            let _ = mpv.set(&option.name, &json!(option.value.parse::<f64>().unwrap_or(100.0)));
-        }
-    }
+    let lift = subtitle_lift(&style, None, controls, frame, placement);
+    mpv_subtitle_options(&style, None, lift)
+        .into_iter()
+        .find(|option| option.name == "sub-pos")
+        .and_then(|option| option.value.parse().ok())
+        .unwrap_or(100.0)
 }
 
 /// Every option that draws subtitles in `style`, the engine's own `mpv_subtitle_options`. Linux
@@ -596,6 +618,25 @@ pub fn style_subtitles(mpv: &Mpv, style: &SubtitleStyle, lift: f64) {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn subtitles_already_clear_of_the_bar_stay_put() {
+        let frame = SubtitleFrame { width: 1280.0, height: 720.0, ..SubtitleFrame::default() };
+        // A bar 90 px tall over 720: plain subtitles rise by all of it, as before.
+        let plain = subtitle_position(90, 720, None, (Some(&frame), &SubtitlePlacement::Plain));
+        assert_eq!(plain, 88.0);
+        // ASS placed high, 133 px up: nothing moves. Placed low: part of the way.
+        let high = SubtitlePlacement::Styled { margin: 200.0, play_height: 1080.0 };
+        assert_eq!(subtitle_position(90, 720, None, (Some(&frame), &high)), 100.0);
+        let low = SubtitlePlacement::Styled { margin: 90.0, play_height: 1080.0 };
+        let partly = subtitle_position(90, 720, None, (Some(&frame), &low));
+        assert!(partly > 88.0 && partly < 100.0, "{partly}");
+        // Not known yet: the whole bar.
+        assert_eq!(subtitle_position(90, 720, None, (None, &SubtitlePlacement::Unknown)), 88.0);
+        // The bar away: mpv's own place, with the viewer's raise.
+        let raised = SubtitleStyle { raise: 6, ..SubtitleStyle::default() };
+        assert_eq!(subtitle_position(0, 720, Some(&raised), (Some(&frame), &low)), 94.0);
+    }
 
     #[test]
     fn the_engines_marks_become_segments() {

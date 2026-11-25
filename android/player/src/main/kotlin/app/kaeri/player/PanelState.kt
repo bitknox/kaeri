@@ -1,0 +1,341 @@
+// What the player's Episodes and Sources panel draws from besides the engine's menus: the
+// episode's releases across every source, a switch to one of them as the engine says it goes, the
+// picture held over the video while the switch loads, and the words its rows share between the
+// phone and the TV (player panel board). After Apple's PanelState.swift.
+
+package app.kaeri.player
+
+import android.content.Context
+import android.graphics.Bitmap
+import android.text.format.DateFormat
+import app.kaeri.engine.core.SourceCandidate
+import app.kaeri.engine.model.EpisodeKind
+import app.kaeri.engine.model.EpisodeRow
+import app.kaeri.engine.model.ListingMiss
+import app.kaeri.engine.model.ListingState
+import app.kaeri.engine.model.Msg
+import app.kaeri.engine.model.SourceListing
+import app.kaeri.engine.model.SourceNote
+import app.kaeri.engine.model.SourceOption
+import app.kaeri.engine.model.SwitchTo
+import app.kaeri.i18n.Strings
+import app.kaeri.store.AirTime
+import app.kaeri.store.AppClock
+import app.kaeri.store.plainReason
+import java.time.Instant
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
+import java.util.Locale
+
+/** The panel's two tabs. It opens on Episodes. */
+enum class PanelTab { Episodes, Sources }
+
+/** What a switch of the playing episode goes to, by the ids the panel's rows carry. */
+data class SwitchTarget(
+    /** The source, as `SourceCandidate.providerId` names it; empty for a stream of the source playing. */
+    val providerId: String,
+    /** The name the source goes by. */
+    val name: String,
+    /** The release, by its `SourceCandidate.id`; null for a stream. */
+    val release: String? = null,
+    /** The stream, by its `MenuSource.id`; null for a release. */
+    val stream: String? = null,
+) {
+    constructor(to: SwitchTo) : this(to.providerId, to.name, to.release, to.stream)
+
+    /** The same row: a stream by its id, a release by its source and id. */
+    fun same(other: SwitchTarget): Boolean =
+        if (stream != null) stream == other.stream else other.stream == null && release == other.release && providerId == other.providerId
+}
+
+/**
+ * A switch picked in the panel, from the tap until it lands or fails. The row it was picked on
+ * shows it: nothing for 600 ms, then a spinner, then "Starting · 3 s"; a failure stays on the row
+ * until the next pick, with Try again.
+ */
+data class PanelSwitch(
+    val target: SwitchTarget,
+    val phase: Phase,
+    /** When it was picked, on the model's clock: what the row's wait counts from. */
+    val since: Long,
+    /** The release a switch was picked from, for Try again. */
+    val candidate: SourceCandidate? = null,
+) {
+    sealed interface Phase {
+        /** Sent, and the engine has said nothing yet. */
+        data object Asked : Phase
+        /** The release is being found; the episode plays on. */
+        data object Finding : Phase
+        /** Found and loading at the playhead; the picture is held. */
+        data object Loading : Phase
+        /** It did not start, and the episode plays on from what played before: the engine's line. */
+        data class Failed(val text: Msg) : Phase
+    }
+
+    /** Whether [target] is the row this switch was picked on. */
+    fun on(target: SwitchTarget): Boolean = this.target.same(target)
+
+    val failed: Msg? get() = (phase as? Phase.Failed)?.text
+
+    /** Whether the spinner shows at [now]: past the silent 600 ms, and not failed. */
+    fun spinning(now: Long): Boolean = failed == null && now - since >= SILENT
+
+    /** The whole seconds waited at [now], once "Starting · 3 s" takes the detail line's place; else null. */
+    fun counting(now: Long): Int? = if (failed == null && now - since >= COUNTING) ((now - since) / 1000).toInt() else null
+
+    companion object {
+        /** Waiting is silent this long: most switches land inside it. */
+        const val SILENT = 600L
+        /** "Starting · 3 s" from here. */
+        const val COUNTING = 3_000L
+    }
+}
+
+/**
+ * A switch to the other version, subtitled or dubbed, from the pick until it lands, or its failure
+ * until the next pick. The picked segment shows it: nothing for 600 ms, then a spinner, then
+ * "Finding episode 7 dubbed · 3 s" under the switch; the picture is held while it loads.
+ */
+data class VersionSwitch(
+    val to: app.kaeri.engine.core.Translation,
+    val phase: PanelSwitch.Phase,
+    /** When it was picked, on the model's clock. */
+    val since: Long,
+) {
+    val failed: Msg? get() = (phase as? PanelSwitch.Phase.Failed)?.text
+
+    /** Whether the segment's spinner shows at [now]: past the silent 600 ms, and not failed. */
+    fun spinning(now: Long): Boolean = failed == null && now - since >= PanelSwitch.SILENT
+
+    /** The whole seconds waited at [now], once the note shows under the switch; else null. */
+    fun counting(now: Long): Int? =
+        if (failed == null && now - since >= PanelSwitch.COUNTING) ((now - since) / 1000).toInt() else null
+
+    /** "Finding episode 7 dubbed · 3 s" at [now], from 3 s; else null. */
+    fun note(context: Context, episode: String, now: Long): String? = counting(now)?.let { seconds ->
+        if (to == app.kaeri.engine.core.Translation.DUB) {
+            Strings.playerFindingVersionSeconds(context, episode, seconds)
+        } else {
+            Strings.playerFindingVersionSubbedSeconds(context, episode, seconds)
+        }
+    }
+}
+
+/**
+ * The episode's releases across every source: the engine's answer to `LoadSources`, in the order
+ * the sources gave them, and each source's row while it is asked (`SourcesProgress`), drawn from
+ * the last one said.
+ */
+data class PanelReleases(
+    val id: app.kaeri.engine.core.AnilistId,
+    val episode: String,
+    val candidates: List<SourceCandidate>?,
+    /** When `LoadSources` went, on the model's clock: the rows are silent for 600 ms from here. */
+    val asked: Long = 0,
+    /** Every source's row, in the order set in Sources, as the engine last said them; null until the first. */
+    val rows: List<SourceListing>? = null,
+    /** When each row first said Asking, on the model's clock: what its seconds count from. */
+    val asking: Map<String, Long> = emptyMap(),
+    /**
+     * Why the engine asked no source for this episode (`SourcesFailed`): none is set up, the
+     * title's details could not be read, or the episode has not aired. Ends the loading.
+     */
+    val failed: Msg? = null,
+) {
+    /** One source's releases, in the order it gave them. */
+    fun of(providerId: String): List<SourceCandidate> {
+        val listed = rows?.firstOrNull { it.providerId == providerId }?.state as? ListingState.Listed
+        return listed?.releases ?: candidates.orEmpty().filter { it.providerId == providerId }
+    }
+
+    /** Whether any source is still asked: the rows keep time while one is. */
+    val busy: Boolean get() = !done && rows?.any { it.state is ListingState.Asking } == true
+
+    /** Whether the engine has ended this listing, with its answer or with why it asked no source: nothing counts on after it. */
+    val done: Boolean get() = candidates != null || failed != null
+
+    /** What [providerId]'s detail line says at [now]. */
+    fun line(providerId: String, now: Long): ListingLine {
+        val row = rows?.firstOrNull { it.providerId == providerId } ?: return ListingLine.Answered
+        if (row.state !is ListingState.Asking || done) return ListingLine.Answered
+        val since = asking[providerId] ?: asked
+        return when {
+            now - since >= PanelSwitch.COUNTING -> ListingLine.Counting
+            now - asked >= PanelSwitch.SILENT -> ListingLine.Asking
+            else -> ListingLine.Silent
+        }
+    }
+
+    /** The whole seconds [providerId] has been asked at [now], for "Asking · 4 s". */
+    fun seconds(providerId: String, now: Long): Int = ((now - (asking[providerId] ?: asked)) / 1000).toInt().coerceAtLeast(0)
+
+    /** The rows with what plays now left out: by its source when known, else by the name it goes by. */
+    fun others(playingProvider: String?, playingName: String?): List<SourceListing> = rows.orEmpty().filter {
+        if (playingProvider != null) it.providerId != playingProvider else it.name != playingName
+    }
+
+    /**
+     * The rows as the engine said them now, whole: a row's seconds count from the first time it
+     * said Asking. Rows said after an answer are a newer listing's, so that answer is let go.
+     */
+    fun said(rows: List<SourceListing>, now: Long): PanelReleases = copy(
+        rows = rows,
+        candidates = null,
+        failed = null,
+        asking = asking + rows.filter { it.state is ListingState.Asking && it.providerId !in asking }.associate { it.providerId to now },
+    )
+}
+
+/**
+ * What a source's detail line says while the Sources tab asks it: nothing for 600 ms, then a
+ * spinner and "Asking", then "Asking · 4 s" from 3 s; once it answered, its answer.
+ */
+enum class ListingLine { Silent, Asking, Counting, Answered }
+
+/**
+ * The picture on screen just before a switch loads, held over the video until the new stream's
+ * first frame, then crossfaded away: mpv clears its picture on `loadfile`.
+ */
+class HeldPicture(val bitmap: Bitmap, val serial: Int)
+
+/** The words the panel's rows share between the phone and the TV. */
+object PanelWords {
+    /** "E7", or the number as it is when it is not whole ("7.5", "OVA 2"). */
+    fun number(context: Context, number: String): String =
+        number.toIntOrNull()?.let { Strings.episodeNumberShort(context, it) } ?: number
+
+    /** The row's title: its own, or "Episode 11" while it has none. */
+    fun title(context: Context, row: EpisodeRow): String =
+        row.title?.takeIf { it.isNotBlank() } ?: Strings.episodeNumberPlain(context, row.number)
+
+    /** Whether the episode has not aired yet at [now], in Unix seconds. */
+    fun notOut(row: EpisodeRow, now: Long = AppClock.now().epochSecond): Boolean = row.airsAt?.let { it > now } == true
+
+    /**
+     * The row's one detail line, from the table's own fields: "Playing · 11 min left" on the
+     * playing row, else the kind, then airs, unsourced, watched, time left or length, and the
+     * source that fills it in.
+     */
+    fun detail(
+        context: Context,
+        row: EpisodeRow,
+        current: Boolean,
+        metadataOnly: Boolean,
+        position: Double,
+        duration: Double?,
+        now: Instant = AppClock.now(),
+    ): String {
+        if (current) {
+            val length = duration ?: row.durationSecs?.toDouble() ?: 0.0
+            val left = maxOf(1, Math.round((length - position) / 60).toInt())
+            return Strings.episodeRowPlaying(context, Strings.timeMinutesLeft(context, left))
+        }
+        val parts = mutableListOf<String>()
+        when (row.kind) {
+            EpisodeKind.FILLER -> parts += Strings.episodeFiller(context)
+            EpisodeKind.MIXED -> parts += Strings.episodeRowMixed(context)
+            else -> {}
+        }
+        val airs = row.airsAt
+        if (airs != null && airs > now.epochSecond) {
+            parts += Strings.episodeRowAirs(context, airsWords(context, Instant.ofEpochSecond(airs), now))
+            row.delayedFrom?.let { parts += Strings.episodeRowDelayed(context, airsWords(context, Instant.ofEpochSecond(it), now)) }
+            return parts.joinToString(" · ") // i18n-skip
+        }
+        if (row.unsourced && !metadataOnly) {
+            parts += Strings.episodeUnsourced(context)
+            return parts.joinToString(" · ") // i18n-skip
+        }
+        val seconds = row.durationSecs?.toDouble()
+        when {
+            row.completed -> parts += Strings.episodeWatched(context)
+            row.watched > 0 && !metadataOnly && seconds != null ->
+                parts += Strings.timeMinutesLeft(context, maxOf(1, Math.round(seconds * (1 - row.watched) / 60).toInt()))
+            seconds != null && seconds > 0 -> parts += Strings.episodeRowLength(context, maxOf(1, Math.round(seconds / 60).toInt()))
+        }
+        if (!metadataOnly) row.source?.let { parts += Strings.episodeRowFrom(context, it) }
+        return parts.joinToString(" · ") // i18n-skip
+    }
+
+    /** The silk line on the still: the playhead on the playing row, the history's on a started one. */
+    fun progress(row: EpisodeRow, current: Boolean, metadataOnly: Boolean, position: Double, duration: Double?): Float? {
+        if (metadataOnly) return null
+        if (current) {
+            val length = duration ?: row.durationSecs?.toDouble() ?: return null
+            return if (length > 0) (position / length).toFloat().coerceIn(0f, 1f) else null
+        }
+        return if (!row.completed && row.watched > 0) row.watched.toFloat().coerceIn(0f, 1f) else null
+    }
+
+    /**
+     * "1080p · 1.4 GiB · lantern-archive · Dubbed · Automatic picks this", from the release's own
+     * fields only. Each part keeps its words on one line.
+     */
+    fun release(context: Context, candidate: SourceCandidate): String {
+        val parts = mutableListOf<String>()
+        candidate.quality?.let { parts += "${it}p" } // i18n-skip
+        candidate.size?.let { parts += it }
+        candidate.label?.takeIf { it.isNotBlank() }?.let { parts += it }
+        if (candidate.dubbed) parts += Strings.audioDubbed(context) else if (candidate.dualAudio) parts += Strings.playerDualAudio(context)
+        if (candidate.autoPick) parts += Strings.playerReleaseAutomatic(context)
+        return parts.joinToString(" · ") { it.replace(' ', ' ') } // i18n-skip
+    }
+
+    /** A source's line: why it is resting, or how much of the title it has. */
+    fun source(context: Context, option: SourceOption): String = when (val note = option.note) {
+        null -> Strings.sourcePickerCoverage(context, option.covered.toInt(), option.of.toInt())
+        SourceNote.Off -> Strings.sourceNoteOff(context)
+        SourceNote.Resting -> Strings.sourceNoteResting(context)
+        SourceNote.Gone -> Strings.sourceNoteGone(context)
+        SourceNote.Ambiguous -> Strings.sourceNoteAmbiguous(context)
+        is SourceNote.Failed -> plainReason(context, note.reason)
+    }
+
+    /**
+     * A source's line in the Sources tab once it answered: how much of the title it has when it
+     * listed releases, else the starting screen's row words for why not, and "Switched off" for one
+     * never asked. Null while it is asked.
+     */
+    fun listing(context: Context, row: SourceListing, option: SourceOption?, episode: String): String? = when (val state = row.state) {
+        is ListingState.Asking -> null
+        // Its coverage, never an older note of it resting or failing.
+        is ListingState.Listed -> option?.takeIf { it.note == null }?.let { source(context, it) }
+            ?: state.releases.singleOrNull()?.let { release(context, it) }
+        is ListingState.Missed -> miss(context, state.miss, episode)
+        is ListingState.Off -> Strings.sourceNoteOff(context)
+    }
+
+    /** Why a source lists nothing for [episode], as a row says it under the source's name. */
+    fun miss(context: Context, miss: ListingMiss, episode: String): String = when (miss) {
+        is ListingMiss.NoMatch -> Strings.playerStartRowNoMatch(context)
+        is ListingMiss.Ambiguous -> Strings.sourceNoteAmbiguous(context)
+        is ListingMiss.NoEpisode -> Strings.playerStartRowNoEpisode(context, episode)
+        is ListingMiss.Failed -> Strings.playerStartRowFailed(context)
+        is ListingMiss.TimedOut -> Strings.playerStartRowTimedOut(context)
+        is ListingMiss.HeldBack -> heldNote(context, miss.why)
+    }
+
+    /**
+     * When a broadcast airs: "today at 16:30", "tomorrow at 16:30", "on Thursday at 16:30" within
+     * six days, and "on 29 Oct at 16:30" later, as the title page says it.
+     */
+    fun airsWords(
+        context: Context,
+        at: Instant,
+        now: Instant = AppClock.now(),
+        zone: ZoneId = AppClock.zone,
+        twentyFourHour: Boolean = DateFormat.is24HourFormat(context),
+        locale: Locale = Locale.getDefault(),
+    ): String {
+        val time = DateTimeFormatter.ofPattern(AirTime.bestPattern(if (twentyFourHour) "Hm" else "hm", if (twentyFourHour) "HH:mm" else "h:mm a"), locale).format(at.atZone(zone))
+        val day = at.atZone(zone).toLocalDate()
+        val days = ChronoUnit.DAYS.between(now.atZone(zone).toLocalDate(), day)
+        return when {
+            days == 0L -> Strings.causeAirsToday(context, time)
+            days == 1L -> Strings.causeAirsTomorrow(context, time)
+            days in 2..6 -> Strings.causeAirsOnDate(context, day.dayOfWeek.getDisplayName(java.time.format.TextStyle.FULL, locale), time)
+            else -> Strings.causeAirsOnDate(context, DateTimeFormatter.ofPattern(AirTime.bestPattern("dMMM", "d MMM"), locale).format(day), time)
+        }
+    }
+}

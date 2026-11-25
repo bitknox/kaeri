@@ -33,6 +33,8 @@ import app.kaeri.engine.core.Translation
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.test.onNodeWithContentDescription
+import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performClick
@@ -46,6 +48,11 @@ import app.kaeri.engine.model.DiscussionState
 import app.kaeri.engine.model.DiscussionView
 import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.Command
+import app.kaeri.engine.core.SourceCandidate
+import app.kaeri.engine.model.SourceListing
+import app.kaeri.engine.model.ListingState
+import app.kaeri.engine.model.ListingMiss
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.PostState
 import app.kaeri.ui.Destination
@@ -244,6 +251,76 @@ class PlayerShots {
         check(kotlin.math.abs(bounds.width / density - 360f) < 1f) { "the side sheet is 360 dp wide: ${bounds.width / density}" }
         check(bounds.right >= screen.right - 1f) { "the side sheet sits on the end edge" }
         check(bounds.height >= screen.height - 1f) { "the side sheet is as tall as the screen" }
+    }
+
+    /**
+     * The panel's Sources tab 4 s after it asked, on cellular (player panel board, Sources
+     * loading): every row from the first event, Example index held back from it with no spinner,
+     * Home server and Media folder answered, the slow two spinning and counting "Asking · 4 s".
+     */
+    @Test
+    fun phone_player_sources_loading() = shoot("phone-player-sources-loading", after = { sourcesAnswer(4_000) }) { model, _ ->
+        model.openPanel(app.kaeri.player.PanelTab.Sources)
+    }.also {
+        // Second example and Archive example, both still asked.
+        compose.onAllNodesWithText("Asking · 4 s", useUnmergedTree = true).assertCountEquals(2) // i18n-skip
+        compose.onNodeWithText("Not asked · Torrents are off on cellular", useUnmergedTree = true).assertExists() // i18n-skip
+        compose.onNodeWithText("Couldn't match this title", useUnmergedTree = true).assertExists() // i18n-skip
+        compose.onNodeWithTag("panel-asking-Archive example", useUnmergedTree = true).assertExists() // i18n-skip
+        compose.onNodeWithTag("panel-asking-Example index", useUnmergedTree = true).assertDoesNotExist() // i18n-skip
+        // A source still asked can't be picked: a tap on it sends nothing.
+        val before = sent.size
+        compose.onNodeWithTag("panel-choice-Second example").performClick() // i18n-skip
+        compose.waitForIdle()
+        check(sent.drop(before).none { it is Command.SwitchSource }) { "a source still asked sent a switch" }
+    }
+
+    /**
+     * The Sources tab's rows as the engine says them, from the first event at once until [at] ms
+     * after the tab asked, then scrolled down to the other sources.
+     */
+    private fun sourcesAnswer(at: Long) {
+        val asked = time
+        fun row(name: String, state: ListingState) = SourceListing(name.lowercase().replace(' ', '-'), name, state)
+        val held = ListingState.Missed(ListingMiss.HeldBack(app.kaeri.engine.model.SourceHold.CELLULAR))
+        val first = listOf(
+            row("Home server", ListingState.Asking), row("Example index", held), row("Media folder", ListingState.Asking), // i18n-skip
+            row("Second example", ListingState.Asking), row("Archive example", ListingState.Asking), row("Old example", ListingState.Off), // i18n-skip
+        )
+        // What each covers, as Sources says it: the coverage line of a source that lists releases.
+        val options = first.map {
+            app.kaeri.engine.model.SourceOption(
+                providerId = it.providerId, name = it.name, covered = 9u, of = 9u, pinned = false,
+                note = if (it.state is ListingState.Off) app.kaeri.engine.model.SourceNote.Off else null, releases = emptyList(),
+            )
+        }
+        compose.runOnUiThread {
+            store.apply(Event.SourceOptions(900_001u, options))
+            model.apply(Event.SourcesProgress(900_001u, "7", first))
+        }
+        val home = SourceCandidate(
+            id = "home-r1", providerId = "home-server", providerName = "Home server", title = "Episode 07 [1080p]", // i18n-skip
+            quality = 1080u, label = null, size = null, dualAudio = false, dubbed = false, autoPick = true,
+        )
+        val answers = listOf(
+            450L to ("Home server" to ListingState.Listed(listOf(home))), // i18n-skip
+            1_300L to ("Media folder" to ListingState.Missed(ListingMiss.Ambiguous)), // i18n-skip
+            6_200L to ("Archive example" to ListingState.Missed(ListingMiss.Failed)), // i18n-skip
+            20_000L to ("Second example" to ListingState.Missed(ListingMiss.TimedOut)), // i18n-skip
+        )
+        var rows = first
+        for ((after, answer) in answers.filter { it.first <= at }) {
+            time = asked + after
+            rows = rows.map { if (it.name == answer.first) it.copy(state = answer.second) else it }
+            val said = rows
+            compose.runOnUiThread { model.apply(Event.SourcesProgress(900_001u, "7", said)) }
+        }
+        time = asked + at
+        compose.runOnUiThread { model.poke() }
+        compose.waitForIdle()
+        compose.onNodeWithTag("panel-sources").performScrollToNode(androidx.compose.ui.test.hasTestTag("panel-choice-Archive example")) // i18n-skip
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
     }
 
     /** Stats for nerds on a phone held sideways, the controls up: compact, under the top bar's buttons, ending above the subtitles. */

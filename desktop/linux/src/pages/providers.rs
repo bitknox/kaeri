@@ -83,6 +83,12 @@ pub fn standing_words(row: &ProviderRow) -> Option<(String, &'static str)> {
         Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsOff) => {
             Some((t::sources_status_torrents_off(), "ring"))
         }
+        Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsStarting) => {
+            Some((t::sources_status_torrents_starting(), "ring"))
+        }
+        Standing::HeldBack if row.held_back_for == Some(HoldReason::TorrentsFailed) => {
+            Some((t::sources_status_torrents_failed(), "ring"))
+        }
         Standing::HeldBack => Some((t::sources_status_held_back(), "ring")),
         Standing::Off => Some((t::value_off(), "ring")),
         Standing::Slow => Some((t::sources_status_slow(), "haze")),
@@ -672,6 +678,25 @@ mod tests {
         assert_eq!(standing_words(&update), Some(("Update available".into(), "water")));
         let torrents = ProviderRow { torrents: true, ..row("a", "plugin") };
         assert!(origin(&torrents).ends_with(&t::sources_plays_torrents()));
+        let held = |why| ProviderRow {
+            held_back: true,
+            held_back_for: Some(why),
+            usable: false,
+            ..row("a", "plugin")
+        };
+        assert_eq!(
+            standing_words(&held(HoldReason::TorrentsOff)),
+            Some((t::sources_status_torrents_off(), "ring"))
+        );
+        assert_eq!(
+            standing_words(&held(HoldReason::TorrentsStarting)),
+            Some((t::sources_status_torrents_starting(), "ring")),
+            "on and starting is not off"
+        );
+        assert_eq!(
+            standing_words(&held(HoldReason::TorrentsFailed)),
+            Some((t::sources_status_torrents_failed(), "ring"))
+        );
     }
 
     #[test]

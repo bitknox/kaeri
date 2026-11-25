@@ -528,6 +528,10 @@ public class SourcesTests
         Assert.Equal(ProviderStanding.HeldBack, (Plugin("a") with { HeldBack = true }).Standing());
         Assert.Null(ProviderStanding.Working.StandingLine());
         Assert.Equal("Not answering", ProviderStanding.Failing.StandingLine());
+        var held = Plugin("a") with { HeldBack = true, HeldBackFor = HoldReason.TorrentsStarting };
+        Assert.Equal("Torrents starting", ProviderStanding.HeldBack.StandingLine(held));
+        Assert.Equal("Torrents off", ProviderStanding.HeldBack.StandingLine(held with { HeldBackFor = HoldReason.TorrentsOff }));
+        Assert.Equal("Torrents didn't start", ProviderStanding.HeldBack.StandingLine(held with { HeldBackFor = HoldReason.TorrentsFailed }));
     }
 }
 
@@ -1737,6 +1741,25 @@ public class SubtitleLiftTests
         Assert.Equal(50, SubtitleLift.Position(300, 400));
         Assert.Equal(SubtitleLift.Bottom, SubtitleLift.Position(0, 720));
         Assert.Equal(SubtitleLift.Bottom, SubtitleLift.Position(90, 0));
+    }
+
+    static readonly SubtitleStyle Style = new(100, SubtitleFont.Default, SubtitleColour.White, SubtitleEdge.Outline,
+        SubtitleThickness.Medium, SubtitleBackground.NoBackground, 75, 0, StyledSubtitles.Keep, true);
+    static readonly SubtitleFrame Filled = new(1280, 720, 0, 0, 0, 0);
+
+    [Fact]
+    public void TheyRiseOnlyAsFarAsTheyNeedTo()
+    {
+        // Plain subtitles rise by the whole bar, as before.
+        Assert.Equal(87.5, SubtitleLift.Position(90, 720, Style, null, Filled, new SubtitlePlacement.Plain()));
+        // ASS placed 133 px up already clears a 90 px bar: nothing moves.
+        Assert.Equal(SubtitleLift.Bottom, SubtitleLift.Position(90, 720, Style, null, Filled, new SubtitlePlacement.Styled(200, 1080)));
+        // Placed 60 px up: part of the way.
+        Assert.InRange(SubtitleLift.Position(90, 720, Style, null, Filled, new SubtitlePlacement.Styled(90, 1080)), 88, 99.9);
+        // Not known yet, or no style: the whole bar.
+        Assert.Equal(87.5, SubtitleLift.Position(90, 720, Style, null, null, null));
+        Assert.Equal(87.5, SubtitleLift.Position(90, 720, null, null, Filled, new SubtitlePlacement.Styled(200, 1080)));
+        Assert.Equal(SubtitleLift.Bottom, SubtitleLift.Position(0, 720, Style, null, Filled, new SubtitlePlacement.Plain()));
     }
 
     [Fact]

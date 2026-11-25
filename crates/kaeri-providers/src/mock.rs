@@ -43,6 +43,13 @@ pub struct MockProvider {
     no_dub: bool,
     streams_for: HashMap<ProviderKey, Vec<Stream>>,
     sources: Vec<SourceCandidate>,
+    /// How a listing of `sources` answers, apart from every other call: after how long, and
+    /// with which error in place of the list. See [`MockProvider::listing_after`].
+    sources_after: Duration,
+    sources_error: Option<ProviderError>,
+    /// The one episode whose listing waits and fails as `sources_after` and `sources_error`
+    /// say, when one is named: every other episode's releases answer at once.
+    sources_episode: Option<String>,
     /// What each release in `sources` resolves to, by its id, for a pick by hand.
     source_streams: HashMap<String, Vec<Stream>>,
     error: Option<ProviderError>,
@@ -76,6 +83,9 @@ impl MockProvider {
             no_dub: false,
             streams_for: HashMap::new(),
             sources: Vec::new(),
+            sources_after: Duration::ZERO,
+            sources_error: None,
+            sources_episode: None,
             source_streams: HashMap::new(),
             error: None,
             unavailable: None,
@@ -166,6 +176,24 @@ impl MockProvider {
         self
     }
 
+    /// Answer a listing of the releases (`sources`) only after `wait`, and with `error` in
+    /// place of the list when one is given. Searches and every other call answer as they
+    /// otherwise would, so a source can match a title at once and then be slow, or fail, to
+    /// list an episode's releases.
+    pub fn listing_after(mut self, wait: Duration, error: Option<ProviderError>) -> Self {
+        self.sources_after = wait;
+        self.sources_error = error;
+        self
+    }
+
+    /// Keep [`MockProvider::listing_after`]'s wait and error to listings of `episode`, so a
+    /// look at another episode's releases, as the source picker's coverage takes, answers at
+    /// once.
+    pub fn listing_after_only_for(mut self, episode: &str) -> Self {
+        self.sources_episode = Some(episode.to_owned());
+        self
+    }
+
     /// Answer `resolve_source` for the release `source_id` with these, whatever the key and the
     /// episode. A release not named here is refused, as the trait's default refuses every one.
     pub fn with_source_streams(mut self, source_id: &str, streams: Vec<Stream>) -> Self {
@@ -220,7 +248,7 @@ impl MockProvider {
 
     async fn record(&self) -> Result<(), ProviderError> {
         if !self.latency.is_zero() {
-            tokio::time::sleep(self.latency).await;
+            crate::still::wait(self.latency).await;
         }
         self.calls.fetch_add(1, Ordering::SeqCst);
         match &self.error {
@@ -268,7 +296,7 @@ impl Provider for MockProvider {
         {
             let taken = turns.taken.fetch_add(1, Ordering::SeqCst);
             let (latency, episodes) = &turns.turns[taken.min(turns.turns.len() - 1)];
-            tokio::time::sleep(*latency).await;
+            crate::still::wait(*latency).await;
             self.record().await?;
             return Ok(episodes.clone());
         }
@@ -299,11 +327,18 @@ impl Provider for MockProvider {
     async fn sources(
         &self,
         _key: &ProviderKey,
-        _episode: &str,
+        episode: &str,
         _translation: Translation,
     ) -> Result<Vec<SourceCandidate>, ProviderError> {
+        let held = self.sources_episode.as_deref().is_none_or(|held| held == episode);
+        if held && !self.sources_after.is_zero() {
+            tokio::time::sleep(self.sources_after).await;
+        }
         self.record().await?;
-        Ok(self.sources.clone())
+        match &self.sources_error {
+            Some(error) if held => Err(error.clone()),
+            _ => Ok(self.sources.clone()),
+        }
     }
 
     async fn resolve_source(

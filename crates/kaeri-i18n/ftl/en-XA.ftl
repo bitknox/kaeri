@@ -406,6 +406,15 @@ notice-audio-now-subbed = [Åüðîö îš ñöŵ šüƀƀéð.~~~~~~]
 # Toast after switching the audio while playing.
 notice-audio-now-dubbed = [Åüðîö îš ñöŵ ðüƀƀéð.~~~~~~]
 
+# Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+player-panel-switch-failed = [Çöüļðñ'ţ šţàŕţ ƒŕöɱ { $source }. Šţîļļ þļàýîñĝ ƒŕöɱ { $current }.~~~~~~~~~~~~~~~]
+
+# Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+player-panel-dub-failed = [Çöüļðñ'ţ ƒîñð éþîšöðé { $episode } ðüƀƀéð. Šţîļļ þļàýîñĝ šüƀƀéð.~~~~~~~~~~~~~~~~~]
+
+# Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+player-panel-sub-failed = [Çöüļðñ'ţ ƒîñð éþîšöðé { $episode } šüƀƀéð. Šţîļļ þļàýîñĝ ðüƀƀéð.~~~~~~~~~~~~~~~~~]
+
 # Toast when the previous-episode control is used on the first episode.
 notice-already-first-episode = [Åļŕéàðý àţ ţĥé ƒîŕšţ éþîšöðé.~~~~~~~~~]
 
@@ -1976,6 +1985,9 @@ discussion-like-named =
         [one] [Ļîķé, öñé ļîķé~~~~~]
        *[other] [Ļîķé, { $count } ļîķéš~~~~~]
     }
+
+# Player panel, Sources tab: part of a release's detail line, a release with both the original and the dubbed audio.
+player-panel-release-dual-audio = [Šüƀƀéð àñð ðüƀƀéð~~~~~~]
 
 # Chip inside the invite field once an invite link is pasted: the invite's code, hidden but for its last four characters.
 linux-store-invite-chip = [Îñṽîţé ••••{ $last }~~~~~]
@@ -8977,6 +8989,9 @@ player-start-pinned = [Ýöüŕ þîçķ ƒöŕ ţĥîš šĥöŵ~~~~~~~]
 # Detail line when a source has no match for the show.
 player-start-miss-no-match = [{ $name } ðöéšñ'ţ ĥàṽé ţĥîš šĥöŵ~~~~~~~~]
 
+# Detail line when a source found titles like the show and could not tell which one it is.
+player-start-miss-ambiguous = [{ $name } çöüļðñ'ţ ɱàţçĥ ţĥîš ţîţļé~~~~~~~~~]
+
 # Detail line when a source has the show and not the episode. The episode is its label.
 player-start-miss-no-episode = [{ $name } ðöéšñ'ţ ĥàṽé éþîšöðé { $episode }~~~~~~~~~]
 
@@ -8994,6 +9009,12 @@ player-start-miss-skipped = [Ýöü šķîþþéð { $name }~~~~~]
 
 # Details row for a source not asked while torrent playback is off. The name goes before it.
 player-start-row-held-torrents-off = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~]
+
+# Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+player-start-row-held-torrents-starting = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ îš šţàŕţîñĝ~~~~~~~~~~~~]
+
+# Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+player-start-row-held-torrents-failed = [Ñöţ àšķéð · Ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ~~~~~~~~~~~~~]
 
 # Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
 player-start-row-held-proxy = [Ñöţ àšķéð · Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~~~~~~~~~]
@@ -9113,6 +9134,20 @@ player-start-not-asked-torrents-off =
     { $count ->
         [one] [{ $names } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~]
        *[other] [{ $names } àŕéñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ.~~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+player-start-not-asked-torrents-starting =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~]
+    }
+
+# Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+player-start-not-asked-torrents-failed =
+    { $count ->
+        [one] [{ $names } îšñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ.~~~~~~~~~~~~~~~~~]
+       *[other] [{ $names } àŕéñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ.~~~~~~~~~~~~~~~~~~]
     }
 
 # Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -9534,6 +9569,12 @@ source-picker-none-answered-lists = [Ñö šöüŕçé ţĥàţ àñšŵéŕéð
 # Line of the picker for a source not asked while torrent playback is off.
 source-picker-held-torrents-off = [{ $name } îšñ'ţ àšķéð ŵĥîļé ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~~~~~~~~]
 
+# Line of the picker for a source not asked while torrent playback is on and still starting.
+source-picker-held-torrents-starting = [{ $name } îšñ'ţ àšķéð üñţîļ ţöŕŕéñţ þļàýƀàçķ ĥàš šţàŕţéð~~~~~~~~~~~~~~~]
+
+# Line of the picker for a source not asked because torrent playback is on and couldn't start.
+source-picker-held-torrents-failed = [{ $name } îšñ'ţ àšķéð ƀéçàüšé ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ~~~~~~~~~~~~~~~~~]
+
 # Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
 source-picker-held-proxy = [{ $name } îšñ'ţ àšķéð üñţîļ ţĥé þŕöẋý çĥéçķ þàššéš~~~~~~~~~~~~~~]
 
@@ -9593,6 +9634,82 @@ player-subs-bg-box = [Ɓöẋ~]
 
 # Button in the subtitles panel that opens Settings.
 player-subs-more = [Ṁöŕé îñ Šéţţîñĝš…~~~~~~]
+
+# Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+player-sheet-episodes-loading = [Ţĥé éþîšöðé ļîšţ îš öñ îţš ŵàý.~~~~~~~~~~]
+
+# Accessibility label of the player's side panel with the Episodes and Sources tabs.
+player-panel = [Éþîšöðéš àñð šöüŕçéš~~~~~~]
+
+# Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+episode-row-playing = [Þļàýîñĝ · { $left }~~~~]
+
+# Episode row in the player's panel: the episode is part story, part filler.
+episode-row-mixed = [Ṁîẋéð~~]
+
+# Episode row in the player's panel: the length of an episode nobody has started.
+episode-row-length = [{ $minutes } ɱîñ~~~]
+
+# Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+episode-row-delayed = [Ðéļàýéð, ŵàš { $when }~~~~~]
+
+# Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+episode-row-from = [Ƒŕöɱ { $source }~~~]
+
+# Button on a partly watched episode: plays it from where it was left.
+action-resume = [Ŕéšüɱé~~]
+
+# Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+player-panel-metadata-only = [Ñö šöüŕçé ļîšţš ţĥîš šĥöŵ ýéţ. Éþîšöðéš çàñ šţîļļ ƀé ɱàŕķéð ŵàţçĥéð.~~~~~~~~~~~~~~~~~~~~~]
+
+# Player panel, Sources tab: heading over the source and streams playing now.
+player-panel-playing-now = [Þļàýîñĝ ñöŵ~~~~]
+
+# Player panel, Sources tab: heading over the other sources, in the order they are tried.
+player-panel-other-sources = [Öţĥéŕ šöüŕçéš~~~~]
+
+# Player panel, Sources tab: the folded list of a source's releases for this episode.
+player-panel-releases =
+    { $count ->
+        [one] [Öñé ŕéļéàšé~~~~]
+       *[other] [{ $count } ŕéļéàšéš~~~~]
+    }
+
+# Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+player-release-automatic = [Åüţöɱàţîç þîçķš ţĥîš~~~~~~]
+
+# Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+player-panel-order = [Ţŕîéð îñ ţĥé öŕðéŕ šéţ îñ Šöüŕçéš.~~~~~~~~~~~]
+
+# Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+player-panel-pick-scope = [Å þîçķ ĥéŕé îš ƒöŕ ţĥîš éþîšöðé öñļý.~~~~~~~~~~~~]
+
+# Accessibility label of the subtitled or dubbed switch in the player panel.
+player-translation = [Šüƀƀéð öŕ ðüƀƀéð~~~~~]
+
+# Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+player-panel-starting = [Šţàŕţîñĝ · { $seconds } š~~~~~]
+
+# Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.
+player-panel-asking = [Åšķîñĝ · { $seconds } š~~~~~]
+
+# Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-seconds = [Ƒîñðîñĝ éþîšöðé { $episode } ðüƀƀéð · { $seconds } š~~~~~~~~~~~]
+
+# Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+player-finding-version-subbed-seconds = [Ƒîñðîñĝ éþîšöðé { $episode } šüƀƀéð · { $seconds } š~~~~~~~~~~~]
+
+# Notice when another source started playing while the player panel was closed.
+notice-playing-from-source = [Þļàýîñĝ ƒŕöɱ { $source } àţ { $clock }~~~~~~~]
+
+# Player panel, under the subtitled or dubbed switch during a watch party.
+party-version-own = [Öñļý ýöüŕ þļàýéŕ šŵîţçĥéš. Ţĥé ŕööɱ ķééþš þļàýîñĝ.~~~~~~~~~~~~~~~]
+
+# Player panel: button under a synopsis cut to three lines, that shows it whole.
+player-panel-more = [Ṁöŕé~~]
+
+# Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+player-panel-less = [Ļéšš~~]
 
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = [Þŕîṽàţé ɱöðé~~~~]
@@ -13405,6 +13522,12 @@ source-note-held-back = [Ŵàîţîñĝ ƒöŕ ţĥé þŕöẋý çĥéçķ~~~~
 # Under a source that names torrents while torrent playback is off in Settings.
 source-note-torrents-off = [Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ~~~~~~~]
 
+# Under a source that names torrents while torrent playback is on and still starting.
+source-note-torrents-starting = [Ţöŕŕéñţš àŕé šţàŕţîñĝ~~~~~~~]
+
+# Under a source that names torrents while torrent playback is on and couldn't start.
+source-note-torrents-failed = [Ţöŕŕéñţš çöüļðñ'ţ šţàŕţ~~~~~~~]
+
 # Heading over one source's releases, for a source that offers several (a batch, single episodes).
 source-picker-releases = [Ŕéļéàšéš~~~]
 
@@ -13474,6 +13597,12 @@ sources-status-held-back = [Ĥéļð ƀàçķ~~~]
 # Status: a source that names torrents, while torrent playback is off.
 sources-status-torrents-off = [Ţöŕŕéñţš öƒƒ~~~~]
 
+# Status: a source that names torrents, while torrent playback is on and still starting.
+sources-status-torrents-starting = [Ţöŕŕéñţš šţàŕţîñĝ~~~~~~]
+
+# Status: a source that names torrents, while torrent playback is on and couldn't start.
+sources-status-torrents-failed = [Ţöŕŕéñţš ðîðñ'ţ šţàŕţ~~~~~~~]
+
 # Status: slow.
 sources-status-slow = [Šļöŵ~~]
 
@@ -13491,6 +13620,12 @@ sources-detail-held-back = [Ŵàîţîñĝ üñţîļ ţĥé þŕöẋý çĥé�
 
 # Status line: torrent playback is off.
 sources-detail-torrents-off = [Ţöŕŕéñţ þļàýƀàçķ îš öƒƒ. Ýöü çàñ ţüŕñ îţ öñ îñ Šéţţîñĝš, üñðéŕ Šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status line: torrent playback is on and still starting.
+sources-detail-torrents-starting = [Ţöŕŕéñţ þļàýƀàçķ îš šţàŕţîñĝ. Ţĥîš šöüŕçé îš àšķéð öñçé îţ ĥàš šţàŕţéð.~~~~~~~~~~~~~~~~~~~~~~]
+
+# Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+sources-detail-torrents-failed = [Ţöŕŕéñţ þļàýƀàçķ çöüļðñ'ţ šţàŕţ. Îţ ţŕîéš àĝàîñ ŵĥéñ Ķàéŕî öþéñš öŕ à ţöŕŕéñţ šéţţîñĝ çĥàñĝéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Status line: disabled.
 sources-detail-disabled = [Öƒƒ. Îţ ķééþš îţš þļàçé àñð îšñ'ţ ţŕîéð.~~~~~~~~~~~~]

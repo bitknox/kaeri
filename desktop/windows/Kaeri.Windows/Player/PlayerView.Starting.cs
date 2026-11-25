@@ -45,8 +45,6 @@ public sealed partial class PlayerView
     bool startArtLoaded, startGroundKnown;
     /// <summary>The column's height when the start began, Details closed: where its top goes.</summary>
     double startColumnHeight;
-    /// <summary>A screenshot run's: the screen frozen at this moment.</summary>
-    TimeSpan? startFrozen;
     /// <summary>
     /// When the next episode was asked for by Up next (Play now or the countdown) or the engine
     /// said it rolls on: the start that follows is a roll-on, whose screen waits 600 ms.
@@ -65,7 +63,7 @@ public sealed partial class PlayerView
     /// <summary>Whether a start is on screen: its alert is the failure screen's to say.</summary>
     internal bool IsStarting => startingShown && start is not null;
 
-    TimeSpan StartElapsed => startFrozen ?? Stopwatch.GetElapsedTime(startingFrom);
+    TimeSpan StartElapsed => StartClock.Since(startingFrom);
 
     // What the engine says.
 
@@ -75,6 +73,9 @@ public sealed partial class PlayerView
         {
             case Event.PlaybackStaged st:
                 staged = (st.Id, st.Episode, st.Resume);
+                // The episode started again, as it does in the other version when nothing played
+                // yet: no switch of it is on its way.
+                panel.Restarted();
                 if (RollOnAsked)
                     rollOnFrom ??= Stopwatch.GetTimestamp();
                 if (start is { } open && open.Id == st.Id && open.Episode == st.Episode)
@@ -142,7 +143,6 @@ public sealed partial class PlayerView
         startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
         if (ctx is not null)
             ctx.Known.DemoPlay = false;
-        startFrozen = null;
         startFailedSaid = false;
         StartingShow.Text = s.Title;
         StartingEpisode.Text = Lines.EpisodeNamed(s.EpisodeValue, s.EpisodeTitle);
@@ -266,7 +266,7 @@ public sealed partial class PlayerView
     {
         startingShown = true;
         ShowPointer();
-        startingFrom = Stopwatch.GetTimestamp();
+        startingFrom = StartClock.Now();
         if (movingOn || startOverPicture)
         {
             // Moving on to the next episode, or any start over a playing picture: the last frame
@@ -947,10 +947,11 @@ public sealed partial class PlayerView
 #if KAERI_TESTING
     /// <summary>
     /// <c>--show=starting-&lt;state&gt;[-details][-beginning][-&lt;seconds&gt;][-reduced]</c>: the engine's made-up start in that
-    /// state (the names of <see cref="StartingFixture"/>, kebab-cased), played on its own clock, or
-    /// with a number of seconds frozen at that moment for a screenshot. With <c>-details</c>,
-    /// Details opens 5 s in, as the viewer opens it; with <c>-beginning</c>, Play from the beginning is
-    /// pressed 4 s in, from the keyboard, so focus moves on.
+    /// state (the names of <see cref="StartingFixture"/>, kebab-cased), played on the wall clock, or,
+    /// with a number of seconds (or <c>--still=&lt;seconds&gt;</c>), held still at that moment for a
+    /// screenshot: see <see cref="StartStill"/>. With <c>-details</c>, Details opens 5 s in, as the
+    /// viewer opens it; with <c>-beginning</c>, Play from the beginning is pressed 4 s in, from the
+    /// keyboard, so focus moves on.
     /// </summary>
     internal async Task StartDemo(string what)
     {
@@ -980,6 +981,8 @@ public sealed partial class PlayerView
             freeze = seconds;
             rest = rest[..cut];
         }
+        else if (Options.StillSeconds(ctx?.Options.Still) is { } still)
+            freeze = still;
         var beginning = rest.EndsWith("-beginning", StringComparison.Ordinal);
         if (beginning)
             rest = rest[..^"-beginning".Length];
@@ -1015,41 +1018,106 @@ public sealed partial class PlayerView
         if (state is not { } fixture)
             return;
         startingHeld = true;
-        // The player opens for the start as the engine's PlayerUi.Starting makes it, with the art of
-        // the scene's first title.
-        var art = ctx?.Known.Entries.Values.FirstOrDefault();
-        Heard([new Event.PlayerUi(1, new PlayerUi.Starting(900_001, "The Lamp Road", "7", "The Lamp Seller", art?.CoverUrl, art?.BannerUrl))]);
-        if (details && freeze is null)
-            _ = OpenDetailsLater();
-        if (beginning && freeze is null)
-            _ = FromBeginningLater();
         var events = KaeriFfiMethods.StartingFixture(fixture);
+        if (freeze is { } at)
+        {
+            StartStill(events, at, details);
+            return;
+        }
+        OpenStartDemo();
+        if (details)
+            _ = OpenDetailsLater();
+        if (beginning)
+            _ = FromBeginningLater();
         var began = Stopwatch.GetTimestamp();
         foreach (var item in events.OrderBy(e => e.AtMs))
         {
-            if (freeze is { } f)
-            {
-                if (item.AtMs > f * 1000)
-                    break;
-                // Said at its own moment on the screen's clock.
-                if (start is not null)
-                    startingFrom = Stopwatch.GetTimestamp() - (long)(item.AtMs / 1000.0 * Stopwatch.Frequency);
-                Heard([item.Event]);
-                continue;
-            }
             var wait = TimeSpan.FromMilliseconds(item.AtMs) - Stopwatch.GetElapsedTime(began);
             if (wait > TimeSpan.Zero)
                 await Task.Delay(wait);
             Heard([item.Event]);
         }
-        if (freeze is { } at)
+    }
+
+    /// <summary>
+    /// The player opens for the start as the engine's PlayerUi.Starting makes it, with the art of
+    /// the scene's first title.
+    /// </summary>
+    void OpenStartDemo()
+    {
+        var art = ctx?.Known.Entries.Values.FirstOrDefault();
+        Heard([new Event.PlayerUi(1, new PlayerUi.Starting(900_001, "The Lamp Road", "7", "The Lamp Seller", art?.CoverUrl, art?.BannerUrl))]);
+    }
+
+    /// <summary>
+    /// A still shot of the made-up start at <paramref name="at"/> seconds, on the engine's still
+    /// clock, which the screen's seconds read (<see cref="StartClock"/>): the clock is turned on at
+    /// the start's nought, held at each event's moment as the event is said, then held at the shot's
+    /// moment, so the screen says what it says that long in at once and the same on every run. Only
+    /// motion runs on the wall clock: the shot is ready once it settles, about 1.5 s on, when the
+    /// log says so.
+    /// </summary>
+    void StartStill(IEnumerable<FixtureEvent> events, double at, bool details)
+    {
+        // Turned on by this hold, at nought. A scene held by KAERI_STILL_AT already runs on it: the
+        // hold sends that clock on to its moment first, and the start counts from there.
+        KaeriFfiMethods.TestingStillClockHold(KaeriFfiMethods.TestingStillClockNowMs() ?? 0);
+        var nought = KaeriFfiMethods.TestingStillClockNowMs() ?? 0;
+        var moment = (ulong)Math.Round(at * 1000);
+        OpenStartDemo();
+        foreach (var item in events.OrderBy(e => e.AtMs))
         {
-            startFrozen = TimeSpan.FromSeconds(at);
-            startTick?.Stop();
-            if (details && start is { } s)
-                s.DetailsOpen = true;
+            if (item.AtMs > moment)
+                break;
+            StepStill(nought, item.AtMs);
+            Heard([item.Event]);
+        }
+        StepStill(nought, moment);
+        if (details && start is { } s)
+            s.DetailsOpen = true;
+        RefreshStart();
+        var shown = StartElapsed;
+        _ = SettledLater(at, shown);
+    }
+
+    /// <summary>
+    /// The still clock stepped on to <paramref name="ms"/> into the start, through each moment on
+    /// the way where a step line waiting out the last one's hold takes its place, as the wall
+    /// clock would pass it: the screen ticks at each.
+    /// </summary>
+    void StepStill(ulong nought, ulong ms)
+    {
+        for (var i = 0; i < 64 && start?.ReleaseAt is { } release; i++)
+        {
+            var due = (ulong)Math.Max(0, Math.Ceiling(release.TotalMilliseconds));
+            if (due >= ms)
+                break;
+            HoldStill(nought + due);
             RefreshStart();
         }
+        HoldStill(nought + ms);
+        RefreshStart();
+    }
+
+    /// <summary>
+    /// The still clock held at <paramref name="ms"/>. It reaches the hold at once with nothing of
+    /// the scene's own waiting on it, else within a few of its 25 ms rests per wait: this waits for
+    /// that, at most a second.
+    /// </summary>
+    static void HoldStill(ulong ms)
+    {
+        KaeriFfiMethods.TestingStillClockHold(ms);
+        var until = Stopwatch.GetTimestamp() + Stopwatch.Frequency;
+        while ((KaeriFfiMethods.TestingStillClockNowMs() ?? ms) < ms && Stopwatch.GetTimestamp() < until)
+            Thread.Sleep(5);
+    }
+
+    async Task SettledLater(double at, TimeSpan shown)
+    {
+        // The crossfades (0.6 s apart at most) and the arrivals' fade-ins have run by then.
+        await Task.Delay(TimeSpan.FromSeconds(1.5));
+        KaeriFfiMethods.LogLine(FfiLogLevel.Info, "windows",
+            $"still start at {at.ToString(CultureInfo.InvariantCulture)} s: settled, the screen reads {shown.TotalSeconds.ToString("0.0", CultureInfo.InvariantCulture)} s");
     }
 
     async Task FromBeginningLater()

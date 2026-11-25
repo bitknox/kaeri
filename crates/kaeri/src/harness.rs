@@ -865,6 +865,8 @@ pub fn name(update: &Event) -> &'static str {
         Event::MatchFixFailed { .. } => "MatchFixFailed",
         Event::TitleMatch { .. } => "TitleMatch",
         Event::Sources { .. } => "Sources",
+        Event::SourcesProgress { .. } => "SourcesProgress",
+        Event::SourcesFailed { .. } => "SourcesFailed",
         Event::SourceOptions { .. } => "SourceOptions",
         Event::PinUnavailable { .. } => "PinUnavailable",
         Event::PlaybackVolume(_) => "PlaybackVolume",
@@ -893,6 +895,7 @@ pub fn name(update: &Event) -> &'static str {
         Event::Resumed { .. } => "Resumed",
         Event::PlayerOps { .. } => "PlayerOps",
         Event::PlayerUi { .. } => "PlayerUi",
+        Event::PlayerSwitch { .. } => "PlayerSwitch",
         Event::PlayerTimeline { .. } => "PlayerTimeline",
         Event::PlayerBuffered { .. } => "PlayerBuffered",
         Event::PlayerStats { .. } => "PlayerStats",
@@ -1093,6 +1096,12 @@ fn copy(update: &Event) -> Event {
             candidates: candidates.clone(),
             missed: missed.clone(),
         },
+        Event::SourcesProgress { id, episode, rows } => {
+            Event::SourcesProgress { id: *id, episode: episode.clone(), rows: rows.clone() }
+        }
+        Event::SourcesFailed { id, episode, why } => {
+            Event::SourcesFailed { id: *id, episode: episode.clone(), why: why.clone() }
+        }
         Event::PinUnavailable { id, provider_id, name } => Event::PinUnavailable {
             id: *id,
             provider_id: provider_id.clone(),
@@ -1176,6 +1185,9 @@ fn copy(update: &Event) -> Event {
         }
         Event::PlayerUi { playback, ui } => {
             Event::PlayerUi { playback: *playback, ui: ui.clone() }
+        }
+        Event::PlayerSwitch { playback, state } => {
+            Event::PlayerSwitch { playback: *playback, state: state.clone() }
         }
         Event::PlayerTimeline { playback, marks } => {
             Event::PlayerTimeline { playback: *playback, marks: marks.clone() }

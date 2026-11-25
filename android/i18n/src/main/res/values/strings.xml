@@ -274,6 +274,12 @@
     <string name="notice_audio_now_subbed">Audio is now subbed.</string>
     <!-- Toast after switching the audio while playing. -->
     <string name="notice_audio_now_dubbed">Audio is now dubbed.</string>
+    <!-- Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source. -->
+    <string name="player_panel_switch_failed">Couldn\'t start from %1$s. Still playing from %2$s.</string>
+    <!-- Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled. -->
+    <string name="player_panel_dub_failed">Couldn\'t find episode %1$s dubbed. Still playing subbed.</string>
+    <!-- Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed. -->
+    <string name="player_panel_sub_failed">Couldn\'t find episode %1$s subbed. Still playing dubbed.</string>
     <!-- Toast when the previous-episode control is used on the first episode. -->
     <string name="notice_already_first_episode">Already at the first episode.</string>
     <!-- Toast when the next-episode control is used on the last known episode. -->
@@ -2585,8 +2591,6 @@
     <string name="player_sheet_finding">Finding sources…</string>
     <!-- Player, sources sheet: shown when no source has the episode. -->
     <string name="player_sheet_none">No sources found for this episode.</string>
-    <!-- Player, episodes sheet: shown before the list arrives. -->
-    <string name="player_sheet_episodes_loading">The episode list is on its way.</string>
     <!-- Player, sources sheet: a stream with both languages. -->
     <string name="player_dual_audio">Subbed and dubbed</string>
     <!-- Notification, new episodes: the summary's title when several shows have a new episode. -->
@@ -4657,6 +4661,8 @@
     <string name="player_start_pinned">Your pick for this show</string>
     <!-- Detail line when a source has no match for the show. -->
     <string name="player_start_miss_no_match">%1$s doesn\'t have this show</string>
+    <!-- Detail line when a source found titles like the show and could not tell which one it is. -->
+    <string name="player_start_miss_ambiguous">%1$s couldn\'t match this title</string>
     <!-- Detail line when a source has the show and not the episode. The episode is its label. -->
     <string name="player_start_miss_no_episode">%1$s doesn\'t have episode %2$s</string>
     <!-- Detail line when the show is pinned to a source that does not have the episode yet, and the next source plays it. -->
@@ -4669,6 +4675,10 @@
     <string name="player_start_miss_skipped">You skipped %1$s</string>
     <!-- Details row for a source not asked while torrent playback is off. The name goes before it. -->
     <string name="player_start_row_held_torrents_off">Not asked · Torrent playback is off</string>
+    <!-- Details row for a source not asked because torrent playback is on and still starting. The name goes before it. -->
+    <string name="player_start_row_held_torrents_starting">Not asked · Torrent playback is starting</string>
+    <!-- Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it. -->
+    <string name="player_start_row_held_torrents_failed">Not asked · Torrent playback couldn\'t start</string>
     <!-- Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it. -->
     <string name="player_start_row_held_proxy">Not asked · Waiting for the proxy check</string>
     <!-- Details row for a source not asked on cellular, where torrents are off. The name goes before it. -->
@@ -4749,6 +4759,16 @@
     <plurals name="player_start_not_asked_torrents_off">
         <item quantity="one">%2$s isn\'t asked while torrent playback is off.</item>
         <item quantity="other">%2$s aren\'t asked while torrent playback is off.</item>
+    </plurals>
+    <!-- Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app. -->
+    <plurals name="player_start_not_asked_torrents_starting">
+        <item quantity="one">%2$s isn\'t asked until torrent playback has started.</item>
+        <item quantity="other">%2$s aren\'t asked until torrent playback has started.</item>
+    </plurals>
+    <!-- Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app. -->
+    <plurals name="player_start_not_asked_torrents_failed">
+        <item quantity="one">%2$s isn\'t asked because torrent playback couldn\'t start.</item>
+        <item quantity="other">%2$s aren\'t asked because torrent playback couldn\'t start.</item>
     </plurals>
     <!-- Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app. -->
     <plurals name="player_start_not_asked_proxy">
@@ -5023,6 +5043,10 @@
     <string name="source_picker_none_answered_lists">No source that answered lists episode %1$s.</string>
     <!-- Line of the picker for a source not asked while torrent playback is off. -->
     <string name="source_picker_held_torrents_off">%1$s isn\'t asked while torrent playback is off</string>
+    <!-- Line of the picker for a source not asked while torrent playback is on and still starting. -->
+    <string name="source_picker_held_torrents_starting">%1$s isn\'t asked until torrent playback has started</string>
+    <!-- Line of the picker for a source not asked because torrent playback is on and couldn't start. -->
+    <string name="source_picker_held_torrents_failed">%1$s isn\'t asked because torrent playback couldn\'t start</string>
     <!-- Line of the picker for a source not asked while the proxy check for torrents hasn't passed. -->
     <string name="source_picker_held_proxy">%1$s isn\'t asked until the proxy check passes</string>
     <!-- Line of the picker for a source not asked on cellular, where torrents are off. -->
@@ -5063,6 +5087,57 @@
     <string name="player_subs_bg_box">Box</string>
     <!-- Button in the subtitles panel that opens Settings. -->
     <string name="player_subs_more">More in Settings…</string>
+    <!-- Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives. -->
+    <string name="player_sheet_episodes_loading">The episode list is on its way.</string>
+    <!-- Accessibility label of the player's side panel with the Episodes and Sources tabs. -->
+    <string name="player_panel">Episodes and sources</string>
+    <!-- Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left. -->
+    <string name="episode_row_playing">Playing · %1$s</string>
+    <!-- Episode row in the player's panel: the episode is part story, part filler. -->
+    <string name="episode_row_mixed">Mixed</string>
+    <!-- Episode row in the player's panel: the length of an episode nobody has started. -->
+    <string name="episode_row_length">%1$,d min</string>
+    <!-- Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it. -->
+    <string name="episode_row_delayed">Delayed, was %1$s</string>
+    <!-- Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one. -->
+    <string name="episode_row_from">From %1$s</string>
+    <!-- Button on a partly watched episode: plays it from where it was left. -->
+    <string name="action_resume">Resume</string>
+    <!-- Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play. -->
+    <string name="player_panel_metadata_only">No source lists this show yet. Episodes can still be marked watched.</string>
+    <!-- Player panel, Sources tab: heading over the source and streams playing now. -->
+    <string name="player_panel_playing_now">Playing now</string>
+    <!-- Player panel, Sources tab: heading over the other sources, in the order they are tried. -->
+    <string name="player_panel_other_sources">Other sources</string>
+    <!-- Player panel, Sources tab: the folded list of a source's releases for this episode. -->
+    <plurals name="player_panel_releases">
+        <item quantity="one">One release</item>
+        <item quantity="other">%1$,d releases</item>
+    </plurals>
+    <!-- Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better. -->
+    <string name="player_release_automatic">Automatic picks this</string>
+    <!-- Player panel, Sources tab, foot of the list: the panel never sorts the sources itself. -->
+    <string name="player_panel_order">Tried in the order set in Sources.</string>
+    <!-- Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is. -->
+    <string name="player_panel_pick_scope">A pick here is for this episode only.</string>
+    <!-- Accessibility label of the subtitled or dubbed switch in the player panel. -->
+    <string name="player_translation">Subbed or dubbed</string>
+    <!-- Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s. -->
+    <string name="player_panel_starting">Starting · %1$,d s</string>
+    <!-- Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow. -->
+    <string name="player_panel_asking">Asking · %1$,d s</string>
+    <!-- Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. -->
+    <string name="player_finding_version_seconds">Finding episode %1$s dubbed · %2$,d s</string>
+    <!-- Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile. -->
+    <string name="player_finding_version_subbed_seconds">Finding episode %1$s subbed · %2$,d s</string>
+    <!-- Notice when another source started playing while the player panel was closed. -->
+    <string name="notice_playing_from_source">Playing from %1$s at %2$s</string>
+    <!-- Player panel, under the subtitled or dubbed switch during a watch party. -->
+    <string name="party_version_own">Only your player switches. The room keeps playing.</string>
+    <!-- Player panel: button under a synopsis cut to three lines, that shows it whole. -->
+    <string name="player_panel_more">More</string>
+    <!-- Player panel: button under a synopsis shown whole after More, that folds it back to three lines. -->
+    <string name="player_panel_less">Less</string>
     <!-- The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. -->
     <string name="private_mode">Private mode</string>
     <!-- The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux. -->
@@ -7643,6 +7718,10 @@
     <string name="source_note_held_back">Waiting for the proxy check</string>
     <!-- Under a source that names torrents while torrent playback is off in Settings. -->
     <string name="source_note_torrents_off">Torrent playback is off</string>
+    <!-- Under a source that names torrents while torrent playback is on and still starting. -->
+    <string name="source_note_torrents_starting">Torrents are starting</string>
+    <!-- Under a source that names torrents while torrent playback is on and couldn't start. -->
+    <string name="source_note_torrents_failed">Torrents couldn\'t start</string>
     <!-- Heading over one source's releases, for a source that offers several (a batch, single episodes). -->
     <string name="source_picker_releases">Releases</string>
     <!-- Accessibility label and badge for the chosen row. -->
@@ -7689,6 +7768,10 @@
     <string name="sources_status_held_back">Held back</string>
     <!-- Status: a source that names torrents, while torrent playback is off. -->
     <string name="sources_status_torrents_off">Torrents off</string>
+    <!-- Status: a source that names torrents, while torrent playback is on and still starting. -->
+    <string name="sources_status_torrents_starting">Torrents starting</string>
+    <!-- Status: a source that names torrents, while torrent playback is on and couldn't start. -->
+    <string name="sources_status_torrents_failed">Torrents didn\'t start</string>
     <!-- Status: slow. -->
     <string name="sources_status_slow">Slow</string>
     <!-- Status: an update exists. -->
@@ -7701,6 +7784,10 @@
     <string name="sources_detail_held_back">Waiting until the proxy check passes.</string>
     <!-- Status line: torrent playback is off. -->
     <string name="sources_detail_torrents_off">Torrent playback is off. You can turn it on in Settings, under Sources.</string>
+    <!-- Status line: torrent playback is on and still starting. -->
+    <string name="sources_detail_torrents_starting">Torrent playback is starting. This source is asked once it has started.</string>
+    <!-- Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes. -->
+    <string name="sources_detail_torrents_failed">Torrent playback couldn\'t start. It tries again when Kaeri opens or a torrent setting changes.</string>
     <!-- Status line: disabled. -->
     <string name="sources_detail_disabled">Off. It keeps its place and isn\'t tried.</string>
     <!-- Status line: the source is gone. -->

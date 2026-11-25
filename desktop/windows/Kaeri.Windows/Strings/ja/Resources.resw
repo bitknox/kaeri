@@ -1772,6 +1772,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>アカウント、{state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>字幕版と吹替版</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>リーダーの設定</value>
   </data>
@@ -5956,6 +5959,9 @@
   </data>
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>設定でさらに表示…</value>
+  </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>エピソード一覧を読み込んでいます。</value>
   </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>プライベートモード</value>

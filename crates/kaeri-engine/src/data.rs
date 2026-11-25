@@ -785,10 +785,15 @@ pub fn provider_rows(
     rows
 }
 
-/// Names why a source is held back. Anything but playback being off is the proxy's check.
+/// Names why a source is held back. Anything but torrent playback being off, starting or failed
+/// to start is the proxy's check.
 fn hold_reason(reason: &str) -> HoldReason {
     if reason == kaeri_providers::torrent::bridge::PLAYBACK_OFF {
         HoldReason::TorrentsOff
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_STARTING {
+        HoldReason::TorrentsStarting
+    } else if reason == kaeri_providers::torrent::bridge::PLAYBACK_FAILED {
+        HoldReason::TorrentsFailed
     } else {
         HoldReason::ProxyCheck
     }
@@ -1316,6 +1321,48 @@ mod naming_tests {
         name_episodes(&mut episodes, &none(), &none());
         assert!(episodes[0].title.is_none());
     }
+
+    /// A source's own lengths stand, short ones too: a one-minute short says "1 min". The
+    /// length AniList gives the title's episodes fills only a row with none, or with 0.
+    #[test]
+    fn a_sources_lengths_stand_and_the_titles_fills_the_missing_ones() {
+        use std::time::Duration;
+        let lengths = |episodes: &[Episode]| -> Vec<Option<u64>> {
+            let store = kaeri_store::Store::open_in_memory().unwrap();
+            let id = kaeri_core::ids::AnilistId::new(1);
+            super::episode_rows(episodes, &store, id).iter().map(|r| r.duration_secs).collect()
+        };
+        let media = |minutes: Option<u32>| -> super::Media {
+            serde_json::from_value(serde_json::json!({
+                "id": 1, "title": {"romaji": "Kazamidori no Uta"}, "format": "TV",
+                "episodes": 4, "duration": minutes,
+            }))
+            .unwrap()
+        };
+        let mut episodes: Vec<Episode> = [Some(60), Some(75), Some(1_425), Some(0), None]
+            .into_iter()
+            .zip(1u32..)
+            .map(|(secs, n)| match secs {
+                Some(secs) => Episode::new(n).with_duration(Duration::from_secs(secs)),
+                None => Episode::new(n),
+            })
+            .collect();
+        let mut bare = episodes.clone();
+
+        super::enrich_episodes(&mut episodes, &media(Some(24)), 0);
+        assert_eq!(
+            lengths(&episodes),
+            [Some(60), Some(75), Some(1_425), Some(1_440), Some(1_440)]
+        );
+
+        // A title of one-minute shorts says a minute; one with no length leaves the gaps, a
+        // source's 0 among them.
+        let mut shorts = vec![Episode::new(1u32)];
+        super::enrich_episodes(&mut shorts, &media(Some(1)), 0);
+        assert_eq!(lengths(&shorts), [Some(60)]);
+        super::enrich_episodes(&mut bare, &media(None), 0);
+        assert_eq!(lengths(&bare), [Some(60), Some(75), Some(1_425), None, None]);
+    }
 }
 
 #[cfg(test)]
@@ -1326,6 +1373,16 @@ mod tests {
         assert_eq!(
             hold_reason(kaeri_providers::torrent::bridge::PLAYBACK_OFF),
             HoldReason::TorrentsOff
+        );
+        assert_eq!(
+            hold_reason(kaeri_providers::torrent::bridge::PLAYBACK_STARTING),
+            HoldReason::TorrentsStarting,
+            "on and starting is not off"
+        );
+        assert_eq!(
+            hold_reason(kaeri_providers::torrent::bridge::PLAYBACK_FAILED),
+            HoldReason::TorrentsFailed,
+            "on and failed to start is not off"
         );
         assert_eq!(hold_reason("proxy check failed"), HoldReason::ProxyCheck);
     }

@@ -2006,6 +2006,9 @@
   <data name="AccountsPaneName" xml:space="preserve">
     <value>Conta, {state}</value>
   </data>
+  <data name="PlayerPanelDualAudio" xml:space="preserve">
+    <value>legendado e dublado</value>
+  </data>
   <data name="WindowsReaderSettingsOpen" xml:space="preserve">
     <value>Ajustes do leitor</value>
   </data>
@@ -6388,6 +6391,9 @@
   </data>
   <data name="PlayerSubsMore" xml:space="preserve">
     <value>Mais em Configurações…</value>
+  </data>
+  <data name="PlayerSheetEpisodesLoading" xml:space="preserve">
+    <value>A lista de episódios está a caminho.</value>
   </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Modo privado</value>

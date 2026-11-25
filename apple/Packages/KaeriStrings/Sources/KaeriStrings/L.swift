@@ -525,6 +525,21 @@ public enum L {
     /// Toast after switching the audio while playing.
     public static var noticeAudioNowDubbed: String { string("notice-audio-now-dubbed", fallback: "Audio is now dubbed.") }
 
+    /// Alert line on a row of the player's Sources panel, when playing from another source or release mid-episode didn't start and the episode plays on from the one before. Both are the names the sources go by, and may be the same name when the switch was to another stream of one source.
+    public static func playerPanelSwitchFailed(source: String, current: String) -> String {
+        Self.format("player-panel-switch-failed", fallback: "Couldn't start from %1$@. Still playing from %2$@.", source, current)
+    }
+
+    /// Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled.
+    public static func playerPanelDubFailed(episode: String) -> String {
+        Self.format("player-panel-dub-failed", fallback: "Couldn't find episode %1$@ dubbed. Still playing subbed.", episode)
+    }
+
+    /// Line under the player panel's subtitled or dubbed switch, when the subbed version of the episode playing couldn't be found or didn't start, and the episode plays on dubbed.
+    public static func playerPanelSubFailed(episode: String) -> String {
+        Self.format("player-panel-sub-failed", fallback: "Couldn't find episode %1$@ subbed. Still playing dubbed.", episode)
+    }
+
     /// Toast when the previous-episode control is used on the first episode.
     public static var noticeAlreadyFirstEpisode: String { string("notice-already-first-episode", fallback: "Already at the first episode.") }
 
@@ -2637,10 +2652,10 @@ public enum L {
     public static var playerReleasesNone: String { string("player-releases-none", fallback: "No releases found") }
 
     /// Part of a release's detail line: a release in the dubbed audio.
-    public static var playerReleaseDub: String { string("player-release-dub", fallback: "dub") }
+    public static var playerReleaseDub: String { string("player-release-dub", fallback: "Dubbed") }
 
     /// Part of a release's detail line: a release with both the original and the dubbed audio.
-    public static var playerReleaseDualAudio: String { string("player-release-dual-audio", fallback: "subbed and dubbed") }
+    public static var playerReleaseDualAudio: String { string("player-release-dual-audio", fallback: "Subbed and dubbed") }
 
     /// VoiceOver label of the countdown bar of the up next card.
     public static func playerCountdownLabel(episode: String) -> String {
@@ -7937,6 +7952,11 @@ public enum L {
         Self.format("player-start-miss-no-match", fallback: "%1$@ doesn't have this show", name)
     }
 
+    /// Detail line when a source found titles like the show and could not tell which one it is.
+    public static func playerStartMissAmbiguous(name: String) -> String {
+        Self.format("player-start-miss-ambiguous", fallback: "%1$@ couldn't match this title", name)
+    }
+
     /// Detail line when a source has the show and not the episode. The episode is its label.
     public static func playerStartMissNoEpisode(name: String, episode: String) -> String {
         Self.format("player-start-miss-no-episode", fallback: "%1$@ doesn't have episode %2$@", name, episode)
@@ -7964,6 +7984,12 @@ public enum L {
 
     /// Details row for a source not asked while torrent playback is off. The name goes before it.
     public static var playerStartRowHeldTorrentsOff: String { string("player-start-row-held-torrents-off", fallback: "Not asked · Torrent playback is off") }
+
+    /// Details row for a source not asked because torrent playback is on and still starting. The name goes before it.
+    public static var playerStartRowHeldTorrentsStarting: String { string("player-start-row-held-torrents-starting", fallback: "Not asked · Torrent playback is starting") }
+
+    /// Details row for a source not asked because torrent playback is on and couldn't start. The name goes before it.
+    public static var playerStartRowHeldTorrentsFailed: String { string("player-start-row-held-torrents-failed", fallback: "Not asked · Torrent playback couldn't start") }
 
     /// Details row for a source not asked while the proxy check for torrents hasn't passed. The name goes before it.
     public static var playerStartRowHeldProxy: String { string("player-start-row-held-proxy", fallback: "Not asked · Waiting for the proxy check") }
@@ -8107,6 +8133,16 @@ public enum L {
     /// Sentence of a failure naming the sources not asked while torrent playback is off, joined as a list by the app.
     public static func playerStartNotAskedTorrentsOff(count: Int, names: String) -> String {
         Self.format("player-start-not-asked-torrents-off", fallback: "%2$@ aren't asked while torrent playback is off.", count, names)
+    }
+
+    /// Sentence of a failure naming the sources not asked while torrent playback is on and still starting, joined as a list by the app.
+    public static func playerStartNotAskedTorrentsStarting(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-torrents-starting", fallback: "%2$@ aren't asked until torrent playback has started.", count, names)
+    }
+
+    /// Sentence of a failure naming the sources not asked because torrent playback is on and couldn't start, joined as a list by the app.
+    public static func playerStartNotAskedTorrentsFailed(count: Int, names: String) -> String {
+        Self.format("player-start-not-asked-torrents-failed", fallback: "%2$@ aren't asked because torrent playback couldn't start.", count, names)
     }
 
     /// Sentence of a failure naming the sources not asked while the proxy check for torrents hasn't passed, joined as a list by the app.
@@ -8564,6 +8600,16 @@ public enum L {
         Self.format("source-picker-held-torrents-off", fallback: "%1$@ isn't asked while torrent playback is off", name)
     }
 
+    /// Line of the picker for a source not asked while torrent playback is on and still starting.
+    public static func sourcePickerHeldTorrentsStarting(name: String) -> String {
+        Self.format("source-picker-held-torrents-starting", fallback: "%1$@ isn't asked until torrent playback has started", name)
+    }
+
+    /// Line of the picker for a source not asked because torrent playback is on and couldn't start.
+    public static func sourcePickerHeldTorrentsFailed(name: String) -> String {
+        Self.format("source-picker-held-torrents-failed", fallback: "%1$@ isn't asked because torrent playback couldn't start", name)
+    }
+
     /// Line of the picker for a source not asked while the proxy check for torrents hasn't passed.
     public static func sourcePickerHeldProxy(name: String) -> String {
         Self.format("source-picker-held-proxy", fallback: "%1$@ isn't asked until the proxy check passes", name)
@@ -8637,6 +8683,98 @@ public enum L {
 
     /// Button in the subtitles panel that opens Settings.
     public static var playerSubsMore: String { string("player-subs-more", fallback: "More in Settings…") }
+
+    /// Player, the episode list in the Episodes panel or sheet: shown under placeholder rows before the list arrives.
+    public static var playerSheetEpisodesLoading: String { string("player-sheet-episodes-loading", fallback: "The episode list is on its way.") }
+
+    /// Accessibility label of the player's side panel with the Episodes and Sources tabs.
+    public static var playerPanel: String { string("player-panel", fallback: "Episodes and sources") }
+
+    /// Episode row in the player's panel: the playing episode's detail line. The argument is time-minutes-left.
+    public static func episodeRowPlaying(left: String) -> String {
+        Self.format("episode-row-playing", fallback: "Playing · %1$@", left)
+    }
+
+    /// Episode row in the player's panel: the episode is part story, part filler.
+    public static var episodeRowMixed: String { string("episode-row-mixed", fallback: "Mixed") }
+
+    /// Episode row in the player's panel: the length of an episode nobody has started.
+    public static func episodeRowLength(minutes: Int) -> String {
+        Self.format("episode-row-length", fallback: "%1$lld min", minutes)
+    }
+
+    /// Episode row in the player's panel, after the air date: the date it was to air before the schedule moved it.
+    public static func episodeRowDelayed(when: String) -> String {
+        Self.format("episode-row-delayed", fallback: "Delayed, was %1$@", when)
+    }
+
+    /// Episode row in the player's panel: the source that fills in this episode, when it is not the title's usual one.
+    public static func episodeRowFrom(source: String) -> String {
+        Self.format("episode-row-from", fallback: "From %1$@", source)
+    }
+
+    /// Button on a partly watched episode: plays it from where it was left.
+    public static var actionResume: String { string("action-resume", fallback: "Resume") }
+
+    /// Player panel, Episodes tab: above a list that comes from the tracker alone, with nothing to play.
+    public static var playerPanelMetadataOnly: String { string("player-panel-metadata-only", fallback: "No source lists this show yet. Episodes can still be marked watched.") }
+
+    /// Player panel, Sources tab: heading over the source and streams playing now.
+    public static var playerPanelPlayingNow: String { string("player-panel-playing-now", fallback: "Playing now") }
+
+    /// Player panel, Sources tab: heading over the other sources, in the order they are tried.
+    public static var playerPanelOtherSources: String { string("player-panel-other-sources", fallback: "Other sources") }
+
+    /// Player panel, Sources tab: the folded list of a source's releases for this episode.
+    public static func playerPanelReleases(count: Int) -> String {
+        Self.format("player-panel-releases", fallback: "%1$lld releases", count)
+    }
+
+    /// Part of a release's detail line: the release Automatic would play. Says what it does, never that it is better.
+    public static var playerReleaseAutomatic: String { string("player-release-automatic", fallback: "Automatic picks this") }
+
+    /// Player panel, Sources tab, foot of the list: the panel never sorts the sources itself.
+    public static var playerPanelOrder: String { string("player-panel-order", fallback: "Tried in the order set in Sources.") }
+
+    /// Player panel, Sources tab, foot of the list: a pick in the player leaves the title's own pick as it is.
+    public static var playerPanelPickScope: String { string("player-panel-pick-scope", fallback: "A pick here is for this episode only.") }
+
+    /// Accessibility label of the subtitled or dubbed switch in the player panel.
+    public static var playerTranslation: String { string("player-translation", fallback: "Subbed or dubbed") }
+
+    /// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
+    public static func playerPanelStarting(seconds: Int) -> String {
+        Self.format("player-panel-starting", fallback: "Starting · %1$lld s", seconds)
+    }
+
+    /// Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.
+    public static func playerPanelAsking(seconds: Int) -> String {
+        Self.format("player-panel-asking", fallback: "Asking · %1$lld s", seconds)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+    public static func playerFindingVersionSeconds(episode: String, seconds: Int) -> String {
+        Self.format("player-finding-version-seconds", fallback: "Finding episode %1$@ dubbed · %2$lld s", episode, seconds)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch while the subbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.
+    public static func playerFindingVersionSubbedSeconds(episode: String, seconds: Int) -> String {
+        Self.format("player-finding-version-subbed-seconds", fallback: "Finding episode %1$@ subbed · %2$lld s", episode, seconds)
+    }
+
+    /// Notice when another source started playing while the player panel was closed.
+    public static func noticePlayingFromSource(source: String, clock: String) -> String {
+        Self.format("notice-playing-from-source", fallback: "Playing from %1$@ at %2$@", source, clock)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch during a watch party.
+    public static var partyVersionOwn: String { string("party-version-own", fallback: "Only your player switches. The room keeps playing.") }
+
+    /// Player panel: button under a synopsis cut to three lines, that shows it whole.
+    public static var playerPanelMore: String { string("player-panel-more", fallback: "More") }
+
+    /// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
+    public static var playerPanelLess: String { string("player-panel-less", fallback: "Less") }
 
     /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
     public static var privateMode: String { string("private-mode", fallback: "Private mode") }
@@ -12818,6 +12956,12 @@ public enum L {
     /// Under a source that names torrents while torrent playback is off in Settings.
     public static var sourceNoteTorrentsOff: String { string("source-note-torrents-off", fallback: "Torrent playback is off") }
 
+    /// Under a source that names torrents while torrent playback is on and still starting.
+    public static var sourceNoteTorrentsStarting: String { string("source-note-torrents-starting", fallback: "Torrents are starting") }
+
+    /// Under a source that names torrents while torrent playback is on and couldn't start.
+    public static var sourceNoteTorrentsFailed: String { string("source-note-torrents-failed", fallback: "Torrents couldn't start") }
+
     /// Heading over one source's releases, for a source that offers several (a batch, single episodes).
     public static var sourcePickerReleases: String { string("source-picker-releases", fallback: "Releases") }
 
@@ -12893,6 +13037,12 @@ public enum L {
     /// Status: a source that names torrents, while torrent playback is off.
     public static var sourcesStatusTorrentsOff: String { string("sources-status-torrents-off", fallback: "Torrents off") }
 
+    /// Status: a source that names torrents, while torrent playback is on and still starting.
+    public static var sourcesStatusTorrentsStarting: String { string("sources-status-torrents-starting", fallback: "Torrents starting") }
+
+    /// Status: a source that names torrents, while torrent playback is on and couldn't start.
+    public static var sourcesStatusTorrentsFailed: String { string("sources-status-torrents-failed", fallback: "Torrents didn't start") }
+
     /// Status: slow.
     public static var sourcesStatusSlow: String { string("sources-status-slow", fallback: "Slow") }
 
@@ -12912,6 +13062,12 @@ public enum L {
 
     /// Status line: torrent playback is off.
     public static var sourcesDetailTorrentsOff: String { string("sources-detail-torrents-off", fallback: "Torrent playback is off. You can turn it on in Settings, under Sources.") }
+
+    /// Status line: torrent playback is on and still starting.
+    public static var sourcesDetailTorrentsStarting: String { string("sources-detail-torrents-starting", fallback: "Torrent playback is starting. This source is asked once it has started.") }
+
+    /// Status line: torrent playback is on and couldn't start. It tries again when the app opens or a torrent setting changes.
+    public static var sourcesDetailTorrentsFailed: String { string("sources-detail-torrents-failed", fallback: "Torrent playback couldn't start. It tries again when Kaeri opens or a torrent setting changes.") }
 
     /// Status line: disabled.
     public static var sourcesDetailDisabled: String { string("sources-detail-disabled", fallback: "Off. It keeps its place and isn't tried.") }
