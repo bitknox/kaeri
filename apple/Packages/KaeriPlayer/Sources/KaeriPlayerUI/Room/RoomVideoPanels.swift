@@ -197,7 +197,7 @@ struct RoomDontWaitNote: View {
     var body: some View {
         RoomClock { now in
             let since = room.view?.waiting.first(where: { $0.name == room.you?.name })?.sinceMs ?? now
-            VStack(spacing: 16) {
+            VStack(alignment: .leading, spacing: 10) {
                 Text(RoomCopy.seconds(RoomCopy.roomPausedUntil, RoomModel.seconds(since: since, now: now)))
                     .font(.system(size: 13)).foregroundStyle(.haze).monospacedDigit()
                 Button(RoomCopy.dontWait) { room.dontWait() }
