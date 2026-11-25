@@ -31,9 +31,7 @@ env:
   # its family it replaces (tools/ci-cache-room.sh), which keeps the caches inside their 10 GB:
   # above it every save fails, and from 14 to 25 November 2026 none landed and every job compiled
   # all its crates.
-  # PROOF ONLY: this branch's pull request saves like main while its runs measure warm caches.
-  SAVE_CACHES: ${{ github.ref == 'refs/heads/main' || github.head_ref == 'perf/ci-build-times' }}
-  CACHE_ROOM_PR_MB: ${{ github.head_ref == 'perf/ci-build-times' && '9600' || '8800' }}
+  SAVE_CACHES: ${{ github.ref == 'refs/heads/main' }}
 
 jobs:
   # Which parts a pull request touches, so a change to the apps alone does not wait on the whole

@@ -1,4 +1,4 @@
-//! Domain types, traits and configuration shared by every Kaeri crate. (CI proof run 3)
+//! Domain types, traits and configuration shared by every Kaeri crate.
 //!
 //! The architecture layers outward from here in increasing order of volatility:
 //! metadata (AniList) is stable, ID mapping is stable glue, video providers are
