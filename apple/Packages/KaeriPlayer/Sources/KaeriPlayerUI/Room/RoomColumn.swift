@@ -253,7 +253,12 @@ struct RoomLineActions: View {
                         .buttonStyle(RoomButtonStyle(kind: .secondary, height: height, size: size, padding: padding))
                 }
             case nil:
-                EmptyView()
+                // On a phone the starting screen has no room for it under the video: the room
+                // waits for you, so the line offers to let it go on.
+                if !mac, room.view?.canDontWait == true {
+                    Button(RoomCopy.dontWait) { room.dontWait() }
+                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: height, size: size, padding: padding))
+                }
             }
         }
         .transition(.opacity)

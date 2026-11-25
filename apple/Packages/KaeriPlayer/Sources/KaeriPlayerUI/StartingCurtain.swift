@@ -155,7 +155,8 @@ struct StartingCurtain: View {
             StartActions(model: model, metrics: metrics)
                 .padding(.top, 16)
             // In a room that waits for this start: the wait, and Don't wait for me (room board).
-            if store.room.inRoom, store.room.view?.canDontWait == true {
+            // On a phone the room's own line offers it (PhoneRoomUpright).
+            if !metrics.touch, store.room.inRoom, store.room.view?.canDontWait == true {
                 RoomDontWaitNote(room: store.room)
                     .padding(.top, 20)
                     .transition(.opacity)
