@@ -303,6 +303,7 @@ library="$host_built/$host_library"
 if [[ -n "$ndk" ]]; then
   for spec in "${android_abis[@]}"; do
     read -r abi target _ <<<"$spec"
+    bindings_target="${bindings_target:-$target}"
     echo "engine.sh: building the $flavour engine for $abi (Android $api, NDK $(basename "$ndk"), $profile)"
     cargo_clean cargo ndk -t "$abi" --platform "$api" build -p kaeri-ffi --no-default-features \
       ${features:+--features "$features"} --lib --profile "$profile"
@@ -310,8 +311,9 @@ if [[ -n "$ndk" ]]; then
     cp "$CARGO_TARGET_DIR/$target/$(profile_dir)/libkaeri_ffi.so" "$stage/jniLibs/$abi/"
     needs_only_system_libraries "$stage/jniLibs/$abi/libkaeri_ffi.so"
   done
-  # The bindings from the phone's library, which has the same interface as every other.
-  library="$CARGO_TARGET_DIR/aarch64-linux-android/$(profile_dir)/libkaeri_ffi.so"
+  # The bindings from the first library built: the phone's, unless a narrowed build has only the
+  # 32-bit one. Every library has the same interface.
+  library="$CARGO_TARGET_DIR/$bindings_target/$(profile_dir)/libkaeri_ffi.so"
 else
   echo "engine.sh: no NDK under ${sdk:-\$ANDROID_HOME}/ndk, so no Android libraries: the APKs will have no engine" >&2
 fi
