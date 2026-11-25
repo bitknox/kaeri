@@ -1315,6 +1315,12 @@ impl SidePanel {
                 );
                 wrap(&line);
                 block.append(&line);
+            } else if data.options.is_none() && self.listing.borrow().is_some() {
+                // Its coverage is on its way while the tab loads: its line is held one line
+                // high, so the rows under it never move when it comes.
+                let line = crate::widgets::haze("", "panel-row-detail");
+                one_line(&line);
+                block.append(&line);
             }
             self.src_list.append(&still_row(&block));
         }
@@ -1947,14 +1953,9 @@ impl SidePanel {
             } else {
                 "panel-choice-title"
             });
-            if look.held {
-                // A loading source's row keeps its height: its name on one line, whole in its
-                // tooltip and its spoken label.
-                one_line(&name);
-                name.set_tooltip_text(Some(title));
-            } else {
-                wrap(&name);
-            }
+            // Whole, on as many lines as it takes: a loading source's name never changes while
+            // it answers, so its row keeps its height.
+            wrap(&name);
             name
         };
         let name = title_label();
@@ -1971,16 +1972,17 @@ impl SidePanel {
         line.set_interpolate_size(true);
         let detail_label = crate::widgets::haze(detail.unwrap_or(""), "panel-row-detail");
         wrap(&detail_label);
-        // A loading source's line: two labels in one place, held one line high when empty.
+        // A loading source's line: two labels in one place, held one line high when empty, and
+        // whole when an answer is longer than the panel is wide.
         let line_label = || {
             let label = crate::widgets::haze("", "panel-row-detail");
             label.add_css_class("tabular");
-            one_line(&label);
+            wrap(&label);
             label
         };
         let line_swap = look.held.then(|| Swap::new(line_label(), line_label()));
         match &line_swap {
-            Some(swap) => line.add_named(&swap.grid, Some("detail")),
+            Some(swap) => line.add_named(&swap.place, Some("detail")),
             None => line.add_named(&detail_label, Some("detail")),
         };
         let starting = crate::widgets::haze("", "panel-row-detail");
@@ -1991,7 +1993,7 @@ impl SidePanel {
         words.set_hexpand(true);
         words.set_valign(gtk::Align::Center);
         match &name_swap {
-            Some(swap) => words.append(&swap.grid),
+            Some(swap) => words.append(&swap.place),
             None => words.append(&name),
         }
         words.append(&line);
@@ -2203,7 +2205,7 @@ struct Look {
 /// while both show. The fades play under Reduce Animation too, where a fade is what reduced
 /// motion keeps.
 struct Swap {
-    grid: gtk::Grid,
+    place: gtk::Overlay,
     labels: [gtk::Label; 2],
     /// The one shown, or coming in.
     front: Cell<usize>,
@@ -2212,13 +2214,19 @@ struct Swap {
 
 impl Swap {
     fn new(first: gtk::Label, second: gtk::Label) -> Self {
-        let grid = gtk::Grid::new();
-        grid.set_hexpand(true);
-        // Both in the one cell: a grid draws them over each other.
-        grid.attach(&first, 0, 0, 1, 1);
-        grid.attach(&second, 0, 0, 1, 1);
+        // One over the other, the place measured from both and each given all of it: a grid
+        // with both in one cell, or an overlay left to place its overlay by its natural size,
+        // takes a wrapping label at its narrowest, many lines too tall.
+        let place = gtk::Overlay::new();
+        place.set_hexpand(true);
+        place.set_child(Some(&first));
+        place.add_overlay(&second);
+        place.set_measure_overlay(&second, true);
+        place.connect_get_child_position(|place, _| {
+            Some(gtk::gdk::Rectangle::new(0, 0, place.width(), place.height()))
+        });
         second.set_visible(false);
-        Self { grid, labels: [first, second], front: Cell::new(0), fades: RefCell::default() }
+        Self { place, labels: [first, second], front: Cell::new(0), fades: RefCell::default() }
     }
 
     /// The label shown, or coming in.
@@ -2238,7 +2246,7 @@ impl Swap {
         new.set_opacity(0.0);
         change(&new);
         new.set_visible(true);
-        if !fade || !self.grid.is_mapped() || !old.is_visible() {
+        if !fade || !self.place.is_mapped() || !old.is_visible() {
             new.set_opacity(1.0);
             old.set_visible(false);
             old.set_opacity(1.0);
@@ -2410,7 +2418,7 @@ fn heading(text: &str) -> gtk::ListBoxRow {
 
 /// Why the listing ended before any source was asked, under the sources' rows.
 fn ended_note(why: &str) -> gtk::ListBoxRow {
-    let note = crate::widgets::haze(why, "panel-row-detail");
+    let note = crate::widgets::haze(why, "panel-foot");
     wrap(&note);
     still_row(&note)
 }
@@ -2985,6 +2993,56 @@ mod tests {
             pump(100);
             assert_eq!(src_texts(&panel).iter().filter(|t| *t == why).count(), 1);
             assert!(!panel.pending());
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_long_name_shows_whole_and_its_row_keeps_its_height() {
+        use kaeri_model::starting::ListingMiss;
+        run(|| {
+            let (panel, window, _) = panel_in_window();
+            panel.open(PanelTab::Sources);
+            panel.listing_asked();
+            let long = "A home server on the shelf in the hall with a long name it was given";
+            let rows = |archive: ListingState| {
+                let mut rows = said(ListingState::Asking, ListingState::Asking, archive);
+                rows[3].name = long.into();
+                rows
+            };
+            panel.set_progress(rows(ListingState::Asking));
+            age(&panel, Duration::from_millis(3500));
+            pump(400);
+            let height = |panel: &SidePanel| loading_rows(panel).iter().map(|r| r.4).collect();
+            let asking: Vec<i32> = height(&panel);
+            let name = panel.listing_rows.borrow()[2].parts.title.shown().clone();
+            assert_eq!(name.label(), long);
+            assert!(!name.layout().is_ellipsized(), "the name is never cut");
+            assert!(name.layout().line_count() > 1, "it takes the lines it needs");
+            assert!(asking[2] > asking[0], "{asking:?}");
+
+            panel.set_progress(rows(ListingState::Missed { miss: ListingMiss::Failed }));
+            pump(400);
+            assert_eq!(loading_rows(&panel)[2].1, "Didn't answer");
+            assert_eq!(height(&panel), asking, "no row moved as it answered");
+            // The name and the answer in its place, taking the row's lines, inside the row.
+            let rows = panel.listing_rows.borrow();
+            let row = &rows[2];
+            for label in [row.parts.title.shown(), row.parts.line.shown()] {
+                let bounds = label.compute_bounds(&row.row).expect("in the row");
+                assert!(
+                    bounds.y() >= 0.0
+                        && bounds.y() + bounds.height() <= row.row.height() as f32,
+                    "{:?} at {bounds:?} in a row {} high",
+                    label.label(),
+                    row.row.height()
+                );
+                assert!(
+                    label.height()
+                        >= label.measure(gtk::Orientation::Vertical, label.width()).1
+                );
+            }
+            drop(rows);
             window.destroy();
         });
     }
