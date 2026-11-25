@@ -495,6 +495,22 @@ targets:
         PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.audit-tests
         TEST_TARGET_NAME: Kaeri Fixtures
 
+  # The player's flows (PlayerFlows) on an iPhone or iPad Simulator, such as the Sources tab while
+  # its sources answer, with a picture at each of the board's moments. Run with the Player Flows
+  # scheme; the Mac runs the same flows with its player's tests.
+  KaeriPlayerFlows:
+    type: bundle.ui-testing
+    supportedDestinations: [iOS]
+    templates: [Fixtures]
+    sources: [PlayerFlows]
+    dependencies:
+      - target: Kaeri Fixtures
+    settings:
+      base:
+        GENERATE_INFOPLIST_FILE: true
+        PRODUCT_BUNDLE_IDENTIFIER: app.kaeri.player-flows
+        TEST_TARGET_NAME: Kaeri Fixtures
+
   # The features page's videos (VideoFlows): each a task done in the Fixtures app as a person does
   # it, while website/scripts/videos films the iPhone Simulator or the Mac. Run with the Video
   # scheme, from those scripts.
@@ -513,12 +529,13 @@ targets:
 
   # The Mac player's controls, clicked as a person clicks them (MacPlayerTests): XCUITest's
   # clicks go through the window server, where the window's title bar and background can take
-  # them before the controls do. The Mac only; run with the Mac Player scheme.
+  # them before the controls do. With the player's flows (PlayerFlows), on the Mac. The Mac only;
+  # run with the Mac Player scheme.
   KaeriMacPlayerTests:
     type: bundle.ui-testing
     supportedDestinations: [macOS]
     templates: [Fixtures]
-    sources: [MacPlayerTests]
+    sources: [MacPlayerTests, PlayerFlows]
     dependencies:
       - target: Kaeri Fixtures
     settings:
@@ -607,6 +624,23 @@ schemes:
       config: Debug
       targets:
         - KaeriVideoFlows
+
+  # xcodebuild -scheme "Kaeri Player Flows" -destination "platform=iOS Simulator,name=<yours>" test
+  Kaeri Player Flows:
+    build:
+      targets:
+        Kaeri Fixtures: all
+        KaeriPlayerFlows: [test]
+      preActions:
+        - name: Build the engine
+          settingsTarget: Kaeri Fixtures
+          script: |
+            mkdir -p "$PROJECT_DIR/.engine"
+            "$PROJECT_DIR/scripts/engine.sh" testing "$KAERI_SLICE" > "$PROJECT_DIR/.engine/testing.log" 2>&1
+    test:
+      config: Debug
+      targets:
+        - KaeriPlayerFlows
 
   # xcodebuild -scheme "Kaeri Mac Player" -destination platform=macOS test
   Kaeri Mac Player:

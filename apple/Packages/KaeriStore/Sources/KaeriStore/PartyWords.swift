@@ -185,6 +185,7 @@ public enum PartyWords {
         let name = missed.name
         switch missed.miss {
         case .noMatch: return L.playerStartMissNoMatch(name: name)
+        case .ambiguous: return L.playerStartMissAmbiguous(name: name)
         case .noEpisode: return L.playerStartMissNoEpisode(name: name, episode: episode)
         case .failed: return L.playerStartMissFailed(name: name)
         case .timedOut: return L.playerStartMissTimedOut(name: name)
@@ -205,7 +206,7 @@ public enum PartyWords {
     public static func unreached(_ miss: ListingMiss) -> Bool {
         switch miss {
         case .failed, .timedOut, .heldBack: true
-        case .noMatch, .noEpisode: false
+        case .noMatch, .ambiguous, .noEpisode: false
         }
     }
 

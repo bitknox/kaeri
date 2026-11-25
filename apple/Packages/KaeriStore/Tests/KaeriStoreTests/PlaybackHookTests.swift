@@ -34,6 +34,21 @@ struct PlaybackHookTests {
         ])
     }
 
+    @Test func theSourcesTabsRowsGoToThePlayerAsTheyAnswer() {
+        let store = AppStore()
+        var seen: [Event] = []
+        store.onPlayback = { seen.append($0) }
+        let rows = [SourceListing(providerId: "harbor", name: "Harbor", state: .asking)]
+        store.apply([
+            .sourcesProgress(id: 900_001, episode: "7", rows: rows),
+            .sources(id: 900_001, episode: "7", candidates: [], missed: []),
+        ])
+        #expect(seen == [
+            .sourcesProgress(id: 900_001, episode: "7", rows: rows),
+            .sources(id: 900_001, episode: "7", candidates: [], missed: []),
+        ])
+    }
+
     @Test func aFailedPlaybackIsTheLastProblemUntilAnotherStarts() throws {
         let store = AppStore()
         store.apply([

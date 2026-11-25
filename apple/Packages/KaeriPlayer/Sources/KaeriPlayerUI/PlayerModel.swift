@@ -297,6 +297,11 @@ public final class PlayerModel {
     #if FIXTURES
     /// A shot of a card holds it up, as a screen reader does.
     @ObservationIgnored public var holdsPromptsForShot = false
+    /// When a shot's panel, already open, asks for the episode's sources, in milliseconds since
+    /// 1970, said ahead in the player's accessibility so a UI test counts its pictures from it.
+    public internal(set) var panelAsksAt: Int?
+    /// Until then the panel asks nothing, so it is in place before the clock starts.
+    @ObservationIgnored var holdsPanelAsk = false
     #endif
     @ObservationIgnored public var skipFindPause: @MainActor () -> SkipFindPause? = { nil }
     public private(set) var speed: Double = 1
@@ -471,9 +476,12 @@ public final class PlayerModel {
             // A play staged anew, as the episode started again in the other version is when
             // nothing played yet: no switch of it is on its way.
             versionSwitch = nil
-            if staged?.id != id || staged?.episode != episode { panelEpisodeChanged() }
+            let anotherEpisode = staged?.id != id || staged?.episode != episode
+            if anotherEpisode { panelEpisodeChanged() }
             staged = StagedPlayback(
                 id: id, title: title, episode: episode, episodeTitle: episodeTitle, alwaysPrivate: alwaysPrivate)
+            // An open panel asks for the next episode's sources at once, as it does when it opens.
+            if anotherEpisode, panelOpen { loadPanelReleases() }
             present()
         case .startingStep(let id, let episode, let step, let line):
             guard isPresented, !closedByViewer, walk?.id == id, walk?.episode == episode else { return }
@@ -503,6 +511,14 @@ public final class PlayerModel {
             // The party's own sheet says why nothing plays and offers its sources: the player's
             // failure would say it twice, under it.
             partySaysWhy = true
+        case .sourcesProgress(let id, let episode, let rows):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.progressed(rows, at: time.now())
+            }
+        case .sourcesFailed(let id, let episode, let why):
+            if panelReleases?.id == id, panelReleases?.episode == episode {
+                panelReleases?.failed = why.text
+            }
         case .sources(let id, let episode, let candidates, let missed):
             if panelReleases?.id == id, panelReleases?.episode == episode {
                 panelReleases?.candidates = candidates
@@ -2275,11 +2291,14 @@ extension PlayerModel {
     }
 
     /// Ask for the playing episode's releases across every source, for the Sources tab. Asked
-    /// again only for another episode, or when `again`.
+    /// again only for another episode, after a listing that asked no source, or when `again`.
     public func loadPanelReleases(again: Bool = false) {
         guard let (id, episode) = panelEpisode else { return }
-        if !again, panelReleases?.id == id, panelReleases?.episode == episode { return }
-        panelReleases = PanelReleases(id: id, episode: episode, candidates: nil)
+        if !again, panelReleases?.id == id, panelReleases?.episode == episode, panelReleases?.failed == nil { return }
+        #if FIXTURES
+        if holdsPanelAsk { return }
+        #endif
+        panelReleases = PanelReleases(id: id, episode: episode, asked: time.now())
         send(.loadSources(id: id, episode: episode))
     }
 

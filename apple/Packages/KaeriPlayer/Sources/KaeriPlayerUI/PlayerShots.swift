@@ -118,6 +118,15 @@ public enum PlayerShot: String, CaseIterable, Sendable {
     case panelFailed = "panel-failed"
     case panelMotion = "panel-motion"
     case panelLive = "panel-live"
+    /// The Sources tab while the SourcesLoading scene's sources answer one by one: the panel
+    /// opens on it as the shot is up, and asks 5 s later, at the moment `panelAsksAt` says.
+    case panelSourcesLoading = "panel-sources-loading"
+    /// The same tab, open on episode 7 as its sources answer, when the next episode plays 3 s after
+    /// it asked, at the moment `panelAsksAt` says: the tab asks again for episode 8.
+    case panelNextEpisode = "panel-next-episode"
+    /// The same tab asking for an episode that has not aired (900002's sixth), at the moment
+    /// `panelAsksAt` says: the engine asks no source, and the tab says why.
+    case panelSourcesFailed = "panel-sources-failed"
 
     /// The engine's fixture for a found times' shot.
     var found: FoundSkipFixture? {
@@ -262,6 +271,61 @@ extension PlayerModel {
             if let menu = shot.menu { requestMenu(menu) }
         case .panelEpisodes, .panelSources, .panelFinding, .panelLoading, .panelLanded, .panelFailed, .panelMotion, .panelLive:
             there = await stagePanel(shot, id: item.id, episode: String(item.episode), store: store)
+        case .panelSourcesLoading:
+            seek(to: 31)
+            there = await waited(10) { self.position >= 31.5 && self.menus != nil }
+            togglePause()
+            pinnedControls = true
+            // Scrolled to the other sources where the panel is too short for them all.
+            panelShot = PanelShot(tab: .sources, scroll: PanelSources.others)
+            // Open and settled first, so the pictures show the rows and not the panel sliding in.
+            holdsPanelAsk = true
+            requestMenu(.episodes)
+            let asks = Date.now.addingTimeInterval(5)
+            panelAsksAt = Int((asks.timeIntervalSince1970 * 1000).rounded())
+            // For pictures taken from outside the app, where its accessibility is out of reach.
+            Self.note(.info, "shot: the panel asks at \(panelAsksAt ?? 0)")
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(asks.timeIntervalSinceNow))
+                self.holdsPanelAsk = false
+                self.loadPanelReleases()
+                // The rows make the tab tall enough to scroll: the other sources to the top once
+                // they are in, where the panel is too short for them all.
+                _ = await self.waited(2) { self.panelReleases?.rows != nil }
+                self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 1)
+            }
+        case .panelNextEpisode, .panelSourcesFailed:
+            seek(to: 31)
+            there = await waited(10) { self.position >= 31.5 && self.menus != nil }
+            togglePause()
+            pinnedControls = true
+            panelShot = PanelShot(tab: .sources, scroll: PanelSources.others)
+            holdsPanelAsk = true
+            requestMenu(.episodes)
+            let asks = Date.now.addingTimeInterval(5)
+            let moment = shot == .panelNextEpisode ? asks.addingTimeInterval(3) : asks
+            panelAsksAt = Int((moment.timeIntervalSince1970 * 1000).rounded())
+            Self.note(.info, "shot: the panel's moment is at \(panelAsksAt ?? 0)")
+            Task { @MainActor in
+                try? await Task.sleep(for: .seconds(asks.timeIntervalSinceNow))
+                if shot == .panelNextEpisode {
+                    self.holdsPanelAsk = false
+                    self.loadPanelReleases()
+                    _ = await self.waited(2) { self.panelReleases?.rows != nil }
+                    self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 1)
+                    try? await Task.sleep(for: .seconds(moment.timeIntervalSinceNow))
+                    // What N, Up Next and a media key send, with the tab open.
+                    self.control(.playNext)
+                    // The other sources to the top again once episode 8's are in, if they come.
+                    _ = await self.waited(3) { self.panelReleases?.episode == "8" && self.panelReleases?.rows != nil }
+                    self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 2)
+                } else {
+                    // Still held, so nothing else asks: one ask, for an episode not out yet.
+                    let (id, episode): (AnilistId, String) = (900_002, "6")
+                    self.panelReleases = PanelReleases(id: id, episode: episode, asked: self.time.now())
+                    self.send(.loadSources(id: id, episode: episode))
+                }
+            }
         case .fading:
             seek(to: 31)
             there = await waited(10) { self.position >= 31.5 }

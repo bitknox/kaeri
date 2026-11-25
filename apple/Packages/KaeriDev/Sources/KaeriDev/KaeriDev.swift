@@ -212,7 +212,14 @@ final class Delegate: NSObject, NSApplicationDelegate {
         }
         if let shot = options.playerShot {
             let there: Bool
-            if !options.frames.isEmpty, MotionDemo.from() == nil, let url = options.snapshot, let window = Snapshot.window {
+            if shot == .panelSourcesLoading, !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
+                // The Sources tab while it loads: frames counted from when the open panel asks.
+                there = await player.stage(shot, store: store)
+                if let at = player.panelAsksAt {
+                    let wall = Int((Date.now.timeIntervalSince1970 * 1000).rounded())
+                    await frames(of: nil, in: window, to: url, from: .now + .milliseconds(at - wall))
+                }
+            } else if !options.frames.isEmpty, MotionDemo.from() == nil, let url = options.snapshot, let window = Snapshot.window {
                 // The player's way in, shot from the moment play is pressed.
                 let staging = Task { await player.stage(shot, store: store) }
                 await frames(of: nil, in: window, to: url)
@@ -411,9 +418,10 @@ final class Delegate: NSObject, NSApplicationDelegate {
 
     /// Run `motion` and snapshot the window at each of the frames' offsets after it starts: taken
     /// into memory as it runs, and written once it has, so writing never delays the next frame.
-    private func frames(of motion: MotionDemo?, in window: NSWindow, to url: URL) async {
+    private func frames(
+        of motion: MotionDemo?, in window: NSWindow, to url: URL, from start: ContinuousClock.Instant = .now
+    ) async {
         var taken: [(offset: Int, at: Duration, image: CGImage)] = []
-        let start = ContinuousClock.now
         motion?.run(navigator: navigator, store: store)
         // The reader's demo over a novel: the window server's picture can leave the page's web
         // view blank, so each frame is drawn with WebKit's own picture of it, as a shot is.
