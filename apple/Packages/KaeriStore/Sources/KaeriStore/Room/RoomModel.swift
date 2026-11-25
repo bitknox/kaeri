@@ -399,6 +399,12 @@ public final class RoomModel {
 
     public func rejoin(_ room: RoomRecent) { act(.rejoin(roomId: room.roomId)) }
 
+    /// Open the player at the room's place, from Watch together.
+    public func openPlayer() {
+        shown = true
+        act(.openPlayer)
+    }
+
     private func act(_ action: RoomAction) {
         changedAt = .now
         send(action)

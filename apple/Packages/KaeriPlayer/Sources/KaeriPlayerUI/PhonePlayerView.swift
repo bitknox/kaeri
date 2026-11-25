@@ -86,12 +86,13 @@ public struct PhonePlayerView: View {
     /// Held upright in a room on a phone (or an iPad in a compact width): the video on top and
     /// the room under it. Turned sideways it is full screen with the strip.
     private func roomUpright(_ size: CGSize) -> Bool {
-        store.room.active && !sideways && size.width < 600
+        store.room.active && !(UIDevice.current.userInterfaceIdiom == .pad && size.width >= 600)
+            && size.height > size.width
     }
 
     /// An iPad in a regular width: the Mac's column beside the video.
     private func roomBeside(_ size: CGSize) -> Bool {
-        store.room.active && store.room.shown && size.width >= 600
+        store.room.active && store.room.shown && UIDevice.current.userInterfaceIdiom == .pad && size.width >= 600
     }
 
     public var body: some View {
@@ -119,6 +120,8 @@ public struct PhonePlayerView: View {
             .animation(reduceMotion ? .fadeIn : .standard, value: beside)
             .statusBarHidden(!upright)
         }
+        .onChange(of: store.room.active, initial: true) { _, active in PhoneOrientation.room(active) }
+        .onDisappear { PhoneOrientation.room(false) }
         .background(store.room.active ? Palette.ground : .black)
     }
 

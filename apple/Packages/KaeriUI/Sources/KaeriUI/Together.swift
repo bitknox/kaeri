@@ -616,7 +616,9 @@ struct TogetherScreen: View {
         Group {
             #if os(macOS)
             ZStack {
-                TogetherPlace()
+                // The room replaces the party's place; the party's lobby goes with the Syncplay
+                // engine once the room's engine lands.
+                RoomPlace()
                     .accessibilityHidden(party.lobbyShown)
                 if party.lobbyShown {
                     TogetherLobby()
@@ -626,7 +628,7 @@ struct TogetherScreen: View {
             }
             .animation(.standard, value: party.lobbyShown)
             #else
-            TogetherPlace()
+            RoomPlace()
                 .navigationDestination(isPresented: $party.lobbyShown) { TogetherLobby() }
             #endif
         }

@@ -27,91 +27,20 @@ extension Int64 {
     @MainActor static var nowMs: Int64 { RoomModel.stillAt ?? Int64((Date.now.timeIntervalSince1970 * 1000).rounded()) }
 }
 
-/// A face of `disc` points, with its ring around it.
+/// A face of `disc` points for a room member, with its ring around it.
 struct RoomFace: View {
     let name: String
     let look: RoomFaceLook
     let disc: CGFloat
 
-    private var stroke: CGFloat { disc >= 48 ? 3 : disc >= 30 ? 2 : 1.75 }
-    private var gap: CGFloat { disc >= 48 ? 3 : 2 }
-    var size: CGFloat { disc + 2 * (stroke + gap) }
-
     var body: some View {
-        ZStack {
-            ring
-            Text(String(name.prefix(1)))
-                .font(.system(size: (disc * 0.42).rounded(), weight: .semibold))
-                .foregroundStyle(.silk)
-                .frame(width: disc, height: disc)
-                .background(Palette.raisedSelected, in: .circle)
-                .opacity(look.dim)
-                .animation(.fadeIn, value: look.dim)
+        let ring: FaceRing = switch look.ring {
+        case .with: .with
+        case .paused: .paused
+        case .waiting(let part): .waiting(part)
+        case .none: .none
         }
-        .frame(width: size, height: size)
-        .overlay(alignment: .bottomTrailing) {
-            if look.pauseBadge {
-                let badge = max(12, (disc * 0.42).rounded())
-                Image(systemName: "pause.fill")
-                    .font(.system(size: badge * 0.5, weight: .bold))
-                    .foregroundStyle(.silk)
-                    .frame(width: badge, height: badge)
-                    .background(Palette.ground, in: .circle)
-                    .offset(x: 1, y: 1)
-            }
-        }
-        .overlay(alignment: .bottomTrailing) {
-            if look.error {
-                let dot = max(8, (disc * 0.28).rounded())
-                Circle()
-                    .fill(Palette.vermilion)
-                    .frame(width: dot, height: dot)
-                    .overlay(Circle().strokeBorder(Palette.ground, lineWidth: 2).padding(-2))
-                    .padding(stroke)
-            }
-        }
-        .accessibilityHidden(true)
-    }
-
-    @ViewBuilder
-    private var ring: some View {
-        let inset = stroke / 2
-        switch look.ring {
-        case .with:
-            Circle().inset(by: inset).stroke(Palette.water, lineWidth: stroke)
-        case .paused:
-            Circle().inset(by: inset).stroke(Palette.haze, lineWidth: stroke)
-        case .waiting(let part):
-            ZStack {
-                Circle().inset(by: inset).stroke(Palette.rule, lineWidth: stroke)
-                Circle().inset(by: inset)
-                    .trim(from: 0, to: part)
-                    .stroke(Palette.silk, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
-                    .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: part)
-            }
-        case .none:
-            EmptyView()
-        }
-    }
-}
-
-/// The "+3" face that opens the full list.
-struct RoomMoreFace: View {
-    let label: String
-    let disc: CGFloat
-
-    var body: some View {
-        let stroke: CGFloat = disc >= 48 ? 3 : disc >= 30 ? 2 : 1.75
-        let gap: CGFloat = disc >= 48 ? 3 : 2
-        Text(label)
-            .font(.system(size: (disc * 0.36).rounded(), weight: .semibold))
-            .foregroundStyle(.haze)
-            .frame(width: disc, height: disc)
-            .background(Palette.raised, in: .circle)
-            .overlay(Circle().strokeBorder(Palette.rule, lineWidth: 1))
-            .frame(width: disc + 2 * (stroke + gap), height: disc + 2 * (stroke + gap))
-            .accessibilityHidden(true)
+        PersonFace(name: name, ring: ring, dim: look.dim, pauseBadge: look.pauseBadge, error: look.error, disc: disc)
     }
 }
 
@@ -182,35 +111,5 @@ struct RoomStrip: View {
             .foregroundStyle(.silk)
             .animation(.fadeIn, value: carry)
         }
-    }
-}
-
-/// The room's buttons: amber for the one thing to press, quiet glass for the rest.
-struct RoomButtonStyle: ButtonStyle {
-    enum Kind { case primary, secondary, glass }
-    var kind: Kind = .secondary
-    var height: CGFloat = 32
-    var size: CGFloat = 13
-    var padding: CGFloat = 14
-    var wide = false
-    @Environment(\.isEnabled) private var enabled
-
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.system(size: size, weight: .semibold))
-            .lineLimit(1)
-            .padding(.horizontal, padding)
-            .frame(maxWidth: wide ? .infinity : nil)
-            .frame(height: height)
-            .foregroundStyle(kind == .primary ? Palette.ground : Palette.silk)
-            .background {
-                switch kind {
-                case .primary: Capsule().fill(Palette.amber)
-                case .secondary: Capsule().fill(Palette.silk.opacity(0.12)).overlay(Capsule().strokeBorder(Palette.glassEdge, lineWidth: 1))
-                case .glass: Capsule().fill(Palette.glass).overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
-                }
-            }
-            .opacity(configuration.isPressed ? 0.8 : enabled ? 1 : 0.5)
-            .contentShape(.capsule)
     }
 }
