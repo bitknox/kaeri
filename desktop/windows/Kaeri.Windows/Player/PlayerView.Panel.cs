@@ -821,9 +821,199 @@ public sealed partial class PlayerView
             return;
         c.Known.SourceChoices.Asking(playingId);
         c.Send(new Command.LoadSourceOptions(playingId));
-        if (panel.AskReleases() is { } asked)
+        if (panel.AskReleases(now: PanelNow) is { } asked)
+        {
             c.Send(new Command.LoadSources(asked.Id, asked.Episode));
+            SpinFromSilence();
+        }
     }
+
+    /// <summary>
+    /// The silent 600 ms after the tab asked end on time, not at the clock's next quarter second:
+    /// the rows still asked show their spinner and "Asking" then.
+    /// </summary>
+    void SpinFromSilence()
+    {
+        panelSilence ??= DispatcherQueue.CreateTimer();
+        panelSilence.IsRepeating = false;
+        panelSilence.Interval = TimeSpan.FromMilliseconds(PanelSwitch.Silent);
+        panelSilence.Tick -= OnSilenceOver;
+        panelSilence.Tick += OnSilenceOver;
+        panelSilence.Stop();
+        panelSilence.Start();
+    }
+
+    void OnSilenceOver(DispatcherQueueTimer sender, object args) => UpdateSourceRows();
+
+    DispatcherQueueTimer? panelSilence;
+
+    /// <summary>
+    /// A row under Other sources, kept so the engine's next word on its source changes it in place:
+    /// one line crossfading, its spinner going as the answer comes, the count and chevron fading in
+    /// at its end. Nothing is added, removed or moved while sources answer.
+    /// </summary>
+    sealed class OtherSourceRow
+    {
+        public required SourceGroup Group;
+        public SourceLine Line;
+        public Button? Button;
+        public SolidColorBrush? TitleBrush;
+        public Grid? DetailHost;
+        public TextBlock? Detail;
+        public ProgressRing? Spinner;
+        public Grid? Row;
+        public Action? Click;
+    }
+
+    /// <summary>The rows under Other sources as laid out, in order, while their sources are asked and after.</summary>
+    readonly List<OtherSourceRow> panelSourceRows = [];
+
+    /// <summary>Playing now's coverage line, held empty until the source options come.</summary>
+    TextBlock? panelPlayingDetail;
+
+    /// <summary>
+    /// The source options came while the rows say where each source stands: Playing now's held
+    /// line fades its coverage in, in place. False when Sources has to be laid out again instead.
+    /// </summary>
+    bool SayPlayingCoverage(Ctx c)
+    {
+        if (panel.Releases?.Rows is null || panelSourceRows.Count == 0)
+            return false;
+        var (_, playingOption, _) = SourcesContext(c);
+        if (playingOption is null)
+            return true;
+        if (panelPlayingDetail is not { } held)
+            return false;
+        held.Text = PanelWords.Source(playingOption);
+        held.Opacity = 0;
+        Motion.FadeLine(held, 1);
+        panelPlayingDetail = null;
+        return true;
+    }
+
+    /// <summary>The source options and the one playing, as Sources lays its rows out.</summary>
+    (SourceOption[]? Options, SourceOption? PlayingOption, string? PlayingProvider) SourcesContext(Ctx c)
+    {
+        var options = c.Known.SourceChoices.For(playingId);
+        var playingOption = options is null ? null
+            : panel.PlayingRelease is { } pr ? options.FirstOrDefault(o => o.ProviderId == pr.ProviderId)
+            : panel.PlayingSource is { } ps ? options.FirstOrDefault(o => o.Name == ps) : null;
+        // Before the source listing comes, the engine's rows name the source playing.
+        var playingProvider = panel.PlayingRelease?.ProviderId ?? playingOption?.ProviderId
+            ?? panel.Releases?.Rows?.FirstOrDefault(r => r.Name == panel.PlayingSource)?.ProviderId;
+        return (options, playingOption, playingProvider);
+    }
+
+    /// <summary>
+    /// The rows under Other sources follow the engine's last word on each source and the clock, in
+    /// place. When the rows themselves changed (another source, another order, an answer taken
+    /// back), Sources is laid out again instead.
+    /// </summary>
+    void UpdateSourceRows()
+    {
+        if (!panelReady || !panel.Open || ctx is not { } c)
+            return;
+        var (options, _, playingProvider) = SourcesContext(c);
+        var groups = PanelWords.Others(options, panel.Releases, playingProvider);
+        var same = groups.Length == panelSourceRows.Count && panelSourceRows.Count > 0;
+        for (var i = 0; same && i < groups.Length; i++)
+        {
+            var was = panelSourceRows[i];
+            same = was.Button is not null && was.Group.ProviderId == groups[i].ProviderId
+                && (was.Group is SourceGroup.Asking or SourceGroup.Waiting || was.Group.GetType() == groups[i].GetType());
+        }
+        if (!same)
+        {
+            BuildSources();
+            return;
+        }
+        var now = PanelNow;
+        for (var i = 0; i < groups.Length; i++)
+            Answer(panelSourceRows[i], groups[i], panel.Line(groups[i], now));
+    }
+
+    /// <summary>One row moves on to what its source says now.</summary>
+    void Answer(OtherSourceRow view, SourceGroup group, SourceLine line)
+    {
+        var was = view.Line;
+        if (line.Words != was.Words && view.DetailHost is { } host && view.Detail is { } old)
+        {
+            if (line.Kind == SourceLineKind.Counting && was.Kind == SourceLineKind.Counting)
+            {
+                // The seconds count on in place.
+                old.Text = line.Words;
+            }
+            else
+            {
+                var said = DetailText(line.Words);
+                said.Opacity = 0;
+                host.Children.Add(said);
+                view.Detail = said;
+                Motion.Swap(old, said, () => host.Children.Remove(old));
+            }
+        }
+        if (view.Spinner is { } ring && line.Spinner != was.Spinner)
+        {
+            if (line.Spinner)
+            {
+                ring.Visibility = Visibility.Visible;
+                ring.IsActive = true;
+                Motion.FadeLine(ring, 1);
+            }
+            else
+            {
+                Motion.FadeLine(ring, 0, () =>
+                {
+                    ring.IsActive = false;
+                    ring.Visibility = Visibility.Collapsed;
+                });
+            }
+        }
+        if (line.Haze && !was.Haze && view.TitleBrush is { } brush)
+            Haze(brush);
+        if (view.Button is { } button && view.Group is SourceGroup.Asking or SourceGroup.Waiting)
+        {
+            switch (group)
+            {
+                case SourceGroup.One one:
+                    view.Click = () => SwitchToRelease(one.Release);
+                    button.IsEnabled = true;
+                    break;
+                case SourceGroup.Releases r:
+                    view.Click = () => ToggleReleases(r.ProviderId);
+                    button.IsEnabled = true;
+                    if (view.Row is { } row)
+                    {
+                        var tail = Tail(r.ProviderId, T.PlayerPanelReleases(r.List.Length), panelOpenSources.Contains(r.ProviderId));
+                        tail.Opacity = 0;
+                        row.Children.Add(tail);
+                        Motion.FadeLine(tail, 1);
+                    }
+                    AutomationProperties.SetItemStatus(button, panelOpenSources.Contains(r.ProviderId) ? T.PlayerPanelLess : T.PlayerPanelMore);
+                    break;
+            }
+        }
+        if (view.Button is { } named && line.Words != was.Words)
+            AutomationProperties.SetName(named, RowName(group.Name, line.Words, group is SourceGroup.Releases many ? T.PlayerPanelReleases(many.List.Length) : null));
+        view.Group = group;
+        view.Line = line;
+    }
+
+    /// <summary>A title going to haze as its source's answer says it has nothing: the fade-in token.</summary>
+    static void Haze(SolidColorBrush brush)
+    {
+        if (Res("HazeBrush") is not SolidColorBrush haze)
+            return;
+        var animation = new ColorAnimation { To = haze.Color, Duration = Motion.Scaled(Motion.FadeInTime), EnableDependentAnimation = true };
+        Storyboard.SetTarget(animation, brush);
+        Storyboard.SetTargetProperty(animation, "Color");
+        var board = new Storyboard();
+        board.Children.Add(animation);
+        board.Begin();
+    }
+
+    static string RowName(string title, string? detail, string? count = null) =>
+        string.Join(", ", new[] { title, detail, count }.Where(w => !string.IsNullOrEmpty(w)));
 
     /// <summary>The rows on the Sources tab whose switch the clock moves on: the spinner, and "Starting · 3 s".</summary>
     readonly List<(SwitchTarget Target, UIElement Spinner, TextBlock Detail, TextBlock Counting)> panelChoices = [];
@@ -847,13 +1037,11 @@ public sealed partial class PlayerView
         }
         PanelSources.Children.Clear();
         panelChoices.Clear();
+        panelSourceRows.Clear();
+        panelPlayingDetail = null;
         if (ctx is not { } c)
             return;
-        var options = c.Known.SourceChoices.For(playingId);
-        var playingOption = options is null ? null
-            : panel.PlayingRelease is { } pr ? options.FirstOrDefault(o => o.ProviderId == pr.ProviderId)
-            : panel.PlayingSource is { } ps ? options.FirstOrDefault(o => o.Name == ps) : null;
-        var playingProvider = panel.PlayingRelease?.ProviderId ?? playingOption?.ProviderId;
+        var (options, playingOption, playingProvider) = SourcesContext(c);
 
         PanelSources.Children.Add(SectionHead(T.PlayerPanelPlayingNow));
         var name = panel.PlayingSource ?? playingOption?.Name;
@@ -863,6 +1051,14 @@ public sealed partial class PlayerView
             block.Children.Add(new TextBlock { Text = name, FontSize = 15, LineHeight = 22, FontWeight = FontWeights.SemiBold, TextWrapping = TextWrapping.Wrap, Foreground = Res("SilkBrush") });
             if (playingOption is not null)
                 block.Children.Add(DetailText(PanelWords.Source(playingOption)));
+            else if (c.Known.SourceChoices.Loading(playingId))
+            {
+                // The coverage line comes with the source options, which can wait on the slowest
+                // source: held one line high until then, so nothing below it moves.
+                panelPlayingDetail = DetailText("");
+                panelPlayingDetail.MinHeight = 16;
+                block.Children.Add(panelPlayingDetail);
+            }
             PanelSources.Children.Add(block);
         }
         if (panel.PlayingRelease is { } release)
@@ -964,13 +1160,21 @@ public sealed partial class PlayerView
     void AddGroup(SourceGroup group)
     {
         var line = group.Option is { } o ? PanelWords.Source(o) : null;
+        // While LoadSources asks, and after, each row says where its source stands, in place.
+        OtherSourceRow? view = null;
+        if (panel.Releases?.Rows is not null || group is SourceGroup.Waiting)
+        {
+            view = new OtherSourceRow { Group = group, Line = panel.Line(group, PanelNow) };
+            panelSourceRows.Add(view);
+            line = view.Line.Words;
+        }
         switch (group)
         {
             case SourceGroup.Releases r:
             {
                 var open = panelOpenSources.Contains(r.ProviderId);
                 PanelSources.Children.Add(ChoiceRow($"source/{r.ProviderId}", r.Name, line, new SwitchTarget(r.ProviderId, r.Name),
-                    disclosure: (T.PlayerPanelReleases(r.List.Length), open), click: () => ToggleReleases(r.ProviderId)));
+                    disclosure: (T.PlayerPanelReleases(r.List.Length), open), click: () => ToggleReleases(r.ProviderId), view: view));
                 if (!open)
                     break;
                 var list = new StackPanel { Tag = $"releases/{r.ProviderId}" };
@@ -989,16 +1193,30 @@ public sealed partial class PlayerView
             {
                 var release = one.Release;
                 PanelSources.Children.Add(ChoiceRow($"source/{one.ProviderId}", one.Name, line ?? PanelWords.Release(release),
-                    new SwitchTarget(release.ProviderId, one.Name, release.Id), click: () => SwitchToRelease(release)));
+                    new SwitchTarget(release.ProviderId, one.Name, release.Id), click: () => SwitchToRelease(release), view: view));
                 break;
             }
-            case SourceGroup.Dim dim:
-                PanelSources.Children.Add(ChoiceRow($"source/{dim.ProviderId}", dim.Name, line, new SwitchTarget(dim.ProviderId, dim.Name), dim: true));
+            case SourceGroup.Waiting or SourceGroup.Asking:
+                PanelSources.Children.Add(ChoiceRow($"source/{group.ProviderId}", group.Name, line, new SwitchTarget(group.ProviderId, group.Name), view: view));
                 break;
-            case SourceGroup.Waiting waiting:
-                PanelSources.Children.Add(ChoiceRow($"source/{waiting.ProviderId}", waiting.Name, line, new SwitchTarget(waiting.ProviderId, waiting.Name), waiting: true));
+            default:
+                // Resting, switched off, held back or with nothing for the episode.
+                PanelSources.Children.Add(ChoiceRow($"source/{group.ProviderId}", group.Name, line, new SwitchTarget(group.ProviderId, group.Name), dim: true, view: view));
                 break;
         }
+    }
+
+    /// <summary>The release count and the chevron at the end of a source's row.</summary>
+    FrameworkElement Tail(string provider, string count, bool open)
+    {
+        var tail = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
+        tail.Children.Add(new TextBlock { Text = count, FontSize = 12, Foreground = Res("HazeBrush"), VerticalAlignment = VerticalAlignment.Center });
+        var chevron = new FontIcon { Glyph = "", FontSize = 12, Width = 12, Height = 12, Foreground = Res("HazeBrush") };
+        tail.Children.Add(chevron);
+        Grid.SetColumn(tail, 2);
+        var turned = panelTurned is { } t && t.Provider == provider;
+        chevron.Loaded += (_, _) => Spin(chevron, turned ? (open ? 0 : 90) : (open ? 90 : 0), open ? 90 : 0);
+        return tail;
     }
 
     /// <summary>A source's releases open under it (0.3 s), or fold away (quick).</summary>
@@ -1075,7 +1293,7 @@ public sealed partial class PlayerView
     /// Try again. A row with nothing to pick is no button.
     /// </summary>
     FrameworkElement ChoiceRow(string key, string title, string? detail, SwitchTarget target, bool on = false, bool sub = false,
-        bool inset = false, bool dim = false, bool waiting = false, (string Count, bool Open)? disclosure = null, Action? click = null)
+        bool inset = false, bool dim = false, (string Count, bool Open)? disclosure = null, Action? click = null, OtherSourceRow? view = null)
     {
         var picked = panel.Switch is { } s && s.On(target) ? s : null;
         var now = PanelNow;
@@ -1095,11 +1313,19 @@ public sealed partial class PlayerView
         {
             slot.Children.Add(new FontIcon { Glyph = "", FontSize = 14, Foreground = Res("SilkBrush") });
         }
+        else if (view?.Line.Spinner == true)
+        {
+            // Its source is being asked.
+            spinner.Visibility = Visibility.Visible;
+            spinner.Opacity = 1;
+        }
         slot.Children.Add(spinner);
         line.Children.Add(slot);
 
         var words = new StackPanel { Spacing = 1, VerticalAlignment = VerticalAlignment.Center };
         Grid.SetColumn(words, 1);
+        // A row whose source may still answer has a brush of its own, for its title to go to haze.
+        var titleBrush = view is not null && Res(dim ? "HazeBrush" : "SilkBrush") is SolidColorBrush shared ? new SolidColorBrush(shared.Color) : null;
         words.Children.Add(new TextBlock
         {
             Text = title,
@@ -1107,10 +1333,11 @@ public sealed partial class PlayerView
             LineHeight = sub ? 18 : 20,
             FontWeight = sub ? FontWeights.Normal : FontWeights.SemiBold,
             TextWrapping = TextWrapping.Wrap,
-            Foreground = Res(dim ? "HazeBrush" : "SilkBrush"),
+            Foreground = titleBrush ?? Res(dim ? "HazeBrush" : "SilkBrush"),
         });
         var detailText = DetailText(detail ?? "");
-        detailText.Visibility = string.IsNullOrEmpty(detail) ? Visibility.Collapsed : Visibility.Visible;
+        // The detail line is held one line high from the first frame, so a row never grows as its source answers.
+        detailText.Visibility = string.IsNullOrEmpty(detail) && view is null ? Visibility.Collapsed : Visibility.Visible;
         var counting = DetailText("");
         counting.Opacity = 0;
         counting.Visibility = Visibility.Collapsed;
@@ -1121,32 +1348,23 @@ public sealed partial class PlayerView
             counting.Visibility = Visibility.Visible;
             detailText.Visibility = Visibility.Collapsed;
         }
-        var detailHost = new Grid();
+        var detailHost = new Grid { MinHeight = view is null ? 0 : 16 };
         detailHost.Children.Add(detailText);
         detailHost.Children.Add(counting);
-        if (waiting && string.IsNullOrEmpty(detail))
-            detailHost.Children.Add(new ProgressRing { Width = 12, Height = 12, IsActive = true, Margin = new Thickness(0, 2, 0, 2), HorizontalAlignment = HorizontalAlignment.Left, Foreground = Res("HazeBrush") });
         words.Children.Add(detailHost);
         line.Children.Add(words);
         if (picked is not null)
             panelChoices.Add((target, spinner, detailText, counting));
 
         if (disclosure is { } d)
-        {
-            var tail = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 4, VerticalAlignment = VerticalAlignment.Center };
-            tail.Children.Add(new TextBlock { Text = d.Count, FontSize = 12, Foreground = Res("HazeBrush"), VerticalAlignment = VerticalAlignment.Center });
-            var chevron = new FontIcon { Glyph = "", FontSize = 12, Width = 12, Height = 12, Foreground = Res("HazeBrush") };
-            tail.Children.Add(chevron);
-            Grid.SetColumn(tail, 2);
-            line.Children.Add(tail);
-            var turned = panelTurned is { } t && t.Provider == target.ProviderId;
-            chevron.Loaded += (_, _) => Spin(chevron, turned ? (d.Open ? 0 : 90) : (d.Open ? 90 : 0), d.Open ? 90 : 0);
-        }
+            line.Children.Add(Tail(target.ProviderId, d.Count, d.Open));
 
         var padding = new Thickness(2 + (inset ? 18 : 0), 8, 8, 8);
         FrameworkElement head;
-        if (click is not null)
+        if (click is not null || view is not null)
         {
+            // A row whose source is still asked, or has nothing, is a button that cannot be
+            // pressed, so it becomes one in place once its source lists a release.
             var button = new Button
             {
                 Style = (Style)Application.Current.Resources["PanelRowButtonStyle"],
@@ -1154,9 +1372,24 @@ public sealed partial class PlayerView
                 Padding = padding,
                 MinHeight = 44,
                 Tag = key,
+                IsEnabled = click is not null,
             };
-            button.Click += (_, _) => click();
-            AutomationProperties.SetName(button, string.Join(", ", new[] { title, detail, disclosure?.Count }.Where(w => !string.IsNullOrEmpty(w))));
+            if (view is not null)
+            {
+                view.Click = click;
+                view.Button = button;
+                view.TitleBrush = titleBrush;
+                view.DetailHost = detailHost;
+                view.Detail = detailText;
+                view.Spinner = spinner;
+                view.Row = line;
+                button.Click += (_, _) => view.Click?.Invoke();
+            }
+            else if (click is not null)
+            {
+                button.Click += (_, _) => click();
+            }
+            AutomationProperties.SetName(button, RowName(title, detail, disclosure?.Count));
             if (disclosure is { } open)
                 AutomationProperties.SetItemStatus(button, open.Open ? T.PlayerPanelLess : T.PlayerPanelMore);
             head = button;
@@ -1164,7 +1397,7 @@ public sealed partial class PlayerView
         else
         {
             head = new Border { Child = line, Padding = padding, MinHeight = 44, CornerRadius = new CornerRadius(4) };
-            AutomationProperties.SetName(head, string.Join(", ", new[] { title, detail }.Where(w => !string.IsNullOrEmpty(w))));
+            AutomationProperties.SetName(head, RowName(title, detail));
         }
         if (on)
             AutomationProperties.SetItemStatus(head, T.PlayerPanelPlayingNow);
@@ -1366,8 +1599,11 @@ public sealed partial class PlayerView
             case PanelState.Effect.ReleaseAndRelist:
                 ReleaseHeld();
                 // The other version's releases are the ones to list now.
-                if (ctx is { } c && panel.AskReleases(again: true) is { } asked)
+                if (ctx is { } c && panel.AskReleases(again: true, now: PanelNow) is { } asked)
+                {
                     c.Send(new Command.LoadSources(asked.Id, asked.Episode));
+                    SpinFromSilence();
+                }
                 break;
             case PanelState.Effect.ReleaseAndAlert when state is SourceSwitch.Failed failed:
                 ReleaseHeld();
@@ -1433,6 +1669,9 @@ public sealed partial class PlayerView
                 }
             }
         }
+        // The rows whose sources are still asked: their spinner from 600 ms, their seconds from 3 s.
+        if (panelSourceRows.Any(r => r.Group is SourceGroup.Asking or SourceGroup.Waiting))
+            UpdateSourceRows();
         if (panel.Tab == PanelTab.Episodes && !panelMetadataOnly && panelRealized.TryGetValue(playingEpisode, out var playing)
             && panelRows.TryGetValue(playingEpisode, out var row))
         {
@@ -1511,11 +1750,32 @@ public sealed partial class PlayerView
             case Event.ShowSettings st when st.V1.Id == playingId && panel.Open:
                 DispatcherQueue.TryEnqueue(() => RefreshPanelEpisodes());
                 break;
+            case Event.SourcesProgress progress:
+                if (panel.Progressed(progress.Id, progress.Episode, progress.Rows, PanelNow) && panel.Open)
+                    UpdateSourceRows();
+                break;
             case Event.Sources s:
+                // The rows said every answer already; the final word keeps the releases for a switch to land on.
                 if (panel.Listed(s.Id, s.Episode, s.Candidates) && panel.Open)
-                    BuildSources();
+                {
+                    if (panel.Releases?.Rows is not null)
+                        UpdateSourceRows();
+                    else
+                        BuildSources();
+                }
+                break;
+            case Event.SourcesFailed failed:
+                // No source was asked (the alert says why): the rows still waiting end, their spinners go.
+                if (panel.Failed(failed.Id, failed.Episode) && panel.Open)
+                    UpdateSourceRows();
                 break;
             case Event.SourceOptions o when o.Id == playingId && panel.Open:
+                // While the rows say each source's progress, the coverage lines crossfade in place.
+                if (ctx is { } known && SayPlayingCoverage(known))
+                    UpdateSourceRows();
+                else
+                    BuildSources();
+                break;
             case Event.TitleDub td when td.Id == playingId && panel.Open:
             case Event.PartyJoined or Event.PartyLeft when panel.Open:
                 BuildSources();

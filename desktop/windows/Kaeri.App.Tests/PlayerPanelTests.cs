@@ -350,4 +350,224 @@ public class PlayerPanelTests
         Assert.Null(panel.Switch);
         Assert.Null(panel.PlayingRelease);
     }
+
+    static SourceListing Listing(string id, string name, ListingState state) => new(id, name, state);
+
+    static SourceListing[] Rows(params (string Id, ListingState State)[] rows) =>
+        [.. rows.Select(r => Listing(r.Id, r.Id switch
+        {
+            "fixture" => "Fixture Source",
+            "home" => "Home server",
+            "folder" => "Media folder",
+            "index" => "Example index",
+            "second" => "Second example",
+            "archive" => "Archive example",
+            _ => "Old example",
+        }, r.State))];
+
+    static ListingState Asking => new ListingState.Asking();
+
+    static ListingState Listed(params SourceCandidate[] releases) => new ListingState.Listed(releases);
+
+    static ListingState Missed(ListingMiss miss) => new ListingState.Missed(miss);
+
+    /// <summary>What each row under Other sources says at <paramref name="now"/>: name, words, spinner, haze, pickable.</summary>
+    static (string Name, string Words, bool Spinner, bool Haze, bool Pick)[] Said(PanelState panel, long now, SourceOption[]? options = null) =>
+        [.. PanelWords.Others(options, panel.Releases, "fixture").Select(g =>
+        {
+            var line = panel.Line(g, now);
+            return (g.Name, line.Words, line.Spinner, line.Haze, g is SourceGroup.One or SourceGroup.Releases);
+        })];
+
+    /// <summary>
+    /// The SourcesLoading scene's sources as the engine says them, from the tab's ask at 1000 ms on
+    /// the panel's clock: Home server lists one release at 0.45 s, Media folder can't match the
+    /// title at 1.3 s, Example index lists five at 2.4 s, Archive example fails at 6.2 s and Second
+    /// example takes too long at 20 s; Old example is switched off. The rows at the board's five
+    /// frames: 0.3 s, 1 s, 4 s, 12 s and 21 s after the ask.
+    /// </summary>
+    [Fact]
+    public void SourcesLoadingSaysEachSourcesRowAsItAnswers()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(900001, "7");
+        const long asked = 1000;
+        Assert.Equal((900001u, "7"), panel.AskReleases(now: asked));
+        var one = Release("home", "h-1");
+        SourceCandidate[] five = [.. Enumerable.Range(1, 5).Select(i => Release("index", $"i-{i}"))];
+        SourceOption[] options = [Option("home", "Home server"), Option("folder", "Media folder"), Option("index", "Example index"), Option("second", "Second example"), Option("archive", "Archive example"), Option("old", "Old example")];
+        var coverage = T.SourcePickerCoverage(9, 12);
+        var off = new ListingState.Off();
+        (string, ListingState) Fixture() => ("fixture", Missed(new ListingMiss.NoEpisode()));
+
+        // Every row at once, in the order set in Sources; the one playing has its own place above.
+        Assert.True(panel.Progressed(900001, "7", Rows(Fixture(), ("home", Asking), ("folder", Asking), ("index", Asking), ("second", Asking), ("archive", Asking), ("old", off)), asked));
+        // 0.45 s: inside the silent 600 ms.
+        panel.Progressed(900001, "7", Rows(Fixture(), ("home", Listed(one)), ("folder", Asking), ("index", Asking), ("second", Asking), ("archive", Asking), ("old", off)), asked + 450);
+        Assert.Equal(
+            [
+                ("Home server", coverage, false, false, true),
+                ("Media folder", "", false, false, false),
+                ("Example index", "", false, false, false),
+                ("Second example", "", false, false, false),
+                ("Archive example", "", false, false, false),
+                ("Old example", "Switched off", false, true, false),
+            ],
+            Said(panel, asked + 500, options));
+        // 0.3 s, as the board's first frame: nothing asked shows yet.
+        Assert.All(Said(panel, asked + 300).Skip(1).SkipLast(1), row => Assert.Equal(("", false), (row.Words, row.Spinner)));
+
+        // 1 s: spinners and Asking; Home server never spun.
+        var at1 = Said(panel, asked + 1000);
+        Assert.Equal(("Home server", false), (at1[0].Name, at1[0].Spinner));
+        Assert.All(at1[1..5], row => Assert.Equal(("Asking", true, false), (row.Words, row.Spinner, row.Pick)));
+
+        // 4 s: Media folder couldn't match, Example index listed five; the slow two count.
+        panel.Progressed(900001, "7", Rows(Fixture(), ("home", Listed(one)), ("folder", Missed(new ListingMiss.Ambiguous())), ("index", Asking), ("second", Asking), ("archive", Asking), ("old", off)), asked + 1300);
+        panel.Progressed(900001, "7", Rows(Fixture(), ("home", Listed(one)), ("folder", Missed(new ListingMiss.Ambiguous())), ("index", Listed(five)), ("second", Asking), ("archive", Asking), ("old", off)), asked + 2400);
+        Assert.Equal(
+            [
+                ("Home server", coverage, false, false, true),
+                ("Media folder", "Couldn't match this title", false, true, false),
+                ("Example index", coverage, false, false, true),
+                ("Second example", "Asking · 4 s", true, false, false),
+                ("Archive example", "Asking · 4 s", true, false, false),
+                ("Old example", "Switched off", false, true, false),
+            ],
+            Said(panel, asked + 4200, options));
+        var index = Assert.IsType<SourceGroup.Releases>(PanelWords.Others(null, panel.Releases, "fixture")[2]);
+        Assert.Equal(5, index.List.Length);
+        // From 3 s exactly, and Asking before.
+        Assert.Equal("Asking", Said(panel, asked + 2999)[3].Words);
+        Assert.Equal("Asking · 3 s", Said(panel, asked + 3005)[3].Words);
+
+        // 12 s: Archive example didn't answer; Second example still counts.
+        panel.Progressed(900001, "7", Rows(Fixture(), ("home", Listed(one)), ("folder", Missed(new ListingMiss.Ambiguous())), ("index", Listed(five)), ("second", Asking), ("archive", Missed(new ListingMiss.Failed())), ("old", off)), asked + 6200);
+        var at12 = Said(panel, asked + 12_000);
+        Assert.Equal(("Asking · 12 s", true), (at12[3].Words, at12[3].Spinner));
+        Assert.Equal(("Didn't answer", false, true), (at12[4].Words, at12[4].Spinner, at12[4].Haze));
+
+        // 21 s: Second example took too long, and nothing is asked any more.
+        panel.Progressed(900001, "7", Rows(Fixture(), ("home", Listed(one)), ("folder", Missed(new ListingMiss.Ambiguous())), ("index", Listed(five)), ("second", Missed(new ListingMiss.TimedOut())), ("archive", Missed(new ListingMiss.Failed())), ("old", off)), asked + 20_000);
+        var at21 = Said(panel, asked + 21_000);
+        Assert.Equal(("Took too long", true), (at21[3].Words, at21[3].Haze));
+        Assert.DoesNotContain(at21, row => row.Spinner);
+        // The final word keeps the rows as they were said.
+        Assert.True(panel.Listed(900001, "7", [one, .. five]));
+        Assert.Equal(at21, Said(panel, asked + 21_000));
+    }
+
+    [Fact]
+    public void ARowSaysWhyItsSourceHasNothingInTheStartingScreensWords()
+    {
+        Assert.Equal("Didn't answer", PanelWords.Miss(new ListingMiss.Failed(), "7"));
+        Assert.Equal("Took too long", PanelWords.Miss(new ListingMiss.TimedOut(), "7"));
+        Assert.Equal("Doesn't have episode 7", PanelWords.Miss(new ListingMiss.NoEpisode(), "7"));
+        Assert.Equal("Doesn't have this show", PanelWords.Miss(new ListingMiss.NoMatch(), "7"));
+        Assert.Equal("Couldn't match this title", PanelWords.Miss(new ListingMiss.Ambiguous(), "7"));
+        Assert.Equal(StartScreen.HeldNote(SourceHold.Cellular), PanelWords.Miss(new ListingMiss.HeldBack(SourceHold.Cellular), "7"));
+        Assert.StartsWith("Not asked", PanelWords.Miss(new ListingMiss.HeldBack(SourceHold.TorrentsOff), "7"));
+        // The picker's lines name the source.
+        Assert.Equal("Alpha couldn't match this title", ReleasePicker.Missed(new MissedListing("Alpha", new ListingMiss.Ambiguous()), "7"));
+    }
+
+    [Fact]
+    public void AHeldBackSourceSaysSoFromTheFirstWordWithNoSpinner()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        panel.Progressed(7, "5", [Listing("index", "Example index", Missed(new ListingMiss.HeldBack(SourceHold.Cellular))), Listing("home", "Home server", Asking)], 1);
+        var rows = Said(panel, 4000);
+        Assert.Equal((StartScreen.HeldNote(SourceHold.Cellular), false, true, false), (rows[0].Words, rows[0].Spinner, rows[0].Haze, rows[0].Pick));
+        Assert.Equal(("Asking · 3 s", true), (rows[1].Words, rows[1].Spinner));
+        Assert.Equal((StartScreen.HeldNote(SourceHold.Cellular), false), (Said(panel, 1)[0].Words, Said(panel, 1)[0].Spinner));
+    }
+
+    [Fact]
+    public void RowsForAnotherAskAreLeftAloneAndANewAskStartsOver()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        Assert.False(panel.Progressed(7, "6", [Listing("home", "Home server", Asking)], 10), "another episode's rows");
+        Assert.True(panel.Progressed(7, "5", [Listing("home", "Home server", Asking)], 10));
+        Assert.Equal(SourceLineKind.Counting, panel.Line(PanelWords.Others(null, panel.Releases, null)[0], 3100).Kind);
+        // The other version landed: its releases are asked anew, and the seconds count from the new ask.
+        panel.AskReleases(again: true, now: 5000);
+        Assert.Null(panel.Releases?.Rows);
+        panel.Progressed(7, "5", [Listing("home", "Home server", Asking)], 5010);
+        Assert.Equal(SourceLineKind.Empty, panel.Line(PanelWords.Others(null, panel.Releases, null)[0], 5300).Kind);
+        Assert.Equal(SourceLineKind.Asking, panel.Line(PanelWords.Others(null, panel.Releases, null)[0], 5700).Kind);
+    }
+
+    /// <summary>
+    /// LoadSources couldn't ask any source (none set up, the title unreadable, the episode not
+    /// out): the engine's SourcesFailed ends the listing, and no row spins or counts on.
+    /// </summary>
+    [Fact]
+    public void AListingThatEndsBeforeAskingLeavesNoRowAsked()
+    {
+        SourceOption[] options = [Option("home", "Home server"), Option("index", "Example index")];
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        // No progress came: the rows are the source options, waiting, and they spin from 600 ms.
+        Assert.All(Said(panel, 4000, options), row => Assert.True(row.Spinner));
+        Assert.False(panel.Failed(7, "6"), "another episode's end");
+        Assert.True(panel.Failed(7, "5"));
+        var ended = Said(panel, 40_000, options);
+        Assert.Equal(2, ended.Length);
+        Assert.All(ended, row => Assert.Equal((false, true, false), (row.Spinner, row.Haze, row.Pick)));
+        Assert.All(PanelWords.Others(options, panel.Releases, "fixture"), group => Assert.IsType<SourceGroup.Dim>(group));
+
+        // Rows the engine said before it ended: those still asked end too; the answers stand.
+        panel.AskReleases(again: true, now: 50_000);
+        panel.Progressed(7, "5", [Listing("home", "Home server", Listed(Release("home", "h-1"))), Listing("index", "Example index", Asking)], 50_010);
+        Assert.True(panel.Failed(7, "5"));
+        var rows = Said(panel, 60_000, options);
+        Assert.Equal(("Home server", false, true), (rows[0].Name, rows[0].Spinner, rows[0].Pick));
+        Assert.Equal(("Example index", false, true, false), (rows[1].Name, rows[1].Spinner, rows[1].Haze, rows[1].Pick));
+    }
+
+    /// <summary>
+    /// A source whose saved option rests or failed, asked anyway and listing releases now, says
+    /// how much it has, never the older note, and can be picked.
+    /// </summary>
+    [Fact]
+    public void AListedSourceSaysItsCoverageNotAnOlderNote()
+    {
+        SourceOption[] options = [Option("home", "Home server", new SourceNote.Resting()), Option("index", "Example index", new SourceNote.Resting())];
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        panel.Progressed(7, "5", [Listing("home", "Home server", Listed(Release("home", "h-1"))), Listing("index", "Example index", Listed(Release("index", "i-1"), Release("index", "i-2")))], 10);
+        var coverage = T.SourcePickerCoverage(9, 12);
+        Assert.Equal(
+            [("Home server", coverage, false, false, true), ("Example index", coverage, false, false, true)],
+            Said(panel, 1000, options));
+        // A source that answered with nothing keeps its note.
+        panel.Progressed(7, "5", [Listing("home", "Home server", Listed()), Listing("index", "Example index", Listed(Release("index", "i-1")))], 20);
+        Assert.Equal(T.SourceNoteResting, Said(panel, 1000, options)[0].Words);
+    }
+
+    /// <summary>
+    /// Another episode while the Sources tab is open: its releases are asked anew, and its rows
+    /// start over from the new ask, with nothing of the last episode's left.
+    /// </summary>
+    [Fact]
+    public void AnotherEpisodeWithTheTabOpenAsksAgainFromTheStart()
+    {
+        var panel = new PanelState { Open = true, Tab = PanelTab.Sources };
+        panel.Playing(7, "5");
+        panel.AskReleases(now: 0);
+        panel.Progressed(7, "5", [Listing("home", "Home server", Asking)], 10);
+        panel.Playing(7, "6");
+        Assert.Equal((7u, "6"), panel.AskReleases(now: 20_000));
+        Assert.False(panel.Progressed(7, "5", [Listing("home", "Home server", Asking)], 20_010), "the last episode's rows");
+        Assert.True(panel.Progressed(7, "6", [Listing("home", "Home server", Asking)], 20_010));
+        var home = PanelWords.Others(null, panel.Releases, null)[0];
+        Assert.Equal(SourceLineKind.Empty, panel.Line(home, 20_300).Kind);
+        Assert.Equal(T.PlayerStartRowAsking, panel.Line(home, 21_000).Words);
+    }
 }

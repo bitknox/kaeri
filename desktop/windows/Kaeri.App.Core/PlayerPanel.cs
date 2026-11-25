@@ -96,8 +96,13 @@ public sealed record VersionSwitch(Translation To, PanelPhase Phase, long Since)
     }
 }
 
-/// <summary>The episode's releases across every source, as <c>LoadSources</c> answered, in the order the sources gave them.</summary>
-public sealed record PanelReleases(uint Id, string Episode, SourceCandidate[]? Candidates)
+/// <summary>
+/// The episode's releases across every source, as <c>LoadSources</c> answered, in the order the
+/// sources gave them; <paramref name="Rows"/> is each source's row as the engine last said it
+/// while it asks, and after. <paramref name="Ended"/>: the listing ended before any source was
+/// asked (none set up, the title unreadable, the episode not out), so no row is asked any more.
+/// </summary>
+public sealed record PanelReleases(uint Id, string Episode, SourceCandidate[]? Candidates, SourceListing[]? Rows = null, bool Ended = false)
 {
     /// <summary>One source's releases, in the order it gave them.</summary>
     public SourceCandidate[] Of(string providerId) => [.. (Candidates ?? []).Where(c => c.ProviderId == providerId)];
@@ -120,7 +125,35 @@ public abstract record SourceGroup(string ProviderId, string Name, SourceOption?
 
     /// <summary>Its releases have not come yet.</summary>
     public sealed record Waiting(string ProviderId, string Name, SourceOption? Option) : SourceGroup(ProviderId, Name, Option);
+
+    /// <summary>Being asked: nothing to pick until it answers.</summary>
+    public sealed record Asking(string ProviderId, string Name, SourceOption? Option) : SourceGroup(ProviderId, Name, Option);
+
+    /// <summary>Answered with nothing to offer, or held back and not asked: said, dimmed, and nothing to pick.</summary>
+    public sealed record Missed(string ProviderId, string Name, SourceOption? Option, ListingMiss Miss) : SourceGroup(ProviderId, Name, Option);
+
+    /// <summary>Switched off, so never asked.</summary>
+    public sealed record Off(string ProviderId, string Name, SourceOption? Option) : SourceGroup(ProviderId, Name, Option);
 }
+
+/// <summary>How a row's detail line stands while its source is asked.</summary>
+public enum SourceLineKind
+{
+    /// <summary>The silent 600 ms after the tab asked: the line is held empty, one line high.</summary>
+    Empty,
+
+    /// <summary>"Asking", with a spinner.</summary>
+    Asking,
+
+    /// <summary>"Asking · 4 s", with a spinner, from 3 s.</summary>
+    Counting,
+
+    /// <summary>The source's answer: its coverage line, or why it has nothing.</summary>
+    Said,
+}
+
+/// <summary>A row's detail line under Other sources: the words, whether the check slot spins, and whether the title goes to haze.</summary>
+public readonly record struct SourceLine(SourceLineKind Kind, string Words, bool Spinner, bool Haze);
 
 /// <summary>The words and choices the panel's rows share.</summary>
 public static class PanelWords
@@ -226,9 +259,12 @@ public static class PanelWords
     /// <summary>A source's line: why it is resting, or how much of the title it has.</summary>
     public static string Source(SourceOption option) => option.Note switch
     {
-        null => T.SourcePickerCoverage(option.Covered, option.Of),
+        null => Coverage(option),
         _ => SourcePicker.Detail(option),
     };
+
+    /// <summary>How much of the title a source has, whatever its note: the line of a source that listed releases now.</summary>
+    public static string Coverage(SourceOption option) => T.SourcePickerCoverage(option.Covered, option.Of);
 
     /// <summary>
     /// When a broadcast airs: "today at 16:30", "tomorrow at 16:30", "on Thursday at 16:30" within
@@ -280,6 +316,8 @@ public static class PanelWords
     /// </summary>
     public static SourceGroup[] Others(SourceOption[]? options, PanelReleases? releases, string? skip)
     {
+        if (releases?.Rows is { } rows)
+            return [.. rows.Where(r => r.ProviderId != skip).Select(r => Row(r, options?.FirstOrDefault(o => o.ProviderId == r.ProviderId), releases.Ended))];
         var known = releases?.Candidates is not null;
         IEnumerable<(string Provider, string Name, SourceOption? Option)> groups = options is not null
             ? options.Where(o => o.ProviderId != skip).Select(o => (o.ProviderId, o.Name, (SourceOption?)o))
@@ -301,6 +339,33 @@ public static class PanelWords
             }),
         ];
     }
+
+    /// <summary>One source's row as the engine said it while it asks, and after.</summary>
+    static SourceGroup Row(SourceListing row, SourceOption? option, bool ended) => row.State switch
+    {
+        ListingState.Asking when ended => new SourceGroup.Dim(row.ProviderId, row.Name, option),
+        ListingState.Listed { Releases.Length: > 1 } listed => new SourceGroup.Releases(row.ProviderId, row.Name, option, listed.Releases),
+        ListingState.Listed { Releases: [var one] } => new SourceGroup.One(row.ProviderId, row.Name, option, one),
+        ListingState.Listed => new SourceGroup.Dim(row.ProviderId, row.Name, option),
+        ListingState.Missed missed => new SourceGroup.Missed(row.ProviderId, row.Name, option, missed.Miss),
+        ListingState.Off => new SourceGroup.Off(row.ProviderId, row.Name, option),
+        _ => new SourceGroup.Asking(row.ProviderId, row.Name, option),
+    };
+
+    /// <summary>
+    /// Why a source has nothing for the episode, as the starting screen's rows say it: "Didn't
+    /// answer", "Took too long", "Doesn't have episode 7", "Couldn't match this title", or "Not
+    /// asked" with the reason.
+    /// </summary>
+    public static string Miss(ListingMiss miss, string episode) => miss switch
+    {
+        ListingMiss.NoMatch => T.PlayerStartRowNoMatch,
+        ListingMiss.Ambiguous => T.SourceNoteAmbiguous,
+        ListingMiss.NoEpisode => T.PlayerStartRowNoEpisode(episode),
+        ListingMiss.TimedOut => T.PlayerStartRowTimedOut,
+        ListingMiss.HeldBack held => StartScreen.HeldNote(held.Why),
+        _ => T.PlayerStartRowFailed,
+    };
 
     /// <summary>Whether the dub does not reach this episode yet, so Dubbed cannot be picked.</summary>
     public static bool PastDub(DubExtent? dub, string? episode) =>
@@ -330,6 +395,12 @@ public sealed class PanelState
 
     /// <summary>The episode's releases across every source, as the panel last asked for them.</summary>
     public PanelReleases? Releases { get; private set; }
+
+    /// <summary>When the releases were last asked for, in milliseconds on the panel's clock: the silent 600 ms count from here.</summary>
+    public long AskedAt { get; private set; }
+
+    /// <summary>When each source's row first said it is asked, by provider id: its seconds count from here.</summary>
+    readonly Dictionary<string, long> askingSince = [];
 
     /// <summary>The switch picked in the panel, from the pick until it lands, or its failure until the next pick.</summary>
     public PanelSwitch? Switch { get; private set; }
@@ -405,14 +476,68 @@ public sealed class PanelState
     /// The releases to ask for, or null when the ones asked for are this episode's already, unless
     /// <paramref name="again"/>.
     /// </summary>
-    public (uint Id, string Episode)? AskReleases(bool again = false)
+    public (uint Id, string Episode)? AskReleases(bool again = false, long now = 0)
     {
         if (Episode is not { } e)
             return null;
         if (!again && Releases is { } r && r.Id == e.Id && r.Episode == e.Episode)
             return null;
         Releases = new PanelReleases(e.Id, e.Episode, null);
+        AskedAt = now;
+        askingSince.Clear();
         return e;
+    }
+
+    /// <summary>
+    /// The engine's rows while it asks: kept, whole, when they are for the episode asked for. A row
+    /// that says it is asked for the first time starts its seconds at <paramref name="now"/>.
+    /// </summary>
+    public bool Progressed(uint id, string episode, SourceListing[] rows, long now)
+    {
+        if (Releases is not { } r || r.Id != id || r.Episode != episode)
+            return false;
+        foreach (var row in rows)
+        {
+            if (row.State is ListingState.Asking)
+                askingSince.TryAdd(row.ProviderId, now);
+        }
+        Releases = r with { Rows = rows };
+        return true;
+    }
+
+    /// <summary>
+    /// What a row under Other sources says at <paramref name="now"/>: nothing for the 600 ms after
+    /// the tab asked, then "Asking" and a spinner, then "Asking · 4 s" from 3 s after the row first
+    /// said it is asked; once it answered, its coverage line or why it has nothing.
+    /// </summary>
+    public SourceLine Line(SourceGroup group, long now)
+    {
+        // A source that listed releases now says how much it has, never an older resting or failed note.
+        var coverage = group.Option is { } o
+            ? group is SourceGroup.One or SourceGroup.Releases ? PanelWords.Coverage(o) : PanelWords.Source(o)
+            : null;
+        switch (group)
+        {
+            case SourceGroup.Asking or SourceGroup.Waiting:
+            {
+                if (now - AskedAt < PanelSwitch.Silent)
+                    return new SourceLine(SourceLineKind.Empty, "", false, false);
+                var since = askingSince.TryGetValue(group.ProviderId, out var at) ? at : AskedAt;
+                return now - since >= PanelSwitch.CountingFrom
+                    ? new SourceLine(SourceLineKind.Counting, T.PlayerPanelAsking((now - since) / 1000), true, false)
+                    : new SourceLine(SourceLineKind.Asking, T.PlayerStartRowAsking, true, false);
+            }
+            case SourceGroup.Missed missed:
+                return new SourceLine(SourceLineKind.Said, PanelWords.Miss(missed.Miss, Episode?.Episode ?? Releases?.Episode ?? ""), false, true);
+            case SourceGroup.Off:
+                return new SourceLine(SourceLineKind.Said, T.SourceNoteOff, false, true);
+            case SourceGroup.Dim:
+                return new SourceLine(SourceLineKind.Said, coverage ?? "", false, true);
+            case SourceGroup.One one:
+                return new SourceLine(SourceLineKind.Said, coverage ?? PanelWords.Release(one.Release), false, false);
+            default:
+                return new SourceLine(SourceLineKind.Said, coverage ?? "", false, false);
+        }
     }
 
     /// <summary>The engine's listing: kept when it is for the episode asked for.</summary>
@@ -421,6 +546,18 @@ public sealed class PanelState
         if (Releases is not { } r || r.Id != id || r.Episode != episode)
             return false;
         Releases = r with { Candidates = candidates };
+        return true;
+    }
+
+    /// <summary>
+    /// The engine ended the listing before asking any source: kept as ended, with no releases,
+    /// when it is for the episode asked for, so no row says it is asked any more.
+    /// </summary>
+    public bool Failed(uint id, string episode)
+    {
+        if (Releases is not { } r || r.Id != id || r.Episode != episode)
+            return false;
+        Releases = r with { Candidates = r.Candidates ?? [], Ended = true };
         return true;
     }
 
