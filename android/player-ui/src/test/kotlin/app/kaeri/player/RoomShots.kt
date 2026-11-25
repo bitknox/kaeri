@@ -108,7 +108,7 @@ class RoomShots {
         canCarryOn = canCarryOn,
         relays = relays,
         moveCandidates = listOf(
-            MoveCandidate("ada", "Ada", muted = false, ticked = true),
+            MoveCandidate("mika", "Mika", muted = false, ticked = true),
             MoveCandidate("ren", "Ren", muted = false, ticked = true),
             MoveCandidate("taro", "Taro", muted = true, ticked = false),
         ),
