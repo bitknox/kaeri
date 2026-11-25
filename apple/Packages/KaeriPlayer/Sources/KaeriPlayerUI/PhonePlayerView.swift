@@ -37,6 +37,9 @@ public struct PhonePlayerView: View {
     /// keyboard frame was a full one rather than a hardware keyboard's shortcuts bar.
     @State private var softKeyboard = GCKeyboard.coalesced == nil
     @State private var width: CGFloat = 0
+    /// Sideways in a room: the chat field is open.
+    @State private var roomTyping = false
+    @FocusState private var roomFieldFocus: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppStore.self) private var store
     private let metrics = PlayerMetrics.phone
@@ -80,7 +83,94 @@ public struct PhonePlayerView: View {
     /// How far the swipe down has gone toward closing, 0 to 1.
     private var pull: CGFloat { min(drag / 120, 1) }
 
+    /// Held upright in a room on a phone (or an iPad in a compact width): the video on top and
+    /// the room under it. Turned sideways it is full screen with the strip.
+    private func roomUpright(_ size: CGSize) -> Bool {
+        store.room.active && !sideways && size.width < 600
+    }
+
+    /// An iPad in a regular width: the Mac's column beside the video.
+    private func roomBeside(_ size: CGSize) -> Bool {
+        store.room.active && store.room.shown && size.width >= 600
+    }
+
     public var body: some View {
+        GeometryReader { outer in
+            let upright = roomUpright(outer.size)
+            let beside = roomBeside(outer.size)
+            HStack(spacing: 0) {
+                VStack(spacing: 0) {
+                    playerBody
+                        .overlay { roomLayer(upright: upright) }
+                        .frame(height: upright ? (outer.size.width * 220 / 390).rounded() : nil)
+                    if upright {
+                        PhoneRoomUpright(room: store.room, tracks: { sheet = .tracks }, episodes: { sheet = .episodes })
+                            .ignoresSafeArea(.container, edges: .bottom)
+                            .transition(.opacity)
+                    }
+                }
+                if beside {
+                    RoomColumn(room: store.room, height: outer.size.height)
+                        .ignoresSafeArea()
+                        .transition(.opacity)
+                }
+            }
+            .animation(reduceMotion ? .fadeIn : .standard, value: upright)
+            .animation(reduceMotion ? .fadeIn : .standard, value: beside)
+            .statusBarHidden(!upright)
+        }
+        .background(store.room.active ? Palette.ground : .black)
+    }
+
+    /// Over the video in a room: the room's panel, and the strip while sideways.
+    @ViewBuilder
+    private func roomLayer(upright: Bool) -> some View {
+        let room = store.room
+        if let panel = room.videoPanel {
+            PhoneRoomVideoPanel(room: room, panel: panel)
+                .transition(.opacity)
+        }
+        if room.inRoom, !upright, sideways || !room.shown {
+            RoomStrip(room: room, disc: 26, touch: true)
+                .padding(.top, visible ? 76 : 14)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .animation(.standard, value: visible)
+                .transition(.opacity)
+        }
+        if room.inRoom, sideways, roomTyping {
+            roomField
+        }
+    }
+
+    /// Sideways in a room: the chat field over the video's foot.
+    private var roomField: some View {
+        let room = store.room
+        return HStack(spacing: 8) {
+            TextField("", text: Binding(get: { room.draft }, set: { room.draft = $0 }), prompt: Text(RoomCopy.saySomething).foregroundStyle(.haze))
+                .font(.system(size: 16))
+                .focused($roomFieldFocus)
+                .submitLabel(.send)
+                .onSubmit { room.say(); roomTyping = false }
+                .padding(.horizontal, 16)
+                .frame(height: 44)
+                .glassEffect(.regular, in: .capsule)
+            Button { room.say(); roomTyping = false } label: {
+                Image(systemName: "arrow.up").font(.system(size: 18, weight: .bold))
+                    .frame(width: 44, height: 44)
+                    .background(Palette.amber, in: .circle)
+                    .foregroundStyle(Palette.ground)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(RoomCopy.send)
+        }
+        .padding(.horizontal, 56)
+        .padding(.bottom, 20)
+        .frame(maxHeight: .infinity, alignment: .bottom)
+        .onAppear { roomFieldFocus = true }
+        .onChange(of: roomFieldFocus) { _, focused in if !focused, room.draft.isEmpty { roomTyping = false } }
+    }
+
+    private var playerBody: some View {
         GeometryReader { proxy in
             ZStack {
                 Color.black
@@ -192,7 +282,6 @@ public struct PhonePlayerView: View {
             )
         }
         .ignoresSafeArea()
-        .statusBarHidden()
         .persistentSystemOverlays(.hidden)
         .playerAccessibility(model)
         .sensoryFeedback(.impact(weight: .light), trigger: drag > 120) { _, crossed in crossed }
@@ -309,11 +398,16 @@ public struct PhonePlayerView: View {
             .lineLimit(1)
             .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 0) {
-                headerButton(
-                    PartyButton.symbol(inParty: store.party.inParty), PartyButton.label(inParty: store.party.inParty)
-                ) {
-                    // The party while in one, the form that starts one otherwise.
-                    if store.party.inParty { sheet = .party } else { store.party.open(.playing) }
+                if store.room.inRoom {
+                    // In a room: Chat opens the field (sideways; upright the room has its own).
+                    headerButton("bubble.left", L.partyChatTitle) { roomTyping = true }
+                } else if !store.room.active {
+                    // Watch together: a room starts from this episode.
+                    headerButton("person.2", RoomCopy.columnTitle) {
+                        if let id = model.starting?.id ?? model.staged?.id {
+                            store.room.start(id: id, episode: model.episode?.number ?? model.startingEpisode ?? "")
+                        }
+                    }
                 }
                 if chatShown, store.party.chat.allowed {
                     headerButton("bubble.left", L.partyChatTitle) { startTyping() }
