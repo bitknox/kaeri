@@ -2591,7 +2591,9 @@ async fn a_switch_picked_while_another_loads_goes_back_to_what_last_played() {
     use kaeri_model::playback::SourceSwitch;
 
     let choose = |stream: &str| {
-        PlaybackEvent::Script(ScriptEvent::Choose(kaeri_playback::Choice::Source(stream.into())))
+        PlaybackEvent::Script(ScriptEvent::Choose(kaeri_playback::Choice::Source(
+            stream.into(),
+        )))
     };
     // Stream 1 is picked and, before it shows a frame, stream 2; that shows none either.
     let picked = [plays(0.0, 3), vec![choose("1")]].concat();
