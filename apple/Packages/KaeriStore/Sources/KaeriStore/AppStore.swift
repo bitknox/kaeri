@@ -96,6 +96,8 @@ public final class AppStore {
     public let sync = SyncModel()
     /// The watch party this device is in, and the sheets that start one.
     public let party = PartyModel()
+    /// The room this device is in: the video's people and chat (the room board).
+    public let room = RoomModel()
     /// The subtitle style before the last reset, for its Undo.
     @ObservationIgnored var subtitleBeforeReset: SubtitleStyle?
     /// Where the built-in demo stands.

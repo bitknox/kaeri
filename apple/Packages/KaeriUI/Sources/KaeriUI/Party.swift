@@ -125,7 +125,7 @@ public struct PartySheets: ViewModifier {
             }
             // The red button and ⌘W ask first while in a party, as quitting does.
             .background {
-                if here { PartyCloseGuard(asks: { party.asksBeforeClosing() }) { window = $0 } }
+                if here { PartyCloseGuard(asks: { party.asksBeforeClosing() || store.room.asksBeforeClosing() }) { window = $0 } }
             }
             #endif
     }

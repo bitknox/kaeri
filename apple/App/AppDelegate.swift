@@ -345,6 +345,10 @@ final class AppDelegate: NSObject {
         if let scene = PartyScene.named() {
             ready = await player.stage(scene, store: store) && ready
         }
+        // A screenshot of the room: its scene around a Fixtures episode.
+        if let scene = RoomScene.named() {
+            ready = await player.stage(scene, store: store) && ready
+        }
         // A screenshot of Watch together: the scene's recent rooms, and the state named.
         if let scene = TogetherScene.named() {
             ready = await store.party.stage(scene, store: store) && ready

@@ -243,6 +243,19 @@ final class Delegate: NSObject, NSApplicationDelegate {
                 await frames(of: nil, in: window, to: url)
             }
         }
+        if let scene = RoomScene.named() {
+            // A recording's scene (morph, fullloop): frames from the moment the episode plays.
+            if !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
+                if options.reduceMotion { navigator.motionReduced = true }
+                let staging = Task { await player.stage(scene, store: store) }
+                await frames(of: nil, in: window, to: url)
+                let there = await staging.value
+                print(there ? "KaeriDev: the room is at \(scene.rawValue)" : "KaeriDev: the room did not reach \(scene.rawValue)")
+            } else {
+                let there = await player.stage(scene, store: store)
+                print(there ? "KaeriDev: the room is at \(scene.rawValue)" : "KaeriDev: the room did not reach \(scene.rawValue)")
+            }
+        }
         if let scene = TogetherScene.named() {
             let there = await store.party.stage(scene, store: store)
             print(there ? "KaeriDev: Watch together is at \(scene.rawValue)" : "KaeriDev: Watch together did not reach \(scene.rawValue)")
@@ -323,7 +336,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
         } catch {
             FileHandle.standardError.write(Data("KaeriDev: \(error)\n".utf8))
         }
-        if options.playerShot != nil || PartyScene.named() != nil || TogetherScene.named() != nil {
+        if options.playerShot != nil || PartyScene.named() != nil || TogetherScene.named() != nil || RoomScene.named() != nil {
+            store.room.clear()
             store.party.leave()
             player.viewerClosed()
             try? await Task.sleep(for: .milliseconds(300))
