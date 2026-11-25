@@ -101,15 +101,20 @@ public struct PhonePlayerView: View {
             let beside = roomBeside(outer.size)
             HStack(spacing: 0) {
                 VStack(spacing: 0) {
+                    // Upright, the video sits under the status bar: the padding takes the top
+                    // inset, so the player's own ignoresSafeArea has none left to grow into.
                     playerBody
                         .overlay { roomLayer(upright: upright) }
                         .frame(height: upright ? (outer.size.width * 220 / 390).rounded() : nil)
+                        .clipped()
+                        .padding(.top, upright ? outer.safeAreaInsets.top : 0)
                     if upright {
                         PhoneRoomUpright(room: store.room, tracks: { sheet = .tracks }, episodes: { sheet = .episodes })
                             .ignoresSafeArea(.container, edges: .bottom)
                             .transition(.opacity)
                     }
                 }
+                .ignoresSafeArea(.container, edges: upright ? .top : [])
                 if beside {
                     RoomColumn(room: store.room, height: outer.size.height)
                         .ignoresSafeArea()

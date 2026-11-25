@@ -7,6 +7,9 @@
 import Foundation
 import KaeriKit
 import KaeriStore
+#if os(iOS)
+import UIKit
+#endif
 
 /// A room's state a screenshot shows: `-KaeriRoom wait`.
 public enum RoomScene: String, CaseIterable, Sendable {
@@ -104,6 +107,9 @@ public enum RoomScene: String, CaseIterable, Sendable {
         guard let index = arguments.firstIndex(of: argument), arguments.indices.contains(index + 1) else { return nil }
         return RoomScene(rawValue: arguments[index + 1])
     }
+
+    /// The scene goes full screen, which only an app in the Dock can.
+    public var fullScreen: Bool { self == .full || self == .fullcap || self == .fullloop }
 
     /// The scene is Watch together's page, not the player.
     var place: Bool { rawValue.hasPrefix("place") }
@@ -348,6 +354,15 @@ extension PlayerModel {
             }
         default: break
         }
+        #if os(iOS)
+        // A room opens upright; a sideways shot (shots.sh --landscape) turns it back as the
+        // person turning the phone would.
+        if UIDevice.current.userInterfaceIdiom == .phone, UIDevice.current.orientation.isLandscape,
+           let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first {
+            try? await Task.sleep(for: .milliseconds(600))
+            scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { _ in }
+        }
+        #endif
         // The column's contents fade in after the window grows.
         try? await Task.sleep(for: .milliseconds(900))
         return room.active
@@ -356,27 +371,27 @@ extension PlayerModel {
     /// Watch together's page: the board's three recent rooms, and the room or failure named.
     private func stagePlace(_ scene: RoomScene, store: AppStore) async -> Bool {
         let room = store.room
-        guard await roomWaited(30, { store.continuing.queue(store.titles).all.count >= 3 }) else { return false }
+        // The Fixtures recent rooms give the titles and art.
+        store.party.loadTogether()
+        guard await roomWaited(30, { store.party.recent.count >= 3 }) else { return false }
         let now = Int64((Date.now.timeIntervalSince1970 * 1000).rounded())
         RoomModel.stillAt = now
-        let items = Array(store.continuing.queue(store.titles).all.prefix(3))
-        let entries = items.compactMap { store.titles[$0.id] }
-        guard entries.count == 3 else { return false }
+        let kept = Array(store.party.recent.prefix(3))
         let recent = [
-            RoomRecent(roomId: "r1", title: entries[0].title, id: entries[0].id, episode: String(items[0].episode),
+            RoomRecent(roomId: "r1", title: kept[0].title, id: kept[0].id, episode: "8",
                        others: ["Mika", "Ren"], lastAt: "19:25", quiet: scene == .placerecentfail), // i18n-skip
-            RoomRecent(roomId: "r2", title: entries[1].title, id: entries[1].id, episode: String(items[1].episode),
+            RoomRecent(roomId: "r2", title: kept[1].title, id: kept[1].id, episode: "3",
                        others: ["Mika"], lastAt: "Tuesday"), // i18n-skip
-            RoomRecent(roomId: "r3", title: entries[2].title, id: entries[2].id, episode: String(items[2].episode),
+            RoomRecent(roomId: "r3", title: kept[2].title, id: kept[2].id, episode: "1",
                        others: [], lastAt: "18 November"), // i18n-skip
         ]
         room.stage(recent: recent, joinFailed: scene == .placejoinfail ? "kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe" : nil)
         if scene == .placeroom {
             let s = RoomStage.self
-            let episode = String(items[0].episode)
+            let episode = "8"
             let view = RoomView(
-                roomId: "r1", title: entries[0].title,
-                episode: RoomEpisode(id: items[0].id, episode: episode, name: "The Long Leg", duration: 1420), // i18n-skip
+                roomId: "r1", title: kept[0].title,
+                episode: RoomEpisode(id: kept[0].id, episode: episode, name: "The Long Leg", duration: 1420), // i18n-skip
                 position: RoomStage.position, positionAtMs: now, playing: true, relays: s.relays, link: s.link)
             room.stage(view: view,
                        members: [s.member("Ada", .playerClosed, you: true), s.member("Mika", .watching), s.member("Ren", .watching)],

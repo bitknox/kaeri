@@ -351,7 +351,8 @@ struct RoomMoveDialog: View {
                         .buttonStyle(RoomButtonStyle(kind: .secondary, height: 32, wide: true))
                         .keyboardShortcut(.cancelAction)
                     Button(RoomCopy.moveWith(room.moveTicks.count)) { room.move() }
-                        .buttonStyle(RoomButtonStyle(kind: .primary, height: 32, wide: true))
+                        .buttonStyle(RoomButtonStyle(kind: .primary, height: 32))
+                        .fixedSize()
                         .disabled(room.moveTicks.isEmpty)
                         .keyboardShortcut(.defaultAction)
                 }
