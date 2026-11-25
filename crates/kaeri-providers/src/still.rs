@@ -287,34 +287,48 @@ mod tests {
     #[tokio::test(flavor = "multi_thread")]
     async fn waits_up_to_the_hold_end_in_order_at_once() {
         // Held at nought until all four waits are on it, as a spawned task may begin its wait
-        // after the clock has moved on, and then held at 5 s from there.
+        // after the clock has moved on. Then held at 1 s, 3 s and 5 s in turn: the clock stops at
+        // each hold, so what has ended by then is read there, not as the clock runs on past a
+        // wait's end before a late task reads it.
         let clock = StillClock::held_at(Duration::ZERO);
         let ended = Arc::new(Mutex::new(Vec::new()));
-        let waits: Vec<_> = [4_500, 450, 2_400, 1_300]
+        let mut waits: BTreeMap<u64, _> = [4_500, 450, 2_400, 1_300]
             .into_iter()
             .map(|length| {
                 let (clock, ended) = (clock.clone(), Arc::clone(&ended));
-                tokio::spawn(async move {
+                let wait = tokio::spawn(async move {
                     clock.wait(ms(length)).await;
                     ended.lock().unwrap().push((length, clock.now()));
-                })
+                });
+                (length, wait)
             })
             .collect();
-        for length in [4_500, 450, 2_400, 1_300] {
-            waiting(&clock, ms(length)).await;
+        for length in waits.keys() {
+            waiting(&clock, ms(*length)).await;
         }
         let started = std::time::Instant::now();
-        clock.hold_from_start(ms(5_000));
-        for wait in waits {
-            tokio::time::timeout(PATIENCE, wait).await.unwrap().unwrap();
+        clock.hold_from_start(ms(1_000));
+        for (hold, due) in [(1_000, &[450][..]), (3_000, &[1_300, 2_400]), (5_000, &[4_500])] {
+            if hold > 1_000 {
+                clock.hold(ms(hold));
+            }
+            reaches(&clock, ms(hold)).await;
+            for length in due {
+                let wait = waits.remove(length).unwrap();
+                tokio::time::timeout(PATIENCE, wait).await.unwrap().unwrap();
+            }
+            for (length, wait) in &waits {
+                assert!(!wait.is_finished(), "the wait of {length} ms ended before {hold} ms");
+            }
         }
         let ended = ended.lock().unwrap().clone();
-        assert_eq!(
-            ended,
-            vec![(450, ms(450)), (1_300, ms(1_300)), (2_400, ms(2_400)), (4_500, ms(4_500)),]
-        );
+        let order: Vec<_> = ended.iter().map(|(length, _)| *length).collect();
+        assert_eq!(order[0], 450, "{ended:?}");
+        assert_eq!(order[3], 4_500, "{ended:?}");
+        for (length, seen) in &ended {
+            assert!(*seen >= ms(*length), "the wait of {length} ms ended at {seen:?}");
+        }
         assert!(started.elapsed() < Duration::from_secs(2), "took {:?}", started.elapsed());
-        reaches(&clock, ms(5_000)).await;
     }
 
     /// A wait past the hold does not end; moving the hold on ends it.
@@ -379,7 +393,9 @@ mod tests {
         tokio::time::sleep(QUIET * 2).await;
         assert_eq!(clock.now(), Duration::ZERO, "it went on before the scene waited");
         clock.wait(ms(4_500)).await;
-        assert_eq!(clock.now(), ms(4_500));
+        // Read after the wait ends, which the clock may have left for the hold by then.
+        let seen = clock.now();
+        assert!(seen >= ms(4_500) && seen <= ms(5_000), "the wait ended at {seen:?}");
         reaches(&clock, ms(5_000)).await;
     }
 
