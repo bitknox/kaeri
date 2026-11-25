@@ -166,7 +166,7 @@ struct HomeScreen: View {
         .navigationDestination(isPresented: Binding(
             get: { !wide && store.party.placeShown },
             set: { store.party.placeShown = $0 }
-        )) { PhoneTogetherPlace() }
+        )) { RoomPlace() }
         #endif
         .task {
             store.loadHome()

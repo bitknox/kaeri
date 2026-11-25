@@ -102,6 +102,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
         let active = ProcessInfo.processInfo.environment["KAERI_SHOT_ACTIVE"] == "1"
         // The toolbar sweep stays out of the Dock and out of the way too.
         let regular = (options.snapshot == nil && options.toolbarSweep == nil) || options.fullScreenCycles > 0 || active
+            || RoomScene.named()?.fullScreen == true
         NSApp.setActivationPolicy(regular ? .regular : .accessory)
         // Shots: KAERI_APPEARANCE=light|dark overrides the system appearance for this process only.
         switch ProcessInfo.processInfo.environment["KAERI_APPEARANCE"] {

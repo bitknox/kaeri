@@ -45,6 +45,9 @@ struct RoomPlace: View {
         .foregroundStyle(.silk)
         .background(.ground)
         .navigationTitle(RoomCopy.columnTitle)
+        #if os(iOS)
+        .navigationBarTitleDisplayMode(.large)
+        #endif
         .animation(.standard, value: room.active)
     }
 
