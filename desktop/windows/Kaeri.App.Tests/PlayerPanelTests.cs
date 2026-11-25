@@ -161,6 +161,17 @@ public class PlayerPanelTests
     }
 
     [Fact]
+    public void AListingThatAskedNoSourceIsAskedAgainOnTheNextLook()
+    {
+        var panel = new PanelState();
+        panel.Playing(7, "5");
+        Assert.Equal((7u, "5"), panel.AskReleases());
+        Assert.True(panel.Failed(7, "5"));
+        Assert.Equal((7u, "5"), panel.AskReleases());
+        Assert.Null(panel.AskReleases());
+    }
+
+    [Fact]
     public void ASwitchHoldsWhileItLoadsAndLandsOnItsRelease()
     {
         var panel = new PanelState { Open = true };
@@ -214,6 +225,23 @@ public class PlayerPanelTests
         Assert.Equal(PanelState.Effect.ReleaseAndNotice, panel.Switched(new SourceSwitch.Landed(to, 10), 0));
         // A stream from the menu lands quietly.
         Assert.Equal(PanelState.Effect.Release, panel.Switched(new SourceSwitch.Landed(new SwitchTo("", "Harbor Mirror", null, "s2"), 10), 0));
+    }
+
+    [Fact]
+    public void AReleaseThatLandsWhileTheTabLoadsIsTheOneThatPlays()
+    {
+        var panel = new PanelState { Open = true };
+        panel.Playing(7, "5");
+        panel.AskReleases();
+        var a = Release("home", "a");
+        var b = Release("home", "b");
+        Assert.True(panel.Progressed(7, "5", Rows(("home", Listed(a, b)), ("index", Asking)), 500));
+        Assert.Null(panel.Releases?.Candidates);
+        // a is picked, then b just before a lands.
+        panel.Picked(SwitchTarget.Of(a), 0, a);
+        panel.Picked(SwitchTarget.Of(b), 10, b);
+        panel.Switched(new SourceSwitch.Landed(new SwitchTo("home", "Home server", "a", null), 40), 20);
+        Assert.Equal(a, panel.PlayingRelease);
     }
 
     [Fact]

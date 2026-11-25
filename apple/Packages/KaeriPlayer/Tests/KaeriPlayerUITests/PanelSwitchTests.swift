@@ -65,6 +65,24 @@ struct PanelSwitchTests {
         #expect(rig.model.alert == nil, "the open panel shows the landing itself")
     }
 
+    @Test func aReleaseThatLandsWhileTheTabLoadsIsTheOneThatPlays() async throws {
+        let rig = try await playing()
+        rig.model.panelOpen = true
+        rig.model.loadPanelReleases()
+        let other = SourceCandidate(
+            id: "r3", providerId: "harbor", providerName: "Harbor Archive", title: "Stardust Wayfarer 07 [720p]",
+            quality: 720, label: nil, size: nil, dualAudio: false, dubbed: false, autoPick: false)
+        let rows = [SourceListing(providerId: "harbor", name: "Harbor Archive", state: .listed(releases: [Self.release, other]))]
+        rig.model.apply(.sourcesProgress(id: 900_001, episode: "7", rows: rows))
+        #expect(rig.model.panelReleases?.candidates == nil, "a slower source is still asked")
+
+        // r2 is picked, then r3 just before r2 lands.
+        rig.model.switchTo(Self.release)
+        rig.model.switchTo(other)
+        rig.model.apply(.playerSwitch(playback: 1, state: .landed(to: Self.to, at: 312)))
+        #expect(rig.model.playingRelease == Self.release, "from the row that listed it, not the later pick")
+    }
+
     @Test func aFailedSwitchStaysOnItsRowAndTriesAgain() async throws {
         let rig = try await playing()
         rig.model.switchTo(Self.release)

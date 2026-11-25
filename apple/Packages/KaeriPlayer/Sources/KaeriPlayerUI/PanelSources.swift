@@ -395,6 +395,12 @@ struct PanelChoiceRow: View {
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(action != nil ? (on ? [.isButton, .isSelected] : .isButton) : (on ? .isSelected : []))
             .accessibilityAction { action?() }
+            // The combined head would swallow Try again: it is one of its actions.
+            .accessibilityActions {
+                if picked?.failed != nil {
+                    Button(L.actionTryAgain) { model.retrySwitch() }
+                }
+            }
     }
 
     @ViewBuilder

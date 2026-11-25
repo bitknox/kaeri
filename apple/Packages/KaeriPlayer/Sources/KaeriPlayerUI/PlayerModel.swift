@@ -2394,8 +2394,9 @@ extension PlayerModel {
             let target = SwitchTarget(to)
             playingSource = to.name
             if let release = to.release {
-                playingRelease = panelReleases?.candidates?.first { $0.providerId == to.providerId && $0.id == release }
-                    ?? panelSwitch?.candidate
+                // While the tab loads the row that listed it has it; else the pick, if it is this one.
+                playingRelease = panelReleases?.release(to.providerId, release)
+                    ?? panelSwitch?.candidate.flatMap { $0.providerId == to.providerId && $0.id == release ? $0 : nil }
             } else if to.stream == nil || to.providerId != playingRelease?.providerId {
                 // The other version, or a stream of another source the engine moved to: the
                 // release picked before is not what plays.

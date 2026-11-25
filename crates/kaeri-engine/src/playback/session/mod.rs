@@ -1389,7 +1389,12 @@ impl Run<'_> {
             self.say_switch(failed);
         }
         self.say_switch(SourceSwitch::Loading { to: to.clone(), at });
-        let was = self.translation;
+        // One still loading is over too, but what it would have gone back to stays: the stream
+        // it left last showed a frame, and the one it was loading never did.
+        let (back_to, was) = match self.switching.take() {
+            Some(earlier) => (earlier.back_to, earlier.was),
+            None => (back_to, self.translation),
+        };
         if let Some(translation) = to.translation {
             self.translation = translation;
         }
