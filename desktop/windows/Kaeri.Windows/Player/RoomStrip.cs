@@ -82,7 +82,7 @@ sealed class RoomStrip : Grid
         if (asking != (carry.Visibility == Visibility.Visible))
         {
             carry.Visibility = asking ? Visibility.Visible : Visibility.Collapsed;
-            if (asking && Motion.Enabled)
+            if (asking)
             {
                 carry.Opacity = 0;
                 Motion.FadeTo(carry, 1, Motion.FadeInTime);

@@ -133,6 +133,7 @@ public sealed partial class PlayerView
 
         roomStrip = new RoomStrip { Margin = new Thickness(0, 16, 16, 0), Visibility = Visibility.Collapsed, Opacity = 0 };
         roomStrip.Asked += _ => SendRoom(new RoomCommand.CarryOn());
+        stripWanted = false;
         Root.Children.Add(roomStrip);
 
         roomFull = FullscreenOn?.Invoke() == true;
@@ -239,6 +240,8 @@ public sealed partial class PlayerView
         if (open)
             roomGrownBy += grow;
         var width = Root.ColumnDefinitions[1].ActualWidth;
+        // From where it stands now, so the column never shows for a frame before it opens.
+        Root.ColumnDefinitions[1].Width = new GridLength(width);
         var target = open ? RoomColumn.PaneWidth : 0;
         if (!Motion.Enabled || !morph)
         {
@@ -348,28 +351,24 @@ public sealed partial class PlayerView
             return;
         var wanted = (roomFull || roomHidden) && (chromeShown || Rooms.StripShows(scene, roomChangedAt));
         strip.Margin = new Thickness(0, chromeShown ? 64 : 16, 16, 0);
-        if (wanted == (strip.Visibility == Visibility.Visible && strip.Opacity > 0))
+        if (wanted == stripWanted)
             return;
+        stripWanted = wanted;
+        // Fades both ways, which Reduce Motion keeps: the strip never slides.
         if (wanted)
         {
             strip.Visibility = Visibility.Visible;
-            if (Motion.Enabled)
-                Motion.FadeTo(strip, 1, Motion.FadeInTime);
-            else
-                strip.Opacity = 1;
+            Motion.FadeTo(strip, 1, Motion.FadeInTime);
         }
-        else if (Motion.Enabled)
+        else
             Motion.FadeOutThen(strip, () =>
             {
-                if (!((roomFull || roomHidden) && (chromeShown || (roomScene is { } s && Rooms.StripShows(s, roomChangedAt)))))
+                if (!stripWanted)
                     strip.Visibility = Visibility.Collapsed;
             });
-        else
-        {
-            strip.Opacity = 0;
-            strip.Visibility = Visibility.Collapsed;
-        }
     }
+
+    bool stripWanted;
 
     // Presses that belong to the room.
 
@@ -678,3 +677,32 @@ static class Curves
         return 3 * (1 - t) * (1 - t) * t * y1 + 3 * (1 - t) * t * t * y2 + t * t * t;
     }
 }
+
+#if KAERI_TESTING
+public sealed partial class PlayerView
+{
+    /// <summary>A shot's: the controls gone, as they are when the pointer rests.</summary>
+    internal void ShotHideControls() => HideChrome();
+
+    /// <summary>A shot's: the video paused or playing, as the room is.</summary>
+    internal void ShotPaused(bool on)
+    {
+        if (paused != on)
+            TogglePause();
+    }
+
+    internal void ShotRoomInvite(bool moveHighlight) => ShowRoomInvite(moveHighlight);
+
+    internal void ShotRoomDetails(bool editing) => ShowRoomDetails(editing);
+
+    internal async void ShotRoomLeave()
+    {
+        if (XamlRoot is { } root && await RoomPopups.AskLeave(root))
+            SendRoom(new RoomCommand.Leave());
+    }
+
+    internal void ShotRoomClose() => CloseOrAsk();
+
+    internal void ShotRoomMove() => _ = AskRoomMove();
+}
+#endif

@@ -130,7 +130,7 @@ sealed class RoomFace : Grid
         error.Visibility = now.ErrorDot ? Visibility.Visible : Visibility.Collapsed;
         if (dimChanged)
         {
-            if (Motion.Enabled && inner.Opacity != now.Dim && IsLoaded)
+            if (inner.Opacity != now.Dim && IsLoaded)
                 Motion.FadeTo(inner, now.Dim, Motion.FadeInTime);
             else
                 inner.Opacity = now.Dim;
