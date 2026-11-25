@@ -1056,10 +1056,9 @@ public sealed partial class PlayerView
     /// </summary>
     void StartStill(IEnumerable<FixtureEvent> events, double at, bool details)
     {
-        // Turned on at nought by the first hold; a scene held by KAERI_STILL_AT already runs on it,
-        // and the start counts from where that clock stands.
-        if (KaeriFfiMethods.TestingStillClockNowMs() is null)
-            KaeriFfiMethods.TestingStillClockHold(0);
+        // Turned on by this hold, at nought. A scene held by KAERI_STILL_AT already runs on it: the
+        // hold sends that clock on to its moment first, and the start counts from there.
+        KaeriFfiMethods.TestingStillClockHold(KaeriFfiMethods.TestingStillClockNowMs() ?? 0);
         var nought = KaeriFfiMethods.TestingStillClockNowMs() ?? 0;
         var moment = (ulong)Math.Round(at * 1000);
         OpenStartDemo();
@@ -1067,15 +1066,34 @@ public sealed partial class PlayerView
         {
             if (item.AtMs > moment)
                 break;
-            HoldStill(nought + item.AtMs);
+            StepStill(nought, item.AtMs);
             Heard([item.Event]);
         }
-        HoldStill(nought + moment);
+        StepStill(nought, moment);
         if (details && start is { } s)
             s.DetailsOpen = true;
         RefreshStart();
         var shown = StartElapsed;
         _ = SettledLater(at, shown);
+    }
+
+    /// <summary>
+    /// The still clock stepped on to <paramref name="ms"/> into the start, through each moment on
+    /// the way where a step line waiting out the last one's hold takes its place, as the wall
+    /// clock would pass it: the screen ticks at each.
+    /// </summary>
+    void StepStill(ulong nought, ulong ms)
+    {
+        for (var i = 0; i < 64 && start?.ReleaseAt is { } release; i++)
+        {
+            var due = (ulong)Math.Max(0, Math.Ceiling(release.TotalMilliseconds));
+            if (due >= ms)
+                break;
+            HoldStill(nought + due);
+            RefreshStart();
+        }
+        HoldStill(nought + ms);
+        RefreshStart();
     }
 
     /// <summary>
