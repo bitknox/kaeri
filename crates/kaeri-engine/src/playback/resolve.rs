@@ -681,7 +681,10 @@ async fn source_slate(
     if registry.is_empty() && !registry.is_arriving() {
         return Err(explained(no_sources()));
     }
-    let media = meta.media(id).await.map_err(|e| Msg::verbatim(e.to_string()))?;
+    let media = meta.media(id).await.map_err(|error| {
+        tracing::warn!(%error, "could not look up the title for its sources");
+        Msg::NoticeTitleLoadFailed
+    })?;
     if let Some(reason) = not_aired(&media, episode) {
         return Err(reason);
     }
@@ -718,11 +721,19 @@ async fn source_slate(
     let ask = |place: usize, provider_id: String, name: String| {
         let target = &target;
         async move {
+            // Switched off since the rows were drawn: said as off, not as a source that failed
+            // or lacks the title, whenever it happened while asked.
+            let off = || registry.is_disabled(&provider_id);
             let Some(source) =
                 registry.pinned(&provider_id).map(ProviderRegistry::even_resting)
             else {
-                // Switched off or taken out of the chain since the rows were drawn.
-                return (place, ListingState::Missed { miss: ListingMiss::Failed });
+                // Or taken out of the chain.
+                let state = if off() {
+                    ListingState::Off
+                } else {
+                    ListingState::Missed { miss: ListingMiss::Failed }
+                };
+                return (place, state);
             };
             let state = match registry.hold_when_asked(&provider_id, now).await {
                 Some(reason) => ListingState::Missed {
@@ -732,6 +743,10 @@ async fn source_slate(
                     listing_of(store, &source, id, target, episode, translation, now, &name)
                         .await
                 }
+            };
+            let state = match state {
+                ListingState::Missed { .. } if off() => ListingState::Off,
+                state => state,
             };
             (place, state)
         }
@@ -847,8 +862,8 @@ fn hold_of_error(error: &kaeri_core::error::ProviderError) -> SourceHold {
 }
 
 /// The releases an episode can be played from, for the Sources overlay: each source's row as
-/// it answers, then the whole slate. A newer `LoadSources` of the title takes over, and this
-/// one stops asking and says nothing more.
+/// it answers, then the whole slate. A newer `LoadSources` of the same episode takes over, and
+/// this one stops asking at once, lets its job go and says nothing more.
 pub fn load_sources(
     id: AnilistId,
     episode: String,
@@ -861,7 +876,7 @@ pub fn load_sources(
     // Sub or dub as a play of the title goes: the show's own, or what the player last picked.
     let translation =
         crate::playback::start::play_config(engine, store, id).playback.translation;
-    let ticket = engine.listed.sources_ticket(id);
+    let ticket = engine.listed.sources_ticket(id, &episode);
     let (store, registry, meta, tx) =
         (store.clone(), registry.clone(), meta.clone(), tx.clone());
     tokio::spawn(async move {
@@ -880,8 +895,12 @@ pub fn load_sources(
             translation,
             SOURCES_LIMIT,
             progress,
-        )
-        .await;
+        );
+        let slate = tokio::select! {
+            slate = slate => slate,
+            // A newer one took over: the sources still asked are let go with it.
+            () = ticket.superseded() => return,
+        };
         match slate {
             // The releases, and what each source that listed none said.
             Ok((candidates, missed)) => {
@@ -889,8 +908,8 @@ pub fn load_sources(
             }
             // Said as an alert, and ended for a list still waiting on it.
             Err(why) => {
-                ticket.send(&tx, Event::Toast(Notice::alert(why.clone())));
-                ticket.send(&tx, Event::SourcesFailed { id, episode, why });
+                let alert = Event::Toast(Notice::alert(why.clone()));
+                ticket.send_all(&tx, [alert, Event::SourcesFailed { id, episode, why }]);
             }
         }
     });
@@ -1208,6 +1227,53 @@ mod tests {
             slate(vec![lacking("brook").named("Brook").with_sources(given)]).await;
         let order: Vec<_> = listed.iter().map(|c| (c.id.as_str(), c.auto_pick)).collect();
         assert_eq!(order, [("r1", false), ("r2", false), ("r3", true)]);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_source_switched_off_while_asked_is_said_as_off() {
+        let second = std::time::Duration::from_secs(1);
+        let registry = ProviderRegistry::new(vec![
+            lacking("alpha").named("Alpha").arc(),
+            lacking("brook").named("Brook").with_latency(2 * second).arc(),
+            lacking("cove").named("Cove").arc(),
+        ]);
+        let store = Store::open_in_memory().unwrap();
+        store
+            .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
+            .unwrap();
+        let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store.clone());
+        // Brook is switched off while it is matching the title.
+        let switch = registry.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(second).await;
+            switch.set_disabled(["alpha".to_owned(), "brook".to_owned()]);
+        });
+        let mut last = Vec::new();
+        let (_, missed) = source_slate(
+            &meta,
+            &store,
+            &registry,
+            AnilistId::new(900_201),
+            "3",
+            kaeri_core::media::Translation::Sub,
+            SOURCES_LIMIT,
+            |rows| {
+                // Alpha is switched off as soon as the rows are drawn, before it is asked.
+                if last.is_empty() {
+                    registry.set_disabled(["alpha".to_owned()]);
+                }
+                last = states(rows);
+                true
+            },
+        )
+        .await
+        .expect("a slate");
+        assert_eq!(last, ["alpha off", "brook off", "cove NoEpisode"]);
+        assert_eq!(
+            missed,
+            [MissedListing { name: "Cove".into(), miss: ListingMiss::NoEpisode }]
+        );
     }
 
     /// Release `id` of episode 3 from `provider`, the automatic pick when `auto_pick`.
