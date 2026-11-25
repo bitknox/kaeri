@@ -173,6 +173,7 @@ struct PhoneRoomUpright: View {
             .accessibilityLabel(RoomCopy.send)
         }
         .disabled(!room.inRoom)
+        .opacity(room.inRoom ? 1 : 0.5)
         .padding(.top, 8)
         .padding(.bottom, fieldFocus ? 8 : 40)
     }

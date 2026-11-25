@@ -111,6 +111,8 @@ public final class RoomModel {
     /// The phone's room folded into the bar over the tabs.
     public var folded = false
     public var draft = ""
+    /// Sideways on iPhone: the chat field is open over the video.
+    public var writing = false
     /// The Join field on the place.
     public var joinText = ""
     /// The last change anyone made, for the full screen strip's 8 s.
@@ -450,6 +452,7 @@ public final class RoomModel {
         view = nil
         members = []
         lines = []
+        writing = false
         invitation = nil
         offer = nil
         popover = nil

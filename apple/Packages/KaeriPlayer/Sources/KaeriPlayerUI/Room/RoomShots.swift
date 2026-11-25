@@ -342,6 +342,9 @@ extension PlayerModel {
         case .leave: room.leaving = .leave
         case .cmdw: room.leaving = .close
         case .movepick: room.startMove()
+        case .sidewayswrite:
+            room.draft = "that bridge again" // i18n-skip
+            room.writing = true
         case .full, .fullcap:
             fullScreen = true
             try? await Task.sleep(for: .milliseconds(1800))
