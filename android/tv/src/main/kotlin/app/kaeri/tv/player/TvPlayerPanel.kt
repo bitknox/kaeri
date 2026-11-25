@@ -183,7 +183,9 @@ internal fun TvPlayerPanel(model: PlayerModel, modifier: Modifier) {
 @Composable
 private fun PanelTabPill(label: String, selected: Boolean, onFocus: () -> Unit, onDown: () -> Boolean, modifier: Modifier) {
     var focused by remember { mutableStateOf(false) }
-    val scale by animateFloatAsState(if (focused) TAB_SCALE else 1f, Motion.quick(), label = "tab") // i18n-skip
+    // Reduce Motion keeps the focus ring and drops the scale.
+    val reduced = LocalReducedMotion.current
+    val scale by animateFloatAsState(if (focused && !reduced) TAB_SCALE else 1f, Motion.quick(), label = "tab") // i18n-skip
     Box(
         modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
@@ -289,10 +291,10 @@ private fun TvEpisodeRow(
     val actions = tvEpisodeActions(model, row, current, metadataOnly, notOut)
     val first = remember { FocusRequester() }
     val self = remember { FocusRequester() }
-    val scale by animateFloatAsState(if (focused) ROW_SCALE else 1f, Motion.quick(), label = "row") // i18n-skip
+    val reduced = LocalReducedMotion.current
+    val scale by animateFloatAsState(if (focused && !reduced) ROW_SCALE else 1f, Motion.quick(), label = "row") // i18n-skip
     val ink = if (focused) ObiSilk.Ground else ObiSilk.Silk
     val soft = if (focused) ObiSilk.Ground.copy(alpha = 0.72f) else ObiSilk.Haze
-    val reduced = LocalReducedMotion.current
     Column(
         modifier
             .graphicsLayer { scaleX = scale; scaleY = scale }
@@ -310,9 +312,8 @@ private fun TvEpisodeRow(
             .onPreviewKeyEvent { event ->
                 if (!focused || event.type != KeyEventType.KeyDown) return@onPreviewKeyEvent false
                 when (event.key) {
-                    // Right moves into the row's buttons, revealing it at once.
+                    // Right moves into the row's buttons, or its More alone, revealing it at once.
                     Key.DirectionRight -> {
-                        if (actions.isEmpty()) return@onPreviewKeyEvent true
                         onDwell()
                         first.tryFocus()
                         true
@@ -420,7 +421,12 @@ private fun TvEpisodeRow(
                             TonalButton(
                                 onClick = { whole = !whole },
                                 height = 40.dp,
-                                modifier = (if (actions.isEmpty()) Modifier.focusRequester(first) else Modifier).testTag("tv-panel-more"),
+                                modifier = (if (actions.isEmpty()) Modifier.focusRequester(first) else Modifier)
+                                    // Left from More, the only button, comes back to the row.
+                                    .onPreviewKeyEvent { event ->
+                                        if (actions.isEmpty() && event.type == KeyEventType.KeyDown && event.key == Key.DirectionLeft) self.tryFocus() else false
+                                    }
+                                    .testTag("tv-panel-more"),
                             ) {
                                 ButtonLabel(if (whole) Strings.playerPanelLess(context) else Strings.playerPanelMore(context))
                             }
@@ -836,7 +842,8 @@ private fun TvChoiceRow(
     val picked = model.panelSwitch?.takeIf { it.on(target) }
     val now = model.clock
     val asking = listing?.let { model.panelReleases?.line(it, now) } ?: ListingLine.Answered
-    val scale by animateFloatAsState(if (focused) ROW_SCALE else 1f, Motion.quick(), label = "choice") // i18n-skip
+    val reduced = LocalReducedMotion.current
+    val scale by animateFloatAsState(if (focused && !reduced) ROW_SCALE else 1f, Motion.quick(), label = "choice") // i18n-skip
     // A source that answered with nothing goes to haze as its answer fades in.
     val rest by animateColorAsState(if (dim) ObiSilk.Haze else ObiSilk.Silk, Motion.fadeIn(), label = "ink") // i18n-skip
     val ink = if (focused) ObiSilk.Ground else rest

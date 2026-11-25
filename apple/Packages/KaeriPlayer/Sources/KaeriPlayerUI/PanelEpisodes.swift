@@ -181,6 +181,12 @@ struct PanelEpisodeRow: View {
         .accessibilityElement(children: .combine)
         .accessibilityAddTraits(current ? [.isButton, .isSelected] : .isButton)
         .accessibilityAction(named: L.actionPlay) { playAtOnce() }
+        // The combined row would swallow the revealed buttons: each is one of its actions.
+        .accessibilityActions {
+            if revealed {
+                ForEach(actions, id: \.title) { button in Button(button.title, action: button.action) }
+            }
+        }
     }
 
     private var fill: Color {

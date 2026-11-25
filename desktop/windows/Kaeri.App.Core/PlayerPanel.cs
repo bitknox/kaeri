@@ -106,6 +106,14 @@ public sealed record PanelReleases(uint Id, string Episode, SourceCandidate[]? C
 {
     /// <summary>One source's releases, in the order it gave them.</summary>
     public SourceCandidate[] Of(string providerId) => [.. (Candidates ?? []).Where(c => c.ProviderId == providerId)];
+
+    /// <summary>
+    /// Release <paramref name="id"/> of <paramref name="providerId"/>, from the answer or, while
+    /// the tab still loads, from the row that listed it.
+    /// </summary>
+    public SourceCandidate? Release(string providerId, string id) =>
+        (Candidates ?? []).Concat((Rows ?? []).SelectMany(r => r.State is ListingState.Listed l ? l.Releases : []))
+            .FirstOrDefault(c => c.ProviderId == providerId && c.Id == id);
 }
 
 /// <summary>A revealed row's buttons.</summary>
@@ -480,7 +488,8 @@ public sealed class PanelState
     {
         if (Episode is not { } e)
             return null;
-        if (!again && Releases is { } r && r.Id == e.Id && r.Episode == e.Episode)
+        // A listing that ended before asking any source is asked again on the next look.
+        if (!again && Releases is { } r && r.Id == e.Id && r.Episode == e.Episode && !r.Ended)
             return null;
         Releases = new PanelReleases(e.Id, e.Episode, null);
         AskedAt = now;
@@ -590,8 +599,9 @@ public sealed class PanelState
                 var target = SwitchTarget.Of(landed.To);
                 PlayingSource = landed.To.Name;
                 if (landed.To.Release is { } release)
-                    PlayingRelease = Releases?.Candidates?.FirstOrDefault(c => c.ProviderId == landed.To.ProviderId && c.Id == release)
-                        ?? Switch?.Candidate;
+                    // While the tab loads the row that listed it has it; else the pick, if it is this one.
+                    PlayingRelease = Releases?.Release(landed.To.ProviderId, release)
+                        ?? (Switch?.Candidate is { } picked && picked.ProviderId == landed.To.ProviderId && picked.Id == release ? picked : null);
                 else if (landed.To.Stream is null || landed.To.ProviderId != PlayingRelease?.ProviderId)
                     // The other version, or a stream of another source the engine moved to: the
                     // release picked before is not what plays.

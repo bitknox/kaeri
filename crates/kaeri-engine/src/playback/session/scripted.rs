@@ -2587,6 +2587,32 @@ async fn a_stream_picked_from_the_menu_that_shows_no_frame_goes_back() {
 }
 
 #[tokio::test]
+async fn a_switch_picked_while_another_loads_goes_back_to_what_last_played() {
+    use kaeri_model::playback::SourceSwitch;
+
+    let choose = |stream: &str| {
+        PlaybackEvent::Script(ScriptEvent::Choose(kaeri_playback::Choice::Source(stream.into())))
+    };
+    // Stream 1 is picked and, before it shows a frame, stream 2; that shows none either.
+    let picked = [plays(0.0, 3), vec![choose("1")]].concat();
+    let loading = vec![PlaybackEvent::Replaced, PlaybackEvent::Loaded, choose("2")];
+    let broke = vec![PlaybackEvent::Loaded, PlaybackEvent::Ended { complete: false }];
+    let rig = failing_rig(vec![picked, loading, broke, taking_over(2.0)], &[2]);
+    let streams = vec![
+        from("yamabiko", "cdn-a.example", 1080),
+        from("kodama", "cdn-b.example", 720),
+        from("kodama", "cdn-c.example", 720),
+    ];
+    let events = rig.play_all(streams, context("1", None), settings()).await;
+
+    let hosts: Vec<String> = loads(&rig.opener.calls()).into_iter().map(|l| l.1).collect();
+    assert_eq!(hosts.len(), 4, "{hosts:?}");
+    assert!(hosts[3].contains("cdn-a.example"), "back on the one that played: {hosts:?}");
+    let said = switches(&events);
+    assert!(matches!(said.last(), Some(SourceSwitch::Failed { .. })), "{said:?}");
+}
+
+#[tokio::test]
 async fn a_stream_of_another_source_taking_over_says_the_episode_plays_from_it() {
     use kaeri_model::playback::{SourceSwitch, SwitchTo};
 

@@ -157,6 +157,17 @@ public struct PanelReleases: Equatable, Sendable {
         (candidates ?? []).filter { $0.providerId == providerId }
     }
 
+    /// Release `id` of `providerId`, from the engine's answer or, while the tab still loads, from
+    /// the row that listed it.
+    public func release(_ providerId: String, _ id: String) -> SourceCandidate? {
+        let isIt = { (c: SourceCandidate) in c.providerId == providerId && c.id == id }
+        if let found = candidates?.first(where: isIt) { return found }
+        for row in rows ?? [] {
+            if case .listed(let listed) = row.state, let found = listed.first(where: isIt) { return found }
+        }
+        return nil
+    }
+
     /// A `SourcesProgress` for this episode: its rows replace the last ones whole, and a row that
     /// says Asking for the first time starts counting.
     mutating func progressed(_ rows: [SourceListing], at now: ContinuousClock.Instant) {
