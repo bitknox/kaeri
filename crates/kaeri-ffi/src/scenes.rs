@@ -1198,6 +1198,7 @@ mod slow {
             tokio::time::sleep(TICK).await;
         }
     }
+}
 
 /// [`FfiScene::SourcesLoading`]'s sources after the fixture one: id, name, and when each answers
 /// the Sources tab, from when it asks.
