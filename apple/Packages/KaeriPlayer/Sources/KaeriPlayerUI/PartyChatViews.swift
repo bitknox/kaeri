@@ -256,11 +256,12 @@ struct ReactionButtons: View {
 
     var body: some View {
         let chat = store.party.chat
-        let waiting = chat.reactWait > 0
+        let room = store.room.inRoom ? store.room : nil
+        let waiting = room == nil && chat.reactWait > 0
         let layout = vertical ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
         layout {
             ForEach(Reaction.order, id: \.self) { reaction in
-                Button { chat.react(reaction) } label: {
+                Button { if let room { room.react(reaction) } else { chat.react(reaction) } } label: {
                     ReactionGlyphView(ReactionGlyphKind(reaction), size: glyph, weight: 1.6)
                         .frame(width: size, height: size)
                         .contentShape(.circle)

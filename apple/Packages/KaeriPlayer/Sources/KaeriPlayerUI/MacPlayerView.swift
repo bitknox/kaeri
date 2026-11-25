@@ -46,6 +46,15 @@ public struct MacPlayerView: View {
     @State private var focusedEpisode: String?
     /// The watch party's popover on the people button.
     @State private var partyOpen = false
+    /// The room's column has faded in at its place (the player-to-room morph).
+    @State private var columnIn = false
+    /// The full screen strip's 8 s after any change.
+    @State private var stripFresh = false
+    @State private var stripTask: Task<Void, Never>?
+    /// Full screen has settled: the column has folded away and the strip holds the room.
+    @State private var settledFull = false
+    /// How much the room's column grew the window by, to give back.
+    @State private var grewBy: CGFloat = 0
     /// Where the panels over the video are, which take the scroll wheel from the player.
     @State private var wheelStops: [CGRect] = []
     @FocusState private var focused: Bool
@@ -82,7 +91,107 @@ public struct MacPlayerView: View {
         model.starting != nil || (!model.hasPicture && !model.holding) || model.holdsCurtain || model.startingHeld
     }
 
+    /// The room's column is beside the video: in a room (or its invitation) and shown. In full
+    /// screen it folds away once the system's zoom settles.
+    private var columnShown: Bool {
+        store.room.active && store.room.shown && !model.returning
+    }
+
     public var body: some View {
+        HStack(spacing: 0) {
+            playerArea
+                .overlay { roomVideoLayer }
+            if columnShown {
+                RoomColumn(room: store.room, height: height)
+                    .opacity(columnIn && !settledFull ? 1 : 0)
+                    .offset(x: settledFull && !reduceMotion ? 24 : 0)
+                    .frame(width: settledFull ? 0 : RoomColumn.width, alignment: .leading)
+                    .clipped()
+                    .animation(reduceMotion ? .fadeIn : .standard, value: settledFull)
+                    .transition(.identity)
+            }
+        }
+        .overlay { roomDialogs }
+        .background(Color(rgb: 0x0B0D18))
+        .ignoresSafeArea()
+        .onChange(of: columnShown) { _, shown in roomColumn(shown) }
+        .onChange(of: store.room.changedAt) { freshenStrip() }
+        .animation(.fadeIn, value: store.room.leaving)
+        .animation(.fadeIn, value: store.room.moving)
+        .animation(.fadeIn, value: store.room.videoPanel)
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
+            guard let window, (note.object as? NSWindow) === window else { return }
+            settledFull = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willExitFullScreenNotification)) { note in
+            guard let window, (note.object as? NSWindow) === window else { return }
+            settledFull = false
+        }
+    }
+
+    /// Over the video: the room's panel when your player has nothing to show, the full screen
+    /// strip, and the room's Up next card.
+    @ViewBuilder
+    private var roomVideoLayer: some View {
+        let room = store.room
+        if let panel = room.videoPanel {
+            RoomMacVideoPanel(room: room, panel: panel)
+                .transition(.opacity)
+                .overlay(alignment: .topLeading) {
+                    // The window's own buttons sit on the banner, as on the player's top bar.
+                    Color.clear.frame(height: 52)
+                }
+        }
+        if room.inRoom, settledFull || !room.shown {
+            RoomStrip(room: room)
+                .padding(.trailing, 16)
+                .padding(.top, (visible ? 60 : 16) + topInset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .opacity(stripShown ? 1 : 0)
+                .animation(stripShown ? .fadeIn : .fadeOut, value: stripShown)
+                .animation(.standard, value: visible)
+                .allowsHitTesting(stripShown)
+        }
+        if room.inRoom, room.view?.canDontWait == true, curtain {
+            RoomDontWaitNote(room: room)
+                .padding(.top, 140)
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        if room.inRoom, let up = room.view?.upNext, up.cancelledBy == nil {
+            RoomUpNextCard(room: room, up: up)
+                .padding(.trailing, 20)
+                .padding(.bottom, 68)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .transition(.opacity)
+        }
+        if room.inRoom, room.skipShown {
+            Button(RoomCopy.skipOpening) { room.skipOpening() }
+                .buttonStyle(RoomButtonStyle(kind: .glass, height: 36, size: 14, padding: 18))
+                .padding(.trailing, 20)
+                .padding(.bottom, 68)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .transition(.opacity)
+        }
+    }
+
+    /// The strip shows while anyone isn't watching, for 8 s after any change, and with the
+    /// controls (decision 8).
+    private var stripShown: Bool {
+        store.room.anyoneNotWatching || visible || stripFresh || store.room.view?.waiting.isEmpty == false
+    }
+
+    @ViewBuilder
+    private var roomDialogs: some View {
+        let room = store.room
+        if let ask = room.leaving {
+            RoomLeaveDialog(room: room, ask: ask)
+        }
+        if room.moving {
+            RoomMoveDialog(room: room)
+        }
+    }
+
+    var playerArea: some View {
         ZStack {
             Color.black
             PlayerPicture(model: model)
@@ -143,6 +252,7 @@ public struct MacPlayerView: View {
             if let window { opened(window) }
             // Closing it stops the playback (`PlayerModel.hostWindow`).
             model.hostWindow = window
+            if columnShown { roomColumn(true) }
         }
         .onChange(of: model.backRequests) { back() }
         .onChange(of: model.menuRequests) {
@@ -202,8 +312,12 @@ public struct MacPlayerView: View {
         .onAppear {
             // From the banner's frame to the window's, on the standard spring.
             withAnimation(.standard) { grown = true }
+            store.room.playerShown = true
+            store.room.closesPlayer = { back() }
         }
         .onDisappear {
+            store.room.playerShown = false
+            store.room.closesPlayer = {}
             // Back to browsing: the player stopped, or moved into Picture in Picture. The main
             // window is given back as it was.
             if let window { restore(window) }
@@ -347,7 +461,7 @@ public struct MacPlayerView: View {
             .overVideoText()
             .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 8) {
-                if store.party.inParty, store.party.chat.shown {
+                if store.room.inRoom || (store.party.inParty && store.party.chat.shown) {
                     ReactionButtons(metrics: metrics)
                         .padding(2)
                         .background(.overVideo(0.62), in: .capsule)
@@ -363,7 +477,7 @@ public struct MacPlayerView: View {
                 .background(.overVideo(0.62), in: .capsule)
                 .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
             }
-            .animation(.fadeIn, value: store.party.inParty && store.party.chat.shown)
+            .animation(.fadeIn, value: store.room.inRoom || (store.party.inParty && store.party.chat.shown))
         }
         .padding(.leading, 20)
         .padding(.trailing, 16)
@@ -499,7 +613,31 @@ public struct MacPlayerView: View {
 
     /// The people button: the party's popover while in one, the form that starts one otherwise
     /// (a sheet over the player, as from a title).
+    @ViewBuilder
     private var partyButton: some View {
+        let room = store.room
+        if room.active {
+            // In a room: the side button hides the column (the strip takes over) or shows it.
+            capsuleButton("sidebar.right", room.shown ? RoomCopy.hideRoom : RoomCopy.showRoom, on: room.shown && !settledFull) {
+                if settledFull { model.fullScreen = false } else { room.shown.toggle() }
+                model.poke()
+            }
+        } else {
+            roomStartButton
+        }
+    }
+
+    /// Watch together: this window turns into the room (the morph).
+    private var roomStartButton: some View {
+        capsuleButton("person.2", RoomCopy.columnTitle, on: false) {
+            panel = nil
+            sidePanel = false
+            if let id = model.starting?.id ?? model.staged?.id { store.room.start(id: id, episode: model.episode?.number ?? model.startingEpisode ?? "") }
+            model.poke()
+        }
+    }
+
+    private var oldPartyButton: some View {
         let inParty = store.party.inParty
         return capsuleButton(PartyButton.symbol(inParty: inParty), PartyButton.label(inParty: inParty), on: partyOpen) { people() }
             .popover(isPresented: $partyOpen, arrowEdge: .bottom) {
@@ -816,6 +954,13 @@ public struct MacPlayerView: View {
         for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
             window.standardWindowButton(kind)?.alphaValue = 1
         }
+        if grewBy != 0, !window.styleMask.contains(.fullScreen) {
+            var frame = window.frame
+            frame.size.width -= grewBy
+            frame.origin.x += grewBy / 2
+            window.setFrame(frame, display: true, animate: false)
+            grewBy = 0
+        }
         guard let saved else { return }
         saved.restore(window)
         self.saved = nil
@@ -889,6 +1034,51 @@ public struct MacPlayerView: View {
         DispatchQueue.main.async { [weak window, model] in
             guard let window, model.fullScreen == on, window.styleMask.contains(.fullScreen) != on else { return }
             window.toggleFullScreen(nil)
+        }
+    }
+
+    /// The room's column comes in or goes. The window grows by the column's width, centred,
+    /// when the screen has room; otherwise it stays inside the screen and the video shrinks
+    /// (decision 9). The frame moves on the system's window animation and the column's contents
+    /// fade in from 120 ms. Under Reduce Motion the frame takes its size at once and the room
+    /// crossfades in over the player, so the picture never goes empty.
+    private func roomColumn(_ shown: Bool) {
+        guard let window, !window.styleMask.contains(.fullScreen) else {
+            columnIn = shown
+            return
+        }
+        var frame = window.frame
+        if shown {
+            guard grewBy == 0 else {
+                columnIn = true
+                return
+            }
+            let room = window.screen?.visibleFrame ?? frame
+            let width = min(frame.width + RoomColumn.width, room.width)
+            let grow = width - frame.width
+            frame.origin.x = min(max(frame.origin.x - grow / 2, room.minX), room.maxX - width)
+            frame.size.width = width
+            grewBy = grow
+            columnIn = false
+            window.setFrame(frame, display: true, animate: !reduceMotion)
+            withAnimation(reduceMotion ? .fadeIn : .fadeIn.delay(0.12)) { columnIn = true }
+        } else {
+            columnIn = false
+            guard grewBy != 0 else { return }
+            frame.size.width -= grewBy
+            frame.origin.x += grewBy / 2
+            grewBy = 0
+            window.setFrame(frame, display: true, animate: !reduceMotion)
+        }
+    }
+
+    /// Any change in the room: the strip shows for 8 s.
+    private func freshenStrip() {
+        stripTask?.cancel()
+        stripFresh = true
+        stripTask = Task {
+            try? await Task.sleep(for: .seconds(8))
+            if !Task.isCancelled { stripFresh = false }
         }
     }
 
