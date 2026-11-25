@@ -859,7 +859,7 @@ private fun ChoiceRow(
                     val shown by animateFloatAsState(if (spins) 1f else 0f, Motion.fadeIn(), label = "asking-spinner") // i18n-skip
                     if (spins || shown > 0f) {
                         // The line says Asking; the spinner adds nothing to read.
-                        CircularProgressIndicator(Modifier.size(18.dp).graphicsLayer { alpha = shown }.clearAndSetSemantics {}.testTag("panel-asking-$title"), color = ObiSilk.Silk, strokeWidth = 2.dp) // i18n-skip
+                        CircularProgressIndicator(Modifier.size(18.dp).graphicsLayer { alpha = shown }.testTag("panel-asking-$title").clearAndSetSemantics {}, color = ObiSilk.Silk, strokeWidth = 2.dp) // i18n-skip
                     }
                 } else if (on) {
                     Icon(PanelGlyphs.Check, contentDescription = null, tint = ObiSilk.Silk, modifier = Modifier.size(18.dp))
