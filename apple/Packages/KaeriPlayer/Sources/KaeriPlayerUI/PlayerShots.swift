@@ -311,9 +311,14 @@ extension PlayerModel {
                 if shot == .panelNextEpisode {
                     self.holdsPanelAsk = false
                     self.loadPanelReleases()
+                    _ = await self.waited(2) { self.panelReleases?.rows != nil }
+                    self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 1)
                     try? await Task.sleep(for: .seconds(moment.timeIntervalSinceNow))
                     // What N, Up Next and a media key send, with the tab open.
                     self.control(.playNext)
+                    // The other sources to the top again once episode 8's are in, if they come.
+                    _ = await self.waited(3) { self.panelReleases?.episode == "8" && self.panelReleases?.rows != nil }
+                    self.panelShot = PanelShot(tab: .sources, scroll: PanelSources.others, serial: 2)
                 } else {
                     // Still held, so nothing else asks: one ask, for an episode not out yet.
                     let (id, episode): (AnilistId, String) = (900_002, "6")
