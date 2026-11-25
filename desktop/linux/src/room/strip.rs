@@ -87,6 +87,8 @@ impl Strip {
     /// The player's controls came up or left.
     pub fn set_controls(self: &Rc<Self>, up: bool) {
         self.controls.set(up);
+        // Under the header bar while it shows, at the corner when it leaves.
+        self.widget.set_margin_top(if up { 60 } else { 16 });
         self.refresh();
     }
 

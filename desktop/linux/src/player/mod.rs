@@ -3208,8 +3208,11 @@ impl PlayerView {
         }
         // Nor to say the window went full screen.
         self.room.set_fullscreen(full);
-        if !full && shot != "room-morph" && self.ctx.window.default_width() < 1500 {
-            self.ctx.window.set_default_size(1616, 767);
+        if !full && shot != "room-morph" {
+            if self.ctx.window.default_width() < 1500 {
+                self.ctx.window.set_default_size(1616, 767);
+            }
+            self.wake();
         }
         if shot == "room-morph" {
             // The recording: the room comes in, goes full screen at 3 s and back at 7 s.

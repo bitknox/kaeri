@@ -175,6 +175,7 @@ pub fn build(
     let h = heading(&c::recent_rooms());
     recent_head.append(&h);
     let note = crate::widgets::haze(&c::recent_note(), "caption");
+    note.set_wrap(false);
     note.set_valign(gtk::Align::End);
     note.set_margin_bottom(2);
     recent_head.append(&note);
