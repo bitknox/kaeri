@@ -332,6 +332,8 @@ for shot in "${shots[@]}"; do
   while IFS= read -r arg; do args+=("$arg"); done < <(arguments "$shot")
   # shellcheck disable=SC2206
   [[ -z "${KAERI_LAUNCH_ARGS:-}" ]] || args+=(${KAERI_LAUNCH_ARGS})
+  # A scene that turns the screen itself (a room opens upright) turns it back for a sideways shot.
+  [[ "$orientation" == portrait ]] || args+=(-KaeriLandscape)
   xcrun simctl terminate "$udid" app.kaeri.fixtures 2>/dev/null || true
   # Attached to the app's console, which ends when the app is terminated: the app's output
   # reaches a file this way, where --stdout leaves it empty.
