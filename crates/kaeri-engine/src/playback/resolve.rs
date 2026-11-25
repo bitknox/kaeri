@@ -744,10 +744,8 @@ async fn source_slate(
                         .await
                 }
             };
-            let state = match state {
-                ListingState::Missed { .. } if off() => ListingState::Off,
-                state => state,
-            };
+            // Whatever it answered: a source switched off offers nothing.
+            let state = if off() { ListingState::Off } else { state };
             (place, state)
         }
     };
@@ -773,7 +771,11 @@ async fn source_slate(
                 // longer waited for.
                 for row in rows.iter_mut().filter(|row| row.state == ListingState::Asking) {
                     tracing::info!(provider = %row.provider_id, "still asked at the limit");
-                    row.state = ListingState::Missed { miss: ListingMiss::TimedOut };
+                    row.state = if registry.is_disabled(&row.provider_id) {
+                        ListingState::Off
+                    } else {
+                        ListingState::Missed { miss: ListingMiss::TimedOut }
+                    };
                 }
                 said(&rows);
                 break;
@@ -1236,6 +1238,12 @@ mod tests {
             lacking("alpha").named("Alpha").arc(),
             lacking("brook").named("Brook").with_latency(2 * second).arc(),
             lacking("cove").named("Cove").arc(),
+            lacking("dawn")
+                .named("Dawn")
+                .with_latency(2 * second)
+                .with_sources(vec![release_of("dawn", "d1")])
+                .arc(),
+            lacking("eve").named("Eve").with_latency(40 * second).arc(),
         ]);
         let store = Store::open_in_memory().unwrap();
         store
@@ -1247,10 +1255,12 @@ mod tests {
         let switch = registry.clone();
         tokio::spawn(async move {
             tokio::time::sleep(second).await;
-            switch.set_disabled(["alpha".to_owned(), "brook".to_owned()]);
+            // Dawn then lists a release, and Eve is still asked at the limit.
+            let off = ["alpha", "brook", "dawn", "eve"];
+            switch.set_disabled(off.map(str::to_owned));
         });
         let mut last = Vec::new();
-        let (_, missed) = source_slate(
+        let (listed, missed) = source_slate(
             &meta,
             &store,
             &registry,
@@ -1269,7 +1279,8 @@ mod tests {
         )
         .await
         .expect("a slate");
-        assert_eq!(last, ["alpha off", "brook off", "cove NoEpisode"]);
+        assert_eq!(last, ["alpha off", "brook off", "cove NoEpisode", "dawn off", "eve off"]);
+        assert!(listed.is_empty(), "a source switched off offers nothing: {listed:?}");
         assert_eq!(
             missed,
             [MissedListing { name: "Cove".into(), miss: ListingMiss::NoEpisode }]

@@ -70,13 +70,18 @@ impl<K: Eq + Hash> Ticket<K> {
     /// Send `event` if this listing is still the newest and someone still reads. Returns
     /// whether it was sent.
     pub fn send(&self, tx: &Outbox, event: Event) -> bool {
-        self.current() && tx.send(event).is_ok()
+        self.send_all(tx, [event])
     }
 
     /// Send every one of `events`, or none if this listing is no longer the newest: a pair
     /// that belongs together is never split by a newer listing starting between the two.
+    ///
+    /// Sent with the generations held, as a newer listing takes them to start: so whatever
+    /// this one says is queued before anything the newer one says, never after it.
     pub fn send_all(&self, tx: &Outbox, events: impl IntoIterator<Item = Event>) -> bool {
-        self.current() && events.into_iter().all(|event| tx.send(event).is_ok())
+        let generations = self.generations.0.lock().unwrap();
+        generations.get(&self.key) == Some(&self.n)
+            && events.into_iter().all(|event| tx.send(event).is_ok())
     }
 
     /// Done once a newer listing has started; never done for the newest. A listing races
