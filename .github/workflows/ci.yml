@@ -784,7 +784,7 @@ jobs:
       # again, on every section and a title's page, while the sync capsule, the activity line and
       # private mode change (KaeriDev's ToolbarSweep). AppKit ends the app when an item's size
       # keeps changing as it moves in and out, so the sweep either prints KAERI_SWEEP_PASSED or
-      # dies. On test.sh's build of the dev harness.
+      # dies. On test.sh's build of the dev harness, in its scratch path.
       - name: Swift, the Mac toolbar's overflow
         if: env.PART == 'swift'
         timeout-minutes: 15
@@ -793,7 +793,7 @@ jobs:
           MACOSX_DEPLOYMENT_TARGET: "26.0"
         run: |
           cd apple/Packages/KaeriDev
-          swift run KaeriDev --toolbar-sweep 12 | tee "$RUNNER_TEMP/toolbar-sweep.log"
+          swift run --scratch-path ../../.build KaeriDev --toolbar-sweep 12 | tee "$RUNNER_TEMP/toolbar-sweep.log"
           grep -q KAERI_SWEEP_PASSED "$RUNNER_TEMP/toolbar-sweep.log"
       # The XcodeGen project every job below builds from.
       - name: The project

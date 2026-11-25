@@ -3,7 +3,8 @@
 # What it links into the KaeriKit package from there.
 /Packages/KaeriKit/Engine/
 /Packages/KaeriKit/Sources/KaeriKit/Generated/
-# SwiftPM's own, in each package.
+# SwiftPM's own: test.sh's one scratch path for every package, and each package's own.
+/.build/
 /Packages/*/.build/
 /Packages/*/.swiftpm/
 /Packages/*/Package.resolved
