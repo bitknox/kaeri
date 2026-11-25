@@ -1023,14 +1023,26 @@ jobs:
           -p:EngineFlavour=testing
         shell: bash
 
+  #
+  # On a pull request in two parts on runners of their own: `ui`, the ui module's unit tests (its
+  # 80 screenshot classes, each a Robolectric JVM), and `app`, everything else. In one job the ui
+  # module's tests began last, once the other modules' had freed Gradle's four workers, and ran
+  # alone for a quarter of an hour. Both build or restore the same engine; only `app` saves it.
+  # main runs `app` alone, every test included, as before.
   android:
     needs: changes
     if: needs.changes.outputs.android == 'true'
+    name: android (${{ matrix.part }})
     runs-on: ubuntu-latest
     permissions:
       contents: read
       actions: write
+    strategy:
+      fail-fast: false
+      matrix:
+        part: ${{ fromJSON(github.event_name == 'pull_request' && '["app", "ui"]' || '["app"]') }}
     env:
+      PART: ${{ matrix.part }}
       KAERI_ANDROID_ABIS: arm64-v8a
       # A JVM per test class, four at once: the runner's four cores, which Gradle's workers cap
       # across every module's tests anyway (android/build-logic, kaeri.engine.flavours).
@@ -1069,7 +1081,7 @@ jobs:
         if: steps.engine.outputs.cache-hit != 'true'
         with:
           shared-key: android
-          save-if: ${{ env.SAVE_CACHES == 'true' }}
+          save-if: ${{ env.SAVE_CACHES == 'true' && env.PART == 'app' }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-ndk
@@ -1080,7 +1092,7 @@ jobs:
       # Gradle's caches and the wrapper's distribution, saved from main like the Rust cache.
       - uses: gradle/actions/setup-gradle@v5
         with:
-          cache-read-only: ${{ github.ref != 'refs/heads/main' }}
+          cache-read-only: ${{ github.ref != 'refs/heads/main' || env.PART != 'app' }}
       # The platform the app compiles against, and the NDK its build.gradle.kts strips the APK's
       # libraries with; the engine itself builds with the newest NDK, above.
       - name: The SDK platform and NDK the app builds with
@@ -1098,7 +1110,7 @@ jobs:
       # 4 KB aligned segments does not load on them. And a library that needed libc++_shared.so
       # would have the app ship it.
       - name: The library loads on 16 KB pages and needs only the system's libraries
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && env.PART == 'app'
         run: |
           bin="$ANDROID_NDK_HOME/toolchains/llvm/prebuilt/linux-x86_64/bin"
           so=android/.engine/testing/jniLibs/arm64-v8a/libkaeri_ffi.so
@@ -1113,7 +1125,7 @@ jobs:
       # entry whole.
       - name: Room for the app's engine
         id: engine-room
-        if: ${{ !cancelled() && steps.engine.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && env.PART == 'app' && steps.engine.outputs.cache-hit != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           ENTRY: ${{ steps.keys.outputs.entry }}
@@ -1144,21 +1156,32 @@ jobs:
       # builds without it and its JNI shim, so its Kotlin compiles and its unit tests run. On main
       # only when Robolectric's builds have to be fetched for its cache, which the tests do.
       - name: The fixtures APK and the unit tests
-        if: github.event_name == 'pull_request' || steps.robolectric.outputs.cache-hit != 'true'
+        if: >-
+          env.PART == 'app'
+          && (github.event_name == 'pull_request' || steps.robolectric.outputs.cache-hit != 'true')
         working-directory: android
-        run: ./gradlew --console=plain assembleFixturesDebug testFixturesDebugUnitTest -Proborazzi.test.record=true
+        run: >-
+          ./gradlew --console=plain assembleFixturesDebug testFixturesDebugUnitTest
+          -Proborazzi.test.record=true
+          ${{ github.event_name == 'pull_request' && '-x :ui:testFixturesDebugUnitTest' || '' }}
+        env:
+          KAERI_PLAYER_NATIVE: "off"
+      - name: The ui module's unit tests
+        if: env.PART == 'ui'
+        working-directory: android
+        run: ./gradlew --console=plain :ui:testFixturesDebugUnitTest -Proborazzi.test.record=true
         env:
           KAERI_PLAYER_NATIVE: "off"
       # Android lint's errors in every module, such as a call the oldest supported Android lacks
       # (NewApi), which the JVM tests cannot see: their JDK has every method.
       - name: Lint
-        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && env.PART == 'app' }}
         working-directory: android
         run: ./gradlew --console=plain --continue lintFixturesDebug :i18n:lintDebug :design:lintDebug
         env:
           KAERI_PLAYER_NATIVE: "off"
       # What the shot tests' semantics check (testkit's A11yShots) found: reported here, and it
-      # fails a test only once KAERI_A11Y_STRICT=1 is set on the step above.
+      # fails a test only once KAERI_A11Y_STRICT=1 is set on the step above. Each part its own.
       - name: Compose semantics findings
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         run: android/scripts/a11y-summary.sh
@@ -1173,7 +1196,7 @@ jobs:
       # against the testing engine's bindings, which hold everything the release engine's do, so
       # an app-only source that no longer matches the engine fails here and not in a release.
       - name: The app flavour's Kotlin
-        if: ${{ !cancelled() }}
+        if: ${{ !cancelled() && env.PART == 'app' }}
         working-directory: android
         run: |
           ln -sfn testing .engine/release
@@ -1182,7 +1205,7 @@ jobs:
           KAERI_PLAYER_NATIVE: "off"
       - name: Room for Robolectric's Android builds
         id: robolectric-room
-        if: env.SAVE_CACHES == 'true' && steps.robolectric.outputs.cache-hit != 'true'
+        if: env.SAVE_CACHES == 'true' && env.PART == 'app' && steps.robolectric.outputs.cache-hit != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: tools/ci-cache-room.sh "${{ steps.robolectric.outputs.cache-primary-key }}" 300
@@ -1197,13 +1220,13 @@ jobs:
       - uses: actions/upload-artifact@v7
         if: always() && github.event_name == 'pull_request'
         with:
-          name: android-screenshots
+          name: android-screenshots${{ matrix.part == 'ui' && '-ui' || '' }}
           path: android/.shots/roborazzi/
           if-no-files-found: ignore
       # Last, as rust-cache saves after the job: room for its new entry.
       - name: Room for the Rust cache
         if: >-
-          env.SAVE_CACHES == 'true' && steps.rust.outcome == 'success'
+          env.SAVE_CACHES == 'true' && env.PART == 'app' && steps.rust.outcome == 'success'
           && steps.rust.outputs.cache-hit != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
