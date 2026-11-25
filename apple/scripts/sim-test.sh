@@ -35,8 +35,8 @@ out="$apple/.shots/sim-test"
 landscape=0
 while (( $# )); do
   case "$1" in
-    --forms) IFS=, read -r -a forms <<<"${2:-}"; shift 2 ;;
-    --out) out="${2:-}"; shift 2 ;;
+    --forms) [[ $# -ge 2 && -n "$2" ]] || usage; IFS=, read -r -a forms <<<"$2"; shift 2 ;;
+    --out) [[ $# -ge 2 && -n "$2" ]] || usage; out="$2"; shift 2 ;;
     --landscape) landscape=1; shift ;;
     --) shift; break ;;
     *) usage ;;
@@ -84,19 +84,20 @@ simulator() {
   if [[ "$form" == ipad ]]; then
     # The iPad's apps full screen: neither Stage Manager nor windowed apps. SpringBoard reads
     # them as it starts.
-    xcrun simctl spawn "$udid" defaults write com.apple.springboard SBChamoisWindowingEnabled -bool NO
-    xcrun simctl spawn "$udid" defaults write com.apple.springboard SBMedusaMultitaskingEnabled -bool NO
+    xcrun simctl spawn "$udid" defaults write com.apple.springboard SBChamoisWindowingEnabled -bool NO >&2 || return 1
+    xcrun simctl spawn "$udid" defaults write com.apple.springboard SBMedusaMultitaskingEnabled -bool NO >&2 || return 1
     xcrun simctl shutdown "$udid" >&2
     xcrun simctl boot "$udid" >&2 || return 1
     xcrun simctl bootstatus "$udid" -b >/dev/null || return 1
   fi
-  xcrun simctl ui "$udid" appearance "${KAERI_APPEARANCE:-dark}"
+  xcrun simctl ui "$udid" appearance "${KAERI_APPEARANCE:-dark}" >&2 || return 1
   xcrun simctl status_bar "$udid" override --time 9:41 --dataNetwork wifi --wifiMode active \
     --wifiBars 3 --cellularMode active --cellularBars 4 --operatorName '' \
-    --batteryState discharging --batteryLevel 100
+    --batteryState discharging --batteryLevel 100 >&2 || return 1
   if (( landscape )); then
     xcrun devicectl --quiet device orientation set --device "$udid" landscapeLeft >/dev/null 2>&1 || true
   fi
+  return 0
 }
 
 # Whether the result bundle at <path> is whole: xcresulttool reads its summary.
