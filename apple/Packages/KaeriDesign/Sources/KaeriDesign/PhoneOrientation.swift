@@ -57,10 +57,13 @@ extension PhoneOrientation {
         change { $0.player = on }
     }
 
+    /// Whether a room turns the screen upright as it opens. Sideways screenshots turn it off.
+    public static var opensUpright = true
+
     /// The player went into a room or left it. Into one, the screen turns upright once, then
     /// follows the sensor.
     public static func room(_ on: Bool) {
-        let entering = on && !now.room && now.player
+        let entering = on && !now.room && now.player && opensUpright
         change { $0.room = on }
         guard entering, UIDevice.current.userInterfaceIdiom == .phone,
               let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first

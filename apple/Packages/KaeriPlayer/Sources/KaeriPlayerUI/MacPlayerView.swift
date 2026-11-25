@@ -152,11 +152,6 @@ public struct MacPlayerView: View {
                 .animation(.standard, value: visible)
                 .allowsHitTesting(stripShown)
         }
-        if room.inRoom, room.view?.canDontWait == true, curtain {
-            RoomDontWaitNote(room: room)
-                .padding(.top, 140)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-        }
         if room.inRoom, let up = room.view?.upNext, up.cancelledBy == nil {
             RoomUpNextCard(room: room, up: up)
                 .padding(.trailing, 20)

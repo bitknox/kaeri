@@ -175,6 +175,10 @@ extension PlayerModel {
     public func stage(_ scene: RoomScene, store: AppStore) async -> Bool {
         let room = store.room
         if scene.place { return await stagePlace(scene, store: store) }
+        #if os(iOS)
+        // A room opens upright; a sideways shot (shots.sh --landscape) stays as the phone is held.
+        if ProcessInfo.processInfo.arguments.contains("-KaeriLandscape") { PhoneOrientation.opensUpright = false }
+        #endif
         guard let item = store.continuing.queue(store.titles).all.first,
               let entry = store.titles[item.id]
         else { return false }
@@ -358,18 +362,6 @@ extension PlayerModel {
             }
         default: break
         }
-        #if os(iOS)
-        // A room opens upright; a sideways shot (shots.sh --landscape) turns it back as the
-        // person turning the phone would.
-        if UIDevice.current.userInterfaceIdiom == .phone, ProcessInfo.processInfo.arguments.contains("-KaeriLandscape"),
-           let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first {
-            // After the room's own upright turn, which comes when the player sees the room.
-            _ = await roomWaited(5, { PhoneOrientation.now.room })
-            try? await Task.sleep(for: .milliseconds(400))
-            scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { _ in }
-            try? await Task.sleep(for: .milliseconds(600))
-        }
-        #endif
         // The column's contents fade in after the window grows.
         try? await Task.sleep(for: .milliseconds(900))
         return room.active
