@@ -5,6 +5,7 @@
 
 #if FIXTURES
 import Foundation
+import KaeriDesign
 import KaeriKit
 import KaeriStore
 #if os(iOS)
@@ -336,7 +337,7 @@ extension PlayerModel {
         room.shown = scene != .hidden && scene != .folded
 
         switch scene {
-        case .invite, .movestart: room.popover = .invite
+        case .invite, .movestart, .invitesheet: room.popover = .invite
         case .details, .detailstrouble: room.popover = .details
         case .editrelays: room.popover = .editRelays
         case .leave: room.leaving = .leave
@@ -360,10 +361,13 @@ extension PlayerModel {
         #if os(iOS)
         // A room opens upright; a sideways shot (shots.sh --landscape) turns it back as the
         // person turning the phone would.
-        if UIDevice.current.userInterfaceIdiom == .phone, UIDevice.current.orientation.isLandscape,
+        if UIDevice.current.userInterfaceIdiom == .phone, ProcessInfo.processInfo.arguments.contains("-KaeriLandscape"),
            let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first {
-            try? await Task.sleep(for: .milliseconds(600))
+            // After the room's own upright turn, which comes when the player sees the room.
+            _ = await roomWaited(5, { PhoneOrientation.now.room })
+            try? await Task.sleep(for: .milliseconds(400))
             scene.requestGeometryUpdate(.iOS(interfaceOrientations: .landscapeRight)) { _ in }
+            try? await Task.sleep(for: .milliseconds(600))
         }
         #endif
         // The column's contents fade in after the window grows.

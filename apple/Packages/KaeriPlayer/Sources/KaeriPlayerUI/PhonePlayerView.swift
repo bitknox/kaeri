@@ -124,6 +124,8 @@ public struct PhonePlayerView: View {
             .animation(reduceMotion ? .fadeIn : .standard, value: beside)
             .statusBarHidden(!upright)
         }
+        // Measured on the whole screen: the upright room's video is wider than tall too.
+        .onGeometryChange(for: Bool.self, of: Self.isSideways) { sideways = $0 }
         .onChange(of: store.room.active, initial: true) { _, active in PhoneOrientation.room(active) }
         .onDisappear { PhoneOrientation.room(false) }
         .background(store.room.active ? Palette.ground : .black)
@@ -293,7 +295,6 @@ public struct PhonePlayerView: View {
         .playerAccessibility(model)
         .sensoryFeedback(.impact(weight: .light), trigger: drag > 120) { _, crossed in crossed }
         .sheet(item: sheetShown) { sheet in sheetContent(sheet) }
-        .onGeometryChange(for: Bool.self, of: Self.isSideways) { sideways = $0 }
         .animation(reduceMotion ? .fadeIn : .standard, value: partyBeside)
         .onChange(of: sheet) { _, open in
             model.hold("sheet", open != nil)
