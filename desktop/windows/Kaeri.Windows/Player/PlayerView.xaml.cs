@@ -1677,7 +1677,13 @@ public sealed partial class PlayerView : UserControl
 
     PartyPanel? partyPanel;
 
-    void OnParty(object sender, RoutedEventArgs e) => ShowParty();
+    void OnParty(object sender, RoutedEventArgs e)
+    {
+        if (InRoom)
+            ToggleRoomColumn();
+        else
+            ShowParty();
+    }
 
     /// <summary>The party's panel when in one; the form that starts one when not.</summary>
     internal void ShowParty()
@@ -1839,7 +1845,7 @@ public sealed partial class PlayerView : UserControl
 
     // The controls.
 
-    void OnClose(object sender, RoutedEventArgs e) => Close();
+    void OnClose(object sender, RoutedEventArgs e) => CloseOrAsk();
 
     internal void Close()
     {
@@ -1907,13 +1913,29 @@ public sealed partial class PlayerView : UserControl
         verdictWait.Start();
     }
 
-    void OnPlayPause(object sender, RoutedEventArgs e) => TogglePause();
+    void OnPlayPause(object sender, RoutedEventArgs e)
+    {
+        if (!RoomTakesPlay())
+            TogglePause();
+    }
     void OnBack10(object sender, RoutedEventArgs e) => SeekBy(-10, flash: false);
     void OnForward10(object sender, RoutedEventArgs e) => SeekBy(10, flash: false);
     void OnFullscreen(object sender, RoutedEventArgs e) => FullscreenRequested?.Invoke(null);
-    void OnSkip(object sender, RoutedEventArgs e) => SendControl(new PlayerCommand.TakeSkip());
-    void OnPlayNext(object sender, RoutedEventArgs e) => PlayNext(auto: false);
-    void OnCancelNext(object sender, RoutedEventArgs e) => CancelNext();
+    void OnSkip(object sender, RoutedEventArgs e)
+    {
+        if (!RoomTakesSkip())
+            SendControl(new PlayerCommand.TakeSkip());
+    }
+    void OnPlayNext(object sender, RoutedEventArgs e)
+    {
+        if (!RoomTakesNext(cancel: false))
+            PlayNext(auto: false);
+    }
+    void OnCancelNext(object sender, RoutedEventArgs e)
+    {
+        if (!RoomTakesNext(cancel: true))
+            CancelNext();
+    }
 
     /// <summary>
     /// Up next as the engine hands it over: the card shows from where the ending starts (or near
@@ -2111,6 +2133,7 @@ public sealed partial class PlayerView : UserControl
         var name = on ? T.PlayerExitFullscreen : T.PlayerFullscreen;
         AutomationProperties.SetName(FullscreenButton, name);
         ToolTipService.SetToolTip(FullscreenButton, T.TooltipWithKey(name, "F"));
+        RoomFullscreen(on);
     }
 
     /// <summary>A time said in words for a screen reader: "12 minutes 4 seconds".</summary>
@@ -2524,7 +2547,11 @@ public sealed partial class PlayerView : UserControl
         act();
     }
 
-    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, TogglePause);
+    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () =>
+    {
+        if (!RoomTakesPlay())
+            TogglePause();
+    });
     void OnKeyBack10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(-10, flash: false));
     void OnKeyForward10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(10, flash: false));
     void OnKeyBack5(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => { if (!MarkingNudge(-1)) SeekBy(-5); }, show: false);
@@ -2628,7 +2655,7 @@ public sealed partial class PlayerView : UserControl
     void OnKeyNext(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(1));
     void OnKeyPrevious(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(-1));
     void OnKeyMini(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => ToggleMini());
-    void OnKeyClose(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, Close, show: false);
+    void OnKeyClose(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, CloseOrAsk, show: false);
 
     void OnKeyEnter(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () =>
     {
