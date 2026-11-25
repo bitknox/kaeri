@@ -576,6 +576,13 @@ impl App {
         Some(Command::LoadSources { id, episode })
     }
 
+    /// The releases of `episode` of `id` could not be listed: the question asked is over.
+    pub(super) fn sources_failed(&mut self, id: AnilistId, episode: &str) {
+        if self.source_context.as_ref().is_some_and(|(i, e)| *i == id && e == episode) {
+            self.source_context = None;
+        }
+    }
+
     /// The release picked, played.
     pub(super) fn confirm_source(&mut self) -> Option<Command> {
         let candidate = self.sources.get(self.cursors.overlay.selected)?.clone();
@@ -1626,6 +1633,34 @@ mod tests {
         assert!(said.contains(&t::source_picker_held_torrents_off("Harbor")), "{said}");
         assert!(said.contains(&t::source_picker_held_torrents_starting("Swarm")), "{said}");
         assert!(!said.contains("alpha"), "a raw id: {said}");
+    }
+
+    #[test]
+    fn a_listing_that_failed_leaves_no_question_to_open_later() {
+        let mut a = app_at_episodes();
+        a.handle(Action::ShowSources, 20);
+        let (id, episode) = a.source_context.clone().expect("a pending question");
+        // Another episode's failure is not this question's.
+        a.apply(Event::SourcesFailed {
+            id,
+            episode: format!("{episode}0"),
+            why: kaeri_model::Msg::NoticeTitleLoadFailed,
+        });
+        assert!(a.source_context.is_some());
+        a.apply(Event::SourcesFailed {
+            id,
+            episode: episode.clone(),
+            why: kaeri_model::Msg::NoticeTitleLoadFailed,
+        });
+        assert!(a.source_context.is_none(), "a failed question is not left pending");
+        // The same listing replayed once back online opens nothing over the screen.
+        a.apply(Event::Sources {
+            id,
+            episode,
+            candidates: vec![source("[A] Show - 1 (1080p)", true)],
+            missed: Vec::new(),
+        });
+        assert_ne!(a.nav.overlay(), Some(&Overlay::Sources));
     }
 
     #[test]
