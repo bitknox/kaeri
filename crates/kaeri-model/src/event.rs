@@ -273,14 +273,29 @@ pub enum Event {
     /// The selectable releases for the episode the user asked about, named so an answer for
     /// an episode whose picker has since closed is not offered against the next one.
     ///
-    /// With no candidates, `missed` says what each source answered instead, in the viewer's
-    /// order: the picker's "No source lists episode 5" and one line for each source under it.
+    /// `missed` says what each source that listed no release answered, in the viewer's order:
+    /// the picker's "No source lists episode 5" and one line for each source under it.
     Sources {
         id: AnilistId,
         episode: String,
         candidates: Vec<SourceCandidate>,
         #[cfg_attr(feature = "ffi", uniffi(default))]
         missed: Vec<crate::starting::MissedListing>,
+    },
+    /// Every source's row while `LoadSources` asks, whole each time one changes; see
+    /// [`SourceListing`](crate::starting::SourceListing).
+    SourcesProgress {
+        id: AnilistId,
+        episode: String,
+        rows: Vec<crate::starting::SourceListing>,
+    },
+    /// `LoadSources` for this episode ended before asking any source: none is set up, the
+    /// title's details could not be read, or the episode has not aired. `why` says which, as the
+    /// alert said beside it. Ends what `SourcesProgress` started; no `Sources` follows.
+    SourcesFailed {
+        id: AnilistId,
+        episode: String,
+        why: Msg,
     },
     /// The sources that could serve a title, each with how much of the title's episodes it has,
     /// in the order they are tried, for a source picker: the answer to

@@ -292,7 +292,7 @@ fn a_change_made_on_both_settles_the_same_on_both() {
 fn a_title_form_chosen_on_one_device_names_titles_on_the_other_at_once() {
     use kaeri_model::catalog::TitleLanguage;
     let shared = tempfile::tempdir().expect("a shared folder");
-    let (mut desk, mut laptop) = group(shared.path());
+    let (mut desk, laptop) = group(shared.path());
 
     desk.send(Command::SetSetting {
         key: SettingKey::Titles,

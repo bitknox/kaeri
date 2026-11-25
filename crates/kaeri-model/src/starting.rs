@@ -59,6 +59,8 @@ pub struct HeldSources {
 pub enum ListingMiss {
     /// The source has no such title.
     NoMatch,
+    /// The source found titles like it and could not tell which one it is.
+    Ambiguous,
     /// The source has the title and lists nothing for this episode.
     NoEpisode,
     /// The source answered with an error.
@@ -75,6 +77,36 @@ pub enum ListingMiss {
 pub struct MissedListing {
     pub name: String,
     pub miss: ListingMiss,
+}
+
+/// Where one source is while `LoadSources` asks it: see [`SourceListing`].
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum ListingState {
+    /// The source is being asked. A front end counts the seconds from the event in which the
+    /// row first said so.
+    Asking,
+    /// The source listed these releases, in its own order, the automatic pick marked.
+    Listed { releases: Vec<kaeri_core::traits::SourceCandidate> },
+    /// The source has nothing to offer, or was not asked because local policy holds it back.
+    /// A source still asked when the overall limit runs out is [`ListingMiss::TimedOut`].
+    Missed { miss: ListingMiss },
+    /// The source is switched off and is never asked.
+    Off,
+}
+
+/// One source's row in [`Event::SourcesProgress`](crate::event::Event::SourcesProgress), said
+/// once as soon as `LoadSources` is taken, with every source in the order set in Sources, switched
+/// off and held back ones included, then again each time a row changes, always whole, so a front
+/// end draws the last one and never merges. A source still asked when the overall limit runs out
+/// is said to have taken too long. `Event::Sources` follows the last one.
+#[derive(Debug, Clone, PartialEq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Record))]
+pub struct SourceListing {
+    pub provider_id: String,
+    /// The name it goes by.
+    pub name: String,
+    pub state: ListingState,
 }
 
 /// One step of a start. See the module docs.

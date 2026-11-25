@@ -7952,6 +7952,11 @@ public enum L {
         Self.format("player-start-miss-no-match", fallback: "%1$@ doesn't have this show", name)
     }
 
+    /// Detail line when a source found titles like the show and could not tell which one it is.
+    public static func playerStartMissAmbiguous(name: String) -> String {
+        Self.format("player-start-miss-ambiguous", fallback: "%1$@ couldn't match this title", name)
+    }
+
     /// Detail line when a source has the show and not the episode. The episode is its label.
     public static func playerStartMissNoEpisode(name: String, episode: String) -> String {
         Self.format("player-start-miss-no-episode", fallback: "%1$@ doesn't have episode %2$@", name, episode)
@@ -8740,6 +8745,11 @@ public enum L {
     /// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
     public static func playerPanelStarting(seconds: Int) -> String {
         Self.format("player-panel-starting", fallback: "Starting · %1$lld s", seconds)
+    }
+
+    /// Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.
+    public static func playerPanelAsking(seconds: Int) -> String {
+        Self.format("player-panel-asking", fallback: "Asking · %1$lld s", seconds)
     }
 
     /// Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.

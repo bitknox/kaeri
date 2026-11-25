@@ -14320,6 +14320,11 @@ pub fn player_start_miss_no_match(name: &str) -> String {
     text("player-start-miss-no-match", &[("name", Arg::Text(name))])
 }
 
+/// Detail line when a source found titles like the show and could not tell which one it is.
+pub fn player_start_miss_ambiguous(name: &str) -> String {
+    text("player-start-miss-ambiguous", &[("name", Arg::Text(name))])
+}
+
 /// Detail line when a source has the show and not the episode. The episode is its label.
 pub fn player_start_miss_no_episode(name: &str, episode: &str) -> String {
     text("player-start-miss-no-episode", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
@@ -15430,6 +15435,11 @@ pub fn player_translation() -> String {
 /// Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.
 pub fn player_panel_starting(seconds: i64) -> String {
     text("player-panel-starting", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.
+pub fn player_panel_asking(seconds: i64) -> String {
+    text("player-panel-asking", &[("seconds", Arg::Int(seconds))])
 }
 
 /// Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.

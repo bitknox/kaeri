@@ -182797,6 +182797,18 @@
         }
       }
     },
+    "player-panel-asking" : {
+      "comment" : "Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Asking · %1$lld s"
+          }
+        }
+      }
+    },
     "player-panel-dub-failed" : {
       "comment" : "Line under the player panel's subtitled or dubbed switch, when the dubbed version of the episode playing couldn't be found or didn't start, and the episode plays on subtitled. Argument 1: episode (Text).",
       "extractionState" : "manual",
@@ -188405,6 +188417,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Đã tìm thấy tiêu đề"
+          }
+        }
+      }
+    },
+    "player-start-miss-ambiguous" : {
+      "comment" : "Detail line when a source found titles like the show and could not tell which one it is. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ couldn't match this title"
           }
         }
       }

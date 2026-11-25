@@ -4,7 +4,9 @@
 use kaeri_core::ids::AnilistId;
 use kaeri_meta::Meta;
 use kaeri_model::StoreMsg;
-use kaeri_model::starting::{ListingMiss, MissedListing, SourceHold, StartStep};
+use kaeri_model::starting::{
+    ListingMiss, ListingState, MissedListing, SourceHold, SourceListing, StartStep,
+};
 use kaeri_model::{Cause, Msg};
 use kaeri_model::{event::Event, notice::Notice, party::NoSourceWhy};
 use kaeri_providers::{ProviderRegistry, walk};
@@ -646,12 +648,24 @@ pub(crate) fn display_name(registry: &ProviderRegistry, provider_id: &str) -> St
         .map_or_else(|| provider_id.to_owned(), |source| source.manifest().display_name.clone())
 }
 
+/// How long [`source_slate`] waits for every source together. A plugin call may take 20 s and a
+/// source makes two (matching the title, then listing the episode), so without it one source
+/// could hold the Sources tab for 40 s. A source still asked then is said to have taken too long.
+pub(crate) const SOURCES_LIMIT: std::time::Duration = std::time::Duration::from_secs(30);
+
 /// The selectable releases for one episode, across every source, and what each source that
-/// listed none said.
+/// listed none said, in the order set in Sources.
 ///
 /// Shares the title-matching rung with playback: the slate is only meaningful for the
-/// provider key the ladder would actually use. Sources resting after failures are asked last,
-/// and a source local policy holds back is not asked at all, as in a play.
+/// provider key the ladder would actually use. Every source is asked together, each one in
+/// turn through its own hold, match and listing, so each keeps its own call limits and the wait
+/// is the slowest source's, up to `limit`. Sources resting after failures are asked too; a
+/// source local policy holds back is not asked at all, as in a play, and one switched off is
+/// never asked.
+///
+/// `said` gets every row each time one changes, starting with every row at once; when it
+/// returns false nobody is listening any more and the asking stops.
+#[allow(clippy::too_many_arguments)]
 async fn source_slate(
     meta: &Meta,
     store: &Store,
@@ -659,11 +673,18 @@ async fn source_slate(
     id: kaeri_core::ids::AnilistId,
     episode: &str,
     translation: kaeri_core::media::Translation,
+    limit: std::time::Duration,
+    mut said: impl FnMut(&[SourceListing]) -> bool,
 ) -> std::result::Result<(Vec<kaeri_core::traits::SourceCandidate>, Vec<MissedListing>), Msg> {
+    use futures::StreamExt;
+
     if registry.is_empty() && !registry.is_arriving() {
         return Err(explained(no_sources()));
     }
-    let media = meta.media(id).await.map_err(|e| Msg::verbatim(e.to_string()))?;
+    let media = meta.media(id).await.map_err(|error| {
+        tracing::warn!(%error, "could not look up the title for its sources");
+        Msg::NoticeTitleLoadFailed
+    })?;
     if let Some(reason) = not_aired(&media, episode) {
         return Err(reason);
     }
@@ -673,53 +694,147 @@ async fn source_slate(
     }
     let target = media.match_target();
     let now = now_epoch();
+
+    // Every row from the start, in the chain's order: switched off and held back ones say so at
+    // once, and every other one is being asked. A source waiting for a torrent session on its
+    // way is asked, since the session may come up while it waits.
+    let mut rows: Vec<SourceListing> = registry
+        .all()
+        .into_iter()
+        .map(|provider| {
+            let provider_id = provider.manifest().id.clone();
+            let state = if registry.is_disabled(&provider_id) {
+                ListingState::Off
+            } else {
+                match registry.hold(&provider_id, now).map(|reason| hold_of_error(&reason)) {
+                    Some(SourceHold::TorrentsStarting) | None => ListingState::Asking,
+                    Some(why) => ListingState::Missed { miss: ListingMiss::HeldBack { why } },
+                }
+            };
+            SourceListing { name: display_name(registry, &provider_id), provider_id, state }
+        })
+        .collect();
+    let mut listening = said(&rows);
+
     // Each provider's releases under its own key: one provider's key means nothing to another.
     // A provider that cannot match the title has nothing to offer here, and the rest still do.
+    let ask = |place: usize, provider_id: String, name: String| {
+        let target = &target;
+        async move {
+            // Switched off since the rows were drawn: said as off, not as a source that failed
+            // or lacks the title, whenever it happened while asked.
+            let off = || registry.is_disabled(&provider_id);
+            let Some(source) =
+                registry.pinned(&provider_id).map(ProviderRegistry::even_resting)
+            else {
+                // Or taken out of the chain.
+                let state = if off() {
+                    ListingState::Off
+                } else {
+                    ListingState::Missed { miss: ListingMiss::Failed }
+                };
+                return (place, state);
+            };
+            let state = match registry.hold_when_asked(&provider_id, now).await {
+                Some(reason) => ListingState::Missed {
+                    miss: ListingMiss::HeldBack { why: hold_of_error(&reason) },
+                },
+                None => {
+                    listing_of(store, &source, id, target, episode, translation, now, &name)
+                        .await
+                }
+            };
+            let state = match state {
+                ListingState::Missed { .. } if off() => ListingState::Off,
+                state => state,
+            };
+            (place, state)
+        }
+    };
+    let mut asked: futures::stream::FuturesUnordered<_> = rows
+        .iter()
+        .enumerate()
+        .filter(|(_, row)| row.state == ListingState::Asking)
+        .map(|(place, row)| ask(place, row.provider_id.clone(), row.name.clone()))
+        .collect();
+    let deadline = tokio::time::Instant::now() + limit;
+    while listening && !asked.is_empty() {
+        match tokio::time::timeout_at(deadline, asked.next()).await {
+            Ok(Some((place, state))) => {
+                if let ListingState::Missed { miss } = &state {
+                    tracing::info!(provider = %rows[place].provider_id, ?miss, "listed no release");
+                }
+                rows[place].state = state;
+                listening = said(&rows);
+            }
+            Ok(None) => break,
+            Err(_) => {
+                // Past the overall limit: whoever is still asked took too long, and is no
+                // longer waited for.
+                for row in rows.iter_mut().filter(|row| row.state == ListingState::Asking) {
+                    tracing::info!(provider = %row.provider_id, "still asked at the limit");
+                    row.state = ListingState::Missed { miss: ListingMiss::TimedOut };
+                }
+                said(&rows);
+                break;
+            }
+        }
+    }
+
     let mut slate = Vec::new();
     let mut missed = Vec::new();
-    for provider_id in registry.usable_ids().into_iter().chain(registry.resting_ids()) {
-        let Some(source) = registry.pinned(&provider_id).map(ProviderRegistry::even_resting)
-        else {
-            continue;
-        };
-        let name = display_name(registry, &provider_id);
-        let miss = match registry.hold_when_asked(&provider_id, now).await {
-            Some(reason) => Some(ListingMiss::HeldBack { why: hold_of_error(&reason) }),
-            None => {
-                match kaeri_providers::resolve(store, &source, id, &target, translation, now)
-                    .await
-                {
-                    kaeri_providers::Resolution::Resolved { key, .. } => {
-                        match source.listing(&key, episode, translation, now).await {
-                            Ok(listed) if listed.is_empty() => Some(ListingMiss::NoEpisode),
-                            Ok(listed) => {
-                                slate.extend(listed.into_iter().map(|candidate| {
-                                    kaeri_core::traits::SourceCandidate {
-                                        provider_name: name.clone(),
-                                        ..candidate
-                                    }
-                                }));
-                                None
-                            }
-                            Err(error) => Some(listing_failed(&error)),
-                        }
-                    }
-                    // Candidates and none sure: the picker has no release to offer from it.
-                    kaeri_providers::Resolution::Ambiguous { .. } => Some(ListingMiss::NoMatch),
-                    kaeri_providers::Resolution::NotFound { miss, .. } => Some(match miss {
-                        walk::Miss::TimedOut => ListingMiss::TimedOut,
-                        walk::Miss::Failed | walk::Miss::Skipped => ListingMiss::Failed,
-                        walk::Miss::NoMatch | walk::Miss::NoEpisode => ListingMiss::NoMatch,
-                    }),
-                }
+    for row in rows {
+        match row.state {
+            ListingState::Listed { releases } => slate.extend(releases),
+            ListingState::Missed { miss } => {
+                missed.push(MissedListing { name: row.name, miss })
             }
-        };
-        if let Some(miss) = miss {
-            tracing::info!(provider = %provider_id, ?miss, "listed no release");
-            missed.push(MissedListing { name, miss });
+            ListingState::Asking | ListingState::Off => {}
         }
     }
     Ok((slate, missed))
+}
+
+/// What one source, held back by nothing, lists for an episode: its releases named as it goes
+/// by, or why it has none.
+#[allow(clippy::too_many_arguments)]
+async fn listing_of(
+    store: &Store,
+    source: &ProviderRegistry,
+    id: kaeri_core::ids::AnilistId,
+    target: &kaeri_meta::title::MatchTarget,
+    episode: &str,
+    translation: kaeri_core::media::Translation,
+    now: i64,
+    name: &str,
+) -> ListingState {
+    let miss = match kaeri_providers::resolve(store, source, id, target, translation, now).await
+    {
+        kaeri_providers::Resolution::Resolved { key, .. } => {
+            match source.listing(&key, episode, translation, now).await {
+                Ok(listed) if listed.is_empty() => ListingMiss::NoEpisode,
+                Ok(listed) => {
+                    let releases = listed
+                        .into_iter()
+                        .map(|candidate| kaeri_core::traits::SourceCandidate {
+                            provider_name: name.to_owned(),
+                            ..candidate
+                        })
+                        .collect();
+                    return ListingState::Listed { releases };
+                }
+                Err(error) => listing_failed(&error),
+            }
+        }
+        // Candidates and none sure: the picker has no release to offer from it.
+        kaeri_providers::Resolution::Ambiguous { .. } => ListingMiss::Ambiguous,
+        kaeri_providers::Resolution::NotFound { miss, .. } => match miss {
+            walk::Miss::TimedOut => ListingMiss::TimedOut,
+            walk::Miss::Failed | walk::Miss::Skipped => ListingMiss::Failed,
+            walk::Miss::NoMatch | walk::Miss::NoEpisode => ListingMiss::NoMatch,
+        },
+    };
+    ListingState::Missed { miss }
 }
 
 /// Why a source that failed to list said nothing: it took too long, or it failed.
@@ -746,7 +861,9 @@ fn hold_of_error(error: &kaeri_core::error::ProviderError) -> SourceHold {
     }
 }
 
-/// The releases an episode can be played from, for the Sources overlay.
+/// The releases an episode can be played from, for the Sources overlay: each source's row as
+/// it answers, then the whole slate. A newer `LoadSources` of the same episode takes over, and
+/// this one stops asking at once, lets its job go and says nothing more.
 pub fn load_sources(
     id: AnilistId,
     episode: String,
@@ -759,20 +876,42 @@ pub fn load_sources(
     // Sub or dub as a play of the title goes: the show's own, or what the player last picked.
     let translation =
         crate::playback::start::play_config(engine, store, id).playback.translation;
+    let ticket = engine.listed.sources_ticket(id, &episode);
     let (store, registry, meta, tx) =
         (store.clone(), registry.clone(), meta.clone(), tx.clone());
     tokio::spawn(async move {
         let _job = job;
-        let update =
-            match source_slate(&meta, &store, &registry, id, &episode, translation).await {
-                // With no release, what each source said; with some, the releases alone.
-                Ok((candidates, missed)) => {
-                    let missed = if candidates.is_empty() { missed } else { Vec::new() };
-                    Event::Sources { id, episode, candidates, missed }
-                }
-                Err(msg) => Event::Toast(Notice::alert(msg)),
-            };
-        let _ = tx.send(update);
+        let progress = |rows: &[SourceListing]| {
+            let event =
+                Event::SourcesProgress { id, episode: episode.clone(), rows: rows.to_vec() };
+            ticket.send(&tx, event)
+        };
+        let slate = source_slate(
+            &meta,
+            &store,
+            &registry,
+            id,
+            &episode,
+            translation,
+            SOURCES_LIMIT,
+            progress,
+        );
+        let slate = tokio::select! {
+            slate = slate => slate,
+            // A newer one took over: the sources still asked are let go with it.
+            () = ticket.superseded() => return,
+        };
+        match slate {
+            // The releases, and what each source that listed none said.
+            Ok((candidates, missed)) => {
+                ticket.send(&tx, Event::Sources { id, episode, candidates, missed });
+            }
+            // Said as an alert, and ended for a list still waiting on it.
+            Err(why) => {
+                let alert = Event::Toast(Notice::alert(why.clone()));
+                ticket.send_all(&tx, [alert, Event::SourcesFailed { id, episode, why }]);
+            }
+        }
     });
 }
 
@@ -1018,6 +1157,8 @@ mod tests {
             AnilistId::new(900_201),
             "3",
             kaeri_core::media::Translation::Sub,
+            SOURCES_LIMIT,
+            |_| true,
         )
         .await
         .expect("a slate")
@@ -1086,6 +1227,302 @@ mod tests {
             slate(vec![lacking("brook").named("Brook").with_sources(given)]).await;
         let order: Vec<_> = listed.iter().map(|c| (c.id.as_str(), c.auto_pick)).collect();
         assert_eq!(order, [("r1", false), ("r2", false), ("r3", true)]);
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_source_switched_off_while_asked_is_said_as_off() {
+        let second = std::time::Duration::from_secs(1);
+        let registry = ProviderRegistry::new(vec![
+            lacking("alpha").named("Alpha").arc(),
+            lacking("brook").named("Brook").with_latency(2 * second).arc(),
+            lacking("cove").named("Cove").arc(),
+        ]);
+        let store = Store::open_in_memory().unwrap();
+        store
+            .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
+            .unwrap();
+        let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store.clone());
+        // Brook is switched off while it is matching the title.
+        let switch = registry.clone();
+        tokio::spawn(async move {
+            tokio::time::sleep(second).await;
+            switch.set_disabled(["alpha".to_owned(), "brook".to_owned()]);
+        });
+        let mut last = Vec::new();
+        let (_, missed) = source_slate(
+            &meta,
+            &store,
+            &registry,
+            AnilistId::new(900_201),
+            "3",
+            kaeri_core::media::Translation::Sub,
+            SOURCES_LIMIT,
+            |rows| {
+                // Alpha is switched off as soon as the rows are drawn, before it is asked.
+                if last.is_empty() {
+                    registry.set_disabled(["alpha".to_owned()]);
+                }
+                last = states(rows);
+                true
+            },
+        )
+        .await
+        .expect("a slate");
+        assert_eq!(last, ["alpha off", "brook off", "cove NoEpisode"]);
+        assert_eq!(
+            missed,
+            [MissedListing { name: "Cove".into(), miss: ListingMiss::NoEpisode }]
+        );
+    }
+
+    /// Release `id` of episode 3 from `provider`, the automatic pick when `auto_pick`.
+    fn release_of(provider: &str, id: &str) -> kaeri_core::traits::SourceCandidate {
+        kaeri_core::traits::SourceCandidate {
+            id: id.into(),
+            provider_id: provider.into(),
+            provider_name: String::new(),
+            title: format!("The Hidden Star - 03 ({id})"),
+            quality: Some(1080),
+            label: None,
+            size: None,
+            dual_audio: false,
+            dubbed: false,
+            auto_pick: false,
+        }
+    }
+
+    /// Every set of rows the slate said as it went, then the slate, for `registry` within
+    /// `limit`.
+    async fn progress_from(
+        registry: &ProviderRegistry,
+        limit: std::time::Duration,
+    ) -> (Vec<Vec<String>>, Vec<kaeri_core::traits::SourceCandidate>, Vec<MissedListing>) {
+        let store = Store::open_in_memory().unwrap();
+        store
+            .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
+            .unwrap();
+        let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store.clone());
+        let mut said = Vec::new();
+        let (listed, missed) = source_slate(
+            &meta,
+            &store,
+            registry,
+            AnilistId::new(900_201),
+            "3",
+            kaeri_core::media::Translation::Sub,
+            limit,
+            |rows| {
+                said.push(states(rows));
+                true
+            },
+        )
+        .await
+        .expect("a slate");
+        (said, listed, missed)
+    }
+
+    /// Each row in short: its source and where it is.
+    fn states(rows: &[SourceListing]) -> Vec<String> {
+        rows.iter()
+            .map(|row| {
+                let state = match &row.state {
+                    ListingState::Asking => "asking".to_owned(),
+                    ListingState::Listed { releases } => format!("listed {}", releases.len()),
+                    ListingState::Missed { miss } => format!("{miss:?}"),
+                    ListingState::Off => "off".to_owned(),
+                };
+                format!("{} {state}", row.provider_id)
+            })
+            .collect()
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn the_sources_are_asked_together_and_each_row_is_said_as_it_answers() {
+        let second = std::time::Duration::from_secs(1);
+        let slow = || {
+            lacking("slow")
+                .named("Slow")
+                .with_latency(4 * second)
+                .with_sources(vec![release_of("slow", "s1"), release_of("slow", "s2")])
+        };
+        // The slow source alone, for how long it takes.
+        let alone = ProviderRegistry::new(vec![slow().arc()]);
+        let began = tokio::time::Instant::now();
+        progress_from(&alone, SOURCES_LIMIT).await;
+        let slowest = began.elapsed();
+        assert!(slowest >= 8 * second, "a match and a listing, 4 s each: {slowest:?}");
+
+        let registry = ProviderRegistry::new(vec![
+            slow().arc(),
+            lacking("quick").named("Quick").with_sources(vec![release_of("quick", "q1")]).arc(),
+            lacking("broken").named("Broken").with_latency(second).failing(transport()).arc(),
+            lacking("old").named("Old").with_sources(vec![release_of("old", "o1")]).arc(),
+            lacking("harbor")
+                .named("Harbor")
+                .unavailable(kaeri_providers::torrent::bridge::PLAYBACK_OFF)
+                .arc(),
+            lacking("cove").named("Cove").with_latency(2 * second).arc(),
+        ]);
+        registry.set_disabled(["old".to_owned()]);
+        let began = tokio::time::Instant::now();
+        let (said, listed, missed) = progress_from(&registry, SOURCES_LIMIT).await;
+        // Together: the slowest source's wait, not the sum of them all.
+        assert_eq!(began.elapsed(), slowest);
+        // Every row at once in the chain's order, switched off and held back ones said so;
+        // then one row at a time, in the order they answered, nothing added or moved.
+        let held = "harbor HeldBack { why: TorrentsOff }";
+        assert_eq!(
+            said,
+            [
+                [
+                    "slow asking",
+                    "quick asking",
+                    "broken asking",
+                    "old off",
+                    held,
+                    "cove asking"
+                ],
+                [
+                    "slow asking",
+                    "quick listed 1",
+                    "broken asking",
+                    "old off",
+                    held,
+                    "cove asking"
+                ],
+                [
+                    "slow asking",
+                    "quick listed 1",
+                    "broken Failed",
+                    "old off",
+                    held,
+                    "cove asking"
+                ],
+                [
+                    "slow asking",
+                    "quick listed 1",
+                    "broken Failed",
+                    "old off",
+                    held,
+                    "cove NoEpisode"
+                ],
+                [
+                    "slow listed 2",
+                    "quick listed 1",
+                    "broken Failed",
+                    "old off",
+                    held,
+                    "cove NoEpisode"
+                ],
+            ]
+        );
+        // The slate keeps the chain's order and each source's own, named as each goes by.
+        let releases: Vec<_> =
+            listed.iter().map(|c| (c.provider_name.as_str(), c.id.as_str())).collect();
+        assert_eq!(releases, [("Slow", "s1"), ("Slow", "s2"), ("Quick", "q1")]);
+        // What each source that listed nothing said, though others listed some.
+        assert_eq!(
+            missed,
+            [
+                MissedListing { name: "Broken".into(), miss: ListingMiss::Failed },
+                MissedListing {
+                    name: "Harbor".into(),
+                    miss: ListingMiss::HeldBack { why: SourceHold::TorrentsOff },
+                },
+                MissedListing { name: "Cove".into(), miss: ListingMiss::NoEpisode },
+            ]
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_source_still_asked_at_the_limit_took_too_long_and_the_rest_still_count() {
+        let registry = ProviderRegistry::new(vec![
+            lacking("quick").named("Quick").with_sources(vec![release_of("quick", "q1")]).arc(),
+            lacking("stuck")
+                .named("Stuck")
+                .with_latency(std::time::Duration::from_secs(600))
+                .arc(),
+            lacking("plugin")
+                .named("Plugin")
+                .with_latency(std::time::Duration::from_secs(5))
+                .failing(kaeri_core::error::ProviderError::Other("plugin timed out".into()))
+                .arc(),
+        ]);
+        let limit = std::time::Duration::from_secs(30);
+        let began = tokio::time::Instant::now();
+        let (said, listed, missed) = progress_from(&registry, limit).await;
+        assert_eq!(began.elapsed(), limit, "nobody is waited for past the limit");
+        assert_eq!(
+            said.last().unwrap(),
+            &["quick listed 1", "stuck TimedOut", "plugin TimedOut"],
+            "{said:?}"
+        );
+        // The plugin's own time-out was said as it came, the limit's at the limit.
+        assert_eq!(said[said.len() - 2], ["quick listed 1", "stuck asking", "plugin TimedOut"]);
+        let ids: Vec<_> = listed.iter().map(|c| c.id.as_str()).collect();
+        assert_eq!(ids, ["q1"]);
+        assert_eq!(
+            missed,
+            [
+                MissedListing { name: "Stuck".into(), miss: ListingMiss::TimedOut },
+                MissedListing { name: "Plugin".into(), miss: ListingMiss::TimedOut },
+            ]
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_source_that_cannot_choose_the_title_says_so_not_that_it_lacks_the_show() {
+        let registry = ProviderRegistry::new(vec![
+            searched("drift", false).named("Drift").arc(),
+            lacking("void").named("Void").with_hits(Vec::new()).arc(),
+        ]);
+        let (said, _, missed) = progress_from(&registry, SOURCES_LIMIT).await;
+        assert_eq!(said.last().unwrap(), &["drift Ambiguous", "void NoMatch"]);
+        assert_eq!(
+            missed[0],
+            MissedListing { name: "Drift".into(), miss: ListingMiss::Ambiguous }
+        );
+    }
+
+    #[tokio::test(start_paused = true)]
+    async fn a_slate_nobody_listens_to_any_more_stops_asking() {
+        let source =
+            lacking("slow").named("Slow").with_latency(std::time::Duration::from_secs(9));
+        let calls = source.call_count();
+        let registry = ProviderRegistry::new(vec![source.arc()]);
+        let store = Store::open_in_memory().unwrap();
+        store
+            .cache_media(AnilistId::new(900_201), &show(false).to_string(), now_epoch())
+            .unwrap();
+        let http = kaeri_net::HttpClient::offline(&NetworkConfig::default()).unwrap();
+        let meta = Meta::new(AniList::new(http, 30), None, store.clone());
+        let began = tokio::time::Instant::now();
+        let mut told = 0;
+        let (listed, missed) = source_slate(
+            &meta,
+            &store,
+            &registry,
+            AnilistId::new(900_201),
+            "3",
+            kaeri_core::media::Translation::Sub,
+            SOURCES_LIMIT,
+            |_| {
+                told += 1;
+                false
+            },
+        )
+        .await
+        .expect("a slate");
+        assert_eq!(told, 1, "only the first rows were said");
+        assert_eq!(began.elapsed(), std::time::Duration::ZERO, "nothing was waited for");
+        assert_eq!(
+            calls.load(std::sync::atomic::Ordering::SeqCst),
+            0,
+            "the source was never asked"
+        );
+        assert!(listed.is_empty() && missed.is_empty());
     }
 
     /// Meta, store and sources for the cached show, offline.

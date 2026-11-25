@@ -5529,6 +5529,9 @@ public static partial class T
     /// <summary>Detail line when a source has no match for the show.</summary>
     public static string PlayerStartMissNoMatch(string name) => Fill(Get("PlayerStartMissNoMatch"), ("name", name));
 
+    /// <summary>Detail line when a source found titles like the show and could not tell which one it is.</summary>
+    public static string PlayerStartMissAmbiguous(string name) => Fill(Get("PlayerStartMissAmbiguous"), ("name", name));
+
     /// <summary>Detail line when a source has the show and not the episode. The episode is its label.</summary>
     public static string PlayerStartMissNoEpisode(string name, string episode) => Fill(Get("PlayerStartMissNoEpisode"), ("name", name), ("episode", episode));
 
@@ -6186,6 +6189,9 @@ public static partial class T
 
     /// <summary>Player panel, Sources tab: in place of a row's detail while the picked source starts, from 3 s.</summary>
     public static string PlayerPanelStarting(long seconds) => Fill(Get("PlayerPanelStarting"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, Sources tab: in place of a source's detail while it is still being asked for the episode's releases, from 3 s. A slow source is only said to be slow.</summary>
+    public static string PlayerPanelAsking(long seconds) => Fill(Get("PlayerPanelAsking"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Player panel, under the subtitled or dubbed switch while the dubbed version of the episode playing is being found, from 3 s. The episode plays on meanwhile.</summary>
     public static string PlayerFindingVersionSeconds(string episode, long seconds) => Fill(Get("PlayerFindingVersionSeconds"), ("episode", episode), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -14468,6 +14474,7 @@ public static partial class T
         ["PlayerStartPlace"] = "{place} of {total} sources",
         ["PlayerStartPinned"] = "Your pick for this show",
         ["PlayerStartMissNoMatch"] = "{name} doesn't have this show",
+        ["PlayerStartMissAmbiguous"] = "{name} couldn't match this title",
         ["PlayerStartMissNoEpisode"] = "{name} doesn't have episode {episode}",
         ["PlayerStartPinMissed"] = "{name} doesn't have episode {episode} yet. Playing from the next source.",
         ["PlayerStartMissFailed"] = "{name} didn't answer",
@@ -14705,6 +14712,7 @@ public static partial class T
         ["PlayerPanelPickScope"] = "A pick here is for this episode only.",
         ["PlayerTranslation"] = "Subbed or dubbed",
         ["PlayerPanelStarting"] = "Starting · {seconds} s",
+        ["PlayerPanelAsking"] = "Asking · {seconds} s",
         ["PlayerFindingVersionSeconds"] = "Finding episode {episode} dubbed · {seconds} s",
         ["PlayerFindingVersionSubbedSeconds"] = "Finding episode {episode} subbed · {seconds} s",
         ["NoticePlayingFromSource"] = "Playing from {source} at {clock}",
