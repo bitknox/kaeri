@@ -113,5 +113,15 @@ fn a_held_slow_scene_waits_for_the_hold_and_answers_once_it_moves_on() {
     assert!(took < Duration::from_secs(4), "it waited on the wall clock: {took:?}");
     let home = homes.last().unwrap();
     assert!(!home.failed, "{home:?}");
-    assert_eq!(testing_still_clock_now_ms(), Some(5_000));
+    // The answers' wait ended at 4.5 s, and the clock goes on to the hold only once the scene has
+    // been quiet a while, which can be after the Home settled.
+    let deadline = Instant::now() + Duration::from_secs(5);
+    while testing_still_clock_now_ms() != Some(5_000) && Instant::now() < deadline {
+        std::thread::sleep(Duration::from_millis(10));
+    }
+    assert_eq!(
+        testing_still_clock_now_ms(),
+        Some(5_000),
+        "the clock did not go on to the hold"
+    );
 }
