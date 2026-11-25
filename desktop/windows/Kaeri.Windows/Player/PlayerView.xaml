@@ -387,7 +387,7 @@
             <Image x:Name="UpNextStill" Stretch="UniformToFill" AutomationProperties.AccessibilityView="Raw" />
           </Border>
           <StackPanel Grid.Column="1" Spacing="2" VerticalAlignment="Center">
-            <TextBlock Text="{x:Bind app:T.PlayerUpNext}" Style="{StaticResource HazeCaptionStyle}" />
+            <TextBlock x:Name="UpNextHead" Text="{x:Bind app:T.PlayerUpNext}" Style="{StaticResource HazeCaptionStyle}" />
             <TextBlock x:Name="UpNextTitle" Style="{StaticResource BodyStrongTextBlockStyle}" TextWrapping="WrapWholeWords"
                        MaxLines="3" TextTrimming="CharacterEllipsis" AutomationProperties.LiveSetting="Polite" />
             <TextBlock x:Name="UpNextLine" Style="{StaticResource HazeCaptionStyle}" Typography.NumeralAlignment="Tabular" Margin="0,4,0,0" />
