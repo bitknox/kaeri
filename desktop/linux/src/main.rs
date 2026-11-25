@@ -36,6 +36,7 @@ mod portal;
 mod prefs;
 mod private;
 mod reading;
+mod room;
 mod say;
 mod shots;
 #[cfg(feature = "fixtures")]

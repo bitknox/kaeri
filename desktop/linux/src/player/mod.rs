@@ -245,6 +245,8 @@ pub struct PlayerView {
     mpris: RefCell<Option<Rc<Mpris>>>,
     /// The watch party's panel, on the people button.
     party: Rc<crate::party::panel::Panel>,
+    /// The room around the player: the column beside the video, the strip and the banner.
+    pub(crate) room: Rc<crate::room::Room>,
     stats: Rc<stats::Stats>,
 }
 
@@ -405,6 +407,24 @@ impl PlayerView {
         let preview = Preview::new(&ui.timeline, false);
         let party = crate::party::panel::Panel::new(ctx);
         party.popover.set_parent(&ui.people);
+        let room = crate::room::Room::new(&ui.page, &ui.stage);
+        ui.top.pack_end(&room.toggle);
+        room.set_aside(&ui.people);
+        // The column carries the window's buttons while it shows, as a split view's sidebar does.
+        room.split.connect_show_sidebar_notify({
+            let top = ui.top.clone();
+            let toggle = room.toggle.clone();
+            move |split| {
+                top.set_show_end_title_buttons(!split.shows_sidebar());
+                if toggle.is_active() != split.shows_sidebar() && split.shows_sidebar() {
+                    toggle.set_active(true);
+                }
+            }
+        });
+        ctx.window.connect_fullscreened_notify({
+            let room = Rc::clone(&room);
+            move |window| room.set_fullscreen(window.is_fullscreen())
+        });
         let stats = stats::Stats::new();
         ui.stage.add_overlay(&stats.widget);
         stats.set_narrow(ctx.size() == Size::Narrow);
@@ -419,7 +439,7 @@ impl PlayerView {
             }
         });
         let view = Rc::new_cyclic(|me| Self {
-            widget: ui.page.clone().upcast(),
+            widget: room.widget.clone().upcast(),
             me: me.clone(),
             ctx: Rc::clone(ctx),
             shell: RefCell::default(),
@@ -497,6 +517,7 @@ impl PlayerView {
             stall_tick: RefCell::default(),
             mpris: RefCell::default(),
             party,
+            room,
             stats,
         });
         view.wire();
@@ -1949,6 +1970,7 @@ impl PlayerView {
             self.ui.page.set_cursor(None);
             self.lift(true);
             self.animate(true);
+            self.room.set_controls(true);
         }
         if let Some(source) = self.idle.borrow_mut().take() {
             source.remove();
@@ -2014,6 +2036,7 @@ impl PlayerView {
         self.preview.hide();
         self.lift(false);
         self.animate(false);
+        self.room.set_controls(false);
     }
 
     /// Subtitles above the bottom bar while it shows, as far as they need to clear it, at once.
@@ -3169,6 +3192,74 @@ impl PlayerView {
         self.ui.people.update_property(&[gtk::accessible::Property::Label(&name)]);
     }
 
+    /// For a shot: the room as the board frame `shot` draws it, over the episode playing.
+    #[cfg(feature = "fixtures")]
+    pub fn shot_room(&self, shot: &str) {
+        use crate::room::fixture;
+        let Some((name, open, full)) = fixture::frame(shot) else { return };
+        let (view, conv, moves) = fixture::for_player(name);
+        self.room.hold_clock(fixture::NOW);
+        self.room.show(view, moves);
+        self.room.show_conversation(&conv);
+        if full {
+            self.ctx.window.fullscreen();
+            // Xvfb has no window manager to make the window fill the screen: the board's size.
+            self.ctx.window.set_default_size(1280, 720);
+        }
+        // Nor to say the window went full screen.
+        self.room.set_fullscreen(full);
+        if !full && shot != "room-morph" && self.ctx.window.default_width() < 1500 {
+            self.ctx.window.set_default_size(1616, 767);
+        }
+        if shot == "room-morph" {
+            // The recording: the room comes in, goes full screen at 3 s and back at 7 s.
+            let (room, window) = (Rc::clone(&self.room), self.ctx.window.clone());
+            glib::timeout_add_local_once(Duration::from_secs(3), move || {
+                window.fullscreen();
+                window.set_default_size(1280, 720);
+                room.set_fullscreen(true);
+                let room = Rc::clone(&room);
+                glib::timeout_add_local_once(Duration::from_secs(4), move || {
+                    window.unfullscreen();
+                    window.set_default_size(1616, 767);
+                    room.set_fullscreen(false);
+                });
+            });
+        }
+        if shot == "room-full-controls" {
+            self.wake();
+        } else if full {
+            self.hide_controls();
+        }
+        if let Some(open) = open {
+            let room = Rc::clone(&self.room);
+            glib::timeout_add_local_once(Duration::from_millis(1500), move || {
+                if open == "toggle-off" {
+                    room.toggle.set_active(false);
+                } else {
+                    room.shot_open(open);
+                }
+            });
+        }
+    }
+
+    /// For a shot: the room's open popover, under its button, over the window.
+    pub fn shot_room_popover(&self) -> Option<(gtk::Widget, f32, f32)> {
+        let window = &self.ctx.window;
+        for button in [&self.room.column.invite, &self.room.column.details] {
+            let Some(popover) = button.popover() else { continue };
+            if !popover.is_visible() {
+                continue;
+            }
+            let at = button.compute_bounds(window)?;
+            let width = popover.width() as f32;
+            let x = (at.x() + at.width() / 2.0 - width / 2.0)
+                .clamp(0.0, (window.width() as f32 - width).max(0.0));
+            return Some((popover.upcast(), x, at.y() + at.height()));
+        }
+        None
+    }
+
     /// For a shot: the party's panel, under the people button, over the window.
     pub fn shot_party_popover(&self) -> Option<(gtk::Widget, f32, f32)> {
         let popover = &self.party.popover;
@@ -3636,6 +3727,8 @@ impl PlayerView {
             button.popdown();
         }
         self.party.popover.popdown();
+        self.room.column.invite.popdown();
+        self.room.column.details.popdown();
     }
 
     /// Whether spoiler protection is on for the show playing.

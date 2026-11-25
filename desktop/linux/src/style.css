@@ -856,3 +856,23 @@ toastoverlay.cast-bar-up > toast { margin-bottom: 76px; }
 .cast-button.connecting image { animation: cast-waves 1.2s ease-in-out infinite; }
 .cast-button.connected { background: alpha(currentColor, 0.1); }
 @keyframes cast-waves { 0% { opacity: 1; } 50% { opacity: 0.38; } 100% { opacity: 1; } }
+
+/* The room (room board, Linux frame): a column beside the video on the sidebar fill, with a
+   hairline at its leading edge; the room's line at 20 px; faces drawn by the app. */
+.room-column { background: #1E2133; box-shadow: inset 1px 0 0 rgba(0, 0, 0, 0.4); }
+.room-column .room-header { background: transparent; box-shadow: none; }
+.room-line { font-size: 20px; line-height: 1.3; font-weight: 600; }
+.room-line-sub { font-size: 13px; }
+.room-people { background: rgba(255, 255, 255, 0.05); }
+.room-people > row { min-height: 50px; }
+.room-name { font-weight: 600; font-size: 14px; }
+.room-conv { font-size: 14px; }
+.room-sys { font-size: 13px; }
+.room-link { padding: 6px 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); }
+.room-button { padding-left: 16px; padding-right: 16px; }
+.room-strip { border-radius: 999px; padding: 6px 8px; }
+.room-strip-words { font-weight: 600; font-size: 13px; }
+.room-strip-carry { min-height: 30px; padding-top: 0; padding-bottom: 0; }
+.room-more-face { min-width: 28px; min-height: 28px; margin: 2px; border-radius: 999px;
+  background: var(--raised); box-shadow: inset 0 0 0 1px var(--rule); color: var(--haze); }
+.room-banner { background: linear-gradient(to top, rgba(11, 13, 24, 0.92), rgba(11, 13, 24, 0.55) 60%, rgba(11, 13, 24, 0.35)); }

@@ -449,6 +449,36 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     if let Some(settle) = crate::shots_cast_states::stage(shell, shot) {
         return settle;
     }
+    #[cfg(feature = "fixtures")]
+    if let Some(place) = crate::room::fixture::place(shot) {
+        close_dialogs(&shell.ctx.window);
+        shell.player.close();
+        shell.go(Dest::Together);
+        let content = crate::room::place::build(&place, crate::room::fixture::NOW, |_| {});
+        let header = adw::HeaderBar::new();
+        let page = crate::widgets::page(&crate::room::copy::room_title(), &header, &content);
+        if let Some(nav) = shell.ctx.nav() {
+            nav.push(&page);
+        }
+        return 2.0;
+    }
+    #[cfg(feature = "fixtures")]
+    if crate::room::fixture::SHOTS.contains(&shot) {
+        close_dialogs(&shell.ctx.window);
+        if !shell.is_player() {
+            play(shell);
+        }
+        let player = Rc::clone(&shell.player);
+        let shot = shot.to_owned();
+        let first = !shell.is_player();
+        glib::timeout_add_local_once(
+            Duration::from_secs(if first { 6 } else { 1 }),
+            move || {
+                player.shot_room(&shot);
+            },
+        );
+        return if first { 10.0 } else { 4.0 };
+    }
     let window = &shell.ctx.window;
     match shot {
         "home" => {
@@ -1810,6 +1840,20 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             #[cfg(feature = "fixtures")]
             shell.ctx.hub.panel_answer.take();
         }
+        #[cfg(feature = "fixtures")]
+        place if crate::room::fixture::PLACE_SHOTS.contains(&place) => {
+            if let Some(nav) = shell.ctx.nav() {
+                nav.pop();
+            }
+        }
+        #[cfg(feature = "fixtures")]
+        room if crate::room::fixture::SHOTS.contains(&room) => {
+            close_dialogs(&shell.ctx.window);
+            shell.player.close_menus();
+            if shell.ctx.window.is_fullscreen() {
+                shell.ctx.window.unfullscreen();
+            }
+        }
         "player" | "player-marks" | "player-undo" | "mini" | "pad-help-player"
         | "demo-starting" => shell.player.close(),
         "first-play-style" => {
@@ -1915,7 +1959,7 @@ fn pad_press(shell: &Rc<Shell>, buttons: &[PadButton], after: u64) {
     });
 }
 
-fn play(shell: &Rc<Shell>) {
+pub(crate) fn play(shell: &Rc<Shell>) {
     let (id, episode) = PLAYING;
     let _ = WidgetExt::activate_action(
         &shell.ctx.window,
@@ -2430,6 +2474,7 @@ async fn painted(shell: &Rc<Shell>, path: &std::path::Path, shot: &str) -> Resul
                     crate::shots_reading_credits::shown_popover(&window)
                 }
                 party if party.starts_with("party-") => player.shot_party_popover(),
+                room if room.starts_with("room-") => player.shot_room_popover(),
                 _ => None,
             };
             capture(&window, &path, over)
@@ -2472,6 +2517,12 @@ pub fn named(list: Option<&str>) -> Vec<String> {
             .filter(|s| !s.is_empty())
             .flat_map(|s| match s {
                 "party" => PARTY.iter().map(|p| (*p).to_owned()).collect(),
+                #[cfg(feature = "fixtures")]
+                "room" => crate::room::fixture::SHOTS
+                    .iter()
+                    .chain(crate::room::fixture::PLACE_SHOTS.iter())
+                    .map(|p| (*p).to_owned())
+                    .collect(),
                 "skips" => SKIPS.iter().map(|p| (*p).to_owned()).collect(),
                 "found" => FOUND.iter().map(|p| (*p).to_owned()).collect(),
                 "sources" => SOURCES.iter().map(|p| (*p).to_owned()).collect(),
