@@ -12,9 +12,12 @@ import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.model.Command
 import app.kaeri.engine.model.DubExtent
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.ListingMiss
+import app.kaeri.engine.model.ListingState
 import app.kaeri.engine.model.MpvOption
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.PlayerOp
+import app.kaeri.engine.model.SourceListing
 import app.kaeri.engine.model.SourceNote
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.engine.model.SourceSwitch
@@ -95,13 +98,48 @@ object PanelDemo {
         }
     }
 
+    /**
+     * `--es panel sources`, on the sourcesloading scene: plays the first fixture's episode 7 and,
+     * once its picture is up, opens the panel on Sources, which asks every source then. The log
+     * says "KAERI_PANEL sources <ms>" (the device's uptime) once the tab has asked.
+     */
+    fun openSources(store: AppStore, player: PlayerModel) {
+        scope.launch {
+            withTimeoutOrNull(60_000) { while (store.phase.value != AppStore.Phase.Running) delay(100) }
+            store.send(Command.Play(900_001u, "7"))
+            if (withTimeoutOrNull(120_000) { while (!player.hasPicture) delay(100) } == null) {
+                Log.w(TAG, "KAERI_PANEL no picture")
+                return@launch
+            }
+            delay(1_000)
+            player.openPanel(PanelTab.Sources)
+            // The moment the tab asks its sources, which on TV is a frame or more after it opens.
+            withTimeoutOrNull(10_000) { while (player.panelReleases == null) delay(5) }
+            Log.w(TAG, "KAERI_PANEL sources ${android.os.SystemClock.uptimeMillis()}")
+        }
+    }
+
     /** The player's [command] to the engine: the panel's own are answered here while the demo is on. */
     fun send(command: Command, send: (Command) -> Unit) {
         if (!on) return send(command)
         when (command) {
             is Command.LoadSources -> scope.launch {
+                // Every row at once, asked, then each as it answers, as the engine says them.
+                fun row(option: SourceOption, state: ListingState) = SourceListing(option.providerId, option.name, state)
+                val asking = sources.map { row(it, if (it.note == SourceNote.Resting) ListingState.Off else ListingState.Asking) }
+                model?.apply(Event.SourcesProgress(command.id, command.episode, asking))
                 delay(700)
-                model?.apply(Event.Sources(command.id, command.episode, releases(command.episode), emptyList()))
+                val all = releases(command.episode)
+                val answered = sources.map { source ->
+                    val listed = all.filter { it.providerId == source.providerId }
+                    when {
+                        source.note == SourceNote.Resting -> row(source, ListingState.Off)
+                        listed.isEmpty() -> row(source, ListingState.Missed(ListingMiss.NoEpisode))
+                        else -> row(source, ListingState.Listed(listed))
+                    }
+                }
+                model?.apply(Event.SourcesProgress(command.id, command.episode, answered))
+                model?.apply(Event.Sources(command.id, command.episode, all, emptyList()))
             }
             is Command.SwitchSource -> scope.launch { switch(command) }
             else -> send(command)

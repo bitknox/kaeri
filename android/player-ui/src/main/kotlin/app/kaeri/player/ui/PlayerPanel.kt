@@ -10,6 +10,7 @@ import android.content.Context
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.snap
@@ -81,12 +82,14 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -104,9 +107,11 @@ import app.kaeri.engine.core.AnilistId
 import app.kaeri.engine.core.SourceCandidate
 import app.kaeri.engine.core.Translation
 import app.kaeri.engine.model.EpisodeRow
+import app.kaeri.engine.model.ListingState
 import app.kaeri.engine.model.SourceOption
 import app.kaeri.i18n.Strings
 import app.kaeri.player.HeldPicture
+import app.kaeri.player.ListingLine
 import app.kaeri.player.PanelTab
 import app.kaeri.player.PanelWords
 import app.kaeri.player.PlayerModel
@@ -534,10 +539,9 @@ private fun PanelSources(model: PlayerModel) {
     val optionsAll by store.sourceChoices.options.collectAsStateWithLifecycle()
     val dubs by store.titles.dubLines.collectAsStateWithLifecycle()
     val inParty = store.party.view.collectAsStateWithLifecycle().value != null
-    LaunchedEffect(id) {
-        store.loadSourceOptions(id)
-        model.loadPanelReleases()
-    }
+    LaunchedEffect(id) { store.loadSourceOptions(id) }
+    // Asked again when another episode plays under the open tab.
+    LaunchedEffect(id, model.staged?.episode) { model.loadPanelReleases() }
     var expanded by rememberSaveable(id, model.staged?.episode) { mutableStateOf(emptySet<String>()) }
     // A release picked elsewhere, or tried again, shows on its row.
     LaunchedEffect(model.panelSwitch?.target) {
@@ -679,6 +683,21 @@ private fun LazyListScope.others(
     expanded: Set<String>,
     toggle: (String) -> Unit,
 ) {
+    model.panelReleases?.failed?.let { why ->
+        // No source was asked: why, in place of the rows.
+        item(key = "sources-failed") { // i18n-skip
+            val context = LocalContext.current
+            Text(why.text(context), style = DetailStyle, color = ObiSilk.Haze, modifier = Modifier.padding(horizontal = 4.dp, vertical = 8.dp).testTag("panel-sources-failed")) // i18n-skip
+        }
+        return
+    }
+    model.panelReleases?.takeIf { it.rows != null }?.let { asked ->
+        listings(model, asked, options, skip, expanded, toggle)
+        return
+    }
+    // Asked, the rows not said yet: each source's row with its line held empty, as the first rows
+    // will have it, so no cached line shows for a moment and fades out.
+    val pending = model.panelReleases?.let { it.rows == null && it.candidates == null } == true
     data class Group(val providerId: String, val name: String, val option: SourceOption?)
     val groups = options?.filter { it.providerId != skip }?.map { Group(it.providerId, it.name, it) }
         ?: model.panelReleases?.candidates.orEmpty().filter { it.providerId != skip }.distinctBy { it.providerId }.map { Group(it.providerId, it.providerName, null) }
@@ -716,13 +735,52 @@ private fun LazyListScope.others(
                 // Resting, or nothing for this episode: said, and nothing to pick.
                 val context = LocalContext.current
                 ChoiceRow(
-                    model, group.name, group.option?.let { PanelWords.source(context, it) },
+                    model, group.name, group.option?.takeIf { !pending }?.let { PanelWords.source(context, it) },
                     SwitchTarget(group.providerId, group.name),
-                    dim = resting || known,
-                    waiting = !known && !resting,
+                    dim = !pending && (resting || known),
+                    waiting = !pending && !known && !resting,
+                    listing = group.providerId.takeIf { pending },
                     onClick = null,
                 )
             }
+        }
+    }
+}
+
+/**
+ * Every other source's row as the engine says it while the tab asks, in the order set in Sources:
+ * each is there from the first event and keeps its place and height, its line crossfading as it
+ * answers. A row can be picked once it listed a release; its releases open only when tapped.
+ */
+private fun LazyListScope.listings(
+    model: PlayerModel,
+    asked: app.kaeri.player.PanelReleases,
+    options: List<SourceOption>?,
+    skip: String?,
+    expanded: Set<String>,
+    toggle: (String) -> Unit,
+) {
+    for (row in asked.others(skip, model.playingSource)) {
+        val releases = (row.state as? ListingState.Listed)?.releases.orEmpty()
+        val open = releases.size > 1 && row.providerId in expanded
+        item(key = "source/${row.providerId}") { // i18n-skip
+            val context = LocalContext.current
+            val one = releases.singleOrNull()
+            ChoiceRow(
+                model, row.name, PanelWords.listing(context, row, options?.firstOrNull { it.providerId == row.providerId }, asked.episode),
+                if (one != null) SwitchTarget(one.providerId, row.name, release = one.id) else SwitchTarget(row.providerId, row.name),
+                dim = row.state !is ListingState.Listed && row.state !is ListingState.Asking,
+                listing = row.providerId,
+                disclosure = if (releases.size > 1) Strings.playerPanelReleases(context, releases.size) to open else null,
+                onClick = when {
+                    releases.size > 1 -> ({ toggle(row.providerId) })
+                    one != null -> ({ model.switchTo(one) })
+                    else -> null
+                },
+            )
+        }
+        if (open) items(releases, key = { "release/${it.providerId}/${it.id}" }) { release -> // i18n-skip
+            ReleaseRow(model, release, row.name)
         }
     }
 }
@@ -752,6 +810,9 @@ private fun Modifier.animateItemFade(): Modifier {
 /** The check column's width. */
 private val CHECK = 24.dp
 
+/** What a row's detail line says: crossfaded as one, old and new together. */
+private enum class Line { Detail, Starting, Silent, Asking, Counting }
+
 /**
  * A stream, source or release: the check on what plays, a spinner on a switch past 600 ms, and
  * "Starting · 3 s" in place of its line from 3 s. A failed switch says so under it, with Try again.
@@ -767,18 +828,22 @@ private fun ChoiceRow(
     inset: Boolean = false,
     dim: Boolean = false,
     waiting: Boolean = false,
+    /** The source this row says while the tab asks it, by its id: its line follows the engine's rows. */
+    listing: String? = null,
     disclosure: Pair<String, Boolean>? = null,
     onClick: (() -> Unit)?,
 ) {
     val context = LocalContext.current
     val picked = model.panelSwitch?.takeIf { it.on(target) }
     val now = model.clock
+    val asking = listing?.let { model.panelReleases?.line(it, now) } ?: ListingLine.Answered
     Column(
         Modifier
             .fillMaxWidth()
             .clip(RoundedCornerShape(12.dp))
             .then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier)
-            .semantics { if (on) selected = true }
+            // One stop for TalkBack, picked or not: the name and its line together.
+            .semantics(mergeDescendants = true) { if (on) selected = true }
             .heightIn(min = 48.dp)
             .padding(start = 4.dp + if (inset) CHECK + 6.dp else 0.dp, end = 10.dp, top = 8.dp, bottom = 8.dp)
             .testTag("panel-choice-$title"), // i18n-skip
@@ -788,27 +853,62 @@ private fun ChoiceRow(
                 if (picked != null && picked.failed == null) {
                     val shown by animateFloatAsState(if (picked.spinning(now)) 1f else 0f, Motion.fadeIn(), label = "spinner") // i18n-skip
                     CircularProgressIndicator(Modifier.size(18.dp).graphicsLayer { alpha = shown }, color = ObiSilk.Silk, strokeWidth = 2.dp)
+                } else if (listing != null) {
+                    // Asked: from 600 ms, faded out as the answer fades in.
+                    val spins = asking == ListingLine.Asking || asking == ListingLine.Counting
+                    val shown by animateFloatAsState(if (spins) 1f else 0f, Motion.fadeIn(), label = "asking-spinner") // i18n-skip
+                    if (spins || shown > 0f) {
+                        // The line says Asking; the spinner adds nothing to read.
+                        CircularProgressIndicator(Modifier.size(18.dp).graphicsLayer { alpha = shown }.testTag("panel-asking-$title").clearAndSetSemantics {}, color = ObiSilk.Silk, strokeWidth = 2.dp) // i18n-skip
+                    }
                 } else if (on) {
                     Icon(PanelGlyphs.Check, contentDescription = null, tint = ObiSilk.Silk, modifier = Modifier.size(18.dp))
                 }
             }
             Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(1.dp)) {
+                // A source that answered with nothing goes to haze as its answer fades in.
+                val ink by animateColorAsState(if (dim) ObiSilk.Haze else ObiSilk.Silk, Motion.fadeIn(), label = "title") // i18n-skip
                 Text(
                     title,
                     style = if (sub) DetailStyle.copy(fontSize = 15.sp, lineHeight = 22.sp) else TitleStyle.copy(fontWeight = FontWeight.SemiBold),
-                    color = if (dim) ObiSilk.Haze else ObiSilk.Silk,
+                    color = ink,
                 )
                 val counting = picked?.counting(now)
-                Crossfade(counting != null, animationSpec = Motion.fadeIn(), label = "line") { starting -> // i18n-skip
-                    when {
-                        starting -> Text(Strings.playerPanelStarting(context, picked?.counting(now) ?: 3), style = DetailStyle, color = ObiSilk.Haze)
-                        !detail.isNullOrEmpty() -> Text(detail, style = DetailStyle, color = ObiSilk.Haze)
-                        waiting -> CircularProgressIndicator(Modifier.padding(vertical = 4.dp).size(12.dp), color = ObiSilk.Haze, strokeWidth = 1.5.dp)
+                val line = when {
+                    counting != null -> Line.Starting
+                    asking == ListingLine.Silent -> Line.Silent
+                    asking == ListingLine.Asking -> Line.Asking
+                    asking == ListingLine.Counting -> Line.Counting
+                    else -> Line.Detail
+                }
+                // While sources answer the line is held one line high, so a row never changes height.
+                val held = if (listing != null) Modifier.heightIn(min = with(LocalDensity.current) { DetailStyle.lineHeight.toDp() }) else Modifier
+                // A source's answer crossfades in when its words come later too (its coverage after its releases).
+                val shownDetail = if (listing != null && line == Line.Detail) detail else null
+                Crossfade(line to shownDetail, modifier = held, animationSpec = Motion.fadeIn(), label = "line") { (said, words) -> // i18n-skip
+                    when (said) {
+                        Line.Starting -> Text(Strings.playerPanelStarting(context, picked?.counting(now) ?: 3), style = DetailStyle, color = ObiSilk.Haze)
+                        Line.Silent -> {}
+                        Line.Asking -> Text(Strings.playerStartRowAsking(context), style = DetailStyle, color = ObiSilk.Haze)
+                        Line.Counting -> Text(
+                            Strings.playerPanelAsking(context, listing?.let { model.panelReleases?.seconds(it, now) } ?: 3),
+                            style = DetailStyle,
+                            color = ObiSilk.Haze,
+                            modifier = Modifier.testTag("panel-asking-seconds-$title"), // i18n-skip
+                        )
+                        Line.Detail -> when (val shown = if (listing != null) words else detail) {
+                            null, "" -> if (waiting) CircularProgressIndicator(Modifier.padding(vertical = 4.dp).size(12.dp), color = ObiSilk.Haze, strokeWidth = 1.5.dp)
+                            else -> Text(shown, style = DetailStyle, color = ObiSilk.Haze)
+                        }
                     }
                 }
             }
-            if (disclosure != null) {
-                val (count, open) = disclosure
+            // A source's release count and chevron fade in at the end of its row as it lists them.
+            // The last count stays while it fades out.
+            var lastDisclosure by remember { mutableStateOf(disclosure) }
+            if (disclosure != null) lastDisclosure = disclosure
+            AnimatedVisibility(disclosure != null, enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
+                val (count, open) = lastDisclosure ?: return@AnimatedVisibility
                 val turn by animateFloatAsState(if (open) 90f else 0f, Motion.standard(), label = "chevron") // i18n-skip
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(count, style = DetailStyle, color = ObiSilk.Haze)

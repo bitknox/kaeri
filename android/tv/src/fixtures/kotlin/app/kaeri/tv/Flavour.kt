@@ -1,7 +1,7 @@
 // The fixtures flavour's launch: the testing engine on a scene, steered by intent extras under
 // the phone's names:
 //
-//   scene     watching (the default), sourceless, fresh or playing
+//   scene     watching (the default), sourceless, fresh, playing or sourcesloading
 //   media     what every episode streams: a path or URL on the device, by default the
 //             flavour's own episode.mp4, which seeks, so a resume starts where it should at once
 //   section   the destination to open on: search, continue, calendar, seasonal, library or settings
@@ -19,6 +19,8 @@
 //             available, allowing, downloading, failed or storage; nothing is fetched or installed
 //   panel     live: the player panel's Sources tab lists made-up sources, and a switch to one
 //             lands or fails as scripted (PanelDemo), on the playing scene
+//             sources: episode 7 plays and the panel opens on Sources once its picture is up,
+//             for the sourcesloading scene's sources answering one by one
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatreact, chatloop and the rest; the log says "KAERI_PARTY ready <shot>"
 //             once it is there. chatloop waits for `am broadcast -a app.kaeri.fixtures.PARTY_GO`
@@ -124,7 +126,10 @@ internal object Flavour {
                 if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
             }
         }
-        if (intent.getStringExtra("panel") == "live") PanelDemo.start(store, player)
+        when (intent.getStringExtra("panel")) {
+            "live" -> PanelDemo.start(store, player)
+            "sources" -> PanelDemo.openSources(store, player)
+        }
         intent.getStringExtra("found")?.let { which -> host?.let { FoundDemo.run(it, store, MainScope(), which) } }
         intent.getStringExtra("day")?.toIntOrNull()?.let { store.calendar.opensOn = it }
         // Episodes of the first fixture marked watched, 1,2,3: playback would also have the engine

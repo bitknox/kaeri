@@ -572,6 +572,21 @@ class PlayerModel(
                     dismiss()
                 }
             }
+            // Every source's row while the Sources tab asks, whole each time one changes.
+            is Event.SourcesProgress -> panelReleases?.let {
+                if (it.id == event.id && it.episode == event.episode) {
+                    val now = now()
+                    panelReleases = it.said(event.rows, now)
+                    clock = now
+                }
+            }
+            // No source was asked: why, in place of the rows, and the loading ends.
+            is Event.SourcesFailed -> panelReleases?.let {
+                if (it.id == event.id && it.episode == event.episode) {
+                    panelReleases = it.copy(failed = event.why)
+                    clock = now()
+                }
+            }
             is Event.Sources -> {
                 panelReleases?.let { if (it.id == event.id && it.episode == event.episode) panelReleases = it.copy(candidates = event.candidates) }
                 if (choosingSource) {
@@ -1464,7 +1479,7 @@ class PlayerModel(
      * sits there; a key ([poke]) or anything that changes the state moves it on again.
      */
     private fun resting(now: Long): Boolean = failure != null ||
-        paused && starting == null && (panelSwitch == null || panelSwitch?.failed != null) && (versionSwitch == null || versionSwitch?.failed != null) && progress == null && stall == null && upNext == null && skip == null && undo == null &&
+        paused && starting == null && panelReleases?.busy != true && (panelSwitch == null || panelSwitch?.failed != null) && (versionSwitch == null || versionSwitch?.failed != null) && progress == null && stall == null && upNext == null && skip == null && undo == null &&
         alert == null && skipNotice == null && skipPrompt == null && marking == null && holds.isEmpty() && scrubbing == null &&
         statsCopiedAt == null && (!statsShown || statsWaitingSince == null) && now - lastInput >= PlayerTiming.CONTROLS_HIDE
 
@@ -1654,12 +1669,14 @@ class PlayerModel(
 
     /**
      * Ask for the playing episode's releases across every source, for the Sources tab. Asked again
-     * only for another episode, or when [again].
+     * only for another episode, after a listing that asked no source, or when [again].
      */
     fun loadPanelReleases(again: Boolean = false) {
         val (id, episode) = panelEpisode ?: return
-        if (!again && panelReleases?.let { it.id == id && it.episode == episode } == true) return
-        panelReleases = PanelReleases(id, episode, null)
+        if (!again && panelReleases?.let { it.id == id && it.episode == episode && it.failed == null } == true) return
+        val now = now()
+        panelReleases = PanelReleases(id, episode, null, asked = now)
+        clock = now
         send(Command.LoadSources(id, episode))
     }
 
@@ -1764,8 +1781,9 @@ class PlayerModel(
                 playingSource = state.to.name
                 val release = state.to.release
                 if (release != null) {
-                    playingRelease = panelReleases?.candidates?.firstOrNull { it.providerId == state.to.providerId && it.id == release }
-                        ?: panelSwitch?.candidate
+                    // Found among its source's releases, said already while slower sources are still asked.
+                    playingRelease = panelReleases?.of(state.to.providerId)?.firstOrNull { it.id == release }
+                        ?: panelSwitch?.candidate?.takeIf { it.providerId == state.to.providerId && it.id == release }
                 } else if (state.to.stream == null || state.to.providerId != playingRelease?.providerId) {
                     // The other version, or a stream of another source the engine moved to: the
                     // release picked before is not what plays.

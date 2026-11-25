@@ -26,6 +26,10 @@ import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.hasSetTextAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.isFocused
+import androidx.compose.ui.test.onFirst
+import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.assertIsFocused
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isRoot
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
@@ -78,6 +82,8 @@ import app.kaeri.engine.model.ContentFor
 import app.kaeri.engine.model.ContentList
 import app.kaeri.engine.model.Ending
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.ListingState
+import app.kaeri.engine.model.SourceListing
 import app.kaeri.engine.model.SectionKind
 import app.kaeri.engine.model.SpotlightCase
 import app.kaeri.engine.model.HiddenTitle
@@ -579,6 +585,88 @@ class TvShots {
     }
 
     /** The chrome gone again, the skip offer holding Center in the bottom right. */
+    /**
+     * The panel's Sources tab 4 s after it asked, focus on a source still asked (player panel
+     * board, Sources loading): the row fills silk and its spinner turns ground, OK does nothing,
+     * and focus stays on the row as it answers.
+     */
+    @Test
+    fun player_sources_loading() = playerShot("tv-player-sources-loading", prepare = { it.apply(Event.SourceOptions(900_001u, loadingOptions())) }) { model ->
+        compose.runOnUiThread { model.openPanel(app.kaeri.player.PanelTab.Sources) }
+        settle()
+        sourcesAnswer(model, 4_000)
+        repeat(12) {
+            if (compose.onAllNodes(hasTestTag("tv-panel-choice-Second example") and isFocused()).fetchSemanticsNodes().isNotEmpty()) return@repeat // i18n-skip
+            press(Key.DirectionDown)
+        }
+        compose.onNodeWithTag("tv-panel-choice-Second example").assertIsFocused() // i18n-skip
+        compose.onAllNodesWithText("Asking · 4 s", useUnmergedTree = true).onFirst().assertExists() // i18n-skip
+        val before = sentCommands.size
+        press(Key.DirectionCenter)
+        assertTrue("OK on a source still asked sends nothing", sentCommands.drop(before).none { it is app.kaeri.engine.model.Command.SwitchSource })
+    }.also {
+        // It times out at 20 s: its line says so, and focus stays where it was.
+        sourcesAnswered("Second example", ListingState.Missed(app.kaeri.engine.model.ListingMiss.TimedOut)) // i18n-skip
+        compose.onNodeWithTag("tv-panel-choice-Second example").assertIsFocused() // i18n-skip
+        compose.onNodeWithText("Took too long", useUnmergedTree = true).assertExists() // i18n-skip
+    }
+
+    private var sourceRows = emptyList<SourceListing>()
+    private var sourcesModel: PlayerModel? = null
+
+    /** The Sources tab's rows as the engine says them, from the first event at once until [at] ms after the tab asked. */
+    private fun sourcesAnswer(model: PlayerModel, at: Long) {
+        sourcesModel = model
+        val asked = time
+        sourceRows = loadingRows()
+        val rows = sourceRows
+        compose.runOnUiThread { model.apply(Event.SourcesProgress(900_001u, "7", rows)) }
+        fun release(provider: String, n: Int) = SourceCandidate(
+            id = "$provider-r$n", providerId = provider, providerName = "", title = "Episode 07 [${1080 - n * 100}p]", // i18n-skip
+            quality = 1080u, label = null, size = null, dualAudio = false, dubbed = false, autoPick = n == 1,
+        )
+        val answers = listOf(
+            450L to ("Home server" to ListingState.Listed(listOf(release("home-server", 1)))), // i18n-skip
+            1_300L to ("Media folder" to ListingState.Missed(app.kaeri.engine.model.ListingMiss.Ambiguous)), // i18n-skip
+            2_400L to ("Example index" to ListingState.Listed((1..5).map { release("example-index", it) })), // i18n-skip
+            6_200L to ("Archive example" to ListingState.Missed(app.kaeri.engine.model.ListingMiss.Failed)), // i18n-skip
+        )
+        for ((after, answer) in answers.filter { it.first <= at }) {
+            time = asked + after
+            sourcesAnswered(answer.first, answer.second)
+        }
+        time = asked + at
+        compose.runOnUiThread { model.poke() }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+    }
+
+    /** The sources after the one playing, in the order set in Sources, as the engine first says them. */
+    private fun loadingRows(): List<SourceListing> {
+        fun row(name: String, state: ListingState) = SourceListing(name.lowercase().replace(' ', '-'), name, state)
+        return listOf(
+            row("Home server", ListingState.Asking), row("Example index", ListingState.Asking), row("Media folder", ListingState.Asking), // i18n-skip
+            row("Second example", ListingState.Asking), row("Archive example", ListingState.Asking), row("Old example", ListingState.Off), // i18n-skip
+        )
+    }
+
+    /** What each of them covers, as Sources says it: the coverage line of a source that lists releases. */
+    private fun loadingOptions() = loadingRows().map {
+        app.kaeri.engine.model.SourceOption(
+            providerId = it.providerId, name = it.name, covered = 9u, of = 9u, pinned = false,
+            note = if (it.state is ListingState.Off) app.kaeri.engine.model.SourceNote.Off else null, releases = emptyList(),
+        )
+    }
+
+    /** [name]'s row answers [state], said with every row as the engine says them. */
+    private fun sourcesAnswered(name: String, state: ListingState) {
+        sourceRows = sourceRows.map { if (it.name == name) it.copy(state = state) else it }
+        val rows = sourceRows
+        compose.runOnUiThread { sourcesModel?.apply(Event.SourcesProgress(900_001u, "7", rows)) }
+        compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+    }
+
     @Test
     fun player_skip() = playerShot("tv-player-skip") { time = CHROME_HIDE + 1_000 }
 
