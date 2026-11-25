@@ -4,6 +4,7 @@
 #
 #   apple/scripts/engine.sh [--check] <release|testing> [macos] [ios] [ios-sim]
 #   apple/scripts/engine.sh --sources-hash
+#   apple/scripts/engine.sh --cache-key|--cache-dir <release|testing> [macos] [ios] [ios-sim]
 #
 #   release   the engine the app ships: --no-default-features, so without mpv's child process,
 #             with the remote, for Play on TV, watch parties (`party`, on every slice, since the
@@ -50,11 +51,22 @@ usage() {
 
 # --sources-hash prints the hash of what the engine is built from, which its stamp and caches
 # are keyed by, CI's too, and builds nothing.
+# --cache-key prints the name the slices of a flavour are kept under outside this machine (an
+# Actions cache, a slot artifact): the sources' hash, the flavour, the profile, the slices and the
+# Xcode that built them, so that one name always means one build. --cache-dir prints the folder
+# in the shared cache below that holds the flavour's slices in this profile.
 sources_only=0
-if [[ "${1:-}" == --sources-hash ]]; then
-  sources_only=1
-  set -- release
-fi
+print=""
+case "${1:-}" in
+  --sources-hash)
+    sources_only=1
+    set -- release
+    ;;
+  --cache-key | --cache-dir)
+    print="${1#--}"
+    shift
+    ;;
+esac
 check=0
 if [[ "${1:-}" == --check ]]; then
   check=1
@@ -131,6 +143,18 @@ if (( sources_only )); then
   echo "$hash"
   exit 0
 fi
+case "$print" in
+  cache-key)
+    xcode="$(xcodebuild -version 2>/dev/null | sed -n 's/^Xcode //p' | head -1)"
+    slice_list="${slices[*]}"
+    echo "engine-apple-$flavour-$profile-${slice_list// /+}-xcode${xcode:-none}-$hash"
+    exit 0
+    ;;
+  cache-dir)
+    echo "${KAERI_ENGINE_CACHE:-$HOME/.cache/kaeri-engine}/apple/$flavour/$profile"
+    exit 0
+    ;;
+esac
 if [[ -f "$out/stamp" && -d "$out/KaeriEngine.xcframework" && -d "$out/Swift" ]]; then
   fresh=1
   [[ "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" ]] || fresh=0

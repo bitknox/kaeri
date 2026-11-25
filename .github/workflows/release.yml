@@ -19,10 +19,10 @@ name: Release
 # v0.2.0-rc.1 as a pre-release, a full one as a stable release. A dispatch releases main's
 # newest commit if it has no release yet, or, given a tag, builds that tag and publishes it again.
 #
-# A tag's run can restore only caches saved on that tag or on main. Releases from main save the
-# terminal builds' caches, and the schedule builds main every week so that a week without a
-# release does not lose them. A pull request that changes how the terminal binaries are built
-# builds them, saving and publishing nothing.
+# The terminal builds keep no Rust cache: theirs held 2.6 GB of the repository's 10 GB, which
+# CI's pull request jobs need, for jobs that run beside the apps' longer build and so never set
+# when a release is out. A pull request that changes how the terminal binaries are built builds
+# them, publishing nothing.
 on:
   push:
     branches: [main]
@@ -52,9 +52,6 @@ on:
       - packaging/apps/version.sh
       - packaging/linux/glibc-floor.sh
       - packaging/rust-licences/**
-  # GitHub drops a cache nobody has read for seven days, so a weekly build reads it and keeps it.
-  schedule:
-    - cron: '23 4 * * 1'
   workflow_dispatch:
     inputs:
       tag:
@@ -63,12 +60,10 @@ on:
         type: string
 
 # One release at a time, and none cancelled once it has started. A newer push to a pull request
-# makes its running builds moot, and each scheduled build is a group of its own, so it never
-# takes the place of a release waiting its turn.
+# makes its running builds moot.
 concurrency:
   group: >-
     ${{ github.event_name == 'pull_request' && format('release-pr-{0}', github.ref)
-    || github.event_name == 'schedule' && format('release-schedule-{0}', github.run_id)
     || 'release' }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
@@ -80,7 +75,7 @@ env:
 
 jobs:
   # What this run builds and whether it publishes it. Every run has a version, so the builds on a
-  # pull request and on the schedule set one too, though they publish nothing.
+  # pull request set one too, though they publish nothing.
   version:
     name: The version
     runs-on: ubuntu-latest
@@ -218,8 +213,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       VERSION: ${{ needs.version.outputs.version }}
-      # Packages are made for a release only. On the schedule and on a pull request the build is
-      # for the cache or the checks.
+      # Packages are made for a release only. On a pull request the build is for the checks.
       PACKAGE: ${{ needs.version.outputs.publish }}
     strategy:
       fail-fast: false
@@ -247,20 +241,6 @@ jobs:
             rustup toolchain install && rustup target add "$TARGET"
           fi
 
-      - uses: Swatinem/rust-cache@v2
-        with:
-          # Linux's dependencies are compiled by zig against its glibc, so they are keyed by that
-          # glibc and never mixed with ones compiled another way.
-          key: ${{ matrix.glibc && format('{0}.{1}', matrix.target, matrix.glibc) || matrix.target }}
-          # Saved only where a later release can restore it (see `on`). A dispatched run starts
-          # from main too, so it saves.
-          save-if: ${{ github.ref == 'refs/heads/main' }}
-          # A failed build still leaves its compiled dependencies worth keeping.
-          cache-on-failure: true
-
-      # After the cache step, which keys the cache by the manifests as they are committed, so a
-      # new version does not make a new cache. Only the workspace's own crates change with it,
-      # and the cache keeps none of those.
       - name: The version
         shell: bash
         run: bash packaging/set-version.sh "$VERSION"
@@ -565,9 +545,8 @@ jobs:
             dist/*.sha256
             dist/*-rust-licences.txt
 
-  # The apps, built beside the terminal binaries for a release only: main and the schedule build
-  # here for the cache, which the apps do not share. A pull request that changes how they are
-  # built runs apps-release.yml itself, as a dry run.
+  # The apps, built beside the terminal binaries for a release only. A pull request that changes
+  # how they are built runs apps-release.yml itself, as a dry run.
   apps:
     needs: version
     if: needs.version.outputs.publish == 'true'

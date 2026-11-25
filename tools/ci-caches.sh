@@ -50,7 +50,7 @@ list >"$work/caches"
 : >"$work/doomed"
 
 # main's superseded entries. The list is newest first, so the first of a family is kept.
-pruned='^(v0-rust-|ci-|apps-|mpv-debs-|linux-app-debs-|robolectric-)'
+pruned='^(v0-rust-|engine-|ci-|apps-|mpv-debs-|linux-app-debs-|robolectric-)'
 while IFS=$'\t' read -r id ref _ size key; do
   [[ "$ref" == refs/heads/main && "$key" =~ $pruned ]] || continue
   name="$(family "$key")"

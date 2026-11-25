@@ -30,7 +30,10 @@ case " ${packages[*]} " in
     ;;
 esac
 
-flags=()
+# Every package builds into one scratch path, apple/.build, so a package the others depend on
+# compiles once rather than once per package that uses it. Each package still runs only its own
+# tests: SwiftPM names the test bundle after the root package.
+flags=(--scratch-path "$root/apple/.build")
 # Swift Testing ships with the Command Line Tools, but outside where SwiftPM looks for it when
 # there is no Xcode. Point the build at it, and the test binary at its libraries.
 developer="${DEVELOPER_DIR:-$(xcode-select -p)}"

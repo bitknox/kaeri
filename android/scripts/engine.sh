@@ -5,6 +5,7 @@
 #
 #   android/scripts/engine.sh [--check] <release|testing>
 #   android/scripts/engine.sh --sources-hash
+#   android/scripts/engine.sh --cache-key|--cache-entry <release|testing>
 #
 #   release   the engine the app flavour ships: --no-default-features, so without mpv's child
 #             process, and with the TV's remote (`startRemote`), which the TV app shares the
@@ -52,12 +53,22 @@ usage() {
 }
 
 # --sources-hash prints the hash of what the engine is built from, which its stamp and caches
-# are keyed by, CI's too, and builds nothing.
+# are keyed by, CI's too, and builds nothing. --cache-key prints the name a build of the flavour
+# is kept under outside this machine (an Actions cache, a slot artifact): the sources' hash, the
+# flavour, the profile, the ABIs, this machine and the NDK, so that one name always means one
+# build. --cache-entry prints the folder in the shared cache below that such a build is kept in.
 sources_only=0
-if [[ "${1:-}" == --sources-hash ]]; then
-  sources_only=1
-  set -- release
-fi
+print=""
+case "${1:-}" in
+  --sources-hash)
+    sources_only=1
+    set -- release
+    ;;
+  --cache-key | --cache-entry)
+    print="${1#--}"
+    shift
+    ;;
+esac
 check=0
 flavour=""
 for arg in "$@"; do
@@ -88,11 +99,16 @@ android_abis=(
   "armeabi-v7a armv7-linux-androideabi armv7a-linux-androideabi"
 )
 # KAERI_ANDROID_ABIS (say arm64-v8a) narrows a testing build to those ABIs, for local checks on an
-# arm64 emulator or phone. A release build always has every ABI, since the TV needs the 32-bit one.
-if [[ "$flavour" == testing && -n "${KAERI_ANDROID_ABIS:-}" ]]; then
+# arm64 emulator or phone. A release build has every ABI, since the TV needs the 32-bit one, and
+# only KAERI_ANDROID_RELEASE_ABIS narrows it: CI's check that the 32-bit engine the TV ships
+# builds, from which no APK is made. The stamp records the ABIs, so such a build is never current
+# for an APK's.
+narrow="${KAERI_ANDROID_ABIS:-}"
+[[ "$flavour" == release ]] && narrow="${KAERI_ANDROID_RELEASE_ABIS:-}"
+if [[ -n "$narrow" ]]; then
   wanted=()
   for spec in "${android_abis[@]}"; do
-    [[ ",$KAERI_ANDROID_ABIS," == *",${spec%% *},"* ]] && wanted+=("$spec")
+    [[ ",$narrow," == *",${spec%% *},"* ]] && wanted+=("$spec")
   done
   (( ${#wanted[@]} )) || { echo "error: KAERI_ANDROID_ABIS names no ABI this script builds" >&2; exit 2; }
   android_abis=("${wanted[@]}")
@@ -135,6 +151,22 @@ if (( sources_only )); then
   echo "$hash"
   exit 0
 fi
+
+# The shared cache's entry for these sources, and whether some worktree has built it already.
+cache="${KAERI_ENGINE_CACHE:-$HOME/.cache/kaeri-engine}/android"
+machine="$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
+entry="$cache/$flavour/$profile/$abis-$machine/$hash"
+case "$print" in
+  cache-key)
+    # An Actions cache's key takes no commas.
+    echo "engine-android-$flavour-$profile-${abis//,/+}-$machine-ndk$(basename "${ndk:-none}")-$hash"
+    exit 0
+    ;;
+  cache-entry)
+    echo "$entry"
+    exit 0
+    ;;
+esac
 if [[ -f "$out/stamp" && -d "$out/kotlin" && -d "$out/host" ]]; then
   fresh=1
   [[ "$(sed -n 's/^sources //p' "$out/stamp")" == "$hash" ]] || fresh=0
@@ -164,11 +196,6 @@ if (( check )); then
   echo "error: run KAERI_ENGINE_PROFILE=$profile android/scripts/engine.sh $flavour" >&2
   exit 1
 fi
-
-# The shared cache's entry for these sources, and whether some worktree has built it already.
-cache="${KAERI_ENGINE_CACHE:-$HOME/.cache/kaeri-engine}/android"
-machine="$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m)"
-entry="$cache/$flavour/$profile/$abis-$machine/$hash"
 
 # Entries unused for 14 days, the leftovers of a store that was cut off, and in each slice's
 # folder every entry but the newest $keep. Each set of sources costs from under a GB to several,
@@ -276,6 +303,7 @@ library="$host_built/$host_library"
 if [[ -n "$ndk" ]]; then
   for spec in "${android_abis[@]}"; do
     read -r abi target _ <<<"$spec"
+    bindings_target="${bindings_target:-$target}"
     echo "engine.sh: building the $flavour engine for $abi (Android $api, NDK $(basename "$ndk"), $profile)"
     cargo_clean cargo ndk -t "$abi" --platform "$api" build -p kaeri-ffi --no-default-features \
       ${features:+--features "$features"} --lib --profile "$profile"
@@ -283,8 +311,9 @@ if [[ -n "$ndk" ]]; then
     cp "$CARGO_TARGET_DIR/$target/$(profile_dir)/libkaeri_ffi.so" "$stage/jniLibs/$abi/"
     needs_only_system_libraries "$stage/jniLibs/$abi/libkaeri_ffi.so"
   done
-  # The bindings from the phone's library, which has the same interface as every other.
-  library="$CARGO_TARGET_DIR/aarch64-linux-android/$(profile_dir)/libkaeri_ffi.so"
+  # The bindings from the first library built: the phone's, unless a narrowed build has only the
+  # 32-bit one. Every library has the same interface.
+  library="$CARGO_TARGET_DIR/$bindings_target/$(profile_dir)/libkaeri_ffi.so"
 else
   echo "engine.sh: no NDK under ${sdk:-\$ANDROID_HOME}/ndk, so no Android libraries: the APKs will have no engine" >&2
 fi
