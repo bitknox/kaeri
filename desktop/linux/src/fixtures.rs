@@ -423,8 +423,14 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
         }
         _ => {}
     }
+    // On the still clock the slow answers come when the shot's hold reaches them.
+    let timeout_secs = if kaeri_providers::still::clock().is_some() {
+        kaeri_providers::still::CLIENT_WAIT.as_secs()
+    } else {
+        client_wait(scene.home)
+    };
     let http = HttpClient::offline(&NetworkConfig {
-        timeout_secs: client_wait(scene.home),
+        timeout_secs,
         ..config.network.clone()
     })
     .map_err(|e| e.to_string())?;

@@ -33,6 +33,11 @@ use tokio::sync::watch;
 /// work that wait let go runs first, and a wait it begins is counted from that moment.
 pub const SETTLE: Duration = Duration::from_millis(25);
 
+/// How long a fixture scene's client waits for an answer while the clock is on: long enough for
+/// any shot to be taken first, as the scene's slow answers wait on the hold, not the wall clock,
+/// and a wall-clock timeout would cut a held one off.
+pub const CLIENT_WAIT: Duration = Duration::from_secs(600);
+
 /// How long a scene held from its start ([`StillClock::held_at`]) must go without a new wait or a
 /// wait ending before the clock goes on to the hold.
 pub const QUIET: Duration = Duration::from_millis(150);
@@ -141,9 +146,30 @@ impl StillClock {
             state.busy = Some(std::time::Instant::now());
             end
         };
+        // A wait given up before it ends (a timeout's, a dropped request's) takes its end away,
+        // so the clock does not stop at it.
+        let _pending = Pending { inner: &self.inner, end };
         let mut now = self.inner.now.subscribe();
         // The clock outlives every wait on it, so the channel cannot close first.
         let _ = now.wait_for(|now| *now >= end).await;
+    }
+}
+
+/// One wait's end on the clock, taken away when the wait is over or given up.
+struct Pending<'a> {
+    inner: &'a Inner,
+    end: u64,
+}
+
+impl Drop for Pending<'_> {
+    fn drop(&mut self) {
+        let mut state = self.inner.lock();
+        if let Some(count) = state.ends.get_mut(&self.end) {
+            *count -= 1;
+            if *count == 0 {
+                state.ends.remove(&self.end);
+            }
+        }
     }
 }
 
@@ -304,6 +330,18 @@ mod tests {
         assert_eq!(clock.now(), ms(4_500));
         tokio::time::sleep(QUIET + SETTLE * 4).await;
         assert_eq!(clock.now(), ms(5_000));
+    }
+
+    /// A wait given up before its end takes the end away: the clock goes on to the hold without
+    /// stopping there.
+    #[tokio::test(flavor = "multi_thread")]
+    async fn a_wait_given_up_leaves_no_stop_behind() {
+        let clock = StillClock::held_at(Duration::ZERO);
+        let gone = tokio::time::timeout(Duration::from_millis(50), clock.wait(ms(5_000))).await;
+        assert!(gone.is_err(), "the wait ended at nought");
+        assert!(clock.inner.lock().ends.is_empty(), "the given-up wait's end is still there");
+        clock.hold(ms(10_000));
+        assert_eq!(clock.now(), ms(10_000), "the clock stopped short of the hold");
     }
 
     /// The hold never goes back, and a wait of nought ends at once.
