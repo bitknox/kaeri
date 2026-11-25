@@ -169,6 +169,8 @@ pub struct SidePanel {
     listing_rows: RefCell<Vec<ListingRow>>,
     /// The source playing as Sources was last drawn, by its id and name: not among the others.
     playing: RefCell<(Option<String>, Option<String>)>,
+    /// Playing now's detail line as last drawn, to change in place while the tab loads.
+    playing_line: RefCell<Option<gtk::Label>>,
     translation: RefCell<Option<VersionRow>>,
     data: RefCell<Data>,
     playhead: Cell<Playhead>,
@@ -290,6 +292,7 @@ impl SidePanel {
             listing: RefCell::default(),
             listing_rows: RefCell::default(),
             playing: RefCell::default(),
+            playing_line: RefCell::default(),
             translation: RefCell::default(),
             data: RefCell::default(),
             playhead: Cell::default(),
@@ -566,6 +569,15 @@ impl SidePanel {
         self.fill_sources();
     }
 
+    /// Nobody waits for the listing any more: the episode started again, so the tab asks
+    /// afresh when it opens, and its rows stop counting until then.
+    pub fn listing_dropped(&self) {
+        if self.listing.take().is_some() {
+            self.fill_sources();
+            self.show_switch();
+        }
+    }
+
     /// Every source's row as the engine says it now, whole. A row that changed changes in place.
     pub fn set_progress(&self, rows: Vec<SourceListing>) {
         {
@@ -619,7 +631,40 @@ impl SidePanel {
 
     pub fn set_options(&self, options: Option<Vec<SourceOption>>) {
         self.data.borrow_mut().options = options;
-        self.fill_sources();
+        if !self.options_in_place() {
+            self.fill_sources();
+        }
+    }
+
+    /// While the tab loads, the sources' coverage changes lines in place: Playing now's and
+    /// each answered row's, so fades and spinners run on. False when it changes which rows
+    /// there are, and the list is drawn again.
+    fn options_in_place(&self) -> bool {
+        if self.listing.borrow().is_none() || self.listing_rows.borrow().is_empty() {
+            return false;
+        }
+        let data = self.data.borrow().clone();
+        let (option, provider, name) = playing_of(&data);
+        let Some(line) = self.playing_line.borrow().clone() else { return false };
+        if name != self.playing.borrow().1 {
+            return false;
+        }
+        self.playing.replace((provider, name));
+        let others = self.listing_others(&data).unwrap_or_default();
+        let same = others.iter().map(|(id, ..)| id).eq(self
+            .listing_rows
+            .borrow()
+            .iter()
+            .map(|r| &r.provider_id));
+        if !same {
+            return false;
+        }
+        if let Some(option) = option {
+            line.set_label(&crate::choices::detail(option, now()));
+            wrap(&line);
+        }
+        self.show_switch();
+        true
     }
 
     /// Where the playhead is: the playing row's line and progress follow it.
@@ -715,6 +760,31 @@ impl SidePanel {
             self.fill_sources();
             self.show_switch();
         }
+    }
+
+    /// Release `id` of `provider_id`, from the episode's releases or, while the tab still
+    /// loads, from the rows that listed it, or else the pick on its way.
+    pub fn release(&self, provider_id: &str, id: &str) -> Option<SourceCandidate> {
+        let is = |c: &&SourceCandidate| c.provider_id == provider_id && c.id == id;
+        if let Some(found) =
+            self.data.borrow().releases.as_ref().and_then(|all| all.iter().find(is))
+        {
+            return Some(found.clone());
+        }
+        let listing = self.listing.borrow();
+        let rows = listing.as_ref().and_then(|l| l.rows.as_ref());
+        rows.into_iter()
+            .flatten()
+            .flat_map(|row| state::listed(Some(&row.state)))
+            .find(is)
+            .cloned()
+            .or_else(|| {
+                self.switch
+                    .borrow()
+                    .as_ref()
+                    .and_then(|s| s.candidate.clone())
+                    .filter(|c| is(&c))
+            })
     }
 
     /// The failed pick, for Try again.
@@ -1277,6 +1347,7 @@ impl SidePanel {
         self.src_does.borrow_mut().clear();
         self.folds.borrow_mut().clear();
         self.listing_rows.borrow_mut().clear();
+        self.playing_line.replace(None);
         self.translation.replace(None);
         while let Some(child) = self.src_list.first_child() {
             self.src_list.remove(&child);
@@ -1286,21 +1357,7 @@ impl SidePanel {
 
         self.src_list.append(&heading(&t::player_panel_playing_now()));
         let options = data.options.as_deref();
-        let playing_option = options.and_then(|all| {
-            data.playing_release
-                .as_ref()
-                .and_then(|r| all.iter().find(|o| o.provider_id == r.provider_id))
-                .or_else(|| {
-                    data.playing_source.as_ref().and_then(|n| all.iter().find(|o| &o.name == n))
-                })
-        });
-        let playing_provider = data
-            .playing_release
-            .as_ref()
-            .map(|r| r.provider_id.clone())
-            .or_else(|| playing_option.map(|o| o.provider_id.clone()));
-        let name =
-            data.playing_source.clone().or_else(|| playing_option.map(|o| o.name.clone()));
+        let (playing_option, playing_provider, name) = playing_of(&data);
         if let Some(name) = &name {
             let block = gtk::Box::new(gtk::Orientation::Vertical, 1);
             block.add_css_class("panel-playing");
@@ -1315,12 +1372,14 @@ impl SidePanel {
                 );
                 wrap(&line);
                 block.append(&line);
+                self.playing_line.replace(Some(line));
             } else if data.options.is_none() && self.listing.borrow().is_some() {
                 // Its coverage is on its way while the tab loads: its line is held one line
                 // high, so the rows under it never move when it comes.
                 let line = crate::widgets::haze("", "panel-row-detail");
                 one_line(&line);
                 block.append(&line);
+                self.playing_line.replace(Some(line));
             }
             self.src_list.append(&still_row(&block));
         }
@@ -1559,8 +1618,10 @@ impl SidePanel {
         let listing = self.listing.borrow();
         let listing = listing.as_ref()?;
         let (playing, name) = self.playing.borrow().clone();
-        let other = |id: &str, source: &str| {
-            playing.as_deref() != Some(id) && name.as_deref() != Some(source)
+        // By its id once known; before its coverage says which source it is, by its name.
+        let other = |id: &str, source: &str| match playing.as_deref() {
+            Some(playing) => playing != id,
+            None => name.as_deref() != Some(source),
         };
         Some(match &listing.rows {
             Some(rows) => rows
@@ -1696,7 +1757,11 @@ impl SidePanel {
     /// Asking, the seconds from 3 s, then the answer, each change a crossfade in place.
     fn show_listing(&self, at: Instant) {
         let listing = self.listing.borrow();
-        let Some(listing) = listing.as_ref() else { return };
+        let Some(listing) = listing.as_ref() else {
+            // Dropped or answered whole: the list is no longer busy.
+            self.src_list.update_state(&[gtk::accessible::State::Busy(false)]);
+            return;
+        };
         let data = self.data.borrow();
         let episode = data.current.clone().unwrap_or_default();
         let unix = now();
@@ -2115,15 +2180,10 @@ impl SidePanel {
             self.say(Act::Release(candidate));
         } else if let Some(stream) = failed.target.stream {
             self.say(Act::Stream(stream));
-        } else if let Some(release) = failed.target.release {
-            let candidate = self.data.borrow().releases.as_ref().and_then(|all| {
-                all.iter()
-                    .find(|c| c.provider_id == failed.target.provider_id && c.id == release)
-                    .cloned()
-            });
-            if let Some(candidate) = candidate {
-                self.say(Act::Release(candidate));
-            }
+        } else if let Some(release) = failed.target.release
+            && let Some(candidate) = self.release(&failed.target.provider_id, &release)
+        {
+            self.say(Act::Release(candidate));
         }
     }
 
@@ -2360,11 +2420,14 @@ impl ListingRow {
             Some(_) => {}
             None => parts.tail.set_visible(listed),
         }
-        let spoken = if want.words.is_empty() {
-            self.name.clone()
-        } else {
-            format!("{}, {}", self.name, want.words) // i18n-skip
-        };
+        // Said as it reads: its name, its line and, once it lists more than one, the count.
+        let count = (want.count > 0).then(|| t::player_panel_releases(want.count as i64));
+        let spoken = [Some(self.name.clone()), Some(want.words.clone()), count]
+            .into_iter()
+            .flatten()
+            .filter(|part| !part.is_empty())
+            .collect::<Vec<_>>()
+            .join(", "); // i18n-skip
         self.row.update_property(&[gtk::accessible::Property::Label(&spoken)]);
     }
 }
@@ -2442,6 +2505,26 @@ fn wrap(label: &gtk::Label) {
     label.set_wrap_mode(gtk::pango::WrapMode::WordChar);
     label.set_max_width_chars(1);
     label.set_hexpand(true);
+}
+
+/// The source playing, as Playing now shows it: its coverage, its id and its name, each once
+/// known.
+fn playing_of(data: &Data) -> (Option<&SourceOption>, Option<String>, Option<String>) {
+    let option = data.options.as_deref().and_then(|all| {
+        data.playing_release
+            .as_ref()
+            .and_then(|r| all.iter().find(|o| o.provider_id == r.provider_id))
+            .or_else(|| {
+                data.playing_source.as_ref().and_then(|n| all.iter().find(|o| &o.name == n))
+            })
+    });
+    let provider = data
+        .playing_release
+        .as_ref()
+        .map(|r| r.provider_id.clone())
+        .or_else(|| option.map(|o| o.provider_id.clone()));
+    let name = data.playing_source.clone().or_else(|| option.map(|o| o.name.clone()));
+    (option, provider, name)
 }
 
 /// A label held to one line, cut at its end when the panel is too narrow for it.
@@ -2993,6 +3076,87 @@ mod tests {
             pump(100);
             assert_eq!(src_texts(&panel).iter().filter(|t| *t == why).count(), 1);
             assert!(!panel.pending());
+            window.destroy();
+        });
+    }
+
+    /// Coverage for `id` called `name`, its episodes 1 to 12.
+    fn coverage(id: &str, name: &str) -> kaeri_model::sources::SourceOption {
+        kaeri_model::sources::SourceOption {
+            provider_id: id.into(),
+            name: name.into(),
+            covered: 12,
+            of: 12,
+            pinned: false,
+            note: None,
+            releases: Vec::new(),
+            pinned_release: None,
+            first: Some(1),
+            last: Some(12),
+            lacking: Vec::new(),
+            lacking_since: None,
+        }
+    }
+
+    #[test]
+    fn coverage_that_comes_while_sources_answer_changes_lines_in_place() {
+        run(|| {
+            let (panel, window, _) = panel_in_window();
+            panel.open(PanelTab::Sources);
+            panel.listing_asked();
+            let home = ListingState::Listed { releases: vec![release("h1", "home")] };
+            panel.set_progress(said(home, ListingState::Asking, ListingState::Asking));
+            pump(300);
+            // A pick that lands before the final answer still knows its release.
+            assert_eq!(panel.release("home", "h1"), Some(release("h1", "home")));
+            let before: Vec<gtk::ListBoxRow> =
+                panel.listing_rows.borrow().iter().map(|r| r.row.clone()).collect();
+            panel.set_options(Some(vec![
+                coverage("example", "Example source"),
+                coverage("home", "Home server"),
+            ]));
+            pump(300);
+            let after: Vec<gtk::ListBoxRow> =
+                panel.listing_rows.borrow().iter().map(|r| r.row.clone()).collect();
+            assert_eq!(before, after, "the rows stay, so their fades and spinners run on");
+            let line = panel.playing_line.borrow().clone().expect("Playing now's line");
+            assert!(!line.label().is_empty(), "Playing now's coverage came in place");
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_source_named_as_the_one_playing_is_listed_once_its_id_is_known() {
+        run(|| {
+            let (panel, window, _) = panel_in_window();
+            panel.open(PanelTab::Sources);
+            panel.listing_asked();
+            let mut rows =
+                said(ListingState::Asking, ListingState::Asking, ListingState::Asking);
+            rows.push(listing("second", "Example source", ListingState::Asking));
+            panel.set_progress(rows);
+            panel.set_options(Some(vec![coverage("example", "Example source")]));
+            pump(300);
+            let ids: Vec<String> = loading_rows(&panel).into_iter().map(|r| r.0).collect();
+            assert!(ids.contains(&"second".to_owned()), "{ids:?}");
+            assert!(!ids.contains(&"example".to_owned()), "{ids:?}");
+            window.destroy();
+        });
+    }
+
+    #[test]
+    fn a_listing_dropped_when_the_episode_starts_again_stops_counting() {
+        run(|| {
+            let (panel, window, _) = panel_in_window();
+            panel.open(PanelTab::Sources);
+            panel.listing_asked();
+            let asking = || ListingState::Asking;
+            panel.set_progress(said(asking(), asking(), asking()));
+            pump(100);
+            assert!(panel.pending());
+            panel.listing_dropped();
+            assert!(panel.listing.borrow().is_none());
+            assert!(!panel.pending(), "its rows stop counting");
             window.destroy();
         });
     }

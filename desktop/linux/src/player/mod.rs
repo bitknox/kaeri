@@ -1297,7 +1297,9 @@ impl PlayerView {
                 // Whether the title has a dub, for the Sub and Dub switch: asked once a title.
                 // An opened link played without tracking has no title behind it to ask about.
                 self.close_panel();
-                self.panel_asked.take();
+                if self.panel_asked.take().is_some() {
+                    self.ui.side.listing_dropped();
+                }
                 if self.title_id.replace(Some(*id)) != Some(*id) {
                     self.has_dub.set(None);
                     self.dub.take();
@@ -3776,17 +3778,7 @@ impl PlayerView {
                     let mut data = self.ui.side.data().clone();
                     data.playing_source = Some(to.name.clone());
                     if let Some(release) = &to.release {
-                        let known = data
-                            .releases
-                            .as_ref()
-                            .and_then(|all| {
-                                all.iter().find(|c| {
-                                    c.provider_id == to.provider_id && &c.id == release
-                                })
-                            })
-                            .cloned()
-                            .or_else(|| self.ui.side.failed_pick().and_then(|s| s.candidate));
-                        data.playing_release = known;
+                        data.playing_release = self.ui.side.release(&to.provider_id, release);
                     } else if !panel_state::keeps_release(to, data.playing_release.as_ref()) {
                         // The other version, or a stream of another source the engine moved
                         // to: the release picked before is not what plays.
