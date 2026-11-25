@@ -56,8 +56,11 @@ const MOMENTS: [f64; 5] = [0.3, 1.0, 4.3, 12.3, 21.0];
 const OPEN_AFTER: f64 = 5.0;
 
 thread_local! {
-    /// When the tab opens, once the run has asked for the episode.
+    /// When the tab opens, once the run has asked for the episode: planned, then the moment it
+    /// opened. Saving a shot holds the main loop for seconds on a busy machine, so the tab can
+    /// open late, and each moment counts from when it did.
     static OPENS: Cell<Option<Instant>> = const { Cell::new(None) };
+    static OPENED: Cell<bool> = const { Cell::new(false) };
 }
 
 /// Put the window in the state `shot` shows, and say how long to let it settle.
@@ -76,6 +79,8 @@ pub fn stage(shell: &Rc<Shell>, shot: &str) -> Option<f64> {
     if let Some((name, _)) = dressed {
         dress(shell, name);
     }
+    // Overdue but not open yet: it opens as soon as the main loop is free, which is now.
+    let opens = if OPENED.with(Cell::get) { opens } else { opens.max(Instant::now()) };
     let moment = match (dressed, at.and_then(|at| at.checked_sub(1))) {
         (Some((_, after)), _) => opens + Duration::from_secs_f64(*after),
         (None, Some(at)) => opens + Duration::from_secs_f64(MOMENTS[at]),
@@ -100,6 +105,8 @@ fn play_and_open(shell: &Rc<Shell>) {
     let player = Rc::clone(&shell.player);
     glib::timeout_add_local_once(Duration::from_secs_f64(OPEN_AFTER), move || {
         player.shot_panel("sources");
+        OPENS.with(|o| o.set(Some(Instant::now())));
+        OPENED.with(|o| o.set(true));
     });
 }
 
