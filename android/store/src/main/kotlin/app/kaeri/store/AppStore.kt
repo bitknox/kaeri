@@ -223,6 +223,9 @@ class AppStore(
         model.kept = { notices.log(EngineNotice(kind = NoticeKind.INFO, text = "", hint = null, msg = it)) }
     }
 
+    /** The room this device is in, as the room's screens read it (stand-in until the room's FFI lands). */
+    val room = app.kaeri.store.room.RoomModel()
+
     /** Watch together: the party this device is in, its room, and the rooms kept. */
     val party = PartyModel().also { model ->
         // Off the player, who came and went and a new episode are said as notices; the player says
