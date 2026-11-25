@@ -597,8 +597,8 @@ pub const LOADING_SOURCES: [(&str, &str); 6] = [
 ];
 
 /// When each of [`LOADING_SOURCES`] answers the Sources tab, from when it asks, in the same
-/// order: listed, could not choose the title (about: it searches more than once), listed, timed
-/// out, failed. The last is never asked.
+/// order: listed, could not choose the title, listed, timed out, failed. The last is never
+/// asked.
 pub const SOURCES_LOADING_TIMES: [std::time::Duration; 5] = [
     std::time::Duration::from_millis(450),
     std::time::Duration::from_millis(1_300),
@@ -633,7 +633,9 @@ fn loading_sources(clip: &Stream) -> Vec<MockProvider> {
             .with_hits(hit.iter().cloned().collect())
             .with_episodes_for(key.clone(), sources::episodes(FINISHED))
             .with_streams_for(key.clone(), vec![own.clone()])
-            .listing_after(SOURCES_LOADING_TIMES.get(at).copied().unwrap_or_default(), error);
+            .listing_after(SOURCES_LOADING_TIMES.get(at).copied().unwrap_or_default(), error)
+            // Only the episode playing: the coverage the tab's lines take answers at once.
+            .listing_after_only_for("7");
         for release in &releases {
             source = source.with_source_streams(&release.id, vec![own.clone()]);
         }
@@ -649,14 +651,14 @@ fn loading_sources(clip: &Stream) -> Vec<MockProvider> {
     };
     vec![
         source(0, vec![release(home, 1, "Episode 07 [1080p]", 1080, true)], None),
-        // Two titles like it and neither sure: a match it cannot choose, after two searches.
+        // Two titles like it and neither sure: a match it cannot choose, after its one search.
         MockProvider::new(LOADING_SOURCES[1].0)
             .named(LOADING_SOURCES[1].1)
             .with_hits(vec![
                 vague(1, "Hoshi Tabi Diaries", 2024),
                 vague(2, "Tabibito to Hoshikuzu", 2025),
             ])
-            .with_latency(SOURCES_LOADING_TIMES[1] / 2),
+            .with_latency(SOURCES_LOADING_TIMES[1]),
         source(
             2,
             vec![

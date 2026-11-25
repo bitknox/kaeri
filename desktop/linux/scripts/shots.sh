@@ -76,6 +76,11 @@ runs=(
   # than the wait to 1 s.
   "sourcesloading 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-0s}"
   "sourcesloadingon 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-1s,sources-loading-4s,sources-loading-12s,sources-loading-21s}"
+  # The same tab with a long source name, a listing the engine ended, and a resting source that
+  # lists from the final answer: SIZES="sourceslong sourcesended sourcesresting".
+  "sourceslong 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-long}"
+  "sourcesended 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-ended}"
+  "sourcesresting 1280x800 ${SHOTS:-sources-loading-playing,sources-loading-resting}"
 )
 for run in "${runs[@]}"; do
   read -r name size shots <<<"$run"
@@ -93,7 +98,9 @@ for run in "${runs[@]}"; do
     following) extra=(--scene following) ;;
     followingslow) extra=(--scene following-slow) ;;
     missing | missingsrc) extra=(--scene missing-episode) ;;
-    sourcesloading | sourcesloadingon) extra=(--scene sourcesloading) ;;
+    sourcesloading | sourcesloadingon | sourceslong | sourcesended | sourcesresting)
+      extra=(--scene sourcesloading)
+      ;;
   esac
   case ",$shots," in *,downloads,*|*,all,*) extra+=(--downloading) ;; esac
   # The match picker's shots need the finished title's source to be unsure of its match.
