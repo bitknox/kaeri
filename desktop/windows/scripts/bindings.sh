@@ -159,7 +159,8 @@ sources_hash() {
 
 hash="$(sources_hash)"
 if ((cache_key)); then
-  echo "engine-windows-$flavour-$profile-$(uname -m)-$hash"
+  # rustc's host rather than uname -m, which says x86_64 where Git Bash runs emulated on Arm.
+  echo "engine-windows-$flavour-$profile-$(rustc -vV | sed -n 's/^host: //p')-$hash"
   exit 0
 fi
 if [[ -f "$out/stamp" && -d "$out/bindings" && -f "$out/native/$library" ]]; then

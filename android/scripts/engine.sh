@@ -99,11 +99,16 @@ android_abis=(
   "armeabi-v7a armv7-linux-androideabi armv7a-linux-androideabi"
 )
 # KAERI_ANDROID_ABIS (say arm64-v8a) narrows a testing build to those ABIs, for local checks on an
-# arm64 emulator or phone. A release build always has every ABI, since the TV needs the 32-bit one.
-if [[ "$flavour" == testing && -n "${KAERI_ANDROID_ABIS:-}" ]]; then
+# arm64 emulator or phone. A release build has every ABI, since the TV needs the 32-bit one, and
+# only KAERI_ANDROID_RELEASE_ABIS narrows it: CI's check that the 32-bit engine the TV ships
+# builds, from which no APK is made. The stamp records the ABIs, so such a build is never current
+# for an APK's.
+narrow="${KAERI_ANDROID_ABIS:-}"
+[[ "$flavour" == release ]] && narrow="${KAERI_ANDROID_RELEASE_ABIS:-}"
+if [[ -n "$narrow" ]]; then
   wanted=()
   for spec in "${android_abis[@]}"; do
-    [[ ",$KAERI_ANDROID_ABIS," == *",${spec%% *},"* ]] && wanted+=("$spec")
+    [[ ",$narrow," == *",${spec%% *},"* ]] && wanted+=("$spec")
   done
   (( ${#wanted[@]} )) || { echo "error: KAERI_ANDROID_ABIS names no ABI this script builds" >&2; exit 2; }
   android_abis=("${wanted[@]}")

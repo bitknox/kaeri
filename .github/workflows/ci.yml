@@ -94,6 +94,9 @@ jobs:
             windows:
               - 'desktop/windows/**'
               - '.github/workflows/ci.yml'
+              - 'tools/ci-toolchain.sh'
+              - 'tools/engine-sources.sh'
+              - 'tools/ci-cache-room.sh'
             desktop-linux:
               - 'desktop/linux/**'
               - '.github/workflows/ci.yml'
@@ -159,7 +162,7 @@ jobs:
           everything=false
           [[ "$(cat "$RUNNER_TEMP/changed.txt")" == . ]] && everything=true
 
-          ci=(.github/workflows/ci.yml tools/ci-toolchain.sh tools/engine-sources.sh tools/engine-touched.sh)
+          ci=(.github/workflows/ci.yml tools/ci-toolchain.sh tools/engine-sources.sh tools/engine-touched.sh tools/ci-cache-room.sh)
           # Rust as the Mac and Windows build it.
           native_re='^(crates/|wit/|assets/|\.cargo/|\.config/|Cargo\.(toml|lock)$|rust-toolchain\.toml$|\.github/workflows/ci\.yml$|tools/ci-toolchain\.sh$)'
           # What the Rust cache's key is made from.
@@ -188,6 +191,15 @@ jobs:
           echo "apple=$apple" >> "$GITHUB_OUTPUT"
           echo "android=${android:-true}" >> "$GITHUB_OUTPUT"
           echo "::notice::Mac and Windows tests: $native. Apple jobs: $apple. Android: ${android:-true}. Engine changed: $engine."
+
+      # tools/ci-cache-room.sh, which pull requests run only when an engine is new and main before
+      # every save, run here on every pull request for a ref that owns no cache: it lists the
+      # caches and answers, and deletes nothing. A change that breaks it fails here, not on main.
+      - name: The cache room script
+        if: github.event_name == 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: GITHUB_REF=refs/pull/0/merge GITHUB_OUTPUT=/dev/null tools/ci-cache-room.sh engine-check-0123456789abcdef 1
 
       # The repository's caches share 10 GB. Over it, every save in every workflow fails with
       # "Unable to reserve cache", the jobs that restore from main find nothing, and a pull
@@ -223,7 +235,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest]
+        # On main the Mac's alone, which builds for its Rust cache: Windows' has none to build for.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && '["macos-latest", "windows-latest"]' || '["macos-latest"]') }}
 
     steps:
       - uses: actions/checkout@v7
@@ -334,6 +347,7 @@ jobs:
       # the JavaScript reference plugin. Without them those tests skip, so the Test step below
       # sets KAERI_REQUIRE_PLUGINS and a missing one fails it.
       - name: Build the plugins the sandbox tests load
+        if: github.event_name == 'pull_request'
         run: |
           for plugin in example-rust example-books test-hostile test-hostile-books test-torrent-source; do
             cargo build --locked --release --target wasm32-wasip2 --manifest-path "plugins/$plugin/Cargo.toml"
@@ -341,6 +355,7 @@ jobs:
           npm ci --prefix plugins/example-ts
           npm run build --prefix plugins/example-ts
       - name: Build the tests
+        if: github.event_name == 'pull_request'
         run: cargo nextest archive --workspace --archive-file "$RUNNER_TEMP/linux-tests.tar.zst"
       - uses: actions/upload-artifact@v7
         if: github.event_name == 'pull_request'
@@ -353,16 +368,16 @@ jobs:
           compression-level: 0
       # Uploaded, so its space goes back to the build.
       - run: rm -f "$RUNNER_TEMP/linux-tests.tar.zst"
-      # The build above, which cargo finds current. On main, only built, for the cache.
+      # The build above, which cargo finds current. On main, which has no cache to build for, the
+      # linux job only checks the formatting, and the mpv jobs after it keep their packages' cache.
       - name: Test
         if: github.event_name == 'pull_request'
         env:
           KAERI_REQUIRE_PLUGINS: "1"
         run: cargo nextest run --workspace --profile ci
       - name: Test the engine without the desktop feature
-        run: >-
-          ${{ github.event_name == 'push' && 'cargo test -p kaeri-engine --no-default-features --lib --no-run'
-          || 'cargo nextest run -p kaeri-engine --no-default-features --lib --profile ci' }}
+        if: github.event_name == 'pull_request'
+        run: cargo nextest run -p kaeri-engine --no-default-features --lib --profile ci
       # Last, and after failed tests too. The mpv jobs start after it, still well inside what the
       # macOS jobs take.
       - name: Clippy
@@ -1006,7 +1021,15 @@ jobs:
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: tools/ci-cache-room.sh "${{ steps.bindgen.outputs.cache-primary-key }}" 50
+        # Only a generator bindings.sh finished: none is built when the engine came from its cache,
+        # and a build that failed half way leaves a .partial folder, which is not kept.
+        run: |
+          rm -rf ~/.cache/kaeri-bindgen-cs/*.partial
+          if compgen -G "$HOME/.cache/kaeri-bindgen-cs/*/bin/uniffi-bindgen-cs*" >/dev/null; then
+            tools/ci-cache-room.sh "${{ steps.bindgen.outputs.cache-primary-key }}" 50
+          else
+            echo "save=false" >> "$GITHUB_OUTPUT"
+          fi
       - name: Keep the bindings generator
         if: ${{ !cancelled() && steps.bindgen-room.outputs.save == 'true' }}
         uses: actions/cache/save@v6
@@ -1026,7 +1049,7 @@ jobs:
   # 80 screenshot classes, each a Robolectric JVM), and `app`, everything else. In one job the ui
   # module's tests began last, once the other modules' had freed Gradle's four workers, and ran
   # alone for a quarter of an hour. Both build or restore the same engine; only `app` saves it.
-  # main runs `app` alone, every test included, as before.
+  # main runs `app` alone, every test included, as before. A third part, `armv7`, below.
   android:
     needs: changes
     if: needs.changes.outputs.android == 'true'
@@ -1038,16 +1061,24 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        part: ${{ fromJSON(github.event_name == 'pull_request' && '["app", "ui"]' || '["app"]') }}
+        part: ${{ fromJSON(github.event_name == 'pull_request' && '["app", "ui", "armv7"]' || '["app"]') }}
     env:
       PART: ${{ matrix.part }}
+      # `armv7` builds the engine the TV app ships for the 32-bit Android most TV boxes run, in
+      # app-dev: a 32-bit-only compile error (a usize that was 64 bits wide, a 64-bit atomic) or a
+      # library the 32-bit build needs beyond the system's (engine.sh checks each ABI's) fails the
+      # pull request, not the release. The other parts build the arm64 engine alone, which is all
+      # the phone, the fixtures APK and the JVM tests take. Kept by its hash like the others, so a
+      # push that leaves the engine's sources alone builds nothing here.
+      FLAVOUR: ${{ matrix.part == 'armv7' && 'release' || 'testing' }}
       KAERI_ANDROID_ABIS: arm64-v8a
+      KAERI_ANDROID_RELEASE_ABIS: ${{ matrix.part == 'armv7' && 'armeabi-v7a' || '' }}
       # A JVM per test class, four at once: the runner's four cores, which Gradle's workers cap
       # across every module's tests anyway (android/build-logic, kaeri.engine.flavours).
       KAERI_TEST_FORKS: "4"
     steps:
       - uses: actions/checkout@v7
-      - run: tools/ci-toolchain.sh aarch64-linux-android
+      - run: tools/ci-toolchain.sh ${{ matrix.part == 'armv7' && 'armv7-linux-androideabi' || 'aarch64-linux-android' }}
       # The newest NDK the runner has, which links 16 KB aligned (r28 and later), where
       # ANDROID_NDK_HOME may name an older one.
       - name: The NDK
@@ -1064,8 +1095,8 @@ jobs:
         id: keys
         run: |
           {
-            echo "key=$(android/scripts/engine.sh --cache-key testing)"
-            echo "entry=$(android/scripts/engine.sh --cache-entry testing)"
+            echo "key=$(android/scripts/engine.sh --cache-key "$FLAVOUR")"
+            echo "entry=$(android/scripts/engine.sh --cache-entry "$FLAVOUR")"
           } >> "$GITHUB_OUTPUT"
       - name: Restore the app's engine
         id: engine
@@ -1084,23 +1115,26 @@ jobs:
         with:
           tool: cargo-ndk
       - uses: actions/setup-java@v6
+        if: env.PART != 'armv7'
         with:
           distribution: temurin
           java-version: 21
       # Gradle's caches and the wrapper's distribution, saved from main like the Rust cache.
       - uses: gradle/actions/setup-gradle@v5
+        if: env.PART != 'armv7'
         with:
           cache-read-only: ${{ github.ref != 'refs/heads/main' || env.PART != 'app' }}
       # The platform the app compiles against, and the NDK its build.gradle.kts strips the APK's
       # libraries with; the engine itself builds with the newest NDK, above.
       - name: The SDK platform and NDK the app builds with
+        if: env.PART != 'armv7'
         run: |
           sdkmanager="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
           yes | "$sdkmanager" --licenses >/dev/null
           "$sdkmanager" --install "platforms;android-37.0" "build-tools;36.0.0" "ndk;30.0.16248370" >/dev/null
       # The fixtures flavour's engine and its bindings, and the fonts.
       - name: The app's engine and bindings
-        run: android/scripts/engine.sh testing
+        run: android/scripts/engine.sh "$FLAVOUR"
         env:
           # The workspace's own, which the Rust cache keeps, rather than the script's default in HOME.
           CARGO_TARGET_DIR: ${{ github.workspace }}/target
@@ -1123,7 +1157,7 @@ jobs:
       # entry whole.
       - name: Room for the app's engine
         id: engine-room
-        if: ${{ !cancelled() && env.PART == 'app' && steps.engine.outputs.cache-hit != 'true' }}
+        if: ${{ !cancelled() && env.PART != 'ui' && steps.engine.outputs.cache-hit != 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
           ENTRY: ${{ steps.keys.outputs.entry }}
@@ -1140,11 +1174,13 @@ jobs:
           path: ${{ steps.keys.outputs.entry }}
           key: ${{ steps.keys.outputs.key }}
       - name: The app's fonts
+        if: env.PART != 'armv7'
         run: android/scripts/fonts.sh
       # The Android builds Robolectric draws the screenshot tests on, which it fetches itself.
       # Saved from main only, like every other cache here.
       - name: Restore Robolectric's Android builds
         id: robolectric
+        if: env.PART != 'armv7'
         uses: actions/cache/restore@v6
         with:
           path: ~/.m2/repository/org/robolectric
@@ -1182,7 +1218,7 @@ jobs:
       # What the shot tests' semantics check (testkit's A11yShots) found: reported here, and it
       # fails a test only once KAERI_A11Y_STRICT=1 is set on the step above. Each part its own.
       - name: Compose semantics findings
-        if: ${{ !cancelled() && github.event_name == 'pull_request' }}
+        if: ${{ !cancelled() && github.event_name == 'pull_request' && env.PART != 'armv7' }}
         run: android/scripts/a11y-summary.sh
       # The app flavour's Kotlin, which only the Release workflow builds otherwise. It compiles
       # against the testing engine's bindings, which hold everything the release engine's do, so
@@ -1210,7 +1246,7 @@ jobs:
       # The screenshot tests' captures, each board's screen drawn from a recorded scene, to look
       # at beside the boards.
       - uses: actions/upload-artifact@v7
-        if: always() && github.event_name == 'pull_request'
+        if: always() && github.event_name == 'pull_request' && env.PART != 'armv7'
         with:
           name: android-screenshots${{ matrix.part == 'ui' && '-ui' || '' }}
           path: android/.shots/roborazzi/
