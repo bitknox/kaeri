@@ -28,10 +28,13 @@ presence = ["dep:kaeri-discord"]
 # What a test stands the engine up with instead of what it builds, and what only a test wants to
 # hear from it: see `options::Parts` and `engine::Traced`. Never on in a build that ships: the
 # binary turns it on for its own tests alone, as a dev-dependency.
-testing = ["kaeri-party?/testing", "kaeri-sync/testing", "kaeri-store/testing"]
+testing = ["kaeri-party?/testing", "kaeri-room?/testing", "kaeri-sync/testing", "kaeri-store/testing"]
 # Watch parties on a Syncplay server, played with whichever player a play has: see `party`. The
 # desktop apps turn it on beside `--no-default-features`; a phone's build leaves it off for now.
-party = ["dep:kaeri-party"]
+party = ["dep:kaeri-party", "room"]
+# The room: watching together over end-to-end encrypted Nostr rooms, with no host. Phones too: see
+# `room`.
+room = ["dep:kaeri-room"]
 # The remote's server a TV runs beside the engine, for phones to drive it with: see `remote`. Off
 # until a TV app's build turns it on; nothing starts it yet.
 remote = ["dep:kaeri-remote"]
@@ -56,6 +59,7 @@ kaeri-model.workspace = true
 kaeri-net.workspace = true
 kaeri-discord = { workspace = true, optional = true }
 kaeri-party = { workspace = true, optional = true }
+kaeri-room = { workspace = true, optional = true }
 kaeri-player = { workspace = true, optional = true }
 # The pure half of playback, which the session drives any player with: the policy, the tracks,
 # skips, and what a player reports and is shown. Allowed in a phone's build.
@@ -122,6 +126,7 @@ tokio = { workspace = true, features = ["test-util"] }
 kaeri-testkit.workspace = true
 # A Syncplay server on the loopback interface, for the watch party's tests.
 kaeri-party = { workspace = true, features = ["testing"] }
+kaeri-room = { workspace = true, features = ["testing"] }
 # A Cast receiver on the loopback interface, for casting's tests.
 kaeri-cast = { workspace = true, features = ["fake"] }
 

@@ -144,6 +144,10 @@ mod read_tracking;
 pub mod reading;
 #[cfg(feature = "remote")]
 pub mod remote;
+#[cfg(feature = "room")]
+pub mod room;
+#[cfg(feature = "room")]
+mod room_chat;
 pub mod servers;
 pub mod services;
 pub mod settings;

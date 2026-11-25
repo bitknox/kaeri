@@ -50,6 +50,7 @@ mod player;
 mod reading;
 #[cfg(feature = "remote")]
 mod remote;
+mod room;
 #[cfg(feature = "testing")]
 mod scenes;
 #[cfg(feature = "remote")]
@@ -81,6 +82,9 @@ pub use player::{
 };
 #[cfg(feature = "remote")]
 pub use remote::{FfiAdvert, FfiLinkSent, FfiPairedPhone, FfiScreen, FfiTvRemote, FfiTxtPair};
+#[cfg(all(feature = "room", feature = "testing"))]
+pub use room::{FfiFakeRoom, FfiRoomScene};
+pub use room::{parse_room_target, room_app_link};
 #[cfg(feature = "testing")]
 pub use scenes::{FIXTURE_OPENED_LINK, FfiScene, MISSING_AIRED_AGO, fixture_opened_link};
 #[cfg(feature = "remote")]

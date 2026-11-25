@@ -45,6 +45,7 @@ testing = [
     "dep:kaeri-plugin-store",
     "kaeri-remote?/testing",
     "kaeri-party?/testing",
+    "kaeri-room?/testing",
     "kaeri-cast?/fake",
     "dep:serde_json",
 ]
@@ -52,7 +53,10 @@ testing = [
 # a Syncplay server on the loopback interface. On in the desktop apps' builds beside
 # `--no-default-features`: desktop/windows/scripts/bindings.sh, apple/scripts/engine.sh and
 # desktop/linux.
-party = ["kaeri-engine/party", "dep:kaeri-party"]
+party = ["kaeri-engine/party", "dep:kaeri-party", "room"]
+# The room: the engine's room commands, and with `testing` `FfiEngine::start_fake_room`, a room
+# with scripted members on fake relays. Phones turn it on too (it has no mpv in it).
+room = ["kaeri-engine/room", "dep:kaeri-room"]
 # `FfiEngine::start_remote`: the remote a TV runs for phones on its network to drive it. On in
 # Android's builds, which the TV app shares with the phone's.
 remote = [
@@ -97,6 +101,8 @@ kaeri-remote = { workspace = true, optional = true }
 kaeri-cast = { workspace = true, optional = true }
 # The fake party server, behind `party` and `testing`.
 kaeri-party = { workspace = true, optional = true }
+# The fake room, behind `room` and `testing`.
+kaeri-room = { workspace = true, optional = true }
 # The hosted player, behind `mpv-host`.
 kaeri-mpv-host = { workspace = true, optional = true }
 # What `start_testing` builds the engine's parts from.

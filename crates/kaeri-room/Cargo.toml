@@ -1,0 +1,27 @@
+[package]
+name = "kaeri-room"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The room: watching together over end-to-end encrypted Nostr rooms, with no host"
+publish = false
+
+[lib]
+doctest = false
+
+# The protocol, its sync rules and its transport, nothing else: no engine, no player. See
+# docs/room-protocol.md.
+[features]
+# `fake`: an in-process room with scripted members, for tests and the apps' Fixtures builds.
+# Never in an app's release build.
+testing = []
+
+[dependencies]
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

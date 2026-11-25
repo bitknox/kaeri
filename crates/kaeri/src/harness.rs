@@ -959,6 +959,25 @@ pub fn name(update: &Event) -> &'static str {
         Event::PartyLookFailed { .. } => "PartyLookFailed",
         Event::PartyRecent(_) => "PartyRecent",
         Event::PartyLastOut { .. } => "PartyLastOut",
+        Event::RoomJoined(_) => "RoomJoined",
+        Event::RoomState(_) => "RoomState",
+        Event::RoomMembers(_) => "RoomMembers",
+        Event::RoomMessage(_) => "RoomMessage",
+        Event::RoomChat(_) => "RoomChat",
+        Event::RoomChatState(_) => "RoomChatState",
+        Event::RoomReaction(_) => "RoomReaction",
+        Event::RoomChatRefused(_) => "RoomChatRefused",
+        Event::RoomLeft { .. } => "RoomLeft",
+        Event::RoomNoSource { .. } => "RoomNoSource",
+        Event::RoomStarted { .. } => "RoomStarted",
+        Event::RoomGlimpse(_) => "RoomGlimpse",
+        Event::RoomLookFailed { .. } => "RoomLookFailed",
+        Event::RoomRecent(_) => "RoomRecent",
+        Event::RoomLastOut { .. } => "RoomLastOut",
+        Event::RoomMoveOffer(_) => "RoomMoveOffer",
+        Event::RoomMoveOfferGone { .. } => "RoomMoveOfferGone",
+        Event::RoomFlushed => "RoomFlushed",
+        Event::RoomRelays(_) => "RoomRelays",
         Event::SyncPairFailed { .. } => "SyncPairFailed",
         Event::SyncStoreJoined { .. } => "SyncStoreJoined",
         Event::SyncStoreJoinFailed { .. } => "SyncStoreJoinFailed",
@@ -1328,6 +1347,36 @@ fn copy(update: &Event) -> Event {
             room: room.clone(),
             reason: reason.clone(),
         },
+        Event::RoomJoined(v) => Event::RoomJoined(v.clone()),
+        Event::RoomState(v) => Event::RoomState(v.clone()),
+        Event::RoomMembers(m) => Event::RoomMembers(m.clone()),
+        Event::RoomMessage(m) => Event::RoomMessage(m.clone()),
+        Event::RoomChat(c) => Event::RoomChat(c.clone()),
+        Event::RoomChatState(c) => Event::RoomChatState(c.clone()),
+        Event::RoomReaction(r) => Event::RoomReaction(r.clone()),
+        Event::RoomChatRefused(r) => Event::RoomChatRefused(*r),
+        Event::RoomLeft { why } => Event::RoomLeft { why: why.clone() },
+        Event::RoomNoSource { id, episode, why, reason } => Event::RoomNoSource {
+            id: *id,
+            episode: episode.clone(),
+            why: *why,
+            reason: reason.clone(),
+        },
+        Event::RoomStarted { id, episode, kind, at } => {
+            Event::RoomStarted { id: *id, episode: episode.clone(), kind: *kind, at: *at }
+        }
+        Event::RoomGlimpse(g) => Event::RoomGlimpse(g.clone()),
+        Event::RoomLookFailed { room_id, reason } => {
+            Event::RoomLookFailed { room_id: room_id.clone(), reason: reason.clone() }
+        }
+        Event::RoomRecent(r) => Event::RoomRecent(r.clone()),
+        Event::RoomLastOut { episode, airs } => {
+            Event::RoomLastOut { episode: episode.clone(), airs: airs.clone() }
+        }
+        Event::RoomMoveOffer(o) => Event::RoomMoveOffer(o.clone()),
+        Event::RoomMoveOfferGone { id } => Event::RoomMoveOfferGone { id: id.clone() },
+        Event::RoomFlushed => Event::RoomFlushed,
+        Event::RoomRelays(r) => Event::RoomRelays(r.clone()),
         Event::PartyRecent(rooms) => Event::PartyRecent(rooms.clone()),
         Event::PartyLastOut { episode, airs } => {
             Event::PartyLastOut { episode: episode.clone(), airs: airs.clone() }

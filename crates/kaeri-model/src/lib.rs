@@ -80,6 +80,7 @@ pub mod qr;
 pub mod reader;
 pub mod reading;
 pub mod remote;
+pub mod room;
 pub mod search;
 pub mod settings;
 pub mod show;

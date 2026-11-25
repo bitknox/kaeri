@@ -28,6 +28,7 @@ kaeri-discord = { path = "crates/kaeri-discord" }
 kaeri-player = { path = "crates/kaeri-player" }
 kaeri-playback = { path = "crates/kaeri-playback" }
 kaeri-party = { path = "crates/kaeri-party" }
+kaeri-room = { path = "crates/kaeri-room" }
 kaeri-mpv-host = { path = "crates/kaeri-mpv-host" }
 kaeri-audio-tap = { path = "crates/kaeri-audio-tap" }
 kaeri-alloc = { path = "crates/kaeri-alloc" }

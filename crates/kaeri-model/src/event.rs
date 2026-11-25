@@ -24,6 +24,11 @@ use crate::{
     playback::{Ending, PlaybackId, SkipKind, TimeRange, TimelineMark},
     progress::{EpisodeProgress, TitleProgress},
     remote::FrontIntent,
+    room::{
+        RoomChatRefusal, RoomChatState, RoomConversation, RoomGlimpse, RoomLeftWhy, RoomMember,
+        RoomMessage, RoomMoveOffer, RoomReaction, RoomRecent, RoomRelaySettings, RoomStartKind,
+        RoomView,
+    },
     search::{BrowseRail, SearchFacets, SearchQuery},
     settings::SettingsView,
     show::ShowSettingsView,
@@ -875,6 +880,65 @@ pub enum Event {
         #[cfg_attr(feature = "ffi", uniffi(default))]
         airs: Option<Msg>,
     },
+    /// In a room: Watch together becomes the room. Followed by [`Event::RoomMembers`], and
+    /// [`Event::RoomState`] as the room changes.
+    RoomJoined(RoomView),
+    /// The room as it stands, after any change.
+    RoomState(RoomView),
+    /// Who is in the room, this device first.
+    RoomMembers(Vec<RoomMember>),
+    /// What the room said; already a line in [`Event::RoomChat`] and a notice on the player.
+    RoomMessage(RoomMessage),
+    /// The room's conversation, whole, after every change.
+    RoomChat(RoomConversation),
+    RoomChatState(RoomChatState),
+    /// A reaction for the moment on the video, from anyone but a muted member.
+    RoomReaction(RoomReaction),
+    RoomChatRefused(RoomChatRefusal),
+    /// This device is out of the room. What is playing goes on as a private session.
+    RoomLeft {
+        why: RoomLeftWhy,
+    },
+    /// The room's episode has no source here: still in the room, "No source for episode 9".
+    RoomNoSource {
+        id: AnilistId,
+        episode: String,
+        why: NoSourceWhy,
+        reason: Msg,
+    },
+    /// The room starts, moves on, or this device comes in at its place: the player opens.
+    RoomStarted {
+        id: AnilistId,
+        episode: String,
+        kind: RoomStartKind,
+        /// Where to open it, in seconds; `None` at the start.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        at: Option<f64>,
+    },
+    /// What a look into a room, or an invite's, found.
+    RoomGlimpse(RoomGlimpse),
+    RoomLookFailed {
+        room_id: String,
+        reason: Msg,
+    },
+    /// The last ten rooms, newest first.
+    RoomRecent(Vec<RoomRecent>),
+    /// The room finished the last episode that is out.
+    RoomLastOut {
+        episode: String,
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        airs: Option<Msg>,
+    },
+    /// Someone moved the room and ticked this device.
+    RoomMoveOffer(RoomMoveOffer),
+    /// The offer was answered, expired, or this device left the room.
+    RoomMoveOfferGone {
+        id: String,
+    },
+    /// The background status reached a relay, or 2 s passed: end the background task.
+    RoomFlushed,
+    /// Settings ▸ Relays.
+    RoomRelays(RoomRelaySettings),
 }
 
 impl Event {

@@ -152,6 +152,12 @@ pub struct EngineState {
     /// The watch party going, if one is: see [`crate::party`].
     #[cfg(feature = "party")]
     pub party: Option<crate::party::Running>,
+    /// The room going, if one is: see [`crate::room`].
+    #[cfg(feature = "room")]
+    pub room: Option<crate::room::Running>,
+    /// Settings ▸ Relays for new rooms, until the config carries it.
+    #[cfg(feature = "room")]
+    pub room_relays: Vec<String>,
     /// Whether reading is in this build, the edition, and the medium: see [`crate::reading`].
     pub reading: crate::reading::ReadingState,
     /// The open reader session and the page worker: see [`crate::reading::session`].
@@ -216,6 +222,10 @@ impl EngineState {
             discussion: Default::default(),
             #[cfg(feature = "party")]
             party: None,
+            #[cfg(feature = "room")]
+            room: None,
+            #[cfg(feature = "room")]
+            room_relays: Vec::new(),
             reading: Default::default(),
             reader: Default::default(),
         }

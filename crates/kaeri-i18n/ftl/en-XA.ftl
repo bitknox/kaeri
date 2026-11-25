@@ -11825,6 +11825,715 @@ notif-chapter-hidden = [Ñéŵ çĥàþţéŕ~~~~]
 # Notification, new chapter: the action that opens the reader on the chapter.
 notif-chapter-read = [Ŕéàð~~]
 
+# First line while the room plays and nobody holds it.
+room-line-watching = [Ŵàţçĥîñĝ ţöĝéţĥéŕ~~~~~~]
+
+# Second line while the room plays: the room's episode and its place in it.
+room-line-watching-detail = [Éþîšöðé { $episode } · { $at }~~~~~~]
+
+# First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.
+room-line-paused-for = [Þàüšéð ƒöŕ { $names }~~~~~]
+
+# First line on your own device while the room waits for you.
+room-line-paused-for-you = [Þàüšéð ƒöŕ ýöü~~~~~]
+
+# Second line while the room waits for you: who waits, and for how many seconds so far.
+room-line-waiting-for-you =
+    { $count ->
+        [one] [{ $names } îš ŵàîţîñĝ · { $seconds } š~~~~~~~]
+       *[other] [{ $names } àŕé ŵàîţîñĝ · { $seconds } š~~~~~~~]
+    }
+
+# First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
+room-line-still-loading =
+    { $count ->
+        [one] [{ $names } îš šţîļļ ļöàðîñĝ~~~~~~]
+       *[other] [{ $names } àŕé šţîļļ ļöàðîñĝ~~~~~~~]
+    }
+
+# Second line once the room has waited as long as it will.
+room-line-waited = [Ţĥé ŕööɱ ĥàš ŵàîţéð { $seconds } š~~~~~~~~]
+
+# Second line after someone pressed Carry on, when the room waited for one person.
+room-line-carried-on-one = [{ $carrier } çàŕŕîéð öñ · { $name } ĵöîñš ŵĥéñ ŕéàðý~~~~~~~~~~~~]
+
+# Second line after someone pressed Carry on, when the room waited for more than one person.
+room-line-carried-on-many = [{ $carrier } çàŕŕîéð öñ · ţĥéý ĵöîñ ŵĥéñ ŕéàðý~~~~~~~~~~~~]
+
+# First line while the room is paused by someone.
+room-line-paused-by = [{ $name } þàüšéð~~~]
+
+# First line while the room is paused by you.
+room-line-you-paused = [Ýöü þàüšéð~~~]
+
+# Second line while the room is paused: the place it paused at.
+room-line-paused-at = [àţ { $at }~~]
+
+# Second line while one of the room's relays is not answering.
+room-line-relays-down =
+    { $count ->
+        [one] [{ $count } öƒ { $total } ŕéļàýš îšñ'ţ àñšŵéŕîñĝ · ţĥé ŕööɱ çàŕŕîéš öñ~~~~~~~~~~~~~~~~~]
+       *[other] [{ $count } öƒ { $total } ŕéļàýš àŕéñ'ţ àñšŵéŕîñĝ · ţĥé ŕööɱ çàŕŕîéš öñ~~~~~~~~~~~~~~~~~]
+    }
+
+# First line when your own device lost every relay.
+room-line-reconnecting = [Ŕéçöññéçţîñĝ ţö ţĥé ŕööɱ~~~~~~~~]
+
+# Second line when your own device lost every relay.
+room-line-reconnecting-detail = [Ñö ŕéļàý îš àñšŵéŕîñĝ · ýöüŕ éþîšöðé ķééþš þļàýîñĝ~~~~~~~~~~~~~~~]
+
+# Second line when your own player is behind the room.
+room-line-you-behind = [Ýöü'ŕé { $seconds } š ƀéĥîñð · çàţçĥîñĝ üþ~~~~~~~~~~]
+
+# The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.
+room-line-with-seconds = [{ $line } · { $seconds } š~~~~]
+
+# Stands for the people the room waits for when there are more than two, inside "Paused for …".
+room-names-people =
+    { $count ->
+        [one] [{ $count } þéŕšöñ~~~]
+       *[other] [{ $count } þéöþļé~~~]
+    }
+
+# State word: in step with the room and playing.
+room-state-watching = [Ŵàţçĥîñĝ~~~]
+
+# State word before play: this person's first frame is ready.
+room-state-ready = [Ŕéàðý~~]
+
+# State word: the room is paused and this person paused it.
+room-state-paused-it = [Þàüšéð îţ~~~]
+
+# State word: the room is paused; this person was watching.
+room-state-paused = [Þàüšéð~~]
+
+# State word: the slowest player, holding the room back, with the gap in seconds.
+room-state-behind = [Ɓéĥîñð · { $seconds } š~~~~~]
+
+# State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.
+room-state-loading = [Ļöàðîñĝ · { $seconds } š~~~~~]
+
+# State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.
+room-state-buffering = [Ɓüƒƒéŕîñĝ · { $seconds } š~~~~~~]
+
+# State word: this person plays another episode than the room's.
+room-state-other-episode = [Öñ éþîšöðé { $episode }~~~~~]
+
+# State word: this person is picking which source to play from.
+room-state-choosing = [Çĥööšîñĝ à šöüŕçé~~~~~~]
+
+# State word: none of this person's sources lists the room's episode.
+room-state-no-source = [Ñö šöüŕçé ƒöŕ éþîšöðé { $episode }~~~~~~~~]
+
+# State word: this person is in the room with the player closed.
+room-state-player-closed = [Þļàýéŕ çļöšéð~~~~]
+
+# State word: this person's device stopped answering.
+room-state-reconnecting = [Ŕéçöññéçţîñĝ~~~~]
+
+# State word: this person left the room. The row stays dimmed for a moment.
+room-state-left = [Ļéƒţ~~]
+
+# State word: you muted this person. Shown alone or after the state word with room-state-and-muted.
+room-state-muted = [Ṁüţéð~~]
+
+# A state word followed by Muted, for a person you muted.
+room-state-and-muted = [{ $state } · Ṁüţéð~~~~]
+
+# Marker after your own name in the people list.
+room-you-marker = [(ýöü)~~]
+
+# Your own name under your face on a phone and in the place's room card.
+room-you = [Ýöü~]
+
+# Accessibility label of a face in the full screen strip: the name and the state word.
+room-face-label = [{ $name }, { $state }~~~]
+
+# The last face in a row of faces, standing for the people not shown.
+room-more-faces = [+{ $count }~~]
+
+# Accessibility label of the last face, which opens the full people list.
+room-more-faces-label =
+    { $count ->
+        [one] [{ $count } ɱöŕé þéŕšöñ~~~~~]
+       *[other] [{ $count } ɱöŕé þéöþļé~~~~~]
+    }
+
+# Name under the last face on a phone and the TV: it opens everyone.
+room-more = [Ṁöŕé~~]
+
+# State under the last face: how many of the hidden people are not watching.
+room-more-not-watching = [{ $count } ñöţ ŵàţçĥîñĝ~~~~~]
+
+# State under the last face when everyone hidden is watching.
+room-more-all-watching = [Åļļ ŵàţçĥîñĝ~~~~]
+
+# Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.
+room-wait-loading = [ļöàðîñĝ · { $seconds } š~~~~~]
+
+# Reason in the waiting capsule, after Paused for, lower case: their player stalled.
+room-wait-buffering = [ƀüƒƒéŕîñĝ · { $seconds } š~~~~~~]
+
+# Button once the room has waited 20 seconds for one person.
+room-carry-on-without = [Çàŕŕý öñ ŵîţĥöüţ { $name }~~~~~~]
+
+# Button once the room has waited 20 seconds for more than one person.
+room-carry-on-without-them = [Çàŕŕý öñ ŵîţĥöüţ ţĥéɱ~~~~~~~]
+
+# Capsule over the video after someone pressed Carry on.
+room-carrying-on-without = [Çàŕŕýîñĝ öñ ŵîţĥöüţ { $names }~~~~~~~]
+
+# Second part of the capsule after Carry on, when the room waited for one person.
+room-joins-at-place = [{ $name } ĵöîñš àţ ţĥé ŕööɱ'š þļàçé~~~~~~~~~]
+
+# Second part of the capsule after Carry on, when the room waited for more than one person.
+room-join-at-place-many = [Ţĥéý ĵöîñ àţ ţĥé ŕööɱ'š þļàçé~~~~~~~~~]
+
+# Line on your own starting screen while the room waits for you, with the seconds so far.
+room-paused-until-start = [Ţĥé ŕööɱ îš þàüšéð üñţîļ ţĥîš šţàŕţš · { $seconds } š~~~~~~~~~~~~~~]
+
+# Button on your own starting screen that lets the room carry on without you.
+room-dont-wait = [Ðöñ'ţ ŵàîţ ƒöŕ ɱé~~~~~~]
+
+# First line before anyone pressed Play.
+room-line-not-started = [Ñöţ šţàŕţéð ýéţ~~~~~]
+
+# Second line before anyone pressed Play.
+room-line-play-starts = [Þļàý šţàŕţš îţ ƒöŕ éṽéŕýöñé~~~~~~~~~]
+
+# First line after Play, while the room waits for people still loading.
+room-line-starting-when =
+    { $count ->
+        [one] [Šţàŕţîñĝ ŵĥéñ { $names } îš ŕéàðý~~~~~~~~]
+       *[other] [Šţàŕţîñĝ ŵĥéñ { $names } àŕé ŕéàðý~~~~~~~~~]
+    }
+
+# First line counting down once everyone is ready.
+room-line-starting-in = [Šţàŕţîñĝ îñ { $seconds }~~~~~]
+
+# Second line when everyone is ready.
+room-line-everyone-ready = [Éṽéŕýöñé îš ŕéàðý~~~~~~]
+
+# Button once the room has waited 20 seconds before play, for one person.
+room-start-without = [Šţàŕţ ŵîţĥöüţ { $name }~~~~~~]
+
+# Button once the room has waited 20 seconds before play, for more than one person.
+room-start-without-them = [Šţàŕţ ŵîţĥöüţ ţĥéɱ~~~~~~]
+
+# Small heading over the episode in the video area before play.
+room-up-in-room = [Ûþ îñ ţĥé ŕööɱ~~~~~]
+
+# Small heading over the episode in the video area when you opened an invite.
+room-room-is-watching = [Ţĥé ŕööɱ îš ŵàţçĥîñĝ~~~~~~]
+
+# Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.
+room-banner-episode = [Éþîšöðé { $episode } · { $title } · { $length }~~~~~~~]
+
+# Line under the episode before play: one of your sources has it.
+room-plays-from-sources = [Þļàýš ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~~]
+
+# Button that starts the episode for everyone in the room.
+room-play-for-everyone = [Þļàý ƒöŕ éṽéŕýöñé~~~~~~]
+
+# Line beside Play for everyone.
+room-anyone-can-start = [Åñýöñé îñ ţĥé ŕööɱ çàñ šţàŕţ îţ~~~~~~~~~~]
+
+# Label of the Play for everyone button after it was pressed.
+room-playing = [Þļàýîñĝ…~~~]
+
+# Line beside the button after Play was pressed, on a desktop.
+room-waiting-first-frames = [Ŵàîţîñĝ ƒöŕ éṽéŕýöñé'š ƒîŕšţ ƒŕàɱé~~~~~~~~~~~]
+
+# Line under the play button after Play was pressed, on a phone.
+room-waiting-first-frames-short = [Ŵàîţîñĝ ƒöŕ ƒîŕšţ ƒŕàɱéš~~~~~~~~]
+
+# First line of the room when an invite link opened it.
+room-invited-by = [{ $name } îñṽîţéð ýöü~~~~~]
+
+# Second line when an invite link opened the room: the show and the episode.
+room-invited-detail = [{ $title } · Éþîšöðé { $episode }~~~~~~]
+
+# Second line when an invite link opened a room with 10 or more people in it.
+room-invited-over = [{ $count } þéöþļé àŕé ĥéŕé àļŕéàðý · ŕööɱš ŵöŕķ ƀéšţ ŵîţĥ 10 öŕ ƒéŵéŕ~~~~~~~~~~~~~~~~~~~]
+
+# Button that joins the room from an invite.
+room-join = [Ĵöîñ ţĥé ŕööɱ~~~~]
+
+# Button that joins a room with 10 or more people in it.
+room-join-anyway = [Ĵöîñ àñýŵàý~~~~]
+
+# Heading over the list of sources for the room's episode.
+room-choose-source = [Çĥööšé à šöüŕçé ƒöŕ éþîšöðé { $episode }~~~~~~~~~~]
+
+# Line under it.
+room-choose-source-line = [Ţĥé ŕööɱ ķééþš ŵàţçĥîñĝ; ýöü ĵöîñ àţ îţš þļàçé.~~~~~~~~~~~~~~~]
+
+# Button that plays the chosen source at the room's place.
+room-play-in-room = [Þļàý îñ ţĥé ŕööɱ~~~~~]
+
+# Heading when none of your sources has the room's episode.
+room-no-source-title = [Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš éþîšöðé { $episode }~~~~~~~~~~~]
+
+# Line under it on a desktop: how many sources were looked in.
+room-no-source-line =
+    { $count ->
+        [one] [Ķàéŕî ļööķéð îñ ýöüŕ öñé šöüŕçé. Ýöü šţàý îñ ţĥé ŕööɱ àñð ţĥé çĥàţ ŵĥîļé ţĥé öţĥéŕš ŵàţçĥ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+       *[other] [Ķàéŕî ļööķéð îñ ýöüŕ { $count } šöüŕçéš. Ýöü šţàý îñ ţĥé ŕööɱ àñð ţĥé çĥàţ ŵĥîļé ţĥé öţĥéŕš ŵàţçĥ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Line under it on a phone.
+room-no-source-line-short = [Ýöü šţàý îñ ţĥé ŕööɱ àñð ţĥé çĥàţ.~~~~~~~~~~~]
+
+# Button that opens your sources.
+room-open-sources = [Öþéñ šöüŕçéš~~~~]
+
+# Button that searches titles in your sources.
+room-search-titles = [Šéàŕçĥ ţîţļéš~~~~]
+
+# Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.
+room-header-line = [Éþîšöðé { $episode } · { $count } îñ ţĥé ŕööɱ~~~~~~~~~]
+
+# Button and accessibility label that opens the invite.
+room-invite = [Îñṽîţé~~]
+
+# Button and accessibility label that opens the room's details.
+room-details = [Ðéţàîļš~~~]
+
+# Accessibility label of the More button on a phone.
+room-more-actions = [Ṁöŕé~~]
+
+# Accessibility label of the player's button that hides the room column.
+room-hide = [Ĥîðé ŕööɱ~~~]
+
+# Accessibility label of the chevron on a phone that folds the room into the bar over the tabs.
+room-fold = [Çļöšé ţĥé ŕööɱ ţö ţĥé ƀàŕ~~~~~~~~]
+
+# Accessibility label of the player's button that opens the chat in full screen.
+room-chat = [Çĥàţ~~]
+
+# Line in the invite: anyone with the link can join.
+room-invite-anyone = [Åñýöñé ŵîţĥ ţĥîš ļîñķ çàñ ĵöîñ.~~~~~~~~~~]
+
+# Line after it on a desktop: the link carries the key.
+room-invite-key = [Ţĥé ļîñķ çàŕŕîéš ţĥé ŕööɱ'š ķéý, šö öñļý þéöþļé ŵĥö ĥàṽé îţ çàñ ŕéàð ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line after it on a phone.
+room-invite-key-short = [Öñļý þéöþļé ŵîţĥ ţĥé ļîñķ çàñ ŕéàð ţĥé ŕööɱ.~~~~~~~~~~~~~~]
+
+# Accessibility label of the invite's QR code.
+room-invite-qr = [Îñṽîţé àš à ǪŔ çöðé~~~~~~]
+
+# Line beside the QR code.
+room-invite-qr-line = [Šöɱéöñé ƀéšîðé ýöü çàñ šçàñ ţĥîš ŵîţĥ ţĥéîŕ çàɱéŕà.~~~~~~~~~~~~~~~~]
+
+# Button that copies the invite link.
+room-copy-link = [Çöþý ļîñķ~~~]
+
+# Button that opens the system's share sheet with the invite link.
+room-share = [Šĥàŕé…~~]
+
+# Menu item on a phone that copies the invite link.
+room-copy-invite-link = [Çöþý îñṽîţé ļîñķ~~~~~]
+
+# Button that makes a new invite link and stops the old one.
+room-new-invite = [Ñéŵ îñṽîţé~~~]
+
+# Line under New invite on a desktop.
+room-new-invite-line = [Ñéŵ îñṽîţé šţöþš ţĥé öļð ļîñķ ŵöŕķîñĝ. Éṽéŕýöñé îñ ţĥé ŕööɱ ɱöṽéš ţö ţĥé ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Short line beside New invite on a phone.
+room-new-invite-short = [Šţöþš ţĥé öļð ļîñķ~~~~~~]
+
+# Button in the invite and menu item on a phone that opens the move.
+room-move-open = [Ṁöṽé ţö à ñéŵ ŕööɱ…~~~~~~]
+
+# Line under the button in the invite.
+room-move-open-line = [Ƒöŕ šöɱéöñé àļŕéàðý ĥéŕé: šţàŕţ à ñéŵ ŕööɱ àñð þîçķ ŵĥö çöɱéš àļöñĝ.~~~~~~~~~~~~~~~~~~~~~]
+
+# Title of the move dialog and sheet.
+room-move-title = [Ṁöṽé ţö à ñéŵ ŕööɱ~~~~~~]
+
+# Line under the title.
+room-move-body = [Éṽéŕýöñé ýöü ţîçķ îš àšķéð ţö ĝö àļöñĝ. Ñöƀöðý ɱöṽéš ŵîţĥöüţ šàýîñĝ ýéš, àñð àñýöñé ñöţ ţîçķéð šţàýš îñ ţĥîš ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Note under your own row: you always go.
+room-move-always-goes = [Åļŵàýš ĝöéš~~~~]
+
+# Note under a person you muted, who starts unticked.
+room-move-muted = [Ṁüţéð, šö ñöţ ţîçķéð~~~~~~]
+
+# Line under the list.
+room-move-foot = [Ţĥé ñéŵ ŕööɱ þîçķš üþ àţ { $at } ŵîţĥ à ñéŵ ķéý. Îţš ļîñķ ŕéàçĥéš öñļý ţĥé þéöþļé ţîçķéð.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button that moves, counting the others ticked.
+room-move-with =
+    { $count ->
+        [one] [Ṁöṽé ŵîţĥ { $count } öţĥéŕ~~~~~~]
+       *[other] [Ṁöṽé ŵîţĥ { $count } öţĥéŕš~~~~~~]
+    }
+
+# The offer to someone ticked, in a notice or alert, as one sentence pair.
+room-move-offer = [{ $name } ɱöṽéð ţĥé ŕööɱ. Ĝö àļöñĝ?~~~~~~~~~]
+
+# First line of the room while the offer waits for an answer.
+room-line-moved = [{ $name } ɱöṽéð ţĥé ŕööɱ~~~~~~]
+
+# Second line with the offer: who else is asked, and the place the episode carries on from.
+room-line-moved-detail =
+    { $count ->
+        [one] [Ĝö àļöñĝ? { $names } îš àšķéð ţöö. Ţĥé éþîšöðé çàŕŕîéš öñ ƒŕöɱ { $at }.~~~~~~~~~~~~~~~~~~]
+       *[other] [Ĝö àļöñĝ? { $names } àŕé àšķéð ţöö. Ţĥé éþîšöðé çàŕŕîéš öñ ƒŕöɱ { $at }.~~~~~~~~~~~~~~~~~~~]
+    }
+
+# Second line with the offer when nobody else is asked.
+room-line-moved-detail-alone = [Ĝö àļöñĝ? Ţĥé éþîšöðé çàŕŕîéš öñ ƒŕöɱ { $at }.~~~~~~~~~~~~~]
+
+# Button that goes along to the new room.
+room-go-along = [Ĝö àļöñĝ~~~]
+
+# Short button that stays in this room, in a notice.
+room-stay = [Šţàý~~]
+
+# First line of the old room for someone who stayed.
+room-line-moved-away = [{ $name } ɱöṽéð ţö à ñéŵ ŕööɱ~~~~~~~]
+
+# Second line of the old room: who went along.
+room-line-went-along = [{ $names } ŵéñţ àļöñĝ · ţĥîš ŕööɱ çàŕŕîéš öñ~~~~~~~~~~~~]
+
+# Label of the encryption row.
+room-details-encryption = [Éñçŕýþţîöñ~~~]
+
+# Value of the encryption row.
+room-details-end-to-end = [Éñð ţö éñð~~~]
+
+# Label of the relays row, and the title of the relays page in Settings.
+room-relays = [Ŕéļàýš~~]
+
+# Value of the relays row when all answer.
+room-relays-answering = [{ $count } àñšŵéŕîñĝ~~~~]
+
+# Value of the relays row when some don't answer.
+room-relays-answering-of = [{ $count } öƒ { $total } àñšŵéŕîñĝ~~~~~~]
+
+# State of a relay that doesn't answer.
+room-relay-not-answering = [Ñöţ àñšŵéŕîñĝ~~~~]
+
+# Round trip time of a relay.
+room-relay-latency = [{ $ms } ɱš~~]
+
+# Line under the relays in Details.
+room-details-relays-line = [Ŕéļàýš þàšš ţĥé ŕööɱ'š ɱéššàĝéš àļöñĝ àñð çàñ'ţ ŕéàð ţĥéɱ. Ţĥéšé àŕé þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš; Ķàéŕî ðöéšñ'ţ ŕüñ àñý öƒ ţĥéɱ. Îƒ öñé šţöþš àñšŵéŕîñĝ, ţĥé ŕööɱ šŵàþš îñ à šþàŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button in Details that edits the room's relays.
+room-edit-relays = [Éðîţ ŕéļàýš…~~~~]
+
+# Title of the room's relay editor.
+room-edit-relays-title = [Éðîţ ŕéļàýš~~~~]
+
+# Line under it.
+room-edit-relays-line = [Çĥàñĝéš ţĥîš ŕööɱ'š ŕéļàýš ƒöŕ éṽéŕýöñé îñ îţ. Ñéŵ îñṽîţéš çàŕŕý ţĥé ļîšţ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Accessibility label of the button that removes a relay. `relay` is its address.
+room-relay-remove = [Ŕéɱöṽé { $relay }~~~]
+
+# Button that adds the address typed beside it.
+room-relay-add = [Åðð~]
+
+# Line under the room's relay editor.
+room-edit-relays-settings = [Šéţţîñĝš › Þļàýƀàçķ › Ŕéļàýš šéţš ţĥé ļîšţ ƒöŕ ñéŵ ŕööɱš.~~~~~~~~~~~~~~~~~~]
+
+# Heading of the group in Settings › Playback.
+room-settings-group = [Ŵàţçĥ ţöĝéţĥéŕ~~~~~]
+
+# Switch that hides chat in every room on this device.
+room-settings-hide-chat = [Ĥîðé çĥàţ îñ ŕööɱš~~~~~~]
+
+# Line under it.
+room-settings-hide-chat-line = [Çĥàţ ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé çĥàţ ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under the Relays row: how many relays new rooms use.
+room-settings-relays-count =
+    { $count ->
+        [one] [{ $count } þüƀļîç ŕéļàý ŕüñ ƀý öţĥéŕš~~~~~~~~~]
+       *[other] [{ $count } þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš~~~~~~~~~~]
+    }
+
+# Button at the end of the Relays row.
+room-settings-relays-edit = [Éðîţ~~]
+
+# Line under the group.
+room-settings-group-line = [Éàçĥ öƒ ýöü þļàýš ţĥé éþîšöðé ƒŕöɱ ýöüŕ öŵñ šöüŕçéš; ŕéļàýš öñļý çàŕŕý ţĥé ŕööɱ'š ɱéššàĝéš, šéàļéð šö ţĥéý çàñ'ţ ŕéàð ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line at the top of the Relays page on a desktop.
+room-relays-intro = [Ŕööɱš ýöü šţàŕţ üšé ţĥéšé ŕéļàýš, àñð ýöüŕ îñṽîţéš çàŕŕý ţĥéɱ. Ŕéļàýš þàšš ţĥé ŕööɱ'š ɱéššàĝéš àļöñĝ àñð çàñ'ţ ŕéàð ţĥéɱ. Ţĥéšé àŕé þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš; Ķàéŕî ðöéšñ'ţ ŕüñ àñý öƒ ţĥéɱ. Å ŕööɱ'š öŵñ ļîšţ îš îñ îţš Ðéţàîļš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line at the top of the Relays page on a phone.
+room-relays-intro-short = [Ŕööɱš ýöü šţàŕţ üšé ţĥéšé ŕéļàýš, àñð ýöüŕ îñṽîţéš çàŕŕý ţĥéɱ. Ţĥéý çàñ'ţ ŕéàð ţĥé ŕööɱ. Ţĥéšé àŕé þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading of the list of relays for new rooms.
+room-relays-new-rooms = [Ƒöŕ ñéŵ ŕööɱš~~~~]
+
+# Line under the list for new rooms.
+room-relays-new-rooms-line = [Ķàéŕî šéñðš éṽéŕý ŕööɱ éṽéñţ ţö àļļ öƒ ţĥéɱ. Þļàîñ ŵš:// ŵöŕķš öñļý ƒöŕ ļöçàļĥöšţ àñð .ļöçàļ àððŕéššéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Heading of the list of spare relays.
+room-relays-spares = [Šþàŕéš~~]
+
+# Line under the spares on a desktop.
+room-relays-spares-line = [Ŵĥéñ à ŕööɱ ĥàš ƒéŵéŕ ţĥàñ ţŵö ŕéļàýš àñšŵéŕîñĝ, îţ šŵàþš îñ ţĥé ƒîŕšţ šþàŕé ţĥàţ àñšŵéŕš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line under the spares on a phone.
+room-relays-spares-line-short = [Ûšéð ŵĥéñ à ŕööɱ ĥàš ƒéŵéŕ ţĥàñ ţŵö ŕéļàýš àñšŵéŕîñĝ.~~~~~~~~~~~~~~~~]
+
+# Button that puts the default relays and spares back.
+room-relays-restore = [Ŕéšţöŕé ţĥé ðéƒàüļţš~~~~~~]
+
+# Button in the room column's header that leaves, on the place's room card, with the dialog after it.
+room-leave-ellipsis = [Ļéàṽé…~~]
+
+# Menu item on an iPhone that leaves, asking first.
+room-leave-menu = [Ļéàṽé ţĥé ŕööɱ…~~~~~]
+
+# Menu item on Android that leaves, asking first.
+room-leave-menu-plain = [Ļéàṽé ţĥé ŕööɱ~~~~~]
+
+# Title of the confirmation before leaving.
+room-leave-title = [Ļéàṽé ţĥé ŕööɱ?~~~~~]
+
+# Line under it.
+room-leave-line = [Ţĥé öţĥéŕš ķééþ ŵàţçĥîñĝ.~~~~~~~~]
+
+# Line under it when closing the window on a Mac, which offers Keep the room.
+room-leave-line-keep = [Ţĥé öţĥéŕš ķééþ ŵàţçĥîñĝ. Ķééþ ţĥé ŕööɱ çļöšéš ţĥé þļàýéŕ àñð ķééþš ýöüŕ þļàçé.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button in the confirmation on closing the window: close the player and stay in the room.
+room-keep = [Ķééþ ţĥé ŕööɱ~~~~]
+
+# Button in the TV's confirmation that goes back to the room.
+room-keep-watching = [Ķééþ ŵàţçĥîñĝ~~~~]
+
+# Small heading of the up next card.
+room-up-next = [Ûþ ñéẋţ ƒöŕ ţĥé ŕööɱ~~~~~~]
+
+# Line on the card naming the next episode.
+room-up-next-episode = [Éþîšöðé { $episode } · { $title }~~~~~~]
+
+# Line on the card naming the next episode when it has no title.
+room-up-next-episode-plain = [Éþîšöðé { $episode }~~~~]
+
+# Line on the card counting down for everyone.
+room-up-next-count = [Þļàýš ƒöŕ éṽéŕýöñé îñ { $seconds } š~~~~~~~~~]
+
+# Line on the card while your file ended sooner and the room waits for someone's longer file.
+room-up-next-waiting = [Ŵàîţîñĝ ƒöŕ { $name } ţö ƒîñîšĥ~~~~~~~~]
+
+# Button on the card that moves the room on at once.
+room-play-next-now = [Þļàý ñéẋţ ñöŵ~~~~]
+
+# First line of the room while up next counts down.
+room-line-up-next = [Ûþ ñéẋţ îñ { $seconds } š~~~~~]
+
+# Second line while up next counts down.
+room-line-up-next-detail = [Éþîšöðé { $episode } þļàýš ƒöŕ éṽéŕýöñé~~~~~~~~~]
+
+# Placeholder of the chat field.
+room-chat-field = [Šàý šöɱéţĥîñĝ~~~~]
+
+# Button and accessibility label that sends a chat line.
+room-chat-send = [Šéñð~~]
+
+# Accessibility label of the button beside the chat field that opens the reactions.
+room-react = [Ŕéàçţ~~]
+
+# Line in the chat of a room opened from an invite, before joining.
+room-chat-opens = [Ţĥé çĥàţ öþéñš ŵĥéñ ýöü ĵöîñ~~~~~~~~~]
+
+# Line under a chat line that didn't reach any relay.
+room-chat-not-sent = [Çöüļðñ'ţ šéñð~~~~]
+
+# Chat line: someone started the room.
+room-chat-started = [{ $name } šţàŕţéð ţĥé ŕööɱ · Éþîšöðé { $episode }~~~~~~~~~~~]
+
+# Chat line: you started the room.
+room-chat-you-started = [Ýöü šţàŕţéð ţĥé ŕööɱ · Éþîšöðé { $episode }~~~~~~~~~~~]
+
+# Chat line: someone paused, at a place in the episode.
+room-chat-paused = [{ $name } þàüšéð àţ { $at }~~~~~~]
+
+# Chat line: you paused.
+room-chat-you-paused = [Ýöü þàüšéð àţ { $at }~~~~~~]
+
+# Chat line: someone played after a pause.
+room-chat-resumed = [{ $name } ŕéšüɱéð~~~~]
+
+# Chat line: the room waits for people whose player is opening the episode.
+room-chat-paused-for-loading = [Þàüšéð ƒöŕ { $names } · ļöàðîñĝ~~~~~~~~]
+
+# Chat line: the room waits for people whose player stalled.
+room-chat-paused-for-buffering = [Þàüšéð ƒöŕ { $names } · ƀüƒƒéŕîñĝ~~~~~~~~]
+
+# Chat line on your own device: the room waits for you.
+room-chat-paused-for-you = [Þàüšéð ƒöŕ ýöü · ļöàðîñĝ~~~~~~~~]
+
+# Chat line: someone pressed Carry on.
+room-chat-carried-on = [{ $carrier } çàŕŕîéð öñ ŵîţĥöüţ { $names }~~~~~~~~]
+
+# Chat line: someone's first frame landed and they joined at the room's place.
+room-chat-joined-at = [{ $name } ĵöîñéð àţ { $at }~~~~~~]
+
+# Chat line: someone left the room.
+room-chat-left = [{ $name } ļéƒţ~~~]
+
+# Chat line: someone moved to a new room.
+room-chat-moved = [{ $name } ɱöṽéð ţö à ñéŵ ŕööɱ~~~~~~~]
+
+# Chat line in the old room: someone went along to the new room.
+room-chat-went = [{ $name } ŵéñţ ţö ţĥé ñéŵ ŕööɱ~~~~~~~~]
+
+# Chat line: up next moved the room on.
+room-chat-up-next = [Ûþ ñéẋţ: éþîšöðé { $episode } ƒöŕ éṽéŕýöñé~~~~~~~~~~]
+
+# Chat line: someone skipped the opening for the room.
+room-chat-skipped-opening = [{ $name } šķîþþéð ţĥé öþéñîñĝ~~~~~~~]
+
+# Label of the laugh reaction button.
+room-react-laugh = [Ļàüĝĥ~~]
+
+# Label of the gasp reaction button.
+room-react-gasp = [Ĝàšþ~~]
+
+# Label of the clap reaction button.
+room-react-clap = [Çļàþ~~]
+
+# Label of the cry reaction button.
+room-react-cry = [Çŕý~]
+
+# Chat line: someone laughed, at a place in the episode.
+room-reacted-laugh = [{ $name } ļàüĝĥéð àţ { $at }~~~~~~]
+
+# Chat line: someone gasped, at a place in the episode.
+room-reacted-gasp = [{ $name } ĝàšþéð àţ { $at }~~~~~~]
+
+# Chat line: someone clapped, at a place in the episode.
+room-reacted-clap = [{ $name } çļàþþéð àţ { $at }~~~~~~]
+
+# Chat line: someone cried, at a place in the episode.
+room-reacted-cry = [{ $name } çŕîéð àţ { $at }~~~~~]
+
+# Line under the video on the TV rail: what the remote's buttons do.
+room-tv-keys = [ÖĶ ƒöŕ ţĥé çöñţŕöļš · Ɓàçķ çļöšéš ţĥé ŕööɱ~~~~~~~~~~~~~]
+
+# Line under the chat on the TV rail: chat is read-only there.
+room-tv-write-from-phone = [Ŵŕîţé ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]
+
+# Line under the place's heading.
+room-place-line = [Éàçĥ öƒ ýöü þļàýš ţĥé éþîšöðé ƒŕöɱ ýöüŕ öŵñ šöüŕçéš; ţĥé ŕööɱ ķééþš ýöü îñ šţéþ. Šţàŕţ à ŕööɱ ƒŕöɱ àñý éþîšöðé ŵîţĥ Ŵàţçĥ ţöĝéţĥéŕ, îñ ţĥé þļàýéŕ öŕ öñ îţš þàĝé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Small heading of the card for the room you are in.
+room-place-yours = [Ýöüŕ ŕööɱ~~~]
+
+# Button on the card that opens the room's player.
+room-open-player = [Öþéñ ţĥé þļàýéŕ~~~~~]
+
+# Heading of the field that joins a room.
+room-place-join = [Ĵöîñ à ŕööɱ~~~~]
+
+# Placeholder of the field that takes an invite link.
+room-place-link = [Îñṽîţé ļîñķ~~~~]
+
+# Button that pastes the clipboard into the field.
+room-place-paste = [Þàšţé~~]
+
+# Heading of the list of recent rooms.
+room-recent = [Ŕéçéñţ ŕööɱš~~~~]
+
+# Line beside the heading.
+room-recent-note = [Ţĥé ļàšţ ţéñ, ķéþţ öñ ţĥîš ðéṽîçé~~~~~~~~~~]
+
+# Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.
+room-recent-row = [Éþîšöðé { $episode } · ŵîţĥ { $names } · { $when }~~~~~~~~~]
+
+# Line of a recent room where you were alone.
+room-recent-row-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
+
+# Button on a recent room that joins it again.
+room-rejoin = [Ŕéĵöîñ~~]
+
+# Title of the alert when none of an invite's relays answers, and the bold start of the line in the place.
+room-error-unreachable-title = [Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš~~~~~~~~~~]
+
+# Line under it, and the next sentence in the place.
+room-error-ask-new-invite = [Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~]
+
+# The same error in one line, where there is no room for a title.
+room-error-unreachable = [Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš. Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~~~~~~~~~~~]
+
+# Line after it in the place: what was tried.
+room-error-tried = [Ķàéŕî ţŕîéð ţĥé ļîñķ'š ŕéļàýš àñð ýöüŕ šþàŕéš, { $seconds } š éàçĥ.~~~~~~~~~~~~~~~~~~]
+
+# Title of the alert when a recent room has nobody answering, such as after a new invite.
+room-error-nobody-answered = [Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ~~~~~~~~~]
+
+# Line under it.
+room-error-nobody-answered-line = [Îƒ šöɱéöñé ɱàðé à ñéŵ îñṽîţé, ţĥé öļð öñé šţöþþéð ŵöŕķîñĝ. Åšķ ţĥéɱ ƒöŕ ţĥé ñéŵ ļîñķ.~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Notice when the room already has 10 people and you can't join.
+room-error-full = [Ţĥîš ŕööɱ îš ƒüļļ~~~~~~]
+
+# Notice when an invite link or code is from an older version.
+room-error-old-invite = [Ţĥîš îñṽîţé îš ƒŕöɱ àñ öļðéŕ ṽéŕšîöñ öƒ Ķàéŕî. Åšķ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~]
+
+# Chat line: someone came into the room.
+room-chat-joined = [{ $name } ĵöîñéð~~~]
+
+# Chat line: someone moved the room to another place in the episode.
+room-chat-jumped = [{ $name } ĵüɱþéð ƒŕöɱ { $from } ţö { $to }~~~~~~~~]
+
+# Chat line: the room waits for people catching up after a jump.
+room-chat-paused-for-seeking = [Þàüšéð ƒöŕ { $names } · çàţçĥîñĝ üþ~~~~~~~~~]
+
+# Chat line: this device's player was moved to stay with the room.
+room-chat-corrected = [Ṁöṽéð ţö šţàý ŵîţĥ ţĥé ŕööɱ~~~~~~~~~]
+
+# Chat line: someone put on another episode for the room.
+room-chat-episode-changed = [{ $name } þüţ öñ éþîšöðé { $episode }~~~~~~~]
+
+# Chat line: someone who was behind caught up with the room.
+room-chat-caught-up = [{ $name } çàüĝĥţ üþ ŵîţĥ ţĥé ŕööɱ~~~~~~~~~]
+
+# Chat line on a device whose Play lost to someone's Pause pressed at the same moment.
+room-chat-already-paused = [{ $name } àļŕéàðý þàüšéð~~~~~~]
+
+# Chat line: someone made a new invite; the old link stopped working.
+room-chat-new-invite = [{ $name } ɱàðé à ñéŵ îñṽîţé~~~~~~~]
+
+# Chat line: someone cancelled Up next for everyone.
+room-chat-up-next-cancelled = [{ $name } çàñçéļļéð üþ ñéẋţ~~~~~~~]
+
+# Chat line on your own device: your name was taken, so the room knows you by this one.
+room-chat-renamed = [Ýöü'ŕé { $name } îñ ţĥîš ŕööɱ~~~~~~~]
+
+# Button that shows the room's column again after Hide room.
+room-show = [Šĥöŵ ŕööɱ~~~]
+
+# The room's Skip opening button on the player: skips for everyone.
+room-skip-opening = [Šķîþ öþéñîñĝ~~~~]
+
+# Confirmation after Copy invite link.
+room-link-copied = [Îñṽîţé ļîñķ çöþîéð~~~~~~]
+
+# The starting screen's line on the device opening the room's episode.
+room-starting-episode = [Šţàŕţîñĝ éþîšöðé { $episode }~~~~~~]
+
+# A short length in minutes, on the banner before play.
+room-minutes = [{ $minutes } ɱîñ~~~]
+
+# Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.
+room-names-and = [{ $names } àñð { $last }~~~~]
+
+# Joins two names in a longer list: "Mika, Ren".
+room-names-comma = [{ $first }, { $rest }~~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 

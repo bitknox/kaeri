@@ -743,6 +743,26 @@ impl App {
             | Event::PartyGlimpse(_)
             | Event::PartyLookFailed { .. }
             | Event::PartyLastOut { .. } => {}
+            // The terminal's Together moves to the room with the transport.
+            Event::RoomJoined(_)
+            | Event::RoomState(_)
+            | Event::RoomMembers(_)
+            | Event::RoomMessage(_)
+            | Event::RoomChat(_)
+            | Event::RoomChatState(_)
+            | Event::RoomReaction(_)
+            | Event::RoomChatRefused(_)
+            | Event::RoomLeft { .. }
+            | Event::RoomNoSource { .. }
+            | Event::RoomStarted { .. }
+            | Event::RoomGlimpse(_)
+            | Event::RoomLookFailed { .. }
+            | Event::RoomRecent(_)
+            | Event::RoomLastOut { .. }
+            | Event::RoomMoveOffer(_)
+            | Event::RoomMoveOfferGone { .. }
+            | Event::RoomFlushed
+            | Event::RoomRelays(_) => {}
             // A native app's network monitor, which the terminal has none of: it never says the
             // path, so the engine never says it changed.
             Event::Connectivity { offline } => self.reader_connectivity(offline),

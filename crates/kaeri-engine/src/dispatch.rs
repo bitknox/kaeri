@@ -699,6 +699,13 @@ pub(crate) fn dispatch(
         Command::PartyLeave => crate::party::leave(engine, tx),
         #[cfg(feature = "party")]
         Command::Party(command) => crate::party::command(command, engine, services, tx),
+        #[cfg(feature = "room")]
+        Command::Room(command) => crate::room::command(command, engine, services, tx),
+        #[cfg(not(feature = "room"))]
+        Command::Room(_) => {
+            let _ =
+                tx.send(Event::Toast(Notice::alert(Msg::Store(StoreMsg::NoticePartyNotBuilt))));
+        }
         #[cfg(not(feature = "party"))]
         Command::PlayParty { .. }
         | Command::LoadPartyForm
