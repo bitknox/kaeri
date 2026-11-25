@@ -82,7 +82,7 @@ pub enum FfiScene {
     /// ([`SOURCES_LOADING_TIMES`]):
     ///
     /// - Home server lists one release at 0.45 s, inside the panel's silent 600 ms;
-    /// - Media folder cannot tell which title it is, at about 1.3 s;
+    /// - Media folder cannot tell which title it is, at 1.3 s;
     /// - Example index lists five releases at 2.4 s;
     /// - Second example takes too long: its plugin call times out at 20 s;
     /// - Archive example answers with an error at 6.2 s;
@@ -967,7 +967,7 @@ pub const LOADING_SOURCES: [(&str, &str); 6] = [
 ];
 
 /// When each of [`LOADING_SOURCES`] answers, in the same order: listed, could not choose the
-/// title (about: it searches more than once), listed, timed out, failed. The last is never
+/// title, listed, timed out, failed. The last is never
 /// asked.
 pub const SOURCES_LOADING_TIMES: [std::time::Duration; 5] = [
     std::time::Duration::from_millis(450),
@@ -1022,14 +1022,14 @@ fn loading_sources(stream: &Stream) -> Vec<MockProvider> {
     };
     vec![
         source(0, vec![release(home, 1, "Episode 07 [1080p]", 1080, true)], None),
-        // Two titles like it and neither sure: a match it cannot choose, after two searches.
+        // Two titles like it and neither sure: a match it cannot choose, after its one search.
         MockProvider::new(LOADING_SOURCES[1].0)
             .named(LOADING_SOURCES[1].1)
             .with_hits(vec![
                 vague(1, "Hoshi Tabi Diaries", 2024),
                 vague(2, "Tabibito to Hoshikuzu", 2025),
             ])
-            .with_latency(SOURCES_LOADING_TIMES[1] / 2),
+            .with_latency(SOURCES_LOADING_TIMES[1]),
         source(
             2,
             vec![
@@ -1166,9 +1166,12 @@ fn scene_config(dirs: &FfiDirs, scene: &FfiScene, now: i64) -> Result<(), FfiErr
              colour = \"yellow\"\nedge = \"outline\"\nbackground = \"each-line\"\n\
              opacity = 75\nraise = 8\nstyled = \"restyle\"\n"
             .to_owned(),
-        FfiScene::SourcesLoading { .. } => {
-            format!("[providers]\ndisabled = [\"{}\"]\n", LOADING_SOURCES[5].0)
-        }
+        // Watch already answered: a config written without it reads as an update from before
+        // reading, which asks Watch, read or both over the player.
+        FfiScene::SourcesLoading { .. } => format!(
+            "[reading]\nkaeri_is_for = \"watch\"\n\n[providers]\ndisabled = [\"{}\"]\n",
+            LOADING_SOURCES[5].0
+        ),
         FfiScene::CrashSaved => crash_config(now),
         FfiScene::CrashHeld => crash_config(now - 24 * 3_600),
         FfiScene::ReadingUpdateSheet => "[sources]\ndemo = true\n".to_owned(),

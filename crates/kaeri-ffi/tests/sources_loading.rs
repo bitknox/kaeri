@@ -201,3 +201,20 @@ fn each_source_says_its_coverage_at_once_for_the_tab_lines() {
         assert!(option.covered > 0 && option.covered == option.of, "{option:?}");
     }
 }
+
+#[test]
+fn the_scene_opens_on_the_player_with_no_question_first() {
+    use kaeri_model::medium::{KaeriIsFor, MediumCommand};
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = scene(&root);
+    engine.send(Command::Medium(MediumCommand::Load));
+    let read = read_until(&engine, |event| matches!(event, Event::Medium(_)));
+    let Some(Event::Medium(view)) =
+        read.into_iter().rev().find(|e| matches!(e, Event::Medium(_)))
+    else {
+        unreachable!()
+    };
+    // Its config is written, so without an answer in it a Fixtures app asks Watch, read or both.
+    assert_eq!((view.ask, view.answer), (None, KaeriIsFor::Watch));
+    engine.shutdown();
+}
