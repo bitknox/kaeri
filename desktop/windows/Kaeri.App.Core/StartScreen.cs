@@ -139,6 +139,9 @@ public sealed class StartScreen(uint id, string episode, double? resume)
             waiting = (text, phase);
     }
 
+    /// <summary>When the waiting text takes the step line's place, if a text waits: a still shot steps its clock through this, as the wall clock passes it.</summary>
+    public TimeSpan? ReleaseAt => waiting is null ? null : shown.Since + Hold;
+
     /// <summary>The clock moved: a waiting text whose turn has come takes its place. True when the step line changed.</summary>
     public bool Tick(TimeSpan at)
     {

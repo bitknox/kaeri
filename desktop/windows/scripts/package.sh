@@ -51,13 +51,13 @@ step() { echo "package.sh: $* ($((SECONDS - started)) s)"; }
 # --- The engine and the app ------------------------------------------------------------------------
 
 step "fetching libmpv for $arch"
-powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$windows/scripts/libmpv.ps1")" -Arch "$arch"
+MSYS_NO_PATHCONV=1 powershell -NoProfile -ExecutionPolicy Bypass -File "$(cygpath -w "$windows/scripts/libmpv.ps1")" -Arch "$arch"
 step "building the release engine"
 KAERI_ENGINE_PROFILE=release "$windows/scripts/bindings.sh" release
 
 step "publishing the app"
 app="$work/app"
-dotnet publish "$(cygpath -w "$windows/Kaeri.Windows/Kaeri.Windows.csproj")" -c Release -r "win-$arch" -p:Platform="$arch" \
+MSYS_NO_PATHCONV=1 dotnet publish "$(cygpath -w "$windows/Kaeri.Windows/Kaeri.Windows.csproj")" -c Release -r "win-$arch" -p:Platform="$arch" \
   --self-contained -p:EnableMsixTooling=true -p:EngineFlavour=release -p:Version="$numeric" -p:InformationalVersion="$version" \
   -o "$(cygpath -w "$app")" -nologo -v:minimal
 # kaeri.pri, the app's resources with its compiled XAML inside, which an unpackaged app's
@@ -135,8 +135,9 @@ if [[ -z "$iscc" ]]; then
   done
 fi
 [[ -n "$iscc" ]] || fail "no Inno Setup 6: install it, or name its ISCC.exe in ISCC"
-# MSYS2_ARG_CONV_EXCL keeps Git Bash from taking ISCC's /D and /O options for paths.
-MSYS2_ARG_CONV_EXCL='*' "$iscc" /Q "/DVERSION=$version" "/DNUMERIC=$numeric" "/DARCH=$arch" \
+# MSYS_NO_PATHCONV (Git for Windows) and MSYS2_ARG_CONV_EXCL keep Git Bash from taking ISCC's /D
+# and /O options for paths.
+MSYS_NO_PATHCONV=1 MSYS2_ARG_CONV_EXCL='*' "$iscc" /Q "/DVERSION=$version" "/DNUMERIC=$numeric" "/DARCH=$arch" \
   "/DSOURCE=$(cygpath -w "$app")" "/DNOTICES=$(cygpath -w "$notices")" "/O$(cygpath -w "$out")" \
   "$(cygpath -w "$root/packaging/windows/kaeri-app.iss")"
 [[ -f "$out/$name" ]] || fail "Inno Setup wrote no $name"

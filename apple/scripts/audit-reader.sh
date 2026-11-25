@@ -129,7 +129,8 @@ run() {
   local name=$1 udid=$2 rc=0
   shift 2
   TEST_RUNNER_KAERI_TEST_MARKS="$work/marks" xcodebuild -project "$apple/Kaeri.xcodeproj" -scheme "Kaeri Audit" \
-    -destination "id=$udid" -derivedDataPath "$dd" test-without-building "$@" >"$work/$name.log" 2>&1 || rc=$?
+    -destination "id=$udid" -derivedDataPath "$dd" -collect-test-diagnostics never \
+    test-without-building "$@" >"$work/$name.log" 2>&1 || rc=$?
   if ! grep -qE "Executed [0-9]+ tests?," "$work/$name.log"; then
     echo "audit-reader.sh: $name did not run the tests" >&2
     tail -n 20 "$work/$name.log" >&2

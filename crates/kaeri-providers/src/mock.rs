@@ -248,7 +248,7 @@ impl MockProvider {
 
     async fn record(&self) -> Result<(), ProviderError> {
         if !self.latency.is_zero() {
-            tokio::time::sleep(self.latency).await;
+            crate::still::wait(self.latency).await;
         }
         self.calls.fetch_add(1, Ordering::SeqCst);
         match &self.error {
@@ -296,7 +296,7 @@ impl Provider for MockProvider {
         {
             let taken = turns.taken.fetch_add(1, Ordering::SeqCst);
             let (latency, episodes) = &turns.turns[taken.min(turns.turns.len() - 1)];
-            tokio::time::sleep(*latency).await;
+            crate::still::wait(*latency).await;
             self.record().await?;
             return Ok(episodes.clone());
         }

@@ -42,7 +42,13 @@ final class AppDelegate: NSObject {
     override init() {
         let store = AppStore()
         self.store = store
-        let player = PlayerModel(send: { [weak store] command in store?.send(command) })
+        #if FIXTURES
+        // `-KaeriStillAt <seconds>`: a still shot, on the engine's still clock.
+        let time = Timekeeper.stillFromLaunch() ?? .wall
+        #else
+        let time = Timekeeper.wall
+        #endif
+        let player = PlayerModel(send: { [weak store] command in store?.send(command) }, time: time)
         self.player = player
         player.discussionHost = DiscussionHost(
             enabled: { [weak store] in store?.discussionsOn ?? false },

@@ -236,8 +236,15 @@ pub(crate) fn options(
     server.serve_art();
     // The one forum thread the apps' discussion shots read: episode 7 of the finished title.
     server.add_fixture_thread(kaeri_engine::now_epoch());
+    // On the still clock the fake's slow answers come when the shot's hold reaches them, however
+    // long that takes on the wall clock, so a wall-clock timeout must not cut them off first.
+    let timeout_secs = if kaeri_providers::still::clock().is_some() {
+        kaeri_providers::still::CLIENT_WAIT.as_secs()
+    } else {
+        5
+    };
     let http =
-        HttpClient::offline(&NetworkConfig { timeout_secs: 5, ..config.network.clone() })
+        HttpClient::offline(&NetworkConfig { timeout_secs, ..config.network.clone() })
             .map_err(|e| FfiError::client(Msg::StartFailedNetwork { reason: e.to_string() }))?;
     let meta = Meta::new(
         server.anilist(&http),
@@ -283,4 +290,34 @@ pub(crate) fn options(
         windows: None,
     });
     Ok(options)
+}
+
+/// Send the still clock ([`kaeri_providers::still`]) to `at_ms` and hold it there: through each
+/// of the fixture scenes' made-up waits due on the way, in order, and at once when none is. It
+/// never goes back. The first call turns the clock on. An app's replay of made-up events (a
+/// starting screen's) steps it to each event's moment with this, and reads
+/// [`testing_still_clock_now_ms`] for its own timing. Only in a build with the `testing` feature.
+#[uniffi::export]
+pub fn testing_still_clock_hold(at_ms: u64) {
+    kaeri_providers::still::hold(std::time::Duration::from_millis(at_ms));
+}
+
+/// Hold the scene's made-up waits at `seconds` from its start, as a launch argument says them
+/// (`4`, `0.3`), as `KAERI_STILL_AT` does: the clock stays at nought until the scene first waits,
+/// goes through the waits due by the moment and stops there, so the shot shows what the scene
+/// shows that long in. False, and the clock left as it was, when they are not a number of
+/// seconds. Call it before the scene starts. Only in a build with the `testing` feature.
+#[uniffi::export]
+pub fn testing_still_clock_hold_seconds(seconds: String) -> bool {
+    let Some(at) = crate::scenes::parse_still_at(&seconds) else { return false };
+    kaeri_providers::still::hold_from_start(at);
+    true
+}
+
+/// Now on the still clock, in milliseconds since it was turned on: what an app's timing of a
+/// still shot reads in place of its own clock. `None` while the clock is off, as it is in a
+/// recording and in every app. Only in a build with the `testing` feature.
+#[uniffi::export]
+pub fn testing_still_clock_now_ms() -> Option<u64> {
+    kaeri_providers::still::now().map(|now| u64::try_from(now.as_millis()).unwrap_or(u64::MAX))
 }

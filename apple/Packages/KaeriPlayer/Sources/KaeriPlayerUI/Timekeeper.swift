@@ -21,3 +21,38 @@ public struct Timekeeper: Sendable {
     /// The wall clock.
     public static let wall = Timekeeper(now: { .now }, sleep: { try await Task.sleep(for: $0) })
 }
+
+#if FIXTURES
+import KaeriKit
+
+extension Timekeeper {
+    /// The engine's still clock, for a still shot (`-KaeriStillAt <seconds>`, `KAERI_STILL_AT`):
+    /// now is where the shot holds the clock, and a wait ends once the clock has moved past it,
+    /// however long that takes on the wall clock. Before the engine turns the clock on it reads
+    /// nought.
+    public static func still() -> Timekeeper {
+        let base = ContinuousClock.now
+        @Sendable func now() -> ContinuousClock.Instant {
+            base + .milliseconds(Int64(clamping: testingStillClockNowMs() ?? 0))
+        }
+        return Timekeeper(now: now) { length in
+            let end = now() + length
+            while now() < end {
+                try await Task.sleep(for: .milliseconds(20))
+            }
+        }
+    }
+
+    /// The still clock, held at the seconds the launch names (`-KaeriStillAt` or
+    /// `KAERI_STILL_AT`), or nil for a launch on the wall clock. Call it before the engine starts,
+    /// so the scene's made-up waits run on the clock from the first.
+    public static func stillFromLaunch() -> Timekeeper? {
+        let arguments = ProcessInfo.processInfo.arguments
+        let seconds = arguments.firstIndex(of: "-KaeriStillAt").flatMap {
+            arguments.indices.contains($0 + 1) ? arguments[$0 + 1] : nil
+        } ?? ProcessInfo.processInfo.environment["KAERI_STILL_AT"]
+        guard let seconds, testingStillClockHoldSeconds(seconds: seconds) else { return nil }
+        return .still()
+    }
+}
+#endif

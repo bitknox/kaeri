@@ -79,13 +79,14 @@ data class PowerState(val onBattery: Boolean, val lowPower: Boolean)
  * @param send hands the engine a command.
  * @param backend makes the mpv for each player opened.
  * @param scope the main thread's, for as long as the process.
- * @param now the clock the cards keep time by, in milliseconds.
+ * @param now the clock the cards and the starting screen keep time by, in milliseconds: the
+ *   system's, or in the fixtures flavour a still shot's held clock ([PlayerTime]).
  */
 class PlayerModel(
     private val send: (Command) -> Unit,
     private val backend: () -> PlayerBackend,
     private val scope: CoroutineScope,
-    private val now: () -> Long = { android.os.SystemClock.elapsedRealtime() },
+    private val now: () -> Long = PlayerTime::now,
     private val power: () -> PowerState = { PowerState(onBattery = false, lowPower = false) },
     /** The hardware decoding mpv starts with: none in the emulator (AS5). */
     private val hwdec: String = MpvSetup.defaultHwdec,

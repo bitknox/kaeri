@@ -485,6 +485,11 @@ public sealed partial class MainWindow : Window
                 "sync-started-over" => new FfiScene.SyncStartedOver(),
                 _ => new FfiScene.Watching(),
             };
+            // --still on a scene: its made-up waits held at that moment from the start. A made-up
+            // start (--show=starting-*) turns the clock on itself, at the start's nought.
+            if (options.Still is { } still && options.Show?.StartsWith("starting-", StringComparison.Ordinal) != true
+                && !KaeriFfiMethods.TestingStillClockHoldSeconds(still))
+                KaeriFfiMethods.LogLine(FfiLogLevel.Warn, "windows", $"--still={still} is not a number of seconds: the scene runs on the wall clock");
             return (FfiEngine.StartScene(scratch, host, scene, EngineSession.AppStart(signIn: false)), scratch);
         }
 #endif

@@ -16,6 +16,8 @@
 # The engine is built in the release profile, the build to keep (KAERI_ENGINE_PROFILE picks
 # another), which takes a while the first time.
 set -euo pipefail
+# Git Bash on the PC turns adb's device paths (/sdcard/...) into Windows paths without this.
+export MSYS_NO_PATHCONV=1
 shopt -s inherit_errexit 2>/dev/null || true
 
 android="$(cd "$(dirname "$0")/.." && pwd)"

@@ -6,7 +6,13 @@
 #              [-At 6,12] [-Wait 30] [-Arguments '<the spike's arguments>']
 #
 # -At lists the seconds after launch at which to take a PNG each (<Name>-<seconds>.png). The
-# spike's report.txt and mpv.log land in -Out as well.
+# spike's report.txt and mpv.log land in -Out as well. A mark that could not be taken (the program
+# had exited, the capture failed) is reported as FAILED and the rest are still taken; the script
+# then exits 1, so a caller never mistakes a run with missing shots for a good one.
+#
+# For the Fixtures app's time-dependent screens, pass --still=<seconds> in -Arguments (with
+# --show=starting-<state>, say) and take one mark once it has settled, about 5 s after its window
+# shows, instead of a mark at the moment on the wall clock.
 param(
   [Parameter(Mandatory)][string]$Exe,
   [Parameter(Mandatory)][string]$Out,
@@ -44,7 +50,8 @@ if (-not $Inner) {
   if ($Point) { $screenArg += " -Point '$Point'" }
   if ($Taskbar -ge 0) { $screenArg += " -Taskbar $Taskbar" }
   if ($Open) { $screenArg += " -Open '" + ($Open -replace "'", "''") + "'" }
-  $command = "& '$PSCommandPath' -Inner$screenArg -Exe '$Exe' -Out '$Out' -Name '$Name' -At '$At' -Wait $Wait -Arguments $quoted *> '$Out\$Name.task.log'; New-Item '$done' | Out-Null"
+  # The done file holds the inner half's exit code: 0, or 1 when any mark failed or it threw.
+  $command = "try { & '$PSCommandPath' -Inner$screenArg -Exe '$Exe' -Out '$Out' -Name '$Name' -At '$At' -Wait $Wait -Arguments $quoted *> '$Out\$Name.task.log'; `$code = `$LASTEXITCODE } catch { `$_ *>> '$Out\$Name.task.log'; `$code = 1 }; Set-Content '$done' `$code"
   $encoded = [Convert]::ToBase64String([Text.Encoding]::Unicode.GetBytes($command))
   $task = 'kaeri-player-spike'
   $action = New-ScheduledTaskAction -Execute 'powershell.exe' -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -EncodedCommand $encoded"
@@ -56,6 +63,8 @@ if (-not $Inner) {
   Unregister-ScheduledTask -TaskName $task -Confirm:$false
   Get-Content "$Out\$Name.task.log" -ErrorAction SilentlyContinue
   if (-not (Test-Path $done)) { throw "spike-shot.ps1: the run did not finish" }
+  $code = "$(Get-Content $done -ErrorAction SilentlyContinue)".Trim()
+  if ($code -ne '0') { Write-Output "spike-shot.ps1: FAILED (the run's exit code: $code)"; exit 1 }
   exit 0
 }
 
@@ -82,72 +91,81 @@ Start-Sleep -Milliseconds 500
 $proc = Start-Process -FilePath $Exe -ArgumentList $Arguments -PassThru -WorkingDirectory (Split-Path $Exe)
 $start = Get-Date
 $opened = -not $Open
+$failed = 0
 foreach ($mark in ($marks | Sort-Object)) {
-  while (((Get-Date) - $start).TotalSeconds -lt $mark) {
-    if (-not $opened -and ((Get-Date) - $start).TotalSeconds -ge 5) {
-      Start-Process $Open
-      $opened = $true
-    }
-    Start-Sleep -Milliseconds 200
-  }
-  $proc.Refresh()
-  if ($proc.HasExited) { Write-Output "the spike exited with $($proc.ExitCode) before $mark s"; break }
-  $hwnd = $proc.MainWindowHandle
-  [SpikeWin]::SetForegroundWindow($hwnd) | Out-Null
-  Start-Sleep -Milliseconds 300
-  if ($Point) {
-    $xy = $Point -split ','
-    # Moved onto it in steps, as a hand would: the taskbar shows a thumbnail on hover, not on a jump.
-    foreach ($dy in 40, 20, 8, 0) {
-      [SpikeWin]::SetCursorPos([int]$xy[0], [int]$xy[1] - $dy) | Out-Null
-      [SpikeWin]::mouse_event(1, 0, 0, 0, [UIntPtr]::Zero)
-      Start-Sleep -Milliseconds 120
-    }
-    Start-Sleep -Milliseconds 2500
-  }
-  if ($Taskbar -ge 0) {
-    [SpikeWin]::keybd_event(0x5B, 0, 0, [UIntPtr]::Zero)
-    [SpikeWin]::keybd_event(0x54, 0, 0, [UIntPtr]::Zero)
-    [SpikeWin]::keybd_event(0x54, 0, 2, [UIntPtr]::Zero)
-    [SpikeWin]::keybd_event(0x5B, 0, 2, [UIntPtr]::Zero)
-    Start-Sleep -Milliseconds 600
-    if ($Taskbar -gt 0) {
-      1..$Taskbar | ForEach-Object {
-        [SpikeWin]::keybd_event(0x27, 0, 0, [UIntPtr]::Zero)
-        [SpikeWin]::keybd_event(0x27, 0, 2, [UIntPtr]::Zero)
-        Start-Sleep -Milliseconds 400
+  try {
+    while (((Get-Date) - $start).TotalSeconds -lt $mark) {
+      if (-not $opened -and ((Get-Date) - $start).TotalSeconds -ge 5) {
+        Start-Process $Open
+        $opened = $true
       }
+      Start-Sleep -Milliseconds 200
     }
-    Start-Sleep -Milliseconds 2000
-  }
-  if ($Volume) {
-    # VK_VOLUME_UP then VK_VOLUME_DOWN: the level ends where it was, the overlay shows.
-    foreach ($key in 0xAF, 0xAE) {
-      [SpikeWin]::keybd_event($key, 0, 0, [UIntPtr]::Zero)
-      [SpikeWin]::keybd_event($key, 0, 2, [UIntPtr]::Zero)
-      Start-Sleep -Milliseconds 150
+    $proc.Refresh()
+    if ($proc.HasExited) { throw "the spike exited with $($proc.ExitCode) before $mark s" }
+    $hwnd = $proc.MainWindowHandle
+    [SpikeWin]::SetForegroundWindow($hwnd) | Out-Null
+    Start-Sleep -Milliseconds 300
+    if ($Point) {
+      $xy = $Point -split ','
+      # Moved onto it in steps, as a hand would: the taskbar shows a thumbnail on hover, not on a jump.
+      foreach ($dy in 40, 20, 8, 0) {
+        [SpikeWin]::SetCursorPos([int]$xy[0], [int]$xy[1] - $dy) | Out-Null
+        [SpikeWin]::mouse_event(1, 0, 0, 0, [UIntPtr]::Zero)
+        Start-Sleep -Milliseconds 120
+      }
+      Start-Sleep -Milliseconds 2500
     }
-    Start-Sleep -Milliseconds 900
+    if ($Taskbar -ge 0) {
+      [SpikeWin]::keybd_event(0x5B, 0, 0, [UIntPtr]::Zero)
+      [SpikeWin]::keybd_event(0x54, 0, 0, [UIntPtr]::Zero)
+      [SpikeWin]::keybd_event(0x54, 0, 2, [UIntPtr]::Zero)
+      [SpikeWin]::keybd_event(0x5B, 0, 2, [UIntPtr]::Zero)
+      Start-Sleep -Milliseconds 600
+      if ($Taskbar -gt 0) {
+        1..$Taskbar | ForEach-Object {
+          [SpikeWin]::keybd_event(0x27, 0, 0, [UIntPtr]::Zero)
+          [SpikeWin]::keybd_event(0x27, 0, 2, [UIntPtr]::Zero)
+          Start-Sleep -Milliseconds 400
+        }
+      }
+      Start-Sleep -Milliseconds 2000
+    }
+    if ($Volume) {
+      # VK_VOLUME_UP then VK_VOLUME_DOWN: the level ends where it was, the overlay shows.
+      foreach ($key in 0xAF, 0xAE) {
+        [SpikeWin]::keybd_event($key, 0, 0, [UIntPtr]::Zero)
+        [SpikeWin]::keybd_event($key, 0, 2, [UIntPtr]::Zero)
+        Start-Sleep -Milliseconds 150
+      }
+      Start-Sleep -Milliseconds 900
+    }
+    $r = New-Object SpikeWin+RECT
+    # DWMWA_EXTENDED_FRAME_BOUNDS: the window as drawn, without the invisible resize borders.
+    [SpikeWin]::DwmGetWindowAttribute($hwnd, 9, [ref]$r, 16) | Out-Null
+    if ($Screen) {
+      Add-Type -AssemblyName System.Windows.Forms
+      $b = [Windows.Forms.Screen]::PrimaryScreen.Bounds
+      $r.Left = $b.Left; $r.Top = $b.Top; $r.Right = $b.Right; $r.Bottom = $b.Bottom
+    }
+    $w = $r.Right - $r.Left; $h = $r.Bottom - $r.Top
+    $bmp = New-Object Drawing.Bitmap $w, $h
+    $g = [Drawing.Graphics]::FromImage($bmp)
+    $g.CopyFromScreen($r.Left, $r.Top, 0, 0, (New-Object Drawing.Size $w, $h))
+    $png = Join-Path $Out "$Name-$mark.png"
+    $bmp.Save($png, [Drawing.Imaging.ImageFormat]::Png)
+    $g.Dispose(); $bmp.Dispose()
+    Write-Output "captured $png (${w}x${h})"
+  } catch {
+    # This mark is lost; the rest are still taken.
+    $failed++
+    Write-Output "FAILED at $mark s: $_"
   }
-  $r = New-Object SpikeWin+RECT
-  # DWMWA_EXTENDED_FRAME_BOUNDS: the window as drawn, without the invisible resize borders.
-  [SpikeWin]::DwmGetWindowAttribute($hwnd, 9, [ref]$r, 16) | Out-Null
-  if ($Screen) {
-    Add-Type -AssemblyName System.Windows.Forms
-    $b = [Windows.Forms.Screen]::PrimaryScreen.Bounds
-    $r.Left = $b.Left; $r.Top = $b.Top; $r.Right = $b.Right; $r.Bottom = $b.Bottom
-  }
-  $w = $r.Right - $r.Left; $h = $r.Bottom - $r.Top
-  $bmp = New-Object Drawing.Bitmap $w, $h
-  $g = [Drawing.Graphics]::FromImage($bmp)
-  $g.CopyFromScreen($r.Left, $r.Top, 0, 0, (New-Object Drawing.Size $w, $h))
-  $png = Join-Path $Out "$Name-$mark.png"
-  $bmp.Save($png, [Drawing.Imaging.ImageFormat]::Png)
-  $g.Dispose(); $bmp.Dispose()
-  Write-Output "captured $png (${w}x${h})"
 }
 if ($Wait -gt 0) { $proc.WaitForExit($Wait * 1000) | Out-Null }
 $proc.Refresh()
 if (-not $proc.HasExited) { $proc.CloseMainWindow() | Out-Null; $proc.WaitForExit(5000) | Out-Null }
 if (-not $proc.HasExited) { $proc.Kill() }
 Write-Output "the spike exited with $($proc.ExitCode)"
+if ($failed -gt 0) { Write-Output "spike-shot.ps1: $failed of $($marks.Count) marks FAILED"; exit 1 }
+exit 0

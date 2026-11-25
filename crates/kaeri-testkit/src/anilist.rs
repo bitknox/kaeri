@@ -888,7 +888,8 @@ async fn serve(socket: TcpStream, state: Arc<Mutex<State>>) {
         lock(&state).slow.get(&operation).copied()
     };
     if let Some(wait) = slow {
-        tokio::time::sleep(wait).await;
+        // On the still clock in a shot held at a moment, the wall clock otherwise.
+        kaeri_providers::still::wait(wait).await;
     }
     let (status, headers, content_type, body) = match reply {
         Reply::Answer { status, headers, body } => {
