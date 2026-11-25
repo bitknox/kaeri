@@ -62,7 +62,11 @@ public struct MacPlayerView: View {
     @State private var fielding = false
     @FocusState private var fieldFocus: Bool
     @Environment(AppStore.self) private var store
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    /// Reduce Motion, or `KAERI_REDUCE_MOTION=1` for a recording of its variant.
+    private var reduceMotion: Bool {
+        systemReduceMotion || ProcessInfo.processInfo.environment["KAERI_REDUCE_MOTION"] == "1"
+    }
     @Environment(\.playerZoom) private var zoom
     private let metrics = PlayerMetrics.mac
 
