@@ -165,7 +165,10 @@ final class MacPlayerSwitchTests: XCTestCase {
     private static func name(after prefix: String, in text: String) -> String? {
         guard let range = text.range(of: prefix) else { return nil }
         let rest = text[range.upperBound...]
-        return rest.components(separatedBy: " · ").first.map { String($0) }
+        // Up to the line's seconds, or to the next line where the screen reads two as one label
+        // ("Still waiting for Harbor Index, From Harbor Index · 33 s").
+        let line = rest.components(separatedBy: " · ").first ?? String(rest)
+        return line.components(separatedBy: ", ").first
     }
 
     /// A screenshot of the main window, kept in the result bundle as `name`.
