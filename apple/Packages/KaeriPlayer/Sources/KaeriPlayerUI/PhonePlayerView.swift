@@ -38,7 +38,6 @@ public struct PhonePlayerView: View {
     @State private var softKeyboard = GCKeyboard.coalesced == nil
     @State private var width: CGFloat = 0
     /// Sideways in a room: the chat field is open.
-    @State private var roomTyping = false
     @FocusState private var roomFieldFocus: Bool
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(AppStore.self) private var store
@@ -145,7 +144,7 @@ public struct PhonePlayerView: View {
                 .animation(.standard, value: visible)
                 .transition(.opacity)
         }
-        if room.inRoom, sideways, roomTyping {
+        if room.inRoom, sideways, room.writing {
             roomField
         }
     }
@@ -158,11 +157,11 @@ public struct PhonePlayerView: View {
                 .font(.system(size: 16))
                 .focused($roomFieldFocus)
                 .submitLabel(.send)
-                .onSubmit { room.say(); roomTyping = false }
+                .onSubmit { room.say(); room.writing = false }
                 .padding(.horizontal, 16)
                 .frame(height: 44)
                 .glassEffect(.regular, in: .capsule)
-            Button { room.say(); roomTyping = false } label: {
+            Button { room.say(); room.writing = false } label: {
                 Image(systemName: "arrow.up").font(.system(size: 18, weight: .bold))
                     .frame(width: 44, height: 44)
                     .background(Palette.amber, in: .circle)
@@ -175,7 +174,7 @@ public struct PhonePlayerView: View {
         .padding(.bottom, 20)
         .frame(maxHeight: .infinity, alignment: .bottom)
         .onAppear { roomFieldFocus = true }
-        .onChange(of: roomFieldFocus) { _, focused in if !focused, room.draft.isEmpty { roomTyping = false } }
+        .onChange(of: roomFieldFocus) { _, focused in if !focused, room.draft.isEmpty { room.writing = false } }
     }
 
     private var playerBody: some View {
@@ -408,7 +407,7 @@ public struct PhonePlayerView: View {
             HStack(spacing: 0) {
                 if store.room.inRoom {
                     // In a room: Chat opens the field (sideways; upright the room has its own).
-                    headerButton("bubble.left", L.partyChatTitle) { roomTyping = true }
+                    headerButton("bubble.left", L.partyChatTitle) { store.room.writing = true }
                 } else if !store.room.active {
                     // Watch together: a room starts from this episode.
                     headerButton("person.2", RoomCopy.columnTitle) {
@@ -453,7 +452,7 @@ public struct PhonePlayerView: View {
     /// The four reactions in a column at the trailing edge, where the thumb rests.
     @ViewBuilder
     private var reactionColumn: some View {
-        if chatShown {
+        if chatShown || (store.room.inRoom && sideways) {
             ReactionButtons(metrics: metrics, size: 44, glyph: 20, vertical: true)
                 .padding(.vertical, 2)
                 .background(.overVideo(0.62), in: .capsule)

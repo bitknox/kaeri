@@ -127,9 +127,11 @@ struct RoomPlace: View {
                 HStack(spacing: 12) {
                     TogetherStill(id: recent.id, width: 64, height: 36, radius: 6)
                     VStack(alignment: .leading, spacing: 0) {
-                        Text(recent.title).font(.system(size: compact ? 15 : 13, weight: .semibold)).lineLimit(1)
+                        Text(recent.title).font(.system(size: compact ? 15 : 13, weight: .semibold))
+                            .fixedSize(horizontal: false, vertical: true)
                         Text(RoomCopy.withNames(recent.episode, recent.others, recent.lastAt))
-                            .font(.system(size: compact ? 13 : 12)).foregroundStyle(.haze).lineLimit(1)
+                            .font(.system(size: compact ? 13 : 12)).foregroundStyle(.haze)
+                            .fixedSize(horizontal: false, vertical: true)
                         if recent.quiet {
                             failure(RoomCopy.nobodyAnswered, RoomCopy.nobodyAnsweredHint).padding(.top, 4)
                         }
@@ -138,7 +140,7 @@ struct RoomPlace: View {
                     Button(recent.quiet ? RoomCopy.tryAgain : RoomCopy.rejoin) { room.rejoin(recent) }
                         .buttonStyle(RoomButtonStyle(kind: .secondary, height: compact ? 36 : 28, size: compact ? 15 : 12, padding: 12))
                 }
-                .padding(.vertical, recent.quiet ? 10 : 0)
+                .padding(.vertical, recent.quiet || compact ? 10 : 0)
                 .frame(minHeight: 56)
                 .frame(maxWidth: 820)
                 .overlay(alignment: .top) { if index > 0 { Rectangle().fill(Palette.faintRule).frame(height: 1) } }
@@ -162,7 +164,8 @@ struct RoomPlaceCard: View {
                 TogetherStill(id: room.view?.episode.id ?? room.invitation?.episode.id, width: compact ? 120 : 192, height: compact ? 68 : 108)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(RoomCopy.yourRoom).font(.system(size: 12, weight: .semibold)).foregroundStyle(.haze)
-                    Text(room.view?.title ?? room.invitation?.title ?? "").font(.showTitle(size: 18)).lineLimit(1)
+                    Text(room.view?.title ?? room.invitation?.title ?? "").font(.showTitle(size: 18))
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(status.title).font(.system(size: 15, weight: .semibold)).padding(.top, 4)
                     Text(status.detail).font(.system(size: 13)).foregroundStyle(.haze).monospacedDigit()
                     faces(now).padding(.top, 10)
@@ -191,13 +194,10 @@ struct RoomPlaceCard: View {
 
     private func faces(_ now: Int64) -> some View {
         let people = room.people
+        // A row when it fits; otherwise one face to a line, so every word stays whole.
         return ViewThatFits(in: .horizontal) {
             HStack(spacing: 12) { ForEach(people) { face($0, now) } }
-            HStack(spacing: -6) {
-                ForEach(people) { member in
-                    PersonFace(name: member.name, ring: ring(member, now), dim: room.look(member, now: now).dim, disc: 22)
-                }
-            }
+            VStack(alignment: .leading, spacing: 6) { ForEach(people) { face($0, now) } }
         }
         .accessibilityElement(children: .combine)
     }
