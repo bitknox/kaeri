@@ -126,43 +126,54 @@ async fn the_kept_list_carries_the_downloads() {
 }
 
 /// How long a series page's list of `n` chapters takes: kept from a first answer, kept again
-/// from a second, and built into rows each time. The quickest of three runs, so a busy machine
-/// stretches neither size more than the other.
+/// from a second, and built into rows each time.
 async fn time_to_list(n: u32) -> std::time::Duration {
-    let mut quickest = std::time::Duration::MAX;
-    for _ in 0..3 {
-        let dir = tempfile::tempdir().unwrap();
-        let kit = kit(None, dir.path());
-        let list: Vec<SourceChapter> = (1..=n)
-            .map(|i| SourceChapter::new(format!("c{i}"), format!("Chapter {i}")))
-            .collect();
-        Lister::put(&kit, "lister", list);
-        let work = WorkId::new("a:900556");
-        kit.store
-            .set_book_match("lister", "series-1", work.as_str(), 90, true, false, NOW)
-            .unwrap();
-        let started = std::time::Instant::now();
-        for round in 0..2 {
-            let (_, mut volumes) =
-                kit.sources.chapters(&work, None, NOW + round).await.unwrap();
-            super::super::series::finish(&kit, &work, None, &mut volumes, NOW);
-            assert_eq!(rows(&volumes).len(), n as usize);
-        }
-        quickest = quickest.min(started.elapsed());
+    let dir = tempfile::tempdir().unwrap();
+    let kit = kit(None, dir.path());
+    let list: Vec<SourceChapter> =
+        (1..=n).map(|i| SourceChapter::new(format!("c{i}"), format!("Chapter {i}"))).collect();
+    Lister::put(&kit, "lister", list);
+    let work = WorkId::new("a:900556");
+    kit.store
+        .set_book_match("lister", "series-1", work.as_str(), 90, true, false, NOW)
+        .unwrap();
+    let started = std::time::Instant::now();
+    for round in 0..2 {
+        let (_, mut volumes) = kit.sources.chapters(&work, None, NOW + round).await.unwrap();
+        super::super::series::finish(&kit, &work, None, &mut volumes, NOW);
+        assert_eq!(rows(&volumes).len(), n as usize);
     }
-    quickest
+    started.elapsed()
 }
 
 /// A very long list grows the work with its length, not with its square: sixteen times the
-/// chapters take well under forty times as long (a square would take 256 times). The budget is
-/// the small list's own time, so no machine is too slow for it.
+/// chapters take well under forty times as long (about 15 times on a quiet machine; a square
+/// would take 256 times). The budget is the small list's own time, so no machine is too slow
+/// for it.
+///
+/// A busy machine stretches whatever runs while it is busy, and the tests around this one come
+/// and go. So each pair of sizes is timed back to back, in turns small then large and large
+/// then small, and the pair the machine stretched least speaks: timing all of one size before
+/// the other once measured the small list on a quiet machine and the large one under load, 60
+/// times as long.
 #[tokio::test]
 async fn a_long_chapter_list_takes_time_in_step_with_its_length() {
-    let small = time_to_list(1_000).await;
-    let large = time_to_list(16_000).await;
-    let ratio = large.as_secs_f64() / small.as_secs_f64().max(1e-6);
+    let mut pairs = Vec::new();
+    for turn in 0..3 {
+        let (small, large) = if turn % 2 == 0 {
+            let small = time_to_list(1_000).await;
+            (small, time_to_list(16_000).await)
+        } else {
+            let large = time_to_list(16_000).await;
+            (time_to_list(1_000).await, large)
+        };
+        pairs.push((large.as_secs_f64() / small.as_secs_f64().max(1e-6), small, large));
+    }
+    let (ratio, small, large) =
+        pairs.iter().copied().min_by(|a, b| a.0.total_cmp(&b.0)).expect("three pairs");
     assert!(
         ratio < 40.0,
-        "16 times the chapters took {ratio:.1} times as long ({small:?}, {large:?})"
+        "16 times the chapters took {ratio:.1} times as long ({small:?}, {large:?}); every pair: \
+         {pairs:?}"
     );
 }
