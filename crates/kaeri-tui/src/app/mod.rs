@@ -385,6 +385,8 @@ pub struct App {
     pub sources: Vec<SourceCandidate>,
     /// Which title and episode the pending source list is for.
     pub source_context: Option<(AnilistId, String)>,
+    /// The screen the pending source list was asked from: its answer opens only there.
+    pub source_asked_on: Option<crate::nav::StageView>,
     /// Which title a manual search would re-match.
     pub manual_target: Option<AnilistId>,
     /// Which text-valued setting the editor is writing.
@@ -561,6 +563,7 @@ impl App {
             match_context: None,
             sources: Vec::new(),
             source_context: None,
+            source_asked_on: None,
             manual_target: None,
             edit_target: None,
             stores: Vec::new(),
