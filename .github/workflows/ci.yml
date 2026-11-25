@@ -239,8 +239,11 @@ jobs:
         shell: bash
 
       # Only main saves. Pull requests restore main's cache, and letting each of them upload
-      # its own pushed main's out of the repository's cache quota.
+      # its own pushed main's out of the repository's cache quota. The Mac's only: Windows' took a
+      # GB of the repository's 10 to speed up a job that ends well before the Android and Apple
+      # jobs, and Windows packs and unpacks it slowly.
       - uses: Swatinem/rust-cache@v2
+        if: matrix.os == 'macos-latest'
         id: rust
         with:
           shared-key: test
@@ -299,23 +302,23 @@ jobs:
       # Last, as rust-cache saves after the job: room for its new entry, by deleting the one it
       # replaces. Only when the job passed, as only then does rust-cache save.
       - name: Room for the Rust cache
-        if: env.SAVE_CACHES == 'true' && steps.rust.outputs.cache-hit != 'true'
+        if: env.SAVE_CACHES == 'true' && matrix.os == 'macos-latest' && steps.rust.outputs.cache-hit != 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-        run: tools/ci-cache-room.sh --rust test 1300
+        run: tools/ci-cache-room.sh --rust test 1500
 
   # The workspace's tests on Linux, built once and archived for the mpv jobs below, which run
   # theirs from the archive rather than compiling the workspace each. On 24.04, the older of the
-  # images those jobs run on. With a Rust cache, since the mpv jobs wait on this build.
+  # images those jobs run on.
+  #
+  # No Rust cache: with the plugins' workspaces it took 1.6 GB of the repository's 10, and this
+  # job and the mpv jobs after it end well before the Android and Apple jobs even cold.
   linux:
     needs: changes
     if: needs.changes.outputs.rust == 'true'
     name: ubuntu-24.04
     runs-on: ubuntu-24.04
-    permissions:
-      contents: read
-      actions: write
     steps:
       # The workspace's tests, the engine built a second way and Clippy outgrew the runner's
       # free disk. The image's .NET, Android and Haskell toolchains are never used here.
@@ -326,26 +329,12 @@ jobs:
       # Formatting is checked first: it needs no build, so a stray space fails in seconds.
       - name: Format
         run: cargo fmt --all --check
-      # The Rust plugins are their own workspaces, so their targets are cached with the rest.
-      - uses: Swatinem/rust-cache@v2
-        id: rust
-        with:
-          shared-key: linux
-          workspaces: |
-            .
-            plugins/example-rust
-            plugins/example-books
-            plugins/test-hostile
-            plugins/test-hostile-books
-            plugins/test-torrent-source
-          save-if: ${{ env.SAVE_CACHES == 'true' }}
       - uses: taiki-e/install-action@v2
         with:
           tool: cargo-nextest
       # The components the sandbox tests load: the Rust reference plugins, the three fixtures and
       # the JavaScript reference plugin. Without them those tests skip, so the Test step below
-      # sets KAERI_REQUIRE_PLUGINS and a missing one fails it. Built on main as well, for the
-      # cache.
+      # sets KAERI_REQUIRE_PLUGINS and a missing one fails it.
       - name: Build the plugins the sandbox tests load
         run: |
           for plugin in example-rust example-books test-hostile test-hostile-books test-torrent-source; do
@@ -384,11 +373,6 @@ jobs:
       - name: Clippy, the engine without the desktop feature
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         run: cargo clippy -p kaeri-engine --no-default-features --all-targets -- -D warnings
-      - name: Room for the Rust cache
-        if: env.SAVE_CACHES == 'true' && steps.rust.outputs.cache-hit != 'true'
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: tools/ci-cache-room.sh --rust linux 1300
 
   # The Linux desktop app, its own workspace over the engine: built, tested with the fixture
   # scene and without it, and linted. On 26.04, whose GTK 4.20 and libadwaita 1.8 are past the 4.16
@@ -907,7 +891,7 @@ jobs:
           && steps.rust.outcome == 'success' && steps.rust.outputs.cache-hit != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: tools/ci-cache-room.sh --rust apple 1300
+        run: tools/ci-cache-room.sh --rust apple 1400
 
   # The Android app: its engine and Kotlin bindings as android/scripts/engine.sh builds them, with
   # the runner's newest NDK through cargo-ndk, which points every C build at the NDK's clang for
@@ -1223,7 +1207,7 @@ jobs:
           && steps.rust.outputs.cache-hit != 'true'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: tools/ci-cache-room.sh --rust android 1300
+        run: tools/ci-cache-room.sh --rust android 1500
 
   # The plugin store's admin page is committed as built output, so building the server never
   # needs bun. This rebuilds it from source and fails if the two have drifted apart. Its runner
