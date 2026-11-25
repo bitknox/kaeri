@@ -387,14 +387,14 @@ pub const SHOTS: [&str; 47] = [
     "room-move-pick",
     "room-move-offer",
     "room-move-after",
+    "room-alone",
+    "room-narrow",
+    "room-toggle-off",
     "room-full-watching",
     "room-full-wait",
     "room-full-cap",
     "room-full-choosing",
-    "room-alone",
     "room-full-controls",
-    "room-narrow",
-    "room-toggle-off",
 ];
 
 /// A shot's view, what it opens over the room, and whether it is full screen.

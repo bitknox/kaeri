@@ -469,6 +469,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             play(shell);
         }
         let player = Rc::clone(&shell.player);
+        let morph = shot == "room-morph";
         let shot = shot.to_owned();
         let first = !shell.is_player();
         glib::timeout_add_local_once(
@@ -477,7 +478,11 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                 player.shot_room(&shot);
             },
         );
-        return if first { 10.0 } else { 4.0 };
+        return match (first, morph) {
+            (_, true) => 16.0,
+            (true, _) => 10.0,
+            _ => 4.0,
+        };
     }
     let window = &shell.ctx.window;
     match shot {
