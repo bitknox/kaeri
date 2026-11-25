@@ -54,6 +54,8 @@ mod shots_reading;
 #[cfg(feature = "fixtures")]
 mod shots_reading_credits;
 #[cfg(feature = "fixtures")]
+mod shots_sources_loading;
+#[cfg(feature = "fixtures")]
 mod showcase;
 mod squeeze;
 mod states;

@@ -232,6 +232,21 @@ pub enum HomeScene {
     /// and comes back still, the second finds it. Opening Source for this title lists it too.
     /// Yamabiko lists episodes 1 to 4 and Minato finds no match, for that sheet's lines.
     MissingEpisode,
+    /// Episode 7 of Hoshikuzu no Tabibito watched up to, with six more sources after the fixture
+    /// one, in this order, for the player panel's Sources tab while it loads. Each matches the
+    /// title at once and then takes its time over episode 7's releases, from when the tab asks
+    /// ([`SOURCES_LOADING_TIMES`]):
+    ///
+    /// - Home server lists one release at 0.45 s, inside the panel's silent 600 ms;
+    /// - Media folder cannot tell which title it is, at about 1.3 s;
+    /// - Example index lists five releases at 2.4 s;
+    /// - Second example takes too long: its plugin call times out at 20 s;
+    /// - Archive example answers with an error at 6.2 s;
+    /// - Old example is switched off and never asked.
+    ///
+    /// Every release plays the scene's media, as the fixture source does. The phones' scene of
+    /// the same name.
+    SourcesLoading,
 }
 
 impl HomeScene {
@@ -253,6 +268,7 @@ impl HomeScene {
             "following" => Self::Following,
             "following-slow" => Self::FollowingSlow,
             "missing-episode" => Self::MissingEpisode,
+            "sourcesloading" | "sources-loading" => Self::SourcesLoading,
             _ => return None,
         })
     }
@@ -440,6 +456,17 @@ pub async fn start(root: &Path, scene: &Scene, host: Arc<dyn Host>) -> Result<St
                 .arc(),
         ]),
         HomeScene::MissingEpisode => missing_episode_sources(&server.art_base()),
+        HomeScene::SourcesLoading => {
+            let fixture =
+                registry(&server.art_base(), scene.media.as_deref(), &provided, false);
+            let clip = match scene.media.as_deref() {
+                Some(media) => Stream::new(media, StreamKind::Mp4),
+                None => sources::episode_clip(),
+            };
+            let mut chain = fixture.all();
+            chain.extend(loading_sources(&clip).into_iter().map(MockProvider::arc));
+            ProviderRegistry::new(chain)
+        }
         _ => registry(&server.art_base(), scene.media.as_deref(), &provided, scene.unsure),
     };
     // A setting that changes which sources exist rebuilds the chain from the config, and the
@@ -559,6 +586,96 @@ fn missing_episode_sources(art: &str) -> ProviderRegistry {
     ProviderRegistry::new(vec![fixture.arc(), short.arc(), none.arc()])
 }
 
+/// [`HomeScene::SourcesLoading`]'s sources after the fixture one: id and name.
+pub const LOADING_SOURCES: [(&str, &str); 6] = [
+    ("fixture-home-server", "Home server"),
+    ("fixture-media-folder", "Media folder"),
+    ("fixture-example-index", "Example index"),
+    ("fixture-second-example", "Second example"),
+    ("fixture-archive-example", "Archive example"),
+    ("fixture-old-example", "Old example"),
+];
+
+/// When each of [`LOADING_SOURCES`] answers the Sources tab, from when it asks, in the same
+/// order: listed, could not choose the title, listed, timed out, failed. The last is never
+/// asked.
+pub const SOURCES_LOADING_TIMES: [std::time::Duration; 5] = [
+    std::time::Duration::from_millis(450),
+    std::time::Duration::from_millis(1_300),
+    std::time::Duration::from_millis(2_400),
+    std::time::Duration::from_secs(20),
+    std::time::Duration::from_millis(6_200),
+];
+
+/// [`LOADING_SOURCES`] as sources whose releases of every episode play `clip`.
+fn loading_sources(clip: &Stream) -> Vec<MockProvider> {
+    use kaeri_core::{error::ProviderError, traits::SourceCandidate};
+    let key = sources::key(FINISHED);
+    let hit = sources::hits().into_iter().find(|hit| hit.key == key);
+    let release =
+        |provider: &str, n: u32, title: &str, quality: u32, auto_pick: bool| SourceCandidate {
+            id: format!("{provider}-r{n}"),
+            provider_id: provider.into(),
+            provider_name: String::new(),
+            title: title.into(),
+            quality: Some(quality),
+            label: None,
+            size: None,
+            dual_audio: false,
+            dubbed: false,
+            auto_pick,
+        };
+    let source = |at: usize, releases: Vec<SourceCandidate>, error: Option<ProviderError>| {
+        let (id, name) = LOADING_SOURCES[at];
+        let own = Stream { provider_id: id.into(), ..clip.clone() };
+        let mut source = MockProvider::new(id)
+            .named(name)
+            .with_hits(hit.iter().cloned().collect())
+            .with_episodes_for(key.clone(), sources::episodes(FINISHED))
+            .with_streams_for(key.clone(), vec![own.clone()])
+            .listing_after(SOURCES_LOADING_TIMES.get(at).copied().unwrap_or_default(), error)
+            // Only the episode playing: the coverage the tab's lines take answers at once.
+            .listing_after_only_for("7");
+        for release in &releases {
+            source = source.with_source_streams(&release.id, vec![own.clone()]);
+        }
+        source.with_sources(releases)
+    };
+    let home = LOADING_SOURCES[0].0;
+    let index = LOADING_SOURCES[2].0;
+    let vague = |n: u32, title: &str, year: u16| SearchHit {
+        episode_count: Some(12),
+        year: Some(year),
+        format: Some(MediaFormat::Tv),
+        ..SearchHit::new(format!("{}:{n}", LOADING_SOURCES[1].0), title)
+    };
+    vec![
+        source(0, vec![release(home, 1, "Episode 07 [1080p]", 1080, true)], None),
+        // Two titles like it and neither sure: a match it cannot choose, after its one search.
+        MockProvider::new(LOADING_SOURCES[1].0)
+            .named(LOADING_SOURCES[1].1)
+            .with_hits(vec![
+                vague(1, "Hoshi Tabi Diaries", 2024),
+                vague(2, "Tabibito to Hoshikuzu", 2025),
+            ])
+            .with_latency(SOURCES_LOADING_TIMES[1]),
+        source(
+            2,
+            vec![
+                release(index, 1, "Episode 07 [1080p]", 1080, true),
+                release(index, 2, "Episode 07 [720p]", 720, false),
+                release(index, 3, "Episode 07 (1080p, second audio)", 1080, false),
+                release(index, 4, "Episode 07 [480p]", 480, false),
+                release(index, 5, "Episodes 01-12 batch [1080p]", 1080, false),
+            ],
+            None,
+        ),
+        source(3, Vec::new(), Some(ProviderError::Other("plugin timed out".into()))),
+        source(4, Vec::new(), Some(ProviderError::Transport("HTTP 503".into()))),
+        source(5, Vec::new(), None),
+    ]
+}
+
 /// The id of the source the unsure scene puts first.
 pub const UNSURE_SOURCE: &str = "hotaru-open-archive";
 
@@ -633,6 +750,11 @@ fn write_config(file: &Path, demo: bool, home: HomeScene) -> Result<(), String> 
                         }
                         // Watching only, as answered: the page with nothing over it.
                         HomeScene::MissingEpisode => "\n[reading]\nkaeri_is_for = \"watch\"\n",
+                        // Watching only, and the switched-off source.
+                        HomeScene::SourcesLoading => {
+                            "\n[reading]\nkaeri_is_for = \"watch\"\n\n\
+                             [providers]\ndisabled = [\"fixture-old-example\"]\n"
+                        }
                         _ => "",
                     }
                 ),
@@ -653,6 +775,7 @@ fn seed_scene(store: &Store, scene: HomeScene, now: i64) {
         }
         HomeScene::OneLeft => seed::watched(store, AIRING_NO_MAL, 7, now - DAY),
         HomeScene::MissingEpisode => seed::watched(store, AIRING, 5, now - DAY),
+        HomeScene::SourcesLoading => seed::watched(store, FINISHED, 6, now - HOUR),
         HomeScene::ContinueFull => {
             let long = fixtures::long_franchise_media();
             let shows = fixtures::ALL.into_iter().chain(long.iter().map(|m| m.id)).take(15);

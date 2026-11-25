@@ -221,6 +221,9 @@ pub struct PlayerView {
     dub: RefCell<Option<kaeri_model::episodes::DubExtent>>,
     /// The episode the panel last asked the sources about.
     panel_asked: RefCell<Option<(AnilistId, String)>>,
+    /// The title whose start found its source, and the source's name: a fast start says it
+    /// before the player is told the title starts, and the panel's Playing now keeps it.
+    found_in: RefCell<Option<(AnilistId, String)>>,
     /// Where a switch to another source loads at, while the picture is held for it.
     hold_at: Cell<Option<f64>>,
     held_fade: RefCell<Option<adw::TimedAnimation>>,
@@ -478,6 +481,7 @@ impl PlayerView {
             has_dub: Cell::new(None),
             dub: RefCell::default(),
             panel_asked: RefCell::default(),
+            found_in: RefCell::default(),
             hold_at: Cell::new(None),
             held_fade: RefCell::default(),
             #[cfg(feature = "fixtures")]
@@ -849,6 +853,18 @@ impl PlayerView {
             {
                 self.ui.side.set_releases(Some(candidates.clone()));
             }
+            Event::SourcesProgress { id, episode, rows }
+                if self.panel_asked.borrow().as_ref() == Some(&(*id, episode.clone())) =>
+            {
+                self.ui.side.set_progress(rows.clone());
+            }
+            Event::SourcesFailed { id, episode, why }
+                if self.panel_asked.borrow().as_ref() == Some(&(*id, episode.clone())) =>
+            {
+                // Said in the tab as well as the alert; opening the tab again asks again.
+                self.panel_asked.take();
+                self.ui.side.sources_failed(crate::say::msg(why));
+            }
             Event::SourceOptions { id, options } if Some(*id) == self.title_id.get() => {
                 self.ui.side.set_options(Some(options.clone()));
             }
@@ -1145,6 +1161,7 @@ impl PlayerView {
             start.step(step, line, at);
         }
         if let kaeri_model::starting::StartStep::Found { source: Some(source), .. } = step {
+            self.found_in.replace(Some((id, source.clone())));
             self.playing_from(source);
         }
         if matches!(step, kaeri_model::starting::StartStep::WaitingForConnection) {
@@ -1286,7 +1303,11 @@ impl PlayerView {
                     self.dub.take();
                     self.table.take();
                     self.own_spoilers.set(None);
-                    self.ui.side.set_data(side_panel::Data::default());
+                    let found = self.found_in.take().filter(|(of, _)| of == id);
+                    self.ui.side.set_data(side_panel::Data {
+                        playing_source: found.map(|(_, source)| source),
+                        ..side_panel::Data::default()
+                    });
                     if *id != kaeri_model::opened::UNTRACKED {
                         self.ctx.hub.send(Command::LoadDub(*id));
                         // The synopses for the Episodes panel, and the show's own protection.
@@ -3661,7 +3682,7 @@ impl PlayerView {
             return;
         }
         self.panel_asked.replace(Some(asked));
-        self.ui.side.set_releases(None);
+        self.ui.side.listing_asked();
         self.ctx.hub.send(Command::LoadSourceOptions(id));
         self.ctx.hub.send(Command::LoadSources { id, episode });
     }

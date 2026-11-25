@@ -3,7 +3,10 @@
 //! words its rows say. Pure, so it is tested without a display. After the Apple and Android
 //! panels' own models.
 
-use std::time::{Duration, Instant};
+use std::{
+    collections::HashMap,
+    time::{Duration, Instant},
+};
 
 use kaeri_core::{media::Translation, traits::SourceCandidate};
 use kaeri_i18n::t;
@@ -11,6 +14,7 @@ use kaeri_model::{
     Msg,
     episodes::{EpisodeKind, EpisodeRow},
     playback::SwitchTo,
+    starting::{ListingMiss, ListingState, SourceHold, SourceListing},
 };
 
 /// The panel's two tabs. It opens on Episodes.
@@ -440,6 +444,149 @@ pub fn days_between(now: (i32, i32), at: (i32, i32), days_in_now_year: i32) -> i
     if now.0 == at.0 { at.1 - now.1 } else { days_in_now_year - now.1 + at.1 }
 }
 
+/// The Sources tab while its sources answer: when it asked, the last rows the engine said, and
+/// when each row first said Asking, which its seconds count from. Drawn from the last rows,
+/// never merged.
+#[derive(Debug, Clone)]
+pub struct Listing {
+    pub asked: Instant,
+    pub rows: Option<Vec<SourceListing>>,
+    /// Why the engine ended the listing before asking any source, once it has.
+    pub ended: Option<String>,
+    asking_since: HashMap<String, Instant>,
+}
+
+/// What a source's detail line says while the tab loads, apart from its words.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ListingLine {
+    /// Held empty, one line high: the silent 600 ms.
+    Held,
+    /// "Asking".
+    Asking,
+    /// "Asking · 4 s", from 3 s.
+    Counting(u64),
+    /// What the source answered: its coverage line, the miss, or Switched off.
+    Answered,
+    /// Never asked: the listing ended before the engine asked any source.
+    Ended,
+}
+
+impl Listing {
+    pub fn asked(now: Instant) -> Self {
+        Self { asked: now, rows: None, ended: None, asking_since: HashMap::new() }
+    }
+
+    /// The engine ended the listing before asking any source, for `why`: no row is asked now.
+    pub fn end(&mut self, why: String) {
+        self.ended = Some(why);
+    }
+
+    /// The engine said every row again.
+    pub fn took(&mut self, rows: Vec<SourceListing>, now: Instant) {
+        for row in &rows {
+            if row.state == ListingState::Asking {
+                self.asking_since.entry(row.provider_id.clone()).or_insert(now);
+            }
+        }
+        self.rows = Some(rows);
+    }
+
+    /// Whether a source is still asked, or the engine has not said the rows yet.
+    pub fn busy(&self) -> bool {
+        self.ended.is_none()
+            && self
+                .rows
+                .as_ref()
+                .is_none_or(|rows| rows.iter().any(|r| r.state == ListingState::Asking))
+    }
+
+    /// The line of the source `provider_id` in `state` at `now`, and whether its spinner shows.
+    pub fn line(
+        &self,
+        provider_id: &str,
+        state: Option<&ListingState>,
+        now: Instant,
+    ) -> (ListingLine, bool) {
+        match state {
+            None | Some(ListingState::Asking) if self.ended.is_some() => {
+                (ListingLine::Ended, false)
+            }
+            None => (ListingLine::Held, false),
+            Some(ListingState::Asking) => {
+                if now.saturating_duration_since(self.asked) < SILENT {
+                    return (ListingLine::Held, false);
+                }
+                let since = self.asking_since.get(provider_id).copied().unwrap_or(self.asked);
+                let waited = now.saturating_duration_since(since);
+                if waited >= COUNTING {
+                    (ListingLine::Counting(waited.as_secs()), true)
+                } else {
+                    (ListingLine::Asking, true)
+                }
+            }
+            Some(_) => (ListingLine::Answered, false),
+        }
+    }
+
+    /// Move every time back by `by`, as if the tab had asked that much earlier.
+    #[cfg(test)]
+    pub fn age(&mut self, by: Duration) {
+        self.asked -= by;
+        for since in self.asking_since.values_mut() {
+            *since -= by;
+        }
+    }
+}
+
+/// The words of a source's answer: `coverage`, its line from the title's sources, when it
+/// listed releases, else the one release's own; the starting screen's row words for a miss;
+/// Switched off.
+pub fn listing_words(state: &ListingState, coverage: Option<String>, episode: &str) -> String {
+    match state {
+        ListingState::Asking => String::new(),
+        ListingState::Listed { releases } => coverage
+            .or_else(|| match releases.as_slice() {
+                [one] => Some(release_detail(one)),
+                _ => None,
+            })
+            .unwrap_or_default(),
+        ListingState::Missed { miss } => miss_words(*miss, episode),
+        ListingState::Off => t::source_note_off(),
+    }
+}
+
+/// The starting screen's row words for a source that listed nothing.
+pub fn miss_words(miss: ListingMiss, episode: &str) -> String {
+    match miss {
+        ListingMiss::NoMatch => t::player_start_row_no_match(),
+        ListingMiss::Ambiguous => t::source_note_ambiguous(),
+        ListingMiss::NoEpisode => t::player_start_row_no_episode(episode),
+        ListingMiss::Failed => t::player_start_row_failed(),
+        ListingMiss::TimedOut => t::player_start_row_timed_out(),
+        ListingMiss::HeldBack { why } => match why {
+            SourceHold::TorrentsOff => t::player_start_row_held_torrents_off(),
+            SourceHold::TorrentsStarting => t::player_start_row_held_torrents_starting(),
+            SourceHold::TorrentsFailed => t::player_start_row_held_torrents_failed(),
+            SourceHold::ProxyCheck => t::player_start_row_held_proxy(),
+            SourceHold::Cellular => t::player_start_row_held_cellular(),
+            SourceHold::Other => t::player_start_row_held_other(),
+        },
+    }
+}
+
+/// The releases a source listed, once it has.
+pub fn listed(state: Option<&ListingState>) -> &[SourceCandidate] {
+    match state {
+        Some(ListingState::Listed { releases }) => releases,
+        _ => &[],
+    }
+}
+
+/// Whether the row's title is in haze: the source answered with nothing to pick, or is off.
+pub fn listing_dim(state: Option<&ListingState>) -> bool {
+    matches!(state, Some(ListingState::Missed { .. } | ListingState::Off))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -671,6 +818,67 @@ mod tests {
         let untitled = EpisodeRow { title: None, ..row("11") };
         assert_eq!(title(&untitled), "Episode 11");
         assert_eq!(title(&row("7")), "The lamp seller");
+    }
+
+    fn listing(id: &str, state: ListingState) -> SourceListing {
+        SourceListing { provider_id: id.into(), name: format!("{id} name"), state }
+    }
+
+    #[test]
+    fn a_source_asked_is_silent_then_asks_then_counts_from_its_first_asking() {
+        let start = Instant::now();
+        let mut loading = Listing::asked(start);
+        assert!(loading.busy(), "nothing said yet");
+        assert_eq!(loading.line("home", None, start), (ListingLine::Held, false));
+        loading.took(vec![listing("home", ListingState::Asking)], start);
+        let asking = Some(&ListingState::Asking);
+        let at = |ms: u64| start + Duration::from_millis(ms);
+        assert_eq!(loading.line("home", asking, at(599)), (ListingLine::Held, false));
+        assert_eq!(loading.line("home", asking, at(600)), (ListingLine::Asking, true));
+        assert_eq!(loading.line("home", asking, at(2999)), (ListingLine::Asking, true));
+        assert_eq!(loading.line("home", asking, at(4200)), (ListingLine::Counting(4), true));
+        // A row said again later keeps the time it first said Asking.
+        loading.took(vec![listing("home", ListingState::Asking)], at(2000));
+        assert_eq!(loading.line("home", asking, at(3100)), (ListingLine::Counting(3), true));
+        let off = Some(&ListingState::Off);
+        assert_eq!(loading.line("home", off, at(100)), (ListingLine::Answered, false));
+        loading.took(vec![listing("home", ListingState::Off)], at(3200));
+        assert!(!loading.busy());
+    }
+
+    #[test]
+    fn a_source_answers_in_the_starting_screens_words() {
+        let one = ListingState::Listed { releases: vec![candidate("r1")] };
+        assert_eq!(
+            listing_words(&one, None, "7"),
+            "1080p · 1.4 GiB · night-index",
+            "one release, before the title's sources are known"
+        );
+        assert_eq!(listing_words(&one, Some("Episodes 1 to 9".into()), "7"), "Episodes 1 to 9");
+        let missed = |miss| ListingState::Missed { miss };
+        assert_eq!(listing_words(&missed(ListingMiss::Failed), None, "7"), "Didn't answer");
+        assert_eq!(listing_words(&missed(ListingMiss::TimedOut), None, "7"), "Took too long");
+        assert_eq!(
+            listing_words(&missed(ListingMiss::Ambiguous), None, "7"),
+            "Couldn't match this title"
+        );
+        assert_eq!(
+            listing_words(&missed(ListingMiss::NoEpisode), None, "7"),
+            t::player_start_row_no_episode("7")
+        );
+        assert_eq!(
+            listing_words(
+                &missed(ListingMiss::HeldBack { why: SourceHold::Cellular }),
+                None,
+                "7"
+            ),
+            "Not asked · Torrents are off on cellular"
+        );
+        assert_eq!(listing_words(&ListingState::Off, None, "7"), "Switched off");
+        assert!(listing_dim(Some(&ListingState::Off)));
+        assert!(listing_dim(Some(&missed(ListingMiss::Failed))));
+        assert!(!listing_dim(Some(&one)) && !listing_dim(Some(&ListingState::Asking)));
+        assert_eq!(listed(Some(&one)).len(), 1);
     }
 
     #[test]
