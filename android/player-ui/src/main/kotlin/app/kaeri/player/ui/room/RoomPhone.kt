@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.Button
@@ -141,7 +142,7 @@ fun RoomUpright(
     val shown = view ?: return
 
     Column(modifier.fillMaxSize().background(ObiSilk.Ground)) {
-        Box(Modifier.fillMaxWidth().height(RoomVideoHeight).background(Color.Black)) {
+        Box(Modifier.fillMaxWidth().background(Color.Black).statusBarsPadding().height(RoomVideoHeight)) {
             video(Modifier.fillMaxSize())
             panel?.invoke(Modifier.fillMaxSize())
         }
@@ -205,7 +206,7 @@ fun RoomUpright(
         RoomOpen.Invite -> InviteSheet(shown, onCopy = onCopyLink, onNew = { room.ask(RoomAsk.NewInvite) }, onDismiss = { open = RoomOpen.None })
         RoomOpen.Details -> DetailsSheet(shown, onEdit = { open = RoomOpen.EditRelays }, onDismiss = { open = RoomOpen.None })
         RoomOpen.EditRelays -> EditRelaysSheet(shown, onDone = { room.ask(RoomAsk.SetRelays(it)); open = RoomOpen.None }, onDismiss = { open = RoomOpen.None })
-        RoomOpen.Move -> MoveSheet(shown, positionS, onMove = { room.ask(RoomAsk.MoveRoom(it)); open = RoomOpen.None }, onDismiss = { open = RoomOpen.None })
+        RoomOpen.Move -> MoveSheet(shown, positionS, members.firstOrNull { it.you }?.name ?: RoomCopy.YOU, onMove = { room.ask(RoomAsk.MoveRoom(it)); open = RoomOpen.None }, onDismiss = { open = RoomOpen.None })
         RoomOpen.Everyone -> EveryoneSheet(shown, members, now, onDismiss = { open = RoomOpen.None })
         else -> Unit
     }

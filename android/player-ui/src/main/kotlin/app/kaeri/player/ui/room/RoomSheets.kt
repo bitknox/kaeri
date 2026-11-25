@@ -282,17 +282,17 @@ private fun addable(typed: String): Boolean = typed.length > RoomCopy.RELAY_FIEL
 
 /** Move to a new room: tick who is asked along; you always go; muted people start unticked. */
 @Composable
-fun MoveSheet(view: RoomView, positionS: Double, onMove: (List<String>) -> Unit, onDismiss: () -> Unit) {
-    RoomSheet(onDismiss) { MoveContent(view, positionS, onMove, onDismiss) }
+fun MoveSheet(view: RoomView, positionS: Double, you: String, onMove: (List<String>) -> Unit, onDismiss: () -> Unit) {
+    RoomSheet(onDismiss) { MoveContent(view, positionS, you, onMove, onDismiss) }
 }
 
 @Composable
-fun MoveContent(view: RoomView, positionS: Double, onMove: (List<String>) -> Unit, onCancel: () -> Unit) {
+fun MoveContent(view: RoomView, positionS: Double, you: String, onMove: (List<String>) -> Unit, onCancel: () -> Unit) {
     val ticked = remember(view.moveCandidates) { mutableStateListOf(*view.moveCandidates.filter { it.ticked }.map { it.id }.toTypedArray()) }
     Text(RoomCopy.MOVE, style = Title)
     Text(RoomCopy.MOVE_BODY, style = Body, modifier = Modifier.padding(top = 4.dp))
     Group(Modifier.padding(top = 16.dp)) {
-        MoveRow(RoomCopy.YOU, RoomCopy.ALWAYS_GOES, on = true, locked = true) {}
+        MoveRow(RoomCopy.YOU, RoomCopy.ALWAYS_GOES, on = true, locked = true, initial = you) {}
         for (c in view.moveCandidates) {
             Rule()
             MoveRow(c.name, if (c.muted) RoomCopy.MUTED_UNTICKED else null, on = c.id in ticked, locked = false) {
@@ -308,7 +308,7 @@ fun MoveContent(view: RoomView, positionS: Double, onMove: (List<String>) -> Uni
 }
 
 @Composable
-private fun MoveRow(name: String, note: String?, on: Boolean, locked: Boolean, onToggle: () -> Unit) {
+private fun MoveRow(name: String, note: String?, on: Boolean, locked: Boolean, initial: String = name, onToggle: () -> Unit) {
     Row(
         Modifier.fillMaxWidth().heightIn(min = 56.dp)
             .let { if (locked) it else it.clickable(role = Role.Checkbox, onClick = onToggle) }
@@ -316,7 +316,7 @@ private fun MoveRow(name: String, note: String?, on: Boolean, locked: Boolean, o
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        RoomFace(name, 32.dp, FaceRing.Water, ground = ObiSilk.Raised)
+        RoomFace(initial, 32.dp, FaceRing.Water, ground = ObiSilk.Raised)
         Column(Modifier.weight(1f)) {
             Text(name, fontSize = 16.sp, color = ObiSilk.Silk)
             if (note != null) Text(note, style = Body.copy(fontSize = 13.sp, lineHeight = 17.sp))

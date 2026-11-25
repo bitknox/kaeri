@@ -86,9 +86,13 @@ fun RoomStrip(view: RoomView, members: List<RoomMember>, now: Long, disc: Dp, po
             for (m in shown) PersonFace(view, m, now, disc, ground = ObiSilk.Raised)
             if (hidden.isNotEmpty()) MoreFace(RoomCopy.plus(hidden.size), disc)
             Text(
-                buildString {
+                androidx.compose.ui.text.buildAnnotatedString {
                     append(line.title)
-                    if (waiting) append(" · " + RoomCopy.seconds(RoomWords.waitSeconds(view, now))) // i18n-skip
+                    if (waiting) {
+                        pushStyle(androidx.compose.ui.text.SpanStyle(color = ObiSilk.Haze, fontWeight = FontWeight.Normal))
+                        append(" · " + RoomCopy.seconds(RoomWords.waitSeconds(view, now))) // i18n-skip
+                        pop()
+                    }
                 },
                 style = TextStyle(fontSize = fs, fontWeight = FontWeight.SemiBold).tabular(),
                 color = ObiSilk.Silk,
