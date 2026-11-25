@@ -330,4 +330,6 @@ public enum RoomAction: Equatable, Sendable {
     case playSource(String)
     /// Watch together from the player or a title's page: a room starts from this episode.
     case start(id: AnilistId, episode: String)
+    /// The player closed (Keep the room) opens again at the room's place.
+    case openPlayer
 }

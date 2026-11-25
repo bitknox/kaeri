@@ -193,6 +193,7 @@ arguments() {
       send=*) printf '%s\n' -KaeriSend "${screen#send=}" ;;
       feed=*) printf '%s\n' -KaeriFeed "${screen#feed=}" ;;
       party=*) printf '%s\n' -KaeriParty "${screen#party=}" ;;
+      room=place*) printf '%s\n' -KaeriSection together -KaeriRoom "${screen#room=}" ;;
       room=*) printf '%s\n' -KaeriRoom "${screen#room=}" ;;
       together=*) printf '%s\n' -KaeriSection together -KaeriTogether "${screen#together=}" ;;
       showcase=*) printf '%s\n' -KaeriShowcase "${screen#showcase=}" ;;

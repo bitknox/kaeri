@@ -89,6 +89,14 @@ public enum RoomScene: String, CaseIterable, Sendable {
     case morph
     /// For a recording: into full screen and out again.
     case fullloop
+    /// Watch together with no room: Join a room and recent rooms.
+    case place
+    /// Watch together in a room whose player is closed (Keep the room): the room's card on top.
+    case placeroom
+    /// The pasted link's relays never answered.
+    case placejoinfail
+    /// Rejoin found nobody answering in the first recent room.
+    case placerecentfail
 
     public static let argument = "-KaeriRoom"
 
@@ -96,6 +104,9 @@ public enum RoomScene: String, CaseIterable, Sendable {
         guard let index = arguments.firstIndex(of: argument), arguments.indices.contains(index + 1) else { return nil }
         return RoomScene(rawValue: arguments[index + 1])
     }
+
+    /// The scene is Watch together's page, not the player.
+    var place: Bool { rawValue.hasPrefix("place") }
 
     /// The scene covers the video with the room's own panel: the episode needn't play.
     var panelOnly: Bool {
@@ -156,6 +167,7 @@ extension PlayerModel {
     /// it), and the room around it. True once the room is on screen as the scene has it.
     public func stage(_ scene: RoomScene, store: AppStore) async -> Bool {
         let room = store.room
+        if scene.place { return await stagePlace(scene, store: store) }
         guard let item = store.continuing.queue(store.titles).all.first,
               let entry = store.titles[item.id]
         else { return false }
@@ -227,7 +239,7 @@ extension PlayerModel {
             members = names.map { s.member($0, .watching) }
             lines = [s.line(1, RoomCopy.chatOpensWhenJoin)]
         case .watching, .invite, .details, .editrelays, .leave, .cmdw, .full, .hidden, .morph, .fullloop, .folded, .menu,
-             .invitesheet, .sidewayswrite:
+             .invitesheet, .sidewayswrite, .place, .placeroom, .placejoinfail, .placerecentfail:
             break
         case .pausedby:
             view.pausedBy = "Mika"
@@ -339,6 +351,40 @@ extension PlayerModel {
         // The column's contents fade in after the window grows.
         try? await Task.sleep(for: .milliseconds(900))
         return room.active
+    }
+
+    /// Watch together's page: the board's three recent rooms, and the room or failure named.
+    private func stagePlace(_ scene: RoomScene, store: AppStore) async -> Bool {
+        let room = store.room
+        guard await roomWaited(30, { store.continuing.queue(store.titles).all.count >= 3 }) else { return false }
+        let now = Int64((Date.now.timeIntervalSince1970 * 1000).rounded())
+        RoomModel.stillAt = now
+        let items = Array(store.continuing.queue(store.titles).all.prefix(3))
+        let entries = items.compactMap { store.titles[$0.id] }
+        guard entries.count == 3 else { return false }
+        let recent = [
+            RoomRecent(roomId: "r1", title: entries[0].title, id: entries[0].id, episode: String(items[0].episode),
+                       others: ["Mika", "Ren"], lastAt: "19:25", quiet: scene == .placerecentfail), // i18n-skip
+            RoomRecent(roomId: "r2", title: entries[1].title, id: entries[1].id, episode: String(items[1].episode),
+                       others: ["Mika"], lastAt: "Tuesday"), // i18n-skip
+            RoomRecent(roomId: "r3", title: entries[2].title, id: entries[2].id, episode: String(items[2].episode),
+                       others: [], lastAt: "18 November"), // i18n-skip
+        ]
+        room.stage(recent: recent, joinFailed: scene == .placejoinfail ? "kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe" : nil)
+        if scene == .placeroom {
+            let s = RoomStage.self
+            let episode = String(items[0].episode)
+            let view = RoomView(
+                roomId: "r1", title: entries[0].title,
+                episode: RoomEpisode(id: items[0].id, episode: episode, name: "The Long Leg", duration: 1420), // i18n-skip
+                position: RoomStage.position, positionAtMs: now, playing: true, relays: s.relays, link: s.link)
+            room.stage(view: view,
+                       members: [s.member("Ada", .playerClosed, you: true), s.member("Mika", .watching), s.member("Ren", .watching)],
+                       lines: s.conversation(episode), invitation: nil, offer: nil, muted: [])
+            room.shown = false
+        }
+        try? await Task.sleep(for: .milliseconds(900))
+        return scene != .placeroom || room.active
     }
 
     private func roomWaited(_ seconds: Int, _ condition: @MainActor () -> Bool) async -> Bool {

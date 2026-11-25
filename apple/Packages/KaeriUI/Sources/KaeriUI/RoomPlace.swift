@@ -1,0 +1,220 @@
+// Watch together in the sidebar (the room board, v5): the place to join a room and come back to
+// one. Your room sits on top with its line and faces; Join a room takes an invite link; recent
+// rooms rejoin. A room starts from an episode, never from here.
+
+import KaeriDesign
+import KaeriKit
+import KaeriStore
+import KaeriStrings
+import SwiftUI
+#if os(macOS)
+import AppKit
+#else
+import UIKit
+#endif
+
+struct RoomPlace: View {
+    @Environment(AppStore.self) private var store
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    private var compact: Bool { sizeClass == .compact }
+    #else
+    private let compact = false
+    #endif
+
+    var body: some View {
+        let room = store.room
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(RoomCopy.placeIntro)
+                    .font(.system(size: compact ? 15 : 14))
+                    .foregroundStyle(.haze)
+                    .frame(maxWidth: 640, alignment: .leading)
+                    .fixedSize(horizontal: false, vertical: true)
+                if room.active {
+                    RoomPlaceCard(room: room, compact: compact)
+                        .padding(.top, 22)
+                        .transition(.opacity)
+                }
+                join(room).padding(.top, 26)
+                recent(room).padding(.top, 26)
+            }
+            .padding(EdgeInsets(top: compact ? 8 : 20, leading: compact ? 16 : 32, bottom: 32, trailing: compact ? 16 : 32))
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .foregroundStyle(.silk)
+        .background(.ground)
+        .navigationTitle(RoomCopy.columnTitle)
+        .animation(.standard, value: room.active)
+    }
+
+    // MARK: Join a room
+
+    private func join(_ room: RoomModel) -> some View {
+        let failed = room.joinFailed != nil
+        let height: CGFloat = compact ? 44 : 32
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(RoomCopy.joinARoom).font(.system(size: compact ? 17 : 15, weight: .semibold))
+                .accessibilityAddTraits(.isHeader)
+            HStack(spacing: 8) {
+                HStack(spacing: 8) {
+                    if room.joinText.isEmpty {
+                        Image(systemName: "doc.on.doc").font(.system(size: compact ? 15 : 13)).foregroundStyle(.haze)
+                    }
+                    TextField(
+                    "", text: Binding(get: { room.joinText }, set: { room.joinText = $0 }),
+                    prompt: Text(RoomCopy.inviteLink).foregroundStyle(.haze)
+                )
+                    .textFieldStyle(.plain)
+                    .font(.system(size: compact ? 15 : 13, design: room.joinText.isEmpty ? .default : .monospaced))
+                    .onSubmit { room.join() }
+                }
+                .padding(.horizontal, 12)
+                .frame(height: height)
+                .background(Palette.silk.opacity(0.08), in: .rect(cornerRadius: compact ? 12 : 8))
+                .overlay(RoundedRectangle(cornerRadius: compact ? 12 : 8).strokeBorder(Palette.glassEdge, lineWidth: 1))
+                if failed {
+                    Button(RoomCopy.tryAgain) { room.join() }
+                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: height, size: compact ? 15 : 13))
+                } else {
+                    Button(RoomCopy.paste) { paste(room) }
+                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: height, size: compact ? 15 : 13))
+                    Button(RoomCopy.join) { room.join() }
+                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: height, size: compact ? 15 : 13))
+                        .disabled(room.joinText.trimmingCharacters(in: .whitespaces).isEmpty)
+                }
+            }
+            .frame(maxWidth: 640)
+            if failed {
+                failure(RoomCopy.relaysUnreachable, RoomCopy.relaysUnreachableHint, size: 13)
+                    .frame(maxWidth: 640, alignment: .leading)
+            }
+        }
+    }
+
+    private func paste(_ room: RoomModel) {
+        #if os(macOS)
+        room.joinText = NSPasteboard.general.string(forType: .string) ?? room.joinText
+        #else
+        room.joinText = UIPasteboard.general.string ?? room.joinText
+        #endif
+    }
+
+    private func failure(_ title: String, _ hint: String, size: CGFloat = 12) -> some View {
+        HStack(alignment: .firstTextBaseline, spacing: 8) {
+            Circle().fill(Palette.vermilion).frame(width: 7, height: 7).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
+            Text("\(Text(title).fontWeight(.semibold)) \(Text(hint).foregroundStyle(.haze))")
+                .font(.system(size: compact ? 13 : size))
+                .fixedSize(horizontal: false, vertical: true)
+        }
+    }
+
+    // MARK: Recent rooms
+
+    private func recent(_ room: RoomModel) -> some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline, spacing: 10) {
+                Text(RoomCopy.recentRooms).font(.system(size: compact ? 17 : 15, weight: .semibold))
+                Text(compact ? RoomCopy.lastTenPhone : RoomCopy.lastTenMac).font(.system(size: 12)).foregroundStyle(.haze)
+            }
+            .accessibilityElement(children: .combine)
+            .accessibilityAddTraits(.isHeader)
+            .padding(.bottom, 4)
+            ForEach(Array(room.recent.enumerated()), id: \.element.key) { index, recent in
+                HStack(spacing: 12) {
+                    TogetherStill(id: recent.id, width: 64, height: 36, radius: 6)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text(recent.title).font(.system(size: compact ? 15 : 13, weight: .semibold)).lineLimit(1)
+                        Text(RoomCopy.withNames(recent.episode, recent.others, recent.lastAt))
+                            .font(.system(size: compact ? 13 : 12)).foregroundStyle(.haze).lineLimit(1)
+                        if recent.quiet {
+                            failure(RoomCopy.nobodyAnswered, RoomCopy.nobodyAnsweredHint).padding(.top, 4)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    Button(recent.quiet ? RoomCopy.tryAgain : RoomCopy.rejoin) { room.rejoin(recent) }
+                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: compact ? 36 : 28, size: compact ? 15 : 12, padding: 12))
+                }
+                .padding(.vertical, recent.quiet ? 10 : 0)
+                .frame(minHeight: 56)
+                .frame(maxWidth: 820)
+                .overlay(alignment: .top) { if index > 0 { Rectangle().fill(Palette.faintRule).frame(height: 1) } }
+            }
+        }
+    }
+}
+
+/// Your room, on top of the place: its art, line and faces, with Open the player and Leave.
+struct RoomPlaceCard: View {
+    let room: RoomModel
+    let compact: Bool
+    @State private var asking = false
+
+    var body: some View {
+        TimelineView(.periodic(from: .now, by: 1)) { context in
+            let now = RoomModel.stillAt ?? Int64((context.date.timeIntervalSince1970 * 1000).rounded())
+            let status = room.status(now: now)
+            let layout = compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 18))
+            layout {
+                TogetherStill(id: room.view?.episode.id ?? room.invitation?.episode.id, width: compact ? 120 : 192, height: compact ? 68 : 108)
+                VStack(alignment: .leading, spacing: 0) {
+                    Text(RoomCopy.yourRoom).font(.system(size: 12, weight: .semibold)).foregroundStyle(.haze)
+                    Text(room.view?.title ?? room.invitation?.title ?? "").font(.showTitle(size: 18)).lineLimit(1)
+                    Text(status.title).font(.system(size: 15, weight: .semibold)).padding(.top, 4)
+                    Text(status.detail).font(.system(size: 13)).foregroundStyle(.haze).monospacedDigit()
+                    faces(now).padding(.top, 10)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                let stack = compact ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(spacing: 8))
+                stack {
+                    Button(RoomCopy.openThePlayer) { room.openPlayer() }
+                        .buttonStyle(RoomButtonStyle(kind: .primary, height: compact ? 44 : 32, size: compact ? 15 : 13, padding: 16, wide: compact))
+                    Button(RoomCopy.leaveDots) { asking = true }
+                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: compact ? 44 : 32, size: compact ? 15 : 13, padding: 16, wide: compact))
+                }
+                .fixedSize(horizontal: !compact, vertical: true)
+            }
+        }
+        .padding(16)
+        .background(Palette.raised, in: .rect(cornerRadius: 16))
+        .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.glassEdge, lineWidth: 1))
+        .alert(RoomCopy.leaveTheRoom, isPresented: $asking) {
+            Button(RoomCopy.cancel, role: .cancel) {}
+            Button(RoomCopy.leave, role: .destructive) { room.leave() }
+        } message: {
+            Text(RoomCopy.othersKeepWatching)
+        }
+    }
+
+    private func faces(_ now: Int64) -> some View {
+        let people = room.people
+        return ViewThatFits(in: .horizontal) {
+            HStack(spacing: 12) { ForEach(people) { face($0, now) } }
+            HStack(spacing: -6) {
+                ForEach(people) { member in
+                    PersonFace(name: member.name, ring: ring(member, now), dim: room.look(member, now: now).dim, disc: 22)
+                }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+
+    private func face(_ member: RoomMember, _ now: Int64) -> some View {
+        let look = room.look(member, now: now)
+        return HStack(spacing: 6) {
+            PersonFace(name: member.name, ring: ring(member, now), dim: look.dim, pauseBadge: look.pauseBadge, error: look.error, disc: 22)
+            Text("\(member.you ? RoomCopy.you : member.name) \(Text(room.word(member, now: now)).foregroundStyle(.haze))")
+                .font(.system(size: 12))
+                .lineLimit(1)
+        }
+    }
+
+    private func ring(_ member: RoomMember, _ now: Int64) -> FaceRing {
+        switch room.look(member, now: now).ring {
+        case .with: .with
+        case .paused: .paused
+        case .waiting(let part): .waiting(part)
+        case .none: .none
+        }
+    }
+}
