@@ -497,7 +497,7 @@ targets:
 
   # The player's flows (PlayerFlows) on an iPhone or iPad Simulator, such as the Sources tab while
   # its sources answer, with a picture at each of the board's moments. Run with the Player Flows
-  # scheme; the Mac runs the same flows with its player's tests.
+  # scheme. Not on the Mac yet: its accessibility leaves out the flows' empty marker view.
   KaeriPlayerFlows:
     type: bundle.ui-testing
     supportedDestinations: [iOS]
@@ -529,13 +529,12 @@ targets:
 
   # The Mac player's controls, clicked as a person clicks them (MacPlayerTests): XCUITest's
   # clicks go through the window server, where the window's title bar and background can take
-  # them before the controls do. With the player's flows (PlayerFlows), on the Mac. The Mac only;
-  # run with the Mac Player scheme.
+  # them before the controls do. The Mac only; run with the Mac Player scheme.
   KaeriMacPlayerTests:
     type: bundle.ui-testing
     supportedDestinations: [macOS]
     templates: [Fixtures]
-    sources: [MacPlayerTests, PlayerFlows]
+    sources: [MacPlayerTests]
     dependencies:
       - target: Kaeri Fixtures
     settings:
