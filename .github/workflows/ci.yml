@@ -1151,14 +1151,15 @@ jobs:
         with:
           path: ~/.m2/repository/org/robolectric
           key: robolectric-${{ hashFiles('android/gradle/libs.versions.toml') }}
-          lookup-only: ${{ github.event_name == 'push' }}
       # libmpv is built by android/scripts/mpv.sh on a developer's Mac, not here: the player module
-      # builds without it and its JNI shim, so its Kotlin compiles and its unit tests run. On main
-      # only when Robolectric's builds have to be fetched for its cache, which the tests do.
+      # builds without it and its JNI shim, so its Kotlin compiles and its unit tests run.
+      #
+      # On main too, every test: Gradle's cache keeps only the files a build used, so a main that
+      # only compiled the tests saved a cache without their runtime libraries, and every pull
+      # request fetched them from Maven Central, which answers CI's runners with 429 Too Many
+      # Requests at busy hours (run 45528409617 of #36).
       - name: The fixtures APK and the unit tests
-        if: >-
-          env.PART == 'app'
-          && (github.event_name == 'pull_request' || steps.robolectric.outputs.cache-hit != 'true')
+        if: env.PART == 'app'
         working-directory: android
         run: >-
           ./gradlew --console=plain assembleFixturesDebug testFixturesDebugUnitTest
@@ -1185,13 +1186,6 @@ jobs:
       - name: Compose semantics findings
         if: ${{ !cancelled() && github.event_name == 'pull_request' }}
         run: android/scripts/a11y-summary.sh
-      # Otherwise main builds the same, tests and all, and runs none, for Gradle's cache.
-      - name: The fixtures APK and the unit tests' build
-        if: github.event_name == 'push' && steps.robolectric.outputs.cache-hit == 'true'
-        working-directory: android
-        run: ./gradlew --console=plain assembleFixturesDebug compileFixturesDebugUnitTestKotlin
-        env:
-          KAERI_PLAYER_NATIVE: "off"
       # The app flavour's Kotlin, which only the Release workflow builds otherwise. It compiles
       # against the testing engine's bindings, which hold everything the release engine's do, so
       # an app-only source that no longer matches the engine fails here and not in a release.
