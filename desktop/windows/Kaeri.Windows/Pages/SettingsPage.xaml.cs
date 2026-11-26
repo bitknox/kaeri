@@ -56,7 +56,7 @@ public sealed partial class SettingsPage : Page
         ]),
         new("playback", "",
         [
-            ("watching", [K.Trailers, K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
+            ("watching", [K.Trailers, K.HoverCards, K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
             ("player", [K.AutoNext, K.UpNextCountdown, K.PreloadMetered, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.FindSkipTimes, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
             ("picture", [K.Upscaling, K.NightMode, K.SpoilerProtection, K.Motion]),
             // Laid out by SubtitleSettings: the preview and its ten rows.
@@ -119,6 +119,7 @@ public sealed partial class SettingsPage : Page
         K.Motion => T.SettingsMotion,
         K.Titles => T.SettingsTitleLanguage,
         K.Trailers => T.SettingsLabelTrailers,
+        K.HoverCards => T.SettingsLabelHoverCards,
         K.Translation => T.SettingsAudio,
         K.Quality => T.SettingsQuality,
         K.Subtitles => T.PlayerSubtitles,
@@ -1498,6 +1499,7 @@ public sealed partial class SettingsPage : Page
     static string? Detail(K key) => key switch
     {
         K.AdultTitles => T.SettingsAdultDetail(KaeriFfiMethods.TrackerName("anilist")),
+        K.HoverCards => T.SettingsHoverCardsNote,
         K.Translation => T.SettingsAudioDetail,
         K.CommitThreshold => T.SettingsCountsWatchedDetail,
         K.SkipButton => T.SettingsSkipButtonDetail,
