@@ -2273,6 +2273,16 @@ class PlayerModel(
         control(PlayerCommand.StallSwitch)
     }
 
+    /**
+     * Esc's answer to the corner card, before it closes anything: Up next is cancelled and the
+     * stall prompt keeps waiting. False when no card takes it, so Esc goes on to close.
+     */
+    fun answerCard(): Boolean = when (corner) {
+        Corner.UpNext -> { cancelNext(); true }
+        Corner.Stall -> { keepWaiting(); true }
+        else -> false
+    }
+
     fun keepWaiting() {
         input()
         stall = null

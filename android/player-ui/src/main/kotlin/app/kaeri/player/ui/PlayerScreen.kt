@@ -276,7 +276,8 @@ fun PlayerScreen(
                 model.poke()
                 if (sheet != null) return@onPreviewKeyEvent false
                 when (event.key) {
-                    Key.Escape -> { close(); true }
+                    // A card is answered first (Up next cancelled, the stall waited on), then the player closes.
+                    Key.Escape -> { if (!model.answerCard()) close(); true }
                     else -> if (!keysFocused) false else when (event.key) {
                         Key.Spacebar, Key.K -> { model.togglePause(); true }
                         Key.DirectionLeft -> { model.seekBy(-SEEK_STEP); true }
