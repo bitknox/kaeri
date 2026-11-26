@@ -34,6 +34,23 @@ struct CouldNotPlayTests {
         #expect(rig.model.failure == nil)
     }
 
+    /// A room's play with no source here: the room's panel says why over the video, so the
+    /// player stays up under it, without a failure of its own. On a phone the events come before
+    /// the player's view is up to say it is in a room.
+    @Test func aRoomsNoSourceKeepsThePlayerUpUnderTheRoomsPanel() {
+        for inRoom in [false, true] {
+            let rig = Rig()
+            rig.model.inRoom = inRoom
+            staged(rig)
+            let why = Msg.noticeNotAired(episode: 7, when: .airsInDays(days: 6, time: "18:00"))
+            rig.model.apply(.partyNoSource(id: 900_001, episode: "7", why: .notAired, reason: why))
+            rig.model.apply(.playbackEnded(watched: false, ending: .failed, rollingOn: false))
+            rig.model.apply(.roomNoSource(id: 900_001, episode: "7", why: .notAired, reason: why))
+            #expect(rig.model.isPresented, "the player stays under the room's panel (in room: \(inRoom))")
+            #expect(rig.model.failure == nil, "the room says why, once")
+        }
+    }
+
     @Test func closingItSendsNothing() {
         let rig = Rig()
         staged(rig)

@@ -502,9 +502,11 @@ public final class PlayerModel {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)
                 rolledOn(at: time.now())
-            } else if backend == nil, ending == .failed, isPresented, partySaysWhy, inRoom {
+            } else if backend == nil, ending == .failed, isPresented, partySaysWhy {
                 // The room's panel over the video says why and offers the sources: the player
-                // stays up under it rather than vanish.
+                // stays up under it rather than vanish. Only a room says why (the no-source
+                // events are the room's), and on a phone this comes before the player's view, so
+                // before the view says the player is in a room.
                 verdictPending = false
             } else if backend == nil, ending == .failed, isPresented, !partySaysWhy, let episode = startingEpisode {
                 // It never played: no stream was found, or none showed a frame. Say so where the
@@ -522,7 +524,7 @@ public final class PlayerModel {
             // player's failure would say it twice, under it. Said after the failure, it takes
             // the failure's place.
             partySaysWhy = true
-            if inRoom, failure != nil { failure = nil }
+            if failure != nil { failure = nil }
         case .sourcesProgress(let id, let episode, let rows):
             if panelReleases?.id == id, panelReleases?.episode == episode {
                 panelReleases?.progressed(rows, at: time.now())
