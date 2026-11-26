@@ -502,6 +502,10 @@ public final class PlayerModel {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)
                 rolledOn(at: time.now())
+            } else if backend == nil, ending == .failed, isPresented, partySaysWhy, inRoom {
+                // The room's panel over the video says why and offers the sources: the player
+                // stays up under it rather than vanish.
+                verdictPending = false
             } else if backend == nil, ending == .failed, isPresented, !partySaysWhy, let episode = startingEpisode {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
@@ -514,9 +518,11 @@ public final class PlayerModel {
                 dismiss()
             }
         case .partyNoSource, .roomNoSource:
-            // The party's own sheet, or the room's panel over the video, says why nothing plays
-            // and offers the sources: the player's failure would say it twice, under it.
+            // The room's panel over the video says why nothing plays and offers the sources: the
+            // player's failure would say it twice, under it. Said after the failure, it takes
+            // the failure's place.
             partySaysWhy = true
+            if inRoom, failure != nil { failure = nil }
         case .sourcesProgress(let id, let episode, let rows):
             if panelReleases?.id == id, panelReleases?.episode == episode {
                 panelReleases?.progressed(rows, at: time.now())
