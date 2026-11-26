@@ -201,7 +201,9 @@ fun TvPlayerScreen(
 
     // A playback that failed keeps the starting screen up, saying so.
     val starting = model.starting != null || !model.hasPicture && !model.holding || model.failure != null
-    val chrome = !starting && !rail && (model.paused || panel != null || model.marking != null || headAt != null || model.clock - model.lastInput < CHROME_HIDE || model.assisted)
+    // In a room a pause is the room's, and its strip says why: the picture stays full, so Down
+    // and Up still reach the rail and Carry on.
+    val chrome = !starting && !rail && (model.paused && !inRoom || panel != null || model.marking != null || headAt != null || model.clock - model.lastInput < CHROME_HIDE || model.assisted)
     val skip = model.skip?.takeIf { model.corner == PlayerModel.Corner.Skip }
     val skipFresh = skip != null && model.clock - skip.since < SKIP_FRESH
 
@@ -447,6 +449,8 @@ fun TvPlayerScreen(
                 durationS = model.duration ?: 0.0,
                 video = video,
                 state = roomState,
+                // Under the clock while the controls are up, and under the held picture's note.
+                stripTop = if (chrome || model.heldPicture != null) 104.dp else 27.dp,
                 onLeft = { model.viewerClosed() },
             )
         } else {
