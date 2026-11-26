@@ -127,7 +127,15 @@ public struct PhonePlayerView: View {
         // Measured on the whole screen: the upright room's video is wider than tall too.
         .onGeometryChange(for: Bool.self, of: Self.isSideways) { sideways = $0 }
         .onChange(of: store.room.active, initial: true) { _, active in PhoneOrientation.room(active) }
-        .onDisappear { PhoneOrientation.room(false) }
+        .onAppear {
+            store.room.playerShown = true
+            store.room.closesPlayer = { [model] in model.viewerClosed() }
+        }
+        .onDisappear {
+            PhoneOrientation.room(false)
+            store.room.playerShown = false
+            store.room.closesPlayer = {}
+        }
         .background(store.room.active ? Palette.ground : .black)
     }
 
