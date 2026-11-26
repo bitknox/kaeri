@@ -66,7 +66,7 @@ struct PhoneRoomUpright: View {
                 Text(room.invitation?.title ?? room.view?.title ?? "")
                     .font(.showTitle(size: 15))
                     .lineLimit(1)
-                Text(RoomCopy.inTheRoom(room.view?.episode.episode ?? room.invitation?.episode.episode ?? "", room.people.count))
+                Text(RoomCopy.inTheRoom(room.invitation?.episode ?? room.view?.episodeNumber ?? "", room.people.count))
                     .font(.system(size: 13))
                     .foregroundStyle(.haze)
                     .lineLimit(1)
@@ -342,7 +342,7 @@ struct PhoneRoomVideoPanel: View {
                     .padding(.bottom, 14)
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomLeading)
                 } else {
-                    let waiting = room.view?.waiting.isEmpty == false || room.view?.startingIn != nil
+                    let waiting = room.view?.waiting.isEmpty == false || room.view?.startsAtMs != nil
                     VStack(spacing: 8) {
                         Button { room.play() } label: {
                             Image(systemName: "play.fill")
@@ -361,7 +361,7 @@ struct PhoneRoomVideoPanel: View {
                 }
             case .choosing:
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(RoomCopy.chooseSourceFor(room.view?.episode.episode ?? "")).font(.system(size: 15, weight: .semibold))
+                    Text(RoomCopy.chooseSourceFor(room.view?.episodeNumber ?? "")).font(.system(size: 15, weight: .semibold))
                     RoomSourceList(room: room, rowHeight: 44, nameSize: 15)
                         .padding(.top, 8)
                     Button(RoomCopy.playInTheRoom) { room.playChosen() }
@@ -373,7 +373,7 @@ struct PhoneRoomVideoPanel: View {
                 .padding(.top, 12)
             case .noSource:
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(RoomCopy.noneHas(room.view?.episode.episode ?? "")).font(.system(size: 17, weight: .semibold))
+                    Text(RoomCopy.noneHas(room.view?.episodeNumber ?? "")).font(.system(size: 17, weight: .semibold))
                     Text(RoomCopy.youStay).font(.system(size: 13)).foregroundStyle(.haze).padding(.top, 4)
                     HStack(spacing: 8) {
                         Button(RoomCopy.openSources) { room.openSources() }
@@ -392,9 +392,8 @@ struct PhoneRoomVideoPanel: View {
     }
 
     private var episodeLine: String {
-        guard let episode = room.invitation?.episode ?? room.view?.episode else { return "" }
-        let name = room.episodeName(episode.episode)
-        return episode.name.map { "\(name) · \($0)" } ?? name
+        guard let number = room.invitation?.episode ?? room.view?.episodeNumber, !number.isEmpty else { return "" }
+        return RoomCopy.upNextEpisode(number, room.invitation == nil ? room.view?.roomEpisode?.name : nil)
     }
 }
 #endif
