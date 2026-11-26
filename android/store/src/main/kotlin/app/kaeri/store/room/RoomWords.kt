@@ -27,7 +27,7 @@ data class RoomLine(val title: String, val detail: String)
 /** The room's words from the catalogue (i18n/en/ui-room.ftl), read through [context]. */
 class RoomCopy(private val context: Context) {
     private val x get() = context
-    private fun ep(e: String?) = e?.toIntOrNull() ?: 0
+    private fun ep(e: String?) = e ?: ""
     val WATCH_TOGETHER get() = Strings.roomLineWatching(x)
     val NOT_STARTED get() = Strings.roomLineNotStarted(x)
     val PLAY_STARTS_IT get() = Strings.roomLinePlayStarts(x)

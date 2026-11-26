@@ -419,7 +419,7 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
-    /** A watch party invite, the https one or on kaeri://party, opens that room's lobby. */
+    /** A room invite, the https one or on kaeri://room, opens that room's Join screen. */
     private fun party(intent: Intent?): Boolean {
         val link = intent?.data?.toString() ?: return false
         // A room invite opens the room's Join screen; an old Syncplay one still opens the party's lobby.
