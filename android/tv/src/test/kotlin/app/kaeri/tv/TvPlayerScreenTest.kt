@@ -16,7 +16,6 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.onAllNodes
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertNull
 import app.kaeri.engine.model.PlayerUi
@@ -144,7 +143,7 @@ class TvPlayerScreenTest {
 
         // Play offers the skip as a custom action, read out in TalkBack's actions menu.
         val withSkip = SemanticsMatcher("has a Skip opening action") { node ->
-            node.config.getOrNull(SemanticsActions.CustomActions)?.any { it.label == "Skip opening" } == true
+            node.config.getOrElseNullable(SemanticsActions.CustomActions) { null }?.any { action -> action.label == "Skip opening" } == true
         }
         compose.onAllNodes(withSkip).assertCountEquals(1)
 
