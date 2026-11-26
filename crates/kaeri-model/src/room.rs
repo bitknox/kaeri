@@ -52,7 +52,7 @@ pub struct RoomView {
     /// What plays next, as the room agreed it: Up next goes there.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub next_episode: Option<RoomEpisodeInfo>,
-    /// The https invite, `https://kaeri.app/party#v=3&k=…`. After New invite, the new one, once
+    /// The https invite, `https://kaeri.app/room#v=3&k=…`. After New invite, the new one, once
     /// the rotation settled.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub link: Option<String>,
@@ -774,11 +774,12 @@ pub struct RoomShare {
     pub episode: Option<String>,
 }
 
-/// The web page every invite points at. It keeps the old address so links already sent still
-/// reach the page that says they're old.
-const WEB_ROOM: &str = "https://kaeri.app/party";
+/// The web page every invite points at.
+const WEB_ROOM: &str = "https://kaeri.app/room";
 /// The app's own scheme for the same, which the web page opens.
-const APP_ROOM: &str = "kaeri://party";
+const APP_ROOM: &str = "kaeri://room";
+/// Where the watch party's invites pointed: any link there is from an older version.
+const OLD_LINKS: [&str; 3] = ["https://kaeri.app/party", "https://www.kaeri.app/party", "kaeri://party"];
 
 impl RoomShare {
     fn fragment(&self) -> String {
@@ -795,7 +796,7 @@ impl RoomShare {
         out
     }
 
-    /// `https://kaeri.app/party#v=3&k=…&by=…&n=…&e=…[&rl=…]`. The fragment never reaches a
+    /// `https://kaeri.app/room#v=3&k=…&by=…&n=…&e=…[&rl=…]`. The fragment never reaches a
     /// server.
     pub fn https_link(&self) -> String {
         format!("{WEB_ROOM}#{}", self.fragment())
@@ -808,8 +809,11 @@ impl RoomShare {
     /// Read an invite: `Ok(None)` for text that isn't one, `Err(old)` for an older version's.
     pub fn parse(text: &str) -> Result<Option<Self>, OldInvite> {
         let text = text.trim();
+        if OLD_LINKS.iter().any(|old| strip_prefix_ignore_case(text, old).is_some()) {
+            return Err(OldInvite::SyncplayLink);
+        }
         let fragment = strip_prefix_ignore_case(text, WEB_ROOM)
-            .or_else(|| strip_prefix_ignore_case(text, "https://www.kaeri.app/party"))
+            .or_else(|| strip_prefix_ignore_case(text, "https://www.kaeri.app/room"))
             .or_else(|| strip_prefix_ignore_case(text, APP_ROOM))
             .map(|rest| rest.strip_prefix('/').unwrap_or(rest));
         let Some(rest) = fragment else {
@@ -996,8 +1000,9 @@ mod tests {
         let link = share().https_link();
         assert_eq!(
             link,
-            "https://kaeri.app/party#v=3&k=MDEyMzQ1Njc4OWFiY2RlZg&by=Mika&n=Natsukaze%20Relay&e=9"
+            "https://kaeri.app/room#v=3&k=MDEyMzQ1Njc4OWFiY2RlZg&by=Mika&n=Natsukaze%20Relay&e=9"
         );
+        assert!(share().app_link().starts_with("kaeri://room#v=3&k="));
         assert_eq!(RoomShare::parse(&link), Ok(Some(share())));
         assert_eq!(RoomShare::parse(&share().app_link()), Ok(Some(share())));
         let custom = RoomShare { relays: vec!["wss://relay.home.example".into()], ..share() };
@@ -1013,7 +1018,10 @@ mod tests {
         assert_eq!(RoomShare::parse("Kite 7qm4 xr9d"), Err(OldInvite::Code));
         assert_eq!(RoomShare::parse("hello there"), Ok(None));
         assert_eq!(RoomTarget::parse("kite-7qm4-xr9d").unwrap().old, Some(OldInvite::Code));
-        assert_eq!(RoomShare::parse("https://kaeri.app/party#v=3&k=short"), Ok(None));
+        assert_eq!(RoomShare::parse("https://kaeri.app/room#v=3&k=short"), Ok(None));
+        // A link to the watch party's old page, even a v=3 one, is from an older version.
+        let party = "https://kaeri.app/party#v=3&k=MDEyMzQ1Njc4OWFiY2RlZg";
+        assert_eq!(RoomShare::parse(party), Err(OldInvite::SyncplayLink));
     }
 
     #[test]

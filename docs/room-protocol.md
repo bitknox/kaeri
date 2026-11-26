@@ -34,12 +34,12 @@ new one."
 ## Invites and keys
 
 ```
-https://kaeri.app/party#v=3&k=<22 chars base64url>&by=Mika&n=<title>&e=9[&rl=<relays>]
+https://kaeri.app/room#v=3&k=<22 chars base64url>&by=Mika&n=<title>&e=9[&rl=<relays>]
 ```
 
-The page keeps the old address so links already sent still reach it. Browsers never send the
-fragment; the page reads it and opens `kaeri://party#…`, loading no analytics and sending
-nothing. `by`, `n` and `e` are only for the page's "Mika invites you" line. `rl` lists the
+Browsers never send the fragment; the page reads it and opens `kaeri://room#…`, loading no
+analytics and sending nothing. The watch party's old page, `kaeri.app/party`, forwards to it with
+the fragment, and the apps read any `/party` or `kaeri://party` link as from an older version. `by`, `n` and `e` are only for the page's "Mika invites you" line. `rl` lists the
 room's relays when they aren't the built-in set. Where the link is shared, one line says
 "Anyone with this link can join."
 
@@ -48,7 +48,7 @@ secret S          128 random bits (the invite's k)
 room_id           HKDF-SHA256(S, salt "kaeri-room-v1", info "id")[..16]   local only, never sent
 K_msg             HKDF(S, salt "kaeri-room-v1", info "msg")              seals every body
 K_tag             HKDF(S, salt "kaeri-room-v1", info "tag")
-room tag (day d)  hex(HMAC-SHA256(K_tag, "tag" ‖ d)[..16])               d = days since epoch, UTC
+room tag (day d)  hex(HMAC-SHA256(K_tag, "tag" ‖ d)[..16])               d = days since epoch, UTC, in decimal
 ```
 
 Bodies use NIP-44 v2's construction with `K_msg` as the conversation key: ChaCha20, HMAC-SHA256,
