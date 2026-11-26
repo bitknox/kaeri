@@ -176,7 +176,8 @@ fun InvitedPanel(title: String, episodeLine: String, modifier: Modifier = Modifi
 fun NoSourcePanel(episode: String, modifier: Modifier = Modifier, onSources: () -> Unit = {}, onSearch: () -> Unit = {}) {
     val c = roomCopy()
     Box(modifier) {
-        Scrim(0.8f) {
+        // Opaque: with no source there is no picture, only the player's own failure to cover.
+        Scrim(1f) {
             Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 52.dp)) {
                 Text(c.noneHas(episode), fontSize = 17.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk)
                 Text(c.STAY_IN_ROOM, fontSize = 13.sp, lineHeight = 18.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
