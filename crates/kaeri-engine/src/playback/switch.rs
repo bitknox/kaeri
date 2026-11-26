@@ -113,8 +113,6 @@ pub fn ask(
         // As the dispatch of `PlaySource` does before it plays.
         engine.dubs.stop();
         engine.names.stop();
-        #[cfg(feature = "party")]
-        crate::party::join_by_default(engine, services, tx);
         return crate::playback::start::play_source(
             id,
             episode,

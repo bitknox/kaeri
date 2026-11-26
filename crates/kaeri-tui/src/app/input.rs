@@ -342,7 +342,7 @@ impl App {
             Action::WatchOrder => return self.show_watch_order(),
             Action::FixMapping => return self.fix_mapping(),
             Action::ShowSources => return self.show_sources(),
-            Action::PlayParty => return self.play_party(),
+            Action::StartRoom => return self.start_room(),
             Action::Download => return self.download_episode(),
             Action::ToggleSynopsis => self.synopsis_expanded = !self.synopsis_expanded,
             Action::SetListStatus => self.pick_list_status(),
@@ -456,8 +456,8 @@ impl App {
             Action::Open if self.nav.overlay() == Some(&Overlay::JoinStore) => {
                 return self.submit_join_link();
             }
-            Action::Open if self.nav.overlay() == Some(&Overlay::JoinParty) => {
-                return self.submit_party_link();
+            Action::Open if self.nav.overlay() == Some(&Overlay::JoinRoom) => {
+                return self.submit_room_link();
             }
             Action::Open if self.nav.overlay() == Some(&Overlay::Say) => {
                 return self.submit_say();

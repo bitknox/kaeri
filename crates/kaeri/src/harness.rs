@@ -373,7 +373,6 @@ impl Harness {
                 task,
                 Command::Play { .. }
                     | Command::PlaySource { .. }
-                    | Command::PlayParty { .. }
                     | Command::PlayLocal { .. }
                     | Command::PlayTrailer { .. }
                     | Command::OpenExternal { .. }
@@ -943,22 +942,6 @@ pub fn name(update: &Event) -> &'static str {
         Event::Remote(_) => "Remote",
         Event::LinkOpened(_) => "LinkOpened",
         Event::OpenedChoices { .. } => "OpenedChoices",
-        Event::PartyForm(_) => "PartyForm",
-        Event::PartyJoined(_) => "PartyJoined",
-        Event::PartyState(_) => "PartyState",
-        Event::PartyMembers(_) => "PartyMembers",
-        Event::PartyMessage(_) => "PartyMessage",
-        Event::PartyChat(_) => "PartyChat",
-        Event::PartyChatState(_) => "PartyChatState",
-        Event::PartyReaction(_) => "PartyReaction",
-        Event::PartyChatRefused(_) => "PartyChatRefused",
-        Event::PartyLeft { .. } => "PartyLeft",
-        Event::PartyNoSource { .. } => "PartyNoSource",
-        Event::PartyStarted { .. } => "PartyStarted",
-        Event::PartyGlimpse(_) => "PartyGlimpse",
-        Event::PartyLookFailed { .. } => "PartyLookFailed",
-        Event::PartyRecent(_) => "PartyRecent",
-        Event::PartyLastOut { .. } => "PartyLastOut",
         Event::RoomJoined(_) => "RoomJoined",
         Event::RoomState(_) => "RoomState",
         Event::RoomMembers(_) => "RoomMembers",
@@ -984,6 +967,10 @@ pub fn name(update: &Event) -> &'static str {
         Event::SetupFrom(_) => "SetupFrom",
         Event::CameIn(_) => "CameIn",
         Event::EpisodeChecked(_) => "EpisodeChecked",
+        // The watch party's events, until the model drops them: the terminal sends nothing
+        // that makes them.
+        #[allow(unreachable_patterns)]
+        _ => "Retired",
     }
 }
 
@@ -1322,31 +1309,6 @@ fn copy(update: &Event) -> Event {
             candidates: candidates.clone(),
             failed: failed.clone(),
         },
-        Event::PartyForm(form) => Event::PartyForm(form.clone()),
-        Event::PartyJoined(view) => Event::PartyJoined(view.clone()),
-        Event::PartyState(view) => Event::PartyState(view.clone()),
-        Event::PartyMembers(members) => Event::PartyMembers(members.clone()),
-        Event::PartyMessage(message) => Event::PartyMessage(message.clone()),
-        Event::PartyChat(conversation) => Event::PartyChat(conversation.clone()),
-        Event::PartyChatState(state) => Event::PartyChatState(state.clone()),
-        Event::PartyReaction(reaction) => Event::PartyReaction(reaction.clone()),
-        Event::PartyChatRefused(refusal) => Event::PartyChatRefused(*refusal),
-        Event::PartyLeft { reason } => Event::PartyLeft { reason: reason.clone() },
-        Event::PartyNoSource { id, episode, why, reason } => Event::PartyNoSource {
-            id: *id,
-            episode: episode.clone(),
-            why: *why,
-            reason: reason.clone(),
-        },
-        Event::PartyStarted { id, episode, kind } => {
-            Event::PartyStarted { id: *id, episode: episode.clone(), kind: *kind }
-        }
-        Event::PartyGlimpse(glimpse) => Event::PartyGlimpse(glimpse.clone()),
-        Event::PartyLookFailed { server, room, reason } => Event::PartyLookFailed {
-            server: server.clone(),
-            room: room.clone(),
-            reason: reason.clone(),
-        },
         Event::RoomJoined(v) => Event::RoomJoined(v.clone()),
         Event::RoomState(v) => Event::RoomState(v.clone()),
         Event::RoomMembers(m) => Event::RoomMembers(m.clone()),
@@ -1377,10 +1339,6 @@ fn copy(update: &Event) -> Event {
         Event::RoomMoveOfferGone { id } => Event::RoomMoveOfferGone { id: id.clone() },
         Event::RoomFlushed => Event::RoomFlushed,
         Event::RoomRelays(r) => Event::RoomRelays(r.clone()),
-        Event::PartyRecent(rooms) => Event::PartyRecent(rooms.clone()),
-        Event::PartyLastOut { episode, airs } => {
-            Event::PartyLastOut { episode: episode.clone(), airs: airs.clone() }
-        }
         Event::SyncPairFailed { problem, device } => {
             Event::SyncPairFailed { problem: *problem, device: device.clone() }
         }
@@ -1398,5 +1356,9 @@ fn copy(update: &Event) -> Event {
                 problem: *problem,
             }
         }
+        // The watch party's events, until the model drops them: the terminal sends nothing
+        // that makes them.
+        #[allow(unreachable_patterns)]
+        other => panic!("the harness keeps no copy of {}", name(other)),
     }
 }

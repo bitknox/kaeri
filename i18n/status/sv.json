@@ -9481,16 +9481,6 @@
     "by": "agent",
     "at": "2026-11-01"
   },
-  "keys-action-play-party": {
-    "source": "11e321ee3797",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "flags": [
-      "context: The article \"en\" depends on the gender of the kept English term { -watch-party }; cannot verify."
-    ],
-    "back": "Play in a { -watch-party }"
-  },
   "keys-action-play-pause": {
     "source": "01c616b90d78",
     "state": "draft",
@@ -9929,12 +9919,6 @@
     "at": "2026-10-31",
     "back": "Keys"
   },
-  "keys-hint-leave-party": {
-    "source": "19bee21a859f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
   "keys-hint-list": {
     "source": "3d249bb48003",
     "state": "draft",
@@ -10084,12 +10068,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Rate"
-  },
-  "keys-hint-ready": {
-    "source": "9c13a2548d25",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "keys-hint-refresh": {
     "source": "7b7163270e57",
@@ -16862,13 +16840,6 @@
     "at": "2026-10-31",
     "back": "Join the { -watch-party }?"
   },
-  "party-joined": {
-    "source": "d20e1c043fde",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Joined { -watch-party }, room { $room } on { $server }."
-  },
   "party-joining": {
     "source": "6697577c5a3f",
     "state": "draft",
@@ -17176,13 +17147,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which a { -plugin-store } adds."
-  },
-  "party-no-source-still-in": {
-    "source": "39d1974f4824",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "{ $reason } You are still in { -watch-party }."
   },
   "party-nosource-missing-detail": {
     "source": "71204e7d5fba",
@@ -27680,27 +27644,6 @@
     "at": "2026-10-31",
     "back": "Swap A and B"
   },
-  "settings-label-syncplay": {
-    "source": "4e6dadff177e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Syncplay { -watch-party-pl }"
-  },
-  "settings-label-syncplay-room": {
-    "source": "fefe8db56b3b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Syncplay room"
-  },
-  "settings-label-syncplay-server": {
-    "source": "cd554effb8ae",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Syncplay server"
-  },
   "settings-label-theme": {
     "source": "aab875d8cfcf",
     "state": "draft",
@@ -28129,27 +28072,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Press Enter to type a language code. There are too many values to browse."
-  },
-  "settings-note-syncplay": {
-    "source": "36c579ef9324",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Press { $key } to play an episode in the room below. When it is on, all playback goes there."
-  },
-  "settings-note-syncplay-room": {
-    "source": "b47b63ed4687",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Press Enter to type a friend's room. Leave empty to start one nobody can guess."
-  },
-  "settings-note-syncplay-server": {
-    "source": "7aca46d27d46",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Press Enter to type host:port. There is no server until you choose one."
   },
   "settings-note-titles": {
     "source": "93262c4de80a",
@@ -30096,13 +30018,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Your mpv configuration"
-  },
-  "settings-value-room-unset": {
-    "source": "47f8e4245a22",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Not set (needed for { -watch-party-pl })"
   },
   "settings-value-seed-ratio": {
     "source": "7163ca369708",
@@ -38758,12 +38673,6 @@
   },
   "tui-together-join-prompt": {
     "source": "cec2ffaab49c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
-  "tui-together-not-a-link": {
-    "source": "e1da7a068dba",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"

@@ -3151,9 +3151,6 @@ keys-action-toggle-demo = Demoyu kaldır ya da ekle
 keys-action-download-range = Bölüm aralığını indir
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Birlikte izlemede oynat
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = İzlendi durumunu değiştir
 
 # Action label in the help overlay and the command palette.
@@ -3553,24 +3550,18 @@ nav-rail-collapsed = Dar
 nav-rail-hidden = Gizli
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Hazır
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Bağlantıyı kopyala
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Ayrıl
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Söyle
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Sustur
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Sesi aç
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Sohbeti gizle
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4309,9 +4300,6 @@ settings-value-player-ui-mpv = Sizin mpv yapılandırmanız
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Torrent önbelleğinde tutulur
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Ayarlanmadı (birlikte izlemeler için gerekli)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Oran { $ratio } olana kadar
 
@@ -4413,15 +4401,6 @@ settings-label-keep-seeding = Paylaşmaya devam et
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = Her indirmeden sonra
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay birlikte izlemeler
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Syncplay sunucusu
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Syncplay odası
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Güncellemeleri denetle
@@ -4530,15 +4509,6 @@ settings-note-keep-seeding = Yükleme tasarrufu için varsayılan olarak kapalı
 
 # Note under the after each download row.
 settings-note-download-hook = Bir komut yazmak için Enter tuşuna basın. Her tamamlanan indirmeden sonra çalışır.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Aşağıda ayarlanan odada tek bir bölümü oynatmak için { $key } tuşuna basın. Açıkken her oynatma oraya gider.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = host:port yazmak için Enter tuşuna basın. Siz seçene kadar sunucu yoktur.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Bir arkadaşınızın odasını yazmak için Enter tuşuna basın. Kimsenin tahmin edemeyeceği bir oda başlatmak için boş bırakın.
 
 # Note under the check for updates row.
 settings-note-update-check = Başlangıçta günde bir kez, önbelleğe alınmış tek bir istek yapılır.
@@ -5640,12 +5610,6 @@ hint-open-stores = Kaynaklar bölümüne gidin ve eklenti mağazaları açmak i�
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Kimlik bilgilerinizi girmek için satırında Enter'a basın.
 
-# Toast when a { -watch-party } is joined.
-party-joined = { $server } üzerindeki { $room } odasındaki birlikte izlemeye katıldınız.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Hâlâ birlikte izlemedesiniz.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = kaynaklar yeniden yükleniyor…
 
@@ -5654,15 +5618,6 @@ pin-unavailable = { $name } bu başlık için sabitlendi ama kullanılamıyor. D
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Birlikte
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = bağlantı ya da kod
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Satırlar ve tepkiler hiçbir partide oynatıcıda görünmez.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = { $episode }. bölüm · { $when }

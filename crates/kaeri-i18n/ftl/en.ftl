@@ -3366,7 +3366,7 @@ keys-action-toggle-demo = Remove or add the demo
 keys-action-download-range = Download a range of episodes
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Play in a watch party
+keys-action-start-room = Start a room
 
 # Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Toggle watched
@@ -3768,24 +3768,27 @@ nav-rail-collapsed = Collapsed
 nav-rail-hidden = Hidden
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Ready
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Copy link
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Leave
+keys-hint-leave-room = Leave
+
+# Status line hint beside a key, in a room the others wait in: play on without those it waits for. Keep it to a word or two.
+keys-hint-carry-on = Carry on
+
+# Status line hint beside a key, on a recent room: take it off the list. Keep it to a word or two.
+keys-hint-forget-room = Forget
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Say
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Mute
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Unmute
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Hide chat
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4527,9 +4530,6 @@ settings-value-player-ui-mpv = Your mpv setup
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Kept with the torrent cache
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Not set (needed for watch parties)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Until ratio { $ratio }
 
@@ -4631,15 +4631,6 @@ settings-label-keep-seeding = Keep seeding
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = After each download
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay watch parties
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Syncplay server
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Syncplay room
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Check for updates
@@ -4748,15 +4739,6 @@ settings-note-keep-seeding = Off by default to save upload; turn it on to give b
 
 # Note under the after each download row.
 settings-note-download-hook = Press Enter to type a command. It runs after each finished download.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Press { $key } to play one episode in the room set below. While on, every play goes there.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Press Enter to type host:port. There is no server until you choose one.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Press Enter to type a friend's room. Leave it empty to start one nobody can guess.
 
 # Note under the check for updates row.
 settings-note-update-check = One cached request a day, made at startup.
@@ -5964,12 +5946,6 @@ hint-open-stores = Go to Sources and press Enter to open the plugin stores.
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Press Enter on its row to enter your credentials.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Joined the watch party in room { $room } on { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } You're still in the watch party.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Reloading sources…
 
@@ -5979,14 +5955,11 @@ pin-unavailable = { $name } is pinned for this title but isn't available. Trying
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Together
 
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = link or code
+# Prompt of the Join line in the Together section: what to paste there.
+tui-together-join-prompt = invite link
 
 # Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Lines and reactions stay off the player in every party.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = That is not a party link or code.
+tui-together-chat-hidden-line = Lines and reactions stay off the player in every room.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episode { $episode } · { $when }
@@ -6005,6 +5978,39 @@ report-player-log-saved-to = Player log saved to { $path }
 
 # That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
 report-player-log-failed-here = Couldn't save the log to { $folder }.
+
+# Toast when this terminal is in a room, said away from the Together section. The key is the one that goes to Together, as the key map draws it.
+tui-room-joined = You're in the room. Press { $key } to see it.
+
+# Toast when what was pasted in the Together section's Join line isn't a room's invite link.
+tui-room-not-a-link = That isn't a room's invite link.
+
+# Toast when the room behind an invite already has 10 people or more. The key is Enter's, as the key map draws it; the Join line then reads Join anyway.
+tui-room-full = This room is full: rooms work best with 10 or fewer. Press { $key } on the Join line to join anyway.
+
+# Line in the field that takes an invite link.
+tui-room-join-line = Paste the invite link someone sent you.
+
+# Line under the Together section's conversation and in the field for saying something. States who can read the chat.
+tui-room-chat-privacy = Messages are sealed end to end. Relays pass them along and can't read them.
+
+# The conversation's only line while Hide chat is on, and a toast when the field is asked for then.
+tui-room-chat-hidden = Chat is hidden
+
+# Toast when a message was sent too soon after the last ones.
+tui-room-chat-wait = Wait { $seconds } s to send again.
+
+# A muted person's line in the conversation, in place of what they said.
+tui-room-muted-line = { $name } is muted
+
+# Line in the Together section when this terminal isn't in a room. The key is the one that starts a room, as the key map draws it.
+tui-room-start-line = Each of you plays the episode from your own sources; the room keeps you in step. Press { $key } on an episode to start a room.
+
+# Line in place of the recent rooms when none are kept yet.
+tui-room-recent-empty = The last ten rooms you're in show here.
+
+# The room's connection, under its title: the room's messages are sealed end to end, and how many of its relays answer.
+tui-room-relays-line = End to end · { $count } of { $total } relays answering
 
 # Title of the about page.
 about-title = About

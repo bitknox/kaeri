@@ -3094,9 +3094,6 @@ keys-action-toggle-demo = デモを削除または追加
 keys-action-download-range = エピソードの範囲をダウンロード
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = 同時視聴で再生
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = 視聴済みを切り替え
 
 # Action label in the help overlay and the command palette.
@@ -3496,24 +3493,18 @@ nav-rail-collapsed = 折りたたみ
 nav-rail-hidden = 非表示
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = 準備完了
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = リンクをコピー
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = 退出
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = 送信
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = ミュート
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = 解除
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = チャット非表示
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4246,9 +4237,6 @@ settings-value-player-ui-mpv = mpvの設定
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = トレントのキャッシュと同じ場所
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = 未設定（同時視聴に必要）
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = 比率 { $ratio } まで
 
@@ -4350,15 +4338,6 @@ settings-label-keep-seeding = シードを続ける
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = ダウンロード完了後のコマンド
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplayの同時視聴
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Syncplayサーバー
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Syncplayのルーム
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = 更新を確認
@@ -4467,15 +4446,6 @@ settings-note-keep-seeding = 初期設定ではオフ（アップロードを節
 
 # Note under the after each download row.
 settings-note-download-hook = Enterキーを押すとコマンドを入力できます。ダウンロードが完了するたびに実行されます。
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = { $key }を押すと、下で設定したルームで1つのエピソードを再生します。オンの間は、すべての再生がそのルームに送られます。
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Enterキーを押すとhost:portを入力できます。選ぶまでサーバーはありません。
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Enterキーを押すと、友だちのルーム名を入力できます。空のままにすると、推測されにくいルームを作成します。
 
 # Note under the check for updates row.
 settings-note-update-check = 1日1回、起動時にキャッシュを使ったリクエストを送ります。
@@ -5566,12 +5536,6 @@ hint-open-stores = ソースに移動して、Enterキーでプラグインス�
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = その行でEnterキーを押し、認証情報を入力してください。
 
-# Toast when a { -watch-party } is joined.
-party-joined = ルーム { $room }（{ $server }）の同時視聴に参加しました。
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } 同時視聴には引き続き参加しています。
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = ソースを再読み込みしています…
 
@@ -5580,15 +5544,6 @@ pin-unavailable = この作品に固定されているソースの{ $name }は�
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = 一緒に見る
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = リンクまたはコード
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = すべてのパーティで、チャットとリアクションはプレーヤーに表示されません。
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = 同時視聴のリンクまたはコードではありません。
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = エピソード { $episode } · { $when }

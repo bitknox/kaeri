@@ -582,7 +582,7 @@ fn every_title_command_with_nothing_selected_says_so() {
         A::Recommendations,
         A::PlayTrailer,
         A::OpenInBrowser,
-        A::PlayParty,
+        A::StartRoom,
         A::SetListStatus,
         A::RateTitle,
         A::PlayNext,

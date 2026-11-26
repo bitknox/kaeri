@@ -85,7 +85,7 @@ pub struct Config {
     pub presence: PresenceConfig,
     pub network: NetworkConfig,
     pub updates: UpdatesConfig,
-    pub syncplay: SyncplayConfig,
+    pub room: RoomConfig,
     pub notifications: NotificationsConfig,
     pub meta: MetaConfig,
     pub controller: ControllerConfig,
@@ -150,6 +150,12 @@ impl Config {
             && let Ok(table) = src.parse::<toml::Table>()
         {
             cfg.providers.torrent.proxy = legacy_proxy(&table);
+        }
+        // A file from before the room: its watch party's name is the room's.
+        if let Ok(table) = src.parse::<toml::Table>()
+            && let Some(name) = legacy_room_name(&table)
+        {
+            cfg.room.name = name;
         }
         cfg.validate().map_err(|e| ConfigProblem {
             line: None,
@@ -222,7 +228,10 @@ pub fn unknown_keys(src: &str, cfg: &Config) -> Vec<String> {
     let mut unknown = Vec::new();
     unknown_in(&given, &known, "", &mut unknown);
     unknown.retain(|key| {
-        key != LEGACY_TORRENT_TABLE && !key.starts_with("providers.torrent.vpn.")
+        key != LEGACY_TORRENT_TABLE
+            && !key.starts_with("providers.torrent.vpn.")
+            && key != LEGACY_SYNCPLAY_TABLE
+            && !key.starts_with("syncplay.")
     });
     unknown
 }
@@ -483,67 +492,40 @@ pub enum PlayerUi {
     Mpv,
 }
 
-/// Watch parties, on a Syncplay server.
+/// The room: watching together over end-to-end encrypted rooms on public Nostr relays.
 ///
-/// The engine speaks Syncplay itself and keeps its own player with the room. An app starts a
-/// party on purpose, from its form; these are the terminal's way in, and the defaults the form
-/// opens with. A party writes no private history but the episodes it finishes: the room pausing
-/// or jumping is never kept as where you left off.
+/// A room writes no private history but the episodes it finishes: the room pausing or jumping is
+/// never kept as where you left off. Earlier versions' `[syncplay]` table is read for its `name`
+/// only, then ignored.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(default)]
-pub struct SyncplayConfig {
-    /// Every play from the terminal joins the party set below, not only those `y` starts. The
-    /// apps start parties when asked, and this does nothing there.
-    pub enabled: bool,
-    /// `host:port` of the server the terminal's parties use. Empty until chosen: there is no
-    /// default server, since a public one is run by people the viewer may not know.
-    pub server: String,
-    /// The room the terminal's parties join. When unset, a new one with a name nobody can guess,
-    /// shared through its invite link.
-    pub room: Option<String>,
-    /// The name shown to the room.
+pub struct RoomConfig {
+    /// The name shown in rooms.
     pub name: String,
-    /// Servers used for a party before, the last first: what the form offers.
-    pub recent_servers: Vec<String>,
-    /// Hide chat in every party on this device: lines, reactions and the moments they make stay
-    /// off the video. The terminal's `i` in Together turns it over; the apps keep their own.
+    /// The relays new rooms use, `wss://` URLs. Empty means the built-in set: public relays run
+    /// by others.
+    pub relays: Vec<String>,
+    /// Hide chat in every room on this device: lines, reactions and the moments they make stay
+    /// off the video. The terminal's `i` turns it over; the apps keep their own.
     pub hide_chat: bool,
-    /// Reserved. Accepted so existing configs keep parsing, but has no effect since the engine
-    /// speaks Syncplay itself and no longer starts the Syncplay program.
-    pub binary: String,
 }
 
-impl Default for SyncplayConfig {
+impl Default for RoomConfig {
     fn default() -> Self {
-        Self {
-            enabled: false,
-            server: String::new(),
-            room: None,
-            name: "kaeri".into(),
-            recent_servers: Vec::new(),
-            hide_chat: false,
-            binary: "syncplay".into(),
-        }
+        Self { name: "kaeri".into(), relays: Vec::new(), hide_chat: false }
     }
 }
 
-impl SyncplayConfig {
-    /// How many servers [`SyncplayConfig::recent_servers`] keeps.
-    pub const RECENT: usize = 5;
+/// Where earlier versions kept the watch party's settings: `[syncplay]`.
+pub const LEGACY_SYNCPLAY_TABLE: &str = "syncplay";
 
-    /// The servers used before with `server` first, as the next party's form should offer them.
-    pub fn used(&self, server: &str) -> Vec<String> {
-        let server = server.trim();
-        let mut recent = vec![server.to_owned()];
-        recent.extend(
-            self.recent_servers
-                .iter()
-                .filter(|s| !s.trim().eq_ignore_ascii_case(server) && !s.trim().is_empty())
-                .cloned(),
-        );
-        recent.truncate(Self::RECENT);
-        recent
+/// The name an earlier version's `[syncplay]` table holds, for a file written before `[room]`.
+pub fn legacy_room_name(table: &toml::Table) -> Option<String> {
+    if table.contains_key("room") {
+        return None;
     }
+    let name = table.get(LEGACY_SYNCPLAY_TABLE)?.get("name")?.as_str()?.trim();
+    (!name.is_empty()).then(|| name.to_owned())
 }
 
 /// The airing digest: what aired for shows in your history while the app was closed. And the
@@ -1736,6 +1718,18 @@ impl Default for NetworkConfig {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn an_old_syncplay_table_gives_its_name_to_the_room_and_nothing_else() {
+        let old =
+            "[syncplay]\nenabled = true\nserver = \"party.example:8999\"\nname = \"Mika\"\n";
+        let cfg = Config::parse(old).unwrap();
+        assert_eq!(cfg.room.name, "Mika");
+        assert!(unknown_keys(old, &cfg).is_empty());
+        let both = "[syncplay]\nname = \"Mika\"\n[room]\nname = \"Ren\"\n";
+        assert_eq!(Config::parse(both).unwrap().room.name, "Ren");
+        assert_eq!(Config::parse("").unwrap().room.name, "kaeri");
+    }
 
     fn paths_in(dir: &std::path::Path) -> Paths {
         Paths {

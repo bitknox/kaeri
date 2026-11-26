@@ -477,3 +477,34 @@ fn your_player_never_rolls_on_alone_and_the_rooms_up_next_moves_everyone() {
     std::mem::forget(room);
     engine.shutdown();
 }
+
+#[test]
+fn a_room_is_kept_and_rejoin_comes_back_as_the_same_person() {
+    let (_root, engine) = staged(FfiRoomScene::Watching);
+    let (view, members, _) = until(&engine, |v, m, _| {
+        v.room_episode.as_ref().is_some_and(|e| !e.title.is_empty()) && m.iter().any(|m| m.you)
+    });
+    let me = members.iter().find(|m| m.you).unwrap().id.clone();
+    engine.send(Command::Room(RoomCommand::Leave));
+    engine.send(Command::Room(RoomCommand::LoadRecent));
+    let room_id = view.room_id.clone();
+    let (_, _, read) = until_from(&engine, (Some(view), members), move |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomRecent(rooms) if rooms.iter().any(|x| x.room_id == room_id)))
+    });
+    let kept = read
+        .iter()
+        .find_map(|e| match e {
+            Event::RoomRecent(rooms) => rooms.first().cloned(),
+            _ => None,
+        })
+        .unwrap();
+    assert_eq!(kept.title, "Stardust Wayfarer");
+    assert_eq!(kept.names, ["Mika", "Ren"]);
+    engine.send(Command::Room(RoomCommand::Rejoin { room_id: kept.room_id.clone() }));
+    let (_, members, _) = until(&engine, |_, m, r| {
+        r.iter().any(|e| matches!(e, Event::RoomJoined(_))) && m.iter().any(|m| m.you)
+    });
+    assert_eq!(members.iter().find(|m| m.you).unwrap().id, me, "the same identity key");
+    engine.send(Command::Room(RoomCommand::ForgetRoom { room_id: kept.room_id }));
+    engine.shutdown();
+}

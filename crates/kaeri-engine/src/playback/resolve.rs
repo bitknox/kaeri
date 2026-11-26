@@ -8,7 +8,7 @@ use kaeri_model::starting::{
     ListingMiss, ListingState, MissedListing, SourceHold, SourceListing, StartStep,
 };
 use kaeri_model::{Cause, Msg};
-use kaeri_model::{event::Event, notice::Notice, party::NoSourceWhy};
+use kaeri_model::{event::Event, notice::Notice, room::NoSourceWhy};
 use kaeri_providers::{ProviderRegistry, walk};
 use kaeri_store::Store;
 

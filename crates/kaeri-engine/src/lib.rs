@@ -73,15 +73,14 @@
 //!   a stream to play and a redirect to take.
 
 //!
-//! # The `party` feature
+//! # The `room` feature
 //!
-//! Watch parties: a room on a Syncplay server that every play here plays with, through
-//! `kaeri-party`, the protocol's client. On in `desktop`, and turned on beside
-//! `--no-default-features` by an app that offers parties. It needs no player of its own: the
-//! session drives whichever player the play has, mpv or the front end's, as the room asks, and
-//! tells the room what the viewer does in it (`playback::seat`). Without it every party
-//! command is answered with an alert that parties aren't built in. See [`party`] and
-//! `docs/party-protocol.md`.
+//! The room: watching together with no host, over end-to-end encrypted Nostr rooms, through
+//! `kaeri-room`. On in `desktop`, and turned on beside `--no-default-features` by every app (it
+//! needs no player of its own: the session drives whichever player the play has, as the room
+//! asks, and tells the room what the viewer does in it through `playback::seat`). Without it
+//! every room command is answered with an alert that the room isn't built in. `party` is its
+//! old name. See [`room`] and `docs/room-protocol.md`.
 
 /// Configuration shared with the long-running background tasks.
 ///
@@ -125,12 +124,6 @@ pub mod new_episodes;
 pub mod opened;
 pub mod options;
 pub mod outbox;
-#[cfg(feature = "party")]
-pub mod party;
-#[cfg(feature = "party")]
-mod party_chat;
-#[cfg(feature = "party")]
-mod party_identify;
 pub mod phases;
 pub mod playback;
 pub mod player_log;

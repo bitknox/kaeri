@@ -642,14 +642,8 @@ pub(crate) fn dispatch(
             if crate::room::play_in_room(id, &episode, engine) {
                 return;
             }
-            #[cfg(feature = "party")]
-            if crate::party::play_in_room(id, &episode, engine, services) {
-                return;
-            }
             engine.dubs.stop();
             engine.names.stop();
-            #[cfg(feature = "party")]
-            crate::party::join_by_default(engine, services, tx);
             play(id, episode, from_start, job, engine, services, tx)
         }
         // The demo: added or taken out of the chain, or played from part 1 by the ordinary play.
@@ -668,8 +662,6 @@ pub(crate) fn dispatch(
         Command::PlaySource { id, episode, provider_id, source_id } => {
             engine.dubs.stop();
             engine.names.stop();
-            #[cfg(feature = "party")]
-            crate::party::join_by_default(engine, services, tx);
             play_source(id, episode, provider_id, source_id, job, engine, services, tx)
         }
         // Another release of the episode playing, from where it is: see `playback::switch`.
@@ -685,39 +677,10 @@ pub(crate) fn dispatch(
                 tx,
             );
         }
-        // Watch parties, where this build has them: see `party`.
-        #[cfg(feature = "party")]
-        Command::PlayParty { id, episode, server, room, name } => {
-            engine.dubs.stop();
-            engine.names.stop();
-            crate::party::play(id, episode, (server, room, name), job, engine, services, tx)
-        }
-        #[cfg(feature = "party")]
-        Command::LoadPartyForm => crate::party::form(engine, tx),
-        #[cfg(feature = "party")]
-        Command::PartyJoin { server, room, name } => {
-            crate::party::join(&server, &room, name.as_deref(), engine, services, tx);
-        }
-        #[cfg(feature = "party")]
-        Command::PartyReady { ready } => crate::party::ready(ready, engine, tx),
-        #[cfg(feature = "party")]
-        Command::PartyLeave => crate::party::leave(engine, tx),
-        #[cfg(feature = "party")]
-        Command::Party(command) => crate::party::command(command, engine, services, tx),
         #[cfg(feature = "room")]
         Command::Room(command) => crate::room::command(command, engine, services, tx),
         #[cfg(not(feature = "room"))]
         Command::Room(_) => {
-            let _ =
-                tx.send(Event::Toast(Notice::alert(Msg::Store(StoreMsg::NoticePartyNotBuilt))));
-        }
-        #[cfg(not(feature = "party"))]
-        Command::PlayParty { .. }
-        | Command::LoadPartyForm
-        | Command::PartyJoin { .. }
-        | Command::PartyReady { .. }
-        | Command::PartyLeave
-        | Command::Party(_) => {
             let _ =
                 tx.send(Event::Toast(Notice::alert(Msg::Store(StoreMsg::NoticePartyNotBuilt))));
         }
@@ -738,8 +701,6 @@ pub(crate) fn dispatch(
         // A link the viewer opened: see `opened`.
         Command::Opened(command) => crate::opened::run(command, job, engine, services, tx),
         Command::PlayLocal { id, episode, title, path } => {
-            #[cfg(feature = "party")]
-            crate::party::join_by_default(engine, services, tx);
             play_local(id, episode, title, path, job, engine, services, tx)
         }
         Command::LoadSourceOptions(id) => {

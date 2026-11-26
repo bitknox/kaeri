@@ -3094,9 +3094,6 @@ keys-action-toggle-demo = Gỡ hoặc thêm bản demo
 keys-action-download-range = Tải một loạt tập
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Phát trong xem chung
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Đổi trạng thái đã xem
 
 # Action label in the help overlay and the command palette.
@@ -3496,24 +3493,18 @@ nav-rail-collapsed = Thu gọn
 nav-rail-hidden = Ẩn
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Sẵn sàng
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Chép liên kết
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Rời đi
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Nhắn
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Tắt tiếng
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Bật tiếng
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Ẩn trò chuyện
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4246,9 +4237,6 @@ settings-value-player-ui-mpv = Cấu hình mpv của bạn
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Giữ cùng bộ nhớ đệm torrent
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Chưa đặt (cần cho các buổi xem chung)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Đến tỉ lệ { $ratio }
 
@@ -4350,15 +4338,6 @@ settings-label-keep-seeding = Tiếp tục chia sẻ
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = Sau mỗi lần tải xuống
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay các buổi xem chung
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Máy chủ Syncplay
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Phòng Syncplay
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Kiểm tra cập nhật
@@ -4467,15 +4446,6 @@ settings-note-keep-seeding = Mặc định tắt để tiết kiệm băng thôn
 
 # Note under the after each download row.
 settings-note-download-hook = Nhấn Enter để nhập lệnh. Lệnh chạy sau mỗi lần tải xong.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Nhấn { $key } để phát một tập trong phòng bên dưới. Khi bật, mọi lần phát đều vào phòng đó.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Nhấn Enter để nhập host:port. Chưa có máy chủ cho đến khi bạn chọn một máy chủ.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Nhấn Enter để nhập tên phòng của bạn bè. Để trống để tạo một phòng mà không ai đoán được.
 
 # Note under the check for updates row.
 settings-note-update-check = Một yêu cầu được lưu vào bộ nhớ đệm mỗi ngày, gửi khi khởi động.
@@ -5566,12 +5536,6 @@ hint-open-stores = Vào Các nguồn và nhấn Enter để mở các cửa hàn
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Nhấn Enter ở dòng đó để nhập thông tin đăng nhập.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Đã tham gia xem chung trong phòng { $room } trên { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Bạn vẫn đang tham gia xem chung.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Đang tải lại các nguồn…
 
@@ -5580,15 +5544,6 @@ pin-unavailable = { $name } được ghim cho tựa này nhưng không khả d�
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Cùng xem
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = liên kết hoặc mã
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Tin nhắn và biểu cảm không hiện trên trình phát ở mọi buổi xem.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Đây không phải liên kết hay mã xem chung.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Tập { $episode } · { $when }

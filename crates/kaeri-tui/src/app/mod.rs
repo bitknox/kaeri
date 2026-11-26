@@ -69,6 +69,7 @@ mod together;
 pub(crate) use self::lists::air_date;
 pub(crate) use self::notices::LOG_ROW;
 use self::title::TitleFrame;
+pub use self::together::RoomGo;
 pub use self::{
     accounts::sync_badge,
     cursor::{Cursor, Cursors},
@@ -391,16 +392,21 @@ pub struct App {
     pub manual_target: Option<AnilistId>,
     /// Which text-valued setting the editor is writing.
     pub edit_target: Option<SettingKey>,
-    /// The watch party this terminal is in, as the lobby last said.
-    pub party: Option<kaeri_model::party::PartyView>,
-    /// Who is in it.
-    pub party_members: Vec<kaeri_model::party::PartyMember>,
+    /// The room this terminal is in, as the engine last said.
+    pub room: Option<kaeri_model::room::RoomView>,
+    /// Who is in it, this device first.
+    pub room_members: Vec<kaeri_model::room::RoomMember>,
     /// The last rooms, newest first.
-    pub party_recent: Vec<kaeri_model::party::PartyRecentRoom>,
-    /// The party's conversation, kept for the party only.
-    pub party_chat: kaeri_model::party::PartyConversation,
-    /// What the room's server allows in chat, once it has said.
-    pub party_chat_state: Option<kaeri_model::party::PartyChatState>,
+    pub room_recent: Vec<kaeri_model::room::RoomRecent>,
+    /// The room's conversation, kept for the room only.
+    pub room_chat: kaeri_model::room::RoomConversation,
+    /// What this device may do in the conversation, once the engine has said.
+    pub room_chat_state: Option<kaeri_model::room::RoomChatState>,
+    /// The invite last sent to join, kept while the engine answers: a full room's Join anyway
+    /// sends it again.
+    pub room_joining: Option<String>,
+    /// The invite of a room that said it was full: the Join line offers Join anyway.
+    pub room_full: Option<String>,
     /// Joined plugin stores.
     pub stores: Vec<StoreRow>,
     /// Whether the store list has arrived at least once, so "none joined" is not said early.
@@ -470,7 +476,7 @@ impl App {
             nav: Nav::new(),
             palette,
             keymap,
-            settings,
+            settings: settings::drop_unnamed(settings),
             content: ContentList::Loading,
             caption: None,
             home: None,
@@ -567,11 +573,13 @@ impl App {
             manual_target: None,
             edit_target: None,
             stores: Vec::new(),
-            party: None,
-            party_members: Vec::new(),
-            party_recent: Vec::new(),
-            party_chat: Default::default(),
-            party_chat_state: None,
+            room: None,
+            room_members: Vec::new(),
+            room_recent: Vec::new(),
+            room_chat: Default::default(),
+            room_chat_state: None,
+            room_joining: None,
+            room_full: None,
             stores_loaded: false,
             members_for: None,
             store_members: Vec::new(),
@@ -714,50 +722,29 @@ impl App {
             Event::Remote(_) => {}
             // A link the viewer opened in an app; the terminal plays one with `--open-torrent`.
             Event::LinkOpened(_) | Event::OpenedChoices { .. } => {}
-            // A watch party: joined, left, and an episode the room plays that no source here
-            // has, said as toasts. What the room says comes on the player, where the viewer is;
-            // the members and the form are a native app's.
-            Event::PartyJoined(view) => {
-                self.push_toast(info(t::party_joined(&view.room, &view.server)));
-                self.set_party(view);
-            }
-            Event::PartyState(view) => self.set_party(view),
-            Event::PartyMembers(members) => self.set_party_members(members),
-            Event::PartyRecent(rooms) => self.set_recent_rooms(rooms),
-            Event::PartyLeft { reason: Some(reason) } => {
-                self.end_party();
-                self.push_toast(Notice::alert(reason));
-            }
-            Event::PartyNoSource { reason, .. } => {
-                self.push_toast(alert(t::party_no_source_still_in(&say(&reason))))
-            }
-            Event::PartyLeft { reason: None } => self.end_party(),
-            // The lobby of a native app, the start the engine acts on, and a look into a room.
-            Event::PartyChat(conversation) => self.set_party_chat(conversation),
-            Event::PartyChatState(state) => self.party_chat_state = Some(state),
-            Event::PartyChatRefused(refusal) => self.chat_refused(refusal),
-            Event::PartyForm(_)
-            | Event::PartyMessage(_)
-            | Event::PartyReaction(_)
-            | Event::PartyStarted { .. }
-            | Event::PartyGlimpse(_)
-            | Event::PartyLookFailed { .. }
-            | Event::PartyLastOut { .. } => {}
-            // The terminal's Together moves to the room with the transport.
-            Event::RoomJoined(_)
-            | Event::RoomState(_)
-            | Event::RoomMembers(_)
-            | Event::RoomMessage(_)
-            | Event::RoomChat(_)
-            | Event::RoomChatState(_)
+            // The room: joined, how it stands, who is in it and what they said. Leaving and an
+            // episode no source here has are said as toasts.
+            Event::RoomJoined(view) => self.room_joined(view),
+            Event::RoomState(view) => self.set_room(view),
+            Event::RoomMembers(members) => self.set_room_members(members),
+            Event::RoomRecent(rooms) => self.set_recent_rooms(rooms),
+            Event::RoomLeft { why } => self.room_left(why),
+            Event::RoomNoSource { reason, .. } => self.push_toast(alert(format!(
+                "{} {}", // i18n-skip: joins two sentences
+                say(&reason),
+                t::room_no_source_line_short()
+            ))),
+            Event::RoomChat(conversation) => self.set_room_chat(conversation),
+            Event::RoomChatState(state) => self.room_chat_state = Some(state),
+            Event::RoomChatRefused(refusal) => self.chat_refused(refusal),
+            // The room's own words are already lines in its chat; a reaction shows there too.
+            // The player opening is the engine's; a look into a room, a move to a new one and
+            // the relay settings are a native app's.
+            Event::RoomMessage(_)
             | Event::RoomReaction(_)
-            | Event::RoomChatRefused(_)
-            | Event::RoomLeft { .. }
-            | Event::RoomNoSource { .. }
             | Event::RoomStarted { .. }
             | Event::RoomGlimpse(_)
             | Event::RoomLookFailed { .. }
-            | Event::RoomRecent(_)
             | Event::RoomLastOut { .. }
             | Event::RoomMoveOffer(_)
             | Event::RoomMoveOfferGone { .. }
@@ -950,6 +937,10 @@ impl App {
             Event::SyncStoreJoined { .. } | Event::SyncStoreJoinFailed { .. } => {}
             // The first run's setup sheets and the add-source reports are the apps'.
             Event::SetupFrom(_) | Event::CameIn(_) => {}
+            // The watch party's events, until the model drops them: the terminal sends nothing
+            // that makes them.
+            #[allow(unreachable_patterns)]
+            _ => {}
         }
     }
 

@@ -8641,12 +8641,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "keys-action-play-party": {
-    "source": "11e321ee3797",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "keys-action-play-pause": {
     "source": "01c616b90d78",
     "state": "draft",
@@ -9025,12 +9019,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "keys-hint-leave-party": {
-    "source": "19bee21a859f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
   "keys-hint-list": {
     "source": "3d249bb48003",
     "state": "draft",
@@ -9162,12 +9150,6 @@
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
-  },
-  "keys-hint-ready": {
-    "source": "9c13a2548d25",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "keys-hint-refresh": {
     "source": "7b7163270e57",
@@ -15355,12 +15337,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "party-joined": {
-    "source": "d20e1c043fde",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "party-joining": {
     "source": "6697577c5a3f",
     "state": "draft",
@@ -15639,12 +15615,6 @@
   },
   "party-no-source-lists": {
     "source": "4b4ce9084006",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "party-no-source-still-in": {
-    "source": "39d1974f4824",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -25650,24 +25620,6 @@
     "by": "agent",
     "at": "2026-10-31"
   },
-  "settings-label-syncplay": {
-    "source": "4e6dadff177e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-label-syncplay-room": {
-    "source": "fefe8db56b3b",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-label-syncplay-server": {
-    "source": "cd554effb8ae",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
   "settings-label-theme": {
     "source": "aab875d8cfcf",
     "state": "draft",
@@ -26042,24 +25994,6 @@
   },
   "settings-note-subtitles": {
     "source": "705d909a302f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-note-syncplay": {
-    "source": "36c579ef9324",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-note-syncplay-room": {
-    "source": "b47b63ed4687",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-note-syncplay-server": {
-    "source": "7aca46d27d46",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -27814,12 +27748,6 @@
   },
   "settings-value-player-ui-mpv": {
     "source": "616724dccee2",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-10-31"
-  },
-  "settings-value-room-unset": {
-    "source": "47f8e4245a22",
     "state": "draft",
     "by": "agent",
     "at": "2026-10-31"
@@ -35574,12 +35502,6 @@
   },
   "tui-together-join-prompt": {
     "source": "cec2ffaab49c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
-  "tui-together-not-a-link": {
-    "source": "e1da7a068dba",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"

@@ -12,17 +12,6 @@ hint-open-stores = Go to { -source-cap-pl } and press Enter to open the { -plugi
 # @only tui
 hint-kitsu-credentials = Press Enter on its row to enter your credentials.
 
-# Toast when a { -watch-party } is joined.
-# @arg room: text
-# @arg server: text
-# @only tui
-party-joined = Joined the { -watch-party } in room { $room } on { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-# @arg reason: text
-# @only tui
-party-no-source-still-in = { $reason } You're still in the { -watch-party }.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 # @only tui
 status-reloading-sources = Reloading { -source-pl }…
@@ -37,18 +26,14 @@ pin-unavailable = { $name } is pinned for this title but isn't available. Trying
 # @only tui
 tui-together-section = Together
 
-# Prompt of the Join line in the Together section.
+# Prompt of the Join line in the Together section: what to paste there.
 # @max 24
 # @only tui
-tui-together-join-prompt = link or code
+tui-together-join-prompt = invite link
 
 # Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
 # @only tui
-tui-together-chat-hidden-line = Lines and reactions stay off the player in every party.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-# @only tui
-tui-together-not-a-link = That is not a party link or code.
+tui-together-chat-hidden-line = Lines and reactions stay off the player in every room.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 # @arg episode: text
@@ -83,3 +68,57 @@ report-player-log-saved-to = Player log saved to { $path }
 # @arg folder: text
 # @only tui
 report-player-log-failed-here = Couldn't save the log to { $folder }.
+
+## The room in the terminal's Together section: the room this terminal is in, a line to join
+## another by its invite link, and the last rooms.
+
+# Toast when this terminal is in a room, said away from the Together section. The key is the one that goes to Together, as the key map draws it.
+# @arg key: text
+# @only tui
+tui-room-joined = You're in the room. Press { $key } to see it.
+
+# Toast when what was pasted in the Together section's Join line isn't a room's invite link.
+# @only tui
+tui-room-not-a-link = That isn't a room's invite link.
+
+# Toast when the room behind an invite already has 10 people or more. The key is Enter's, as the key map draws it; the Join line then reads Join anyway.
+# @arg key: text
+# @only tui
+tui-room-full = This room is full: rooms work best with 10 or fewer. Press { $key } on the Join line to join anyway.
+
+# Line in the field that takes an invite link.
+# @only tui
+tui-room-join-line = Paste the invite link someone sent you.
+
+# Line under the Together section's conversation and in the field for saying something. States who can read the chat.
+# @only tui
+tui-room-chat-privacy = Messages are sealed end to end. Relays pass them along and can't read them.
+
+# The conversation's only line while Hide chat is on, and a toast when the field is asked for then.
+# @only tui
+tui-room-chat-hidden = Chat is hidden
+
+# Toast when a message was sent too soon after the last ones.
+# @arg seconds: int
+# @only tui
+tui-room-chat-wait = Wait { $seconds } s to send again.
+
+# A muted person's line in the conversation, in place of what they said.
+# @arg name: text
+# @only tui
+tui-room-muted-line = { $name } is muted
+
+# Line in the Together section when this terminal isn't in a room. The key is the one that starts a room, as the key map draws it.
+# @arg key: text
+# @only tui
+tui-room-start-line = Each of you plays the episode from your own { -source-pl }; the room keeps you in step. Press { $key } on an episode to start a room.
+
+# Line in place of the recent rooms when none are kept yet.
+# @only tui
+tui-room-recent-empty = The last ten rooms you're in show here.
+
+# The room's connection, under its title: the room's messages are sealed end to end, and how many of its relays answer.
+# @arg count: int
+# @arg total: int
+# @only tui
+tui-room-relays-line = End to end · { $count } of { $total } relays answering

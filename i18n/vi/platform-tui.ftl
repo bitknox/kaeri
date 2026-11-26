@@ -1,14 +1,11 @@
 hint-stop-playback = Nhấn { $key } để dừng phát.
 hint-open-stores = Vào { -source-cap-pl } và nhấn Enter để mở { -plugin-store-pl }.
 hint-kitsu-credentials = Nhấn Enter ở dòng đó để nhập thông tin đăng nhập.
-party-joined = Đã tham gia { -watch-party } trong phòng { $room } trên { $server }.
-party-no-source-still-in = { $reason } Bạn vẫn đang tham gia { -watch-party }.
 status-reloading-sources = Đang tải lại { -source-pl }…
 pin-unavailable = { $name } được ghim cho tựa này nhưng không khả dụng. Đang thử { -source-pl } khác.
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = liên kết hoặc mã
 tui-together-chat-hidden-line = Tin nhắn và biểu cảm không hiện trên trình phát ở mọi buổi xem.
-tui-together-not-a-link = Đây không phải liên kết hay mã { -watch-party }.
 tui-together-recent-alone = Tập { $episode } · { $when }
 tui-medium-read-change = Nhấn { $key } để đổi cách dùng { -app-name }.
 tui-medium-settings-hint = { $key } để đổi

@@ -1944,7 +1944,7 @@ impl crate::playback::further::Lookup for Onward {
         self.asks.lock().unwrap().push((passed, skipped.map(str::to_owned)));
         self.more.lock().unwrap().take().filter(|more| !more.is_empty()).ok_or_else(|| {
             kaeri_model::starting::StartFailure {
-                why: kaeri_model::party::NoSourceWhy::NotFound,
+                why: kaeri_model::room::NoSourceWhy::NotFound,
                 text: kaeri_model::Msg::verbatim("No source has episode 1."),
                 asked: vec!["kodama".into()],
                 unreached: Vec::new(),

@@ -35,10 +35,10 @@ rules=(
   # Light enough for a TV box: the protocol and its TLS, never the engine or an HTTP stack.
   "kaeri-remote|$terminal"
   "kaeri-remote|^(kaeri-engine|kaeri-net|reqwest|hyper) "
-  # The Syncplay client: the protocol and its TLS, for any front end's player. Never the
-  # engine, a player or an HTTP stack.
-  "kaeri-party|$terminal"
-  "kaeri-party|^(kaeri-engine|kaeri-player|kaeri-net|reqwest|hyper) "
+  # The room: its protocol, keys and relay pool, for any front end's player. Never the engine,
+  # a player or the app's own HTTP stack (reqwest only for a relay's NIP-11 clock).
+  "kaeri-room|$terminal"
+  "kaeri-room|^(kaeri-engine|kaeri-player|kaeri-net) "
   # Book files as untrusted bytes: parsing only, so no network, no async runtime and no engine.
   # Fetching books is kaeri-bookserver's and the engine's.
   "kaeri-books|$terminal"
@@ -135,22 +135,22 @@ for crate in kaeri-engine kaeri-ffi; do
     echo "$crate for aarch64-apple-darwin with presence: clean, $(wc -l <<<"$tree" | tr -d ' ') packages"
   fi
 done
-# The desktop apps' engine: without the desktop feature, with watch parties, as the Mac, Windows
-# and Linux apps build it. Parties play in the app's own player and take none of the desktop.
+# The apps' engine: without the desktop feature, with the room, as the apps build it. The room
+# plays in the app's own player and takes none of the desktop.
 for crate in kaeri-engine kaeri-ffi; do
   for target in aarch64-apple-darwin aarch64-apple-ios x86_64-pc-windows-msvc x86_64-unknown-linux-gnu; do
-    tree="$(cargo tree --quiet --color never -p "$crate" --no-default-features --features party \
+    tree="$(cargo tree --quiet --color never -p "$crate" --no-default-features --features room \
       -e normal --target "$target" --prefix none | sed 's/ (\*)$//' | sort -u)"
     found="$(grep -E "$phone" <<<"$tree" || true)"
     if [[ -n "$found" ]]; then
-      echo "$crate for $target, with party, must not depend on:" >&2
+      echo "$crate for $target, with the room, must not depend on:" >&2
       sed 's/^/  /' <<<"$found" >&2
       status=1
-    elif ! grep -q '^kaeri-party ' <<<"$tree"; then
-      echo "$crate with the party feature does not build the Syncplay client" >&2
+    elif ! grep -q '^kaeri-room ' <<<"$tree"; then
+      echo "$crate with the room feature does not build the room" >&2
       status=1
     else
-      echo "$crate for $target with party: clean, $(wc -l <<<"$tree" | tr -d ' ') packages"
+      echo "$crate for $target with the room: clean, $(wc -l <<<"$tree" | tr -d ' ') packages"
     fi
   done
 done

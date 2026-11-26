@@ -217,7 +217,7 @@ mod tests {
         // scroll into view rather than living below the fold.
         let mut app = app_with(ContentList::Empty);
         app.go_to_section(Section::Settings);
-        app.set_cursor(kaeri_model::settings::SettingKey::ROWS.len() - 1);
+        app.set_cursor(app.settings.rows.len() - 1);
         let text = text_of(&render_to_buffer(&mut app, 120, 12));
         assert!(text.contains("Ask after a crash"), "the last row must be visible:\n{text}");
     }

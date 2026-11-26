@@ -32,7 +32,7 @@ pub enum SeatCue {
     /// A reaction's moment: the glyph and who, worded as for [`SeatCue::Chat`].
     Reaction {
         who: String,
-        reaction: kaeri_model::party::Reaction,
+        reaction: kaeri_model::room::Reaction,
     },
     /// Hide chat was turned on: what chat has on the video leaves it.
     ChatCleared,

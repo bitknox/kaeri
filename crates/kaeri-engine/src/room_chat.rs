@@ -7,11 +7,11 @@
 use std::collections::{BTreeSet, VecDeque};
 
 use kaeri_model::{
-    party::{CONVERSATION_LINES, ECHO_WAIT_SECONDS, REACTION_MARKS},
     room::{
         CHAT_MAX_LENGTH, Reaction, RoomChatBody, RoomChatLine, RoomChatRefusal, RoomChatState,
         RoomConversation, RoomMessage, RoomReactionMark,
     },
+    room::{CONVERSATION_LINES, ECHO_WAIT_SECONDS, REACTION_MARKS},
 };
 use kaeri_room::SendLimits;
 

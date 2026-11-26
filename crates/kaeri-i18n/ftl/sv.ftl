@@ -3151,9 +3151,6 @@ keys-action-toggle-demo = Ta bort eller lägg till demon
 keys-action-download-range = Ladda ner ett urval av avsnitt
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Spela upp i en watch party
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Växla sedd-status
 
 # Action label in the help overlay and the command palette.
@@ -3553,24 +3550,18 @@ nav-rail-collapsed = Ihopfälld
 nav-rail-hidden = Dold
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Redo
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Kopiera länk
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Lämna
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Säg
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Tysta
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Avtysta
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Dölj chatt
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4309,9 +4300,6 @@ settings-value-player-ui-mpv = Din mpv-konfiguration
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Sparas med torrentcachen
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Inte satt (behövs för watch partyn)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Till ratio { $ratio }
 
@@ -4413,15 +4401,6 @@ settings-label-keep-seeding = Fortsätt dela
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = Efter varje nedladdning
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay watch partyn
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Syncplay-server
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Syncplay-rum
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Sök efter uppdateringar
@@ -4530,15 +4509,6 @@ settings-note-keep-seeding = Av som standard för att spara uppladdning. Slå p�
 
 # Note under the after each download row.
 settings-note-download-hook = Tryck på Enter för att skriva ett kommando. Det körs efter varje färdig nedladdning.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Tryck på { $key } för att spela ett avsnitt i rummet nedan. När det är på går alla uppspelningar dit.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Tryck på Enter för att skriva värd:port. Det finns ingen server förrän du väljer en.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Tryck på Enter för att skriva en väns rum. Lämna tomt för att starta ett som ingen kan gissa.
 
 # Note under the check for updates row.
 settings-note-update-check = En cachad förfrågan om dagen, görs vid start.
@@ -5640,12 +5610,6 @@ hint-open-stores = Gå till Källor och tryck Enter för att öppna tilläggsbut
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Tryck Enter på dess rad för att ange dina inloggningsuppgifter.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Gick med i watch party, rum { $room } på { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Du är kvar i watch party.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Laddar om källor…
 
@@ -5654,15 +5618,6 @@ pin-unavailable = { $name } är vald för den här titeln men är inte tillgäng
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Tillsammans
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = länk eller kod
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Rader och reaktioner hålls borta från spelaren i alla partyn.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Det där är varken en länk eller en kod för watch party.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Avsnitt { $episode } · { $when }

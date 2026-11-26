@@ -178,7 +178,7 @@ mod tests {
             cache_dir: dir.path().join("cache"),
         };
         std::fs::create_dir_all(&paths.data_dir).unwrap();
-        std::fs::write(&paths.config_file, "[syncplay]\nname = \"Mika\"\n").unwrap();
+        std::fs::write(&paths.config_file, "[room]\nname = \"Mika\"\n").unwrap();
         let store = Store::open(paths.data_dir.join("kaeri.db")).unwrap();
         let tokens = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
 
@@ -188,15 +188,15 @@ mod tests {
         let set = |table: &[&str], key: &str, value: SettingValue| {
             assert!(kaeri_core::profile::write_shared(&overlay, table, key, value).unwrap());
         };
-        set(&["syncplay"], "name", SettingValue::Str("Aki".into()));
+        set(&["room"], "name", SettingValue::Str("Aki".into()));
         set(&["meta"], "adult", SettingValue::Bool(true));
-        assert_eq!(read_config(&store, &paths).unwrap().syncplay.name, "Aki");
+        assert_eq!(read_config(&store, &paths).unwrap().room.name, "Aki");
 
         // Aki takes Mika's place, and with it the config's keys.
         delete(&store, &paths, &tokens, "p1").unwrap();
         assert_eq!(overlay_of(&store, &paths), None);
         let config = read_config(&store, &paths).unwrap();
-        assert_eq!(config.syncplay.name, "Aki", "not the deleted profile's name");
+        assert_eq!(config.room.name, "Aki", "not the deleted profile's name");
         assert!(config.meta.adult);
         assert!(!overlay.exists());
     }

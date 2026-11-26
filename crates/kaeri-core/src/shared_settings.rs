@@ -35,8 +35,8 @@ pub const SHARED: &[(&[&str], &str)] = &[
     (&["reading", "novel"], "mode"),
     (&["reading", "novel"], "look"),
     (&["reading", "novel"], "font"),
-    (&["syncplay"], "name"),
-    (&["syncplay"], "recent_servers"),
+    (&["room"], "name"),
+    (&["room"], "relays"),
 ];
 
 /// Whether `table.key` is a shared setting.

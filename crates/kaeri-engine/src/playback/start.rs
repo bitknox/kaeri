@@ -553,41 +553,6 @@ fn play_staged(
     staged
 }
 
-/// Play an episode with the watch party, which the caller has joined: staged and played as any
-/// play is, with a seat at the party. An episode none of the sources has leaves the viewer in
-/// the room with nothing playing, and says so with [`Event::PartyNoSource`].
-pub fn play_party(
-    id: AnilistId,
-    episode: String,
-    job: Option<JobGuard>,
-    engine: &mut EngineState,
-    services: &Services,
-    tx: &Outbox,
-) {
-    let Some(opener) = opener_for(engine, services) else {
-        return playback::refuse(job, tx);
-    };
-    let billing = named(id, &episode, engine);
-    // From the start: the room opens an episode at 0:00 and brings a member who joins late to
-    // its own position. This device's resume point would put it ahead of the room, and near the
-    // end of a file it ended at once and moved the whole room on.
-    let staged = play_staged(
-        id,
-        episode,
-        None,
-        Start::Beginning,
-        true,
-        false,
-        billing,
-        opener,
-        job,
-        engine,
-        services,
-        tx,
-    );
-    let _ = tx.send(staged);
-}
-
 /// Play a downloaded episode from disk, in the full playback session all the same.
 #[allow(clippy::too_many_arguments)]
 pub fn play_local(
@@ -1023,7 +988,7 @@ fn spawn_playback(
                 // In a party the dialog says why, and a toast would say it twice.
                 // The kind comes as the lookup decided it.
                 if party {
-                    let _ = tx.send(Event::PartyNoSource {
+                    let _ = tx.send(Event::RoomNoSource {
                         id,
                         episode: episode.clone(),
                         why: reason.why,
@@ -1056,7 +1021,7 @@ fn spawn_playback(
                     held_back: starting.held_back(),
                 };
                 if party {
-                    let _ = tx.send(Event::PartyNoSource {
+                    let _ = tx.send(Event::RoomNoSource {
                         id,
                         episode: episode.clone(),
                         why: reason.why,
@@ -1242,7 +1207,7 @@ impl Lookup for Onward {
                 Ok(streams)
             }
             Ok(_) => Err(kaeri_model::starting::StartFailure {
-                why: kaeri_model::party::NoSourceWhy::NotFound,
+                why: kaeri_model::room::NoSourceWhy::NotFound,
                 text: crate::playback::resolve::explained(kaeri_model::Cause::NoSources),
                 asked: self.starting.asked(),
                 unreached: Vec::new(),
