@@ -204,6 +204,8 @@ public final class AppStore {
         reader.onClosed = { [weak self] in self?.serverProgress.clearLines() }
         updates.send = { [weak self] command in self?.send(command) }
         party.send = { [weak self] command in self?.send(command) }
+        room.send = { [weak self] command in _ = self?.send(command) }
+        room.countSources = { [weak self] in self?.providers.rows.count ?? 0 }
         missing.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
         party.chat.send = { [weak self] command in self?.send(command) }
@@ -339,6 +341,12 @@ public final class AppStore {
             AppLog.error("party", "the fake party server did not start: \(error)")
             return nil
         }
+    }
+
+    /// A room on fake relays beside the engine, with scripted members a screenshot run stages
+    /// (`startFakeRoom`); rooms this engine starts go there too. The Fixtures app only.
+    public func startFakeRoom() -> FfiFakeRoom? {
+        client?.engine.startFakeRoom()
     }
     #else
     public var fixtureStoreInvite: String? { nil }
@@ -1241,6 +1249,7 @@ public final class AppStore {
             widgetsChanged()
         case .sources:
             party.apply(event)
+            room.apply(event)
             onPlayback?(event)
         case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard,
              .startingStep, .playerSkipMark, .playerSkipPrompt, .playerSkipNotice, .playerSwitch, .sourcesProgress, .sourcesFailed:
@@ -1257,6 +1266,13 @@ public final class AppStore {
             // The party's sheet says it, and the player steps aside for it.
             party.apply(event)
             onPlayback?(event)
+
+        case .roomJoined, .roomState, .roomMembers, .roomMessage, .roomChat, .roomChatState, .roomLeft, .roomStarted,
+             .roomGlimpse, .roomLookFailed, .roomRecent, .roomMoveOffer, .roomMoveOfferGone:
+            room.apply(event)
+        case .roomReaction, .roomChatRefused, .roomNoSource, .roomLastOut, .roomFlushed, .roomRelays:
+            // The room's view says no source and the chat's wait; reactions show as its lines.
+            break
 
         case .widgetSnapshot(let data):
             // The engine sends none while private; one asked for before the switch stays unshown.

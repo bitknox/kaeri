@@ -1,7 +1,8 @@
 // The room's states for screenshots (apple/scripts/shots.sh, room=<scene>): one scene per frame
-// of the room board (v5), staged on `RoomModel` around a Fixtures episode playing in the main
-// window. Testing only: the release app has none of this. Until the engine's fake room lands,
-// the scenes set the room's state directly.
+// of the room board (v5). The engine's fake room (`startFakeRoom`) stages each one with scripted
+// members on fake relays, and the app plays the room's episode as it would in any room; the
+// dialogs, popovers and Move are the app's own, opened over Watching. Testing only: the release
+// app has none of this.
 
 #if FIXTURES
 import Foundation
@@ -124,54 +125,54 @@ public enum RoomScene: String, CaseIterable, Sendable {
     }
 }
 
-/// The board's room: Ada (this device), Mika and Ren, at 12:04 in Episode 9.
+/// The engine's fake room, kept for the run.
 @MainActor
 enum RoomStage {
-    static let link = "https://kaeri.app/r#k=7Hq2Lw9xVf3pT0aN"
-    static let relays = [
-        RoomRelayHealth(url: "wss://relay-one.example", healthy: true, rttMs: 38),
-        RoomRelayHealth(url: "wss://relay-two.example", healthy: true, rttMs: 61),
-        RoomRelayHealth(url: "wss://relay-three.example", healthy: true, rttMs: 112),
-    ]
-    static let position: Double = 724
+    static var fake: FfiFakeRoom?
 
-    static func line(_ id: UInt64, _ text: String) -> RoomLine { RoomLine(id: id, kind: .system(text)) }
-    static func chat(_ id: UInt64, _ from: String, _ text: String) -> RoomLine {
-        RoomLine(id: id, kind: .chat(from: from, text: text, you: from == "Ada"))
-    }
-
-    // The board's own lines: made-up talk, in the room's words.
-    static func conversation(_ episode: String) -> [RoomLine] {
-        [
-            line(1, "Mika started the room · Episode \(episode)"), // i18n-skip
-            chat(2, "Mika", "everyone here?"), // i18n-skip
-            chat(3, "Ren", "yes, go"), // i18n-skip
-            line(4, "Ren paused at 3:10"), // i18n-skip
-            chat(5, "Ren", "back in two, kettle"), // i18n-skip
-            line(6, "Ren resumed"), // i18n-skip
-            RoomLine(id: 7, kind: .reaction(from: "Ren", reaction: .laugh, at: "11:52")),
-            chat(8, "Ada", "the relay handoff at the bridge"), // i18n-skip
-            chat(9, "Mika", "every week this song"), // i18n-skip
-        ]
-    }
-
-    static func lobby(_ episode: String) -> [RoomLine] {
-        [
-            line(1, "Mika started the room · Episode \(episode)"), // i18n-skip
-            chat(2, "Mika", "everyone here?"), // i18n-skip
-            chat(3, "Ren", "two minutes, making tea"), // i18n-skip
-            chat(4, "Ada", "ready when you are"), // i18n-skip
-        ]
-    }
-
-    static func member(_ name: String, _ state: RoomMemberState, since: Int64 = 0, you: Bool = false) -> RoomMember {
-        RoomMember(id: name.lowercased(), name: name, you: you, state: state, sinceMs: since)
+    /// The engine's scene for a board frame; the app's own panels open over Watching.
+    static func scene(_ scene: RoomScene) -> FfiRoomScene {
+        switch scene {
+        case .before: .beforePlay
+        case .beforewait: .beforePlayWait
+        case .beforecap: .beforePlayCap
+        case .count: .starting
+        case .invited: .invited
+        case .invitedover: .invitedFull
+        case .pausedby: .paused
+        case .wait: .waitLoading
+        case .cap, .fullcap: .waitCap
+        case .carried: .carriedOn
+        case .ownwait: .youLoading
+        case .buffering: .buffering
+        case .bufferingsix: .bufferingSix
+        case .renchoosing: .choosing
+        case .rennosource: .noSource
+        case .renclosed: .playerClosed
+        case .renreconnecting: .reconnecting
+        case .renbehind: .behind
+        case .renepisode: .otherEpisode
+        case .youchoosing: .youChoosing
+        case .younosource: .youNoSource
+        case .youbehind: .youBehind
+        case .youreconnecting: .youReconnecting
+        case .six: .six
+        case .relaytrouble, .detailstrouble: .relayTrouble
+        case .upnext: .upNext
+        case .moveoffer: .moveOffer
+        case .moved: .movedAway
+        case .placejoinfail: .unreachable
+        case .watching, .invite, .details, .editrelays, .leave, .cmdw, .skip, .movestart, .movepick, .full, .hidden,
+             .folded, .menu, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail:
+            .watching
+        }
     }
 }
 
 extension PlayerModel {
-    /// Stages a room scene: a Fixtures episode in the main window (held where the board holds
-    /// it), and the room around it. True once the room is on screen as the scene has it.
+    /// Stages a room scene: the engine's fake room in the scene's state, the room's episode
+    /// playing in the main window, and the app's own panels the scene opens. True once the room
+    /// is on screen as the scene has it.
     public func stage(_ scene: RoomScene, store: AppStore) async -> Bool {
         let room = store.room
         if scene.place { return await stagePlace(scene, store: store) }
@@ -179,165 +180,32 @@ extension PlayerModel {
         // A room opens upright; a sideways shot (shots.sh --landscape) stays as the phone is held.
         if ProcessInfo.processInfo.arguments.contains("-KaeriLandscape") { PhoneOrientation.opensUpright = false }
         #endif
-        guard let item = store.continuing.queue(store.titles).all.first,
-              let entry = store.titles[item.id]
-        else { return false }
-        let now = Int64((Date.now.timeIntervalSince1970 * 1000).rounded())
-        RoomModel.stillAt = now
-        let episode = String(item.episode)
-        let roomEpisode = RoomEpisode(id: item.id, episode: episode, name: "The Long Leg", duration: 1420) // i18n-skip
-        store.send(.play(id: item.id, episode: episode))
-        guard await roomWaited(30, { self.isPresented && self.hasPicture && self.duration != nil }) else { return false }
-        if scene == .ownwait { holdsCurtain = true }
-        let held: Bool = switch scene {
-        case .watching, .upnext, .skip, .hidden, .six, .bufferingsix, .renbehind, .renepisode, .renchoosing, .rennosource,
-             .renclosed, .renreconnecting, .youbehind, .full, .morph, .fullloop, .invite, .details, .editrelays,
-             .detailstrouble, .relaytrouble, .leave, .cmdw, .movestart, .movepick, .moved, .folded, .menu, .invitesheet,
-             .sidewayswrite, .youreconnecting:
-            false
-        default:
-            true
-        }
-        if held != paused { togglePause() }
-        hideControls()
-
-        func ago(_ seconds: Int64) -> Int64 { now - seconds * 1000 }
-        let s = RoomStage.self
-        var members = [s.member("Ada", .watching, you: true), s.member("Mika", .watching), s.member("Ren", .watching)]
-        var view = RoomView(
-            roomId: "r1", title: entry.title, episode: roomEpisode, position: RoomStage.position, positionAtMs: now,
-            playing: !held, relays: s.relays, link: s.link)
-        var lines = s.conversation(episode)
-        var invitation: RoomInvitation?
-        var offer: RoomMoveOffer?
-        var muted: Set<String> = []
-
-        func set(_ name: String, _ state: RoomMemberState, since: Int64 = 0) {
-            if let index = members.firstIndex(where: { $0.name == name }) {
-                members[index].state = state
-                members[index].sinceMs = since
-            }
-        }
-        func six() {
-            members += [s.member("Sora", .watching), s.member("Kenji", .watching), s.member("Noa", .watching)]
-        }
-
-        switch scene {
-        case .before, .beforewait, .beforecap, .count:
-            view.started = false
-            view.playing = false
-            view.position = 0
-            lines = s.lobby(episode)
-            members = members.map { var m = $0; m.ready = true; return m }
-            switch scene {
-            case .before:
-                set("Ren", .loading, since: ago(4))
-            case .beforewait:
-                set("Ren", .loading, since: ago(6))
-                view.waiting = [RoomPausedFor(name: "Ren", reason: .loading, sinceMs: ago(6))]
-            case .beforecap:
-                set("Ren", .loading, since: ago(20))
-                view.waiting = [RoomPausedFor(name: "Ren", reason: .loading, sinceMs: ago(20))]
-                view.canCarryOn = true
-            default:
-                view.startingIn = 3
-            }
-        case .invited, .invitedover:
-            let names = scene == .invitedover
-                ? ["Mika", "Ren", "Sora", "Kenji", "Noa", "Yui", "Taro", "Hana", "Kai", "Rio"]
-                : ["Mika", "Ren"]
-            invitation = RoomInvitation(by: "Mika", title: entry.title, episode: roomEpisode, names: names)
-            members = names.map { s.member($0, .watching) }
-            lines = [s.line(1, RoomCopy.chatOpensWhenJoin)]
-        case .watching, .invite, .details, .editrelays, .leave, .cmdw, .full, .hidden, .morph, .fullloop, .folded, .menu,
-             .invitesheet, .sidewayswrite, .place, .placeroom, .placejoinfail, .placerecentfail:
-            break
-        case .pausedby:
-            view.pausedBy = "Mika"
-            members = members.map { var m = $0; m.state = .paused; m.pausedRoom = m.name == "Mika"; return m }
-            lines.append(s.line(10, "Mika paused at 12:04")) // i18n-skip
-        case .wait, .cap, .fullcap, .ownwait:
-            let secs: Int64 = scene == .cap || scene == .fullcap ? 20 : 6
-            set("Ren", .loading, since: ago(secs))
-            view.waiting = [RoomPausedFor(name: "Ren", reason: .loading, sinceMs: ago(secs))]
-            view.canCarryOn = secs >= 20
-            if scene == .ownwait {
-                members = members.map { var m = $0; m.you = m.name == "Ren"; return m }
-                view.canDontWait = true
-            }
-        case .carried:
-            set("Ren", .loading, since: ago(24))
-            view.carriedOn = (by: "Mika", past: ["Ren"])
-            lines.append(s.line(10, "Mika carried on without Ren")) // i18n-skip
-        case .buffering:
-            set("Ren", .buffering, since: ago(3))
-            view.waiting = [RoomPausedFor(name: "Ren", reason: .buffering, sinceMs: ago(3))]
-        case .bufferingsix:
-            six()
-            set("Sora", .buffering, since: ago(3))
-        case .six:
-            six()
-            set("Sora", .noSource)
-        case .renchoosing: set("Ren", .choosing)
-        case .rennosource: set("Ren", .noSource)
-        case .renclosed: set("Ren", .playerClosed)
-        case .renreconnecting: set("Ren", .reconnecting)
-        case .renbehind:
-            set("Ren", .behind)
-            members[2].behindS = 42
-        case .renepisode:
-            set("Ren", .otherEpisode)
-            members[2].episode = String(item.episode + 1)
-        case .youchoosing:
-            set("Ada", .choosing)
-            room.stage(choices: [
-                RoomSourceChoice(id: "a", name: "Riverside", detail: "1080p · 1.2 GB"), // i18n-skip
-                RoomSourceChoice(id: "b", name: "Lantern", detail: "720p · 640 MB"), // i18n-skip
-                RoomSourceChoice(id: "c", name: "Harbour", detail: "1080p · 1.4 GB"), // i18n-skip
-            ])
-        case .younosource:
-            set("Ada", .noSource)
-        case .youbehind:
-            set("Ada", .behind)
-            members[0].behindS = 9
-        case .youreconnecting:
-            view.connection = .reconnecting(relaysUp: 0)
-            set("Ada", .reconnecting)
-        case .relaytrouble, .detailstrouble:
-            view.relays[1].healthy = false
-            view.relays[1].rttMs = nil
-            view.relays[2].healthy = false
-            view.relays[2].rttMs = nil
-            view.connection = .reconnecting(relaysUp: 1)
-        case .upnext:
-            view.upNext = RoomUpNext(episode: String(item.episode + 1), name: "Crosswind", endsAtMs: now + 8000) // i18n-skip
-        case .skip:
-            room.stage(skip: true)
-        case .movestart, .movepick:
-            members = [s.member("Mika", .watching, you: true), s.member("Ada", .watching), s.member("Ren", .watching),
-                       s.member("Taro", .watching)]
-            muted = ["Taro"]
-        case .moveoffer:
-            members = [s.member("Ada", .watching, you: true), s.member("Ren", .watching), s.member("Taro", .watching),
-                       s.member("Mika", .left)]
-            offer = RoomMoveOffer(id: "m1", by: "Mika", names: ["Ren"], title: entry.title, episode: episode, expiresAtMs: now + 60000)
-            lines = Array(s.conversation(episode).prefix(5)) + [s.line(10, "Mika moved to a new room")] // i18n-skip
-        case .moved:
-            members = [s.member("Taro", .watching, you: true), s.member("Ada", .left), s.member("Ren", .left)]
-            view.moved = RoomMoved(by: "Mika", went: ["Ada", "Ren"])
-            lines = [
-                s.line(1, "Mika started the room · Episode \(episode)"), // i18n-skip
-                s.line(2, "Mika moved to a new room"), // i18n-skip
-                s.line(3, "Ada went to the new room"), // i18n-skip
-                s.line(4, "Ren went to the new room"), // i18n-skip
-            ]
-        }
-
+        guard let fake = store.startFakeRoom() else { return false }
+        RoomStage.fake = fake
         if scene == .morph {
-            // For the recording: the plain player first, then Watch together.
+            // For the recording: the plain player first, then Watch together from it.
+            guard let item = store.continuing.queue(store.titles).all.first else { return false }
+            store.send(.play(id: item.id, episode: String(item.episode)))
+            guard await roomWaited(30, { self.isPresented && self.hasPicture }) else { return false }
+            hideControls()
             try? await Task.sleep(for: .milliseconds(1500))
+            room.start(id: item.id, episode: String(item.episode))
+            guard await roomWaited(15, { room.inRoom }) else { return false }
+            try? await Task.sleep(for: .milliseconds(900))
+            return true
         }
-        room.stage(view: view, members: members, lines: lines, invitation: invitation, offer: offer, muted: muted)
+        let engineScene = RoomStage.scene(scene)
+        // The fake blocks while its members act: off the main thread.
+        let staged = await Task.detached { fake.stage(scene: engineScene) }.value
+        guard staged, await roomWaited(15, { room.active }) else { return false }
+        if !scene.panelOnly {
+            guard await roomWaited(30, { self.isPresented && self.hasPicture }) else { return false }
+        }
+        if scene == .ownwait { holdsCurtain = true }
+        hideControls()
+        // Let the members' states settle, then hold the room's clocks there.
+        try? await Task.sleep(for: .milliseconds(600))
+        RoomModel.stillAt = Int64((Date.now.timeIntervalSince1970 * 1000).rounded())
         room.shown = scene != .hidden && scene != .folded
 
         switch scene {
@@ -346,7 +214,13 @@ extension PlayerModel {
         case .editrelays: room.popover = .editRelays
         case .leave: room.leaving = .leave
         case .cmdw: room.leaving = .close
-        case .movepick: room.startMove()
+        case .movepick:
+            // Ren muted: Move leaves a muted member unticked.
+            if let ren = room.members.first(where: { $0.name == "Ren" }) { room.mute(ren, true) } // i18n-skip
+            _ = await roomWaited(5) { room.members.contains { $0.muted } }
+            room.startMove()
+        case .skip:
+            room.stage(skipTo: 90)
         case .sidewayswrite:
             room.draft = "that bridge again" // i18n-skip
             room.writing = true
@@ -367,36 +241,44 @@ extension PlayerModel {
         return room.active
     }
 
-    /// Watch together's page: the board's three recent rooms, and the room or failure named.
+    /// Watch together's page: three recent rooms on Fixtures titles, and the room or failure
+    /// named. The engine keeps no recent rooms yet (LoadRecent answers none), so the page's list
+    /// is staged.
     private func stagePlace(_ scene: RoomScene, store: AppStore) async -> Bool {
         let room = store.room
-        // The Fixtures recent rooms give the titles and art.
-        store.party.loadTogether()
-        guard await roomWaited(30, { store.party.recent.count >= 3 }) else { return false }
-        let now = Int64((Date.now.timeIntervalSince1970 * 1000).rounded())
-        RoomModel.stillAt = now
-        let kept = Array(store.party.recent.prefix(3))
+        guard await roomWaited(30, { store.titles.entries.count >= 3 }) else { return false }
+        let kept = store.titles.entries.values.sorted { $0.title < $1.title }.prefix(3).map { $0 }
         let recent = [
-            RoomRecent(roomId: "r1", title: kept[0].title, id: kept[0].id, episode: "8",
+            RecentRoom(roomId: "r1", title: kept[0].title, id: kept[0].id, episode: "8",
                        others: ["Mika", "Ren"], lastAt: "19:25", quiet: scene == .placerecentfail), // i18n-skip
-            RoomRecent(roomId: "r2", title: kept[1].title, id: kept[1].id, episode: "3",
+            RecentRoom(roomId: "r2", title: kept[1].title, id: kept[1].id, episode: "3",
                        others: ["Mika"], lastAt: "Tuesday"), // i18n-skip
-            RoomRecent(roomId: "r3", title: kept[2].title, id: kept[2].id, episode: "1",
+            RecentRoom(roomId: "r3", title: kept[2].title, id: kept[2].id, episode: "1",
                        others: [], lastAt: "18 November"), // i18n-skip
         ]
-        room.stage(recent: recent, joinFailed: scene == .placejoinfail ? "kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe" : nil)
-        if scene == .placeroom {
-            let s = RoomStage.self
-            let episode = "8"
-            let view = RoomView(
-                roomId: "r1", title: kept[0].title,
-                episode: RoomEpisode(id: kept[0].id, episode: episode, name: "The Long Leg", duration: 1420), // i18n-skip
-                position: RoomStage.position, positionAtMs: now, playing: true, relays: s.relays, link: s.link)
-            room.stage(view: view,
-                       members: [s.member("Ada", .playerClosed, you: true), s.member("Mika", .watching), s.member("Ren", .watching)],
-                       lines: s.conversation(episode), invitation: nil, offer: nil, muted: [])
+        room.stage(recent: recent, joinFailed: nil)
+        switch scene {
+        case .placejoinfail:
+            // The engine's link whose relays never answer.
+            guard let fake = store.startFakeRoom() else { return false }
+            RoomStage.fake = fake
+            room.joinText = fake.invite(by: "Mika")
+            _ = await Task.detached { fake.stage(scene: .unreachable) }.value
+            guard await roomWaited(40, { room.joinFailure != nil }) else { return false }
+            room.stage(recent: recent, joinFailed: room.joinFailed)
+        case .placeroom:
+            // In a room whose player was closed with Keep the room.
+            guard let fake = store.startFakeRoom() else { return false }
+            RoomStage.fake = fake
+            _ = await Task.detached { fake.stage(scene: .watching) }.value
+            guard await roomWaited(30, { room.inRoom && self.isPresented }) else { return false }
+            room.keepRoom()
+            guard await roomWaited(10, { room.you?.state == .playerClosed }) else { return false }
             room.shown = false
+        default:
+            break
         }
+        RoomModel.stillAt = Int64((Date.now.timeIntervalSince1970 * 1000).rounded())
         try? await Task.sleep(for: .milliseconds(900))
         return scene != .placeroom || room.active
     }

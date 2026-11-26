@@ -52,7 +52,7 @@ extension RoomModel {
         return nil
     }
 
-    var episodeId: AnilistId? { invitation?.episode.id ?? view?.episode.id }
+    var episodeId: AnilistId? { invitation?.id ?? view?.episodeId }
 }
 
 /// The Mac's panel: the banner under a dusk gradient, the words at the bottom leading corner.
@@ -79,7 +79,7 @@ struct RoomMacVideoPanel: View {
         .foregroundStyle(.silk)
     }
 
-    private var episode: RoomEpisode? { room.invitation?.episode ?? room.view?.episode }
+    private var number: String { room.invitation?.episode ?? room.view?.episodeNumber ?? "" }
     private var title: String { room.invitation?.title ?? room.view?.title ?? "" }
 
     @ViewBuilder
@@ -111,7 +111,7 @@ struct RoomMacVideoPanel: View {
         case .choosing:
             VStack(alignment: .leading, spacing: 0) {
                 Text(title).font(.macShowTitle(size: 28)).lineLimit(1)
-                Text(RoomCopy.chooseSourceFor(episode?.episode ?? "")).font(.system(size: 15)).padding(.top, 2)
+                Text(RoomCopy.chooseSourceFor(number)).font(.system(size: 15)).padding(.top, 2)
                 Text(RoomCopy.roomKeepsWatching).font(.system(size: 13)).foregroundStyle(.haze).padding(.top, 4)
                 RoomSourceList(room: room, rowHeight: 52, nameSize: 14)
                     .padding(.top, 14)
@@ -128,7 +128,7 @@ struct RoomMacVideoPanel: View {
         case .noSource:
             VStack(alignment: .leading, spacing: 0) {
                 Text(title).font(.macShowTitle(size: 28)).lineLimit(1)
-                Text(RoomCopy.noneHas(episode?.episode ?? "")).font(.system(size: 17, weight: .semibold)).padding(.top, 6)
+                Text(RoomCopy.noneHas(number)).font(.system(size: 17, weight: .semibold)).padding(.top, 6)
                 Text(RoomCopy.lookedIn(room.sourceCount)).font(.system(size: 14)).foregroundStyle(.haze)
                     .fixedSize(horizontal: false, vertical: true).padding(.top, 4)
                 HStack(spacing: 10) {
@@ -144,11 +144,8 @@ struct RoomMacVideoPanel: View {
     }
 
     private var episodeLine: String {
-        guard let episode else { return "" }
-        var parts = [room.episodeName(episode.episode)]
-        if let name = episode.name { parts[0] += " · \(name)" }
-        if let duration = episode.duration { parts.append(RoomCopy.minutes(Int((duration / 60).rounded()))) }
-        return parts.joined(separator: " · ")
+        guard !number.isEmpty else { return "" }
+        return RoomCopy.upNextEpisode(number, room.invitation == nil ? room.view?.roomEpisode?.name : nil)
     }
 }
 
@@ -160,26 +157,27 @@ struct RoomSourceList: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            ForEach(Array(room.choices.enumerated()), id: \.element.id) { index, choice in
-                Button { room.chosen = choice.id } label: {
+            ForEach(Array(room.choices.enumerated()), id: \.element.roomKey) { index, choice in
+                let picked = room.chosen == choice.roomKey
+                Button { room.chosen = choice.roomKey } label: {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text(choice.name).font(.system(size: nameSize, weight: .semibold))
-                            Text(choice.detail).font(.system(size: 12)).foregroundStyle(.haze)
+                            Text(choice.title).font(.system(size: nameSize, weight: .semibold)).lineLimit(1)
+                            Text(PartyWords.detail(choice)).font(.system(size: 12)).foregroundStyle(.haze).lineLimit(1)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
-                        if room.chosen == choice.id {
+                        if picked {
                             Image(systemName: "checkmark").font(.system(size: 15, weight: .semibold))
                         }
                     }
                     .padding(.horizontal, 14)
                     .frame(height: rowHeight)
-                    .background(room.chosen == choice.id ? Palette.silk.opacity(0.08) : .clear)
+                    .background(picked ? Palette.silk.opacity(0.08) : .clear)
                     .contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .overlay(alignment: .top) { if index > 0 { Rectangle().fill(Palette.glassEdge).frame(height: 1) } }
-                .accessibilityAddTraits(room.chosen == choice.id ? .isSelected : [])
+                .accessibilityAddTraits(picked ? .isSelected : [])
             }
         }
         .background(.ultraThinMaterial, in: .rect(cornerRadius: 14))
@@ -196,9 +194,9 @@ struct RoomDontWaitNote: View {
 
     var body: some View {
         RoomClock { now in
-            let since = room.view?.waiting.first(where: { $0.name == room.you?.name })?.sinceMs ?? now
+            let since = room.view?.waiting.first(where: \.you)?.sinceMs ?? now
             VStack(alignment: .leading, spacing: 10) {
-                Text(RoomCopy.seconds(RoomCopy.roomPausedUntil, RoomModel.seconds(since: since, now: now)))
+                Text(RoomCopy.roomPausedUntil(RoomModel.seconds(since: since, now: now)))
                     .font(.system(size: 13)).foregroundStyle(.haze).monospacedDigit()
                 Button(RoomCopy.dontWait) { room.dontWait() }
                     .buttonStyle(RoomButtonStyle(kind: .glass, height: 32, size: 13, padding: 16))

@@ -1,6 +1,7 @@
 // The room this device is in: the video's people, their states, the room's line and its chat
-// (the room board, v5). The engine works out every state; this keeps what it said and words it
-// for the screens, which never hold English of their own.
+// (the room board, v5). The engine works out every state (the room's FFI: RoomView, RoomMember,
+// Command.room); this keeps what it said and words it for the screens, which never hold English
+// of their own.
 
 import Foundation
 import KaeriKit
@@ -39,10 +40,10 @@ public struct RoomFaceLook: Equatable, Sendable {
 /// The room's line: what is happening, in words, and the one thing to press when there is one.
 public struct RoomStatus: Equatable, Sendable {
     public enum Action: Equatable, Sendable {
-        /// Carry on without them, from 20 s.
-        case carryOn(String)
+        /// Carry on without them, from 20 s: whom it leaves behind.
+        case carryOn([String])
         /// Before play, from 20 s.
-        case start(String)
+        case start([String])
         /// An invite opened: Join the room (or Join anyway) and Not now.
         case join(over: Bool)
         /// Someone moved the room and ticked you.
@@ -75,29 +76,29 @@ public enum RoomPopover: Equatable, Sendable {
 public final class RoomModel {
     /// The room, or nil outside one.
     public internal(set) var view: RoomView?
-    /// Its members, in join order.
+    /// Its members, this device first.
     public internal(set) var members: [RoomMember] = []
-    /// The conversation, oldest first.
+    /// The conversation, oldest first, without muted members' lines.
     public internal(set) var lines: [RoomLine] = []
-    /// The muted names.
-    public internal(set) var muted: Set<String> = []
+    /// The chat is off in Settings: no lines or field over the video.
+    public internal(set) var chatHidden = false
     /// An invite opened and not joined yet.
     public internal(set) var invitation: RoomInvitation?
     /// Someone moved the room and ticked this member.
     public internal(set) var offer: RoomMoveOffer?
     /// The rooms kept on this device, newest first.
-    public internal(set) var recent: [RoomRecent] = []
-    /// A pasted link that led nowhere: none of its relays answered.
+    public internal(set) var recent: [RecentRoom] = []
+    /// A pasted link that led nowhere, and why.
     public internal(set) var joinFailed: String?
+    public internal(set) var joinFailure: RoomJoinFailure?
     /// How many sources this device looked in for the room's episode.
-    public internal(set) var sourceCount = 3
-    /// The room is in the episode's opening: Skip opening shows for everyone (decision 7).
-    public internal(set) var skipShown = false
+    public var sourceCount: Int { countSources() }
+    /// The room is in the episode's opening: Skip opening shows for everyone, and skips to here.
+    public var skipTo: Double?
+    public var skipShown: Bool { skipTo != nil }
     /// What this device's sources list for the room's episode, while choosing one.
-    public internal(set) var choices: [RoomSourceChoice] = []
+    public internal(set) var choices: [SourceCandidate] = []
     public var chosen: String?
-    /// Relays added by hand to this room's list.
-    public internal(set) var extraRelays: [String] = []
 
     // MARK: What the screens have open
 
@@ -118,7 +119,18 @@ public final class RoomModel {
     /// The last change anyone made, for the full screen strip's 8 s.
     public private(set) var changedAt: Date = .distantPast
 
-    @ObservationIgnored public var send: @MainActor (RoomAction) -> Void = { _ in }
+    /// Rooms Rejoin found quiet, by room id.
+    private var quiet: Set<String> = []
+    private var kept: [KaeriKit.RoomRecent] = []
+    /// What a Join or a Rejoin is waiting on: a failure is about it.
+    private var joining: String?
+    private var rejoining: String?
+    /// A room looked into from Watch together: its glimpse isn't an invitation.
+    private var lookingIn: String?
+    private var peeked: String?
+
+    @ObservationIgnored public var send: @MainActor (Command) -> Void = { _ in }
+    @ObservationIgnored public var countSources: @MainActor () -> Int = { 0 }
     /// The player shows the room: ⌘W asks there.
     @ObservationIgnored public var playerShown = false
     /// Closes the player, for Leave and Keep the room from ⌘W.
@@ -134,7 +146,7 @@ public final class RoomModel {
     public var active: Bool { view != nil || invitation != nil }
     public var you: RoomMember? { members.first(where: \.you) }
 
-    /// The members, you first, the rest in join order.
+    /// The members, you first, the rest in join order; nobody who left.
     public var people: [RoomMember] {
         members.filter(\.you) + members.filter { !$0.you }
     }
@@ -144,30 +156,33 @@ public final class RoomModel {
     /// The room's position now, in seconds.
     public func position(at nowMs: Int64) -> Double {
         guard let view else { return 0 }
-        guard view.playing, view.positionAtMs > 0 else { return view.position }
-        return view.position + Double(nowMs - view.positionAtMs) / 1000
+        let position = view.position ?? 0
+        guard view.playing, view.positionAtMs > 0 else { return position }
+        return position + Double(nowMs - view.positionAtMs) / 1000
     }
 
     /// How long someone has been in their state, whole seconds.
-    public static func seconds(since: Int64, now: Int64) -> Int {
-        max(0, Int((now - since) / 1000))
+    public static func seconds(since: Int64?, now: Int64) -> Int {
+        guard let since else { return 0 }
+        return max(0, Int((now - since) / 1000))
     }
 
     /// Whom the room waits for.
     public var waitingFor: [String] { view?.waiting.map(\.name) ?? [] }
 
     private func waitSeconds(_ now: Int64) -> Int {
-        guard let first = view?.waiting.map(\.sinceMs).min() else { return 0 }
-        return Self.seconds(since: first, now: now)
+        Self.seconds(since: view?.waitShownAtMs ?? view?.waiting.map(\.sinceMs).min(), now: now)
     }
 
     /// The room's line.
     public func status(now: Int64) -> RoomStatus {
         if let invitation {
             return invitation.over
-                ? RoomStatus(title: RoomCopy.invitedBy(invitation.by), detail: RoomCopy.overCap, action: .join(over: true), waits: false)
+                ? RoomStatus(
+                    title: RoomCopy.invitedBy(invitation.by), detail: RoomCopy.overCap(invitation.names.count),
+                    action: .join(over: true), waits: false)
                 : RoomStatus(
-                    title: RoomCopy.invitedBy(invitation.by), detail: "\(invitation.title) · \(episodeName(invitation.episode.episode))",
+                    title: RoomCopy.invitedBy(invitation.by), detail: RoomCopy.invitedDetail(invitation.title, invitation.episode),
                     action: .join(over: false), waits: false)
         }
         guard let view else { return RoomStatus(title: "", detail: "", action: nil, waits: false) }
@@ -191,57 +206,54 @@ public final class RoomModel {
         }
         let waiting = waitingFor
         let secs = waitSeconds(now)
-        if let me = you, waiting.contains(me.name) {
+        if view.waiting.contains(where: \.you) {
             let others = members.filter { !$0.you && $0.state != .left }.map(\.name)
-            return RoomStatus(
-                title: RoomCopy.pausedForYou, detail: RoomCopy.areWaiting(RoomCopy.names(others), others.count > 1, secs),
-                action: nil, waits: true)
+            return RoomStatus(title: RoomCopy.pausedForYou, detail: RoomCopy.areWaiting(others, secs), action: nil, waits: true)
         }
-        let names = RoomCopy.names(waiting)
-        let many = waiting.count > 1
-        let who = many ? RoomCopy.them : names
         if !view.started {
-            if let n = view.startingIn {
+            if let n = view.startingIn(now: now) {
                 return RoomStatus(title: RoomCopy.startingIn(n), detail: RoomCopy.everyoneReady, action: nil, waits: false)
             }
             if waiting.isEmpty {
                 return RoomStatus(title: RoomCopy.notStarted, detail: RoomCopy.playStartsIt, action: nil, waits: false)
             }
             if view.canCarryOn {
-                return RoomStatus(title: RoomCopy.stillLoading(names, many), detail: RoomCopy.waited20, action: .start(who), waits: true)
+                return RoomStatus(title: RoomCopy.stillLoading(waiting), detail: RoomCopy.waited(secs), action: .start(waiting), waits: true)
             }
             return RoomStatus(
-                title: RoomCopy.startingWhen(names, many), detail: RoomCopy.seconds(RoomCopy.loading, secs), action: nil, waits: true)
+                title: RoomCopy.startingWhen(waiting), detail: RoomCopy.loading(secs), action: nil, waits: true)
         }
         if let up = view.upNext, up.cancelledBy == nil, let ends = up.endsAtMs {
             let left = max(0, Int((Double(ends - now) / 1000).rounded(.up)))
-            return RoomStatus(title: RoomCopy.upNextIn(left), detail: RoomCopy.playsForEveryone(up.episode), action: nil, waits: false)
+            return RoomStatus(title: RoomCopy.upNextIn(left), detail: RoomCopy.playsForEveryone(up.episode.episode), action: nil, waits: false)
         }
         if !waiting.isEmpty {
             if view.canCarryOn {
-                return RoomStatus(title: RoomCopy.stillLoading(names, many), detail: RoomCopy.waited20, action: .carryOn(who), waits: true)
+                return RoomStatus(title: RoomCopy.stillLoading(waiting), detail: RoomCopy.waited(secs), action: .carryOn(waiting), waits: true)
             }
             let buffering = view.waiting.count == 1 && view.waiting[0].reason == .buffering
-            let word = buffering ? RoomCopy.buffering : RoomCopy.loading
-            return RoomStatus(title: RoomCopy.pausedFor(names), detail: RoomCopy.seconds(word, secs), action: nil, waits: true)
-        }
-        if let carried = view.carriedOn {
             return RoomStatus(
-                title: RoomCopy.watchingTogether,
-                detail: RoomCopy.carriedOn(carried.by, RoomCopy.names(carried.past), carried.past.count > 1), action: nil, waits: false)
+                title: RoomCopy.pausedFor(waiting), detail: buffering ? RoomCopy.buffering(secs) : RoomCopy.loading(secs),
+                action: nil, waits: true)
         }
-        if !view.playing, let by = view.pausedBy {
-            let name = members.first(where: { $0.name == by })?.you == true ? RoomCopy.you : by
-            return RoomStatus(title: RoomCopy.paused(name), detail: RoomCopy.at(Self.clock(view.position)), action: nil, waits: false)
+        if let carried = view.carriedOn, !carried.past.isEmpty {
+            return RoomStatus(
+                title: RoomCopy.watchingTogether, detail: RoomCopy.carriedOn(carried.byYou ? RoomCopy.you : carried.by, carried.past),
+                action: nil, waits: false)
+        }
+        if !view.playing, view.pausedBy != nil || view.pausedByYou {
+            return RoomStatus(
+                title: RoomCopy.paused(by: view.pausedByYou ? nil : view.pausedBy), detail: RoomCopy.at(Self.clock(view.position ?? 0)),
+                action: nil, waits: false)
         }
         return RoomStatus(
-            title: RoomCopy.watchingTogether, detail: RoomCopy.episodeAt(view.episode.episode, Self.clock(position(at: now))),
+            title: RoomCopy.watchingTogether, detail: RoomCopy.episodeAt(view.episodeNumber, Self.clock(position(at: now))),
             action: nil, waits: false)
     }
 
     /// Whether the room waits for this member.
     public func waits(for member: RoomMember) -> Bool {
-        view?.waiting.contains { $0.name == member.name } ?? false
+        view?.waiting.contains { $0.id == member.id } ?? false
     }
 
     /// The word under a member's name.
@@ -249,27 +261,27 @@ public final class RoomModel {
         let secs = Self.seconds(since: member.sinceMs, now: now)
         let word: String
         switch member.state {
-        case .watching:
-            word = view?.started == false ? RoomCopy.ready : RoomCopy.watching
+        case .watching: word = view?.started == false ? RoomCopy.ready : RoomCopy.watching
+        case .ready: word = RoomCopy.ready
         case .paused: word = member.pausedRoom ? RoomCopy.pausedIt : RoomCopy.paused
-        case .loading: word = RoomCopy.seconds(RoomCopy.loading, secs)
-        case .buffering: word = RoomCopy.seconds(RoomCopy.buffering, secs)
-        case .behind: word = RoomCopy.seconds(RoomCopy.behind, Int((member.behindS ?? 0).rounded()))
-        case .otherEpisode: word = RoomCopy.onEpisode(member.episode ?? "")
+        case .loading: word = RoomCopy.loading(secs)
+        case .buffering: word = RoomCopy.buffering(secs)
+        case .behind: word = RoomCopy.behind(Int((member.behindS ?? 0).rounded()))
+        case .otherEpisode: word = RoomCopy.onEpisode(member.episode?.episode ?? "")
         case .choosing: word = RoomCopy.choosing
-        case .noSource: word = RoomCopy.noSourceFor(view?.episode.episode ?? "")
+        case .noSource: word = RoomCopy.noSourceFor(view?.episodeNumber ?? "")
         case .playerClosed: word = RoomCopy.playerClosed
         case .reconnecting: word = RoomCopy.reconnecting
         case .left: word = RoomCopy.left
         }
-        return muted.contains(member.name) ? "\(word) · \(RoomCopy.muted)" : word
+        return member.muted ? RoomCopy.andMuted(word) : word
     }
 
     /// A member's face.
     public func look(_ member: RoomMember, now: Int64) -> RoomFaceLook {
         let secs = Double(Self.seconds(since: member.sinceMs, now: now))
         switch member.state {
-        case .watching, .behind:
+        case .watching, .ready, .behind:
             return RoomFaceLook(ring: .with, dim: 1, pauseBadge: false, error: false)
         case .paused:
             return RoomFaceLook(ring: .paused, dim: 1, pauseBadge: member.pausedRoom, error: false)
@@ -286,19 +298,19 @@ public final class RoomModel {
 
     /// Whether the member is with the room: watching (or ready before play).
     public static func isWatching(_ member: RoomMember) -> Bool {
-        member.state == .watching
+        member.state == .watching || member.state == .ready
     }
 
     /// The full screen strip stays while anyone isn't watching (decision 8).
     public var anyoneNotWatching: Bool {
-        members.contains { $0.state != .watching && $0.state != .paused }
+        members.contains { !Self.isWatching($0) && $0.state != .paused }
     }
 
     /// "Episode 9"
-    public func episodeName(_ episode: String) -> String { "Episode \(episode)" }
+    public func episodeName(_ episode: String) -> String { RoomCopy.upNextEpisode(episode, nil) }
 
     /// 12:04
-    public static func clock(_ seconds: Double) -> String {
+    nonisolated public static func clock(_ seconds: Double) -> String {
         let s = max(0, Int(seconds.rounded()))
         return "\(s / 60):" + String(format: "%02d", s % 60)
     }
@@ -307,15 +319,27 @@ public final class RoomModel {
 
     public func carryOn() { act(.carryOn) }
     public func dontWait() { act(.dontWait) }
-    public func skipOpening() { act(.skipOpening) }
+    public func skipOpening() {
+        guard let skipTo else { return }
+        act(.skipOpening(to: skipTo))
+    }
     public func cancelUpNext() { act(.cancelUpNext) }
     public func playNextNow() { act(.playNextNow) }
-    public func play() { act(.play) }
+    /// Play for everyone before play (and Carry on during a wait).
+    public func play() { act(.play(play: true)) }
     public func newInvite() { act(.newInvite) }
-    public func accept() { act(.accept) }
+
+    /// Join the room, from an invite opened.
+    public func accept() {
+        guard let invitation else { return }
+        joining = invitation.link
+        act(.lobby(invite: invitation.link, name: nil, pick: nil, anyway: invitation.full))
+    }
+
+    /// Not now, from an invite opened: nothing was joined, so nothing is left.
     public func notNow() {
         invitation = nil
-        act(.leave)
+        peeked = nil
     }
 
     public func answer(go: Bool) {
@@ -328,26 +352,25 @@ public final class RoomModel {
         let text = draft.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty else { return }
         draft = ""
-        act(.say(text))
+        act(.say(text: text))
     }
 
-    public func react(_ reaction: Reaction) { act(.react(reaction)) }
+    public func react(_ reaction: Reaction) { act(.react(reaction: reaction)) }
 
     /// Watch together: a room starts from the episode playing, never empty.
     public func start(id: AnilistId, episode: String) {
         shown = true
-        act(.start(id: id, episode: episode))
+        act(.lobby(invite: nil, name: nil, pick: RoomEpisode(id: id, episode: episode), anyway: false))
     }
 
-    public func mute(_ name: String, _ on: Bool) {
-        if on { muted.insert(name) } else { muted.remove(name) }
-        act(.mute(name, on))
+    public func mute(_ member: RoomMember, _ on: Bool) {
+        act(.mute(id: member.id, muted: on))
     }
 
     /// Open Move to a new room: everyone present ticked, except muted people.
     public func startMove() {
         popover = nil
-        moveTicks = Set(members.filter { !$0.you && $0.state != .left && !muted.contains($0.name) }.map(\.id))
+        moveTicks = Set(members.filter { !$0.you && $0.state != .left && !$0.muted }.map(\.id))
         moving = true
     }
 
@@ -379,27 +402,55 @@ public final class RoomModel {
         return true
     }
 
+    /// Join, on Watch together's page: the pasted link.
     public func join() {
-        let link = joinText.trimmingCharacters(in: .whitespaces)
+        let link = joinText.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !link.isEmpty else { return }
-        act(.join(link: link))
+        joinFailed = nil
+        joinFailure = nil
+        joining = link
+        act(.lobby(invite: link, name: nil, pick: nil, anyway: false))
+    }
+
+    /// An invite link opened from outside the app: the room shows behind its banner first.
+    public func open(invite link: String) {
+        peeked = link
+        send(.room(.peekInvite(invite: link)))
     }
 
     public func openSources() { showSources() }
     public func searchTitles() { showSearch(view?.title ?? "") }
 
-    public func setRelays(_ relays: [String]) { act(.setRelays(relays)) }
+    /// Edit relays, for this room and everyone in it.
+    public func setRelays(_ relays: [String]) { act(.editRelays(relays: relays)) }
+
+    /// Choosing a source for the room's episode: what each source lists, loading in place.
+    public func chooseSource() {
+        guard let view, let id = view.episodeId else { return }
+        choices = []
+        chosen = nil
+        act(.choosingSource(open: true))
+        send(.loadSources(id: id, episode: view.episodeNumber))
+    }
 
     /// Play in the room: the source picked plays at the room's place.
     public func playChosen() {
-        guard let chosen, let choice = choices.first(where: { $0.id == chosen }) else { return }
-        act(.playSource(choice.id))
+        guard let view, let id = view.episodeId, let chosen, let choice = choices.first(where: { $0.roomKey == chosen }) else { return }
+        send(.playSource(id: id, episode: view.episodeNumber, providerId: choice.providerId, sourceId: choice.id))
     }
 
     /// Not now, from choosing a source: back to before.
     public func stopChoosing() { act(.choosingSource(open: false)) }
 
-    public func rejoin(_ room: RoomRecent) { act(.rejoin(roomId: room.roomId)) }
+    public func rejoin(_ room: RecentRoom) {
+        quiet.remove(room.roomId)
+        rejoining = room.roomId
+        recent = rows()
+        act(.rejoin(roomId: room.roomId))
+    }
+
+    /// Watch together's page opened: the rooms kept on this device.
+    public func loadRecent() { send(.room(.loadRecent)) }
 
     /// Open the player at the room's place, from Watch together.
     public func openPlayer() {
@@ -407,9 +458,9 @@ public final class RoomModel {
         act(.openPlayer)
     }
 
-    private func act(_ action: RoomAction) {
+    private func act(_ command: RoomCommand) {
         changedAt = .now
-        send(action)
+        send(.room(command))
     }
 
     /// Something in the room changed: the strip shows for 8 s.
@@ -419,59 +470,127 @@ public final class RoomModel {
     /// seconds are the scene's. Only a Fixtures run sets it.
     public static var stillAt: Int64?
 
-    #if FIXTURES
-    /// A screenshot run's room, as a scene stages it.
-    public func stage(
-        view: RoomView?, members: [RoomMember], lines: [RoomLine], invitation: RoomInvitation? = nil,
-        offer: RoomMoveOffer? = nil, muted: Set<String> = []
-    ) {
-        self.view = view
-        self.members = members
-        self.lines = lines
-        self.invitation = invitation
-        self.offer = offer
-        self.muted = muted
-        changedAt = .now
+    // MARK: The engine
+
+    func apply(_ event: Event) {
+        switch event {
+        case .roomJoined(let view):
+            self.view = view
+            invitation = nil
+            peeked = nil
+            joining = nil
+            rejoining = nil
+            joinFailed = nil
+            joinFailure = nil
+            joinText = ""
+            changed()
+        case .roomState(let view):
+            self.view = view
+            if case .found? = view.sources { choices = [] }
+        case .roomMembers(let members):
+            self.members = members
+            changed()
+        case .roomMessage:
+            changed()
+        case .roomChat(let conversation):
+            lines = conversation.lines.compactMap(RoomLine.init)
+        case .roomChatState(let state):
+            chatHidden = state.hidden
+        case .roomLeft(let why):
+            left(why)
+        case .roomStarted(let id, let episode, _, _):
+            // The room plays: the player opens at its place, and the seat follows the room.
+            shown = true
+            send(.play(id: id, episode: episode))
+        case .roomGlimpse(let glimpse):
+            if let room = glimpse.roomId, room == lookingIn {
+                lookingIn = nil
+                return
+            }
+            guard view == nil, let by = glimpse.by else { return }
+            let episode = glimpse.roomEpisode
+            invitation = RoomInvitation(
+                by: by, title: episode?.title ?? "", id: episode?.id, episode: episode?.episode ?? "",
+                names: glimpse.members.map(\.name), full: glimpse.full, link: peeked)
+            members = glimpse.members
+            lines = []
+        case .roomLookFailed(let roomId, _):
+            quiet.insert(roomId)
+            if rejoining == roomId { rejoining = nil }
+            recent = rows()
+        case .roomRecent(let rooms):
+            #if FIXTURES
+            if stagedRecent { return }
+            #endif
+            kept = rooms
+            recent = rows()
+        case .roomMoveOffer(let offer):
+            self.offer = offer
+            changed()
+        case .roomMoveOfferGone(let id):
+            if offer?.id == id { offer = nil }
+        case .sources(let id, let episode, let candidates, _):
+            if view?.episodeId == id, view?.episodeNumber == episode, you?.state == .choosing {
+                choices = candidates
+                chosen = chosen ?? candidates.first?.roomKey
+            }
+        default:
+            break
+        }
     }
 
-    public func stage(skip: Bool) { skipShown = skip }
-
-    public func stage(choices: [RoomSourceChoice], extraRelays: [String] = []) {
-        self.choices = choices
-        chosen = choices.first?.id
-        self.extraRelays = extraRelays
-    }
-
-    public func stage(recent: [RoomRecent], joinFailed: String?) {
-        self.recent = recent
-        self.joinFailed = joinFailed
-        if let joinFailed { joinText = joinFailed }
-    }
-
-    public func clear() {
+    private func left(_ why: RoomLeftWhy) {
+        let failed: RoomJoinFailure? = switch why {
+        case .left, .moved: nil
+        case .unreachable: .unreachable
+        case .full: .full
+        case .oldInvite: .oldInvite
+        case .failed(let reason): .failed(reason.text)
+        }
+        if let rejoining, failed != nil {
+            quiet.insert(rejoining)
+        } else if let joining, let failed {
+            joinFailed = joining
+            joinFailure = failed
+            joinText = joining
+        }
+        joining = nil
+        rejoining = nil
         view = nil
         members = []
         lines = []
-        writing = false
-        invitation = nil
         offer = nil
         popover = nil
         leaving = nil
         moving = false
+        writing = false
+        recent = rows()
     }
+
+    private func rows() -> [RecentRoom] {
+        #if FIXTURES
+        if stagedRecent { return recent }
+        #endif
+        return kept.map { room in
+            RecentRoom(
+                roomId: room.roomId, title: room.title, id: room.id, episode: room.episode, others: room.names,
+                lastAt: RecentRoom.when(room.lastAt), quiet: quiet.contains(room.roomId))
+        }
+    }
+
+    #if FIXTURES
+    private var stagedRecent = false
+
+    /// A screenshot run's recent rooms and Join failure, for Watch together's page.
+    public func stage(recent: [RecentRoom], joinFailed: String?) {
+        stagedRecent = true
+        self.recent = recent
+        self.joinFailed = joinFailed
+        joinFailure = joinFailed == nil ? nil : .unreachable
+        if let joinFailed { joinText = joinFailed }
+    }
+
+    /// The player's skip mark, for a screenshot of Skip opening.
+    public func stage(skipTo: Double?) { self.skipTo = skipTo }
     #endif
-}
-
-/// A source that lists the room's episode.
-public struct RoomSourceChoice: Equatable, Sendable, Identifiable {
-    public var id: String
-    public var name: String
-    /// "1080p · 1.2 GB"
-    public var detail: String
-
-    public init(id: String, name: String, detail: String) {
-        self.id = id
-        self.name = name
-        self.detail = detail
-    }
 }
