@@ -21,10 +21,10 @@ public static class Chat
     /// <summary>The button's name for a reaction: "Laugh".</summary>
     public static string Label(Reaction reaction) => reaction switch
     {
-        Reaction.Laugh => T.PartyReactLaugh,
-        Reaction.Gasp => T.PartyReactGasp,
-        Reaction.Clap => T.PartyReactClap,
-        _ => T.PartyReactCry,
+        Reaction.Laugh => T.RoomReactLaugh,
+        Reaction.Gasp => T.RoomReactGasp,
+        Reaction.Clap => T.RoomReactClap,
+        _ => T.RoomReactCry,
     };
 
     /// <summary>Names with what they did: "Ren and Mika laughed".</summary>
@@ -54,11 +54,11 @@ public static class Chat
     };
 
     /// <summary>Who a line is from, as it reads: "You" for this device's own.</summary>
-    public static string Who(PartyChatLine line) => line.You ? T.PartyChatYou : line.From;
+    public static string Who(RoomChatLine line) => line.You ? T.RoomYou : line.From;
 
     /// <summary>A reaction line as the conversation says it: "Ren and Mika laughed at 12:04".</summary>
-    public static string? ReactionLine(PartyChatLine line) =>
-        line.Body is PartyChatBody.Reacted r ? T.PartyReactedAt(Reacted(Names(Who(line), r.With), r.Reaction), Time(r.At)) : null;
+    public static string? ReactionLine(RoomChatLine line) =>
+        line.Body is RoomChatBody.Reacted r ? T.PartyReactedAt(Reacted(Names(Who(line), r.With), r.Reaction), Time(r.At)) : null;
 
     /// <summary>How long a line holds on the video: 4 s, and 1 s for every 10 words past 12, as notices do.</summary>
     public static TimeSpan Hold(string text)
@@ -79,7 +79,7 @@ public static class Chat
     /// <paramref name="duration"/> long: marks within <paramref name="near"/> of the tick before
     /// them share it.
     /// </summary>
-    public static IReadOnlyList<Tick> Ticks(IEnumerable<PartyReactionMark> marks, double duration, double width, double near)
+    public static IReadOnlyList<Tick> Ticks(IEnumerable<RoomReactionMark> marks, double duration, double width, double near)
     {
         var ticks = new List<(double At, List<string> Who)>();
         if (duration <= 0 || width <= 0)
@@ -97,40 +97,11 @@ public static class Chat
         return ticks.Select(t => new Tick(t.At, t.Who)).ToList();
     }
 
-    /// <summary>What a conversation lists: a typed line, a reaction line, or one line for a muted member's run.</summary>
-    public abstract record Entry
-    {
-        public sealed record Said(string Who, bool You, string Text) : Entry;
-        public sealed record Reacted(string Line) : Entry;
-        public sealed record Muted(string Name) : Entry;
-    }
-
-    /// <summary>The lines a conversation lists: a muted member's run of lines becomes one line saying so.</summary>
-    public static IReadOnlyList<Entry> Entries(IEnumerable<PartyChatLine> lines)
-    {
-        var entries = new List<Entry>();
-        foreach (var line in lines)
-        {
-            if (line.Muted)
-            {
-                if (entries.LastOrDefault() is not Entry.Muted m || m.Name != line.From)
-                    entries.Add(new Entry.Muted(line.From));
-                continue;
-            }
-            entries.Add(line.Body switch
-            {
-                PartyChatBody.Said said => new Entry.Said(Who(line), line.You, said.Text),
-                _ => new Entry.Reacted(ReactionLine(line) ?? ""),
-            });
-        }
-        return entries;
-    }
-
     /// <summary>The typed, unmuted lines new since <paramref name="seen"/>, and the newest id.</summary>
-    public static (IReadOnlyList<PartyChatLine> Fresh, ulong Newest) Fresh(IReadOnlyCollection<PartyChatLine> lines, ulong seen)
+    public static (IReadOnlyList<RoomChatLine> Fresh, ulong Newest) Fresh(IReadOnlyCollection<RoomChatLine> lines, ulong seen)
     {
         var newest = Math.Max(seen, lines.Count == 0 ? seen : lines.Max(l => l.Id));
-        var fresh = lines.Where(l => l.Id > seen && !l.Muted && l.Body is PartyChatBody.Said).ToList();
+        var fresh = lines.Where(l => l.Id > seen && !l.Muted && l.Body is RoomChatBody.Said).ToList();
         return (fresh, newest);
     }
 

@@ -10,12 +10,10 @@ using Microsoft.UI.Xaml.Media;
 namespace Kaeri.Windows.Pages;
 
 /// <summary>
-/// A party's episode that none of this device's sources found: the viewer is in the room with
-/// nothing playing. Choose source lists what each source has for the episode, and the one picked
-/// plays with the room; Not now stays in the room, and Leave party leaves it. A cast that
-/// couldn't start on a TV opens the same list on its own, for the episode to play here.
+/// What each source lists for an episode, to pick one and play it here: a cast that couldn't
+/// start on a TV, or a start that found nothing to play, opens it.
 /// </summary>
-sealed class PartySourceDialog
+sealed class SourceListDialog
 {
     readonly Ctx ctx;
     readonly ContentDialog dialog;
@@ -24,77 +22,35 @@ sealed class PartySourceDialog
     readonly StackPanel body = new() { Spacing = 12, Width = 440 };
     readonly ListView list = new() { SelectionMode = ListViewSelectionMode.Single, MaxHeight = 260 };
     readonly ProgressRing ring = new() { Width = 16, Height = 16, IsActive = true };
-    readonly FontIcon mark = new() { Glyph = "\uEA39", FontSize = 16, Opacity = 0 };
+    readonly FontIcon mark = new() { Glyph = "", FontSize = 16, Opacity = 0 };
     readonly TextBlock line = Ui.Text("", "HazeBodyStyle");
     /// <summary>What each source said when none listed a release, one line each.</summary>
     readonly StackPanel reasons = new() { Spacing = 4 };
     SourceCandidate[]? candidates;
     bool choosing, failed, openProviders;
 
-    readonly NoSourceWhy why;
-    readonly string reason;
-    readonly bool alone;
-
-    /// <summary>The episode's sources on their own, outside a party: the one picked plays here.</summary>
-    public static PartySourceDialog ForEpisode(Ctx ctx, XamlRoot root, uint id, string episode) =>
-        new(ctx, root, id, episode, NoSourceWhy.NotFound, "", alone: true);
-
-    public PartySourceDialog(Ctx ctx, XamlRoot root, uint id, string episode, NoSourceWhy why, string reason, bool alone = false)
+    public SourceListDialog(Ctx ctx, XamlRoot root, uint id, string episode)
     {
-        this.alone = alone;
         this.ctx = ctx;
         this.id = id;
         this.episode = episode;
-        this.why = why;
-        this.reason = reason;
         dialog = new ContentDialog
         {
             XamlRoot = root,
             Content = body,
-            SecondaryButtonText = T.PartyLeave,
-            CloseButtonText = T.PartyNotNow,
+            CloseButtonText = T.ActionCancel,
+            DefaultButton = ContentDialogButton.Primary,
+            PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle"),
         };
-        // The actions that fit the answer: nothing to choose before the episode is out, the
-        // plugins to add when there are no sources, and the sources' list otherwise.
-        switch (why)
-        {
-            case NoSourceWhy.NotAired:
-                dialog.DefaultButton = ContentDialogButton.Close;
-                break;
-            case NoSourceWhy.NoSources:
-                dialog.PrimaryButtonText = T.PartyOpenSources;
-                openProviders = true;
-                break;
-            default:
-                dialog.PrimaryButtonText = T.PlayerChooseSource;
-                break;
-        }
-        if (why != NoSourceWhy.NotAired)
-        {
-            dialog.DefaultButton = ContentDialogButton.Primary;
-            dialog.PrimaryButtonStyle = Ui.Res<Style>("AccentButtonStyle");
-        }
         dialog.PrimaryButtonClick += OnPrimary;
-        dialog.SecondaryButtonClick += (_, _) => ctx.Send(new Command.PartyLeave());
         list.SelectionChanged += (_, _) => dialog.IsPrimaryButtonEnabled = list.SelectedIndex >= 0;
         AutomationProperties.SetName(list, T.PartySourcesLabel);
         AutomationProperties.SetLiveSetting(line, AutomationLiveSetting.Polite);
-        if (alone)
-        {
-            dialog.SecondaryButtonText = "";
-            dialog.CloseButtonText = T.ActionCancel;
-            Choose();
-        }
-        else
-            First();
+        Choose();
     }
-
-    /// <summary>The dialog that is up, for a screenshot run to press Choose source in.</summary>
-    public static PartySourceDialog? Showing { get; private set; }
 
     public async Task ShowAsync()
     {
-        Showing = this;
         ctx.Batch += Heard;
         var answer = ContentDialogResult.None;
         try
@@ -104,70 +60,17 @@ sealed class PartySourceDialog
         finally
         {
             ctx.Batch -= Heard;
-            if (Showing == this)
-                Showing = null;
         }
-        // Only Open sources goes there: Not now, Escape and a party that ended stay where they are.
+        // Only Open sources goes there: Cancel and Escape stay where they are.
         if (openProviders && answer == ContentDialogResult.Primary)
             ctx.Go("providers");
     }
-
-    /// <summary>Whether this is the dialog for <paramref name="episode"/> of <paramref name="title"/>.</summary>
-    public bool Asks(uint title, string episode) => id == title && this.episode == episode;
-
-    /// <summary>Closes it, or drops it if it is still waiting behind another dialog.</summary>
-    public void Close() => Dialogs.Close(dialog);
-
-    string What => ctx.Known.Entry(id) is { } entry ? T.EpisodeLabelOf(episode, entry.Title) : T.EpisodeLabel(episode);
-
-    void First()
-    {
-        body.Children.Clear();
-        var place = ctx.Known.Party is { } party ? T.PartyInRoomIdle(party.Room, party.Server) : T.PartyInRoomIdlePlain;
-        switch (why)
-        {
-            case NoSourceWhy.NotAired:
-                // The schedule's own words, already in the person's language, say when it airs.
-                dialog.Title = T.PartyNosourceUnairedTitle(episode);
-                body.Children.Add(Ui.Text(place, "BodyTextBlockStyle"));
-                body.Children.Add(Ui.Haze(T.PartyNosourceUnairedWhen(reason)));
-                break;
-            case NoSourceWhy.NoSources:
-                dialog.Title = T.PartyNosourceNoneTitle;
-                body.Children.Add(Ui.Text(place, "BodyTextBlockStyle"));
-                body.Children.Add(Ui.Haze(T.PartyNosourceNoneDetail(What)));
-                break;
-            default:
-                dialog.Title = T.PartyNosourceMissingTitle;
-                body.Children.Add(Ui.Text(place, "BodyTextBlockStyle"));
-                body.Children.Add(Ui.Haze(T.PartyNosourceMissingDetail(reason.TrimEnd('.'), What)));
-                break;
-        }
-    }
-
-#if KAERI_TESTING
-    public void RehearseChoose() => Choose();
-
-    /// <summary>A screenshot's answer in which no source lists anything, each with its reason.</summary>
-    public void RehearseMissed(MissedListing[] missed)
-    {
-        if (!choosing)
-            Choose();
-        rehearsed = true;
-        Listed([], missed);
-    }
-
-    /// <summary>A screenshot's answer is on screen: the engine's own, however late, stays out.</summary>
-    bool rehearsed;
-#else
-    const bool rehearsed = false;
-#endif
 
     void OnPrimary(ContentDialog sender, ContentDialogButtonClickEventArgs args)
     {
         if (openProviders)
             return;
-        if (!choosing || failed)
+        if (failed)
         {
             args.Cancel = true;
             Choose();
@@ -179,7 +82,6 @@ sealed class PartySourceDialog
             return;
         }
         var pick = candidates[list.SelectedIndex];
-        // In the room already: this play plays with it.
         ctx.Send(new Command.PlaySource(id, episode, pick.ProviderId, pick.Id));
     }
 
@@ -187,7 +89,7 @@ sealed class PartySourceDialog
     void Choose()
     {
         dialog.Title = T.PartyChooseSourceFor(episode);
-        dialog.PrimaryButtonText = alone ? T.ActionPlay : T.PartyPlayWith;
+        dialog.PrimaryButtonText = T.ActionPlay;
         dialog.IsPrimaryButtonEnabled = false;
         if (!choosing)
         {
@@ -224,18 +126,12 @@ sealed class PartySourceDialog
         {
             switch (e)
             {
-                case Event.Sources s when choosing && !rehearsed && s.Id == id && s.Episode == episode:
+                case Event.Sources s when choosing && s.Id == id && s.Episode == episode:
                     Listed(s.Candidates, s.Missed);
                     break;
                 // The engine says why it found nothing as an alert, not as an empty list.
-                case Event.Toast t when choosing && !rehearsed && candidates is null && !failed && t.V1.Kind == NoticeKind.Alert:
+                case Event.Toast t when choosing && candidates is null && !failed && t.V1.Kind == NoticeKind.Alert:
                     Failed(t.V1.Msg is { } said ? said.Text() : T.SourcesLoadFailed);
-                    break;
-                case Event.PartyLeft when !alone:
-                    Close();
-                    return;
-                case Event.PartyJoined or Event.PartyState when !choosing && !alone:
-                    First();
                     break;
             }
         }

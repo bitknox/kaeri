@@ -735,8 +735,6 @@ public sealed partial class MainWindow : Window
             });
         if (options.Show?.StartsWith("room-", StringComparison.Ordinal) == true)
             RehearseRoom(options.Show);
-        if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
-            RehearseParty(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)
             RehearseTv(options.Show);
         if (options.Show?.StartsWith("cast-", StringComparison.Ordinal) == true)
@@ -853,7 +851,6 @@ public sealed partial class MainWindow : Window
 
     void Heard(IReadOnlyList<Event> batch)
     {
-        PartyHeard(batch);
         RoomHeard(batch);
         foreach (var e in batch)
         {
@@ -1406,7 +1403,7 @@ public sealed partial class MainWindow : Window
         else
             Nav.SelectedItem = null;
         selecting = false;
-        UpdatePartyBar();
+        UpdateRoomBar();
         if (!Player.Showing)
             FocusPage();
     }
@@ -1670,7 +1667,7 @@ public sealed partial class MainWindow : Window
         KeepPlaceNow();
         if (closing)
             return;
-        if (AskLeavingParty())
+        if (AskLeavingRoom())
         {
             args.Cancel = true;
             return;
@@ -1968,7 +1965,7 @@ public sealed partial class MainWindow : Window
         }
         if (link is Link.Party party)
         {
-            OpenPartyInvite(party.Text);
+            OpenRoomInvite(party.Text);
             return;
         }
         if (link is Link.Invite invite)

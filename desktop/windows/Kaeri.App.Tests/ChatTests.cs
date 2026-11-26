@@ -16,11 +16,11 @@ public class ChatTests
         T.Language = "en";
     }
 
-    static PartyChatLine Said(ulong id, string from, string text, bool you = false, bool muted = false) =>
-        new(id, from, you, new PartyChatBody.Said(text), muted);
+    static RoomChatLine Said(ulong id, string from, string text, bool you = false, bool muted = false) =>
+        new(id, from, you, new RoomChatBody.Said(text), muted);
 
-    static PartyChatLine Reacted(ulong id, string from, Reaction reaction, double at, params string[] with) =>
-        new(id, from, false, new PartyChatBody.Reacted(reaction, at, with), false);
+    static RoomChatLine Reacted(ulong id, string from, Reaction reaction, double at, params string[] with) =>
+        new(id, from, false, new RoomChatBody.Reacted(reaction, at, with), false);
 
     [Fact]
     public void NamesReadAsASentence()
@@ -52,7 +52,7 @@ public class ChatTests
     public void MarksCloseTogetherShareATick()
     {
         // 600 s over 600 px: a second is a pixel, and marks within 4 px share the tick before them.
-        PartyReactionMark[] marks =
+        RoomReactionMark[] marks =
         [
             new(100, "Mika", Reaction.Laugh),
             new(10, "Ren", Reaction.Gasp),
@@ -68,33 +68,9 @@ public class ChatTests
     }
 
     [Fact]
-    public void AMutedMembersRunIsOneLine()
-    {
-        PartyChatLine[] lines =
-        [
-            Said(1, "Mika", "ok starting"),
-            Said(2, "Sol", "one", muted: true),
-            Said(3, "Sol", "two", muted: true),
-            Said(4, "Ren", "ready"),
-            Said(5, "Sol", "three", muted: true),
-            Reacted(6, "Ren", Reaction.Gasp, 90),
-        ];
-        var entries = Chat.Entries(lines);
-        Assert.Equal(
-            [
-                new Chat.Entry.Said("Mika", false, "ok starting"),
-                new Chat.Entry.Muted("Sol"),
-                new Chat.Entry.Said("Ren", false, "ready"),
-                new Chat.Entry.Muted("Sol"),
-                new Chat.Entry.Reacted("Ren gasped at 1:30"),
-            ],
-            entries);
-    }
-
-    [Fact]
     public void FreshLinesAreTheTypedUnmutedOnesAfterTheLastSeen()
     {
-        PartyChatLine[] lines =
+        RoomChatLine[] lines =
         [
             Said(1, "Mika", "ok starting"),
             Said(2, "Sol", "muted", muted: true),

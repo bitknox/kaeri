@@ -2311,7 +2311,7 @@ public sealed partial class TitlePage : Page, IPageKeys
     void OnWatchParty(object sender, RoutedEventArgs e)
     {
         if (action is { Playable: true })
-            ctx.Window.ShowParty(new PartyDialog.For.Episode(id, action.Episode.ToString()));
+            ctx.Window.StartRoom(id, action.Episode.ToString());
     }
 
     void OpenShowSettings()
