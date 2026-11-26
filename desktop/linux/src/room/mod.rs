@@ -39,6 +39,7 @@ pub mod popovers;
 #[cfg(feature = "fixtures")]
 pub mod scenes;
 pub mod strip;
+pub mod upnext;
 pub mod words;
 
 use banner::{Banner, Panel};
@@ -62,6 +63,7 @@ pub struct Room {
     pub column: Rc<Column>,
     pub strip: Rc<Strip>,
     pub banner: Banner,
+    pub up_next: upnext::UpNext,
     /// The header bar's toggle that shows the column.
     pub toggle: gtk::ToggleButton,
     view: RefCell<Option<RoomView>>,
@@ -137,6 +139,8 @@ impl Room {
             move |a| f(a)
         });
         stage.add_overlay(&banner.widget);
+        let up_next = upnext::UpNext::new();
+        stage.add_overlay(&up_next.widget);
         stage.add_overlay(&strip.widget);
         column.on_act({
             let f = Rc::clone(&forward);
@@ -149,6 +153,7 @@ impl Room {
             column,
             strip,
             banner,
+            up_next,
             toggle,
             view: RefCell::default(),
             moves: RefCell::default(),
@@ -428,6 +433,7 @@ impl Room {
         let panel =
             Panel::for_view(&view, &self.sources.borrow(), self.source_count.get(), now);
         self.banner.show(&view, panel.as_ref());
+        self.up_next.show(Some(&view), now);
         self.toggle.set_visible(true);
         for w in self.aside.borrow().iter() {
             w.set_visible(false);
@@ -448,6 +454,7 @@ impl Room {
     pub fn clear(&self) {
         self.view.replace(None);
         self.banner.show(&RoomView::default(), None);
+        self.up_next.show(None, 0);
         self.column.show_conversation(&[]);
         self.split.set_show_sidebar(false);
         self.toggle.set_visible(false);
@@ -487,6 +494,7 @@ impl Room {
                         now,
                     );
                     me.banner.show(&view, panel.as_ref());
+                    me.up_next.show(Some(&view), now);
                 }
                 glib::ControlFlow::Continue
             }));

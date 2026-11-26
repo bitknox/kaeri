@@ -367,6 +367,23 @@ pub fn search_titles() -> String {
     t::room_search_titles()
 }
 
+// The room's Up next card.
+pub fn up_next_for_room() -> String {
+    t::room_up_next()
+}
+pub fn up_next_episode(episode: &str, name: &str) -> String {
+    t::room_up_next_episode(episode, name)
+}
+pub fn up_next_episode_plain(episode: &str) -> String {
+    t::room_up_next_episode_plain(episode)
+}
+pub fn plays_for_everyone_in(secs: i64) -> String {
+    t::room_up_next_count(secs)
+}
+pub fn up_next_waiting(name: &str) -> String {
+    t::room_up_next_waiting(name)
+}
+
 // Watch together, the place in the main window.
 pub fn place_intro() -> String {
     t::room_place_line()
