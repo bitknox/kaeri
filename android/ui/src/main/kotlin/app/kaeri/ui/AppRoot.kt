@@ -349,6 +349,8 @@ fun AppRoot(
     player: PlayerSlot? = null,
     /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
     links: Flow<AppLink> = emptyFlow(),
+    /** The keyboard's shortcuts, as they are pressed (Ctrl+1 to a section, Ctrl+F to Search). */
+    shortcuts: Flow<KeyShortcut> = emptyFlow(),
     /** The destination on screen, each time it changes: where the Updated notification comes back to. */
     onSection: (Destination) -> Unit = {},
     /** Whether first launch's pages may show, until this device has been through them. */
@@ -366,6 +368,7 @@ fun AppRoot(
             startPage = startPage,
             player = player,
             links = links,
+            shortcuts = shortcuts,
             onSection = onSection,
             firstLaunch = firstLaunch,
         )
@@ -390,6 +393,8 @@ private fun AppRootFrame(
     player: PlayerSlot? = null,
     /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
     links: Flow<AppLink> = emptyFlow(),
+    /** The keyboard's shortcuts, as they are pressed (Ctrl+1 to a section, Ctrl+F to Search). */
+    shortcuts: Flow<KeyShortcut> = emptyFlow(),
     /** The destination on screen, each time it changes: where the Updated notification comes back to. */
     onSection: (Destination) -> Unit = {},
     /** Whether first launch's pages may show, until this device has been through them. */
@@ -543,6 +548,14 @@ private fun AppRootFrame(
         androidx.compose.runtime.LaunchedEffect(links, navigator) {
             // A new link takes over from one still waiting to play.
             links.collectLatest { link -> navigator.follow(link, store, following) { searchOpening = true } }
+        }
+        // A shortcut acts on the pages, never under the player, which takes its own keys.
+        val shortcutAnswer by rememberUpdatedState(answer)
+        val shortcutsOff by rememberUpdatedState(onPlayer)
+        androidx.compose.runtime.LaunchedEffect(shortcuts, navigator) {
+            shortcuts.collect { key ->
+                if (!shortcutsOff) navigator.follow(key, shortcutAnswer, store, following) { searchOpening = true }
+            }
         }
         // First launch's pages stand over the app, which TalkBack then does not reach.
         var covered by remember { mutableStateOf(false) }

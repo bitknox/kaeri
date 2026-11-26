@@ -181,6 +181,10 @@ class MainActivity : ComponentActivity() {
     private val links = Channel<AppLink>(Channel.BUFFERED)
     private val linkFlow = links.receiveAsFlow()
 
+    /** The keyboard's shortcuts, as they are pressed, for the frame to act on. */
+    private val shortcuts = Channel<app.kaeri.ui.KeyShortcut>(Channel.BUFFERED)
+    private val shortcutFlow = shortcuts.receiveAsFlow()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Out of the launch theme, whose window draws Android 11's splash screen. On a panel the
         // last run found to be e-ink, the window is paper from the start, so a cold start never
@@ -297,6 +301,7 @@ class MainActivity : ComponentActivity() {
                     startPage = page,
                     player = player,
                     links = linkFlow,
+                    shortcuts = shortcutFlow,
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
                 ) }
@@ -490,6 +495,23 @@ class MainActivity : ComponentActivity() {
         if (!drivingTv()) return super.onKeyDown(keyCode, event)
         app.store.tv.send(FfiTvCommand.Volume(step))
         return true
+    }
+
+    /**
+     * Ctrl with a number, F, comma or [ goes to a section, Search, Settings or back, before any
+     * screen sees the key: no field of the app reads those keys as text.
+     */
+    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
+        val shortcut = app.kaeri.ui.keyShortcut(event.keyCode, event.isCtrlPressed, event.isAltPressed, event.isShiftPressed, event.isMetaPressed)
+            ?: return super.dispatchKeyEvent(event)
+        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) shortcuts.trySend(shortcut)
+        return true
+    }
+
+    /** The shortcuts the system's Meta + / sheet lists. */
+    override fun onProvideKeyboardShortcuts(data: MutableList<android.view.KeyboardShortcutGroup>, menu: android.view.Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        data.add(app.kaeri.ui.keyShortcutGroup(this, getString(R.string.app_name), app.store.medium.answer))
     }
 
     /** The key-up of a volume press [onKeyDown] took, so the system does not also act on it. */
