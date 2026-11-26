@@ -15,6 +15,8 @@ struct ReaderChrome: View {
     let onClose: () -> Void
     /// The group's height, for a novel's notice to clear it.
     @Binding var groupHeight: CGFloat
+    /// The control the keyboard is on, when Tab took it there.
+    var focus: FocusState<ReaderFocus?>.Binding
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var type
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -94,6 +96,7 @@ struct ReaderChrome: View {
                 if mac {
                     // Back to the window as it was before the book opened, as Esc goes.
                     button("chevron.backward", L.actionBack, action: onClose)
+                        .focused(focus, equals: .back)
                     chaptersButton
                 } else {
                     button("xmark", L.readerClose, action: onClose).accessibilitySortPriority(5)
@@ -108,6 +111,7 @@ struct ReaderChrome: View {
                 ) {
                     NSApp.keyWindow?.toggleFullScreen(nil)
                 }
+                .focused(focus, equals: .fullScreen)
                 .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { _ in fullScreen = true }
                 .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { _ in fullScreen = false }
                 .onAppear { fullScreen = NSApp.keyWindow?.styleMask.contains(.fullScreen) ?? false }
@@ -143,6 +147,7 @@ struct ReaderChrome: View {
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
+            .focused(focus, equals: .backToPage)
             .accessibilitySortPriority(0.5)
             Spacer(minLength: 0)
         }
@@ -171,6 +176,7 @@ struct ReaderChrome: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .focused(focus, equals: .goToPage)
         .accessibilityElement(children: .combine)
         .accessibilityHint(L.readerGoToPage)
         .accessibilitySortPriority(1)
@@ -184,6 +190,7 @@ struct ReaderChrome: View {
 
     private var chaptersButton: some View {
         button("list.bullet", L.readerChapters) { model.sheet = .chapters }
+            .focused(focus, equals: .chapters)
             .accessibilitySortPriority(3)
             .popover(isPresented: sheetBinding(.chapters), attachmentAnchor: .point(.top)) {
                 // A narrow iPad window shows it as a sheet, which takes the window's width.
@@ -207,6 +214,7 @@ struct ReaderChrome: View {
             .contentShape(.circle)
         }
         .buttonStyle(.plain)
+        .focused(focus, equals: .settings)
         .accessibilityLabel(L.readerSettingsOpen)
         .accessibilitySortPriority(2)
         .popover(isPresented: sheetBinding(.settings), attachmentAnchor: .point(.top)) {
