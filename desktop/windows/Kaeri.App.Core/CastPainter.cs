@@ -302,10 +302,6 @@ public sealed record CastFooter(CastAction First, bool FirstAccent, bool FirstLi
         CastOffer.ChooseAnother => CastAction.ChooseAnother,
         _ => CastAction.PlayHere,
     };
-        CastLine.Idle => new(CastAction.ChooseAnother, FirstAccent: false, FirstLive: true, CastAction.Disconnect, [CastAction.ChooseAnother, CastAction.Disconnect], MoreLive: true),
-        CastLine.Reconnecting => new(CastAction.PlayHere, FirstAccent: false, FirstLive: false, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: false),
-        _ => new(CastAction.PlayHere, FirstAccent: false, FirstLive: true, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: true),
-    };
 
     /// <summary>The words of a footer place or a More item.</summary>
     public static string Words(CastAction action) => action switch

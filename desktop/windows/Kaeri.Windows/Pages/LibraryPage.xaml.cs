@@ -77,8 +77,8 @@ public sealed partial class LibraryPage : Page
         var scope = !signedIn && ctx.Known.Medium.Both;
         Bar.Visibility = signedIn || scope ? Visibility.Visible : Visibility.Collapsed;
         Lists.Visibility = OrderButton.Visibility = signedIn ? Visibility.Visible : Visibility.Collapsed;
-        Grid.SetRow(SignedOut, scope ? 2 : 1);
-        Grid.SetRowSpan(SignedOut, scope ? 1 : 2);
+        Microsoft.UI.Xaml.Controls.Grid.SetRow(SignedOut, scope ? 2 : 1);
+        Microsoft.UI.Xaml.Controls.Grid.SetRowSpan(SignedOut, scope ? 1 : 2);
         Scroll.Visibility = signedIn ? Visibility.Visible : Visibility.Collapsed;
         if (!signedIn)
             return;

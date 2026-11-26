@@ -348,9 +348,9 @@ sealed class CastController : Grid
         Set(skipped, undone is not null);
         if (undone is not null)
         {
-            var said = TvWords.CastSkipped(undone);
-            if (skippedLine.Text != said)
-                skippedLine.Text = said;
+            var skippedSaid = TvWords.CastSkipped(undone);
+            if (skippedLine.Text != skippedSaid)
+                skippedLine.Text = skippedSaid;
         }
         var offer = live && next is null && undone is null ? card?.Card.Now?.Skip : null;
         Set(skipOffer, offer is not null);
