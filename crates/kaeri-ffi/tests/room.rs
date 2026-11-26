@@ -328,3 +328,24 @@ fn a_stall_and_your_own_behind_happen_in_a_room_already_watching() {
     });
     after_play(FfiRoomScene::YouBehind, |_, m| state(m, "Ada") == Some(MemberState::Behind));
 }
+
+#[test]
+fn you_in_a_list_of_names_is_lowercase_mid_sentence() {
+    let (_root, engine) = staged(FfiRoomScene::YouLoading);
+    let (_, _, read) = until(&engine, |_, _, r| {
+        r.iter().any(|e| {
+            matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::WaitingFor { .. }))
+        })
+    });
+    let line = read
+        .iter()
+        .find_map(|e| match e {
+            Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::WaitingFor { .. }) => {
+                Some(m.text.clone())
+            }
+            _ => None,
+        })
+        .unwrap();
+    assert!(line.contains("you") && !line.contains("You"), "{line}");
+    engine.shutdown();
+}

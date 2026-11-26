@@ -18905,6 +18905,11 @@ pub fn room_you() -> String {
     text("room-you", &[])
 }
 
+/// You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.
+pub fn room_you_in_list() -> String {
+    text("room-you-in-list", &[])
+}
+
 /// Accessibility label of a face in the full screen strip: the name and the state word.
 pub fn room_face_label(name: &str, state: &str) -> String {
     text("room-face-label", &[("name", Arg::Text(name)), ("state", Arg::Text(state))])

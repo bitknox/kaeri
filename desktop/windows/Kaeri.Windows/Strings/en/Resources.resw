@@ -11568,6 +11568,10 @@
     <value>You</value>
     <comment>Your own name under your face on a phone and in the place's room card.</comment>
   </data>
+  <data name="RoomYouInList" xml:space="preserve">
+    <value>you</value>
+    <comment>You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.</comment>
+  </data>
   <data name="RoomFaceLabel" xml:space="preserve">
     <value>{name}, {state}</value>
     <comment>Accessibility label of a face in the full screen strip: the name and the state word.</comment>

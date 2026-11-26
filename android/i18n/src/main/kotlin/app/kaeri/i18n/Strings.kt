@@ -12440,6 +12440,10 @@ object Strings {
     fun roomYou(context: Context): String =
         context.getString(R.string.room_you)
 
+    /** You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so. */
+    fun roomYouInList(context: Context): String =
+        context.getString(R.string.room_you_in_list)
+
     /** Accessibility label of a face in the full screen strip: the name and the state word. */
     fun roomFaceLabel(context: Context, name: String, state: String): String =
         context.getString(R.string.room_face_label, name, state)

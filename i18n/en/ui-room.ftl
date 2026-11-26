@@ -176,6 +176,11 @@ room-you-marker = (you)
 # @max 12
 room-you = You
 
+# You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without
+# you". Lowercase where the language writes it so.
+# @max 12
+room-you-in-list = you
+
 # Accessibility label of a face in the full screen strip: the name and the state word.
 # @arg name: text
 # @arg state: text

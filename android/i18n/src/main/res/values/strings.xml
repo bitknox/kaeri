@@ -6658,6 +6658,8 @@
     <string name="room_you_marker">(you)</string>
     <!-- Your own name under your face on a phone and in the place's room card. -->
     <string name="room_you">You</string>
+    <!-- You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so. -->
+    <string name="room_you_in_list">you</string>
     <!-- Accessibility label of a face in the full screen strip: the name and the state word. -->
     <string name="room_face_label">%1$s, %2$s</string>
     <!-- The last face in a row of faces, standing for the people not shown. -->

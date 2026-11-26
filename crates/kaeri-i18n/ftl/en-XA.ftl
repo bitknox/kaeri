@@ -11946,6 +11946,9 @@ room-you-marker = [(ýöü)~~]
 # Your own name under your face on a phone and in the place's room card.
 room-you = [Ýöü~]
 
+# You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.
+room-you-in-list = [ýöü~]
+
 # Accessibility label of a face in the full screen strip: the name and the state word.
 room-face-label = [{ $name }, { $state }~~~]
 

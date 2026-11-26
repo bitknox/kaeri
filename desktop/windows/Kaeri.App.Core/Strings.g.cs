@@ -8270,6 +8270,9 @@ public static partial class T
     /// <summary>Your own name under your face on a phone and in the place's room card.</summary>
     public static string RoomYou => Get("RoomYou");
 
+    /// <summary>You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.</summary>
+    public static string RoomYouInList => Get("RoomYouInList");
+
     /// <summary>Accessibility label of a face in the full screen strip: the name and the state word.</summary>
     public static string RoomFaceLabel(string name, string state) => Fill(Get("RoomFaceLabel"), ("name", name), ("state", state));
 
@@ -16119,6 +16122,7 @@ public static partial class T
         ["RoomStateAndMuted"] = "{state} · Muted",
         ["RoomYouMarker"] = "(you)",
         ["RoomYou"] = "You",
+        ["RoomYouInList"] = "you",
         ["RoomFaceLabel"] = "{name}, {state}",
         ["RoomMoreFaces"] = "+{count}",
         ["RoomMoreFacesLabel_one"] = "{count} more person",

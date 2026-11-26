@@ -11275,6 +11275,9 @@ public enum L {
     /// Your own name under your face on a phone and in the place's room card.
     public static var roomYou: String { string("room-you", fallback: "You") }
 
+    /// You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.
+    public static var roomYouInList: String { string("room-you-in-list", fallback: "you") }
+
     /// Accessibility label of a face in the full screen strip: the name and the state word.
     public static func roomFaceLabel(name: String, state: String) -> String {
         Self.format("room-face-label", fallback: "%1$@, %2$@", name, state)

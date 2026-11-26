@@ -453,6 +453,11 @@ impl Task {
         if mid == self.me { kaeri_i18n::t::room_you() } else { self.name_of(mid) }
     }
 
+    /// [`Self::who`] inside a list of names, mid-sentence: "Ren and you".
+    fn who_in_list(&self, mid: &str) -> String {
+        if mid == self.me { kaeri_i18n::t::room_you_in_list() } else { self.name_of(mid) }
+    }
+
     fn body(&mut self, m: Message) -> Body {
         let now = self.now();
         self.ctr += 1;
@@ -529,7 +534,7 @@ impl Task {
                 Some(RoomMessageKind::EpisodeChanged { by, episode: new.ep.1.clone() })
             }
             Cause::CarryOn => {
-                let past = new.carry.iter().map(|m| self.who(m)).collect();
+                let past = new.carry.iter().map(|m| self.who_in_list(m)).collect();
                 Some(RoomMessageKind::CarriedOn { by, past })
             }
             Cause::UpNext => {
@@ -795,7 +800,7 @@ impl Task {
             && self.said_wait != wseq
         {
             self.said_wait = wseq;
-            let names = waited.iter().map(|w| self.who(&w.mid)).collect();
+            let names = waited.iter().map(|w| self.who_in_list(&w.mid)).collect();
             self.message(RoomMessageKind::WaitingFor { names, reason: reason(first.reason) });
         }
         let period = if waited.iter().any(|w| w.mid == self.me) {
