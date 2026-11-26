@@ -572,13 +572,19 @@ public final class BookSourcesModel {
 
     public var isEmpty: Bool {
         guard let view else { return true }
-        return view.folders.isEmpty && view.servers.isEmpty && view.plugins.isEmpty
+        return folders.isEmpty && view.servers.isEmpty && view.plugins.isEmpty
     }
 
     /// Folders, servers and book plugins, all told.
     public var count: Int {
         guard let view else { return 0 }
-        return view.folders.count + view.servers.count + view.plugins.count
+        return folders.count + view.servers.count + view.plugins.count
+    }
+
+    /// The folders, without one just removed: the engine keeps that one a few seconds for
+    /// Undo, out of sight.
+    public var folders: [BookFolderRow] {
+        view?.folders.filter { !$0.removed } ?? []
     }
 
     public func load() { send?(.bookSources(.load)) }

@@ -3,6 +3,7 @@
 
 @testable import KaeriStore
 import KaeriKit
+import KaeriStrings
 import Foundation
 import Testing
 
@@ -474,5 +475,34 @@ struct AccountsTests {
         #expect(store.settings.isOn(.autoNext))
         #expect(!store.settings.isOn(.nightMode), "a row it does not have")
         #expect(store.settings.row(.quality)?.option?.value == .int(720))
+    }
+}
+
+@MainActor
+struct BookFolderRemovalTests {
+    private func folder(_ id: String, removed: Bool = false) -> BookFolderRow {
+        BookFolderRow(id: id, name: "Comics \(id)", scan: .done, removed: removed)
+    }
+
+    /// A removed folder the engine keeps for Undo is out of sight at once: no empty Folders
+    /// group, and the page counts as empty when it was the last source.
+    @Test func aRemovedFolderLeavesNoGhost() {
+        let store = AppStore()
+        store.apply(.bookSources(.view(BookSourcesView(folders: [folder("a", removed: true), folder("b")]))))
+        #expect(store.bookSources.folders.map(\.id) == ["b"])
+        #expect(store.bookSources.count == 1)
+        store.apply(.bookSources(.view(BookSourcesView(folders: [folder("a", removed: true)]))))
+        #expect(store.bookSources.folders.isEmpty)
+        #expect(store.bookSources.isEmpty)
+    }
+
+    /// Remove says so with Undo, and Undo brings the folder back.
+    @Test func removeOffersUndo() throws {
+        let store = AppStore()
+        store.removeBookFolder(folder("a"))
+        let notice = try #require(store.notices.current)
+        #expect(notice.notice.text == L.sourcesRemoved(name: "Comics a"))
+        try #require(notice.action).run()
+        #expect(store.sentLog.suffix(2) == ["bookSources", "bookSources"])
     }
 }

@@ -381,6 +381,16 @@ extension AppStore {
         send(.playLocal(id: row.anilistId, episode: row.episode, title: row.title, path: path))
     }
 
+    /// Remove a book folder, with Undo for as long as the engine keeps it.
+    public func removeBookFolder(_ folder: BookFolderRow) {
+        bookSources.removeFolder(folder.id)
+        notices.post(
+            Notice(kind: .info, text: L.sourcesRemoved(name: folder.name), hint: nil),
+            action: NoticeButton(title: L.actionUndo) { [weak self] in
+                self?.bookSources.restoreFolder(folder.id)
+            })
+    }
+
     /// Queue a failed download again: the engine retries it in place.
     public func retryDownload(_ row: DownloadRow) {
         send(.downloadEpisode(id: row.anilistId, episode: row.episode))
