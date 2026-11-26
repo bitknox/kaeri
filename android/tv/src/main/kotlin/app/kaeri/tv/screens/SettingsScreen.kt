@@ -32,6 +32,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -162,7 +164,12 @@ fun SettingsScreen(nav: TvNavigator, memory: FocusMemory, start: SettingsSection
     ToTop(nav, memory, scrolled = { false }) {}
 
     Row(Modifier.fillMaxSize().padding(start = Canvas.Keyline, top = Canvas.SafeY, end = Canvas.SafeX)) {
-        Column(Modifier.width(256.dp).fillMaxHeight().focusRestorer(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(
+            // The rows grow with the font size: past what fits, the column scrolls, focus bringing
+            // About and the last sections in.
+            Modifier.width(256.dp).fillMaxHeight().focusRestorer().verticalScroll(rememberScrollState()).padding(bottom = 27.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(start = 16.dp, bottom = 16.dp).semantics { heading() })
             // Ten sections at 40 each end inside the safe area, under the heading.
             SettingsSection.entries.forEach { each ->
