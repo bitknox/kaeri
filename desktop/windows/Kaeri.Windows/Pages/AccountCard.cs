@@ -110,11 +110,11 @@ sealed class AccountCard
         }
     }
 
-    /// <summary>Kitsu takes a user name and password; the others sign in in the browser or with a code.</summary>
+    /// <summary>Kitsu and MangaUpdates take a user name and password; the others sign in in the browser or with a code.</summary>
     void SignIn()
     {
-        if (tracker == "kitsu")
-            KitsuDialog.Show(ctx, card.XamlRoot);
+        if (tracker is "kitsu" or "mangaupdates")
+            KitsuDialog.Show(ctx, card.XamlRoot, tracker);
         else
         {
             ctx.SignIn(tracker);

@@ -1522,7 +1522,9 @@ public sealed partial class SettingsPage : Page
         Cards.Children.Add(under);
         Cards.Children.Add(Heading(T.SettingsTrackers));
         // Each card keeps itself current: sync, an expired sign-in, and one under way.
-        foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
+        // MangaUpdates tracks reading only, so it is here while reading is on, as onboarding says.
+        string[] trackers = ctx.Known.Medium.Reads ? ["anilist", "mal", "kitsu", "simkl", "trakt", "mangaupdates"] : ["anilist", "mal", "kitsu", "simkl", "trakt"];
+        foreach (var tracker in trackers)
         {
             Cards.Children.Add(AccountCard.For(ctx, tracker));
             // What the last pull found different from AniList, under its card, with Review.
