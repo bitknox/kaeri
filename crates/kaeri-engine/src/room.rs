@@ -420,8 +420,8 @@ struct Task {
     relays: Vec<RelayHealth>,
     connection: RoomConnection,
     last_sent: i64,
-    /// What the player was last told: paused or not.
-    told_paused: Option<bool>,
+    /// What the player was last told, paused or not, and whether its samples caught up.
+    pause: PlayerPause,
     /// The last wait said in the chat.
     said_wait: u64,
     told_view: Option<RoomView>,
@@ -597,8 +597,7 @@ impl Task {
     /// Tell the player to play or pause with the room.
     fn cue_play(&mut self) {
         let paused = !self.room.playing();
-        if self.told_paused != Some(paused) {
-            self.told_paused = Some(paused);
+        if self.pause.tell(paused, self.now()) {
             self.cue(SeatCue::Pause(paused));
         }
     }
@@ -1025,7 +1024,7 @@ impl Task {
                     s.rejoin = false;
                     s.dw = false;
                 });
-                self.told_paused = None;
+                self.pause.forget();
                 self.cue_play();
                 if on_room
                     && self.room.playing()
@@ -1036,8 +1035,9 @@ impl Task {
             }
             SeatReport::Sample { position, paused, .. } => {
                 self.status.pos = Some(position);
-                if self.told_paused.is_some_and(|told| told != paused) {
-                    // The viewer pressed play or pause on the player.
+                // The viewer pressed play or pause on the player; a sample from before the
+                // player took the room's last cue is not a press.
+                if let Some(paused) = self.pause.sample(paused, self.now()) {
                     if paused {
                         self.write(
                             |h| {
@@ -1451,7 +1451,7 @@ impl Task {
                 if on_it {
                     // Started from the player: it keeps playing, the player becomes the room.
                     let pos = self.status.pos.unwrap_or(0.0);
-                    let playing = self.told_paused != Some(true);
+                    let playing = self.pause.told() != Some(true);
                     self.write(
                         |h| {
                             h.cause = Cause::Play;
@@ -1630,7 +1630,7 @@ async fn run(
         relays: Vec::new(),
         connection: RoomConnection::Joining,
         last_sent: now,
-        told_paused: None,
+        pause: PlayerPause::default(),
         said_wait: 0,
         told_view: None,
         told_members: Vec::new(),
@@ -1702,7 +1702,7 @@ impl Task {
         match message {
             SeatMessage::Seated(cues) => {
                 self.cues = Some(cues);
-                self.told_paused = None;
+                self.pause.forget();
             }
             SeatMessage::Report(report) => self.on_report(report),
         }
@@ -1723,5 +1723,125 @@ impl Task {
         if changed {
             self.refresh();
         }
+    }
+}
+
+/// How long a pause or play cue is waited for in the player's samples. A sample taken before the
+/// player took the cue still shows the old state; within this it is stale, not a press.
+const EXPECT_PAUSE_MS: i64 = 2_000;
+
+/// What the player was told, paused or not, and the cue its samples haven't caught up with yet.
+/// Without the wait, a sample from before a cue reads as the viewer pressing the other way, the
+/// room follows it, and room and player pause and resume each other for ever.
+#[derive(Debug, Default)]
+struct PlayerPause {
+    told: Option<bool>,
+    /// The state told, until when its samples are waited for.
+    expect: Option<(bool, i64)>,
+}
+
+impl PlayerPause {
+    /// The room wants `paused`: `true` when the player must be told.
+    fn tell(&mut self, paused: bool, now: i64) -> bool {
+        if self.told == Some(paused) {
+            return false;
+        }
+        self.told = Some(paused);
+        self.expect = Some((paused, now + EXPECT_PAUSE_MS));
+        true
+    }
+
+    fn told(&self) -> Option<bool> {
+        self.told
+    }
+
+    /// A new player, or a new file: nothing told yet.
+    fn forget(&mut self) {
+        *self = Self::default();
+    }
+
+    /// A sample from the player: `Some(paused)` when it is the viewer's own press.
+    fn sample(&mut self, paused: bool, now: i64) -> Option<bool> {
+        let told = self.told?;
+        if let Some((want, until)) = self.expect {
+            if paused == want {
+                self.expect = None;
+                return None;
+            }
+            if now < until {
+                return None;
+            }
+            // The player never took the cue: what it reports now is the viewer's.
+            self.expect = None;
+        }
+        if paused == told {
+            return None;
+        }
+        self.told = Some(paused);
+        Some(paused)
+    }
+}
+
+#[cfg(test)]
+mod pause_tests {
+    use super::PlayerPause;
+
+    /// The room and a player that applies cues a moment late, with samples every 250 ms: what
+    /// the room writes as the viewer's presses over 5 s. The player's first samples after each
+    /// cue still show the state before it.
+    fn presses(guarded: bool) -> usize {
+        let mut pause = PlayerPause::default();
+        let mut room_paused = false;
+        let mut player_paused = true;
+        // Cues in flight, applied in order 600 ms after each was sent.
+        let mut cues: std::collections::VecDeque<(bool, i64)> = Default::default();
+        let mut presses = 0;
+        let mut now = 0;
+        while now < 5_000 {
+            if pause.tell(room_paused, now) {
+                cues.push_back((room_paused, now + 600));
+            }
+            while let Some((to, at)) = cues.front().copied()
+                && now >= at
+            {
+                player_paused = to;
+                cues.pop_front();
+            }
+            let press = if guarded {
+                pause.sample(player_paused, now)
+            } else {
+                // The old rule: any sample that differs from what was told is a press.
+                pause.told().is_some_and(|t| t != player_paused).then_some(player_paused)
+            };
+            if let Some(paused) = press {
+                presses += 1;
+                room_paused = paused;
+            }
+            now += 250;
+        }
+        presses
+    }
+
+    #[test]
+    fn stale_samples_no_longer_pause_and_resume_the_room_for_ever() {
+        assert!(presses(false) > 4, "the old rule loops: {}", presses(false));
+        assert_eq!(presses(true), 0);
+    }
+
+    #[test]
+    fn a_real_press_still_counts_once_the_cue_is_taken_or_its_time_is_up() {
+        let mut pause = PlayerPause::default();
+        assert!(pause.tell(false, 0));
+        assert_eq!(pause.sample(true, 100), None, "stale");
+        assert_eq!(pause.sample(false, 300), None, "caught up");
+        assert_eq!(pause.sample(true, 400), Some(true), "the viewer paused");
+        assert!(!pause.tell(true, 450), "already paused there");
+        // A player that never takes a cue: after 2 s its state is the viewer's.
+        assert!(pause.tell(false, 1_000));
+        assert_eq!(pause.sample(true, 2_900), None);
+        assert_eq!(pause.sample(true, 3_000), Some(true));
+        // Nothing told yet: no press.
+        pause.forget();
+        assert_eq!(pause.sample(false, 4_000), None);
     }
 }
