@@ -110,8 +110,11 @@ pub fn view(name: &str) -> RoomView {
         "carry" => {
             set(&mut v, "Ren", MemberState::Loading, Some(24));
             v.waiting.push(paused_for("Ren", false, WaitReason::Loading, 24));
-            v.carried_on =
-                Some(RoomCarriedOn { by: "Mika".into(), by_you: false, past: vec!["Ren".into()] });
+            v.carried_on = Some(RoomCarriedOn {
+                by: "Mika".into(),
+                by_you: false,
+                past: vec!["Ren".into()],
+            });
         }
         "self-wait" => {
             v.name = "Ren".into();
@@ -137,7 +140,8 @@ pub fn view(name: &str) -> RoomView {
         }
         "other" => {
             set(&mut v, "Ren", MemberState::OtherEpisode, None);
-            v.members[2].episode = Some(RoomEpisode { id: AnilistId::new(1), episode: "8".into() });
+            v.members[2].episode =
+                Some(RoomEpisode { id: AnilistId::new(1), episode: "8".into() });
         }
         "self-choosing" => set(&mut v, "Ada", MemberState::Choosing, None),
         "self-nosource" => set(&mut v, "Ada", MemberState::NoSource, None),

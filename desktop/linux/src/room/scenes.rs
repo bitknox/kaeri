@@ -200,7 +200,9 @@ impl Staged {
             names.extend(["Sora", "Kenji", "Noa"]);
         }
         if scene == S::InvitedFull {
-            names = vec!["Mika", "Ren", "Sora", "Kenji", "Noa", "Yui", "Taro", "Hana", "Kai", "Rio"];
+            names = vec![
+                "Mika", "Ren", "Sora", "Kenji", "Noa", "Yui", "Taro", "Hana", "Kai", "Rio",
+            ];
         }
         if scene == S::MovedAway {
             names.push("Taro");
@@ -236,11 +238,7 @@ impl Staged {
         self.run(ready);
         self.pause(200);
         match scene {
-            S::BeforePlay
-            | S::Invited
-            | S::InvitedFull
-            | S::Unreachable
-            | S::Watching => {}
+            S::BeforePlay | S::Invited | S::InvitedFull | S::Unreachable | S::Watching => {}
             S::BeforePlayWait | S::BeforePlayCap | S::Starting => {
                 self.run(|f| f.member_plays("Mika"));
             }

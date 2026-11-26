@@ -274,7 +274,10 @@ impl Room {
             Act::GoAlong | Act::Stay => {
                 let offer = self.offer.borrow_mut().take();
                 if let Some(offer) = offer {
-                    self.send(RoomCommand::AnswerMove { offer: offer.id, go: a == Act::GoAlong });
+                    self.send(RoomCommand::AnswerMove {
+                        offer: offer.id,
+                        go: a == Act::GoAlong,
+                    });
                 }
                 self.redraw();
             }
@@ -422,7 +425,8 @@ impl Room {
         let now = self.now();
         self.column.show(&view, &moves, now);
         self.strip.show(&view, &moves, now);
-        let panel = Panel::for_view(&view, &self.sources.borrow(), self.source_count.get(), now);
+        let panel =
+            Panel::for_view(&view, &self.sources.borrow(), self.source_count.get(), now);
         self.banner.show(&view, panel.as_ref());
         self.toggle.set_visible(true);
         for w in self.aside.borrow().iter() {
