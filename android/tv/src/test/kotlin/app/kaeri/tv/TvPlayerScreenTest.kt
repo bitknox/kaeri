@@ -16,7 +16,7 @@ import androidx.compose.ui.test.SemanticsMatcher
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
-import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import android.view.accessibility.AccessibilityManager
@@ -153,7 +153,8 @@ class TvPlayerScreenTest {
 
         // And the row has it as a button D-pad focus can reach, which takes the skip.
         compose.onAllNodes(hasText("Skip opening") and hasClickAction()).assertCountEquals(1)
-        compose.onAllNodes(hasText("Skip opening") and hasClickAction())[0].performClick()
+        // TalkBack and the remote's OK reach it as its click action; the TV's surfaces take no touch.
+        compose.onAllNodes(hasText("Skip opening") and hasClickAction())[0].performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
         assertNull(model.skip)
         compose.onAllNodes(withSkip).assertCountEquals(0)
