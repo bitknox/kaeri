@@ -212,6 +212,7 @@ sealed class NovelView : Grid
 
     /// <summary>
     /// What the reader itself needs from inside the page: the keys that leave or go full screen,
+    /// ] and [ for the next and previous chapter,
     /// Tab, which brings the chrome up and goes into it, pointer movement for the group, and the
     /// wheel, which turns pages. The paginator handles
     /// the turning keys.
@@ -223,7 +224,7 @@ sealed class NovelView : Grid
           var post = function (m) { try { window.chrome.webview.postMessage(JSON.stringify(m)); } catch (e) {} };
           document.addEventListener('keydown', function (e) {
             var k = e.key;
-            if (k === 'Escape' || k === 'F11' || (k === 'Tab' && !e.ctrlKey && !e.altKey) || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0'))) {
+            if (k === 'Escape' || k === 'F11' || (k === 'Tab' && !e.ctrlKey && !e.altKey) || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0')) || ((k === '[' || k === ']') && !e.ctrlKey && !e.altKey)) {
               e.preventDefault();
               post({ type: 'hostkey', key: k, alt: e.altKey, ctrl: e.ctrlKey, shift: e.shiftKey });
             }
