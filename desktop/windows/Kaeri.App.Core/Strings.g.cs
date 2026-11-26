@@ -8885,6 +8885,18 @@ public static partial class T
     /// <summary>Menu item dimmed in a room, with this reason under it.</summary>
     public static string RoomMarkUnavailable => Get("RoomMarkUnavailable");
 
+    /// <summary>Heading of the people list in the room, and its accessibility label.</summary>
+    public static string RoomPeople => Get("RoomPeople");
+
+    /// <summary>State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.</summary>
+    public static string RoomStateSeeking(long seconds) => Fill(Get("RoomStateSeeking"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.</summary>
+    public static string RoomErrorUnreachableLead => Get("RoomErrorUnreachableLead");
+
+    /// <summary>Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.</summary>
+    public static string RoomErrorNobodyAnsweredLead => Get("RoomErrorNobodyAnsweredLead");
+
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
 
@@ -16401,6 +16413,10 @@ public static partial class T
         ["RoomVersionOwn"] = "Only your player switches. The room keeps playing.",
         ["RoomBannerEpisodePlain"] = "Episode {episode} · {length}",
         ["RoomMarkUnavailable"] = "Mark skip times after you leave the room.",
+        ["RoomPeople"] = "People in the room",
+        ["RoomStateSeeking"] = "Seeking · {seconds} s",
+        ["RoomErrorUnreachableLead"] = "Couldn't reach this room's relays.",
+        ["RoomErrorNobodyAnsweredLead"] = "Nobody answered in this room.",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",

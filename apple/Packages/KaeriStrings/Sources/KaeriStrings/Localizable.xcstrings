@@ -258161,6 +258161,18 @@
         }
       }
     },
+    "room-error-nobody-answered-lead" : {
+      "comment" : "Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nobody answered in this room."
+          }
+        }
+      }
+    },
     "room-error-nobody-answered-line" : {
       "comment" : "Line under it.",
       "extractionState" : "manual",
@@ -258205,6 +258217,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Couldn't reach this room's relays. Ask for a new invite."
+          }
+        }
+      }
+    },
+    "room-error-unreachable-lead" : {
+      "comment" : "Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach this room's relays."
           }
         }
       }
@@ -259487,6 +259511,18 @@
         }
       }
     },
+    "room-people" : {
+      "comment" : "Heading of the people list in the room, and its accessibility label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "People in the room"
+          }
+        }
+      }
+    },
     "room-place-join" : {
       "comment" : "Heading of the field that joins a room.",
       "extractionState" : "manual",
@@ -260321,6 +260357,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Reconnecting"
+          }
+        }
+      }
+    },
+    "room-state-seeking" : {
+      "comment" : "State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seeking · %1$lld s"
           }
         }
       }

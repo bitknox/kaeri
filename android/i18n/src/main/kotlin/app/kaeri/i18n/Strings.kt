@@ -13260,6 +13260,22 @@ object Strings {
     fun roomMarkUnavailable(context: Context): String =
         context.getString(R.string.room_mark_unavailable)
 
+    /** Heading of the people list in the room, and its accessibility label. */
+    fun roomPeople(context: Context): String =
+        context.getString(R.string.room_people)
+
+    /** State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person. */
+    fun roomStateSeeking(context: Context, seconds: Int): String =
+        context.getString(R.string.room_state_seeking, seconds)
+
+    /** Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title. */
+    fun roomErrorUnreachableLead(context: Context): String =
+        context.getString(R.string.room_error_unreachable_lead)
+
+    /** Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title. */
+    fun roomErrorNobodyAnsweredLead(context: Context): String =
+        context.getString(R.string.room_error_nobody_answered_lead)
+
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
         context.getString(R.string.seasonal_previous)

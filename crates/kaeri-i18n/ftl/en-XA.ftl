@@ -12599,6 +12599,18 @@ room-banner-episode-plain = [Éþîšöðé { $episode } · { $length }~~~~~~]
 # Menu item dimmed in a room, with this reason under it.
 room-mark-unavailable = [Ṁàŕķ šķîþ ţîɱéš àƒţéŕ ýöü ļéàṽé ţĥé ŕööɱ.~~~~~~~~~~~~~]
 
+# Heading of the people list in the room, and its accessibility label.
+room-people = [Þéöþļé îñ ţĥé ŕööɱ~~~~~~]
+
+# State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+room-state-seeking = [Šééķîñĝ · { $seconds } š~~~~~]
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+room-error-unreachable-lead = [Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš.~~~~~~~~~~~]
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+room-error-nobody-answered-lead = [Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ.~~~~~~~~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 

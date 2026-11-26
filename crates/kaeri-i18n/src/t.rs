@@ -19940,6 +19940,26 @@ pub fn room_mark_unavailable() -> String {
     text("room-mark-unavailable", &[])
 }
 
+/// Heading of the people list in the room, and its accessibility label.
+pub fn room_people() -> String {
+    text("room-people", &[])
+}
+
+/// State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+pub fn room_state_seeking(seconds: i64) -> String {
+    text("room-state-seeking", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+pub fn room_error_unreachable_lead() -> String {
+    text("room-error-unreachable-lead", &[])
+}
+
+/// Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+pub fn room_error_nobody_answered_lead() -> String {
+    text("room-error-nobody-answered-lead", &[])
+}
+
 /// Button that shows the season before.
 pub fn seasonal_previous() -> String {
     text("seasonal-previous", &[])
