@@ -193,7 +193,9 @@ public final class RoomModel {
     public var waitingFor: [String] { view?.waiting.map(\.name) ?? [] }
 
     private func waitSeconds(_ now: Int64) -> Int {
-        Self.seconds(since: view?.waitShownAtMs ?? view?.waiting.map(\.sinceMs).min(), now: now)
+        // From the first waited person's start, as their row counts (the engine lists them oldest
+        // first); waitShownAtMs only says when the wait showed.
+        Self.seconds(since: view?.waiting.first?.sinceMs, now: now)
     }
 
     /// The room's line.
