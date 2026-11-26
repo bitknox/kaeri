@@ -3031,7 +3031,6 @@ dependencies = [
  "kaeri-model",
  "kaeri-mpv-host",
  "kaeri-net",
- "kaeri-party",
  "kaeri-providers",
  "kaeri-remote",
  "kaeri-room",
@@ -3084,7 +3083,6 @@ dependencies = [
  "kaeri-model",
  "kaeri-net",
  "kaeri-pages",
- "kaeri-party",
  "kaeri-playback",
  "kaeri-plugin",
  "kaeri-plugin-store",
@@ -3196,20 +3194,6 @@ dependencies = [
  "realfft",
  "rustfft",
  "thiserror 2.0.21",
-]
-
-[[package]]
-name = "kaeri-party"
-version = "0.5.4"
-dependencies = [
- "rustls",
- "serde",
- "serde_json",
- "thiserror 2.0.21",
- "tokio",
- "tokio-rustls",
- "tracing",
- "webpki-roots",
 ]
 
 [[package]]

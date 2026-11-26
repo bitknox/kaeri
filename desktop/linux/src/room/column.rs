@@ -169,7 +169,7 @@ impl Column {
 
         let list = crate::widgets::boxed_list();
         list.add_css_class("room-people");
-        list.update_property(&[gtk::accessible::Property::Label(&c::room_people(0))]);
+        list.update_property(&[gtk::accessible::Property::Label(&c::room_people())]);
         let list_scroll = gtk::ScrolledWindow::builder()
             .child(&list)
             .hscrollbar_policy(gtk::PolicyType::Never)

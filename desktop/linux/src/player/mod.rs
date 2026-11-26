@@ -35,7 +35,6 @@ use crate::{
     window::{Ctx, Shell, Size},
 };
 
-mod chat;
 mod clock;
 mod coming;
 mod marking;
@@ -212,6 +211,8 @@ pub struct PlayerView {
     translation_action: gio::SimpleAction,
     /// The title playing, and whether it has a dub, once the engine has said.
     title_id: Cell<Option<AnilistId>>,
+    /// Watch together pressed on a title's page: the episode whose play starts a room.
+    room_pending: RefCell<Option<(AnilistId, String)>>,
     /// The playing title's episode table, for the Episodes panel's synopses, and the show's own
     /// spoiler protection when it sets one.
     table: RefCell<Vec<kaeri_model::episodes::EpisodeRow>>,
@@ -243,8 +244,6 @@ pub struct PlayerView {
     stall_tick: RefCell<Option<glib::SourceId>>,
     /// The media controls on the session bus, once served.
     mpris: RefCell<Option<Rc<Mpris>>>,
-    /// The watch party's panel, on the people button.
-    party: Rc<crate::party::panel::Panel>,
     /// The room around the player: the column beside the video, the strip and the banner.
     pub(crate) room: Rc<crate::room::Room>,
     stats: Rc<stats::Stats>,
@@ -313,7 +312,6 @@ struct Ui {
     /// The subtitle style panel's button.
     style: gtk::MenuButton,
     cards: gtk::Box,
-    chat: Rc<chat::Chat>,
     skip: Card,
     skip_button: gtk::Button,
     /// The marking bar, at the top of the video while skip times are marked.
@@ -342,8 +340,8 @@ struct Ui {
     held: gtk::Picture,
     catcher: gtk::Box,
     tracks: gtk::MenuButton,
-    /// Watch together: the form that starts a party, or the party's panel once in one, with a
-    /// dot on the people while in one.
+    /// Watch together: starts a room from the episode playing, or shows and hides its column
+    /// once in one, with a dot on the people while in one.
     people: gtk::Button,
     people_dot: gtk::Box,
     /// Play on TV: hands what plays over to a TV.
@@ -411,8 +409,6 @@ impl PlayerView {
 
         let ui = build_ui(ctx, &video_widget);
         let preview = Preview::new(&ui.timeline, false);
-        let party = crate::party::panel::Panel::new(ctx);
-        party.popover.set_parent(&ui.people);
         let room = crate::room::Room::new(&ui.page, &ui.stage);
         ui.top.pack_end(&room.toggle);
         room.set_aside(&ui.people);
@@ -511,6 +507,7 @@ impl PlayerView {
             ),
             translation_action: radio("translation", "sub"),
             title_id: Cell::new(None),
+            room_pending: RefCell::default(),
             table: RefCell::default(),
             own_spoilers: Cell::new(None),
             late: Cell::new(false),
@@ -530,7 +527,6 @@ impl PlayerView {
             stall_since: Cell::new(None),
             stall_tick: RefCell::default(),
             mpris: RefCell::default(),
-            party,
             room,
             stats,
         });
@@ -673,7 +669,7 @@ impl PlayerView {
             MediaAction::Pause if !paused => self.send(PlayerCommand::TogglePause),
             MediaAction::Play | MediaAction::Pause => {}
             MediaAction::Stop => self.close(),
-            MediaAction::Next if self.in_party() => {}
+            MediaAction::Next if self.in_room() => {}
             MediaAction::Next => self.send(PlayerCommand::Step(1)),
             MediaAction::Previous => self.send(PlayerCommand::Step(-1)),
             MediaAction::SeekBy(by) => self.send(PlayerCommand::Seek(by)),
@@ -880,14 +876,6 @@ impl PlayerView {
             }
             Event::PlayerUi { ui, .. } => self.player_ui(ui),
             Event::Settings(_) => self.style_subtitles(),
-            Event::PartyJoined(_) | Event::PartyLeft { .. } => {
-                self.show_party_button();
-                self.ui.chat.heard(event, true);
-            }
-            Event::PartyChat(_)
-            | Event::PartyChatState(_)
-            | Event::PartyReaction(_)
-            | Event::PartyChatRefused(_) => self.ui.chat.heard(event, true),
             Event::PlayerSkipMark { view, .. } => self.skip_mark(view.clone()),
             Event::PlayerSkipPrompt { prompt, .. } => {
                 if !self.prompt_held.get() || prompt.is_some() {
@@ -1283,7 +1271,7 @@ impl PlayerView {
             }
             A::Skip => self.send(PlayerCommand::SkipSource),
             A::ChooseSource | A::ChooseAnother => {
-                crate::party::source::choose(&self.ctx, id, &episode);
+                crate::choose_source::choose(&self.ctx, id, &episode);
             }
             A::Details => {
                 let open = {
@@ -1430,6 +1418,12 @@ impl PlayerView {
                 let art = banner_url.as_deref().or(cover_url.as_deref());
                 self.ctx.hub.art(&self.ui.start.art, art);
                 self.open();
+                // Watch together on a title's page: the room starts from this play.
+                let pending = self.room_pending.borrow().clone();
+                if pending.is_some_and(|(i, e)| i == *id && e == *episode) {
+                    self.room_pending.replace(None);
+                    self.watch_together();
+                }
             }
             PlayerUi::Episode { number, title, show, translation, .. } => {
                 self.ui.show.set_label(show);
@@ -1513,11 +1507,7 @@ impl PlayerView {
             }
             PlayerUi::StallCleared => self.stall_over(),
             PlayerUi::Alert { text, .. } => {
-                let shown = crate::catalog::shown(text);
-                // A chat line has its own place on the video, in the column.
-                if !self.ui.chat.is_echo(&shown) {
-                    self.ctx.alert(&shown);
-                }
+                self.ctx.alert(&crate::catalog::shown(text));
             }
             PlayerUi::Thumbnails { url } => self.preview.thumbnails(url.as_deref()),
             PlayerUi::Resumed { position } => self.resumed(*position),
@@ -1586,7 +1576,9 @@ impl PlayerView {
             let state = self.state.borrow();
             (state.position.unwrap_or(0.0), state.duration.unwrap_or(0.0))
         };
+        // In a room the room's own card says what is next, and the room moves on.
         let (card, due) = match self.coming.borrow().as_ref() {
+            _ if self.in_room() => (coming::Card::Away, false),
             Some(plan) => (plan.card(position, duration), plan.due(position, duration)),
             None => (coming::Card::Away, false),
         };
@@ -1609,11 +1601,7 @@ impl PlayerView {
             }
             coming::Card::Counting { left, fraction } => {
                 let secs = left.ceil() as i64;
-                self.ui.up_next_line.set_label(&if self.in_party() {
-                    t::party_next_line(secs)
-                } else {
-                    t::player_plays_in(secs)
-                });
+                self.ui.up_next_line.set_label(&t::player_plays_in(secs));
                 self.ui.up_next_line.set_visible(true);
                 self.ui.up_next_bar.set_fraction(fraction);
                 self.ui.up_next_bar.set_visible(true);
@@ -1629,14 +1617,14 @@ impl PlayerView {
         }
     }
 
-    /// Whether this device is in a watch party, where the room moves on together.
-    fn in_party(&self) -> bool {
-        self.ctx.hub.known.borrow().party.is_some()
+    /// Whether this device is in a room, which moves on together.
+    fn in_room(&self) -> bool {
+        self.room.in_room()
     }
 
     /// Cancel on the card, Escape, or the pad's B: the card goes and the engine stays.
     fn cancel_next(&self) {
-        if self.in_party() {
+        if self.in_room() {
             return;
         }
         if let Some(plan) = self.coming.borrow_mut().as_mut() {
@@ -1648,7 +1636,7 @@ impl PlayerView {
 
     /// Play now on the card, Enter, or the pad's A.
     fn play_next(&self) {
-        if self.in_party() {
+        if self.in_room() {
             return;
         }
         if let Some(plan) = self.coming.borrow_mut().as_mut() {
@@ -2048,10 +2036,8 @@ impl PlayerView {
     /// Hide the controls, unless paused, scrubbing, a menu is open, the pointer is on a bar,
     /// keyboard focus is on a control or a screen reader runs.
     fn rest(&self) {
-        let menu_open = self.ui.menu_buttons.iter().any(|b| b.is_active())
-            || self.party.popover.is_visible()
-            || self.ui.chat.holds_controls()
-            || self.ui.side.is_open();
+        let menu_open =
+            self.ui.menu_buttons.iter().any(|b| b.is_active()) || self.ui.side.is_open();
         let card = self.ui.stall.shown() || self.marking.borrow().is_some();
         if self.state.borrow().paused
             || self.over_bar.get()
@@ -2457,7 +2443,7 @@ impl PlayerView {
             });
             group.add_action(action);
         }
-        add("party", None, Box::new(|v, _| v.show_party()));
+        add("together", None, Box::new(|v, _| v.watch_together()));
         add("tv", None, Box::new(|v, _| v.play_on_tv()));
         self.ui.tv.set_visible(self.ctx.tv.available());
         // Once the TV has it, the player here closes.
@@ -2468,36 +2454,6 @@ impl PlayerView {
                     && view.shell().is_some_and(|shell| shell.is_player())
                 {
                     view.close();
-                }
-            }
-        });
-        self.party.popover.connect_map({
-            let weak = Rc::downgrade(self);
-            move |_| {
-                if let Some(view) = weak.upgrade() {
-                    view.party.refresh_chat();
-                    view.ui.chat.popover(true);
-                }
-            }
-        });
-        self.ui.chat.on_marks({
-            let marked = self.ui.marked.clone_handle();
-            move |marks| marked.set_reactions(marks)
-        });
-        self.ui.chat.on_open_conversation({
-            let weak = Rc::downgrade(self);
-            move || {
-                if let Some(view) = weak.upgrade() {
-                    view.show_party();
-                }
-            }
-        });
-        self.party.popover.connect_closed({
-            let weak = Rc::downgrade(self);
-            move |_| {
-                if let Some(view) = weak.upgrade() {
-                    view.ui.chat.popover(false);
-                    view.wake();
                 }
             }
         });
@@ -3200,9 +3156,23 @@ impl PlayerView {
         });
     }
 
+    /// Watch together on a title's page: the episode plays, and the room starts from it. In a
+    /// room already, the room's episode changes to it.
+    pub fn start_room(&self, id: AnilistId, episode: String) {
+        if self.room.in_room() {
+            self.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::ChangeEpisode {
+                id,
+                episode,
+            }));
+            return;
+        }
+        self.room_pending.replace(Some((id, episode.clone())));
+        self.ctx.hub.send(Command::Play { id, episode, from_start: false });
+    }
+
     /// Watch together: the room comes in around the player, from the episode playing. In a
     /// room already, the column shows or hides.
-    pub fn show_party(&self) {
+    pub fn watch_together(&self) {
         if self.room.in_room() {
             self.room.toggle.set_active(!self.room.toggle.is_active());
             return;
@@ -3224,6 +3194,7 @@ impl PlayerView {
     /// room starts, moves on or takes this device in at its place.
     fn room_heard(&self, event: &Event) {
         self.room.heard(event);
+        self.show_room_controls();
         match event {
             Event::RoomStarted { id, episode, .. } => {
                 let open = self.shell().is_some_and(|shell| shell.is_player());
@@ -3239,8 +3210,12 @@ impl PlayerView {
                 }
             }
             Event::RoomJoined(_) | Event::RoomState(_) => self.room_sources(),
+            Event::RoomChat(conversation) => {
+                self.ui.marked.set_reactions(conversation.marks.clone())
+            }
             // A room that couldn't be joined, or ended on this device: why, as a notice.
             Event::RoomLeft { why } => {
+                self.ui.marked.set_reactions(Vec::new());
                 use kaeri_model::room::RoomLeftWhy as W;
                 let said = match why {
                     W::Left | W::Moved => None,
@@ -3318,32 +3293,22 @@ impl PlayerView {
         }
     }
 
-    /// The chat over the video, for the shots.
-    #[cfg(feature = "fixtures")]
-    pub fn chat(&self) -> Rc<chat::Chat> {
-        Rc::clone(&self.ui.chat)
-    }
-
-    /// The people button as the party stands: a dot while in one, and its name.
-    fn show_party_button(&self) {
-        let in_party = self.ctx.hub.known.borrow().party.is_some();
-        // The room moves on together: no Next, no Episodes and Sources panel, and the card has
-        // no buttons.
-        self.ui.up_buttons.set_visible(!in_party);
-        if in_party {
+    /// The controls as the room stands: in one, it moves on together, so no Next and no
+    /// Episodes and Sources panel, and the people button has its dot.
+    fn show_room_controls(&self) {
+        let in_room = self.in_room();
+        self.ui.up_buttons.set_visible(!in_room);
+        if in_room {
             self.close_panel();
         }
-        self.ui.episodes.set_sensitive(!in_party);
-        self.ui.episodes.set_tooltip_text(Some(&if in_party {
+        self.ui.episodes.set_sensitive(!in_room);
+        self.ui.episodes.set_tooltip_text(Some(&if in_room {
             t::party_next_off()
         } else {
             t::player_panel()
         }));
         // Faded rather than added, so nothing moves.
-        self.ui.people_dot.set_opacity(if in_party { 1.0 } else { 0.0 });
-        let name = t::party_title();
-        self.ui.people.set_tooltip_text(Some(&name));
-        self.ui.people.update_property(&[gtk::accessible::Property::Label(&name)]);
+        self.ui.people_dot.set_opacity(if in_room { 1.0 } else { 0.0 });
     }
 
     /// For a shot: the room as the board frame `shot` draws it, over the episode playing: the
@@ -3364,7 +3329,7 @@ impl PlayerView {
             let me = Rc::downgrade(self);
             glib::timeout_add_local_once(Duration::from_millis(800), move || {
                 if let Some(me) = me.upgrade() {
-                    me.show_party();
+                    me.watch_together();
                     me.shot_room_after("room-morph", None, false);
                 }
             });
@@ -3465,20 +3430,6 @@ impl PlayerView {
         None
     }
 
-    /// For a shot: the party's panel, under the people button, over the window.
-    pub fn shot_party_popover(&self) -> Option<(gtk::Widget, f32, f32)> {
-        let popover = &self.party.popover;
-        if !popover.is_visible() {
-            return None;
-        }
-        let window = &self.ctx.window;
-        let button = self.ui.people.compute_bounds(window)?;
-        let width = popover.width() as f32;
-        let x = (button.x() + button.width() / 2.0 - width / 2.0)
-            .clamp(0.0, (window.width() as f32 - width).max(0.0));
-        Some((popover.clone().upcast(), x, button.y() + button.height()))
-    }
-
     fn rest_now(&self) {
         if let Some(source) = self.idle.borrow_mut().take() {
             source.remove();
@@ -3521,10 +3472,6 @@ impl PlayerView {
         // Tab and F6 bring the controls up before focus moves onto them.
         if matches!(key, Key::Tab | Key::ISO_Left_Tab | Key::F6) {
             self.wake();
-            return false;
-        }
-        // The keys of a text field, an open party form or a focused button are its own.
-        if self.party.popover.is_visible() {
             return false;
         }
         // With the panel open, Escape and E close it first. Inside it, the arrows, Enter and
@@ -3612,18 +3559,13 @@ impl PlayerView {
             Key::p | Key::P => self.toggle_mini(),
             Key::s | Key::S if self.ui.skip.shown() => self.send(PlayerCommand::TakeSkip),
             Key::n => self.play_next(),
-            Key::N if self.in_party() => {}
+            Key::N if self.in_room() => {}
             Key::N => self.send(PlayerCommand::Step(-1)),
             Key::bracketleft => self.step_speed(false),
             Key::bracketright => self.step_speed(true),
             Key::BackSpace => self.ask_speed(1.0),
-            Key::e | Key::E if self.in_party() => {}
+            Key::e | Key::E if self.in_room() => {}
             Key::e | Key::E => self.toggle_panel(),
-            Key::c | Key::C if self.in_party() => {
-                if !self.ui.chat.open_field() {
-                    return false;
-                }
-            }
             Key::t | Key::T => self.ui.tracks.popup(),
             Key::i | Key::I => self.toggle_stats(),
             Key::u | Key::U => {
@@ -3761,7 +3703,7 @@ fn log_pacing(pacing: Rc<video::Pacing>, player: Rc<Player>) {
 /// name when there is one.
 fn episode_line(number: &str, translation: Option<Translation>, title: Option<&str>) -> String {
     let line = say::marked(
-        t::episode_number(crate::party::number(number)),
+        t::episode_number(crate::choose_source::number(number)),
         translation == Some(Translation::Dub),
     );
     match title {
@@ -3869,7 +3811,7 @@ impl PlayerView {
 
     /// Slide the panel in on `tab`: the header stays, the bottom bar goes, the video dims.
     fn open_panel(&self, tab: PanelTab) {
-        if self.in_party() || self.start.borrow().is_some() || self.mini.get().is_some() {
+        if self.in_room() || self.start.borrow().is_some() || self.mini.get().is_some() {
             return;
         }
         self.close_menus_only();
@@ -3931,7 +3873,6 @@ impl PlayerView {
         for button in &self.ui.menu_buttons {
             button.popdown();
         }
-        self.party.popover.popdown();
         self.room.column.invite.popdown();
         self.room.column.details.popdown();
     }
@@ -4257,7 +4198,7 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
         .build();
     tracks.add_css_class("flat");
     let people_dot = gtk::Box::new(gtk::Orientation::Horizontal, 0);
-    people_dot.add_css_class("party-dot");
+    people_dot.add_css_class("room-dot");
     people_dot.set_halign(gtk::Align::End);
     people_dot.set_valign(gtk::Align::Start);
     people_dot.set_opacity(0.0);
@@ -4267,8 +4208,8 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     people_icon.add_overlay(&people_dot);
     let people = gtk::Button::builder()
         .child(&people_icon)
-        .tooltip_text(t::party_title())
-        .action_name("player.party")
+        .tooltip_text(t::together_people_button())
+        .action_name("player.together")
         .valign(gtk::Align::Center)
         .build();
     people.add_css_class("flat");
@@ -4513,10 +4454,6 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     resumed.append(&start_over);
 
     let cards = gtk::Box::new(gtk::Orientation::Vertical, 8);
-    let chat = chat::Chat::new(ctx, &cards);
-    for button in chat.buttons.iter().rev() {
-        top.pack_end(button);
-    }
 
     cards.set_halign(gtk::Align::End);
     cards.set_valign(gtk::Align::End);
@@ -4582,9 +4519,6 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     stage.add_overlay(&dim);
     stage.add_overlay(&starting);
     stage.add_overlay(&cards);
-    stage.add_overlay(&chat.column);
-    stage.add_overlay(&chat.moments);
-    stage.add_overlay(&chat.field);
     stage.add_overlay(&mark_bar);
     stage.add_overlay(&resumed);
     stage.add_overlay(&catcher);
@@ -4646,7 +4580,6 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
         ],
         style,
         cards,
-        chat,
         skip,
         skip_button,
         mark_bar,

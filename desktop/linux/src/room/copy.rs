@@ -27,10 +27,9 @@ pub fn room_leave() -> String {
 pub fn room_say() -> String {
     t::room_chat_field()
 }
-/// The people list's name for screen readers, "3 people"; the catalogue has no "People in the
-/// room".
-pub fn room_people(count: usize) -> String {
-    t::room_names_people(n(count))
+/// The people list's name for screen readers: "People in the room".
+pub fn room_people() -> String {
+    t::room_people()
 }
 
 // The room's line.
@@ -56,8 +55,8 @@ pub fn line_paused_for(names: &str) -> String {
 pub fn line_why(reason: WaitReason, secs: i64) -> String {
     match reason {
         WaitReason::Buffering => t::room_state_buffering(secs),
-        // The catalogue has no "Seeking · N s": a seek waits on loading.
-        WaitReason::Loading | WaitReason::Seeking => t::room_state_loading(secs),
+        WaitReason::Loading => t::room_state_loading(secs),
+        WaitReason::Seeking => t::room_state_seeking(secs),
     }
 }
 pub fn line_still_loading(names: &str, count: usize) -> String {
@@ -413,7 +412,7 @@ pub fn try_again() -> String {
     t::action_try_again()
 }
 pub fn unreachable() -> String {
-    t::room_error_unreachable_title()
+    t::room_error_unreachable_lead()
 }
 pub fn unreachable_note() -> String {
     format!("{} {}", t::room_error_ask_new_invite(), t::room_error_tried(8)) // i18n-skip
@@ -428,7 +427,7 @@ pub fn rejoin() -> String {
     t::room_rejoin()
 }
 pub fn nobody_answered() -> String {
-    t::room_error_nobody_answered()
+    t::room_error_nobody_answered_lead()
 }
 pub fn nobody_answered_note() -> String {
     t::room_error_nobody_answered_line()

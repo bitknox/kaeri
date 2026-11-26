@@ -147,7 +147,7 @@ impl PlayerView {
     }
 
     fn begin_marking(&self, kind: Option<SkipKind>) {
-        if self.ctx.hub.known.borrow().party.is_some() {
+        if self.ctx.hub.known.borrow().room.is_some() {
             self.ctx.toast(&t::player_mark_unavailable());
             return;
         }

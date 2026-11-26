@@ -13,7 +13,6 @@ pub mod home_page;
 pub mod join;
 pub mod library;
 pub mod licensed;
-pub mod lobby;
 pub mod match_picker;
 pub mod more_about;
 pub mod opened;

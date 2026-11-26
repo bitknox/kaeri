@@ -574,7 +574,7 @@ impl Dialog {
         self.stack.insert_action_group("cast", Some(&more));
         let choose_source = on(|me| {
             if let Some((id, episode)) = me.tv.cast_choose_source() {
-                crate::party::source::choose(&me.ctx, id, &episode);
+                crate::choose_source::choose(&me.ctx, id, &episode);
             }
         });
         self.remote.choose_source.connect_clicked(move |_| choose_source());

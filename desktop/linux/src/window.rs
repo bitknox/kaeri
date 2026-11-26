@@ -374,10 +374,6 @@ pub struct Shell {
     fixtures: bool,
     /// Whether first launch was weighed, once, on Continue's first answer.
     welcome_checked: Cell<bool>,
-    /// In a watch party, as the window last heard: what it says as one starts and ends.
-    pub in_party: Cell<bool>,
-    /// The viewer chose to leave the party to close, so the close goes on without asking again.
-    party_asked: Cell<bool>,
     /// Stop and quit was chosen for the cast running: the close goes on.
     cast_asked: Cell<bool>,
 }
@@ -550,8 +546,6 @@ impl Shell {
             held: RefCell::default(),
             fixtures,
             welcome_checked: Cell::new(false),
-            in_party: Cell::new(false),
-            party_asked: Cell::new(false),
             cast_asked: Cell::new(false),
         });
         shell.player.attach(Rc::downgrade(&shell));
@@ -947,15 +941,32 @@ impl Shell {
                 }
             }),
         );
+        // A room's invite pasted on Watch together: the room shows in the player, as an invite
+        // the system opened does.
+        add(
+            "join-room",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                let Some(link) = a.and_then(|a| a.str()) else { return };
+                match kaeri_model::room::RoomTarget::parse(link.trim()) {
+                    Some(target) if target.old.is_some() => {
+                        s.ctx.toast(&kaeri_i18n::t::room_error_old_invite());
+                    }
+                    Some(target) => {
+                        s.show_player(true);
+                        s.player.room.peek(&target.link);
+                    }
+                    // The catalogue's only "not an invite" line is the terminal's.
+                    None => s.ctx.toast(&kaeri_i18n::t::tui_room_not_a_link()),
+                }
+            }),
+        );
         add(
             "watch-together",
             Some(glib::VariantTy::new("(us)").expect("a type")),
             Box::new(move |s, a| {
                 if let Some((id, episode)) = play_of(a) {
-                    crate::party::form::open(
-                        &s.ctx,
-                        crate::party::form::For::Episode(id, episode),
-                    );
+                    s.player.start_room(id, episode);
                 }
             }),
         );
@@ -1642,10 +1653,6 @@ impl Shell {
             if matches!(event, Event::Downloads(_) | Event::Seeding(_)) {
                 shell.release_when_done();
             }
-            if matches!(event, Event::PartyJoined(_)) {
-                shell.party_asked.set(false);
-            }
-            crate::party::heard(&shell, event);
             shell.player.engine_event(event);
         });
     }
@@ -1772,7 +1779,7 @@ impl Shell {
         });
     }
 
-    /// An `kaeri://` link handed to the app: a watch party's invite, a plugin store's invite,
+    /// An `kaeri://` link handed to the app: a room's invite, a plugin store's invite,
     /// or a tracker's sign-in coming back from the browser, `kaeri://auth/<tracker>` with the
     /// token or code it carries.
     pub fn open_link(self: &Rc<Self>, link: &str) {
@@ -1797,10 +1804,6 @@ impl Shell {
                 self.show_player(true);
                 self.player.room.peek(&target.link);
             }
-            return;
-        }
-        if is_party_link(link) {
-            crate::party::open_invite(self, link);
             return;
         }
         if let Some(invite) = pages::join::invite_in(link) {
@@ -1830,13 +1833,6 @@ impl Shell {
         self.ctx.window.connect_close_request(move |window| {
             let Some(shell) = weak.upgrade() else { return glib::Propagation::Proceed };
             shell.ctx.prefs.remember_window(window);
-            // Closing leaves the party: asked first, unless quitting or already answered.
-            if !shell.closing.get()
-                && !shell.party_asked.get()
-                && crate::party::ask_before_closing(&shell)
-            {
-                return glib::Propagation::Stop;
-            }
             // Quitting stops a cast: asked first, unless already answered.
             if !shell.cast_asked.get() && ask_before_stopping_cast(&shell) {
                 return glib::Propagation::Stop;
@@ -1862,13 +1858,6 @@ impl Shell {
                 }
             }
         });
-    }
-
-    /// The viewer left the party to close the window: the close goes on, asking of downloads
-    /// as any close does.
-    pub fn left_party_to_close(&self) {
-        self.party_asked.set(true);
-        self.ctx.window.close();
     }
 
     /// The viewer chose to stop everything and close.
@@ -1926,13 +1915,6 @@ impl Shell {
     pub fn is_reader(&self) -> bool {
         self.top.visible_child_name().as_deref() == Some("reader")
     }
-}
-
-/// Whether `link` is a watch party's invite, `kaeri://party?…`, in any case.
-fn is_party_link(link: &str) -> bool {
-    ["kaeri://party?", "kaeri://party/?"].iter().any(|scheme| {
-        link.get(..scheme.len()).is_some_and(|start| start.eq_ignore_ascii_case(scheme))
-    })
 }
 
 /// The tracker an `kaeri://auth/<tracker>` sign-in return is for.
@@ -2455,7 +2437,7 @@ mod tests {
             rev: 0,
             over: false,
             reached: false,
-            party: None,
+            room: None,
         };
         let said = |phase, playing, ended| link_standing(&card(phase), playing, ended);
         assert_eq!(
@@ -2484,15 +2466,6 @@ mod tests {
         assert!(setting_saved(&said(NoticeKind::Info, saved)));
         assert!(!setting_saved(&said(NoticeKind::Alert, refused.clone())));
         assert!(!setting_saved(&said(NoticeKind::Info, refused)));
-    }
-
-    #[test]
-    fn a_party_invite_is_told_from_other_links() {
-        assert!(is_party_link("kaeri://party?server=a&room=b&title=1&episode=2"));
-        assert!(is_party_link("KAERI://Party?server=a"));
-        assert!(is_party_link("kaeri://party/?server=a"));
-        assert!(!is_party_link("kaeri://auth/anilist#x"));
-        assert!(!is_party_link("kaeri://partyroom"));
     }
 
     #[test]

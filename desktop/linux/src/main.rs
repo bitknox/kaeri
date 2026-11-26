@@ -11,6 +11,7 @@
 mod cards_layout;
 mod catalog;
 mod choices;
+mod choose_source;
 mod crash_signal;
 mod engine;
 mod fit;
@@ -30,7 +31,6 @@ mod nagare;
 mod notices;
 mod pad;
 mod pages;
-mod party;
 mod player;
 mod portal;
 mod prefs;
