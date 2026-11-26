@@ -146,7 +146,9 @@ public static class Rooms
         var waitSecs = waits.Length == 0 ? 0 : Seconds(waits.Min(w => w.SinceMs), s.NowMs);
         if (waits.Any(w => w.You))
         {
-            var waiting = s.Members.Where(m => !m.You && m.State != MemberState.Left).Select(m => m.Name).ToList();
+            // Those waiting: not this device, not gone, and not waited for themselves (their rows say so).
+            var waitedFor = waits.Select(w => w.Id).ToHashSet();
+            var waiting = s.Members.Where(m => !m.You && m.State != MemberState.Left && !waitedFor.Contains(m.Id)).Select(m => m.Name).ToList();
             return new RoomLine(RoomWords.PausedForYou, RoomWords.Waiting(Names(waiting), waiting.Count, waitSecs)) { Kind = "self-wait" };
         }
         var names = waits.Select(w => w.Name).Distinct().ToList();

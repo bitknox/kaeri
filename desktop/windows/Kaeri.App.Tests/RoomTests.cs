@@ -108,6 +108,15 @@ public class RoomTests
     }
 
     [Fact]
+    public void YourOwnWaitLeavesOutThoseWaitedForToo()
+    {
+        var members = new[] { M("Ada", MemberState.Loading, you: true, ago: 6_000), M("Mika", MemberState.Paused), M("Ren", MemberState.Loading, ago: 6_000) };
+        var waiting = new[] { Wait("Ada", 6_000, WaitReason.Seeking, you: true), Wait("Ren", 6_000, WaitReason.Seeking) };
+        var line = Rooms.Line(Scene(View(playing: false, waiting: waiting), members));
+        Assert.Equal(("Paused for you", "Mika is waiting · 6 s"), (line.Title, line.Detail));
+    }
+
+    [Fact]
     public void APauseSaysWhoAndWhere()
     {
         Assert.Equal(("Mika paused", "at 12:04"), Pair(Rooms.Line(Scene(View(playing: false, pausedBy: "Mika"), Three()))));
