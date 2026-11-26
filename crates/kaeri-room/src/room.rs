@@ -97,14 +97,48 @@ pub enum Word {
 /// Something that happened, for the engine to say.
 #[derive(Debug, Clone, PartialEq)]
 pub enum Happening {
-    Joined { mid: Mid },
-    Left { mid: Mid },
-    Playhead { old: Option<Box<Playhead>>, new: Box<Playhead> },
-    Chat { mid: Mid, id: String, text: String },
-    React { mid: Mid, id: String, reaction: crate::wire::Reaction, at: f64 },
-    SyncRequested { from: Mid, nonce: String, peek: bool },
-    Move { by: Mid, id: String, to: Vec<crate::wire::MoveTo> },
-    Relays { list: Vec<String> },
+    Joined {
+        mid: Mid,
+    },
+    Left {
+        mid: Mid,
+    },
+    Playhead {
+        old: Option<Box<Playhead>>,
+        new: Box<Playhead>,
+    },
+    Chat {
+        mid: Mid,
+        id: String,
+        text: String,
+    },
+    React {
+        mid: Mid,
+        id: String,
+        reaction: crate::wire::Reaction,
+        at: f64,
+    },
+    SyncRequested {
+        from: Mid,
+        nonce: String,
+        peek: bool,
+    },
+    Move {
+        by: Mid,
+        id: String,
+        to: Vec<crate::wire::MoveTo>,
+    },
+    Relays {
+        list: Vec<String>,
+    },
+    /// A rekey: `to` holds the new secret sealed to each member present at the press.
+    Rekey {
+        by: Mid,
+        seq: u64,
+        t: i64,
+        session: String,
+        to: Vec<(String, String)>,
+    },
 }
 
 /// The room clock: running from `from` seconds at `start`.
@@ -130,6 +164,8 @@ pub struct Room {
     wait_cause: Option<(Cause, Mid)>,
     relays: Vec<String>,
     relays_seq: u64,
+    /// The key epoch register: the winning rekey's `(seq, t, session)`.
+    epoch: (u64, i64, String),
 }
 
 impl Room {
@@ -162,7 +198,27 @@ impl Room {
             wait_cause: None,
             relays: Vec::new(),
             relays_seq: 0,
+            epoch: (0, 0, String::new()),
         }
+    }
+
+    /// The key epoch: the winning rekey's `(seq, t, session)`.
+    pub fn epoch(&self) -> &(u64, i64, String) {
+        &self.epoch
+    }
+
+    /// A rekey `(seq, t, session)`, this device's or someone's: `true` when it wins the epoch
+    /// register (a higher seq, then the lower `t`, then the lower key), and is now the epoch.
+    pub fn take_epoch(&mut self, seq: u64, t: i64, session: &str) -> bool {
+        use std::cmp::Reverse;
+        let (cur_seq, cur_t, cur_pk) = &self.epoch;
+        let wins = (seq, Reverse(t), Reverse(session))
+            > (*cur_seq, Reverse(*cur_t), Reverse(cur_pk.as_str()))
+            && seq <= cur_seq + SEQ_JUMP_LIMIT;
+        if wins {
+            self.epoch = (seq, t, session.to_owned());
+        }
+        wins
     }
 
     pub fn me(&self) -> &str {
@@ -657,6 +713,13 @@ impl Room {
                 out.push(Happening::SyncRequested { from: body.mid, nonce, peek });
             }
             Message::Move { id, to } => out.push(Happening::Move { by: body.mid, id, to }),
+            Message::Rekey { seq, to } => out.push(Happening::Rekey {
+                by: body.mid,
+                seq,
+                t: body.t,
+                session: body.from,
+                to,
+            }),
             Message::Relays { seq, list } if seq > self.relays_seq => {
                 self.relays_seq = seq;
                 self.relays.clone_from(&list);
@@ -721,7 +784,7 @@ impl Room {
             playhead: self.playhead.clone(),
             relays: self.relays.clone(),
             relays_seq: self.relays_seq,
-            epoch: 0,
+            epoch: self.epoch.0,
             now_pos: self.position(now),
             playing_now: self.playing(),
             started: !self.before_play,

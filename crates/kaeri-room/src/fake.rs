@@ -100,6 +100,8 @@ fn fresh_secret() -> [u8; 16] {
 struct Scripted {
     mid: Mid,
     session: String,
+    /// Its session key, which seals its pairwise payloads.
+    keys: crate::keys::Session,
     room: Room,
     status: Status,
     status_at: i64,
@@ -299,7 +301,7 @@ impl Scripted {
         self.ctr += 1;
         let mut st = self.status.clone();
         st.age = (now - self.status_at).max(0) as u32;
-        st.dg = [self.room.seq(), self.room.relays_seq(), 0];
+        st.dg = [self.room.seq(), self.room.relays_seq(), self.room.epoch().0];
         Body {
             v: VERSION,
             from: self.session.clone(),
@@ -393,7 +395,8 @@ impl FakeRoom {
         let now = self.now();
         let n = NEXT.fetch_add(1, Ordering::Relaxed);
         let mid = format!("{:016x}", crate::mix(name, &n.to_string()));
-        let session = format!("{:064x}", u128::from(crate::mix(&mid, "session")));
+        let keys = crate::keys::Session::new();
+        let session = keys.pubkey();
         let mut room = Room::new(&mid, name, &session, now);
         // It knows the room as the others do.
         let answer = {
@@ -415,6 +418,7 @@ impl FakeRoom {
         let mut member = Scripted {
             mid,
             session,
+            keys,
             room,
             status: Status::default(),
             status_at: now,
@@ -705,7 +709,21 @@ impl FakeRoom {
     pub fn member_new_invite(&self, name: &str) {
         let secret = fresh_secret();
         net(|net| net.buses.insert(secret, Arc::clone(&self.bus)));
-        self.act(name, |_, now| Some(Message::Rekey { seq: now as u64, to: Vec::new() }));
+        let devices: Vec<String> =
+            self.bus.lock().devices.values().filter_map(|d| d.session.clone()).collect();
+        self.act(name, |m, _| {
+            let to = devices
+                .iter()
+                .filter_map(|pk| {
+                    Some((
+                        crate::keys::pk8(pk),
+                        m.keys.seal_to(pk, base64url(&secret).as_bytes())?,
+                    ))
+                })
+                .collect();
+            let seq = m.room.epoch().0 + 1;
+            Some(Message::Rekey { seq, to })
+        });
     }
 
     /// `name` moves the room to a new one, taking `take` (member names, or [`YOU`] for the
@@ -732,13 +750,19 @@ impl FakeRoom {
                         })
                     })
                 };
+                let plain = payload.map(|p| serde_json::to_vec(&p).unwrap_or_default());
+                let sealed = {
+                    let state = self.bus.lock();
+                    state
+                        .members
+                        .get(name)
+                        .zip(plain)
+                        .and_then(|(m, plain)| m.keys.seal_to(&session, &plain))
+                };
                 MoveTo {
                     mid,
-                    pk8: session.chars().take(16).collect(),
-                    // Sealed pairwise in the transport; the fake sends it open.
-                    sealed: payload
-                        .map(|p| serde_json::to_string(&p).unwrap_or_default())
-                        .unwrap_or_default(),
+                    pk8: crate::keys::pk8(&session),
+                    sealed: sealed.unwrap_or_default(),
                 }
             })
             .collect();
@@ -887,9 +911,4 @@ fn base64url(bytes: &[u8]) -> String {
         }
     }
     out
-}
-
-/// A Move payload as the fake sends it: open JSON.
-pub fn open_move(sealed: &str) -> Option<MovePayload> {
-    serde_json::from_str(sealed).ok()
 }

@@ -20,6 +20,7 @@ use kaeri_model::{
 };
 use kaeri_room::{
     Happening, Reason, Room, Word,
+    keys::{Identity, pk8},
     link::{self, Heard, Link, Out},
     wire::{self, Body, Cause, Ep, Message, Mid, MovePayload, MoveTo, StateCode, Status, Up},
 };
@@ -248,7 +249,7 @@ fn peek(invite: &str, services: &Services, tx: &Outbox) {
         };
         let now = now_ms();
         let me = random_hex(8);
-        let session = random_hex(32);
+        let session = link.session.pubkey();
         let mut room = Room::new(&me, "", &session, now);
         let nonce = random_hex(8);
         let body = Body {
@@ -398,6 +399,8 @@ struct Offer {
 struct Task {
     env: Env,
     name: String,
+    /// This device's identity key in this room: it gives `me`.
+    identity: Identity,
     me: Mid,
     session: String,
     ctr: u64,
@@ -456,7 +459,7 @@ impl Task {
         self.last_sent = now;
         let mut st = self.status.clone();
         st.age = (now - self.status_at).max(0) as u32;
-        st.dg = [self.room.seq(), self.room.relays_seq(), 0];
+        st.dg = [self.room.seq(), self.room.relays_seq(), self.room.epoch().0];
         st.play = self.room.playing();
         st.pos = self.room.position(now).or(st.pos);
         Body {
@@ -464,7 +467,7 @@ impl Task {
             from: self.session.clone(),
             mid: self.me.clone(),
             ctr: self.ctr,
-            t: now,
+            t: self.link.corrected(now),
             st,
             m,
         }
@@ -952,8 +955,13 @@ impl Task {
                 self.moved = Some((by.clone(), Vec::new()));
                 let name = self.name_of(&by);
                 self.message(RoomMessageKind::MovedRoom { by: name.clone() });
-                if let Some(mine) = to.iter().find(|t| t.mid == self.me)
-                    && let Some(payload) = open_move(&mine.sealed)
+                let from = self.room.member(&by).map(|m| m.session.clone()).unwrap_or_default();
+                let mine = to.iter().find(|t| t.mid == self.me && t.pk8 == pk8(&self.session));
+                if let Some(mine) = mine
+                    && let Some(payload) =
+                        self.link.session.open_from(&from, &mine.sealed).and_then(|plain| {
+                            serde_json::from_slice::<MovePayload>(&plain).ok()
+                        })
                 {
                     let names = to
                         .iter()
@@ -980,6 +988,26 @@ impl Task {
             Happening::Relays { list } => {
                 self.target.relays = list.clone();
                 let _ = self.link.out.send(Out::Relays(list));
+            }
+            Happening::Rekey { by, seq, t, session, to } => {
+                let me = pk8(&self.session);
+                let Some(secret) = to
+                    .iter()
+                    .find(|(pk, _)| *pk == me)
+                    .and_then(|(_, sealed)| self.link.session.open_from(&session, sealed))
+                    .and_then(|plain| String::from_utf8(plain).ok())
+                    .and_then(|text| unbase64url(&text))
+                    .and_then(|bytes| <[u8; 16]>::try_from(bytes.as_slice()).ok())
+                else {
+                    // Not sealed to this session: this device was Reconnecting at the press.
+                    return;
+                };
+                if self.room.take_epoch(seq, t, &session) {
+                    let _ = self.link.out.send(Out::Rekey(secret));
+                    self.target.secret = secret;
+                    let by = self.who(&by);
+                    self.message(RoomMessageKind::NewInvite { by });
+                }
             }
         }
     }
@@ -1148,7 +1176,25 @@ impl Task {
             }
             RoomCommand::NewInvite => {
                 let secret = random_secret();
-                self.send(Message::Rekey { seq: self.ctr, to: Vec::new() });
+                let now = self.now();
+                let plain = base64url(&secret);
+                // The new secret, sealed to every member present now (their proved sessions).
+                let to: Vec<(String, String)> = self
+                    .room
+                    .present(now)
+                    .into_iter()
+                    .filter(|m| m.mid != self.me && !m.session.is_empty())
+                    .filter_map(|m| {
+                        Some((
+                            pk8(&m.session),
+                            self.link.session.seal_to(&m.session, plain.as_bytes())?,
+                        ))
+                    })
+                    .collect();
+                let seq = self.room.epoch().0 + 1;
+                let body = self.body(Message::Rekey { seq, to });
+                self.room.take_epoch(seq, body.t, &self.session.clone());
+                let _ = self.link.out.send(Out::Body(body));
                 let _ = self.link.out.send(Out::Rekey(secret));
                 self.target.secret = secret;
                 self.message(RoomMessageKind::NewInvite { by: kaeri_i18n::t::room_you() });
@@ -1252,14 +1298,18 @@ impl Task {
             now_pos: pos,
             playing,
         };
+        let plain = serde_json::to_vec(&payload).unwrap_or_default();
+        // Sealed to each ticked member's proved session key: nobody else can open it.
         let to: Vec<MoveTo> = take
             .iter()
             .filter_map(|mid| self.room.member(mid))
-            .map(|m| MoveTo {
-                mid: m.mid.clone(),
-                pk8: m.session.chars().take(16).collect(),
-                // Sealed pairwise by the transport; the in-process room takes it open.
-                sealed: serde_json::to_string(&payload).unwrap_or_default(),
+            .filter(|m| !m.session.is_empty() && m.mid != self.me)
+            .filter_map(|m| {
+                Some(MoveTo {
+                    mid: m.mid.clone(),
+                    pk8: pk8(&m.session),
+                    sealed: self.link.session.seal_to(&m.session, &plain)?,
+                })
             })
             .collect();
         if to.is_empty() {
@@ -1287,8 +1337,9 @@ impl Task {
         };
         self.say(Event::RoomLeft { why: RoomLeftWhy::Moved });
         let now = self.now();
-        self.me = random_hex(8);
-        self.session = random_hex(32);
+        self.identity = Identity::new();
+        self.me = self.identity.mid();
+        self.session = link.session.pubkey();
         self.ctr = 0;
         self.link = link;
         self.target = target;
@@ -1383,13 +1434,10 @@ impl Task {
             self.connection = RoomConnection::Connected;
         }
         let name = self.name.clone();
-        self.send(Message::Hello {
-            name,
-            app: APP.into(),
-            caps: Vec::new(),
-            idpk: String::new(),
-            idsig: String::new(),
-        });
+        let idpk = self.identity.pubkey();
+        let idsig = self.identity.prove(&self.session, &self.link.room_id);
+        self.room.set_my_proof(&idpk, &idsig);
+        self.send(Message::Hello { name, app: APP.into(), caps: Vec::new(), idpk, idsig });
     }
 
     /// This device is the room's first member.
@@ -1446,10 +1494,6 @@ impl Task {
 }
 
 use kaeri_room::wire::Playhead;
-
-fn open_move(sealed: &str) -> Option<MovePayload> {
-    serde_json::from_str(sealed).ok()
-}
 
 fn from_wire(reaction: wire::Reaction) -> Reaction {
     match reaction {
@@ -1562,12 +1606,14 @@ async fn run(
         }
     };
     let now = now_ms();
-    let me = random_hex(8);
-    let session = random_hex(32);
+    let identity = Identity::new();
+    let me = identity.mid();
+    let session = link.session.pubkey();
     let hidden = env.hidden;
     let mut task = Task {
         env,
         name: name.clone(),
+        identity,
         room: Room::new(&me, &name, &session, now),
         me,
         session,
