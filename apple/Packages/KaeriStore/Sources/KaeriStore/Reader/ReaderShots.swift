@@ -383,7 +383,7 @@ extension ReaderModel {
             ReaderSettingRow(key: .look, value: .choice(name: "light"), scope: .medium, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .fit, value: .choice(name: "screen"), scope: .medium, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .cropBorders, value: .toggle(on: true), scope: .medium, detected: false, overridden: false, choices: []),
-            ReaderSettingRow(key: .tapLayout, value: .choice(name: "edges"), scope: .device, detected: false, overridden: false, choices: []),
+            ReaderSettingRow(key: .tapPaged, value: .choice(name: "sides"), scope: .device, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .pageLayout, value: .choice(name: "auto"), scope: .medium, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .paperMode, value: .toggle(on: false), scope: .device, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .greyscalePages, value: .toggle(on: false), scope: .device, detected: false, overridden: false, choices: []),

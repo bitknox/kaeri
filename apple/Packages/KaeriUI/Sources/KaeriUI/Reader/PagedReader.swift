@@ -169,14 +169,11 @@ struct PagedReader: View {
     // MARK: Turning
 
     private func tap(_ x: Double) {
-        let layout = model.choice(.tapLayout) ?? "edges"
         // While zoomed the zones are off: a tap anywhere only brings the chrome or puts it away.
         if zoom.zoomed { onTap(0.5); return }
-        if (model.chromeShown && ReaderDevice.tapsHeldByChrome) || layout == "off" { onTap(x); return }
-        // Edges: the outer thirds turn. Halves: the outer 40 percent turn, and the middle band
-        // still brings the chrome up.
-        let edge = layout == "sides" ? 0.4 : 0.33
-        if x < edge || x > 1 - edge {
+        if (model.chromeShown && ReaderDevice.tapsHeldByChrome) || !model.tapsTurn { onTap(x); return }
+        // The outer thirds turn, and the middle band brings the chrome up.
+        if x < 0.33 || x > 0.67 {
             let leftSide = x < 0.5
             // Left is forward when the book runs right to left.
             turn(forward: leftSide == rtl, how: .turn)

@@ -889,6 +889,14 @@ public final class ReaderModel {
         return nil
     }
 
+    /// Whether a tap at the page's sides turns it: the engine's tap zones for this reading
+    /// (paged, or a scrolled novel's), read as Sides, the outer thirds, unless they are Off.
+    public var tapsTurn: Bool {
+        let scrolling = medium == .novel && choice(.mode) == "scrolled"
+        guard let layout = choice(scrolling ? .tapScroll : .tapPaged) else { return !scrolling }
+        return layout != "off"
+    }
+
     public func amount(_ key: ReaderSettingKey) -> Double? {
         if case .amount(let value)? = row(key)?.value { return value }
         return nil

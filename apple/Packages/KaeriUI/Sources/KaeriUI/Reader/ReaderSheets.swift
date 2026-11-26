@@ -314,9 +314,6 @@ struct ReaderSettingsSheet: View {
                 if show(L.readerSpreads), !novel {
                     segments(L.readerSpreads, [(L.readerSpreadsSplit, "split"), (L.readerSpreadsRotate, "rotate"), (L.readerSpreadsWhole, "whole")], .spreads)
                 }
-                if show(L.readerTapZones) {
-                    segments(L.readerTapZones, [(L.readerTapEdges, "edges"), (L.readerTapSides, "sides"), (L.readerTapOff, "off")], .tapLayout)
-                }
                 if show(L.readerStripGap), !novel, model.view?.mode == .strip {
                     chips(L.readerStripGap, [(L.readerGapNone, "none"), (L.readerGapSmall, "small")], gap) { gap = $0 }
                 }
@@ -334,7 +331,7 @@ struct ReaderSettingsSheet: View {
     /// The rows under More settings and whether this reader has each, for saying when a search
     /// finds none.
     private var moreRows: [(name: String, here: Bool)] {
-        [(L.readerPageLayout, !novel), (L.readerSpreads, !novel), (L.readerTapZones, true),
+        [(L.readerPageLayout, !novel), (L.readerSpreads, !novel),
          (L.readerStripGap, !novel && model.view?.mode == .strip), (L.readerKeyStep, mac),
          (L.readerVolumeKeys, model.row(.volumeKeysTurn) != nil)]
     }
