@@ -48,6 +48,11 @@ static RUNTIME: std::sync::OnceLock<tokio::runtime::Handle> = std::sync::OnceLoc
 /// Where the fake AniList serves its art, `http://…/art/`, for shots that draw covers of their own.
 pub static ART_BASE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
 
+/// The engine's runtime, for the room's fake relays.
+pub fn runtime() -> Option<tokio::runtime::Handle> {
+    RUNTIME.get().cloned()
+}
+
 /// Keep `handle`, the engine's runtime, for [`FakeParty::start`].
 pub fn keep_runtime(handle: tokio::runtime::Handle) {
     ACTIVE.store(true, std::sync::atomic::Ordering::Relaxed);

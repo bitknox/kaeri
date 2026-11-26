@@ -463,7 +463,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         return 2.0;
     }
     #[cfg(feature = "fixtures")]
-    if crate::room::fixture::SHOTS.contains(&shot) {
+    if crate::room::scenes::frame(shot).is_some() {
         close_dialogs(&shell.ctx.window);
         if !shell.is_player() {
             play(shell);
@@ -478,10 +478,11 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
                 player.shot_room(&shot);
             },
         );
+        // The scene takes a few seconds to stage off the main loop.
         return match (first, morph) {
-            (_, true) => 16.0,
-            (true, _) => 10.0,
-            _ => 4.0,
+            (_, true) => 18.0,
+            (true, _) => 12.0,
+            _ => 7.0,
         };
     }
     let window = &shell.ctx.window;
@@ -1852,7 +1853,7 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
             }
         }
         #[cfg(feature = "fixtures")]
-        room if crate::room::fixture::SHOTS.contains(&room) => {
+        room if crate::room::scenes::frame(room).is_some() => {
             close_dialogs(&shell.ctx.window);
             shell.player.close_menus();
             if shell.ctx.window.is_fullscreen() {
@@ -2523,10 +2524,11 @@ pub fn named(list: Option<&str>) -> Vec<String> {
             .flat_map(|s| match s {
                 "party" => PARTY.iter().map(|p| (*p).to_owned()).collect(),
                 #[cfg(feature = "fixtures")]
-                "room" => crate::room::fixture::SHOTS
+                "room" => crate::room::scenes::SHOTS
                     .iter()
-                    .chain(crate::room::fixture::PLACE_SHOTS.iter())
-                    .map(|p| (*p).to_owned())
+                    .map(|s| s.0)
+                    .chain(crate::room::fixture::PLACE_SHOTS.iter().copied())
+                    .map(str::to_owned)
                     .collect(),
                 "skips" => SKIPS.iter().map(|p| (*p).to_owned()).collect(),
                 "found" => FOUND.iter().map(|p| (*p).to_owned()).collect(),

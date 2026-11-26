@@ -1,463 +1,430 @@
-//! The room's words, as the board writes them, until the engine branch's catalogue carries
-//! them. Each function is named for the catalogue id it stands in for (`room_*`), so the swap
-//! to `kaeri_i18n::t` is one `use` per caller. Nothing here may ship: the report lists every id.
+//! The room's words from the catalogue (`i18n/en/ui-room.ftl`), in the shapes the room's widgets
+//! ask for: episode numbers as the room carries them, counts as `usize`, and the board's choice
+//! between one name and many.
+
+use kaeri_i18n::t;
+use kaeri_model::room::{Reaction, WaitReason};
+
+/// An episode number as the catalogue counts it: "9" is 9; anything else reads as 0.
+fn ep(episode: &str) -> i64 {
+    episode.trim().parse::<f64>().map_or(0, |n| n as i64)
+}
+
+fn n(count: usize) -> i64 {
+    i64::try_from(count).unwrap_or(i64::MAX)
+}
 
 pub fn room_title() -> String {
-    "Watch together".into() // i18n-skip
-}
-pub fn room_in_room(episode: &str, count: usize) -> String {
-    format!("{episode} · {count} in the room") // i18n-skip
+    t::nav_watch_together()
 }
 pub fn room_show_room() -> String {
-    "Show the room".into() // i18n-skip
+    t::room_show()
 }
 pub fn room_invite() -> String {
-    "Invite".into() // i18n-skip
+    t::room_invite()
 }
 pub fn room_details() -> String {
-    "Details".into() // i18n-skip
+    t::room_details()
 }
 pub fn room_leave() -> String {
-    "Leave".into() // i18n-skip
+    t::action_leave()
 }
 pub fn room_say() -> String {
-    "Say something".into() // i18n-skip
+    t::room_chat_field()
 }
-pub fn room_people() -> String {
-    "People in the room".into() // i18n-skip
+/// The people list's name for screen readers, "3 people"; the catalogue has no "People in the
+/// room".
+pub fn room_people(count: usize) -> String {
+    t::room_names_people(n(count))
 }
 
 // The room's line.
 pub fn line_watching() -> String {
-    "Watching together".into() // i18n-skip
+    t::room_line_watching()
 }
 pub fn line_at(episode: &str, at: &str) -> String {
-    format!("{episode} · {at}") // i18n-skip
+    t::room_line_watching_detail(ep(episode), at)
 }
 pub fn line_paused(by: &str) -> String {
-    format!("{by} paused") // i18n-skip
+    t::room_line_paused_by(by)
 }
 pub fn line_you_paused() -> String {
-    "You paused".into() // i18n-skip
+    t::room_line_you_paused()
 }
 pub fn line_paused_at(at: &str) -> String {
-    format!("at {at}") // i18n-skip
+    t::room_line_paused_at(at)
 }
 pub fn line_paused_for(names: &str) -> String {
-    format!("Paused for {names}") // i18n-skip
+    t::room_line_paused_for(names)
 }
-pub fn line_why(why: &str, secs: i64) -> String {
-    format!("{why} · {secs} s") // i18n-skip
-}
-pub fn why_loading() -> String {
-    "Loading".into() // i18n-skip
-}
-pub fn why_buffering() -> String {
-    "Buffering".into() // i18n-skip
-}
-pub fn why_seeking() -> String {
-    "Seeking".into() // i18n-skip
-}
-pub fn line_still_loading(names: &str, many: bool) -> String {
-    if many {
-        format!("{names} are still loading") // i18n-skip
-    } else {
-        format!("{names} is still loading") // i18n-skip
+/// "Loading · 6 s", "Buffering · 3 s": why the room waits, and how long so far.
+pub fn line_why(reason: WaitReason, secs: i64) -> String {
+    match reason {
+        WaitReason::Buffering => t::room_state_buffering(secs),
+        // The catalogue has no "Seeking · N s": a seek waits on loading.
+        WaitReason::Loading | WaitReason::Seeking => t::room_state_loading(secs),
     }
 }
-pub fn line_waited() -> String {
-    "The room has waited 20 s".into() // i18n-skip
+pub fn line_still_loading(names: &str, count: usize) -> String {
+    t::room_line_still_loading(names, n(count))
+}
+pub fn line_waited(secs: i64) -> String {
+    t::room_line_waited(secs)
 }
 pub fn line_carried(by: &str, names: &str, many: bool) -> String {
-    if many {
-        format!("{by} carried on · they join when ready") // i18n-skip
-    } else {
-        format!("{by} carried on · {names} joins when ready") // i18n-skip
-    }
+    if many { t::room_line_carried_on_many(by) } else { t::room_line_carried_on_one(by, names) }
 }
 pub fn line_paused_for_you() -> String {
-    "Paused for you".into() // i18n-skip
+    t::room_line_paused_for_you()
 }
-pub fn line_waiting_on_you(names: &str, many: bool, secs: i64) -> String {
-    if many {
-        format!("{names} are waiting · {secs} s") // i18n-skip
-    } else {
-        format!("{names} is waiting · {secs} s") // i18n-skip
-    }
+pub fn line_waiting_on_you(names: &str, count: usize, secs: i64) -> String {
+    t::room_line_waiting_for_you(names, n(count), secs)
 }
 pub fn line_behind(secs: i64) -> String {
-    format!("You're {secs} s behind · catching up") // i18n-skip
+    t::room_line_you_behind(secs)
 }
 pub fn line_reconnecting() -> String {
-    "Reconnecting to the room".into() // i18n-skip
+    t::room_line_reconnecting()
 }
 pub fn line_no_relay() -> String {
-    "No relay is answering · your episode keeps playing".into() // i18n-skip
+    t::room_line_reconnecting_detail()
 }
 pub fn line_relay_trouble(down: usize, of: usize) -> String {
-    if down == 1 {
-        format!("1 of {of} relays isn't answering · the room carries on") // i18n-skip
-    } else {
-        format!("{down} of {of} relays aren't answering · the room carries on") // i18n-skip
-    }
+    t::room_line_relays_down(n(down), n(of))
 }
 pub fn line_not_started() -> String {
-    "Not started yet".into() // i18n-skip
+    t::room_line_not_started()
 }
 pub fn line_play_starts() -> String {
-    "Play starts it for everyone".into() // i18n-skip
+    t::room_line_play_starts()
 }
-pub fn line_starting_when(names: &str, many: bool) -> String {
-    if many {
-        format!("Starting when {names} are ready") // i18n-skip
-    } else {
-        format!("Starting when {names} is ready") // i18n-skip
-    }
+pub fn line_starting_when(names: &str, count: usize) -> String {
+    t::room_line_starting_when(names, n(count))
 }
 pub fn line_starting_in(secs: u32) -> String {
-    format!("Starting in {secs}") // i18n-skip
+    t::room_line_starting_in(i64::from(secs))
 }
 pub fn line_everyone_ready() -> String {
-    "Everyone is ready".into() // i18n-skip
+    t::room_line_everyone_ready()
 }
 pub fn line_invited(by: &str) -> String {
-    format!("{by} invited you") // i18n-skip
+    t::room_invited_by(by)
+}
+pub fn line_invited_detail(title: &str, episode: &str) -> String {
+    t::room_invited_detail(title, ep(episode))
 }
 pub fn line_over_cap(count: usize) -> String {
-    format!("{count} people are here already · rooms work best with 10 or fewer") // i18n-skip
+    t::room_invited_over(n(count))
 }
 pub fn line_up_next(secs: i64) -> String {
-    format!("Up next in {secs} s") // i18n-skip
+    t::room_line_up_next(secs)
 }
 pub fn line_up_next_for_everyone(episode: &str) -> String {
-    format!("Episode {episode} plays for everyone") // i18n-skip
+    t::room_line_up_next_detail(ep(episode))
 }
 pub fn line_moved(by: &str) -> String {
-    format!("{by} moved the room") // i18n-skip
+    t::room_line_moved(by)
 }
 pub fn line_go_along(others: &str, count: usize, at: &str) -> String {
-    match count {
-        0 => format!("Go along? The episode carries on from {at}."), // i18n-skip
-        1 => format!("Go along? {others} is asked too. The episode carries on from {at}."), // i18n-skip
-        _ => format!("Go along? {others} are asked too. The episode carries on from {at}."), // i18n-skip
+    if count == 0 {
+        t::room_line_moved_detail_alone(at)
+    } else {
+        t::room_line_moved_detail(others, n(count), at)
     }
 }
 pub fn line_moved_away(by: &str) -> String {
-    format!("{by} moved to a new room") // i18n-skip
+    t::room_line_moved_away(by)
 }
 pub fn line_went_along(names: &str) -> String {
-    format!("{names} went along · this room carries on") // i18n-skip
+    t::room_line_went_along(names)
 }
-
-// Buttons under the line.
-pub fn carry_on_without(names: &str) -> String {
-    format!("Carry on without {names}") // i18n-skip
+/// Carry on without one person, or without them.
+pub fn carry_on_without(name: Option<&str>) -> String {
+    name.map_or_else(t::room_carry_on_without_them, t::room_carry_on_without)
 }
-pub fn start_without(names: &str) -> String {
-    format!("Start without {names}") // i18n-skip
-}
-pub fn them() -> String {
-    "them".into() // i18n-skip
+pub fn start_without(name: Option<&str>) -> String {
+    name.map_or_else(t::room_start_without_them, t::room_start_without)
 }
 pub fn join_room() -> String {
-    "Join the room".into() // i18n-skip
+    t::room_join()
 }
 pub fn join_anyway() -> String {
-    "Join anyway".into() // i18n-skip
+    t::room_join_anyway()
 }
 pub fn not_now() -> String {
-    "Not now".into() // i18n-skip
+    t::action_not_now()
 }
 pub fn go_along() -> String {
-    "Go along".into() // i18n-skip
+    t::room_go_along()
 }
 pub fn stay_here() -> String {
-    "Stay here".into() // i18n-skip
+    t::room_stay()
 }
 pub fn dont_wait() -> String {
-    "Don't wait for me".into() // i18n-skip
+    t::room_dont_wait()
 }
-
-// Names joined.
 pub fn names_two(a: &str, b: &str) -> String {
-    format!("{a} and {b}") // i18n-skip
+    t::room_names_and(a, b)
 }
 pub fn names_many(count: usize) -> String {
-    format!("{count} people") // i18n-skip
+    t::room_names_people(n(count))
 }
 pub fn you() -> String {
-    "You".into() // i18n-skip
+    t::room_you()
 }
 pub fn you_tag() -> String {
-    "(you)".into() // i18n-skip
+    t::room_you_marker()
 }
 
-// A person's word.
+// Each person's word.
 pub fn state_watching() -> String {
-    "Watching".into() // i18n-skip
+    t::room_state_watching()
 }
 pub fn state_ready() -> String {
-    "Ready".into() // i18n-skip
+    t::room_state_ready()
 }
 pub fn state_paused_it() -> String {
-    "Paused it".into() // i18n-skip
+    t::room_state_paused_it()
 }
 pub fn state_paused() -> String {
-    "Paused".into() // i18n-skip
+    t::room_state_paused()
 }
 pub fn state_behind(secs: i64) -> String {
-    format!("Behind · {secs} s") // i18n-skip
+    t::room_state_behind(secs)
 }
 pub fn state_loading(secs: i64) -> String {
-    format!("Loading · {secs} s") // i18n-skip
+    t::room_state_loading(secs)
 }
 pub fn state_buffering(secs: i64) -> String {
-    format!("Buffering · {secs} s") // i18n-skip
+    t::room_state_buffering(secs)
 }
 pub fn state_other_episode(episode: &str) -> String {
-    format!("On episode {episode}") // i18n-skip
+    t::room_state_other_episode(ep(episode))
 }
 pub fn state_choosing() -> String {
-    "Choosing a source".into() // i18n-skip
+    t::room_state_choosing()
 }
 pub fn state_no_source(episode: &str) -> String {
-    format!("No source for episode {episode}") // i18n-skip
+    t::room_state_no_source(ep(episode))
 }
 pub fn state_closed() -> String {
-    "Player closed".into() // i18n-skip
+    t::room_state_player_closed()
 }
 pub fn state_reconnecting() -> String {
-    "Reconnecting".into() // i18n-skip
+    t::room_state_reconnecting()
 }
 pub fn state_left() -> String {
-    "Left".into() // i18n-skip
+    t::room_state_left()
 }
 pub fn state_muted(word: &str) -> String {
-    format!("{word} · Muted") // i18n-skip
+    t::room_state_and_muted(word)
 }
 
-// Invite.
+// Invite and Details.
 pub fn invite_body() -> String {
-    "Anyone with this link can join. The link carries the room's key, so only people who have it can read the room.".into() // i18n-skip
+    format!("{} {}", t::room_invite_anyone(), t::room_invite_key()) // i18n-skip
 }
 pub fn copy_link() -> String {
-    "Copy link".into() // i18n-skip
+    t::room_copy_link()
 }
 pub fn link_copied() -> String {
-    "Copied".into() // i18n-skip
+    t::room_link_copied()
 }
 pub fn new_invite() -> String {
-    "New invite".into() // i18n-skip
+    t::room_new_invite()
 }
 pub fn new_invite_note() -> String {
-    "New invite stops the old link working. Everyone in the room moves to the new one.".into() // i18n-skip
+    t::room_new_invite_line()
 }
 pub fn move_room_button() -> String {
-    "Move to a new room…".into() // i18n-skip
+    t::room_move_open()
 }
 pub fn move_room_note() -> String {
-    "For someone already here: start a new room and pick who comes along.".into() // i18n-skip
+    t::room_move_open_line()
 }
-
-// Details.
 pub fn encryption() -> String {
-    "Encryption".into() // i18n-skip
+    t::room_details_encryption()
 }
 pub fn end_to_end() -> String {
-    "End to end".into() // i18n-skip
+    t::room_details_end_to_end()
 }
 pub fn relays() -> String {
-    "Relays".into() // i18n-skip
+    t::room_relays()
 }
 pub fn relays_answering(up: usize, of: usize) -> String {
-    if up == of {
-        format!("{of} answering") // i18n-skip
-    } else {
-        format!("{up} of {of} answering") // i18n-skip
-    }
+    if up == of { t::room_relays_answering(n(of)) } else { t::room_relays_answering_of(n(up), n(of)) }
 }
 pub fn relay_rtt(ms: u32) -> String {
-    format!("{ms} ms") // i18n-skip
+    t::room_relay_latency(i64::from(ms))
 }
 pub fn relay_down() -> String {
-    "Not answering".into() // i18n-skip
+    t::room_relay_not_answering()
 }
 pub fn relays_note() -> String {
-    "Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare.".into() // i18n-skip
+    t::room_details_relays_line()
 }
 pub fn edit_relays_button() -> String {
-    "Edit relays…".into() // i18n-skip
+    t::room_edit_relays()
 }
 pub fn edit_relays() -> String {
-    "Edit relays".into() // i18n-skip
+    t::room_edit_relays_title()
 }
 pub fn edit_relays_body() -> String {
-    "Changes this room's relays for everyone in it. New invites carry the list.".into() // i18n-skip
+    t::room_edit_relays_line()
 }
 pub fn remove_relay(url: &str) -> String {
-    format!("Remove {url}") // i18n-skip
+    t::room_relay_remove(url)
 }
 pub fn add() -> String {
-    "Add".into() // i18n-skip
+    t::room_relay_add()
 }
 pub fn relays_settings_note() -> String {
-    "Settings ▸ Playback ▸ Relays sets the list for new rooms.".into() // i18n-skip
+    t::room_edit_relays_settings()
 }
 pub fn done() -> String {
-    "Done".into() // i18n-skip
+    t::action_done()
 }
 
-// Leaving.
+// Leave, and Move to a new room.
 pub fn leave_title() -> String {
-    "Leave the room?".into() // i18n-skip
+    t::room_leave_title()
 }
 pub fn leave_body() -> String {
-    "The others keep watching.".into() // i18n-skip
+    t::room_leave_line()
 }
 pub fn leave_close_body() -> String {
-    "The others keep watching. Keep the room closes the player and keeps your place.".into() // i18n-skip
+    t::room_leave_line_keep()
 }
 pub fn keep_room() -> String {
-    "Keep the room".into() // i18n-skip
+    t::room_keep()
 }
 pub fn cancel() -> String {
-    "Cancel".into() // i18n-skip
+    t::action_cancel()
 }
-
-// Move to a new room.
 pub fn move_title() -> String {
-    "Move to a new room".into() // i18n-skip
+    t::room_move_title()
 }
 pub fn move_body() -> String {
-    "Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room.".into() // i18n-skip
+    t::room_move_body()
 }
 pub fn move_foot(at: &str) -> String {
-    format!(
-        "The new room picks up at {at} with a new key. Its link reaches only the people ticked."
-    ) // i18n-skip
+    t::room_move_foot(at)
 }
 pub fn move_always() -> String {
-    "Always goes".into() // i18n-skip
+    t::room_move_always_goes()
 }
 pub fn move_muted() -> String {
-    "Muted, so not ticked".into() // i18n-skip
+    t::room_move_muted()
 }
 pub fn move_with(others: usize) -> String {
-    match others {
-        1 => "Move with 1 other".into(),      // i18n-skip
-        n => format!("Move with {n} others"), // i18n-skip
-    }
+    t::room_move_with(n(others))
 }
 
-// The video area before play, and when your own player has nothing to show.
+// The banner over the video.
 pub fn up_in_room() -> String {
-    "Up in the room".into() // i18n-skip
+    t::room_up_in_room()
 }
 pub fn room_is_watching() -> String {
-    "The room is watching".into() // i18n-skip
+    t::room_room_is_watching()
 }
-pub fn episode_minutes(episode: &str, minutes: u32) -> String {
-    format!("{episode} · {minutes} min") // i18n-skip
+/// "Episode 9 · The Long Leg · 24 min", or as much of it as is known.
+pub fn banner_episode(episode: &str, name: Option<&str>, minutes: Option<u32>) -> String {
+    match (name, minutes) {
+        (Some(name), Some(min)) => {
+            t::room_banner_episode(ep(episode), name, &t::room_minutes(i64::from(min)))
+        }
+        (Some(name), None) => t::room_up_next_episode(ep(episode), name),
+        _ => t::room_up_next_episode_plain(ep(episode)),
+    }
 }
 pub fn plays_from_yours() -> String {
-    "Plays from your sources".into() // i18n-skip
+    t::room_plays_from_sources()
 }
 pub fn play_for_everyone() -> String {
-    "Play for everyone".into() // i18n-skip
+    t::room_play_for_everyone()
 }
 pub fn anyone_can_start() -> String {
-    "Anyone in the room can start it".into() // i18n-skip
-}
-pub fn waiting_first_frames() -> String {
-    "Waiting for everyone's first frame".into() // i18n-skip
+    t::room_anyone_can_start()
 }
 pub fn choose_source_for(episode: &str) -> String {
-    format!("Choose a source for episode {episode}") // i18n-skip
+    t::room_choose_source(ep(episode))
 }
 pub fn choose_note() -> String {
-    "The room keeps watching; you join at its place.".into() // i18n-skip
+    t::room_choose_source_line()
 }
 pub fn play_in_room() -> String {
-    "Play in the room".into() // i18n-skip
+    t::room_play_in_room()
 }
 pub fn none_has(episode: &str) -> String {
-    format!("None of your sources has episode {episode}") // i18n-skip
+    t::room_no_source_title(ep(episode))
 }
 pub fn none_has_note(count: usize) -> String {
-    format!(
-        "Kaeri looked in your {count} sources. You stay in the room and the chat while the others watch."
-    ) // i18n-skip
+    t::room_no_source_line(n(count))
 }
 pub fn open_sources() -> String {
-    "Open sources".into() // i18n-skip
+    t::room_open_sources()
 }
 pub fn search_titles() -> String {
-    "Search titles".into() // i18n-skip
-}
-pub fn paused_until_starts(secs: i64) -> String {
-    format!("The room is paused until this starts · {secs} s") // i18n-skip
+    t::room_search_titles()
 }
 
-// Up next and Skip opening.
-pub fn up_next_for_room() -> String {
-    "Up next for the room".into() // i18n-skip
-}
-pub fn plays_for_everyone_in(secs: i64) -> String {
-    format!("Plays for everyone in {secs} s") // i18n-skip
-}
-
-// Watch together, the place.
+// Watch together, the place in the main window.
 pub fn place_intro() -> String {
-    "Each of you plays the episode from your own sources; the room keeps you in step. Start a room from any episode with Watch together, in the player or on its page.".into() // i18n-skip
+    t::room_place_line()
 }
 pub fn your_room() -> String {
-    "Your room".into() // i18n-skip
+    t::room_place_yours()
 }
 pub fn open_player() -> String {
-    "Open the player".into() // i18n-skip
+    t::room_open_player()
 }
 pub fn leave_ellipsis() -> String {
-    "Leave…".into() // i18n-skip
+    t::room_leave_ellipsis()
 }
 pub fn join_a_room() -> String {
-    "Join a room".into() // i18n-skip
+    t::room_place_join()
 }
 pub fn invite_link() -> String {
-    "Invite link".into() // i18n-skip
+    t::room_place_link()
 }
 pub fn paste() -> String {
-    "Paste".into() // i18n-skip
+    t::room_place_paste()
 }
 pub fn join() -> String {
-    "Join".into() // i18n-skip
+    t::action_join()
 }
 pub fn try_again() -> String {
-    "Try again".into() // i18n-skip
+    t::action_try_again()
 }
 pub fn unreachable() -> String {
-    "Couldn't reach this room's relays.".into() // i18n-skip
+    t::room_error_unreachable_title()
 }
-pub fn unreachable_note(link: usize, spares: usize) -> String {
-    format!(
-        "Ask for a new invite. Kaeri tried the link's {link} relays and {spares} spares for 8 s each."
-    ) // i18n-skip
+pub fn unreachable_note() -> String {
+    format!("{} {}", t::room_error_ask_new_invite(), t::room_error_tried(8)) // i18n-skip
 }
 pub fn recent_rooms() -> String {
-    "Recent rooms".into() // i18n-skip
+    t::room_recent()
 }
 pub fn recent_note() -> String {
-    "The last ten, kept on this computer".into() // i18n-skip
+    t::room_recent_note()
 }
 pub fn rejoin() -> String {
-    "Rejoin".into() // i18n-skip
+    t::room_rejoin()
 }
 pub fn nobody_answered() -> String {
-    "Nobody answered in this room.".into() // i18n-skip
+    t::room_error_nobody_answered()
 }
 pub fn nobody_answered_note() -> String {
-    "If someone made a new invite, the old one stopped working; ask them for the new link."
-        .into() // i18n-skip
+    t::room_error_nobody_answered_line()
 }
-pub fn recent_with(episode: &str, names: &str, when: &str) -> String {
-    format!("Episode {episode} · with {names} · {when}") // i18n-skip
+
+/// "Ren laughed at 7:48".
+pub fn reacted(reaction: Reaction, name: &str, at: f64) -> String {
+    let at = super::words::mmss(at);
+    match reaction {
+        Reaction::Laugh => t::room_reacted_laugh(name, &at),
+        Reaction::Gasp => t::room_reacted_gasp(name, &at),
+        Reaction::Clap => t::room_reacted_clap(name, &at),
+        Reaction::Cry => t::room_reacted_cry(name, &at),
+    }
 }

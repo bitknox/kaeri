@@ -137,7 +137,7 @@ pub fn build(
         text.set_markup(&format!(
             "<b>{}</b> <span foreground=\"#A3A9C4\">{}</span>", // i18n-skip
             gtk::glib::markup_escape_text(&c::unreachable()),
-            gtk::glib::markup_escape_text(&c::unreachable_note(3, 3)),
+            gtk::glib::markup_escape_text(&c::unreachable_note()),
         ));
         text.set_wrap(true);
         text.set_xalign(0.0);

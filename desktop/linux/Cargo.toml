@@ -26,6 +26,7 @@ fixtures = [
   "kaeri-providers/testing",
   "dep:kaeri-track",
   "dep:kaeri-party",
+  "dep:kaeri-room",
   "dep:kaeri-remote",
   "kaeri-remote/testing",
   "kaeri-engine/testing",
@@ -41,9 +42,9 @@ kaeri-model = { path = "../../crates/kaeri-model" }
 kaeri-net = { path = "../../crates/kaeri-net" }
 kaeri-store = { path = "../../crates/kaeri-store" }
 # Without the terminal's mpv child, as this app hosts its own player; with the Discord presence,
-# watch parties, the remote's sender side for Play on TV and casting to TVs with Chromecast built in.
+# watch parties and the room, the remote's sender side for Play on TV and casting to TVs with Chromecast built in.
 kaeri-i18n = { path = "../../crates/kaeri-i18n" }
-kaeri-engine = { path = "../../crates/kaeri-engine", default-features = false, features = ["presence", "party", "remote", "cast", "opds-feed"] }
+kaeri-engine = { path = "../../crates/kaeri-engine", default-features = false, features = ["presence", "party", "room", "remote", "cast", "opds-feed"] }
 kaeri-mpv-host = { path = "../../crates/kaeri-mpv-host", features = ["libmpv"] }
 
 kaeri-testkit = { path = "../../crates/kaeri-testkit", optional = true }
@@ -52,6 +53,8 @@ kaeri-providers = { path = "../../crates/kaeri-providers", optional = true }
 kaeri-track = { path = "../../crates/kaeri-track", default-features = false, optional = true }
 # A Syncplay server on loopback with members it plays, for the watch party's scenes.
 kaeri-party = { path = "../../crates/kaeri-party", features = ["testing"], optional = true }
+# A room with scripted members on fake relays, for the room's scenes.
+kaeri-room = { path = "../../crates/kaeri-room", features = ["testing"], optional = true }
 # TVs on loopback with a scripted player, for Play on TV's scenes.
 kaeri-remote = { path = "../../crates/kaeri-remote", optional = true }
 # TVs with Chromecast built in on loopback, for the casting scenes.

@@ -247,6 +247,8 @@ pub struct PlayerView {
     party: Rc<crate::party::panel::Panel>,
     /// The room around the player: the column beside the video, the strip and the banner.
     pub(crate) room: Rc<crate::room::Room>,
+    /// A scene's room plays another episode than the player's: the player stays on its own.
+    room_holds_player: Cell<bool>,
     stats: Rc<stats::Stats>,
 }
 
@@ -356,6 +358,12 @@ struct Ui {
     mini_play: gtk::Button,
 }
 
+#[cfg(feature = "fixtures")]
+thread_local! {
+    /// The room scene's fake room, kept while its shot runs.
+    static SCENE_ROOM: RefCell<Option<Arc<crate::room::scenes::Staged>>> = RefCell::default();
+}
+
 impl PlayerView {
     pub fn new(ctx: &Rc<Ctx>, options: &PlayerOptions) -> Rc<Self> {
         let (host_tx, host_rx) = async_channel::unbounded::<HostEvent>();
@@ -424,6 +432,10 @@ impl PlayerView {
         ctx.window.connect_fullscreened_notify({
             let room = Rc::clone(&room);
             move |window| room.set_fullscreen(window.is_fullscreen())
+        });
+        room.set_sender({
+            let hub = Rc::clone(&ctx.hub);
+            move |command| hub.send(command)
         });
         let stats = stats::Stats::new();
         ui.stage.add_overlay(&stats.widget);
@@ -518,7 +530,16 @@ impl PlayerView {
             mpris: RefCell::default(),
             party,
             room,
+            room_holds_player: Cell::new(false),
             stats,
+        });
+        view.room.on_act({
+            let me = view.me.clone();
+            move |act| {
+                if let Some(me) = me.upgrade() {
+                    me.room_act(act);
+                }
+            }
         });
         view.wire();
         glib::spawn_future_local({
@@ -730,6 +751,29 @@ impl PlayerView {
         self.closed();
     }
 
+    /// Back, as the viewer closes the player: in a room, Leave the room? asks first, with Keep
+    /// the room, which closes the player and keeps this device's place in it.
+    pub fn close_asking(&self) {
+        if !self.room.in_room() {
+            self.close();
+            return;
+        }
+        let me = self.me.clone();
+        let hub = Rc::clone(&self.ctx.hub);
+        self.room.ask_close(move |answer| {
+            use crate::room::dialogs::LeaveAnswer;
+            let command = match answer {
+                LeaveAnswer::Leave => kaeri_model::room::RoomCommand::Leave,
+                LeaveAnswer::KeepRoom => kaeri_model::room::RoomCommand::ClosePlayer,
+                LeaveAnswer::Cancel => return,
+            };
+            hub.send(Command::Room(command));
+            if let Some(me) = me.upgrade() {
+                me.close();
+            }
+        });
+    }
+
     /// The window is closing: whatever plays ends as if the viewer closed it.
     pub fn window_closed(&self) {
         if let Some(player) = &self.player {
@@ -782,6 +826,7 @@ impl PlayerView {
 
     /// What the engine said, as the player hears it.
     pub fn engine_event(&self, event: &Event) {
+        self.room_heard(event);
         if crate::private::changes(event) {
             self.follow_private();
             self.tv_media_private();
@@ -2378,7 +2423,7 @@ impl PlayerView {
             });
             group.add_action(&action);
         };
-        add("back", None, Box::new(|v, _| v.close()));
+        add("back", None, Box::new(|v, _| v.close_asking()));
         add("toggle", None, Box::new(|v, _| v.send(PlayerCommand::TogglePause)));
         add("back-10", None, Box::new(|v, _| v.send(PlayerCommand::Seek(-10.0))));
         add("forward-10", None, Box::new(|v, _| v.send(PlayerCommand::Seek(10.0))));
@@ -3154,14 +3199,103 @@ impl PlayerView {
         });
     }
 
-    /// The party's panel when in one; the form that starts one when not.
+    /// Watch together: the room comes in around the player, from the episode playing. In a
+    /// room already, the column shows or hides.
     pub fn show_party(&self) {
-        if self.ctx.hub.known.borrow().party.is_none() {
-            crate::party::form::open(&self.ctx, crate::party::form::For::Playing);
+        if self.room.in_room() {
+            self.room.toggle.set_active(!self.room.toggle.is_active());
             return;
         }
-        self.wake();
-        self.party.popover.popup();
+        let Some(id) = self.title_id.get() else { return };
+        let episode = self.episode_line.borrow().0.clone();
+        if episode.is_empty() {
+            return;
+        }
+        self.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::Lobby {
+            invite: None,
+            name: None,
+            pick: Some(kaeri_model::room::RoomEpisode { id, episode }),
+            anyway: false,
+        }));
+    }
+
+    /// The room's events: the room draws itself; the player opens the room's episode when the
+    /// room starts, moves on or takes this device in at its place.
+    fn room_heard(&self, event: &Event) {
+        self.room.heard(event);
+        match event {
+            Event::RoomStarted { id, episode, .. } if !self.room_holds_player.get() => {
+                let same = self.title_id.get() == Some(*id)
+                    && self.episode_line.borrow().0 == *episode;
+                if !same {
+                    self.ctx.hub.send(Command::Play {
+                        id: *id,
+                        episode: episode.clone(),
+                        from_start: false,
+                    });
+                }
+            }
+            Event::RoomJoined(_) | Event::RoomState(_) => self.room_sources(),
+            _ => {}
+        }
+    }
+
+    /// Your sources for the room's episode, for Choose a source.
+    fn room_sources(&self) {
+        let known = self.ctx.hub.known.borrow();
+        let options = self.title_id.get().and_then(|id| known.source_options.get(&id.get()));
+        let rows: Vec<(String, String, bool)> = options
+            .map(|o| {
+                o.iter()
+                    .map(|s| {
+                        let detail = kaeri_i18n::t::source_picker_coverage(
+                            i64::from(s.covered),
+                            i64::from(s.of),
+                        );
+                        (s.name.clone(), detail, s.pinned)
+                    })
+                    .collect()
+            })
+            .unwrap_or_default();
+        let count = known.providers.len();
+        drop(known);
+        self.room.set_sources(rows, count);
+    }
+
+    /// What only the player answers of the room's buttons.
+    fn room_act(&self, act: crate::room::column::Act) {
+        use crate::room::column::Act;
+        let window = &self.ctx.window;
+        match act {
+            Act::PlayInRoom(i) => {
+                self.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::ChoosingSource {
+                    open: false,
+                }));
+                let known = self.ctx.hub.known.borrow();
+                let Some(id) = self.title_id.get() else { return };
+                let provider = known
+                    .source_options
+                    .get(&id.get())
+                    .and_then(|o| o.get(i))
+                    .map(|s| s.provider_id.clone());
+                drop(known);
+                let episode = self.episode_line.borrow().0.clone();
+                if let Some(provider) = provider {
+                    self.ctx.hub.send(Command::SetProviderPreference {
+                        id,
+                        provider: Some(provider),
+                    });
+                }
+                self.ctx.hub.send(Command::Play { id, episode, from_start: false });
+            }
+            Act::OpenSources => {
+                let _ = WidgetExt::activate_action(window, "win.go", Some(&"providers".to_variant()));
+            }
+            Act::SearchTitles => {
+                let _ = WidgetExt::activate_action(window, "win.search", None);
+            }
+            _ => {}
+        }
     }
 
     /// The chat over the video, for the shots.
@@ -3192,15 +3326,46 @@ impl PlayerView {
         self.ui.people.update_property(&[gtk::accessible::Property::Label(&name)]);
     }
 
-    /// For a shot: the room as the board frame `shot` draws it, over the episode playing.
+    /// For a shot: the room as the board frame `shot` draws it, over the episode playing: the
+    /// engine's fake room, staged off the main loop, with the device joined as Ada.
     #[cfg(feature = "fixtures")]
-    pub fn shot_room(&self, shot: &str) {
-        use crate::room::fixture;
-        let Some((name, open, full)) = fixture::frame(shot) else { return };
-        let (view, conv, moves) = fixture::for_player(name);
-        self.room.hold_clock(fixture::NOW);
-        self.room.show(view, moves);
-        self.room.show_conversation(&conv);
+    pub fn shot_room(self: &Rc<Self>, shot: &str) {
+        use crate::room::scenes::{self, Scene, Staged};
+        let Some((scene, open, full)) = scenes::frame(shot) else { return };
+        let Some(runtime) = crate::fixtures::runtime() else { return };
+        // Each shot's own room: the one before is left.
+        self.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::Leave));
+        self.room.clear();
+        // The scene's room plays Stardust Wayfarer 9; the player stays on the scene's episode.
+        self.room_holds_player.set(true);
+        let staged = Staged::start(runtime, self.ctx.hub.engine_link());
+        SCENE_ROOM.with(|r| r.replace(Some(Arc::clone(&staged))));
+        let (done, heard) = async_channel::bounded::<bool>(1);
+        std::thread::spawn({
+            let staged = Arc::clone(&staged);
+            move || {
+                // The room left above settles first.
+                std::thread::sleep(Duration::from_millis(600));
+                let _ = done.send_blocking(staged.stage(scene));
+            }
+        });
+        let me = Rc::downgrade(self);
+        let shot = shot.to_owned();
+        glib::spawn_future_local(async move {
+            let joined = heard.recv().await.unwrap_or(false);
+            let Some(me) = me.upgrade() else { return };
+            if !joined {
+                tracing::warn!(shot, "the room's scene did not get the device in");
+            }
+            if matches!(scene, Scene::Invited | Scene::InvitedFull) {
+                me.room.peek(&staged.invite("Mika"));
+            }
+            me.shot_room_after(&shot, open, full);
+        });
+    }
+
+    #[cfg(feature = "fixtures")]
+    fn shot_room_after(self: &Rc<Self>, shot: &str, open: Option<&'static str>, full: bool) {
         if full {
             self.ctx.window.fullscreen();
             // Xvfb has no window manager to make the window fill the screen: the board's size.
@@ -3229,9 +3394,7 @@ impl PlayerView {
                 });
             });
         }
-        if shot == "room-full-controls" {
-            self.wake();
-        } else if full {
+        if full {
             self.hide_controls();
         }
         if let Some(open) = open {

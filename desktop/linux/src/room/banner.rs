@@ -4,7 +4,7 @@
 //! It lies over the video at the bottom leading edge, on a dark gradient, and crossfades away
 //! when the first frame lands.
 
-use std::rc::Rc;
+use std::{cell::RefCell, rc::Rc};
 
 use adw::prelude::*;
 
@@ -27,25 +27,35 @@ pub enum Panel {
 }
 
 impl Panel {
-    /// The panel `view` calls for on this device, if any.
-    pub fn for_view(view: &RoomView, sources: &[(String, String, bool)]) -> Option<Self> {
+    /// The panel `view` calls for on this device at `now_ms`, if any.
+    pub fn for_view(
+        view: &RoomView,
+        sources: &[(String, String, bool)],
+        count: usize,
+        now_ms: i64,
+    ) -> Option<Self> {
         if view.invited_by.is_some() {
             return Some(Self::Invited);
         }
         match view.you().map(|m| m.state) {
             Some(MemberState::Choosing) => return Some(Self::Choosing(sources.to_vec())),
-            Some(MemberState::NoSource) => return Some(Self::NoSource { sources: 3 }),
+            Some(MemberState::NoSource) => return Some(Self::NoSource { sources: count }),
             _ => {}
         }
-        matches!(view.before, Some(Before::Idle | Before::Waiting)).then_some(Self::Before)
+        matches!(view.before(now_ms), Some(Before::Idle | Before::Waiting)).then_some(Self::Before)
     }
 }
+
+/// The panel, the room before play, the title and the episode.
+type Shown = (Panel, Option<Before>, String, String);
 
 pub struct Banner {
     pub widget: gtk::Box,
     body: gtk::Box,
     act: Rc<dyn Fn(Act)>,
     fader: crate::motion::Fader,
+    /// What it shows now, so the second's tick redraws nothing.
+    shown: RefCell<Option<Shown>>,
 }
 
 impl Banner {
@@ -61,25 +71,38 @@ impl Banner {
         widget.append(&body);
         body.set_vexpand(true);
         widget.set_visible(false);
-        Self { widget, body, act: Rc::new(act), fader: crate::motion::Fader::always() }
+        Self {
+            widget,
+            body,
+            act: Rc::new(act),
+            fader: crate::motion::Fader::always(),
+            shown: RefCell::default(),
+        }
     }
 
     pub fn show(&self, view: &RoomView, panel: Option<&Panel>) {
         let Some(panel) = panel else {
+            self.shown.replace(None);
             self.fader.set(&self.widget, false);
             return;
         };
+        // Idle or waiting is all the banner tells apart before play.
+        let before = view.before_play.then_some(if view.waiting.is_empty() {
+            Before::Idle
+        } else {
+            Before::Waiting
+        });
+        let key = (panel.clone(), before, view.title.clone(), view.episode.clone());
+        if self.shown.borrow().as_ref() == Some(&key) {
+            return;
+        }
+        self.shown.replace(Some(key));
         while let Some(child) = self.body.first_child() {
             self.body.remove(&child);
         }
         let title = crate::widgets::show_title(&view.title, "page");
         title.set_xalign(0.0);
-        let episode = match (&view.episode_title, view.minutes) {
-            (Some(name), Some(min)) => {
-                c::episode_minutes(&format!("{} · {name}", view.episode_label()), min)
-            } // i18n-skip
-            _ => view.episode_label(),
-        };
+        let episode = c::banner_episode(&view.episode, view.episode_title.as_deref(), view.minutes);
         let button = |label: &str, pri: bool, a: Act| {
             let b = gtk::Button::with_label(label);
             b.add_css_class("pill");
@@ -121,7 +144,7 @@ impl Banner {
                 plays.append(&dot);
                 plays.append(&crate::widgets::haze(&c::plays_from_yours(), ""));
                 self.body.append(&plays);
-                if *panel == Panel::Before && view.before == Some(Before::Idle) {
+                if *panel == Panel::Before && before == Some(Before::Idle) {
                     let r = row();
                     r.set_margin_top(22);
                     let play = gtk::Button::new();
