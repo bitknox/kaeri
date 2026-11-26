@@ -501,13 +501,13 @@ class MainActivity : ComponentActivity() {
     }
 
     /**
-     * Ctrl with a number, F, comma or [ goes to a section, Search, Settings or back, before any
-     * screen sees the key: no field of the app reads those keys as text.
+     * Ctrl with a number, F, comma or [ goes to a section, Search, Settings or back. The system
+     * asks here once per press, for a Ctrl key no screen took.
      */
-    override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val shortcut = keyShortcut(event.keyCode, event.isCtrlPressed, event.isAltPressed, event.isShiftPressed, event.isMetaPressed)
-            ?: return super.dispatchKeyEvent(event)
-        if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) shortcuts.trySend(shortcut)
+    override fun onKeyShortcut(keyCode: Int, event: KeyEvent): Boolean {
+        val shortcut = keyShortcut(keyCode, event.isCtrlPressed, event.isAltPressed, event.isShiftPressed, event.isMetaPressed)
+            ?: return super.onKeyShortcut(keyCode, event)
+        shortcuts.trySend(shortcut)
         return true
     }
 
