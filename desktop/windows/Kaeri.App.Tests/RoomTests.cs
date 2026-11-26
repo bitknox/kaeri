@@ -21,7 +21,7 @@ public class RoomTests
         RoomCarriedOn? carried = null, RoomMoved? moved = null) =>
         new("room", "Ada", connection ?? new RoomConnection.Connected(), new RoomEpisode(1, "9"),
             new RoomEpisodeInfo(1, "9", "Natsukaze Relay", "The Long Leg"), new RoomEpisodeInfo(1, "10", "Natsukaze Relay"),
-            "https://kaeri.app/party#v=3&k=x", playing, before, startsAt, pausedBy, pausedByYou, 724, Now, waiting ?? [], null, null, cap, false,
+            "https://kaeri.app/room#v=3&k=x", playing, before, startsAt, pausedBy, pausedByYou, 724, Now, waiting ?? [], null, null, cap, false,
             carried, upNext, null, relays ?? [new("wss://relay-one.example", true, 40), new("wss://relay-two.example", true, 40), new("wss://relay-three.example", true, 40)],
             false, [], moved, null);
 
@@ -54,6 +54,23 @@ public class RoomTests
         var waiting = new[] { Wait("Ren", 3_000, WaitReason.Buffering) };
         var line = Rooms.Line(Scene(View(playing: false, waiting: waiting), Three(MemberState.Buffering, 3_000)));
         Assert.Equal(("Paused for Ren", "Buffering · 3 s"), (line.Title, line.Detail));
+    }
+
+    [Fact]
+    public void ASeekingWaitSaysSeekingOnTheLineAndTheRow()
+    {
+        var waiting = new[] { Wait("Ren", 2_000, WaitReason.Seeking) };
+        var scene = Scene(View(playing: false, waiting: waiting), Three(MemberState.Loading, 2_000));
+        var line = Rooms.Line(scene);
+        Assert.Equal(("Paused for Ren", "Seeking · 2 s"), (line.Title, line.Detail));
+        Assert.Equal("Seeking · 2 s", Rooms.Word(scene, scene.Members[2]));
+    }
+
+    [Fact]
+    public void ThePlaceSaysWhyARoomEndedWithABoldStartAndItsHint()
+    {
+        Assert.Equal(("Couldn't reach this room's relays.", "Ask for a new invite."), RoomWords.LeftLine(new RoomLeftWhy.Unreachable()));
+        Assert.Null(RoomWords.LeftLine(new RoomLeftWhy.Full()).Then);
     }
 
     [Fact]

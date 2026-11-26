@@ -135,7 +135,7 @@ sealed class RoomColumn : Grid
             MaxHeight = 5 * 44,
             Padding = new Thickness(0, 0, 0, 10),
         };
-        AutomationProperties.SetName(people, RoomWords.Title);
+        AutomationProperties.SetName(people, RoomWords.PeopleList);
         Grid.SetRow(peopleScroll, 2);
         Children.Add(peopleScroll);
 

@@ -1491,7 +1491,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             PrimaryAction.Visibility = Visibility.Visible;
             WaitingLine.Text = MatchWords.Uncertain(asked);
             WaitingLine.Visibility = Visibility.Visible;
-            PartyItem.IsEnabled = false;
+            RoomItem.IsEnabled = false;
             TvAction.Visibility = Visibility.Collapsed;
             HideMissing();
             actionWords = null;
@@ -1509,7 +1509,7 @@ public sealed partial class TitlePage : Page, IPageKeys
         WaitingLine.Text = action.Waiting ?? "";
         WaitingLine.Visibility = action.Waiting is not null ? Visibility.Visible : Visibility.Collapsed;
         // A party plays the episode the primary action would.
-        PartyItem.IsEnabled = action is { Playable: true };
+        RoomItem.IsEnabled = action is { Playable: true };
         // Items that would do nothing are greyed, not left to fail in silence: nothing to
         // download yet, or no episode before the next one left unwatched.
         var table = ctx.Known.Episodes.GetValueOrDefault(id);
@@ -2308,7 +2308,7 @@ public sealed partial class TitlePage : Page, IPageKeys
             _ = SourcePickerDialog.Open(ctx, id, entry.Title, root);
     }
 
-    void OnWatchParty(object sender, RoutedEventArgs e)
+    void OnWatchTogether(object sender, RoutedEventArgs e)
     {
         if (action is { Playable: true })
             ctx.Window.StartRoom(id, action.Episode.ToString());

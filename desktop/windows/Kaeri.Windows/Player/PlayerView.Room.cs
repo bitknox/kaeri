@@ -209,13 +209,16 @@ public sealed partial class PlayerView
     {
         if (roomScene is null)
         {
-            ShowPartyButton();
+            // Not shown yet: the dot says this device is in a room.
+            RoomDot.Opacity = RoomKnown ? 1 : 0;
+            ToolTipService.SetToolTip(RoomButton, RoomWords.Title);
+            AutomationProperties.SetName(RoomButton, RoomWords.Title);
             return;
         }
         var name = roomHidden || roomFull ? RoomWords.ShowRoom : RoomWords.HideRoom;
-        ToolTipService.SetToolTip(PartyButton, name);
-        AutomationProperties.SetName(PartyButton, name);
-        PartyDot.Opacity = 0;
+        ToolTipService.SetToolTip(RoomButton, name);
+        AutomationProperties.SetName(RoomButton, name);
+        RoomDot.Opacity = 0;
     }
 
     /// <summary>The room button: hides or shows the column; the video takes or gives the room.</summary>

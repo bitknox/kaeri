@@ -176,7 +176,12 @@ public static class Rooms
         }
         if (names.Count > 0)
         {
-            var secs = waits.Length == 1 && waits[0].Reason == WaitReason.Buffering ? RoomWords.Buffering(waitSecs) : RoomWords.Loading(waitSecs);
+            var secs = waits.Length != 1 ? RoomWords.Loading(waitSecs) : waits[0].Reason switch
+            {
+                WaitReason.Buffering => RoomWords.Buffering(waitSecs),
+                WaitReason.Seeking => RoomWords.Seeking(waitSecs),
+                _ => RoomWords.Loading(waitSecs),
+            };
             return new RoomLine(RoomWords.PausedFor(who), secs) { Kind = "wait" };
         }
         if (!v.Playing)
@@ -210,6 +215,7 @@ public static class Rooms
             MemberState.Watching => before ? RoomWords.StateReady : RoomWords.StateWatching,
             MemberState.Paused when before => RoomWords.StateReady,
             MemberState.Paused => m.PausedRoom ? RoomWords.StatePausedIt : RoomWords.StatePaused,
+            MemberState.Loading or MemberState.Buffering when Seeks(s, m) => RoomWords.StateSeeking(secs),
             MemberState.Loading => RoomWords.StateLoading(secs),
             MemberState.Buffering => RoomWords.StateBuffering(secs),
             MemberState.Behind => RoomWords.StateBehind((long)Math.Round(m.BehindS ?? 0)),
@@ -222,6 +228,10 @@ public static class Rooms
             _ => "",
         };
     }
+
+    /// <summary>Whether the room waits for this member to catch up after a seek or Skip opening.</summary>
+    static bool Seeks(RoomScene s, RoomMember m) =>
+        (s.View.Waiting ?? []).Any(w => w.Id == m.Id && w.Reason == WaitReason.Seeking);
 
     /// <summary>A member's face: solid with the room, an arc while waited for, no ring and dimmed when not with it.</summary>
     public static RoomFaceLook Face(RoomScene s, RoomMember m)

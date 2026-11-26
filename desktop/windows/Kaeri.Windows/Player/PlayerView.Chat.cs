@@ -47,7 +47,7 @@ public sealed partial class PlayerView
     bool ChatHidden => ChatSetting.Hidden;
     readonly HashSet<Microsoft.UI.Dispatching.DispatcherQueueTimer> chatTimers = [];
 
-    bool ChatLive => InParty && !ChatHidden;
+    bool ChatLive => RoomKnown && !ChatHidden;
 
     void BuildReactions()
     {
@@ -86,7 +86,7 @@ public sealed partial class PlayerView
             else
                 Motion.Hide(Reactions);
         }
-        if (ChatHidden || !InParty)
+        if (ChatHidden || !RoomKnown)
         {
             ChatClear();
             CloseChatField();
@@ -126,7 +126,7 @@ public sealed partial class PlayerView
     /// </summary>
     bool ChatEcho(string text)
     {
-        if (!InParty || ctx is null)
+        if (!RoomKnown || ctx is null)
             return false;
         var lines = ctx.Known.RoomChat?.Lines ?? [];
         if (lines.TakeLast(4).Any(l => l.Body is RoomChatBody.Said said && text.Contains(said.Text, StringComparison.Ordinal)))
@@ -216,7 +216,7 @@ public sealed partial class PlayerView
             Motion.Show(ChatFold);
     }
 
-    void OnChatFold(object sender, RoutedEventArgs e) => ShowParty();
+    void OnChatFold(object sender, RoutedEventArgs e) => ShowRoomColumn();
 
     /// <summary>A line on the raised fill with a hair ring: the name in semibold, an en space, the words, three rows at most.</summary>
     static Border LineCard(string who, bool you, string text)
@@ -448,7 +448,7 @@ public sealed partial class PlayerView
     /// <summary>C: the field opens above the controls and takes focus, or the room's server says it has no chat.</summary>
     bool OpenChatField()
     {
-        if (ctx is null || !InParty || ChatHidden || mini)
+        if (ctx is null || !RoomKnown || ChatHidden || mini)
             return false;
         // With the room's column open, its own field takes the words.
         if (ColumnShows && roomColumn is { } column)
@@ -505,7 +505,7 @@ public sealed partial class PlayerView
     {
         tickPlaces.Clear();
         ticksDrawn = chatMarks;
-        if (ChatHidden || !InParty || chatMarks.Length == 0 || duration <= 0)
+        if (ChatHidden || !RoomKnown || chatMarks.Length == 0 || duration <= 0)
             return;
         var haze = (Brush)Application.Current.Resources["HazeBrush"];
         foreach (var tick in Chat.Ticks(chatMarks, duration, width, TickNear))

@@ -27,7 +27,7 @@ public static class SettingsCatalog
         SettingKey.MarkChapters, SettingKey.SkipButton, SettingKey.Fullscreen, SettingKey.NightMode,
         SettingKey.MergeSubtitles, SettingKey.KeepSeeding, SettingKey.Presence, SettingKey.PresenceTitle,
         SettingKey.PresenceRich,
-        SettingKey.Torrents, SettingKey.Syncplay, SettingKey.UpdateCheck, SettingKey.UpdateBeta, SettingKey.SpoilerProtection,
+        SettingKey.Torrents, SettingKey.UpdateCheck, SettingKey.UpdateBeta, SettingKey.SpoilerProtection,
         SettingKey.DownloadsOnCellular, SettingKey.TorrentsOnCellular, SettingKey.EpisodeNotifications,
         SettingKey.ChapterDownloadsOnCellular, SettingKey.KeepChaptersReady, SettingKey.DeleteAfterReading, SettingKey.ShowVolumes, SettingKey.OpdsFeed,
         SettingKey.SeriesChoicesFollow, SettingKey.LookFollows, SettingKey.ChapterNotifications, SettingKey.DownloadsFinished,
@@ -36,15 +36,13 @@ public static class SettingsCatalog
     ];
 
     /// <summary>
-    /// The switches a row waits on, each to be on before the row means anything: the party's
-    /// server and room on Watch party, the title on Discord, rich presence on the title too, and
-    /// Up next countdown and Preload on Auto-play next, since nothing counts down or warms
-    /// without it. The Mac greys the same rows.
+    /// The switches a row waits on, each to be on before the row means anything: the title on
+    /// Discord, rich presence on the title too, and Up next countdown and Preload on Auto-play
+    /// next, since nothing counts down or warms without it. The Mac greys the same rows.
     /// </summary>
     public static IReadOnlyList<SettingKey> Needs(SettingKey key) => key switch
     {
         SettingKey.UpNextCountdown or SettingKey.PreloadMetered => [SettingKey.AutoNext],
-        SettingKey.SyncplayServer or SettingKey.SyncplayRoom => [SettingKey.Syncplay],
         SettingKey.PresenceTitle => [SettingKey.Presence],
         SettingKey.CommentImages => [SettingKey.EpisodeDiscussions],
         SettingKey.PresenceRich => [SettingKey.Presence, SettingKey.PresenceTitle],

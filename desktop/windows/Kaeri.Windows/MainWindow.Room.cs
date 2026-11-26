@@ -145,8 +145,14 @@ public sealed partial class MainWindow
                     roomPanelShown = null;
                     roomSourcesFor = null;
                     Player.EndRoom();
+                    // Said over the video while the player shows, where the window's toasts can't be seen.
                     if (left.Why is not RoomLeftWhy.Left and not RoomLeftWhy.Moved)
-                        ShowToast(InfoBarSeverity.Warning, RoomWords.Left(left.Why));
+                    {
+                        if (Player.Showing)
+                            Player.Say(RoomWords.Left(left.Why));
+                        else
+                            ShowToast(InfoBarSeverity.Warning, RoomWords.Left(left.Why));
+                    }
                     break;
                 case Event.Sources s when roomSourcesFor == $"{s.Id}/{s.Episode}":
                     Player.ShowRoomSources(s.Candidates);

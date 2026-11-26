@@ -20,7 +20,7 @@ namespace Kaeri.Windows.Pages;
 public sealed partial class TogetherPage : Page
 {
     readonly Ctx ctx = Ctx.Current;
-    readonly TextBox join = new() { PlaceholderText = T.RoomPlaceLink, MinWidth = 320, FontFamily = new FontFamily("Cascadia Mono, Consolas") };
+    readonly TextBox join = new() { PlaceholderText = T.RoomPlaceLink, Width = 320, FontFamily = new FontFamily("Cascadia Mono, Consolas") };
     /// <summary>The recent room a Rejoin looked into, while its answer is awaited.</summary>
     string? rejoining;
     /// <summary>The link Join tried that failed: it stays in the field, and Try again is the only button.</summary>
@@ -277,10 +277,10 @@ public sealed partial class TogetherPage : Page
         });
         if (failed)
         {
-            var why = ctx.Known.RoomLeftWhy is { } left ? RoomWords.Left(left)
-                : KaeriFfiMethods.ParseRoomTarget(join.Text.Trim()) is { Old: not null } ? T.RoomErrorOldInvite
-                : T.RoomErrorUnreachable;
-            Block("join-failed", () => Failure(), b => SetFailure(b, why, null));
+            var (lead, then) = ctx.Known.RoomLeftWhy is { } left ? RoomWords.LeftLine(left)
+                : KaeriFfiMethods.ParseRoomTarget(join.Text.Trim()) is { Old: not null } ? (T.RoomErrorOldInvite, null)
+                : RoomWords.LeftLine(new Kaeri.Engine.Model.RoomLeftWhy.Unreachable());
+            Block("join-failed", () => Failure(), b => SetFailure(b, lead, then));
         }
     }
 
@@ -352,7 +352,7 @@ public sealed partial class TogetherPage : Page
         {
             var why = new StackPanel { Margin = new Thickness(0, 4, 0, 0) };
             var said = Failure();
-            SetFailure(said, T.RoomErrorNobodyAnswered, T.RoomErrorNobodyAnsweredLine);
+            SetFailure(said, T.RoomErrorNobodyAnsweredLead, T.RoomErrorNobodyAnsweredLine);
             why.Children.Add(said);
             text.Children.Add(why);
         }

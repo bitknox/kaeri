@@ -6,8 +6,8 @@
 //   player-film: Play on Home and the handover to the first frame, 15 s with the controls hidden,
 //     15 s with the pointer on the top bar (controls up), then a seek into the ending and the
 //     Up next card until the next episode starts.
-//   party-film: the scene's party rehearsal, named by KAERI_DRIVE_SHOW (party-lobby, party-panel,
-//     party-chat-moment...), filmed for 20 s from 6 s after launch.
+//   room-film: the scene's room rehearsal, named by KAERI_DRIVE_SHOW (room-watching, room-wait,
+//     room-chat...), filmed for 20 s from 6 s after launch.
 //
 // Each film is a folder of NNNN-<ms>.png frames beside the report.
 
@@ -97,12 +97,12 @@ static partial class PlayerFilm
         });
     }
 
-    public static async Task Party(Run run)
+    public static async Task Room(Run run)
     {
         var w = run.Window.BoundingRectangle;
         Mouse.MoveTo(new Point(w.Left + w.Width / 2, w.Top + w.Height / 3));
         await Task.Delay(2000);
-        await run.Step("film: the rehearsal, untouched", async () => await Record(run, "party", 20000));
+        await run.Step("film: the rehearsal, untouched", async () => await Record(run, "room", 20000));
     }
 
     static bool Loaded(string marks)

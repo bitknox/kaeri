@@ -460,7 +460,7 @@ public sealed partial class PlayerView : UserControl
                     HeardSkip(e);
                     break;
                 case Event.RoomJoined or Event.RoomLeft:
-                    ShowPartyButton();
+                    ShowRoomButton();
                     ChatHeard(e);
                     break;
                 case Event.RoomChat or Event.RoomChatState or Event.RoomReaction or Event.RoomChatRefused:
@@ -640,7 +640,7 @@ public sealed partial class PlayerView : UserControl
         scrubbing = seconds;
         ShowClocks();
         ShowPlayed();
-        if (InParty || player is not { } p || duration <= 0)
+        if (RoomKnown || player is not { } p || duration <= 0)
             return;
         if (scrubSent is { } sent && Math.Abs(sent - seconds) < 0.5)
             return;
@@ -1669,7 +1669,7 @@ public sealed partial class PlayerView : UserControl
         if (TvButton.IsHitTestVisible)
             Add(T.TvPlayOn, () => OnPlayOnTv(TvButton, new RoutedEventArgs()));
         menu.Items.Add(new MenuFlyoutSeparator());
-        Add(RoomWords.Title, ShowParty);
+        Add(RoomWords.Title, ShowRoomColumn);
         if (ChatLive)
             Add(RoomWords.SaySomething, () => OpenChatField(), "C");
         return menu;
@@ -1678,7 +1678,7 @@ public sealed partial class PlayerView : UserControl
     // Watch together.
 
 
-    void OnParty(object sender, RoutedEventArgs e)
+    void OnRoomButton(object sender, RoutedEventArgs e)
     {
         if (InRoom)
             ToggleRoomColumn();
@@ -1690,7 +1690,7 @@ public sealed partial class PlayerView : UserControl
     }
 
     /// <summary>The room: its column when in one, Watch together from this episode when not.</summary>
-    internal void ShowParty() => OnParty(PartyButton, new RoutedEventArgs());
+    internal void ShowRoomColumn() => OnRoomButton(RoomButton, new RoutedEventArgs());
 
     /// <summary>Play on TV, in the big player only, once the engine gives a sender.</summary>
     void ShowTvButton()
@@ -1747,14 +1747,6 @@ public sealed partial class PlayerView : UserControl
         ToolTipService.SetToolTip(StatsClose, T.TooltipWithKey(T.ActionClose, "I"));
         ToolTipService.SetToolTip(UndoButton, T.TooltipWithKey(T.ActionUndo, "U"));
         MiniTip.Subtitle = T.PlayerMiniTip("P");
-    }
-
-    void ShowPartyButton()
-    {
-        var inParty = ctx?.Known.Room is not null;
-        PartyDot.Opacity = inParty ? 1 : 0;
-        ToolTipService.SetToolTip(PartyButton, RoomWords.Title);
-        AutomationProperties.SetName(PartyButton, RoomWords.Title);
     }
 
     void OnMenuClosed(object? sender, object e)
@@ -1958,10 +1950,10 @@ public sealed partial class PlayerView : UserControl
     string? upNextStill;
 
     /// <summary>In a room, as the engine says: the room picks episodes and moves on together.</summary>
-    bool InParty => ctx?.Known.Room is not null;
+    bool RoomKnown => ctx?.Known.Room is not null;
 
     /// <summary>In a room, everyone goes on together: Up next is the room's, and nobody's player plays the next episode itself.</summary>
-    bool RoomLeads => InParty;
+    bool RoomLeads => RoomKnown;
 
     /// <summary>A seek reached mpv, the viewer's or the engine's: a countdown it lands in or past starts again there.</summary>
     void Sought(double target)
@@ -1992,7 +1984,7 @@ public sealed partial class PlayerView : UserControl
         // With a screen reader running the card waits for a choice instead of counting down, and
         // so does it in a party the room doesn't move on: Play now picks the episode for the room.
         // On the time shown, so a seek on its way holds the line full rather than hiding it.
-        var left = DeviceWatch.ScreenReaderRunning() || InParty ? null : card.Remaining(Shown, duration);
+        var left = DeviceWatch.ScreenReaderRunning() || RoomKnown ? null : card.Remaining(Shown, duration);
         UpNextBar.Visibility = left is null ? Visibility.Collapsed : Visibility.Visible;
         UpNextLine.Visibility = UpNextBar.Visibility;
         if (left is { } l)
@@ -2043,7 +2035,7 @@ public sealed partial class PlayerView : UserControl
     void Step(int by)
     {
         ForgetRollOn();
-        if (!InParty)
+        if (!RoomKnown)
         {
             SendControl(new PlayerCommand.Step(by));
             return;
@@ -2060,7 +2052,7 @@ public sealed partial class PlayerView : UserControl
     void ChooseEpisode(string number)
     {
         ForgetRollOn();
-        if (InParty)
+        if (RoomKnown)
             PlayInRoom(number);
         else
             SendControl(new PlayerCommand.Choose(new PlayerChoice.Episode(number)));

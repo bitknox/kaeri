@@ -289,41 +289,6 @@ public sealed class Known
     /// <summary>What the update check last said, or null before it has said anything.</summary>
     public UpdateStatus? Update { get; private set; }
 
-    /// <summary>The watch party this device is in, or null when it is in none.</summary>
-    public PartyView? Party { get; private set; }
-
-    /// <summary>The party's members, this device's first, once the room has listed them.</summary>
-    public PartyMember[]? PartyMembers { get; private set; }
-
-    /// <summary>What the form that starts a party opens with, once the engine has said.</summary>
-    public PartyForm? PartyForm { get; set; }
-
-    /// <summary>The last ten rooms, kept on this device, newest first.</summary>
-    public PartyRecentRoom[] PartyRecent { get; private set; } = [];
-
-    /// <summary>Whether the engine has sent the last rooms yet, even as none.</summary>
-    public bool PartyRecentLoaded { get; private set; }
-
-    /// <summary>What looking into a room found, or why it could not, for the room that was opened last.</summary>
-    public PartyGlimpse? PartyGlimpse { get; private set; }
-
-    public string? PartyLookFailure { get; private set; }
-
-    /// <summary>
-    /// A room opened from an invite, a code or Rejoin, looked into and not joined yet: the lobby
-    /// shows what it watches and who is there, with Join. Null once joined or let go.
-    /// </summary>
-    public (string Server, string Room)? PartyLooking { get; set; }
-
-    /// <summary>The room finished its last episode out (and when the next airs): Ready would replay it. Gone when the room moves on.</summary>
-    public Event.PartyLastOut? PartyLastOut { get; private set; }
-
-    /// <summary>The party's conversation as the engine last sent it, whole: lines, reaction marks and a lost send.</summary>
-    public PartyConversation? PartyChat { get; private set; }
-
-    /// <summary>What this device may do in the conversation now, once the room's server has said.</summary>
-    public PartyChatState? PartyChatState { get; private set; }
-
     /// <summary>The room this device is in, or null when it is in none.</summary>
     public RoomView? Room { get; private set; }
 
@@ -665,60 +630,6 @@ public sealed class Known
                 break;
             case Event.Connectivity c:
                 Offline = c.Offline;
-                break;
-            case Event.PartyForm f:
-                PartyForm = f.V1;
-                break;
-            case Event.PartyJoined j:
-                // A room joined afresh lists its members afresh.
-                if (Party is null || Party.Server != j.V1.Server || Party.Room != j.V1.Room)
-                {
-                    PartyMembers = null;
-                    PartyChat = null;
-                    PartyChatState = null;
-                }
-                Party = j.V1;
-                if (PartyLooking is { } looked && looked.Server == j.V1.Server && looked.Room == j.V1.Room)
-                    PartyLooking = null;
-                break;
-            case Event.PartyState p:
-                if (Party?.RoomEpisode is { } before && p.V1.RoomEpisode is { } after && (before.Episode != after.Episode || before.Id != after.Id))
-                    PartyLastOut = null;
-                Party = p.V1;
-                break;
-            case Event.PartyLastOut last:
-                PartyLastOut = last;
-                break;
-            case Event.PartyStarted:
-                PartyLastOut = null;
-                break;
-            case Event.PartyMembers m:
-                PartyMembers = m.V1;
-                break;
-            case Event.PartyRecent r:
-                PartyRecent = r.V1;
-                PartyRecentLoaded = true;
-                break;
-            case Event.PartyGlimpse g:
-                PartyGlimpse = g.V1;
-                PartyLookFailure = null;
-                break;
-            case Event.PartyLookFailed f:
-                PartyGlimpse = null;
-                PartyLookFailure = f.Reason.Text();
-                break;
-            case Event.PartyLeft:
-                Party = null;
-                PartyLastOut = null;
-                PartyMembers = null;
-                PartyChat = null;
-                PartyChatState = null;
-                break;
-            case Event.PartyChat c:
-                PartyChat = c.V1;
-                break;
-            case Event.PartyChatState c:
-                PartyChatState = c.V1;
                 break;
             case Event.RoomJoined j:
                 if (Room is null || Room.RoomId != j.V1.RoomId)

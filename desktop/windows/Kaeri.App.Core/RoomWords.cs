@@ -26,6 +26,7 @@ public static class RoomWords
     public static string Waiting(string names, int many, long seconds) => T.RoomLineWaitingForYou(names, many, seconds);
     public static string Loading(long seconds) => T.RoomStateLoading(seconds);
     public static string Buffering(long seconds) => T.RoomStateBuffering(seconds);
+    public static string Seeking(long seconds) => T.RoomStateSeeking(seconds);
     public static string StillLoading(string names, int many) => T.RoomLineStillLoading(names, many);
     public static string WaitedCap => T.RoomLineWaited((long)Rooms.CapSeconds);
     public static string CarryOnWithout(string name) => T.RoomCarryOnWithout(name);
@@ -69,6 +70,9 @@ public static class RoomWords
     public static string YouAlone => T.RoomYou;
     public static string YouMark => T.RoomYouMarker;
 
+    // The people list
+    public static string PeopleList => T.RoomPeople;
+
     // A row's word
     public static string StateWatching => T.RoomStateWatching;
     public static string StateReady => T.RoomStateReady;
@@ -77,7 +81,8 @@ public static class RoomWords
     public static string StateBehind(long s) => T.RoomStateBehind(s);
     public static string StateLoading(long s) => T.RoomStateLoading(s);
     public static string StateBuffering(long s) => T.RoomStateBuffering(s);
-    public static string StateOther(string episode) => T.RoomStateOtherEpisode(N(episode));
+    public static string StateSeeking(long s) => T.RoomStateSeeking(s);
+    public static string StateOther(string? episode) => T.RoomStateOtherEpisode(N(episode));
     public static string StateChoosing => T.RoomStateChoosing;
     public static string StateNoSource(string episode) => T.RoomStateNoSource(N(episode));
     public static string StateClosed => T.RoomStatePlayerClosed;
@@ -177,5 +182,13 @@ public static class RoomWords
         Kaeri.Engine.Model.RoomLeftWhy.OldInvite => T.RoomErrorOldInvite,
         Kaeri.Engine.Model.RoomLeftWhy.Failed f => f.Reason.Text(),
         _ => T.RoomErrorNobodyAnswered,
+    };
+
+    /// <summary>The room's place says why in two parts: a bold start, then the hint when there is one.</summary>
+    public static (string Lead, string? Then) LeftLine(Kaeri.Engine.Model.RoomLeftWhy why) => why switch
+    {
+        Kaeri.Engine.Model.RoomLeftWhy.Unreachable => (T.RoomErrorUnreachableLead, T.RoomErrorAskNewInvite),
+        Kaeri.Engine.Model.RoomLeftWhy.Full or Kaeri.Engine.Model.RoomLeftWhy.OldInvite or Kaeri.Engine.Model.RoomLeftWhy.Failed => (Left(why), null),
+        _ => (T.RoomErrorNobodyAnsweredLead, T.RoomErrorNobodyAnsweredLine),
     };
 }

@@ -419,7 +419,6 @@ public class SettingsCatalogTests
     {
         Assert.True(SettingsCatalog.IsSwitch(SettingKey.PresenceRich));
         Assert.Equal([SettingKey.Presence, SettingKey.PresenceTitle], SettingsCatalog.Needs(SettingKey.PresenceRich));
-        Assert.Equal([SettingKey.Syncplay], SettingsCatalog.Needs(SettingKey.SyncplayRoom));
         Assert.Empty(SettingsCatalog.Needs(SettingKey.Presence));
     }
 
@@ -468,7 +467,7 @@ public class SettingsCatalogTests
         Assert.Equal(["off", "1 episode", "2 episodes", "3 episodes", "5 episodes", "10 episodes"], SettingsCatalog.Options(SettingKey.KeepNextEpisodes).Select(o => o.Label));
         Assert.Equal("unlimited", SettingsCatalog.Options(SettingKey.UploadLimit)[0].Label);
         Assert.Equal("262 kB/s", SettingsCatalog.Options(SettingKey.UploadLimit)[1].Label);
-        Assert.Equal(new SettingValue[] { new SettingValue.Bool(false), new SettingValue.Bool(true) }, SettingsCatalog.Options(SettingKey.Syncplay).Select(o => o.Value));
+        Assert.Equal(new SettingValue[] { new SettingValue.Bool(false), new SettingValue.Bool(true) }, SettingsCatalog.Options(SettingKey.Torrents).Select(o => o.Value));
         Assert.Empty(SettingsCatalog.Options(SettingKey.DownloadDir));
         Assert.Empty(SettingsCatalog.Options(SettingKey.MpvOptions));
     }
@@ -608,15 +607,15 @@ public class StoresTests
         var known = new Known();
         Assert.False(known.ServersLoaded);
         Assert.False(known.HiddenLoaded);
-        Assert.False(known.PartyRecentLoaded);
+        Assert.False(known.RoomRecentLoaded);
         Assert.False(known.Queue.Loaded);
         known.Take(new Event.Server(new ServerEvent.Servers([])));
         known.Take(new Event.HiddenTitles([]));
-        known.Take(new Event.PartyRecent([]));
+        known.Take(new Event.RoomRecent([]));
         known.Take(new Event.Downloads([]));
         Assert.True(known.ServersLoaded);
         Assert.True(known.HiddenLoaded);
-        Assert.True(known.PartyRecentLoaded);
+        Assert.True(known.RoomRecentLoaded);
         Assert.True(known.Queue.Loaded);
     }
 }
