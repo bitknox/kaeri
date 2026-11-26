@@ -25,6 +25,10 @@ const TITLE_NAME: &str = "Stardust Wayfarer"; // i18n-skip
 const EPISODE: &str = "9";
 const NEXT: &str = "10";
 const DEVICE: &str = "Ada";
+/// Inside the Fixtures clip (60 s), as the engine's scenes keep: past the opening, clear of
+/// Up next. A seek past the clip would end the episode.
+const OPENING_ENDS: f64 = 20.0;
+const SEEK_TO: f64 = 35.0;
 
 /// One scene per frame family on the room board.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -244,7 +248,7 @@ impl Staged {
             }
             S::Paused => self.run(|f| f.member_pauses("Mika")),
             S::WaitLoading | S::WaitCap | S::CarriedOn => {
-                self.run(|f| f.member_seeks("Mika", 724.0));
+                self.run(|f| f.member_seeks("Mika", SEEK_TO));
                 let secs = match scene {
                     S::WaitLoading => 6.0,
                     S::WaitCap => 20.0,
@@ -258,7 +262,7 @@ impl Staged {
                 }
             }
             S::YouLoading => {
-                self.run(|f| f.member_seeks("Mika", 724.0));
+                self.run(|f| f.member_seeks("Mika", SEEK_TO));
                 self.pause(200);
                 self.run(|f| f.pose_you(StateCode::Loading, 6.0, None, None, false));
             }
@@ -297,11 +301,11 @@ impl Staged {
                 f.member_reaches_up_next("Mika");
                 f.pose_you(StateCode::Watching, 0.0, None, None, true);
             }),
-            S::SkippedOpening => self.run(|f| f.member_skips_opening("Mika", 90.0)),
+            S::SkippedOpening => self.run(|f| f.member_skips_opening("Mika", OPENING_ENDS)),
             S::Chat => self.run(|f| {
                 f.member_says("Mika", "ok starting");
                 f.member_says("Ren", "the handoff in the rain, I knew it");
-                f.member_reacts("Ren", wire::Reaction::Gasp, 468.0);
+                f.member_reacts("Ren", wire::Reaction::Gasp, 24.0);
                 f.member_says("Mika", "this part again");
             }),
             S::MoveOffer => {
