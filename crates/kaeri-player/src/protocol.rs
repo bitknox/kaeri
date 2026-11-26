@@ -74,6 +74,38 @@ pub fn base_args(socket_path: &str) -> Vec<String> {
     ]
 }
 
+/// `--clipboard-backends=vo` when the `mpv` on PATH has that option (it came with mpv's
+/// clipboard, in 0.40), and nothing for an older one, which refuses an option it doesn't know
+/// and doesn't start. Asked of `mpv --list-options` once.
+///
+/// mpv's clipboard connects to the Wayland compositor at start, on its main thread and before
+/// it opens `--input-ipc-server`, so a compositor that is down or restarting holds the control
+/// socket back for seconds. The `vo` backend asks only the window mpv opens itself.
+pub fn vo_clipboard_args() -> &'static [String] {
+    static ARGS: std::sync::OnceLock<Vec<String>> = std::sync::OnceLock::new();
+    ARGS.get_or_init(|| {
+        let listed = std::process::Command::new("mpv")
+            .args(["--no-config", "--list-options"])
+            .stdin(std::process::Stdio::null())
+            .stderr(std::process::Stdio::null())
+            .output()
+            .map(|out| String::from_utf8_lossy(&out.stdout).into_owned())
+            .unwrap_or_default();
+        if lists_option(&listed, "clipboard-backends") {
+            vec!["--clipboard-backends=vo".to_owned()]
+        } else {
+            Vec::new()
+        }
+    })
+}
+
+/// Whether `mpv --list-options` output names `option` itself, not only a longer option that
+/// starts with it.
+fn lists_option(listed: &str, option: &str) -> bool {
+    let wanted = format!("--{option}");
+    listed.lines().any(|line| line.split_whitespace().next() == Some(wanted.as_str()))
+}
+
 /// Flags that belong to the player rather than to one file.
 ///
 /// Speed and volume are set once when the window opens and then live in the session: a viewer
@@ -113,6 +145,16 @@ mod tests {
         assert!(session_args(Some(1.0), None, false).is_empty());
         assert!(session_args(Some(1.5), None, false).iter().any(|a| a == "--speed=1.5"));
         assert!(session_args(None, None, true).iter().any(|a| a == "--fullscreen"));
+    }
+
+    #[test]
+    fn the_clipboard_option_is_found_only_where_mpv_lists_it() {
+        let newer = " --clipboard-backends             Object settings list (default: win32,mac,wayland,x11,vo)\n    --clipboard-backends-add\n --clipboard-monitor              Flag (default: no)\n";
+        let older = " --cache                          Choices: no yes auto (default: auto)\n --clipboard-monitor-x            Flag (default: no)\n";
+        assert!(lists_option(newer, "clipboard-backends"));
+        assert!(!lists_option(older, "clipboard-backends"));
+        assert!(!lists_option("", "clipboard-backends"), "no mpv, no option");
+        assert!(!lists_option("    --clipboard-backends-add\n", "clipboard-backends"));
     }
 
     #[test]

@@ -363,6 +363,7 @@ empty=
     /// Run `mpv` with `args` to completion, killing it if it outlives `limit`.
     fn run_mpv(args: &[String], limit: Duration) {
         let mut child = Command::new("mpv")
+            .args(crate::protocol::vo_clipboard_args())
             .args(args)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -489,6 +490,7 @@ empty=
             format!("--input-ipc-server={}", socket.display()),
         ];
         let mut mpv = Command::new("mpv")
+            .args(crate::protocol::vo_clipboard_args())
             .args(&args)
             .stdin(Stdio::null())
             .stdout(Stdio::null())
@@ -602,6 +604,7 @@ empty=
         let socket = cache.path().join("ipc.sock");
         let mut mpv = Command::new("mpv")
             .args(["--no-config", "--load-scripts=no", "--pause", "--vo=null", "--ao=null"])
+            .args(crate::protocol::vo_clipboard_args())
             .arg(format!("--script={}", bundle.thumbfast().display()))
             // thumbfast adds the parent's pid to both, and they stay in this test's directory.
             .arg(format!("--script-opts-append=thumbfast-socket={}", commands.display()))

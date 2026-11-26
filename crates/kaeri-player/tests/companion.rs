@@ -91,6 +91,8 @@ impl Player {
             // S is mpv's screenshot key whenever no skip is on offer, and a test presses it.
             .arg(format!("--screenshot-dir={}", dir.display()))
             .arg(format!("--input-ipc-server={}", socket.display()))
+            // A compositor that is restarting can't hold the socket back.
+            .args(kaeri_player::protocol::vo_clipboard_args())
             .arg(format!("--script={}", script_dir().display()))
             .args(extra);
         if let Some(file) = file {
