@@ -1,159 +1,180 @@
+using System.Globalization;
+
 namespace Kaeri.App;
 
 /// <summary>
-/// Stand-in words for the room, the board's English as drawn (board v5, main.js and board.js),
-/// until the engine branch's catalogue lands. Then each is swapped for its <c>T.*</c> string and
-/// this file goes. Nothing here is read by the strings lint: it scans Kaeri.Windows only, and the
-/// pages take every word from here.
+/// The room's words, from the catalogue (i18n/en/ui-room.ftl), named as the board draws them.
+/// Episodes come in as the engine's text ("9") and go to the catalogue as numbers.
 /// </summary>
 public static class RoomWords
 {
+    /// <summary>An episode's number for the catalogue; an episode that isn't a whole number reads 0.</summary>
+    public static long N(string? episode) =>
+        long.TryParse(episode, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? n : 0;
+
     // The column's header
-    public const string Title = "Watch together";
-    public const string Invite = "Invite";
-    public const string Details = "Details";
-    public const string Leave = "Leave";
-    public const string HideRoom = "Hide room";
-    public const string ShowRoom = "Show room";
+    public static string Title => T.RoomSettingsGroup;
+    public static string Invite => T.RoomInvite;
+    public static string Details => T.RoomDetails;
+    public static string Leave => T.ActionLeave;
+    public static string HideRoom => T.RoomHide;
+    public static string ShowRoom => T.RoomShow;
 
     // The room's line
-    public const string Watching = "Watching together";
-    public static string WatchingAt(string episode, string at) => $"{episode} · {at}";
-    public static string PausedFor(string names) => $"Paused for {names}";
-    public const string PausedForYou = "Paused for you";
-    public static string Waiting(string names, int many, long seconds) => $"{names} {(many > 1 ? "are" : "is")} waiting · {seconds} s";
-    public static string Why(string why, long seconds) => $"{why} · {seconds} s";
-    public const string WhyLoading = "Loading";
-    public const string WhyBuffering = "Buffering";
-    public static string StillLoading(string names, int many) => $"{names} {(many > 1 ? "are" : "is")} still loading";
-    public const string WaitedCap = "The room has waited 20 s";
-    public static string CarryOnWithout(string names) => $"Carry on without {names}";
-    public static string StartWithout(string names) => $"Start without {names}";
-    public const string Them = "them";
+    public static string Watching => T.RoomLineWatching;
+    public static string WatchingAt(string episode, string at) => T.RoomLineWatchingDetail(N(episode), at);
+    public static string PausedFor(string names) => T.RoomLinePausedFor(names);
+    public static string PausedForYou => T.RoomLinePausedForYou;
+    public static string Waiting(string names, int many, long seconds) => T.RoomLineWaitingForYou(names, many, seconds);
+    public static string Loading(long seconds) => T.RoomStateLoading(seconds);
+    public static string Buffering(long seconds) => T.RoomStateBuffering(seconds);
+    public static string StillLoading(string names, int many) => T.RoomLineStillLoading(names, many);
+    public static string WaitedCap => T.RoomLineWaited((long)Rooms.CapSeconds);
+    public static string CarryOnWithout(string name) => T.RoomCarryOnWithout(name);
+    public static string CarryOnWithoutThem => T.RoomCarryOnWithoutThem;
+    public static string StartWithout(string name) => T.RoomStartWithout(name);
+    public static string StartWithoutThem => T.RoomStartWithoutThem;
     public static string CarriedOn(string by, string names, int many) =>
-        many > 1 ? $"{by} carried on · they join when ready" : $"{by} carried on · {names} joins when ready";
-    public static string Paused(string by) => $"{by} paused";
-    public const string YouPaused = "You paused";
-    public static string PausedAt(string at) => $"at {at}";
-    public const string NotStarted = "Not started yet";
-    public const string PlayStartsIt = "Play starts it for everyone";
-    public static string StartingIn(long n) => $"Starting in {n}";
-    public const string EveryoneReady = "Everyone is ready";
-    public static string StartingWhen(string names, int many) => $"Starting when {names} {(many > 1 ? "are" : "is")} ready";
-    public static string UpNextIn(long seconds) => $"Up next in {seconds} s";
-    public static string PlaysForEveryone(string episode) => $"{episode} plays for everyone";
-    public const string ReconnectingRoom = "Reconnecting to the room";
-    public const string NoRelayAnswers = "No relay is answering · your episode keeps playing";
-    public static string RelaysDown(int down, int of) =>
-        down == 1 ? $"1 of {of} relays isn't answering · the room carries on" : $"{down} of {of} relays aren't answering · the room carries on";
-    public static string YouBehind(long seconds) => $"You're {seconds} s behind · catching up";
-    public static string Invited(string by) => $"{by} invited you";
-    public static string Over(int people) => $"{people} people are here already · rooms work best with 10 or fewer";
-    public const string JoinRoom = "Join the room";
-    public const string JoinAnyway = "Join anyway";
-    public const string NotNow = "Not now";
-    public static string MovedTheRoom(string by) => $"{by} moved the room";
+        many > 1 ? T.RoomLineCarriedOnMany(by) : T.RoomLineCarriedOnOne(by, names);
+    public static string Paused(string by) => T.RoomLinePausedBy(by);
+    public static string YouPaused => T.RoomLineYouPaused;
+    public static string PausedAt(string at) => T.RoomLinePausedAt(at);
+    public static string NotStarted => T.RoomLineNotStarted;
+    public static string PlayStartsIt => T.RoomLinePlayStarts;
+    public static string StartingIn(long n) => T.RoomLineStartingIn(n);
+    public static string EveryoneReady => T.RoomLineEveryoneReady;
+    public static string StartingWhen(string names, int many) => T.RoomLineStartingWhen(names, many);
+    public static string UpNextIn(long seconds) => T.RoomLineUpNext(seconds);
+    public static string PlaysForEveryone(string episode) => T.RoomLineUpNextDetail(N(episode));
+    public static string ReconnectingRoom => T.RoomLineReconnecting;
+    public static string NoRelayAnswers => T.RoomLineReconnectingDetail;
+    public static string RelaysDown(int down, int of) => T.RoomLineRelaysDown(down, of);
+    public static string YouBehind(long seconds) => T.RoomLineYouBehind(seconds);
+    public static string Invited(string by) => T.RoomInvitedBy(by);
+    public static string InvitedTo(string title, string episode) => T.RoomInvitedDetail(title, N(episode));
+    public static string Over(int people) => T.RoomInvitedOver(people);
+    public static string JoinRoom => T.RoomJoin;
+    public static string JoinAnyway => T.RoomJoinAnyway;
+    public static string NotNow => T.ActionNotNow;
+    public static string MovedTheRoom(string by) => T.RoomLineMoved(by);
     public static string GoAlongAsk(string others, int many, string at) =>
-        many == 0 ? $"Go along? The episode carries on from {at}." : $"Go along? {others} {(many > 1 ? "are" : "is")} asked too. The episode carries on from {at}.";
-    public const string GoAlong = "Go along";
-    public const string StayHere = "Stay here";
+        many == 0 ? T.RoomLineMovedDetailAlone(at) : T.RoomLineMovedDetail(others, many, at);
+    public static string GoAlong => T.RoomGoAlong;
+    public static string StayHere => T.RoomStay;
+    public static string MovedAway(string by) => T.RoomLineMovedAway(by);
+    public static string WentAlong(string names) => T.RoomLineWentAlong(names);
+    public static string WithSeconds(string line, long seconds) => T.RoomLineWithSeconds(line, seconds);
 
     // Names joined
-    public static string Two(string a, string b) => $"{a} and {b}";
-    public static string People(int n) => $"{n} people";
-    public static string You(string name) => $"{name} (you)";
-    public const string YouAlone = "You";
-    public const string YouMark = "(you)";
+    public static string Two(string a, string b) => T.RoomNamesAnd(a, b);
+    public static string People(int n) => T.RoomNamesPeople(n);
+    public static string YouAlone => T.RoomYou;
+    public static string YouMark => T.RoomYouMarker;
 
     // A row's word
-    public const string StateWatching = "Watching";
-    public const string StateReady = "Ready";
-    public const string StatePausedIt = "Paused it";
-    public const string StatePaused = "Paused";
-    public static string StateBehind(long s) => $"Behind · {s} s";
-    public static string StateLoading(long s) => $"Loading · {s} s";
-    public static string StateBuffering(long s) => $"Buffering · {s} s";
-    public static string StateOther(string episode) => $"On episode {episode}";
-    public const string StateOtherUnknown = "On another episode";
-    public const string StateChoosing = "Choosing a source";
-    public static string StateNoSource(string episode) => $"No source for episode {episode}";
-    public const string StateClosed = "Player closed";
-    public const string StateReconnecting = "Reconnecting";
-    public const string StateLeft = "Left";
-    public static string Muted(string word) => $"{word} · Muted";
-    public static string More(int n) => $"+{n}";
-    public static string NotWatching(int n) => $"{n} not watching";
-    public const string AllWatching = "All watching";
+    public static string StateWatching => T.RoomStateWatching;
+    public static string StateReady => T.RoomStateReady;
+    public static string StatePausedIt => T.RoomStatePausedIt;
+    public static string StatePaused => T.RoomStatePaused;
+    public static string StateBehind(long s) => T.RoomStateBehind(s);
+    public static string StateLoading(long s) => T.RoomStateLoading(s);
+    public static string StateBuffering(long s) => T.RoomStateBuffering(s);
+    public static string StateOther(string episode) => T.RoomStateOtherEpisode(N(episode));
+    public static string StateChoosing => T.RoomStateChoosing;
+    public static string StateNoSource(string episode) => T.RoomStateNoSource(N(episode));
+    public static string StateClosed => T.RoomStatePlayerClosed;
+    public static string StateReconnecting => T.RoomStateReconnecting;
+    public static string StateLeft => T.RoomStateLeft;
+    public static string Muted(string word) => T.RoomStateAndMuted(word);
+    public static string Spoken(string name, string word) => T.RoomFaceLabel(name, word);
+    public static string More(int n) => T.RoomMoreFaces(n);
+    public static string MoreSpoken(int n) => T.RoomMoreFacesLabel(n);
+    public static string NotWatching(int n) => T.RoomMoreNotWatching(n);
+    public static string AllWatching => T.RoomMoreAllWatching;
 
     // The chat
-    public const string SaySomething = "Say something";
-    public const string Send = "Send";
-    public static string PausedForLine(string names) => $"Paused for {names} · loading";
-    public const string PausedForYouLine = "Paused for you · loading";
-    public static string CarriedOnLine(string by, string names) => $"{by} carried on without {names}";
-    public static string SkippedLine(string by) => $"{by} skipped the opening";
-    public static string JoinedAt(string name, string at) => $"{name} joined at {at}";
-    public const string ChatOpensOnJoin = "The chat opens when you join";
+    public static string SaySomething => T.RoomChatField;
+    public static string Send => T.RoomChatSend;
+    public static string ChatOpensOnJoin => T.RoomChatOpens;
+    public static string NotSent => T.RoomChatNotSent;
+    public static string TryAgain => T.ActionTryAgain;
 
     // Before play, over the video
-    public const string UpInTheRoom = "Up in the room";
-    public const string RoomIsWatching = "The room is watching";
-    public static string EpisodeLength(string episode, long minutes) => $"{episode} · {minutes} min";
-    public const string PlaysFromYourSources = "Plays from your sources";
-    public const string PlayForEveryone = "Play for everyone";
-    public const string AnyoneCanStart = "Anyone in the room can start it";
-    public static string ChooseSourceFor(string episode) => $"Choose a source for {episode}";
-    public const string RoomKeepsWatching = "The room keeps watching; you join at its place.";
-    public const string PlayInRoom = "Play in the room";
-    public static string NoneHas(string episode) => $"None of your sources has {episode}";
-    public static string LookedIn(int sources) => $"Kaeri looked in your {sources} sources. You stay in the room and the chat while the others watch.";
-    public const string OpenSources = "Open sources";
-    public const string SearchTitles = "Search titles";
-    public static string RoomPausedUntil(long seconds) => $"The room is paused until this starts · {seconds} s";
-    public const string DontWait = "Don't wait for me";
+    public static string UpInTheRoom => T.RoomUpInRoom;
+    public static string RoomIsWatching => T.RoomRoomIsWatching;
+    public static string EpisodeLength(string episode, string title, long minutes) => T.RoomBannerEpisode(N(episode), title, T.RoomMinutes(minutes));
+    public static string PlaysFromYourSources => T.RoomPlaysFromSources;
+    public static string PlayForEveryone => T.RoomPlayForEveryone;
+    public static string AnyoneCanStart => T.RoomAnyoneCanStart;
+    public static string ChooseSourceFor(string episode) => T.RoomChooseSource(N(episode));
+    public static string RoomKeepsWatching => T.RoomChooseSourceLine;
+    public static string PlayInRoom => T.RoomPlayInRoom;
+    public static string NoneHas(string episode) => T.RoomNoSourceTitle(N(episode));
+    public static string LookedIn(int sources) => T.RoomNoSourceLine(sources);
+    public static string OpenSources => T.RoomOpenSources;
+    public static string SearchTitles => T.RoomSearchTitles;
+    public static string RoomPausedUntil(long seconds) => T.RoomPausedUntilStart(seconds);
+    public static string DontWait => T.RoomDontWait;
+    public static string StartingEpisode(string episode) => T.RoomStartingEpisode(N(episode));
 
     // Up next and Skip
-    public const string UpNextForRoom = "Up next for the room";
-    public static string PlaysInSeconds(long seconds) => $"Plays for everyone in {seconds} s";
+    public static string UpNextForRoom => T.RoomUpNext;
+    public static string PlaysInSeconds(long seconds) => T.RoomUpNextCount(seconds);
+    public static string UpNextWaiting(string name) => T.RoomUpNextWaiting(name);
+    public static string PlayNextNow => T.RoomPlayNextNow;
+    public static string SkipOpening => T.RoomSkipOpening;
 
     // Invite
-    public const string InviteBody = "Anyone with this link can join. The link carries the room's key, so only people who have it can read the room.";
-    public const string CopyLink = "Copy link";
-    public const string Share = "Share…";
-    public const string NewInvite = "New invite";
-    public const string NewInviteBody = "New invite stops the old link working. Everyone in the room moves to the new one.";
-    public const string MoveRoom = "Move to a new room…";
-    public const string MoveRoomBody = "For someone already here: start a new room and pick who comes along.";
+    public static string InviteAnyone => T.RoomInviteAnyone;
+    public static string InviteKey => T.RoomInviteKey;
+    public static string CopyLink => T.RoomCopyLink;
+    public static string LinkCopied => T.RoomLinkCopied;
+    public static string Share => T.RoomShare;
+    public static string NewInvite => T.RoomNewInvite;
+    public static string NewInviteBody => T.RoomNewInviteLine;
+    public static string MoveRoom => T.RoomMoveOpen;
+    public static string MoveRoomBody => T.RoomMoveOpenLine;
 
     // Details
-    public const string Encryption = "Encryption";
-    public const string EndToEnd = "End to end";
-    public const string Relays = "Relays";
-    public static string RelaysAnswering(int up, int of) => up == of ? $"{up} answering" : $"{up} of {of} answering";
-    public static string Rtt(uint ms) => $"{ms} ms";
-    public const string NotAnswering = "Not answering";
-    public const string RelaysBody = "Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare.";
-    public const string EditRelays = "Edit relays…";
-    public const string EditRelaysTitle = "Edit relays";
-    public const string EditRelaysBody = "Changes this room's relays for everyone in it. New invites carry the list.";
-    public static string Remove(string what) => $"Remove {what}";
+    public static string Encryption => T.RoomDetailsEncryption;
+    public static string EndToEnd => T.RoomDetailsEndToEnd;
+    public static string Relays => T.RoomRelays;
+    public static string RelaysAnswering(int up, int of) => up == of ? T.RoomRelaysAnswering(up) : T.RoomRelaysAnsweringOf(up, of);
+    public static string Rtt(uint ms) => T.RoomRelayLatency(ms);
+    public static string NotAnswering => T.RoomRelayNotAnswering;
+    public static string RelaysBody => T.RoomDetailsRelaysLine;
+    public static string EditRelays => T.RoomEditRelays;
+    public static string EditRelaysTitle => T.RoomEditRelaysTitle;
+    public static string EditRelaysBody => T.RoomEditRelaysLine;
+    public static string Remove(string what) => T.RoomRelayRemove(what);
+    /// <summary>The relay field's placeholder: a scheme, not words.</summary>
     public const string RelayScheme = "wss://";
-    public const string Add = "Add";
-    public const string RelaysInSettings = "Settings ▸ Playback ▸ Relays sets the list for new rooms.";
-    public const string Done = "Done";
+    public static string Add => T.RoomRelayAdd;
+    public static string RelaysInSettings => T.RoomEditRelaysSettings;
+    public static string Done => T.ActionDone;
 
     // Leave
-    public const string LeaveTitle = "Leave the room?";
-    public const string LeaveBody = "The others keep watching.";
-    public const string LeaveCloseBody = "The others keep watching. Keep the room closes the player and keeps your place.";
-    public const string KeepRoom = "Keep the room";
-    public const string Cancel = "Cancel";
+    public static string LeaveTitle => T.RoomLeaveTitle;
+    public static string LeaveBody => T.RoomLeaveLine;
+    public static string LeaveCloseBody => T.RoomLeaveLineKeep;
+    public static string KeepRoom => T.RoomKeep;
+    public static string Cancel => T.ActionCancel;
 
     // Move to a new room
-    public const string MoveTitle = "Move to a new room";
-    public const string MoveBody = "Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room.";
-    public static string MoveFoot(string at) => $"The new room picks up at {at} with a new key. Its link reaches only the people ticked.";
-    public const string AlwaysGoes = "Always goes";
-    public const string MutedNotTicked = "Muted, so not ticked";
-    public static string MoveWith(int others) => others == 1 ? "Move with 1 other" : $"Move with {others} others";
+    public static string MoveTitle => T.RoomMoveTitle;
+    public static string MoveBody => T.RoomMoveBody;
+    public static string MoveFoot(string at) => T.RoomMoveFoot(at);
+    public static string AlwaysGoes => T.RoomMoveAlwaysGoes;
+    public static string MutedNotTicked => T.RoomMoveMuted;
+    public static string MoveWith(int others) => T.RoomMoveWith(others);
+
+    // Why a room ended, when it ended on its own
+    public static string Left(Kaeri.Engine.Model.RoomLeftWhy why) => why switch
+    {
+        Kaeri.Engine.Model.RoomLeftWhy.Unreachable => T.RoomErrorUnreachable,
+        Kaeri.Engine.Model.RoomLeftWhy.Full => T.RoomErrorFull,
+        Kaeri.Engine.Model.RoomLeftWhy.OldInvite => T.RoomErrorOldInvite,
+        Kaeri.Engine.Model.RoomLeftWhy.Failed f => f.Reason.Text(),
+        _ => T.RoomErrorNobodyAnswered,
+    };
 }

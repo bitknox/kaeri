@@ -1,5 +1,5 @@
 using Kaeri.App;
-using Kaeri.App.RoomStand;
+using Kaeri.Engine.Model;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
@@ -49,7 +49,6 @@ sealed class RoomColumn : Grid
     string lineKind = "";
     RoomAsk ask;
     bool asking;
-    int chatCount = -1;
 
     public event Action<RoomAsk>? Asked;
     public event Action? Declined;
@@ -204,11 +203,11 @@ sealed class RoomColumn : Grid
     }
 
     /// <summary>The room as it is now. Called on every change and once a second while anything counts.</summary>
-    public void Show(RoomScene scene, IReadOnlyList<RoomChatLine> lines, IReadOnlyCollection<string>? muted = null)
+    public void Show(RoomScene scene, RoomConversation? conversation)
     {
         ShowLine(Rooms.Line(scene));
-        ShowPeople(scene, muted);
-        ShowChat(lines);
+        ShowPeople(scene);
+        ShowChat(conversation);
         // Before joining, the chat waits for the room.
         var joined = scene.Invited is null;
         entry.IsEnabled = send.IsEnabled = joined;
@@ -275,9 +274,9 @@ sealed class RoomColumn : Grid
     }
 
     /// <summary>The rows by id, kept as elements so a row that only changes its word keeps its place and focus.</summary>
-    void ShowPeople(RoomScene scene, IReadOnlyCollection<string>? muted)
+    void ShowPeople(RoomScene scene)
     {
-        var now = Rooms.Rows(scene, muted);
+        var now = Rooms.Rows(scene);
         var seen = new HashSet<string>();
         var index = 0;
         foreach (var r in now.Where(r => !(r.Left && closed.Contains(r.Id))))
@@ -319,51 +318,86 @@ sealed class RoomColumn : Grid
                 });
     }
 
-    void ShowChat(IReadOnlyList<RoomChatLine> lines)
+    void ShowChat(RoomConversation? conversation)
     {
-        if (lines.Count == chatCount)
-            return;
-        // Lines only ever come at the end; anything else rebuilds.
-        if (chatCount < 0 || lines.Count < chatCount)
+        var lines = conversation?.Lines ?? [];
+        // Lines only ever come at the end, each with its id; a new room starts over.
+        if (lines.Length == 0 ? chatLastId > 0 : lines[^1].Id < chatLastId)
         {
             chat.Children.Clear();
-            chatCount = 0;
+            chatLastId = 0;
+            failedLine = null;
         }
-        for (var i = chatCount; i < lines.Count; i++)
+        var fresh = chatLastId > 0;
+        foreach (var line in lines)
         {
-            var block = ChatLine(lines[i]);
+            if (line.Id <= chatLastId)
+                continue;
+            var block = ChatLine(line);
             chat.Children.Add(block);
-            if (chatCount > 0)
+            if (fresh)
             {
                 block.Opacity = 0;
                 Motion.FadeTo(block, 1, Motion.FadeInTime);
             }
+            chatLastId = line.Id;
         }
-        chatCount = lines.Count;
+        // A line no relay echoed: Couldn't send, with Try again, last.
+        if (failedLine is { } old)
+            chat.Children.Remove(old);
+        failedLine = null;
+        if (conversation?.Failed is { } failed)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            row.Children.Add(new TextBlock { Text = RoomWords.NotSent, FontSize = 13, Foreground = (Brush)Application.Current.Resources["SystemFillColorCriticalBrush"], VerticalAlignment = VerticalAlignment.Center });
+            var again = new HyperlinkButton { Content = RoomWords.TryAgain, Padding = new Thickness(4, 0, 4, 0) };
+            again.Click += (_, _) => Said?.Invoke(failed);
+            row.Children.Add(again);
+            failedLine = row;
+            chat.Children.Add(row);
+        }
     }
 
-    static FrameworkElement ChatLine(RoomChatLine line)
+    ulong chatLastId;
+    FrameworkElement? failedLine;
+
+    static FrameworkElement ChatLine(Kaeri.Engine.Model.RoomChatLine line)
     {
         var text = new TextBlock { FontSize = 14, LineHeight = 20, TextWrapping = TextWrapping.Wrap, IsTextSelectionEnabled = true };
         Typography.SetNumeralAlignment(text, FontNumeralAlignment.Tabular);
-        switch (line)
+        if (line.Muted && line.Body is not RoomChatBody.Room)
         {
-            case RoomChatLine.Note note:
-                text.Text = note.Text;
+            text.Text = T.PartyMutedLine(line.From);
+            text.FontSize = 13;
+            text.Foreground = Haze;
+            return text;
+        }
+        switch (line.Body)
+        {
+            case RoomChatBody.Room room:
+                text.Text = room.Message.Text;
                 text.FontSize = 13;
                 text.Foreground = Haze;
                 return text;
-            case RoomChatLine.Said said:
-                var name = new Run { Text = said.From, FontWeight = FontWeights.SemiBold };
-                if (said.You)
+            case RoomChatBody.Said said:
+                var name = new Run { Text = line.From, FontWeight = FontWeights.SemiBold };
+                if (line.You)
                     name.Foreground = Haze;
                 text.Inlines.Add(name);
                 text.Inlines.Add(new Run { Text = "  " + said.Text });
                 return text;
-            case RoomChatLine.Reacted reacted:
+            case RoomChatBody.Reacted reacted:
                 var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
                 row.Children.Add(ReactionGlyph.Make(reacted.Reaction, 17, Haze));
-                text.Text = $"{Chat.Reacted(reacted.From, reacted.Reaction)} · {reacted.At}";
+                var who = line.You ? RoomWords.YouAlone : line.From;
+                var at = Rooms.Clock(reacted.At);
+                text.Text = reacted.Reaction switch
+                {
+                    Reaction.Laugh => T.RoomReactedLaugh(who, at),
+                    Reaction.Gasp => T.RoomReactedGasp(who, at),
+                    Reaction.Clap => T.RoomReactedClap(who, at),
+                    _ => T.RoomReactedCry(who, at),
+                };
                 text.FontSize = 13;
                 text.Foreground = Haze;
                 row.Children.Add(text);
@@ -437,7 +471,7 @@ sealed class RoomColumn : Grid
             {
                 muted = isMuted;
                 var item = new MenuFlyoutItem { Text = isMuted ? T.PartyUnmute(r.Name) : T.PartyMute(r.Name) };
-                var who = r.Name;
+                var who = r.Id;
                 item.Click += (_, _) => column.Mute(who, !isMuted);
                 var menu = new MenuFlyout();
                 menu.Items.Add(item);
