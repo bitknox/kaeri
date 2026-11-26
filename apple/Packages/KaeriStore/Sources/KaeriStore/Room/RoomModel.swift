@@ -105,6 +105,17 @@ public final class RoomModel {
 
     // MARK: What the screens have open
 
+    /// Watch together's page, pushed on Home on iPhone and in a narrow window.
+    public var placeShown = false
+    /// Settings › Hide chat, kept on this device and handed to every room it joins.
+    public var hidesChat: Bool = UserDefaults.standard.bool(forKey: RoomModel.hidesChatKey) {
+        didSet {
+            UserDefaults.standard.set(hidesChat, forKey: Self.hidesChatKey)
+            if inRoom { act(.hideChat(hidden: hidesChat)) }
+        }
+    }
+    static let hidesChatKey = "kaeri.hideChat"
+
     /// The column beside the video on Mac (and iPad in a regular width).
     public var shown = true
     public var popover: RoomPopover?
@@ -486,6 +497,7 @@ public final class RoomModel {
         switch event {
         case .roomJoined(let view):
             self.view = view
+            if hidesChat { act(.hideChat(hidden: true)) }
             invitation = nil
             peeked = nil
             joining = nil

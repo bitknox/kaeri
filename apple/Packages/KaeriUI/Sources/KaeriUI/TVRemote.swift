@@ -115,7 +115,7 @@ struct TVAccessory: ViewModifier {
     /// together, whose room card shows it already (its section, or the page pushed on Home).
     private var roomBar: Bool {
         roomBarView != nil && store.room.inRoom && !playerUp && navigator.section != .together
-            && !store.party.placeShown
+            && !store.room.placeShown
     }
 
     /// The party's bar, away from Watch together itself.

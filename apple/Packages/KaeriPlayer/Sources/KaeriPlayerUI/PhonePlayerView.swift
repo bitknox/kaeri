@@ -446,7 +446,7 @@ public struct PhonePlayerView: View {
             HStack(spacing: 0) {
                 if store.room.inRoom {
                     // In a room: Chat opens the field (sideways; upright the room has its own).
-                    headerButton("bubble.left", L.partyChatTitle) { store.room.writing = true }
+                    headerButton("bubble.left", L.roomChat) { store.room.writing = true }
                 } else if !store.room.active {
                     // Watch together: a room starts from this episode.
                     headerButton("person.2", RoomCopy.columnTitle) {

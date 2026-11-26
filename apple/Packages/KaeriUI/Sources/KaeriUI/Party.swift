@@ -90,11 +90,7 @@ public struct PartySheets: ViewModifier {
             // An invite opens its lobby in Watch together, looking in first.
             .onOpenURL { url in
                 guard !overPlayer else { return }
-                if RoomLinks.isInvite(url) {
-                    // A room's invite: the room shows behind its banner in Watch together first.
-                    store.room.open(invite: url.absoluteString)
-                    navigator.showTogether(lobby: false, store: store)
-                } else if PartyLinks.isInvite(url) {
+                if PartyLinks.isInvite(url) {
                     party.openLink(url.absoluteString)
                 }
             }
@@ -129,26 +125,10 @@ public struct PartySheets: ViewModifier {
                      ? L.partyLeaveDetail(room: room)
                      : L.partyLeaveDetailWindow(room: room))
             }
-            // The red button and ⌘W ask first while in a party, as quitting does.
-            .background {
-                if here { PartyCloseGuard(asks: { party.asksBeforeClosing() || store.room.asksBeforeClosing() }) { window = $0 } }
-            }
             #endif
     }
 }
 
-/// The sheets the player's own buttons open over its cover on iPhone and iPad: Play on TV's and
-/// the party's.
-public struct PlayerCoverSheets: ViewModifier {
-    public init() {}
-
-    public func body(content: Content) -> some View {
-        content
-            .modifier(TVRemoteSheets(overPlayer: true))
-            .modifier(PartySheets(overPlayer: true))
-            .modifier(DiscussionSheets(overPlayer: true))
-    }
-}
 
 /// The `kaeri://party?…` links: an invite to a watch party, which the engine reads.
 enum PartyLinks {
@@ -157,48 +137,6 @@ enum PartyLinks {
     }
 }
 
-extension Navigator {
-    /// Watch together on screen: its section on the Mac and a wide iPad, Home with the place
-    /// pushed on iPhone and in a narrow window. The lobby is pushed in it.
-    func showTogether(lobby: Bool, store: AppStore) {
-        #if os(iOS)
-        if UITraitCollection.current.horizontalSizeClass == .compact || UIDevice.current.userInterfaceIdiom == .phone {
-            if section != .home { section = .home }
-            paths[.home] = []
-            store.party.placeShown = true
-            return
-        }
-        #endif
-        store.party.placeShown = false
-        if section != .together { section = .together }
-    }
-
-    /// Pick what to watch, Watch something else and Change episode, in the room: Home to browse,
-    /// where Play on any episode picks it for the room. The party stays, and on iPhone and iPad
-    /// its bar says so; the Mac, with no bar, says it once as a notice.
-    func browseForRoom(store: AppStore) {
-        store.party.lobbyShown = false
-        store.party.placeShown = false
-        #if os(iOS)
-        phoneSettings = nil
-        paths[.home] = []
-        #else
-        store.say(L.partyBarPick)
-        #endif
-        if section != .home { section = .home }
-    }
-
-    /// An invite's title, over the section on screen, unless it is the page there.
-    func showInvitedTitle(_ id: AnilistId) {
-        #if os(iOS)
-        phoneSettings = nil
-        let onScreen = paths[section]?.last?.id
-        #else
-        let onScreen = titleOnMac
-        #endif
-        if onScreen != id { openTitle(id) }
-    }
-}
 
 /// The form's words and state, the same on each platform.
 @MainActor
@@ -297,7 +235,7 @@ struct PartySourceState {
         case .looking?: return .play
         case .listed(let found)?: return found.isEmpty ? .providers : .play
         // A source that failed or was held back may answer when asked again.
-        case .missed(let missed)?: return missed.contains { PartyWords.unreached($0.miss) } ? .again : .providers
+        case .missed(let missed)?: return missed.contains { SourceWords.unreached($0.miss) } ? .again : .providers
         case .failed?: return .again
         }
     }
@@ -320,7 +258,7 @@ struct PartySourceState {
             found.isEmpty
                 ? (L.partyNoSourceLists(episode: ask.episode), false, false)
                 : (PartyWords.found(found.count), false, false)
-        case .missed(let missed)?: (PartyWords.noneLists(missed, episode: ask.episode), false, false)
+        case .missed(let missed)?: (SourceWords.noneLists(missed, episode: ask.episode), false, false)
         case .failed(let why)?: (why, false, true)
         }
     }
@@ -332,7 +270,7 @@ struct PartySourceState {
 
     /// With nothing listed, what each source said, one line each.
     var reasons: [String] {
-        if case .missed(let missed)? = party.choice { return missed.map { PartyWords.missed($0, episode: ask.episode) } }
+        if case .missed(let missed)? = party.choice { return missed.map { SourceWords.missed($0, episode: ask.episode) } }
         return []
     }
 
@@ -346,70 +284,7 @@ extension SourceCandidate {
 }
 
 #if os(macOS)
-/// Asks before the window closes while in a party: its delegate stands behind one that asks
-/// first, and answers everything else as it did. SwiftUI keeps the window's delegate; this one
-/// only wraps it.
-struct PartyCloseGuard: NSViewRepresentable {
-    let asks: @MainActor () -> Bool
-    let found: (NSWindow?) -> Void
 
-    func makeNSView(context: Context) -> Holder { Holder(asks: asks, found: found) }
-    func updateNSView(_ view: Holder, context: Context) {
-        view.asker.asks = asks
-        view.install()
-    }
-
-    final class Holder: NSView {
-        let asker: CloseAsker
-        let found: (NSWindow?) -> Void
-
-        init(asks: @escaping @MainActor () -> Bool, found: @escaping (NSWindow?) -> Void) {
-            asker = CloseAsker(asks: asks)
-            self.found = found
-            super.init(frame: .zero)
-        }
-
-        required init?(coder: NSCoder) { fatalError("not used") }
-
-        override func viewDidMoveToWindow() {
-            super.viewDidMoveToWindow()
-            install()
-            found(window)
-        }
-
-        /// In front of the window's own delegate, once, and again should SwiftUI set another.
-        func install() {
-            guard let window, window.delegate !== asker else { return }
-            asker.original = window.delegate
-            window.delegate = asker
-        }
-    }
-}
-
-/// The window delegate that asks: `windowShouldClose` asks while in a party, and every other
-/// message goes to the delegate it stands in front of.
-final class CloseAsker: NSObject, NSWindowDelegate {
-    var asks: @MainActor () -> Bool
-    weak var original: NSWindowDelegate?
-
-    init(asks: @escaping @MainActor () -> Bool) {
-        self.asks = asks
-    }
-
-    @MainActor
-    func windowShouldClose(_ sender: NSWindow) -> Bool {
-        if asks() { return false }
-        return original?.windowShouldClose?(sender) ?? true
-    }
-
-    override func responds(to selector: Selector!) -> Bool {
-        super.responds(to: selector) || (original?.responds(to: selector) ?? false)
-    }
-
-    override func forwardingTarget(for selector: Selector!) -> Any? {
-        original?.responds(to: selector) == true ? original : super.forwardingTarget(for: selector)
-    }
-}
 #endif
 
 // MARK: - Mac
@@ -621,7 +496,7 @@ struct MacPartySource: View {
                 List(state.candidates, id: \.partyKey, selection: $picked) { candidate in
                     VStack(alignment: .leading, spacing: 2) {
                         Text(candidate.title).font(.mac(13)).foregroundStyle(.silk).lineLimit(1)
-                        Text(PartyWords.detail(candidate)).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
+                        Text(SourceWords.detail(candidate)).font(.mac(12)).foregroundStyle(.haze).lineLimit(1)
                     }
                     .padding(.vertical, 3)
                 }
@@ -900,7 +775,7 @@ struct PhonePartySource: View {
                                 HStack {
                                     VStack(alignment: .leading, spacing: 2) {
                                         Text(candidate.title).foregroundStyle(.silk).lineLimit(1)
-                                        Text(PartyWords.detail(candidate)).font(.ui(13)).foregroundStyle(.haze).lineLimit(1)
+                                        Text(SourceWords.detail(candidate)).font(.ui(13)).foregroundStyle(.haze).lineLimit(1)
                                     }
                                     Spacer(minLength: 8)
                                     Image(systemName: "checkmark")

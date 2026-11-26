@@ -451,7 +451,7 @@ struct PhonePlaybackPage: View {
             }
             Section {
                 Toggle(isOn: Binding(
-                    get: { store.party.chat.hidden }, set: { store.party.chat.hidden = $0 })
+                    get: { store.room.hidesChat }, set: { store.room.hidesChat = $0 })
                 ) {
                     PhoneRowTitle(title: L.settingsHideChat, note: L.settingsHideChatLine)
                 }

@@ -142,7 +142,7 @@ struct RoomPlace: View {
             ForEach(Array(room.recent.enumerated()), id: \.element.key) { index, recent in
                 VStack(alignment: .leading, spacing: 6) {
                     HStack(spacing: 12) {
-                        TogetherStill(id: recent.id, width: 64, height: 36, radius: 6)
+                        RoomStill(id: recent.id, width: 64, height: 36, radius: 6)
                         VStack(alignment: .leading, spacing: 0) {
                             Text(recent.title).font(.system(size: compact ? 15 : 13, weight: .semibold))
                                 .fixedSize(horizontal: false, vertical: true)
@@ -184,7 +184,7 @@ struct RoomPlaceCard: View {
             let status = room.status(now: now)
             let layout = compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 18))
             layout {
-                TogetherStill(id: room.view?.episodeId ?? room.invitation?.id, width: compact ? 120 : 192, height: compact ? 68 : 108)
+                RoomStill(id: room.view?.episodeId ?? room.invitation?.id, width: compact ? 120 : 192, height: compact ? 68 : 108)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(RoomCopy.yourRoom).font(.system(size: 12, weight: .semibold)).foregroundStyle(.haze)
                     Text(room.view?.title ?? room.invitation?.title ?? "").font(.showTitle(size: 18))
@@ -245,14 +245,47 @@ struct RoomPlaceCard: View {
     }
 }
 
-/// A room's invite links, which the engine reads: `kaeri://room#…`, the way the system hands one
-/// to the app, and `https://kaeri.app/room#…`, as people paste and share them.
-enum RoomLinks {
-    static func isInvite(_ url: URL) -> Bool {
-        switch url.scheme?.lowercased() {
-        case "kaeri": url.host?.lowercased() == "room"
-        case "https": url.host?.lowercased() == "kaeri.app" && url.path.lowercased() == "/room"
-        default: false
+/// The room's still: the title's wide art, or its cover's colour. On iPhone, and an iPad at
+/// compact width, by the wide art's rule (`HeroArt`): its banner, a seen still, the cover filling
+/// the frame, or a plate with the title.
+struct RoomStill: View {
+    @Environment(AppStore.self) private var store
+    @Environment(\.displayScale) private var scale
+    #if os(iOS)
+    @Environment(\.horizontalSizeClass) private var sizeClass
+    #endif
+    let id: AnilistId?
+    let width: CGFloat
+    let height: CGFloat
+    var radius: CGFloat = 10
+
+    /// Whether the frame fills by the wide art's rule.
+    private var fills: Bool {
+        #if os(iOS)
+        sizeClass == .compact
+        #else
+        false
+        #endif
+    }
+
+    var body: some View {
+        let entry = id.flatMap { store.titles[$0] }
+        Group {
+            if fills, let entry {
+                HeroArtView(art: store.heroArt(entry, fills: true), entry: entry)
+            } else {
+                ArtworkView(url: entry?.bannerUrl ?? entry?.coverUrl, color: entry?.plateColor,
+                            maxPixelSize: Int(width * scale))
+            }
         }
+            .frame(width: width, height: height)
+            .clipShape(.rect(cornerRadius: radius))
+            .accessibilityHidden(true)
+            .task(id: id) {
+                // The room's title may be one this device has not opened: its art and episodes.
+                guard let id else { return }
+                if store.titles[id] == nil { store.loadDetail(id) }
+                if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
+            }
     }
 }

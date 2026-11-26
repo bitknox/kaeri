@@ -722,8 +722,8 @@ struct HideChatSwitch: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
-        let chat = store.party.chat
-        Toggle(L.settingsHideChat, isOn: Binding(get: { chat.hidden }, set: { chat.hidden = $0 }))
+        let room = store.room
+        Toggle(L.settingsHideChat, isOn: Binding(get: { room.hidesChat }, set: { room.hidesChat = $0 }))
             .toggleStyle(.switch)
             .tint(.amber)
             .labelsHidden()

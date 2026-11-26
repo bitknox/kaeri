@@ -163,7 +163,7 @@ struct RoomSourceList: View {
                     HStack(spacing: 12) {
                         VStack(alignment: .leading, spacing: 0) {
                             Text(choice.title).font(.system(size: nameSize, weight: .semibold)).lineLimit(1)
-                            Text(PartyWords.detail(choice)).font(.system(size: 12)).foregroundStyle(.haze).lineLimit(1)
+                            Text(SourceWords.detail(choice)).font(.system(size: 12)).foregroundStyle(.haze).lineLimit(1)
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
                         if picked {

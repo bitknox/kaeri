@@ -10,18 +10,6 @@ import KaeriStrings
 import SwiftUI
 import UIKit
 
-/// The people button in Home's toolbar, before the account button.
-struct TogetherButton: ToolbarContent {
-    @Environment(AppStore.self) private var store
-
-    var body: some ToolbarContent {
-        ToolbarItem(placement: .topBarTrailing) {
-            Button(L.navWatchTogether, systemImage: store.party.inParty ? "person.2.fill" : "person.2") {
-                store.party.placeShown = true
-            }
-        }
-    }
-}
 
 /// The place on iPhone: the line, Start a party across the width, the party you are in, Join a
 /// party, and recent rooms.

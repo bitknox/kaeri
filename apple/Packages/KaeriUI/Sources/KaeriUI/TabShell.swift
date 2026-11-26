@@ -141,7 +141,7 @@ struct TabShell: View {
         .onChange(of: navigator.section == .together && sizeClass == .compact, initial: true) { _, narrow in
             guard narrow else { return }
             navigator.section = .home
-            store.party.placeShown = true
+            store.room.placeShown = true
         }
         .modifier(TVAccessory())
         // The iPad's sidebar as the brief draws it (PadSidebarStyle). The bar is empty; it is

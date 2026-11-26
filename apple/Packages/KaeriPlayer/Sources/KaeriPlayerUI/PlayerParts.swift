@@ -199,9 +199,9 @@ struct SourceList: View {
                     // the ones that answered said.
                     let episode = model.startingEpisode ?? ""
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(PartyWords.noneLists(model.sourceMisses, episode: episode)).foregroundStyle(.haze)
+                        Text(SourceWords.noneLists(model.sourceMisses, episode: episode)).foregroundStyle(.haze)
                         ForEach(model.sourceMisses, id: \.name) { missed in
-                            Text(PartyWords.missed(missed, episode: episode)).foregroundStyle(.silk)
+                            Text(SourceWords.missed(missed, episode: episode)).foregroundStyle(.silk)
                         }
                     }
                     .font(.system(size: 13))
@@ -239,7 +239,7 @@ struct SourceList: View {
         if let label = candidate.label { parts.append(label) }
         if let size = candidate.size { parts.append(size) }
         if candidate.dubbed { parts.append(L.playerReleaseDub) } else if candidate.dualAudio { parts.append(L.playerReleaseDualAudio) }
-        parts.append(PartyWords.sourceName(candidate))
+        parts.append(SourceWords.sourceName(candidate))
         return parts.joined(separator: " · ")
     }
 }

@@ -119,50 +119,6 @@ struct TogetherMemberRow: View {
     }
 }
 
-/// The room's still: the title's wide art, or its cover's colour. On iPhone, and an iPad at
-/// compact width, by the wide art's rule (`HeroArt`): its banner, a seen still, the cover filling
-/// the frame, or a plate with the title.
-struct TogetherStill: View {
-    @Environment(AppStore.self) private var store
-    @Environment(\.displayScale) private var scale
-    #if os(iOS)
-    @Environment(\.horizontalSizeClass) private var sizeClass
-    #endif
-    let id: AnilistId?
-    let width: CGFloat
-    let height: CGFloat
-    var radius: CGFloat = 10
-
-    /// Whether the frame fills by the wide art's rule.
-    private var fills: Bool {
-        #if os(iOS)
-        sizeClass == .compact
-        #else
-        false
-        #endif
-    }
-
-    var body: some View {
-        let entry = id.flatMap { store.titles[$0] }
-        Group {
-            if fills, let entry {
-                HeroArtView(art: store.heroArt(entry, fills: true), entry: entry)
-            } else {
-                ArtworkView(url: entry?.bannerUrl ?? entry?.coverUrl, color: entry?.plateColor,
-                            maxPixelSize: Int(width * scale))
-            }
-        }
-            .frame(width: width, height: height)
-            .clipShape(.rect(cornerRadius: radius))
-            .accessibilityHidden(true)
-            .task(id: id) {
-                // The room's title may be one this device has not opened: its art and episodes.
-                guard let id else { return }
-                if store.titles[id] == nil { store.loadDetail(id) }
-                if store.titles.episodes[id] == nil { store.loadEpisodes(id) }
-            }
-    }
-}
 
 /// A recent room's poster, 36 × 54.
 struct TogetherPoster: View {
@@ -603,38 +559,6 @@ struct TogetherMembers: View {
 
 // MARK: - Mac and iPad
 
-/// The Watch together section on Mac and on a wide iPad: the place, and the lobby over it. On
-/// iPad the lobby is pushed on the tab's stack. The Mac's detail column holds no stack of its
-/// own: one there takes the window's toolbar from the split view, search and all, and the two
-/// can pass it back and forth until AppKit stops the app. So the lobby lies over the place as a
-/// title page lies over its section, with Back in the toolbar (`TogetherLobbyBack`).
-struct TogetherScreen: View {
-    @Environment(AppStore.self) private var store
-
-    var body: some View {
-        @Bindable var party = store.party
-        Group {
-            #if os(macOS)
-            ZStack {
-                // The room replaces the party's place; the party's lobby goes with the Syncplay
-                // engine once the room's engine lands.
-                RoomPlace()
-                    .accessibilityHidden(party.lobbyShown)
-                if party.lobbyShown {
-                    TogetherLobby()
-                        .transition(.opacity)
-                        .zIndex(1)
-                }
-            }
-            .animation(.standard, value: party.lobbyShown)
-            #else
-            RoomPlace()
-                .navigationDestination(isPresented: $party.lobbyShown) { TogetherLobby() }
-            #endif
-        }
-        .task { party.loadTogether() }
-    }
-}
 
 /// The place: the line, the party you are in, Start and Join, recent rooms, servers.
 struct TogetherPlace: View {
@@ -1194,5 +1118,51 @@ extension ChatLineData {
         case .reacted(let text):
             self.init(id: row.id, name: nil, text: text)
         }
+    }
+}
+
+// The party's lobby, until it goes.
+typealias TogetherStill = RoomStill
+
+extension Navigator {
+    /// Watch together on screen: its section on the Mac and a wide iPad, Home with the place
+    /// pushed on iPhone and in a narrow window. The lobby is pushed in it.
+    func showTogether(lobby: Bool, store: AppStore) {
+        #if os(iOS)
+        if UITraitCollection.current.horizontalSizeClass == .compact || UIDevice.current.userInterfaceIdiom == .phone {
+            if section != .home { section = .home }
+            paths[.home] = []
+            store.party.placeShown = true
+            return
+        }
+        #endif
+        store.party.placeShown = false
+        if section != .together { section = .together }
+    }
+
+    /// Pick what to watch, Watch something else and Change episode, in the room: Home to browse,
+    /// where Play on any episode picks it for the room. The party stays, and on iPhone and iPad
+    /// its bar says so; the Mac, with no bar, says it once as a notice.
+    func browseForRoom(store: AppStore) {
+        store.party.lobbyShown = false
+        store.party.placeShown = false
+        #if os(iOS)
+        phoneSettings = nil
+        paths[.home] = []
+        #else
+        store.say(L.partyBarPick)
+        #endif
+        if section != .home { section = .home }
+    }
+
+    /// An invite's title, over the section on screen, unless it is the page there.
+    func showInvitedTitle(_ id: AnilistId) {
+        #if os(iOS)
+        phoneSettings = nil
+        let onScreen = paths[section]?.last?.id
+        #else
+        let onScreen = titleOnMac
+        #endif
+        if onScreen != id { openTitle(id) }
     }
 }

@@ -164,8 +164,8 @@ struct HomeScreen: View {
         // Watch together has no tab on an iPhone or in a narrow window: the people button pushes
         // the place from here, and the lobby is pushed over it.
         .navigationDestination(isPresented: Binding(
-            get: { !wide && store.party.placeShown },
-            set: { store.party.placeShown = $0 }
+            get: { !wide && store.room.placeShown },
+            set: { store.room.placeShown = $0 }
         )) { RoomPlace() }
         #endif
         .task {

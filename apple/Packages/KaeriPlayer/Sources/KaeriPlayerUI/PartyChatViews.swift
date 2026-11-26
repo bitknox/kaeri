@@ -8,30 +8,7 @@ import KaeriStore
 import KaeriStrings
 import SwiftUI
 
-extension ReactionGlyphKind {
-    init(_ reaction: Reaction) {
-        switch reaction {
-        case .laugh: self = .laugh
-        case .gasp: self = .gasp
-        case .clap: self = .clap
-        case .cry: self = .cry
-        }
-    }
-}
 
-extension Reaction {
-    /// "Laugh", the button's name.
-    var buttonName: String {
-        switch self {
-        case .laugh: L.partyReactLaugh
-        case .gasp: L.partyReactGasp
-        case .clap: L.partyReactClap
-        case .cry: L.partyReactCry
-        }
-    }
-
-    static let order: [Reaction] = [.laugh, .gasp, .clap, .cry]
-}
 
 extension ChatLineData {
     init(_ row: ChatRow) {
@@ -246,38 +223,6 @@ struct ReactionMomentView: View {
     }
 }
 
-/// The four reaction buttons. They sit at 40% while a reaction's wait runs.
-struct ReactionButtons: View {
-    let metrics: PlayerMetrics
-    var size: CGFloat = 32
-    var glyph: CGFloat = 18
-    var vertical = false
-    @Environment(AppStore.self) private var store
-
-    var body: some View {
-        let chat = store.party.chat
-        let room = store.room.inRoom ? store.room : nil
-        let waiting = room == nil && chat.reactWait > 0
-        let layout = vertical ? AnyLayout(VStackLayout(spacing: 0)) : AnyLayout(HStackLayout(spacing: 0))
-        layout {
-            ForEach(Reaction.order, id: \.self) { reaction in
-                Button { if let room { room.react(reaction) } else { chat.react(reaction) } } label: {
-                    ReactionGlyphView(ReactionGlyphKind(reaction), size: glyph, weight: 1.6)
-                        .frame(width: size, height: size)
-                        .contentShape(.circle)
-                }
-                .buttonStyle(OverVideoButtonStyle())
-                .accessibilityLabel(reaction.buttonName)
-                .help(reaction.buttonName)
-                .disabled(waiting)
-            }
-        }
-        .opacity(waiting ? 0.4 : 1)
-        .animation(.fadeIn, value: waiting)
-        .accessibilityElement(children: .contain)
-        .accessibilityLabel(L.partyReact)
-    }
-}
 
 /// The room's reaction ticks on the seek line: 2 by 5 pt in haze, 3 pt above the line.
 struct ReactionTicks: View {

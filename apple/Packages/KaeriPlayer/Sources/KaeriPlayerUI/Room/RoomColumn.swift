@@ -213,7 +213,7 @@ struct RoomRow: View {
         .accessibilityLabel("\(member.name)\(member.you ? " \(RoomCopy.youMark)" : ""), \(room.word(member, now: now))")
         .contextMenu {
             if !member.you {
-                Button(member.muted ? L.partyUnmute(name: member.name) : L.partyMute(name: member.name)) { room.mute(member, !member.muted) }
+                Button(member.muted ? L.roomUnmute(name: member.name) : L.roomMute(name: member.name)) { room.mute(member, !member.muted) }
             }
         }
     }
