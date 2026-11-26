@@ -24,6 +24,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.staticCompositionLocalOf
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.drawBehind
@@ -107,13 +108,30 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     /** Open [id]'s page in the [owner]'s back stack, flying from [from]. */
     fun openTitle(id: AnilistId, from: String) {
         source = "$from:$id"
-        nav.navigate(titleRoute(owner(), id))
+        faded { nav.navigate(titleRoute(owner(), id)) }
     }
 
     /** Open a reading series' page in the [owner]'s back stack, its cover flying from [from]. */
     fun openSeries(work: WorkId, from: String) {
         source = "$from:$work"
-        nav.navigate(seriesRoute(owner(), work))
+        faded { nav.navigate(seriesRoute(owner(), work)) }
+    }
+
+    /** Whether Remove animations is on, as the host last read it: pages crossfade rather than fly. */
+    internal var removed: Boolean = false
+
+    /** Where a crossfade's still fades out: the host's scope. */
+    internal var scope: kotlinx.coroutines.CoroutineScope? = null
+
+    /**
+     * Runs [change] as it is with animations on. With Remove animations on, a flight would land at
+     * once, so the page crossfades instead: a still of the old one fades out over the new, at full speed.
+     */
+    private fun faded(change: () -> Unit) {
+        val fade = fade
+        val scope = scope
+        if (!removed || fade == null || scope == null) return change()
+        scope.launch { fade.swap(fullSpeed = true) { change() } }
     }
 
     /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
@@ -165,7 +183,7 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
     }
 
     fun back() {
-        nav.popBackStack()
+        faded { nav.popBackStack() }
     }
 
     /** Open Settings at [pane], or at its list. */
@@ -196,6 +214,9 @@ fun Navigator.openDownloads() = open(DOWNLOADS_ROUTE)
 fun Navigator.openStores() = open(STORES_ROUTE)
 
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("no Navigator in this composition") }
+
+/** Whether the system's Remove animations is on, as the app's host reads it once for every screen. */
+val LocalAnimationsRemoved = staticCompositionLocalOf { false }
 
 /** The same navigator, or null where none is provided (the player on its own, in a test). */
 val LocalNavigatorOrNull = staticCompositionLocalOf<Navigator?> { null }
@@ -249,6 +270,8 @@ fun Modifier.sharedWork(shared: Shared, work: WorkId, from: String? = null, grou
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun Modifier.sharedKeyed(shared: Shared, id: String, from: String?, ground: Color): Modifier {
+    // With Remove animations on nothing flies: the page crossfades in (Navigator.faded).
+    if (LocalAnimationsRemoved.current) return if (ground.isSpecified) background(ground) else this
     val layout = LocalSharedTransitions.current
     val page = LocalPageAnimation.current
     val outside = LocalView.current !== LocalSharedTransitionsView.current

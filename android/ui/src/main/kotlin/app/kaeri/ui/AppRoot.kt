@@ -402,7 +402,12 @@ private fun AppRootFrame(
     // How far a reading page moves on the shared axis as it comes and goes: 30 dp.
     val axis = with(androidx.compose.ui.platform.LocalDensity.current) { 30.dp.roundToPx() }
     val pageFade = app.kaeri.design.rememberStillFade()
-    SideEffect { navigator.fade = pageFade }
+    val pageScope = rememberCoroutineScope()
+    SideEffect {
+        navigator.fade = pageFade
+        navigator.removed = removed
+        navigator.scope = pageScope
+    }
     val sheets = remember { AppSheets() }
     // Whether Search is to open its field as it shows: a link to Search asked for it.
     var searchOpening by remember { mutableStateOf(false) }
@@ -577,6 +582,7 @@ private fun AppRootFrame(
                         CompositionLocalProvider(
                             LocalSharedTransitions provides this,
                             LocalSharedTransitionsView provides androidx.compose.ui.platform.LocalView.current,
+                            LocalAnimationsRemoved provides removed,
                         ) {
                             NavHost(
                                 nav,

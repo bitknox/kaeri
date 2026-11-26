@@ -555,6 +555,8 @@ fun PlayerScreen(
         still.frame?.let { frame ->
             Box(Modifier.fillMaxSize().background(ObiSilk.Ground))
             val image = remember(frame) { frame.asImageBitmap() }
+            // Remove animations: the dismiss drag fades as it follows the finger, rather than shrinking.
+            val removed = app.kaeri.design.rememberAnimationsRemoved()
             Box(
                 Modifier
                     .fillMaxSize()
@@ -562,9 +564,13 @@ fun PlayerScreen(
                         val k = (drag.value / DISMISS_DP).coerceIn(0f, 1f)
                         val p = back.value
                         val edge = if (backEdge == BackEventCompat.EDGE_LEFT) 1f else -1f
-                        val scale = (1f - 0.1f * k) * (1f - 0.1f * p)
-                        scaleX = scale
-                        scaleY = scale
+                        if (removed) {
+                            alpha = (1f - 0.5f * k) * (1f - 0.5f * p)
+                        } else {
+                            val scale = (1f - 0.1f * k) * (1f - 0.1f * p)
+                            scaleX = scale
+                            scaleY = scale
+                        }
                         translationY = (drag.value - 12.6f * p).dp.toPx()
                         translationX = (37.75f * p * edge).dp.toPx()
                         shape = RoundedCornerShape((16f * k + 28f * p).dp)
