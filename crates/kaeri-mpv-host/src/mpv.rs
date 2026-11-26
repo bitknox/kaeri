@@ -15,6 +15,12 @@ use crate::{
     sys,
 };
 
+/// mpv's "option not found": an older libmpv.
+const MPV_ERROR_OPTION_NOT_FOUND: i32 = -5;
+
+/// Options a host sets only where libmpv has them: `clipboard-backends` is mpv 0.40's.
+const OPTIONAL: [&str; 1] = ["clipboard-backends"];
+
 /// mpv said no: its error, and what was asked.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct MpvError {
@@ -108,6 +114,10 @@ impl Mpv {
             let (n, v) = (cstring(name), cstring(value));
             // SAFETY: live handle, valid strings.
             let code = unsafe { sys::mpv_set_option_string(mpv.raw(), n.as_ptr(), v.as_ptr()) };
+            // A libmpv older than an option the hosts set where they can: left at its default.
+            if code == MPV_ERROR_OPTION_NOT_FOUND && OPTIONAL.contains(&name) {
+                continue;
+            }
             checked(code, || format!("option {name}={value}"))?;
         }
         let level = cstring(log_level);

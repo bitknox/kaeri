@@ -76,7 +76,12 @@ impl VideoOutput {
     /// The options that send the picture there.
     fn options(self) -> Vec<(&'static str, String)> {
         match self {
-            Self::RenderApi => vec![("vo", "libmpv".into())],
+            Self::RenderApi => vec![
+                ("vo", "libmpv".into()),
+                // The app's toolkit owns the clipboard. mpv's own Wayland clipboard connects to
+                // the compositor by itself, even under X11, and blocks when the compositor dies.
+                ("clipboard-backends", "vo".into()),
+            ],
             Self::D3d11Composition { width, height } => vec![
                 ("vo", "gpu-next".into()),
                 ("gpu-api", "d3d11".into()),
@@ -595,6 +600,7 @@ mod tests {
         let options = PlayerOptions::default().resolved();
         assert_eq!(options[0], ("vo".into(), "libmpv".into()));
         assert_eq!(option(&options, "d3d11-output-mode"), None);
+        assert_eq!(option(&options, "clipboard-backends"), Some("vo"));
     }
 
     #[test]
