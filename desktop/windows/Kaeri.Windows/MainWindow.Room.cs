@@ -1,6 +1,8 @@
 using Kaeri.App;
 using Kaeri.Engine.Ffi;
 using Kaeri.Engine.Model;
+using System.Runtime.InteropServices;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
 
 namespace Kaeri.Windows;
@@ -48,6 +50,83 @@ public sealed partial class MainWindow
     internal void StartRoom(uint id, string episode) =>
         ctx.Send(new Command.Room(new RoomCommand.Lobby(Pick: new RoomEpisode(id, episode))));
 
+
+    bool askedRoom;
+
+    /// <summary>The bar above the pages while in a room with the player closed: what it watches, a way back and out.</summary>
+    internal void UpdateRoomBar()
+    {
+        if (ctx.Known.Room is not { } room || Player.Showing || ContentFrame.Content is Pages.TogetherPage)
+        {
+            RoomBar.Visibility = Visibility.Collapsed;
+            return;
+        }
+        var ep = room.RoomEpisode;
+        RoomBarTitle.Text = ep?.Title ?? RoomWords.Title;
+        RoomBarLine.Text = ep is null ? "" : T.RoomHeaderLine(RoomWords.N(ep.Episode), ctx.Known.RoomMembers.Count(m => m.State != MemberState.Left));
+        RoomBar.Visibility = Visibility.Visible;
+    }
+
+    void OnRoomBarOpen(object sender, RoutedEventArgs e) => ctx.Send(new Command.Room(new RoomCommand.OpenPlayer()));
+
+    async void OnRoomBarLeave(object sender, RoutedEventArgs e)
+    {
+        if (await Kaeri.Windows.Player.RoomPopups.AskLeave(Root.XamlRoot))
+            ctx.Send(new Command.Room(new RoomCommand.Leave()));
+    }
+
+    /// <summary>Closing the window leaves the room: asked first, once per close.</summary>
+    bool AskLeavingRoom()
+    {
+        if (ctx.Known.Room is null || askedRoom)
+            return false;
+        askedRoom = true;
+        AskLeavingRoomNow();
+        return true;
+    }
+
+    async void AskLeavingRoomNow()
+    {
+        bool leave;
+        try
+        {
+            if (CloseDialogs())
+                await Task.Delay(250);
+            leave = await Kaeri.Windows.Player.RoomPopups.AskLeave(Root.XamlRoot);
+        }
+        catch (COMException)
+        {
+            leave = false;
+        }
+        if (!leave)
+        {
+            askedRoom = false;
+            return;
+        }
+        ctx.Send(new Command.Room(new RoomCommand.Leave()));
+        // Running downloads are still asked about, as a close outside a room would.
+        if (!HoldForDownloads())
+            CloseNow();
+    }
+
+    /// <summary>An invite link: what the room watches and who is there, with Join, in the place (or over the player).</summary>
+    void OpenRoomInvite(string text)
+    {
+        if (KaeriFfiMethods.ParseRoomTarget(text) is not { } target)
+        {
+            ShowToast(InfoBarSeverity.Warning, T.RoomErrorNobodyAnswered);
+            return;
+        }
+        if (target.Old is not null)
+        {
+            ShowToast(InfoBarSeverity.Warning, T.RoomErrorOldInvite);
+            return;
+        }
+        RoomInvite = target.Link;
+        ctx.Send(new Command.Room(new RoomCommand.PeekInvite(target.Link)));
+        if (!Player.Showing)
+            Go("together");
+    }
     void RoomHeard(IReadOnlyList<Event> batch)
     {
         WireRoom();
@@ -78,6 +157,7 @@ public sealed partial class MainWindow
                     break;
             }
         }
+        UpdateRoomBar();
         if (touched)
             ShowRoomNow(morph: joined);
     }

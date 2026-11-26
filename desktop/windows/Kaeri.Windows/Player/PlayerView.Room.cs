@@ -39,6 +39,9 @@ public sealed partial class PlayerView
     /// <summary>Every press in the room, as the engine's room commands.</summary>
     internal event Action<RoomCommand>? RoomSent;
 
+    /// <summary>The column is on screen beside the video: not hidden, not in full screen.</summary>
+    bool ColumnShows => roomColumn is not null && !roomHidden && !roomFull;
+
     /// <summary>In a room: the column, or the strip in full screen, speaks for it.</summary>
     internal bool InRoom => roomScene is not null;
 
