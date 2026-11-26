@@ -889,7 +889,7 @@ pub(crate) fn dispatch(
                     .ok()
                     .flatten()
                     .is_some_and(|list| list.primary == id);
-            match crate::profile::delete(
+            match crate::profile::delete_or_say(
                 &services.store,
                 &services.paths,
                 &services.tokens,
@@ -903,7 +903,9 @@ pub(crate) fn dispatch(
                     }
                 }
                 Ok(()) => {}
-                Err(e) => tracing::warn!(error = %e, "could not delete a profile"),
+                Err(said) => {
+                    let _ = tx.send(Event::Toast(Notice::alert(said)));
+                }
             }
             let _ = tx
                 .send(Event::Profiles(crate::profile::view(&services.store, &services.paths)));

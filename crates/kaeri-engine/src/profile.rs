@@ -15,12 +15,13 @@ use kaeri_store::{
 use kaeri_track::secret::TokenStore;
 
 /// The trackers and cloud drives whose tokens belong to a profile.
-pub const TRACKER_TOKENS: [&str; 8] = [
+pub const TRACKER_TOKENS: [&str; 9] = [
     "anilist",
     "mal",
     "kitsu",
     "simkl",
     "trakt",
+    "mangaupdates",
     crate::cloud::TOKEN_IDS[0],
     crate::cloud::TOKEN_IDS[1],
     crate::cloud::TOKEN_IDS[2],
@@ -152,6 +153,28 @@ pub fn delete(
     Ok(())
 }
 
+/// [`delete`], with what to tell the person when it doesn't happen: the profile in use is
+/// refused, and anything else that stops it is said with its reason.
+pub fn delete_or_say(
+    store: &Store,
+    paths: &Paths,
+    tokens: &TokenStore,
+    id: &str,
+) -> Result<(), kaeri_model::Msg> {
+    let name = ProfileList::load(&paths.data_dir)
+        .ok()
+        .flatten()
+        .and_then(|list| list.get(id).map(|p| p.name.clone()))
+        .unwrap_or_default();
+    if store.active_profile().as_deref() == Some(id) {
+        return Err(kaeri_model::Msg::NoticeProfileInUse { name });
+    }
+    delete(store, paths, tokens, id).map_err(|reason| {
+        tracing::warn!(error = %reason, "could not delete a profile");
+        kaeri_model::Msg::NoticeProfileNotDeleted { name, reason }
+    })
+}
+
 /// Record that a profile is the next one to enter. The front end stops the engine, which saves
 /// what plays, and starts it again on this profile.
 pub fn choose(paths: &Paths, id: &str) -> Result<(), String> {
@@ -199,5 +222,80 @@ mod tests {
         assert_eq!(config.syncplay.name, "Aki", "not the deleted profile's name");
         assert!(config.meta.adult);
         assert!(!overlay.exists());
+    }
+
+    /// Every tracker the engine builds keeps its sign-in under its id: each one is in the list a
+    /// deleted profile's sign-ins are cleared or moved by.
+    #[test]
+    fn every_tracker_sign_in_belongs_to_a_profile() {
+        let dir = tempfile::tempdir().unwrap();
+        let mut config = Config::default();
+        config.trackers.enabled = ["anilist", "mal", "kitsu", "simkl", "trakt", "mangaupdates"]
+            .map(String::from)
+            .to_vec();
+        config.trackers.mal.client_id = Some("a-made-up-client".into());
+        config.trackers.simkl.client_id = Some("a-made-up-client".into());
+        config.trackers.trakt.client_id = Some("a-made-up-client".into());
+        let store = Store::open(dir.path().join("kaeri.db")).unwrap();
+        let http = kaeri_net::HttpClient::new(&Default::default()).unwrap();
+        let tokens = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
+        let sync = crate::tracking::Sync::with_tokens(&config, &store, &http, tokens);
+        let ids: Vec<&str> = sync.trackers.iter().map(|t| t.id()).collect();
+        assert_eq!(ids.len(), 6, "every tracker built: {ids:?}");
+        for id in ids {
+            assert!(TRACKER_TOKENS.contains(&id), "{id} is not in TRACKER_TOKENS");
+        }
+    }
+
+    /// The profile in use can't be deleted, and the person is told so rather than nothing
+    /// happening.
+    #[test]
+    fn deleting_the_profile_in_use_is_refused_out_loud() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        std::fs::create_dir_all(&paths.data_dir).unwrap();
+        let store = Store::open(paths.data_dir.join("kaeri.db")).unwrap();
+        let tokens = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
+        add(&store, &paths, "Aki", false, "Mika").unwrap();
+        assert_eq!(enter(&store, &paths, Some("p2")).unwrap().as_deref(), Some("p2"));
+
+        assert_eq!(
+            delete_or_say(&store, &paths, &tokens, "p2"),
+            Err(kaeri_model::Msg::NoticeProfileInUse { name: "Aki".into() })
+        );
+        assert!(ProfileList::load(&paths.data_dir).unwrap().unwrap().get("p2").is_some());
+        assert!(matches!(
+            delete_or_say(&store, &paths, &tokens, "p9"),
+            Err(kaeri_model::Msg::NoticeProfileNotDeleted { .. })
+        ));
+        assert_eq!(delete_or_say(&store, &paths, &tokens, "p1"), Ok(()));
+    }
+
+    /// When the first profile is deleted, the one taking its place signs in to MangaUpdates as
+    /// itself, not as the person deleted.
+    #[test]
+    fn deleting_the_first_profile_hands_on_no_mangaupdates_sign_in() {
+        let dir = tempfile::tempdir().unwrap();
+        let paths = Paths {
+            config_file: dir.path().join("config.toml"),
+            data_dir: dir.path().join("data"),
+            cache_dir: dir.path().join("cache"),
+        };
+        std::fs::create_dir_all(&paths.data_dir).unwrap();
+        let store = Store::open(paths.data_dir.join("kaeri.db")).unwrap();
+        let tokens = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
+        add(&store, &paths, "Aki", false, "Mika").unwrap();
+        assert_eq!(enter(&store, &paths, Some("p2")).unwrap().as_deref(), Some("p2"));
+        tokens.set("mangaupdates", "mika-session").unwrap();
+        tokens.scoped("p2").set("mangaupdates", "aki-session").unwrap();
+
+        delete(&store, &paths, &tokens, "p1").unwrap();
+        let fresh = TokenStore::with_backend(dir.path().join("tokens"), Backend::File);
+        assert_eq!(fresh.get("mangaupdates").unwrap(), "aki-session");
+        assert!(!fresh.scoped("p2").has("mangaupdates"), "nothing stranded under the old name");
     }
 }
