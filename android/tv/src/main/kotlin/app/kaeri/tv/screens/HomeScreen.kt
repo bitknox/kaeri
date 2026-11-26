@@ -186,16 +186,31 @@ fun HomeScreen(
             }
             home?.end?.let { end ->
                 item(key = "end", contentType = "line") {
-                    Text(
-                        when (end) {
-                            HomeEnd.EVERYTHING -> Strings.homeEnd(context)
-                            HomeEnd.SIGN_IN -> Strings.homeEndSignedOut(context)
-                            HomeEnd.NO_SOURCES -> Strings.homeEndNoSources(context)
-                        },
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = ObiSilk.Haze,
-                        modifier = swapFade().padding(start = Canvas.Keyline, end = Canvas.SafeX),
-                    )
+                    // Signed out or with no source, the line ends in the way on, as a button under
+                    // it (StateBlock's action): the D-pad can't follow a link in the text.
+                    val way: Pair<String, () -> Unit>? = when (end) {
+                        HomeEnd.EVERYTHING -> null
+                        HomeEnd.SIGN_IN -> Strings.homeSignIn(context) to { nav.openSignIn("anilist") } // i18n-skip
+                        HomeEnd.NO_SOURCES -> Strings.navPluginStores(context) to { nav.goSettings(SettingsSection.PluginStores.name) }
+                    }
+                    Column(swapFade().padding(start = Canvas.Keyline, end = Canvas.SafeX)) {
+                        Text(
+                            when (end) {
+                                HomeEnd.EVERYTHING -> Strings.homeEnd(context)
+                                HomeEnd.SIGN_IN -> Strings.homeEndSignedOut(context)
+                                HomeEnd.NO_SOURCES -> Strings.homeEndNoSources(context)
+                            },
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = ObiSilk.Haze,
+                        )
+                        if (way != null) {
+                            Spacer(Modifier.height(16.dp))
+                            TonalButton(
+                                onClick = way.second,
+                                modifier = Modifier.firstFocus(memory, "end", spot == null && sections.isEmpty() && home?.failed != true),
+                            ) { ButtonLabel(way.first) }
+                        }
+                    }
                 }
             }
             if (emptyOffline) {
