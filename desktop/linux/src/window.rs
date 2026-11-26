@@ -1140,6 +1140,23 @@ impl Shell {
                 }
             }),
         );
+        // A Home shelf's View all: Search, on the shelf's query.
+        add(
+            "browse",
+            Some(glib::VariantTy::STRING),
+            Box::new(move |s, a| {
+                if s.is_reader() {
+                    return;
+                }
+                let query = a.and_then(String::from_variant).and_then(|q| {
+                    serde_json::from_str::<kaeri_model::search::SearchQuery>(&q).ok()
+                });
+                s.go(Dest::Search);
+                if let Some(query) = query {
+                    s.search_page().browse(&query);
+                }
+            }),
+        );
         // Ctrl+1 to 8: Watch and Read first with both media, then the sidebar's order.
         add(
             "go-section",
