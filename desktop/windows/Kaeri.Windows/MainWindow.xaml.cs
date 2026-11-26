@@ -854,6 +854,7 @@ public sealed partial class MainWindow : Window
     void Heard(IReadOnlyList<Event> batch)
     {
         PartyHeard(batch);
+        RoomHeard(batch);
         foreach (var e in batch)
         {
             // --play: Home's spotlight, the title Continue leads with, once the engine has it. Before

@@ -324,6 +324,39 @@ public sealed class Known
     /// <summary>What this device may do in the conversation now, once the room's server has said.</summary>
     public PartyChatState? PartyChatState { get; private set; }
 
+    /// <summary>The room this device is in, or null when it is in none.</summary>
+    public RoomView? Room { get; private set; }
+
+    /// <summary>The room's members, once it has listed them.</summary>
+    public RoomMember[] RoomMembers { get; private set; } = [];
+
+    /// <summary>The room's conversation as the engine last sent it, whole.</summary>
+    public RoomConversation? RoomChat { get; private set; }
+
+    /// <summary>What this device may do in the room's chat now.</summary>
+    public RoomChatState? RoomChatState { get; private set; }
+
+    /// <summary>An invite or recent room looked into and not joined yet.</summary>
+    public RoomGlimpse? RoomGlimpse { get; private set; }
+
+    /// <summary>Why looking into a recent room failed.</summary>
+    public string? RoomLookFailure { get; private set; }
+
+    /// <summary>The last ten rooms, kept on this device, newest first.</summary>
+    public RoomRecent[] RoomRecent { get; private set; } = [];
+
+    /// <summary>Whether the engine has sent the recent rooms yet, even as none.</summary>
+    public bool RoomRecentLoaded { get; private set; }
+
+    /// <summary>Someone moved the room and asked this device along; gone once answered or expired.</summary>
+    public RoomMoveOffer? RoomMoveOffer { get; private set; }
+
+    /// <summary>Why the last room ended, for the place to say (null after a plain Leave).</summary>
+    public RoomLeftWhy? RoomLeftWhy { get; private set; }
+
+    /// <summary>The relays Settings sets for new rooms, once loaded.</summary>
+    public RoomRelaySettings? RoomRelays { get; private set; }
+
     /// <summary>The AniList account, when signed in.</summary>
     /// <summary>The engine's jobs running now, for the title bar's status.</summary>
     public Jobs Jobs { get; } = new();
@@ -686,6 +719,59 @@ public sealed class Known
                 break;
             case Event.PartyChatState c:
                 PartyChatState = c.V1;
+                break;
+            case Event.RoomJoined j:
+                if (Room is null || Room.RoomId != j.V1.RoomId)
+                {
+                    RoomMembers = [];
+                    RoomChat = null;
+                    RoomChatState = null;
+                }
+                Room = j.V1;
+                RoomGlimpse = null;
+                RoomLeftWhy = null;
+                break;
+            case Event.RoomState r:
+                Room = r.V1;
+                break;
+            case Event.RoomMembers m:
+                RoomMembers = m.V1;
+                break;
+            case Event.RoomChat c:
+                RoomChat = c.V1;
+                break;
+            case Event.RoomChatState c:
+                RoomChatState = c.V1;
+                break;
+            case Event.RoomGlimpse g:
+                RoomGlimpse = g.V1;
+                RoomLookFailure = null;
+                RoomLeftWhy = null;
+                break;
+            case Event.RoomLookFailed f:
+                RoomGlimpse = null;
+                RoomLookFailure = f.Reason.Text();
+                break;
+            case Event.RoomRecent r:
+                RoomRecent = r.V1;
+                RoomRecentLoaded = true;
+                break;
+            case Event.RoomMoveOffer o:
+                RoomMoveOffer = o.V1;
+                break;
+            case Event.RoomMoveOfferGone g when RoomMoveOffer?.Id == g.Id:
+                RoomMoveOffer = null;
+                break;
+            case Event.RoomRelays r:
+                RoomRelays = r.V1;
+                break;
+            case Event.RoomLeft l:
+                Room = null;
+                RoomMembers = [];
+                RoomChat = null;
+                RoomChatState = null;
+                RoomGlimpse = null;
+                RoomLeftWhy = l.Why is global::Kaeri.Engine.Model.RoomLeftWhy.Left ? null : l.Why;
                 break;
             case Event.Update u:
                 // A check that found nothing new leaves a release found before on offer only

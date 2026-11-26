@@ -258,6 +258,8 @@ public sealed partial class PlayerView : UserControl
         ShowControls();
         LiftSubtitles(animated: false);
         tick.Start();
+        // In a room, the player is the room: its column comes with it.
+        ctx?.Window.ShowRoomNow();
         ShowStats();
         ChatReflect();
         // Just made visible, the view has no layout yet and WinUI refuses it the focus, which
@@ -1681,8 +1683,11 @@ public sealed partial class PlayerView : UserControl
     {
         if (InRoom)
             ToggleRoomColumn();
-        else
-            ShowParty();
+        else if (ctx?.Known.Room is not null)
+            ctx.Window.ShowRoomNow(morph: true);
+        else if (ctx is not null && playingId != 0 && playingEpisode is { Length: > 0 } episode)
+            // Watch together from the player: the player becomes the room.
+            ctx.Window.StartRoom(playingId, episode);
     }
 
     /// <summary>The party's panel when in one; the form that starts one when not.</summary>

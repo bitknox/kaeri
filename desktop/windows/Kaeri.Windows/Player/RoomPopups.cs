@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 using Kaeri.App;
-using Kaeri.App.RoomStand;
+using Kaeri.Engine.Model;
 using Kaeri.Windows.Pages;
 using Microsoft.UI.Text;
 using Microsoft.UI.Xaml;
@@ -55,7 +55,8 @@ static class RoomPopups
     {
         var body = new StackPanel { Spacing = 0 };
         body.Children.Add(Heading(RoomWords.Invite));
-        body.Children.Add(Note(RoomWords.InviteBody));
+        body.Children.Add(Note(RoomWords.InviteAnyone));
+        body.Children.Add(Note(RoomWords.InviteKey));
         var row = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 10, 0, 0) };
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
