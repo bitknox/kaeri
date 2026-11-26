@@ -3716,8 +3716,13 @@ impl Reader {
                 return self.tab_into_chrome(back);
             }
             K::Escape => self.close(),
+            // Left and Right follow the page; in a strip they do nothing.
+            K::Right | K::Left if self.flows() => return false,
             K::Right => self.turn(!rtl, TurnHow::Key),
             K::Left => self.turn(rtl, TurnHow::Key),
+            K::space | K::KP_Space if modifiers.contains(gdk::ModifierType::SHIFT_MASK) => {
+                self.turn(false, TurnHow::Key);
+            }
             K::space | K::Page_Down | K::Down => self.turn(true, TurnHow::Key),
             K::Page_Up | K::Up => self.turn(false, TurnHow::Key),
             // A novel's first and last page are the chapter's, across its spine's documents.
@@ -3751,6 +3756,9 @@ impl Reader {
                 self.ask_page();
                 turned = false;
             }
+            // ] and [ change chapter.
+            K::bracketright => self.step_chapter(1),
+            K::bracketleft => self.step_chapter(-1),
             _ => return false,
         }
         if turned {
