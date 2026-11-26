@@ -63,6 +63,8 @@ public enum RoomLeaveAsk: Equatable, Sendable {
     case leave
     /// ⌘W or the window's close: Leave, Keep the room or Cancel.
     case close
+    /// ⌘Q on a Mac with the player up: Cancel or Leave, and Leave quits.
+    case quit
 }
 
 /// Which of the column's popovers is open.
@@ -151,6 +153,10 @@ public final class RoomModel {
     @ObservationIgnored public var playerShown = false
     /// Closes the player, for Leave and Keep the room from ⌘W.
     @ObservationIgnored public var closesPlayer: @MainActor () -> Void = {}
+    /// Quits the app once the room is left on the way out (⌘Q's Leave).
+    @ObservationIgnored public var quits: @MainActor () -> Void = {}
+    /// The room was left to quit: the quit that follows asks nothing more.
+    @ObservationIgnored public private(set) var leftToQuit = false
     /// Open sources and Search titles, from no source: the app's own places.
     @ObservationIgnored public var showSources: @MainActor () -> Void = {}
     @ObservationIgnored public var showSearch: @MainActor (String) -> Void = { _ in }
@@ -402,9 +408,21 @@ public final class RoomModel {
 
     public func leave() {
         let closing = leaving == .close
+        let quitting = leaving == .quit
         leaving = nil
+        if quitting {
+            leaveToQuit()
+            quits()
+            return
+        }
         act(.leave)
         if closing { closesPlayer() }
+    }
+
+    /// Leave on the way out of the app: the quit that follows asks nothing more.
+    public func leaveToQuit() {
+        leftToQuit = true
+        act(.leave)
     }
 
     /// Keep the room: the player closes and this device stays in.
@@ -421,6 +439,17 @@ public final class RoomModel {
         leaving = .close
         return true
     }
+
+    /// ⌘Q in a room with the player up: Cancel or Leave, asked over the player as ⌘W is. Without
+    /// the player the app asks in an alert of its own (`asksInAlertBeforeQuitting`).
+    public func asksBeforeQuitting() -> Bool {
+        guard inRoom, playerShown, !leftToQuit else { return false }
+        leaving = .quit
+        return true
+    }
+
+    /// ⌘Q in a room kept with the player closed: nothing of the room is on screen to ask in.
+    public var asksInAlertBeforeQuitting: Bool { inRoom && !playerShown && !leftToQuit }
 
     /// Join, on Watch together's page: the pasted link.
     public func join() {

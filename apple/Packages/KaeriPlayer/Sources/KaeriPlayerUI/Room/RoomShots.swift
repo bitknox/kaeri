@@ -66,6 +66,8 @@ public enum RoomScene: String, CaseIterable, Sendable {
     // Leaving
     case leave
     case cmdw
+    /// ⌘Q with the player up.
+    case quit
     // Up next and Skip
     case upnext
     case skip
@@ -183,7 +185,7 @@ enum RoomStage {
         case .moveoffer: .moveOffer
         case .moved: .movedAway
         case .placejoinfail: .unreachable
-        case .watching, .invite, .details, .editrelays, .leave, .cmdw, .skip, .movestart, .movepick, .full, .hidden,
+        case .watching, .invite, .details, .editrelays, .leave, .cmdw, .quit, .skip, .movestart, .movepick, .full, .hidden,
              .menu, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail:
             .watching
         }
@@ -247,6 +249,7 @@ extension PlayerModel {
         case .editrelays: room.popover = .editRelays
         case .leave: room.leaving = .leave
         case .cmdw: room.leaving = .close
+        case .quit: room.leaving = .quit
         case .movepick:
             // Ren muted: Move leaves a muted member unticked.
             if let ren = room.members.first(where: { $0.name == "Ren" }) { room.mute(ren, true) } // i18n-skip

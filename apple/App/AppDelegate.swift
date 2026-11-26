@@ -428,6 +428,8 @@ extension AppDelegate: NSApplicationDelegate {
     /// never the menu bar alone.
     func applicationDidFinishLaunching(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in self?.showMainWindowIfNone() }
+        // ⌘Q's Leave, asked over the player: the room is left, then the app quits.
+        store.room.quits = { NSApp.terminate(nil) }
     }
 
     /// The Dock icon clicked, or the app opened again from the Finder, with no window up: the
@@ -451,6 +453,22 @@ extension AppDelegate: NSApplicationDelegate {
     }
 
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
+        // In a room, quitting leaves it: asked over the player as ⌘W is, or in an alert when the
+        // room is kept with the player closed. The others keep watching either way.
+        if store.room.asksBeforeQuitting() {
+            NSApp.activate()
+            return .terminateCancel
+        }
+        if store.room.asksInAlertBeforeQuitting {
+            let alert = NSAlert()
+            alert.messageText = RoomCopy.leaveTheRoom
+            alert.informativeText = RoomCopy.othersKeepWatching
+            alert.addButton(withTitle: RoomCopy.leave)
+            alert.addButton(withTitle: RoomCopy.cancel)
+            NSApp.activate()
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            store.room.leaveToQuit()
+        }
         if store.tv.cast.connected {
             // This Mac serves the episode: quitting ends it on the TV, so it asks first.
             let name = store.tv.cast.heldName
