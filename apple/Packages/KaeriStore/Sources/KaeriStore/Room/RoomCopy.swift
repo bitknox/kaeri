@@ -6,8 +6,6 @@ import KaeriKit
 import KaeriStrings
 
 public enum RoomCopy {
-    /// The catalogue counts episodes as whole numbers; a "7.5" shows as its whole part.
-    static func number(_ episode: String) -> Int { Int(episode) ?? Int(Double(episode) ?? 0) }
 
     // MARK: Words on a row
 
@@ -18,9 +16,9 @@ public enum RoomCopy {
     public static func behind(_ s: Int) -> String { L.roomStateBehind(seconds: s) }
     public static func loading(_ s: Int) -> String { L.roomStateLoading(seconds: s) }
     public static func buffering(_ s: Int) -> String { L.roomStateBuffering(seconds: s) }
-    public static func onEpisode(_ episode: String) -> String { L.roomStateOtherEpisode(episode: number(episode)) }
+    public static func onEpisode(_ episode: String) -> String { L.roomStateOtherEpisode(episode: episode) }
     public static var choosing: String { L.roomStateChoosing }
-    public static func noSourceFor(_ episode: String) -> String { L.roomStateNoSource(episode: number(episode)) }
+    public static func noSourceFor(_ episode: String) -> String { L.roomStateNoSource(episode: episode) }
     public static var playerClosed: String { L.roomStatePlayerClosed }
     public static var reconnecting: String { L.roomStateReconnecting }
     public static var left: String { L.roomStateLeft }
@@ -37,10 +35,10 @@ public enum RoomCopy {
     // MARK: The room's line
 
     public static var watchingTogether: String { L.roomLineWatching }
-    public static func episodeAt(_ episode: String, _ at: String) -> String { L.roomLineWatchingDetail(episode: number(episode), at: at) }
+    public static func episodeAt(_ episode: String, _ at: String) -> String { L.roomLineWatchingDetail(episode: episode, at: at) }
     public static func invitedBy(_ name: String) -> String { L.roomInvitedBy(name: name) }
     public static func invitedDetail(_ title: String, _ episode: String) -> String {
-        L.roomInvitedDetail(title: title, episode: number(episode))
+        L.roomInvitedDetail(title: title, episode: episode)
     }
     public static func overCap(_ n: Int) -> String { L.roomInvitedOver(count: n) }
     public static func relaysDown(_ down: Int, _ of: Int) -> String { L.roomLineRelaysDown(count: down, total: of) }
@@ -59,7 +57,7 @@ public enum RoomCopy {
     public static func waited(_ s: Int) -> String { L.roomLineWaited(seconds: s) }
     public static func startingWhen(_ names: [String]) -> String { L.roomLineStartingWhen(names: Self.names(names), count: names.count) }
     public static func upNextIn(_ s: Int) -> String { L.roomLineUpNext(seconds: s) }
-    public static func playsForEveryone(_ episode: String) -> String { L.roomLineUpNextDetail(episode: number(episode)) }
+    public static func playsForEveryone(_ episode: String) -> String { L.roomLineUpNextDetail(episode: episode) }
     public static func carriedOn(_ by: String, _ past: [String]) -> String {
         past.count == 1 ? L.roomLineCarriedOnOne(carrier: by, name: past[0]) : L.roomLineCarriedOnMany(carrier: by)
     }
@@ -112,16 +110,16 @@ public enum RoomCopy {
     public static var roomIsWatching: String { L.roomRoomIsWatching }
     public static func minutes(_ m: Int) -> String { L.roomMinutes(minutes: m) }
     public static var playsFromYourSources: String { L.roomPlaysFromSources }
-    public static func chooseSourceFor(_ episode: String) -> String { L.roomChooseSource(episode: number(episode)) }
+    public static func chooseSourceFor(_ episode: String) -> String { L.roomChooseSource(episode: episode) }
     public static var roomKeepsWatching: String { L.roomChooseSourceLine }
     public static var playInTheRoom: String { L.roomPlayInRoom }
-    public static func noneHas(_ episode: String) -> String { L.roomNoSourceTitle(episode: number(episode)) }
+    public static func noneHas(_ episode: String) -> String { L.roomNoSourceTitle(episode: episode) }
     public static func lookedIn(_ n: Int) -> String { L.roomNoSourceLine(count: n) }
     public static var youStay: String { L.roomNoSourceLineShort }
     public static var openSources: String { L.roomOpenSources }
     public static var searchTitles: String { L.roomSearchTitles }
     public static func roomPausedUntil(_ s: Int) -> String { L.roomPausedUntilStart(seconds: s) }
-    public static func startingEpisode(_ episode: String) -> String { L.roomStartingEpisode(episode: number(episode)) }
+    public static func startingEpisode(_ episode: String) -> String { L.roomStartingEpisode(episode: episode) }
 
     // MARK: Chat
 
@@ -149,7 +147,7 @@ public enum RoomCopy {
 
     public static var upNextForRoom: String { L.roomUpNext }
     public static func upNextEpisode(_ episode: String, _ name: String?) -> String {
-        name.map { L.roomUpNextEpisode(episode: number(episode), title: $0) } ?? L.roomUpNextEpisodePlain(episode: number(episode))
+        name.map { L.roomUpNextEpisode(episode: episode, title: $0) } ?? L.roomUpNextEpisodePlain(episode: episode)
     }
     public static func playsForEveryoneIn(_ s: Int) -> String { L.roomUpNextCount(seconds: s) }
     public static func waitingToFinish(_ names: [String]) -> String { L.roomUpNextWaiting(name: Self.names(names)) }
@@ -230,13 +228,13 @@ public enum RoomCopy {
     public static var oldInvite: String { L.roomErrorOldInvite }
     public static func withNames(_ episode: String, _ names: [String], _ when: String) -> String {
         names.isEmpty
-            ? L.roomRecentRowAlone(episode: number(episode), when: when)
-            : L.roomRecentRow(episode: number(episode), names: list(names), when: when)
+            ? L.roomRecentRowAlone(episode: episode, when: when)
+            : L.roomRecentRow(episode: episode, names: list(names), when: when)
     }
 
     // MARK: Phone
 
-    public static func inTheRoom(_ episode: String, _ n: Int) -> String { L.roomHeaderLine(episode: number(episode), count: n) }
+    public static func inTheRoom(_ episode: String, _ n: Int) -> String { L.roomHeaderLine(episode: episode, count: n) }
 
     // MARK: Joining names
 

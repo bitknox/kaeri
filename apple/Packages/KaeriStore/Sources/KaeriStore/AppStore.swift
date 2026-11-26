@@ -1278,8 +1278,11 @@ public final class AppStore {
         case .roomJoined, .roomState, .roomMembers, .roomMessage, .roomChat, .roomChatState, .roomLeft, .roomStarted,
              .roomGlimpse, .roomLookFailed, .roomRecent, .roomMoveOffer, .roomMoveOfferGone:
             room.apply(event)
-        case .roomReaction, .roomChatRefused, .roomNoSource, .roomLastOut, .roomFlushed, .roomRelays:
-            // The room's view says no source and the chat's wait; reactions show as its lines.
+        case .roomNoSource:
+            // The room's view says no source; the player steps aside for its panel.
+            onPlayback?(event)
+        case .roomReaction, .roomChatRefused, .roomLastOut, .roomFlushed, .roomRelays:
+            // The chat's wait; reactions show as its lines.
             break
 
         case .widgetSnapshot(let data):

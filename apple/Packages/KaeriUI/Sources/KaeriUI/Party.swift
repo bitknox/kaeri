@@ -89,8 +89,14 @@ public struct PartySheets: ViewModifier {
             }
             // An invite opens its lobby in Watch together, looking in first.
             .onOpenURL { url in
-                guard !overPlayer, PartyLinks.isInvite(url) else { return }
-                party.openLink(url.absoluteString)
+                guard !overPlayer else { return }
+                if RoomLinks.isInvite(url) {
+                    // A room's invite: the room shows behind its banner in Watch together first.
+                    store.room.open(invite: url.absoluteString)
+                    navigator.showTogether(lobby: false, store: store)
+                } else if PartyLinks.isInvite(url) {
+                    party.openLink(url.absoluteString)
+                }
             }
             .onChange(of: party.lobbyShown) { _, shown in
                 if shown, !overPlayer { navigator.showTogether(lobby: true, store: store) }

@@ -244,3 +244,15 @@ struct RoomPlaceCard: View {
         }
     }
 }
+
+/// A room's invite links, which the engine reads: `kaeri://room#…`, the way the system hands one
+/// to the app, and `https://kaeri.app/room#…`, as people paste and share them.
+enum RoomLinks {
+    static func isInvite(_ url: URL) -> Bool {
+        switch url.scheme?.lowercased() {
+        case "kaeri": url.host?.lowercased() == "room"
+        case "https": url.host?.lowercased() == "kaeri.app" && url.path.lowercased() == "/room"
+        default: false
+        }
+    }
+}

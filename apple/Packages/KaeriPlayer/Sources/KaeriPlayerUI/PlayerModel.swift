@@ -507,9 +507,9 @@ public final class PlayerModel {
                 verdictPending = false
                 dismiss()
             }
-        case .partyNoSource:
-            // The party's own sheet says why nothing plays and offers its sources: the player's
-            // failure would say it twice, under it.
+        case .partyNoSource, .roomNoSource:
+            // The party's own sheet, or the room's panel over the video, says why nothing plays
+            // and offers the sources: the player's failure would say it twice, under it.
             partySaysWhy = true
         case .sourcesProgress(let id, let episode, let rows):
             if panelReleases?.id == id, panelReleases?.episode == episode {
