@@ -578,7 +578,10 @@ struct PhoneCalendar: View {
             return
         }
         guard !reduceMotion else {
-            withAnimation(.standard) { position.scrollTo(id: today, anchor: .top) }
+            // Under Reduce Motion, straight there: no scroll over the days between.
+            var jump = Transaction()
+            jump.disablesAnimations = true
+            withTransaction(jump) { position.scrollTo(id: today, anchor: .top) }
             return
         }
         // A screen short of today on the side the agenda is on, inside the days it holds.
