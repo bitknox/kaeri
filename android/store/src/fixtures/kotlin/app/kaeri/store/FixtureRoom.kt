@@ -72,7 +72,10 @@ object FixtureRoom {
             // The room's episode in the player, unless the room already opened it.
             if (!waited(5) { presented() }) {
                 val episode = store.room.view.value?.episode
-                if (episode != null) store.send(Command.Play(episode.id, episode.episode))
+                if (episode != null) {
+                    log("the room opened no player: playing ${episode.episode} here")
+                    store.send(Command.Play(episode.id, episode.episode))
+                }
             }
             if (pictureless(scene)) {
                 // The play fails on its own; give it the time to say so.

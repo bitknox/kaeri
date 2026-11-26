@@ -180,6 +180,16 @@ fun TvRoom(
     SideEffect { state.carry = carry != null }
     LaunchedEffect(focusCarry, carry != null) { if (focusCarry && carry != null) runCatching { carryFocus.requestFocus() } }
     val mode = state.mode
+    // As on the phone, the strip shows for 8 s after anyone's state changes; and while this device
+    // is paused with the room, since the controls stay down then.
+    val change = members.map { it.id to it.state } to v.waiting.map { it.id }
+    var recent by remember { mutableStateOf(false) }
+    LaunchedEffect(change) {
+        recent = true
+        kotlinx.coroutines.delay(RoomWords.STRIP_AFTER_CHANGE_MS)
+        recent = false
+    }
+    val paused = members.any { it.you && it.state == MemberState.PAUSED }
 
     BoxWithConstraints(modifier.fillMaxSize().background(ObiSilk.Ground).onFocusChanged { state.holdsFocus = it.hasFocus }) {
         // One video box, drawn once, that moves between the full screen and the rail's 640 x 360,
@@ -209,7 +219,7 @@ fun TvRoom(
         val top = moving(stripTop, "tv-strip-top") // i18n-skip
         if (!rail) {
             val o = offer
-            val wanted = forceStrip || RoomWords.stripWanted(v, members) || o != null || carry != null
+            val wanted = forceStrip || recent || paused || RoomWords.stripWanted(v, members) || o != null || carry != null
             KeptFade(if (wanted) v else null, Modifier.align(Alignment.TopEnd).padding(top = top, end = 48.dp)) { sv ->
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     TvStrip(sv, members, now, positionS, carry, carryFocus) { room.send(RoomCommand.CarryOn) }
