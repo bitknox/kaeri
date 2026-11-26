@@ -192,7 +192,7 @@ private fun CommentCard(comment: CommentView, depth: Int, view: DiscussionView, 
                     // A screen reader reads the text whatever its colour: until opened, each spoiler is
                     // the word "Spoiler" to it, as the bar is to the eye.
                     modifier = if (hidden) {
-                        Modifier.clearAndSetSemantics { text = AnnotatedString(spokenBlock(block.spans.map { it.spoiler to it.text }, spoiler)) }
+                        Modifier.clearAndSetSemantics { text = AnnotatedString(spokenSpans(block.spans.map { it.spoiler to it.text }, spoiler)) }
                     } else {
                         Modifier
                     },
@@ -206,17 +206,18 @@ private fun CommentCard(comment: CommentView, depth: Int, view: DiscussionView, 
 }
 
 /** A block's text as a screen reader gets it: each hidden ([Pair.first]) span read as [spoiler]. */
-internal fun spokenBlock(spans: List<Pair<Boolean, String>>, spoiler: String): String = buildString {
+internal fun spokenSpans(spans: List<Pair<Boolean, String>>, spoiler: String): String = buildString {
     var lastHidden = false
     for ((hidden, text) in spans) {
         if (hidden) {
             // Spans of one spoiler side by side say the word once.
             if (!lastHidden) {
-                if (isNotEmpty() && !last().isWhitespace()) append(' ')
+                if (isNotEmpty() && !last().isWhitespace() && last() !in "([{\"'") append(' ') // i18n-skip
                 append(spoiler)
             }
         } else {
-            if (lastHidden && text.isNotEmpty() && !text.first().isWhitespace()) append(' ')
+            // A word straight after the spoiler gets a space; punctuation keeps to it.
+            if (lastHidden && text.isNotEmpty() && text.first().isLetterOrDigit()) append(' ')
             append(text)
         }
         lastHidden = hidden
