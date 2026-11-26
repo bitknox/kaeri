@@ -350,12 +350,14 @@ private fun OpenReader(
     // Back closes the reader wherever its screens have no Back of their own, such as the e-ink
     // questions; the app under it takes none while it is open.
     ReaderBackHandler(enabled = !leaving) { ReaderLauncher.close() }
+    val systemDark = androidx.compose.foundation.isSystemInDarkTheme()
     // Closing, the reader keeps the focus from coming back to it: the app under it takes it again.
     CompositionLocalProvider(LocalReaderLeaving provides leaving) {
         Box(
             Modifier
                 .fillMaxSize()
-                .readerSurface(density, eink = request.eink, dark = true) { surface ->
+                // The system's dark state, which a System-look novel opens in.
+                .readerSurface(density, eink = request.eink, dark = systemDark) { surface ->
                     if (!opened[0]) {
                         opened[0] = true
                         val title = store.reading.series.value[request.work]?.titles?.display
