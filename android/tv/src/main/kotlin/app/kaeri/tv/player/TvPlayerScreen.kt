@@ -341,7 +341,11 @@ fun TvPlayerScreen(
         if (event.type != KeyEventType.KeyDown) return false
         return when (event.key) {
             Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
-                if (model.corner == PlayerModel.Corner.Undo) {
+                if (rail) {
+                    // OK on the rail: the full picture with the controls, as its hint says.
+                    roomState.full()
+                    show(ChromeFocus.Play)
+                } else if (model.corner == PlayerModel.Corner.Undo) {
                     model.undoSkip()
                 } else if (skipFresh) {
                     model.takeSkip()

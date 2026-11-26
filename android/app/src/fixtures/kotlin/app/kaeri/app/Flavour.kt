@@ -67,7 +67,8 @@
 //             chatloop and bar wait for `am broadcast -a app.kaeri.fixtures.PARTY_GO` before
 //             their timeline, so a recording can roll first
 //   room      the room on the testing engine's fake room (FfiRoomScene, as before-play, watching,
-//             wait-loading, up-next, move-offer, ...): scenes with a player open the room's episode
+//             wait-loading, up-next, move-offer, ...): scenes with a player open the room's episode;
+//             roomat=<ms> plays the episode alone first and joins the room that long after
 
 package app.kaeri.app
 
@@ -326,7 +327,7 @@ internal object Flavour {
         if (!reachedReading(intent, store)) return false
         FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
             val app = appContext as? KaeriApp ?: return false
-            return FixtureRoom.stage(scene, store) { app.player.isPresented && app.player.hasPicture }
+            return FixtureRoom.stage(scene, store, { app.player.isPresented && app.player.hasPicture }, intent.getStringExtra("roomat")?.toLongOrNull())
         }
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
             val app = appContext as? KaeriApp ?: return false
