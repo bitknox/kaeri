@@ -68,6 +68,7 @@ import app.kaeri.engine.ffi.parseRoomTarget
 import app.kaeri.engine.model.RoomCommand
 import app.kaeri.engine.model.RoomRecent
 import app.kaeri.engine.model.RoomView
+import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import app.kaeri.store.room.RoomCopy
 import app.kaeri.store.room.RoomWords
