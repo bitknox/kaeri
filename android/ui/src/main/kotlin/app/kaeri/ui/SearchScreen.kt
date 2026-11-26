@@ -633,6 +633,19 @@ private fun FilterRow(query: SearchQuery, phone: Boolean, rowScroll: LazyListSta
                     }
                 }
             }
+            item(key = "available") {
+                // The common filters' last, as the spec's row has it; the Filters sheet keeps it too.
+                val choices = listOf<Available?>(null, Available.PLAYS_HERE, Available.ON_YOUR_SERVICES)
+                val names = listOf(stringResource(R.string.search_available_all), stringResource(R.string.search_available_here), stringResource(R.string.search_available_services))
+                MenuChip(words.available.label, selected = words.available.set, phone = phone, describe = words.available.spoken, modifier = slot()) { close ->
+                    choices.forEachIndexed { index, each ->
+                        Choice(names[index], each == query.available) {
+                            close()
+                            store.editSearch { it.copy(available = each) }
+                        }
+                    }
+                }
+            }
             if (!phone) {
                 item(key = "filters") {
                     val count = query.advancedCount()
