@@ -15,6 +15,10 @@ import kotlinx.coroutines.withContext
 import kotlinx.coroutines.withTimeoutOrNull
 
 object FixtureRoom {
+    /** The fake room's episode: Stardust Wayfarer, episode 9. */
+    private const val ID = 900001u
+    private const val EPISODE = "9"
+
     /** The fake room, held for the run: it stops when let go. */
     private var held: FfiFakeRoom? = null
 
@@ -36,11 +40,18 @@ object FixtureRoom {
      * Bring the room to [scene]; true once it is there. [presented] says whether the player is up
      * with a picture. The engine's stage blocks for a few seconds, so it runs off the main thread.
      */
-    suspend fun stage(scene: FfiRoomScene, store: AppStore, presented: () -> Boolean): Boolean {
+    suspend fun stage(scene: FfiRoomScene, store: AppStore, presented: () -> Boolean, after: Long? = null): Boolean {
         val engine = withTimeoutOrNull(60_000) {
             while (store.engine == null) delay(50)
             store.engine
         } ?: return false
+        // For the morph's recording: the player alone first, then the room joins [after] ms on.
+        if (after != null) {
+            store.send(Command.Play(ID, EPISODE))
+            if (!waited(60, presented)) return false.also { log("roomat: no picture") }
+            log("playing, the room in $after ms")
+            delay(after)
+        }
         val staged = withContext(Dispatchers.IO) {
             try {
                 val fake = engine.startFakeRoom().also { held = it }

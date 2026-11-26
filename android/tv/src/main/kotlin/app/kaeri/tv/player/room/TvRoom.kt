@@ -130,6 +130,12 @@ class TvRoomState(start: TvRoomMode = TvRoomMode.Full) {
         return true
     }
 
+    /** Back to the full picture, as OK on the rail does to bring the controls up. */
+    fun full() {
+        mode = TvRoomMode.Full
+        under = TvRoomMode.Full
+    }
+
     /** Up reaches Carry on when there is one. */
     fun up(): Boolean = carry && runCatching { carryFocus.requestFocus() }.isSuccess
 

@@ -139,7 +139,7 @@ internal object Flavour {
         }
         app.kaeri.store.FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
             MainScope().launch {
-                if (!app.kaeri.store.FixtureRoom.stage(scene, store) { player.isPresented && player.hasPicture }) Log.w(TvApp.TAG, "the room scene did not set up")
+                if (!app.kaeri.store.FixtureRoom.stage(scene, store, { player.isPresented && player.hasPicture }, intent.getStringExtra("roomat")?.toLongOrNull())) Log.w(TvApp.TAG, "the room scene did not set up")
             }
         }
         when (intent.getStringExtra("panel")) {
