@@ -164,9 +164,14 @@ private fun Airing.listProgress(context: Context): String? {
     return entry.episodes?.let { Strings.widgetLineOf(context, done.toInt(), it.toInt()) } ?: Strings.episodeNumberShort(context, done.toInt())
 }
 
-/** The tabs start two weeks back; the last is the ceiling the engine reports, four weeks ahead until it says. */
-private const val DAYS_BACK = 14
+/**
+ * The first tab is the floor and the last the ceiling the engine reports (the engine owns the
+ * range); until it says, the tabs start today and run four weeks ahead.
+ */
 private const val DAYS_AHEAD = 28
+
+/** How the picked day stands against what is loaded: on its way, or its page failed. */
+private enum class DayEdge { LOADING_EARLIER, LOADING_LATER, EARLIER_FAILED, LATER_FAILED }
 
 @Composable
 fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) -> Unit) {
@@ -187,7 +192,10 @@ fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
     // The last tab is the ceiling, counted from the anchor the engine reckoned it against.
     val ceilingDays = window.ceiling?.let { ceiling -> window.anchor?.let { ((ceiling - it) / 86_400L).toInt() } }
         ?.coerceAtLeast(0) ?: DAYS_AHEAD
-    var offset by rememberSaveable { mutableIntStateOf(store.calendar.opensOn.coerceIn(-DAYS_BACK, ceilingDays)) }
+    // The first tab is the floor, as far back from the same anchor.
+    val floorDays = window.floor?.let { floor -> window.anchor?.let { ((it - floor) / 86_400L).toInt() } }
+        ?.coerceAtLeast(0) ?: 0
+    var offset by rememberSaveable { mutableIntStateOf(store.calendar.opensOn.coerceIn(-floorDays, ceilingDays)) }
     val day = today.plusDays(offset.toLong())
     val airings = remember(window) { window.airings(now) }
     val shown = airings.filter { it.at.atZone(zone).toLocalDate() == day && (!onlyMine || it.entry.listStatus != null) }
@@ -196,7 +204,7 @@ fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
     // The line that marks now stands before the lead row; with every broadcast aired, after the last.
     val nowAt = if (offset == 0 && shown.isNotEmpty()) shown.indexOfFirst { it.at >= now }.takeIf { it >= 0 } ?: shown.size else null
     val list = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(0, lead - 1))
-    val tabs = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(0, DAYS_BACK + offset - 1))
+    val tabs = rememberLazyListState(initialFirstVisibleItemIndex = maxOf(0, floorDays + offset - 1))
     val scope = rememberCoroutineScope()
     // Back steps from a row to its tab, then to Today, then lets the rail have it.
     DisposableEffect(nav, memory) {
@@ -206,7 +214,7 @@ fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
                 offset != 0 -> {
                     offset = 0
                     scope.launch {
-                        tabs.scrollToItem(maxOf(0, DAYS_BACK - 1))
+                        tabs.scrollToItem(maxOf(0, floorDays - 1))
                         repeat(5) {
                             withFrameNanos { }
                             if (memory.focus("day/0")) return@launch
@@ -231,6 +239,19 @@ fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
     val loading = (state is ListState.Loading || state is ListState.Idle) && airings.isEmpty()
     val placeholders = placeholdersAfterWait(loading)
     val failed = state as? ListState.Failed
+    // A day beyond what is loaded is on its way, or its page failed: it says so rather than
+    // "Nothing airing", and a failed page keeps what arrived, with Try again.
+    val dayStart = day.atStartOfDay(zone).toInstant()
+    val earlier = window.morePast && airings.firstOrNull()?.at?.let { dayStart < it } == true
+    val later = window.moreAhead && airings.lastOrNull()?.at?.let { dayStart > it } == true
+    val dayEdge = when {
+        earlier && window.pastFailed -> DayEdge.EARLIER_FAILED
+        later && window.aheadFailed -> DayEdge.LATER_FAILED
+        earlier -> DayEdge.LOADING_EARLIER
+        later -> DayEdge.LOADING_LATER
+        else -> null
+    }
+    val edgePlaceholders = placeholdersAfterWait(dayEdge == DayEdge.LOADING_EARLIER || dayEdge == DayEdge.LOADING_LATER)
 
     // Left and Right on a row: the neighbouring day, at the row nearest the same time of day.
     var aim by remember { mutableStateOf<LocalTime?>(null) }
@@ -254,8 +275,9 @@ fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
 
     Column(Modifier.fillMaxSize().padding(start = Canvas.Keyline, top = Canvas.SafeY, end = Canvas.SafeX)) {
         androidx.compose.foundation.lazy.LazyRow(state = tabs, modifier = Modifier.focusRestorer(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            items(DAYS_BACK + ceilingDays + 1, key = { it }) { index ->
-                val tabOffset = index - DAYS_BACK
+            // Keyed by the day, so the floor arriving adds tabs before today without moving the row.
+            items(floorDays + ceilingDays + 1, key = { it - floorDays }) { index ->
+                val tabOffset = index - floorDays
                 TvTab(
                     dayLabel(context, today.plusDays(tabOffset.toLong()), today),
                     selected = tabOffset == offset,
@@ -293,6 +315,20 @@ fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
                 onAction = { store.loadCalendar(force = true) },
                 actionModifier = Modifier.firstFocus(memory, "retry"),
             )
+            dayEdge == DayEdge.EARLIER_FAILED || dayEdge == DayEdge.LATER_FAILED -> {
+                val past = dayEdge == DayEdge.EARLIER_FAILED
+                Text(
+                    if (past) Strings.calendarEarlierFailedLine(context) else Strings.calendarLaterFailedLine(context),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = ObiSilk.Haze,
+                )
+                Spacer(Modifier.height(12.dp))
+                TonalButton(
+                    onClick = { if (past) store.retryCalendarPast() else store.loadCalendarAhead(retry = true) },
+                    modifier = Modifier.remembered(memory, "edge-retry"),
+                ) { ButtonLabel(stringResource(R.string.action_try_again)) }
+            }
+            dayEdge != null -> if (edgePlaceholders) Column(verticalArrangement = Arrangement.spacedBy(4.dp)) { repeat(5) { AiringPlaceholder() } }
             shown.isEmpty() && !loading && onlyMine && airings.none { it.entry.listStatus != null && it.at >= now } -> {
                 Text(stringResource(R.string.calendar_empty_mine_ahead), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
                 Spacer(Modifier.height(12.dp))
@@ -316,7 +352,7 @@ fun CalendarScreen(nav: TvNavigator, memory: FocusMemory, onOpen: (AnilistId) ->
                             sheet = { planSheet(context, store, airing.entry, onOpen) },
                             onDay = { step ->
                                 val next = offset + step
-                                if (next !in -DAYS_BACK..ceilingDays) return@AiringRow false
+                                if (next !in -floorDays..ceilingDays) return@AiringRow false
                                 offset = next
                                 aim = airing.at.atZone(zone).toLocalTime()
                                 true

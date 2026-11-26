@@ -334,13 +334,13 @@ fun TvPlayerScreen(
         if (event.type != KeyEventType.KeyDown) return false
         return when (event.key) {
             Key.DirectionCenter, Key.Enter, Key.NumPadEnter -> {
-                if (model.corner == PlayerModel.Corner.Undo) {
-                    model.undoSkip()
-                } else if (skipFresh) {
-                    model.takeSkip()
-                } else {
-                    model.togglePause()
-                    show(ChromeFocus.Play)
+                when (centerKey(undoShown = model.corner == PlayerModel.Corner.Undo, skipLive = skip != null)) {
+                    CenterKey.UNDO -> model.undoSkip()
+                    CenterKey.SKIP -> model.takeSkip()
+                    CenterKey.PAUSE -> {
+                        model.togglePause()
+                        show(ChromeFocus.Play)
+                    }
                 }
                 true
             }
@@ -671,15 +671,26 @@ private fun Chrome(
             val party = onReact != null
             val pad = if (party) 16.dp else 20.dp
             fun icon(glyph: ImageVector) = glyph.takeUnless { party }
+            // A screen reader keeps the chrome up, which hides the corner's Skip and Undo pill and
+            // leaves Center to the focused button: so while one runs, the offer is a button at the
+            // row's start and a custom action on Play.
+            val context = LocalContext.current
+            val offer: Pair<String, () -> Unit>? = if (!model.assisted) null else when (model.corner) {
+                PlayerModel.Corner.Undo -> model.undo?.let { Strings.tvPlayerUndoPill(context, it.label(context)) to model::undoSkip }
+                PlayerModel.Corner.Skip -> model.skip?.let { it.label(context) to model::takeSkip }
+                else -> null
+            }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(if (party) 8.dp else 12.dp)) {
+                if (offer != null) TonalButton(onClick = offer.second, padding = pad) { ButtonLabel(offer.first) }
+                val offerAction = Modifier.semantics { if (offer != null) customActions = listOf(CustomAccessibilityAction(offer.first) { offer.second(); true }) }
                 val playLabel = stringResource(if (model.paused) R.string.action_play else R.string.action_pause)
                 val playIcon = if (model.paused) TvIcons.Play else TvIcons.Pause
                 if (party) {
-                    TonalButton(onClick = { model.togglePause() }, padding = 12.dp, modifier = Modifier.size(48.dp).focusRequester(playFocus)) {
+                    TonalButton(onClick = { model.togglePause() }, padding = 12.dp, modifier = Modifier.size(48.dp).focusRequester(playFocus).then(offerAction)) {
                         androidx.tv.material3.Icon(playIcon, contentDescription = playLabel, modifier = Modifier.size(24.dp))
                     }
                 } else {
-                    TonalButton(onClick = { model.togglePause() }, icon = playIcon, modifier = Modifier.focusRequester(playFocus)) { ButtonLabel(playLabel) }
+                    TonalButton(onClick = { model.togglePause() }, icon = playIcon, modifier = Modifier.focusRequester(playFocus).then(offerAction)) { ButtonLabel(playLabel) }
                 }
                 if (onReact != null) TonalButton(onClick = onReact, icon = app.kaeri.design.ChatGlyphs.Laugh, padding = pad, modifier = Modifier.focusRequester(reactFocus)) {
                     ButtonLabel(Strings.partyReact(LocalContext.current))
@@ -849,7 +860,7 @@ private fun SeekCount(model: PlayerModel, label: String) {
     }
 }
 
-/** The skip offer: silk while it holds Center, dimmed once it lets go. */
+/** The skip offer: silk for its first 8 s, dimmed after; Center takes it either way while it shows. */
 @Composable
 private fun SkipPill(label: String, fresh: Boolean, modifier: Modifier) {
     Box(

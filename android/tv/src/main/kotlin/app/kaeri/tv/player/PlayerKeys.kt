@@ -20,8 +20,22 @@ const val CHROME_HIDE = 5_000L
 /** How long after the last Left or Right the one seek goes. */
 const val SEEK_SETTLE = 500L
 
-/** How long a skip offer holds Center while the chrome is hidden. */
+/** How long a skip offer shows at full strength; it dims after, and Center still takes it. */
 const val SKIP_FRESH = 8_000L
+
+/** What Center does with the chrome hidden. */
+enum class CenterKey { UNDO, SKIP, PAUSE }
+
+/**
+ * Center with the chrome hidden: the Undo note's undo while it shows; the skip while the opening or
+ * ending it skips is still playing, even once its pill has dimmed ([skipLive]: the engine's offer
+ * holds only inside the stretch); else pause or play.
+ */
+fun centerKey(undoShown: Boolean, skipLive: Boolean): CenterKey = when {
+    undoShown -> CenterKey.UNDO
+    skipLive -> CenterKey.SKIP
+    else -> CenterKey.PAUSE
+}
 
 /**
  * Left and Right with the chrome hidden: each press adds 10 s to a running count, and one seek

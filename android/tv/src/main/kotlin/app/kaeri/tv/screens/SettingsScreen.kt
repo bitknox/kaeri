@@ -32,6 +32,8 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -162,7 +164,12 @@ fun SettingsScreen(nav: TvNavigator, memory: FocusMemory, start: SettingsSection
     ToTop(nav, memory, scrolled = { false }) {}
 
     Row(Modifier.fillMaxSize().padding(start = Canvas.Keyline, top = Canvas.SafeY, end = Canvas.SafeX)) {
-        Column(Modifier.width(256.dp).fillMaxHeight().focusRestorer(), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+        Column(
+            // The rows grow with the font size: past what fits, the column scrolls, focus bringing
+            // About and the last sections in.
+            Modifier.width(256.dp).fillMaxHeight().focusRestorer().verticalScroll(rememberScrollState()).padding(bottom = 27.dp),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
             Text(stringResource(R.string.settings_title), style = MaterialTheme.typography.headlineSmall, color = ObiSilk.Silk, modifier = Modifier.padding(start = 16.dp, bottom = 16.dp).semantics { heading() })
             // Ten sections at 40 each end inside the safe area, under the heading.
             SettingsSection.entries.forEach { each ->
@@ -550,11 +557,13 @@ private fun LazyListScope.pluginStores(nav: TvNavigator, memory: FocusMemory, fi
         val actions = LocalActions.current
         val context = LocalContext.current
         val stores by store.stores.stores.collectAsStateWithLifecycle()
+        // Leaving a store is asked first, as every destructive action is.
+        var leaving by remember { mutableStateOf<StoreRow?>(null) }
         Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             stores.forEachIndexed { index, row ->
                 TvListRow(
                     row.name,
-                    onClick = { actions?.open(storeSheet(context, store, row)) },
+                    onClick = { actions?.open(storeSheet(context, row) { leaving = row }) },
                     supporting = storeLine(context, row),
                     modifier = (if (index == 0) first else Modifier).remembered(memory, "store/${row.id}"),
                 )
@@ -563,6 +572,18 @@ private fun LazyListScope.pluginStores(nav: TvNavigator, memory: FocusMemory, fi
                 stringResource(R.string.stores_add_title),
                 onClick = nav::openJoinStore,
                 modifier = (if (stores.isEmpty()) first else Modifier).remembered(memory, "store/add"),
+            )
+        }
+        leaving?.let { row ->
+            ConfirmDialog(
+                title = stringResource(R.string.stores_leave_title, row.name),
+                body = stringResource(R.string.stores_leave_rejoin),
+                action = stringResource(R.string.action_leave),
+                onConfirm = {
+                    store.leaveStore(row.id)
+                    leaving = null
+                },
+                onCancel = { leaving = null },
             )
         }
     }
@@ -755,15 +776,15 @@ private fun storeLine(context: Context, row: StoreRow): String = listOfNotNull(
     },
 ).joinToString(" · ")
 
-/** A store's page as a panel: its plugins with their hosts, its key, and Leave. */
-private fun storeSheet(context: Context, store: AppStore, row: StoreRow): ActionSheet = ActionSheet(
+/** A store's page as a panel: its plugins with their hosts, its key, and Leave, which asks first. */
+private fun storeSheet(context: Context, row: StoreRow, onLeave: () -> Unit): ActionSheet = ActionSheet(
     row.name,
     body = {
         InfoLines(
             listOf(Strings.storesAddress(context) to row.host, Strings.storesKeyFingerprint(context) to row.fingerprint) +
                 row.plugins.map { plugin -> plugin.name to listOf(Strings.aboutVersion(context, plugin.version), plugin.hosts.joinToString(", ")).filter { it.isNotEmpty() }.joinToString(" · ") }, // i18n-skip
             action = Strings.storesLeave(context),
-            onAction = { store.leaveStore(row.id) },
+            onAction = onLeave,
         )
     },
 )
