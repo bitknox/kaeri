@@ -6,6 +6,8 @@ package app.kaeri.tv.ui
 import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.foundation.focusGroup
+import androidx.compose.foundation.focusable
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.ExperimentalComposeUiApi
 import app.kaeri.i18n.Strings
 import android.content.Context
@@ -146,9 +148,16 @@ private const val SCRIM = 0.32f
 @Composable
 private fun Sheet(host: ActionsHost, sheet: ActionSheet, modifier: Modifier) {
     val first = remember(sheet) { FocusRequester() }
+    val bodyFocus = remember(sheet) { FocusRequester() }
+    // Whether focus is somewhere in the panel, and whether its body has to hold focus itself: a
+    // body with nothing focusable and no actions under it would leave focus on the screen behind
+    // the scrim, where the D-pad would go on moving it.
+    var inside by remember(sheet) { mutableStateOf(false) }
+    var bodyHolds by remember(sheet) { mutableStateOf(false) }
     Column(
         modifier
             .width(panelWidth(sheet.width))
+            .onFocusChanged { inside = it.hasFocus }
             .panelFocus(sheet.title)
             .fillMaxHeight()
             .background(ObiSilk.RaisedHigh)
@@ -164,8 +173,14 @@ private fun Sheet(host: ActionsHost, sheet: ActionSheet, modifier: Modifier) {
         sheet.lead?.invoke()
         val body = sheet.body
         if (body != null) {
-            body()
-            return@Column
+            // With actions under it, the body takes only the room they leave, so they stay on screen.
+            val room = if (sheet.actions.isEmpty()) Modifier else Modifier.weight(1f, fill = false)
+            Box(
+                room
+                    .focusRequester(bodyFocus)
+                    .then(if (bodyHolds) Modifier.semantics(mergeDescendants = true) {}.focusable() else Modifier),
+            ) { body() }
+            if (sheet.actions.isEmpty()) return@Column
         }
         LazyColumn(verticalArrangement = Arrangement.spacedBy(4.dp)) {
             itemsIndexed(sheet.actions, key = { index, action -> "$index/${action.label}" }) { index, action ->
@@ -193,14 +208,27 @@ private fun Sheet(host: ActionsHost, sheet: ActionSheet, modifier: Modifier) {
         }
     }
     LaunchedEffect(sheet) {
-        // A body focuses its own.
-        if (sheet.body != null) return@LaunchedEffect
-        repeat(5) {
-            androidx.compose.runtime.withFrameNanos { }
-            if (first.tryFocus()) return@LaunchedEffect
+        if (sheet.body == null) {
+            repeat(5) {
+                androidx.compose.runtime.withFrameNanos { }
+                if (first.tryFocus()) return@LaunchedEffect
+            }
+            return@LaunchedEffect
         }
+        // A body focuses its own: give it the frames it takes, then the first action, then the body
+        // itself, read whole, when nothing in it can take focus.
+        repeat(BODY_FOCUS_FRAMES) {
+            androidx.compose.runtime.withFrameNanos { }
+            if (inside) return@LaunchedEffect
+        }
+        if (sheet.actions.isNotEmpty() && first.tryFocus()) return@LaunchedEffect
+        bodyHolds = true
+        bodyFocus.focusSoon()
     }
 }
+
+/** How many frames a sheet's body has to focus its own before the sheet focuses something for it. */
+private const val BODY_FOCUS_FRAMES = 12
 
 /** The five lists, the current one marked: Library's Change status. */
 fun statusSheet(context: Context, store: AppStore, id: AnilistId, title: String, current: LibrarySegment?): ActionSheet = ActionSheet(

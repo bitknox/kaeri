@@ -337,7 +337,8 @@ private fun SpotlightHero(
             // No source can play yet: the one way on is a plugin store, as on the title page.
             val addStore = LocalAddStore.current
             when {
-                action == HomeAction.NOTHING -> Text(Strings.homeSpotlightPlanning(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, modifier = Modifier.firstFocus(memory, SPOTLIGHT))
+                // Nothing to play: the line says so, and the Title page button beside it takes the first focus.
+                action == HomeAction.NOTHING -> Text(Strings.homeSpotlightPlanning(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
                 action == HomeAction.DETAILS -> AmberButton(
                     onClick = { onOpen(entry.id) },
                     icon = null,
@@ -365,7 +366,7 @@ private fun SpotlightHero(
             TonalButton(
                 onClick = { onOpen(entry.id) },
                 icon = TvIcons.Info,
-                modifier = Modifier.remembered(memory, "hero/title"),
+                modifier = if (action == HomeAction.NOTHING) Modifier.firstFocus(memory, SPOTLIGHT) else Modifier.remembered(memory, "hero/title"),
             ) { ButtonLabel(stringResource(R.string.tv_title_page)) }
         }
     }

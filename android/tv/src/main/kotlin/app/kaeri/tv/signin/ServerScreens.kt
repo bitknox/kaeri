@@ -121,6 +121,9 @@ fun AddServerScreen(onDone: () -> Unit) {
         when {
             certificate != null -> {
                 Text(stringResource(R.string.servers_cert_body, certificate.host), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 640.dp))
+                // The fingerprint and Allow this certificate, above Cancel: without them a server
+                // with its own certificate can't be added from the TV.
+                CertificateBlock(state)
                 val cancel = remember { FocusRequester() }
                 Row(Modifier.entryFocus(cancel)) { TonalButton(onClick = onDone, modifier = Modifier.focusRequester(cancel)) { ButtonLabel(stringResource(R.string.action_cancel)) } }
             }
