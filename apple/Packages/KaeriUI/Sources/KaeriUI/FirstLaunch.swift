@@ -402,9 +402,18 @@ struct FirstLaunch: View {
             }
             .fixedSize(horizontal: false, vertical: true)
         case .store(let invited)?:
-            Text(invited.name)
-                .font(.plat(mac: 13, touch: 15, weight: .semibold))
-                .foregroundStyle(.silk)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(invited.name)
+                    .font(.plat(mac: 13, touch: 15, weight: .semibold))
+                    .foregroundStyle(.silk)
+                // Who answers for the plugins, said before Join.
+                if let owner = invited.ownerLine {
+                    Text(owner)
+                        .font(.plat(mac: 12, touch: 13))
+                        .foregroundStyle(.haze)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         case nil:
             EmptyView()
         }

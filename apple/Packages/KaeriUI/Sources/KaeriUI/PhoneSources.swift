@@ -567,9 +567,14 @@ struct PhoneJoinStoreSheet: View {
                     .listRowBackground(Palette.raised)
                 }
             } footer: {
-                Text(invited.alreadyJoined
-                     ? L.storesAlreadyJoinedNote
-                     : L.storesNotFromApp)
+                // Who answers for the plugins, where the choice to join is made.
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(invited.alreadyJoined
+                         ? L.storesAlreadyJoinedNote
+                         : L.storesNotFromApp)
+                    if let owner = invited.ownerLine { Text(owner) }
+                    if !invited.alreadyJoined { Text(L.pluginRiskWarning) }
+                }
             }
         case nil:
             EmptyView()
