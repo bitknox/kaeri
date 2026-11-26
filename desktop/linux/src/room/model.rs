@@ -169,7 +169,11 @@ impl RoomView {
 pub enum ConvLine {
     /// What the room did: "Mika paused at 12:04".
     System(String),
-    Said { who: String, text: String, you: bool },
+    Said {
+        who: String,
+        text: String,
+        you: bool,
+    },
 }
 
 impl ConvLine {

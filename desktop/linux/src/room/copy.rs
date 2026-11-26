@@ -252,7 +252,11 @@ pub fn relays() -> String {
     t::room_relays()
 }
 pub fn relays_answering(up: usize, of: usize) -> String {
-    if up == of { t::room_relays_answering(n(of)) } else { t::room_relays_answering_of(n(up), n(of)) }
+    if up == of {
+        t::room_relays_answering(n(of))
+    } else {
+        t::room_relays_answering_of(n(up), n(of))
+    }
 }
 pub fn relay_rtt(ms: u32) -> String {
     t::room_relay_latency(i64::from(ms))

@@ -42,7 +42,8 @@ impl Panel {
             Some(MemberState::NoSource) => return Some(Self::NoSource { sources: count }),
             _ => {}
         }
-        matches!(view.before(now_ms), Some(Before::Idle | Before::Waiting)).then_some(Self::Before)
+        matches!(view.before(now_ms), Some(Before::Idle | Before::Waiting))
+            .then_some(Self::Before)
     }
 }
 
@@ -102,7 +103,8 @@ impl Banner {
         }
         let title = crate::widgets::show_title(&view.title, "page");
         title.set_xalign(0.0);
-        let episode = c::banner_episode(&view.episode, view.episode_title.as_deref(), view.minutes);
+        let episode =
+            c::banner_episode(&view.episode, view.episode_title.as_deref(), view.minutes);
         let button = |label: &str, pri: bool, a: Act| {
             let b = gtk::Button::with_label(label);
             b.add_css_class("pill");

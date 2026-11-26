@@ -3268,9 +3268,9 @@ impl PlayerView {
         let window = &self.ctx.window;
         match act {
             Act::PlayInRoom(i) => {
-                self.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::ChoosingSource {
-                    open: false,
-                }));
+                self.ctx.hub.send(Command::Room(
+                    kaeri_model::room::RoomCommand::ChoosingSource { open: false },
+                ));
                 let known = self.ctx.hub.known.borrow();
                 let Some(id) = self.title_id.get() else { return };
                 let provider = known
@@ -3281,15 +3281,18 @@ impl PlayerView {
                 drop(known);
                 let episode = self.episode_line.borrow().0.clone();
                 if let Some(provider) = provider {
-                    self.ctx.hub.send(Command::SetProviderPreference {
-                        id,
-                        provider: Some(provider),
-                    });
+                    self.ctx
+                        .hub
+                        .send(Command::SetProviderPreference { id, provider: Some(provider) });
                 }
                 self.ctx.hub.send(Command::Play { id, episode, from_start: false });
             }
             Act::OpenSources => {
-                let _ = WidgetExt::activate_action(window, "win.go", Some(&"providers".to_variant()));
+                let _ = WidgetExt::activate_action(
+                    window,
+                    "win.go",
+                    Some(&"providers".to_variant()),
+                );
             }
             Act::SearchTitles => {
                 let _ = WidgetExt::activate_action(window, "win.search", None);

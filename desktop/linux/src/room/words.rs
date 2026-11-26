@@ -106,12 +106,8 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
         return plain(c::line_reconnecting(), c::line_no_relay());
     }
     let shows = view.wait_shows(now_ms);
-    let waited: Vec<&str> = view
-        .waiting
-        .iter()
-        .filter(|w| shows && !w.you)
-        .map(|w| w.name.as_str())
-        .collect();
+    let waited: Vec<&str> =
+        view.waiting.iter().filter(|w| shows && !w.you).map(|w| w.name.as_str()).collect();
     let waits_for_you = shows && view.waiting.iter().any(|w| w.you);
     let oldest = view.waiting.iter().map(|w| w.since_ms).min().map(|s| secs_since(s, now_ms));
     if waits_for_you {
@@ -123,7 +119,11 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
             .collect();
         return Line {
             title: c::line_paused_for_you(),
-            sub: c::line_waiting_on_you(&join_names(&others), others.len(), oldest.unwrap_or(0)),
+            sub: c::line_waiting_on_you(
+                &join_names(&others),
+                others.len(),
+                oldest.unwrap_or(0),
+            ),
             buttons: LineButtons::DontWait,
             holds: true,
         };
@@ -291,7 +291,10 @@ pub fn anyone_not_watching(view: &RoomView) -> bool {
         || view.members.iter().any(|m| {
             !matches!(
                 m.state,
-                MemberState::Watching | MemberState::Ready | MemberState::Paused | MemberState::Left
+                MemberState::Watching
+                    | MemberState::Ready
+                    | MemberState::Paused
+                    | MemberState::Left
             )
         })
 }
