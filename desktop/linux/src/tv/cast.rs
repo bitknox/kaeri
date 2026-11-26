@@ -179,8 +179,11 @@ pub fn offers_for(notice: &Msg) -> Vec<Offer> {
         Msg::NoticeCastRefused { .. }
         | Msg::NoticeCastVideoCodec { .. }
         | Msg::NoticeCastAudioCodec { .. }
-        | Msg::NoticeCastContainer { .. } => vec![Offer::ChooseSource, Offer::PlayHere],
-        Msg::NoticeCastNeverFetches { .. } => vec![Offer::TryAgain, Offer::PlayHere],
+        | Msg::NoticeCastContainer { .. }
+        | Msg::NoticeCastSegment { .. } => vec![Offer::ChooseSource, Offer::PlayHere],
+        Msg::NoticeCastNeverFetches { .. } | Msg::NoticeCastLostStream { .. } => {
+            vec![Offer::TryAgain, Offer::PlayHere]
+        }
         Msg::NoticeCastDeepLink => vec![Offer::ChooseSource],
         _ => vec![Offer::PlayHere, Offer::ChooseAnother],
     }
@@ -792,6 +795,15 @@ mod tests {
             offers_for(&Msg::NoticeCastNotSameNetwork { name: name() }),
             vec![PlayHere, ChooseAnother]
         );
+        assert_eq!(
+            offers_for(&Msg::NoticeCastSegment { name: name() }),
+            vec![ChooseSource, PlayHere]
+        );
+        assert_eq!(
+            offers_for(&Msg::NoticeCastLostStream { name: name() }),
+            vec![TryAgain, PlayHere]
+        );
+        assert_eq!(offers_for(&Msg::NoticeCastNoDevice), vec![PlayHere, ChooseAnother]);
         assert_eq!(offers_for(&Msg::NoticeCastDeepLink), vec![ChooseSource]);
         assert_eq!(
             offers_for(&Msg::NoticeCastLost { name: name() }),
