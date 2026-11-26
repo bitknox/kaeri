@@ -100,7 +100,27 @@ public sealed class StartScreen(uint id, string episode, double? resume)
     bool announcedSlow;
 
     public bool DetailsOpen { get; set; }
+
+    /// <summary>
+    /// The version this start looks for, as the settings say, until a found stream names it: the
+    /// Subtitled/Dubbed switch shows from the first step, so a start that is slow or fails in one
+    /// can be started again in the other.
+    /// </summary>
+    public Translation? Configured { get; set; }
+
+    /// <summary>The version a show plays in as far as this app knows: its own setting where its sheet says one, else the session's.</summary>
+    public static Translation? InForce(SettingsView? settings, ShowSettingsView? show) =>
+        show?.Rows.FirstOrDefault(r => r.Key == ShowSettingKey.Translation && r.Own is not null)?.Value switch
+        {
+            "sub" => Translation.Sub,
+            "dub" => Translation.Dub,
+            _ => settings?.Translation,
+        };
+
     public bool Failed => failure is not null;
+
+    /// <summary>Whether a stream was found: from then on a switch of version goes to the player, not to a new search.</summary>
+    public bool StreamFound => found is not null;
 
     /// <summary>Whether the start is waiting for a connection.</summary>
     public bool Offline => shown.Phase == StartPhase.Waiting;
@@ -435,7 +455,7 @@ public sealed class StartScreen(uint id, string episode, double? resume)
             failed,
             shown.Phase == StartPhase.Buffering ? percent : null,
             Rows(at),
-            found?.Translation,
+            found?.Translation ?? Configured,
             DetailsOpen);
     }
 
