@@ -114,10 +114,13 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
             .disabled(covered)
             SurpriseMenuItem(store: store, navigator: navigator)
                 .disabled(covered)
+            #if os(macOS)
             // The palette is drawn in the window under the book, so it would take the keys unseen.
+            // Only the Mac's window draws it; the iPad's ⌘K would open nothing.
             Button(L.menuCommandPalette) { navigator.paletteShown.toggle() }
                 .keyboardShortcut("k", modifiers: .command)
                 .disabled(covered)
+            #endif
             Divider()
             Button(L.actionBack) {
                 if let playerBack, playerBack.isUp() {
@@ -185,7 +188,8 @@ public struct KaeriCommands<Playback: View, PlayerWindowItems: View>: Commands {
         CommandGroup(after: .toolbar) {
             let bounds = store.calendarBounds
             let week = navigator.calendarWeek
-            let here = navigator.section == .calendar && navigator.titleOnMac == nil && !covered
+            // On the iPad a title page is pushed on the tab's stack, over the calendar.
+            let here = navigator.section == .calendar && !navigator.canGoBack && !covered
             Button(L.menuGoToToday) { navigator.showCalendarWeek(0) }
                 .keyboardShortcut(reading ? nil : KeyboardShortcut("t", modifiers: .command))
                 .disabled(!here || week == 0)
