@@ -419,7 +419,8 @@ private fun SeriesButtons(
                 statusMenu()
             }
             Box {
-                EinkOutlinedButton(Strings.seriesDownload(context), { if (!choosing && chapters?.volumes?.hasDownloads() == true) onDownload() })
+                // As on the phone: nothing left to download, or choosing, leaves it unpressable.
+                EinkOutlinedButton(Strings.seriesDownload(context), onDownload, enabled = !choosing && chapters?.volumes?.hasDownloads() == true)
                 downloadMenu()
             }
         }

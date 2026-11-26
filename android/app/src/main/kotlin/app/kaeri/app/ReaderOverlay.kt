@@ -73,6 +73,7 @@ import app.kaeri.reader.phone.PhoneReader
 import app.kaeri.reader.phone.PhoneReaderActions
 import app.kaeri.reader.phone.QuietPhone
 import app.kaeri.reader.phone.ReaderLook
+import app.kaeri.reader.phone.ReaderExit
 import app.kaeri.reader.phone.ReaderLauncher
 import app.kaeri.reader.phone.ReaderRequest
 import app.kaeri.reader.readerSurface
@@ -393,8 +394,10 @@ private fun OpenReader(
                         painter = painter,
                         actions = EinkReaderActions(
                             onBack = close,
-                            onSeries = close,
-                            onDownloads = close,
+                            // Series and Open downloads close the reader and go there: the series page
+                            // only when it is not the one under the reader already.
+                            onSeries = { ReaderLauncher.closeTo(ReaderExit.Series(state.view?.work ?: request.work)) },
+                            onDownloads = { ReaderLauncher.closeTo(ReaderExit.Downloads) },
                             onAddSource = addSource,
                             onDownload = { chapter -> store.reading.download(state.view?.work ?: request.work, app.kaeri.engine.model.DownloadPick.Chapters(listOf(chapter.id))) },
                         ),
