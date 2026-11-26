@@ -90,6 +90,9 @@ import app.kaeri.eink.PaperWaiting
 import app.kaeri.eink.einkClick
 import app.kaeri.eink.einkFocus
 import app.kaeri.engine.core.Medium
+import app.kaeri.engine.core.WorkId
+import app.kaeri.engine.model.BookDownloadsView
+import app.kaeri.engine.model.BookSourcesView
 import app.kaeri.engine.model.KaeriIsFor
 import app.kaeri.engine.model.LibrarySegmentRead
 import app.kaeri.engine.model.ReadingAbout
@@ -141,6 +144,16 @@ private val SheetChoice = 128.dp
 /** The chips' words: one step under the body size. */
 private val ChipText = EinkType.Body.copy(fontSize = EinkType.Secondary.fontSize)
 
+/**
+ * The series On this device keeps: those with a chapter downloaded and those in the book folders,
+ * matched or kept as Your files. Null until the downloads are known; the folders, loaded as reading
+ * starts, join when they come.
+ */
+internal fun onThisDevice(downloads: BookDownloadsView?, sources: BookSourcesView?): Set<WorkId>? {
+    val downloaded = downloads?.series?.filter { it.chapters > 0u } ?: return null
+    return downloaded.mapTo(HashSet()) { it.work } + sources?.groups?.mapNotNull { it.work }.orEmpty()
+}
+
 /** The series [list] shows under the choices in View. */
 private fun shownTiles(list: List<WorkTile>, medium: PaperMedium, kept: PaperKept, here: Set<String>, sort: PaperSort): List<WorkTile> {
     val chosen = list.filter { tile ->
@@ -190,7 +203,8 @@ internal fun EinkLibraryPage() {
         for (each in READ_LISTS) if (each != segment) store.reading.loadList(each)
     }
     LaunchedEffect(segment) { store.reading.loadList(segment) }
-    val here = downloads?.series?.filter { it.chapters > 0u }?.mapTo(HashSet()) { it.work }
+    val sources by store.bookSources.view.collectAsStateWithLifecycle()
+    val here = onThisDevice(downloads, sources)
     val shown = { list: List<WorkTile>? -> list?.let { shownTiles(it, medium, kept, here.orEmpty(), sort) } }
     val count = { each: LibrarySegmentRead -> shown(lists[each])?.size }
     val mediumWords = @Composable { each: PaperMedium ->
