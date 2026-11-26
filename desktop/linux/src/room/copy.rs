@@ -5,11 +5,6 @@
 use kaeri_i18n::t;
 use kaeri_model::room::{Reaction, WaitReason};
 
-/// An episode number as the catalogue counts it: "9" is 9; anything else reads as 0.
-fn ep(episode: &str) -> i64 {
-    episode.trim().parse::<f64>().map_or(0, |n| n as i64)
-}
-
 fn n(count: usize) -> i64 {
     i64::try_from(count).unwrap_or(i64::MAX)
 }
@@ -43,7 +38,7 @@ pub fn line_watching() -> String {
     t::room_line_watching()
 }
 pub fn line_at(episode: &str, at: &str) -> String {
-    t::room_line_watching_detail(ep(episode), at)
+    t::room_line_watching_detail(episode, at)
 }
 pub fn line_paused(by: &str) -> String {
     t::room_line_paused_by(by)
@@ -111,7 +106,7 @@ pub fn line_invited(by: &str) -> String {
     t::room_invited_by(by)
 }
 pub fn line_invited_detail(title: &str, episode: &str) -> String {
-    t::room_invited_detail(title, ep(episode))
+    t::room_invited_detail(title, episode)
 }
 pub fn line_over_cap(count: usize) -> String {
     t::room_invited_over(n(count))
@@ -120,7 +115,7 @@ pub fn line_up_next(secs: i64) -> String {
     t::room_line_up_next(secs)
 }
 pub fn line_up_next_for_everyone(episode: &str) -> String {
-    t::room_line_up_next_detail(ep(episode))
+    t::room_line_up_next_detail(episode)
 }
 pub fn line_moved(by: &str) -> String {
     t::room_line_moved(by)
@@ -199,13 +194,13 @@ pub fn state_buffering(secs: i64) -> String {
     t::room_state_buffering(secs)
 }
 pub fn state_other_episode(episode: &str) -> String {
-    t::room_state_other_episode(ep(episode))
+    t::room_state_other_episode(episode)
 }
 pub fn state_choosing() -> String {
     t::room_state_choosing()
 }
 pub fn state_no_source(episode: &str) -> String {
-    t::room_state_no_source(ep(episode))
+    t::room_state_no_source(episode)
 }
 pub fn state_closed() -> String {
     t::room_state_player_closed()
@@ -335,10 +330,10 @@ pub fn room_is_watching() -> String {
 pub fn banner_episode(episode: &str, name: Option<&str>, minutes: Option<u32>) -> String {
     match (name, minutes) {
         (Some(name), Some(min)) => {
-            t::room_banner_episode(ep(episode), name, &t::room_minutes(i64::from(min)))
+            t::room_banner_episode(episode, name, &t::room_minutes(i64::from(min)))
         }
-        (Some(name), None) => t::room_up_next_episode(ep(episode), name),
-        _ => t::room_up_next_episode_plain(ep(episode)),
+        (Some(name), None) => t::room_up_next_episode(episode, name),
+        _ => t::room_up_next_episode_plain(episode),
     }
 }
 pub fn plays_from_yours() -> String {
@@ -351,7 +346,7 @@ pub fn anyone_can_start() -> String {
     t::room_anyone_can_start()
 }
 pub fn choose_source_for(episode: &str) -> String {
-    t::room_choose_source(ep(episode))
+    t::room_choose_source(episode)
 }
 pub fn choose_note() -> String {
     t::room_choose_source_line()
@@ -360,7 +355,7 @@ pub fn play_in_room() -> String {
     t::room_play_in_room()
 }
 pub fn none_has(episode: &str) -> String {
-    t::room_no_source_title(ep(episode))
+    t::room_no_source_title(episode)
 }
 pub fn none_has_note(count: usize) -> String {
     t::room_no_source_line(n(count))
