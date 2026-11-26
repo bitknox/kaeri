@@ -250,6 +250,9 @@ pub enum NovelSays {
     /// The page can't show the text any more: its web process stopped, or the document
     /// failed to load.
     Failed,
+    /// A footnote's link was followed: its words, to show over the page, which stays where it
+    /// is.
+    Note(String),
 }
 
 impl NovelView {
@@ -547,7 +550,11 @@ impl NovelView {
                 }
             }
             Some("link") => {
-                if json["internal"].as_bool() == Some(true)
+                if let Some(note) =
+                    json["note"].as_str().map(str::trim).filter(|n| !n.is_empty())
+                {
+                    (self.tell)(NovelSays::Note(note.to_owned()));
+                } else if json["internal"].as_bool() == Some(true)
                     && let Some(href) = json["href"].as_str()
                     && href.starts_with("kaeri-book://")
                 {

@@ -2936,6 +2936,7 @@ impl Reader {
                     }
                     NovelSays::Middle => this.toggle_chrome(),
                     NovelSays::End => this.novel_end(),
+                    NovelSays::Note(words) => this.show_note(&words),
                     // Try again opens the chapter afresh, in a new page.
                     NovelSays::Failed => this.open_failed(&ReadingFailure::Other {
                         reason: t::linux_reader_novel_stopped(),
@@ -3456,6 +3457,16 @@ impl Reader {
         {
             self.open_chapter(session, chapter.id);
         }
+    }
+
+    /// A footnote over the page, which keeps its place: Close or Esc returns to it, and a
+    /// screen reader reads the note as the dialog opens.
+    fn show_note(&self, words: &str) {
+        let dialog = adw::AlertDialog::new(None, Some(words));
+        dialog.add_response("close", &t::action_close());
+        dialog.set_default_response(Some("close"));
+        dialog.set_close_response("close");
+        dialog.present(Some(&self.widget));
     }
 
     fn rtl(&self) -> bool {
