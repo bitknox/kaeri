@@ -542,7 +542,8 @@ impl Dialog {
             }
         });
         let play_here = on(|me| {
-            if let Some((id, episode)) = me.tv.cast_play_here() {
+            if let Some((id, episode, at)) = me.tv.cast_play_here() {
+                me.ctx.start_at.replace(at.map(|at| (id, episode.clone(), at)));
                 me.ctx.hub.send(Command::play(id, episode));
             }
         });

@@ -40,6 +40,10 @@ pub const COUNT_AFTER: Duration = Duration::from_secs(4);
 /// The status line's mark while the app waits on the TV: a small spinner in the dot's place.
 pub const SPIN: &str = "spin";
 
+/// Play here carries the TV's place from this far in, as the engine's sender does: nearer the
+/// start the episode plays from where history has it.
+const CARRY_FROM: f64 = 5.0;
+
 /// Where a cast is: starting, playing, or ended in a way the card keeps and explains.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum Stage {
@@ -631,19 +635,21 @@ impl Tv {
     }
 
     /// Play here: the cast stops and the episode is the caller's to play on this computer, from
-    /// where the engine kept it in history.
-    pub fn cast_play_here(&self) -> Option<(AnilistId, String)> {
+    /// where the TV had it (`None` near the start, or when the TV never said).
+    pub fn cast_play_here(&self) -> Option<(AnilistId, String, Option<f64>)> {
         let run = self.drop_cast()?;
-        let episode = Self::episode_of(&run);
-        if !stage_of(&run.card).ended() {
+        let (id, episode) = Self::episode_of(&run);
+        let at = if stage_of(&run.card).ended() {
+            run.card.card.now.as_ref().map(|now| now.position).filter(|p| *p >= CARRY_FROM)
+        } else {
             let _entered = self.handle.enter();
-            run.session.play_here();
-        }
+            run.session.play_here()
+        };
         if self.sheet.get() == Some(Sheet::Remote) {
             self.sheet.set(None);
         }
         self.changed();
-        Some(episode)
+        Some((id, episode, at))
     }
 
     /// Try again: the same episode to the same TV, from where it got to. The card starts over.

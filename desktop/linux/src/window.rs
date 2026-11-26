@@ -95,6 +95,9 @@ pub struct Ctx {
     pub read_search_focus: RefCell<Option<Rc<dyn Fn()>>>,
     /// Private mode's notice and what a screen reader last heard of it.
     pub private: crate::private::Private,
+    /// Where the next play of this episode starts: Play here carries the TV's place. Any other
+    /// play gives it up.
+    pub start_at: RefCell<Option<(AnilistId, String, f64)>>,
 }
 
 /// Opens reading's Search on a query.
@@ -142,6 +145,7 @@ impl Ctx {
             read_search_focus: RefCell::default(),
             read_from_home: Cell::new(false),
             private: crate::private::Private::default(),
+            start_at: RefCell::default(),
         })
     }
 
@@ -466,6 +470,7 @@ impl Shell {
             read_search_focus: RefCell::default(),
             read_from_home: Cell::new(false),
             private: crate::private::Private::default(),
+            start_at: RefCell::default(),
         });
 
         // The monitor that says where the network stands is not watched under fixtures. The
