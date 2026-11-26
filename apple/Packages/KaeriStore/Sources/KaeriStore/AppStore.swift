@@ -1049,6 +1049,14 @@ public final class AppStore {
     }
 
     public func apply(_ event: Event) {
+        #if FIXTURES
+        if ProcessInfo.processInfo.environment["KAERI_ROOM_TRACE"] == "1" {
+            let name = String(describing: event)
+            if name.hasPrefix("room") || name.hasPrefix("playback") || name.hasPrefix("play") || name.hasPrefix("toast") {
+                print("trace:", name.prefix(400))
+            }
+        }
+        #endif
         if !held.isEmpty, let kind = event.showcaseKind, held.contains(kind) { return }
         notifications.observe(event)
         reader.observe(event)
