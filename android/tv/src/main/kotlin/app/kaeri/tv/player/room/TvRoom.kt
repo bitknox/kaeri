@@ -67,15 +67,16 @@ import app.kaeri.design.ShowTitle
 import app.kaeri.design.SwapFade
 import app.kaeri.design.rememberRoomNow
 import app.kaeri.design.tabular
-import app.kaeri.engine.model.PartyChatBody
-import app.kaeri.store.room.MemberState
+import app.kaeri.engine.model.MemberState
+import app.kaeri.engine.model.RoomChatBody
+import app.kaeri.engine.model.RoomCommand
+import app.kaeri.engine.model.RoomMember
+import app.kaeri.engine.model.RoomView
 import app.kaeri.store.room.Ring
-import app.kaeri.store.room.RoomAsk
 import app.kaeri.store.room.RoomCopy
+import androidx.compose.ui.platform.LocalContext
 import app.kaeri.store.room.RoomLine
-import app.kaeri.store.room.RoomMember
 import app.kaeri.store.room.RoomModel
-import app.kaeri.store.room.RoomView
 import app.kaeri.store.room.RoomWords
 import app.kaeri.tv.ui.AmberButton
 import app.kaeri.tv.ui.LocalAppStore
@@ -122,8 +123,9 @@ fun TvRoom(
     var mode by remember(start) { mutableStateOf(start) }
     var under by remember(start) { mutableStateOf(if (start == TvRoomMode.Rail) TvRoomMode.Rail else TvRoomMode.Full) }
     val carryFocus = remember { FocusRequester() }
+    val c = tvRoomCopy()
     val v = view ?: return
-    val carry = RoomWords.carryLabel(v, now)
+    val carry = RoomWords.carryLabel(c, v, now)
 
     BackHandler(enabled = true) {
         when (mode) {
@@ -147,7 +149,7 @@ fun TvRoom(
     ) {
         SwapFade(if (mode == TvRoomMode.Leave) under else mode, Modifier.fillMaxSize(), label = "tv-room") { shown -> // i18n-skip
             if (shown == TvRoomMode.Rail) {
-                TvRail(v, members, now, positionS, durationS, episodeLine, video, carry, carryFocus, onPlay = { room.ask(RoomAsk.PlayForEveryone) }) { room.ask(RoomAsk.CarryOn) }
+                TvRail(v, members, now, positionS, durationS, episodeLine, video, carry, carryFocus, onPlay = { room.send(RoomCommand.Play(true)) }) { room.send(RoomCommand.CarryOn) }
             } else {
                 Box(Modifier.fillMaxSize().background(Color.Black)) {
                     video(Modifier.fillMaxSize())
@@ -155,15 +157,15 @@ fun TvRoom(
                     val wanted = forceStrip || RoomWords.stripWanted(v, members) || o != null || carry != null
                     KeptFade(if (wanted) v else null, Modifier.align(Alignment.TopEnd).padding(top = 27.dp, end = 48.dp)) { sv ->
                         Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            TvStrip(sv, members, now, positionS, carry, carryFocus) { room.ask(RoomAsk.CarryOn) }
-                            if (o != null) TvOffer(o.by, o.names, RoomWords.clock(positionS), { room.ask(RoomAsk.AnswerMove(o.id, true)) }, { room.ask(RoomAsk.AnswerMove(o.id, false)) })
+                            TvStrip(sv, members, now, positionS, carry, carryFocus) { room.send(RoomCommand.CarryOn) }
+                            if (o != null) TvOffer(o.by, o.names, RoomWords.clock(positionS), { room.send(RoomCommand.AnswerMove(o.id, true)) }, { room.send(RoomCommand.AnswerMove(o.id, false)) })
                         }
                     }
                 }
             }
         }
         if (mode == TvRoomMode.Leave) {
-            TvLeaveDialog(onLeave = { room.ask(RoomAsk.Leave); onLeft() }, onKeep = { mode = under })
+            TvLeaveDialog(onLeave = { room.send(RoomCommand.Leave); onLeft() }, onKeep = { mode = under })
         }
     }
 }
@@ -171,11 +173,12 @@ fun TvRoom(
 /** The strip on the full picture: faces at 32, the line's title, and Carry on (focusable) at 20 s. */
 @Composable
 fun TvStrip(view: RoomView, members: List<RoomMember>, now: Long, positionS: Double, carry: String?, carryFocus: FocusRequester, onCarry: () -> Unit) {
-    val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.Left })
-    val line = RoomWords.line(view, members, now, positionS)
+    val c = tvRoomCopy()
+    val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.LEFT })
+    val line = RoomWords.line(c, view, members, now, positionS)
     val waiting = RoomWords.shownWaits(view, now).isNotEmpty() && carry == null
     val disc = 32.dp
-    val spoken = (shown.map { RoomCopy.spoken(it.name, RoomWords.word(view, it, now)) } + line.title).joinToString(". ") // i18n-skip
+    val spoken = (shown.map { c.spoken(it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
     Row(
         Modifier.shadow(18.dp, CircleShape).height(disc + 16.dp).clip(CircleShape).background(ObiSilk.Raised)
             .border(1.dp, ObiSilk.Silk.copy(alpha = 0.10f), CircleShape).padding(horizontal = 10.dp),
@@ -184,11 +187,11 @@ fun TvStrip(view: RoomView, members: List<RoomMember>, now: Long, positionS: Dou
     ) {
         Row(Modifier.clearAndSetSemantics { contentDescription = spoken; liveRegion = LiveRegionMode.Polite }, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             for (m in shown) TvFace(view, m, now, disc, ObiSilk.Raised)
-            if (hidden.isNotEmpty()) MoreFace(RoomCopy.plus(hidden.size), disc)
+            if (hidden.isNotEmpty()) MoreFace(c.plus(hidden.size), disc)
             Text(
                 buildAnnotatedString {
                     append(line.title)
-                    if (waiting) withStyle(SpanStyle(color = ObiSilk.Haze, fontWeight = FontWeight.Normal)) { append(" · " + RoomCopy.seconds(RoomWords.waitSeconds(view, now))) } // i18n-skip
+                    if (waiting) withStyle(SpanStyle(color = ObiSilk.Haze, fontWeight = FontWeight.Normal)) { append(c.withSeconds(line.title, RoomWords.waitSeconds(view, now)).removePrefix(line.title)) }
                 },
                 style = TextStyle(fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk).tabular(),
                 maxLines = 1,
@@ -206,14 +209,15 @@ fun TvStrip(view: RoomView, members: List<RoomMember>, now: Long, positionS: Dou
 /** Someone moved the room and ticked this TV: the words, Go along and Stay here. */
 @Composable
 private fun TvOffer(by: String, others: List<String>, at: String, onGo: () -> Unit, onStay: () -> Unit) {
+    val c = tvRoomCopy()
     Column(
         Modifier.width(360.dp).clip(RoundedCornerShape(16.dp)).background(ObiSilk.Raised).border(1.dp, ObiSilk.Silk.copy(alpha = 0.10f), RoundedCornerShape(16.dp)).padding(16.dp),
     ) {
-        Text(RoomCopy.movedTheRoom(by), fontSize = 18.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
-        Text(RoomCopy.goAlong(others, at), fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
+        Text(c.movedTheRoom(by), fontSize = 18.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
+        Text(c.goAlong(others, at), fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
         Row(Modifier.padding(top = 12.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            AmberButton(onClick = onGo, icon = null, height = 44.dp) { Text(RoomCopy.GO_ALONG, fontSize = 16.sp) }
-            TonalButton(onClick = onStay, height = 44.dp) { Text(RoomCopy.STAY_HERE, fontSize = 16.sp) }
+            AmberButton(onClick = onGo, icon = null, height = 44.dp) { Text(c.GO_ALONG, fontSize = 16.sp) }
+            TonalButton(onClick = onStay, height = 44.dp) { Text(c.STAY_HERE, fontSize = 16.sp) }
         }
     }
 }
@@ -233,16 +237,17 @@ private fun TvRail(
     onPlay: () -> Unit,
     onCarry: () -> Unit,
 ) {
-    val line = RoomWords.line(view, members, now, positionS)
+    val c = tvRoomCopy()
+    val line = RoomWords.line(c, view, members, now, positionS)
     Box(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 27.dp)) {
         Column(Modifier.width(640.dp)) {
             if (view.beforePlay) {
-                TvBeforePlay(view.title, episodeLine, started = view.startingIn != null || view.waiting.isNotEmpty(), still = video, onPlay = onPlay)
+                TvBeforePlay(view.roomEpisode?.title ?: view.name, episodeLine, started = view.startsAtMs != null || view.waiting.isNotEmpty(), still = video, onPlay = onPlay)
             } else {
                 Box(Modifier.size(640.dp, 360.dp).clip(RoundedCornerShape(12.dp)).background(Color.Black)) { video(Modifier.fillMaxSize()) }
             }
             Row(Modifier.padding(top = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(view.title, style = ShowTitle.page.copy(lineHeight = 30.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
+                Text(view.roomEpisode?.title ?: view.name, style = ShowTitle.page.copy(lineHeight = 30.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 Text(episodeLine, fontSize = 16.sp, color = ObiSilk.Silk, maxLines = 1)
                 Spacer(Modifier.weight(1f))
                 Text(RoomWords.clock(positionS) + " / " + RoomWords.clock(durationS), style = TextStyle(fontSize = 16.sp, color = ObiSilk.Haze).tabular()) // i18n-skip
@@ -250,7 +255,7 @@ private fun TvRail(
             Box(Modifier.padding(top = 10.dp).fillMaxWidth().height(6.dp).clip(CircleShape).background(ObiSilk.Silk.copy(alpha = 0.25f))) {
                 Box(Modifier.fillMaxWidth(if (durationS > 0) (positionS / durationS).toFloat().coerceIn(0f, 1f) else 0f).height(6.dp).background(ObiSilk.Silk))
             }
-            Text(RoomCopy.TV_HINT, fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 10.dp))
+            Text(c.TV_HINT, fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 10.dp))
         }
         Column(Modifier.align(Alignment.TopEnd).width(200.dp).fillMaxHeight()) {
             TvLineBlock(line)
@@ -259,13 +264,13 @@ private fun TvRail(
                     Text(carry, fontSize = 15.sp, maxLines = 2)
                 }
             }
-            val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.Left })
+            val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.LEFT })
             for (m in shown) {
                 // The TV goes by its device name, as the others see it.
                 val name = m.name
-                val word = RoomWords.word(view, m, now)
+                val word = RoomWords.word(c, view, m, now)
                 Row(
-                    Modifier.height(56.dp).fillMaxWidth().clearAndSetSemantics { contentDescription = RoomCopy.spoken(name, word) },
+                    Modifier.height(56.dp).fillMaxWidth().clearAndSetSemantics { contentDescription = c.spoken(name, word) },
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
@@ -278,16 +283,16 @@ private fun TvRail(
             }
             if (hidden.isNotEmpty()) {
                 Row(Modifier.height(56.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    MoreFace(RoomCopy.plus(hidden.size), 36.dp)
+                    MoreFace(c.plus(hidden.size), 36.dp)
                     Column {
-                        Text(RoomCopy.MORE, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk)
-                        Text(RoomWords.moreWord(hidden), fontSize = 14.sp, lineHeight = 18.sp, color = ObiSilk.Haze)
+                        Text(c.MORE, fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk)
+                        Text(RoomWords.moreWord(c, hidden), fontSize = 14.sp, lineHeight = 18.sp, color = ObiSilk.Haze)
                     }
                 }
             }
             Box(Modifier.padding(vertical = 10.dp).fillMaxWidth().height(1.dp).background(ObiSilk.FaintRule))
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.BottomStart) { TvReadOnlyChat() }
-            Text(RoomCopy.WRITE_ON_PHONE, fontSize = 13.sp, lineHeight = 18.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
+            Text(c.WRITE_ON_PHONE, fontSize = 13.sp, lineHeight = 18.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }
@@ -304,19 +309,20 @@ private fun TvLineBlock(line: RoomLine) {
 @Composable
 private fun TvReadOnlyChat() {
     val store = LocalAppStore.current
-    val conversation by store.party.conversation.collectAsStateWithLifecycle()
-    val lines = conversation.lines.filter { !it.muted }.takeLast(6)
+    val c = tvRoomCopy()
+    val conversation by store.room.conversation.collectAsStateWithLifecycle()
+    val lines = conversation?.lines.orEmpty().filter { !it.muted }.takeLast(6)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         for (l in lines) {
             when (val b = l.body) {
-                is PartyChatBody.Said -> Text(
+                is RoomChatBody.Said -> Text(
                     buildAnnotatedString {
-                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = if (l.you) ObiSilk.Haze else ObiSilk.Silk)) { append(l.from + "  ") } // i18n-skip
+                        withStyle(SpanStyle(fontWeight = FontWeight.SemiBold, color = if (l.you) ObiSilk.Haze else ObiSilk.Silk)) { append(c.chatName(l) + "  ") } // i18n-skip: two spaces
                         append(b.text)
                     },
                     fontSize = 15.sp, lineHeight = 20.sp, color = ObiSilk.Silk,
                 )
-                else -> Unit
+                else -> Text(c.chatSentence(l).orEmpty(), fontSize = 15.sp, lineHeight = 20.sp, color = ObiSilk.Haze)
             }
         }
     }
@@ -325,15 +331,16 @@ private fun TvReadOnlyChat() {
 /** Leave the room? Leave and Keep watching; Back keeps watching. */
 @Composable
 fun TvLeaveDialog(onLeave: () -> Unit, onKeep: () -> Unit) {
+    val c = tvRoomCopy()
     val first = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
         Column(Modifier.width(440.dp).clip(RoundedCornerShape(16.dp)).background(ObiSilk.RaisedHigh).padding(28.dp)) {
-            Text(RoomCopy.LEAVE_TITLE, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
-            Text(RoomCopy.LEAVE_BODY, fontSize = 16.sp, lineHeight = 22.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
+            Text(c.LEAVE_TITLE, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
+            Text(c.LEAVE_BODY, fontSize = 16.sp, lineHeight = 22.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
             Row(Modifier.padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TonalButton(onClick = onLeave, modifier = Modifier.focusRequester(first), height = 44.dp) { Text(RoomCopy.LEAVE, fontSize = 16.sp) }
-                TonalButton(onClick = onKeep, height = 44.dp) { Text(RoomCopy.KEEP_WATCHING, fontSize = 16.sp) }
+                TonalButton(onClick = onLeave, modifier = Modifier.focusRequester(first), height = 44.dp) { Text(c.LEAVE, fontSize = 16.sp) }
+                TonalButton(onClick = onKeep, height = 44.dp) { Text(c.KEEP_WATCHING, fontSize = 16.sp) }
             }
         }
     }
@@ -345,6 +352,7 @@ fun TvLeaveDialog(onLeave: () -> Unit, onKeep: () -> Unit) {
  */
 @Composable
 fun TvBeforePlay(title: String, episodeLine: String, started: Boolean, still: @Composable (Modifier) -> Unit, onPlay: () -> Unit) {
+    val c = tvRoomCopy()
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
     Box(Modifier.size(640.dp, 360.dp).clip(RoundedCornerShape(12.dp)).background(Color.Black)) {
@@ -359,7 +367,14 @@ fun TvBeforePlay(title: String, episodeLine: String, started: Boolean, still: @C
                 icon = TvIcons.Play,
                 enabled = !started,
                 height = 44.dp,
-            ) { Text(if (started) RoomCopy.WAITING_FIRST_FRAMES else RoomCopy.PLAY_FOR_EVERYONE, fontSize = 16.sp) }
+            ) { Text(if (started) c.WAITING_FIRST_FRAMES else c.PLAY_FOR_EVERYONE, fontSize = 16.sp) }
         }
     }
+}
+
+/** The room's words for this screen's context. */
+@Composable
+internal fun tvRoomCopy(): RoomCopy {
+    val context = LocalContext.current
+    return remember(context) { RoomCopy(context) }
 }

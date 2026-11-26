@@ -48,12 +48,12 @@ import app.kaeri.design.RoomGlyphs
 import app.kaeri.design.ShowTitle
 import app.kaeri.design.rememberRoomNow
 import app.kaeri.design.tabular
-import app.kaeri.store.room.MemberState
-import app.kaeri.store.room.RoomAsk
-import app.kaeri.store.room.RoomCopy
-import app.kaeri.store.room.RoomMember
+import app.kaeri.engine.model.MemberState
+import app.kaeri.engine.model.RoomCommand
+import app.kaeri.engine.model.RoomMember
+import app.kaeri.engine.model.RoomView
+import app.kaeri.engine.model.WaitReason
 import app.kaeri.store.room.RoomModel
-import app.kaeri.store.room.RoomView
 import app.kaeri.store.room.RoomWords
 import app.kaeri.store.room.CARRY_ON_AFTER_S
 
@@ -63,14 +63,15 @@ import app.kaeri.store.room.CARRY_ON_AFTER_S
  */
 @Composable
 fun RoomStrip(view: RoomView, members: List<RoomMember>, now: Long, disc: Dp, positionS: Double, modifier: Modifier = Modifier, touch: Boolean = true, onCarry: () -> Unit = {}) {
-    val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.Left })
-    val line = RoomWords.line(view, members, now, positionS)
-    val carry = RoomWords.carryLabel(view, now)
+    val c = roomCopy()
+    val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.LEFT })
+    val line = RoomWords.line(c, view, members, now, positionS)
+    val carry = RoomWords.carryLabel(c, view, now)
     val waiting = RoomWords.shownWaits(view, now).isNotEmpty() && carry == null
     val gap = if (disc >= 32.dp) 8.dp else 6.dp
     val height = if (carry != null && touch) 52.dp else disc + 16.dp
     val fs = if (disc >= 28.dp) 14.sp else 13.sp
-    val spoken = (shown.map { RoomCopy.spoken(if (it.you) RoomCopy.YOU else it.name, RoomWords.word(view, it, now)) } + line.title).joinToString(". ") // i18n-skip
+    val spoken = (shown.map { c.spoken(if (it.you) c.YOU else it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
     Row(
         modifier
             .shadow(18.dp, CircleShape, ambientColor = Color.Black, spotColor = Color.Black)
@@ -84,13 +85,15 @@ fun RoomStrip(view: RoomView, members: List<RoomMember>, now: Long, disc: Dp, po
     ) {
         Row(Modifier.clearAndSetSemantics { contentDescription = spoken; liveRegion = LiveRegionMode.Polite }, horizontalArrangement = Arrangement.spacedBy(gap), verticalAlignment = Alignment.CenterVertically) {
             for (m in shown) PersonFace(view, m, now, disc, ground = ObiSilk.Raised)
-            if (hidden.isNotEmpty()) MoreFace(RoomCopy.plus(hidden.size), disc)
+            if (hidden.isNotEmpty()) MoreFace(c.plus(hidden.size), disc)
             Text(
                 androidx.compose.ui.text.buildAnnotatedString {
                     append(line.title)
                     if (waiting) {
+                        // "Paused for Ren · 3 s": the seconds in haze, after the bold words.
+                        val whole = c.withSeconds(line.title, RoomWords.waitSeconds(view, now))
                         pushStyle(androidx.compose.ui.text.SpanStyle(color = ObiSilk.Haze, fontWeight = FontWeight.Normal))
-                        append(" · " + RoomCopy.seconds(RoomWords.waitSeconds(view, now))) // i18n-skip
+                        append(whole.removePrefix(line.title))
                         pop()
                     }
                 },
@@ -120,7 +123,7 @@ fun RoomSideways(room: RoomModel, positionS: Double, video: @Composable (Modifie
         video(Modifier.fillMaxSize())
         val wanted = forceStrip || RoomWords.stripWanted(shown, members)
         KeptFade(if (wanted) shown else null, Modifier.align(Alignment.TopCenter).padding(top = if (controls) 78.dp else 14.dp)) { v ->
-            RoomStrip(v, members, now, 28.dp, positionS) { room.ask(RoomAsk.CarryOn) }
+            RoomStrip(v, members, now, 28.dp, positionS) { room.send(RoomCommand.CarryOn) }
         }
     }
 }
@@ -134,10 +137,11 @@ private fun Scrim(alpha: Float, content: @Composable () -> Unit) {
 /** Before play: the round Play and "Play for everyone", or "Waiting for first frames" once pressed. */
 @Composable
 fun BeforePlayPanel(started: Boolean, modifier: Modifier = Modifier, onPlay: () -> Unit) {
+    val c = roomCopy()
     Box(modifier) {
         Scrim(0.5f) {
             Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
-                val label = if (started) RoomCopy.WAITING_FIRST_FRAMES else RoomCopy.PLAY_FOR_EVERYONE
+                val label = if (started) c.WAITING_FIRST_FRAMES else c.PLAY_FOR_EVERYONE
                 Box(
                     Modifier.size(64.dp).clip(CircleShape).background(ObiSilk.Raised)
                         .border(1.dp, ObiSilk.Silk.copy(alpha = 0.10f), CircleShape)
@@ -166,12 +170,13 @@ fun InvitedPanel(title: String, episodeLine: String, modifier: Modifier = Modifi
 /** No source for the room's episode: the words, Open sources and Search titles. */
 @Composable
 fun NoSourcePanel(episode: String, modifier: Modifier = Modifier, onSources: () -> Unit = {}, onSearch: () -> Unit = {}) {
+    val c = roomCopy()
     Box(modifier) {
         Scrim(0.8f) {
             Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 52.dp)) {
-                Text(RoomCopy.noneHas(episode), fontSize = 17.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk)
-                Text(RoomCopy.STAY_IN_ROOM, fontSize = 13.sp, lineHeight = 18.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
-                Box(Modifier.padding(top = 14.dp)) { PairButtons(RoomCopy.OPEN_SOURCES, RoomCopy.SEARCH_TITLES, onSources, onSearch) }
+                Text(c.noneHas(episode), fontSize = 17.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk)
+                Text(c.STAY_IN_ROOM, fontSize = 13.sp, lineHeight = 18.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
+                Box(Modifier.padding(top = 14.dp)) { PairButtons(c.OPEN_SOURCES, c.SEARCH_TITLES, onSources, onSearch) }
             }
         }
     }
@@ -186,10 +191,11 @@ data class RoomSourceChoice(val name: String, val detail: String)
  */
 @Composable
 fun ChoosingPanel(episode: String, choices: List<RoomSourceChoice>, picked: Int, modifier: Modifier = Modifier, onPick: (Int) -> Unit = {}, onPlay: () -> Unit = {}) {
+    val c = roomCopy()
     Box(modifier) {
         Scrim(0.5f) {
             Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 12.dp)) {
-                Text(RoomCopy.chooseFor(episode), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk)
+                Text(c.chooseFor(episode), fontSize = 15.sp, fontWeight = FontWeight.SemiBold, color = ObiSilk.Silk)
                 Column(Modifier.padding(top = 8.dp).fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(ObiSilk.Raised)) {
                     choices.forEachIndexed { i, c ->
                         if (i > 0) Box(Modifier.fillMaxWidth().height(1.dp).background(ObiSilk.FaintRule))
@@ -204,8 +210,8 @@ fun ChoosingPanel(episode: String, choices: List<RoomSourceChoice>, picked: Int,
                     }
                 }
                 Row(Modifier.padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    CarryOnButton(RoomCopy.PLAY_IN_ROOM, onClick = onPlay)
-                    Text(RoomCopy.CHOOSE_BODY, fontSize = 12.sp, lineHeight = 16.sp, color = ObiSilk.Silk, modifier = Modifier.weight(1f))
+                    CarryOnButton(c.PLAY_IN_ROOM, onClick = onPlay)
+                    Text(c.CHOOSE_BODY, fontSize = 12.sp, lineHeight = 16.sp, color = ObiSilk.Silk, modifier = Modifier.weight(1f))
                 }
             }
         }
@@ -215,6 +221,7 @@ fun ChoosingPanel(episode: String, choices: List<RoomSourceChoice>, picked: Int,
 /** This device is loading and the room waits for it: the seconds, and Don't wait for me. */
 @Composable
 fun LoadingPanel(seconds: Int, canDontWait: Boolean, modifier: Modifier = Modifier, onDontWait: () -> Unit = {}) {
+    val c = roomCopy()
     Box(modifier) {
         Scrim(0.5f) {
             Column(Modifier.align(Alignment.Center).semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }, horizontalAlignment = Alignment.CenterHorizontally) {
@@ -225,14 +232,14 @@ fun LoadingPanel(seconds: Int, canDontWait: Boolean, modifier: Modifier = Modifi
                     trackColor = ObiSilk.Rule,
                     strokeWidth = 3.dp,
                 )
-                Text(RoomCopy.reasonFor(app.kaeri.store.room.WaitReason.Loading, seconds), fontSize = 13.sp, color = ObiSilk.Silk, modifier = Modifier.padding(top = 10.dp))
+                Text(c.reasonFor(WaitReason.LOADING, seconds), fontSize = 13.sp, color = ObiSilk.Silk, modifier = Modifier.padding(top = 10.dp))
                 if (canDontWait) {
                     androidx.compose.material3.FilledTonalButton(
                         onClick = onDontWait,
                         modifier = Modifier.padding(top = 12.dp).height(44.dp),
                         shape = CircleShape,
                         colors = androidx.compose.material3.ButtonDefaults.filledTonalButtonColors(containerColor = ObiSilk.Raised, contentColor = ObiSilk.Silk),
-                    ) { Text(RoomCopy.DONT_WAIT, fontSize = 15.sp, fontWeight = FontWeight.Medium) }
+                    ) { Text(c.DONT_WAIT, fontSize = 15.sp, fontWeight = FontWeight.Medium) }
                 }
             }
         }
@@ -245,11 +252,12 @@ fun LoadingPanel(seconds: Int, canDontWait: Boolean, modifier: Modifier = Modifi
  */
 @Composable
 fun RoomBar(room: RoomModel, positionS: Double, still: @Composable (Modifier) -> Unit, modifier: Modifier = Modifier, onOpen: () -> Unit = {}) {
+    val c = roomCopy()
     val view by room.view.collectAsStateWithLifecycle()
     val members by room.members.collectAsStateWithLifecycle()
     val now = rememberRoomNow()
     val v = view ?: return
-    val line = RoomWords.line(v, members, now, positionS)
+    val line = RoomWords.line(c, v, members, now, positionS)
     val waiting = RoomWords.shownWaits(v, now).isNotEmpty()
     Row(
         modifier.fillMaxWidth().height(64.dp).clip(RoundedCornerShape(16.dp)).background(ObiSilk.RaisedHigh)
@@ -259,11 +267,11 @@ fun RoomBar(room: RoomModel, positionS: Double, still: @Composable (Modifier) ->
     ) {
         still(Modifier.size(width = 64.dp, height = 44.dp).clip(RoundedCornerShape(10.dp)))
         Column(Modifier.weight(1f)) {
-            Text(v.title, style = ShowTitle.caption.copy(lineHeight = 18.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(v.roomEpisode?.title ?: v.name, style = ShowTitle.caption.copy(lineHeight = 18.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(line.title, style = TextStyle(fontSize = 13.sp, lineHeight = 17.sp).tabular(), color = if (waiting) ObiSilk.Silk else ObiSilk.Haze, maxLines = 1)
         }
         Row {
-            val (shown, _) = RoomWords.capped(members.filter { it.state != MemberState.Left })
+            val (shown, _) = RoomWords.capped(members.filter { it.state != MemberState.LEFT })
             shown.forEachIndexed { i, m -> PersonFace(v, m, now, 22.dp, Modifier.offset(x = (-6 * i).dp), ground = ObiSilk.RaisedHigh) }
         }
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {

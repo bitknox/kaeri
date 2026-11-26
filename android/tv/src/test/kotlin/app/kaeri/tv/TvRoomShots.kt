@@ -11,18 +11,20 @@ import androidx.compose.ui.test.onRoot
 import app.kaeri.design.LocalRoomClock
 import app.kaeri.design.RoomClock
 import app.kaeri.engine.model.Event
-import app.kaeri.engine.model.PartyChatBody
-import app.kaeri.engine.model.PartyChatLine
-import app.kaeri.engine.model.PartyChatState
-import app.kaeri.engine.model.PartyConversation
+import app.kaeri.engine.model.MemberState
+import app.kaeri.engine.model.PausedFor
+import app.kaeri.engine.model.RoomChatBody
+import app.kaeri.engine.model.RoomChatLine
+import app.kaeri.engine.model.RoomChatState
+import app.kaeri.engine.model.RoomConnection
+import app.kaeri.engine.model.RoomConversation
+import app.kaeri.engine.model.RoomEpisode
+import app.kaeri.engine.model.RoomEpisodeInfo
+import app.kaeri.engine.model.RoomMember
+import app.kaeri.engine.model.RoomMoveOffer
+import app.kaeri.engine.model.RoomView
+import app.kaeri.engine.model.WaitReason
 import app.kaeri.store.AppStore
-import app.kaeri.store.room.MemberState
-import app.kaeri.store.room.PausedFor
-import app.kaeri.store.room.RoomEpisode
-import app.kaeri.store.room.RoomMember
-import app.kaeri.store.room.RoomMoveOffer
-import app.kaeri.store.room.RoomView
-import app.kaeri.store.room.WaitReason
 import app.kaeri.testkit.FixtureArt
 import app.kaeri.testkit.captureRoboImage
 import app.kaeri.tv.player.room.TvRoom
@@ -77,32 +79,34 @@ class TvRoomShots {
     private fun ago(s: Int) = now - s * 1000L
 
     private fun view(waiting: List<PausedFor> = emptyList(), canCarryOn: Boolean = false, beforePlay: Boolean = false, playing: Boolean = true) = RoomView(
-        title = "Natsukaze Relay",
-        episode = RoomEpisode(9, "9"),
+        roomId = "room-1",
         name = "Mika's room",
+        connection = RoomConnection.Connected,
+        episode = RoomEpisode(900001u, "9"),
+        roomEpisode = RoomEpisodeInfo(900001u, "9", "Natsukaze Relay", null, null, null),
         beforePlay = beforePlay,
         playing = playing,
         waiting = waiting,
         canCarryOn = canCarryOn,
     )
 
-    private fun members(ren: MemberState = MemberState.Watching, secs: Int = 0, behind: Float? = null) = listOf(
-        RoomMember("ada", "Ada", false, MemberState.Watching),
-        RoomMember("mika", "Mika", false, MemberState.Watching),
+    private fun members(ren: MemberState = MemberState.WATCHING, secs: Int = 0, behind: Float? = null) = listOf(
+        RoomMember("ada", "Ada", false, MemberState.WATCHING),
+        RoomMember("mika", "Mika", false, MemberState.WATCHING),
         RoomMember("ren", "Ren", false, ren, sinceMs = ago(secs), behindS = behind),
-        RoomMember("tv", "Living room", true, MemberState.Watching),
+        RoomMember("tv", "Living room", true, MemberState.WATCHING),
     )
 
-    private fun waitRen(s: Int) = listOf(PausedFor("Ren", WaitReason.Loading, ago(s)))
+    private fun waitRen(s: Int) = listOf(PausedFor(id = "ren", name = "Ren", you = false, reason = WaitReason.LOADING, sinceMs = ago(s)))
 
-    private fun said(id: ULong, from: String, text: String) = PartyChatLine(id, from, false, PartyChatBody.Said(text), false)
+    private fun said(id: ULong, from: String, text: String) = RoomChatLine(id, from, false, RoomChatBody.Said(text), false)
 
     private fun shoot(name: String, view: RoomView, members: List<RoomMember>, start: TvRoomMode = TvRoomMode.Full, focusCarry: Boolean = false, strip: Boolean = true, offer: RoomMoveOffer? = null) {
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         compose.runOnUiThread {
-            store.apply(Event.PartyChatState(PartyChatState(allowed = true, maxLength = 150u)))
-            store.apply(Event.PartyChat(PartyConversation(lines = listOf(said(1u, "Ren", "yes, go"), said(2u, "Ada", "the relay handoff at the bridge"), said(3u, "Mika", "every week this song")), marks = emptyList())))
-            store.room.show(view, members, offer = offer)
+            store.apply(Event.RoomChatState(RoomChatState(maxLength = 150u)))
+            val talk = listOf(said(1u, "Ren", "yes, go"), said(2u, "Ada", "the relay handoff at the bridge"), said(3u, "Mika", "every week this song"))
+            store.room.show(view, members, offer = offer, conversation = RoomConversation(lines = talk, marks = emptyList(), failed = null))
         }
         val art = FixtureArt.bytes("${FixtureArt.HOST}banner/900001.jpg")!!
         val still = android.graphics.BitmapFactory.decodeByteArray(art, 0, art.size).asImageBitmap()
@@ -128,25 +132,25 @@ class TvRoomShots {
     }
 
     @Test
-    fun before_play() = shoot("before-play", view(beforePlay = true), members(MemberState.Loading, 4), start = TvRoomMode.Rail)
+    fun before_play() = shoot("before-play", view(beforePlay = true), members(MemberState.LOADING, 4), start = TvRoomMode.Rail)
 
     @Test
     fun at_rest() = shoot("at-rest", view(), members(), strip = false)
 
     @Test
-    fun paused_for_ren() = shoot("paused-for-ren", view(waitRen(6), playing = false), members(MemberState.Loading, 6))
+    fun paused_for_ren() = shoot("paused-for-ren", view(waitRen(6), playing = false), members(MemberState.LOADING, 6))
 
     @Test
-    fun twenty_seconds() = shoot("twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), members(MemberState.Loading, 20))
+    fun twenty_seconds() = shoot("twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), members(MemberState.LOADING, 20))
 
     @Test
-    fun up_on_carry() = shoot("up-on-carry", view(waitRen(20), canCarryOn = true, playing = false), members(MemberState.Loading, 20), focusCarry = true)
+    fun up_on_carry() = shoot("up-on-carry", view(waitRen(20), canCarryOn = true, playing = false), members(MemberState.LOADING, 20), focusCarry = true)
 
     @Test
-    fun rail() = shoot("rail", view(), members(MemberState.Behind, behind = 4f), start = TvRoomMode.Rail)
+    fun rail() = shoot("rail", view(), members(MemberState.BEHIND, behind = 4f), start = TvRoomMode.Rail)
 
     @Test
-    fun rail_twenty_seconds() = shoot("rail-twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), members(MemberState.Loading, 20), start = TvRoomMode.Rail)
+    fun rail_twenty_seconds() = shoot("rail-twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), members(MemberState.LOADING, 20), start = TvRoomMode.Rail)
 
     @Test
     fun leave_asks() = shoot("leave-asks", view(), members(), start = TvRoomMode.Leave, strip = false)
