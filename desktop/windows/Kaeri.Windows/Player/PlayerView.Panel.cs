@@ -1777,7 +1777,7 @@ public sealed partial class PlayerView
                     BuildSources();
                 break;
             case Event.TitleDub td when td.Id == playingId && panel.Open:
-            case Event.PartyJoined or Event.PartyLeft when panel.Open:
+            case Event.RoomJoined or Event.RoomLeft when panel.Open:
                 BuildSources();
                 break;
             case Event.StartingStep { Step: StartStep.Found found } step:

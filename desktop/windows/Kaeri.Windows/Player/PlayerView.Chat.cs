@@ -41,14 +41,13 @@ public sealed partial class PlayerView
     ulong chatSeen;
     bool chatPopover, reactionsBuilt;
     ChatField? chatField;
-    PartyReactionMark[] chatMarks = [];
+    RoomReactionMark[] chatMarks = [];
     readonly List<(double X, Chat.Tick Tick)> tickPlaces = [];
 
     bool ChatHidden => ChatSetting.Hidden;
-    bool ChatAllowed => ctx?.Known.PartyChatState?.Allowed ?? true;
     readonly HashSet<Microsoft.UI.Dispatching.DispatcherQueueTimer> chatTimers = [];
 
-    bool ChatLive => InParty && !ChatHidden && ChatAllowed;
+    bool ChatLive => InParty && !ChatHidden;
 
     void BuildReactions()
     {
@@ -63,7 +62,7 @@ public sealed partial class PlayerView
             button.Click += (_, _) =>
             {
                 still.Input();
-                ctx?.Send(new Command.Party(new PartyCommand.React(reaction)));
+                ctx?.Send(new Command.Room(new RoomCommand.React(reaction)));
             };
             Reactions.Children.Add(button);
         }
@@ -97,7 +96,7 @@ public sealed partial class PlayerView
         {
             if (!live)
                 CloseChatField();
-            chatMarks = ctx?.Known.PartyChat?.Marks ?? [];
+            chatMarks = ctx?.Known.RoomChat?.Marks ?? [];
         }
         // The ticks only when what they mark changed: the chat's state comes often.
         if (!chatMarks.AsSpan().SequenceEqual(ticksDrawn))
@@ -105,7 +104,7 @@ public sealed partial class PlayerView
     }
 
     /// <summary>The reactions the seek line's ticks were last drawn for.</summary>
-    PartyReactionMark[] ticksDrawn = [];
+    RoomReactionMark[] ticksDrawn = [];
 
     /// <summary>Everything on the video goes at once: leaving the party, Hide chat, the player closing.</summary>
     void ChatClear()
@@ -129,33 +128,33 @@ public sealed partial class PlayerView
     {
         if (!InParty || ctx is null)
             return false;
-        var lines = ctx.Known.PartyChat?.Lines ?? [];
-        if (lines.TakeLast(4).Any(l => l.Body is PartyChatBody.Said said && text.Contains(said.Text, StringComparison.Ordinal)))
+        var lines = ctx.Known.RoomChat?.Lines ?? [];
+        if (lines.TakeLast(4).Any(l => l.Body is RoomChatBody.Said said && text.Contains(said.Text, StringComparison.Ordinal)))
             return true;
-        return (ctx.Known.PartyMembers ?? []).Any(m => text.StartsWith(m.Name + ": ", StringComparison.Ordinal));
+        return ctx.Known.RoomMembers.Any(m => text.StartsWith(m.Name + ": ", StringComparison.Ordinal));
     }
 
     void ChatHeard(Event e)
     {
         switch (e)
         {
-            case Event.PartyJoined:
+            case Event.RoomJoined:
                 // A room joined afresh starts its conversation afresh; the same room again keeps its place.
-                if (ctx?.Known.PartyChat is null)
+                if (ctx?.Known.RoomChat is null)
                     chatSeen = 0;
                 ChatReflect();
                 break;
-            case Event.PartyLeft:
+            case Event.RoomLeft:
                 chatSeen = 0;
                 ChatReflect();
                 break;
-            case Event.PartyChat { V1: var conversation }:
+            case Event.RoomChat { V1: var conversation }:
             {
                 var (fresh, newest) = Chat.Fresh(conversation.Lines, chatSeen);
                 chatSeen = newest;
                 if (ChatHidden)
                     break;
-                if (Showing && !mini && !chatPopover)
+                if (Showing && !mini && !chatPopover && !ColumnShows)
                     foreach (var line in fresh)
                         Arrive(line);
                 if (chatMarks.Length != conversation.Marks.Length || !chatMarks.SequenceEqual(conversation.Marks))
@@ -167,7 +166,7 @@ public sealed partial class PlayerView
                     chatField?.Lost(conversation.Failed);
                 break;
             }
-            case Event.PartyChatState { V1: var state }:
+            case Event.RoomChatState { V1: var state }:
                 ChatReflect();
                 foreach (var button in Reactions.Children.OfType<Button>())
                 {
@@ -176,22 +175,18 @@ public sealed partial class PlayerView
                 }
                 chatField?.Typed();
                 break;
-            case Event.PartyReaction { V1: var reaction }:
+            case Event.RoomReaction { V1: var reaction }:
                 if (Showing && !mini && !ChatHidden)
                     ShowMoment(reaction);
-                break;
-            case Event.PartyChatRefused { V1: PartyChatRefusal.Off }:
-                if (Showing)
-                    Say(T.PartyChatOff);
                 break;
         }
     }
 
     // The column.
 
-    void Arrive(PartyChatLine line)
+    void Arrive(Kaeri.Engine.Model.RoomChatLine line)
     {
-        if (line.Body is not PartyChatBody.Said said)
+        if (line.Body is not RoomChatBody.Said said)
             return;
         var who = Chat.Who(line);
         // Said to a screen reader as it comes; reactions are not.
@@ -226,7 +221,7 @@ public sealed partial class PlayerView
     /// <summary>A line on the raised fill with a hair ring: the name in semibold, an en space, the words, three rows at most.</summary>
     static Border LineCard(string who, bool you, string text)
     {
-        var words = ChatPane.Said(who, you, text);
+        var words = ChatField.Said(who, you, text);
         words.IsTextSelectionEnabled = false;
         words.MaxLines = 3;
         words.TextTrimming = TextTrimming.CharacterEllipsis;
@@ -355,13 +350,13 @@ public sealed partial class PlayerView
 
     // Moments.
 
-    void ShowMoment(PartyReaction reaction)
+    void ShowMoment(Kaeri.Engine.Model.RoomReaction reaction)
     {
         var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
         row.Children.Add(ReactionGlyph.Make(reaction.Reaction, 20));
         row.Children.Add(new TextBlock
         {
-            Text = reaction.You ? T.PartyChatYou : reaction.From,
+            Text = reaction.You ? RoomWords.YouAlone : reaction.From,
             FontSize = 14,
             FontWeight = FontWeights.SemiBold,
             VerticalAlignment = VerticalAlignment.Center,
@@ -455,11 +450,9 @@ public sealed partial class PlayerView
     {
         if (ctx is null || !InParty || ChatHidden || mini)
             return false;
-        if (!ChatAllowed)
-        {
-            Say(T.PartyChatOff);
-            return true;
-        }
+        // With the room's column open, its own field takes the words.
+        if (ColumnShows && roomColumn is { } column)
+            return column.Field.Focus(FocusState.Keyboard);
         if (chatField is null)
         {
             chatField = new ChatField(ctx, overVideo: true) { Height = 32 };
@@ -473,7 +466,7 @@ public sealed partial class PlayerView
         }
         if (ChatFieldSlot.Visibility != Visibility.Visible)
             Arrives(ChatFieldSlot);
-        chatField.Lost(ctx.Known.PartyChat?.Failed);
+        chatField.Lost(ctx.Known.RoomChat?.Failed);
         chatField.Typed();
         ShowControls();
         DispatcherQueue.TryEnqueue(() => chatField.Box.Focus(FocusState.Programmatic));

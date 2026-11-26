@@ -459,11 +459,11 @@ public sealed partial class PlayerView : UserControl
                 case Event.PlayerSkipMark or Event.PlayerSkipPrompt or Event.PlayerSkipNotice:
                     HeardSkip(e);
                     break;
-                case Event.PartyJoined or Event.PartyLeft:
+                case Event.RoomJoined or Event.RoomLeft:
                     ShowPartyButton();
                     ChatHeard(e);
                     break;
-                case Event.PartyChat or Event.PartyChatState or Event.PartyReaction or Event.PartyChatRefused:
+                case Event.RoomChat or Event.RoomChatState or Event.RoomReaction or Event.RoomChatRefused:
                     ChatHeard(e);
                     break;
                 case Event.TitleDub td when td.Id == playingId:
@@ -1669,15 +1669,14 @@ public sealed partial class PlayerView : UserControl
         if (TvButton.IsHitTestVisible)
             Add(T.TvPlayOn, () => OnPlayOnTv(TvButton, new RoutedEventArgs()));
         menu.Items.Add(new MenuFlyoutSeparator());
-        Add(T.PartyTitle, ShowParty);
+        Add(RoomWords.Title, ShowParty);
         if (ChatLive)
-            Add(T.PartyChatField, () => OpenChatField(), "C");
+            Add(RoomWords.SaySomething, () => OpenChatField(), "C");
         return menu;
     }
 
-    // Watch party.
+    // Watch together.
 
-    PartyPanel? partyPanel;
 
     void OnParty(object sender, RoutedEventArgs e)
     {
@@ -1690,27 +1689,8 @@ public sealed partial class PlayerView : UserControl
             ctx.Window.StartRoom(playingId, episode);
     }
 
-    /// <summary>The party's panel when in one; the form that starts one when not.</summary>
-    internal void ShowParty()
-    {
-        if (ctx is null)
-            return;
-        if (ctx.Known.Party is null)
-        {
-            ctx.Window.ShowParty(new PartyDialog.For.Playing());
-            return;
-        }
-        if (partyPanel is null)
-        {
-            partyPanel = new PartyPanel(ctx);
-            partyPanel.Flyout.Opened += OnMenuOpened;
-            partyPanel.Flyout.Closed += OnMenuClosed;
-            partyPanel.Flyout.Opened += (_, _) => ChatPopover(true);
-            partyPanel.Flyout.Closed += (_, _) => ChatPopover(false);
-        }
-        ShowControls();
-        partyPanel.Flyout.ShowAt(PartyButton);
-    }
+    /// <summary>The room: its column when in one, Watch together from this episode when not.</summary>
+    internal void ShowParty() => OnParty(PartyButton, new RoutedEventArgs());
 
     /// <summary>Play on TV, in the big player only, once the engine gives a sender.</summary>
     void ShowTvButton()
@@ -1771,10 +1751,10 @@ public sealed partial class PlayerView : UserControl
 
     void ShowPartyButton()
     {
-        var inParty = ctx?.Known.Party is not null;
+        var inParty = ctx?.Known.Room is not null;
         PartyDot.Opacity = inParty ? 1 : 0;
-        ToolTipService.SetToolTip(PartyButton, T.PartyTitle);
-        AutomationProperties.SetName(PartyButton, T.PartyTitle);
+        ToolTipService.SetToolTip(PartyButton, RoomWords.Title);
+        AutomationProperties.SetName(PartyButton, RoomWords.Title);
     }
 
     void OnMenuClosed(object? sender, object e)
@@ -1977,10 +1957,11 @@ public sealed partial class PlayerView : UserControl
     /// <summary>The thumbnail Up next shows, so the same one said again does not blank it.</summary>
     string? upNextStill;
 
-    bool InParty => ctx?.Known.Party is not null;
+    /// <summary>In a room, as the engine says: the room picks episodes and moves on together.</summary>
+    bool InParty => ctx?.Known.Room is not null;
 
-    /// <summary>In a party whose room moves on at the end: everyone goes on together, so nobody's player plays the next episode itself.</summary>
-    bool RoomLeads => InParty && ctx?.Known.Party?.MovesOn == true;
+    /// <summary>In a room, everyone goes on together: Up next is the room's, and nobody's player plays the next episode itself.</summary>
+    bool RoomLeads => InParty;
 
     /// <summary>A seek reached mpv, the viewer's or the engine's: a countdown it lands in or past starts again there.</summary>
     void Sought(double target)
@@ -1993,27 +1974,21 @@ public sealed partial class PlayerView : UserControl
     void ShowUpNext()
     {
         var card = upNext;
-        var leads = RoomLeads;
-        UpNextButtons.Visibility = leads ? Visibility.Collapsed : Visibility.Visible;
+        if (RoomLeads)
+        {
+            // The room's Up next, as the room counts it for everyone (ShowRoomUpNext).
+            UpNextButtons.Visibility = Visibility.Visible;
+            UpNextLine.Visibility = Visibility.Visible;
+            upNextShown = roomUpNextShown;
+            UpdateCorner();
+            return;
+        }
+        UpNextButtons.Visibility = Visibility.Visible;
         var shown = card is { Cancelled: false } && card.ShowsAt(duration) is { } at && Shown >= at;
         upNextShown = shown;
         UpdateCorner();
         if (!shown || card is null)
             return;
-        if (leads)
-        {
-            // The room moves on when the file ends, for everyone at once: the card says so and
-            // counts the last seconds of the file down.
-            var span = (double)Math.Max(10, card.Countdown);
-            var toEnd = duration - Shown;
-            var counting = duration > 0 && toEnd <= span;
-            UpNextBar.Visibility = counting ? Visibility.Visible : Visibility.Collapsed;
-            UpNextLine.Visibility = Visibility.Visible;
-            UpNextLine.Text = counting ? T.PartyNextLine((long)Math.Ceiling(Math.Max(0, toEnd))) : T.PartyNextOff;
-            if (counting)
-                UpNextFill.ScaleX = Math.Clamp(toEnd / span, 0, 1);
-            return;
-        }
         // With a screen reader running the card waits for a choice instead of counting down, and
         // so does it in a party the room doesn't move on: Play now picks the episode for the room.
         // On the time shown, so a seek on its way holds the line full rather than hiding it.
@@ -2037,13 +2012,6 @@ public sealed partial class PlayerView : UserControl
             return;
         if (upNext is not null)
             upNext.Played = true;
-        if (InParty)
-        {
-            // The room's pick, for everyone: the lobby has it.
-            if (upNext is { } card)
-                PlayInRoom(card.Number);
-            return;
-        }
         // The next play is a roll-on: its starting screen waits 600 ms.
         AskedRollOn();
         if (auto && upNext is not { Sought: true })
@@ -2060,19 +2028,15 @@ public sealed partial class PlayerView : UserControl
     }
 
     /// <summary>
-    /// Another episode, asked for in the player while in a party: the room's pick, as Play is
-    /// everywhere in a party, never a play of this device's own. The player gives way to the
-    /// lobby, where the room starts it once everyone is ready. The room's own episode is already
-    /// playing here.
+    /// Another episode, asked for in the player while in a room: the room changes episode for
+    /// everyone, never a play of this device's own. The room's own episode is already playing here.
     /// </summary>
     void PlayInRoom(string episode)
     {
         if (ctx is not { } c || playingId == 0 || episode == playingEpisode)
             return;
         still.Input();
-        c.Send(new Command.Play(playingId, episode, false));
-        Close();
-        c.Window.Go("together");
+        c.Send(new Command.Room(new RoomCommand.ChangeEpisode(playingId, episode)));
     }
 
     /// <summary>N and Shift+N, the media keys' Next and Previous: the next or previous episode in the player's list.</summary>

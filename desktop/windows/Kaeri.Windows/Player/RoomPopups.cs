@@ -202,6 +202,90 @@ static class RoomPopups
         return flyout;
     }
 
+
+    /// <summary>
+    /// Settings › Playback › Watch together › Relays: the list new rooms start on and invites
+    /// carry, with Add and Remove, the spares under it, and Restore the defaults. Null on Cancel;
+    /// an empty list means the defaults.
+    /// </summary>
+    public static async Task<string[]?> EditDefaultRelays(XamlRoot root, RoomRelaySettings settings)
+    {
+        var defaults = settings.Defaults ?? [];
+        var list = new List<string>((settings.Chosen ?? []).Length > 0 ? settings.Chosen! : defaults);
+        var body = new StackPanel { Spacing = 0, Width = 440 };
+        body.Children.Add(Note(T.RoomRelaysIntro));
+        var heading = Heading(T.RoomRelaysNewRooms);
+        heading.Margin = new Thickness(0, 14, 0, 2);
+        body.Children.Add(heading);
+        body.Children.Add(Note(T.RoomRelaysNewRoomsLine));
+        var rows = new StackPanel { Margin = new Thickness(0, 6, 0, 0) };
+        body.Children.Add(Boxed(rows));
+        var add = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 8, 0, 0) };
+        add.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
+        add.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        var field = new TextBox { PlaceholderText = RoomWords.RelayScheme, FontFamily = Mono, FontSize = 12 };
+        AutomationProperties.SetName(field, T.RoomRelaysNewRooms);
+        add.Children.Add(field);
+        var addButton = new Button { Content = RoomWords.Add };
+        Grid.SetColumn(addButton, 1);
+        add.Children.Add(addButton);
+        body.Children.Add(add);
+        var restore = new HyperlinkButton { Content = T.RoomRelaysRestore, Padding = new Thickness(0), Margin = new Thickness(0, 8, 0, 0) };
+        body.Children.Add(restore);
+        var spares = Heading(T.RoomRelaysSpares);
+        spares.Margin = new Thickness(0, 14, 0, 2);
+        body.Children.Add(spares);
+        body.Children.Add(Note(T.RoomRelaysSparesLine));
+        var spareRows = new StackPanel { Margin = new Thickness(0, 6, 0, 0) };
+        foreach (var spare in settings.Spares ?? [])
+            spareRows.Children.Add(RelayRow(spare, true, "", null));
+        body.Children.Add(Boxed(spareRows));
+        void Fill()
+        {
+            rows.Children.Clear();
+            foreach (var url in list.ToList())
+                rows.Children.Add(RelayRow(url, true, null, () =>
+                {
+                    list.Remove(url);
+                    Fill();
+                }));
+            restore.Visibility = list.SequenceEqual(defaults) ? Visibility.Collapsed : Visibility.Visible;
+        }
+        addButton.Click += (_, _) =>
+        {
+            var url = field.Text.Trim();
+            if (url.Length == 0 || list.Contains(url))
+                return;
+            list.Add(url);
+            field.Text = "";
+            Fill();
+        };
+        restore.Click += (_, _) =>
+        {
+            list = [.. defaults];
+            Fill();
+        };
+        Fill();
+        var dialog = new ContentDialog
+        {
+            XamlRoot = root,
+            Title = T.RoomRelays,
+            Content = new ScrollViewer { Content = body, MaxHeight = 520 },
+            PrimaryButtonText = RoomWords.Done,
+            CloseButtonText = RoomWords.Cancel,
+            DefaultButton = ContentDialogButton.Primary,
+        };
+        try
+        {
+            if (await Dialogs.Show(dialog) != ContentDialogResult.Primary)
+                return null;
+        }
+        catch (COMException)
+        {
+            return null;
+        }
+        return list.SequenceEqual(defaults) ? [] : [.. list];
+    }
     static Border Boxed(UIElement child) => new()
     {
         Child = child,

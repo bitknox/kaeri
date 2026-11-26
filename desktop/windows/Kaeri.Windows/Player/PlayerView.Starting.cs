@@ -699,7 +699,7 @@ public sealed partial class PlayerView
                 break;
             case StartAction.ChooseSource or StartAction.ChooseAnother:
                 if (ctx is { } c && XamlRoot is { } root)
-                    _ = PartySourceDialog.ForEpisode(c, root, s.Id, s.Episode).ShowAsync();
+                    _ = new SourceListDialog(c, root, s.Id, s.Episode).ShowAsync();
                 break;
             case StartAction.Details:
                 s.DetailsOpen = !s.DetailsOpen;
