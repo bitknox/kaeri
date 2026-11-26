@@ -340,21 +340,31 @@ fun EinkSolidButton(text: String, onClick: () -> Unit, modifier: Modifier = Modi
     }
 }
 
-/** A second action: the same shape with a 2 dp ink border. */
+/**
+ * A second action: the same shape with a 2 dp ink border. Until it can be pressed, the border and
+ * the words are grey, with no fade on paper.
+ */
 @Composable
-fun EinkOutlinedButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, height: Dp = EinkSizes.ButtonHeight) {
+fun EinkOutlinedButton(
+    text: String,
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier,
+    height: Dp = EinkSizes.ButtonHeight,
+    enabled: Boolean = true,
+) {
     val press = rememberEinkPress()
+    val ink = if (enabled) EinkColours.Ink else EinkColours.Secondary
     Box(
         modifier
             .heightIn(min = height)
             .clip(RoundedCornerShape(height / 2))
-            .einkInverted(press.inverted)
-            .border(BorderStroke(EinkSizes.Rule, EinkColours.Ink), RoundedCornerShape(height / 2))
-            .einkPress(press, shape = RoundedCornerShape(height / 2), inset = EinkSizes.FocusInsideBorder, onClick = onClick)
+            .einkInverted(press.inverted && enabled)
+            .border(BorderStroke(EinkSizes.Rule, ink), RoundedCornerShape(height / 2))
+            .einkPress(press, enabled = enabled, shape = RoundedCornerShape(height / 2), inset = EinkSizes.FocusInsideBorder, onClick = onClick)
             .padding(horizontal = EinkSizes.ButtonSide),
         contentAlignment = Alignment.Center,
     ) {
-        Text(text, style = EinkType.Button, textAlign = TextAlign.Center)
+        Text(text, style = if (enabled) EinkType.Button else EinkType.Button.copy(color = ink), textAlign = TextAlign.Center)
     }
 }
 

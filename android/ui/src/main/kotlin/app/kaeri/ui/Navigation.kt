@@ -134,6 +134,19 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         scope.launch { fade.swap(fullSpeed = true) { change() } }
     }
 
+    /** Whether the page on screen is [work]'s series page. */
+    fun showsSeries(work: WorkId): Boolean {
+        val entry = nav.currentBackStackEntry ?: return false
+        val destination = entry.destinationOf() ?: return false
+        return entry.destination.route == seriesPattern(destination) &&
+            entry.arguments?.getString("work")?.let(android.net.Uri::decode) == work
+    }
+
+    /** Open [work]'s series page, from [from], unless it is the page on screen already. */
+    fun showSeries(work: WorkId, from: String) {
+        if (!showsSeries(work)) openSeries(work, from)
+    }
+
     /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
     var replacing: Boolean by mutableStateOf(false)
         private set

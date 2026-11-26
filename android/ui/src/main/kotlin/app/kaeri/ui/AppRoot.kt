@@ -506,6 +506,21 @@ private fun AppRootFrame(
                 navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE)
             }
         }
+        // The reader closed for Open downloads or Series: the app goes there.
+        val readerExit by app.kaeri.reader.phone.ReaderLauncher.exit.collectAsStateWithLifecycle()
+        androidx.compose.runtime.LaunchedEffect(readerExit) {
+            val exit = readerExit ?: return@LaunchedEffect
+            when (exit) {
+                app.kaeri.reader.phone.ReaderExit.Downloads ->
+                    if (eink && Destination.Downloads in einkBarDestinations(answer, einkReader)) {
+                        navigator.go(Destination.Downloads)
+                    } else if (nav.currentBackStackEntry?.destination?.route != DOWNLOADS_ROUTE) {
+                        navigator.open(DOWNLOADS_ROUTE)
+                    }
+                is app.kaeri.reader.phone.ReaderExit.Series -> navigator.showSeries(exit.work, "reader")
+            }
+            app.kaeri.reader.phone.ReaderLauncher.exited(exit)
+        }
         // The player comes up over whatever is on screen, and goes back to it as it closes.
         if (player != null) {
             androidx.compose.runtime.LaunchedEffect(player.presented) {
