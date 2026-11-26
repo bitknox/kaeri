@@ -1543,7 +1543,10 @@ class AppStore(
             is Event.SourceOptions -> sourceChoices.apply(event.id, event.options)
             is Event.EpisodeChecked -> missing.apply(event.v1)
             is Event.PinUnavailable -> sourceChoices.pinUnavailable(event.id, event.providerId, event.name)
-            is Event.Stores -> stores.apply(event.v1)
+            is Event.Stores -> {
+                stores.apply(event.v1)
+                cameIn.storesNow(event.v1)
+            }
             is Event.LinkOpened -> opened.linkOpened(event.v1)
             is Event.OpenedChoices -> opened.choices(event.link, event.query, event.candidates, event.failed)
             is Event.StorePreview -> stores.previewed(event.v1)

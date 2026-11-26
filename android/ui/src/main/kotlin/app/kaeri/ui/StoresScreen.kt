@@ -632,7 +632,7 @@ private fun JoinedPlugins(
                             FilledTonalButton(
                                 onClick = {
                                     store.installPlugin(report.store, plugin.id)
-                                    model.installedOne(plugin.id)
+                                    model.installingOne(plugin.id)
                                 },
                                 enabled = !busy,
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),

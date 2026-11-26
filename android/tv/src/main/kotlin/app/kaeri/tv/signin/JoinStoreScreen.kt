@@ -498,7 +498,7 @@ private fun JoinedResult(
                                 val busy = store.stores.isWorking(working, StoresModel.Work.Install(list.store, plugin.id))
                                 TvPluginRow(plugin, installed = installed, busy = busy, onInstall = {
                                     store.installPlugin(list.store, plugin.id)
-                                    store.cameIn.installedOne(plugin.id)
+                                    store.cameIn.installingOne(plugin.id)
                                 }, then = doneFocus, first = installFocus.takeIf { plugin.id == firstToInstall })
                             }
                         }
