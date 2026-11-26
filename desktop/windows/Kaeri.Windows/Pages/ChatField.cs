@@ -154,7 +154,7 @@ sealed class ChatField : Grid
         if (left <= Chat.CountFrom && Box.Text.Trim().Length > 0)
         {
             if (!toldLeft)
-                Tell(T.PartyChatLeft(left));
+                Tell(T.RoomChatCharactersLeft(left));
             toldLeft = true;
         }
         else
@@ -162,7 +162,7 @@ sealed class ChatField : Grid
         if (wait > 0)
         {
             if (toldWait == 0)
-                Tell(T.PartyChatWaitSpoken(wait));
+                Tell(T.RoomChatWaitSpoken(wait));
             toldWait = wait;
         }
         else
@@ -200,7 +200,7 @@ sealed class ChatField : Grid
             name.Foreground = Ui.Res<Brush>("HazeBrush");
         block.Inlines.Add(name);
         block.Inlines.Add(new Run { Text = " " + text });
-        AutomationProperties.SetName(block, T.PartyChatAnnounce(who, text));
+        AutomationProperties.SetName(block, T.RoomChatAnnounce(who, text));
         return block;
     }
 

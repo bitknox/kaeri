@@ -191,7 +191,7 @@ public sealed partial class PlayerView
         var who = Chat.Who(line);
         // Said to a screen reader as it comes; reactions are not.
         if (FrameworkElementAutomationPeer.CreatePeerForElement(ChatLines) is { } peer)
-            peer.RaiseNotificationEvent(AutomationNotificationKind.Other, AutomationNotificationProcessing.All, T.PartyChatAnnounce(who, said.Text), "party-chat-line");
+            peer.RaiseNotificationEvent(AutomationNotificationKind.Other, AutomationNotificationProcessing.All, T.RoomChatAnnounce(who, said.Text), "party-chat-line");
         if (chatShown.Count < ChatRoom && chatWaiting.Count == 0 && chatPushed.Count == 0)
             ShowLine(who, line.You, said.Text);
         else
@@ -210,8 +210,8 @@ public sealed partial class PlayerView
                 Motion.Hide(ChatFold);
             return;
         }
-        ChatFoldText.Text = T.PartyChatMore(count);
-        AutomationProperties.SetName(ChatFold, T.PartyChatMore(count));
+        ChatFoldText.Text = T.RoomChatMore(count);
+        AutomationProperties.SetName(ChatFold, T.RoomChatMore(count));
         if (ChatFold.Visibility != Visibility.Visible && !chatPopover)
             Motion.Show(ChatFold);
     }

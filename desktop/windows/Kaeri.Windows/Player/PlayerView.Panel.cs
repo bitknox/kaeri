@@ -1529,7 +1529,7 @@ public sealed partial class PlayerView
         if (Wording.DubLine(dub) is { } line)
             notes.Children.Add(DetailText(line));
         if (InParty)
-            notes.Children.Add(DetailText(T.PartyVersionOwn));
+            notes.Children.Add(DetailText(T.RoomVersionOwn));
         if (notes.Children.Count > 0)
             block.Children.Add(notes);
         return block;

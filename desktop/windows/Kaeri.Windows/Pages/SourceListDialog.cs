@@ -44,7 +44,7 @@ sealed class SourceListDialog
         };
         dialog.PrimaryButtonClick += OnPrimary;
         list.SelectionChanged += (_, _) => dialog.IsPrimaryButtonEnabled = list.SelectedIndex >= 0;
-        AutomationProperties.SetName(list, T.PartySourcesLabel);
+        AutomationProperties.SetName(list, T.SourcesLabel);
         AutomationProperties.SetLiveSetting(line, AutomationLiveSetting.Polite);
         Choose();
     }
@@ -88,7 +88,7 @@ sealed class SourceListDialog
     /// <summary>Step two: what each source lists for the episode, loading in place.</summary>
     void Choose()
     {
-        dialog.Title = T.PartyChooseSourceFor(episode);
+        dialog.Title = T.SourcesChooseFor(episode);
         dialog.PrimaryButtonText = T.ActionPlay;
         dialog.IsPrimaryButtonEnabled = false;
         if (!choosing)
@@ -116,7 +116,7 @@ sealed class SourceListDialog
         ring.Opacity = 1;
         mark.Opacity = 0;
         line.Foreground = Ui.Res<Brush>("TextFillColorSecondaryBrush");
-        line.Text = T.PartyLookingSources;
+        line.Text = T.SourcesLooking;
         ctx.Send(new Command.LoadSources(id, episode));
     }
 
@@ -177,7 +177,7 @@ sealed class SourceListDialog
             }
             else
             {
-                dialog.PrimaryButtonText = T.PartyOpenSources;
+                dialog.PrimaryButtonText = T.SourcesOpen;
                 openProviders = true;
             }
             dialog.IsPrimaryButtonEnabled = true;
@@ -185,13 +185,13 @@ sealed class SourceListDialog
         }
         if (found.Length == 0)
         {
-            line.Text = T.PartyNoSourceLists(episode);
-            dialog.PrimaryButtonText = T.PartyOpenSources;
+            line.Text = T.SourcesNoneList(episode);
+            dialog.PrimaryButtonText = T.SourcesOpen;
             dialog.IsPrimaryButtonEnabled = true;
             openProviders = true;
             return;
         }
-        line.Text = T.PartySourcesFound(found.Length);
+        line.Text = T.SourcesFound(found.Length);
         foreach (var c in found)
         {
             var row = new StackPanel { Padding = new Thickness(0, 4, 0, 4) };

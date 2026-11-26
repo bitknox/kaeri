@@ -368,7 +368,7 @@ sealed class RoomColumn : Grid
         Typography.SetNumeralAlignment(text, FontNumeralAlignment.Tabular);
         if (line.Muted && line.Body is not RoomChatBody.Room)
         {
-            text.Text = T.PartyMutedLine(line.From);
+            text.Text = T.RoomChatMuted(line.From);
             text.FontSize = 13;
             text.Foreground = Haze;
             return text;
@@ -390,15 +390,7 @@ sealed class RoomColumn : Grid
             case RoomChatBody.Reacted reacted:
                 var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 6 };
                 row.Children.Add(ReactionGlyph.Make(reacted.Reaction, 17, Haze));
-                var who = line.You ? RoomWords.YouAlone : line.From;
-                var at = Rooms.Clock(reacted.At);
-                text.Text = reacted.Reaction switch
-                {
-                    Reaction.Laugh => T.RoomReactedLaugh(who, at),
-                    Reaction.Gasp => T.RoomReactedGasp(who, at),
-                    Reaction.Clap => T.RoomReactedClap(who, at),
-                    _ => T.RoomReactedCry(who, at),
-                };
+                text.Text = Chat.ReactionLine(line) ?? "";
                 text.FontSize = 13;
                 text.Foreground = Haze;
                 row.Children.Add(text);
@@ -471,7 +463,7 @@ sealed class RoomColumn : Grid
             if (!r.You && muted != isMuted)
             {
                 muted = isMuted;
-                var item = new MenuFlyoutItem { Text = isMuted ? T.PartyUnmute(r.Name) : T.PartyMute(r.Name) };
+                var item = new MenuFlyoutItem { Text = isMuted ? T.RoomUnmute(r.Name) : T.RoomMute(r.Name) };
                 var who = r.Id;
                 item.Click += (_, _) => column.Mute(who, !isMuted);
                 var menu = new MenuFlyout();

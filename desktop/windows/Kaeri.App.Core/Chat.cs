@@ -27,13 +27,13 @@ public static class Chat
         _ => T.RoomReactCry,
     };
 
-    /// <summary>Names with what they did: "Ren and Mika laughed".</summary>
-    public static string Reacted(string names, Reaction reaction) => reaction switch
+    /// <summary>Names with what they did, and when: "Ren and Mika laughed at 12:04".</summary>
+    public static string Reacted(string names, Reaction reaction, string at) => reaction switch
     {
-        Reaction.Laugh => T.PartyReactedLaugh(names),
-        Reaction.Gasp => T.PartyReactedGasp(names),
-        Reaction.Clap => T.PartyReactedClap(names),
-        _ => T.PartyReactedCry(names),
+        Reaction.Laugh => T.RoomReactedLaugh(names, at),
+        Reaction.Gasp => T.RoomReactedGasp(names, at),
+        Reaction.Clap => T.RoomReactedClap(names, at),
+        _ => T.RoomReactedCry(names, at),
     };
 
     /// <summary>A moment in the episode: <c>m:ss</c>, or <c>h:mm:ss</c> from the first hour.</summary>
@@ -48,9 +48,9 @@ public static class Chat
     public static string Names(string first, IReadOnlyList<string> with) => with.Count switch
     {
         0 => first,
-        1 => T.PartyNamesTwo(first, with[0]),
-        2 => T.PartyNamesThree(first, with[0], with[1]),
-        _ => T.PartyNamesOthers(first, with[0], with.Count - 1),
+        1 => T.RoomNamesTwo(first, with[0]),
+        2 => T.RoomNamesThree(first, with[0], with[1]),
+        _ => T.RoomNamesOthers(first, with[0], with.Count - 1),
     };
 
     /// <summary>Who a line is from, as it reads: "You" for this device's own.</summary>
@@ -58,7 +58,7 @@ public static class Chat
 
     /// <summary>A reaction line as the conversation says it: "Ren and Mika laughed at 12:04".</summary>
     public static string? ReactionLine(RoomChatLine line) =>
-        line.Body is RoomChatBody.Reacted r ? T.PartyReactedAt(Reacted(Names(Who(line), r.With), r.Reaction), Time(r.At)) : null;
+        line.Body is RoomChatBody.Reacted r ? Reacted(Names(Who(line), r.With), r.Reaction, Time(r.At)) : null;
 
     /// <summary>How long a line holds on the video: 4 s, and 1 s for every 10 words past 12, as notices do.</summary>
     public static TimeSpan Hold(string text)
@@ -71,7 +71,7 @@ public static class Chat
     public sealed record Tick(double At, IReadOnlyList<string> Who)
     {
         /// <summary>The seek bar's label near it: "12:04 · Ren and Mika".</summary>
-        public string Label() => T.PartyTickLabel(Time(At), Who.Count == 0 ? "" : Names(Who[0], Who.Skip(1).ToList()));
+        public string Label() => T.RoomTickLabel(Time(At), Who.Count == 0 ? "" : Names(Who[0], Who.Skip(1).ToList()));
     }
 
     /// <summary>
@@ -112,7 +112,7 @@ public static class Chat
     public static string? Tail(string text, uint maxLength, uint waitSeconds)
     {
         if (waitSeconds > 0)
-            return T.PartyChatWait(waitSeconds);
+            return T.RoomChatWait(waitSeconds);
         var left = Math.Max(0, (int)maxLength - text.Length);
         return left <= CountFrom && text.Trim().Length > 0 ? left.ToString(System.Globalization.CultureInfo.CurrentCulture) : null;
     }

@@ -119,7 +119,10 @@ public sealed partial class PlayerView
     {
         // In a room, marking waits: its seeks would move everyone.
         if (ctx?.Known.Room is not null)
+        {
+            Say(T.RoomMarkUnavailable);
             return;
+        }
         Send(new PlayerCommand.BeginSkipMark(kind));
     }
 
@@ -645,6 +648,8 @@ public sealed partial class PlayerView
         menu.Items.Insert(0, mark);
         menu.Items.Insert(1, times);
         menu.Items.Insert(2, new MenuFlyoutSeparator { Tag = "skips" });
+        if (inRoom)
+            ToolTipService.SetToolTip(mark, T.RoomMarkUnavailable);
     }
 
     async void ShowSkipTimes()
