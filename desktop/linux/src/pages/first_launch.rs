@@ -1028,6 +1028,11 @@ fn draw_paired(run: &Rc<Run>, parts: &PairedParts) {
     parts.list.set_visible(parts.list.first_child().is_some());
     parts.heading.set_visible(parts.list.first_child().is_some());
     if let Some(setup) = &setup {
+        // Stores to join here: what a plugin is and whose they are, where the choice is made.
+        if setup.stores.iter().any(|offer| join.refusal(&offer.name).is_none()) {
+            parts.notes.append(&note(&t::plugin_risk_warning()));
+            parts.notes.append(&note(&t::stores_not_from_app()));
+        }
         if setup.folders > 0 {
             parts.notes.append(&note(&t::first_join_folders(&device)));
         }

@@ -378,6 +378,17 @@ impl Join {
             t::stores_device_name_detail()
         };
         self.preview.append(&widgets::haze(&line, "caption"));
+        // Who answers for the store, then what a plugin is, before Join.
+        if !store.already_joined {
+            let owner = if store.owners.is_empty() {
+                store.host.clone()
+            } else {
+                store.owners.join(", ")
+            };
+            self.preview
+                .append(&widgets::haze(&t::stores_join_owner_responsible(&owner), "caption"));
+            self.preview.append(&widgets::haze(&t::plugin_risk_warning(), "caption"));
+        }
 
         if !store.plugins.is_empty() {
             let heading = widgets::heading(&t::stores_plugins());
