@@ -15,17 +15,19 @@ final class RoomFlows: XCTestCase {
     func testTheRoomsMoreMenu() throws {
         let app = launch(room: "menu")
         defer { app.terminate() }
-        let more = app.buttons["More"].firstMatch
+        // Home's own More waits behind the player: the room's has an identifier of its own.
+        let more = app.buttons["room-more"].firstMatch
         XCTAssertTrue(more.waitForExistence(timeout: 120), "the room did not come up with its More button")
         // The scene's own settling (the room's clocks are held once it is staged).
         Thread.sleep(forTimeInterval: 3)
         more.tap()
-        XCTAssertTrue(app.buttons["Leave the room…"].waitForExistence(timeout: 5), "More did not open its menu")
+        let opened = app.buttons["Leave the room…"].waitForExistence(timeout: 5)
         Thread.sleep(forTimeInterval: 1)
         let picture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         picture.name = "\(Self.form)-room-menu"
         picture.lifetime = .keepAlways
         add(picture)
+        XCTAssertTrue(opened, "More did not open its menu")
     }
 
     private func launch(room scene: String) -> XCUIApplication {
