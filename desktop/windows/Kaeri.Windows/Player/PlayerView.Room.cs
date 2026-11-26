@@ -564,7 +564,7 @@ public sealed partial class PlayerView
                 at.Children.Add(Words(panel.Kind == RoomPanelKind.Invited ? RoomWords.RoomIsWatching : RoomWords.UpInTheRoom, 13, strong: true, haze: true));
                 var title = new TextBlock { Text = panel.Show, Style = (Style)Application.Current.Resources["ShowTitleDisplayStyle"], Margin = new Thickness(0, 6, 0, 0), TextAlignment = TextAlignment.Left };
                 at.Children.Add(title);
-                var ep = Words(RoomWords.EpisodeLength(panel.Episode, panel.EpisodeName ?? "", panel.Minutes), 17);
+                var ep = Words(RoomWords.EpisodeLength(panel.Episode, panel.EpisodeName, panel.Minutes), 17);
                 ep.Margin = new Thickness(0, 4, 0, 0);
                 at.Children.Add(ep);
                 var plays = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 10, 0, 0) };

@@ -183,7 +183,9 @@ public sealed partial class MainWindow
         Player.ShowRoom(scene, known.Room is null ? null : known.RoomChat, morph && Motion.Enabled);
         var kind = Rooms.PanelFor(scene);
         var ep = scene.View.RoomEpisode;
-        var panel = kind == RoomPanelKind.None ? null : new RoomPanel(kind, ep?.Title ?? "", scene.Episode, ep?.Name,
+        // The episode's name from the room, else from this device's own list.
+        var name = ep?.Name ?? (ep is null ? null : known.Episodes.GetValueOrDefault(ep.Id)?.FirstOrDefault(r => r.Number == ep.Episode)?.Title);
+        var panel = kind == RoomPanelKind.None ? null : new RoomPanel(kind, ep?.Title ?? "", scene.Episode, name,
             SourceCount: known.Providers.Count(p => !p.IsDemo),
             Pressed: (scene.View.Waiting ?? []).Length > 0 || scene.View.StartsAtMs is not null);
         if (panel == roomPanelShown)
@@ -253,6 +255,30 @@ public sealed partial class MainWindow
         _ => FfiRoomScene.Watching,
     };
 
+
+    /// <summary>A started scene's steps, as <c>FfiFakeRoom.stage</c> takes them, for after the room plays.</summary>
+    static Action<FfiFakeRoom>? AfterStart(FfiRoomScene scene) => scene switch
+    {
+        FfiRoomScene.Paused => f => f.MemberPauses("Mika"),
+        FfiRoomScene.WaitLoading => f => Wait(f, 6),
+        FfiRoomScene.WaitCap => f => Wait(f, 20),
+        FfiRoomScene.CarriedOn => f =>
+        {
+            Wait(f, 24);
+            Thread.Sleep(200);
+            f.MemberCarriesOn("Mika");
+        },
+        FfiRoomScene.Buffering => f => f.MemberStalls("Ren", 3),
+        FfiRoomScene.SkippedOpening => f => f.MemberSkipsOpening("Mika", 90),
+        _ => null,
+    };
+
+    static void Wait(FfiFakeRoom fake, double seconds)
+    {
+        fake.MemberSeeks("Mika", 724);
+        Thread.Sleep(200);
+        fake.MemberLoads("Ren", seconds);
+    }
     /// <summary>Waits until the process has run this long, so a run's shots land on a moment.</summary>
     static async Task AtUptime(double seconds)
     {
@@ -292,7 +318,17 @@ public sealed partial class MainWindow
         if (scene is FfiRoomScene.Invited or FfiRoomScene.InvitedFull)
             RoomInvite = fake.Invite("Mika");
         // The fake blocks while it stages: off the window's thread.
-        var staged = await Task.Run(() => state == "room-wait-story" ? fake.Stage(FfiRoomScene.Watching) : fake.Stage(scene));
+        // Scenes that pause or wait right after joining would pause the room before its start
+        // count ends, leaving it before play: they are staged as Watching, and once the room
+        // plays, the scene's own steps run through the fake's scripts.
+        var after = AfterStart(scene);
+        var staged = await Task.Run(() => fake.Stage(after is not null || state == "room-wait-story" ? FfiRoomScene.Watching : scene));
+        if (after is not null)
+        {
+            for (var i = 0; i < 60 && ctx.Known.Room is not { Playing: true, BeforePlay: false }; i++)
+                await Task.Delay(200);
+            await Task.Run(() => after(fake));
+        }
         if (!staged)
             System.Diagnostics.Debug.WriteLine("room fixture: the device never got into the room");
         await Task.Delay(800);
