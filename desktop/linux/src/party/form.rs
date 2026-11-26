@@ -26,8 +26,6 @@ use crate::{
 pub enum For {
     /// From a title's More menu: this episode plays with the room.
     Episode(AnilistId, String),
-    /// From the player's people button: what plays now plays with the room.
-    Playing,
     /// From an invite link: its room, on its server, with its episode. Links open the lobby
     /// now; this is the older dialog's own step, still driven by the shots that rehearse it.
     #[allow(dead_code)]
@@ -363,7 +361,6 @@ impl Form {
         let line = match &self.what {
             For::Episode(id, episode) => super::episode_of(&self.ctx, *id, episode),
             For::Invite(link) => super::episode_of(&self.ctx, link.id, &link.episode),
-            For::Playing => t::party_form_nothing(),
         };
         self.episode.set_label(&line);
     }
@@ -481,7 +478,6 @@ impl Form {
                 let play = match &self.what {
                     For::Episode(id, episode) => Some((*id, episode.clone())),
                     For::Invite(link) => Some((link.id, link.episode.clone())),
-                    For::Playing => None,
                 };
                 if let Some((id, episode)) = play {
                     self.ctx.hub.send(Command::PlayParty {

@@ -9,10 +9,8 @@
 //! beside the video, which doesn't move, and its contents fade in from 120 ms. With Reduce
 //! Animation the room crossfades in over the player instead, so the picture never goes empty.
 //!
-//! Until the engine's room FFI lands, the room draws the stand-in records in [`model`].
-
-// The stand-ins carry what the engine will send; the rest is wired with its FFI.
-#![allow(dead_code)]
+//! The room listens to the engine's `Room*` events ([`Room::heard`]) and answers its buttons with
+//! `Command::Room`; what only the player can do (play a source, open Sources) goes to the player.
 
 use std::{
     cell::{Cell, RefCell},
@@ -22,6 +20,11 @@ use std::{
 
 use adw::prelude::*;
 use gtk::glib;
+use kaeri_model::{
+    command::Command,
+    event::Event,
+    room::{RoomCommand, RoomGlimpse, RoomLeftWhy, RoomMember, RoomMoveOffer},
+};
 
 pub mod banner;
 pub mod column;
@@ -33,6 +36,8 @@ pub mod fixture;
 pub mod model;
 pub mod place;
 pub mod popovers;
+#[cfg(feature = "fixtures")]
+pub mod scenes;
 pub mod strip;
 pub mod words;
 
@@ -44,6 +49,9 @@ use words::Moves;
 
 /// The column's contents start fading in this long after the column starts to come in.
 const CONTENT_DELAY: Duration = Duration::from_millis(120);
+
+/// Where the room's commands go.
+type Sender = Rc<dyn Fn(Command)>;
 
 /// The room around the player's page.
 pub struct Room {
@@ -58,7 +66,16 @@ pub struct Room {
     pub toggle: gtk::ToggleButton,
     view: RefCell<Option<RoomView>>,
     moves: RefCell<Moves>,
+    /// The engine's room, its members, an invite's look before joining, and a move offer.
+    engine_view: RefCell<Option<kaeri_model::room::RoomView>>,
+    members: RefCell<Vec<RoomMember>>,
+    glimpse: RefCell<Option<(String, RoomGlimpse)>>,
+    offer: RefCell<Option<RoomMoveOffer>>,
+    /// Your sources for the room's episode, for the Choose a source banner.
     sources: RefCell<Vec<(String, String, bool)>>,
+    /// How many sources looked for the episode, for No source.
+    source_count: Cell<usize>,
+    send: RefCell<Option<Sender>>,
     /// This device's clock, in Unix epoch ms. Shots hold it still.
     clock: RefCell<Rc<dyn Fn() -> i64>>,
     tick: RefCell<Option<glib::SourceId>>,
@@ -135,10 +152,13 @@ impl Room {
             toggle,
             view: RefCell::default(),
             moves: RefCell::default(),
-            sources: RefCell::new(vec![
-                ("Local files".into(), "1080p · 1.2 GB".into(), true), // i18n-skip
-                ("night-index".into(), "720p · 640 MB".into(), false), // i18n-skip
-            ]),
+            engine_view: RefCell::default(),
+            members: RefCell::default(),
+            glimpse: RefCell::default(),
+            offer: RefCell::default(),
+            sources: RefCell::default(),
+            source_count: Cell::new(0),
+            send: RefCell::default(),
             clock: RefCell::new(Rc::new(wall_ms)),
             tick: RefCell::default(),
             fullscreen: Cell::new(false),
@@ -173,9 +193,29 @@ impl Room {
         self.aside.borrow_mut().push(widget.as_ref().clone());
     }
 
-    /// What the player does with the room's buttons.
+    /// What the player does with the buttons only it can answer: a source to play, Sources,
+    /// Search.
     pub fn on_act(&self, f: impl Fn(Act) + 'static) {
         self.act.replace(Some(Rc::new(f)));
+    }
+
+    /// Where the room's commands go: the engine.
+    pub fn set_sender(&self, send: impl Fn(Command) + 'static) {
+        self.send.replace(Some(Rc::new(send)));
+    }
+
+    fn send(&self, command: RoomCommand) {
+        let f = self.send.borrow().clone();
+        if let Some(f) = f {
+            f(Command::Room(command));
+        }
+    }
+
+    /// Your sources for the room's episode, as the Choose a source banner lists them, and how
+    /// many sources there are.
+    pub fn set_sources(&self, sources: Vec<(String, String, bool)>, count: usize) {
+        self.sources.replace(sources);
+        self.source_count.set(count);
     }
 
     fn handle(self: &Rc<Self>, a: Act) {
@@ -186,7 +226,7 @@ impl Room {
                     if answer == dialogs::LeaveAnswer::Leave
                         && let Some(me) = me.upgrade()
                     {
-                        me.pass(Act::Leave);
+                        me.send(RoomCommand::Leave);
                     }
                 });
                 return;
@@ -195,14 +235,145 @@ impl Room {
                 self.ask_move();
                 return;
             }
+            Act::Move(take) => self.send(RoomCommand::MoveRoom { take: take.clone() }),
             Act::CopyLink => {
                 if let Some(link) = self.view.borrow().as_ref().and_then(|v| v.link.clone()) {
                     self.widget.display().clipboard().set_text(&link);
                 }
             }
-            _ => {}
+            Act::CarryOn => self.send(RoomCommand::CarryOn),
+            Act::DontWait => self.send(RoomCommand::DontWait),
+            Act::PlayForEveryone => self.send(RoomCommand::Play { play: true }),
+            Act::NewInvite => self.send(RoomCommand::NewInvite),
+            Act::SaveRelays(relays) => {
+                self.send(RoomCommand::EditRelays { relays: relays.clone() });
+            }
+            Act::Say(text) => self.send(RoomCommand::Say { text: text.clone() }),
+            Act::Join => {
+                let glimpse = self.glimpse.borrow().clone();
+                if let Some((invite, glimpse)) = glimpse {
+                    self.send(RoomCommand::Lobby {
+                        invite: Some(invite),
+                        name: None,
+                        pick: None,
+                        anyway: glimpse.full,
+                    });
+                }
+            }
+            Act::NotNow => {
+                if self.glimpse.borrow_mut().take().is_some() {
+                    if self.engine_view.borrow().is_none() {
+                        self.clear();
+                    } else {
+                        self.redraw();
+                    }
+                    return;
+                }
+                self.send(RoomCommand::ChoosingSource { open: false });
+            }
+            Act::GoAlong | Act::Stay => {
+                let offer = self.offer.borrow_mut().take();
+                if let Some(offer) = offer {
+                    self.send(RoomCommand::AnswerMove { offer: offer.id, go: a == Act::GoAlong });
+                }
+                self.redraw();
+            }
+            Act::PlayInRoom(_) | Act::OpenSources | Act::SearchTitles => {}
         }
         self.pass(a);
+    }
+
+    /// What the engine says about the room.
+    pub fn heard(self: &Rc<Self>, event: &Event) {
+        match event {
+            Event::RoomJoined(view) | Event::RoomState(view) => {
+                if matches!(event, Event::RoomJoined(_)) {
+                    self.glimpse.replace(None);
+                    self.members.replace(Vec::new());
+                }
+                self.engine_view.replace(Some(view.clone()));
+                self.redraw();
+            }
+            Event::RoomMembers(members) => {
+                self.members.replace(members.clone());
+                self.redraw();
+            }
+            Event::RoomChat(conversation) => {
+                self.show_conversation(&model::ConvLine::from_engine(conversation));
+            }
+            Event::RoomGlimpse(glimpse) => {
+                let mut held = self.glimpse.borrow_mut();
+                // Only the invite this device opened shows as one.
+                if let Some((_, g)) = held.as_mut() {
+                    *g = glimpse.clone();
+                    drop(held);
+                    self.redraw();
+                }
+            }
+            Event::RoomMoveOffer(offer) => {
+                self.offer.replace(Some(offer.clone()));
+                self.redraw();
+            }
+            Event::RoomMoveOfferGone { id } => {
+                let gone = self.offer.borrow().as_ref().is_some_and(|o| &o.id == id);
+                if gone {
+                    self.offer.replace(None);
+                    self.redraw();
+                }
+            }
+            Event::RoomLeft { why } => {
+                self.engine_view.replace(None);
+                self.members.replace(Vec::new());
+                self.offer.replace(None);
+                if !matches!(why, RoomLeftWhy::Left | RoomLeftWhy::Moved) {
+                    self.glimpse.replace(None);
+                }
+                if self.glimpse.borrow().is_some() {
+                    self.redraw();
+                } else {
+                    self.clear();
+                }
+            }
+            _ => {}
+        }
+    }
+
+    /// An invite opened here: the room shows as it is, with Join the room and Not now.
+    pub fn peek(&self, invite: &str) {
+        self.glimpse.replace(Some((
+            invite.to_owned(),
+            RoomGlimpse {
+                room_id: None,
+                by: None,
+                members: Vec::new(),
+                room_episode: None,
+                playing: false,
+                full: false,
+            },
+        )));
+        self.send(RoomCommand::PeekInvite { invite: invite.to_owned() });
+    }
+
+    /// Draw the room again from what the engine said.
+    fn redraw(self: &Rc<Self>) {
+        let glimpse = self.glimpse.borrow().clone();
+        let view = match (&glimpse, self.engine_view.borrow().as_ref()) {
+            (Some((_, g)), _) if g.room_episode.is_some() || !g.members.is_empty() => {
+                RoomView::from_glimpse(g)
+            }
+            (_, Some(v)) => RoomView::from_engine(v, &self.members.borrow()),
+            _ => return,
+        };
+        let mut moves = Moves::default();
+        if let Some(offer) = self.offer.borrow().as_ref() {
+            moves.offer_by = Some(offer.by.clone());
+            moves.offer_others = offer.names.clone();
+        }
+        if let Some(moved) = self.engine_view.borrow().as_ref().and_then(|v| v.moved.clone()) {
+            moves.moved_by = Some(moved.by);
+            moves.went = moved.went;
+        }
+        self.show(view, moves);
     }
 
     fn pass(&self, a: Act) {
@@ -220,11 +391,10 @@ impl Room {
             &self.widget,
             &view.name,
             &view.move_candidates,
-            view.position,
+            view.position_at(self.now()),
             move |take| {
                 if let Some(me) = me.upgrade() {
-                    me.pass(Act::MoveRoom);
-                    let _ = take;
+                    me.handle(Act::Move(take));
                 }
             },
         ))
@@ -236,11 +406,6 @@ impl Room {
         answer: impl Fn(dialogs::LeaveAnswer) + 'static,
     ) -> adw::AlertDialog {
         dialogs::leave(&self.widget, true, answer)
-    }
-
-    /// Hold the room's clock at `now_ms`, for shots.
-    pub fn hold_clock(&self, now_ms: i64) {
-        self.clock.replace(Rc::new(move || now_ms));
     }
 
     fn now(&self) -> i64 {
@@ -257,7 +422,7 @@ impl Room {
         let now = self.now();
         self.column.show(&view, &moves, now);
         self.strip.show(&view, &moves, now);
-        let panel = Panel::for_view(&view, &self.sources.borrow());
+        let panel = Panel::for_view(&view, &self.sources.borrow(), self.source_count.get(), now);
         self.banner.show(&view, panel.as_ref());
         self.toggle.set_visible(true);
         for w in self.aside.borrow().iter() {
@@ -278,6 +443,7 @@ impl Room {
     /// Out of the room: the column goes and the player is the player again.
     pub fn clear(&self) {
         self.view.replace(None);
+        self.banner.show(&RoomView::default(), None);
         self.split.set_show_sidebar(false);
         self.toggle.set_visible(false);
         self.toggle.set_active(false);
@@ -295,6 +461,8 @@ impl Room {
         let counts = self.view.borrow().as_ref().is_some_and(|v| {
             !v.waiting.is_empty()
                 || v.up_next.is_some()
+                || v.starts_at_ms.is_some()
+                || v.playing
                 || v.members.iter().any(|m| m.since_ms.is_some())
         });
         let mut tick = self.tick.borrow_mut();
@@ -307,6 +475,13 @@ impl Room {
                     let now = me.now();
                     me.column.show(&view, &moves, now);
                     me.strip.show(&view, &moves, now);
+                    let panel = Panel::for_view(
+                        &view,
+                        &me.sources.borrow(),
+                        me.source_count.get(),
+                        now,
+                    );
+                    me.banner.show(&view, panel.as_ref());
                 }
                 glib::ControlFlow::Continue
             }));

@@ -44,7 +44,10 @@ pub enum Act {
     Leave,
     CopyLink,
     NewInvite,
+    /// Move to a new room…: the dialog.
     MoveRoom,
+    /// Move with these member ids.
+    Move(Vec<String>),
     SaveRelays(Vec<String>),
     Say(String),
     PlayForEveryone,
@@ -63,7 +66,6 @@ struct Row {
 
 pub struct Column {
     pub widget: adw::ToolbarView,
-    pub header: adw::HeaderBar,
     line_stack: gtk::Stack,
     lines: [(gtk::Label, gtk::Label); 2],
     front: Cell<usize>,
@@ -167,7 +169,7 @@ impl Column {
 
         let list = crate::widgets::boxed_list();
         list.add_css_class("room-people");
-        list.update_property(&[gtk::accessible::Property::Label(&c::room_people())]);
+        list.update_property(&[gtk::accessible::Property::Label(&c::room_people(0))]);
         let list_scroll = gtk::ScrolledWindow::builder()
             .child(&list)
             .hscrollbar_policy(gtk::PolicyType::Never)
@@ -236,7 +238,6 @@ impl Column {
 
         Rc::new(Self {
             widget,
-            header,
             line_stack,
             lines: [(t0, s0), (t1, s1)],
             front: Cell::new(0),

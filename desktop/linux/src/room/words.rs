@@ -74,7 +74,7 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
         buttons: LineButtons::None,
         holds: false,
     };
-    let at = mmss(view.position);
+    let at = mmss(view.position_at(now_ms));
     if let Some(by) = &moves.offer_by {
         let others: Vec<&str> = moves.offer_others.iter().map(String::as_str).collect();
         return Line {
@@ -92,7 +92,7 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
         let sub = if view.over_cap {
             c::line_over_cap(view.members.len())
         } else {
-            format!("{} · {}", view.title, view.episode_label()) // i18n-skip
+            c::line_invited_detail(&view.title, &view.episode)
         };
         return Line {
             title: c::line_invited(by),
@@ -105,13 +105,14 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
     if matches!(view.connection, RoomConnection::Reconnecting { .. }) {
         return plain(c::line_reconnecting(), c::line_no_relay());
     }
+    let shows = view.wait_shows(now_ms);
     let waited: Vec<&str> = view
         .waiting
         .iter()
-        .filter(|w| you.is_none_or(|y| y.name != w.name))
+        .filter(|w| shows && !w.you)
         .map(|w| w.name.as_str())
         .collect();
-    let waits_for_you = you.is_some_and(|y| view.waiting.iter().any(|w| w.name == y.name));
+    let waits_for_you = shows && view.waiting.iter().any(|w| w.you);
     let oldest = view.waiting.iter().map(|w| w.since_ms).min().map(|s| secs_since(s, now_ms));
     if waits_for_you {
         let others: Vec<&str> = view
@@ -122,36 +123,33 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
             .collect();
         return Line {
             title: c::line_paused_for_you(),
-            sub: c::line_waiting_on_you(
-                &join_names(&others),
-                others.len() > 1,
-                oldest.unwrap_or(0),
-            ),
+            sub: c::line_waiting_on_you(&join_names(&others), others.len(), oldest.unwrap_or(0)),
             buttons: LineButtons::DontWait,
             holds: true,
         };
     }
     let names = join_names(&waited);
     let many = waited.len() > 1;
-    let without = if many { c::them() } else { names.clone() };
-    match view.before {
+    let without = (!many).then_some(names.as_str());
+    let carry = view.carry_on_now(now_ms);
+    match view.before(now_ms) {
         Some(Before::Idle) => return plain(c::line_not_started(), c::line_play_starts()),
         Some(Before::Count(n)) => {
             return plain(c::line_starting_in(n), c::line_everyone_ready());
         }
         Some(Before::Waiting) if !waited.is_empty() => {
             let secs = oldest.unwrap_or(0);
-            if view.can_carry_on || secs >= CAP_SECS {
+            if carry {
                 return Line {
-                    title: c::line_still_loading(&names, many),
-                    sub: c::line_waited(),
-                    buttons: LineButtons::CarryOn(c::start_without(&without)),
+                    title: c::line_still_loading(&names, waited.len()),
+                    sub: c::line_waited(secs),
+                    buttons: LineButtons::CarryOn(c::start_without(without)),
                     holds: true,
                 };
             }
             return Line {
-                title: c::line_starting_when(&names, many),
-                sub: c::line_why(&c::why_loading(), secs),
+                title: c::line_starting_when(&names, waited.len()),
+                sub: c::line_why(WaitReason::Loading, secs),
                 buttons: LineButtons::None,
                 holds: true,
             };
@@ -163,18 +161,24 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
         && let Some(ends) = up.ends_at_ms
     {
         let secs = ((ends - now_ms) as f64 / 1000.0).ceil().max(0.0) as i64;
-        return plain(c::line_up_next(secs), c::line_up_next_for_everyone(&up.episode));
+        return plain(c::line_up_next(secs), c::line_up_next_for_everyone(&up.episode.episode));
     }
     if !waited.is_empty() {
-        if let Some(by) = &view.carried_on_by {
-            return plain(c::line_watching(), c::line_carried(by, &names, many));
+        if let Some(carried) = &view.carried_on {
+            let past: Vec<&str> = carried.past.iter().map(String::as_str).collect();
+            let (names, many) = if past.is_empty() {
+                (names.clone(), many)
+            } else {
+                (join_names(&past), past.len() > 1)
+            };
+            return plain(c::line_watching(), c::line_carried(&carried.by, &names, many));
         }
         let secs = oldest.unwrap_or(0);
-        if view.can_carry_on || secs >= CAP_SECS {
+        if carry {
             return Line {
-                title: c::line_still_loading(&names, many),
-                sub: c::line_waited(),
-                buttons: LineButtons::CarryOn(c::carry_on_without(&without)),
+                title: c::line_still_loading(&names, waited.len()),
+                sub: c::line_waited(secs),
+                buttons: LineButtons::CarryOn(c::carry_on_without(without)),
                 holds: true,
             };
         }
@@ -182,13 +186,12 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
             waited.len(),
             view.waiting.iter().find(|w| w.name == waited[0]).map(|w| w.reason),
         ) {
-            (1, Some(WaitReason::Buffering)) => c::why_buffering(),
-            (1, Some(WaitReason::Seeking)) => c::why_seeking(),
-            _ => c::why_loading(),
+            (1, Some(reason)) => reason,
+            _ => WaitReason::Loading,
         };
         return Line {
             title: c::line_paused_for(&names),
-            sub: c::line_why(&why, secs),
+            sub: c::line_why(why, secs),
             buttons: LineButtons::None,
             holds: true,
         };
@@ -213,14 +216,7 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
         };
         return plain(title, c::line_paused_at(&at));
     }
-    plain(c::line_watching(), c::line_at(&view.episode_label(), &at))
-}
-
-impl RoomView {
-    /// "Episode 9".
-    pub fn episode_label(&self) -> String {
-        kaeri_i18n::t::episode_number(crate::party::number(&self.episode))
-    }
+    plain(c::line_watching(), c::line_at(&view.episode, &at))
 }
 
 /// How a face's ring draws.
@@ -256,8 +252,9 @@ pub fn face(view: &RoomView, member: &RoomMember, now_ms: i64) -> Face {
     let progress = |s: Option<i64>| {
         Ring::Progress((s.unwrap_or(0) as f64 / CAP_SECS as f64).clamp(0.04, 1.0))
     };
-    let before = view.before.is_some();
+    let before = view.before_play;
     let (word, ring, dim) = match member.state {
+        MemberState::Ready => (c::state_ready(), Ring::Water, 1.0),
         MemberState::Watching if before => (c::state_ready(), Ring::Water, 1.0),
         MemberState::Watching => (c::state_watching(), Ring::Water, 1.0),
         MemberState::Paused if member.paused_room => (c::state_paused_it(), Ring::Haze, 1.0),
@@ -268,7 +265,8 @@ pub fn face(view: &RoomView, member: &RoomMember, now_ms: i64) -> Face {
         MemberState::Loading => (c::state_loading(secs.unwrap_or(0)), progress(secs), 1.0),
         MemberState::Buffering => (c::state_buffering(secs.unwrap_or(0)), progress(secs), 1.0),
         MemberState::OtherEpisode => {
-            (c::state_other_episode(member.episode.as_deref().unwrap_or("")), Ring::None, 0.5)
+            let episode = member.episode.as_ref().map_or("", |e| e.episode.as_str());
+            (c::state_other_episode(episode), Ring::None, 0.5)
         }
         MemberState::Choosing => (c::state_choosing(), Ring::None, 0.5),
         MemberState::NoSource => (c::state_no_source(&view.episode), Ring::None, 0.5),
@@ -278,7 +276,7 @@ pub fn face(view: &RoomView, member: &RoomMember, now_ms: i64) -> Face {
     };
     let word = if member.muted { c::state_muted(&word) } else { word };
     Face {
-        loud: !matches!(member.state, MemberState::Watching),
+        loud: !matches!(member.state, MemberState::Watching | MemberState::Ready),
         badge: member.state == MemberState::Paused && member.paused_room,
         error: member.state == MemberState::NoSource,
         word,
@@ -291,7 +289,10 @@ pub fn face(view: &RoomView, member: &RoomMember, now_ms: i64) -> Face {
 pub fn anyone_not_watching(view: &RoomView) -> bool {
     !view.waiting.is_empty()
         || view.members.iter().any(|m| {
-            !matches!(m.state, MemberState::Watching | MemberState::Paused | MemberState::Left)
+            !matches!(
+                m.state,
+                MemberState::Watching | MemberState::Ready | MemberState::Paused | MemberState::Left
+            )
         })
 }
 

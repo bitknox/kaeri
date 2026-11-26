@@ -2832,6 +2832,7 @@ dependencies = [
  "kaeri-party",
  "kaeri-providers",
  "kaeri-remote",
+ "kaeri-room",
  "kaeri-store",
  "kaeri-testkit",
  "kaeri-track",
@@ -2887,6 +2888,7 @@ dependencies = [
  "kaeri-plugin-store",
  "kaeri-providers",
  "kaeri-remote",
+ "kaeri-room",
  "kaeri-store",
  "kaeri-store-server",
  "kaeri-sync",
@@ -3100,6 +3102,16 @@ dependencies = [
  "thiserror 2.0.21",
  "tokio",
  "tokio-rustls",
+ "tracing",
+]
+
+[[package]]
+name = "kaeri-room"
+version = "0.5.4"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tokio",
  "tracing",
 ]
 
