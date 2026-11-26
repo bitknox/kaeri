@@ -6586,8 +6586,8 @@
     <string name="room_line_paused_for_you">Paused for you</string>
     <!-- Second line while the room waits for you: who waits, and for how many seconds so far. -->
     <plurals name="room_line_waiting_for_you">
-        <item quantity="one">%1$s is waiting · %3$,d s</item>
-        <item quantity="other">%1$s are waiting · %3$,d s</item>
+        <item quantity="one">%1$s is waiting · %3$,d s</item>
+        <item quantity="other">%1$s are waiting · %3$,d s</item>
     </plurals>
     <!-- First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for. -->
     <plurals name="room_line_still_loading">
@@ -6595,7 +6595,7 @@
         <item quantity="other">%1$s are still loading</item>
     </plurals>
     <!-- Second line once the room has waited as long as it will. -->
-    <string name="room_line_waited">The room has waited %1$,d s</string>
+    <string name="room_line_waited">The room has waited %1$,d s</string>
     <!-- Second line after someone pressed Carry on, when the room waited for one person. -->
     <string name="room_line_carried_on_one">%1$s carried on · %2$s joins when ready</string>
     <!-- Second line after someone pressed Carry on, when the room waited for more than one person. -->
@@ -6616,9 +6616,9 @@
     <!-- Second line when your own device lost every relay. -->
     <string name="room_line_reconnecting_detail">No relay is answering · your episode keeps playing</string>
     <!-- Second line when your own player is behind the room. -->
-    <string name="room_line_you_behind">You\'re %1$,d s behind · catching up</string>
+    <string name="room_line_you_behind">You\'re %1$,d s behind · catching up</string>
     <!-- The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines. -->
-    <string name="room_line_with_seconds">%1$s · %2$,d s</string>
+    <string name="room_line_with_seconds">%1$s · %2$,d s</string>
     <!-- Stands for the people the room waits for when there are more than two, inside "Paused for …". -->
     <plurals name="room_names_people">
         <item quantity="one">%1$,d person</item>
@@ -6633,11 +6633,11 @@
     <!-- State word: the room is paused; this person was watching. -->
     <string name="room_state_paused">Paused</string>
     <!-- State word: the slowest player, holding the room back, with the gap in seconds. -->
-    <string name="room_state_behind">Behind · %1$,d s</string>
+    <string name="room_state_behind">Behind · %1$,d s</string>
     <!-- State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person. -->
-    <string name="room_state_loading">Loading · %1$,d s</string>
+    <string name="room_state_loading">Loading · %1$,d s</string>
     <!-- State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person. -->
-    <string name="room_state_buffering">Buffering · %1$,d s</string>
+    <string name="room_state_buffering">Buffering · %1$,d s</string>
     <!-- State word: this person plays another episode than the room's. -->
     <string name="room_state_other_episode">On episode %1$s</string>
     <!-- State word: this person is picking which source to play from. -->
@@ -6676,9 +6676,9 @@
     <!-- State under the last face when everyone hidden is watching. -->
     <string name="room_more_all_watching">All watching</string>
     <!-- Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode. -->
-    <string name="room_wait_loading">loading · %1$,d s</string>
+    <string name="room_wait_loading">loading · %1$,d s</string>
     <!-- Reason in the waiting capsule, after Paused for, lower case: their player stalled. -->
-    <string name="room_wait_buffering">buffering · %1$,d s</string>
+    <string name="room_wait_buffering">buffering · %1$,d s</string>
     <!-- Button once the room has waited 20 seconds for one person. -->
     <string name="room_carry_on_without">Carry on without %1$s</string>
     <!-- Button once the room has waited 20 seconds for more than one person. -->
@@ -6690,7 +6690,7 @@
     <!-- Second part of the capsule after Carry on, when the room waited for more than one person. -->
     <string name="room_join_at_place_many">They join at the room\'s place</string>
     <!-- Line on your own starting screen while the room waits for you, with the seconds so far. -->
-    <string name="room_paused_until_start">The room is paused until this starts · %1$,d s</string>
+    <string name="room_paused_until_start">The room is paused until this starts · %1$,d s</string>
     <!-- Button on your own starting screen that lets the room carry on without you. -->
     <string name="room_dont_wait">Don\'t wait for me</string>
     <!-- First line before anyone pressed Play. -->
@@ -6844,7 +6844,7 @@
     <!-- State of a relay that doesn't answer. -->
     <string name="room_relay_not_answering">Not answering</string>
     <!-- Round trip time of a relay. -->
-    <string name="room_relay_latency">%1$,d ms</string>
+    <string name="room_relay_latency">%1$,d ms</string>
     <!-- Line under the relays in Details. -->
     <string name="room_details_relays_line">Relays pass the room\'s messages along and can\'t read them. These are public relays run by others; Kaeri doesn\'t run any of them. If one stops answering, the room swaps in a spare.</string>
     <!-- Button in Details that edits the room's relays. -->
@@ -6913,13 +6913,13 @@
     <!-- Line on the card naming the next episode when it has no title. -->
     <string name="room_up_next_episode_plain">Episode %1$s</string>
     <!-- Line on the card counting down for everyone. -->
-    <string name="room_up_next_count">Plays for everyone in %1$,d s</string>
+    <string name="room_up_next_count">Plays for everyone in %1$,d s</string>
     <!-- Line on the card while your file ended sooner and the room waits for someone's longer file. -->
     <string name="room_up_next_waiting">Waiting for %1$s to finish</string>
     <!-- Button on the card that moves the room on at once. -->
     <string name="room_play_next_now">Play next now</string>
     <!-- First line of the room while up next counts down. -->
-    <string name="room_line_up_next">Up next in %1$,d s</string>
+    <string name="room_line_up_next">Up next in %1$,d s</string>
     <!-- Second line while up next counts down. -->
     <string name="room_line_up_next_detail">Episode %1$s plays for everyone</string>
     <!-- Placeholder of the chat field. -->
@@ -7011,7 +7011,7 @@
     <!-- The same error in one line, where there is no room for a title. -->
     <string name="room_error_unreachable">Couldn\'t reach this room\'s relays. Ask for a new invite.</string>
     <!-- Line after it in the place: what was tried. -->
-    <string name="room_error_tried">Kaeri tried the link\'s relays and your spares, %1$,d s each.</string>
+    <string name="room_error_tried">Kaeri tried the link\'s relays and your spares, %1$,d s each.</string>
     <!-- Title of the alert when a recent room has nobody answering, such as after a new invite. -->
     <string name="room_error_nobody_answered">Nobody answered in this room</string>
     <!-- Line under it. -->
@@ -7049,7 +7049,7 @@
     <!-- The starting screen's line on the device opening the room's episode. -->
     <string name="room_starting_episode">Starting episode %1$s</string>
     <!-- A short length in minutes, on the banner before play. -->
-    <string name="room_minutes">%1$,d min</string>
+    <string name="room_minutes">%1$,d min</string>
     <!-- Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma. -->
     <string name="room_names_and">%1$s and %2$s</string>
     <!-- Joins two names in a longer list: "Mika, Ren". -->
@@ -7065,7 +7065,7 @@
     <!-- Spoken by a screen reader when a chat line arrives. -->
     <string name="room_chat_announce">%1$s says %2$s</string>
     <!-- End of the chat field while sending waits, after three messages in five seconds. -->
-    <string name="room_chat_wait">Wait %1$,d s</string>
+    <string name="room_chat_wait">Wait %1$,d s</string>
     <!-- Spoken once when sending waits, for screen readers. -->
     <plurals name="room_chat_wait_spoken">
         <item quantity="one">Wait one second</item>
@@ -7095,11 +7095,17 @@
     <!-- Heading of the people list in the room, and its accessibility label. -->
     <string name="room_people">People in the room</string>
     <!-- State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person. -->
-    <string name="room_state_seeking">Seeking · %1$,d s</string>
+    <string name="room_state_seeking">Seeking · %1$,d s</string>
     <!-- Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title. -->
     <string name="room_error_unreachable_lead">Couldn\'t reach this room\'s relays.</string>
     <!-- Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title. -->
     <string name="room_error_nobody_answered_lead">Nobody answered in this room.</string>
+    <!-- Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV. -->
+    <string name="room_device_in_room">%1$s is in this room</string>
+    <!-- Button on the phone's remote screen that leaves the room on the paired TV. -->
+    <string name="room_leave_on_device">Leave the room on %1$s</string>
+    <!-- Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links. -->
+    <string name="room_tv_join_from_phone">To join someone\'s room, open their invite on a paired phone and choose this TV.</string>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->

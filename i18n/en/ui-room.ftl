@@ -29,8 +29,8 @@ room-line-paused-for-you = Paused for you
 # @arg count: int
 # @arg seconds: int
 room-line-waiting-for-you = { $count ->
-    [one] { $names } is waiting · { $seconds } s
-   *[other] { $names } are waiting · { $seconds } s
+    [one] { $names } is waiting · { $seconds } s
+   *[other] { $names } are waiting · { $seconds } s
 }
 
 # First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
@@ -44,7 +44,7 @@ room-line-still-loading = { $count ->
 
 # Second line once the room has waited as long as it will.
 # @arg seconds: int
-room-line-waited = The room has waited { $seconds } s
+room-line-waited = The room has waited { $seconds } s
 
 # Second line after someone pressed Carry on, when the room waited for one person.
 # @arg carrier: text
@@ -85,12 +85,12 @@ room-line-reconnecting-detail = No relay is answering · your episode keeps play
 
 # Second line when your own player is behind the room.
 # @arg seconds: int
-room-line-you-behind = You're { $seconds } s behind · catching up
+room-line-you-behind = You're { $seconds } s behind · catching up
 
 # The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.
 # @arg line: text
 # @arg seconds: int
-room-line-with-seconds = { $line } · { $seconds } s
+room-line-with-seconds = { $line } · { $seconds } s
 
 # Stands for the people the room waits for when there are more than two, inside "Paused for …".
 # @arg count: int
@@ -122,17 +122,17 @@ room-state-paused = Paused
 # State word: the slowest player, holding the room back, with the gap in seconds.
 # @arg seconds: int
 # @max 24
-room-state-behind = Behind · { $seconds } s
+room-state-behind = Behind · { $seconds } s
 
 # State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.
 # @arg seconds: int
 # @max 24
-room-state-loading = Loading · { $seconds } s
+room-state-loading = Loading · { $seconds } s
 
 # State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.
 # @arg seconds: int
 # @max 24
-room-state-buffering = Buffering · { $seconds } s
+room-state-buffering = Buffering · { $seconds } s
 
 # State word: this person plays another episode than the room's.
 # @arg episode: text
@@ -217,11 +217,11 @@ room-more-all-watching = All watching
 
 # Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.
 # @arg seconds: int
-room-wait-loading = loading · { $seconds } s
+room-wait-loading = loading · { $seconds } s
 
 # Reason in the waiting capsule, after Paused for, lower case: their player stalled.
 # @arg seconds: int
-room-wait-buffering = buffering · { $seconds } s
+room-wait-buffering = buffering · { $seconds } s
 
 # Button once the room has waited 20 seconds for one person.
 # @arg name: text
@@ -245,7 +245,7 @@ room-join-at-place-many = They join at the room's place
 
 # Line on your own starting screen while the room waits for you, with the seconds so far.
 # @arg seconds: int
-room-paused-until-start = The room is paused until this starts · { $seconds } s
+room-paused-until-start = The room is paused until this starts · { $seconds } s
 
 # Button on your own starting screen that lets the room carry on without you.
 # @max 28
@@ -546,7 +546,7 @@ room-relay-not-answering = Not answering
 
 # Round trip time of a relay.
 # @arg ms: int
-room-relay-latency = { $ms } ms
+room-relay-latency = { $ms } ms
 
 # Line under the relays in Details.
 room-details-relays-line = Relays pass the room's messages along and can't read them. These are public relays run by others; { -app-name } doesn't run any of them. If one stops answering, the room swaps in a spare.
@@ -669,7 +669,7 @@ room-up-next-episode-plain = Episode { $episode }
 
 # Line on the card counting down for everyone.
 # @arg seconds: int
-room-up-next-count = Plays for everyone in { $seconds } s
+room-up-next-count = Plays for everyone in { $seconds } s
 
 # Line on the card while your file ended sooner and the room waits for someone's longer file.
 # @arg name: text
@@ -682,7 +682,7 @@ room-play-next-now = Play next now
 # First line of the room while up next counts down.
 # @arg seconds: int
 # @max 40
-room-line-up-next = { -up-next-cap } in { $seconds } s
+room-line-up-next = { -up-next-cap } in { $seconds } s
 
 # Second line while up next counts down.
 # @arg episode: text
@@ -876,7 +876,7 @@ room-error-unreachable = Couldn't reach this room's relays. Ask for a new invite
 
 # Line after it in the place: what was tried.
 # @arg seconds: int
-room-error-tried = { -app-name } tried the link's relays and your spares, { $seconds } s each.
+room-error-tried = { -app-name } tried the link's relays and your spares, { $seconds } s each.
 
 # Title of the alert when a recent room has nobody answering, such as after a new invite.
 room-error-nobody-answered = Nobody answered in this room
@@ -951,7 +951,7 @@ room-starting-episode = Starting episode { $episode }
 
 # A short length in minutes, on the banner before play.
 # @arg minutes: int
-room-minutes = { $minutes } min
+room-minutes = { $minutes } min
 
 # Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before,
 # already joined with room-names-comma.
@@ -993,7 +993,7 @@ room-chat-announce = { $name } says { $message }
 # End of the chat field while sending waits, after three messages in five seconds.
 # @arg seconds: int
 # @max 16
-room-chat-wait = Wait { $seconds } s
+room-chat-wait = Wait { $seconds } s
 
 # Spoken once when sending waits, for screen readers.
 # @arg seconds: int
@@ -1056,7 +1056,7 @@ room-people = People in the room
 # State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
 # @arg seconds: int
 # @max 24
-room-state-seeking = Seeking · { $seconds } s
+room-state-seeking = Seeking · { $seconds } s
 
 # Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
 room-error-unreachable-lead = Couldn't reach this room's relays.
@@ -1064,3 +1064,15 @@ room-error-unreachable-lead = Couldn't reach this room's relays.
 # Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
 room-error-nobody-answered-lead = Nobody answered in this room.
 
+
+# Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+# @arg device: text
+room-device-in-room = { $device } is in this room
+
+# Button on the phone's remote screen that leaves the room on the paired TV.
+# @arg device: text
+# @max 40
+room-leave-on-device = Leave the room on { $device }
+
+# Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+room-tv-join-from-phone = To join someone's room, open their invite on a paired phone and choose this TV.

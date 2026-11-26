@@ -11150,7 +11150,7 @@ public enum L {
 
     /// Second line while the room waits for you: who waits, and for how many seconds so far.
     public static func roomLineWaitingForYou(names: String, count: Int, seconds: Int) -> String {
-        Self.format("room-line-waiting-for-you", fallback: "%1$@ are waiting · %3$lld s", names, count, seconds)
+        Self.format("room-line-waiting-for-you", fallback: "%1$@ are waiting · %3$lld s", names, count, seconds)
     }
 
     /// First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
@@ -11160,7 +11160,7 @@ public enum L {
 
     /// Second line once the room has waited as long as it will.
     public static func roomLineWaited(seconds: Int) -> String {
-        Self.format("room-line-waited", fallback: "The room has waited %1$lld s", seconds)
+        Self.format("room-line-waited", fallback: "The room has waited %1$lld s", seconds)
     }
 
     /// Second line after someone pressed Carry on, when the room waited for one person.
@@ -11199,12 +11199,12 @@ public enum L {
 
     /// Second line when your own player is behind the room.
     public static func roomLineYouBehind(seconds: Int) -> String {
-        Self.format("room-line-you-behind", fallback: "You're %1$lld s behind · catching up", seconds)
+        Self.format("room-line-you-behind", fallback: "You're %1$lld s behind · catching up", seconds)
     }
 
     /// The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.
     public static func roomLineWithSeconds(line: String, seconds: Int) -> String {
-        Self.format("room-line-with-seconds", fallback: "%1$@ · %2$lld s", line, seconds)
+        Self.format("room-line-with-seconds", fallback: "%1$@ · %2$lld s", line, seconds)
     }
 
     /// Stands for the people the room waits for when there are more than two, inside "Paused for …".
@@ -11226,17 +11226,17 @@ public enum L {
 
     /// State word: the slowest player, holding the room back, with the gap in seconds.
     public static func roomStateBehind(seconds: Int) -> String {
-        Self.format("room-state-behind", fallback: "Behind · %1$lld s", seconds)
+        Self.format("room-state-behind", fallback: "Behind · %1$lld s", seconds)
     }
 
     /// State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.
     public static func roomStateLoading(seconds: Int) -> String {
-        Self.format("room-state-loading", fallback: "Loading · %1$lld s", seconds)
+        Self.format("room-state-loading", fallback: "Loading · %1$lld s", seconds)
     }
 
     /// State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.
     public static func roomStateBuffering(seconds: Int) -> String {
-        Self.format("room-state-buffering", fallback: "Buffering · %1$lld s", seconds)
+        Self.format("room-state-buffering", fallback: "Buffering · %1$lld s", seconds)
     }
 
     /// State word: this person plays another episode than the room's.
@@ -11306,12 +11306,12 @@ public enum L {
 
     /// Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.
     public static func roomWaitLoading(seconds: Int) -> String {
-        Self.format("room-wait-loading", fallback: "loading · %1$lld s", seconds)
+        Self.format("room-wait-loading", fallback: "loading · %1$lld s", seconds)
     }
 
     /// Reason in the waiting capsule, after Paused for, lower case: their player stalled.
     public static func roomWaitBuffering(seconds: Int) -> String {
-        Self.format("room-wait-buffering", fallback: "buffering · %1$lld s", seconds)
+        Self.format("room-wait-buffering", fallback: "buffering · %1$lld s", seconds)
     }
 
     /// Button once the room has waited 20 seconds for one person.
@@ -11337,7 +11337,7 @@ public enum L {
 
     /// Line on your own starting screen while the room waits for you, with the seconds so far.
     public static func roomPausedUntilStart(seconds: Int) -> String {
-        Self.format("room-paused-until-start", fallback: "The room is paused until this starts · %1$lld s", seconds)
+        Self.format("room-paused-until-start", fallback: "The room is paused until this starts · %1$lld s", seconds)
     }
 
     /// Button on your own starting screen that lets the room carry on without you.
@@ -11594,7 +11594,7 @@ public enum L {
 
     /// Round trip time of a relay.
     public static func roomRelayLatency(ms: Int) -> String {
-        Self.format("room-relay-latency", fallback: "%1$lld ms", ms)
+        Self.format("room-relay-latency", fallback: "%1$lld ms", ms)
     }
 
     /// Line under the relays in Details.
@@ -11703,7 +11703,7 @@ public enum L {
 
     /// Line on the card counting down for everyone.
     public static func roomUpNextCount(seconds: Int) -> String {
-        Self.format("room-up-next-count", fallback: "Plays for everyone in %1$lld s", seconds)
+        Self.format("room-up-next-count", fallback: "Plays for everyone in %1$lld s", seconds)
     }
 
     /// Line on the card while your file ended sooner and the room waits for someone's longer file.
@@ -11716,7 +11716,7 @@ public enum L {
 
     /// First line of the room while up next counts down.
     public static func roomLineUpNext(seconds: Int) -> String {
-        Self.format("room-line-up-next", fallback: "Up next in %1$lld s", seconds)
+        Self.format("room-line-up-next", fallback: "Up next in %1$lld s", seconds)
     }
 
     /// Second line while up next counts down.
@@ -11898,7 +11898,7 @@ public enum L {
 
     /// Line after it in the place: what was tried.
     public static func roomErrorTried(seconds: Int) -> String {
-        Self.format("room-error-tried", fallback: "Kaeri tried the link's relays and your spares, %1$lld s each.", seconds)
+        Self.format("room-error-tried", fallback: "Kaeri tried the link's relays and your spares, %1$lld s each.", seconds)
     }
 
     /// Title of the alert when a recent room has nobody answering, such as after a new invite.
@@ -11977,7 +11977,7 @@ public enum L {
 
     /// A short length in minutes, on the banner before play.
     public static func roomMinutes(minutes: Int) -> String {
-        Self.format("room-minutes", fallback: "%1$lld min", minutes)
+        Self.format("room-minutes", fallback: "%1$lld min", minutes)
     }
 
     /// Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.
@@ -12017,7 +12017,7 @@ public enum L {
 
     /// End of the chat field while sending waits, after three messages in five seconds.
     public static func roomChatWait(seconds: Int) -> String {
-        Self.format("room-chat-wait", fallback: "Wait %1$lld s", seconds)
+        Self.format("room-chat-wait", fallback: "Wait %1$lld s", seconds)
     }
 
     /// Spoken once when sending waits, for screen readers.
@@ -12071,7 +12071,7 @@ public enum L {
 
     /// State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
     public static func roomStateSeeking(seconds: Int) -> String {
-        Self.format("room-state-seeking", fallback: "Seeking · %1$lld s", seconds)
+        Self.format("room-state-seeking", fallback: "Seeking · %1$lld s", seconds)
     }
 
     /// Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
@@ -12079,6 +12079,19 @@ public enum L {
 
     /// Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
     public static var roomErrorNobodyAnsweredLead: String { string("room-error-nobody-answered-lead", fallback: "Nobody answered in this room.") }
+
+    /// Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+    public static func roomDeviceInRoom(device: String) -> String {
+        Self.format("room-device-in-room", fallback: "%1$@ is in this room", device)
+    }
+
+    /// Button on the phone's remote screen that leaves the room on the paired TV.
+    public static func roomLeaveOnDevice(device: String) -> String {
+        Self.format("room-leave-on-device", fallback: "Leave the room on %1$@", device)
+    }
+
+    /// Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+    public static var roomTvJoinFromPhone: String { string("room-tv-join-from-phone", fallback: "To join someone's room, open their invite on a paired phone and choose this TV.") }
 
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }

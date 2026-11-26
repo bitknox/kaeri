@@ -19960,6 +19960,21 @@ pub fn room_error_nobody_answered_lead() -> String {
     text("room-error-nobody-answered-lead", &[])
 }
 
+/// Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+pub fn room_device_in_room(device: &str) -> String {
+    text("room-device-in-room", &[("device", Arg::Text(device))])
+}
+
+/// Button on the phone's remote screen that leaves the room on the paired TV.
+pub fn room_leave_on_device(device: &str) -> String {
+    text("room-leave-on-device", &[("device", Arg::Text(device))])
+}
+
+/// Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+pub fn room_tv_join_from_phone() -> String {
+    text("room-tv-join-from-phone", &[])
+}
+
 /// Button that shows the season before.
 pub fn seasonal_previous() -> String {
     text("seasonal-previous", &[])
