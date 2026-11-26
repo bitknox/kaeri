@@ -330,12 +330,6 @@ struct SeekLine: View {
             }
             .frame(width: proxy.size.width, height: proxy.size.height, alignment: .leading)
             .overlay(alignment: .leading) { MarkedStretch(model: model, width: proxy.size.width, height: lineHeight) }
-            .overlay {
-                // Where the room reacted: ticks above the line, for this episode.
-                let ticks = reactionTicks(duration: duration, width: proxy.size.width)
-                if !ticks.isEmpty { ReactionTicks(ticks: ticks, lineHeight: lineHeight) }
-            }
-            .animation(.fadeIn, value: reactionTicks(duration: duration, width: proxy.size.width).count)
             .contentShape(.rect)
             .gesture(
                 DragGesture(minimumDistance: 0)
@@ -374,10 +368,7 @@ struct SeekLine: View {
                 if showsPreview, let time = model.scrubbing ?? model.hovering, duration > 0 {
                     let width = ScrubBubble.width
                     let x = proxy.size.width * time / duration - width / 2
-                    ScrubBubble(
-                        model: model, time: time,
-                        tick: reactionTicks(duration: duration, width: proxy.size.width)
-                            .first { abs($0.x - proxy.size.width * time / duration) <= 4 }?.label)
+                    ScrubBubble(model: model, time: time)
                         .frame(width: width, alignment: .bottom)
                         .offset(
                             x: min(max(x, -16), proxy.size.width - width + 16),
@@ -406,11 +397,6 @@ struct SeekLine: View {
         }
     }
 
-    /// The ticks of the party's reactions on a line `width` wide.
-    private func reactionTicks(duration: Double, width: Double) -> [ReactionTick] {
-        guard let chat = store?.party.chat, store?.party.inParty == true, chat.shown else { return [] }
-        return chat.ticks(duration: duration, width: width)
-    }
 
     /// While scrubbing, the opening or ending under the thumb, or none: a change is a mark crossed.
     private var markUnderThumb: Int? {
@@ -445,8 +431,6 @@ struct SeekLine: View {
 struct ScrubBubble: View {
     let model: PlayerModel
     let time: Double
-    /// "12:04 · Ren and Mika", when the pointer is over a reaction's tick.
-    var tick: String?
 
     static let width: CGFloat = 220
 
@@ -482,7 +466,7 @@ struct ScrubBubble: View {
                 .clipShape(.rect(cornerRadius: 6))
                 .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
             }
-            Text(tick ?? model.chapter(at: time).map { "\(PlayerClock.label(time)) · \($0)" } ?? PlayerClock.label(time))
+            Text(model.chapter(at: time).map { "\(PlayerClock.label(time)) · \($0)" } ?? PlayerClock.label(time))
                 .font(.system(size: 13, weight: .semibold))
                 .monospacedDigit()
                 .foregroundStyle(.silk)
@@ -664,16 +648,6 @@ struct UpNextCardView: View {
                         .padding(.top, 10)
                         .accessibilityLabel(L.playerCountdownLabel(episode: card.next.number))
                 }
-                if store.party.inParty, store.party.party?.movesOn == true {
-                    // In a party the room moves on together: no Cancel, no Play now.
-                    Text(countdown.map { L.partyNextLine(seconds: $0.seconds) } ?? L.partyNextOff)
-                        .font(.system(size: 13))
-                        .monospacedDigit()
-                        .foregroundStyle(.haze)
-                        .contentTransition(.numericText(countsDown: true))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, metrics.touch ? 4 : 10)
-                } else {
                 HStack(spacing: 8) {
                     Text(countdown.map { L.playerPlaysIn(seconds: $0.seconds) } ?? "")
                         .font(.system(size: 13))
@@ -689,7 +663,6 @@ struct UpNextCardView: View {
                         .sensoryFeedback(.impact(weight: .light), trigger: card.played) { _, played in played }
                 }
                 .padding(.top, metrics.touch ? 4 : 10)
-                }
             }
             .padding(EdgeInsets(top: 12, leading: 12, bottom: metrics.touch ? 8 : 12, trailing: 12))
             .frame(width: 320)

@@ -165,7 +165,7 @@ struct PanelSources: View {
             })
         var notes: [String] = []
         if let id, let line = store.titles.dubLines[id] { notes.append(line) }
-        if store.party.inParty { notes.append(L.partyVersionOwn) }
+        if store.room.inRoom { notes.append(L.roomVersionOwn) }
         return VStack(alignment: .leading, spacing: 8) {
             Picker(L.playerTranslation, selection: pick) {
                 Text(L.playerStartSubtitled).tag(KaeriKit.Translation.sub)

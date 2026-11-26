@@ -103,9 +103,6 @@ struct MacShell: View {
                         ToolbarItem(placement: .navigation) { DownloadsTitle().toolbarItemWidth(downloadsSubtitle(store)) }
                             .sharedBackgroundVisibility(.hidden)
                     }
-                    if navigator.section == .together, store.party.lobbyShown {
-                        ToolbarItem(placement: .navigation) { TogetherLobbyBack().toolbarItemWidth(0) }
-                    }
                     // Every item here is one width in the bar and in the overflow menu
                     // (`toolbarItemWidth`), keyed on what it shows. An item that can show nothing
                     // is wrapped only when it shows, so the toolbar still leaves it out.

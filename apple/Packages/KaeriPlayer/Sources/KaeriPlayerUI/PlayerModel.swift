@@ -224,10 +224,16 @@ public final class PlayerModel {
     public internal(set) var skipTimesOpen = false
     /// The edge the review's arrow keys move: Tab changes it.
     public var markEdge: SkipEdge = .start
-    /// Marking is off while a watch party plays: the app sets it from the party's state.
+    /// Marking is off while a room plays: the app sets it from the room's state.
     public var marksBlocked = false
-    /// Whether a watch party is joined, which the menus' Say Something… needs.
-    public var inParty = false
+    /// Whether this device is in a room, which the menus' Say Something… needs.
+    public var inRoom = false
+    /// In a room the opening's skip is the room's: it skips for everyone and the chat says who.
+    @ObservationIgnored public var skipsWithRoom: (@MainActor (Double) -> Void)?
+    /// The room draws its own Skip opening (the Mac's, over the room's column edge).
+    public var roomDrawsSkip = false
+    /// Where the room's Skip opening goes, while in one and the opening's offer stands.
+    public var roomSkip: Double? { inRoom && skip?.kind == .opening ? skip?.to : nil }
     /// Counts the asks to open the chat field (Playback › Say Something…).
     public private(set) var chatRequests = 0
     public func requestChat() { chatRequests += 1 }
@@ -1584,7 +1590,7 @@ public final class PlayerModel {
         if let prompt = skipPrompt, prompt.prompt.isCard { return .prompt }
         if undo != nil { return .undo }
         if upNextShown { return .upNext }
-        if skip != nil { return .skip }
+        if skip != nil, !(roomDrawsSkip && roomSkip != nil) { return .skip }
         return nil
     }
 
@@ -2021,6 +2027,12 @@ public final class PlayerModel {
 
     public func takeSkip() {
         input()
+        if let to = roomSkip, let room = skipsWithRoom {
+            skipsTaken += 1
+            skip = nil
+            room(to)
+            return
+        }
         sought()
         skipsTaken += 1
         skip = nil

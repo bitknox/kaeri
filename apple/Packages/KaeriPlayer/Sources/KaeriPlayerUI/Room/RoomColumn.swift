@@ -142,6 +142,7 @@ struct RoomColumn: View {
             .textFieldStyle(.plain)
             .font(.system(size: 13))
             .focused($fieldFocus)
+            .onChange(of: room.chatAsked) { fieldFocus = true }
             .onSubmit { room.say() }
             .padding(.horizontal, 14)
             .frame(height: 32)

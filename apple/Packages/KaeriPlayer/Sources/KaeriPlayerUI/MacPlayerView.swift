@@ -44,8 +44,6 @@ public struct MacPlayerView: View {
     @State private var landedEpisode: String?
     /// The episode whose row has the keyboard's focus in the Episodes panel.
     @State private var focusedEpisode: String?
-    /// The watch party's popover on the people button.
-    @State private var partyOpen = false
     /// The room's column has faded in at its place (the player-to-room morph).
     @State private var columnIn = false
     /// The full screen strip's 8 s after any change.
@@ -58,9 +56,6 @@ public struct MacPlayerView: View {
     /// Where the panels over the video are, which take the scroll wheel from the player.
     @State private var wheelStops: [CGRect] = []
     @FocusState private var focused: Bool
-    /// The chat field above the control row, opened with C.
-    @State private var fielding = false
-    @FocusState private var fieldFocus: Bool
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
     /// Reduce Motion, or `KAERI_REDUCE_MOTION=1` for a recording of its variant.
@@ -77,14 +72,14 @@ public struct MacPlayerView: View {
     }
 
     private var visible: Bool {
-        (model.controlsVisible || panel != nil || partyOpen || overBar) && !model.stillWatching && model.failure == nil
+        (model.controlsVisible || panel != nil || overBar) && !model.stillWatching && model.failure == nil
             && !curtain && !leavingFullScreen && !model.returning && !sidePanel
     }
 
     /// Whether the pointer may hide over the video (PlayerPointer).
     private var pointerIdle: Bool {
         PlayerPointer.idle(
-            controlsShown: model.controlsVisible || panel != nil || partyOpen || overBar || sidePanel,
+            controlsShown: model.controlsVisible || panel != nil || overBar || sidePanel,
             loading: curtain, failed: model.failure != nil, askingStillWatching: model.stillWatching)
     }
 
@@ -267,25 +262,9 @@ public struct MacPlayerView: View {
             pointedEpisode = nil
             focusedEpisode = nil
         }
-        .onChange(of: store.party.panelRequests) {
-            panel = nil
-            sidePanel = false
-            partyOpen = store.party.inParty
-        }
-        // The party is over: its popover goes with it.
-        .onChange(of: store.party.inParty) { _, inParty in if !inParty { partyOpen = false; fielding = false } }
-        // The popover has the conversation's own field: the bar's goes, and the draft stays.
-        .onChange(of: partyOpen) { _, open in
-            if open, fielding {
-                fielding = false
-                model.hold("chat", false)
-            }
-        }
-        .animation(.fadeIn, value: fielding)
-        .onChange(of: store.party.inParty, initial: true) { _, inParty in
-            model.marksBlocked = inParty
-            model.inParty = inParty
-        }
+        .onChange(of: store.room.inRoom, initial: true) { _, inRoom in roomChanged(inRoom) }
+        // The opening's skip is the room's: its button stands where the player's would.
+        .onChange(of: model.roomSkip, initial: true) { _, to in roomSkipChanged(to) }
         .onChange(of: model.chatRequests) { sayHello() }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
             guard let window, (note.object as? NSWindow) === window else { return }
@@ -335,18 +314,6 @@ public struct MacPlayerView: View {
             .padding(.leading, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .animation(.standard, value: model.resume)
-        PartyColumn(model: model, metrics: metrics, covered: partyOpen) { people() }
-            .padding(.top, 60 + topInset)
-            .padding(.leading, 20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        if store.party.inParty, store.party.chat.shown {
-            ReactionMomentView(metrics: metrics)
-                .padding(.trailing, 16)
-                .padding(.bottom, model.corner == nil ? 72 : metrics.cornerInset.bottom + 88)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .animation(.standard, value: model.corner == nil)
-                .allowsHitTesting(false)
-        }
         SkipMarkLayer(model: model, metrics: metrics, layout: .bar)
         // Stats for nerds stays up while the controls hide, below where the top bar's capsule
         // is, under the menus that hang from it.
@@ -400,10 +367,39 @@ public struct MacPlayerView: View {
         if model.playOnTVAvailable {
             Button(L.tvPlayOnMenu) { model.playOnTV() }
         }
-        Button(L.partyOpen) { people() }
-        if store.party.inParty, store.party.chat.shown {
+        if store.room.inRoom {
             Button(L.menuSaySomething) { sayHello() }
+        } else if !store.room.active {
+            Button(RoomCopy.columnTitle) { startRoom() }
         }
+    }
+
+    /// In a room or out of one: marking is off, and the opening's skip is the room's.
+    private func roomChanged(_ inRoom: Bool) {
+        model.marksBlocked = inRoom
+        model.inRoom = inRoom
+        model.roomDrawsSkip = true
+        let room = store.room
+        if inRoom {
+            model.skipsWithRoom = { to in
+                room.skipTo = to
+                room.skipOpening()
+            }
+        } else {
+            model.skipsWithRoom = nil
+            room.skipTo = nil
+        }
+    }
+
+    private func roomSkipChanged(_ to: Double?) {
+        if store.room.inRoom { store.room.skipTo = to }
+    }
+
+    /// Say something: the room's column opens with its field focused.
+    private func sayHello() {
+        guard store.room.inRoom else { return }
+        store.room.shown = true
+        store.room.chatAsked += 1
     }
 
     // MARK: Chrome
@@ -429,7 +425,6 @@ public struct MacPlayerView: View {
                 header
                     .padding(.top, topInset)
                 Spacer(minLength: 0)
-                chatField
                 controlRow
                     .onHover { overBar = $0 }
             }
@@ -460,7 +455,7 @@ public struct MacPlayerView: View {
             .overVideoText()
             .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 8) {
-                if store.room.inRoom || (store.party.inParty && store.party.chat.shown) {
+                if store.room.inRoom {
                     ReactionButtons(metrics: metrics)
                         .padding(2)
                         .background(.overVideo(0.62), in: .capsule)
@@ -476,7 +471,7 @@ public struct MacPlayerView: View {
                 .background(.overVideo(0.62), in: .capsule)
                 .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
             }
-            .animation(.fadeIn, value: store.room.inRoom || (store.party.inParty && store.party.chat.shown))
+            .animation(.fadeIn, value: store.room.inRoom)
         }
         .padding(.leading, 20)
         .padding(.trailing, 16)
@@ -587,13 +582,11 @@ public struct MacPlayerView: View {
         // Episodes is the side panel's (player panel board).
         if which == .episodes {
             panel = nil
-            partyOpen = false
             if sidePanel { closeSidePanel() } else { openSidePanel() }
             return
         }
         panel = panel == which ? nil : which
         sidePanel = false
-        partyOpen = false
         model.poke()
     }
 
@@ -631,77 +624,19 @@ public struct MacPlayerView: View {
         capsuleButton("person.2", RoomCopy.columnTitle, on: false) {
             panel = nil
             sidePanel = false
-            if let id = model.starting?.id ?? model.staged?.id { store.room.start(id: id, episode: model.episode?.number ?? model.startingEpisode ?? "") }
-            model.poke()
+            startRoom()
         }
     }
 
-    private var oldPartyButton: some View {
-        let inParty = store.party.inParty
-        return capsuleButton(PartyButton.symbol(inParty: inParty), PartyButton.label(inParty: inParty), on: partyOpen) { people() }
-            .popover(isPresented: $partyOpen, arrowEdge: .bottom) {
-                PartyPanel(metrics: metrics)
-                    .environment(store)
-                    .preferredColorScheme(.dark)
-            }
-    }
-
-    /// C: the chat field opens above the control row, or says why it can't.
-    private func sayHello() {
-        guard store.party.inParty, !store.party.chat.hidden else { return }
-        guard store.party.chat.allowed else {
-            model.say(L.partyChatOff)
-            return
-        }
-        fielding = true
-        fieldFocus = true
-        model.hold("chat", true)
-    }
-
-    /// The field above the control row: 480 by 32, 16 from the leading edge.
-    @ViewBuilder
-    private var chatField: some View {
-        let chat = store.party.chat
-        if fielding, store.party.inParty, chat.shown {
-            ChatTextField(
-                text: Binding(get: { chat.draft }, set: { chat.draft = $0 }), placeholder: L.partyChatField, style: .overVideo, limit: chat.maxLength,
-                remaining: chat.remaining,
-                waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
-                waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
-                focus: $fieldFocus
-            ) { chat.submit() }
-            .frame(width: 480)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 16)
-            .padding(.bottom, 6)
-            .transition(.opacity)
-            .onKeyPress(.escape) {
-                closeField()
-                return .handled
-            }
-            .onChange(of: visible) { _, up in if !up, chat.draft.isEmpty { closeField() } }
-            .onChange(of: chat.draft.isEmpty) { _, empty in model.hold("chat", !empty) }
-            .accessibilityElement(children: .contain)
-            .onAppear { fieldFocus = true }
-        }
-    }
-
-    private func closeField() {
-        fielding = false
-        model.hold("chat", false)
-        focused = true
-    }
-
-    private func people() {
-        panel = nil
-        sidePanel = false
-        if store.party.inParty {
-            partyOpen.toggle()
-        } else {
-            store.party.open(.playing)
-        }
+    private func startRoom() {
+        if let id = model.starting?.id ?? model.staged?.id { store.room.start(id: id, episode: model.episode?.number ?? model.startingEpisode ?? "") }
         model.poke()
     }
+
+
+
+
+
 
     @ViewBuilder
     private func panelLayer(_ which: Panel) -> some View {

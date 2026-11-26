@@ -94,8 +94,6 @@ public final class AppStore {
     public let tv = TVRemoteModel()
     /// Sync between this person's devices, and the profiles on this one.
     public let sync = SyncModel()
-    /// The watch party this device is in, and the sheets that start one.
-    public let party = PartyModel()
     /// The room this device is in: the video's people and chat (the room board).
     public let room = RoomModel()
     /// The subtitle style before the last reset, for its Undo.
@@ -203,20 +201,10 @@ public final class AppStore {
         serverProgress.quiet = { [weak self] in self?.settings.value(.sendProgressAfter) == "close" } // i18n-skip: the engine's value
         reader.onClosed = { [weak self] in self?.serverProgress.clearLines() }
         updates.send = { [weak self] command in self?.send(command) }
-        party.send = { [weak self] command in self?.send(command) }
         room.send = { [weak self] command in _ = self?.send(command) }
         room.countSources = { [weak self] in self?.providers.rows.count ?? 0 }
         missing.send = { [weak self] command in self?.send(command) }
         sync.send = { [weak self] command in self?.send(command) }
-        party.chat.send = { [weak self] command in self?.send(command) }
-        party.say = { [weak self] notice, player, kind in
-            guard let self else { return }
-            if party.playerUp() {
-                if let player { playerSays?(player, kind) }
-            } else {
-                notices.post(Notice(kind: kind, text: notice, hint: nil))
-            }
-        }
         // The downloads' Live Activity and the system's own progress for them never show at once.
         continued.runningChanged = { [weak self] running in self?.downloadsActivity.systemShowsProgress = running }
     }
@@ -330,17 +318,6 @@ public final class AppStore {
     /// online (the testing engine's `testingSetOffline`). The Fixtures app only.
     public func setFakeOffline(_ offline: Bool) {
         client?.engine.testingSetOffline(offline: offline)
-    }
-
-    /// A Syncplay server on the loopback interface beside the engine, with members a screenshot
-    /// run plays (`startFakeParty`). The Fixtures app only.
-    public func startFakeParty() -> FfiFakeParty? {
-        do {
-            return try client?.engine.startFakeParty()
-        } catch {
-            AppLog.error("party", "the fake party server did not start: \(error)")
-            return nil
-        }
     }
 
     /// A room on fake relays beside the engine, with scripted members a screenshot run stages
@@ -1141,7 +1118,6 @@ public final class AppStore {
             titles.recount(id, dub: dub, dubChanged: dub != nil)
 
         case .toast(let notice):
-            party.apply(event)
             // The page says an uncertain match in its own line, so it is not said twice.
             if case .noticeMatchUncertain? = notice.msg { break }
             notices.post(notice)
@@ -1256,7 +1232,6 @@ public final class AppStore {
             onPlayback?(event)
             widgetsChanged()
         case .sources:
-            party.apply(event)
             room.apply(event)
             onPlayback?(event)
         case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard,
@@ -1265,15 +1240,12 @@ public final class AppStore {
 
         case .partyForm, .partyJoined, .partyState, .partyMembers, .partyLeft, .partyRecent, .partyGlimpse,
              .partyLookFailed, .partyLastOut, .partyMessage, .partyStarted, .partyChat, .partyChatState,
-             .partyReaction:
-            party.apply(event)
-        case .partyChatRefused:
-            // The field and the glyphs already show the wait; the engine has said no.
+             .partyReaction, .partyChatRefused:
+            // The Syncplay party's, which the app no longer has: the room took its place.
             break
         case .partyNoSource:
-            // The party's sheet says it, and the player steps aside for it. In a room the room's
-            // panel says it instead: the party's sheet would be a second, older answer.
-            if !room.inRoom { party.apply(event) }
+            // A room's play found no source here (the engine's older word for it): the room's
+            // panel says it, and the player steps aside for it.
             onPlayback?(event)
 
         case .roomJoined, .roomState, .roomMembers, .roomMessage, .roomChat, .roomChatState, .roomLeft, .roomStarted,

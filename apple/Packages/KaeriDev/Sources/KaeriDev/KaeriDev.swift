@@ -83,12 +83,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
             open: { [weak store] key in store?.discussion.show(key) })
         player.playOnTVHandler = { [weak store] request in store?.tv.offer(request) }
         store.tv.handedOff = { [weak player] in player?.viewerClosed() }
-        store.party.playerUp = { [weak player] in player?.isPresented ?? false }
         store.playerSays = { [weak player] text, kind in player?.say(text, kind: kind) }
-        player.alertFilter = { [weak store] text in
-            guard let store, store.party.inParty else { return false }
-            return store.party.chat.isChatNotice(text, members: (store.party.members ?? []).map(\.name))
-        }
         return player
     }()
     private var temporary: URL?
@@ -236,14 +231,6 @@ final class Delegate: NSObject, NSApplicationDelegate {
             }
             print(there ? "KaeriDev: the player is at \(shot.rawValue)" : "KaeriDev: the player did not reach \(shot.rawValue)")
         }
-        if let scene = PartyScene.named() {
-            let there = await player.stage(scene, store: store)
-            print(there ? "KaeriDev: the party is at \(scene.rawValue)" : "KaeriDev: the party did not reach \(scene.rawValue)")
-            // A recording's scene (chatloop, reactloop): frames from the moment it is up.
-            if !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
-                await frames(of: nil, in: window, to: url)
-            }
-        }
         if let scene = RoomScene.named() {
             // A recording's scene (morph, fullloop): frames from the moment the episode plays.
             if !options.frames.isEmpty, let url = options.snapshot, let window = Snapshot.window {
@@ -256,10 +243,6 @@ final class Delegate: NSObject, NSApplicationDelegate {
                 let there = await player.stage(scene, store: store)
                 print(there ? "KaeriDev: the room is at \(scene.rawValue)" : "KaeriDev: the room did not reach \(scene.rawValue)")
             }
-        }
-        if let scene = TogetherScene.named() {
-            let there = await store.party.stage(scene, store: store)
-            print(there ? "KaeriDev: Watch together is at \(scene.rawValue)" : "KaeriDev: Watch together did not reach \(scene.rawValue)")
         }
         // A cast scene's loop (morph, pause) or clip: frames from the moment the window is up,
         // with --reduce-motion as the app runs under Reduce Motion.
@@ -337,9 +320,8 @@ final class Delegate: NSObject, NSApplicationDelegate {
         } catch {
             FileHandle.standardError.write(Data("KaeriDev: \(error)\n".utf8))
         }
-        if options.playerShot != nil || PartyScene.named() != nil || TogetherScene.named() != nil || RoomScene.named() != nil {
+        if options.playerShot != nil || RoomScene.named() != nil {
             if store.room.inRoom { store.room.leave() }
-            store.party.leave()
             player.viewerClosed()
             try? await Task.sleep(for: .milliseconds(300))
         }

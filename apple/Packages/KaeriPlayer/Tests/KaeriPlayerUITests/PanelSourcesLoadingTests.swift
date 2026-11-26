@@ -128,7 +128,7 @@ struct PanelSourcesLoadingTests {
 
     @Test func aSourceThatCannotMatchTheTitleSaysSoInThePicker() {
         let missed = MissedListing(name: "Media folder", miss: .ambiguous)
-        #expect(PartyWords.missed(missed, episode: "7") == L.playerStartMissAmbiguous(name: "Media folder"))
-        #expect(!PartyWords.unreached(.ambiguous), "trying again does not choose the title")
+        #expect(SourceWords.missed(missed, episode: "7") == L.playerStartMissAmbiguous(name: "Media folder"))
+        #expect(!SourceWords.unreached(.ambiguous), "trying again does not choose the title")
     }
 }

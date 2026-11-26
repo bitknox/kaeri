@@ -126,6 +126,8 @@ public final class RoomModel {
     /// The phone's room folded into the bar over the tabs.
     public var folded = false
     public var draft = ""
+    /// Say something (the menus, or C): the column's field takes the keyboard (Mac and iPad).
+    public var chatAsked = 0
     /// Sideways on iPhone: the chat field is open over the video.
     public var writing = false
     /// The Join field on the place.

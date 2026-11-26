@@ -118,34 +118,25 @@ struct TVAccessory: ViewModifier {
             && !store.room.placeShown
     }
 
-    /// The party's bar, away from Watch together itself.
-    private var partyBar: Bool {
-        store.party.inParty && !playerUp && !store.party.lobbyShown && !store.party.placeShown
-            && navigator.section != .together
-    }
-
     @State private var anchor = CastMiniAnchor()
     @State private var drawer = CastDrawer()
 
     func body(content: Content) -> some View {
         if #available(iOS 26.1, *) {
-            // The TV's bar wins: what plays on the TV is the louder thing. Otherwise the party
-            // you are in, while its lobby and the player are away. A cast's mini grows into its
-            // controller.
+            // The TV's bar wins: what plays on the TV is the louder thing. Otherwise the room
+            // you are in, while its player is closed. A cast's mini grows into its controller.
             let mini = store.tv.cast.miniShown && !playerUp
             let tv = !mini && store.tv.connected != nil && store.tv.now != nil
             content
-                .tabViewBottomAccessory(isEnabled: mini || tv || roomBar || partyBar) {
+                .tabViewBottomAccessory(isEnabled: mini || tv || roomBar) {
                     if mini {
                         CastMini()
                             .background(CastMiniProbe(anchor: anchor))
                             .environment(drawer)
                     } else if tv {
                         TVNowPlayingBar()
-                    } else if roomBar, let roomBarView {
+                    } else if let roomBarView {
                         roomBarView
-                    } else {
-                        PartyBar()
                     }
                 }
                 .modifier(CastAccessoryCover(anchor: anchor, drawer: drawer))
