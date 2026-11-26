@@ -87,6 +87,8 @@ import app.kaeri.engine.model.SourceListing
 import app.kaeri.engine.model.SectionKind
 import app.kaeri.engine.model.SpotlightCase
 import app.kaeri.engine.model.HiddenTitle
+import app.kaeri.engine.model.StoreRow
+import app.kaeri.engine.model.StoreState
 import app.kaeri.engine.model.MenuChoices
 import app.kaeri.engine.model.MenuSource
 import app.kaeri.engine.model.NextEpisode
@@ -1166,6 +1168,27 @@ class TvShots {
         downTo("Hidden titles")
         press(Key.DirectionCenter)
         settle()
+    }
+
+    /** Settings › Plugin stores: a joined store's sheet, then Leave, which asks before it leaves. */
+    @Test
+    fun store_leave_asks() = shoot("tv-store-leave", section = "PluginStores") {
+        val row = StoreRow(
+            id = "hilltop", name = "Hilltop Plugins", url = "https://plugins.hilltop.example", host = "plugins.hilltop.example",
+            fingerprint = "9f3c 1a2b 77de 0c41", member = "Mika", owner = false, state = StoreState.Ready, checkedAt = null,
+        )
+        shot.apply(listOf(Event.Stores(listOf(row))))
+        press(Key.DirectionRight)
+        settle()
+        downTo("Hilltop Plugins")
+        press(Key.DirectionCenter)
+        settle()
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-store-sheet.png")
+        downTo("Leave")
+        press(Key.DirectionCenter)
+        settle()
+        // Still joined: the dialog asks first.
+        assertEquals(1, shot.stores.stores.value.size)
     }
 
     /** Settings › Sources, torrents off: the switch, and that torrents connect directly unless a proxy is set. */

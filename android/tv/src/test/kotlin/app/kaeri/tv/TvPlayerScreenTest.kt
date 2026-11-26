@@ -18,6 +18,8 @@ import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.performClick
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
+import android.view.accessibility.AccessibilityManager
 import app.kaeri.engine.model.PlayerUi
 import app.kaeri.engine.model.SkipKind
 import kotlinx.coroutines.CoroutineScope
@@ -136,8 +138,10 @@ class TvPlayerScreenTest {
 
     @Test
     fun withTalkBackTheOpeningsSkipIsAButtonInTheRowAndAnActionOnPlay() {
-        compose.runOnUiThread { model.assisted = true }
+        // TalkBack on, as the screen reads it: the player sets assisted from the system.
+        compose.runOnUiThread { shadowOf(compose.activity.getSystemService(AccessibilityManager::class.java)).setTouchExplorationEnabled(true) }
         playing()
+        assertTrue(model.assisted)
         compose.runOnUiThread { model.apply(Event.PlayerUi(1u, PlayerUi.Skip(SkipKind.OPENING, 220.0))) }
         compose.waitForIdle()
 
