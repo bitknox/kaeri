@@ -47,6 +47,7 @@ import app.kaeri.store.FixtureScene
 import app.kaeri.store.Prelaunch
 import app.kaeri.store.FixtureSync
 import app.kaeri.store.FixtureParty
+import app.kaeri.store.FixtureRoom
 import app.kaeri.store.PartyShot
 import app.kaeri.store.PartyStage
 import app.kaeri.store.enginePlatform
@@ -137,9 +138,9 @@ internal object Flavour {
                 if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
             }
         }
-        app.kaeri.store.FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
+        FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
             MainScope().launch {
-                if (!app.kaeri.store.FixtureRoom.stage(scene, store, { player.isPresented && player.hasPicture }, intent.getStringExtra("roomat")?.toLongOrNull())) Log.w(TvApp.TAG, "the room scene did not set up")
+                if (!FixtureRoom.stage(scene, store, { player.isPresented && player.hasPicture }, intent.getStringExtra("roomat")?.toLongOrNull())) Log.w(TvApp.TAG, "the room scene did not set up")
             }
         }
         when (intent.getStringExtra("panel")) {
