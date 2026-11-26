@@ -1187,6 +1187,7 @@ class TvShots {
         downTo("Leave")
         press(Key.DirectionCenter)
         settle()
+        compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/tv-store-leave-pressed.png")
         // Still joined: the dialog asks first.
         assertEquals(1, shot.stores.stores.value.size)
     }
