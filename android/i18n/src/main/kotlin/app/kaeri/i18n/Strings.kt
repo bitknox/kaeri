@@ -13276,6 +13276,18 @@ object Strings {
     fun roomErrorNobodyAnsweredLead(context: Context): String =
         context.getString(R.string.room_error_nobody_answered_lead)
 
+    /** Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV. */
+    fun roomDeviceInRoom(context: Context, device: String): String =
+        context.getString(R.string.room_device_in_room, device)
+
+    /** Button on the phone's remote screen that leaves the room on the paired TV. */
+    fun roomLeaveOnDevice(context: Context, device: String): String =
+        context.getString(R.string.room_leave_on_device, device)
+
+    /** Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links. */
+    fun roomTvJoinFromPhone(context: Context): String =
+        context.getString(R.string.room_tv_join_from_phone)
+
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
         context.getString(R.string.seasonal_previous)

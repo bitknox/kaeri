@@ -235,6 +235,13 @@ pub fn no_source(engine: &EngineState) {
     }
 }
 
+/// Where a player that just opened on the room's episode is moved: the room's place, playing or
+/// not, as a paused or waiting room is somewhere in the episode too. Before play the room is at
+/// the start, where the player already is.
+fn seat_at(playing: bool, position: Option<f64>) -> Option<f64> {
+    position.filter(|&pos| playing || pos > 0.5)
+}
+
 fn random_secret() -> [u8; 16] {
     rand::random()
 }
@@ -419,7 +426,7 @@ fn peek(target: Target, room_id: Option<String>, services: &Services, tx: &Outbo
             .members()
             .into_iter()
             .filter(|m| m.mid != me && m.left_at.is_none())
-            .map(|m| member_of(&room, m, now, &HashMap::new(), false))
+            .map(|m| member_of(&room, m, now, &HashMap::new(), None))
             .collect();
         let room_episode = match room.playhead() {
             Some(head) => Some(info(&meta, &head.ep, target.title.as_deref()).await),
@@ -491,7 +498,7 @@ fn member_of(
     m: &kaeri_room::Member,
     now: i64,
     muted: &HashMap<Mid, bool>,
-    waited: bool,
+    waited: Option<i64>,
 ) -> RoomMember {
     let word = room.word(m, now);
     let behind = (word == Word::Behind)
@@ -507,13 +514,14 @@ fn member_of(
         name: m.name.clone(),
         you: m.mid == room.me(),
         state: word_state(word),
-        since_ms: Some(m.since()),
+        // A waited member's row counts from the wait's start, as the room's line does.
+        since_ms: Some(waited.unwrap_or_else(|| m.since())),
         behind_s: behind,
         episode: (word == Word::OtherEpisode)
             .then(|| m.status.ep.as_ref().map(episode_of))
             .flatten(),
         paused_room: room.paused_room(m),
-        waited,
+        waited: waited.is_some(),
         background: m.status.bg,
         muted: muted.get(&m.mid).copied().unwrap_or(false),
     }
@@ -563,6 +571,9 @@ struct Task {
     drift: kaeri_room::drift::Drift,
     /// Since when this player has been held waiting for data mid-episode.
     stall_since: Option<i64>,
+    /// None of this device's sources has the room's episode: closing the empty player or the
+    /// source picker leaves it reading No source, not Player closed.
+    no_source: bool,
     /// When this device wrote a stall wait: not again for a member who stalled twice in 10
     /// minutes.
     stall_writes: Vec<i64>,
@@ -736,6 +747,7 @@ impl Task {
                 };
                 self.chat.new_episode();
                 self.status.ue = false;
+                self.no_source = false;
                 self.say(Event::RoomStarted {
                     id: AnilistId::new(new.ep.0),
                     episode: new.ep.1.clone(),
@@ -771,6 +783,16 @@ impl Task {
     }
 
     /// Tell the player to play or pause with the room.
+    /// The player closed without finishing: Player closed, unless this device has no source
+    /// for the episode or its source picker is open, which the closed player doesn't change.
+    fn close_player(&mut self) {
+        self.set_status(|s| {
+            if !matches!(s.s, StateCode::NoSource | StateCode::Choosing) {
+                s.s = StateCode::PlayerClosed;
+            }
+        });
+    }
+
     fn cue_play(&mut self) {
         let paused = !self.room.playing();
         if self.pause.tell(paused, self.now()) {
@@ -921,12 +943,15 @@ impl Task {
 
     fn members(&self) -> Vec<RoomMember> {
         let now = self.now();
-        let waited: Vec<Mid> = self.room.waited(now).into_iter().map(|w| w.mid).collect();
+        let waited = self.room.waited(now);
         self.room
             .members()
             .into_iter()
             .filter(|m| self.room.shown(m, now))
-            .map(|m| member_of(&self.room, m, now, &self.muted, waited.contains(&m.mid)))
+            .map(|m| {
+                let since = waited.iter().find(|w| w.mid == m.mid).map(|w| w.since);
+                member_of(&self.room, m, now, &self.muted, since)
+            })
             .collect()
     }
 
@@ -1291,10 +1316,11 @@ impl Task {
                 self.pause.forget();
                 self.drift.reset();
                 self.stall_since = None;
+                self.no_source = false;
                 self.cue_play();
                 if on_room
-                    && self.room.playing()
-                    && let Some(pos) = self.room.position(self.now())
+                    && let Some(pos) =
+                        seat_at(self.room.playing(), self.room.position(self.now()))
                 {
                     let now = self.now();
                     self.drift.cued_seek(pos, now);
@@ -1365,7 +1391,7 @@ impl Task {
                 if finished {
                     self.set_status(|s| s.ue = true);
                 } else {
-                    self.set_status(|s| s.s = StateCode::PlayerClosed);
+                    self.close_player();
                 }
                 self.cues = None;
             }
@@ -1650,11 +1676,24 @@ impl Task {
                     Some(ep),
                 );
             }
-            RoomCommand::ChoosingSource { open } => self.set_status(|s| {
-                s.s = if open { StateCode::Choosing } else { StateCode::PlayerClosed };
-            }),
+            RoomCommand::ChoosingSource { open: true } => {
+                self.no_source |= self.status.s == StateCode::NoSource;
+                self.set_status(|s| s.s = StateCode::Choosing)
+            }
+            RoomCommand::ChoosingSource { open: false } => {
+                let no_source = self.no_source;
+                self.set_status(|s| {
+                    if s.s == StateCode::Choosing {
+                        s.s = if no_source {
+                            StateCode::NoSource
+                        } else {
+                            StateCode::PlayerClosed
+                        };
+                    }
+                });
+            }
             RoomCommand::ClosePlayer => {
-                self.set_status(|s| s.s = StateCode::PlayerClosed);
+                self.close_player();
                 self.cues = None;
             }
             RoomCommand::OpenPlayer => {
@@ -2128,6 +2167,7 @@ async fn run(
         pause: PlayerPause::default(),
         drift: kaeri_room::drift::Drift::default(),
         stall_since: None,
+        no_source: false,
         stall_writes: Vec::new(),
         last_pause_at: None,
         before_bg: None,
@@ -2199,6 +2239,7 @@ async fn run(
                     task.refresh();
                 }
                 Some(Control::NoSource) => {
+                    task.no_source = true;
                     task.set_status(|s| {
                         if s.s != StateCode::Choosing {
                             s.s = StateCode::NoSource;
@@ -2386,6 +2427,15 @@ mod pause_tests {
             now += 250;
         }
         presses
+    }
+
+    #[test]
+    fn a_player_opening_in_a_paused_or_waiting_room_goes_to_the_rooms_place() {
+        assert_eq!(super::seat_at(true, Some(12.0)), Some(12.0));
+        assert_eq!(super::seat_at(false, Some(12.0)), Some(12.0), "paused at 0:12");
+        assert_eq!(super::seat_at(false, Some(35.0)), Some(35.0), "waiting after a seek");
+        assert_eq!(super::seat_at(false, Some(0.0)), None, "before play: already there");
+        assert_eq!(super::seat_at(true, None), None);
     }
 
     #[test]
