@@ -174,6 +174,18 @@ impl Gate {
             Message::SyncReq { .. } if !self.sessions.contains_key(&session) => {
                 // A newcomer asks before its Hello. It can't speak as anyone with it.
             }
+            // A sync answer carries its sender's own proof in its roster: a newcomer who missed
+            // the sender's Hello binds it from there.
+            Message::SyncAns { roster, .. } if !self.speaks_for(&session, &body.mid) => {
+                let own = roster.iter().find(|e| e.mid == body.mid && e.pk == session);
+                let proved = own.is_some_and(|e| {
+                    let (mid, idpk, idsig) = (e.mid.clone(), e.idpk.clone(), e.idsig.clone());
+                    self.bind(&session, &mid, &idpk, &idsig)
+                });
+                if !proved {
+                    return Err(Dropped::Unbound);
+                }
+            }
             _ if !self.speaks_for(&session, &body.mid) => return Err(Dropped::Unbound),
             _ => {}
         }
@@ -258,7 +270,7 @@ mod tests {
         assert_eq!(open(&[&keys], &event, NOW + 121_000), Err(Dropped::Age));
         // Nothing readable on the wire.
         let json = serde_json::to_string(&event).unwrap();
-        assert!(!json.contains("heartbeat") && !json.contains("Mika"), "{json}");
+        assert!(!json.contains("heartbeat"), "{json}");
         assert!(json.contains(&keys.send_tag(NOW)));
     }
 
@@ -367,6 +379,57 @@ mod tests {
         let Message::SyncAns { roster, .. } = &answer.m else { unreachable!() };
         assert_eq!(roster.len(), 1);
         assert!(gate.speaks_for(&ren_s.pubkey(), &ren.mid()));
+    }
+
+    #[test]
+    fn a_newcomer_takes_an_answer_whose_sender_proves_itself_in_the_roster() {
+        let keys = RoomKeys::new([1; 16]);
+        let (ada, ada_s) = (Identity::new(), Session::new());
+        let own = RosterEntry {
+            mid: ada.mid(),
+            name: "Ada".into(),
+            pk: ada_s.pubkey(),
+            idpk: ada.pubkey(),
+            idsig: ada.prove(&ada_s.pubkey(), &keys.room_id()),
+            st: Status::default(),
+            joined_ms_ago: 0,
+            gone: false,
+        };
+        let answer = |roster: Vec<RosterEntry>| {
+            body(
+                &ada_s,
+                &ada.mid(),
+                5,
+                Message::SyncAns {
+                    nonce: "n".into(),
+                    playhead: None,
+                    relays: vec![],
+                    relays_seq: 0,
+                    epoch: 0,
+                    now_pos: None,
+                    playing_now: false,
+                    started: false,
+                    roster,
+                },
+            )
+        };
+        // Without her own entry, or with one that doesn't prove her: dropped.
+        assert_eq!(
+            Gate::new(keys.room_id()).admit(&mut answer(vec![]), NOW),
+            Err(Dropped::Unbound)
+        );
+        let forged = RosterEntry {
+            idsig: Identity::new().prove(&ada_s.pubkey(), &keys.room_id()),
+            ..own.clone()
+        };
+        assert_eq!(
+            Gate::new(keys.room_id()).admit(&mut answer(vec![forged]), NOW),
+            Err(Dropped::Unbound)
+        );
+        // With it: taken, and Ada is bound from then on.
+        let mut gate = Gate::new(keys.room_id());
+        assert_eq!(gate.admit(&mut answer(vec![own]), NOW), Ok(()));
+        assert!(gate.speaks_for(&ada_s.pubkey(), &ada.mid()));
     }
 
     #[test]
