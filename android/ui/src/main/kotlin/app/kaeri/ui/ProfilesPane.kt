@@ -110,7 +110,8 @@ internal fun ProfilesPane(actions: AppActions) {
         ProfileSheet(null, firstName = list.firstOrNull()?.name ?: user ?: stringResource(R.string.profiles_yours), onDismiss = { adding = false })
     }
     editing?.let { profile ->
-        ProfileSheet(profile, firstName = null, onDismiss = { editing = null }, canDelete = list.size > 1)
+        // The profile in use can't be deleted (the engine refuses it): switch first, as the desktops have it.
+        ProfileSheet(profile, firstName = null, onDismiss = { editing = null }, canDelete = list.size > 1 && !profile.active)
     }
 }
 
