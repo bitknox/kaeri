@@ -349,3 +349,26 @@ fn you_in_a_list_of_names_is_lowercase_mid_sentence() {
     assert!(line.contains("you") && !line.contains("You"), "{line}");
     engine.shutdown();
 }
+
+#[test]
+fn behind_counts_the_seconds_from_a_room_well_into_the_episode() {
+    let (_root, engine) = staged(FfiRoomScene::Behind);
+    let (_, members, _) =
+        until(&engine, |_, m, _| state(m, "Ren") == Some(MemberState::Behind));
+    let ren = members.iter().find(|m| m.name == "Ren").unwrap();
+    let behind = ren.behind_s.unwrap_or_default();
+    assert!((3.0..=5.0).contains(&behind), "{behind}");
+    engine.shutdown();
+}
+
+#[test]
+fn up_next_shows_the_next_episodes_art() {
+    let (_root, engine) = staged(FfiRoomScene::UpNext);
+    let (view, _, _) = until(&engine, |v, _, _| {
+        v.up_next.as_ref().is_some_and(|u| u.episode.cover_url.is_some())
+    });
+    let next = view.up_next.unwrap().episode;
+    assert_eq!(next.episode, "10");
+    assert!(next.banner_url.is_some(), "{next:?}");
+    engine.shutdown();
+}
