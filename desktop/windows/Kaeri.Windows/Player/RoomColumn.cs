@@ -71,7 +71,8 @@ sealed class RoomColumn : Grid
         Background = new SolidColorBrush(Pane);
         BorderBrush = new SolidColorBrush(Edge);
         BorderThickness = new Thickness(1, 0, 0, 0);
-        Padding = new Thickness(16, 0, 16, 0);
+        // The window's caption buttons sit over the column's top (the title bar is tall, 48 epx): the header starts under them.
+        Padding = new Thickness(16, 48, 16, 0);
         RequestedTheme = ElementTheme.Dark;
         AutomationProperties.SetName(this, RoomWords.Title);
         AutomationProperties.SetLandmarkType(this, AutomationLandmarkType.Custom);

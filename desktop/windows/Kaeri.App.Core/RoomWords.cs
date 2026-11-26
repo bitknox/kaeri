@@ -102,7 +102,10 @@ public static class RoomWords
     // Before play, over the video
     public static string UpInTheRoom => T.RoomUpInRoom;
     public static string RoomIsWatching => T.RoomRoomIsWatching;
-    public static string EpisodeLength(string episode, string title, long minutes) => T.RoomBannerEpisode(N(episode), title, T.RoomMinutes(minutes));
+    /// <summary>"Episode 9 · The Long Leg · 24 min"; without a name, the plain episode and its length.</summary>
+    public static string EpisodeLength(string episode, string? title, long minutes) => title is { Length: > 0 }
+        ? T.RoomBannerEpisode(N(episode), title, T.RoomMinutes(minutes))
+        : T.RoomLineWatchingDetail(N(episode), T.RoomMinutes(minutes));
     public static string PlaysFromYourSources => T.RoomPlaysFromSources;
     public static string PlayForEveryone => T.RoomPlayForEveryone;
     public static string AnyoneCanStart => T.RoomAnyoneCanStart;
