@@ -452,6 +452,10 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     #[cfg(feature = "fixtures")]
     if let Some(place) = crate::room::fixture::place(shot) {
         close_dialogs(&shell.ctx.window);
+        // The place draws its own room: the scenes' one is left, and its notices with it.
+        shell.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::Leave));
+        shell.player.room.clear();
+        shell.ctx.notices.dismiss_each();
         shell.player.close();
         shell.go(Dest::Together);
         let content = crate::room::place::build(&place, crate::room::fixture::NOW, |_| {});

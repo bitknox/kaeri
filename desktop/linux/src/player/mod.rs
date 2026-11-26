@@ -3239,6 +3239,20 @@ impl PlayerView {
                 }
             }
             Event::RoomJoined(_) | Event::RoomState(_) => self.room_sources(),
+            // A room that couldn't be joined, or ended on this device: why, as a notice.
+            Event::RoomLeft { why } => {
+                use kaeri_model::room::RoomLeftWhy as W;
+                let said = match why {
+                    W::Left | W::Moved => None,
+                    W::Unreachable => Some(kaeri_i18n::t::room_error_unreachable()),
+                    W::Full => Some(kaeri_i18n::t::room_error_full()),
+                    W::OldInvite => Some(kaeri_i18n::t::room_error_old_invite()),
+                    W::Failed { reason } => Some(crate::say::msg(reason)),
+                };
+                if let Some(said) = said {
+                    self.ctx.toast(&said);
+                }
+            }
             _ => {}
         }
     }
@@ -3356,8 +3370,12 @@ impl PlayerView {
             });
             return;
         }
-        // The room opens its own episode in a fresh player, as joining from an invite does.
-        self.close();
+        // The room opens its own episode in a fresh player, as joining from an invite does. An
+        // invite not yet answered, or one whose relays don't answer, shows over the episode
+        // playing.
+        if !matches!(scene, Scene::Invited | Scene::InvitedFull | Scene::Unreachable) {
+            self.close();
+        }
         let (done, heard) = async_channel::bounded::<bool>(1);
         std::thread::spawn({
             let staged = Arc::clone(&staged);
