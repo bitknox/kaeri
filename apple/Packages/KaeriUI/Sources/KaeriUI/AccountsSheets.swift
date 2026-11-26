@@ -43,6 +43,10 @@ struct KitsuSheet: View {
                     .onSubmit(signIn)
             }
             .textFieldStyle(SheetFieldStyle())
+            if let failure = store.accounts.signInFailure, !working {
+                FailedLine(failure)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             HStack(spacing: 10) {
                 Spacer()
                 if working { ProgressView().controlSize(.small) }
@@ -62,16 +66,22 @@ struct KitsuSheet: View {
         .onChange(of: store.accounts.tracker(tracker)?.connected) { _, connected in
             if connected == true { dismiss() }
         }
+        // A sign-in that failed asks for the password again; until then it stays.
+        .onChange(of: store.accounts.signInFailure) { _, failure in
+            if failure != nil { password = "" }
+        }
+        .onAppear { store.accounts.credentialsSheetShown(tracker) }
+        .onDisappear { store.accounts.credentialsSheetShown(nil) }
     }
 
     private func signIn() {
         guard !username.isEmpty, !password.isEmpty else { return }
+        guard !store.accounts.isWorking(tracker) else { return }
         if tracker == "mangaupdates" {
-            store.reading.connectMangaUpdates(username: username, password: password)
+            store.connectMangaUpdates(username: username, password: password)
         } else {
             store.connectKitsu(username: username, password: password)
         }
-        password = ""
     }
 }
 

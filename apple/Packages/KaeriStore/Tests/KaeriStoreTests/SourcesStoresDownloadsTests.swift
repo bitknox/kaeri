@@ -506,3 +506,35 @@ struct BookFolderRemovalTests {
         #expect(store.sentLog.suffix(2) == ["bookSources", "bookSources"])
     }
 }
+
+@MainActor
+struct CredentialsSheetTests {
+    private func failed(_ tracker: String) -> Event {
+        .toast(Notice(kind: .info, text: "Couldn't sign in", hint: nil,
+                      msg: .noticeSignInFailed(tracker: tracker, reason: "The password is wrong.")))
+    }
+
+    /// The open sheet says its own failed sign-in, and the capsule under it doesn't.
+    @Test func theSheetHoldsItsOwnFailure() {
+        let store = AppStore()
+        store.accounts.credentialsSheetShown("mangaupdates")
+        store.apply(failed("MangaUpdates"))
+        #expect(store.accounts.signInFailure == "The password is wrong.")
+        #expect(store.notices.current == nil)
+        #expect(store.notices.log.count == 1)
+        // The next try clears it, and shows as working.
+        store.connectMangaUpdates(username: "mika", password: "secret")
+        #expect(store.accounts.signInFailure == nil)
+        #expect(store.sentLog.last == "reading")
+    }
+
+    /// Another tracker's failure, or one with no sheet open, is a notice as before.
+    @Test func otherFailuresStayNotices() {
+        let store = AppStore()
+        store.apply(failed("Kitsu"))
+        #expect(store.notices.current != nil)
+        store.accounts.credentialsSheetShown("mangaupdates")
+        store.apply(failed("Kitsu"))
+        #expect(store.accounts.signInFailure == nil)
+    }
+}

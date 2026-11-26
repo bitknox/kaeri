@@ -296,10 +296,6 @@ public final class ReadingModel {
         send?(.reading(.resolveConflict(work: work, tracker: tracker, keepLocal: keepLocal)))
     }
 
-    public func connectMangaUpdates(username: String, password: String) {
-        send?(.reading(.connectMangaUpdates(username: username, password: password)))
-    }
-
     public func download(_ work: String, _ pick: DownloadPick) {
         send?(.reading(.download(work: work, pick: pick)))
         send?(.reading(.loadChapters(work: work, edition: chapters[work]?.edition?.sourceId)))

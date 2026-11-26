@@ -162,7 +162,29 @@ public final class AccountsModel {
     }
 
     func started(_ tracker: String, job: JobId?) {
+        if tracker == credentialsSheet { signInFailure = nil }
         if let job { working[job] = tracker }
+    }
+
+    /// The tracker whose name and password sheet is open (Kitsu's or MangaUpdates'), if one is.
+    public private(set) var credentialsSheet: String?
+    /// Why the sign-in from the open name and password sheet failed, in the engine's words, for
+    /// the sheet to say in its own place: the notice would show under it. Cleared by the next try.
+    public private(set) var signInFailure: String?
+
+    /// `tracker`'s name and password sheet opened, or closed (nil).
+    public func credentialsSheetShown(_ tracker: String?) {
+        credentialsSheet = tracker
+        signInFailure = nil
+    }
+
+    /// Whether `notice` is a failed sign-in the open name and password sheet says, which it then
+    /// holds.
+    func tookSignInFailure(_ notice: Notice) -> Bool {
+        guard case .noticeSignInFailed(let tracker, let reason)? = notice.msg,
+              let sheet = credentialsSheet, tracker == Self.name(sheet) else { return false }
+        signInFailure = reason
+        return true
     }
 
     func done(_ job: JobId) {

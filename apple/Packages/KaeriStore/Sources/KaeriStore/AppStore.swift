@@ -1126,6 +1126,12 @@ public final class AppStore {
             party.apply(event)
             // The page says an uncertain match in its own line, so it is not said twice.
             if case .noticeMatchUncertain? = notice.msg { break }
+            // A failed sign-in from the name and password sheet is said in the sheet; Messages
+            // still keeps it.
+            if accounts.tookSignInFailure(notice) {
+                notices.record(notice)
+                break
+            }
             notices.post(notice)
         case .matchChoices, .matchSearchFailed, .matchFixFailed, .titleMatch:
             applyMatch(event)

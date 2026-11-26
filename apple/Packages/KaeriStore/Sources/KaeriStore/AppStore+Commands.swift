@@ -185,6 +185,10 @@ extension AppStore {
         accounts.started("kitsu", job: send(.connectKitsu(username: username, password: password)))
     }
 
+    public func connectMangaUpdates(username: String, password: String) {
+        accounts.started("mangaupdates", job: send(.reading(.connectMangaUpdates(username: username, password: password))))
+    }
+
     public func disconnect(_ tracker: String) {
         send(.disconnect(tracker: tracker))
     }
