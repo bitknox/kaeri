@@ -473,7 +473,19 @@ public sealed partial class ReaderOverlay : UserControl
     bool StateShown => stateView is not null;
 
     /// <summary>The last input was a finger or a pen: the end page offers one more swipe.</summary>
-    internal bool TouchInput { get; private set; }
+    internal bool TouchInput
+    {
+        get => touchInput;
+        private set
+        {
+            if (touchInput == value)
+                return;
+            touchInput = value;
+            // The novel's page holds its taps for the chrome only after a touch.
+            novel?.SyncInput();
+        }
+    }
+    bool touchInput;
 
     /// <summary>The strip is what shows: its end comes by scrolling, not a swipe.</summary>
     internal bool StripShown => kind == Kind.Strip;
@@ -1107,11 +1119,16 @@ public sealed partial class ReaderOverlay : UserControl
         var width = stage.ActualWidth;
         if (width <= 0)
             return;
-        var x = e.GetPosition(stage).X / width;
+        var point = e.GetPosition(stage);
+        var x = point.X / width;
+        var y = stage.ActualHeight > 0 ? point.Y / stage.ActualHeight : 0.5;
         switch (kind)
         {
             case Kind.Paged:
-                paged?.Tap(x);
+                paged?.Tap(x, y);
+                break;
+            case Kind.Novel when novel is { EndShown: true } end:
+                end.EndTap(x);
                 break;
             case Kind.Strip:
                 strip?.Tap(x);
