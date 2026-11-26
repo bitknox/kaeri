@@ -223,6 +223,14 @@ struct ReaderModelTests {
         #expect(model.tapsTurn)
     }
 
+    /// Vertical is laid out by the engine as a strip of whole pages, so it reads as one.
+    @Test func verticalFlowsAsAStripDoes() {
+        #expect(ReaderMode.vertical.flows)
+        #expect(ReaderMode.strip.flows)
+        #expect(!ReaderMode.paged.flows)
+        #expect(!ReaderMode.scrolled.flows)
+    }
+
     @Test func aFirstPageThatFailsFailsTheChapter() {
         let (model, _) = model()
         model.open(work: "a:900301")

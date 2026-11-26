@@ -146,7 +146,7 @@ public struct ReaderScreen: View {
                 NovelReader(model: model, theme: theme, mac: mac, size: size, rtl: rtl, web: novelWeb) { [model] x in
                     Self.tap(model, x)
                 }
-            } else if model.view?.mode == .strip {
+            } else if model.view?.mode.flows == true {
                 StripReader(model: model, theme: theme, mac: mac, size: size, tone: tone) { tap(0.5) }
             } else {
                 PagedReader(model: model, theme: theme, size: size, scale: displayScale, tone: tone, paper: paper) { tap($0) }
@@ -434,7 +434,7 @@ extension ReaderActions {
     /// Home and End: the first page or image, or the last one before the end page.
     @MainActor private static func edge(_ model: ReaderModel, first: Bool) {
         model.hideChrome()
-        if model.novel != nil || model.view?.mode == .strip {
+        if model.novel != nil || model.view?.mode.flows == true {
             model.requestJump(first ? 0 : max(model.position.count - 1, 0))
             return
         }
@@ -447,7 +447,7 @@ extension ReaderActions {
             let now = model.amount(.textSize) ?? 1
             let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
             model.set(.textSize, .amount(value: next))
-        } else if model.view?.mode == .strip {
+        } else if model.view?.mode.flows == true {
             let now = model.amount(.stripWidth) ?? 0.6
             let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
             model.set(.stripWidth, .amount(value: next))
@@ -499,7 +499,7 @@ struct ReaderOpening: View {
     /// The page's place as the opening holds it: the column of a strip, a page fitted to the
     /// screen otherwise. The first page fades in on the same plate.
     private var plate: CGSize {
-        if model.view?.mode == .strip { return CGSize(width: min(size.width, 720), height: size.height) }
+        if model.view?.mode.flows == true { return CGSize(width: min(size.width, 720), height: size.height) }
         let width = min(size.width, size.height * 0.7)
         return CGSize(width: width, height: min(size.height, width / 0.7))
     }
