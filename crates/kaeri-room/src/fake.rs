@@ -79,7 +79,7 @@ pub(crate) fn open(
         Some(Some(net.buses.entry(secret).or_insert_with(|| Bus::new(clock)).clone()))
     })?;
     Some(match bus {
-        Some(bus) => Ok(bus.subscribe(relays.to_vec())),
+        Some(bus) => Ok(bus.subscribe(secret, relays.to_vec())),
         None => Err(crate::link::Unreachable::NoRelay),
     })
 }
@@ -149,7 +149,7 @@ impl Bus {
         self.state.lock().unwrap_or_else(PoisonError::into_inner)
     }
 
-    fn subscribe(self: &Arc<Self>, relays: Vec<String>) -> Link {
+    fn subscribe(self: &Arc<Self>, secret: [u8; 16], relays: Vec<String>) -> Link {
         let (tx, heard) = mpsc::unbounded_channel();
         let (out, mut rx) = mpsc::unbounded_channel::<Out>();
         let id = NEXT.fetch_add(1, Ordering::Relaxed);
@@ -188,7 +188,14 @@ impl Bus {
             })
         });
         drop(spawned);
-        Link { out, heard, relays }
+        Link {
+            out,
+            heard,
+            relays,
+            session: Arc::new(crate::keys::Session::new()),
+            room_id: crate::keys::RoomKeys::new(secret).room_id(),
+            offset: Arc::default(),
+        }
     }
 
     fn take_from_device(&self, id: u64, body: Body) {

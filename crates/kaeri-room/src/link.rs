@@ -2,6 +2,11 @@
 //! pool over Nostr, or the in-process fake (feature `testing`). Bodies go out whole; sealing,
 //! padding, relays and dedupe are the transport's.
 
+use std::sync::{
+    Arc,
+    atomic::{AtomicI64, Ordering},
+};
+
 use tokio::sync::mpsc;
 
 use crate::wire::{Body, Mid};
@@ -59,6 +64,19 @@ pub struct Link {
     pub heard: mpsc::UnboundedReceiver<Heard>,
     /// The relays in use.
     pub relays: Vec<String>,
+    /// This join's session key: it signs every event, and seals and opens pairwise payloads.
+    pub session: Arc<crate::keys::Session>,
+    /// The room id the link opened with, which identity proofs name.
+    pub room_id: [u8; 16],
+    /// The clock correction from the relays, ms.
+    pub offset: Arc<AtomicI64>,
+}
+
+impl Link {
+    /// This device's corrected clock, from its local `now`.
+    pub fn corrected(&self, now: i64) -> i64 {
+        now + self.offset.load(Ordering::Relaxed)
+    }
 }
 
 /// Why a room can't be reached.
@@ -88,7 +106,5 @@ pub async fn open(secret: [u8; 16], relays: Vec<String>) -> Result<Link, Unreach
     if let Some(link) = crate::fake::open(secret, &relays) {
         return link;
     }
-    let _ = (secret, relays);
-    // The Nostr relay pool comes with the transport; until then only the fake answers.
-    Err(Unreachable::NoRelay)
+    crate::pool::open(secret, relays).await
 }

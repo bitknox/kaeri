@@ -9,12 +9,17 @@
 //!
 //! See `docs/room-protocol.md`.
 
+pub mod clock;
 pub mod envelope;
 #[cfg(any(test, feature = "testing"))]
 pub mod fake;
+#[cfg(any(test, feature = "testing"))]
+pub mod fake_relay;
 pub mod keys;
 pub mod limits;
 pub mod link;
+pub mod pool;
+pub mod relay;
 pub mod room;
 pub mod wire;
 
