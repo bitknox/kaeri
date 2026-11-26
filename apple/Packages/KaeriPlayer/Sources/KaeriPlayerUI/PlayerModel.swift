@@ -801,6 +801,11 @@ public final class PlayerModel {
                         }
                     } catch {
                         Self.note(.warn, "mpv refused \(Self.describe(item)): \(AppLog.redacting("\(error)"))")
+                        #if FIXTURES
+                        if ProcessInfo.processInfo.environment["KAERI_ROOM_TRACE"] == "1" {
+                            print("trace: mpv refused \(Self.describe(item)): \(error)")
+                        }
+                        #endif
                         // A change the viewer asked for that mpv refused says so; the periodic
                         // sampling stays quiet.
                         switch item {

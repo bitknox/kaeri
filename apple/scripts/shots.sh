@@ -362,6 +362,8 @@ for shot in "${shots[@]}"; do
   sleep "$(echo "0.5 + ${KAERI_SHOT_WAIT:-0}" | bc)"
   xcrun simctl io "$udid" screenshot --type=png "$out/$prefix-$(name "$shot").png" >/dev/null
   echo "shots.sh: wrote $out/$prefix-$(name "$shot").png"
+  # KAERI_SHOT_CONSOLE=1 keeps each shot's console beside it, for a scene's traces.
+  [[ -z "${KAERI_SHOT_CONSOLE:-}" ]] || cp "$log" "$out/$prefix-$(name "$shot").log"
   xcrun simctl terminate "$udid" app.kaeri.fixtures 2>/dev/null || true
   wait
   rm -f "$log"
