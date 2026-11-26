@@ -4,6 +4,9 @@
 
 package app.kaeri.tv.ui
 
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.semantics.text
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -162,6 +165,7 @@ private fun CommentCard(comment: CommentView, depth: Int, view: DiscussionView, 
                     color = ObiSilk.Haze,
                 )
             }
+            val spoiler = stringResource(R.string.discussion_spoiler)
             for (block in comment.body) {
                 val media = block.spans.firstOrNull { it.media != null }
                 if (media != null) {
@@ -172,6 +176,7 @@ private fun CommentCard(comment: CommentView, depth: Int, view: DiscussionView, 
                     )
                     continue
                 }
+                val hidden = !open && block.spans.any { it.spoiler }
                 Text(
                     buildAnnotatedString {
                         for (span in block.spans) {
@@ -184,12 +189,37 @@ private fun CommentCard(comment: CommentView, depth: Int, view: DiscussionView, 
                     },
                     style = MaterialTheme.typography.bodyLarge,
                     color = ObiSilk.Silk,
+                    // A screen reader reads the text whatever its colour: until opened, each spoiler is
+                    // the word "Spoiler" to it, as the bar is to the eye.
+                    modifier = if (hidden) {
+                        Modifier.clearAndSetSemantics { text = AnnotatedString(spokenBlock(block.spans.map { it.spoiler to it.text }, spoiler)) }
+                    } else {
+                        Modifier
+                    },
                 )
             }
             if (focused && hasSpoiler && !open) {
                 Text(stringResource(R.string.tv_discussion_select_spoiler), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.padding(top = 4.dp))
             }
         }
+    }
+}
+
+/** A block's text as a screen reader gets it: each hidden ([Pair.first]) span read as [spoiler]. */
+internal fun spokenBlock(spans: List<Pair<Boolean, String>>, spoiler: String): String = buildString {
+    var lastHidden = false
+    for ((hidden, text) in spans) {
+        if (hidden) {
+            // Spans of one spoiler side by side say the word once.
+            if (!lastHidden) {
+                if (isNotEmpty() && !last().isWhitespace()) append(' ')
+                append(spoiler)
+            }
+        } else {
+            if (lastHidden && text.isNotEmpty() && !text.first().isWhitespace()) append(' ')
+            append(text)
+        }
+        lastHidden = hidden
     }
 }
 
