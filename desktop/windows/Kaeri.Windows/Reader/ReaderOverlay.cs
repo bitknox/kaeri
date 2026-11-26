@@ -50,6 +50,12 @@ public sealed partial class ReaderOverlay : UserControl
     bool flyoutOpen;
     /// <summary>The last input was a key, not the pointer.</summary>
     bool keyed;
+
+    /// <summary>The last input was a key: focus moved for it shows its ring.</summary>
+    internal bool Keyed => keyed;
+
+    /// <summary>The open Chapters flyout's list, built again once chapters come in while it waits.</summary>
+    internal Action? RefreshChapterList { get; set; }
     Point lastPointer = new(-1, -1);
     long lastNovelWheel;
     string? lastFit, lastBackground;
@@ -336,6 +342,9 @@ public sealed partial class ReaderOverlay : UserControl
             case ReaderChange.Credits:
             case ReaderChange.Parts:
                 CreditsChanged();
+                break;
+            case ReaderChange.Chapters when chaptersFlyout.IsOpen:
+                RefreshChapterList?.Invoke();
                 break;
             case ReaderChange.Chapters:
                 break;

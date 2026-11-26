@@ -623,6 +623,12 @@ static class ChaptersFlyout
             Grid.SetRowSpan(body, 2);
             body.Content = List();
         }
+        // Chapters that come while the flyout is open replace its waiting line.
+        owner.RefreshChapterList = () =>
+        {
+            if (body.Content is FrameworkElement { Tag: WaitingTag } && reader.ChaptersLoaded)
+                body.Content = List();
+        };
         return root;
     }
 
@@ -717,6 +723,9 @@ static class ChaptersFlyout
         return new ScrollViewer { Content = stack, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
     }
 
+    /// <summary>The waiting line's mark, for the list to take its place.</summary>
+    const string WaitingTag = "chapters-waiting"; // i18n-skip
+
     /// <summary>The chapters by volume, the open one on the selected fill; a click opens one.</summary>
     static FrameworkElement ChapterList(ReaderOverlay owner, Flyout flyout)
     {
@@ -735,6 +744,8 @@ static class ChaptersFlyout
                 Opacity = 0,
             };
             AutomationProperties.SetLiveSetting(waiting, AutomationLiveSetting.Polite);
+            // The list takes its place once the chapters come (RefreshChapterList).
+            waiting.Tag = WaitingTag;
             var timer = waiting.DispatcherQueue.CreateTimer();
             timer.Interval = TimeSpan.FromMilliseconds(600);
             timer.IsRepeating = false;
@@ -787,7 +798,12 @@ static class ChaptersFlyout
         }
         var scroll = new ScrollViewer { Content = stack, VerticalScrollBarVisibility = ScrollBarVisibility.Auto };
         if (open is not null)
-            scroll.Loaded += (_, _) => open.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.4, AnimationDesired = false });
+            scroll.Loaded += (_, _) =>
+            {
+                open.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.4, AnimationDesired = false });
+                // Focus starts on the open chapter, so the arrows move from there.
+                open.Focus(owner.Keyed ? FocusState.Keyboard : FocusState.Programmatic);
+            };
         return scroll;
     }
 
