@@ -327,6 +327,8 @@ public final class RoomModel {
     public func playNextNow() { act(.playNextNow) }
     /// Play for everyone before play (and Carry on during a wait).
     public func play() { act(.play(play: true)) }
+    /// Play or pause the room, from the bar over the tabs.
+    public func setPlaying(_ playing: Bool) { act(.play(play: playing)) }
     public func newInvite() { act(.newInvite) }
 
     /// Join the room, from an invite opened.

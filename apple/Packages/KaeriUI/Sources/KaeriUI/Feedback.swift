@@ -7,6 +7,9 @@ import SwiftUI
 extension EnvironmentValues {
     /// Whether the player the app hosts is up: the app's shell says so from the player.
     @Entry public var playerUp = false
+    /// The room folded into the bar over the tabs on iPhone: the player's package draws it, and
+    /// the app hands it in here.
+    @Entry public var roomBar: AnyView? = nil
 }
 
 /// The check of a watched episode: drawn on when the episode becomes watched, at once under

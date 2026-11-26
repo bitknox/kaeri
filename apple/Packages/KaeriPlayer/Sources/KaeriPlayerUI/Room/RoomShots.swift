@@ -161,7 +161,7 @@ enum RoomStage {
         case .invited: .invited
         case .invitedover: .invitedFull
         case .pausedby: .paused
-        case .wait: .waitLoading
+        case .wait, .folded: .waitLoading
         case .cap, .fullcap: .waitCap
         case .carried: .carriedOn
         case .ownwait: .youLoading
@@ -184,7 +184,7 @@ enum RoomStage {
         case .moved: .movedAway
         case .placejoinfail: .unreachable
         case .watching, .invite, .details, .editrelays, .leave, .cmdw, .skip, .movestart, .movepick, .full, .hidden,
-             .folded, .menu, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail:
+             .menu, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail:
             .watching
         }
     }
@@ -254,6 +254,10 @@ extension PlayerModel {
             room.startMove()
         case .skip:
             room.stage(skipTo: 20)
+        case .folded:
+            // Paused for Ren, folded into the bar over the tabs with the chevron.
+            room.keepRoom()
+            guard await roomWaited(10, { room.you?.state == .playerClosed && !self.isPresented }) else { return false }
         case .youchoosing:
             // The app's player plays the room's episode, which the fake's pose can't hold: choose
             // a source as a viewer would.
