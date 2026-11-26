@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableLongStateOf
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.tv.material3.MaterialTheme
 import androidx.tv.material3.Text
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import app.kaeri.design.Nagare
@@ -99,6 +101,12 @@ fun SignInScreen(tracker: String, onDone: () -> Unit, cancelLabel: String? = nul
         }
     }
     BackHandler(onBack = onDone)
+    // The engine's word on a failed sign-in for this tracker comes here, for the screen to say in
+    // place of a wait that would never end.
+    DisposableEffect(tracker) {
+        store.accounts.credentialsSheet(tracker)
+        onDispose { store.accounts.credentialsSheet(null) }
+    }
 
     val cancel = remember { FocusRequester() }
     Row(
@@ -113,7 +121,7 @@ fun SignInScreen(tracker: String, onDone: () -> Unit, cancelLabel: String? = nul
         Column(verticalArrangement = Arrangement.spacedBy(20.dp)) {
             Text(stringResource(R.string.accounts_sign_in_to, name), style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
             when (signInWay(tracker)) {
-                SignInWay.Page -> PageWay(store, tracker, name)
+                SignInWay.Page -> PageWay(store, tracker, name, cancel, onCancel = onDone, cancelLabel = cancelText)
                 SignInWay.DeviceCode -> DeviceCodeWay(store, tracker, cancel, onCancel = onDone, cancelLabel = cancelText)
                 SignInWay.None -> Text(
                     stringResource(R.string.tv_signin_not_on_tv, name),
@@ -122,26 +130,36 @@ fun SignInScreen(tracker: String, onDone: () -> Unit, cancelLabel: String? = nul
                     modifier = Modifier.widthIn(max = 640.dp),
                 )
             }
-            if (signInWay(tracker) != SignInWay.DeviceCode) {
+            if (signInWay(tracker) == SignInWay.None) {
                 TonalButton(onClick = onDone, modifier = Modifier.focusRequester(cancel)) { ButtonLabel(cancelText) }
             }
         }
     }
 }
 
-/** AniList and Kitsu: the TV's own page, its QR code and address, while the screen is open. */
+/**
+ * AniList and Kitsu: the TV's own page, its QR code and address, while the screen is open. A wait
+ * that can't end says why: no network a phone can reach, the sign-in failing to start, or the
+ * page closed after its 10 minutes, with a way to start again.
+ */
 @Composable
-private fun PageWay(store: AppStore, tracker: String, name: String) {
+private fun PageWay(store: AppStore, tracker: String, name: String, cancel: FocusRequester, onCancel: () -> Unit, cancelLabel: String) {
     val context = LocalContext.current
     val pageHost = LocalPageHost.current
     val scope = androidx.compose.runtime.rememberCoroutineScope()
     val request by store.accounts.signIn.collectAsStateWithLifecycle()
+    val failure by store.accounts.signInFailure.collectAsStateWithLifecycle()
     val anilist = tracker == "anilist"
+    // Each start in turn: again once the page has closed or the start failed and Get a new code or
+    // Try again is pressed.
+    var opened by remember { mutableIntStateOf(0) }
     // AniList's sign-in starts in the engine, which gives the address to open and the state.
-    LaunchedEffect(tracker) { if (anilist) store.connect(tracker) }
+    LaunchedEffect(tracker, opened) { if (anilist && (opened == 0 || store.accounts.signIn.value?.tracker != tracker)) store.connect(tracker) }
     val asked = request?.takeIf { it.tracker == tracker }
     val ready = !anilist || asked != null
     var link by remember { mutableStateOf<String?>(null) }
+    var started by remember { mutableStateOf(false) }
+    var expired by remember { mutableStateOf(false) }
     var sent by remember { mutableStateOf(false) }
     // A sign-in that ran and ended with no account: the answer was turned down. A success closes
     // the screen before this is seen.
@@ -150,8 +168,13 @@ private fun PageWay(store: AppStore, tracker: String, name: String) {
     var ran by remember { mutableStateOf(false) }
     LaunchedEffect(busy) { if (busy) ran = true }
     val failed = sent && ran && !busy
-    DisposableEffect(ready) {
+    // AniList's start failed (offline, say): the engine said why, or it ran and gave no address.
+    val startFailed = anilist && asked == null && (failure != null || ran && !busy && !sent)
+    DisposableEffect(ready, opened) {
         if (!ready) return@DisposableEffect onDispose {}
+        expired = false
+        started = false
+        link = null
         val page = SignInPage(
             context = context,
             tracker = name,
@@ -175,6 +198,12 @@ private fun PageWay(store: AppStore, tracker: String, name: String) {
             val port = withContext(Dispatchers.IO) { page.start() }
             val address = pageHost(context)
             link = if (port != null && address != null) page.address(address, port) else null
+            started = true
+            if (port != null) {
+                // The page stops itself after its lifetime; the screen says so.
+                delay(SignInPage.LIFETIME_MILLIS)
+                expired = true
+            }
         }
         onDispose {
             job.cancel()
@@ -188,24 +217,40 @@ private fun PageWay(store: AppStore, tracker: String, name: String) {
     } else {
         stringResource(R.string.accounts_scan_password, name)
     }
+    val didNot = failure ?: stringResource(R.string.tv_signin_did_not, name)
     Text(steps, style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 640.dp))
     Row(horizontalArrangement = Arrangement.spacedBy(40.dp), verticalAlignment = Alignment.CenterVertically) {
-        val shown = link
+        val shown = link.takeIf { !expired }
         if (shown != null) {
             QrCode(shown, label = stringResource(R.string.tv_signin_qr_page))
         } else {
-            Box(Modifier.size(180.dp).background(ObiSilk.Raised, RoundedCornerShape(12.dp)))
+            Box(Modifier.size(180.dp).background(ObiSilk.Raised, RoundedCornerShape(12.dp)), contentAlignment = Alignment.Center) {
+                if (expired) Text(stringResource(R.string.stores_code_expired), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk)
+            }
         }
         Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.widthIn(max = 520.dp)) {
             Text(stringResource(R.string.stores_or_open_address), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Haze)
-            Text(shown ?: stringResource(R.string.downloads_notice_starting), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Silk)
             // A failure leads with the error's dot, its words in silk: vermilion is never text.
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (startFailed) Box(Modifier.size(8.dp).background(ObiSilk.Vermilion, CircleShape))
+                Text(
+                    when {
+                        expired -> stringResource(R.string.stores_page_closed)
+                        shown != null -> shown
+                        startFailed -> didNot
+                        started -> stringResource(R.string.stores_tv_no_network)
+                        else -> stringResource(R.string.downloads_notice_starting)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = ObiSilk.Silk,
+                )
+            }
+            if (shown != null) Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                 if (failed) Box(Modifier.size(8.dp).background(ObiSilk.Vermilion, CircleShape))
                 Text(
                     when {
                         !sent -> stringResource(R.string.stores_page_closes)
-                        failed -> stringResource(R.string.tv_signin_did_not, name)
+                        failed -> didNot
                         else -> stringResource(R.string.accounts_signing_in_action)
                     },
                     style = MaterialTheme.typography.bodyMedium,
@@ -213,6 +258,25 @@ private fun PageWay(store: AppStore, tracker: String, name: String) {
                 )
             }
         }
+    }
+    // Once the page has closed or the start failed, focus rests on starting again.
+    val again = remember { FocusRequester() }
+    val stuck = expired || startFailed
+    LaunchedEffect(stuck) { if (stuck) again.focusSoon() }
+    Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        if (stuck) {
+            TonalButton(
+                onClick = {
+                    // A new start begins clean: the last failure leaves the screen.
+                    store.accounts.credentialsSheet(tracker)
+                    sent = false
+                    ran = false
+                    opened += 1
+                },
+                modifier = Modifier.focusRequester(again),
+            ) { ButtonLabel(stringResource(if (expired) R.string.action_new_code else R.string.action_try_again)) }
+        }
+        TonalButton(onClick = onCancel, modifier = Modifier.focusRequester(cancel)) { ButtonLabel(cancelLabel) }
     }
 }
 
@@ -225,6 +289,7 @@ private fun PageWay(store: AppStore, tracker: String, name: String) {
 @Composable
 private fun DeviceCodeWay(store: AppStore, tracker: String, again: FocusRequester, onCancel: () -> Unit, cancelLabel: String) {
     val prompt by store.accounts.deviceCode.collectAsStateWithLifecycle()
+    val failure by store.accounts.signInFailure.collectAsStateWithLifecycle()
     LaunchedEffect(tracker) { store.connect(tracker) }
     val shown = prompt?.takeIf { it.tracker == tracker }
     var expired by remember(shown?.code) { mutableStateOf(false) }
@@ -258,6 +323,12 @@ private fun DeviceCodeWay(store: AppStore, tracker: String, again: FocusRequeste
                     style = MaterialTheme.typography.displaySmall.copy(fontFamily = FontFamily.Monospace, letterSpacing = 4.sp),
                     color = if (expired) ObiSilk.Haze else ObiSilk.Silk,
                 )
+            } else if (failure != null) {
+                // Asking for a code failed: the engine's reason, after the error's dot, in place of a wait.
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Box(Modifier.size(8.dp).background(ObiSilk.Vermilion, CircleShape))
+                    Text(failure.orEmpty(), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Silk, modifier = Modifier.widthIn(max = 520.dp))
+                }
             } else {
                 Text(stringResource(R.string.tv_signin_asking_code), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze)
             }
@@ -268,7 +339,14 @@ private fun DeviceCodeWay(store: AppStore, tracker: String, again: FocusRequeste
     }
     // The code waits, so focus rests on asking for a fresh one.
     Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-        TonalButton(onClick = { store.connect(tracker) }, modifier = Modifier.focusRequester(again)) { ButtonLabel(stringResource(R.string.action_new_code)) }
+        TonalButton(
+            onClick = {
+                // A new code starts clean: the last failure leaves the screen.
+                store.accounts.credentialsSheet(tracker)
+                store.connect(tracker)
+            },
+            modifier = Modifier.focusRequester(again),
+        ) { ButtonLabel(stringResource(R.string.action_new_code)) }
         TonalButton(onClick = onCancel) { ButtonLabel(cancelLabel) }
     }
 }
