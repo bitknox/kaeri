@@ -86,7 +86,8 @@ pub(crate) fn opener_for(
     opener(engine.config.effective(), &services.paths, &services.player_theme, hosted)
 }
 
-/// Play an episode from whichever source the resolution ladder chooses, staged for Now Playing
+/// Play an episode from its finished download, or else from whichever source the resolution
+/// ladder chooses, staged for Now Playing
 /// as the engine's record of the titles names it, which the front end is told: where it was
 /// left, or from the beginning when `from_start`. Refused, with nothing staged, where this build
 /// has no player to open.
@@ -457,8 +458,8 @@ impl Start {
 }
 
 /// Play an episode staged for Now Playing as `billing` says, its title and its episode's own
-/// name, from the release `pick` names or whichever the resolution ladder chooses, and from where
-/// `start` says. Returns what it was staged as.
+/// name, from the release `pick` names, its finished download, or whichever the resolution
+/// ladder chooses, and from where `start` says. Returns what it was staged as.
 #[allow(clippy::too_many_arguments)]
 fn play_staged(
     id: AnilistId,
@@ -478,6 +479,18 @@ fn play_staged(
     services: &Services,
     tx: &Outbox,
 ) -> Event {
+    // A finished download plays from disk, offline too: unless a release was picked by hand,
+    // the party plays, or the play goes to a TV.
+    if pick.is_none()
+        && !party
+        && !casting(engine, services)
+        && let Some(path) = downloaded(services, id, &episode)
+    {
+        let billing = (title, episode_title);
+        return play_file(
+            id, episode, path, start, follows, billing, opener, job, engine, services, tx,
+        );
+    }
     let Services { paths, sync, prefetch, store, .. } = services;
     let played = engine.next_playback(id, &episode);
     let told = follows || table_told(id, engine);
@@ -598,22 +611,84 @@ pub fn play_local(
     let Some(opener) = opener_for(engine, services) else {
         return playback::refuse(job, tx);
     };
+    // Named by the download it plays: the Downloads screen says what its rows are called.
+    let billing = (title, engine.cache.episode_title(id, &episode));
+    let staged = play_file(
+        id,
+        episode,
+        path,
+        Start::Resume,
+        false,
+        billing,
+        opener,
+        job,
+        engine,
+        services,
+        tx,
+    );
+    let _ = tx.send(staged);
+}
+
+/// The file a finished download of `episode` of `id` left on disk, if it is still there.
+fn downloaded(services: &Services, id: AnilistId, episode: &str) -> Option<String> {
+    let download = services.store.download_for(id, episode).ok().flatten()?;
+    if download.state != kaeri_store::DownloadState::Done {
+        return None;
+    }
+    let path = download.path?;
+    std::path::Path::new(&path).exists().then_some(path)
+}
+
+/// Whether plays go to a TV now, which a file on this device's disk does not reach.
+fn casting(engine: &EngineState, services: &Services) -> bool {
+    #[cfg(feature = "cast")]
+    {
+        engine.casting.is_some()
+            || services.casts.casting()
+            || services.casts.session_device().is_some()
+    }
+    #[cfg(not(feature = "cast"))]
+    {
+        let _ = (engine, services);
+        false
+    }
+}
+
+/// Play the file at `path`, a downloaded episode, staged as `billing` says and from where
+/// `start` says: the playback session a streamed play has, without the lookup. Returns what it
+/// was staged as.
+#[allow(clippy::too_many_arguments)]
+fn play_file(
+    id: AnilistId,
+    episode: String,
+    path: String,
+    start: Start,
+    // Led to by a playback of the same title, whose player has the title's table.
+    follows: bool,
+    (title, episode_title): (String, Option<String>),
+    opener: Arc<dyn PlayerOpener>,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) -> Event {
     let Services { paths, http, store, sync, .. } = services;
     let played = engine.next_playback(id, &episode);
-    let told = table_told(id, engine);
+    let told = follows || table_told(id, engine);
     let for_show = play_config(engine, store, id);
     let hints =
         engine.cache.hints(id, &episode, for_show.playback.skip_filler, PlayKind::Staged);
-    // Named by the download it plays: the Downloads screen says what its rows are called.
-    let episode_title = engine.cache.episode_title(id, &episode);
-    let resume = resume_of(services, id, &episode);
+    let resume = match start {
+        Start::Resume => resume_of(services, id, &episode),
+        Start::Beginning => None,
+        Start::At(at) => Some(at),
+    };
     let private = services.privacy.holds_show(played.id);
     let staged =
         stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine, private);
     if !told {
         say_table(id, engine, tx);
     }
-    let _ = tx.send(staged);
     let switches = engine.switches.open(played.serial);
     let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     // Nothing to find: it opens at once, and a Stop is its session's from the start.
@@ -684,6 +759,7 @@ pub fn play_local(
         handoff.complete().await;
         playback::play(vec![stream], context, store, http, machine, settings, tx, prx).await;
     });
+    staged
 }
 
 /// Write the shaders out for a playback, on the blocking pool rather than on the engine's own
