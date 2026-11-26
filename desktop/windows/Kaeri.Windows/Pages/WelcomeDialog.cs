@@ -82,7 +82,8 @@ sealed class WelcomeDialog
         dialog = new ContentDialog { XamlRoot = root, Content = frame };
         dialog.PrimaryButtonClick += OnPrimary;
         dialog.SecondaryButtonClick += OnSecondary;
-        clock = ctx.Window.DispatcherQueue.CreateTimer();
+        dialog.CloseButtonClick += OnClose;
+        clock =ctx.Window.DispatcherQueue.CreateTimer();
         clock.Interval = TimeSpan.FromMilliseconds(300);
         clock.Tick += (_, _) => RefreshPair();
         // The other device's setup comes as an engine event, heard while the dialog is up.
@@ -249,6 +250,8 @@ sealed class WelcomeDialog
             AutomationProperties.SetLiveSetting(waitingText, AutomationLiveSetting.Polite);
             waiting.Children.Add(waitingText);
             body.Children.Add(waiting);
+            // Back to the two ways in; New code joins it once this one has run out.
+            dialog.CloseButtonText = T.ActionBack;
             RefreshPair();
         }
         dialog.PrimaryButtonText = T.FirstOtherNo;
@@ -271,6 +274,23 @@ sealed class WelcomeDialog
         ctx.Send(new Command.PairInvite(Sync.SyncDialogs.TypedName));
         clock.Start();
         Show(Screen.Other);
+    }
+
+    /// <summary>The code ran out: a fresh one in its place, with the wait counted again.</summary>
+    void NewCode()
+    {
+        pairStarted = DateTimeOffset.UtcNow;
+        ctx.Known.PairInvite = null;
+        ctx.Send(new Command.PairInvite(Sync.SyncDialogs.TypedName));
+        dialog.SecondaryButtonText = "";
+        if (code is not null)
+            code.Text = "––– –––";
+        if (left is not null)
+        {
+            left.Text = "";
+            left.Foreground = Ui.Res<Brush>("TextFillColorSecondaryBrush");
+        }
+        RefreshPair();
     }
 
     void StopPairing()
@@ -313,6 +333,9 @@ sealed class WelcomeDialog
             left.Text = seconds <= 0 ? T.PairErrExpired : T.PairGoodFor(SyncWords.MinutesSeconds(seconds));
             left.Foreground = Ui.Res<Brush>(seconds <= 0 ? "SystemFillColorCriticalBrush" : "TextFillColorSecondaryBrush");
         }
+        var offer = seconds <= 0 ? T.ActionNewCode : "";
+        if (dialog.SecondaryButtonText != offer)
+            dialog.SecondaryButtonText = offer;
     }
 
     /// <summary>This PC's address on the local network, for the code the other device types or scans.</summary>
@@ -336,6 +359,8 @@ sealed class WelcomeDialog
     {
         foreach (var e in batch)
         {
+            if (listsWaiting)
+                HeardSignIn(e);
             if (e is not Event.SetupFrom from)
                 continue;
             setup = from.V1;
@@ -477,6 +502,7 @@ sealed class WelcomeDialog
             body.Children.Add(Ui.Text(T.AccountsOtherTrackersNote, "HazeCaptionStyle"));
             dialog.PrimaryButtonText = T.AccountsSignInTo(anilist);
             dialog.SecondaryButtonText = T.OnboardingNotNow;
+            SignInState();
             return;
         }
         dialog.Title = T.OnboardingListsTitle;
@@ -495,6 +521,60 @@ sealed class WelcomeDialog
         }));
         dialog.PrimaryButtonText = T.OnboardingConnect(anilist);
         dialog.SecondaryButtonText = T.OnboardingNotNow;
+        SignInState();
+    }
+
+    /// <summary>Connect was pressed and AniList has not answered: the page waits, as Android's and the Mac's do.</summary>
+    bool listsWaiting;
+    /// <summary>Why the last sign-in did not work, under the page until Connect is pressed again.</summary>
+    string? listsProblem;
+
+    /// <summary>The ring with "Waiting for the browser…" while AniList signs in, or why it did not; Connect held meanwhile.</summary>
+    void SignInState()
+    {
+        if (listsWaiting)
+        {
+            var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 };
+            row.Children.Add(new ProgressRing { IsActive = true, Width = 16, Height = 16 });
+            var words = Ui.Text(T.AccountsStateWaitingBrowser, "HazeBodyStyle");
+            AutomationProperties.SetLiveSetting(words, AutomationLiveSetting.Polite);
+            row.Children.Add(words);
+            body.Children.Add(row);
+        }
+        else if (listsProblem is { Length: > 0 } why)
+        {
+            var words = Ui.Text(why, "HazeCaptionStyle");
+            words.Foreground = Ui.Res<Brush>("SystemFillColorCriticalBrush");
+            AutomationProperties.SetLiveSetting(words, AutomationLiveSetting.Assertive);
+            body.Children.Add(words);
+        }
+        dialog.IsPrimaryButtonEnabled = !listsWaiting;
+    }
+
+    /// <summary>On once AniList is connected; back to Connect, saying why, when the sign-in ends without it.</summary>
+    void HeardSignIn(Event e)
+    {
+        switch (e)
+        {
+            case Event.Sync { V1: { Tracker: "anilist", Connected: true } }:
+                listsWaiting = false;
+                listsProblem = null;
+                if (page == Screen.Lists)
+                    Next();
+                return;
+            case Event.Toast { V1.Kind: NoticeKind.Alert } toast:
+                // A browser sign-in that failed or stopped says so only in an alert.
+                listsProblem = toast.V1.Msg?.Text();
+                break;
+            default:
+                if (ctx.Known.SigningIn.ContainsKey("anilist") || ctx.Known.Sync.GetValueOrDefault("anilist") is { Connected: true })
+                    return;
+                break;
+        }
+        // The sign-in ended without an account: Connect again, with the reason when there was one.
+        listsWaiting = false;
+        if (page == Screen.Lists)
+            Show(Screen.Lists);
     }
 
     // ---------------------------------------------------------------- sources
@@ -722,8 +802,15 @@ sealed class WelcomeDialog
                 break;
             case Screen.Lists:
                 args.Cancel = true;
+                if (ctx.Known.Sync.GetValueOrDefault("anilist") is { Connected: true })
+                {
+                    Next();
+                    break;
+                }
+                listsWaiting = true;
+                listsProblem = null;
                 ctx.SignIn("anilist");
-                Next();
+                Show(Screen.Lists);
                 break;
             default:
                 // Play the demo: first launch closes into the player on part 1.
@@ -753,8 +840,25 @@ sealed class WelcomeDialog
     {
         if (page == Screen.Lists)
         {
+            // Not now leaves a sign-in under way to finish in the browser; the page moves on.
             args.Cancel = true;
+            listsWaiting = false;
             Next();
         }
+        else if (page == Screen.Other && pairing)
+        {
+            args.Cancel = true;
+            NewCode();
+        }
+    }
+
+    /// <summary>Back while the code shows: pairing stops and the page offers its two ways in again.</summary>
+    void OnClose(ContentDialog sender, ContentDialogButtonClickEventArgs args)
+    {
+        if (page != Screen.Other || !pairing)
+            return;
+        args.Cancel = true;
+        StopPairing();
+        Show(Screen.Other);
     }
 }
