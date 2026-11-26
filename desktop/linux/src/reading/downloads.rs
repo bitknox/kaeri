@@ -7,11 +7,13 @@ use std::{cell::RefCell, rc::Rc};
 
 use adw::prelude::*;
 use gtk::{gio, glib};
+use kaeri_core::books::ChapterId;
 use kaeri_i18n::t;
 use kaeri_model::{
     event::Event,
     reading::{
-        BookDownloadSeries, BookDownloadsView, DownloadPick, ReadingCommand, ReadingEvent,
+        BookDownloadSeries, BookDownloadsView, ChapterDownloadState, DownloadPick,
+        ReadingCommand, ReadingEvent,
     },
 };
 
@@ -93,7 +95,7 @@ impl Section {
             self.list.remove(&row);
         }
         for item in &view.series {
-            self.list.append(&series_row(ctx, item));
+            self.list.append(&series_row(ctx, item, &moving(view, item)));
         }
         self.view.replace(Some(view.clone()));
         self.widget.set_visible(self.has_any());
@@ -104,8 +106,30 @@ impl Section {
     }
 }
 
-/// A series' row: cover, title, its line, and at the end the ring, Retry or Delete read.
-fn series_row(ctx: &Rc<Ctx>, item: &BookDownloadSeries) -> adw::ActionRow {
+/// The series' chapters queued, waiting or downloading: what Stop download stops.
+fn moving(view: &BookDownloadsView, item: &BookDownloadSeries) -> Vec<ChapterId> {
+    view.rows
+        .iter()
+        .filter(|row| row.work == item.work)
+        .filter(|row| {
+            matches!(
+                row.state,
+                ChapterDownloadState::Queued
+                    | ChapterDownloadState::WaitsForWifi
+                    | ChapterDownloadState::Downloading { .. }
+            )
+        })
+        .map(|row| row.chapter.id.clone())
+        .collect()
+}
+
+/// A series' row: cover, title, its line, and at the end the ring (which stops the download),
+/// Retry or Delete read.
+fn series_row(
+    ctx: &Rc<Ctx>,
+    item: &BookDownloadSeries,
+    moving: &[ChapterId],
+) -> adw::ActionRow {
     let row = adw::ActionRow::builder()
         .title(glib::markup_escape_text(&item.title))
         .subtitle(glib::markup_escape_text(&dotted(&item.line)))
@@ -120,7 +144,27 @@ fn series_row(ctx: &Rc<Ctx>, item: &BookDownloadSeries) -> adw::ActionRow {
         ring.update_property(&[gtk::accessible::Property::Label(&t::send_progress_spoken(
             percent,
         ))]);
-        row.add_suffix(&ring);
+        // The ring is the button that stops the download, as on the series page.
+        let stop = gtk::Button::builder().child(&ring).valign(gtk::Align::Center).build();
+        stop.add_css_class("flat");
+        stop.add_css_class("circular");
+        stop.set_tooltip_text(Some(&t::chapter_download_stop()));
+        stop.update_property(&[gtk::accessible::Property::Label(&format!(
+            "{}, {}", // i18n-skip
+            t::chapter_download_stop(),
+            t::send_progress_spoken(percent)
+        ))]);
+        stop.set_sensitive(!moving.is_empty());
+        stop.connect_clicked({
+            let (hub, work, chapters) = (hub.clone(), item.work.clone(), moving.to_vec());
+            move |_| {
+                if let Some(hub) = hub.upgrade() {
+                    let (work, chapters) = (work.clone(), chapters.clone());
+                    send(&hub, ReadingCommand::DownloadCancel { work, chapters });
+                }
+            }
+        });
+        row.add_suffix(&stop);
     } else if !item.failed.is_empty() {
         let retry = gtk::Button::with_label(&t::chapter_retry());
         retry.add_css_class("pill");
@@ -157,12 +201,32 @@ fn series_row(ctx: &Rc<Ctx>, item: &BookDownloadSeries) -> adw::ActionRow {
         "win.open-series",
         &item.work.0,
     ));
+    if !moving.is_empty() {
+        let stop = gio::Menu::new();
+        stop.append(Some(&t::chapter_download_stop()), Some("row.stop"));
+        menu.append_section(None, &stop);
+    }
     if item.read > 0 {
         menu.append_item(&widgets::menu_item(
             &t::read_downloads_delete_read(),
             "win.read-delete-read",
             &item.work.0,
         ));
+    }
+    if !moving.is_empty() {
+        let actions = gio::SimpleActionGroup::new();
+        let stop = gio::SimpleAction::new("stop", None);
+        stop.connect_activate({
+            let (work, chapters) = (item.work.clone(), moving.to_vec());
+            move |_, _| {
+                if let Some(hub) = hub.upgrade() {
+                    let (work, chapters) = (work.clone(), chapters.clone());
+                    send(&hub, ReadingCommand::DownloadCancel { work, chapters });
+                }
+            }
+        });
+        actions.add_action(&stop);
+        row.insert_action_group("row", Some(&actions));
     }
     widgets::context_menu(&row, &menu);
     row.set_action_target_value(Some(&item.work.0.to_variant()));
