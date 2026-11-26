@@ -925,12 +925,17 @@ public static class TvWords
     /// <summary>What a card that ended offers, by the engine's reason.</summary>
     public static CastOffer[] OffersFor(Msg? notice) => notice switch
     {
-        Msg.NoticeCastRefused or Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec or Msg.NoticeCastContainer =>
-            [CastOffer.ChooseSource, CastOffer.PlayHere],
-        Msg.NoticeCastNeverFetches => [CastOffer.TryAgain, CastOffer.PlayHere],
+        Msg.NoticeCastRefused or Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec or Msg.NoticeCastContainer
+            or Msg.NoticeCastSegment => [CastOffer.ChooseSource, CastOffer.PlayHere],
+        Msg.NoticeCastNeverFetches or Msg.NoticeCastLostStream => [CastOffer.TryAgain, CastOffer.PlayHere],
         Msg.NoticeCastDeepLink => [CastOffer.ChooseSource],
         _ => [CastOffer.PlayHere, CastOffer.ChooseAnother],
     };
+
+    /// <summary>Whether the spec's failure table names this reason; any other keeps the line's own two actions.</summary>
+    public static bool Tabled(Msg? notice) => notice is Msg.NoticeCastRefused or Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec
+        or Msg.NoticeCastContainer or Msg.NoticeCastSegment or Msg.NoticeCastNeverFetches or Msg.NoticeCastLostStream
+        or Msg.NoticeCastDeepLink or Msg.NoticeCastNotSameNetwork or Msg.NoticeCastLost or Msg.NoticeCastNoDevice;
 
     /// <summary>
     /// The line while a cast starts: the engine's phase line, else "Starting on Living room",

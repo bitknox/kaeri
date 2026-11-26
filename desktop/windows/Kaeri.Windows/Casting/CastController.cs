@@ -331,7 +331,7 @@ sealed class CastController : Grid
         Tracks(now, live);
         Volume(view, live);
 
-        Footer(CastFooter.For(line), turned);
+        Footer(CastFooter.For(line, drawn.Notice), turned);
         first.Live(footerDrawn!.FirstLive && (first.Action is not (CastAction.PlayHere or CastAction.ChooseSource) || tv.SessionPlay is not null));
         second.Live(second.Action is not (CastAction.PlayHere or CastAction.ChooseSource) || tv.SessionPlay is not null);
 
@@ -395,7 +395,10 @@ sealed class CastController : Grid
         void Change()
         {
             first.Set(want.First, want.FirstAccent);
-            second.Set(want.Second, accented: false);
+            // A reason with one way on leaves the second place out.
+            if (want.Second is { } then)
+                second.Set(then, accented: false);
+            Set(second.Root, want.Second is not null);
         }
         if (turned && footer.ActualWidth > 0)
             Crossfade.Swap(footer, Change);
@@ -422,6 +425,9 @@ sealed class CastController : Grid
                 break;
             case CastAction.ChooseAnother:
                 act.ChooseAnother();
+                break;
+            case CastAction.TryAgain:
+                act.TryAgain();
                 break;
             case CastAction.ChooseSource:
                 act.ChooseSource();
@@ -565,6 +571,7 @@ sealed class CastActions
     public required Action Stop { get; init; }
     public required Action ChooseAnother { get; init; }
     public required Action ChooseSource { get; init; }
+    public required Action TryAgain { get; init; }
 }
 
 /// <summary>

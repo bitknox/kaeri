@@ -47,7 +47,8 @@ public sealed record CastDrawn(
     string Total,
     bool Paused,
     string? Waiting,
-    string? Reason);
+    string? Reason,
+    Msg? Notice = null);
 
 /// <summary>
 /// Draws the cast from the engine's session view without amplifying it: widgets change only for
@@ -205,7 +206,8 @@ public sealed class CastPainter(Func<DateTimeOffset>? clock = null)
             Remaining: length is { } d ? "-" + KaeriFfiMethods.PlayClock(Math.Max(0, d - position)) : "",
             Total: length is { } t ? KaeriFfiMethods.PlayClock(t) : "",
             Paused, waiting,
-            Reason: failed ? view?.Notice?.Text() : null);
+            Reason: failed ? view?.Notice?.Text() : null,
+            Notice: failed ? view?.Notice : null);
     }
 
     /// <summary>"Episode 7 · The made-up title", or the episode alone, or nothing for media from elsewhere.</summary>
@@ -260,19 +262,46 @@ public enum CastAction
     StopCasting,
     Disconnect,
     ChooseSource,
+    TryAgain,
 }
 
 /// <summary>
 /// The remote's footer and More menu for a frame: two places that keep their spot and change only
 /// their words, the first in the accent when it is the way on, and More's items. While it
-/// reconnects only Stop casting takes input: Play here waits for Casting stopped.
+/// reconnects only Stop casting takes input: Play here waits for Casting stopped. A cast that
+/// ended offers what the spec's table gives its reason; one with a single way on (an episode
+/// that opens in another app) leaves the second place empty.
 /// </summary>
-public sealed record CastFooter(CastAction First, bool FirstAccent, bool FirstLive, CastAction Second, CastAction[] More, bool MoreLive)
+public sealed record CastFooter(CastAction First, bool FirstAccent, bool FirstLive, CastAction? Second, CastAction[] More, bool MoreLive)
 {
-    public static CastFooter For(CastLine line) => line switch
+    public static CastFooter For(CastLine line, Msg? notice = null) => line switch
     {
-        CastLine.Stopped => new(CastAction.PlayHere, FirstAccent: true, FirstLive: true, CastAction.ChooseAnother, [CastAction.ChooseAnother], MoreLive: true),
-        CastLine.Failed => new(CastAction.ChooseSource, FirstAccent: true, FirstLive: true, CastAction.PlayHere, [], MoreLive: true),
+        CastLine.Stopped or CastLine.Failed => Ended(line, notice),
+        CastLine.Idle => new(CastAction.ChooseAnother, FirstAccent: false, FirstLive: true, CastAction.Disconnect, [CastAction.ChooseAnother, CastAction.Disconnect], MoreLive: true),
+        CastLine.Reconnecting => new(CastAction.PlayHere, FirstAccent: false, FirstLive: false, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: false),
+        _ => new(CastAction.PlayHere, FirstAccent: false, FirstLive: true, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: true),
+    };
+
+    /// <summary>The two actions of a cast that ended, by the engine's reason (native-ux's failure table).</summary>
+    static CastFooter Ended(CastLine line, Msg? notice)
+    {
+        CastAction[] more = line == CastLine.Stopped ? [CastAction.ChooseAnother] : [];
+        // A reason the table does not name: the way on the line has always offered.
+        if (!TvWords.Tabled(notice))
+            return line == CastLine.Stopped
+                ? new(CastAction.PlayHere, FirstAccent: true, FirstLive: true, CastAction.ChooseAnother, more, MoreLive: true)
+                : new(CastAction.ChooseSource, FirstAccent: true, FirstLive: true, CastAction.PlayHere, more, MoreLive: true);
+        var offers = TvWords.OffersFor(notice).Select(Of).ToArray();
+        return new(offers[0], FirstAccent: true, FirstLive: true, offers.Length > 1 ? offers[1] : null, more, MoreLive: true);
+    }
+
+    static CastAction Of(CastOffer offer) => offer switch
+    {
+        CastOffer.ChooseSource => CastAction.ChooseSource,
+        CastOffer.TryAgain => CastAction.TryAgain,
+        CastOffer.ChooseAnother => CastAction.ChooseAnother,
+        _ => CastAction.PlayHere,
+    };
         CastLine.Idle => new(CastAction.ChooseAnother, FirstAccent: false, FirstLive: true, CastAction.Disconnect, [CastAction.ChooseAnother, CastAction.Disconnect], MoreLive: true),
         CastLine.Reconnecting => new(CastAction.PlayHere, FirstAccent: false, FirstLive: false, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: false),
         _ => new(CastAction.PlayHere, FirstAccent: false, FirstLive: true, CastAction.StopCasting, [CastAction.ChooseAnother, CastAction.StopCasting], MoreLive: true),
@@ -285,6 +314,7 @@ public sealed record CastFooter(CastAction First, bool FirstAccent, bool FirstLi
         CastAction.ChooseAnother => T.TvChooseAnother,
         CastAction.StopCasting => T.CastStop,
         CastAction.Disconnect => T.ActionDisconnect,
+        CastAction.TryAgain => T.ActionTryAgain,
         _ => T.PlayerChooseSource,
     };
 }
