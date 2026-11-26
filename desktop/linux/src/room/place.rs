@@ -145,8 +145,8 @@ pub fn build(
         column.append(&why);
     } else {
         let paste = gtk::Button::with_label(&c::paste());
+        // Secondary like Paste, as the board draws it: the place has no amber until a room.
         let join = gtk::Button::with_label(&c::join());
-        join.add_css_class("suggested-action");
         join.set_sensitive(false);
         field.connect_changed({
             let join = join.clone();
@@ -183,13 +183,15 @@ pub fn build(
     let list = crate::widgets::boxed_list();
     list.set_margin_top(8);
     for (i, r) in place.recent.iter().enumerate() {
-        let row = adw::ActionRow::builder().title(&r.title).subtitle(&r.line).build();
+        let esc = |s: &str| gtk::glib::markup_escape_text(s).to_string();
+        let row = adw::ActionRow::builder().title(esc(&r.title)).subtitle(esc(&r.line)).build();
         if r.failed {
+            // The lead in bold and the hint after it, on one line under the row's own.
             row.set_subtitle(&format!(
-                "{}\n{} {}",
-                r.line,
-                c::nobody_answered(),
-                c::nobody_answered_note()
+                "{}\n<b>{}</b> {}",
+                esc(&r.line),
+                esc(&c::nobody_answered()),
+                esc(&c::nobody_answered_note())
             )); // i18n-skip
             row.set_subtitle_lines(4);
         }
