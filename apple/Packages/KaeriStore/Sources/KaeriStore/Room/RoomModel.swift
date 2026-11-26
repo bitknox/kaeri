@@ -325,10 +325,12 @@ public final class RoomModel {
     /// "Episode 9"
     public func episodeName(_ episode: String) -> String { RoomCopy.upNextEpisode(episode, nil) }
 
-    /// 12:04
+    /// 12:04, 1:02:09. Whole seconds cut down, as the player's clock and the engine's room lines
+    /// write them: 12.6 s is 0:12 in the header as in "Mika paused at 0:12".
     nonisolated public static func clock(_ seconds: Double) -> String {
-        let s = max(0, Int(seconds.rounded()))
-        return "\(s / 60):" + String(format: "%02d", s % 60)
+        let s = Int(max(0, seconds.isFinite ? seconds : 0).rounded(.down))
+        let (h, m, sec) = (s / 3600, s / 60 % 60, s % 60)
+        return h > 0 ? "\(h):" + String(format: "%02d:%02d", m, sec) : "\(m):" + String(format: "%02d", sec)
     }
 
     // MARK: Actions
