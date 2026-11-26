@@ -74,8 +74,8 @@ data class TvLinkAsk(val link: String, val address: String)
 enum class TvScene {
     PAIRED, PICKER, CODE, REMOTE, LOST,
 
-    /** [REMOTE] with Living room in a watch party: the card's party section and its chat. */
-    PARTY,
+    /** [REMOTE] with Living room in a room: the card's room section and its chat. */
+    ROOM,
     ;
 
     companion object {
@@ -533,7 +533,7 @@ class TvRemoteModel(
         TvScene.CODE -> _pairing.value.let { it != null && it.needsCode && !it.working && it.tvName.isNotEmpty() }
         TvScene.REMOTE -> _card.value?.card?.now?.let { !it.loading && it.subtitles.isNotEmpty() } == true
         TvScene.LOST -> _card.value?.card?.let { it.phase == FfiLinkPhase.RETRYING && it.now != null } == true
-        TvScene.PARTY -> _card.value?.card?.party?.messages?.isNotEmpty() == true
+        TvScene.ROOM -> _card.value?.card?.room?.messages?.isNotEmpty() == true
     }
 
     /** The paired TV this phone drives, for the card's header and Settings. */

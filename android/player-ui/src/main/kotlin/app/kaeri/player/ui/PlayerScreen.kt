@@ -160,7 +160,6 @@ fun PlayerScreen(
     val context = LocalContext.current
     var surfaceView by remember { mutableStateOf<SurfaceView?>(null) }
     var sheet by remember { mutableStateOf<PlayerSheet?>(null) }
-    var typing by remember { mutableStateOf(false) }
     val discussion = discussionEntry(model)
 
     // TalkBack and Switch Access keep the controls up, and Up Next waits for them (T4, T5).
@@ -454,15 +453,16 @@ fun PlayerScreen(
                 }
             }
 
-            val inParty = LocalAppStore.current.party.view.collectAsStateWithLifecycle().value != null
-            val chatOn = inParty && rememberChatOn()
-            val partyMarks = LocalAppStore.current.party.conversation.collectAsStateWithLifecycle().value.marks
-            val ticks = if (chatOn) remember(partyMarks) { tickSeconds(partyMarks) } else emptyList()
+            // Watch together starts a room with what plays: the player becomes the room. In a room
+            // the room itself is around the player, so the button goes.
+            val store = LocalAppStore.current
+            val inRoom = store.room.view.collectAsStateWithLifecycle().value != null
+            val roomId = model.titleId
+            val roomEpisode = model.episode?.number
+            val startRoom = if (!inRoom && roomId != null && roomEpisode != null) ({ store.startRoom(roomId, roomEpisode) }) else null
             // "Still watching?" is the only thing a screen reader reaches while it shows.
-            // While the chat field is open the controls make way for it, as the board has it: the
-            // picture above the keyboard stays in view, with the column over it.
             AnimatedVisibility(
-                chromeVisible && !typing,
+                chromeVisible,
                 modifier = if (model.stillWatching) Modifier.clearAndSetSemantics { } else Modifier,
                 enter = fadeIn(Motion.fadeIn()),
                 exit = fadeOut(Motion.fadeOut()),
@@ -476,9 +476,7 @@ fun PlayerScreen(
                     preview = preview.takeIf { previewSource != null && !Device.power(context).lowPower },
                     onPlayOnTv = playOnTv,
                     discussion = discussion,
-                    onPeople = if (inParty) ({ sheet = PlayerSheet.People }) else null,
-                    onChat = if (chatOn) ({ typing = true }) else null,
-                    ticks = ticks,
+                    onPeople = startRoom,
                 )
             }
 
@@ -528,30 +526,13 @@ fun PlayerScreen(
             if (still.frame == null && !pip) {
                 // A reaction's moment stands above the corner card, bottom trailing.
                 Column(Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 88.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                    if (inParty) ReactionMoments()
                     CornerCard(model, chromeVisible, { ground.value })
                 }
                 ResumeNote(model, Modifier.align(Alignment.BottomStart).padding(start = 48.dp, bottom = 84.dp))
-                // In a party the notice leads the chat column at the top leading corner; else it stands top centre.
-                if (inParty) {
-                    // Above the keyboard there is little room left, so the column moves up while typing.
-                    val columnTop by animateDpAsState(if (typing) 16.dp else 80.dp, Motion.standard(), label = "column") // i18n-skip
-                    PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = columnTop), compact = typing)
-                } else {
-                    AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
-                }
+                AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
                 StillWatching(model)
                 MarkingPanel(model)
                 ShareSkipTimes(model)
-            }
-            // The controls make way for the field; the hold keeps their clock from running out under
-            // it, so they come back as it closes.
-            DisposableEffect(typing) {
-                model.hold("chat", typing) // i18n-skip
-                onDispose { model.hold("chat", false) } // i18n-skip
-            }
-            AnimatedVisibility(typing && chatOn, modifier = Modifier.align(Alignment.BottomCenter), enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
-                TypingBar(onClose = { typing = false })
             }
             PlayerSheets(model, sheet, onMoreSubtitleSettings = { sheet = null; openSubtitleSettings() }) { sheet = null }
             PlayerPanelLayer(model)

@@ -80,10 +80,6 @@ import app.kaeri.store.HAS_TESTING_ENGINE
 import app.kaeri.testkit.FixtureArt
 import app.kaeri.testkit.Scene
 import app.kaeri.testkit.SynopsisFixtures
-import app.kaeri.testkit.PartyStates
-import app.kaeri.engine.model.PartyFound
-import app.kaeri.engine.model.PartySources
-import app.kaeri.engine.model.PartyConnection
 
 /**
  * Each board's screen, drawn on the JVM from a scene the testing engine recorded, at the board's
@@ -833,187 +829,65 @@ class BoardShots {
      * [scene] replayed into a store, the app drawn on it from [start], and captured once the art
      * has landed and every transition has run.
      */
-    // Watch together: the place, the in-party bar, the lobby's states, and the picker. The lobby
-    // states lay the engine's party events over the recorded Together scene.
+    // Watch together: the room this device is in, Join a room and the recent rooms, with the
+    // lines a failed join or rejoin leaves where it was asked.
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_home_people() = shoot("phone-party-home", TOGETHER)
+    fun phone_room_place() = shoot("phone-room-place", WATCHING, page = TOGETHER_ROUTE, before = { it.room.showPlace(recentRooms()) })
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_together() = shoot("phone-party-place", TOGETHER, page = TOGETHER_ROUTE)
+    fun phone_room_place_empty() = shoot("phone-room-place-empty", WATCHING, page = TOGETHER_ROUTE)
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_together_in_party() = shoot("phone-party-place-in-party", TOGETHER, page = TOGETHER_ROUTE, party = PartyStates.inRoom())
+    fun phone_room_place_in_room() = shoot("phone-room-place-in-room", WATCHING, page = TOGETHER_ROUTE, before = { store ->
+        store.room.show(placeRoom(), listOf(placeMember("ada", "Ada", you = true), placeMember("mika", "Mika"), placeMember("ren", "Ren")))
+        store.room.showPlace(recentRooms())
+    })
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_together_looked_in() = shoot("phone-party-place-looked-in", TOGETHER, page = TOGETHER_ROUTE) { store ->
-        compose.runOnUiThread { store.apply(listOf(PartyStates.glimpse())) }
-    }
+    fun phone_room_place_rejoin_failed() = shoot("phone-room-place-rejoin-failed", WATCHING, page = TOGETHER_ROUTE, before = { it.room.showPlace(recentRooms(), rejoinFailed = "room-2") })
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_together_bad_code() = shoot("phone-party-place-bad-code", TOGETHER, page = TOGETHER_ROUTE) {
-        compose.onNode(androidx.compose.ui.test.hasSetTextAction()).performTextInput("not a code")
-        compose.onNodeWithText("Join").performClick()
-    }
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_party_bar() = shoot("phone-party-bar", TOGETHER, party = PartyStates.inRoom())
-
-    /** The bar rises from behind the navigation bar: frames at 0, 60, 120, 200 and 400 ms. */
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_party_bar_rising() = shoot("phone-party-bar-rising-end", TOGETHER, settle = false) { store ->
-        frames("phone-party-bar-rising", listOf(0L, 60L, 120L, 200L, 400L)) { compose.runOnUiThread { store.apply(PartyStates.inRoom()) } }
-    }
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_invited() = shoot("phone-party-lobby-invited", TOGETHER, page = LOBBY_ROUTE, before = { store -> lobby(store, by = "Mika") }, party = listOf(PartyStates.glimpse()))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_looking() = shoot("phone-party-lobby-looking", TOGETHER, page = LOBBY_ROUTE, before = { store -> lobby(store, title = null) })
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_unreachable() = shoot("phone-party-lobby-unreachable", TOGETHER, page = LOBBY_ROUTE, before = { store -> lobby(store) }, party = listOf(PartyStates.unreachable()))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_empty_code() = shoot("phone-party-lobby-empty-code", TOGETHER, page = LOBBY_ROUTE, before = { store -> lobby(store, code = true, title = null) }, party = listOf(PartyStates.glimpse(members = emptyList(), roomEpisode = null)))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_filling() = shoot("phone-party-lobby-filling", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom())
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_ready() = shoot("phone-party-lobby-ready", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(ready = true), PartyStates.members(ready = 1, youReady = true)))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_starting() = shoot(
-        "phone-party-lobby-starting",
-        TOGETHER,
-        page = LOBBY_ROUTE,
-        party = PartyStates.inRoom(PartyStates.view(ready = true, startingIn = 3u), PartyStates.members(ready = 2, youReady = true)),
-    )
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_alone() = shoot("phone-party-lobby-alone", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(members = listOf(PartyStates.member("Sol", false, you = true))))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_start_anyway() = shoot("phone-party-lobby-start-anyway", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(ready = true, canStartAnyway = true), PartyStates.members(ready = 1, youReady = true)))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_nothing_open() = shoot("phone-party-lobby-nothing-open", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(roomEpisode = null, sources = null)))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_guesses() = shoot(
-        "phone-party-lobby-guesses",
-        TOGETHER,
-        page = LOBBY_ROUTE,
-        party = PartyStates.inRoom(PartyStates.view(roomEpisode = PartyStates.episode(PartyFound.UNMATCHED, id = null, plainBy = "Mika"), sources = null, guesses = PartyStates.guesses())),
-    )
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_not_found() = shoot(
-        "phone-party-lobby-not-found",
-        TOGETHER,
-        page = LOBBY_ROUTE,
-        party = PartyStates.inRoom(PartyStates.view(roomEpisode = PartyStates.episode(PartyFound.UNMATCHED, id = null, plainBy = "Mika"), sources = null)),
-    )
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_found_by_name() = shoot("phone-party-lobby-found-by-name", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(roomEpisode = PartyStates.episode(PartyFound.NAME))))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_checking() = shoot("phone-party-lobby-checking", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(sources = PartySources.Checking)))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_not_aired() = shoot("phone-party-lobby-not-aired", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(sources = PartyStates.notAired())))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_last_out() = shoot(
-        "phone-party-lobby-last-out",
-        TOGETHER,
-        page = LOBBY_ROUTE,
-        party = PartyStates.inRoom(PartyStates.view(playing = false)) + Event.PartyLastOut("9", null),
-    )
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_connection_lost() = shoot("phone-party-lobby-connection-lost", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(connection = PartyConnection.Reconnecting(2u, 5u))))
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_playing() = shoot("phone-party-lobby-playing", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(ready = true, playing = true), PartyStates.members(ready = 2, youReady = true)))
-
-    /** Mika says ready: her row's mark fades in and the counts and wait line crossfade. */
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_lobby_member_ready() = shoot("phone-party-lobby-member-ready-end", TOGETHER, page = LOBBY_ROUTE, party = PartyStates.inRoom(PartyStates.view(), PartyStates.members(ready = 0)), settle = false) { store ->
-        compose.mainClock.advanceTimeBy(3_000)
-        frames("phone-party-lobby-member-ready", listOf(0L, 100L, 200L, 300L)) {
-            compose.runOnUiThread { store.apply(listOf(Event.PartyMembers(PartyStates.members(ready = 1)))) }
-        }
-    }
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_party_pick() = shoot("phone-party-pick", TOGETHER, page = TOGETHER_ROUTE, screen = true) {
-        compose.onNodeWithText("Start a party").performClick()
-    }
-
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_party_first_server() = shoot("phone-party-first-server", TOGETHER, page = TOGETHER_ROUTE, screen = true, exclude = { it is Event.PartyForm }, party = listOf(firstForm())) {
-        compose.onNodeWithText("Start a party").performClick()
+    fun phone_room_place_join_failed() = shoot("phone-room-place-join-failed", WATCHING, page = TOGETHER_ROUTE, before = { it.room.showPlace(recentRooms()) }) { store ->
+        compose.onNode(androidx.compose.ui.test.hasSetTextAction()).performTextInput(PLACE_LINK)
+        compose.runOnUiThread { store.room.showPlace(recentRooms(), joinFailed = PLACE_LINK) }
         compose.waitForIdle()
-        compose.onAllNodesWithText("Stardust Wayfarer").onLast().performClick()
     }
 
-    /** The lobby's More: Change episode, Copy invite link and Leave watch party. */
-    @Test
-    @Config(qualifiers = PHONE)
-    fun phone_party_lobby_menu() = shoot("phone-party-lobby-menu", TOGETHER, page = LOBBY_ROUTE, screen = true, party = PartyStates.inRoom()) {
-        compose.onNodeWithContentDescription("More").performClick()
-    }
+    private fun placeRoom() = app.kaeri.engine.model.RoomView(
+        roomId = "room-1",
+        name = "Mika's room",
+        episode = app.kaeri.engine.model.RoomEpisode(900001u, "9"),
+        roomEpisode = app.kaeri.engine.model.RoomEpisodeInfo(900001u, "9", "Stardust Wayfarer", null, null, null),
+        position = 754.0,
+        positionAtMs = 0,
+        connection = app.kaeri.engine.model.RoomConnection.Connected,
+        link = PLACE_LINK,
+        beforePlay = false,
+        playing = true,
+        waiting = emptyList(),
+        canCarryOn = false,
+        relays = emptyList(),
+        moveCandidates = emptyList(),
+    )
 
-    /** Open the lobby a link opened, as the app does for one from a chat. */
-    private fun lobby(store: AppStore, by: String? = null, title: String? = "Natsukaze Relay", code: Boolean = false) {
-        store.openParty(
-            app.kaeri.engine.model.PartyTarget(
-                server = PartyStates.SERVER,
-                room = PartyStates.CODE,
-                by = by,
-                title = title,
-                episode = title?.let { "9" },
-                id = title?.let { PartyStates.RELAY },
-                fromCode = code,
-            ),
+    private fun placeMember(id: String, name: String, you: Boolean = false) =
+        app.kaeri.engine.model.RoomMember(id, name, you = you, state = app.kaeri.engine.model.MemberState.WATCHING)
+
+    /** Three kept rooms: an hour ago with two people, yesterday with one, last week alone. */
+    private fun recentRooms(): List<app.kaeri.engine.model.RoomRecent> {
+        val now = AppClock.clock.instant().epochSecond
+        return listOf(
+            app.kaeri.engine.model.RoomRecent("room-1", 900001u, "Stardust Wayfarer", "9", listOf("Mika", "Ren"), now - 3_600, null),
+            app.kaeri.engine.model.RoomRecent("room-2", 900002u, "Lantern Road", "4", listOf("Sol"), now - 86_400, null),
+            app.kaeri.engine.model.RoomRecent("room-3", 900003u, "Harbour Lights", "12", emptyList(), now - 6 * 86_400, null),
         )
     }
-
-    /** Start a party's form with no server used before: the first time asks for one. */
-    private fun firstForm() = Event.PartyForm(
-        app.kaeri.engine.model.PartyForm(recentServers = emptyList(), suggestedServer = PartyStates.SERVER, suggestedRunBy = "Syncplay", room = "quiet-harbour", name = "Sol"),
-    )
 
     /** Capture [name]-<ms> at each of [at] after [change], the clock held between frames. */
     private fun frames(name: String, at: List<Long>, screen: Boolean = false, change: () -> Unit) {
@@ -1429,9 +1303,9 @@ class BoardShots {
         firstLaunch: Boolean = false,
         /** The page opened over [start] as the app opens, by its route. */
         page: String? = null,
-        /** Events laid over the scene each time it replays: a watch party's, say. */
+        /** Events laid over the scene each time it replays. */
         party: List<Event> = emptyList(),
-        /** Run on the store before the screens show: a lobby a link opened, say. */
+        /** Run on the store before the screens show: the room's place, say. */
         before: ((AppStore) -> Unit)? = null,
         /** The episode tables of the scene as they are sent: text and stills laid on, say. */
         episodes: ((AnilistId, List<EpisodeRow>) -> List<EpisodeRow>)? = null,
@@ -1586,7 +1460,7 @@ class BoardShots {
 
         const val HOME_WATCHING = "home-watching"
         const val FRESH = "fresh"
-        const val TOGETHER = "together"
+        const val PLACE_LINK = "https://kaeri.app/room#v1.Q2m4xR9dK7tWbH3nPzL8sYe"
 
         /** The zone the shots read their days and times in, wherever they run. */
         val ZONE: ZoneId = ZoneId.of("Europe/Copenhagen")

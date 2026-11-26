@@ -62,9 +62,19 @@ class PlayerFrame(
         val left by room.left.collectAsStateWithLifecycle()
         // An invite opened with the player closed: the room's Join screen, upright, its video the still.
         if (invited != null && !model.isPresented) {
-            val inv = invited
+            val inv = invited!!
+            // A TV driven from this phone and in no room: the TV can take the invite, playing from its own sources.
+            val tv = LocalAppStore.current.tv
+            val card by tv.card.collectAsStateWithLifecycle()
+            val drivenTv = card?.card?.takeIf { it.room == null && it.tvName.isNotEmpty() }
+            val onTv = drivenTv?.let { c ->
+                c.tvName to {
+                    tv.send(app.kaeri.engine.ffi.FfiTvCommand.RoomJoin(inv.invite))
+                    room.notNow()
+                }
+            }
             BackHandler { room.notNow() }
-            RoomInvitedScreen(room, inv!!, onClose = { room.notNow() })
+            RoomInvitedScreen(room, inv, onClose = { room.notNow() }, joinOnTv = onTv)
         }
         if (view == null) left?.let { why -> RoomLeftAlert(room, why) }
     }

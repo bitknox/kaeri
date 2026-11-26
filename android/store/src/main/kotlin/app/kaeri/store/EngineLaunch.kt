@@ -303,7 +303,7 @@ enum class FixtureScene {
     /** Servers and a licensed service together, for Search's Available filter. */
     AVAILABLE,
 
-    /** [WATCHING] with three watch party rooms kept, as Watch together lists them. */
+    /** [WATCHING] with three rooms kept, as Watch together lists them. */
     TOGETHER,
 
     /** [WATCHING] with sync set up through a cloud folder: this device, the Living room TV, one kept-watch note. */

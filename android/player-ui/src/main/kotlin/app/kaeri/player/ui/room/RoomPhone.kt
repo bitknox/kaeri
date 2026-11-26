@@ -12,6 +12,9 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.TextButton
+import androidx.compose.ui.platform.LocalContext
+import app.kaeri.i18n.Strings
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -127,6 +130,8 @@ fun RoomUpright(
     onSubtitles: () -> Unit = {},
     onCopyLink: () -> Unit = {},
     opened: RoomOpen = RoomOpen.None,
+    /** The Join screen with a TV driven from this phone: "Join on Living room" hands it the invite. */
+    joinOnTv: Pair<String, () -> Unit>? = null,
 ) {
     val view by room.view.collectAsStateWithLifecycle()
     val members by room.members.collectAsStateWithLifecycle()
@@ -168,7 +173,14 @@ fun RoomUpright(
         if (inv != null) {
             line = RoomLine(inv.by?.let { c.invited(it) } ?: c.JOIN, if (inv.over) c.overCap(inv.names.size) else c.titleEpisode(inv.title, inv.episode))
             buttons = {
-                PairButtons(if (inv.over) c.JOIN_ANYWAY else c.JOIN, c.NOT_NOW, { room.join(inv.over) }, { room.notNow(); onBack() })
+                Column {
+                    PairButtons(if (inv.over) c.JOIN_ANYWAY else c.JOIN, c.NOT_NOW, { room.join(inv.over) }, { room.notNow(); onBack() })
+                    joinOnTv?.let { (tv, join) ->
+                        TextButton(onClick = join, modifier = Modifier.padding(top = 4.dp)) {
+                            Text(Strings.partyJoinOnDevice(LocalContext.current, tv), color = ObiSilk.Silk, fontSize = 15.sp)
+                        }
+                    }
+                }
             }
         } else if (off != null) {
             line = RoomLine(c.movedTheRoom(off.by), c.goAlong(off.names, RoomWords.clock(positionS)))
@@ -310,7 +322,8 @@ internal fun PairButtons(first: String, second: String, onFirst: () -> Unit, onS
 fun FacesRow(view: RoomView, members: List<RoomMember>, now: Long, modifier: Modifier = Modifier, onMore: () -> Unit) {
     val c = roomCopy()
     val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.LEFT || it.sinceMs?.let { s -> now - s < LEFT_KEPT_MS } != false })
-    Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
+    // Named as a group for TalkBack: "People in the room", then each face.
+    Row(modifier.fillMaxWidth().semantics { contentDescription = c.PEOPLE }, horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
         for (m in shown) {
             val name = if (m.you) c.YOU else m.name
             val word = RoomWords.word(c, view, m, now)
@@ -475,7 +488,7 @@ fun RoomAround(
  * who invited, what it watches and who is there, then Join and Not now.
  */
 @Composable
-fun RoomInvitedScreen(room: RoomModel, invited: RoomInvited, onClose: () -> Unit) {
+fun RoomInvitedScreen(room: RoomModel, invited: RoomInvited, onClose: () -> Unit, joinOnTv: Pair<String, () -> Unit>? = null) {
     // A model of its own shows the glimpse as the room; Join goes out through the real one.
     val glimpse = remember(room) { RoomModel { room.send(it) } }
     androidx.compose.runtime.SideEffect {
@@ -487,5 +500,6 @@ fun RoomInvitedScreen(room: RoomModel, invited: RoomInvited, onClose: () -> Unit
         positionS = 0.0,
         video = { m -> app.kaeri.ui.ArtworkImage(art, ObiSilk.Raised, app.kaeri.ui.pixels(RoomVideoHeight * 2), m) },
         onBack = onClose,
+        joinOnTv = joinOnTv,
     )
 }

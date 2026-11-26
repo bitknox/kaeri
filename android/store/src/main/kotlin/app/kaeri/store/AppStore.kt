@@ -53,11 +53,6 @@ import app.kaeri.engine.ffi.FfiHost
 import app.kaeri.engine.ffi.FfiTvBrowser
 import app.kaeri.engine.ffi.FfiTvRemote
 import app.kaeri.engine.model.Command
-import app.kaeri.engine.model.PartyCommand
-import app.kaeri.engine.model.PartyMessageKind
-import app.kaeri.engine.model.PartyEpisode
-import app.kaeri.engine.model.PartyTarget
-import app.kaeri.engine.ffi.parsePartyTarget
 import app.kaeri.engine.model.ContentFor
 import app.kaeri.engine.model.ContentList
 import app.kaeri.engine.model.Event
@@ -225,20 +220,6 @@ class AppStore(
 
     /** The room this device is in, as the room's screens read it. */
     val room = app.kaeri.store.room.RoomModel { send(Command.Room(it)) }
-
-    /** Watch together: the party this device is in, its room, and the rooms kept. */
-    val party = PartyModel().also { model ->
-        // Off the player, who came and went and a new episode are said as notices; the player says
-        // the room's every word on the video itself.
-        model.onMessage = { message ->
-            val said = when (message.kind) {
-                is PartyMessageKind.Joined, is PartyMessageKind.Left, is PartyMessageKind.EpisodeChanged,
-                is PartyMessageKind.StarterLeft, is PartyMessageKind.JoinedAt -> true
-                else -> false
-            }
-            if (said && model.view.value?.playing != true) notices.post(EngineNotice(kind = NoticeKind.INFO, text = message.text, hint = null))
-        }
-    }
 
     /** The app's own update: the newer release, and the download and install the viewer started. */
     val updates = UpdateModel(notices, asset = updateAsset)
@@ -476,7 +457,7 @@ class AppStore(
      */
     fun send(command: Command): JobId? {
         if (command is Command.Reader && readerAnswer?.invoke(command.v1) == true) return null
-        if (command is Command.Play || command is Command.PlaySource || command is Command.PlayLocal || command is Command.PlayParty) {
+        if (command is Command.Play || command is Command.PlaySource || command is Command.PlayLocal) {
             onPlayAsked?.invoke()
         }
         val client = client
@@ -1418,9 +1399,8 @@ class AppStore(
         if (event is Event.PlaybackStaged) playbackFailed = false
         if (event is Event.PlaybackEnded && !event.rollingOn) playbackFailed = event.ending == app.kaeri.engine.model.Ending.Failed
         // The room started or moved on: the engine opens the episode, and the player takes it.
-        if (event is Event.PartyStarted || event is Event.RoomStarted) onPlayAsked?.invoke()
+        if (event is Event.RoomStarted) onPlayAsked?.invoke()
         if (room.apply(event)) return
-        if (party.apply(event)) return
         when (event) {
             is Event.JobStarted -> jobs.started(event.job, event.activity)
             is Event.JobNote -> jobs.note(event.job, event.note, event.wait?.toMillis())
@@ -1629,27 +1609,7 @@ class AppStore(
         }
     }
 
-    // Watch together: the place, the lobby and the room.
-
-    /** Ask for the last ten rooms, for the place's Recent rooms. */
-    fun loadPartyRooms() {
-        send(Command.Party(PartyCommand.LoadRecent))
-    }
-
-    /** Ask for the servers used before and a new room's name, for Start a party. */
-    fun loadPartyForm() {
-        send(Command.LoadPartyForm)
-    }
-
-    /**
-     * Open the lobby for what [text] leads to, an invite link or a code, and look into the room;
-     * `null` when it is neither.
-     */
-    fun openParty(text: String): PartyTarget? {
-        val target = parsePartyTarget(text) ?: return null
-        openParty(target)
-        return target
-    }
+    // Watch together: the place and the room.
 
     /**
      * A room invite the app was opened with, or one pasted: the room's invited state comes up and
@@ -1665,109 +1625,6 @@ class AppStore(
     /** Start a room watching [id] episode [episode]: from the player, the player becomes the room. */
     fun startRoom(id: AnilistId, episode: String) {
         send(Command.Room(app.kaeri.engine.model.RoomCommand.Lobby(null, null, app.kaeri.engine.model.RoomEpisode(id, episode), false)))
-    }
-
-    /** A party link the app was opened with: its lobby comes up; false when [link] is not one. */
-    fun followPartyLink(link: String): Boolean {
-        val target = openParty(link) ?: return false
-        party.linked(target)
-        return true
-    }
-
-    /** Open the lobby for [target] and look into its room, unless this device is in it already. */
-    fun openParty(target: PartyTarget) {
-        party.opened(target)
-        if (!party.isIn(RoomKey(target.server, target.room))) lookIntoRoom(target.server, target.room)
-    }
-
-    /**
-     * Rejoin [target], a recent room: its lobby opens and this device joins at once, without
-     * looking in first. A look into the room takes this device's name there for a moment, so the
-     * join would come in under another.
-     */
-    fun rejoinParty(target: PartyTarget) {
-        party.opened(target)
-        joinParty(target.server, target.room)
-    }
-
-    /** Close a lobby a link or code opened. */
-    fun closePartyLobby() {
-        party.closedLobby()
-    }
-
-    /** Connect to a room for a moment and read who is there: only when a room is opened. */
-    fun lookIntoRoom(server: String, room: String) {
-        party.looking(RoomKey(server, room))
-        send(Command.Party(PartyCommand.LookIn(server, room, null)))
-    }
-
-    /** Join [server]'s [room]: the room says what it watches, and this device opens it from its own sources. */
-    fun joinParty(server: String, room: String, name: String? = null) {
-        party.asked()
-        send(Command.Party(PartyCommand.Lobby(server, room, name, null)))
-    }
-
-    /** Start a party in [room] on [server] with [id]'s [episode]: this device sets what the room watches. */
-    fun startParty(server: String, room: String, name: String?, id: AnilistId, episode: String) {
-        party.asked()
-        send(Command.Party(PartyCommand.Lobby(server, room, name, PartyEpisode(id, episode))))
-    }
-
-    /**
-     * Start a party in [room] on [server] with nothing picked: once in, Play on any episode picks
-     * it for the room.
-     */
-    fun startParty(server: String, room: String, name: String?) {
-        party.asked()
-        send(Command.Party(PartyCommand.Lobby(server, room, name, null)))
-    }
-
-    fun partyReady(ready: Boolean) {
-        send(Command.PartyReady(ready))
-    }
-
-    fun leaveParty() {
-        party.closedLobby()
-        send(Command.PartyLeave)
-    }
-
-    /** Say something to the room; it shows when the server sends it back. */
-    fun partySay(text: String) {
-        send(Command.Party(PartyCommand.Say(text)))
-    }
-
-    /** React at the playhead. */
-    fun partyReact(reaction: app.kaeri.engine.model.Reaction) {
-        send(Command.Party(PartyCommand.React(reaction)))
-    }
-
-    /** Hide a member's lines and reactions for this party, on this device, or show them again. */
-    fun partyMute(name: String, muted: Boolean) {
-        send(Command.Party(PartyCommand.Mute(name, muted)))
-    }
-
-    fun startPartyAnyway() {
-        send(Command.Party(PartyCommand.StartAnyway))
-    }
-
-    /** Change the room's episode for everyone. In a party, Play anywhere does this through the engine. */
-    fun changePartyEpisode(id: AnilistId, episode: String) {
-        send(Command.Party(PartyCommand.ChangeEpisode(id, episode)))
-    }
-
-    /** Use [id] for the plain file the room plays, or with `null` reject the match made. */
-    fun choosePartyTitle(id: AnilistId?) {
-        send(Command.Party(PartyCommand.ChooseTitle(id)))
-    }
-
-    /** Open the player again at the room's position. */
-    fun openPartyPlayer() {
-        onPlayAsked?.invoke()
-        send(Command.Party(PartyCommand.OpenPlayer))
-    }
-
-    fun forgetPartyRoom(server: String, room: String) {
-        send(Command.Party(PartyCommand.ForgetRoom(server, room)))
     }
 
     // Fixing a source match: the commands the match sheet sends, and the engine's answers to them.

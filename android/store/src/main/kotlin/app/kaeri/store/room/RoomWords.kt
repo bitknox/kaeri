@@ -127,7 +127,18 @@ class RoomCopy(private val context: Context) {
     fun startingWhen(names: String, count: Int) = Strings.roomLineStartingWhen(x, names, count)
     fun startingIn(n: Int) = Strings.roomLineStartingIn(x, n)
     fun waited(s: Int) = Strings.roomLineWaited(x, s)
-    fun reasonFor(reason: WaitReason, s: Int) = if (reason == WaitReason.BUFFERING) Strings.roomStateBuffering(x, s) else Strings.roomStateLoading(x, s)
+    fun reasonFor(reason: WaitReason, s: Int) = when (reason) {
+        WaitReason.BUFFERING -> Strings.roomStateBuffering(x, s)
+        WaitReason.SEEKING -> Strings.roomStateSeeking(x, s)
+        WaitReason.LOADING -> Strings.roomStateLoading(x, s)
+    }
+    val PEOPLE get() = Strings.roomPeople(x)
+
+    /** A recent room's line: "Episode 8 · with Mika and Ren · Tuesday", or without the names. */
+    fun recentLine(room: app.kaeri.engine.model.RoomRecent): String {
+        val at = RoomWords.lastIn(room.lastAt)
+        return if (room.names.isEmpty()) Strings.roomRecentRowAlone(x, room.episode, at) else Strings.roomRecentRow(x, room.episode, list(room.names), at)
+    }
     fun othersWaiting(names: String, count: Int, s: Int) = Strings.roomLineWaitingForYou(x, names, count, s)
     fun carriedOn(by: String, past: List<String>) = if (past.size == 1) Strings.roomLineCarriedOnOne(x, by, past[0]) else Strings.roomLineCarriedOnMany(x, by)
     fun behindYou(s: Int) = Strings.roomLineYouBehind(x, s)
@@ -205,6 +216,19 @@ enum class Ring { Water, Haze, Arc, None }
 data class FaceLook(val ring: Ring, val arc: Float = 0f, val dim: Float = 1f, val badge: Boolean = false, val error: Boolean = false)
 
 object RoomWords {
+    /** When a recent room was last in: the time today, the weekday this week, else "18 November". */
+    fun lastIn(seconds: Long): String {
+        val at = java.time.Instant.ofEpochSecond(seconds).atZone(app.kaeri.store.AppClock.zone)
+        val now = java.time.ZonedDateTime.now(app.kaeri.store.AppClock.clock)
+        val days = java.time.temporal.ChronoUnit.DAYS.between(at.toLocalDate(), now.toLocalDate())
+        val pattern = when {
+            days <= 0L -> java.time.format.DateTimeFormatter.ofLocalizedTime(java.time.format.FormatStyle.SHORT)
+            days < 7L -> java.time.format.DateTimeFormatter.ofPattern("EEEE") // i18n-skip
+            else -> java.time.format.DateTimeFormatter.ofPattern("d MMMM") // i18n-skip
+        }
+        return at.format(pattern.withLocale(app.kaeri.store.AirTime.locale))
+    }
+
     /** "12:04", or "1:12:04" past the hour. */
     fun clock(seconds: Double): String {
         val s = seconds.toLong().coerceAtLeast(0)

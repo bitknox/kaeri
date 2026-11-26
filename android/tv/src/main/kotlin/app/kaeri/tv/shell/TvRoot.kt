@@ -205,10 +205,8 @@ private fun BoxScope.Notices(store: AppStore, player: PlayerModel, remote: TvRem
         kotlinx.coroutines.delay(1_000)
         if (store.crashes.pendingNotice() != null) notices.say(resources.getString(app.kaeri.i18n.R.string.crash_notice_tv))
     }
-    // In a party the column on the video says the player's alerts, chat lines among them.
-    val inParty = store.party.view.collectAsStateWithLifecycle().value != null
     val alert = player.alert
-    LaunchedEffect(alert?.since) { alert?.takeUnless { inParty && player.hasPicture }?.let { notices.say(it.text) } }
+    LaunchedEffect(alert?.since) { alert?.let { notices.say(it.text) } }
     // A newer release, when the engine says to tell of it: the update's page is in Settings › About.
     // Held while something plays, as a phone asking to pair is, and said once it stops.
     val update by store.updates.notice.collectAsStateWithLifecycle()
@@ -258,11 +256,7 @@ private fun BoxScope.RemoteOverlays(remote: TvRemoteHost, playing: Boolean, nav:
 
 @Composable
 private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromStart: (AnilistId, UInt) -> Unit) {
-    // The TV joined a room, from a phone or a kept room: its lobby comes up, until play starts.
     val store = LocalAppStore.current
-    val partyView by store.party.view.collectAsStateWithLifecycle()
-    val inParty = partyView != null
-    LaunchedEffect(inParty) { if (inParty && partyView?.playing != true) nav.openLobby() }
     // A pick opens its title page, or takes the open one's place for Another.
     LaunchedEffect(store) {
         store.surprise.picks.collect { pick ->
@@ -342,8 +336,6 @@ private fun Browse(nav: TvNavigator, play: (AnilistId, UInt) -> Unit, playFromSt
                                 is Page.Server -> ServerScreen(target.id, onDone = { nav.pop() })
                                 is Page.Licensed -> LicensedScreen(onDone = { nav.pop() })
                                 is Page.Update -> UpdateScreen(target.memory, onDone = { nav.pop() })
-                                is Page.Lobby -> app.kaeri.tv.screens.PartyLobbyScreen(nav, target.memory)
-                                is Page.PartyPick -> app.kaeri.tv.screens.PartyPickScreen(nav, target.memory)
                                 Destination.Together -> app.kaeri.tv.screens.TogetherScreen(nav, nav.memory(Destination.Together))
                                 Destination.Home -> HomeScreen(nav, nav.memory(target as Destination), onOpen = nav::openTitle, onPlay = play)
                                 Destination.Search -> SearchScreen(nav, nav.memory(Destination.Search), onOpen = nav::openTitle)

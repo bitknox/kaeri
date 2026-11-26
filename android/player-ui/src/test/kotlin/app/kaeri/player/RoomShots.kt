@@ -195,6 +195,10 @@ class RoomShots {
     @Test
     fun paused_for_ren() = shoot("paused-for-ren", view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 6)))
 
+    /** Ren seeking after a jump: the room waits with the seeking line. */
+    @Test
+    fun paused_for_ren_seeking() = shoot("paused-for-ren-seeking", view(waitRen(4, WaitReason.SEEKING), playing = false), listOf(ada(), mika(), ren(MemberState.BUFFERING, 4)))
+
     @Test
     fun twenty_seconds() = shoot("twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 20)))
 

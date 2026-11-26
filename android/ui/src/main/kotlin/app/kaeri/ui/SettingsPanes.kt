@@ -349,12 +349,12 @@ internal fun PlaybackPane() {
             ),
         )
         // Hide chat is this device's own: the engine always sends the room's words.
-        val hidden by store.party.hideChat.collectAsStateWithLifecycle()
-        LaunchedEffect(Unit) { store.party.loadHideChat(context) }
+        val hidden by store.room.hideChat.collectAsStateWithLifecycle()
+        LaunchedEffect(Unit) { store.room.loadHideChat(context) }
         SettingsGroup(
             title = stringResource(R.string.together_title),
             rows = listOf(
-                { place -> SwitchRow(place, Strings.settingsHideChat(context), checked = hidden, note = Strings.settingsHideChatLine(context)) { store.party.setHideChat(context, it) } },
+                { place -> SwitchRow(place, Strings.settingsHideChat(context), checked = hidden, note = Strings.settingsHideChatLine(context)) { store.room.setHideChat(context, it) } },
             ),
         )
     }

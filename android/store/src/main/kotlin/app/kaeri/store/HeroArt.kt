@@ -1,5 +1,5 @@
 // A title's wide art: the banner, else a still from an episode already seen, else, where the frame
-// asks for it (Continue cards, the spotlight and the party screens), the cover filling the frame,
+// asks for it (Continue cards, the spotlight and the room's screens), the cover filling the frame,
 // else nothing wide, and the screens set the cover beside the title instead. The player's starting
 // screen follows the same rule. The still comes from the episode table once it is here, and before
 // that from the one the engine sends with the title (`Entry.seenStill`), by the same rule.

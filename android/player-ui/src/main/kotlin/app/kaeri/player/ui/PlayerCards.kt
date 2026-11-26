@@ -184,9 +184,9 @@ private fun UpNextCard(model: PlayerModel) {
     val haptics = LocalHapticFeedback.current
     val countdown = model.countdown
     val upNextTitle = stringResource(R.string.player_up_next)
-    // In a watch party the room moves on together: "Everyone moves on in 8 s", and no Cancel or Play now.
-    val party by app.kaeri.ui.LocalAppStore.current.party.view.collectAsStateWithLifecycle()
-    val together = party != null
+    // In a room the room's line counts down to Up next for everyone, so this card stays away.
+    val inRoom by app.kaeri.ui.LocalAppStore.current.room.view.collectAsStateWithLifecycle()
+    if (inRoom != null) return
     Column(
         Modifier
             .width(336.dp)
@@ -220,16 +220,16 @@ private fun UpNextCard(model: PlayerModel) {
         Row(Modifier.padding(top = 4.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 countdown?.let {
-                    if (together) Strings.partyNextLine(LocalContext.current, it.first.toInt()) else stringResource(R.string.player_plays_in, it.first.toInt())
+                    stringResource(R.string.player_plays_in, it.first.toInt())
                 }.orEmpty(),
                 style = MaterialTheme.typography.bodyMedium.tabular(),
                 color = ObiSilk.Haze,
                 modifier = Modifier.weight(1f),
             )
-            if (!together) TextButton(onClick = model::cancelNext, modifier = Modifier.minimumInteractiveComponentSize().height(40.dp), contentPadding = PaddingValues(horizontal = 12.dp)) {
+            TextButton(onClick = model::cancelNext, modifier = Modifier.minimumInteractiveComponentSize().height(40.dp), contentPadding = PaddingValues(horizontal = 12.dp)) {
                 Text(stringResource(R.string.action_cancel), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk)
             }
-            if (!together) Button(
+            Button(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     model.playNext()

@@ -123,7 +123,6 @@ import app.kaeri.store.AppStore
 import app.kaeri.store.HAS_TESTING_ENGINE
 import app.kaeri.testkit.FixtureArt
 import app.kaeri.testkit.Scene
-import app.kaeri.testkit.PartyStates
 import app.kaeri.tv.player.CHROME_HIDE
 import app.kaeri.tv.player.TvPlayerScreen
 import app.kaeri.tv.remote.PairPage
@@ -1627,38 +1626,58 @@ class TvShots {
      * The app's root on [start] (or a title page, or Search with [query]), fed the scene's
      * events, then [then], then the capture when [name] is given.
      */
-    // Watch together: the place after Library, the lobby with its QR code, and what a party starts on.
+    // Watch together: the place after Library, with the room this TV is in and the recent rooms.
 
     @Test
-    fun together() = shoot("tv-together", start = Destination.Together, scene = TOGETHER) {
-        assertTrue("Start a party takes the first focus", focusedText().contains("Start a party"))
-    }
+    fun together() = shoot("tv-together", start = Destination.Together)
 
     @Test
-    fun together_in_party() = shoot("tv-together-in-party", start = Destination.Together, scene = TOGETHER) {
-        compose.runOnUiThread { shot.apply(PartyStates.inRoom()) }
+    fun together_recent() = shoot("tv-together-recent", start = Destination.Together) {
+        compose.runOnUiThread { shot.room.showPlace(recentRooms()) }
         settle()
-        nav.pop()
     }
 
     @Test
-    fun party_lobby() = shoot("tv-party-lobby", start = Destination.Together, scene = TOGETHER) {
-        compose.runOnUiThread { shot.apply(PartyStates.inRoom()) }
+    fun together_in_room() = shoot("tv-together-in-room", start = Destination.Together) {
+        compose.runOnUiThread {
+            shot.room.show(placeRoom(), listOf(placeMember("ada", "Ada", you = true), placeMember("mika", "Mika")))
+            shot.room.showPlace(recentRooms())
+        }
+        settle()
     }
 
     @Test
-    fun party_lobby_ready() = shoot("tv-party-lobby-ready", start = Destination.Together, scene = TOGETHER) {
-        compose.runOnUiThread { shot.apply(PartyStates.inRoom(PartyStates.view(ready = true), PartyStates.members(ready = 1, youReady = true))) }
+    fun together_rejoin_failed() = shoot("tv-together-rejoin-failed", start = Destination.Together) {
+        compose.runOnUiThread { shot.room.showPlace(recentRooms(), rejoinFailed = "room-1") }
+        settle()
     }
 
-    @Test
-    fun party_lobby_starting() = shoot("tv-party-lobby-starting", start = Destination.Together, scene = TOGETHER) {
-        compose.runOnUiThread { shot.apply(PartyStates.inRoom(PartyStates.view(ready = true, startingIn = 3u), PartyStates.members(ready = 2, youReady = true))) }
-    }
+    private fun placeRoom() = app.kaeri.engine.model.RoomView(
+        roomId = "room-1",
+        name = "Mika's room",
+        episode = app.kaeri.engine.model.RoomEpisode(900001u, "9"),
+        roomEpisode = app.kaeri.engine.model.RoomEpisodeInfo(900001u, "9", "Stardust Wayfarer", null, null, null),
+        position = 754.0,
+        positionAtMs = 0,
+        connection = app.kaeri.engine.model.RoomConnection.Connected,
+        link = "https://kaeri.app/room#v1.Q2m4xR9dK7tWbH3nPzL8sYe",
+        beforePlay = false,
+        playing = true,
+        waiting = emptyList(),
+        canCarryOn = false,
+        relays = emptyList(),
+        moveCandidates = emptyList(),
+    )
 
-    @Test
-    fun party_pick() = shoot("tv-party-pick", start = Destination.Together, scene = TOGETHER) {
-        press(Key.DirectionCenter)
+    private fun placeMember(id: String, name: String, you: Boolean = false) =
+        app.kaeri.engine.model.RoomMember(id, name, you = you, state = app.kaeri.engine.model.MemberState.WATCHING)
+
+    private fun recentRooms(): List<app.kaeri.engine.model.RoomRecent> {
+        val now = app.kaeri.store.AppClock.clock.instant().epochSecond
+        return listOf(
+            app.kaeri.engine.model.RoomRecent("room-1", 900001u, "Stardust Wayfarer", "9", listOf("Mika", "Ren"), now - 3_600, null),
+            app.kaeri.engine.model.RoomRecent("room-2", 900002u, "Lantern Road", "4", listOf("Sol"), now - 86_400, null),
+        )
     }
 
     private fun shoot(
@@ -1891,7 +1910,6 @@ class TvShots {
         const val FOLLOWING = "following"
         const val BROWSING = "browsing"
         const val HOME_WATCHING = "home-watching"
-        const val TOGETHER = "together"
 
         /** A pairing link as the engine writes one, with a made-up key. */
         const val PAIR_LINK = "kaeri-remote://pair?addr=192.168.1.20:47811&fp=" +

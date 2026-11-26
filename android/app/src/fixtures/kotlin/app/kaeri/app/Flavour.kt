@@ -61,11 +61,6 @@
 //             plate, which comes at 600 ms, on works that open at once here
 //   readerat  ms after the engine is up that a reader scene opens, so a recording of its opening
 //             starts on a settled app, past the splash screen
-//   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
-//             chatline, chatbusy, chatreact, chatfield, chatoff, chatfail, chatmute, chathidden,
-//             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
-//             chatloop and bar wait for `am broadcast -a app.kaeri.fixtures.PARTY_GO` before
-//             their timeline, so a recording can roll first
 //   room      the room on the testing engine's fake room (FfiRoomScene, as before-play, watching,
 //             wait-loading, up-next, move-offer, ...): scenes with a player open the room's episode;
 //             roomat=<ms> plays the episode alone first and joins the room that long after
@@ -109,10 +104,7 @@ import app.kaeri.store.CastScene
 import app.kaeri.store.FixtureCasts
 import app.kaeri.store.FixtureTvBrowser
 import app.kaeri.store.FixtureScene
-import app.kaeri.store.FixtureParty
 import app.kaeri.store.FixtureRoom
-import app.kaeri.store.PartyShot
-import app.kaeri.store.PartyStage
 import app.kaeri.store.FixtureTvs
 import app.kaeri.store.TvPlayRequest
 import app.kaeri.store.TvScene
@@ -328,11 +320,6 @@ internal object Flavour {
         FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
             val app = appContext as? KaeriApp ?: return false
             return FixtureRoom.stage(scene, store, { app.player.isPresented && app.player.hasPicture }, intent.getStringExtra("roomat")?.toLongOrNull())
-        }
-        PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
-            val app = appContext as? KaeriApp ?: return false
-            FixtureParty.listen(app)
-            return FixtureParty.stage(shot, store, PlayerStage(app))
         }
         intent.getStringExtra("sheet")?.takeIf { it.startsWith("match") }?.let { stageMatch(store, it) }
         intent.getStringExtra("discussion")?.let { value ->
@@ -566,19 +553,3 @@ internal object Flavour {
     private fun codeSecondsLeft(intent: Intent): Long = intent.getStringExtra("expires")?.toLongOrNull()?.coerceAtLeast(0) ?: 899
 }
 
-/** The phone's player, as the party scenes steer it. */
-private class PlayerStage(private val app: KaeriApp) : PartyStage {
-    private val player get() = app.player
-
-    override val playing: Boolean get() = player.isPresented && player.hasPicture && player.duration != null
-
-    override fun holdControls(on: Boolean) = player.hold("shot", on) // i18n-skip
-
-    override fun hideControls() = player.hideControls()
-
-    override fun seekTo(seconds: Double) = player.seekTo(seconds)
-
-    override fun setPlaying(playing: Boolean) = player.setPlaying(playing)
-
-    override fun hideChat(on: Boolean) = app.store.party.setHideChat(app, on)
-}
