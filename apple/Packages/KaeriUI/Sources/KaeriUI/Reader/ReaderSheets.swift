@@ -209,7 +209,10 @@ struct ReaderSettingsSheet: View {
     /// The row's value: "Auto · Right to left" while guessed, the choice otherwise.
     private var modeValue: String {
         let guessed = model.choice(.mode) == "strip" ? L.readerModeStrip
+            : model.choice(.mode) == "vertical" ? L.readerModeVerticalPages
             : (model.choice(.direction) == "ltr" ? L.readerModeLtr : L.readerModeRtl)
+        // Vertical, chosen on another device, is none of the picker's four: it says so.
+        if model.modeOverridden, model.choice(.mode) == "vertical" { return L.readerModeVerticalPages }
         switch currentMode {
         case .auto: return L.readerModeAuto(mode: guessed)
         case .rightToLeft: return L.readerModeRtl
