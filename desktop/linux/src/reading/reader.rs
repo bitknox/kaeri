@@ -3154,7 +3154,12 @@ impl Reader {
         if let Some(id) = self.hide_timer.borrow_mut().take() {
             id.remove();
         }
-        if self.pinned.get() || self.keyboard_in_chrome() {
+        // Under a screen reader the chrome stays: its controls are how the page is reached, as
+        // the player keeps its controls up.
+        if self.pinned.get()
+            || self.keyboard_in_chrome()
+            || crate::window::screen_reader_running()
+        {
             return;
         }
         self.head_fade.set(&self.head, false);
