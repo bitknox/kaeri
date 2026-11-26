@@ -11429,11 +11429,11 @@
     <comment>First line on your own device while the room waits for you.</comment>
   </data>
   <data name="RoomLineWaitingForYou_one" xml:space="preserve">
-    <value>[{names} îš ŵàîţîñĝ · {seconds} š~~~~~~~]</value>
+    <value>[{names} îš ŵàîţîñĝ · {seconds} š~~~~~~~]</value>
     <comment>Second line while the room waits for you: who waits, and for how many seconds so far.</comment>
   </data>
   <data name="RoomLineWaitingForYou_other" xml:space="preserve">
-    <value>[{names} àŕé ŵàîţîñĝ · {seconds} š~~~~~~~]</value>
+    <value>[{names} àŕé ŵàîţîñĝ · {seconds} š~~~~~~~]</value>
     <comment>Second line while the room waits for you: who waits, and for how many seconds so far.</comment>
   </data>
   <data name="RoomLineStillLoading_one" xml:space="preserve">
@@ -11445,7 +11445,7 @@
     <comment>First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.</comment>
   </data>
   <data name="RoomLineWaited" xml:space="preserve">
-    <value>[Ţĥé ŕööɱ ĥàš ŵàîţéð {seconds} š~~~~~~~~]</value>
+    <value>[Ţĥé ŕööɱ ĥàš ŵàîţéð {seconds} š~~~~~~~~]</value>
     <comment>Second line once the room has waited as long as it will.</comment>
   </data>
   <data name="RoomLineCarriedOnOne" xml:space="preserve">
@@ -11485,11 +11485,11 @@
     <comment>Second line when your own device lost every relay.</comment>
   </data>
   <data name="RoomLineYouBehind" xml:space="preserve">
-    <value>[Ýöü'ŕé {seconds} š ƀéĥîñð · çàţçĥîñĝ üþ~~~~~~~~~~]</value>
+    <value>[Ýöü'ŕé {seconds} š ƀéĥîñð · çàţçĥîñĝ üþ~~~~~~~~~~]</value>
     <comment>Second line when your own player is behind the room.</comment>
   </data>
   <data name="RoomLineWithSeconds" xml:space="preserve">
-    <value>[{line} · {seconds} š~~~~]</value>
+    <value>[{line} · {seconds} š~~~~]</value>
     <comment>The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.</comment>
   </data>
   <data name="RoomNamesPeople_one" xml:space="preserve">
@@ -11517,15 +11517,15 @@
     <comment>State word: the room is paused; this person was watching.</comment>
   </data>
   <data name="RoomStateBehind" xml:space="preserve">
-    <value>[Ɓéĥîñð · {seconds} š~~~~~]</value>
+    <value>[Ɓéĥîñð · {seconds} š~~~~~]</value>
     <comment>State word: the slowest player, holding the room back, with the gap in seconds.</comment>
   </data>
   <data name="RoomStateLoading" xml:space="preserve">
-    <value>[Ļöàðîñĝ · {seconds} š~~~~~]</value>
+    <value>[Ļöàðîñĝ · {seconds} š~~~~~]</value>
     <comment>State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.</comment>
   </data>
   <data name="RoomStateBuffering" xml:space="preserve">
-    <value>[Ɓüƒƒéŕîñĝ · {seconds} š~~~~~~]</value>
+    <value>[Ɓüƒƒéŕîñĝ · {seconds} š~~~~~~]</value>
     <comment>State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.</comment>
   </data>
   <data name="RoomStateOtherEpisode" xml:space="preserve">
@@ -11601,11 +11601,11 @@
     <comment>State under the last face when everyone hidden is watching.</comment>
   </data>
   <data name="RoomWaitLoading" xml:space="preserve">
-    <value>[ļöàðîñĝ · {seconds} š~~~~~]</value>
+    <value>[ļöàðîñĝ · {seconds} š~~~~~]</value>
     <comment>Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.</comment>
   </data>
   <data name="RoomWaitBuffering" xml:space="preserve">
-    <value>[ƀüƒƒéŕîñĝ · {seconds} š~~~~~~]</value>
+    <value>[ƀüƒƒéŕîñĝ · {seconds} š~~~~~~]</value>
     <comment>Reason in the waiting capsule, after Paused for, lower case: their player stalled.</comment>
   </data>
   <data name="RoomCarryOnWithout" xml:space="preserve">
@@ -11629,7 +11629,7 @@
     <comment>Second part of the capsule after Carry on, when the room waited for more than one person.</comment>
   </data>
   <data name="RoomPausedUntilStart" xml:space="preserve">
-    <value>[Ţĥé ŕööɱ îš þàüšéð üñţîļ ţĥîš šţàŕţš · {seconds} š~~~~~~~~~~~~~~]</value>
+    <value>[Ţĥé ŕööɱ îš þàüšéð üñţîļ ţĥîš šţàŕţš · {seconds} š~~~~~~~~~~~~~~]</value>
     <comment>Line on your own starting screen while the room waits for you, with the seconds so far.</comment>
   </data>
   <data name="RoomDontWait" xml:space="preserve">
@@ -11929,7 +11929,7 @@
     <comment>State of a relay that doesn't answer.</comment>
   </data>
   <data name="RoomRelayLatency" xml:space="preserve">
-    <value>[{ms} ɱš~~]</value>
+    <value>[{ms} ɱš~~]</value>
     <comment>Round trip time of a relay.</comment>
   </data>
   <data name="RoomDetailsRelaysLine" xml:space="preserve">
@@ -12065,7 +12065,7 @@
     <comment>Line on the card naming the next episode when it has no title.</comment>
   </data>
   <data name="RoomUpNextCount" xml:space="preserve">
-    <value>[Þļàýš ƒöŕ éṽéŕýöñé îñ {seconds} š~~~~~~~~~]</value>
+    <value>[Þļàýš ƒöŕ éṽéŕýöñé îñ {seconds} š~~~~~~~~~]</value>
     <comment>Line on the card counting down for everyone.</comment>
   </data>
   <data name="RoomUpNextWaiting" xml:space="preserve">
@@ -12077,7 +12077,7 @@
     <comment>Button on the card that moves the room on at once.</comment>
   </data>
   <data name="RoomLineUpNext" xml:space="preserve">
-    <value>[Ûþ ñéẋţ îñ {seconds} š~~~~~]</value>
+    <value>[Ûþ ñéẋţ îñ {seconds} š~~~~~]</value>
     <comment>First line of the room while up next counts down.</comment>
   </data>
   <data name="RoomLineUpNextDetail" xml:space="preserve">
@@ -12261,7 +12261,7 @@
     <comment>The same error in one line, where there is no room for a title.</comment>
   </data>
   <data name="RoomErrorTried" xml:space="preserve">
-    <value>[Ķàéŕî ţŕîéð ţĥé ļîñķ'š ŕéļàýš àñð ýöüŕ šþàŕéš, {seconds} š éàçĥ.~~~~~~~~~~~~~~~~~~]</value>
+    <value>[Ķàéŕî ţŕîéð ţĥé ļîñķ'š ŕéļàýš àñð ýöüŕ šþàŕéš, {seconds} š éàçĥ.~~~~~~~~~~~~~~~~~~]</value>
     <comment>Line after it in the place: what was tried.</comment>
   </data>
   <data name="RoomErrorNobodyAnswered" xml:space="preserve">
@@ -12337,7 +12337,7 @@
     <comment>The starting screen's line on the device opening the room's episode.</comment>
   </data>
   <data name="RoomMinutes" xml:space="preserve">
-    <value>[{minutes} ɱîñ~~~]</value>
+    <value>[{minutes} ɱîñ~~~]</value>
     <comment>A short length in minutes, on the banner before play.</comment>
   </data>
   <data name="RoomNamesAnd" xml:space="preserve">
@@ -12369,7 +12369,7 @@
     <comment>Spoken by a screen reader when a chat line arrives.</comment>
   </data>
   <data name="RoomChatWait" xml:space="preserve">
-    <value>[Ŵàîţ {seconds} š~~~]</value>
+    <value>[Ŵàîţ {seconds} š~~~]</value>
     <comment>End of the chat field while sending waits, after three messages in five seconds.</comment>
   </data>
   <data name="RoomChatWaitSpoken_one" xml:space="preserve">
@@ -12425,7 +12425,7 @@
     <comment>Heading of the people list in the room, and its accessibility label.</comment>
   </data>
   <data name="RoomStateSeeking" xml:space="preserve">
-    <value>[Šééķîñĝ · {seconds} š~~~~~]</value>
+    <value>[Šééķîñĝ · {seconds} š~~~~~]</value>
     <comment>State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.</comment>
   </data>
   <data name="RoomErrorUnreachableLead" xml:space="preserve">

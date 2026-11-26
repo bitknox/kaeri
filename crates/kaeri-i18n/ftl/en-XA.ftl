@@ -11846,8 +11846,8 @@ room-line-paused-for-you = [Þàüšéð ƒöŕ ýöü~~~~~]
 # Second line while the room waits for you: who waits, and for how many seconds so far.
 room-line-waiting-for-you =
     { $count ->
-        [one] [{ $names } îš ŵàîţîñĝ · { $seconds } š~~~~~~~]
-       *[other] [{ $names } àŕé ŵàîţîñĝ · { $seconds } š~~~~~~~]
+        [one] [{ $names } îš ŵàîţîñĝ · { $seconds } š~~~~~~~]
+       *[other] [{ $names } àŕé ŵàîţîñĝ · { $seconds } š~~~~~~~]
     }
 
 # First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
@@ -11858,7 +11858,7 @@ room-line-still-loading =
     }
 
 # Second line once the room has waited as long as it will.
-room-line-waited = [Ţĥé ŕööɱ ĥàš ŵàîţéð { $seconds } š~~~~~~~~]
+room-line-waited = [Ţĥé ŕööɱ ĥàš ŵàîţéð { $seconds } š~~~~~~~~]
 
 # Second line after someone pressed Carry on, when the room waited for one person.
 room-line-carried-on-one = [{ $carrier } çàŕŕîéð öñ · { $name } ĵöîñš ŵĥéñ ŕéàðý~~~~~~~~~~~~]
@@ -11889,10 +11889,10 @@ room-line-reconnecting = [Ŕéçöññéçţîñĝ ţö ţĥé ŕööɱ~~~~~~~~]
 room-line-reconnecting-detail = [Ñö ŕéļàý îš àñšŵéŕîñĝ · ýöüŕ éþîšöðé ķééþš þļàýîñĝ~~~~~~~~~~~~~~~]
 
 # Second line when your own player is behind the room.
-room-line-you-behind = [Ýöü'ŕé { $seconds } š ƀéĥîñð · çàţçĥîñĝ üþ~~~~~~~~~~]
+room-line-you-behind = [Ýöü'ŕé { $seconds } š ƀéĥîñð · çàţçĥîñĝ üþ~~~~~~~~~~]
 
 # The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.
-room-line-with-seconds = [{ $line } · { $seconds } š~~~~]
+room-line-with-seconds = [{ $line } · { $seconds } š~~~~]
 
 # Stands for the people the room waits for when there are more than two, inside "Paused for …".
 room-names-people =
@@ -11914,13 +11914,13 @@ room-state-paused-it = [Þàüšéð îţ~~~]
 room-state-paused = [Þàüšéð~~]
 
 # State word: the slowest player, holding the room back, with the gap in seconds.
-room-state-behind = [Ɓéĥîñð · { $seconds } š~~~~~]
+room-state-behind = [Ɓéĥîñð · { $seconds } š~~~~~]
 
 # State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.
-room-state-loading = [Ļöàðîñĝ · { $seconds } š~~~~~]
+room-state-loading = [Ļöàðîñĝ · { $seconds } š~~~~~]
 
 # State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.
-room-state-buffering = [Ɓüƒƒéŕîñĝ · { $seconds } š~~~~~~]
+room-state-buffering = [Ɓüƒƒéŕîñĝ · { $seconds } š~~~~~~]
 
 # State word: this person plays another episode than the room's.
 room-state-other-episode = [Öñ éþîšöðé { $episode }~~~~~]
@@ -11978,10 +11978,10 @@ room-more-not-watching = [{ $count } ñöţ ŵàţçĥîñĝ~~~~~]
 room-more-all-watching = [Åļļ ŵàţçĥîñĝ~~~~]
 
 # Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.
-room-wait-loading = [ļöàðîñĝ · { $seconds } š~~~~~]
+room-wait-loading = [ļöàðîñĝ · { $seconds } š~~~~~]
 
 # Reason in the waiting capsule, after Paused for, lower case: their player stalled.
-room-wait-buffering = [ƀüƒƒéŕîñĝ · { $seconds } š~~~~~~]
+room-wait-buffering = [ƀüƒƒéŕîñĝ · { $seconds } š~~~~~~]
 
 # Button once the room has waited 20 seconds for one person.
 room-carry-on-without = [Çàŕŕý öñ ŵîţĥöüţ { $name }~~~~~~]
@@ -11999,7 +11999,7 @@ room-joins-at-place = [{ $name } ĵöîñš àţ ţĥé ŕööɱ'š þļàçé~~
 room-join-at-place-many = [Ţĥéý ĵöîñ àţ ţĥé ŕööɱ'š þļàçé~~~~~~~~~]
 
 # Line on your own starting screen while the room waits for you, with the seconds so far.
-room-paused-until-start = [Ţĥé ŕööɱ îš þàüšéð üñţîļ ţĥîš šţàŕţš · { $seconds } š~~~~~~~~~~~~~~]
+room-paused-until-start = [Ţĥé ŕööɱ îš þàüšéð üñţîļ ţĥîš šţàŕţš · { $seconds } š~~~~~~~~~~~~~~]
 
 # Button on your own starting screen that lets the room carry on without you.
 room-dont-wait = [Ðöñ'ţ ŵàîţ ƒöŕ ɱé~~~~~~]
@@ -12228,7 +12228,7 @@ room-relays-answering-of = [{ $count } öƒ { $total } àñšŵéŕîñĝ~~~~~~]
 room-relay-not-answering = [Ñöţ àñšŵéŕîñĝ~~~~]
 
 # Round trip time of a relay.
-room-relay-latency = [{ $ms } ɱš~~]
+room-relay-latency = [{ $ms } ɱš~~]
 
 # Line under the relays in Details.
 room-details-relays-line = [Ŕéļàýš þàšš ţĥé ŕööɱ'š ɱéššàĝéš àļöñĝ àñð çàñ'ţ ŕéàð ţĥéɱ. Ţĥéšé àŕé þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš; Ķàéŕî ðöéšñ'ţ ŕüñ àñý öƒ ţĥéɱ. Îƒ öñé šţöþš àñšŵéŕîñĝ, ţĥé ŕööɱ šŵàþš îñ à šþàŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
@@ -12331,7 +12331,7 @@ room-up-next-episode = [Éþîšöðé { $episode } · { $title }~~~~~~]
 room-up-next-episode-plain = [Éþîšöðé { $episode }~~~~]
 
 # Line on the card counting down for everyone.
-room-up-next-count = [Þļàýš ƒöŕ éṽéŕýöñé îñ { $seconds } š~~~~~~~~~]
+room-up-next-count = [Þļàýš ƒöŕ éṽéŕýöñé îñ { $seconds } š~~~~~~~~~]
 
 # Line on the card while your file ended sooner and the room waits for someone's longer file.
 room-up-next-waiting = [Ŵàîţîñĝ ƒöŕ { $name } ţö ƒîñîšĥ~~~~~~~~]
@@ -12340,7 +12340,7 @@ room-up-next-waiting = [Ŵàîţîñĝ ƒöŕ { $name } ţö ƒîñîšĥ~~~~~~~
 room-play-next-now = [Þļàý ñéẋţ ñöŵ~~~~]
 
 # First line of the room while up next counts down.
-room-line-up-next = [Ûþ ñéẋţ îñ { $seconds } š~~~~~]
+room-line-up-next = [Ûþ ñéẋţ îñ { $seconds } š~~~~~]
 
 # Second line while up next counts down.
 room-line-up-next-detail = [Éþîšöðé { $episode } þļàýš ƒöŕ éṽéŕýöñé~~~~~~~~~]
@@ -12478,7 +12478,7 @@ room-error-ask-new-invite = [Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~]
 room-error-unreachable = [Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš. Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~~~~~~~~~~~]
 
 # Line after it in the place: what was tried.
-room-error-tried = [Ķàéŕî ţŕîéð ţĥé ļîñķ'š ŕéļàýš àñð ýöüŕ šþàŕéš, { $seconds } š éàçĥ.~~~~~~~~~~~~~~~~~~]
+room-error-tried = [Ķàéŕî ţŕîéð ţĥé ļîñķ'š ŕéļàýš àñð ýöüŕ šþàŕéš, { $seconds } š éàçĥ.~~~~~~~~~~~~~~~~~~]
 
 # Title of the alert when a recent room has nobody answering, such as after a new invite.
 room-error-nobody-answered = [Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ~~~~~~~~~]
@@ -12535,7 +12535,7 @@ room-link-copied = [Îñṽîţé ļîñķ çöþîéð~~~~~~]
 room-starting-episode = [Šţàŕţîñĝ éþîšöðé { $episode }~~~~~~]
 
 # A short length in minutes, on the banner before play.
-room-minutes = [{ $minutes } ɱîñ~~~]
+room-minutes = [{ $minutes } ɱîñ~~~]
 
 # Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.
 room-names-and = [{ $names } àñð { $last }~~~~]
@@ -12559,7 +12559,7 @@ room-chat-more = [{ $count } ɱöŕé îñ çĥàţ~~~~~]
 room-chat-announce = [{ $name } šàýš { $message }~~~~]
 
 # End of the chat field while sending waits, after three messages in five seconds.
-room-chat-wait = [Ŵàîţ { $seconds } š~~~]
+room-chat-wait = [Ŵàîţ { $seconds } š~~~]
 
 # Spoken once when sending waits, for screen readers.
 room-chat-wait-spoken =
@@ -12603,7 +12603,7 @@ room-mark-unavailable = [Ṁàŕķ šķîþ ţîɱéš àƒţéŕ ýöü ļéà�
 room-people = [Þéöþļé îñ ţĥé ŕööɱ~~~~~~]
 
 # State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
-room-state-seeking = [Šééķîñĝ · { $seconds } š~~~~~]
+room-state-seeking = [Šééķîñĝ · { $seconds } š~~~~~]
 
 # Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
 room-error-unreachable-lead = [Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš.~~~~~~~~~~~]
