@@ -182,6 +182,9 @@ pub struct PlayerView {
     start_leave: RefCell<Option<glib::SourceId>>,
     /// Where the playback resumed, while "Resumed at" shows: it goes 6 s of playback later.
     resumed_from: Cell<Option<f64>>,
+    /// The playhead has been seen where the episode resumed. Until then mpv may still report
+    /// positions from the start, which say nothing of the note.
+    resume_reached: Cell<bool>,
     /// The last automatic skip, while Undo is offered for it.
     undo: Cell<Option<Undo>>,
     /// Since when the skip offer has shown, for a controller's A to take it only while it is new.
@@ -454,6 +457,7 @@ impl PlayerView {
             start_reveal: RefCell::default(),
             start_leave: RefCell::default(),
             resumed_from: Cell::new(None),
+            resume_reached: Cell::new(false),
             undo: Cell::new(None),
             skip_since: Cell::new(None),
             marking: RefCell::new(None),
@@ -1265,6 +1269,7 @@ impl PlayerView {
         self.ui.resumed_line.set_label(&t::player_resumed_at(&say::clock(position)));
         self.announce(&self.ui.resumed_line.label());
         self.resumed_from.set(Some(position));
+        self.resume_reached.set(false);
         self.ui.resumed.set_visible(true);
         crate::motion::fade_in(&self.ui.resumed);
     }
@@ -1833,10 +1838,13 @@ impl PlayerView {
             self.leave_start();
         }
         // Six seconds of playback on, or a seek back past it, and "Resumed at" goes.
-        if let (Some(from), Some(position)) = (self.resumed_from.get(), state.position)
-            && (position > from + RESUMED_FOR || position + 1.0 < from)
-        {
-            self.resumed_done();
+        if let (Some(from), Some(position)) = (self.resumed_from.get(), state.position) {
+            let mut reached = self.resume_reached.get();
+            let ends = resume_note_ends(from, position, &mut reached);
+            self.resume_reached.set(reached);
+            if ends {
+                self.resumed_done();
+            }
         }
         self.update_provisional();
         if let (Some(player), Some(duration)) = (&self.player, state.duration) {
@@ -4382,6 +4390,17 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     }
 }
 
+/// Whether "Resumed at" goes at `position`: six seconds played past `from`, or a seek back
+/// before it. Positions before the playhead has been seen within 2 s of `from` are mpv's from
+/// the start, before the resume seek lands, and are passed over (`reached` records the sighting).
+fn resume_note_ends(from: f64, position: f64, reached: &mut bool) -> bool {
+    if !*reached {
+        *reached = (position - from).abs() < 2.0;
+        return false;
+    }
+    position > from + RESUMED_FOR || position + 1.0 < from
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -4440,6 +4459,20 @@ mod tests {
         // `]` then `[` comes back to where it began.
         assert_eq!(next_speed(next_speed(1.0, true).unwrap(), false), Some(1.0));
         assert_eq!(next_speed(0.5, false), None);
+    }
+
+    #[test]
+    fn the_resume_note_waits_for_the_playhead_to_reach_the_resume_point() {
+        let mut reached = false;
+        // mpv's first ticks are from the start, before the resume seek lands.
+        assert!(!resume_note_ends(606.0, 0.0, &mut reached));
+        assert!(!resume_note_ends(606.0, 0.4, &mut reached));
+        assert!(!reached);
+        assert!(!resume_note_ends(606.0, 606.1, &mut reached));
+        assert!(reached);
+        assert!(!resume_note_ends(606.0, 611.0, &mut reached));
+        assert!(resume_note_ends(606.0, 612.5, &mut reached), "six seconds on");
+        assert!(resume_note_ends(606.0, 300.0, &mut reached), "a seek back before it");
     }
 
     #[test]
