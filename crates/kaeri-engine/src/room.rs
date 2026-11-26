@@ -2004,7 +2004,14 @@ struct PlayerPause {
     told: Option<bool>,
     /// The state told, until when its samples are waited for.
     expect: Option<(bool, i64)>,
+    /// When the player last showed the told state: reports it made before that can still
+    /// arrive just after.
+    confirmed_at: Option<i64>,
 }
+
+/// After the player shows the told state, a contrary sample this soon is an older report
+/// arriving late, not a press.
+const SETTLE_MS: i64 = 1_000;
 
 impl PlayerPause {
     /// The room wants `paused`: `true` when the player must be told.
@@ -2033,6 +2040,7 @@ impl PlayerPause {
         if let Some((want, until)) = self.expect {
             if paused == want {
                 self.expect = None;
+                self.confirmed_at = Some(now);
                 return Sampled::Same;
             }
             if now < until {
@@ -2044,6 +2052,9 @@ impl PlayerPause {
             return Sampled::Again(want);
         }
         if paused == told {
+            return Sampled::Same;
+        }
+        if self.confirmed_at.is_some_and(|at| now - at < SETTLE_MS) {
             return Sampled::Same;
         }
         self.told = Some(paused);
@@ -2121,6 +2132,20 @@ mod pause_tests {
     }
 
     #[test]
+    fn a_late_report_after_the_player_took_the_pause_is_not_a_press() {
+        // The room waits: pause. The player takes it late, after its file loaded, and an older
+        // position report saying it plays arrives just after.
+        let mut pause = PlayerPause::default();
+        assert!(pause.tell(true, 0));
+        assert_eq!(pause.sample(false, 900), Sampled::Same, "before it took the cue");
+        assert_eq!(pause.sample(true, 1_500), Sampled::Same, "it took it");
+        assert_eq!(pause.sample(false, 1_600), Sampled::Same, "an older report, late");
+        assert_eq!(pause.sample(true, 1_900), Sampled::Same);
+        // A real play, later, is the viewer's.
+        assert_eq!(pause.sample(false, 4_000), Sampled::Pressed(false));
+    }
+
+    #[test]
     fn a_files_own_start_playing_over_a_wait_is_never_your_press() {
         assert!(presses_with(false, Some(1_000), true) > 0, "the old rule takes it as yours");
         assert_eq!(presses_with(true, Some(1_000), true), 0);
@@ -2138,8 +2163,8 @@ mod pause_tests {
         assert!(pause.tell(false, 0));
         assert_eq!(pause.sample(true, 100), Sampled::Same, "stale");
         assert_eq!(pause.sample(false, 300), Sampled::Same, "caught up");
-        assert_eq!(pause.sample(true, 400), Sampled::Pressed(true), "the viewer paused");
-        assert!(!pause.tell(true, 450), "already paused there");
+        assert_eq!(pause.sample(true, 1_400), Sampled::Pressed(true), "the viewer paused");
+        assert!(!pause.tell(true, 1_450), "already paused there");
         // Nothing told yet: no press.
         pause.forget();
         assert_eq!(pause.sample(false, 4_000), Sampled::Same);
