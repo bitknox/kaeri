@@ -190,7 +190,8 @@ pub fn heard(shell: &Rc<Shell>, event: &kaeri_model::event::Event) {
                 }
             }
         }
-        Event::PartyNoSource { id, episode, why, reason } => {
+        // In a room, the room's own banner says No source and offers the sources.
+        Event::PartyNoSource { id, episode, why, reason } if !shell.player.room.in_room() => {
             source::open(ctx, *id, episode, *why, &crate::say::msg(reason));
         }
         _ => {}
