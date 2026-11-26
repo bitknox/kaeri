@@ -25,6 +25,40 @@ pub fn room_app_link(link: String) -> Option<String> {
 #[cfg(all(feature = "room", feature = "testing"))]
 pub use fake::{FfiFakeRoom, FfiRoomScene};
 
+/// Where the room's scenes put the playhead: inside the Fixtures apps' clip, which the app's
+/// player plays to its end and on to the next episode. A seek past it ends the episode, and the
+/// scene can't be shot.
+#[cfg(feature = "testing")]
+mod scene {
+    /// The Fixtures apps' clip, in seconds.
+    pub const CLIP_SECS: f64 = 60.0;
+    /// Where the clip's opening mark ends: Skip opening's target.
+    pub const OPENING_ENDS: f64 = 20.0;
+    /// Up Next's window before the end, which a scene keeps clear of.
+    const UP_NEXT_SECS: f64 = 10.0;
+    /// A seek's target: after the opening, well before Up Next.
+    pub const SEEK_TO: f64 = OPENING_ENDS + (CLIP_SECS - UP_NEXT_SECS - OPENING_ENDS) * 0.5;
+    const _: () = assert!(SEEK_TO > OPENING_ENDS && SEEK_TO < CLIP_SECS - UP_NEXT_SECS);
+
+    /// `fraction` of the way through the clip.
+    pub fn at(fraction: f64) -> f64 {
+        (CLIP_SECS * fraction).round()
+    }
+
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn every_scene_position_is_inside_the_clip() {
+            assert_eq!(SEEK_TO, 35.0);
+            for f in [0.15, 0.4, 0.65] {
+                assert!(at(f) < CLIP_SECS - UP_NEXT_SECS);
+            }
+        }
+    }
+}
+
 #[cfg(all(feature = "room", feature = "testing"))]
 mod fake {
     use std::{sync::Arc, time::Duration};
@@ -412,7 +446,7 @@ mod fake {
                 S::Watching => {}
                 S::Paused => self.run(|f| f.member_pauses("Mika")),
                 S::WaitLoading | S::WaitCap | S::CarriedOn => {
-                    self.run(|f| f.member_seeks("Mika", 724.0));
+                    self.run(|f| f.member_seeks("Mika", super::scene::SEEK_TO));
                     let secs = match scene {
                         S::WaitLoading => 6.0,
                         S::WaitCap => 20.0,
@@ -426,7 +460,7 @@ mod fake {
                     }
                 }
                 S::YouLoading => {
-                    self.run(|f| f.member_seeks("Mika", 724.0));
+                    self.run(|f| f.member_seeks("Mika", super::scene::SEEK_TO));
                     self.pause(200);
                     self.run(|f| f.pose_you(StateCode::Loading, 6.0, None, None, false));
                 }
@@ -465,14 +499,16 @@ mod fake {
                     f.member_reaches_up_next("Mika");
                     f.pose_you(StateCode::Watching, 0.0, None, None, true);
                 }),
-                S::SkippedOpening => self.run(|f| f.member_skips_opening("Mika", 90.0)),
+                S::SkippedOpening => {
+                    self.run(|f| f.member_skips_opening("Mika", super::scene::OPENING_ENDS));
+                }
                 S::Chat => self.run(|f| {
                     f.member_says("Mika", "ok starting");
-                    f.member_reacts("Sora", wire::Reaction::Clap, 204.0);
+                    f.member_reacts("Sora", wire::Reaction::Clap, super::scene::at(0.15));
                     f.member_says("Ren", "the handoff in the rain, I knew it");
-                    f.member_reacts("Ren", wire::Reaction::Gasp, 468.0);
+                    f.member_reacts("Ren", wire::Reaction::Gasp, super::scene::at(0.4));
                     f.member_says("Mika", "this part again");
-                    f.member_reacts("Ren", wire::Reaction::Laugh, 724.0);
+                    f.member_reacts("Ren", wire::Reaction::Laugh, super::scene::at(0.65));
                 }),
                 S::MoveOffer => {
                     self.run(|f| f.member_moves("Mika", &[YOU, "Ren"]));

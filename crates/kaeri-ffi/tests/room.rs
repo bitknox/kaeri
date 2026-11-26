@@ -129,7 +129,10 @@ fn starting_counts_three_once_everyone_is_ready() {
 #[test]
 fn the_room_waits_for_ren_and_carry_on_comes_at_twenty_seconds() {
     let (_root, engine) = staged(FfiRoomScene::WaitCap);
-    let (view, members, _) = until(&engine, |v, _, _| v.can_carry_on);
+    // The members list comes in its own event: wait for both to say Ren is waited for.
+    let (view, members, _) = until(&engine, |v, m, _| {
+        v.can_carry_on && m.iter().any(|m| m.name == "Ren" && m.waited)
+    });
     assert!(!view.playing);
     assert_eq!(view.waiting.len(), 1);
     assert_eq!(view.waiting[0].name, "Ren");
@@ -224,12 +227,17 @@ fn move_to_a_new_room_offers_and_the_old_room_says_who_went() {
     assert_eq!(offer.by, "Mika");
     assert_eq!(offer.names, ["Ren"]);
     engine.send(Command::Room(RoomCommand::AnswerMove { offer: offer.id, go: true }));
-    until(&engine, |_, _, r| {
-        r.iter().any(|e| matches!(e, Event::RoomLeft { why: RoomLeftWhy::Moved }))
+    // One wait for both: the new room's RoomJoined can come in the same batch as the old
+    // room's RoomLeft, and a second wait would never see it.
+    let (view, _, _) = until(&engine, |v, _, r| {
+        let left =
+            r.iter().position(|e| matches!(e, Event::RoomLeft { why: RoomLeftWhy::Moved }));
+        let joined = r.iter().rposition(|e| matches!(e, Event::RoomJoined(_)));
+        matches!((left, joined), (Some(l), Some(j)) if j > l)
+            && !v.looking
+            && v.room_episode.is_some()
     });
-    let (view, _, _) =
-        until(&engine, |v, _, _| v.moved.is_none() && !v.looking && v.room_episode.is_some());
-    assert!(view.playing || !view.playing);
+    assert!(view.moved.is_none());
     engine.shutdown();
 
     let (_root, engine) = staged(FfiRoomScene::MovedAway);
