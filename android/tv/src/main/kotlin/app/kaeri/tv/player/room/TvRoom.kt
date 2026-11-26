@@ -166,6 +166,7 @@ fun TvRoom(
     state: TvRoomState = remember(start) { TvRoomState(start) },
     focusCarry: Boolean = false,
     forceStrip: Boolean = false,
+    stripTop: Dp = 27.dp,
     onLeft: () -> Unit = {},
 ) {
     val view by room.view.collectAsStateWithLifecycle()
@@ -205,10 +206,11 @@ fun TvRoom(
                 TvBeforePlay(v.roomEpisode?.title ?: v.name, episodeLine, started = v.startsAtMs != null || v.waiting.isNotEmpty()) { room.send(RoomCommand.Play(true)) }
             }
         }
+        val top = moving(stripTop, "tv-strip-top") // i18n-skip
         if (!rail) {
             val o = offer
             val wanted = forceStrip || RoomWords.stripWanted(v, members) || o != null || carry != null
-            KeptFade(if (wanted) v else null, Modifier.align(Alignment.TopEnd).padding(top = 27.dp, end = 48.dp)) { sv ->
+            KeptFade(if (wanted) v else null, Modifier.align(Alignment.TopEnd).padding(top = top, end = 48.dp)) { sv ->
                 Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(10.dp)) {
                     TvStrip(sv, members, now, positionS, carry, carryFocus) { room.send(RoomCommand.CarryOn) }
                     if (o != null) TvOffer(o.by, o.names, RoomWords.clock(positionS), { room.send(RoomCommand.AnswerMove(o.id, true)) }, { room.send(RoomCommand.AnswerMove(o.id, false)) })
