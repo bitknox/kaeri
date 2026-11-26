@@ -340,12 +340,12 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
 
     /// Which taps and keys the page turns on by itself, so a turn is one message from the page:
     /// the tap setting's sides, forward on the side the book reads towards, and none while the
-    /// chrome or the end page is up, when a tap is the reader's.
+    /// end page is up, or the chrome under a finger, when a tap is the reader's.
     private var input: String {
         let layout = model?.choice(.tapLayout) ?? "edges"
         let edge = layout == "off" ? 0 : (layout == "sides" ? 0.5 : 0.33)
         let forward = book?.progression == .rightToLeft ? "left" : "right"
-        let hold = shown.end || (model?.chromeShown ?? false)
+        let hold = shown.end || ((model?.chromeShown ?? false) && ReaderDevice.tapsHeldByChrome)
         return "{edge:\(edge),forward:'\(forward)',keys:true,hold:\(hold)}"
     }
 
@@ -527,7 +527,7 @@ final class NovelWebController: NSObject, WKNavigationDelegate, WKScriptMessageH
     func tapped(_ x: Double) {
         guard let model else { return }
         let layout = model.choice(.tapLayout) ?? "edges"
-        if model.chromeShown || layout == "off" { onTap(x); return }
+        if (model.chromeShown && ReaderDevice.tapsHeldByChrome) || layout == "off" { onTap(x); return }
         let edge = layout == "sides" ? 0.5 : 0.33
         if x < edge || x > 1 - edge || layout == "sides" {
             turn(forward: (x < 0.5) == (book?.progression == .rightToLeft), how: "turn")

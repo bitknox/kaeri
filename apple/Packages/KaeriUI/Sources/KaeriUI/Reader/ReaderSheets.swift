@@ -475,6 +475,16 @@ enum ReaderDevice {
         #endif
     }
 
+    /// While the controls are up a touch only puts them away, so a finger reaching for them
+    /// can't turn the page. A Mac's click is aimed: it turns at the sides whatever is up.
+    static var tapsHeldByChrome: Bool {
+        #if os(macOS)
+        false
+        #else
+        true
+        #endif
+    }
+
     static var isPad: Bool {
         #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .pad

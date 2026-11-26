@@ -172,7 +172,7 @@ struct PagedReader: View {
         let layout = model.choice(.tapLayout) ?? "edges"
         // While zoomed the zones are off: a tap anywhere only brings the chrome or puts it away.
         if zoom.zoomed { onTap(0.5); return }
-        if model.chromeShown || layout == "off" { onTap(x); return }
+        if (model.chromeShown && ReaderDevice.tapsHeldByChrome) || layout == "off" { onTap(x); return }
         // Edges: the outer thirds turn. Halves: the outer 40 percent turn, and the middle band
         // still brings the chrome up.
         let edge = layout == "sides" ? 0.4 : 0.33
