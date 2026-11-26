@@ -74,21 +74,31 @@ import app.kaeri.i18n.R
 import app.kaeri.i18n.Strings
 import app.kaeri.store.text
 
-/** AniList's `~!spoiler!~` spans as bars that open on a tap, and the rest as it is. */
+/**
+ * AniList's `~!spoiler!~` spans as bars that open on a tap, and the rest as it is, with what a
+ * screen reader reads instead while a bar is closed and how to open them all.
+ */
+private class SynopsisText(val text: AnnotatedString, val speech: SpoilerSpeech, val openAll: () -> Unit)
+
 @Composable
-private fun synopsisText(text: String, id: app.kaeri.engine.core.AnilistId): AnnotatedString {
+private fun synopsisText(text: String, id: app.kaeri.engine.core.AnilistId): SynopsisText {
     val colors = MaterialTheme.colorScheme
     var opened by rememberSaveable(id) { mutableStateOf(setOf<Int>()) }
     val flat = text.replace(Regex("[^\\S\\n]+"), " ").replace(Regex(" ?\\n ?"), "\n").replace(Regex("\\n{2,}"), "\n").trim()
-    return buildAnnotatedString {
+    val speech = SpoilerSpeech(stringResource(R.string.discussion_spoiler))
+    var count = 0
+    val drawn = buildAnnotatedString {
         var at = 0
         var index = 0
         for (m in Regex("~!(.*?)!~", RegexOption.DOT_MATCHES_ALL).findAll(flat)) {
             append(flat.substring(at, m.range.first))
+            speech.plain(flat.substring(at, m.range.first))
             val key = index++
             if (key in opened) {
                 append(m.groupValues[1])
+                speech.plain(m.groupValues[1])
             } else {
+                speech.bar()
                 // A bar the length of its words: nothing reflows when it opens.
                 withLink(
                     LinkAnnotation.Clickable(
@@ -100,7 +110,10 @@ private fun synopsisText(text: String, id: app.kaeri.engine.core.AnilistId): Ann
             at = m.range.last + 1
         }
         append(flat.substring(at))
+        speech.plain(flat.substring(at))
+        count = index
     }
+    return SynopsisText(drawn, speech) { opened = (0 until count).toSet() }
 }
 
 @Composable
@@ -144,13 +157,15 @@ internal fun SpotlightBlock(spot: Spotlight, h: HomeHandlers) {
             }
             spot.resume?.fraction?.let { SilkMeter(it, Modifier.padding(vertical = 4.dp)) }
             if (entry.synopsis.isNotBlank()) {
+                val synopsis = synopsisText(entry.synopsis, id)
                 Text(
-                    synopsisText(entry.synopsis, id),
+                    synopsis.text,
                     style = MaterialTheme.typography.bodyMedium,
                     color = colors.onSurfaceVariant,
                     maxLines = if (side) 3 else 2,
                     overflow = TextOverflow.Ellipsis,
-                    modifier = Modifier.padding(top = 4.dp),
+                    modifier = Modifier.padding(top = 4.dp)
+                        .spoilerSpeech(synopsis.speech, stringResource(R.string.discussion_show_spoilers), synopsis.openAll),
                 )
             }
             SpotlightActions(spot, action, side, h, onPlanned = { planned = true }, Modifier.padding(top = 12.dp))
