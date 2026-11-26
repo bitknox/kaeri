@@ -63,6 +63,7 @@ import app.kaeri.design.RoomGlyphs
 import app.kaeri.design.tabular
 import app.kaeri.engine.model.RoomMember
 import app.kaeri.engine.model.RoomView
+import app.kaeri.store.room.RoomModel
 import app.kaeri.store.room.RoomWords
 import app.kaeri.ui.QrCode
 
