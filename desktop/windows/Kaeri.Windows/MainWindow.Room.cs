@@ -255,30 +255,6 @@ public sealed partial class MainWindow
         _ => FfiRoomScene.Watching,
     };
 
-
-    /// <summary>A started scene's steps, as <c>FfiFakeRoom.stage</c> takes them, for after the room plays.</summary>
-    static Action<FfiFakeRoom>? AfterStart(FfiRoomScene scene) => scene switch
-    {
-        FfiRoomScene.Paused => f => f.MemberPauses("Mika"),
-        FfiRoomScene.WaitLoading => f => Wait(f, 6),
-        FfiRoomScene.WaitCap => f => Wait(f, 20),
-        FfiRoomScene.CarriedOn => f =>
-        {
-            Wait(f, 24);
-            Thread.Sleep(200);
-            f.MemberCarriesOn("Mika");
-        },
-        FfiRoomScene.Buffering => f => f.MemberStalls("Ren", 3),
-        FfiRoomScene.SkippedOpening => f => f.MemberSkipsOpening("Mika", 90),
-        _ => null,
-    };
-
-    static void Wait(FfiFakeRoom fake, double seconds)
-    {
-        fake.MemberSeeks("Mika", 724);
-        Thread.Sleep(200);
-        fake.MemberLoads("Ren", seconds);
-    }
     /// <summary>Waits until the process has run this long, so a run's shots land on a moment.</summary>
     static async Task AtUptime(double seconds)
     {
@@ -318,17 +294,7 @@ public sealed partial class MainWindow
         if (scene is FfiRoomScene.Invited or FfiRoomScene.InvitedFull)
             RoomInvite = fake.Invite("Mika");
         // The fake blocks while it stages: off the window's thread.
-        // Scenes that pause or wait right after joining would pause the room before its start
-        // count ends, leaving it before play: they are staged as Watching, and once the room
-        // plays, the scene's own steps run through the fake's scripts.
-        var after = AfterStart(scene);
-        var staged = await Task.Run(() => fake.Stage(after is not null || state == "room-wait-story" ? FfiRoomScene.Watching : scene));
-        if (after is not null)
-        {
-            for (var i = 0; i < 60 && ctx.Known.Room is not { Playing: true, BeforePlay: false }; i++)
-                await Task.Delay(200);
-            await Task.Run(() => after(fake));
-        }
+        var staged = await Task.Run(() => fake.Stage(state == "room-wait-story" ? FfiRoomScene.Watching : scene));
         if (!staged)
             System.Diagnostics.Debug.WriteLine("room fixture: the device never got into the room");
         await Task.Delay(800);
@@ -423,7 +389,7 @@ public sealed partial class MainWindow
     static async Task RoomWaitStory(FfiFakeRoom fake)
     {
         await Task.Delay(1000);
-        fake.MemberSeeks("Mika", 724);
+        fake.MemberSeeks("Mika", 35);
         fake.MemberLoads("Ren", 0);
         await Task.Delay(22_000);
         fake.MemberCarriesOn("Mika");
