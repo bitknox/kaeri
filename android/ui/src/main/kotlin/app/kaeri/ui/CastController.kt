@@ -1056,7 +1056,11 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
             if (LocalSnackbars.current.host.currentSnackbarData != null) Spacer(Modifier.height(80.dp))
         }
     }
-    if (choosingSource && entry != null) SourcePickerSheet(entry) { choosingSource = false }
+    // The episode's own releases, not the title's preference: the pick plays, and so casts to the
+    // TV the session holds.
+    if (choosingSource && entry != null) {
+        EpisodeReleasesSheet(now.id, entry.showTitle, Strings.castEpisode(context, now.episode), now.episode) { choosingSource = false }
+    }
 }
 
 /** What a failed or stopped cast's footer offers. */
