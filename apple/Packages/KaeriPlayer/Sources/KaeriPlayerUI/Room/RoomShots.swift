@@ -295,7 +295,7 @@ extension PlayerModel {
             // The engine's link whose relays never answer.
             guard let fake = store.startFakeRoom() else { return false }
             RoomStage.fake = fake
-            room.joinText = fake.invite(by: "Mika")
+            room.stage(joining: fake.invite(by: "Mika"))
             _ = await Task.detached { fake.stage(scene: .unreachable) }.value
             guard await roomWaited(40, { room.joinFailure != nil }) else { return false }
             room.stage(recent: recent, joinFailed: room.joinFailed)

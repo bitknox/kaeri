@@ -581,6 +581,12 @@ public final class RoomModel {
     #if FIXTURES
     private var stagedRecent = false
 
+    /// A screenshot run's join of `link`, which the fake room sends itself.
+    public func stage(joining link: String) {
+        joinText = link
+        joining = link
+    }
+
     /// A screenshot run's recent rooms and Join failure, for Watch together's page.
     public func stage(recent: [RecentRoom], joinFailed: String?) {
         stagedRecent = true
