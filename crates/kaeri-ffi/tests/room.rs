@@ -425,6 +425,80 @@ fn an_episode_with_no_source_here_reads_no_source_in_the_room() {
 }
 
 #[test]
+fn closing_the_empty_player_or_the_picker_leaves_you_no_source_not_player_closed() {
+    let (_root, engine) = staged(FfiRoomScene::YouNoSource);
+    let (view, members, _) =
+        until(&engine, |_, m, _| state(m, "Ada") == Some(MemberState::NoSource));
+    // The app closes the player it opened for the failed play: still No source.
+    engine.send(Command::Room(RoomCommand::ClosePlayer));
+    // The picker opens over it, and closes without a pick: back to No source.
+    engine.send(Command::Room(RoomCommand::ChoosingSource { open: true }));
+    let (view, members, _) = until_from(&engine, (Some(view), members), |_, m, _| {
+        state(m, "Ada") == Some(MemberState::Choosing)
+    });
+    engine.send(Command::Room(RoomCommand::ClosePlayer));
+    engine.send(Command::Room(RoomCommand::ChoosingSource { open: false }));
+    let (_, members, read) = until_from(&engine, (Some(view), members), |_, m, _| {
+        state(m, "Ada") != Some(MemberState::Choosing)
+    });
+    assert_eq!(state(&members, "Ada"), Some(MemberState::NoSource), "{read:?}");
+    engine.shutdown();
+
+    // Choosing stays Choosing when the player closes under the picker.
+    let (_root, engine) = staged(FfiRoomScene::YouChoosing);
+    let (view, members, _) =
+        until(&engine, |_, m, _| state(m, "Ada") == Some(MemberState::Choosing));
+    engine.send(Command::Room(RoomCommand::ClosePlayer));
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (_, members, _) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    assert_eq!(state(&members, "Ada"), Some(MemberState::Choosing));
+    engine.shutdown();
+}
+
+#[test]
+fn paused_waiting_and_before_play_scenes_open_the_player() {
+    // Android's fixture played from 0:00 while the room was at 0:12: each of these scenes must
+    // tell the app to open the player, and a paused or waiting room says where.
+    for scene in [
+        FfiRoomScene::Paused,
+        FfiRoomScene::WaitLoading,
+        FfiRoomScene::WaitCap,
+        FfiRoomScene::BeforePlay,
+        FfiRoomScene::BeforePlayWait,
+    ] {
+        let (_root, engine) = staged(scene);
+        let (view, _, read) =
+            until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+        let at = read.iter().find_map(|e| match e {
+            Event::RoomStarted { at, .. } => Some(*at),
+            _ => None,
+        });
+        if view.before_play {
+            assert!(at.is_some(), "{scene:?}: {read:?}");
+        } else {
+            assert!(matches!(at, Some(Some(pos)) if pos > 0.5), "{scene:?}: {at:?}");
+        }
+        engine.shutdown();
+    }
+}
+
+#[test]
+fn the_wait_line_and_the_row_count_from_one_start() {
+    let (_root, engine) = staged(FfiRoomScene::WaitLoading);
+    let (view, members, _) = until(&engine, |v, m, _| {
+        v.waiting.iter().any(|w| w.name == "Ren")
+            && state(m, "Ren") == Some(MemberState::Loading)
+    });
+    let wait = view.waiting.iter().find(|w| w.name == "Ren").unwrap();
+    let row = members.iter().find(|m| m.name == "Ren").unwrap();
+    assert_eq!(Some(wait.since_ms), row.since_ms);
+    assert_eq!(view.waiting[0].since_ms, wait.since_ms, "Ren is the first waited");
+    engine.shutdown();
+}
+
+#[test]
 fn carry_on_never_carries_on_without_yourself() {
     // The room waits for you alone: Carry on is your own Don't wait, and names nobody.
     let (_root, engine) = staged(FfiRoomScene::YouLoading);

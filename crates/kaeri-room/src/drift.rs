@@ -9,6 +9,8 @@
 
 /// A position that moved this much more than playing explains was moved on purpose, seconds.
 pub const SEEK_THRESHOLD: f64 = 1.0;
+/// A player within this of a place it was told, or of the room's, landed there, seconds.
+pub const LANDED: f64 = SEEK_THRESHOLD + 0.5;
 /// Ahead of the room by more than this, the player is moved back.
 pub const REWIND_THRESHOLD: f64 = 4.0;
 /// Behind by more than this, the player is moved on.
@@ -59,7 +61,8 @@ struct Last {
 #[derive(Debug, Default)]
 pub struct Drift {
     last: Option<Last>,
-    expect_seek: Option<(f64, i64)>,
+    /// A place the room told the player to go to, until when, and where the player was then.
+    expect_seek: Option<(f64, i64, Option<f64>)>,
     settle_until: i64,
     slowed: bool,
     behind: bool,
@@ -79,7 +82,8 @@ impl Drift {
 
     /// The room told the player to seek to `to`: the jump that follows is the room's.
     pub fn cued_seek(&mut self, to: f64, now: i64) {
-        self.expect_seek = Some((to, now + EXPECT_SEEK_MS));
+        let from = self.last.as_ref().map(|l| l.pos);
+        self.expect_seek = Some((to, now + EXPECT_SEEK_MS, from));
         self.settle_until = now + SETTLE_MS;
     }
 
@@ -94,7 +98,7 @@ impl Drift {
     ) -> Vec<Act> {
         let mut out = Vec::new();
         let last = self.last.replace(Last { pos, paused, speed, at: now });
-        if let Some((_, until)) = self.expect_seek
+        if let Some((_, until, _)) = self.expect_seek
             && now >= until
         {
             self.expect_seek = None;
@@ -106,14 +110,18 @@ impl Drift {
             let jumped = (pos - (last.pos + played)).abs() > SEEK_THRESHOLD;
             if jumped {
                 self.settle_until = now + SETTLE_MS;
-                match self.expect_seek {
-                    Some((to, _)) if (pos - to).abs() <= SEEK_THRESHOLD + 0.5 => {
-                        self.expect_seek = None;
-                    }
-                    _ => {
-                        out.push(Act::ViewerSeek(pos));
-                        return out;
-                    }
+                // Never the viewer's: a place the room told the player to go to, or a stale
+                // report of where it was before (both looked for the whole window, as a player
+                // can report late and out of order), or the room's own place, where a seek would
+                // move nothing (a late report of a cue, or the player opening at the room's place).
+                let told = self.expect_seek.is_some_and(|(to, _, from)| {
+                    (pos - to).abs() <= LANDED
+                        || from.is_some_and(|f| (pos - f).abs() <= LANDED)
+                });
+                let rooms = room.is_some_and(|(room_pos, _)| (pos - room_pos).abs() <= LANDED);
+                if !told && !rooms {
+                    out.push(Act::ViewerSeek(pos));
+                    return out;
                 }
             }
         }
@@ -209,6 +217,38 @@ mod tests {
         // Paused, the position doesn't move: no seek.
         assert!(drift.sample(120.2, true, 1.0, 3_500, None).is_empty());
         assert!(drift.sample(120.2, true, 1.0, 6_500, None).is_empty());
+    }
+
+    #[test]
+    fn a_told_place_reported_late_or_twice_is_never_the_viewers_seek() {
+        let mut drift = Drift::default();
+        let paused_at = |pos| Some((pos, false));
+        // Paused for Ren at 0:12; the room seeks to 0:35. The player reports a stale 0:12 between
+        // its reports of 0:35, the last of them long after the cue.
+        assert!(drift.sample(12.0, true, 1.0, 0, paused_at(12.0)).is_empty());
+        drift.cued_seek(35.0, 100);
+        for (pos, at) in [(12.0, 600), (35.0, 1_500), (12.0, 2_000), (35.0, 3_000)] {
+            assert!(
+                drift.sample(pos, true, 1.0, at, paused_at(35.0)).is_empty(),
+                "{pos} at {at}"
+            );
+        }
+        // Past the window, going back to 0:12 is the viewer's own seek, and the room's place
+        // after it is not.
+        assert_eq!(
+            drift.sample(12.0, true, 1.0, 9_000, paused_at(35.0)),
+            vec![Act::ViewerSeek(12.0)]
+        );
+        assert!(drift.sample(35.0, true, 1.0, 9_500, paused_at(35.0)).is_empty());
+        // A player opening at the room's place (0:00, then 0:12.3) moved nothing.
+        let mut drift = Drift::default();
+        assert!(drift.sample(0.0, true, 1.0, 0, paused_at(12.3)).is_empty());
+        assert!(drift.sample(12.3, true, 1.0, 400, paused_at(12.3)).is_empty());
+        // The viewer's own seek away from the room's place still counts.
+        assert_eq!(
+            drift.sample(40.0, true, 1.0, 900, paused_at(12.3)),
+            vec![Act::ViewerSeek(40.0)]
+        );
     }
 
     #[test]

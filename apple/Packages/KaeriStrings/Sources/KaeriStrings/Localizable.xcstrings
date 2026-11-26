@@ -257894,7 +257894,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Wait %1$lld s"
+            "value" : "Wait %1$lld s"
           }
         }
       }
@@ -258065,6 +258065,18 @@
         }
       }
     },
+    "room-device-in-room" : {
+      "comment" : "Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is in this room"
+          }
+        }
+      }
+    },
     "room-dont-wait" : {
       "comment" : "Button on your own starting screen that lets the room carry on without you.",
       "extractionState" : "manual",
@@ -258204,7 +258216,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Kaeri tried the link's relays and your spares, %1$lld s each."
+            "value" : "Kaeri tried the link's relays and your spares, %1$lld s each."
           }
         }
       }
@@ -258545,6 +258557,18 @@
         }
       }
     },
+    "room-leave-on-device" : {
+      "comment" : "Button on the phone's remote screen that leaves the room on the paired TV. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the room on %1$@"
+          }
+        }
+      }
+    },
     "room-leave-title" : {
       "comment" : "Title of the confirmation before leaving.",
       "extractionState" : "manual",
@@ -258880,7 +258904,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Up next in %1$lld s"
+            "value" : "Up next in %1$lld s"
           }
         }
       }
@@ -258904,7 +258928,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The room has waited %1$lld s"
+            "value" : "The room has waited %1$lld s"
           }
         }
       }
@@ -258927,13 +258951,13 @@
                   "one" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ is waiting · %3$lld s"
+                      "value" : "%1$@ is waiting · %3$lld s"
                     }
                   },
                   "other" : {
                     "stringUnit" : {
                       "state" : "translated",
-                      "value" : "%1$@ are waiting · %3$lld s"
+                      "value" : "%1$@ are waiting · %3$lld s"
                     }
                   }
                 }
@@ -258986,7 +259010,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$@ · %2$lld s"
+            "value" : "%1$@ · %2$lld s"
           }
         }
       }
@@ -258998,7 +259022,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "You're %1$lld s behind · catching up"
+            "value" : "You're %1$lld s behind · catching up"
           }
         }
       }
@@ -259046,7 +259070,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld min"
+            "value" : "%1$lld min"
           }
         }
       }
@@ -259506,7 +259530,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "The room is paused until this starts · %1$lld s"
+            "value" : "The room is paused until this starts · %1$lld s"
           }
         }
       }
@@ -259842,7 +259866,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "%1$lld ms"
+            "value" : "%1$lld ms"
           }
         }
       }
@@ -260212,7 +260236,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Behind · %1$lld s"
+            "value" : "Behind · %1$lld s"
           }
         }
       }
@@ -260224,7 +260248,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Buffering · %1$lld s"
+            "value" : "Buffering · %1$lld s"
           }
         }
       }
@@ -260260,7 +260284,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Loading · %1$lld s"
+            "value" : "Loading · %1$lld s"
           }
         }
       }
@@ -260368,7 +260392,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Seeking · %1$lld s"
+            "value" : "Seeking · %1$lld s"
           }
         }
       }
@@ -260405,6 +260429,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "room-tv-join-from-phone" : {
+      "comment" : "Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To join someone's room, open their invite on a paired phone and choose this TV."
           }
         }
       }
@@ -260476,7 +260512,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Plays for everyone in %1$lld s"
+            "value" : "Plays for everyone in %1$lld s"
           }
         }
       }
@@ -260536,7 +260572,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "buffering · %1$lld s"
+            "value" : "buffering · %1$lld s"
           }
         }
       }
@@ -260548,7 +260584,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "loading · %1$lld s"
+            "value" : "loading · %1$lld s"
           }
         }
       }
