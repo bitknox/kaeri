@@ -64,6 +64,7 @@ import app.kaeri.design.tabular
 import app.kaeri.engine.model.RoomMember
 import app.kaeri.engine.model.RoomView
 import app.kaeri.store.room.RoomModel
+import app.kaeri.store.text
 import app.kaeri.store.room.RoomWords
 import app.kaeri.ui.QrCode
 
@@ -106,11 +107,12 @@ fun RoomAlert(title: String, body: String, onRetry: (() -> Unit)?, onClose: () -
 @Composable
 fun RoomLeftAlert(room: RoomModel, why: app.kaeri.engine.model.RoomLeftWhy) {
     val c = roomCopy()
+    val context = androidx.compose.ui.platform.LocalContext.current
     val (title, body) = when (why) {
         is app.kaeri.engine.model.RoomLeftWhy.Unreachable -> c.UNREACHABLE_TITLE to c.UNREACHABLE_BODY
         is app.kaeri.engine.model.RoomLeftWhy.Full -> c.FULL to ""
         is app.kaeri.engine.model.RoomLeftWhy.OldInvite -> c.OLD_INVITE to ""
-        is app.kaeri.engine.model.RoomLeftWhy.Failed -> c.UNREACHABLE_TITLE to why.reason
+        is app.kaeri.engine.model.RoomLeftWhy.Failed -> c.UNREACHABLE_TITLE to why.reason.text(context)
         else -> return
     }
     RoomAlert(title, body, onRetry = null, onClose = room::dismissLeft)
