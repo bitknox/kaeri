@@ -60,6 +60,9 @@ import app.kaeri.store.traced
 import app.kaeri.ui.AppActions
 import app.kaeri.ui.AppLink
 import app.kaeri.ui.AppRoot
+import app.kaeri.ui.KeyShortcut
+import app.kaeri.ui.keyShortcut
+import app.kaeri.ui.keyShortcutGroup
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
 import app.kaeri.ui.reading.LocalEinkLayout
@@ -182,7 +185,7 @@ class MainActivity : ComponentActivity() {
     private val linkFlow = links.receiveAsFlow()
 
     /** The keyboard's shortcuts, as they are pressed, for the frame to act on. */
-    private val shortcuts = Channel<app.kaeri.ui.KeyShortcut>(Channel.BUFFERED)
+    private val shortcuts = Channel<KeyShortcut>(Channel.BUFFERED)
     private val shortcutFlow = shortcuts.receiveAsFlow()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -502,7 +505,7 @@ class MainActivity : ComponentActivity() {
      * screen sees the key: no field of the app reads those keys as text.
      */
     override fun dispatchKeyEvent(event: KeyEvent): Boolean {
-        val shortcut = app.kaeri.ui.keyShortcut(event.keyCode, event.isCtrlPressed, event.isAltPressed, event.isShiftPressed, event.isMetaPressed)
+        val shortcut = keyShortcut(event.keyCode, event.isCtrlPressed, event.isAltPressed, event.isShiftPressed, event.isMetaPressed)
             ?: return super.dispatchKeyEvent(event)
         if (event.action == KeyEvent.ACTION_DOWN && event.repeatCount == 0) shortcuts.trySend(shortcut)
         return true
@@ -511,7 +514,7 @@ class MainActivity : ComponentActivity() {
     /** The shortcuts the system's Meta + / sheet lists. */
     override fun onProvideKeyboardShortcuts(data: MutableList<android.view.KeyboardShortcutGroup>, menu: android.view.Menu?, deviceId: Int) {
         super.onProvideKeyboardShortcuts(data, menu, deviceId)
-        data.add(app.kaeri.ui.keyShortcutGroup(this, getString(R.string.app_name), app.store.medium.answer))
+        data.add(keyShortcutGroup(this, getString(R.string.app_name), app.store.medium.answer))
     }
 
     /** The key-up of a volume press [onKeyDown] took, so the system does not also act on it. */
