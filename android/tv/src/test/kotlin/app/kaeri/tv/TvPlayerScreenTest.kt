@@ -1,4 +1,5 @@
-// The TV player's chrome on the JVM: it goes after the idle time while playing, and stays gone.
+// The TV player's chrome on the JVM: it goes after the idle time while playing, and stays gone;
+// with TalkBack on, its row carries a Skip button and Play a Skip action.
 
 package app.kaeri.tv
 
@@ -10,6 +11,16 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.SemanticsMatcher
+import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.hasClickAction
+import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.onAllNodes
+import androidx.compose.ui.test.performClick
+import org.junit.Assert.assertNull
+import app.kaeri.engine.model.PlayerUi
+import app.kaeri.engine.model.SkipKind
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -77,8 +88,8 @@ class TvPlayerScreenTest {
         compose.waitForIdle()
     }
 
-    @Test
-    fun theChromeHidesWhilePlayingAndStaysHiddenAsThePlayheadMoves() {
+    /** The player open and playing, its chrome up. */
+    private fun playing() {
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         compose.runOnUiThread {
             model.apply(Event.PlaybackStaged(900_001u, "Stardust Wayfarer", "7", null, 1.0))
@@ -103,6 +114,11 @@ class TvPlayerScreenTest {
             model.poke()
         }
         compose.waitForIdle()
+    }
+
+    @Test
+    fun theChromeHidesWhilePlayingAndStaysHiddenAsThePlayheadMoves() {
+        playing()
         compose.onNodeWithText("Episodes").assertIsDisplayed()
 
         // The idle time and the fade after it: bare video.
@@ -117,5 +133,34 @@ class TvPlayerScreenTest {
         compose.runOnUiThread { model.poke() }
         compose.waitForIdle()
         compose.onNodeWithText("Episodes").assertIsDisplayed()
+    }
+
+    @Test
+    fun withTalkBackTheOpeningsSkipIsAButtonInTheRowAndAnActionOnPlay() {
+        compose.runOnUiThread { model.assisted = true }
+        playing()
+        compose.runOnUiThread { model.apply(Event.PlayerUi(1u, PlayerUi.Skip(SkipKind.OPENING, 220.0))) }
+        compose.waitForIdle()
+
+        // Play offers the skip as a custom action, read out in TalkBack's actions menu.
+        val withSkip = SemanticsMatcher("has a Skip opening action") { node ->
+            node.config.getOrNull(SemanticsActions.CustomActions)?.any { it.label == "Skip opening" } == true
+        }
+        compose.onAllNodes(withSkip).assertCountEquals(1)
+
+        // And the row has it as a button D-pad focus can reach, which takes the skip.
+        compose.onAllNodes(hasText("Skip opening") and hasClickAction()).assertCountEquals(1)
+        compose.onAllNodes(hasText("Skip opening") and hasClickAction())[0].performClick()
+        compose.waitForIdle()
+        assertNull(model.skip)
+        compose.onAllNodes(withSkip).assertCountEquals(0)
+    }
+
+    @Test
+    fun withoutTalkBackTheRowHasNoSkipButton() {
+        playing()
+        compose.runOnUiThread { model.apply(Event.PlayerUi(1u, PlayerUi.Skip(SkipKind.OPENING, 220.0))) }
+        compose.waitForIdle()
+        compose.onAllNodes(hasText("Skip opening") and hasClickAction()).assertCountEquals(0)
     }
 }
