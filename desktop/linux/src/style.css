@@ -870,6 +870,9 @@ toastoverlay.cast-bar-up > toast { margin-bottom: 76px; }
 .room-sys { font-size: 13px; }
 .room-link { padding: 6px 10px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); }
 .room-button { padding-left: 16px; padding-right: 16px; }
+.room-upnext { border-radius: 16px; padding: 10px; }
+.room-upnext-art { border-radius: 8px; background: var(--ground); }
+.room-upnext-episode { font-weight: 600; font-size: 14px; }
 .room-strip { border-radius: 999px; padding: 6px 8px; }
 .room-strip-words { font-weight: 600; font-size: 13px; }
 .room-strip-carry { min-height: 30px; padding-top: 0; padding-bottom: 0; }

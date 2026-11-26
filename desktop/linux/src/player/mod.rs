@@ -431,6 +431,10 @@ impl PlayerView {
             let room = Rc::clone(&room);
             move |window| room.set_fullscreen(window.is_fullscreen())
         });
+        room.up_next.set_art({
+            let hub = Rc::clone(&ctx.hub);
+            Rc::new(move |picture: &gtk::Picture, url: Option<&str>| hub.art(picture, url))
+        });
         room.set_sender({
             let hub = Rc::clone(&ctx.hub);
             move |command| hub.send(command)
