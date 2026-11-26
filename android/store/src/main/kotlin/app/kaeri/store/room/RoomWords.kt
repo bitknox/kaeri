@@ -249,8 +249,11 @@ object RoomWords {
         return if (shown != null) (if (nowMs >= shown) view.waiting else emptyList()) else view.waiting.filter { nowMs - it.sinceMs >= 1000 }
     }
 
-    /** The oldest wait's seconds. */
-    fun waitSeconds(view: RoomView, nowMs: Long): Int = view.waiting.minOfOrNull { it.sinceMs }?.let { secs(it, nowMs) } ?: 0
+    /**
+     * The wait's seconds, from the first waited member's start: the clock that member's row counts,
+     * so the line and the row read the same. wait_shown_at only says when the wait may show.
+     */
+    fun waitSeconds(view: RoomView, nowMs: Long): Int = view.waiting.firstOrNull()?.let { secs(it.sinceMs, nowMs) } ?: 0
 
     /** Whether Carry on shows: the engine says so, or the wait is past 20 s. */
     fun carryShown(view: RoomView, nowMs: Long): Boolean =

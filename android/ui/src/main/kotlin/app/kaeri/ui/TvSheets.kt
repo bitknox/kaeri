@@ -500,7 +500,7 @@ private fun TvRemote(tv: TvRemoteModel) {
 private fun TvRoomSection(tv: TvRemoteModel, tvName: String, room: app.kaeri.engine.ffi.FfiTvRoom, live: Boolean) {
     val context = LocalContext.current
     val c = remember(context) { app.kaeri.store.room.RoomCopy(context) }
-    TvHeading(stringResource(R.string.together_title))
+    TvHeading(Strings.roomDeviceInRoom(context, tvName))
     val title = room.title
     val episode = room.episode
     if (title != null && episode != null) SheetText(c.titleEpisode(title, episode))
@@ -518,7 +518,7 @@ private fun TvRoomSection(tv: TvRemoteModel, tvName: String, room: app.kaeri.eng
         }
     }
     TvChatBlock(tv, tvName, room, live, c)
-    QuietButton(Strings.roomLeaveMenuPlain(context), onClick = { tv.send(FfiTvCommand.RoomLeave) })
+    QuietButton(Strings.roomLeaveOnDevice(context, tvName), onClick = { tv.send(FfiTvCommand.RoomLeave) })
     TvDivider(Modifier.padding(top = 8.dp))
 }
 

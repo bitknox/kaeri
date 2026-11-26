@@ -105,6 +105,7 @@ fun TogetherScreen(nav: TvNavigator, memory: FocusMemory) {
         }
         // Joining is from a phone: an invite opened there offers Join on this TV.
         Heading(Strings.roomPlaceJoin(context))
+        Text(Strings.roomTvJoinFromPhone(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, modifier = Modifier.padding(bottom = 8.dp).widthIn(max = 640.dp))
         val phones = remote?.phones.orEmpty()
         if (phones.isNotEmpty()) {
             Text(phones.joinToString(", ") { it.name }, style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze) // i18n-skip
