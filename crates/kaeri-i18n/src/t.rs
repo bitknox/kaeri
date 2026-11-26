@@ -5213,8 +5213,8 @@ pub fn keys_action_download_range() -> String {
 }
 
 /// Action label in the help overlay and the command palette.
-pub fn keys_action_play_party() -> String {
-    text("keys-action-play-party", &[])
+pub fn keys_action_start_room() -> String {
+    text("keys-action-start-room", &[])
 }
 
 /// Action label in the help overlay and the command palette.
@@ -5883,18 +5883,23 @@ pub fn nav_rail_hidden() -> String {
 }
 
 /// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-pub fn keys_hint_ready() -> String {
-    text("keys-hint-ready", &[])
-}
-
-/// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 pub fn keys_hint_copy_link() -> String {
     text("keys-hint-copy-link", &[])
 }
 
 /// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-pub fn keys_hint_leave_party() -> String {
-    text("keys-hint-leave-party", &[])
+pub fn keys_hint_leave_room() -> String {
+    text("keys-hint-leave-room", &[])
+}
+
+/// Status line hint beside a key, in a room the others wait in: play on without those it waits for. Keep it to a word or two.
+pub fn keys_hint_carry_on() -> String {
+    text("keys-hint-carry-on", &[])
+}
+
+/// Status line hint beside a key, on a recent room: take it off the list. Keep it to a word or two.
+pub fn keys_hint_forget_room() -> String {
+    text("keys-hint-forget-room", &[])
 }
 
 /// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
@@ -5902,17 +5907,17 @@ pub fn keys_hint_say() -> String {
     text("keys-hint-say", &[])
 }
 
-/// Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+/// Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 pub fn keys_hint_mute() -> String {
     text("keys-hint-mute", &[])
 }
 
-/// Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+/// Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 pub fn keys_hint_unmute() -> String {
     text("keys-hint-unmute", &[])
 }
 
-/// Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+/// Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 pub fn keys_hint_hide_chat() -> String {
     text("keys-hint-hide-chat", &[])
 }
@@ -7110,11 +7115,6 @@ pub fn settings_value_download_dir_default() -> String {
     text("settings-value-download-dir-default", &[])
 }
 
-/// Value of the Syncplay room setting when no room is set.
-pub fn settings_value_room_unset() -> String {
-    text("settings-value-room-unset", &[])
-}
-
 /// Value of the seeding ratio setting: seed until the ratio is reached.
 pub fn settings_value_seed_ratio(ratio: &str) -> String {
     text("settings-value-seed-ratio", &[("ratio", Arg::Text(ratio))])
@@ -7283,21 +7283,6 @@ pub fn settings_label_keep_seeding() -> String {
 /// Settings row: a command run when a download finishes.
 pub fn settings_label_download_hook() -> String {
     text("settings-label-download-hook", &[])
-}
-
-/// Settings row: Syncplay { -watch-party-pl }.
-pub fn settings_label_syncplay() -> String {
-    text("settings-label-syncplay", &[])
-}
-
-/// Settings row: the Syncplay server.
-pub fn settings_label_syncplay_server() -> String {
-    text("settings-label-syncplay-server", &[])
-}
-
-/// Settings row: the Syncplay room.
-pub fn settings_label_syncplay_room() -> String {
-    text("settings-label-syncplay-room", &[])
 }
 
 /// Settings row: whether the app checks for a new version.
@@ -7478,21 +7463,6 @@ pub fn settings_note_keep_seeding() -> String {
 /// Note under the after each download row.
 pub fn settings_note_download_hook() -> String {
     text("settings-note-download-hook", &[])
-}
-
-/// Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-pub fn settings_note_syncplay(key: &str) -> String {
-    text("settings-note-syncplay", &[("key", Arg::Text(key))])
-}
-
-/// Note under the Syncplay server row.
-pub fn settings_note_syncplay_server() -> String {
-    text("settings-note-syncplay-server", &[])
-}
-
-/// Note under the Syncplay room row.
-pub fn settings_note_syncplay_room() -> String {
-    text("settings-note-syncplay-room", &[])
 }
 
 /// Note under the check for updates row.
@@ -9425,16 +9395,6 @@ pub fn hint_kitsu_credentials() -> String {
     text("hint-kitsu-credentials", &[])
 }
 
-/// Toast when a { -watch-party } is joined.
-pub fn party_joined(room: &str, server: &str) -> String {
-    text("party-joined", &[("room", Arg::Text(room)), ("server", Arg::Text(server))])
-}
-
-/// Toast when the party's episode has no { -source } here. The reason says why.
-pub fn party_no_source_still_in(reason: &str) -> String {
-    text("party-no-source-still-in", &[("reason", Arg::Text(reason))])
-}
-
 /// Status line while the { -source-pl } are rebuilt after a change.
 pub fn status_reloading_sources() -> String {
     text("status-reloading-sources", &[])
@@ -9450,7 +9410,7 @@ pub fn tui_together_section() -> String {
     text("tui-together-section", &[])
 }
 
-/// Prompt of the Join line in the Together section.
+/// Prompt of the Join line in the Together section: what to paste there.
 pub fn tui_together_join_prompt() -> String {
     text("tui-together-join-prompt", &[])
 }
@@ -9458,11 +9418,6 @@ pub fn tui_together_join_prompt() -> String {
 /// Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
 pub fn tui_together_chat_hidden_line() -> String {
     text("tui-together-chat-hidden-line", &[])
-}
-
-/// Toast when what was typed in the Together section's Join line is neither a link nor a code.
-pub fn tui_together_not_a_link() -> String {
-    text("tui-together-not-a-link", &[])
 }
 
 /// Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
@@ -9493,6 +9448,61 @@ pub fn report_player_log_saved_to(path: &str) -> String {
 /// That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
 pub fn report_player_log_failed_here(folder: &str) -> String {
     text("report-player-log-failed-here", &[("folder", Arg::Text(folder))])
+}
+
+/// Toast when this terminal is in a room, said away from the Together section. The key is the one that goes to Together, as the key map draws it.
+pub fn tui_room_joined(key: &str) -> String {
+    text("tui-room-joined", &[("key", Arg::Text(key))])
+}
+
+/// Toast when what was pasted in the Together section's Join line isn't a room's invite link.
+pub fn tui_room_not_a_link() -> String {
+    text("tui-room-not-a-link", &[])
+}
+
+/// Toast when the room behind an invite already has 10 people or more. The key is Enter's, as the key map draws it; the Join line then reads Join anyway.
+pub fn tui_room_full(key: &str) -> String {
+    text("tui-room-full", &[("key", Arg::Text(key))])
+}
+
+/// Line in the field that takes an invite link.
+pub fn tui_room_join_line() -> String {
+    text("tui-room-join-line", &[])
+}
+
+/// Line under the Together section's conversation and in the field for saying something. States who can read the chat.
+pub fn tui_room_chat_privacy() -> String {
+    text("tui-room-chat-privacy", &[])
+}
+
+/// The conversation's only line while Hide chat is on, and a toast when the field is asked for then.
+pub fn tui_room_chat_hidden() -> String {
+    text("tui-room-chat-hidden", &[])
+}
+
+/// Toast when a message was sent too soon after the last ones.
+pub fn tui_room_chat_wait(seconds: i64) -> String {
+    text("tui-room-chat-wait", &[("seconds", Arg::Int(seconds))])
+}
+
+/// A muted person's line in the conversation, in place of what they said.
+pub fn tui_room_muted_line(name: &str) -> String {
+    text("tui-room-muted-line", &[("name", Arg::Text(name))])
+}
+
+/// Line in the Together section when this terminal isn't in a room. The key is the one that starts a room, as the key map draws it.
+pub fn tui_room_start_line(key: &str) -> String {
+    text("tui-room-start-line", &[("key", Arg::Text(key))])
+}
+
+/// Line in place of the recent rooms when none are kept yet.
+pub fn tui_room_recent_empty() -> String {
+    text("tui-room-recent-empty", &[])
+}
+
+/// The room's connection, under its title: the room's messages are sealed end to end, and how many of its relays answer.
+pub fn tui_room_relays_line(count: i64, total: i64) -> String {
+    text("tui-room-relays-line", &[("count", Arg::Int(count)), ("total", Arg::Int(total))])
 }
 
 /// Title of the about page.
@@ -19928,6 +19938,26 @@ pub fn room_banner_episode_plain(episode: &str, length: &str) -> String {
 /// Menu item dimmed in a room, with this reason under it.
 pub fn room_mark_unavailable() -> String {
     text("room-mark-unavailable", &[])
+}
+
+/// Heading of the people list in the room, and its accessibility label.
+pub fn room_people() -> String {
+    text("room-people", &[])
+}
+
+/// State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+pub fn room_state_seeking(seconds: i64) -> String {
+    text("room-state-seeking", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+pub fn room_error_unreachable_lead() -> String {
+    text("room-error-unreachable-lead", &[])
+}
+
+/// Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+pub fn room_error_nobody_answered_lead() -> String {
+    text("room-error-nobody-answered-lead", &[])
 }
 
 /// Button that shows the season before.

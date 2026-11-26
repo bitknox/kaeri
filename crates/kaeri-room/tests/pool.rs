@@ -151,7 +151,12 @@ async fn relays_see_nothing_and_outsiders_hear_nothing() {
     assert!(outsider.drain(800).await.is_empty());
     for event in relays[0].events() {
         let json = serde_json::to_string(&event).unwrap();
-        assert!(!json.contains("secret word") && !json.contains("Mika"), "{json}");
+        // A phrase with a space can't be in base64; a short name is looked for outside the
+        // sealed body, which random base64 can spell by chance.
+        assert!(!json.contains("secret word"), "{json}");
+        let mut open = serde_json::to_value(&event).unwrap();
+        open["content"] = serde_json::Value::Null;
+        assert!(!open.to_string().contains("Mika"), "{open}");
         assert_eq!(event.kind.as_u16(), kaeri_room::envelope::KIND);
         let tag = RoomKeys::new(SECRET).send_tag(event.created_at.as_secs() as i64 * 1000);
         assert!(json.contains(&tag));

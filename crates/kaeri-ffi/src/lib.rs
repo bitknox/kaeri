@@ -44,7 +44,6 @@ mod engine;
 mod folders;
 mod host;
 mod log;
-mod party;
 #[cfg(feature = "mpv-host")]
 mod player;
 mod reading;
@@ -69,12 +68,6 @@ pub use engine::FfiEngine;
 pub use folders::{FfiFolderAccess, FfiFolderEntry, FfiOpenedFile};
 pub use host::{FfiDecodedImage, FfiHost, FfiPageDecoder};
 pub use log::{FfiLogLevel, log_line, start_log};
-#[cfg(all(feature = "party", feature = "testing"))]
-pub use party::{FfiChatFixture, FfiFakeParty};
-pub use party::{
-    clean_party_code, parse_party_invite, parse_party_target, party_invite_link,
-    party_share_app_link, party_share_link,
-};
 #[cfg(feature = "mpv-host")]
 pub use player::{
     FfiPlayer, FfiPlayerEvent, FfiPlayerOptions, FfiPlayerSink, FfiPlayerState, FfiSnapshot,

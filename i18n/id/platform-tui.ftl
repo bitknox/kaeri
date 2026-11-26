@@ -1,14 +1,11 @@
 hint-stop-playback = Tekan { $key } untuk menghentikan pemutaran.
 hint-open-stores = Buka { -source-cap-pl }, lalu tekan Enter untuk membuka { -plugin-store }.
 hint-kitsu-credentials = Tekan Enter pada barisnya untuk memasukkan kredensial Anda.
-party-joined = Bergabung ke { -watch-party } di ruang { $room } pada { $server }.
-party-no-source-still-in = { $reason } Anda masih berada di { -watch-party }.
 status-reloading-sources = Memuat ulang { -source-pl }…
 pin-unavailable = { $name } disematkan untuk judul ini tetapi tidak tersedia. Mencoba { -source-pl } lain.
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = tautan atau kode
 tui-together-chat-hidden-line = Pesan dan reaksi tidak muncul di pemutar di semua sesi.
-tui-together-not-a-link = Itu bukan tautan atau kode { -watch-party }.
 tui-together-recent-alone = Episode { $episode } · { $when }
 tui-medium-read-change = Tekan { $key } untuk mengubah fungsi { -app-name }.
 tui-medium-settings-hint = { $key } untuk mengubah

@@ -249,3 +249,73 @@ fn a_late_joiner_starts_at_the_answered_place() {
     assert!(!ren.before_play());
     assert_eq!(ren.members().len(), 2);
 }
+
+/// Three relays, health bits per member (bit i: relay i works there).
+fn relayed(others: &[&str]) -> Room {
+    let mut room = room(others);
+    room.set_relays(
+        vec![
+            "wss://one.example".into(),
+            "wss://two.example".into(),
+            "wss://three.example".into(),
+        ],
+        1,
+    );
+    room
+}
+
+fn health(room: &mut Room, mid: &str, ok: u8, now: i64) {
+    if mid == "a" {
+        let st = Status { ok, ..room.my_status().clone() };
+        room.set_status(st, now);
+    } else {
+        status(room, mid, Status { ok, ..watching(None) }, now);
+    }
+}
+
+#[test]
+fn a_relay_the_majority_cant_reach_for_a_minute_is_swapped_for_a_spare() {
+    let spares = ["wss://two.example".to_owned(), "wss://spare.example".to_owned()];
+    let mut room = relayed(&["r", "s"]);
+    // Relay 1 (two.example) fails for Ada and Ren; Sol still has it. Two of three: a majority.
+    for now in [0, 30_000] {
+        health(&mut room, "a", 0b101, now);
+        health(&mut room, "r", 0b101, now);
+        health(&mut room, "s", 0b111, now);
+        assert_eq!(room.relay_change(now, &spares), None);
+    }
+    health(&mut room, "a", 0b101, 60_000);
+    health(&mut room, "r", 0b101, 60_000);
+    health(&mut room, "s", 0b111, 60_000);
+    assert_eq!(
+        room.relay_change(60_000, &spares),
+        Some(vec![
+            "wss://one.example".into(),
+            "wss://spare.example".into(),
+            "wss://three.example".into()
+        ])
+    );
+}
+
+#[test]
+fn one_members_trouble_never_evicts_a_relay_and_only_adds_one() {
+    let spares = ["wss://spare.example".to_owned()];
+    let mut room = relayed(&["r", "s"]);
+    // Only Ada can't reach two relays: no majority, so nothing is evicted, but after a minute
+    // with fewer than two healthy relays her device adds the spare.
+    for now in [0, 59_000] {
+        health(&mut room, "a", 0b001, now);
+        health(&mut room, "r", 0b111, now);
+        health(&mut room, "s", 0b111, now);
+        assert_eq!(room.relay_change(now, &spares), None);
+    }
+    health(&mut room, "a", 0b001, 60_000);
+    let changed = room.relay_change(60_000, &spares).unwrap();
+    assert_eq!(changed.len(), 4);
+    assert_eq!(changed[3], "wss://spare.example");
+    // Members who never reported health don't count.
+    let mut room = relayed(&["r"]);
+    health(&mut room, "r", 0, 0);
+    health(&mut room, "a", 0b111, 0);
+    assert_eq!(room.relay_change(120_000, &spares), None);
+}

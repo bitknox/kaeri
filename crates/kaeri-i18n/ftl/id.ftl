@@ -3094,9 +3094,6 @@ keys-action-toggle-demo = Hapus atau tambah demo
 keys-action-download-range = Unduh rentang episode
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Putar di nonton bareng
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Ubah status ditonton
 
 # Action label in the help overlay and the command palette.
@@ -3496,24 +3493,18 @@ nav-rail-collapsed = Diciutkan
 nav-rail-hidden = Disembunyikan
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Siap
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Salin tautan
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Keluar
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Tulis
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Bisukan
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Suarakan
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Sembunyikan chat
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4246,9 +4237,6 @@ settings-value-player-ui-mpv = Pengaturan mpv Anda
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Disimpan di cache torrent
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Belum diatur (diperlukan untuk nonton bareng)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Sampai rasio { $ratio }
 
@@ -4350,15 +4338,6 @@ settings-label-keep-seeding = Tetap seeding
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = Setelah setiap unduhan
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay nonton bareng
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Server Syncplay
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Ruang Syncplay
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Periksa pembaruan
@@ -4467,15 +4446,6 @@ settings-note-keep-seeding = Nonaktif secara bawaan untuk menghemat unggahan; ak
 
 # Note under the after each download row.
 settings-note-download-hook = Tekan Enter untuk mengetik perintah. Perintah dijalankan setelah setiap unduhan selesai.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Tekan { $key } untuk memutar satu episode di ruang yang diatur di bawah. Saat aktif, setiap pemutaran dikirim ke sana.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Tekan Enter untuk mengetik host:port. Belum ada server sampai Anda memilih satu.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Tekan Enter untuk mengetik ruang teman. Kosongkan untuk membuat ruang yang tidak bisa ditebak siapa pun.
 
 # Note under the check for updates row.
 settings-note-update-check = Satu permintaan tersimpan per hari, dibuat saat mulai.
@@ -5566,12 +5536,6 @@ hint-open-stores = Buka Sumber-sumber, lalu tekan Enter untuk membuka toko plugi
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Tekan Enter pada barisnya untuk memasukkan kredensial Anda.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Bergabung ke nonton bareng di ruang { $room } pada { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Anda masih berada di nonton bareng.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Memuat ulang sumber-sumber…
 
@@ -5580,15 +5544,6 @@ pin-unavailable = { $name } disematkan untuk judul ini tetapi tidak tersedia. Me
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Nonton bareng
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = tautan atau kode
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Pesan dan reaksi tidak muncul di pemutar di semua sesi.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Itu bukan tautan atau kode nonton bareng.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episode { $episode } · { $when }

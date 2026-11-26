@@ -12066,6 +12066,20 @@ public enum L {
     /// Menu item dimmed in a room, with this reason under it.
     public static var roomMarkUnavailable: String { string("room-mark-unavailable", fallback: "Mark skip times after you leave the room.") }
 
+    /// Heading of the people list in the room, and its accessibility label.
+    public static var roomPeople: String { string("room-people", fallback: "People in the room") }
+
+    /// State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+    public static func roomStateSeeking(seconds: Int) -> String {
+        Self.format("room-state-seeking", fallback: "Seeking · %1$lld s", seconds)
+    }
+
+    /// Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+    public static var roomErrorUnreachableLead: String { string("room-error-unreachable-lead", fallback: "Couldn't reach this room's relays.") }
+
+    /// Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+    public static var roomErrorNobodyAnsweredLead: String { string("room-error-nobody-answered-lead", fallback: "Nobody answered in this room.") }
+
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }
 

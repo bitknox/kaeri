@@ -198,10 +198,12 @@ pub enum Overlay {
     Logs,
     /// Paste an invite link.
     JoinStore,
-    /// Type a party's link or code.
-    JoinParty,
-    /// Say something to the party.
+    /// Paste a room's invite link.
+    JoinRoom,
+    /// Say something to the room.
     Say,
+    /// Leave the room? Asked first, always.
+    LeaveRoom,
     /// A store action that needs a yes: joining, leaving, removing someone.
     StoreConfirm,
     /// What can be done with one of a store's plugins.
@@ -287,7 +289,8 @@ impl Overlay {
             Self::Conflicts => t::nav_overlay_conflicts(),
             Self::Logs => t::nav_overlay_logs(),
             Self::JoinStore => t::nav_overlay_join_store(),
-            Self::JoinParty => t::together_join(),
+            Self::JoinRoom => t::room_place_join(),
+            Self::LeaveRoom => t::room_leave_title(),
             Self::Say => t::keys_hint_say(),
             Self::StoreConfirm => t::nav_overlay_store_confirm(),
             Self::PluginAction => t::nav_overlay_plugin_action(),
@@ -357,7 +360,7 @@ impl Overlay {
                 | Self::KitsuUsername
                 | Self::KitsuPassword
                 | Self::JoinStore
-                | Self::JoinParty
+                | Self::JoinRoom
                 | Self::Say
                 | Self::InviteName
                 | Self::SyncAddress

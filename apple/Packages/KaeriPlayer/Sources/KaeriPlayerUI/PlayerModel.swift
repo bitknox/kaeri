@@ -256,7 +256,7 @@ public final class PlayerModel {
     /// The player closed before a frame: waiting for the engine to say whether it failed.
     @ObservationIgnored private var verdictPending = false
     /// A party play found no source: the party's sheet says so, and the player closes.
-    @ObservationIgnored private var partySaysWhy = false
+    @ObservationIgnored private var roomSaysWhy = false
     /// "Still watching?": the episodes rolled on in a row with nobody there, which pauses.
     public private(set) var stillWatching = false
     /// Skips the viewer has taken, for the haptic that answers each (T4).
@@ -408,7 +408,7 @@ public final class PlayerModel {
         let asked: (id: AnilistId, episode: String, again: Bool)
         switch command {
         case .play(let id, let episode, let fromStart): asked = (id, episode, fromStart)
-        case .playSource(let id, let episode, _, _), .playLocal(let id, let episode, _, _), .playParty(let id, let episode, _, _, _):
+        case .playSource(let id, let episode, _, _), .playLocal(let id, let episode, _, _):
             asked = (id, episode, true)
         default: return false
         }
@@ -478,7 +478,7 @@ public final class PlayerModel {
             choosingSource = false
             sourceChoices = nil
             verdictPending = false
-            partySaysWhy = false
+            roomSaysWhy = false
             // A play staged anew, as the episode started again in the other version is when
             // nothing played yet: no switch of it is on its way.
             versionSwitch = nil
@@ -502,13 +502,13 @@ public final class PlayerModel {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)
                 rolledOn(at: time.now())
-            } else if backend == nil, ending == .failed, isPresented, partySaysWhy {
+            } else if backend == nil, ending == .failed, isPresented, roomSaysWhy {
                 // The room's panel over the video says why and offers the sources: the player
                 // stays up under it rather than vanish. Only a room says why (the no-source
                 // events are the room's), and on a phone this comes before the player's view, so
                 // before the view says the player is in a room.
                 verdictPending = false
-            } else if backend == nil, ending == .failed, isPresented, !partySaysWhy, let episode = startingEpisode {
+            } else if backend == nil, ending == .failed, isPresented, !roomSaysWhy, let episode = startingEpisode {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
                 verdictPending = false
@@ -519,11 +519,11 @@ public final class PlayerModel {
                 verdictPending = false
                 dismiss()
             }
-        case .partyNoSource, .roomNoSource:
+        case .roomNoSource:
             // The room's panel over the video says why nothing plays and offers the sources: the
             // player's failure would say it twice, under it. Said after the failure, it takes
             // the failure's place.
-            partySaysWhy = true
+            roomSaysWhy = true
             if failure != nil { failure = nil }
         case .sourcesProgress(let id, let episode, let rows):
             if panelReleases?.id == id, panelReleases?.episode == episode {

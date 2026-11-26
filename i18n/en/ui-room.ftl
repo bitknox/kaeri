@@ -1047,3 +1047,20 @@ room-banner-episode-plain = Episode { $episode } · { $length }
 # Menu item dimmed in a room, with this reason under it.
 room-mark-unavailable = Mark skip times after you leave the room.
 
+## Asked for by the apps (26 Nov)
+
+# Heading of the people list in the room, and its accessibility label.
+# @max 32
+room-people = People in the room
+
+# State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+# @arg seconds: int
+# @max 24
+room-state-seeking = Seeking · { $seconds } s
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+room-error-unreachable-lead = Couldn't reach this room's relays.
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+room-error-nobody-answered-lead = Nobody answered in this room.
+

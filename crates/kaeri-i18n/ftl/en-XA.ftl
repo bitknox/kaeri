@@ -3366,7 +3366,7 @@ keys-action-toggle-demo = [Ŕéɱöṽé öŕ àðð ţĥé ðéɱö~~~~~~~]
 keys-action-download-range = [Ðöŵñļöàð à ŕàñĝé öƒ éþîšöðéš~~~~~~~~~]
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = [Þļàý îñ à ŵàţçĥ þàŕţý~~~~~~~]
+keys-action-start-room = [Šţàŕţ à ŕööɱ~~~~]
 
 # Action label in the help overlay and the command palette.
 keys-action-toggle-watched = [Ţöĝĝļé ŵàţçĥéð~~~~~]
@@ -3768,24 +3768,27 @@ nav-rail-collapsed = [Çöļļàþšéð~~~]
 nav-rail-hidden = [Ĥîððéñ~~]
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = [Ŕéàðý~~]
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = [Çöþý ļîñķ~~~]
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = [Ļéàṽé~~]
+keys-hint-leave-room = [Ļéàṽé~~]
+
+# Status line hint beside a key, in a room the others wait in: play on without those it waits for. Keep it to a word or two.
+keys-hint-carry-on = [Çàŕŕý öñ~~~]
+
+# Status line hint beside a key, on a recent room: take it off the list. Keep it to a word or two.
+keys-hint-forget-room = [Ƒöŕĝéţ~~]
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = [Šàý~]
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = [Ṁüţé~~]
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = [Ûñɱüţé~~]
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = [Ĥîðé çĥàţ~~~]
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4527,9 +4530,6 @@ settings-value-player-ui-mpv = [Ýöüŕ ɱþṽ šéţüþ~~~~~]
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = [Ķéþţ ŵîţĥ ţĥé ţöŕŕéñţ çàçĥé~~~~~~~~~]
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = [Ñöţ šéţ (ñééðéð ƒöŕ ŵàţçĥ þàŕţîéš)~~~~~~~~~~~]
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = [Ûñţîļ ŕàţîö { $ratio }~~~~~]
 
@@ -4631,15 +4631,6 @@ settings-label-keep-seeding = [Ķééþ šééðîñĝ~~~~]
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = [Åƒţéŕ éàçĥ ðöŵñļöàð~~~~~~]
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = [Šýñçþļàý ŵàţçĥ þàŕţîéš~~~~~~~]
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = [Šýñçþļàý šéŕṽéŕ~~~~~]
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = [Šýñçþļàý ŕööɱ~~~~]
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = [Çĥéçķ ƒöŕ üþðàţéš~~~~~~]
@@ -4748,15 +4739,6 @@ settings-note-keep-seeding = [Öƒƒ ƀý ðéƒàüļţ ţö šàṽé üþļö
 
 # Note under the after each download row.
 settings-note-download-hook = [Þŕéšš Éñţéŕ ţö ţýþé à çöɱɱàñð. Îţ ŕüñš àƒţéŕ éàçĥ ƒîñîšĥéð ðöŵñļöàð.~~~~~~~~~~~~~~~~~~~~~]
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = [Þŕéšš { $key } ţö þļàý öñé éþîšöðé îñ ţĥé ŕööɱ šéţ ƀéļöŵ. Ŵĥîļé öñ, éṽéŕý þļàý ĝöéš ţĥéŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~]
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = [Þŕéšš Éñţéŕ ţö ţýþé ĥöšţ:þöŕţ. Ţĥéŕé îš ñö šéŕṽéŕ üñţîļ ýöü çĥööšé öñé.~~~~~~~~~~~~~~~~~~~~~~]
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = [Þŕéšš Éñţéŕ ţö ţýþé à ƒŕîéñð'š ŕööɱ. Ļéàṽé îţ éɱþţý ţö šţàŕţ öñé ñöƀöðý çàñ ĝüéšš.~~~~~~~~~~~~~~~~~~~~~~~~~]
 
 # Note under the check for updates row.
 settings-note-update-check = [Öñé çàçĥéð ŕéƣüéšţ à ðàý, ɱàðé àţ šţàŕţüþ.~~~~~~~~~~~~~]
@@ -5964,12 +5946,6 @@ hint-open-stores = [Ĝö ţö Šöüŕçéš àñð þŕéšš Éñţéŕ ţö �
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = [Þŕéšš Éñţéŕ öñ îţš ŕöŵ ţö éñţéŕ ýöüŕ çŕéðéñţîàļš.~~~~~~~~~~~~~~~]
 
-# Toast when a { -watch-party } is joined.
-party-joined = [Ĵöîñéð ţĥé ŵàţçĥ þàŕţý îñ ŕööɱ { $room } öñ { $server }.~~~~~~~~~~~~~]
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = [{ $reason } Ýöü'ŕé šţîļļ îñ ţĥé ŵàţçĥ þàŕţý.~~~~~~~~~~~]
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = [Ŕéļöàðîñĝ šöüŕçéš…~~~~~~]
 
@@ -5979,14 +5955,11 @@ pin-unavailable = [{ $name } îš þîññéð ƒöŕ ţĥîš ţîţļé ƀüţ
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = [Ţöĝéţĥéŕ~~~]
 
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = [ļîñķ öŕ çöðé~~~~]
+# Prompt of the Join line in the Together section: what to paste there.
+tui-together-join-prompt = [îñṽîţé ļîñķ~~~~]
 
 # Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = [Ļîñéš àñð ŕéàçţîöñš šţàý öƒƒ ţĥé þļàýéŕ îñ éṽéŕý þàŕţý.~~~~~~~~~~~~~~~~~]
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = [Ţĥàţ îš ñöţ à þàŕţý ļîñķ öŕ çöðé.~~~~~~~~~~]
+tui-together-chat-hidden-line = [Ļîñéš àñð ŕéàçţîöñš šţàý öƒƒ ţĥé þļàýéŕ îñ éṽéŕý ŕööɱ.~~~~~~~~~~~~~~~~~]
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = [Éþîšöðé { $episode } · { $when }~~~~~~]
@@ -6005,6 +5978,39 @@ report-player-log-saved-to = [Þļàýéŕ ļöĝ šàṽéð ţö { $path }~~~~
 
 # That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
 report-player-log-failed-here = [Çöüļðñ'ţ šàṽé ţĥé ļöĝ ţö { $folder }.~~~~~~~~~]
+
+# Toast when this terminal is in a room, said away from the Together section. The key is the one that goes to Together, as the key map draws it.
+tui-room-joined = [Ýöü'ŕé îñ ţĥé ŕööɱ. Þŕéšš { $key } ţö šéé îţ.~~~~~~~~~~~~]
+
+# Toast when what was pasted in the Together section's Join line isn't a room's invite link.
+tui-room-not-a-link = [Ţĥàţ îšñ'ţ à ŕööɱ'š îñṽîţé ļîñķ.~~~~~~~~~~]
+
+# Toast when the room behind an invite already has 10 people or more. The key is Enter's, as the key map draws it; the Join line then reads Join anyway.
+tui-room-full = [Ţĥîš ŕööɱ îš ƒüļļ: ŕööɱš ŵöŕķ ƀéšţ ŵîţĥ 10 öŕ ƒéŵéŕ. Þŕéšš { $key } öñ ţĥé Ĵöîñ ļîñé ţö ĵöîñ àñýŵàý.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line in the field that takes an invite link.
+tui-room-join-line = [Þàšţé ţĥé îñṽîţé ļîñķ šöɱéöñé šéñţ ýöü.~~~~~~~~~~~~]
+
+# Line under the Together section's conversation and in the field for saying something. States who can read the chat.
+tui-room-chat-privacy = [Ṁéššàĝéš àŕé šéàļéð éñð ţö éñð. Ŕéļàýš þàšš ţĥéɱ àļöñĝ àñð çàñ'ţ ŕéàð ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~]
+
+# The conversation's only line while Hide chat is on, and a toast when the field is asked for then.
+tui-room-chat-hidden = [Çĥàţ îš ĥîððéñ~~~~~]
+
+# Toast when a message was sent too soon after the last ones.
+tui-room-chat-wait = [Ŵàîţ { $seconds } š ţö šéñð àĝàîñ.~~~~~~~~]
+
+# A muted person's line in the conversation, in place of what they said.
+tui-room-muted-line = [{ $name } îš ɱüţéð~~~~]
+
+# Line in the Together section when this terminal isn't in a room. The key is the one that starts a room, as the key map draws it.
+tui-room-start-line = [Éàçĥ öƒ ýöü þļàýš ţĥé éþîšöðé ƒŕöɱ ýöüŕ öŵñ šöüŕçéš; ţĥé ŕööɱ ķééþš ýöü îñ šţéþ. Þŕéšš { $key } öñ àñ éþîšöðé ţö šţàŕţ à ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line in place of the recent rooms when none are kept yet.
+tui-room-recent-empty = [Ţĥé ļàšţ ţéñ ŕööɱš ýöü'ŕé îñ šĥöŵ ĥéŕé.~~~~~~~~~~~~]
+
+# The room's connection, under its title: the room's messages are sealed end to end, and how many of its relays answer.
+tui-room-relays-line = [Éñð ţö éñð · { $count } öƒ { $total } ŕéļàýš àñšŵéŕîñĝ~~~~~~~~~~~~]
 
 # Title of the about page.
 about-title = [Åƀöüţ~~]
@@ -12592,6 +12598,18 @@ room-banner-episode-plain = [Éþîšöðé { $episode } · { $length }~~~~~~]
 
 # Menu item dimmed in a room, with this reason under it.
 room-mark-unavailable = [Ṁàŕķ šķîþ ţîɱéš àƒţéŕ ýöü ļéàṽé ţĥé ŕööɱ.~~~~~~~~~~~~~]
+
+# Heading of the people list in the room, and its accessibility label.
+room-people = [Þéöþļé îñ ţĥé ŕööɱ~~~~~~]
+
+# State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+room-state-seeking = [Šééķîñĝ · { $seconds } š~~~~~]
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+room-error-unreachable-lead = [Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš.~~~~~~~~~~~]
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+room-error-nobody-answered-lead = [Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ.~~~~~~~~~]
 
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]

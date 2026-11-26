@@ -265,7 +265,14 @@ async fn run(
             break;
         }
     }
-    // Dropping the slots stops their connections.
+    // The room is closing: what waits under the cap (a Leave, usually) goes now, then dropping
+    // the slots stops their connections after it.
+    let now = pool.local();
+    for slot in &mut pool.slots {
+        while let Some(event) = slot.queue.pop_front() {
+            slot.put(event, now);
+        }
+    }
     pool.slots.clear();
 }
 

@@ -1178,6 +1178,28 @@ const MIGRATIONS: &[(&str, &str)] = &[
      WHERE instr(cover, '&apiKey=') > 0;
     "#,
     ),
+    (
+        "0041_room_recent",
+        r#"
+    -- The watch party's rooms were on Syncplay servers, which the room no longer reaches: they go.
+    DROP TABLE party_room;
+    -- The last ten rooms this profile was in, to go back to one. `secret` and `identity` are
+    -- membership tokens; `relays` and `names` are one per line.
+    CREATE TABLE room_recent (
+        room_id    TEXT    PRIMARY KEY,
+        secret     TEXT    NOT NULL,
+        relays     TEXT    NOT NULL DEFAULT '',
+        identity   TEXT    NOT NULL,
+        name       TEXT    NOT NULL,
+        anilist_id INTEGER NOT NULL,
+        title      TEXT    NOT NULL,
+        episode    TEXT    NOT NULL,
+        names      TEXT    NOT NULL DEFAULT '',
+        cover_url  TEXT,
+        last_at    INTEGER NOT NULL
+    );
+    "#,
+    ),
 ];
 
 /// How long a statement waits for a lock another connection or process holds before it fails.
@@ -1332,7 +1354,7 @@ mod tests {
             "skip_marks",
             "skip_votes",
             "aniskip_outbox",
-            "party_room",
+            "room_recent",
             "read_event",
             "read_adopt",
             "read_reset",
@@ -1438,7 +1460,7 @@ mod tests {
         );
     }
 
-    /// A database at 0038, the last one 0.5.2 ran, takes both later migrations in order.
+    /// A database at 0038, the last one 0.5.2 ran, takes the later migrations in order.
     #[test]
     fn a_database_from_0_5_2_takes_the_read_dates_and_the_cover_change() {
         let conn = Connection::open_in_memory().unwrap();
@@ -1454,7 +1476,7 @@ mod tests {
             [],
         )
         .unwrap();
-        assert_eq!(migrate(&conn).unwrap(), 2);
+        assert_eq!(migrate(&conn).unwrap(), 3);
         let (status_at, score_at): (i64, i64) = conn
             .query_row("SELECT status_at, score_at FROM read_status", [], |r| {
                 Ok((r.get(0)?, r.get(1)?))
@@ -1464,6 +1486,32 @@ mod tests {
         let cover: String =
             conn.query_row("SELECT cover FROM book_work", [], |r| r.get(0)).unwrap();
         assert_eq!(cover, "https://kavita.home.example/c?id=1");
+    }
+
+    /// A database at main's latest migration, with a watch party room kept: the room goes, and
+    /// recent rooms start empty.
+    #[test]
+    fn the_watch_partys_rooms_go_and_recent_rooms_start_empty() {
+        let conn = Connection::open_in_memory().unwrap();
+        migrate_until(&conn, Some("0041_room_recent")).unwrap();
+        conn.execute(
+            "INSERT INTO party_room (server, room, anilist_id, title, episode, last_at)
+             VALUES ('party.example:8999', 'kite-aaaa-0001', 1, 'Lantern Ledger', '2', 10)",
+            [],
+        )
+        .unwrap();
+        assert_eq!(migrate(&conn).unwrap(), 1);
+        let party: i64 = conn
+            .query_row(
+                "SELECT count(*) FROM sqlite_master WHERE name = 'party_room'",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(party, 0);
+        let kept: i64 =
+            conn.query_row("SELECT count(*) FROM room_recent", [], |r| r.get(0)).unwrap();
+        assert_eq!(kept, 0);
     }
 
     #[test]

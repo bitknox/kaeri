@@ -43,9 +43,9 @@ struct CouldNotPlayTests {
             rig.model.inRoom = inRoom
             staged(rig)
             let why = Msg.noticeNotAired(episode: 7, when: .airsInDays(days: 6, time: "18:00"))
-            rig.model.apply(.partyNoSource(id: 900_001, episode: "7", why: .notAired, reason: why))
-            rig.model.apply(.playbackEnded(watched: false, ending: .failed, rollingOn: false))
+            // The engine's order: the room's no source, then the play's failed end.
             rig.model.apply(.roomNoSource(id: 900_001, episode: "7", why: .notAired, reason: why))
+            rig.model.apply(.playbackEnded(watched: false, ending: .failed, rollingOn: false))
             #expect(rig.model.isPresented, "the player stays under the room's panel (in room: \(inRoom))")
             #expect(rig.model.failure == nil, "the room says why, once")
         }

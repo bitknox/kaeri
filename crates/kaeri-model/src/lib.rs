@@ -69,7 +69,6 @@ pub mod msg_text;
 pub mod notice;
 pub mod notifications;
 pub mod opened;
-pub mod party;
 pub mod playback;
 pub mod present;
 pub mod private;

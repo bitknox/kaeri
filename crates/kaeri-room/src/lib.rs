@@ -10,6 +10,7 @@
 //! See `docs/room-protocol.md`.
 
 pub mod clock;
+pub mod drift;
 pub mod envelope;
 #[cfg(any(test, feature = "testing"))]
 pub mod fake;

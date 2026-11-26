@@ -3208,9 +3208,6 @@ keys-action-toggle-demo = Rimuovi o aggiungi la demo
 keys-action-download-range = Scarica un intervallo di episodi
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Riproduci in un watch party
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Cambia stato visto
 
 # Action label in the help overlay and the command palette.
@@ -3610,24 +3607,18 @@ nav-rail-collapsed = Ridotta
 nav-rail-hidden = Nascosta
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Pronto
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Copia link
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Esci
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Scrivi
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Silenzia
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Riattiva
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Nascondi chat
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4372,9 +4363,6 @@ settings-value-player-ui-mpv = La tua configurazione di mpv
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Insieme alla cache dei torrent
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Non impostata (serve per watch party)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Fino al rapporto { $ratio }
 
@@ -4476,15 +4464,6 @@ settings-label-keep-seeding = Continua a condividere
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = Comando dopo ogni download
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay watch party
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Server Syncplay
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Stanza Syncplay
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Controlla aggiornamenti
@@ -4593,15 +4572,6 @@ settings-note-keep-seeding = Disattivato per impostazione predefinita per rispar
 
 # Note under the after each download row.
 settings-note-download-hook = Premi Invio per digitare un comando. Viene eseguito dopo ogni download completato.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Premi { $key } per riprodurre un solo episodio nella stanza impostata qui sotto. Se attiva, ogni riproduzione finisce lì.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Premi Invio per digitare host:port. Non c'è nessun server finché non ne scegli uno.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Premi Invio per digitare la stanza di un amico. Lasciala vuota per crearne una che nessuno possa indovinare.
 
 # Note under the check for updates row.
 settings-note-update-check = Una richiesta in cache al giorno, fatta all'avvio.
@@ -5714,12 +5684,6 @@ hint-open-stores = Vai su Fonti e premi Invio per aprire i negozi di plugin.
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Premi Invio sulla sua riga per inserire le credenziali.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Ti sei unito al watch party nella stanza { $room } su { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Sei ancora nel watch party.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Ricarico le fonti…
 
@@ -5728,15 +5692,6 @@ pin-unavailable = { $name } è fissata per questo titolo ma non è disponibile. 
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Insieme
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = link o codice
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Messaggi e reazioni restano fuori dal player in ogni party.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Non è un link o un codice di una watch party.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episodio { $episode } · { $when }

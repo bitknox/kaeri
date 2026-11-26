@@ -1,16 +1,16 @@
 Kaeri                                                                  plugins ●
 ────────────────────────────────────────────────────────────────────────────────
- ▸ │  Watch together
+ ▸ │  Together
  ▤ │  ────────────────────────────────────────────────────────────────────────
- ▦ │  Open a room and invite friends with a link or a code, then press Play on
- / │  what you want to watch.
+ ▦ │  Each of you plays the episode from your own sources; the room keeps you
+ / │  in step. Press y on an episode to start a room.
  ▥ │
- ↓ │    Join a party  [link or code]
+ ↓ │    Join a room  [invite link]
  ◇ │
  ◎ │  Recent rooms
  ≡ │  ────────────────────────────────────────────────────────────────────────
 ▌⇄ │  ▌ Natsukaze Relay
-   │    Episode 8 · with Mika, Ren · Today
+   │    Episode 8 · with Mika and Ren · Today
    │    Lantern Harbour
    │    Episode 3 · with Mika · Saturday
    │    Glass Orchard
@@ -21,7 +21,7 @@ Kaeri                                                                  plugins �
    │
    │
 ────────────────────────────────────────────────────────────────────────────────
-plugins · Subbed · 1080p                                         ↵ open   ? keys
+plugins · Subbed · 1080p                            x forget   ↵ rejoin   ? keys
 === styles ===
 colours text=#e4e0d6 text-dim=#a8aec9 rule=#46464d obi=#f2a64b state=#7fc7d9 alert=#f59b85 ground=#1a1b26
 r00 c00-04 fg=text mod=BOLD
@@ -29,22 +29,22 @@ r00 c71-79 fg=state
 r01 c00-79 fg=rule
 r02 c01-01 fg=text-dim
 r02 c03-03 fg=rule
-r02 c06-19 fg=text-dim
+r02 c06-13 fg=text-dim
 r03 c01-01 fg=text-dim
 r03 c03-03 fg=rule
 r03 c06-77 fg=rule
 r04 c01-01 fg=text-dim
 r04 c03-03 fg=rule
-r04 c06-77 fg=text-dim
+r04 c06-76 fg=text-dim
 r05 c01-01 fg=text-dim
 r05 c03-03 fg=rule
-r05 c06-28 fg=text-dim
+r05 c06-52 fg=text-dim
 r06 c01-01 fg=text-dim
 r06 c03-03 fg=rule
 r07 c01-01 fg=text-dim
 r07 c03-03 fg=rule
-r07 c08-19 fg=text
-r07 c22-35 fg=text-dim
+r07 c08-18 fg=text
+r07 c21-33 fg=text-dim
 r08 c01-01 fg=text-dim
 r08 c03-03 fg=rule
 r09 c01-01 fg=text-dim
@@ -59,7 +59,7 @@ r11 c03-03 fg=rule
 r11 c06-06 fg=obi
 r11 c08-22 fg=text mod=BOLD
 r12 c03-03 fg=rule
-r12 c08-41 fg=text-dim
+r12 c08-44 fg=text-dim
 r13 c03-03 fg=rule
 r13 c08-22 fg=text
 r14 c03-03 fg=rule
@@ -75,7 +75,9 @@ r20 c03-03 fg=rule
 r21 c03-03 fg=rule
 r22 c00-79 fg=rule
 r23 c00-23 fg=text-dim
-r23 c65-65 fg=text
-r23 c66-73 fg=text-dim
+r23 c52-52 fg=text
+r23 c53-62 fg=text-dim
+r23 c63-63 fg=text
+r23 c64-73 fg=text-dim
 r23 c74-74 fg=text
 r23 c75-79 fg=text-dim

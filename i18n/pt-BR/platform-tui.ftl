@@ -1,14 +1,11 @@
 hint-stop-playback = Pressione { $key } para parar a reprodução.
 hint-open-stores = Vá para { -source-cap-pl } e pressione Enter para abrir as { -plugin-store-pl }.
 hint-kitsu-credentials = Pressione Enter na linha dele para digitar suas credenciais.
-party-joined = Entrou na { -watch-party } da sala { $room } em { $server }.
-party-no-source-still-in = { $reason } Você continua na { -watch-party }.
 status-reloading-sources = Recarregando { -source-pl }…
 pin-unavailable = { $name } está fixada para este título, mas não está disponível. Tentando as outras { -source-pl }.
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = link ou código
 tui-together-chat-hidden-line = As mensagens e reações ficam fora do player em todas as sessões.
-tui-together-not-a-link = Isso não é um link ou código de sessão.
 tui-together-recent-alone = Episódio { $episode } · { $when }
 tui-medium-read-change = Pressione { $key } para mudar para que o { -app-name } serve.
 tui-medium-settings-hint = { $key } para mudar

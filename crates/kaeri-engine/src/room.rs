@@ -14,13 +14,13 @@ use kaeri_model::{
         CARRY_ON_AFTER_MS, DEFAULT_RELAYS, MoveCandidate, OldInvite, PausedFor, Reaction,
         RelayHealth, RoomCarriedOn, RoomCommand, RoomConnection, RoomEpisode, RoomEpisodeInfo,
         RoomGlimpse, RoomLeftWhy, RoomMember, RoomMessage, RoomMessageKind, RoomMoveOffer,
-        RoomMoved, RoomRelaySettings, RoomShare, RoomStartKind, RoomUpNext, RoomView,
-        SPARE_RELAYS, WaitReason, base64url, unbase64url,
+        RoomMoved, RoomRecent, RoomRelaySettings, RoomShare, RoomStartKind, RoomUpNext,
+        RoomView, SPARE_RELAYS, WaitReason, base64url, unbase64url,
     },
 };
 use kaeri_room::{
     Happening, Reason, Room, Word,
-    keys::{Identity, pk8},
+    keys::{Identity, RoomKeys, pk8},
     link::{self, Heard, Link, Out},
     wire::{self, Body, Cause, Ep, Message, Mid, MovePayload, MoveTo, StateCode, Status, Up},
 };
@@ -39,6 +39,13 @@ const SYNC_WAIT: Duration = Duration::from_secs(3);
 /// The heartbeat, and the faster one while this device is waited for.
 const HEARTBEAT_MS: i64 = 15_000;
 const HEARTBEAT_WAITED_MS: i64 = 5_000;
+/// A pause taken as the viewer's this soon before the app goes to the background was the
+/// system's, and is withdrawn.
+const SYSTEM_PAUSE_MS: i64 = 300;
+/// A stall this long reads Buffering, and may hold the room.
+const STALL_GRACE_MS: i64 = 1_500;
+/// A member who stalled twice in this long doesn't hold the room again.
+const STALL_REPEAT_MS: i64 = 600_000;
 /// A Move offer lasts this long.
 const OFFER_LIFE_MS: i64 = 600_000;
 /// The app's version as a Hello says it.
@@ -51,6 +58,10 @@ enum Control {
     NoSource,
     /// This device's own Up next point came: its player asked for the room's next episode.
     UpNextPoint,
+    /// The app went to the background or came back.
+    Phase(kaeri_model::command::AppState),
+    /// The network path changed: open the sockets again.
+    Network,
 }
 
 /// The room's episode and the one after it, as the task last saw them.
@@ -93,23 +104,56 @@ pub fn command(
         RoomCommand::Lobby { invite, name, pick, anyway } => {
             join(invite.as_deref(), name, pick, anyway, engine, services, tx);
         }
-        RoomCommand::PeekInvite { invite } => peek(&invite, services, tx),
-        RoomCommand::Rejoin { room_id } | RoomCommand::LookIn { room_id } => {
-            // Recent rooms come with the store's table.
-            let _ = tx.send(Event::RoomLookFailed {
-                room_id,
-                reason: Msg::verbatim("Recent rooms aren't kept yet."),
-            });
-        }
+        RoomCommand::PeekInvite { invite } => match target(&invite) {
+            Ok(target) => peek(target, None, services, tx),
+            Err(why) => {
+                let _ = tx.send(Event::RoomLeft { why });
+            }
+        },
+        RoomCommand::Rejoin { room_id } => match recent(&room_id, services) {
+            Some((target, name)) => {
+                begin(target, Start::Join { anyway: false }, Some(name), engine, services, tx);
+            }
+            None => gone(room_id, tx),
+        },
+        RoomCommand::LookIn { room_id } => match recent(&room_id, services) {
+            Some((target, _)) => peek(target, Some(room_id), services, tx),
+            None => gone(room_id, tx),
+        },
         RoomCommand::LoadRecent => {
-            let _ = tx.send(Event::RoomRecent(Vec::new()));
+            let rooms = services.store.recent_rooms().unwrap_or_default();
+            let rooms = rooms
+                .into_iter()
+                .map(|r| RoomRecent {
+                    room_id: r.room_id,
+                    id: r.anilist_id,
+                    title: r.title,
+                    episode: r.episode,
+                    names: r.names,
+                    last_at: r.last_at,
+                    cover_url: r.cover_url,
+                })
+                .collect();
+            let _ = tx.send(Event::RoomRecent(rooms));
         }
-        RoomCommand::ForgetRoom { .. } => {}
+        RoomCommand::ForgetRoom { room_id } => {
+            if let Err(e) = services.store.forget_room(&room_id) {
+                tracing::warn!(error = %e, "room: couldn't forget a recent room");
+            }
+        }
         RoomCommand::LoadRelays => relays(engine, tx),
         RoomCommand::SetRelays { relays: list } => {
-            engine.room_relays =
-                list.into_iter().filter(|r| kaeri_model::room::valid_relay(r)).collect();
+            let list = list.into_iter().filter(|r| kaeri_model::room::valid_relay(r)).collect();
+            crate::settings::save_room_relays(list, engine, services, tx);
             relays(engine, tx);
+        }
+        RoomCommand::HideChat { hidden } => {
+            // Kept for every room on this device, and told to the one going.
+            crate::settings::save_hide_chat(hidden, engine, services, tx);
+            if let Some(running) = going(engine) {
+                let _ =
+                    running.control.send(Control::Command(RoomCommand::HideChat { hidden }));
+            }
         }
         RoomCommand::Leave => {
             if let Some(running) = going(engine) {
@@ -129,7 +173,7 @@ fn relays(engine: &EngineState, tx: &Outbox) {
     let _ = tx.send(Event::RoomRelays(RoomRelaySettings {
         defaults: DEFAULT_RELAYS.iter().map(|r| (*r).to_owned()).collect(),
         spares: SPARE_RELAYS.iter().map(|r| (*r).to_owned()).collect(),
-        chosen: engine.room_relays.clone(),
+        chosen: engine.config.effective().room.relays.clone(),
     }));
 }
 
@@ -162,6 +206,20 @@ pub fn play_in_room(id: AnilistId, episode: &str, engine: &EngineState) -> bool 
         Control::Command(RoomCommand::ChangeEpisode { id, episode: episode.to_owned() })
     };
     running.control.send(control).is_ok()
+}
+
+/// The app went to the background or came back: the room says so in this device's status.
+pub fn app_phase(phase: kaeri_model::command::AppState, engine: &EngineState) {
+    if let Some(running) = going(engine) {
+        let _ = running.control.send(Control::Phase(phase));
+    }
+}
+
+/// The network path changed: the room's sockets open again at once.
+pub fn network_changed(engine: &EngineState) {
+    if let Some(running) = going(engine) {
+        let _ = running.control.send(Control::Network);
+    }
 }
 
 /// A room is going on this device.
@@ -222,6 +280,26 @@ enum Start {
     Moved { ep: Ep, pos: f64, playing: bool },
 }
 
+/// A recent room's way back in: its target and the name used there.
+fn recent(room_id: &str, services: &Services) -> Option<(Target, String)> {
+    let room = services.store.recent_room(room_id).ok()??;
+    let secret =
+        unbase64url(&room.secret).and_then(|s| <[u8; 16]>::try_from(s.as_slice()).ok())?;
+    let relays = if room.relays.is_empty() {
+        link::relays_for_new_room(&[], &DEFAULT_RELAYS)
+    } else {
+        room.relays
+    };
+    Some((Target { secret, relays, by: None, title: Some(room.title) }, room.name))
+}
+
+fn gone(room_id: String, tx: &Outbox) {
+    let _ = tx.send(Event::RoomLookFailed {
+        room_id,
+        reason: Msg::verbatim("That room isn't kept any more."),
+    });
+}
+
 fn join(
     invite: Option<&str>,
     name: Option<String>,
@@ -248,27 +326,41 @@ fn join(
                 });
                 return;
             };
-            let relays = link::relays_for_new_room(&engine.room_relays, &DEFAULT_RELAYS);
+            let relays = link::relays_for_new_room(
+                &engine.config.effective().room.relays,
+                &DEFAULT_RELAYS,
+            );
             (
                 Target { secret: random_secret(), relays, by: None, title: None },
                 Start::New(pick),
             )
         }
     };
-    #[cfg(feature = "party")]
-    crate::party::leave(engine, tx);
+    begin(target, start, name, engine, services, tx);
+}
+
+/// Start the room's task for `target`, leaving any room before it.
+fn begin(
+    target: Target,
+    start: Start,
+    name: Option<String>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
     leave(engine);
     let name = name
         .map(|n| n.trim().to_owned())
         .filter(|n| !n.is_empty())
-        .unwrap_or_else(|| engine.config.effective().syncplay.name.clone());
+        .unwrap_or_else(|| engine.config.effective().room.name.clone());
     let name = if name.trim().is_empty() { "kaeri".to_owned() } else { name };
     let (control, controls) = mpsc::unbounded_channel();
     let seats = services.party.open();
     let env = Env {
         meta: services.meta.clone(),
+        store: services.store.clone(),
         tx: tx.clone(),
-        hidden: engine.config.effective().syncplay.hide_chat,
+        hidden: engine.config.effective().room.hide_chat,
     };
     let episodes = Episodes::default();
     tokio::spawn(run(target, start, name, env, controls, seats, episodes.clone()));
@@ -278,19 +370,13 @@ fn join(
 #[derive(Clone)]
 struct Env {
     meta: Meta,
+    store: kaeri_store::Store,
     tx: Outbox,
     hidden: bool,
 }
 
-/// Look into an invite's room without anyone seeing.
-fn peek(invite: &str, services: &Services, tx: &Outbox) {
-    let target = match target(invite) {
-        Ok(target) => target,
-        Err(why) => {
-            let _ = tx.send(Event::RoomLeft { why });
-            return;
-        }
-    };
+/// Look into a room without anyone seeing: an invite's, or a recent room's (`room_id`).
+fn peek(target: Target, room_id: Option<String>, services: &Services, tx: &Outbox) {
     let tx = tx.clone();
     let meta = services.meta.clone();
     tokio::spawn(async move {
@@ -340,7 +426,7 @@ fn peek(invite: &str, services: &Services, tx: &Outbox) {
             None => None,
         };
         let _ = tx.send(Event::RoomGlimpse(RoomGlimpse {
-            room_id: None,
+            room_id,
             by: target.by.clone(),
             full: members.len() as u32 >= kaeri_model::room::ROOM_CAP,
             members,
@@ -473,6 +559,18 @@ struct Task {
     last_sent: i64,
     /// What the player was last told, paused or not, and whether its samples caught up.
     pause: PlayerPause,
+    /// This player kept with the room's position.
+    drift: kaeri_room::drift::Drift,
+    /// Since when this player has been held waiting for data mid-episode.
+    stall_since: Option<i64>,
+    /// When this device wrote a stall wait: not again for a member who stalled twice in 10
+    /// minutes.
+    stall_writes: Vec<i64>,
+    /// When the player's last pause was taken as the viewer's: one just before going to the
+    /// background was the system's.
+    last_pause_at: Option<i64>,
+    /// The status before going to the background, to come back to.
+    before_bg: Option<Status>,
     /// The last wait said in the chat.
     said_wait: u64,
     told_view: Option<RoomView>,
@@ -482,6 +580,8 @@ struct Task {
     joined: bool,
     /// The room's episode and the next, for the engine's plays.
     episodes: Episodes,
+    /// What recent rooms last kept of this room: its id, episode, title and who was there.
+    remembered: Option<(String, Ep, String, Vec<String>)>,
 }
 
 impl Task {
@@ -555,8 +655,11 @@ impl Task {
         let now = self.now();
         let old = self.room.playhead().cloned();
         if let Some(head) = self.room.write(now, now, change, ep) {
-            // Ready for a wait this device started, when its player has the episode open.
-            if head.wseq == head.seq && self.status.s == StateCode::Watching {
+            // Ready for a seek's wait the viewer made here: the player is already there.
+            if head.wseq == head.seq
+                && head.cause == Cause::Seek
+                && self.status.s == StateCode::Watching
+            {
                 self.status.rdy = Some(head.wseq);
                 self.room.set_status(self.status.clone(), now);
             }
@@ -606,15 +709,17 @@ impl Task {
             self.message(kind);
         }
         let new_episode = old.as_ref().is_none_or(|o| o.ep != new.ep);
-        // A seek's wait: a player already on the episode is ready once it has moved there.
-        // (The player's own Ready for the cue comes with the transport's seat changes.)
         let new_wait = old.as_ref().is_none_or(|o| o.wseq != new.wseq);
-        if new_wait
+        let seek_wait = new_wait
             && !new_episode
-            && self.status.s == StateCode::Watching
+            && matches!(new.cause, Cause::Seek | Cause::SkipOpening)
+            && !(new.by == self.me && new.cause == Cause::Seek);
+        if seek_wait
+            && self.status.s.player_open()
             && self.status.ep.as_ref() == Some(&new.ep)
-            && self.status.rdy != Some(new.wseq)
+            && self.cues.is_none()
         {
+            // No player seated here: nothing to wait for.
             let wseq = new.wseq;
             self.set_status(|s| s.rdy = Some(wseq));
         }
@@ -638,8 +743,15 @@ impl Task {
                     at: None,
                 });
             }
-        } else if matches!(new.cause, Cause::Seek | Cause::SkipOpening | Cause::CarryOn) {
-            self.cue(SeatCue::Seek(new.pos));
+        } else if seek_wait {
+            // The player moves there and answers Ready at its first frame.
+            let now = self.now();
+            self.drift.cued_seek(new.pos, now);
+            self.cue(SeatCue::Seek { to: new.pos, cue: Some(new.wseq) });
+        } else if new.cause == Cause::CarryOn {
+            let now = self.now();
+            self.drift.cued_seek(new.pos, now);
+            self.cue(SeatCue::Seek { to: new.pos, cue: None });
         }
         self.cue_play();
     }
@@ -750,7 +862,7 @@ impl Task {
             episode: head.map(|h| h.ep.1.clone()),
         };
         RoomView {
-            room_id: base64url(&self.target.secret[..8]),
+            room_id: RoomKeys::new(self.target.secret).room_id_hex(),
             name: self.name.clone(),
             connection: self.connection,
             episode: self.status.ep.as_ref().map(episode_of),
@@ -819,7 +931,71 @@ impl Task {
     }
 
     /// Tell the front end what changed.
+    /// Keep this room in recent rooms, with its episode and who is there, as they change.
+    fn remember(&mut self) {
+        if !self.joined {
+            return;
+        }
+        let Some(head) = self.room.playhead() else { return };
+        let ep = head.ep.clone();
+        let info = self.infos.get(&ep);
+        let title = info.map(|i| i.title.clone()).unwrap_or_default();
+        if title.is_empty() {
+            return;
+        }
+        let keys = RoomKeys::new(self.target.secret);
+        let room_id = keys.room_id_hex();
+        let mut names: Vec<String> = self
+            .room
+            .members()
+            .into_iter()
+            .filter(|m| m.mid != self.me && m.left_at.is_none())
+            .map(|m| m.name.clone())
+            .collect();
+        names.sort();
+        // Who was there stays once they've gone: names only grow while in the room.
+        if let Some((id, _, _, before)) = &self.remembered
+            && *id == room_id
+        {
+            for name in before {
+                if !names.contains(name) {
+                    names.push(name.clone());
+                }
+            }
+            names.sort();
+        }
+        let key = (room_id.clone(), ep.clone(), title.clone(), names.clone());
+        if self.remembered.as_ref() == Some(&key) {
+            return;
+        }
+        let relays = if self.target.relays.iter().map(String::as_str).eq(DEFAULT_RELAYS) {
+            Vec::new()
+        } else {
+            self.target.relays.clone()
+        };
+        let row = kaeri_store::RecentRoom {
+            room_id,
+            secret: base64url(&self.target.secret),
+            relays,
+            identity: self.identity.secret_hex(),
+            name: self.name.clone(),
+            anilist_id: AnilistId::new(ep.0),
+            title,
+            episode: ep.1.clone(),
+            names,
+            cover_url: info.and_then(|i| i.cover_url.clone()),
+            last_at: self.now() / 1000,
+        };
+        match self.env.store.remember_room(&row) {
+            Ok(()) => self.remembered = Some(key),
+            Err(e) => {
+                tracing::warn!(error = %e, "room: couldn't keep the room in recent rooms")
+            }
+        }
+    }
+
     fn refresh(&mut self) {
+        self.remember();
         let now = self.room.playhead().map(|h| (h.ep.clone(), h.next.clone()));
         *self.episodes.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = now;
         let view = self.view();
@@ -855,6 +1031,8 @@ impl Task {
         self.room.settle(now);
         if self.joined {
             self.up_next(now);
+            self.stall(now);
+            self.relays_check(now);
         }
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
@@ -906,6 +1084,13 @@ impl Task {
                 let _ = mover;
             }
             Heard::Up { relays_up } => {
+                // Back on a relay after none: say where this device is and ask the room again.
+                // Nothing relies on relays keeping events.
+                let was_down = matches!(self.connection, RoomConnection::Reconnecting { .. });
+                if was_down && relays_up > 0 && self.joined {
+                    self.send(Message::Status);
+                    self.send(Message::SyncReq { nonce: random_hex(8), peek: false });
+                }
                 self.connection = if relays_up == 0 {
                     RoomConnection::Reconnecting { relays_up: 0 }
                 } else if self.joined {
@@ -915,6 +1100,16 @@ impl Task {
                 };
             }
             Heard::Relays(list) => {
+                // A bit per room relay that works here, and the round trip, in every status.
+                let ok = list
+                    .iter()
+                    .take(8)
+                    .enumerate()
+                    .filter(|(_, r)| r.healthy)
+                    .fold(0u8, |bits, (i, _)| bits | (1 << i));
+                let rtt = list.iter().filter_map(|r| r.rtt_ms).min().unwrap_or(0);
+                self.status.ok = ok;
+                self.status.rtt = rtt.min(u32::from(u16::MAX)) as u16;
                 self.relays = list
                     .into_iter()
                     .map(|r| RelayHealth { url: r.url, healthy: r.healthy, rtt_ms: r.rtt_ms })
@@ -1094,16 +1289,58 @@ impl Task {
                     s.dw = false;
                 });
                 self.pause.forget();
+                self.drift.reset();
+                self.stall_since = None;
                 self.cue_play();
                 if on_room
                     && self.room.playing()
                     && let Some(pos) = self.room.position(self.now())
                 {
-                    self.cue(SeatCue::Seek(pos));
+                    let now = self.now();
+                    self.drift.cued_seek(pos, now);
+                    self.cue(SeatCue::Seek { to: pos, cue: None });
                 }
             }
-            SeatReport::Sample { position, paused, .. } => {
+            SeatReport::Ready { cue } => {
+                let head = self.room.playhead().cloned();
+                if let (Some(cue), Some(head)) = (cue, head)
+                    && cue == head.wseq
+                    && self.status.ep.as_ref() == Some(&head.ep)
+                {
+                    self.set_status(|s| s.rdy = Some(cue));
+                }
+            }
+            SeatReport::Stalled(true) => {
+                if self.stall_since.is_none() && self.status.s.player_open() {
+                    self.stall_since = Some(self.now());
+                }
+            }
+            SeatReport::Stalled(false) => {
+                self.stall_since = None;
+                if self.status.s == StateCode::Buffering {
+                    // Playing again where it stalled: ready for the room's wait.
+                    let wseq = self.room.playhead().map(|h| h.wseq);
+                    self.set_status(|s| {
+                        s.s = StateCode::Watching;
+                        s.rdy = wseq;
+                    });
+                }
+            }
+            SeatReport::Sample { position, paused, speed } => {
                 self.status.pos = Some(position);
+                // Away, a pause is the system's (a call, the lock screen): never the room's.
+                if self.status.bg {
+                    return;
+                }
+                if self.status.rejoin
+                    && self
+                        .room
+                        .position(self.now())
+                        .is_some_and(|p| (p - position).abs() <= 1.0)
+                {
+                    self.set_status(|s| s.rejoin = false);
+                }
+                self.follow(position, paused, speed);
                 // The viewer pressed play or pause on the player; a sample from before the
                 // player took the room's last cue is not a press.
                 match self.pause.sample(paused, self.now()) {
@@ -1111,13 +1348,16 @@ impl Task {
                     // The player never showed what it was told (its own file start unpaused it):
                     // tell it again, never take it as the viewer's.
                     Sampled::Again(paused) => self.cue(SeatCue::Pause(paused)),
-                    Sampled::Pressed(true) => self.write(
-                        |h| {
-                            h.play = false;
-                            h.cause = Cause::Pause;
-                        },
-                        None,
-                    ),
+                    Sampled::Pressed(true) => {
+                        self.last_pause_at = Some(self.now());
+                        self.write(
+                            |h| {
+                                h.play = false;
+                                h.cause = Cause::Pause;
+                            },
+                            None,
+                        );
+                    }
                     Sampled::Pressed(false) => self.play(),
                 }
             }
@@ -1129,6 +1369,136 @@ impl Task {
                 }
                 self.cues = None;
             }
+        }
+    }
+
+    /// Swap or add a relay when the health reports call for it (see `Room::relay_change`).
+    fn relays_check(&mut self, now: i64) {
+        let spares: Vec<String> = SPARE_RELAYS.iter().map(|r| (*r).to_owned()).collect();
+        let Some(list) = self.room.relay_change(now, &spares) else { return };
+        let seq = self.room.relays_seq() + 1;
+        tracing::info!(relays = list.len(), "room: the room's relays change");
+        self.room.set_relays(list.clone(), seq);
+        self.target.relays = list.clone();
+        self.send(Message::Relays { seq, list: list.clone() });
+        let _ = self.link.out.send(Out::Relays(list));
+    }
+
+    /// The app's phase. In the background without playing, this device reads Player closed and
+    /// says so once (the app's background task waits for [`Event::RoomFlushed`]); playing on in
+    /// the background (PiP, AirPlay, audio) its status stays real. Either way heartbeats slow to
+    /// 30 s. Back in the foreground: fresh sockets, the room asked again, and the player comes
+    /// back in at the room's place without being waited for.
+    fn phase(&mut self, phase: kaeri_model::command::AppState) {
+        use kaeri_model::command::AppState;
+        let now = self.now();
+        match phase {
+            AppState::Background { playing } => {
+                if self.status.bg {
+                    return;
+                }
+                // A pause the app made for going away just before this never reaches the room.
+                if self.last_pause_at.is_some_and(|at| now - at <= SYSTEM_PAUSE_MS) {
+                    self.last_pause_at = None;
+                    self.write(
+                        |h| {
+                            h.play = true;
+                            h.cause = Cause::Play;
+                        },
+                        None,
+                    );
+                }
+                self.before_bg = Some(self.status.clone());
+                self.status.bg = true;
+                self.status.hb = 30;
+                if !playing {
+                    self.status.s = StateCode::PlayerClosed;
+                    self.status_at = now;
+                }
+                self.room.set_status(self.status.clone(), now);
+                if self.joined {
+                    let body = self.body(Message::Status);
+                    let _ = self.link.out.send(Out::Flush(body));
+                } else {
+                    self.say(Event::RoomFlushed);
+                }
+            }
+            AppState::Foreground | AppState::BackgroundDownloads => {
+                if !self.status.bg {
+                    return;
+                }
+                let before = self.before_bg.take().unwrap_or_else(|| self.status.clone());
+                self.status =
+                    Status { bg: false, hb: 15, rejoin: before.s.player_open(), ..before };
+                self.status_at = now;
+                self.room.set_status(self.status.clone(), now);
+                let _ = self.link.out.send(Out::Refresh);
+                if self.joined {
+                    self.send(Message::Status);
+                    self.send(Message::SyncReq { nonce: random_hex(8), peek: false });
+                }
+                self.pause.forget();
+                self.drift.reset();
+                self.cue_play();
+            }
+        }
+    }
+
+    /// Keep the player with the room: the viewer's own seek is the room's, the player is moved
+    /// or slowed to stay with it, and Behind is said as it comes and goes.
+    fn follow(&mut self, position: f64, paused: bool, speed: f64) {
+        let now = self.now();
+        let on_room = self.room.playhead().is_some_and(|h| {
+            self.status.ep.as_ref() == Some(&h.ep) && self.status.s.player_open()
+        });
+        if !on_room {
+            return;
+        }
+        let room = self.room.position(now).map(|p| (p, self.room.playing()));
+        for act in self.drift.sample(position, paused, speed, now, room) {
+            match act {
+                kaeri_room::drift::Act::ViewerSeek(to) => self.write(
+                    |h| {
+                        h.pos = to;
+                        h.cause = Cause::Seek;
+                    },
+                    None,
+                ),
+                kaeri_room::drift::Act::Seek(to) => self.cue(SeatCue::Seek { to, cue: None }),
+                kaeri_room::drift::Act::Speed(rate) => self.cue(SeatCue::Speed(rate)),
+                kaeri_room::drift::Act::Behind(behind) => {
+                    if matches!(self.status.s, StateCode::Watching | StateCode::Behind) {
+                        self.set_status(|s| {
+                            s.s = if behind { StateCode::Behind } else { StateCode::Watching };
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    /// A stall past 1.5 s reads Buffering, and in a room of 5 or fewer holds the room for this
+    /// player alone, unless this member stalled twice in the last 10 minutes.
+    fn stall(&mut self, now: i64) {
+        let Some(since) = self.stall_since else { return };
+        if now - since < STALL_GRACE_MS || self.status.s == StateCode::Buffering {
+            return;
+        }
+        self.set_status(|s| s.s = StateCode::Buffering);
+        self.status_at = since;
+        self.stall_writes.retain(|at| now - at < STALL_REPEAT_MS);
+        if self.room.playing() && self.room.stall_may_wait(now) && self.stall_writes.len() < 2 {
+            self.stall_writes.push(now);
+            let pos = self.status.pos;
+            self.write(
+                |h| {
+                    h.cause = Cause::Stall;
+                    if let Some(pos) = pos {
+                        h.pos = pos;
+                    }
+                },
+                None,
+            );
         }
     }
 
@@ -1258,6 +1628,14 @@ impl Task {
                         Some(next),
                     );
                 }
+            }
+            RoomCommand::ChangeEpisode { id, episode }
+                if self
+                    .room
+                    .playhead()
+                    .is_some_and(|h| h.ep == Ep(id.get(), episode.clone())) =>
+            {
+                return Box::pin(self.on_command(RoomCommand::OpenPlayer)).await;
             }
             RoomCommand::ChangeEpisode { id, episode } => {
                 let ep = Ep(id.get(), episode);
@@ -1465,6 +1843,7 @@ impl Task {
         self.link = link;
         self.target = target;
         self.room = Room::new(&self.me, &self.name, &self.session, now);
+        self.room.set_relays(self.target.relays.clone(), 0);
         self.room.set_status(self.status.clone(), now);
         self.chat = Chat::new(self.env.hidden);
         self.muted.clear();
@@ -1714,7 +2093,15 @@ async fn run(
         }
     };
     let now = now_ms();
-    let identity = Identity::new();
+    // The same identity key as the last time in this room: a rejoin is the same person.
+    let room_id = RoomKeys::new(target.secret).room_id_hex();
+    let identity = env
+        .store
+        .recent_room(&room_id)
+        .ok()
+        .flatten()
+        .and_then(|r| Identity::from_secret_hex(&r.identity))
+        .unwrap_or_default();
     let me = identity.mid();
     let session = link.session.pubkey();
     let hidden = env.hidden;
@@ -1739,6 +2126,11 @@ async fn run(
         connection: RoomConnection::Joining,
         last_sent: now,
         pause: PlayerPause::default(),
+        drift: kaeri_room::drift::Drift::default(),
+        stall_since: None,
+        stall_writes: Vec::new(),
+        last_pause_at: None,
+        before_bg: None,
         said_wait: 0,
         told_view: None,
         told_members: Vec::new(),
@@ -1746,7 +2138,9 @@ async fn run(
         moved: None,
         joined: false,
         episodes,
+        remembered: None,
     };
+    task.room.set_relays(task.target.relays.clone(), 0);
     // A playback going takes its seat first: starting from the player keeps it.
     let settle = tokio::time::sleep(Duration::from_millis(300));
     tokio::pin!(settle);
@@ -1792,6 +2186,13 @@ async fn run(
                         return;
                     }
                     task.refresh();
+                }
+                Some(Control::Phase(phase)) => {
+                    task.phase(phase);
+                    task.refresh();
+                }
+                Some(Control::Network) => {
+                    let _ = task.link.out.send(Out::Refresh);
                 }
                 Some(Control::UpNextPoint) => {
                     task.set_status(|s| s.ue = true);
@@ -1860,7 +2261,14 @@ struct PlayerPause {
     told: Option<bool>,
     /// The state told, until when its samples are waited for.
     expect: Option<(bool, i64)>,
+    /// When the player last showed the told state: reports it made before that can still
+    /// arrive just after.
+    confirmed_at: Option<i64>,
 }
+
+/// After the player shows the told state, a contrary sample this soon is an older report
+/// arriving late, not a press.
+const SETTLE_MS: i64 = 1_000;
 
 impl PlayerPause {
     /// The room wants `paused`: `true` when the player must be told.
@@ -1889,6 +2297,7 @@ impl PlayerPause {
         if let Some((want, until)) = self.expect {
             if paused == want {
                 self.expect = None;
+                self.confirmed_at = Some(now);
                 return Sampled::Same;
             }
             if now < until {
@@ -1900,6 +2309,9 @@ impl PlayerPause {
             return Sampled::Again(want);
         }
         if paused == told {
+            return Sampled::Same;
+        }
+        if self.confirmed_at.is_some_and(|at| now - at < SETTLE_MS) {
             return Sampled::Same;
         }
         self.told = Some(paused);
@@ -1977,6 +2389,20 @@ mod pause_tests {
     }
 
     #[test]
+    fn a_late_report_after_the_player_took_the_pause_is_not_a_press() {
+        // The room waits: pause. The player takes it late, after its file loaded, and an older
+        // position report saying it plays arrives just after.
+        let mut pause = PlayerPause::default();
+        assert!(pause.tell(true, 0));
+        assert_eq!(pause.sample(false, 900), Sampled::Same, "before it took the cue");
+        assert_eq!(pause.sample(true, 1_500), Sampled::Same, "it took it");
+        assert_eq!(pause.sample(false, 1_600), Sampled::Same, "an older report, late");
+        assert_eq!(pause.sample(true, 1_900), Sampled::Same);
+        // A real play, later, is the viewer's.
+        assert_eq!(pause.sample(false, 4_000), Sampled::Pressed(false));
+    }
+
+    #[test]
     fn a_files_own_start_playing_over_a_wait_is_never_your_press() {
         assert!(presses_with(false, Some(1_000), true) > 0, "the old rule takes it as yours");
         assert_eq!(presses_with(true, Some(1_000), true), 0);
@@ -1994,8 +2420,8 @@ mod pause_tests {
         assert!(pause.tell(false, 0));
         assert_eq!(pause.sample(true, 100), Sampled::Same, "stale");
         assert_eq!(pause.sample(false, 300), Sampled::Same, "caught up");
-        assert_eq!(pause.sample(true, 400), Sampled::Pressed(true), "the viewer paused");
-        assert!(!pause.tell(true, 450), "already paused there");
+        assert_eq!(pause.sample(true, 1_400), Sampled::Pressed(true), "the viewer paused");
+        assert!(!pause.tell(true, 1_450), "already paused there");
         // Nothing told yet: no press.
         pause.forget();
         assert_eq!(pause.sample(false, 4_000), Sampled::Same);

@@ -355,7 +355,7 @@ pub fn fixture(
     use kaeri_model::{
         Cause,
         notice::Notice,
-        party::NoSourceWhy,
+        room::NoSourceWhy,
         starting::{FixtureEvent, StartFailure, StartingFixture as State},
     };
     const SHOW: u32 = 900_001;
@@ -874,7 +874,7 @@ mod tests {
         assert!(matches!(
             &last.event,
             Event::PlaybackEnded { failure: Some(f), .. }
-                if f.why == kaeri_model::party::NoSourceWhy::NoConnection
+                if f.why == kaeri_model::room::NoSourceWhy::NoConnection
         ));
         let asked = fixture(F::FailedNoEpisode);
         assert!(asked.iter().any(|e| matches!(

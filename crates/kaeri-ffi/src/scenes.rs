@@ -164,12 +164,10 @@ pub enum FfiScene {
     /// Library Above the Clouds and "On Lantern Library" for Stardust Wayfarer Season 2. Plays here
     /// keeps to the first two, and On your services to the titles Lantern Library carries.
     Available,
-    /// [`Self::Watching`] with three watch party rooms kept, as Together shows them: Natsukaze
+    /// [`Self::Watching`] with three rooms kept, as Together shows them: Natsukaze
     /// Relay's with two friends an hour ago, Stardust Wayfarer's with one a day ago, and
-    /// Cloudcutter Airship's alone a week ago. The party lobby states are reached by joining the
-    /// fake party server ([`FfiEngine::start_fake_party`]) and steering its members: Natsukaze
-    /// Relay's episode 9 has not aired (Out on a day), Stardust Wayfarer's episodes play, and
-    /// [`Self::Sourceless`] and [`Self::NotFound`] show the other two sources lines.
+    /// Cloudcutter Airship's alone a week ago. The room itself is staged with
+    /// [`FfiEngine::start_fake_room`].
     Together,
     /// Nothing watched and offline from the start: the fake AniList hangs up on every request
     /// and the engine is told the path is offline, whatever the host says, so Home has nothing
@@ -1962,30 +1960,41 @@ fn seed_dubs(store: &Store, now: i64) {
     store.put_dub(AIRING_NO_MAL, "franchise", &row(None)).expect("seeding a dub");
 }
 
-/// The three rooms [`FfiScene::Together`] keeps.
+/// The three rooms [`FfiScene::Together`] keeps: each with its own secret and an identity key
+/// for this device, so Rejoin and Look in find them.
 fn seed_rooms(store: &Store, now: i64) {
-    use kaeri_store::PartyRoom;
-    const HOUR: i64 = 3_600;
-    let rooms = [
-        (AIRING_NO_MAL, "kite-7qm4-xr9d", "8", &["Mika", "Ren"][..], now - HOUR),
-        (FINISHED, "ember-2hv8-kd4p", "3", &["Mika"][..], now - 24 * HOUR),
-        (ONA, "ember-9wz3-tn6c", "1", &[][..], now - 7 * 24 * HOUR),
-    ];
-    for (id, room, episode, names, last_at) in rooms {
-        let media = fixtures::media(id);
-        store
-            .remember_party_room(&PartyRoom {
-                server: "syncplay.pl:8995".into(),
-                room: room.into(),
-                anilist_id: id,
-                title: media.title.display().to_owned(),
-                episode: episode.into(),
-                names: names.iter().map(|n| (*n).to_owned()).collect(),
-                cover_url: None,
-                last_at,
-            })
-            .expect("seeding a party room");
+    #[cfg(feature = "room")]
+    {
+        use kaeri_room::keys::{Identity, RoomKeys};
+        use kaeri_store::RecentRoom;
+        const HOUR: i64 = 3_600;
+        let rooms = [
+            (AIRING_NO_MAL, 1u8, "8", &["Mika", "Ren"][..], now - HOUR),
+            (FINISHED, 2, "3", &["Mika"][..], now - 24 * HOUR),
+            (ONA, 3, "1", &[][..], now - 7 * 24 * HOUR),
+        ];
+        for (id, n, episode, names, last_at) in rooms {
+            let media = fixtures::media(id);
+            let secret = [n; 16];
+            store
+                .remember_room(&RecentRoom {
+                    room_id: RoomKeys::new(secret).room_id_hex(),
+                    secret: kaeri_model::room::base64url(&secret),
+                    relays: Vec::new(),
+                    identity: Identity::new().secret_hex(),
+                    name: "Ada".into(),
+                    anilist_id: id,
+                    title: media.title.display().to_owned(),
+                    episode: episode.into(),
+                    names: names.iter().map(|n| (*n).to_owned()).collect(),
+                    cover_url: None,
+                    last_at,
+                })
+                .expect("seeding a recent room");
+        }
     }
+    #[cfg(not(feature = "room"))]
+    let _ = (store, now);
 }
 
 #[cfg(test)]

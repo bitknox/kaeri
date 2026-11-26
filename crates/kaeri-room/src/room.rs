@@ -166,7 +166,16 @@ pub struct Room {
     relays_seq: u64,
     /// The key epoch register: the winning rekey's `(seq, t, session)`.
     epoch: (u64, i64, String),
+    /// Per room relay, since when more than half the present members have reported it unhealthy.
+    relay_bad_since: Vec<Option<i64>>,
+    /// Since when this device has had fewer than two healthy room relays.
+    few_relays_since: Option<i64>,
 }
+
+/// A relay reported unhealthy by a majority this long is swapped out, ms.
+pub const RELAY_SWAP_AFTER: i64 = 60_000;
+/// The most relays a room uses after minority adds.
+pub const RELAYS_MOST: usize = 4;
 
 impl Room {
     /// A room with only this device in it.
@@ -199,7 +208,58 @@ impl Room {
             relays: Vec::new(),
             relays_seq: 0,
             epoch: (0, 0, String::new()),
+            relay_bad_since: Vec::new(),
+            few_relays_since: None,
         }
+    }
+
+    /// The room's relays as they should be after the health reports, when they should change:
+    /// a relay more than half the present members (this device included) have reported
+    /// unhealthy for 60 s is replaced by the first spare not in the list. A device with fewer
+    /// than two healthy room relays for 60 s may add the first spare, up to four, removing
+    /// nothing. Members who haven't reported health yet (`ok == 0`) aren't counted. `None`:
+    /// leave the list.
+    pub fn relay_change(&mut self, now: i64, spares: &[String]) -> Option<Vec<String>> {
+        let list = self.relays.clone();
+        if list.is_empty() {
+            return None;
+        }
+        self.relay_bad_since.resize(list.len(), None);
+        let reports: Vec<u8> =
+            self.present(now).into_iter().map(|m| m.status.ok).filter(|ok| *ok != 0).collect();
+        let spare = spares.iter().find(|s| !list.contains(s)).cloned();
+        for (i, since) in self.relay_bad_since.iter_mut().enumerate().take(8) {
+            let bad = reports.iter().filter(|ok| *ok & (1 << i) == 0).count();
+            if !reports.is_empty() && bad * 2 > reports.len() {
+                let since = *since.get_or_insert(now);
+                if now - since >= RELAY_SWAP_AFTER
+                    && let Some(spare) = spare.clone()
+                {
+                    let mut swapped = list.clone();
+                    swapped[i] = spare;
+                    self.relay_bad_since.clear();
+                    return Some(swapped);
+                }
+            } else {
+                *since = None;
+            }
+        }
+        let mine = self.my_status().ok;
+        let healthy = (0..list.len().min(8)).filter(|i| mine & (1 << i) != 0).count();
+        if mine != 0 && healthy < 2 && list.len() < RELAYS_MOST {
+            let since = *self.few_relays_since.get_or_insert(now);
+            if now - since >= RELAY_SWAP_AFTER
+                && let Some(spare) = spare
+            {
+                self.few_relays_since = None;
+                let mut added = list;
+                added.push(spare);
+                return Some(added);
+            }
+        } else {
+            self.few_relays_since = None;
+        }
+        None
     }
 
     /// The key epoch: the winning rekey's `(seq, t, session)`.

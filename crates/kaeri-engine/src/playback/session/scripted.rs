@@ -836,9 +836,11 @@ async fn at_a_party(
     let settings = PlaySettings { party: hub.clone(), ..settings() };
     let driving = async {
         let Some(SeatMessage::Seated(cues)) = party.recv().await else { panic!("no seat") };
-        for cue in
-            [SeatCue::Pause(true), SeatCue::Seek(42.0), SeatCue::Notice("Mika paused".into())]
-        {
+        for cue in [
+            SeatCue::Pause(true),
+            SeatCue::Seek { to: 42.0, cue: None },
+            SeatCue::Notice("Mika paused".into()),
+        ] {
             cues.send(cue).unwrap();
         }
         let asked = |calls: &[Call]| {
@@ -1944,7 +1946,7 @@ impl crate::playback::further::Lookup for Onward {
         self.asks.lock().unwrap().push((passed, skipped.map(str::to_owned)));
         self.more.lock().unwrap().take().filter(|more| !more.is_empty()).ok_or_else(|| {
             kaeri_model::starting::StartFailure {
-                why: kaeri_model::party::NoSourceWhy::NotFound,
+                why: kaeri_model::room::NoSourceWhy::NotFound,
                 text: kaeri_model::Msg::verbatim("No source has episode 1."),
                 asked: vec!["kodama".into()],
                 unreached: Vec::new(),
@@ -2768,7 +2770,7 @@ async fn the_rooms_cues_wait_until_the_file_has_loaded() {
     let driving = async {
         let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
         cues.send(SeatCue::Pause(true)).unwrap();
-        cues.send(SeatCue::Seek(35.0)).unwrap();
+        cues.send(SeatCue::Seek { to: 35.0, cue: None }).unwrap();
         tokio::time::sleep(std::time::Duration::from_millis(200)).await;
         assert!(!paused(&rig.opener.calls()), "{:#?}", rig.opener.calls());
         let window = rig.opener.window().expect("a window is open");
@@ -2788,4 +2790,54 @@ async fn the_rooms_cues_wait_until_the_file_has_loaded() {
         rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
         driving
     );
+}
+
+/// The room hears when its seek has landed (Ready with the wait's cue, at the first frame there)
+/// and when the player stalls mid-episode and plays again.
+#[tokio::test]
+async fn the_room_hears_ready_for_its_seek_and_a_stall() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        window
+            .send(PlaybackEvent::Progress { position: 1.0, duration: Some(RUNTIME) })
+            .unwrap();
+        cues.send(SeatCue::Seek { to: 35.0, cue: Some(7) }).unwrap();
+        for _ in 0..200 {
+            if rig.opener.calls().contains(&Call::Seek { seconds: 35.0, absolute: true }) {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        window.send(PlaybackEvent::Buffering(true)).unwrap();
+        window.send(PlaybackEvent::Buffering(false)).unwrap();
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let mut reports = Vec::new();
+        while let Some(message) = room.recv().await {
+            if let SeatMessage::Report(report) = message {
+                let ended = matches!(report, SeatReport::Ended { .. });
+                reports.push(report);
+                if ended {
+                    break;
+                }
+            }
+        }
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    let ready = reports.iter().position(|r| *r == SeatReport::Ready { cue: Some(7) });
+    let stalled = reports.iter().position(|r| *r == SeatReport::Stalled(true));
+    let again = reports.iter().position(|r| *r == SeatReport::Stalled(false));
+    assert!(ready.is_some() && stalled > ready && again > stalled, "{reports:?}");
 }

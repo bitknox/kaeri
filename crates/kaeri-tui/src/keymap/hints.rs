@@ -143,20 +143,12 @@ fn hint_sign_out() -> &'static str {
     said(t::keys_hint_sign_out())
 }
 
-fn hint_ready() -> &'static str {
-    said(t::keys_hint_ready())
+fn hint_start_now() -> &'static str {
+    said(t::keys_hint_start_now())
 }
 
 fn hint_copy_link() -> &'static str {
     said(t::keys_hint_copy_link())
-}
-
-fn hint_leave_party() -> &'static str {
-    said(t::keys_hint_leave_party())
-}
-
-fn hint_start_now() -> &'static str {
-    said(t::keys_hint_start_now())
 }
 
 fn hint_stores() -> &'static str {
@@ -432,32 +424,49 @@ pub(crate) fn status_hints_paged(
             return with_help(keymap, hints);
         }
         // Together: Enter joins the highlighted room or asks for a link, and on a member's row
-        // `M` mutes them instead. The party's own keys are named only while there is a party
-        // to use them on. A narrow line drops from the front, so Hide chat goes first and the
-        // row's own key and Say last.
+        // `M` mutes them instead; `x` on a recent room forgets it. The room's own keys are named
+        // only while there is a room to use them on. A narrow line drops from the front, so
+        // Hide chat goes first and the row's own key and Say last.
         V::Section(Section::Together) => {
+            use crate::app::RoomGo;
             let mut hints = Vec::new();
-            if let Some(party) = &app.party {
+            if let Some(room) = &app.room {
                 hints.push(if app.chat_hidden() {
                     (Action::ToggleSynopsis, said(t::keys_hint_show_chat()))
                 } else {
                     (Action::ToggleSynopsis, said(t::keys_hint_hide_chat()))
                 });
-                hints.push((Action::Refresh, hint_ready()));
-                hints.push((Action::ClearCompleted, hint_copy_link()));
-                if party.can_start_anyway {
-                    hints.push((Action::ShowSources, hint_start_now()));
+                hints.push((Action::Refresh, said(t::room_new_invite())));
+                if room.link.is_some() {
+                    hints.push((Action::ClearCompleted, hint_copy_link()));
                 }
-                hints.push((Action::HideFromContinue, hint_leave_party()));
+                if app.selected_room().is_none() {
+                    hints.push((Action::HideFromContinue, said(t::keys_hint_leave_room())));
+                }
+                if let Some(go) = app.room_go() {
+                    hints.push((
+                        Action::ShowSources,
+                        said(match go {
+                            RoomGo::CarryOn => t::keys_hint_carry_on(),
+                            RoomGo::DontWait => t::room_dont_wait(),
+                            RoomGo::PlayForEveryone => t::room_play_for_everyone(),
+                        }),
+                    ));
+                }
                 if !app.chat_hidden() {
                     hints.push((Action::FixMapping, said(t::keys_hint_say())));
                 }
             }
+            if app.selected_room().is_some() {
+                hints.push((Action::HideFromContinue, said(t::keys_hint_forget_room())));
+            }
             hints.push(match app.selected_member() {
-                Some(member) if app.is_muted(&member.name) => {
+                Some(member) if member.muted => {
                     (Action::MarkAllPrevious, said(t::keys_hint_unmute()))
                 }
                 Some(_) => (Action::MarkAllPrevious, said(t::keys_hint_mute())),
+                None if app.selected_room().is_some() => (Action::Open, said(t::room_rejoin())),
+                None if app.room_full.is_some() => (Action::Open, said(t::room_join_anyway())),
                 None => (Action::Open, hint_open()),
             });
             hints
@@ -726,8 +735,9 @@ fn overlay_hints(
                 O::KitsuUsername => hint_next(),
                 O::KitsuPassword => hint_sign_in(),
                 O::JoinStore => hint_check(),
-                O::JoinParty => hint_open(),
-                O::Say => said(t::party_chat_send()),
+                O::JoinRoom => hint_open(),
+                O::Say => said(t::room_chat_send()),
+                O::LeaveRoom => said(t::room_leave_menu_plain()),
                 O::InviteName => hint_make_link(),
                 O::SyncAddress
                     if app.devices.kind != Some(kaeri_model::group::SyncFolderKind::WebDav) =>

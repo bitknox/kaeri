@@ -16,8 +16,12 @@ use tokio::sync::{mpsc, watch};
 #[derive(Debug, Clone, PartialEq)]
 pub enum SeatCue {
     Pause(bool),
-    /// Seek to this position, in seconds.
-    Seek(f64),
+    /// Seek to this position, in seconds. `cue` names a room's wait: the player answers
+    /// [`SeatReport::Ready`] with it at its first frame there.
+    Seek {
+        to: f64,
+        cue: Option<u64>,
+    },
     Speed(f64),
     /// Show this on the player, as a notice.
     Notice(String),
@@ -32,7 +36,7 @@ pub enum SeatCue {
     /// A reaction's moment: the glyph and who, worded as for [`SeatCue::Chat`].
     Reaction {
         who: String,
-        reaction: kaeri_model::party::Reaction,
+        reaction: kaeri_model::room::Reaction,
     },
     /// Hide chat was turned on: what chat has on the video leaves it.
     ChatCleared,
@@ -47,6 +51,10 @@ pub enum SeatReport {
     Playing { id: AnilistId, episode: String, name: String, duration: Option<f64> },
     /// Where the player is.
     Sample { position: f64, paused: bool, speed: f64 },
+    /// Playback is held waiting for data mid-episode (`true`), or plays again.
+    Stalled(bool),
+    /// The first frame after the room's seek `cue` (see [`SeatCue::Seek`]).
+    Ready { cue: Option<u64> },
     /// The playback ended. `leave` when the viewer stopped it or closed its window, which
     /// leaves the party; an episode that played to its end, or failed, stays in it.
     /// `finished` when it played to its end, which moves the room on to its next episode.

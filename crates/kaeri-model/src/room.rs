@@ -10,8 +10,6 @@
 
 use kaeri_core::ids::AnilistId;
 
-pub use crate::party::{NoSourceWhy, Reaction};
-
 /// The relays a new room uses when Settings has none of its own: public relays run by others.
 /// Kaeri runs none of them.
 pub const DEFAULT_RELAYS: [&str; 3] =
@@ -30,6 +28,16 @@ pub const CARRY_ON_AFTER_MS: i64 = 20_000;
 
 /// The most characters in one chat message.
 pub const CHAT_MAX_LENGTH: u32 = 500;
+
+/// The most lines a room's conversation holds.
+pub const CONVERSATION_LINES: usize = 200;
+
+/// The most reaction marks an episode holds.
+pub const REACTION_MARKS: usize = 500;
+
+/// How long a send waits for its own event to come back from a relay, in seconds, before it
+/// reads "Couldn't send".
+pub const ECHO_WAIT_SECONDS: u32 = 5;
 
 /// The room this device is in, as it stands: sent whole with
 /// [`Event::RoomJoined`](crate::event::Event::RoomJoined) and
@@ -779,7 +787,8 @@ const WEB_ROOM: &str = "https://kaeri.app/room";
 /// The app's own scheme for the same, which the web page opens.
 const APP_ROOM: &str = "kaeri://room";
 /// Where the watch party's invites pointed: any link there is from an older version.
-const OLD_LINKS: [&str; 3] = ["https://kaeri.app/party", "https://www.kaeri.app/party", "kaeri://party"];
+const OLD_LINKS: [&str; 3] =
+    ["https://kaeri.app/party", "https://www.kaeri.app/party", "kaeri://party"];
 
 impl RoomShare {
     fn fragment(&self) -> String {
@@ -817,11 +826,7 @@ impl RoomShare {
             .or_else(|| strip_prefix_ignore_case(text, APP_ROOM))
             .map(|rest| rest.strip_prefix('/').unwrap_or(rest));
         let Some(rest) = fragment else {
-            return if crate::party::clean_party_code(text).is_some() {
-                Err(OldInvite::Code)
-            } else {
-                Ok(None)
-            };
+            return if old_code(text).is_some() { Err(OldInvite::Code) } else { Ok(None) };
         };
         if rest.starts_with('?') {
             return Err(OldInvite::SyncplayLink);
@@ -979,6 +984,66 @@ pub fn unbase64url(text: &str) -> Option<Vec<u8>> {
         }
     }
     Some(out)
+}
+
+/// Why the room's episode has no source here, for a dialog that offers what fits: nothing to
+/// choose before it airs, Providers when there are no sources, Choose source otherwise.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum NoSourceWhy {
+    /// The schedule says the episode has not aired yet.
+    NotAired,
+    /// No source is set up to ask.
+    NoSources,
+    /// The sources were asked, and none of them played it.
+    NotFound,
+    /// The device stayed offline for the two minutes a start waits for a connection, and no
+    /// source was asked.
+    NoConnection,
+}
+
+/// A reaction to what is playing: one of four, drawn as a glyph by every app. Typed on the wire.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "ffi", derive(uniffi::Enum))]
+pub enum Reaction {
+    Laugh,
+    Gasp,
+    Clap,
+    Cry,
+}
+
+/// The word list and letters of the old typed room codes, only to recognise one pasted in.
+const CODE_WORDS: &[&str] = &[
+    "acorn", "amber", "birch", "bloom", "breeze", "cedar", "cloud", "comet", "coral", "dune",
+    "ember", "fern", "finch", "flint", "frost", "glade", "heron", "iris", "jade", "kite",
+    "lark", "lotus", "maple", "mist", "moss", "otter", "pearl", "pine", "reed", "robin",
+    "sage", "tide",
+];
+
+/// The letters a code's random part is written in: lower case, without the ones read as others
+/// (`l`, `o`, `0`, `1`). Thirty-two of them, five bits each.
+const CODE_LETTERS: &[u8; 32] = b"abcdefghijkmnpqrstuvwxyz23456789";
+
+/// An old typed room code, `kite-7qm4-xr9d`, cleaned: only to say it's from an older version.
+fn old_code(text: &str) -> Option<String> {
+    let lower = text.trim().to_ascii_lowercase();
+    if !lower.is_ascii() {
+        return None;
+    }
+    let mut parts = lower.split(|c: char| c.is_whitespace() || c == '-' || c == '_');
+    let parts: Vec<&str> = parts.by_ref().filter(|p| !p.is_empty()).collect();
+    let (word, key) = match parts.as_slice() {
+        [] => return None,
+        // Written without separators: the word is one of the known ones.
+        [one] => {
+            let word = CODE_WORDS.iter().find(|w| one.starts_with(**w))?;
+            (word.to_string(), one[word.len()..].to_owned())
+        }
+        [word, rest @ ..] => ((*word).to_owned(), rest.concat()),
+    };
+    let word_ok = (3..=8).contains(&word.len()) && word.bytes().all(|b| b.is_ascii_lowercase());
+    let key_ok = key.len() == 8 && key.bytes().all(|b| CODE_LETTERS.contains(&b));
+    (word_ok && key_ok).then(|| format!("{word}-{}-{}", &key[..4], &key[4..]))
 }
 
 #[cfg(test)]

@@ -16,18 +16,13 @@ use crate::{
     jobs::JobId,
     notice::Notice,
     notifications::{NewEpisode, UpcomingNotices},
-    party::{
-        NoSourceWhy, PartyChatRefusal, PartyChatState, PartyConversation, PartyForm,
-        PartyGlimpse, PartyMember, PartyMessage, PartyReaction, PartyRecentRoom,
-        PartyStartKind, PartyView,
-    },
     playback::{Ending, PlaybackId, SkipKind, TimeRange, TimelineMark},
     progress::{EpisodeProgress, TitleProgress},
     remote::FrontIntent,
     room::{
-        RoomChatRefusal, RoomChatState, RoomConversation, RoomGlimpse, RoomLeftWhy, RoomMember,
-        RoomMessage, RoomMoveOffer, RoomReaction, RoomRecent, RoomRelaySettings, RoomStartKind,
-        RoomView,
+        NoSourceWhy, RoomChatRefusal, RoomChatState, RoomConversation, RoomGlimpse,
+        RoomLeftWhy, RoomMember, RoomMessage, RoomMoveOffer, RoomReaction, RoomRecent,
+        RoomRelaySettings, RoomStartKind, RoomView,
     },
     search::{BrowseRail, SearchFacets, SearchQuery},
     settings::SettingsView,
@@ -818,68 +813,6 @@ pub enum Event {
     /// field, a key, a volume step, or a pairing code to show or hide. Sent only on a TV that
     /// started its remote, and never by the engine itself, which has no screen to act on.
     Remote(FrontIntent),
-    /// What the form that starts a party opens with, for
-    /// [`Command::LoadPartyForm`](crate::command::Command::LoadPartyForm).
-    PartyForm(PartyForm),
-    /// In a party's room: the form becomes the party panel. Followed by
-    /// [`Event::PartyMembers`], and [`Event::PartyState`] as the party changes.
-    PartyJoined(PartyView),
-    /// The party as it stands, after any change: ready, the episode and its invite link, the
-    /// connection lost and made again, the round trip.
-    PartyState(PartyView),
-    /// Who is in the room, this device's member first.
-    PartyMembers(Vec<PartyMember>),
-    /// What the room said: someone joining, leaving, pausing, resuming or jumping, a
-    /// correction to stay with the room, everyone ready, or chat. Already shown on the player
-    /// as a notice; this is for a party panel.
-    PartyMessage(PartyMessage),
-    /// The party's conversation, whole, after every change: a line, a reaction, a mute, a send
-    /// that was never echoed. Nothing is kept past the party.
-    PartyChat(PartyConversation),
-    /// What this device may do in the conversation: whether the server has chat on, how long a
-    /// message may be, who is muted and how long Send waits.
-    PartyChatState(PartyChatState),
-    /// A reaction for the moment on the video, from any member but a muted one.
-    PartyReaction(PartyReaction),
-    /// A send that was not made, and why.
-    PartyChatRefused(PartyChatRefusal),
-    /// The party is over: left on purpose with `None`, or for the reason given, worded for the
-    /// user ("party.example:8999 refused the party: …"). What is playing goes on as a private
-    /// session.
-    PartyLeft {
-        reason: Option<Msg>,
-    },
-    /// The party's episode has no source here: this device is in the room without playing,
-    /// for the dialog that says why and offers what fits, Choose source among it. It carries
-    /// the lookup's own words, and no [`Event::Toast`] says them a second time.
-    PartyNoSource {
-        id: AnilistId,
-        episode: String,
-        why: NoSourceWhy,
-        reason: Msg,
-    },
-    /// The room starts or moves on: the player opens.
-    PartyStarted {
-        id: AnilistId,
-        episode: String,
-        kind: PartyStartKind,
-    },
-    /// What a look into a room found.
-    PartyGlimpse(PartyGlimpse),
-    /// A look into a room failed.
-    PartyLookFailed {
-        server: String,
-        room: String,
-        reason: Msg,
-    },
-    /// The last ten rooms, newest first.
-    PartyRecent(Vec<PartyRecentRoom>),
-    /// The room finished the last episode that is out.
-    PartyLastOut {
-        episode: String,
-        #[cfg_attr(feature = "ffi", uniffi(default))]
-        airs: Option<Msg>,
-    },
     /// In a room: Watch together becomes the room. Followed by [`Event::RoomMembers`], and
     /// [`Event::RoomState`] as the room changes.
     RoomJoined(RoomView),

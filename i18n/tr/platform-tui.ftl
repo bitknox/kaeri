@@ -1,14 +1,11 @@
 hint-stop-playback = Oynatmayı durdurmak için { $key } tuşuna basın.
 hint-open-stores = { -source-cap-pl } bölümüne gidin ve { -plugin-store-pl } açmak için Enter'a basın.
 hint-kitsu-credentials = Kimlik bilgilerinizi girmek için satırında Enter'a basın.
-party-joined = { $server } üzerindeki { $room } odasındaki { -watch-party }ye katıldınız.
-party-no-source-still-in = { $reason } Hâlâ { -watch-party }desiniz.
 status-reloading-sources = { -source-pl } yeniden yükleniyor…
 pin-unavailable = { $name } bu başlık için sabitlendi ama kullanılamıyor. Diğer { -source-pl } deneniyor.
 tui-together-section = Birlikte
 tui-together-join-prompt = bağlantı ya da kod
 tui-together-chat-hidden-line = Satırlar ve tepkiler hiçbir partide oynatıcıda görünmez.
-tui-together-not-a-link = Bu bir parti bağlantısı ya da kodu değil.
 tui-together-recent-alone = { $episode }. bölüm · { $when }
 tui-medium-read-change = { -app-name } uygulamasının ne için kullanılacağını değiştirmek için { $key } tuşuna basın.
 tui-medium-settings-hint = Değiştirmek için { $key }

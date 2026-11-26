@@ -16,7 +16,7 @@ use kaeri_model::{
     command::{Command, PlayerCommand},
     hosted::TrackKind,
     opened::OpenedCommand,
-    party::PartyCommand,
+    room::RoomCommand,
 };
 use serde::{Deserialize, Serialize};
 
@@ -71,21 +71,19 @@ pub enum RemoteCommand {
     },
     /// Move the TV's focus, as its own remote would.
     Navigate { key: Key },
-    /// Join a friend's watch party on the TV: [`PartyCommand::Lobby`]. The phone read the invite
-    /// (its link or code) into a server and a room.
-    PartyJoin { server: String, room: String },
-    /// [`Command::PartyReady`]: say the TV is ready, or not.
-    PartyReady { ready: bool },
-    /// [`PartyCommand::StartAnyway`]: start the room without those who are not ready.
-    PartyStart,
-    /// [`Command::PartyLeave`].
-    PartyLeave,
-    /// [`PartyCommand::Say`]: say something in the party's chat as the TV. The line shows on
-    /// the TV when the room's server sends it back, as everyone's does.
-    PartyChat { text: String },
-    /// [`PartyCommand::Mute`]: hide a member's lines and reactions on the TV for this party, or
-    /// show them again.
-    PartyMute { member: String, muted: bool },
+    /// Join a room on the TV: [`RoomCommand::Lobby`] with the invite link the phone holds. The
+    /// TV's only way into a room: it has no field to type a link into.
+    RoomJoin { invite: String },
+    /// [`RoomCommand::Leave`].
+    RoomLeave,
+    /// [`RoomCommand::CarryOn`]: play without whoever the room waits for.
+    RoomCarryOn,
+    /// [`RoomCommand::Say`]: say something in the room's chat as the TV. The line shows on the
+    /// TV when a relay sends it back, as everyone's does.
+    RoomChat { text: String },
+    /// [`RoomCommand::Mute`]: hide a person's lines and reactions on the TV for this room, or
+    /// show them again. `member` is their id in the room.
+    RoomMute { member: String, muted: bool },
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -137,6 +135,7 @@ impl From<Key> for RemoteKey {
 impl RemoteCommand {
     pub fn route(self) -> Routed {
         let player = |command| Routed::Engine(Command::Player(command));
+        let room = |command| Routed::Engine(Command::Room(command));
         match self {
             Self::Play { id, episode } => Routed::Engine(Command::play(id, episode)),
             Self::Open { id } => Routed::Front(FrontIntent::Open { id }),
@@ -168,23 +167,16 @@ impl RemoteCommand {
             }),
             Self::Text { text, submit } => Routed::Front(FrontIntent::Text { text, submit }),
             Self::Navigate { key } => Routed::Front(FrontIntent::Navigate { key: key.into() }),
-            Self::PartyJoin { server, room } => {
-                Routed::Engine(Command::Party(PartyCommand::Lobby {
-                    server,
-                    room,
-                    name: None,
-                    pick: None,
-                }))
-            }
-            Self::PartyReady { ready } => Routed::Engine(Command::PartyReady { ready }),
-            Self::PartyStart => Routed::Engine(Command::Party(PartyCommand::StartAnyway)),
-            Self::PartyLeave => Routed::Engine(Command::PartyLeave),
-            Self::PartyChat { text } => {
-                Routed::Engine(Command::Party(PartyCommand::Say { text }))
-            }
-            Self::PartyMute { member, muted } => {
-                Routed::Engine(Command::Party(PartyCommand::Mute { name: member, muted }))
-            }
+            Self::RoomJoin { invite } => room(RoomCommand::Lobby {
+                invite: Some(invite),
+                name: None,
+                pick: None,
+                anyway: false,
+            }),
+            Self::RoomLeave => room(RoomCommand::Leave),
+            Self::RoomCarryOn => room(RoomCommand::CarryOn),
+            Self::RoomChat { text } => room(RoomCommand::Say { text }),
+            Self::RoomMute { member, muted } => room(RoomCommand::Mute { id: member, muted }),
         }
     }
 
@@ -200,12 +192,11 @@ impl RemoteCommand {
                 | Self::Navigate { .. }
                 | Self::Volume { .. }
                 | Self::Mute { .. }
-                | Self::PartyJoin { .. }
-                | Self::PartyReady { .. }
-                | Self::PartyStart
-                | Self::PartyLeave
-                | Self::PartyChat { .. }
-                | Self::PartyMute { .. }
+                | Self::RoomJoin { .. }
+                | Self::RoomLeave
+                | Self::RoomCarryOn
+                | Self::RoomChat { .. }
+                | Self::RoomMute { .. }
         )
     }
 }
@@ -251,38 +242,37 @@ mod tests {
     }
 
     #[test]
-    fn party_commands_reach_the_engine_and_need_nothing_playing() {
-        let join = RemoteCommand::PartyJoin {
-            server: "party.example:8999".into(),
-            room: "kite-7qm4-xr9d".into(),
-        };
+    fn room_commands_reach_the_engine_and_need_nothing_playing() {
+        let link = "https://kaeri.app/room#v=3&k=MDEyMzQ1Njc4OWFiY2RlZg".to_owned();
+        let join = RemoteCommand::RoomJoin { invite: link.clone() };
         assert!(!join.needs_playback());
         assert_eq!(
             join.route(),
-            Routed::Engine(Command::Party(PartyCommand::Lobby {
-                server: "party.example:8999".into(),
-                room: "kite-7qm4-xr9d".into(),
+            Routed::Engine(Command::Room(RoomCommand::Lobby {
+                invite: Some(link),
                 name: None,
                 pick: None,
+                anyway: false,
             }))
         );
         assert_eq!(
-            RemoteCommand::PartyReady { ready: true }.route(),
-            Routed::Engine(Command::PartyReady { ready: true })
-        );
-        assert_eq!(RemoteCommand::PartyLeave.route(), Routed::Engine(Command::PartyLeave));
-        assert_eq!(
-            RemoteCommand::PartyChat { text: "back in 2".into() }.route(),
-            Routed::Engine(Command::Party(PartyCommand::Say { text: "back in 2".into() }))
+            RemoteCommand::RoomLeave.route(),
+            Routed::Engine(Command::Room(RoomCommand::Leave))
         );
         assert_eq!(
-            RemoteCommand::PartyMute { member: "Ren".into(), muted: true }.route(),
-            Routed::Engine(Command::Party(PartyCommand::Mute {
-                name: "Ren".into(),
+            RemoteCommand::RoomChat { text: "back in 2".into() }.route(),
+            Routed::Engine(Command::Room(RoomCommand::Say { text: "back in 2".into() }))
+        );
+        assert_eq!(
+            RemoteCommand::RoomMute { member: "0123456789abcdef".into(), muted: true }.route(),
+            Routed::Engine(Command::Room(RoomCommand::Mute {
+                id: "0123456789abcdef".into(),
                 muted: true
             }))
         );
-        assert!(!RemoteCommand::PartyChat { text: String::new() }.needs_playback());
+        let read: RemoteCommand = serde_json::from_str(r#"{"name":"room_carry_on"}"#).unwrap();
+        assert_eq!(read, RemoteCommand::RoomCarryOn);
+        assert!(!RemoteCommand::RoomChat { text: String::new() }.needs_playback());
     }
 
     #[test]

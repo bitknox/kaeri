@@ -81,7 +81,7 @@ impl Further {
         match &self.lookup {
             Some(lookup) => lookup.after(streams, skipped).await,
             None => Err(StartFailure {
-                why: kaeri_model::party::NoSourceWhy::NotFound,
+                why: kaeri_model::room::NoSourceWhy::NotFound,
                 text: kaeri_model::Msg::NoticeReason { reason: kaeri_model::Cause::NoSources },
                 asked: Vec::new(),
                 unreached: Vec::new(),

@@ -214,7 +214,6 @@ impl Engine {
             player_theme,
             hosted_player,
             audio_tap,
-            every_play_a_party,
             app_clients,
             device_label,
             handheld,
@@ -359,7 +358,6 @@ impl Engine {
                     power,
                     hosted,
                     hosted_player,
-                    every_play_a_party,
                     paths,
                     http,
                     store,
@@ -410,7 +408,6 @@ impl Engine {
         ));
         let services = Services {
             hosted_player,
-            every_play_a_party,
             app_clients,
             stores,
             skip_find,
@@ -1351,33 +1348,11 @@ impl Actor {
         {
             self.state.translation_picked = Some((front.id, picked.toggled()));
         }
-        // A play in a room found no source here: the room's No source, for its dialog, and this
-        // device reads No source in the room (the reason stays here).
+        // A play in a room found no source here: this device reads No source in the room (the
+        // reason stays here). The app answers RoomStarted with its own play.
         #[cfg(feature = "room")]
-        if let Event::PartyNoSource { id, episode, why, reason } = &*event
-            && crate::room::is_going(&self.state)
-        {
+        if let Event::RoomNoSource { .. } = event {
             crate::room::no_source(&self.state);
-            let _ = self.inbox.sender().send(Event::RoomNoSource {
-                id: *id,
-                episode: episode.clone(),
-                why: *why,
-                reason: reason.clone(),
-            });
-            return Vec::new();
-        }
-        // The room starts or moves on: this device opens the episode from its own sources.
-        #[cfg(feature = "party")]
-        if let Event::PartyStarted { id, episode, .. } = event {
-            let tx = self.inbox.sender();
-            crate::playback::start::play_party(
-                *id,
-                episode.clone(),
-                None,
-                &mut self.state,
-                &self.services,
-                &tx,
-            );
         }
         if let Event::PrefetchNext { id, episode } = event {
             prefetch(*id, episode.clone(), &self.state, &self.services);
@@ -1655,8 +1630,6 @@ impl Inbox {
 mod tests {
     use super::*;
     use kaeri_core::config::{Config, Paths};
-    #[cfg(feature = "party")]
-    use kaeri_model::party::PartyCommand;
     use kaeri_model::playback::PlayerTheme;
     use kaeri_model::{Cause, Msg};
     use kaeri_net::HttpClient;
@@ -2393,10 +2366,9 @@ mod tests {
             "{seen:?}"
         );
 
-        // A release picked by hand the same, and a watch party where this build has none:
-        // refused before anything is staged.
+        // A release picked by hand the same: refused before anything is staged.
         let episode = || "1".to_owned();
-        let mut plays = vec![(
+        let plays = vec![(
             Command::PlaySource {
                 id,
                 episode: episode(),
@@ -2405,12 +2377,6 @@ mod tests {
             },
             Msg::NoticeNoPlayer.english(),
         )];
-        if cfg!(not(feature = "party")) {
-            plays.push((
-                Command::play_party(id, episode()),
-                Msg::Store(StoreMsg::NoticePartyNotBuilt).english(),
-            ));
-        }
         for (play, refusal) in plays {
             engine.send(play);
             let seen = until(&mut events, |e| matches!(e, Event::JobDone(_))).await;
@@ -2611,7 +2577,7 @@ mod tests {
     /// stopped, so it is long: Windows takes about two seconds to refuse a connection to a
     /// closed local port, and a send's last page and its file take over ten seconds on a loaded
     /// machine.
-    #[cfg(any(feature = "party", feature = "cast"))]
+    #[cfg(any(feature = "cast", feature = "testing"))]
     async fn seen_until(events: &mut EventStream, done: impl Fn(&Event) -> bool) -> Vec<Event> {
         let mut seen = Vec::new();
         while !seen.iter().any(&done) {
@@ -2621,464 +2587,6 @@ mod tests {
             }
         }
         seen
-    }
-
-    /// A party joined, steered and left through the engine, on a server of the test's own.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn a_watch_party_is_joined_steered_and_left() {
-        use kaeri_model::party::{PartyMessageKind, SUGGESTED_SERVER};
-        use kaeri_party::fake::{FakeOptions, FakeServer};
-
-        let dir = tempfile::tempdir().unwrap();
-        let (engine, mut events) = quiet_engine(dir.path()).await;
-        events.launch().await;
-        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
-
-        // The form: the public server suggested, nothing used before, and a room to meet in.
-        engine.send(Command::LoadPartyForm);
-        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyForm(_))).await;
-        let Some(Event::PartyForm(form)) =
-            seen.iter().find(|e| matches!(e, Event::PartyForm(_)))
-        else {
-            unreachable!()
-        };
-        assert_eq!(form.suggested_server, SUGGESTED_SERVER);
-        assert!(form.recent_servers.is_empty());
-        assert_eq!(
-            kaeri_model::party::clean_party_code(&form.room).as_deref(),
-            Some(form.room.as_str()),
-            "a code: {}",
-            form.room
-        );
-        // Each form a room of its own, past guessing.
-        let first = form.room.clone();
-        engine.send(Command::LoadPartyForm);
-        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyForm(_))).await;
-        let again = seen.iter().find_map(|e| match e {
-            Event::PartyForm(form) => Some(form.room.clone()),
-            _ => None,
-        });
-        assert_ne!(again, Some(first));
-
-        // Joined: the room said, and its server kept first among the ones used.
-        let room = "amber-anchor";
-        let join = || Command::PartyJoin {
-            server: server.address(),
-            room: room.into(),
-            name: Some("Ada".into()),
-        };
-        engine.send(join());
-        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyJoined(_))).await;
-        let Some(Event::PartyJoined(view)) =
-            seen.iter().find(|e| matches!(e, Event::PartyJoined(_)))
-        else {
-            unreachable!()
-        };
-        assert_eq!((view.room.as_str(), view.name.as_str()), (room, "Ada"));
-        assert_eq!(view.server, server.address());
-        // The room's members listed, before anyone else comes in, and the server saved.
-        let mut seen = seen;
-        while !(seen.iter().any(|e| matches!(e, Event::Settings(_)))
-            && seen.iter().any(|e| matches!(e, Event::PartyMembers(_))))
-        {
-            seen.extend(seen_until(&mut events, |_| true).await);
-        }
-        let saved = std::fs::read_to_string(dir.path().join("config.toml")).unwrap();
-        assert!(saved.contains(&server.address()), "{saved}");
-        // The same room again is the party already going.
-        engine.send(join());
-
-        // Someone else comes in, and the members are said with them.
-        let mika = server.member(room, "Mika");
-        let seen = seen_until(&mut events, |e| {
-            matches!(e, Event::PartyMessage(m) if matches!(&m.kind, PartyMessageKind::Joined { name } if name == "Mika"))
-        })
-        .await;
-        assert!(!seen.iter().any(|e| matches!(e, Event::PartyJoined(_))), "{seen:?}");
-        let members = seen_until(
-            &mut events,
-            |e| matches!(e, Event::PartyMembers(members) if members.len() == 2),
-        )
-        .await;
-        let Some(Event::PartyMembers(members)) =
-            members.iter().rev().find(|e| matches!(e, Event::PartyMembers(m) if m.len() == 2))
-        else {
-            unreachable!()
-        };
-        assert!(members.iter().any(|m| m.name == "Ada" && m.you));
-
-        // Ready, as the room sees it.
-        engine.send(Command::PartyReady { ready: true });
-        let seen =
-            seen_until(&mut events, |e| matches!(e, Event::PartyState(view) if view.ready))
-                .await;
-        assert!(!seen.is_empty());
-        let ready =
-            || server.room(room).and_then(|r| r.members.into_iter().find(|m| m.name == "Ada"));
-        for _ in 0..50 {
-            if ready().is_some_and(|ada| ada.ready == Some(true)) {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(20)).await;
-        }
-        assert_eq!(ready().and_then(|ada| ada.ready), Some(true));
-
-        // Another room: the first is left without a word, and the new one says itself.
-        engine.send(Command::PartyJoin {
-            server: server.address(),
-            room: "birch-bell".into(),
-            name: Some("Ada".into()),
-        });
-        let seen = seen_until(
-            &mut events,
-            |e| matches!(e, Event::PartyJoined(view) if view.room == "birch-bell"),
-        )
-        .await;
-        assert!(!seen.iter().any(|e| matches!(e, Event::PartyLeft { .. })), "{seen:?}");
-        for _ in 0..50 {
-            if ready().is_none() {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(20)).await;
-        }
-        assert_eq!(ready(), None, "out of the first room");
-
-        // Left: said once, and a party command after it is told there is none.
-        drop(mika);
-        engine.send(Command::PartyLeave);
-        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyLeft { .. })).await;
-        assert!(
-            seen.iter().any(|e| matches!(e, Event::PartyLeft { reason: None })),
-            "{seen:?}"
-        );
-        engine.send(Command::PartyReady { ready: false });
-        seen_until(&mut events, |e| matches!(e, Event::PartyLeft { reason: None })).await;
-
-        // A server written wrong is refused with how to write it.
-        engine.send(Command::PartyJoin {
-            server: "syncplay.example:port".into(),
-            room: room.into(),
-            name: None,
-        });
-        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyLeft { .. })).await;
-        let Some(reason) = seen.iter().find_map(|e| match e {
-            Event::PartyLeft { reason } => reason.clone(),
-            _ => None,
-        }) else {
-            panic!("{seen:?}")
-        };
-        assert!(reason.english().contains("host and a port"), "{reason}");
-    }
-
-    /// A lobby joined by link or code reads what the room watches from its playlist, counts
-    /// down when everyone is ready, and starts the room.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn a_lobby_follows_the_rooms_playlist_and_starts_when_all_are_ready() {
-        use kaeri_model::party::{PartyCommand, PartyFound, PartyStartKind};
-        use kaeri_party::fake::{FakeOptions, FakeServer};
-
-        let dir = tempfile::tempdir().unwrap();
-        let (engine, mut events) = quiet_engine(dir.path()).await;
-        events.launch().await;
-        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
-        let room = "kite-7qm4-xr9d";
-        let mika = server.member(room, "Mika");
-        mika.set_playlist(&[
-            "Natsukaze Relay, episode 9 [anilist:104321:9]",
-            "Natsukaze Relay, episode 10 [anilist:104321:10]",
-        ]);
-        mika.set_index(0);
-
-        engine.send(Command::Party(PartyCommand::Lobby {
-            server: server.address(),
-            room: room.into(),
-            name: Some("Ada".into()),
-            pick: None,
-        }));
-        let seen = seen_until(&mut events, |e| {
-            matches!(e, Event::PartyState(view) if view.room_episode.is_some() && view.next_episode.is_some())
-        })
-        .await;
-        let Some(Event::PartyState(view)) = seen
-            .iter()
-            .rev()
-            .find(|e| matches!(e, Event::PartyState(view) if view.room_episode.is_some()))
-        else {
-            panic!("{seen:?}")
-        };
-        let found = view.room_episode.as_ref().unwrap();
-        assert_eq!(found.id.map(kaeri_core::ids::AnilistId::get), Some(104_321));
-        assert_eq!((found.episode.as_str(), found.found), ("9", PartyFound::Tag));
-        assert_eq!(view.next_episode.as_ref().map(|n| n.episode.as_str()), Some("10"));
-        assert_eq!(view.starter.as_deref(), Some("Mika"));
-        assert!(!view.can_start_anyway, "Mika set the episode, not this device");
-        assert_eq!(view.code.as_deref(), None, "a code is on the suggested server only");
-        assert!(
-            view.link.as_deref().is_some_and(|l| l.starts_with("https://kaeri.app/party#"))
-        );
-
-        // Both ready: the count runs, then the room starts.
-        mika.ready(true);
-        engine.send(Command::PartyReady { ready: true });
-        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyStarted { .. })).await;
-        assert!(
-            seen.iter().any(|e| matches!(e, Event::PartyState(v) if v.starting_in == Some(3))),
-            "the count ran: {seen:?}"
-        );
-        assert!(seen.iter().any(|e| matches!(
-            e,
-            Event::PartyStarted { id, episode, kind: PartyStartKind::Start }
-                if id.get() == 104_321 && episode == "9"
-        )));
-    }
-
-    /// A room someone else picked and started, joined from its lobby without saying ready:
-    /// this device opens the room's episode and joins in.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn a_room_someone_else_plays_opens_the_player_without_waiting_for_ready() {
-        use kaeri_model::party::{PartyCommand, PartyStartKind};
-        use kaeri_party::fake::{FakeOptions, FakeServer};
-
-        let dir = tempfile::tempdir().unwrap();
-        let (engine, mut events) = quiet_engine(dir.path()).await;
-        events.launch().await;
-        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
-        let room = "lark-3vd8-pq2m";
-        let mika = server.member(room, "Mika");
-        mika.set_playlist(&["Natsukaze Relay, episode 9 [anilist:104321:9]"]);
-        mika.set_index(0);
-        mika.open("Natsukaze Relay, episode 9 [anilist:104321:9]", 1440.0);
-
-        engine.send(Command::Party(PartyCommand::Lobby {
-            server: server.address(),
-            room: room.into(),
-            name: Some("Ada".into()),
-            pick: None,
-        }));
-        seen_until(&mut events, |e| {
-            matches!(e, Event::PartyState(view) if view.room_episode.as_ref().is_some_and(|r| r.id.is_some()))
-        })
-        .await;
-        // Paused, the lobby waits.
-        let seen =
-            seen_until(&mut events, |e| matches!(e, Event::PartyMembers(m) if m.len() == 2))
-                .await;
-        assert!(!seen.iter().any(|e| matches!(e, Event::PartyStarted { .. })), "{seen:?}");
-
-        mika.play();
-        let seen = seen_until(&mut events, |e| matches!(e, Event::PartyStarted { .. })).await;
-        assert!(
-            seen.iter().any(|e| matches!(
-                e,
-                Event::PartyStarted { id, episode, kind: PartyStartKind::Rejoin }
-                    if id.get() == 104_321 && episode == "9"
-            )),
-            "{seen:?}"
-        );
-    }
-
-    /// A play anywhere in the app while in a party picks that episode for the room, rather
-    /// than playing it alone; the room's own episode is not picked again.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn a_play_while_in_a_party_picks_the_episode_for_the_room() {
-        use kaeri_core::ids::AnilistId;
-        use kaeri_party::fake::{FakeOptions, FakeServer};
-
-        let dir = tempfile::tempdir().unwrap();
-        let (engine, mut events) = quiet_engine(dir.path()).await;
-        events.launch().await;
-        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
-        let room = "wren-5kt2-hb7c";
-        let _mika = server.member(room, "Mika");
-        engine.send(Command::PartyJoin {
-            server: server.address(),
-            room: room.into(),
-            name: Some("Ada".into()),
-        });
-        seen_until(&mut events, |e| matches!(e, Event::PartyJoined(_))).await;
-
-        engine.send(Command::play(AnilistId::new(104_321), "9"));
-        let picked = |e: &Event| {
-            matches!(e, Event::PartyState(view) if view.room_episode.as_ref().is_some_and(|r| {
-                r.id.map(AnilistId::get) == Some(104_321) && r.episode == "9"
-            }))
-        };
-        let seen = seen_until(&mut events, picked).await;
-        assert!(!seen.iter().any(|e| matches!(e, Event::PlaybackStaged { .. })), "{seen:?}");
-        for _ in 0..50 {
-            if server.room(room).is_some_and(|r| !r.playlist.is_empty()) {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(20)).await;
-        }
-        let kept = server.room(room).expect("the room exists");
-        assert!(kept.playlist[0].ends_with("[anilist:104321:9]"), "{:?}", kept.playlist);
-
-        // The same episode again changes nothing in the room, and still plays nothing alone.
-        engine.send(Command::play(AnilistId::new(104_321), "9"));
-        let seen = seen_until(&mut events, |e| matches!(e, Event::JobDone(_))).await;
-        assert!(!seen.iter().any(|e| matches!(e, Event::PlaybackStaged { .. })), "{seen:?}");
-        assert_eq!(server.room(room).unwrap().playlist, kept.playlist);
-
-        // Out of the party, a play is this device's own again.
-        engine.send(Command::PartyLeave);
-        seen_until(&mut events, |e| matches!(e, Event::PartyLeft { .. })).await;
-        engine.send(Command::play(AnilistId::new(104_321), "9"));
-        seen_until(&mut events, |e| matches!(e, Event::PlaybackStaged { .. })).await;
-    }
-
-    /// A device that starts a party writes the playlist the others read: this episode and the
-    /// next, in the name every Kaeri player reports.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn starting_a_party_writes_the_episode_and_the_next_to_the_room() {
-        use kaeri_core::ids::AnilistId;
-        use kaeri_model::party::{PartyCommand, PartyEpisode};
-        use kaeri_party::fake::{FakeOptions, FakeServer};
-
-        let dir = tempfile::tempdir().unwrap();
-        let (engine, mut events) = quiet_engine(dir.path()).await;
-        events.launch().await;
-        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
-        let room = "kite-7qm4-xr9d";
-
-        engine.send(Command::Party(PartyCommand::Lobby {
-            server: server.address(),
-            room: room.into(),
-            name: Some("Ada".into()),
-            pick: Some(PartyEpisode { id: AnilistId::new(104_321), episode: "9".into() }),
-        }));
-        let seen = seen_until(
-            &mut events,
-            |e| matches!(e, Event::PartyState(view) if view.can_start_anyway),
-        )
-        .await;
-        let Some(Event::PartyState(view)) =
-            seen.iter().rev().find(|e| matches!(e, Event::PartyState(v) if v.can_start_anyway))
-        else {
-            panic!("{seen:?}")
-        };
-        assert_eq!(view.starter.as_deref(), Some("Ada"));
-        for _ in 0..50 {
-            if server.room(room).is_some_and(|r| !r.playlist.is_empty()) {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(20)).await;
-        }
-        let kept = server.room(room).expect("the room exists");
-        assert_eq!(kept.index, Some(0));
-        assert_eq!(kept.playlist.len(), 2, "{:?}", kept.playlist);
-        assert!(kept.playlist[0].ends_with("[anilist:104321:9]"), "{:?}", kept.playlist);
-        assert!(kept.playlist[1].ends_with("[anilist:104321:10]"), "{:?}", kept.playlist);
-    }
-
-    /// Looking in joins for a moment, says who is there and what the room watches, and leaves.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn looking_in_reports_the_room_and_leaves_it() {
-        use kaeri_party::fake::{FakeOptions, FakeServer};
-
-        let dir = tempfile::tempdir().unwrap();
-        let (engine, mut events) = quiet_engine(dir.path()).await;
-        events.launch().await;
-        let server = FakeServer::start(FakeOptions::default()).await.unwrap();
-        let room = "kite-7qm4-xr9d";
-        let mika = server.member(room, "Mika");
-        mika.set_playlist(&["Natsukaze Relay, episode 9 [anilist:104321:9]"]);
-        mika.set_index(0);
-
-        engine.send(Command::Party(PartyCommand::LookIn {
-            server: server.address(),
-            room: room.into(),
-            name: Some("Ada".into()),
-        }));
-        let seen = seen_until(&mut events, |e| {
-            matches!(e, Event::PartyGlimpse(_) | Event::PartyLookFailed { .. })
-        })
-        .await;
-        let Some(Event::PartyGlimpse(glimpse)) =
-            seen.iter().find(|e| matches!(e, Event::PartyGlimpse(_)))
-        else {
-            panic!("{seen:?}")
-        };
-        assert_eq!(
-            glimpse.members.iter().map(|m| m.name.as_str()).collect::<Vec<_>>(),
-            ["Mika"]
-        );
-        assert_eq!(glimpse.room_episode.as_ref().map(|r| r.episode.as_str()), Some("9"));
-        for _ in 0..50 {
-            if server.room(room).is_some_and(|r| r.members.len() == 1) {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(20)).await;
-        }
-        assert_eq!(server.room(room).map(|r| r.members.len()), Some(1), "only Mika is left");
-
-        // A server that is not there is a failed look, said in words.
-        engine.send(Command::Party(PartyCommand::LookIn {
-            server: "127.0.0.1:9".into(),
-            room: room.into(),
-            name: None,
-        }));
-        let seen =
-            seen_until(&mut events, |e| matches!(e, Event::PartyLookFailed { .. })).await;
-        assert!(seen.iter().any(|e| matches!(e, Event::PartyLookFailed { .. })), "{seen:?}");
-    }
-
-    /// A party asked of a play with no server chosen: refused, naming the public one and who
-    /// runs it, with nothing staged.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn a_party_play_with_no_server_names_the_suggestion() {
-        use kaeri_model::party::{SUGGESTED_SERVER, SUGGESTED_SERVER_RUN_BY};
-
-        let dir = tempfile::tempdir().unwrap();
-        let (engine, mut events) = quiet_engine(dir.path()).await;
-        events.launch().await;
-        engine.send(Command::play_party(kaeri_core::ids::AnilistId::new(7), "1"));
-        let seen = seen_until(&mut events, |e| matches!(e, Event::JobDone(_))).await;
-        let reason = seen.iter().find_map(|e| match e {
-            Event::PartyLeft { reason } => reason.clone(),
-            _ => None,
-        });
-        let reason = reason.unwrap_or_else(|| panic!("{seen:?}"));
-        assert!(
-            reason.english().contains(SUGGESTED_SERVER)
-                && reason.english().contains(SUGGESTED_SERVER_RUN_BY)
-        );
-        assert!(!seen.iter().any(|e| matches!(e, Event::PlaybackStaged { .. })), "{seen:?}");
-    }
-
-    /// `syncplay.enabled` sends every play to the party on the terminal, which asks for that,
-    /// and does nothing in an app, which starts parties when asked.
-    #[cfg(feature = "party")]
-    #[tokio::test]
-    async fn every_play_joins_the_party_on_the_terminal_alone() {
-        use kaeri_model::party::SUGGESTED_SERVER;
-
-        for terminal in [false, true] {
-            let dir = tempfile::tempdir().unwrap();
-            let host = Arc::new(QuietHost::in_dir(&dir.path().join("tokens")));
-            let (engine, mut events) = engine_with(dir.path(), host, |options| {
-                options.config.syncplay.enabled = true;
-                options.every_play_a_party = terminal;
-            })
-            .await;
-            events.launch().await;
-            engine.send(Command::play(kaeri_core::ids::AnilistId::new(7), "1"));
-            let seen = seen_until(&mut events, |e| matches!(e, Event::JobDone(_))).await;
-            // No server is set, so the terminal's play is told to choose one; the app's plays
-            // with no word of a party.
-            let asked = seen.iter().any(|e| {
-                matches!(e, Event::PartyLeft { reason: Some(reason) } if reason.english().contains(SUGGESTED_SERVER))
-            });
-            assert_eq!(asked, terminal, "{seen:?}");
-            engine.shutdown().await;
-        }
     }
 
     /// A play while casting goes to the TV, the next episode's included: the cast's card is

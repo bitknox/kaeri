@@ -133,6 +133,7 @@ impl App {
         // stray `j` must not move the cursor off the member a "remove" is about to be applied to.
         match (overlay, action) {
             (Overlay::StoreConfirm, Action::Open) => return self.confirm_store_action(),
+            (Overlay::LeaveRoom, Action::Open) => return self.confirm_leave_room(),
             (Overlay::InviteLink, Action::Open) => {
                 self.nav.close_overlay();
                 self.invite_link = None;
@@ -167,6 +168,7 @@ impl App {
             }
             (
                 Overlay::StoreConfirm
+                | Overlay::LeaveRoom
                 | Overlay::InviteLink
                 | Overlay::OpenLink
                 | Overlay::FirstRun,

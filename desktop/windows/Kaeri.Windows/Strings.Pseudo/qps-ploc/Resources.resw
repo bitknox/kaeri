@@ -12420,6 +12420,22 @@
     <value>[Ṁàŕķ šķîþ ţîɱéš àƒţéŕ ýöü ļéàṽé ţĥé ŕööɱ.~~~~~~~~~~~~~]</value>
     <comment>Menu item dimmed in a room, with this reason under it.</comment>
   </data>
+  <data name="RoomPeople" xml:space="preserve">
+    <value>[Þéöþļé îñ ţĥé ŕööɱ~~~~~~]</value>
+    <comment>Heading of the people list in the room, and its accessibility label.</comment>
+  </data>
+  <data name="RoomStateSeeking" xml:space="preserve">
+    <value>[Šééķîñĝ · {seconds} š~~~~~]</value>
+    <comment>State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.</comment>
+  </data>
+  <data name="RoomErrorUnreachableLead" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš.~~~~~~~~~~~]</value>
+    <comment>Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.</comment>
+  </data>
+  <data name="RoomErrorNobodyAnsweredLead" xml:space="preserve">
+    <value>[Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ.~~~~~~~~~]</value>
+    <comment>Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>[Þŕéṽîöüš šéàšöñ~~~~~]</value>
     <comment>Button that shows the season before.</comment>

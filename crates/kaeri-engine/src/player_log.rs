@@ -17,7 +17,7 @@
 //!
 //! Full redaction happens only when the text is asked for ([`text`]): the report's private strings
 //! and sources, the playbacks' titles, and what the engine has seen to be private ([`note`]):
-//! tracker account names, synced device names, party rooms, store links, server addresses and
+//! tracker account names, synced device names, rooms and their links, store links, server addresses and
 //! search words.
 
 use std::{
@@ -746,13 +746,19 @@ fn private_in(event: &Event) -> Vec<String> {
         Event::OpenJoin { view, .. } => {
             out.extend(view.link.as_ref().map(|link| link.0.clone()))
         }
-        Event::PartyJoined(view) | Event::PartyState(view) => {
-            out.extend([view.room.clone(), view.server.clone(), view.name.clone()]);
-            out.extend(view.invite.clone());
+        Event::RoomJoined(view) | Event::RoomState(view) => {
+            // The link holds the room's secret.
+            out.extend([view.room_id.clone(), view.name.clone()]);
+            out.extend(view.link.clone());
+            out.extend(view.waiting.iter().map(|w| w.name.clone()));
+            out.extend(view.move_candidates.iter().map(|m| m.name.clone()));
         }
-        Event::PartyRecent(rooms) => {
+        Event::RoomMembers(members) => {
+            out.extend(members.iter().flat_map(|m| [m.id.clone(), m.name.clone()]));
+        }
+        Event::RoomRecent(rooms) => {
             for room in rooms {
-                out.extend([room.room.clone(), room.server.clone(), room.title.clone()]);
+                out.extend([room.room_id.clone(), room.title.clone()]);
                 out.extend(room.names.iter().cloned());
             }
         }

@@ -23,7 +23,7 @@ extension SettingKey {
     public var isSwitch: Bool {
         switch self {
         case .motion, .autoNext, .preloadMetered, .skipOpening, .skipRecap, .findSkipTimes, .askWasOpening, .shareSkipTimes, .skipFiller, .markChapters, .skipButton, .fullscreen, .nightMode,
-             .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents, .syncplay,
+             .mergeSubtitles, .keepSeeding, .presence, .presenceTitle, .presenceRich, .torrents,
              .updateCheck, .updateBeta, .spoilerProtection, .pictureInPictureOnLeave, .downloadsOnCellular, .torrentsOnCellular, .adultTitles,
              .chapterDownloadsOnCellular, .keepChaptersReady, .deleteAfterReading, .showVolumes, .opdsFeed, .seriesChoicesFollow, .lookFollows, .chapterNotifications, .downloadsFinished,
              .episodeDiscussions, .commentImages, .hoverCards, .showFollowing:

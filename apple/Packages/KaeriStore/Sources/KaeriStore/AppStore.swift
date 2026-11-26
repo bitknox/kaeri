@@ -453,7 +453,7 @@ public final class AppStore {
             playSent = .now
             startAt = nil
             AppLog.info("store", "play \(id) episode \(episode) from a chosen source")
-        case .playLocal, .playParty:
+        case .playLocal:
             startAt = nil
         default:
             break
@@ -1236,16 +1236,6 @@ public final class AppStore {
             onPlayback?(event)
         case .playerOps, .playerUi, .playbackKept, .playerTimeline, .playerBuffered, .playerStats, .clipboard,
              .startingStep, .playerSkipMark, .playerSkipPrompt, .playerSkipNotice, .playerSwitch, .sourcesProgress, .sourcesFailed:
-            onPlayback?(event)
-
-        case .partyForm, .partyJoined, .partyState, .partyMembers, .partyLeft, .partyRecent, .partyGlimpse,
-             .partyLookFailed, .partyLastOut, .partyMessage, .partyStarted, .partyChat, .partyChatState,
-             .partyReaction, .partyChatRefused:
-            // The Syncplay party's, which the app no longer has: the room took its place.
-            break
-        case .partyNoSource:
-            // A room's play found no source here (the engine's older word for it): the room's
-            // panel says it, and the player steps aside for it.
             onPlayback?(event)
 
         case .roomJoined, .roomState, .roomMembers, .roomMessage, .roomChat, .roomChatState, .roomLeft, .roomStarted,
