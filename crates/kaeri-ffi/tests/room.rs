@@ -508,3 +508,23 @@ fn a_room_is_kept_and_rejoin_comes_back_as_the_same_person() {
     engine.send(Command::Room(RoomCommand::ForgetRoom { room_id: kept.room_id }));
     engine.shutdown();
 }
+
+#[test]
+fn the_background_says_player_closed_once_and_the_foreground_comes_back() {
+    use kaeri_model::command::AppState;
+    let (_root, engine) = staged(FfiRoomScene::Watching);
+    let (view, members, _) =
+        until(&engine, |v, m, _| v.playing && state(m, "Ada") == Some(MemberState::Watching));
+    engine.send(Command::AppPhase { phase: AppState::Background { playing: false } });
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, m, r| {
+        r.iter().any(|e| matches!(e, Event::RoomFlushed))
+            && m.iter().any(|m| m.you && m.state == MemberState::PlayerClosed && m.background)
+    });
+    assert!(read.iter().any(|e| matches!(e, Event::RoomFlushed)));
+    engine.send(Command::AppPhase { phase: AppState::Foreground });
+    let (_, members, _) = until_from(&engine, (Some(view), members), |_, m, _| {
+        m.iter().any(|m| m.you && !m.background && m.state != MemberState::PlayerClosed)
+    });
+    assert_ne!(state(&members, "Ada"), Some(MemberState::PlayerClosed));
+    engine.shutdown();
+}

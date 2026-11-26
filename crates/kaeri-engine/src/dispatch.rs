@@ -727,6 +727,8 @@ pub(crate) fn dispatch(
         Command::AppPhase { phase } => {
             services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine);
+            #[cfg(feature = "room")]
+            crate::room::app_phase(phase, engine);
             let EngineState { config, reader, .. } = engine;
             let cx = reader.cx(config, services, tx);
             if phase == kaeri_model::command::AppState::Foreground {
@@ -740,6 +742,9 @@ pub(crate) fn dispatch(
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
+            // Every path change opens the room's sockets again at once.
+            #[cfg(feature = "room")]
+            crate::room::network_changed(engine);
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
             // The metadata ladder blames no source for a path that is gone.
