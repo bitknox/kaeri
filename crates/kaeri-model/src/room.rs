@@ -91,7 +91,9 @@ pub struct RoomView {
     /// ([`RoomView::wait_shown_at_ms`]), so a fast seek never flashes one.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub waiting: Vec<PausedFor>,
-    /// When the wait may show: the first waited member's start plus one second.
+    /// When the wait may show: the first waited member's start plus one second. Only whether
+    /// to show it: the seconds the line counts come from `waiting[0].since_ms`, the same clock
+    /// as that member's row ([`RoomMember::since_ms`]), so the two never differ.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub wait_shown_at_ms: Option<i64>,
     /// When Carry on comes forward: the oldest waited member's start plus 20 s. Play during a
@@ -143,7 +145,8 @@ pub struct PausedFor {
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub you: bool,
     pub reason: WaitReason,
-    /// When this member started loading or stalling.
+    /// When this member started loading or stalling: equal to its row's
+    /// [`RoomMember::since_ms`], so the line and the row count the same seconds.
     pub since_ms: i64,
 }
 
