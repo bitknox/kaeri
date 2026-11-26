@@ -252,7 +252,7 @@ extension PlayerModel {
             _ = await roomWaited(5) { room.members.contains { $0.muted } }
             room.startMove()
         case .skip:
-            room.stage(skipTo: 90)
+            room.stage(skipTo: 20)
         case .sidewayswrite:
             room.draft = "that bridge again" // i18n-skip
             room.writing = true
