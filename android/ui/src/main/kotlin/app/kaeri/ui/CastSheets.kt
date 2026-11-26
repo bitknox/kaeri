@@ -133,7 +133,7 @@ internal fun CastSheetHost() {
             val id = ended.id
             val episode = ended.episode
             if (id != null && episode != null) {
-                snackbars.show(ended.notice.text(context), Strings.castCardPlayHere(context), timed = true) { cast.playHere?.invoke(id, episode) }
+                snackbars.show(ended.notice.text(context), Strings.castCardPlayHere(context), timed = true) { cast.playHere?.invoke(id, episode, null) }
             } else {
                 snackbars.show(ended.notice.text(context))
             }
