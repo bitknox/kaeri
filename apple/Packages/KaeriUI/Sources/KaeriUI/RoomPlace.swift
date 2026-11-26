@@ -140,21 +140,28 @@ struct RoomPlace: View {
             .accessibilityAddTraits(.isHeader)
             .padding(.bottom, 4)
             ForEach(Array(room.recent.enumerated()), id: \.element.key) { index, recent in
-                HStack(spacing: 12) {
-                    TogetherStill(id: recent.id, width: 64, height: 36, radius: 6)
-                    VStack(alignment: .leading, spacing: 0) {
-                        Text(recent.title).font(.system(size: compact ? 15 : 13, weight: .semibold))
-                            .fixedSize(horizontal: false, vertical: true)
-                        Text(RoomCopy.withNames(recent.episode, recent.others, recent.lastAt))
-                            .font(.system(size: compact ? 13 : 12)).foregroundStyle(.haze)
-                            .fixedSize(horizontal: false, vertical: true)
-                        if recent.quiet {
-                            failure(RoomCopy.nobodyAnswered, RoomCopy.nobodyAnsweredHint).padding(.top, 4)
+                VStack(alignment: .leading, spacing: 6) {
+                    HStack(spacing: 12) {
+                        TogetherStill(id: recent.id, width: 64, height: 36, radius: 6)
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(recent.title).font(.system(size: compact ? 15 : 13, weight: .semibold))
+                                .fixedSize(horizontal: false, vertical: true)
+                            Text(RoomCopy.withNames(recent.episode, recent.others, recent.lastAt))
+                                .font(.system(size: compact ? 13 : 12)).foregroundStyle(.haze)
+                                .fixedSize(horizontal: false, vertical: true)
+                            if recent.quiet, !compact {
+                                failure(RoomCopy.nobodyAnswered, RoomCopy.nobodyAnsweredHint).padding(.top, 4)
+                            }
                         }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        Button(recent.quiet ? RoomCopy.tryAgain : RoomCopy.rejoin) { room.rejoin(recent) }
+                            .buttonStyle(RoomButtonStyle(kind: .secondary, height: compact ? 36 : 28, size: compact ? 15 : 12, padding: 12))
                     }
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    Button(recent.quiet ? RoomCopy.tryAgain : RoomCopy.rejoin) { room.rejoin(recent) }
-                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: compact ? 36 : 28, size: compact ? 15 : 12, padding: 12))
+                    // On a phone Try again leaves the failure too narrow beside it: it goes under the
+                    // row, from the title's edge.
+                    if recent.quiet, compact {
+                        failure(RoomCopy.nobodyAnswered, RoomCopy.nobodyAnsweredHint).padding(.leading, 76)
+                    }
                 }
                 .padding(.vertical, recent.quiet || compact ? 10 : 0)
                 .frame(minHeight: 56)
