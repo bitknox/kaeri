@@ -89,7 +89,9 @@ struct PhoneRoomUpright: View {
                         .glassEffect(.regular.interactive(), in: .circle)
                 }
                 .accessibilityLabel(RoomCopy.more)
-                .accessibilityIdentifier("room-more")
+                // A room scene's More is named once the scene is staged: a menu opened while
+                // the stream still opens closes as its picture comes.
+                .accessibilityIdentifier(RoomScene.current == nil || room.staged ? "room-more" : "room-more-staging")
             }
         }
     }

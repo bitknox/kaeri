@@ -110,6 +110,8 @@ public enum RoomScene: String, CaseIterable, Sendable {
     case placerecentfail
 
     public static let argument = "-KaeriRoom"
+    /// The scene this run stages, if any.
+    public static let current = named()
 
     public static func named(in arguments: [String] = ProcessInfo.processInfo.arguments) -> RoomScene? {
         guard let index = arguments.firstIndex(of: argument), arguments.indices.contains(index + 1) else { return nil }
@@ -293,6 +295,7 @@ extension PlayerModel {
         }
         // The column's contents fade in after the window grows.
         try? await Task.sleep(for: .milliseconds(900))
+        room.staged = room.active
         return room.active
     }
 

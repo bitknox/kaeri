@@ -120,6 +120,9 @@ public final class RoomModel {
 
     /// The column beside the video on Mac (and iPad in a regular width).
     public var shown = true
+    /// Fixtures: a room scene is staged as it should look (its player up with a picture). UI
+    /// tests wait for it before they touch the room.
+    public var staged = false
     public var popover: RoomPopover?
     public var leaving: RoomLeaveAsk?
     public var moving = false
