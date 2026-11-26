@@ -744,7 +744,7 @@ private fun ProfileTile(profile: app.kaeri.engine.model.ProfileView, modifier: M
             focusedContainerColor = ObiSilk.Silk,
             focusedContentColor = ObiSilk.Ground,
         ),
-        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = app.kaeri.tv.ui.focusedScale(1.06f)),
     ) {
         Column(
             Modifier.padding(24.dp).semantics { contentDescription = Strings.profilesAvatarDesc(context, profile.name) },

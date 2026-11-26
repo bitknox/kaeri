@@ -49,7 +49,7 @@ fun TonalButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = height),
         enabled = enabled,
-        scale = ButtonDefaults.scale(focusedScale = FOCUSED_SCALE),
+        scale = ButtonDefaults.scale(focusedScale = focusedScale(FOCUSED_SCALE)),
         glow = ButtonDefaults.glow(),
         shape = ButtonDefaults.shape(CircleShape),
         colors = ButtonDefaults.colors(
@@ -87,7 +87,7 @@ fun AmberButton(
         onClick = onClick,
         modifier = modifier.heightIn(min = height),
         enabled = enabled,
-        scale = ButtonDefaults.scale(focusedScale = FOCUSED_SCALE),
+        scale = ButtonDefaults.scale(focusedScale = focusedScale(FOCUSED_SCALE)),
         glow = ButtonDefaults.glow(),
         shape = ButtonDefaults.shape(CircleShape),
         colors = ButtonDefaults.colors(
@@ -113,7 +113,7 @@ fun TonalIconButton(icon: ImageVector, label: String, onClick: () -> Unit, modif
     IconButton(
         onClick = onClick,
         modifier = modifier.size(48.dp),
-        scale = IconButtonDefaults.scale(focusedScale = FOCUSED_SCALE),
+        scale = IconButtonDefaults.scale(focusedScale = focusedScale(FOCUSED_SCALE)),
         glow = IconButtonDefaults.glow(),
         colors = IconButtonDefaults.colors(
             containerColor = ObiSilk.RaisedSelected,
