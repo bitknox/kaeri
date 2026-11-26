@@ -4,6 +4,7 @@
 import Foundation
 import KaeriKit
 @testable import KaeriUI
+import SwiftUI
 import Testing
 
 @MainActor
@@ -379,5 +380,15 @@ struct EpisodeSynopsisTests {
         #expect(EpisodeLanguage.of("A storm closes the pass with the mail still aboard.") == "en")
         #expect(EpisodeLanguage.of("嵐が峠を閉ざし、郵便を載せたまま船は動けなくなる。") == "ja")
         #expect(EpisodeLanguage.of("") == nil)
+    }
+}
+
+struct EpisodeMetricsTextSizeTests {
+    /// Past the default text size an iPad row fits its text instead of cutting it at the still.
+    @Test func theIPadRowFitsLargerText() {
+        #expect(!EpisodeMetrics.pad.fitting(.large).fits)
+        #expect(EpisodeMetrics.pad.fitting(.xLarge).fits)
+        #expect(EpisodeMetrics.pad.fitting(.accessibility2).fits)
+        #expect(EpisodeMetrics.phone.fitting(.small).fits, "the phone always fits")
     }
 }
