@@ -18736,8 +18736,8 @@ pub fn room_line_watching() -> String {
 }
 
 /// Second line while the room plays: the room's episode and its place in it.
-pub fn room_line_watching_detail(episode: i64, at: &str) -> String {
-    text("room-line-watching-detail", &[("episode", Arg::Plain(episode)), ("at", Arg::Text(at))])
+pub fn room_line_watching_detail(episode: &str, at: &str) -> String {
+    text("room-line-watching-detail", &[("episode", Arg::Text(episode)), ("at", Arg::Text(at))])
 }
 
 /// First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.
@@ -18856,8 +18856,8 @@ pub fn room_state_buffering(seconds: i64) -> String {
 }
 
 /// State word: this person plays another episode than the room's.
-pub fn room_state_other_episode(episode: i64) -> String {
-    text("room-state-other-episode", &[("episode", Arg::Plain(episode))])
+pub fn room_state_other_episode(episode: &str) -> String {
+    text("room-state-other-episode", &[("episode", Arg::Text(episode))])
 }
 
 /// State word: this person is picking which source to play from.
@@ -18866,8 +18866,8 @@ pub fn room_state_choosing() -> String {
 }
 
 /// State word: none of this person's sources lists the room's episode.
-pub fn room_state_no_source(episode: i64) -> String {
-    text("room-state-no-source", &[("episode", Arg::Plain(episode))])
+pub fn room_state_no_source(episode: &str) -> String {
+    text("room-state-no-source", &[("episode", Arg::Text(episode))])
 }
 
 /// State word: this person is in the room with the player closed.
@@ -19031,8 +19031,8 @@ pub fn room_room_is_watching() -> String {
 }
 
 /// Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.
-pub fn room_banner_episode(episode: i64, title: &str, length: &str) -> String {
-    text("room-banner-episode", &[("episode", Arg::Plain(episode)), ("title", Arg::Text(title)), ("length", Arg::Text(length))])
+pub fn room_banner_episode(episode: &str, title: &str, length: &str) -> String {
+    text("room-banner-episode", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title)), ("length", Arg::Text(length))])
 }
 
 /// Line under the episode before play: one of your sources has it.
@@ -19071,8 +19071,8 @@ pub fn room_invited_by(name: &str) -> String {
 }
 
 /// Second line when an invite link opened the room: the show and the episode.
-pub fn room_invited_detail(title: &str, episode: i64) -> String {
-    text("room-invited-detail", &[("title", Arg::Text(title)), ("episode", Arg::Plain(episode))])
+pub fn room_invited_detail(title: &str, episode: &str) -> String {
+    text("room-invited-detail", &[("title", Arg::Text(title)), ("episode", Arg::Text(episode))])
 }
 
 /// Second line when an invite link opened a room with 10 or more people in it.
@@ -19091,8 +19091,8 @@ pub fn room_join_anyway() -> String {
 }
 
 /// Heading over the list of sources for the room's episode.
-pub fn room_choose_source(episode: i64) -> String {
-    text("room-choose-source", &[("episode", Arg::Plain(episode))])
+pub fn room_choose_source(episode: &str) -> String {
+    text("room-choose-source", &[("episode", Arg::Text(episode))])
 }
 
 /// Line under it.
@@ -19106,8 +19106,8 @@ pub fn room_play_in_room() -> String {
 }
 
 /// Heading when none of your sources has the room's episode.
-pub fn room_no_source_title(episode: i64) -> String {
-    text("room-no-source-title", &[("episode", Arg::Plain(episode))])
+pub fn room_no_source_title(episode: &str) -> String {
+    text("room-no-source-title", &[("episode", Arg::Text(episode))])
 }
 
 /// Line under it on a desktop: how many sources were looked in.
@@ -19131,8 +19131,8 @@ pub fn room_search_titles() -> String {
 }
 
 /// Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.
-pub fn room_header_line(episode: i64, count: i64) -> String {
-    text("room-header-line", &[("episode", Arg::Plain(episode)), ("count", Arg::Int(count))])
+pub fn room_header_line(episode: &str, count: i64) -> String {
+    text("room-header-line", &[("episode", Arg::Text(episode)), ("count", Arg::Int(count))])
 }
 
 /// Button and accessibility label that opens the invite.
@@ -19486,13 +19486,13 @@ pub fn room_up_next() -> String {
 }
 
 /// Line on the card naming the next episode.
-pub fn room_up_next_episode(episode: i64, title: &str) -> String {
-    text("room-up-next-episode", &[("episode", Arg::Plain(episode)), ("title", Arg::Text(title))])
+pub fn room_up_next_episode(episode: &str, title: &str) -> String {
+    text("room-up-next-episode", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title))])
 }
 
 /// Line on the card naming the next episode when it has no title.
-pub fn room_up_next_episode_plain(episode: i64) -> String {
-    text("room-up-next-episode-plain", &[("episode", Arg::Plain(episode))])
+pub fn room_up_next_episode_plain(episode: &str) -> String {
+    text("room-up-next-episode-plain", &[("episode", Arg::Text(episode))])
 }
 
 /// Line on the card counting down for everyone.
@@ -19516,8 +19516,8 @@ pub fn room_line_up_next(seconds: i64) -> String {
 }
 
 /// Second line while up next counts down.
-pub fn room_line_up_next_detail(episode: i64) -> String {
-    text("room-line-up-next-detail", &[("episode", Arg::Plain(episode))])
+pub fn room_line_up_next_detail(episode: &str) -> String {
+    text("room-line-up-next-detail", &[("episode", Arg::Text(episode))])
 }
 
 /// Placeholder of the chat field.
@@ -19546,13 +19546,13 @@ pub fn room_chat_not_sent() -> String {
 }
 
 /// Chat line: someone started the room.
-pub fn room_chat_started(name: &str, episode: i64) -> String {
-    text("room-chat-started", &[("name", Arg::Text(name)), ("episode", Arg::Plain(episode))])
+pub fn room_chat_started(name: &str, episode: &str) -> String {
+    text("room-chat-started", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
 }
 
 /// Chat line: you started the room.
-pub fn room_chat_you_started(episode: i64) -> String {
-    text("room-chat-you-started", &[("episode", Arg::Plain(episode))])
+pub fn room_chat_you_started(episode: &str) -> String {
+    text("room-chat-you-started", &[("episode", Arg::Text(episode))])
 }
 
 /// Chat line: someone paused, at a place in the episode.
@@ -19611,8 +19611,8 @@ pub fn room_chat_went(name: &str) -> String {
 }
 
 /// Chat line: up next moved the room on.
-pub fn room_chat_up_next(episode: i64) -> String {
-    text("room-chat-up-next", &[("episode", Arg::Plain(episode))])
+pub fn room_chat_up_next(episode: &str) -> String {
+    text("room-chat-up-next", &[("episode", Arg::Text(episode))])
 }
 
 /// Chat line: someone skipped the opening for the room.
@@ -19711,13 +19711,13 @@ pub fn room_recent_note() -> String {
 }
 
 /// Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.
-pub fn room_recent_row(episode: i64, names: &str, when: &str) -> String {
-    text("room-recent-row", &[("episode", Arg::Plain(episode)), ("names", Arg::Text(names)), ("when", Arg::Text(when))])
+pub fn room_recent_row(episode: &str, names: &str, when: &str) -> String {
+    text("room-recent-row", &[("episode", Arg::Text(episode)), ("names", Arg::Text(names)), ("when", Arg::Text(when))])
 }
 
 /// Line of a recent room where you were alone.
-pub fn room_recent_row_alone(episode: i64, when: &str) -> String {
-    text("room-recent-row-alone", &[("episode", Arg::Plain(episode)), ("when", Arg::Text(when))])
+pub fn room_recent_row_alone(episode: &str, when: &str) -> String {
+    text("room-recent-row-alone", &[("episode", Arg::Text(episode)), ("when", Arg::Text(when))])
 }
 
 /// Button on a recent room that joins it again.
@@ -19786,8 +19786,8 @@ pub fn room_chat_corrected() -> String {
 }
 
 /// Chat line: someone put on another episode for the room.
-pub fn room_chat_episode_changed(name: &str, episode: i64) -> String {
-    text("room-chat-episode-changed", &[("name", Arg::Text(name)), ("episode", Arg::Plain(episode))])
+pub fn room_chat_episode_changed(name: &str, episode: &str) -> String {
+    text("room-chat-episode-changed", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
 }
 
 /// Chat line: someone who was behind caught up with the room.
@@ -19831,8 +19831,8 @@ pub fn room_link_copied() -> String {
 }
 
 /// The starting screen's line on the device opening the room's episode.
-pub fn room_starting_episode(episode: i64) -> String {
-    text("room-starting-episode", &[("episode", Arg::Plain(episode))])
+pub fn room_starting_episode(episode: &str) -> String {
+    text("room-starting-episode", &[("episode", Arg::Text(episode))])
 }
 
 /// A short length in minutes, on the banner before play.
@@ -19848,6 +19848,86 @@ pub fn room_names_and(names: &str, last: &str) -> String {
 /// Joins two names in a longer list: "Mika, Ren".
 pub fn room_names_comma(first: &str, rest: &str) -> String {
     text("room-names-comma", &[("first", Arg::Text(first)), ("rest", Arg::Text(rest))])
+}
+
+/// Person menu item and accessibility action that hides someone's lines and reactions in this room.
+pub fn room_mute(name: &str) -> String {
+    text("room-mute", &[("name", Arg::Text(name))])
+}
+
+/// Person menu item and accessibility action that shows a muted person's lines again.
+pub fn room_unmute(name: &str) -> String {
+    text("room-unmute", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation where a muted person's lines were.
+pub fn room_chat_muted(name: &str) -> String {
+    text("room-chat-muted", &[("name", Arg::Text(name))])
+}
+
+/// Line after the newest chat lines over the video, which opens the conversation.
+pub fn room_chat_more(count: i64) -> String {
+    text("room-chat-more", &[("count", Arg::Int(count))])
+}
+
+/// Spoken by a screen reader when a chat line arrives.
+pub fn room_chat_announce(name: &str, message: &str) -> String {
+    text("room-chat-announce", &[("name", Arg::Text(name)), ("message", Arg::Text(message))])
+}
+
+/// End of the chat field while sending waits, after three messages in five seconds.
+pub fn room_chat_wait(seconds: i64) -> String {
+    text("room-chat-wait", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken once when sending waits, for screen readers.
+pub fn room_chat_wait_spoken(seconds: i64) -> String {
+    text("room-chat-wait-spoken", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken by a screen reader once, when 20 characters are left in the chat field.
+pub fn room_chat_characters_left(count: i64) -> String {
+    text("room-chat-characters-left", &[("count", Arg::Int(count))])
+}
+
+/// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+pub fn room_reacted_at(line: &str, time: &str) -> String {
+    text("room-reacted-at", &[("line", Arg::Text(line)), ("time", Arg::Text(time))])
+}
+
+/// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+pub fn room_tick_label(time: &str, names: &str) -> String {
+    text("room-tick-label", &[("time", Arg::Text(time)), ("names", Arg::Text(names))])
+}
+
+/// Two people named together, for a reaction made by both: "Ren and Mika".
+pub fn room_names_two(first: &str, second: &str) -> String {
+    text("room-names-two", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// Three people named together.
+pub fn room_names_three(first: &str, second: &str, third: &str) -> String {
+    text("room-names-three", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("third", Arg::Text(third))])
+}
+
+/// More than three people named together: two names and how many others.
+pub fn room_names_others(first: &str, second: &str, count: i64) -> String {
+    text("room-names-others", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("count", Arg::Int(count))])
+}
+
+/// Player panel, under the subtitled or dubbed switch in a room.
+pub fn room_version_own() -> String {
+    text("room-version-own", &[])
+}
+
+/// The banner over the room when the episode has no name of its own: the episode and its length.
+pub fn room_banner_episode_plain(episode: &str, length: &str) -> String {
+    text("room-banner-episode-plain", &[("episode", Arg::Text(episode)), ("length", Arg::Text(length))])
+}
+
+/// Menu item dimmed in a room, with this reason under it.
+pub fn room_mark_unavailable() -> String {
+    text("room-mark-unavailable", &[])
 }
 
 /// Button that shows the season before.
@@ -23123,6 +23203,36 @@ pub fn sources_add_demo() -> String {
 /// Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
 pub fn sources_order_all() -> String {
     text("sources-order-all", &[])
+}
+
+/// Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+pub fn sources_choose_for(episode: &str) -> String {
+    text("sources-choose-for", &[("episode", Arg::Text(episode))])
+}
+
+/// Line while the sources are searched for the episode.
+pub fn sources_looking() -> String {
+    text("sources-looking", &[])
+}
+
+/// Line over the list of sources that list the episode.
+pub fn sources_found(count: i64) -> String {
+    text("sources-found", &[("count", Arg::Int(count))])
+}
+
+/// Line when no source lists the episode.
+pub fn sources_none_list(episode: &str) -> String {
+    text("sources-none-list", &[("episode", Arg::Text(episode))])
+}
+
+/// Button that goes to the Sources page, when no source is set up.
+pub fn sources_open() -> String {
+    text("sources-open", &[])
+}
+
+/// Accessibility label of the list of sources for the episode.
+pub fn sources_label() -> String {
+    text("sources-label", &[])
 }
 
 /// Short label for a joined store, on a row.

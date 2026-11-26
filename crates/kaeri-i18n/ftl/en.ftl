@@ -12537,6 +12537,62 @@ room-names-and = { $names } and { $last }
 # Joins two names in a longer list: "Mika, Ren".
 room-names-comma = { $first }, { $rest }
 
+# Person menu item and accessibility action that hides someone's lines and reactions in this room.
+room-mute = Mute { $name }
+
+# Person menu item and accessibility action that shows a muted person's lines again.
+room-unmute = Unmute { $name }
+
+# Line in the conversation where a muted person's lines were.
+room-chat-muted = { $name } is muted
+
+# Line after the newest chat lines over the video, which opens the conversation.
+room-chat-more = { $count } more in chat
+
+# Spoken by a screen reader when a chat line arrives.
+room-chat-announce = { $name } says { $message }
+
+# End of the chat field while sending waits, after three messages in five seconds.
+room-chat-wait = Wait { $seconds } s
+
+# Spoken once when sending waits, for screen readers.
+room-chat-wait-spoken =
+    { $seconds ->
+        [one] Wait one second
+       *[other] Wait { $seconds } seconds
+    }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+room-chat-characters-left =
+    { $count ->
+        [one] { $count } character left
+       *[other] { $count } characters left
+    }
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+room-reacted-at = { $line } at { $time }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+room-tick-label = { $time } · { $names }
+
+# Two people named together, for a reaction made by both: "Ren and Mika".
+room-names-two = { $first } and { $second }
+
+# Three people named together.
+room-names-three = { $first }, { $second } and { $third }
+
+# More than three people named together: two names and how many others.
+room-names-others = { $first }, { $second } and { $count } others
+
+# Player panel, under the subtitled or dubbed switch in a room.
+room-version-own = Only your player switches. The room keeps playing.
+
+# The banner over the room when the episode has no name of its own: the episode and its length.
+room-banner-episode-plain = Episode { $episode } · { $length }
+
+# Menu item dimmed in a room, with this reason under it.
+room-mark-unavailable = Mark skip times after you leave the room.
+
 # Button that shows the season before.
 seasonal-previous = Previous season
 
@@ -14617,6 +14673,28 @@ sources-add-demo = Add the demo
 
 # Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
 sources-order-all = Every source is tried in this order, whatever its kind.
+
+# Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+sources-choose-for = Choose a source for episode { $episode }
+
+# Line while the sources are searched for the episode.
+sources-looking = Looking through your sources…
+
+# Line over the list of sources that list the episode.
+sources-found =
+    { $count ->
+        [one] One source has it
+       *[other] { $count } sources have it
+    }
+
+# Line when no source lists the episode.
+sources-none-list = No source lists episode { $episode }. Sources come from plugins, which a plugin store adds.
+
+# Button that goes to the Sources page, when no source is set up.
+sources-open = Open sources
+
+# Accessibility label of the list of sources for the episode.
+sources-label = Sources for this episode
 
 # Short label for a joined store, on a row.
 stores-joined = Joined

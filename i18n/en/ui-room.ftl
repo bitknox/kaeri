@@ -11,7 +11,7 @@
 room-line-watching = Watching together
 
 # Second line while the room plays: the room's episode and its place in it.
-# @arg episode: plain
+# @arg episode: text
 # @arg at: text
 room-line-watching-detail = Episode { $episode } · { $at }
 
@@ -135,7 +135,7 @@ room-state-loading = Loading · { $seconds } s
 room-state-buffering = Buffering · { $seconds } s
 
 # State word: this person plays another episode than the room's.
-# @arg episode: plain
+# @arg episode: text
 # @max 24
 room-state-other-episode = On episode { $episode }
 
@@ -144,7 +144,7 @@ room-state-other-episode = On episode { $episode }
 room-state-choosing = Choosing a { -source }
 
 # State word: none of this person's sources lists the room's episode.
-# @arg episode: plain
+# @arg episode: text
 # @max 36
 room-state-no-source = No { -source } for episode { $episode }
 
@@ -294,7 +294,7 @@ room-up-in-room = Up in the room
 room-room-is-watching = The room is watching
 
 # Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.
-# @arg episode: plain
+# @arg episode: text
 # @arg title: text
 # @arg length: text
 room-banner-episode = Episode { $episode } · { $title } · { $length }
@@ -327,7 +327,7 @@ room-invited-by = { $name } invited you
 
 # Second line when an invite link opened the room: the show and the episode.
 # @arg title: text
-# @arg episode: plain
+# @arg episode: text
 room-invited-detail = { $title } · Episode { $episode }
 
 # Second line when an invite link opened a room with 10 or more people in it.
@@ -346,7 +346,7 @@ room-join-anyway = Join anyway
 ## video area.
 
 # Heading over the list of sources for the room's episode.
-# @arg episode: plain
+# @arg episode: text
 room-choose-source = Choose a { -source } for episode { $episode }
 
 # Line under it.
@@ -357,7 +357,7 @@ room-choose-source-line = The room keeps watching; you join at its place.
 room-play-in-room = Play in the room
 
 # Heading when none of your sources has the room's episode.
-# @arg episode: plain
+# @arg episode: text
 room-no-source-title = None of your { -source-pl } has episode { $episode }
 
 # Line under it on a desktop: how many sources were looked in.
@@ -381,7 +381,7 @@ room-search-titles = Search titles
 ## The room's header and buttons.
 
 # Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.
-# @arg episode: plain
+# @arg episode: text
 # @arg count: int
 room-header-line = Episode { $episode } · { $count } in the room
 
@@ -659,12 +659,12 @@ room-keep-watching = Keep watching
 room-up-next = { -up-next-cap } for the room
 
 # Line on the card naming the next episode.
-# @arg episode: plain
+# @arg episode: text
 # @arg title: text
 room-up-next-episode = Episode { $episode } · { $title }
 
 # Line on the card naming the next episode when it has no title.
-# @arg episode: plain
+# @arg episode: text
 room-up-next-episode-plain = Episode { $episode }
 
 # Line on the card counting down for everyone.
@@ -685,7 +685,7 @@ room-play-next-now = Play next now
 room-line-up-next = { -up-next-cap } in { $seconds } s
 
 # Second line while up next counts down.
-# @arg episode: plain
+# @arg episode: text
 room-line-up-next-detail = Episode { $episode } plays for everyone
 
 ## Chat in the room: the conversation, the room's own lines in it, and reactions.
@@ -711,11 +711,11 @@ room-chat-not-sent = Couldn't send
 
 # Chat line: someone started the room.
 # @arg name: text
-# @arg episode: plain
+# @arg episode: text
 room-chat-started = { $name } started the room · Episode { $episode }
 
 # Chat line: you started the room.
-# @arg episode: plain
+# @arg episode: text
 room-chat-you-started = You started the room · Episode { $episode }
 
 # Chat line: someone paused, at a place in the episode.
@@ -765,7 +765,7 @@ room-chat-moved = { $name } moved to a new room
 room-chat-went = { $name } went to the new room
 
 # Chat line: up next moved the room on.
-# @arg episode: plain
+# @arg episode: text
 room-chat-up-next = { -up-next-cap }: episode { $episode } for everyone
 
 # Chat line: someone skipped the opening for the room.
@@ -849,13 +849,13 @@ room-recent = Recent rooms
 room-recent-note = The last ten, kept on this { -device }
 
 # Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.
-# @arg episode: plain
+# @arg episode: text
 # @arg names: text
 # @arg when: text
 room-recent-row = Episode { $episode } · with { $names } · { $when }
 
 # Line of a recent room where you were alone.
-# @arg episode: plain
+# @arg episode: text
 # @arg when: text
 room-recent-row-alone = Episode { $episode } · { $when }
 
@@ -909,7 +909,7 @@ room-chat-corrected = Moved to stay with the room
 
 # Chat line: someone put on another episode for the room.
 # @arg name: text
-# @arg episode: plain
+# @arg episode: text
 room-chat-episode-changed = { $name } put on episode { $episode }
 
 # Chat line: someone who was behind caught up with the room.
@@ -946,7 +946,7 @@ room-skip-opening = Skip opening
 room-link-copied = Invite link copied
 
 # The starting screen's line on the device opening the room's episode.
-# @arg episode: plain
+# @arg episode: text
 room-starting-episode = Starting episode { $episode }
 
 # A short length in minutes, on the banner before play.
@@ -963,3 +963,87 @@ room-names-and = { $names } and { $last }
 # @arg first: text
 # @arg rest: text
 room-names-comma = { $first }, { $rest }
+
+## Asked for by the Windows room (26 Nov)
+
+# Person menu item and accessibility action that hides someone's lines and reactions in this room.
+# @arg name: text
+# @max 32
+room-mute = Mute { $name }
+
+# Person menu item and accessibility action that shows a muted person's lines again.
+# @arg name: text
+# @max 32
+room-unmute = Unmute { $name }
+
+# Line in the conversation where a muted person's lines were.
+# @arg name: text
+room-chat-muted = { $name } is muted
+
+# Line after the newest chat lines over the video, which opens the conversation.
+# @arg count: int
+# @max 24
+room-chat-more = { $count } more in chat
+
+# Spoken by a screen reader when a chat line arrives.
+# @arg name: text
+# @arg message: text
+room-chat-announce = { $name } says { $message }
+
+# End of the chat field while sending waits, after three messages in five seconds.
+# @arg seconds: int
+# @max 16
+room-chat-wait = Wait { $seconds } s
+
+# Spoken once when sending waits, for screen readers.
+# @arg seconds: int
+room-chat-wait-spoken = { $seconds ->
+    [one] Wait one second
+   *[other] Wait { $seconds } seconds
+}
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+# @arg count: int
+room-chat-characters-left = { $count ->
+    [one] { $count } character left
+   *[other] { $count } characters left
+}
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+# @arg line: text
+# @arg time: text
+room-reacted-at = { $line } at { $time }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+# @arg time: text
+# @arg names: text
+room-tick-label = { $time } · { $names }
+
+# Two people named together, for a reaction made by both: "Ren and Mika".
+# @arg first: text
+# @arg second: text
+room-names-two = { $first } and { $second }
+
+# Three people named together.
+# @arg first: text
+# @arg second: text
+# @arg third: text
+room-names-three = { $first }, { $second } and { $third }
+
+# More than three people named together: two names and how many others.
+# @arg first: text
+# @arg second: text
+# @arg count: int
+room-names-others = { $first }, { $second } and { $count } others
+
+# Player panel, under the subtitled or dubbed switch in a room.
+room-version-own = Only your player switches. The room keeps playing.
+
+# The banner over the room when the episode has no name of its own: the episode and its length.
+# @arg episode: text
+# @arg length: text
+room-banner-episode-plain = Episode { $episode } · { $length }
+
+# Menu item dimmed in a room, with this reason under it.
+room-mark-unavailable = Mark skip times after you leave the room.
+

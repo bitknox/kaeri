@@ -8169,7 +8169,7 @@ public static partial class T
     public static string RoomLineWatching => Get("RoomLineWatching");
 
     /// <summary>Second line while the room plays: the room's episode and its place in it.</summary>
-    public static string RoomLineWatchingDetail(long episode, string at) => Fill(Get("RoomLineWatchingDetail"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("at", at));
+    public static string RoomLineWatchingDetail(string episode, string at) => Fill(Get("RoomLineWatchingDetail"), ("episode", episode), ("at", at));
 
     /// <summary>First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.</summary>
     public static string RoomLinePausedFor(string names) => Fill(Get("RoomLinePausedFor"), ("names", names));
@@ -8241,13 +8241,13 @@ public static partial class T
     public static string RoomStateBuffering(long seconds) => Fill(Get("RoomStateBuffering"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>State word: this person plays another episode than the room's.</summary>
-    public static string RoomStateOtherEpisode(long episode) => Fill(Get("RoomStateOtherEpisode"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomStateOtherEpisode(string episode) => Fill(Get("RoomStateOtherEpisode"), ("episode", episode));
 
     /// <summary>State word: this person is picking which source to play from.</summary>
     public static string RoomStateChoosing => Get("RoomStateChoosing");
 
     /// <summary>State word: none of this person's sources lists the room's episode.</summary>
-    public static string RoomStateNoSource(long episode) => Fill(Get("RoomStateNoSource"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomStateNoSource(string episode) => Fill(Get("RoomStateNoSource"), ("episode", episode));
 
     /// <summary>State word: this person is in the room with the player closed.</summary>
     public static string RoomStatePlayerClosed => Get("RoomStatePlayerClosed");
@@ -8346,7 +8346,7 @@ public static partial class T
     public static string RoomRoomIsWatching => Get("RoomRoomIsWatching");
 
     /// <summary>Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.</summary>
-    public static string RoomBannerEpisode(long episode, string title, string length) => Fill(Get("RoomBannerEpisode"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title), ("length", length));
+    public static string RoomBannerEpisode(string episode, string title, string length) => Fill(Get("RoomBannerEpisode"), ("episode", episode), ("title", title), ("length", length));
 
     /// <summary>Line under the episode before play: one of your sources has it.</summary>
     public static string RoomPlaysFromSources => Get("RoomPlaysFromSources");
@@ -8370,7 +8370,7 @@ public static partial class T
     public static string RoomInvitedBy(string name) => Fill(Get("RoomInvitedBy"), ("name", name));
 
     /// <summary>Second line when an invite link opened the room: the show and the episode.</summary>
-    public static string RoomInvitedDetail(string title, long episode) => Fill(Get("RoomInvitedDetail"), ("title", title), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomInvitedDetail(string title, string episode) => Fill(Get("RoomInvitedDetail"), ("title", title), ("episode", episode));
 
     /// <summary>Second line when an invite link opened a room with 10 or more people in it.</summary>
     public static string RoomInvitedOver(long count) => Fill(Get("RoomInvitedOver"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -8382,7 +8382,7 @@ public static partial class T
     public static string RoomJoinAnyway => Get("RoomJoinAnyway");
 
     /// <summary>Heading over the list of sources for the room's episode.</summary>
-    public static string RoomChooseSource(long episode) => Fill(Get("RoomChooseSource"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomChooseSource(string episode) => Fill(Get("RoomChooseSource"), ("episode", episode));
 
     /// <summary>Line under it.</summary>
     public static string RoomChooseSourceLine => Get("RoomChooseSourceLine");
@@ -8391,7 +8391,7 @@ public static partial class T
     public static string RoomPlayInRoom => Get("RoomPlayInRoom");
 
     /// <summary>Heading when none of your sources has the room's episode.</summary>
-    public static string RoomNoSourceTitle(long episode) => Fill(Get("RoomNoSourceTitle"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomNoSourceTitle(string episode) => Fill(Get("RoomNoSourceTitle"), ("episode", episode));
 
     /// <summary>Line under it on a desktop: how many sources were looked in.</summary>
     public static string RoomNoSourceLine(long count) => Fill(GetPlural("RoomNoSourceLine", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -8406,7 +8406,7 @@ public static partial class T
     public static string RoomSearchTitles => Get("RoomSearchTitles");
 
     /// <summary>Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.</summary>
-    public static string RoomHeaderLine(long episode, long count) => Fill(Get("RoomHeaderLine"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomHeaderLine(string episode, long count) => Fill(Get("RoomHeaderLine"), ("episode", episode), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button and accessibility label that opens the invite.</summary>
     public static string RoomInvite => Get("RoomInvite");
@@ -8619,10 +8619,10 @@ public static partial class T
     public static string RoomUpNext => Get("RoomUpNext");
 
     /// <summary>Line on the card naming the next episode.</summary>
-    public static string RoomUpNextEpisode(long episode, string title) => Fill(Get("RoomUpNextEpisode"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("title", title));
+    public static string RoomUpNextEpisode(string episode, string title) => Fill(Get("RoomUpNextEpisode"), ("episode", episode), ("title", title));
 
     /// <summary>Line on the card naming the next episode when it has no title.</summary>
-    public static string RoomUpNextEpisodePlain(long episode) => Fill(Get("RoomUpNextEpisodePlain"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomUpNextEpisodePlain(string episode) => Fill(Get("RoomUpNextEpisodePlain"), ("episode", episode));
 
     /// <summary>Line on the card counting down for everyone.</summary>
     public static string RoomUpNextCount(long seconds) => Fill(Get("RoomUpNextCount"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -8637,7 +8637,7 @@ public static partial class T
     public static string RoomLineUpNext(long seconds) => Fill(Get("RoomLineUpNext"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Second line while up next counts down.</summary>
-    public static string RoomLineUpNextDetail(long episode) => Fill(Get("RoomLineUpNextDetail"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomLineUpNextDetail(string episode) => Fill(Get("RoomLineUpNextDetail"), ("episode", episode));
 
     /// <summary>Placeholder of the chat field.</summary>
     public static string RoomChatField => Get("RoomChatField");
@@ -8655,10 +8655,10 @@ public static partial class T
     public static string RoomChatNotSent => Get("RoomChatNotSent");
 
     /// <summary>Chat line: someone started the room.</summary>
-    public static string RoomChatStarted(string name, long episode) => Fill(Get("RoomChatStarted"), ("name", name), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomChatStarted(string name, string episode) => Fill(Get("RoomChatStarted"), ("name", name), ("episode", episode));
 
     /// <summary>Chat line: you started the room.</summary>
-    public static string RoomChatYouStarted(long episode) => Fill(Get("RoomChatYouStarted"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomChatYouStarted(string episode) => Fill(Get("RoomChatYouStarted"), ("episode", episode));
 
     /// <summary>Chat line: someone paused, at a place in the episode.</summary>
     public static string RoomChatPaused(string name, string at) => Fill(Get("RoomChatPaused"), ("name", name), ("at", at));
@@ -8694,7 +8694,7 @@ public static partial class T
     public static string RoomChatWent(string name) => Fill(Get("RoomChatWent"), ("name", name));
 
     /// <summary>Chat line: up next moved the room on.</summary>
-    public static string RoomChatUpNext(long episode) => Fill(Get("RoomChatUpNext"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomChatUpNext(string episode) => Fill(Get("RoomChatUpNext"), ("episode", episode));
 
     /// <summary>Chat line: someone skipped the opening for the room.</summary>
     public static string RoomChatSkippedOpening(string name) => Fill(Get("RoomChatSkippedOpening"), ("name", name));
@@ -8754,10 +8754,10 @@ public static partial class T
     public static string RoomRecentNote => Get("RoomRecentNote");
 
     /// <summary>Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.</summary>
-    public static string RoomRecentRow(long episode, string names, string when) => Fill(Get("RoomRecentRow"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("names", names), ("when", when));
+    public static string RoomRecentRow(string episode, string names, string when) => Fill(Get("RoomRecentRow"), ("episode", episode), ("names", names), ("when", when));
 
     /// <summary>Line of a recent room where you were alone.</summary>
-    public static string RoomRecentRowAlone(long episode, string when) => Fill(Get("RoomRecentRowAlone"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)), ("when", when));
+    public static string RoomRecentRowAlone(string episode, string when) => Fill(Get("RoomRecentRowAlone"), ("episode", episode), ("when", when));
 
     /// <summary>Button on a recent room that joins it again.</summary>
     public static string RoomRejoin => Get("RoomRejoin");
@@ -8799,7 +8799,7 @@ public static partial class T
     public static string RoomChatCorrected => Get("RoomChatCorrected");
 
     /// <summary>Chat line: someone put on another episode for the room.</summary>
-    public static string RoomChatEpisodeChanged(string name, long episode) => Fill(Get("RoomChatEpisodeChanged"), ("name", name), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomChatEpisodeChanged(string name, string episode) => Fill(Get("RoomChatEpisodeChanged"), ("name", name), ("episode", episode));
 
     /// <summary>Chat line: someone who was behind caught up with the room.</summary>
     public static string RoomChatCaughtUp(string name) => Fill(Get("RoomChatCaughtUp"), ("name", name));
@@ -8826,7 +8826,7 @@ public static partial class T
     public static string RoomLinkCopied => Get("RoomLinkCopied");
 
     /// <summary>The starting screen's line on the device opening the room's episode.</summary>
-    public static string RoomStartingEpisode(long episode) => Fill(Get("RoomStartingEpisode"), ("episode", episode.ToString(System.Globalization.CultureInfo.CurrentCulture)));
+    public static string RoomStartingEpisode(string episode) => Fill(Get("RoomStartingEpisode"), ("episode", episode));
 
     /// <summary>A short length in minutes, on the banner before play.</summary>
     public static string RoomMinutes(long minutes) => Fill(Get("RoomMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -8836,6 +8836,54 @@ public static partial class T
 
     /// <summary>Joins two names in a longer list: "Mika, Ren".</summary>
     public static string RoomNamesComma(string first, string rest) => Fill(Get("RoomNamesComma"), ("first", first), ("rest", rest));
+
+    /// <summary>Person menu item and accessibility action that hides someone's lines and reactions in this room.</summary>
+    public static string RoomMute(string name) => Fill(Get("RoomMute"), ("name", name));
+
+    /// <summary>Person menu item and accessibility action that shows a muted person's lines again.</summary>
+    public static string RoomUnmute(string name) => Fill(Get("RoomUnmute"), ("name", name));
+
+    /// <summary>Line in the conversation where a muted person's lines were.</summary>
+    public static string RoomChatMuted(string name) => Fill(Get("RoomChatMuted"), ("name", name));
+
+    /// <summary>Line after the newest chat lines over the video, which opens the conversation.</summary>
+    public static string RoomChatMore(long count) => Fill(Get("RoomChatMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken by a screen reader when a chat line arrives.</summary>
+    public static string RoomChatAnnounce(string name, string message) => Fill(Get("RoomChatAnnounce"), ("name", name), ("message", message));
+
+    /// <summary>End of the chat field while sending waits, after three messages in five seconds.</summary>
+    public static string RoomChatWait(long seconds) => Fill(Get("RoomChatWait"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken once when sending waits, for screen readers.</summary>
+    public static string RoomChatWaitSpoken(long seconds) => Fill(GetPlural("RoomChatWaitSpoken", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken by a screen reader once, when 20 characters are left in the chat field.</summary>
+    public static string RoomChatCharactersLeft(long count) => Fill(GetPlural("RoomChatCharactersLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.</summary>
+    public static string RoomReactedAt(string line, string time) => Fill(Get("RoomReactedAt"), ("line", line), ("time", time));
+
+    /// <summary>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</summary>
+    public static string RoomTickLabel(string time, string names) => Fill(Get("RoomTickLabel"), ("time", time), ("names", names));
+
+    /// <summary>Two people named together, for a reaction made by both: "Ren and Mika".</summary>
+    public static string RoomNamesTwo(string first, string second) => Fill(Get("RoomNamesTwo"), ("first", first), ("second", second));
+
+    /// <summary>Three people named together.</summary>
+    public static string RoomNamesThree(string first, string second, string third) => Fill(Get("RoomNamesThree"), ("first", first), ("second", second), ("third", third));
+
+    /// <summary>More than three people named together: two names and how many others.</summary>
+    public static string RoomNamesOthers(string first, string second, long count) => Fill(Get("RoomNamesOthers"), ("first", first), ("second", second), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch in a room.</summary>
+    public static string RoomVersionOwn => Get("RoomVersionOwn");
+
+    /// <summary>The banner over the room when the episode has no name of its own: the episode and its length.</summary>
+    public static string RoomBannerEpisodePlain(string episode, string length) => Fill(Get("RoomBannerEpisodePlain"), ("episode", episode), ("length", length));
+
+    /// <summary>Menu item dimmed in a room, with this reason under it.</summary>
+    public static string RoomMarkUnavailable => Get("RoomMarkUnavailable");
 
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
@@ -10801,6 +10849,24 @@ public static partial class T
 
     /// <summary>Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.</summary>
     public static string SourcesOrderAll => Get("SourcesOrderAll");
+
+    /// <summary>Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.</summary>
+    public static string SourcesChooseFor(string episode) => Fill(Get("SourcesChooseFor"), ("episode", episode));
+
+    /// <summary>Line while the sources are searched for the episode.</summary>
+    public static string SourcesLooking => Get("SourcesLooking");
+
+    /// <summary>Line over the list of sources that list the episode.</summary>
+    public static string SourcesFound(long count) => Fill(GetPlural("SourcesFound", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line when no source lists the episode.</summary>
+    public static string SourcesNoneList(string episode) => Fill(Get("SourcesNoneList"), ("episode", episode));
+
+    /// <summary>Button that goes to the Sources page, when no source is set up.</summary>
+    public static string SourcesOpen => Get("SourcesOpen");
+
+    /// <summary>Accessibility label of the list of sources for the episode.</summary>
+    public static string SourcesLabel => Get("SourcesLabel");
 
     /// <summary>Short label for a joined store, on a row.</summary>
     public static string StoresJoined => Get("StoresJoined");
@@ -16317,6 +16383,24 @@ public static partial class T
         ["RoomMinutes"] = "{minutes} min",
         ["RoomNamesAnd"] = "{names} and {last}",
         ["RoomNamesComma"] = "{first}, {rest}",
+        ["RoomMute"] = "Mute {name}",
+        ["RoomUnmute"] = "Unmute {name}",
+        ["RoomChatMuted"] = "{name} is muted",
+        ["RoomChatMore"] = "{count} more in chat",
+        ["RoomChatAnnounce"] = "{name} says {message}",
+        ["RoomChatWait"] = "Wait {seconds} s",
+        ["RoomChatWaitSpoken_one"] = "Wait one second",
+        ["RoomChatWaitSpoken_other"] = "Wait {seconds} seconds",
+        ["RoomChatCharactersLeft_one"] = "{count} character left",
+        ["RoomChatCharactersLeft_other"] = "{count} characters left",
+        ["RoomReactedAt"] = "{line} at {time}",
+        ["RoomTickLabel"] = "{time} · {names}",
+        ["RoomNamesTwo"] = "{first} and {second}",
+        ["RoomNamesThree"] = "{first}, {second} and {third}",
+        ["RoomNamesOthers"] = "{first}, {second} and {count} others",
+        ["RoomVersionOwn"] = "Only your player switches. The room keeps playing.",
+        ["RoomBannerEpisodePlain"] = "Episode {episode} · {length}",
+        ["RoomMarkUnavailable"] = "Mark skip times after you leave the room.",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",
@@ -17001,6 +17085,13 @@ public static partial class T
         ["SourcesSectionCatalogues"] = "Open catalogues",
         ["SourcesAddDemo"] = "Add the demo",
         ["SourcesOrderAll"] = "Every source is tried in this order, whatever its kind.",
+        ["SourcesChooseFor"] = "Choose a source for episode {episode}",
+        ["SourcesLooking"] = "Looking through your sources…",
+        ["SourcesFound_one"] = "One source has it",
+        ["SourcesFound_other"] = "{count} sources have it",
+        ["SourcesNoneList"] = "No source lists episode {episode}. Sources come from plugins, which a plugin store adds.",
+        ["SourcesOpen"] = "Open sources",
+        ["SourcesLabel"] = "Sources for this episode",
         ["StoresJoined"] = "Joined",
         ["StoresEmptyTitle"] = "No plugin stores yet",
         ["StoresEmptyDetail"] = "Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.",

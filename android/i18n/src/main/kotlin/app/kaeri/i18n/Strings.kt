@@ -12305,7 +12305,7 @@ object Strings {
         context.getString(R.string.room_line_watching)
 
     /** Second line while the room plays: the room's episode and its place in it. */
-    fun roomLineWatchingDetail(context: Context, episode: Int, at: String): String =
+    fun roomLineWatchingDetail(context: Context, episode: String, at: String): String =
         context.getString(R.string.room_line_watching_detail, episode, at)
 
     /** First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people. */
@@ -12401,7 +12401,7 @@ object Strings {
         context.getString(R.string.room_state_buffering, seconds)
 
     /** State word: this person plays another episode than the room's. */
-    fun roomStateOtherEpisode(context: Context, episode: Int): String =
+    fun roomStateOtherEpisode(context: Context, episode: String): String =
         context.getString(R.string.room_state_other_episode, episode)
 
     /** State word: this person is picking which source to play from. */
@@ -12409,7 +12409,7 @@ object Strings {
         context.getString(R.string.room_state_choosing)
 
     /** State word: none of this person's sources lists the room's episode. */
-    fun roomStateNoSource(context: Context, episode: Int): String =
+    fun roomStateNoSource(context: Context, episode: String): String =
         context.getString(R.string.room_state_no_source, episode)
 
     /** State word: this person is in the room with the player closed. */
@@ -12541,7 +12541,7 @@ object Strings {
         context.getString(R.string.room_room_is_watching)
 
     /** Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min. */
-    fun roomBannerEpisode(context: Context, episode: Int, title: String, length: String): String =
+    fun roomBannerEpisode(context: Context, episode: String, title: String, length: String): String =
         context.getString(R.string.room_banner_episode, episode, title, length)
 
     /** Line under the episode before play: one of your sources has it. */
@@ -12573,7 +12573,7 @@ object Strings {
         context.getString(R.string.room_invited_by, name)
 
     /** Second line when an invite link opened the room: the show and the episode. */
-    fun roomInvitedDetail(context: Context, title: String, episode: Int): String =
+    fun roomInvitedDetail(context: Context, title: String, episode: String): String =
         context.getString(R.string.room_invited_detail, title, episode)
 
     /** Second line when an invite link opened a room with 10 or more people in it. */
@@ -12589,7 +12589,7 @@ object Strings {
         context.getString(R.string.room_join_anyway)
 
     /** Heading over the list of sources for the room's episode. */
-    fun roomChooseSource(context: Context, episode: Int): String =
+    fun roomChooseSource(context: Context, episode: String): String =
         context.getString(R.string.room_choose_source, episode)
 
     /** Line under it. */
@@ -12601,7 +12601,7 @@ object Strings {
         context.getString(R.string.room_play_in_room)
 
     /** Heading when none of your sources has the room's episode. */
-    fun roomNoSourceTitle(context: Context, episode: Int): String =
+    fun roomNoSourceTitle(context: Context, episode: String): String =
         context.getString(R.string.room_no_source_title, episode)
 
     /** Line under it on a desktop: how many sources were looked in. */
@@ -12621,7 +12621,7 @@ object Strings {
         context.getString(R.string.room_search_titles)
 
     /** Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room. */
-    fun roomHeaderLine(context: Context, episode: Int, count: Int): String =
+    fun roomHeaderLine(context: Context, episode: String, count: Int): String =
         context.getString(R.string.room_header_line, episode, count)
 
     /** Button and accessibility label that opens the invite. */
@@ -12905,11 +12905,11 @@ object Strings {
         context.getString(R.string.room_up_next)
 
     /** Line on the card naming the next episode. */
-    fun roomUpNextEpisode(context: Context, episode: Int, title: String): String =
+    fun roomUpNextEpisode(context: Context, episode: String, title: String): String =
         context.getString(R.string.room_up_next_episode, episode, title)
 
     /** Line on the card naming the next episode when it has no title. */
-    fun roomUpNextEpisodePlain(context: Context, episode: Int): String =
+    fun roomUpNextEpisodePlain(context: Context, episode: String): String =
         context.getString(R.string.room_up_next_episode_plain, episode)
 
     /** Line on the card counting down for everyone. */
@@ -12929,7 +12929,7 @@ object Strings {
         context.getString(R.string.room_line_up_next, seconds)
 
     /** Second line while up next counts down. */
-    fun roomLineUpNextDetail(context: Context, episode: Int): String =
+    fun roomLineUpNextDetail(context: Context, episode: String): String =
         context.getString(R.string.room_line_up_next_detail, episode)
 
     /** Placeholder of the chat field. */
@@ -12953,11 +12953,11 @@ object Strings {
         context.getString(R.string.room_chat_not_sent)
 
     /** Chat line: someone started the room. */
-    fun roomChatStarted(context: Context, name: String, episode: Int): String =
+    fun roomChatStarted(context: Context, name: String, episode: String): String =
         context.getString(R.string.room_chat_started, name, episode)
 
     /** Chat line: you started the room. */
-    fun roomChatYouStarted(context: Context, episode: Int): String =
+    fun roomChatYouStarted(context: Context, episode: String): String =
         context.getString(R.string.room_chat_you_started, episode)
 
     /** Chat line: someone paused, at a place in the episode. */
@@ -13005,7 +13005,7 @@ object Strings {
         context.getString(R.string.room_chat_went, name)
 
     /** Chat line: up next moved the room on. */
-    fun roomChatUpNext(context: Context, episode: Int): String =
+    fun roomChatUpNext(context: Context, episode: String): String =
         context.getString(R.string.room_chat_up_next, episode)
 
     /** Chat line: someone skipped the opening for the room. */
@@ -13085,11 +13085,11 @@ object Strings {
         context.getString(R.string.room_recent_note)
 
     /** Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25. */
-    fun roomRecentRow(context: Context, episode: Int, names: String, `when`: String): String =
+    fun roomRecentRow(context: Context, episode: String, names: String, `when`: String): String =
         context.getString(R.string.room_recent_row, episode, names, `when`)
 
     /** Line of a recent room where you were alone. */
-    fun roomRecentRowAlone(context: Context, episode: Int, `when`: String): String =
+    fun roomRecentRowAlone(context: Context, episode: String, `when`: String): String =
         context.getString(R.string.room_recent_row_alone, episode, `when`)
 
     /** Button on a recent room that joins it again. */
@@ -13145,7 +13145,7 @@ object Strings {
         context.getString(R.string.room_chat_corrected)
 
     /** Chat line: someone put on another episode for the room. */
-    fun roomChatEpisodeChanged(context: Context, name: String, episode: Int): String =
+    fun roomChatEpisodeChanged(context: Context, name: String, episode: String): String =
         context.getString(R.string.room_chat_episode_changed, name, episode)
 
     /** Chat line: someone who was behind caught up with the room. */
@@ -13181,7 +13181,7 @@ object Strings {
         context.getString(R.string.room_link_copied)
 
     /** The starting screen's line on the device opening the room's episode. */
-    fun roomStartingEpisode(context: Context, episode: Int): String =
+    fun roomStartingEpisode(context: Context, episode: String): String =
         context.getString(R.string.room_starting_episode, episode)
 
     /** A short length in minutes, on the banner before play. */
@@ -13195,6 +13195,70 @@ object Strings {
     /** Joins two names in a longer list: "Mika, Ren". */
     fun roomNamesComma(context: Context, first: String, rest: String): String =
         context.getString(R.string.room_names_comma, first, rest)
+
+    /** Person menu item and accessibility action that hides someone's lines and reactions in this room. */
+    fun roomMute(context: Context, name: String): String =
+        context.getString(R.string.room_mute, name)
+
+    /** Person menu item and accessibility action that shows a muted person's lines again. */
+    fun roomUnmute(context: Context, name: String): String =
+        context.getString(R.string.room_unmute, name)
+
+    /** Line in the conversation where a muted person's lines were. */
+    fun roomChatMuted(context: Context, name: String): String =
+        context.getString(R.string.room_chat_muted, name)
+
+    /** Line after the newest chat lines over the video, which opens the conversation. */
+    fun roomChatMore(context: Context, count: Int): String =
+        context.getString(R.string.room_chat_more, count)
+
+    /** Spoken by a screen reader when a chat line arrives. */
+    fun roomChatAnnounce(context: Context, name: String, message: String): String =
+        context.getString(R.string.room_chat_announce, name, message)
+
+    /** End of the chat field while sending waits, after three messages in five seconds. */
+    fun roomChatWait(context: Context, seconds: Int): String =
+        context.getString(R.string.room_chat_wait, seconds)
+
+    /** Spoken once when sending waits, for screen readers. */
+    fun roomChatWaitSpoken(context: Context, seconds: Int): String =
+        context.resources.getQuantityString(R.plurals.room_chat_wait_spoken, seconds, seconds)
+
+    /** Spoken by a screen reader once, when 20 characters are left in the chat field. */
+    fun roomChatCharactersLeft(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_chat_characters_left, count, count)
+
+    /** A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds. */
+    fun roomReactedAt(context: Context, line: String, time: String): String =
+        context.getString(R.string.room_reacted_at, line, time)
+
+    /** Label on the seek bar when pointing near a reaction tick: the moment and who reacted. */
+    fun roomTickLabel(context: Context, time: String, names: String): String =
+        context.getString(R.string.room_tick_label, time, names)
+
+    /** Two people named together, for a reaction made by both: "Ren and Mika". */
+    fun roomNamesTwo(context: Context, first: String, second: String): String =
+        context.getString(R.string.room_names_two, first, second)
+
+    /** Three people named together. */
+    fun roomNamesThree(context: Context, first: String, second: String, third: String): String =
+        context.getString(R.string.room_names_three, first, second, third)
+
+    /** More than three people named together: two names and how many others. */
+    fun roomNamesOthers(context: Context, first: String, second: String, count: Int): String =
+        context.getString(R.string.room_names_others, first, second, count)
+
+    /** Player panel, under the subtitled or dubbed switch in a room. */
+    fun roomVersionOwn(context: Context): String =
+        context.getString(R.string.room_version_own)
+
+    /** The banner over the room when the episode has no name of its own: the episode and its length. */
+    fun roomBannerEpisodePlain(context: Context, episode: String, length: String): String =
+        context.getString(R.string.room_banner_episode_plain, episode, length)
+
+    /** Menu item dimmed in a room, with this reason under it. */
+    fun roomMarkUnavailable(context: Context): String =
+        context.getString(R.string.room_mark_unavailable)
 
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
@@ -15823,6 +15887,30 @@ object Strings {
     /** Line under the sources page's list when a source is dragged: first-party sources are tried in this order too. */
     fun sourcesOrderAll(context: Context): String =
         context.getString(R.string.sources_order_all)
+
+    /** Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5. */
+    fun sourcesChooseFor(context: Context, episode: String): String =
+        context.getString(R.string.sources_choose_for, episode)
+
+    /** Line while the sources are searched for the episode. */
+    fun sourcesLooking(context: Context): String =
+        context.getString(R.string.sources_looking)
+
+    /** Line over the list of sources that list the episode. */
+    fun sourcesFound(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.sources_found, count, count)
+
+    /** Line when no source lists the episode. */
+    fun sourcesNoneList(context: Context, episode: String): String =
+        context.getString(R.string.sources_none_list, episode)
+
+    /** Button that goes to the Sources page, when no source is set up. */
+    fun sourcesOpen(context: Context): String =
+        context.getString(R.string.sources_open)
+
+    /** Accessibility label of the list of sources for the episode. */
+    fun sourcesLabel(context: Context): String =
+        context.getString(R.string.sources_label)
 
     /** Short label for a joined store, on a row. */
     fun storesJoined(context: Context): String =

@@ -11136,8 +11136,8 @@ public enum L {
     public static var roomLineWatching: String { string("room-line-watching", fallback: "Watching together") }
 
     /// Second line while the room plays: the room's episode and its place in it.
-    public static func roomLineWatchingDetail(episode: Int, at: String) -> String {
-        Self.format("room-line-watching-detail", fallback: "Episode %1$@ · %2$@", String(episode), at)
+    public static func roomLineWatchingDetail(episode: String, at: String) -> String {
+        Self.format("room-line-watching-detail", fallback: "Episode %1$@ · %2$@", episode, at)
     }
 
     /// First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.
@@ -11240,16 +11240,16 @@ public enum L {
     }
 
     /// State word: this person plays another episode than the room's.
-    public static func roomStateOtherEpisode(episode: Int) -> String {
-        Self.format("room-state-other-episode", fallback: "On episode %1$@", String(episode))
+    public static func roomStateOtherEpisode(episode: String) -> String {
+        Self.format("room-state-other-episode", fallback: "On episode %1$@", episode)
     }
 
     /// State word: this person is picking which source to play from.
     public static var roomStateChoosing: String { string("room-state-choosing", fallback: "Choosing a source") }
 
     /// State word: none of this person's sources lists the room's episode.
-    public static func roomStateNoSource(episode: Int) -> String {
-        Self.format("room-state-no-source", fallback: "No source for episode %1$@", String(episode))
+    public static func roomStateNoSource(episode: String) -> String {
+        Self.format("room-state-no-source", fallback: "No source for episode %1$@", episode)
     }
 
     /// State word: this person is in the room with the player closed.
@@ -11377,8 +11377,8 @@ public enum L {
     public static var roomRoomIsWatching: String { string("room-room-is-watching", fallback: "The room is watching") }
 
     /// Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.
-    public static func roomBannerEpisode(episode: Int, title: String, length: String) -> String {
-        Self.format("room-banner-episode", fallback: "Episode %1$@ · %2$@ · %3$@", String(episode), title, length)
+    public static func roomBannerEpisode(episode: String, title: String, length: String) -> String {
+        Self.format("room-banner-episode", fallback: "Episode %1$@ · %2$@ · %3$@", episode, title, length)
     }
 
     /// Line under the episode before play: one of your sources has it.
@@ -11405,8 +11405,8 @@ public enum L {
     }
 
     /// Second line when an invite link opened the room: the show and the episode.
-    public static func roomInvitedDetail(title: String, episode: Int) -> String {
-        Self.format("room-invited-detail", fallback: "%1$@ · Episode %2$@", title, String(episode))
+    public static func roomInvitedDetail(title: String, episode: String) -> String {
+        Self.format("room-invited-detail", fallback: "%1$@ · Episode %2$@", title, episode)
     }
 
     /// Second line when an invite link opened a room with 10 or more people in it.
@@ -11421,8 +11421,8 @@ public enum L {
     public static var roomJoinAnyway: String { string("room-join-anyway", fallback: "Join anyway") }
 
     /// Heading over the list of sources for the room's episode.
-    public static func roomChooseSource(episode: Int) -> String {
-        Self.format("room-choose-source", fallback: "Choose a source for episode %1$@", String(episode))
+    public static func roomChooseSource(episode: String) -> String {
+        Self.format("room-choose-source", fallback: "Choose a source for episode %1$@", episode)
     }
 
     /// Line under it.
@@ -11432,8 +11432,8 @@ public enum L {
     public static var roomPlayInRoom: String { string("room-play-in-room", fallback: "Play in the room") }
 
     /// Heading when none of your sources has the room's episode.
-    public static func roomNoSourceTitle(episode: Int) -> String {
-        Self.format("room-no-source-title", fallback: "None of your sources has episode %1$@", String(episode))
+    public static func roomNoSourceTitle(episode: String) -> String {
+        Self.format("room-no-source-title", fallback: "None of your sources has episode %1$@", episode)
     }
 
     /// Line under it on a desktop: how many sources were looked in.
@@ -11451,8 +11451,8 @@ public enum L {
     public static var roomSearchTitles: String { string("room-search-titles", fallback: "Search titles") }
 
     /// Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.
-    public static func roomHeaderLine(episode: Int, count: Int) -> String {
-        Self.format("room-header-line", fallback: "Episode %1$@ · %2$lld in the room", String(episode), count)
+    public static func roomHeaderLine(episode: String, count: Int) -> String {
+        Self.format("room-header-line", fallback: "Episode %1$@ · %2$lld in the room", episode, count)
     }
 
     /// Button and accessibility label that opens the invite.
@@ -11692,13 +11692,13 @@ public enum L {
     public static var roomUpNext: String { string("room-up-next", fallback: "Up next for the room") }
 
     /// Line on the card naming the next episode.
-    public static func roomUpNextEpisode(episode: Int, title: String) -> String {
-        Self.format("room-up-next-episode", fallback: "Episode %1$@ · %2$@", String(episode), title)
+    public static func roomUpNextEpisode(episode: String, title: String) -> String {
+        Self.format("room-up-next-episode", fallback: "Episode %1$@ · %2$@", episode, title)
     }
 
     /// Line on the card naming the next episode when it has no title.
-    public static func roomUpNextEpisodePlain(episode: Int) -> String {
-        Self.format("room-up-next-episode-plain", fallback: "Episode %1$@", String(episode))
+    public static func roomUpNextEpisodePlain(episode: String) -> String {
+        Self.format("room-up-next-episode-plain", fallback: "Episode %1$@", episode)
     }
 
     /// Line on the card counting down for everyone.
@@ -11720,8 +11720,8 @@ public enum L {
     }
 
     /// Second line while up next counts down.
-    public static func roomLineUpNextDetail(episode: Int) -> String {
-        Self.format("room-line-up-next-detail", fallback: "Episode %1$@ plays for everyone", String(episode))
+    public static func roomLineUpNextDetail(episode: String) -> String {
+        Self.format("room-line-up-next-detail", fallback: "Episode %1$@ plays for everyone", episode)
     }
 
     /// Placeholder of the chat field.
@@ -11740,13 +11740,13 @@ public enum L {
     public static var roomChatNotSent: String { string("room-chat-not-sent", fallback: "Couldn't send") }
 
     /// Chat line: someone started the room.
-    public static func roomChatStarted(name: String, episode: Int) -> String {
-        Self.format("room-chat-started", fallback: "%1$@ started the room · Episode %2$@", name, String(episode))
+    public static func roomChatStarted(name: String, episode: String) -> String {
+        Self.format("room-chat-started", fallback: "%1$@ started the room · Episode %2$@", name, episode)
     }
 
     /// Chat line: you started the room.
-    public static func roomChatYouStarted(episode: Int) -> String {
-        Self.format("room-chat-you-started", fallback: "You started the room · Episode %1$@", String(episode))
+    public static func roomChatYouStarted(episode: String) -> String {
+        Self.format("room-chat-you-started", fallback: "You started the room · Episode %1$@", episode)
     }
 
     /// Chat line: someone paused, at a place in the episode.
@@ -11803,8 +11803,8 @@ public enum L {
     }
 
     /// Chat line: up next moved the room on.
-    public static func roomChatUpNext(episode: Int) -> String {
-        Self.format("room-chat-up-next", fallback: "Up next: episode %1$@ for everyone", String(episode))
+    public static func roomChatUpNext(episode: String) -> String {
+        Self.format("room-chat-up-next", fallback: "Up next: episode %1$@ for everyone", episode)
     }
 
     /// Chat line: someone skipped the opening for the room.
@@ -11875,13 +11875,13 @@ public enum L {
     public static var roomRecentNote: String { string("room-recent-note", fallback: "The last ten, kept on this device") }
 
     /// Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.
-    public static func roomRecentRow(episode: Int, names: String, when: String) -> String {
-        Self.format("room-recent-row", fallback: "Episode %1$@ · with %2$@ · %3$@", String(episode), names, when)
+    public static func roomRecentRow(episode: String, names: String, when: String) -> String {
+        Self.format("room-recent-row", fallback: "Episode %1$@ · with %2$@ · %3$@", episode, names, when)
     }
 
     /// Line of a recent room where you were alone.
-    public static func roomRecentRowAlone(episode: Int, when: String) -> String {
-        Self.format("room-recent-row-alone", fallback: "Episode %1$@ · %2$@", String(episode), when)
+    public static func roomRecentRowAlone(episode: String, when: String) -> String {
+        Self.format("room-recent-row-alone", fallback: "Episode %1$@ · %2$@", episode, when)
     }
 
     /// Button on a recent room that joins it again.
@@ -11932,8 +11932,8 @@ public enum L {
     public static var roomChatCorrected: String { string("room-chat-corrected", fallback: "Moved to stay with the room") }
 
     /// Chat line: someone put on another episode for the room.
-    public static func roomChatEpisodeChanged(name: String, episode: Int) -> String {
-        Self.format("room-chat-episode-changed", fallback: "%1$@ put on episode %2$@", name, String(episode))
+    public static func roomChatEpisodeChanged(name: String, episode: String) -> String {
+        Self.format("room-chat-episode-changed", fallback: "%1$@ put on episode %2$@", name, episode)
     }
 
     /// Chat line: someone who was behind caught up with the room.
@@ -11971,8 +11971,8 @@ public enum L {
     public static var roomLinkCopied: String { string("room-link-copied", fallback: "Invite link copied") }
 
     /// The starting screen's line on the device opening the room's episode.
-    public static func roomStartingEpisode(episode: Int) -> String {
-        Self.format("room-starting-episode", fallback: "Starting episode %1$@", String(episode))
+    public static func roomStartingEpisode(episode: String) -> String {
+        Self.format("room-starting-episode", fallback: "Starting episode %1$@", episode)
     }
 
     /// A short length in minutes, on the banner before play.
@@ -11989,6 +11989,82 @@ public enum L {
     public static func roomNamesComma(first: String, rest: String) -> String {
         Self.format("room-names-comma", fallback: "%1$@, %2$@", first, rest)
     }
+
+    /// Person menu item and accessibility action that hides someone's lines and reactions in this room.
+    public static func roomMute(name: String) -> String {
+        Self.format("room-mute", fallback: "Mute %1$@", name)
+    }
+
+    /// Person menu item and accessibility action that shows a muted person's lines again.
+    public static func roomUnmute(name: String) -> String {
+        Self.format("room-unmute", fallback: "Unmute %1$@", name)
+    }
+
+    /// Line in the conversation where a muted person's lines were.
+    public static func roomChatMuted(name: String) -> String {
+        Self.format("room-chat-muted", fallback: "%1$@ is muted", name)
+    }
+
+    /// Line after the newest chat lines over the video, which opens the conversation.
+    public static func roomChatMore(count: Int) -> String {
+        Self.format("room-chat-more", fallback: "%1$lld more in chat", count)
+    }
+
+    /// Spoken by a screen reader when a chat line arrives.
+    public static func roomChatAnnounce(name: String, message: String) -> String {
+        Self.format("room-chat-announce", fallback: "%1$@ says %2$@", name, message)
+    }
+
+    /// End of the chat field while sending waits, after three messages in five seconds.
+    public static func roomChatWait(seconds: Int) -> String {
+        Self.format("room-chat-wait", fallback: "Wait %1$lld s", seconds)
+    }
+
+    /// Spoken once when sending waits, for screen readers.
+    public static func roomChatWaitSpoken(seconds: Int) -> String {
+        Self.format("room-chat-wait-spoken", fallback: "Wait %1$lld seconds", seconds)
+    }
+
+    /// Spoken by a screen reader once, when 20 characters are left in the chat field.
+    public static func roomChatCharactersLeft(count: Int) -> String {
+        Self.format("room-chat-characters-left", fallback: "%1$lld characters left", count)
+    }
+
+    /// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+    public static func roomReactedAt(line: String, time: String) -> String {
+        Self.format("room-reacted-at", fallback: "%1$@ at %2$@", line, time)
+    }
+
+    /// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+    public static func roomTickLabel(time: String, names: String) -> String {
+        Self.format("room-tick-label", fallback: "%1$@ · %2$@", time, names)
+    }
+
+    /// Two people named together, for a reaction made by both: "Ren and Mika".
+    public static func roomNamesTwo(first: String, second: String) -> String {
+        Self.format("room-names-two", fallback: "%1$@ and %2$@", first, second)
+    }
+
+    /// Three people named together.
+    public static func roomNamesThree(first: String, second: String, third: String) -> String {
+        Self.format("room-names-three", fallback: "%1$@, %2$@ and %3$@", first, second, third)
+    }
+
+    /// More than three people named together: two names and how many others.
+    public static func roomNamesOthers(first: String, second: String, count: Int) -> String {
+        Self.format("room-names-others", fallback: "%1$@, %2$@ and %3$lld others", first, second, count)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch in a room.
+    public static var roomVersionOwn: String { string("room-version-own", fallback: "Only your player switches. The room keeps playing.") }
+
+    /// The banner over the room when the episode has no name of its own: the episode and its length.
+    public static func roomBannerEpisodePlain(episode: String, length: String) -> String {
+        Self.format("room-banner-episode-plain", fallback: "Episode %1$@ · %2$@", episode, length)
+    }
+
+    /// Menu item dimmed in a room, with this reason under it.
+    public static var roomMarkUnavailable: String { string("room-mark-unavailable", fallback: "Mark skip times after you leave the room.") }
 
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }
@@ -14243,6 +14319,30 @@ public enum L {
 
     /// Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
     public static var sourcesOrderAll: String { string("sources-order-all", fallback: "Every source is tried in this order, whatever its kind.") }
+
+    /// Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+    public static func sourcesChooseFor(episode: String) -> String {
+        Self.format("sources-choose-for", fallback: "Choose a source for episode %1$@", episode)
+    }
+
+    /// Line while the sources are searched for the episode.
+    public static var sourcesLooking: String { string("sources-looking", fallback: "Looking through your sources…") }
+
+    /// Line over the list of sources that list the episode.
+    public static func sourcesFound(count: Int) -> String {
+        Self.format("sources-found", fallback: "%1$lld sources have it", count)
+    }
+
+    /// Line when no source lists the episode.
+    public static func sourcesNoneList(episode: String) -> String {
+        Self.format("sources-none-list", fallback: "No source lists episode %1$@. Sources come from plugins, which a plugin store adds.", episode)
+    }
+
+    /// Button that goes to the Sources page, when no source is set up.
+    public static var sourcesOpen: String { string("sources-open", fallback: "Open sources") }
+
+    /// Accessibility label of the list of sources for the episode.
+    public static var sourcesLabel: String { string("sources-label", fallback: "Sources for this episode") }
 
     /// Short label for a joined store, on a row.
     public static var storesJoined: String { string("stores-joined", fallback: "Joined") }

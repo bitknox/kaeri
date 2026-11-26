@@ -257434,13 +257434,25 @@
       }
     },
     "room-banner-episode" : {
-      "comment" : "Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min. Argument 1: episode (Plain). Argument 2: title (Text). Argument 3: length (Text).",
+      "comment" : "Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min. Argument 1: episode (Text). Argument 2: title (Text). Argument 3: length (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "Episode %1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "room-banner-episode-plain" : {
+      "comment" : "The banner over the room when the episode has no name of its own: the episode and its length. Argument 1: episode (Text). Argument 2: length (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · %2$@"
           }
         }
       }
@@ -257505,6 +257517,18 @@
         }
       }
     },
+    "room-chat-announce" : {
+      "comment" : "Spoken by a screen reader when a chat line arrives. Argument 1: name (Text). Argument 2: message (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ says %2$@"
+          }
+        }
+      }
+    },
     "room-chat-carried-on" : {
       "comment" : "Chat line: someone pressed Carry on. Argument 1: carrier (Text). Argument 2: names (Text).",
       "extractionState" : "manual",
@@ -257529,6 +257553,40 @@
         }
       }
     },
+    "room-chat-characters-left" : {
+      "comment" : "Spoken by a screen reader once, when 20 characters are left in the chat field. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld character left"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld characters left"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "room-chat-corrected" : {
       "comment" : "Chat line: this device's player was moved to stay with the room.",
       "extractionState" : "manual",
@@ -257542,7 +257600,7 @@
       }
     },
     "room-chat-episode-changed" : {
-      "comment" : "Chat line: someone put on another episode for the room. Argument 1: name (Text). Argument 2: episode (Plain).",
+      "comment" : "Chat line: someone put on another episode for the room. Argument 1: name (Text). Argument 2: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -257613,6 +257671,18 @@
         }
       }
     },
+    "room-chat-more" : {
+      "comment" : "Line after the newest chat lines over the video, which opens the conversation. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld more in chat"
+          }
+        }
+      }
+    },
     "room-chat-moved" : {
       "comment" : "Chat line: someone moved to a new room. Argument 1: name (Text).",
       "extractionState" : "manual",
@@ -257621,6 +257691,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ moved to a new room"
+          }
+        }
+      }
+    },
+    "room-chat-muted" : {
+      "comment" : "Line in the conversation where a muted person's lines were. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is muted"
           }
         }
       }
@@ -257770,7 +257852,7 @@
       }
     },
     "room-chat-started" : {
-      "comment" : "Chat line: someone started the room. Argument 1: name (Text). Argument 2: episode (Plain).",
+      "comment" : "Chat line: someone started the room. Argument 1: name (Text). Argument 2: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -257782,7 +257864,7 @@
       }
     },
     "room-chat-up-next" : {
-      "comment" : "Chat line: up next moved the room on. Argument 1: episode (Plain).",
+      "comment" : "Chat line: up next moved the room on. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -257801,6 +257883,52 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ cancelled up next"
+          }
+        }
+      }
+    },
+    "room-chat-wait" : {
+      "comment" : "End of the chat field while sending waits, after three messages in five seconds. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wait %1$lld s"
+          }
+        }
+      }
+    },
+    "room-chat-wait-spoken" : {
+      "comment" : "Spoken once when sending waits, for screen readers. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@seconds@"
+          },
+          "substitutions" : {
+            "seconds" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Wait one second"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Wait %1$lld seconds"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -257830,7 +257958,7 @@
       }
     },
     "room-chat-you-started" : {
-      "comment" : "Chat line: you started the room. Argument 1: episode (Plain).",
+      "comment" : "Chat line: you started the room. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -257842,7 +257970,7 @@
       }
     },
     "room-choose-source" : {
-      "comment" : "Heading over the list of sources for the room's episode. Argument 1: episode (Plain).",
+      "comment" : "Heading over the list of sources for the room's episode. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -258130,7 +258258,7 @@
       }
     },
     "room-header-line" : {
-      "comment" : "Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room. Argument 1: episode (Plain). Argument 2: count (Int).",
+      "comment" : "Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room. Argument 1: episode (Text). Argument 2: count (Int).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -258238,7 +258366,7 @@
       }
     },
     "room-invited-detail" : {
-      "comment" : "Second line when an invite link opened the room: the show and the episode. Argument 1: title (Text). Argument 2: episode (Plain).",
+      "comment" : "Second line when an invite link opened the room: the show and the episode. Argument 1: title (Text). Argument 2: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -258734,7 +258862,7 @@
       }
     },
     "room-line-up-next-detail" : {
-      "comment" : "Second line while up next counts down. Argument 1: episode (Plain).",
+      "comment" : "Second line while up next counts down. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -258804,7 +258932,7 @@
       }
     },
     "room-line-watching-detail" : {
-      "comment" : "Second line while the room plays: the room's episode and its place in it. Argument 1: episode (Plain). Argument 2: at (Text).",
+      "comment" : "Second line while the room plays: the room's episode and its place in it. Argument 1: episode (Text). Argument 2: at (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -258871,6 +258999,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Invite link copied"
+          }
+        }
+      }
+    },
+    "room-mark-unavailable" : {
+      "comment" : "Menu item dimmed in a room, with this reason under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark skip times after you leave the room."
           }
         }
       }
@@ -259111,6 +259251,18 @@
         }
       }
     },
+    "room-mute" : {
+      "comment" : "Person menu item and accessibility action that hides someone's lines and reactions in this room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute %1$@"
+          }
+        }
+      }
+    },
     "room-names-and" : {
       "comment" : "Joins the last name to the ones before it: \"Mika, Ren and Sol\". `names` is the ones before, already joined with room-names-comma. Argument 1: names (Text). Argument 2: last (Text).",
       "extractionState" : "manual",
@@ -259131,6 +259283,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "room-names-others" : {
+      "comment" : "More than three people named together: two names and how many others. Argument 1: first (Text). Argument 2: second (Text). Argument 3: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ and %3$lld others"
           }
         }
       }
@@ -259165,6 +259329,30 @@
                 }
               }
             }
+          }
+        }
+      }
+    },
+    "room-names-three" : {
+      "comment" : "Three people named together. Argument 1: first (Text). Argument 2: second (Text). Argument 3: third (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ and %3$@"
+          }
+        }
+      }
+    },
+    "room-names-two" : {
+      "comment" : "Two people named together, for a reaction made by both: \"Ren and Mika\". Argument 1: first (Text). Argument 2: second (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$@"
           }
         }
       }
@@ -259252,7 +259440,7 @@
       }
     },
     "room-no-source-title" : {
-      "comment" : "Heading when none of your sources has the room's episode. Argument 1: episode (Plain).",
+      "comment" : "Heading when none of your sources has the room's episode. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -259479,6 +259667,18 @@
         }
       }
     },
+    "room-reacted-at" : {
+      "comment" : "A reaction line with the moment in the episode it was made at, such as \"Ren and Mika laughed at 12:04\". The time is minutes and seconds. Argument 1: line (Text). Argument 2: time (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
     "room-reacted-clap" : {
       "comment" : "Chat line: someone clapped, at a place in the episode. Argument 1: name (Text). Argument 2: at (Text).",
       "extractionState" : "manual",
@@ -259552,7 +259752,7 @@
       }
     },
     "room-recent-row" : {
-      "comment" : "Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25. Argument 1: episode (Plain). Argument 2: names (Text). Argument 3: when (Text).",
+      "comment" : "Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25. Argument 1: episode (Text). Argument 2: names (Text). Argument 3: when (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -259564,7 +259764,7 @@
       }
     },
     "room-recent-row-alone" : {
-      "comment" : "Line of a recent room where you were alone. Argument 1: episode (Plain). Argument 2: when (Text).",
+      "comment" : "Line of a recent room where you were alone. Argument 1: episode (Text). Argument 2: when (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -259946,7 +260146,7 @@
       }
     },
     "room-starting-episode" : {
-      "comment" : "The starting screen's line on the device opening the room's episode. Argument 1: episode (Plain).",
+      "comment" : "The starting screen's line on the device opening the room's episode. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -260042,7 +260242,7 @@
       }
     },
     "room-state-no-source" : {
-      "comment" : "State word: none of this person's sources lists the room's episode. Argument 1: episode (Plain).",
+      "comment" : "State word: none of this person's sources lists the room's episode. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -260054,7 +260254,7 @@
       }
     },
     "room-state-other-episode" : {
-      "comment" : "State word: this person plays another episode than the room's. Argument 1: episode (Plain).",
+      "comment" : "State word: this person plays another episode than the room's. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -260149,6 +260349,18 @@
         }
       }
     },
+    "room-tick-label" : {
+      "comment" : "Label on the seek bar when pointing near a reaction tick: the moment and who reacted. Argument 1: time (Text). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
     "room-tv-keys" : {
       "comment" : "Line under the video on the TV rail: what the remote's buttons do.",
       "extractionState" : "manual",
@@ -260169,6 +260381,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Write from your phone"
+          }
+        }
+      }
+    },
+    "room-unmute" : {
+      "comment" : "Person menu item and accessibility action that shows a muted person's lines again. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmute %1$@"
           }
         }
       }
@@ -260210,7 +260434,7 @@
       }
     },
     "room-up-next-episode" : {
-      "comment" : "Line on the card naming the next episode. Argument 1: episode (Plain). Argument 2: title (Text).",
+      "comment" : "Line on the card naming the next episode. Argument 1: episode (Text). Argument 2: title (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -260222,7 +260446,7 @@
       }
     },
     "room-up-next-episode-plain" : {
-      "comment" : "Line on the card naming the next episode when it has no title. Argument 1: episode (Plain).",
+      "comment" : "Line on the card naming the next episode when it has no title. Argument 1: episode (Text).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -260241,6 +260465,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Waiting for %1$@ to finish"
+          }
+        }
+      }
+    },
+    "room-version-own" : {
+      "comment" : "Player panel, under the subtitled or dubbed switch in a room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only your player switches. The room keeps playing."
           }
         }
       }
@@ -328879,6 +329115,18 @@
         }
       }
     },
+    "sources-choose-for" : {
+      "comment" : "Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a source for episode %1$@"
+          }
+        }
+      }
+    },
     "sources-contacts-label" : {
       "comment" : "Row label: the hosts a plugin contacts.",
       "extractionState" : "manual",
@@ -332159,6 +332407,40 @@
         }
       }
     },
+    "sources-found" : {
+      "comment" : "Line over the list of sources that list the episode. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One source has it"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sources have it"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "sources-found-server" : {
       "comment" : "What the address answered, before the sign-in. Argument 1: kind (Text).",
       "extractionState" : "manual",
@@ -332643,6 +332925,18 @@
         }
       }
     },
+    "sources-label" : {
+      "comment" : "Accessibility label of the list of sources for the episode.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources for this episode"
+          }
+        }
+      }
+    },
     "sources-listed-by-store" : {
       "comment" : "Value: how the plugin is listed.",
       "extractionState" : "manual",
@@ -332807,6 +333101,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không tải được các nguồn"
+          }
+        }
+      }
+    },
+    "sources-looking" : {
+      "comment" : "Line while the sources are searched for the episode.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking through your sources…"
           }
         }
       }
@@ -333147,6 +333453,18 @@
         }
       }
     },
+    "sources-none-list" : {
+      "comment" : "Line when no source lists the episode. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No source lists episode %1$@. Sources come from plugins, which a plugin store adds."
+          }
+        }
+      }
+    },
     "sources-not-checked" : {
       "comment" : "Value: not checked yet.",
       "extractionState" : "manual",
@@ -333227,6 +333545,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa kiểm tra"
+          }
+        }
+      }
+    },
+    "sources-open" : {
+      "comment" : "Button that goes to the Sources page, when no source is set up.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open sources"
           }
         }
       }

@@ -1578,23 +1578,14 @@ fn and(names: &[String]) -> String {
     }
 }
 
-/// An episode number for a catalogue string; one that isn't a whole number reads as 0 there,
-/// so it is said in the line's own words instead.
-fn whole(episode: &str) -> Option<i64> {
-    episode.trim().parse().ok()
-}
-
 /// The room's line in words, in the app's language.
 pub(crate) fn words(kind: &RoomMessageKind) -> String {
     use RoomMessageKind as K;
     use kaeri_i18n::t;
     let you = t::room_you();
     match kind {
-        K::Started { by, episode } => match whole(episode) {
-            Some(n) if *by == you => t::room_chat_you_started(n),
-            Some(n) => t::room_chat_started(by, n),
-            None => format!("{by} · {episode}"),
-        },
+        K::Started { by, episode } if *by == you => t::room_chat_you_started(episode),
+        K::Started { by, episode } => t::room_chat_started(by, episode),
         K::Joined { name } => t::room_chat_joined(name),
         K::Left { name } => t::room_chat_left(name),
         K::Paused { by, at } if *by == you => t::room_chat_you_paused(&clock(*at)),
@@ -1602,14 +1593,11 @@ pub(crate) fn words(kind: &RoomMessageKind) -> String {
         K::Resumed { by } => t::room_chat_resumed(by),
         K::Seeked { by, from, to } => t::room_chat_jumped(by, &clock(*from), &clock(*to)),
         K::Corrected => t::room_chat_corrected(),
-        K::EpisodeChanged { by, episode } => match whole(episode) {
-            Some(n) => t::room_chat_episode_changed(by, n),
-            None => format!("{by} · {episode}"),
-        },
+        K::EpisodeChanged { by, episode } => t::room_chat_episode_changed(by, episode),
         K::JoinedAt { name } => t::room_chat_caught_up(name),
         K::AlreadyPaused { by } => t::room_chat_already_paused(by),
         K::WaitingFor { names, reason } => {
-            if names.len() == 1 && names[0] == you {
+            if names.len() == 1 && names[0] == t::room_you_in_list() {
                 return t::room_chat_paused_for_you();
             }
             let names = and(names);
@@ -1622,9 +1610,7 @@ pub(crate) fn words(kind: &RoomMessageKind) -> String {
         K::CarriedOn { by, past } => t::room_chat_carried_on(by, &and(past)),
         K::SkippedOpening { by } => t::room_chat_skipped_opening(by),
         K::NewInvite { by } => t::room_chat_new_invite(by),
-        K::UpNext { episode } => {
-            whole(episode).map_or_else(|| episode.clone(), t::room_chat_up_next)
-        }
+        K::UpNext { episode } => t::room_chat_up_next(episode),
         K::UpNextCancelled { by } => t::room_chat_up_next_cancelled(by),
         K::MovedRoom { by } => t::room_chat_moved(by),
         K::WentAlong { name } => t::room_chat_went(name),

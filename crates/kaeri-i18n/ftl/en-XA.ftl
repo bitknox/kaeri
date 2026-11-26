@@ -12537,6 +12537,62 @@ room-names-and = [{ $names } àñð { $last }~~~~]
 # Joins two names in a longer list: "Mika, Ren".
 room-names-comma = [{ $first }, { $rest }~~~]
 
+# Person menu item and accessibility action that hides someone's lines and reactions in this room.
+room-mute = [Ṁüţé { $name }~~~]
+
+# Person menu item and accessibility action that shows a muted person's lines again.
+room-unmute = [Ûñɱüţé { $name }~~~]
+
+# Line in the conversation where a muted person's lines were.
+room-chat-muted = [{ $name } îš ɱüţéð~~~~]
+
+# Line after the newest chat lines over the video, which opens the conversation.
+room-chat-more = [{ $count } ɱöŕé îñ çĥàţ~~~~~]
+
+# Spoken by a screen reader when a chat line arrives.
+room-chat-announce = [{ $name } šàýš { $message }~~~~]
+
+# End of the chat field while sending waits, after three messages in five seconds.
+room-chat-wait = [Ŵàîţ { $seconds } š~~~]
+
+# Spoken once when sending waits, for screen readers.
+room-chat-wait-spoken =
+    { $seconds ->
+        [one] [Ŵàîţ öñé šéçöñð~~~~~]
+       *[other] [Ŵàîţ { $seconds } šéçöñðš~~~~~]
+    }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+room-chat-characters-left =
+    { $count ->
+        [one] [{ $count } çĥàŕàçţéŕ ļéƒţ~~~~~~]
+       *[other] [{ $count } çĥàŕàçţéŕš ļéƒţ~~~~~~]
+    }
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+room-reacted-at = [{ $line } àţ { $time }~~~]
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+room-tick-label = [{ $time } · { $names }~~~]
+
+# Two people named together, for a reaction made by both: "Ren and Mika".
+room-names-two = [{ $first } àñð { $second }~~~~]
+
+# Three people named together.
+room-names-three = [{ $first }, { $second } àñð { $third }~~~~~]
+
+# More than three people named together: two names and how many others.
+room-names-others = [{ $first }, { $second } àñð { $count } öţĥéŕš~~~~~~~]
+
+# Player panel, under the subtitled or dubbed switch in a room.
+room-version-own = [Öñļý ýöüŕ þļàýéŕ šŵîţçĥéš. Ţĥé ŕööɱ ķééþš þļàýîñĝ.~~~~~~~~~~~~~~~]
+
+# The banner over the room when the episode has no name of its own: the episode and its length.
+room-banner-episode-plain = [Éþîšöðé { $episode } · { $length }~~~~~~]
+
+# Menu item dimmed in a room, with this reason under it.
+room-mark-unavailable = [Ṁàŕķ šķîþ ţîɱéš àƒţéŕ ýöü ļéàṽé ţĥé ŕööɱ.~~~~~~~~~~~~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 
@@ -14617,6 +14673,28 @@ sources-add-demo = [Åðð ţĥé ðéɱö~~~~]
 
 # Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
 sources-order-all = [Éṽéŕý šöüŕçé îš ţŕîéð îñ ţĥîš öŕðéŕ, ŵĥàţéṽéŕ îţš ķîñð.~~~~~~~~~~~~~~~~~]
+
+# Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+sources-choose-for = [Çĥööšé à šöüŕçé ƒöŕ éþîšöðé { $episode }~~~~~~~~~~]
+
+# Line while the sources are searched for the episode.
+sources-looking = [Ļööķîñĝ ţĥŕöüĝĥ ýöüŕ šöüŕçéš…~~~~~~~~~]
+
+# Line over the list of sources that list the episode.
+sources-found =
+    { $count ->
+        [one] [Öñé šöüŕçé ĥàš îţ~~~~~~]
+       *[other] [{ $count } šöüŕçéš ĥàṽé îţ~~~~~~]
+    }
+
+# Line when no source lists the episode.
+sources-none-list = [Ñö šöüŕçé ļîšţš éþîšöðé { $episode }. Šöüŕçéš çöɱé ƒŕöɱ þļüĝîñš, ŵĥîçĥ à þļüĝîñ šţöŕé àððš.~~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Button that goes to the Sources page, when no source is set up.
+sources-open = [Öþéñ šöüŕçéš~~~~]
+
+# Accessibility label of the list of sources for the episode.
+sources-label = [Šöüŕçéš ƒöŕ ţĥîš éþîšöðé~~~~~~~~]
 
 # Short label for a joined store, on a row.
 stores-joined = [Ĵöîñéð~~]

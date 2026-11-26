@@ -6579,7 +6579,7 @@
     <!-- First line while the room plays and nobody holds it. -->
     <string name="room_line_watching">Watching together</string>
     <!-- Second line while the room plays: the room's episode and its place in it. -->
-    <string name="room_line_watching_detail">Episode %1$d · %2$s</string>
+    <string name="room_line_watching_detail">Episode %1$s · %2$s</string>
     <!-- First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people. -->
     <string name="room_line_paused_for">Paused for %1$s</string>
     <!-- First line on your own device while the room waits for you. -->
@@ -6639,11 +6639,11 @@
     <!-- State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person. -->
     <string name="room_state_buffering">Buffering · %1$,d s</string>
     <!-- State word: this person plays another episode than the room's. -->
-    <string name="room_state_other_episode">On episode %1$d</string>
+    <string name="room_state_other_episode">On episode %1$s</string>
     <!-- State word: this person is picking which source to play from. -->
     <string name="room_state_choosing">Choosing a source</string>
     <!-- State word: none of this person's sources lists the room's episode. -->
-    <string name="room_state_no_source">No source for episode %1$d</string>
+    <string name="room_state_no_source">No source for episode %1$s</string>
     <!-- State word: this person is in the room with the player closed. -->
     <string name="room_state_player_closed">Player closed</string>
     <!-- State word: this person's device stopped answering. -->
@@ -6715,7 +6715,7 @@
     <!-- Small heading over the episode in the video area when you opened an invite. -->
     <string name="room_room_is_watching">The room is watching</string>
     <!-- Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min. -->
-    <string name="room_banner_episode">Episode %1$d · %2$s · %3$s</string>
+    <string name="room_banner_episode">Episode %1$s · %2$s · %3$s</string>
     <!-- Line under the episode before play: one of your sources has it. -->
     <string name="room_plays_from_sources">Plays from your sources</string>
     <!-- Button that starts the episode for everyone in the room. -->
@@ -6731,7 +6731,7 @@
     <!-- First line of the room when an invite link opened it. -->
     <string name="room_invited_by">%1$s invited you</string>
     <!-- Second line when an invite link opened the room: the show and the episode. -->
-    <string name="room_invited_detail">%1$s · Episode %2$d</string>
+    <string name="room_invited_detail">%1$s · Episode %2$s</string>
     <!-- Second line when an invite link opened a room with 10 or more people in it. -->
     <string name="room_invited_over">%1$,d people are here already · rooms work best with 10 or fewer</string>
     <!-- Button that joins the room from an invite. -->
@@ -6739,13 +6739,13 @@
     <!-- Button that joins a room with 10 or more people in it. -->
     <string name="room_join_anyway">Join anyway</string>
     <!-- Heading over the list of sources for the room's episode. -->
-    <string name="room_choose_source">Choose a source for episode %1$d</string>
+    <string name="room_choose_source">Choose a source for episode %1$s</string>
     <!-- Line under it. -->
     <string name="room_choose_source_line">The room keeps watching; you join at its place.</string>
     <!-- Button that plays the chosen source at the room's place. -->
     <string name="room_play_in_room">Play in the room</string>
     <!-- Heading when none of your sources has the room's episode. -->
-    <string name="room_no_source_title">None of your sources has episode %1$d</string>
+    <string name="room_no_source_title">None of your sources has episode %1$s</string>
     <!-- Line under it on a desktop: how many sources were looked in. -->
     <plurals name="room_no_source_line">
         <item quantity="one">Kaeri looked in your one source. You stay in the room and the chat while the others watch.</item>
@@ -6758,7 +6758,7 @@
     <!-- Button that searches titles in your sources. -->
     <string name="room_search_titles">Search titles</string>
     <!-- Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room. -->
-    <string name="room_header_line">Episode %1$d · %2$,d in the room</string>
+    <string name="room_header_line">Episode %1$s · %2$,d in the room</string>
     <!-- Button and accessibility label that opens the invite. -->
     <string name="room_invite">Invite</string>
     <!-- Button and accessibility label that opens the room's details. -->
@@ -6909,9 +6909,9 @@
     <!-- Small heading of the up next card. -->
     <string name="room_up_next">Up next for the room</string>
     <!-- Line on the card naming the next episode. -->
-    <string name="room_up_next_episode">Episode %1$d · %2$s</string>
+    <string name="room_up_next_episode">Episode %1$s · %2$s</string>
     <!-- Line on the card naming the next episode when it has no title. -->
-    <string name="room_up_next_episode_plain">Episode %1$d</string>
+    <string name="room_up_next_episode_plain">Episode %1$s</string>
     <!-- Line on the card counting down for everyone. -->
     <string name="room_up_next_count">Plays for everyone in %1$,d s</string>
     <!-- Line on the card while your file ended sooner and the room waits for someone's longer file. -->
@@ -6921,7 +6921,7 @@
     <!-- First line of the room while up next counts down. -->
     <string name="room_line_up_next">Up next in %1$,d s</string>
     <!-- Second line while up next counts down. -->
-    <string name="room_line_up_next_detail">Episode %1$d plays for everyone</string>
+    <string name="room_line_up_next_detail">Episode %1$s plays for everyone</string>
     <!-- Placeholder of the chat field. -->
     <string name="room_chat_field">Say something</string>
     <!-- Button and accessibility label that sends a chat line. -->
@@ -6933,9 +6933,9 @@
     <!-- Line under a chat line that didn't reach any relay. -->
     <string name="room_chat_not_sent">Couldn\'t send</string>
     <!-- Chat line: someone started the room. -->
-    <string name="room_chat_started">%1$s started the room · Episode %2$d</string>
+    <string name="room_chat_started">%1$s started the room · Episode %2$s</string>
     <!-- Chat line: you started the room. -->
-    <string name="room_chat_you_started">You started the room · Episode %1$d</string>
+    <string name="room_chat_you_started">You started the room · Episode %1$s</string>
     <!-- Chat line: someone paused, at a place in the episode. -->
     <string name="room_chat_paused">%1$s paused at %2$s</string>
     <!-- Chat line: you paused. -->
@@ -6959,7 +6959,7 @@
     <!-- Chat line in the old room: someone went along to the new room. -->
     <string name="room_chat_went">%1$s went to the new room</string>
     <!-- Chat line: up next moved the room on. -->
-    <string name="room_chat_up_next">Up next: episode %1$d for everyone</string>
+    <string name="room_chat_up_next">Up next: episode %1$s for everyone</string>
     <!-- Chat line: someone skipped the opening for the room. -->
     <string name="room_chat_skipped_opening">%1$s skipped the opening</string>
     <!-- Label of the laugh reaction button. -->
@@ -6999,9 +6999,9 @@
     <!-- Line beside the heading. -->
     <string name="room_recent_note">The last ten, kept on this device</string>
     <!-- Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25. -->
-    <string name="room_recent_row">Episode %1$d · with %2$s · %3$s</string>
+    <string name="room_recent_row">Episode %1$s · with %2$s · %3$s</string>
     <!-- Line of a recent room where you were alone. -->
-    <string name="room_recent_row_alone">Episode %1$d · %2$s</string>
+    <string name="room_recent_row_alone">Episode %1$s · %2$s</string>
     <!-- Button on a recent room that joins it again. -->
     <string name="room_rejoin">Rejoin</string>
     <!-- Title of the alert when none of an invite's relays answers, and the bold start of the line in the place. -->
@@ -7029,7 +7029,7 @@
     <!-- Chat line: this device's player was moved to stay with the room. -->
     <string name="room_chat_corrected">Moved to stay with the room</string>
     <!-- Chat line: someone put on another episode for the room. -->
-    <string name="room_chat_episode_changed">%1$s put on episode %2$d</string>
+    <string name="room_chat_episode_changed">%1$s put on episode %2$s</string>
     <!-- Chat line: someone who was behind caught up with the room. -->
     <string name="room_chat_caught_up">%1$s caught up with the room</string>
     <!-- Chat line on a device whose Play lost to someone's Pause pressed at the same moment. -->
@@ -7047,13 +7047,51 @@
     <!-- Confirmation after Copy invite link. -->
     <string name="room_link_copied">Invite link copied</string>
     <!-- The starting screen's line on the device opening the room's episode. -->
-    <string name="room_starting_episode">Starting episode %1$d</string>
+    <string name="room_starting_episode">Starting episode %1$s</string>
     <!-- A short length in minutes, on the banner before play. -->
     <string name="room_minutes">%1$,d min</string>
     <!-- Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma. -->
     <string name="room_names_and">%1$s and %2$s</string>
     <!-- Joins two names in a longer list: "Mika, Ren". -->
     <string name="room_names_comma">%1$s, %2$s</string>
+    <!-- Person menu item and accessibility action that hides someone's lines and reactions in this room. -->
+    <string name="room_mute">Mute %1$s</string>
+    <!-- Person menu item and accessibility action that shows a muted person's lines again. -->
+    <string name="room_unmute">Unmute %1$s</string>
+    <!-- Line in the conversation where a muted person's lines were. -->
+    <string name="room_chat_muted">%1$s is muted</string>
+    <!-- Line after the newest chat lines over the video, which opens the conversation. -->
+    <string name="room_chat_more">%1$,d more in chat</string>
+    <!-- Spoken by a screen reader when a chat line arrives. -->
+    <string name="room_chat_announce">%1$s says %2$s</string>
+    <!-- End of the chat field while sending waits, after three messages in five seconds. -->
+    <string name="room_chat_wait">Wait %1$,d s</string>
+    <!-- Spoken once when sending waits, for screen readers. -->
+    <plurals name="room_chat_wait_spoken">
+        <item quantity="one">Wait one second</item>
+        <item quantity="other">Wait %1$,d seconds</item>
+    </plurals>
+    <!-- Spoken by a screen reader once, when 20 characters are left in the chat field. -->
+    <plurals name="room_chat_characters_left">
+        <item quantity="one">%1$,d character left</item>
+        <item quantity="other">%1$,d characters left</item>
+    </plurals>
+    <!-- A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds. -->
+    <string name="room_reacted_at">%1$s at %2$s</string>
+    <!-- Label on the seek bar when pointing near a reaction tick: the moment and who reacted. -->
+    <string name="room_tick_label">%1$s · %2$s</string>
+    <!-- Two people named together, for a reaction made by both: "Ren and Mika". -->
+    <string name="room_names_two">%1$s and %2$s</string>
+    <!-- Three people named together. -->
+    <string name="room_names_three">%1$s, %2$s and %3$s</string>
+    <!-- More than three people named together: two names and how many others. -->
+    <string name="room_names_others">%1$s, %2$s and %3$,d others</string>
+    <!-- Player panel, under the subtitled or dubbed switch in a room. -->
+    <string name="room_version_own">Only your player switches. The room keeps playing.</string>
+    <!-- The banner over the room when the episode has no name of its own: the episode and its length. -->
+    <string name="room_banner_episode_plain">Episode %1$s · %2$s</string>
+    <!-- Menu item dimmed in a room, with this reason under it. -->
+    <string name="room_mark_unavailable">Mark skip times after you leave the room.</string>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->
@@ -8455,6 +8493,21 @@
     <string name="sources_add_demo">Add the demo</string>
     <!-- Line under the sources page's list when a source is dragged: first-party sources are tried in this order too. -->
     <string name="sources_order_all">Every source is tried in this order, whatever its kind.</string>
+    <!-- Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5. -->
+    <string name="sources_choose_for">Choose a source for episode %1$s</string>
+    <!-- Line while the sources are searched for the episode. -->
+    <string name="sources_looking">Looking through your sources…</string>
+    <!-- Line over the list of sources that list the episode. -->
+    <plurals name="sources_found">
+        <item quantity="one">One source has it</item>
+        <item quantity="other">%1$,d sources have it</item>
+    </plurals>
+    <!-- Line when no source lists the episode. -->
+    <string name="sources_none_list">No source lists episode %1$s. Sources come from plugins, which a plugin store adds.</string>
+    <!-- Button that goes to the Sources page, when no source is set up. -->
+    <string name="sources_open">Open sources</string>
+    <!-- Accessibility label of the list of sources for the episode. -->
+    <string name="sources_label">Sources for this episode</string>
     <!-- Short label for a joined store, on a row. -->
     <string name="stores_joined">Joined</string>
     <!-- Title of the empty list. -->

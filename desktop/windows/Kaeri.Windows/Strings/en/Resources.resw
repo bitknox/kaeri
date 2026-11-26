@@ -12348,6 +12348,78 @@
     <value>{first}, {rest}</value>
     <comment>Joins two names in a longer list: "Mika, Ren".</comment>
   </data>
+  <data name="RoomMute" xml:space="preserve">
+    <value>Mute {name}</value>
+    <comment>Person menu item and accessibility action that hides someone's lines and reactions in this room.</comment>
+  </data>
+  <data name="RoomUnmute" xml:space="preserve">
+    <value>Unmute {name}</value>
+    <comment>Person menu item and accessibility action that shows a muted person's lines again.</comment>
+  </data>
+  <data name="RoomChatMuted" xml:space="preserve">
+    <value>{name} is muted</value>
+    <comment>Line in the conversation where a muted person's lines were.</comment>
+  </data>
+  <data name="RoomChatMore" xml:space="preserve">
+    <value>{count} more in chat</value>
+    <comment>Line after the newest chat lines over the video, which opens the conversation.</comment>
+  </data>
+  <data name="RoomChatAnnounce" xml:space="preserve">
+    <value>{name} says {message}</value>
+    <comment>Spoken by a screen reader when a chat line arrives.</comment>
+  </data>
+  <data name="RoomChatWait" xml:space="preserve">
+    <value>Wait {seconds} s</value>
+    <comment>End of the chat field while sending waits, after three messages in five seconds.</comment>
+  </data>
+  <data name="RoomChatWaitSpoken_one" xml:space="preserve">
+    <value>Wait one second</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="RoomChatWaitSpoken_other" xml:space="preserve">
+    <value>Wait {seconds} seconds</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="RoomChatCharactersLeft_one" xml:space="preserve">
+    <value>{count} character left</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
+  <data name="RoomChatCharactersLeft_other" xml:space="preserve">
+    <value>{count} characters left</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
+  <data name="RoomReactedAt" xml:space="preserve">
+    <value>{line} at {time}</value>
+    <comment>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.</comment>
+  </data>
+  <data name="RoomTickLabel" xml:space="preserve">
+    <value>{time} · {names}</value>
+    <comment>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</comment>
+  </data>
+  <data name="RoomNamesTwo" xml:space="preserve">
+    <value>{first} and {second}</value>
+    <comment>Two people named together, for a reaction made by both: "Ren and Mika".</comment>
+  </data>
+  <data name="RoomNamesThree" xml:space="preserve">
+    <value>{first}, {second} and {third}</value>
+    <comment>Three people named together.</comment>
+  </data>
+  <data name="RoomNamesOthers" xml:space="preserve">
+    <value>{first}, {second} and {count} others</value>
+    <comment>More than three people named together: two names and how many others.</comment>
+  </data>
+  <data name="RoomVersionOwn" xml:space="preserve">
+    <value>Only your player switches. The room keeps playing.</value>
+    <comment>Player panel, under the subtitled or dubbed switch in a room.</comment>
+  </data>
+  <data name="RoomBannerEpisodePlain" xml:space="preserve">
+    <value>Episode {episode} · {length}</value>
+    <comment>The banner over the room when the episode has no name of its own: the episode and its length.</comment>
+  </data>
+  <data name="RoomMarkUnavailable" xml:space="preserve">
+    <value>Mark skip times after you leave the room.</value>
+    <comment>Menu item dimmed in a room, with this reason under it.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Previous season</value>
     <comment>Button that shows the season before.</comment>
@@ -15083,6 +15155,34 @@
   <data name="SourcesOrderAll" xml:space="preserve">
     <value>Every source is tried in this order, whatever its kind.</value>
     <comment>Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.</comment>
+  </data>
+  <data name="SourcesChooseFor" xml:space="preserve">
+    <value>Choose a source for episode {episode}</value>
+    <comment>Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.</comment>
+  </data>
+  <data name="SourcesLooking" xml:space="preserve">
+    <value>Looking through your sources…</value>
+    <comment>Line while the sources are searched for the episode.</comment>
+  </data>
+  <data name="SourcesFound_one" xml:space="preserve">
+    <value>One source has it</value>
+    <comment>Line over the list of sources that list the episode.</comment>
+  </data>
+  <data name="SourcesFound_other" xml:space="preserve">
+    <value>{count} sources have it</value>
+    <comment>Line over the list of sources that list the episode.</comment>
+  </data>
+  <data name="SourcesNoneList" xml:space="preserve">
+    <value>No source lists episode {episode}. Sources come from plugins, which a plugin store adds.</value>
+    <comment>Line when no source lists the episode.</comment>
+  </data>
+  <data name="SourcesOpen" xml:space="preserve">
+    <value>Open sources</value>
+    <comment>Button that goes to the Sources page, when no source is set up.</comment>
+  </data>
+  <data name="SourcesLabel" xml:space="preserve">
+    <value>Sources for this episode</value>
+    <comment>Accessibility label of the list of sources for the episode.</comment>
   </data>
   <data name="StoresJoined" xml:space="preserve">
     <value>Joined</value>
