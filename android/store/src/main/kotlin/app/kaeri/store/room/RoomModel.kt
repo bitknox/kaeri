@@ -77,6 +77,11 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
     /** Someone moved the room and ticked this device: Go along or Stay. */
     val offer: StateFlow<RoomMoveOffer?> = _offer.asStateFlow()
 
+    private val _noSource = MutableStateFlow<String?>(null)
+
+    /** The room's episode this device's play failed on, "No source for episode 9", until it starts again. */
+    val noSource: StateFlow<String?> = _noSource.asStateFlow()
+
     private val _conversation = MutableStateFlow<RoomConversation?>(null)
 
     /** The room's chat, its own lines and the room's words among them. */
@@ -129,12 +134,16 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
 
     /** Takes the engine's room events; true when [event] was the room's. */
     fun apply(event: Event): Boolean {
+        // A start opens the player again; the player's own handling still takes the event.
+        if (event is Event.RoomStarted) _noSource.value = null
         when (event) {
             is Event.RoomJoined -> {
                 _view.value = event.v1
                 _invited.value = null
                 _left.value = null
+                _noSource.value = null
             }
+            is Event.RoomNoSource -> _noSource.value = event.episode
             is Event.RoomState -> _view.value = event.v1
             is Event.RoomMembers -> _members.value = event.v1
             is Event.RoomChat -> _conversation.value = event.v1
@@ -152,6 +161,7 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
                 )
             }
             is Event.RoomLeft -> {
+                _noSource.value = null
                 _view.value = null
                 _members.value = emptyList()
                 _conversation.value = null

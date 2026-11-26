@@ -315,12 +315,13 @@ fun RoomStripOver(room: RoomModel, positionS: Double, controls: Boolean, modifie
 fun RoomPanel(room: RoomModel, modifier: Modifier = Modifier, onSources: () -> Unit = {}, onSearch: () -> Unit = {}) {
     val view by room.view.collectAsStateWithLifecycle()
     val members by room.members.collectAsStateWithLifecycle()
+    val failed by room.noSource.collectAsStateWithLifecycle()
     val now = rememberRoomNow()
     val v = view ?: return
     val you = members.firstOrNull { it.you }
     when {
         v.beforePlay -> BeforePlayPanel(started = v.startsAtMs != null || v.waiting.isNotEmpty(), modifier = modifier) { room.send(RoomCommand.Play(true)) }
-        you?.state == MemberState.NO_SOURCE -> NoSourcePanel(v.episode?.episode ?: "", modifier, onSources, onSearch)
+        you?.state == MemberState.NO_SOURCE || (failed != null && failed == v.episode?.episode) -> NoSourcePanel(v.episode?.episode ?: "", modifier, onSources, onSearch)
         v.waiting.any { it.you } -> LoadingPanel(RoomWords.waitSeconds(v, now), v.canDontWait, modifier) { room.send(RoomCommand.DontWait) }
         else -> Unit
     }
