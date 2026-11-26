@@ -140,6 +140,8 @@ struct PhoneRoomUpright: View {
             }
         }
         .animation(.standard, value: room.people.map(\.id))
+        .accessibilityElement(children: .contain)
+        .accessibilityLabel(RoomCopy.people)
     }
 
     private var field: some View {
@@ -191,6 +193,8 @@ struct PhoneRoomEveryone: View {
                     ForEach(room.people) { RoomRow(room: room, member: $0, now: now) }
                 }
                 .padding(20)
+                .accessibilityElement(children: .contain)
+                .accessibilityLabel(RoomCopy.people)
             }
         }
         .foregroundStyle(.silk)

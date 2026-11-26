@@ -108,20 +108,24 @@ struct RoomPlace: View {
     /// What a Join that didn't happen says: the title, and what to do.
     static func words(_ failure: RoomJoinFailure) -> (title: String, hint: String) {
         switch failure {
-        case .unreachable: (RoomCopy.relaysUnreachable, RoomCopy.relaysUnreachableHint(8))
+        case .unreachable: (RoomCopy.relaysUnreachableLead, RoomCopy.relaysUnreachableHint(8))
         case .full: (RoomCopy.full, "")
         case .oldInvite: (RoomCopy.oldInvite, "")
         case .failed(let reason): (reason, "")
         }
     }
 
-    /// The failure line: the catalogue's title has no stop of its own, so the hint goes under it.
+    /// The failure line: a red dot, then the bold lead and the hint on one line.
     private func failure(_ title: String, _ hint: String, size: CGFloat = 12) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Circle().fill(Palette.vermilion).frame(width: 7, height: 7).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title).fontWeight(.semibold)
-                if !hint.isEmpty { Text(hint).foregroundStyle(.haze) }
+            // One line, as the board has it: the bold lead (with its stop), then the hint.
+            Group {
+                if hint.isEmpty {
+                    Text(title).fontWeight(.semibold)
+                } else {
+                    Text("\(Text(title).fontWeight(.semibold)) \(Text(hint).foregroundStyle(.haze))")
+                }
             }
             .font(.system(size: compact ? 13 : size))
             .fixedSize(horizontal: false, vertical: true)
@@ -150,7 +154,7 @@ struct RoomPlace: View {
                                 .font(.system(size: compact ? 13 : 12)).foregroundStyle(.haze)
                                 .fixedSize(horizontal: false, vertical: true)
                             if recent.quiet, !compact {
-                                failure(RoomCopy.nobodyAnswered, RoomCopy.nobodyAnsweredHint).padding(.top, 4)
+                                failure(RoomCopy.nobodyAnsweredLead, RoomCopy.nobodyAnsweredHint).padding(.top, 4)
                             }
                         }
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -160,7 +164,7 @@ struct RoomPlace: View {
                     // On a phone Try again leaves the failure too narrow beside it: it goes under the
                     // row, from the title's edge.
                     if recent.quiet, compact {
-                        failure(RoomCopy.nobodyAnswered, RoomCopy.nobodyAnsweredHint).padding(.leading, 76)
+                        failure(RoomCopy.nobodyAnsweredLead, RoomCopy.nobodyAnsweredHint).padding(.leading, 76)
                     }
                 }
                 .padding(.vertical, recent.quiet || compact ? 10 : 0)

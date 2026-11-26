@@ -16,6 +16,7 @@ public enum RoomCopy {
     public static func behind(_ s: Int) -> String { L.roomStateBehind(seconds: s) }
     public static func loading(_ s: Int) -> String { L.roomStateLoading(seconds: s) }
     public static func buffering(_ s: Int) -> String { L.roomStateBuffering(seconds: s) }
+    public static func seeking(_ s: Int) -> String { L.roomStateSeeking(seconds: s) }
     public static func onEpisode(_ episode: String) -> String { L.roomStateOtherEpisode(episode: episode) }
     public static var choosing: String { L.roomStateChoosing }
     public static func noSourceFor(_ episode: String) -> String { L.roomStateNoSource(episode: episode) }
@@ -25,6 +26,8 @@ public enum RoomCopy {
     public static func andMuted(_ word: String) -> String { L.roomStateAndMuted(state: word) }
     public static var you: String { L.roomYou }
     public static var youMark: String { L.roomYouMarker }
+    /// The people list's name for VoiceOver: the board gives it no heading on screen.
+    public static var people: String { L.roomPeople }
     public static func faceLabel(_ name: String, _ state: String) -> String { L.roomFaceLabel(name: name, state: state) }
     public static func moreFaces(_ n: Int) -> String { L.roomMoreFaces(count: n) }
     public static func moreFacesLabel(_ n: Int) -> String { L.roomMoreFacesLabel(count: n) }
@@ -227,9 +230,12 @@ public enum RoomCopy {
     public static var lastTen: String { L.roomRecentNote }
     public static var rejoin: String { L.roomRejoin }
     public static var relaysUnreachable: String { L.roomErrorUnreachableTitle }
+    /// The bold start of the place's failure line, with its stop: the hint follows on the line.
+    public static var relaysUnreachableLead: String { L.roomErrorUnreachableLead }
     /// What Join tried, in seconds per relay.
     public static func relaysUnreachableHint(_ seconds: Int) -> String { "\(L.roomErrorAskNewInvite) \(L.roomErrorTried(seconds: seconds))" }
     public static var nobodyAnswered: String { L.roomErrorNobodyAnswered }
+    public static var nobodyAnsweredLead: String { L.roomErrorNobodyAnsweredLead }
     public static var nobodyAnsweredHint: String { L.roomErrorNobodyAnsweredLine }
     public static var full: String { L.roomErrorFull }
     public static var oldInvite: String { L.roomErrorOldInvite }

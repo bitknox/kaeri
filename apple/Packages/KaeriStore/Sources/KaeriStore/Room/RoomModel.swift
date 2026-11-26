@@ -253,10 +253,13 @@ public final class RoomModel {
             if view.canCarryOn {
                 return RoomStatus(title: RoomCopy.stillLoading(waiting), detail: RoomCopy.waited(secs), action: .carryOn(waiting), waits: true)
             }
-            let buffering = view.waiting.count == 1 && view.waiting[0].reason == .buffering
-            return RoomStatus(
-                title: RoomCopy.pausedFor(waiting), detail: buffering ? RoomCopy.buffering(secs) : RoomCopy.loading(secs),
-                action: nil, waits: true)
+            // One person waited for says what they're doing; more than one are loading.
+            let detail = switch view.waiting.count == 1 ? view.waiting[0].reason : .loading {
+            case .buffering: RoomCopy.buffering(secs)
+            case .seeking: RoomCopy.seeking(secs)
+            default: RoomCopy.loading(secs)
+            }
+            return RoomStatus(title: RoomCopy.pausedFor(waiting), detail: detail, action: nil, waits: true)
         }
         if let carried = view.carriedOn, !carried.past.isEmpty {
             return RoomStatus(
@@ -286,7 +289,10 @@ public final class RoomModel {
         case .watching: word = view?.started == false ? RoomCopy.ready : RoomCopy.watching
         case .ready: word = RoomCopy.ready
         case .paused: word = member.pausedRoom ? RoomCopy.pausedIt : RoomCopy.paused
-        case .loading: word = RoomCopy.loading(secs)
+        case .loading:
+            // Loading the room's new place after someone sought: the room says why it waits.
+            let seeking = view?.waiting.contains { $0.id == member.id && $0.reason == .seeking } ?? false
+            word = seeking ? RoomCopy.seeking(secs) : RoomCopy.loading(secs)
         case .buffering: word = RoomCopy.buffering(secs)
         case .behind: word = RoomCopy.behind(Int((member.behindS ?? 0).rounded()))
         case .otherEpisode: word = RoomCopy.onEpisode(member.episode?.episode ?? "")

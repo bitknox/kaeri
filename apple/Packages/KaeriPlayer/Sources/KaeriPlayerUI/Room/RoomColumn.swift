@@ -118,6 +118,8 @@ struct RoomColumn: View {
             }
             .padding(.bottom, 10)
             .animation(.standard, value: people.map(\.id))
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(RoomCopy.people)
         }
         .scrollDisabled(!many)
         .scrollIndicators(.never)
