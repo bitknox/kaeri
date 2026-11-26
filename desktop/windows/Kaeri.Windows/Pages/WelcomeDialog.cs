@@ -402,7 +402,11 @@ sealed class WelcomeDialog
         {
             var names = brought.SignedIn.Select(KaeriFfiMethods.TrackerName).ToList();
             var joined = names.Count == 1 ? names[0] : T.NamesPair(names.Take(names.Count - 1).Skip(1).Aggregate(names[0], T.NamesList), names[^1]);
-            body.Children.Add(Ui.Haze(T.FirstJoinSigninsLine(joined)));
+            // Copy sign-ins, on until turned off: the engine holds them until Continue answers.
+            var copy = new ToggleSwitch { Name = "WelcomeCopySignIns", IsOn = copySignIns, OnContent = "", OffContent = "", MinWidth = 0 };
+            AutomationProperties.SetName(copy, T.PairCopySignins(device));
+            copy.Toggled += (_, _) => copySignIns = copy.IsOn;
+            body.Children.Add(Line(T.PairCopySignins(device), T.FirstJoinSigninsLine(joined), copy));
         }
         foreach (var store in brought.Stores.Where(s => s.InviteFrom is not null))
         {
@@ -444,11 +448,17 @@ sealed class WelcomeDialog
         return toggle;
     }
 
-    /// <summary>Joins and adds what was kept, answers the medium, and skips the pages the setup answered.</summary>
+    /// <summary>Copy sign-ins on the setup's summary.</summary>
+    bool copySignIns = true;
+
+    /// <summary>Joins and adds what was kept, copies the sign-ins or drops them, answers the medium, and skips the pages the setup answered.</summary>
     void TakeSetup(JoinedSetup brought)
     {
         if (storesOn.Count > 0)
             ctx.Send(new Command.SyncGroup(new SyncCommand.JoinStoresFrom(brought.Device, [.. storesOn], null)));
+        // Always answered: the held tracker sign-ins are taken with the switch on, dropped with it off.
+        if (brought.SignedIn.Length > 0)
+            ctx.Send(new Command.SyncGroup(SyncWords.SetupSignIns(brought.Device, copySignIns)));
         if (serversOn.Count > 0)
             ctx.Send(new Command.SyncGroup(new SyncCommand.AddBookServersFrom(brought.Device, [.. serversOn])));
         foreach (var done in brought.Answered)
