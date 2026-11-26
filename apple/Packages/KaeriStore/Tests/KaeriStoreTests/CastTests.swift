@@ -129,6 +129,31 @@ struct CastTests {
         }
     }
 
+    /// The player a cast was asked from closes once the TV plays, and never for a cast that
+    /// failed first.
+    @Test func thePlayerHandsOffOnlyOnceTheTvPlays() async throws {
+        let (model, session) = casting()
+        var handed = 0
+        model.handOffWhenPlaying { handed += 1 }
+        #expect(handed == 0, "still starting")
+        play(session)
+        try await waitFor { model.stage == .playing }
+        #expect(handed == 1)
+        session.change { $0.position = 500 }
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(handed == 1, "once")
+
+        let (failing, failed) = casting()
+        var closed = false
+        failing.handOffWhenPlaying { closed = true }
+        failed.change {
+            $0.notice = .noticeCastRefused(name: "Living room")
+            $0.over = true
+        }
+        try await waitFor { failing.stage == .failed }
+        #expect(!closed)
+    }
+
     /// The actions follow the reason, not whether the cast had played: the spec's table.
     @Test func theActionsFollowTheReasonBeforeAndAfterTheFirstFrame() async throws {
         let failed: [(Msg, [CastAction])] = [
