@@ -345,6 +345,10 @@ pub enum Msg {
     CloudLoopbackDone,
     /// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
     SyncDeviceRemoved,
+    /// Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.
+    NoticeProfileInUse { name: String },
+    /// Alert when a profile could not be deleted. The reason comes from the system.
+    NoticeProfileNotDeleted { name: String, reason: String },
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     NoticeSignedIn { tracker: String },
     /// Toast after a sign-in succeeded and the token went into the system keychain.
@@ -656,6 +660,8 @@ impl Msg {
             Self::PartyServerUnreachable { .. } => "party-server-unreachable",
             Self::CloudLoopbackDone => "cloud-loopback-done",
             Self::SyncDeviceRemoved => "sync-device-removed",
+            Self::NoticeProfileInUse { .. } => "notice-profile-in-use",
+            Self::NoticeProfileNotDeleted { .. } => "notice-profile-not-deleted",
             Self::NoticeSignedIn { .. } => "notice-signed-in",
             Self::NoticeSignedInKeychain { .. } => "notice-signed-in-keychain",
             Self::NoticeSignedInFile { .. } => "notice-signed-in-file",
@@ -898,6 +904,8 @@ impl Msg {
             Self::PartyServerUnreachable { server } => vec![("server", Value::Text(server.clone()))],
             Self::CloudLoopbackDone => Vec::new(),
             Self::SyncDeviceRemoved => Vec::new(),
+            Self::NoticeProfileInUse { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeProfileNotDeleted { name, reason } => vec![("name", Value::Text(name.clone())), ("reason", Value::Text(reason.clone()))],
             Self::NoticeSignedIn { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInKeychain { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInFile { tracker } => vec![("tracker", Value::Text(tracker.clone()))],

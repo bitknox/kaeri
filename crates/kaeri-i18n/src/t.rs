@@ -2380,6 +2380,16 @@ pub fn sync_device_removed() -> String {
     text("sync-device-removed", &[])
 }
 
+/// Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.
+pub fn notice_profile_in_use(name: &str) -> String {
+    text("notice-profile-in-use", &[("name", Arg::Text(name))])
+}
+
+/// Alert when a profile could not be deleted. The reason comes from the system.
+pub fn notice_profile_not_deleted(name: &str, reason: &str) -> String {
+    text("notice-profile-not-deleted", &[("name", Arg::Text(name)), ("reason", Arg::Text(reason))])
+}
+
 /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 pub fn notice_signed_in(tracker: &str) -> String {
     text("notice-signed-in", &[("tracker", Arg::Text(tracker))])

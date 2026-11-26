@@ -180,6 +180,8 @@ public static class MsgText
         Msg.PartyServerUnreachable x => T.PartyServerUnreachable(x.Server),
         Msg.CloudLoopbackDone => T.CloudLoopbackDone,
         Msg.SyncDeviceRemoved => T.SyncDeviceRemoved,
+        Msg.NoticeProfileInUse x => T.NoticeProfileInUse(x.Name),
+        Msg.NoticeProfileNotDeleted x => T.NoticeProfileNotDeleted(x.Name, x.Reason),
         Msg.NoticeSignedIn x => T.NoticeSignedIn(x.Tracker),
         Msg.NoticeSignedInKeychain x => T.NoticeSignedInKeychain(x.Tracker),
         Msg.NoticeSignedInFile x => T.NoticeSignedInFile(x.Tracker),

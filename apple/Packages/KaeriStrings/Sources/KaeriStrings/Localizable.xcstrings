@@ -133617,6 +133617,30 @@
         }
       }
     },
+    "notice-profile-in-use" : {
+      "comment" : "Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@'s profile is in use. Switch to another profile to delete it."
+          }
+        }
+      }
+    },
+    "notice-profile-not-deleted" : {
+      "comment" : "Alert when a profile could not be deleted. The reason comes from the system. Argument 1: name (Text). Argument 2: reason (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't delete %1$@'s profile. %2$@"
+          }
+        }
+      }
+    },
     "notice-proxy-not-checked" : {
       "comment" : "Toast when the proxy could not be checked. The cause says why. Argument 1: cause (Cause).",
       "extractionState" : "manual",

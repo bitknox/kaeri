@@ -1440,6 +1440,12 @@ public static partial class T
     /// <summary>The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.</summary>
     public static string SyncDeviceRemoved => Get("SyncDeviceRemoved");
 
+    /// <summary>Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.</summary>
+    public static string NoticeProfileInUse(string name) => Fill(Get("NoticeProfileInUse"), ("name", name));
+
+    /// <summary>Alert when a profile could not be deleted. The reason comes from the system.</summary>
+    public static string NoticeProfileNotDeleted(string name, string reason) => Fill(Get("NoticeProfileNotDeleted"), ("name", name), ("reason", reason));
+
     /// <summary>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</summary>
     public static string NoticeSignedIn(string tracker) => Fill(Get("NoticeSignedIn"), ("tracker", tracker));
 
@@ -13068,6 +13074,8 @@ public static partial class T
         ["StoresReadyDemoStays"] = "{store} is ready. The demo stays last in Your sources.",
         ["CloudLoopbackDone"] = "You can close this tab and go back to Kaeri.",
         ["SyncDeviceRemoved"] = "This device was removed from sync on another device. Join again to sync it.",
+        ["NoticeProfileInUse"] = "{name}'s profile is in use. Switch to another profile to delete it.",
+        ["NoticeProfileNotDeleted"] = "Couldn't delete {name}'s profile. {reason}",
         ["NoticeSignedIn"] = "Signed in to {tracker}.",
         ["NoticeSignedInKeychain"] = "Signed in to {tracker}. The token is in the OS keychain.",
         ["NoticeSignedInFile"] = "Signed in to {tracker}. No keychain is available, so the token is in a private file on this device.",
