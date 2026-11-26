@@ -49,6 +49,9 @@ pub struct Member {
     pub joined_at: i64,
     /// Sent Leave, or silent past the Left timeout, at this moment.
     pub left_at: Option<i64>,
+    /// Their identity key and its proof for `session`, passed on in sync answers.
+    pub idpk: String,
+    pub idsig: String,
 }
 
 impl Member {
@@ -144,6 +147,8 @@ impl Room {
                 heard_at: now,
                 joined_at: now,
                 left_at: None,
+                idpk: String::new(),
+                idsig: String::new(),
             },
         );
         Self {
@@ -203,6 +208,14 @@ impl Room {
             return want.to_owned();
         }
         (2..).map(|n| format!("{want} {n}")).find(|n| !taken(n)).unwrap_or_default()
+    }
+
+    /// This device's identity proof, for the sync answers it gives.
+    pub fn set_my_proof(&mut self, idpk: &str, idsig: &str) {
+        if let Some(me) = self.members.get_mut(&self.me) {
+            me.idpk = idpk.to_owned();
+            me.idsig = idsig.to_owned();
+        }
     }
 
     pub fn rename_me(&mut self, name: &str) {
@@ -573,7 +586,7 @@ impl Room {
         }
         let known = self.members.contains_key(&body.mid);
         match &body.m {
-            Message::Hello { name, .. } => {
+            Message::Hello { name, idpk, idsig, .. } => {
                 let back = self.members.get(&body.mid).is_some_and(|m| m.left_at.is_some());
                 let member = self.members.entry(body.mid.clone()).or_insert_with(|| Member {
                     mid: body.mid.clone(),
@@ -584,9 +597,13 @@ impl Room {
                     heard_at: now,
                     joined_at: now,
                     left_at: None,
+                    idpk: String::new(),
+                    idsig: String::new(),
                 });
                 member.name.clone_from(name);
                 member.session.clone_from(&body.from);
+                member.idpk.clone_from(idpk);
+                member.idsig.clone_from(idsig);
                 member.left_at = None;
                 if !known || back {
                     out.push(Happening::Joined { mid: body.mid.clone() });
@@ -660,13 +677,20 @@ impl Room {
         let member = self.members.entry(entry.mid.clone()).or_insert_with(|| Member {
             mid: entry.mid.clone(),
             name: entry.name.clone(),
-            session: String::new(),
+            session: entry.pk.clone(),
             status: entry.st.clone(),
             status_at: now,
             heard_at: now,
             joined_at: joined,
             left_at: None,
+            idpk: entry.idpk.clone(),
+            idsig: entry.idsig.clone(),
         });
+        if !entry.pk.is_empty() {
+            member.session.clone_from(&entry.pk);
+            member.idpk.clone_from(&entry.idpk);
+            member.idsig.clone_from(&entry.idsig);
+        }
         member.status = entry.st.clone();
         member.status_at = now;
         member.heard_at = now;
@@ -684,8 +708,9 @@ impl Room {
             .map(|m| RosterEntry {
                 mid: m.mid.clone(),
                 name: m.name.clone(),
-                idpk: String::new(),
-                idsig: String::new(),
+                pk: m.session.clone(),
+                idpk: m.idpk.clone(),
+                idsig: m.idsig.clone(),
                 st: Status { age: (now - m.since()).max(0) as u32, ..m.status.clone() },
                 joined_ms_ago: (now - m.joined_at).max(0) as u64,
                 gone: false,

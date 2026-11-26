@@ -204,6 +204,9 @@ pub enum Reaction {
 pub struct RosterEntry {
     pub mid: Mid,
     pub name: String,
+    /// Their session key, which `idsig` proves.
+    #[serde(default)]
+    pub pk: String,
     #[serde(default)]
     pub idpk: String,
     #[serde(default)]
