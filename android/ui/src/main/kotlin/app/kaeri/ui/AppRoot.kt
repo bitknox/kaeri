@@ -730,12 +730,6 @@ private fun AppRootFrame(
                                     CompositionLocalProvider(LocalPageAnimation provides this) { PartyLobbyScreen() }
                                 }
                             }
-                            // With Remove animations on, system Back takes the page's own Back, which fades a still of
-                            // the page out where NavHost's back would cut. Composed after NavHost so it answers before
-                            // it, while a page opened later still answers Back first.
-                            androidx.activity.compose.BackHandler(enabled = removed && entry != null && nav.previousBackStackEntry != null) {
-                                navigator.back()
-                            }
                         }
                     }
                 }
