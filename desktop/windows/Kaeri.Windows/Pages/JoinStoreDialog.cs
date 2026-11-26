@@ -215,6 +215,13 @@ sealed class JoinStoreDialog
             body.Children.Add(new ScrollViewer { Content = list, MaxHeight = 200, VerticalScrollBarVisibility = ScrollBarVisibility.Auto });
         }
         body.Children.Add(Ui.Haze(T.StoresJoinInstallsNothing));
+        // Where the choice is made: who answers for the store, and what plugins are.
+        if (!store.AlreadyJoined)
+        {
+            body.Children.Add(Ui.Haze(Stores.OwnerResponsible(store.Owners, store.Host)));
+            body.Children.Add(Ui.Haze(T.StoresNotFromApp));
+            body.Children.Add(Ui.Haze(T.PluginRiskWarning));
+        }
         if (!store.Anonymous && !store.AlreadyJoined)
         {
             deviceName = new TextBox { Text = store.DeviceLabel };

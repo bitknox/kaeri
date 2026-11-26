@@ -193,6 +193,10 @@ public static class Stores
     public static string RunBy(string[]? owners, string host) =>
         owners is { Length: > 0 } ? T.StoresRunBy(string.Join(", ", owners), host) : host;
 
+    /// <summary>Who answers for a store and its plugins, shown before Join: its owners, or its host when it names none.</summary>
+    public static string OwnerResponsible(string[]? owners, string host) =>
+        T.StoresJoinOwnerResponsible(owners is { Length: > 0 } ? string.Join(", ", owners) : host);
+
     /// <summary>Who this device joined as: a name, or none for one that joined with the store's open link.</summary>
     public static string JoinedAs(StoreRow store) => store.Anonymous ? T.StoresJoinedNameless : T.StoresDeviceJoinedAs(store.Member);
 
