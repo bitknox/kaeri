@@ -8897,6 +8897,15 @@ public static partial class T
     /// <summary>Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.</summary>
     public static string RoomErrorNobodyAnsweredLead => Get("RoomErrorNobodyAnsweredLead");
 
+    /// <summary>Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.</summary>
+    public static string RoomDeviceInRoom(string device) => Fill(Get("RoomDeviceInRoom"), ("device", device));
+
+    /// <summary>Button on the phone's remote screen that leaves the room on the paired TV.</summary>
+    public static string RoomLeaveOnDevice(string device) => Fill(Get("RoomLeaveOnDevice"), ("device", device));
+
+    /// <summary>Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.</summary>
+    public static string RoomTvJoinFromPhone => Get("RoomTvJoinFromPhone");
+
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
 
@@ -16417,6 +16426,9 @@ public static partial class T
         ["RoomStateSeeking"] = "Seeking · {seconds} s",
         ["RoomErrorUnreachableLead"] = "Couldn't reach this room's relays.",
         ["RoomErrorNobodyAnsweredLead"] = "Nobody answered in this room.",
+        ["RoomDeviceInRoom"] = "{device} is in this room",
+        ["RoomLeaveOnDevice"] = "Leave the room on {device}",
+        ["RoomTvJoinFromPhone"] = "To join someone's room, open their invite on a paired phone and choose this TV.",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",

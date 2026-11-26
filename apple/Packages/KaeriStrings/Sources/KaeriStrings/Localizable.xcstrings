@@ -258065,6 +258065,18 @@
         }
       }
     },
+    "room-device-in-room" : {
+      "comment" : "Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is in this room"
+          }
+        }
+      }
+    },
     "room-dont-wait" : {
       "comment" : "Button on your own starting screen that lets the room carry on without you.",
       "extractionState" : "manual",
@@ -258541,6 +258553,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Leave the room"
+          }
+        }
+      }
+    },
+    "room-leave-on-device" : {
+      "comment" : "Button on the phone's remote screen that leaves the room on the paired TV. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the room on %1$@"
           }
         }
       }
@@ -260405,6 +260429,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "room-tv-join-from-phone" : {
+      "comment" : "Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To join someone's room, open their invite on a paired phone and choose this TV."
           }
         }
       }

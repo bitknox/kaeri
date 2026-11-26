@@ -12611,6 +12611,15 @@ room-error-unreachable-lead = [Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š �
 # Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
 room-error-nobody-answered-lead = [Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ.~~~~~~~~~]
 
+# Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+room-device-in-room = [{ $device } îš îñ ţĥîš ŕööɱ~~~~~~]
+
+# Button on the phone's remote screen that leaves the room on the paired TV.
+room-leave-on-device = [Ļéàṽé ţĥé ŕööɱ öñ { $device }~~~~~~~]
+
+# Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+room-tv-join-from-phone = [Ţö ĵöîñ šöɱéöñé'š ŕööɱ, öþéñ ţĥéîŕ îñṽîţé öñ à þàîŕéð þĥöñé àñð çĥööšé ţĥîš ŢṼ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]
 

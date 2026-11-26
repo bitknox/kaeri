@@ -12080,6 +12080,19 @@ public enum L {
     /// Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
     public static var roomErrorNobodyAnsweredLead: String { string("room-error-nobody-answered-lead", fallback: "Nobody answered in this room.") }
 
+    /// Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+    public static func roomDeviceInRoom(device: String) -> String {
+        Self.format("room-device-in-room", fallback: "%1$@ is in this room", device)
+    }
+
+    /// Button on the phone's remote screen that leaves the room on the paired TV.
+    public static func roomLeaveOnDevice(device: String) -> String {
+        Self.format("room-leave-on-device", fallback: "Leave the room on %1$@", device)
+    }
+
+    /// Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+    public static var roomTvJoinFromPhone: String { string("room-tv-join-from-phone", fallback: "To join someone's room, open their invite on a paired phone and choose this TV.") }
+
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }
 

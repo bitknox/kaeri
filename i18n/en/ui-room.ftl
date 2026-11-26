@@ -1064,3 +1064,15 @@ room-error-unreachable-lead = Couldn't reach this room's relays.
 # Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
 room-error-nobody-answered-lead = Nobody answered in this room.
 
+
+# Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+# @arg device: text
+room-device-in-room = { $device } is in this room
+
+# Button on the phone's remote screen that leaves the room on the paired TV.
+# @arg device: text
+# @max 40
+room-leave-on-device = Leave the room on { $device }
+
+# Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+room-tv-join-from-phone = To join someone's room, open their invite on a paired phone and choose this TV.
