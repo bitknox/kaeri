@@ -462,6 +462,28 @@ impl FakeRoom {
         self.act(name, |_, _| Some(Message::Status));
     }
 
+    /// `name` has the room playing `ep` from `at` seconds, as a room that has been watching for
+    /// a while: no wait and no count before play. For scenes of a room past its start.
+    pub fn member_started(&self, name: &str, ep: Ep, next: Option<Ep>, at: f64) {
+        self.act(name, |m, now| {
+            let head = m.room.write(
+                now,
+                now,
+                |h| {
+                    h.play = true;
+                    h.next = next;
+                    h.cause = Cause::Play;
+                    h.pos = at;
+                    h.wseq = 0;
+                },
+                Some(ep),
+            )?;
+            m.watch(now);
+            Some(Message::Playhead(head))
+        });
+        self.act(name, |_, _| Some(Message::Status));
+    }
+
     fn write(&self, name: &str, change: impl FnOnce(&mut Playhead)) {
         self.act(name, |m, now| m.room.write(now, now, change, None).map(Message::Playhead));
     }

@@ -410,7 +410,14 @@ mod fake {
                 scene,
                 S::BeforePlay | S::BeforePlayWait | S::BeforePlayCap | S::Starting
             );
-            self.run(|f| f.member_starts("Mika", ep(EPISODE), Some(ep(NEXT)), !before_play));
+            if before_play {
+                self.run(|f| f.member_starts("Mika", ep(EPISODE), Some(ep(NEXT)), false));
+            } else {
+                // A room that has been watching a while: no count before play, so a pause, a
+                // seek or a stall reads as one, not as "Starting when Ren is ready".
+                let at = super::scene::at(0.2);
+                self.run(|f| f.member_started("Mika", ep(EPISODE), Some(ep(NEXT)), at));
+            }
             if matches!(scene, S::BeforePlay | S::BeforePlayWait | S::BeforePlayCap) {
                 let secs = match scene {
                     S::BeforePlay => 4.0,

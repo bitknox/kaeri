@@ -292,3 +292,39 @@ fn an_invite_nobody_answers_says_so() {
     rx.recv_timeout(PATIENCE).unwrap();
     engine.shutdown();
 }
+
+/// The scenes of a room past its start: each must be past "Starting when Ren is ready", in the
+/// state the board draws.
+fn after_play(
+    scene: FfiRoomScene,
+    drawn: impl Fn(&RoomView, &[RoomMember]) -> bool + Send + 'static,
+) {
+    let (_root, engine) = staged(scene);
+    let (view, members, _) = until(&engine, move |v, m, _| !v.before_play && drawn(v, m));
+    assert!(!view.before_play, "{scene:?}: {view:?} {members:?}");
+    engine.shutdown();
+}
+
+#[test]
+fn a_paused_room_was_watching_before_mika_paused_it() {
+    after_play(FfiRoomScene::Paused, |v, _| {
+        !v.playing && v.paused_by.as_deref() == Some("Mika")
+    });
+}
+
+#[test]
+fn a_wait_after_a_seek_is_a_wait_not_the_start() {
+    for scene in [FfiRoomScene::WaitLoading, FfiRoomScene::WaitCap] {
+        after_play(scene, |v, _| !v.playing && v.waiting.iter().any(|w| w.name == "Ren"));
+    }
+    after_play(FfiRoomScene::CarriedOn, |v, _| v.playing && v.carried_on.is_some());
+    after_play(FfiRoomScene::YouLoading, |v, _| v.waiting.iter().any(|w| w.you));
+}
+
+#[test]
+fn a_stall_and_your_own_behind_happen_in_a_room_already_watching() {
+    after_play(FfiRoomScene::Buffering, |v, m| {
+        !v.playing && state(m, "Ren") == Some(MemberState::Buffering)
+    });
+    after_play(FfiRoomScene::YouBehind, |_, m| state(m, "Ada") == Some(MemberState::Behind));
+}
