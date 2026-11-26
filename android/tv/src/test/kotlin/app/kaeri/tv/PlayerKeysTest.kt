@@ -7,7 +7,9 @@ import org.robolectric.RobolectricTestRunner
 import org.junit.runner.RunWith
 import org.junit.Test
 import app.kaeri.player.SeekSegment
+import app.kaeri.tv.player.CenterKey
 import app.kaeri.tv.player.ScrubHead
+import app.kaeri.tv.player.centerKey
 import app.kaeri.tv.player.SeekRun
 import app.kaeri.tv.player.clockTime
 import app.kaeri.tv.player.remainingTime
@@ -25,6 +27,17 @@ class PlayerKeysTest {
         SeekSegment(SeekSegment.Kind.Ending, 1291.0, 1381.0),
         SeekSegment(SeekSegment.Kind.Plain, 1381.0, 1442.0),
     )
+
+    @Test
+    fun center_skips_while_the_stretch_plays_and_pauses_after() {
+        // The offer holds while the opening plays, dimmed or not: Center takes it.
+        assertEquals(CenterKey.SKIP, centerKey(undoShown = false, skipLive = true))
+        // The opening has passed and the engine cleared its offer: Center pauses, as everywhere else.
+        assertEquals(CenterKey.PAUSE, centerKey(undoShown = false, skipLive = false))
+        // An automatic skip's Undo note comes first.
+        assertEquals(CenterKey.UNDO, centerKey(undoShown = true, skipLive = false))
+        assertEquals(CenterKey.UNDO, centerKey(undoShown = true, skipLive = true))
+    }
 
     @Test
     fun presses_count_up_and_seek_once() {
