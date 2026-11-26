@@ -14,7 +14,7 @@ use kaeri_model::{
     event::Event,
     room::{
         MemberState, OldInvite, RoomCommand, RoomConnection, RoomLeftWhy, RoomMember,
-        RoomMessageKind, RoomView,
+        RoomMessageKind, RoomStartKind, RoomView,
     },
 };
 
@@ -435,5 +435,45 @@ fn carry_on_never_carries_on_without_yourself() {
         !read.iter().any(|e| matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::CarriedOn { .. }))),
         "{read:?}"
     );
+    engine.shutdown();
+}
+
+#[test]
+fn your_player_never_rolls_on_alone_and_the_rooms_up_next_moves_everyone() {
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let room = Arc::clone(&engine).start_fake_room();
+    assert!(room.stage(FfiRoomScene::Watching));
+    let (view, members, _) = until(&engine, |v, _, _| v.playing && v.room_episode.is_some());
+    let id = view.room_episode.clone().unwrap().id;
+    // The player reached its end and asks for the next episode, as an app's own Up next would.
+    engine.send(Command::Play { id, episode: "10".into(), from_start: false });
+    let (view, members, read) = until_from(&engine, (Some(view), members), |v, _, _| {
+        v.up_next.as_ref().is_some_and(|u| !u.waiting_for.is_empty())
+    });
+    assert!(
+        !read
+            .iter()
+            .any(|e| matches!(e, Event::RoomStarted { episode, .. } if episode == "10")),
+        "{read:?}"
+    );
+    assert_eq!(view.room_episode.as_ref().unwrap().episode, "9");
+    // Once everyone's file has reached its own Up next point, the room counts and moves on.
+    room.member_reaches_up_next("Mika".into());
+    room.member_reaches_up_next("Ren".into());
+    let (view, members, _) = until_from(&engine, (Some(view), members), |v, _, _| {
+        v.up_next.as_ref().is_some_and(|u| u.ends_at_ms.is_some())
+    });
+    let (view, _, read) = until_from(&engine, (Some(view), members), |v, _, r| {
+        v.room_episode.as_ref().is_some_and(|e| e.episode == "10")
+            && r.iter()
+                .any(|e| matches!(e, Event::RoomStarted { episode, .. } if episode == "10"))
+    });
+    assert!(view.up_next.is_none(), "{view:?}");
+    assert!(
+        read.iter()
+            .any(|e| matches!(e, Event::RoomStarted { kind: RoomStartKind::MoveOn, .. }))
+    );
+    std::mem::forget(room);
     engine.shutdown();
 }

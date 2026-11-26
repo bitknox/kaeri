@@ -637,6 +637,11 @@ pub(crate) fn dispatch(
         // Each refused where this build has no player to play in: see `playback::refuse`.
         // A play wants the source's time: a dub or episode names lookup running stops for it.
         Command::Play { id, episode, from_start } => {
+            // In a room a play is the room's: see `room::play_in_room`.
+            #[cfg(feature = "room")]
+            if crate::room::play_in_room(id, &episode, engine) {
+                return;
+            }
             #[cfg(feature = "party")]
             if crate::party::play_in_room(id, &episode, engine, services) {
                 return;

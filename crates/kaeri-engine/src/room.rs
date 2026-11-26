@@ -49,11 +49,17 @@ enum Control {
     Command(RoomCommand),
     /// The sources check for the room's episode found nothing here.
     NoSource,
+    /// This device's own Up next point came: its player asked for the room's next episode.
+    UpNextPoint,
 }
+
+/// The room's episode and the one after it, as the task last saw them.
+type Episodes = std::sync::Arc<std::sync::Mutex<Option<(Ep, Option<Ep>)>>>;
 
 /// The room going, as the engine steers it.
 pub struct Running {
     control: mpsc::UnboundedSender<Control>,
+    episodes: Episodes,
 }
 
 impl Running {
@@ -132,6 +138,30 @@ pub fn leave(engine: &mut EngineState) {
     if let Some(running) = engine.room.take() {
         let _ = running.control.send(Control::Command(RoomCommand::Leave));
     }
+}
+
+/// A play while a room is going: the room's episode plays here (`false`), the room's next one is
+/// this device's Up next point (the room's Up next moves everyone together, never one player
+/// on its own), and any other becomes the room's episode. `false` with no room.
+pub fn play_in_room(id: AnilistId, episode: &str, engine: &EngineState) -> bool {
+    let Some(running) = going(engine) else { return false };
+    let ep = Ep(id.get(), episode.to_owned());
+    let (room, next) = running
+        .episodes
+        .lock()
+        .unwrap_or_else(std::sync::PoisonError::into_inner)
+        .clone()
+        .unzip();
+    // The room's own episode plays here: it's how the app answers RoomStarted.
+    if room.as_ref() == Some(&ep) {
+        return false;
+    }
+    let control = if next.flatten().as_ref() == Some(&ep) {
+        Control::UpNextPoint
+    } else {
+        Control::Command(RoomCommand::ChangeEpisode { id, episode: episode.to_owned() })
+    };
+    running.control.send(control).is_ok()
 }
 
 /// A room is going on this device.
@@ -240,8 +270,9 @@ fn join(
         tx: tx.clone(),
         hidden: engine.config.effective().syncplay.hide_chat,
     };
-    tokio::spawn(run(target, start, name, env, controls, seats));
-    engine.room = Some(Running { control });
+    let episodes = Episodes::default();
+    tokio::spawn(run(target, start, name, env, controls, seats, episodes.clone()));
+    engine.room = Some(Running { control, episodes });
 }
 
 #[derive(Clone)]
@@ -449,6 +480,8 @@ struct Task {
     offers: HashMap<String, Offer>,
     moved: Option<(Mid, Vec<Mid>)>,
     joined: bool,
+    /// The room's episode and the next, for the engine's plays.
+    episodes: Episodes,
 }
 
 impl Task {
@@ -787,6 +820,8 @@ impl Task {
 
     /// Tell the front end what changed.
     fn refresh(&mut self) {
+        let now = self.room.playhead().map(|h| (h.ep.clone(), h.next.clone()));
+        *self.episodes.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = now;
         let view = self.view();
         let mut compare = view.clone();
         compare.position_at_ms = 0;
@@ -818,6 +853,9 @@ impl Task {
     fn tick(&mut self) {
         let now = self.now();
         self.room.settle(now);
+        if self.joined {
+            self.up_next(now);
+        }
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
         let wseq = self.room.playhead().map_or(0, |h| h.wseq);
@@ -1108,6 +1146,47 @@ impl Task {
                 },
                 None,
             );
+        }
+    }
+
+    /// The room's Up next, from this device: once everyone taking part has reached their own Up
+    /// next point, the count starts from the room's place; when it runs out, the room moves on.
+    /// Every device may write either; they agree on the tie.
+    fn up_next(&mut self, now: i64) {
+        let Some(head) = self.room.playhead().cloned() else { return };
+        let Some(next) = head.next.clone() else { return };
+        match head.up {
+            Up::None => {
+                let everyone = self.status.ue
+                    && self.room.playing()
+                    && self.room.up_next_waiting_for(now).is_empty();
+                if everyone {
+                    let from_pos = self.room.position(now).unwrap_or(head.pos);
+                    self.write(
+                        |h| {
+                            h.cause = Cause::UpNext;
+                            h.up = Up::Counting { from_pos };
+                        },
+                        None,
+                    );
+                }
+            }
+            Up::Counting { .. } => {
+                if self.room.up_next_ends_at(now).is_some_and(|end| end <= now) {
+                    let after = next_of(&next);
+                    self.write(
+                        |h| {
+                            h.cause = Cause::MoveOn;
+                            h.pos = 0.0;
+                            h.play = true;
+                            h.up = Up::None;
+                            h.next = after;
+                        },
+                        Some(next),
+                    );
+                }
+            }
+            Up::Cancelled => {}
         }
     }
 
@@ -1625,6 +1704,7 @@ async fn run(
     env: Env,
     mut controls: mpsc::UnboundedReceiver<Control>,
     mut seats: mpsc::UnboundedReceiver<SeatMessage>,
+    episodes: Episodes,
 ) {
     let link = match link::open(target.secret, target.relays.clone()).await {
         Ok(link) => link,
@@ -1665,6 +1745,7 @@ async fn run(
         offers: HashMap::new(),
         moved: None,
         joined: false,
+        episodes,
     };
     // A playback going takes its seat first: starting from the player keeps it.
     let settle = tokio::time::sleep(Duration::from_millis(300));
@@ -1710,6 +1791,10 @@ async fn run(
                     if task.on_command(command).await {
                         return;
                     }
+                    task.refresh();
+                }
+                Some(Control::UpNextPoint) => {
+                    task.set_status(|s| s.ue = true);
                     task.refresh();
                 }
                 Some(Control::NoSource) => {
