@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using Kaeri.App;
-using Kaeri.App.RoomStand;
+using Kaeri.Engine.Core;
+using Kaeri.Engine.Model;
 using Microsoft.UI;
 using Microsoft.UI.Text;
 using Microsoft.UI.Windowing;
@@ -27,14 +28,13 @@ public sealed partial class PlayerView
     Grid? roomPanelLayer;
     RoomPanel? roomPanel;
     RoomScene? roomScene;
-    IReadOnlyList<RoomChatLine> roomLines = [];
-    IReadOnlyCollection<string> roomMuted = [];
+    RoomConversation? roomChat;
+    SourceCandidate[]? roomSources;
     DispatcherTimer? roomTick;
     long roomChangedAt;
     string roomPrint = "";
     bool roomHidden, roomFull;
     int roomGrownBy;
-    Func<RoomScene, RoomScene>? roomNow;
 
     /// <summary>Every press in the room, as the engine's room commands.</summary>
     internal event Action<RoomCommand>? RoomSent;
@@ -42,22 +42,27 @@ public sealed partial class PlayerView
     /// <summary>In a room: the column, or the strip in full screen, speaks for it.</summary>
     internal bool InRoom => roomScene is not null;
 
+    /// <summary>Join (true; and whether anyway, past ten people) or Not now, on an invite looked into.</summary>
+    internal event Action<bool, bool>? RoomAnswered;
+
+    /// <summary>A source picked in the Choosing panel, to play in the room.</summary>
+    internal event Action<SourceCandidate>? RoomSourcePicked;
+
+    /// <summary>Open sources or Search titles, from the no-source panel: the window goes there.</summary>
+    internal event Action<string>? RoomGo;
+
     void SendRoom(RoomCommand command) => RoomSent?.Invoke(command);
 
     /// <summary>
     /// The room as it stands. The first call opens the room: with <paramref name="morph"/>, the
     /// player turns into the room (the window frame widens by the column on the system's curve and
     /// the column's contents fade in at their place), otherwise it is simply there.
-    /// <paramref name="now"/> moves the scene's clock on for the one-second tick.
     /// </summary>
-    internal void ShowRoom(RoomScene scene, IReadOnlyList<RoomChatLine> lines, IReadOnlyCollection<string>? muted = null, bool morph = false, Func<RoomScene, RoomScene>? now = null)
+    internal void ShowRoom(RoomScene scene, RoomConversation? chat, bool morph = false)
     {
         var opening = roomScene is null;
         roomScene = scene;
-        roomLines = lines;
-        roomMuted = muted ?? [];
-        if (now is not null)
-            roomNow = now;
+        roomChat = chat;
         if (opening)
             OpenRoom(morph);
         RenderRoom();
@@ -70,6 +75,14 @@ public sealed partial class PlayerView
         BuildRoomPanel();
     }
 
+    /// <summary>What each source has for the room's episode, for the Choosing panel; null while looking.</summary>
+    internal void ShowRoomSources(SourceCandidate[]? found)
+    {
+        roomSources = found;
+        if (roomPanel is { Kind: RoomPanelKind.Choosing })
+            BuildRoomPanel();
+    }
+
     /// <summary>Out of the room: the column goes and the window gives back what it grew by.</summary>
     internal void EndRoom()
     {
@@ -78,6 +91,7 @@ public sealed partial class PlayerView
         roomScene = null;
         roomTick?.Stop();
         roomPanel = null;
+        roomSources = null;
         BuildRoomPanel();
         if (roomStrip is { } strip)
         {
@@ -104,19 +118,27 @@ public sealed partial class PlayerView
         discussion?.Close();
         var column = new RoomColumn();
         roomColumn = column;
-        column.Asked += ask => SendRoom(ask switch
+        column.Asked += ask =>
         {
-            RoomAsk.CarryOn or RoomAsk.Start => new RoomCommand.CarryOn(),
-            RoomAsk.Join or RoomAsk.JoinAnyway => new RoomCommand.Join(true),
-            RoomAsk.GoAlong => new RoomCommand.AnswerMove(roomScene?.Offer?.Id ?? "", true),
-            _ => new RoomCommand.CarryOn(),
-        });
+            switch (ask)
+            {
+                case RoomAsk.Join or RoomAsk.JoinAnyway:
+                    RoomAnswered?.Invoke(true, ask == RoomAsk.JoinAnyway);
+                    break;
+                case RoomAsk.GoAlong when roomScene?.Offer is { } offer:
+                    SendRoom(new RoomCommand.AnswerMove(offer.Id, true));
+                    break;
+                case RoomAsk.CarryOn or RoomAsk.Start:
+                    SendRoom(new RoomCommand.CarryOn());
+                    break;
+            }
+        };
         column.Declined += () =>
         {
             if (roomScene?.Offer is { } offer)
                 SendRoom(new RoomCommand.AnswerMove(offer.Id, false));
             else
-                SendRoom(new RoomCommand.Join(false));
+                RoomAnswered?.Invoke(false, false);
         };
         column.InviteClicked += () => ShowRoomInvite();
         column.DetailsClicked += () => ShowRoomDetails();
@@ -126,7 +148,7 @@ public sealed partial class PlayerView
                 SendRoom(new RoomCommand.Leave());
         };
         column.Said += text => SendRoom(new RoomCommand.Say(text));
-        column.MuteAsked += (name, on) => SendRoom(new RoomCommand.Mute(name, on));
+        column.MuteAsked += (id, on) => SendRoom(new RoomCommand.Mute(id, on));
         Grid.SetColumn(column, 1);
         column.HorizontalAlignment = HorizontalAlignment.Left;
         Root.Children.Add(column);
@@ -155,7 +177,7 @@ public sealed partial class PlayerView
     {
         if (roomScene is null)
             return;
-        roomScene = roomNow is { } step ? step(roomScene) : roomScene with { NowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
+        roomScene = roomScene with { NowMs = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds() };
         RenderRoom();
     }
 
@@ -171,7 +193,7 @@ public sealed partial class PlayerView
             roomPrint = print;
             roomChangedAt = scene.NowMs;
         }
-        roomColumn?.Show(scene, roomLines, roomMuted);
+        roomColumn?.Show(scene, roomChat);
         roomStrip?.Show(scene);
         PlaceRoomStrip();
         if (roomPanel is { Kind: RoomPanelKind.SelfLoading })
@@ -377,17 +399,10 @@ public sealed partial class PlayerView
     {
         if (roomScene is not { } scene)
             return false;
-        if (scene.View.Waiting.Length > 0)
-        {
-            SendRoom(new RoomCommand.CarryOn());
-            return true;
-        }
-        if (scene.Start is RoomStart.Before)
-        {
-            SendRoom(new RoomCommand.Play());
-            return true;
-        }
-        return false;
+        if ((scene.View.Waiting ?? []).Length == 0 && !scene.View.BeforePlay)
+            return false;
+        SendRoom(new RoomCommand.Play(true));
+        return true;
     }
 
     /// <summary>Skip opening skips for the room, and the chat says who.</summary>
@@ -436,7 +451,7 @@ public sealed partial class PlayerView
     {
         if (roomColumn is not { } column || roomScene is not { } scene)
             return;
-        var flyout = RoomPopups.Details(scene.View.Relays, relays => SendRoom(new RoomCommand.SetRelays(relays)), editing);
+        var flyout = RoomPopups.Details(scene.View.Relays, relays => SendRoom(new RoomCommand.EditRelays(relays)), editing);
         flyout.Opened += OnMenuOpened;
         flyout.Closed += OnMenuClosed;
         flyout.ShowAt(column.DetailsAnchor);
@@ -455,7 +470,7 @@ public sealed partial class PlayerView
 
     void ShowRoomUpNext(RoomScene scene)
     {
-        if (scene.View.UpNext is not { EndsAtMs: { } ends, CancelledBy: null } || scene.View.Waiting.Length > 0)
+        if (scene.View.UpNext is not { CancelledBy: null } next || (scene.View.Waiting ?? []).Length > 0)
         {
             if (roomUpNextShown)
             {
@@ -467,8 +482,12 @@ public sealed partial class PlayerView
         }
         roomUpNextShown = true;
         UpNextHead.Text = RoomWords.UpNextForRoom;
-        UpNextTitle.Text = scene.NextEpisodeName ?? "";
-        UpNextLine.Text = RoomWords.PlaysInSeconds(Math.Max(0, (ends - scene.NowMs + 999) / 1000));
+        var episode = next.Episode;
+        UpNextTitle.Text = episode.Name is { Length: > 0 } name ? T.RoomUpNextEpisode(RoomWords.N(episode.Episode), name) : T.RoomUpNextEpisodePlain(RoomWords.N(episode.Episode));
+        // The count, or while someone's file still plays, who the card waits for.
+        UpNextLine.Text = next.EndsAtMs is { } ends
+            ? RoomWords.PlaysInSeconds(Math.Max(0, (ends - scene.NowMs + 999) / 1000))
+            : RoomWords.UpNextWaiting(Rooms.Names(next.WaitingFor ?? []));
         UpNextBar.Visibility = Visibility.Collapsed;
         if (UpNextCard.Visibility != Visibility.Visible)
         {
@@ -542,14 +561,14 @@ public sealed partial class PlayerView
                 at.Children.Add(Words(panel.Kind == RoomPanelKind.Invited ? RoomWords.RoomIsWatching : RoomWords.UpInTheRoom, 13, strong: true, haze: true));
                 var title = new TextBlock { Text = panel.Show, Style = (Style)Application.Current.Resources["ShowTitleDisplayStyle"], Margin = new Thickness(0, 6, 0, 0), TextAlignment = TextAlignment.Left };
                 at.Children.Add(title);
-                var ep = Words(RoomWords.EpisodeLength(panel.EpisodeLine, panel.Minutes), 17);
+                var ep = Words(RoomWords.EpisodeLength(panel.Episode, panel.EpisodeName ?? "", panel.Minutes), 17);
                 ep.Margin = new Thickness(0, 4, 0, 0);
                 at.Children.Add(ep);
                 var plays = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 10, 0, 0) };
                 plays.Children.Add(new Microsoft.UI.Xaml.Shapes.Ellipse { Width = 7, Height = 7, Fill = (Brush)Application.Current.Resources["WaterBrush"], VerticalAlignment = VerticalAlignment.Center });
                 plays.Children.Add(Words(RoomWords.PlaysFromYourSources, 14, haze: true));
                 at.Children.Add(plays);
-                if (panel.Kind == RoomPanelKind.Before && !panel.Pressed && roomScene?.View.Waiting.Length == 0 && roomScene.Start is RoomStart.Before)
+                if (panel.Kind == RoomPanelKind.Before && !panel.Pressed && roomScene is { Start: RoomStart.Before } && (roomScene.View.Waiting ?? []).Length == 0)
                 {
                     var row = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 22, 0, 0) };
                     var play = new Button
@@ -560,7 +579,7 @@ public sealed partial class PlayerView
                         Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new FontIcon { Glyph = "", FontSize = 16 }, new TextBlock { Text = RoomWords.PlayForEveryone, FontSize = 15 } } },
                     };
                     AutomationProperties.SetName(play, RoomWords.PlayForEveryone);
-                    play.Click += (_, _) => SendRoom(new RoomCommand.Play());
+                    play.Click += (_, _) => SendRoom(new RoomCommand.Play(true));
                     row.Children.Add(play);
                     var note = Words(RoomWords.AnyoneCanStart, 13, haze: true);
                     note.VerticalAlignment = VerticalAlignment.Center;
@@ -577,17 +596,28 @@ public sealed partial class PlayerView
                 at.Children.Add(keeps);
                 var list = new ListView { SelectionMode = ListViewSelectionMode.Single, Margin = new Thickness(0, 14, 0, 0), Background = (Brush)Application.Current.Resources["RaisedBrush"], CornerRadius = new CornerRadius(8) };
                 AutomationProperties.SetName(list, RoomWords.ChooseSourceFor(panel.Episode));
-                foreach (var s in panel.Sources ?? [])
+                // The app's own list of what each source has for the episode, loading in place.
+                var found = roomSources ?? [];
+                if (roomSources is null)
+                    at.Children.Add(new ProgressRing { IsActive = true, Width = 20, Height = 20, HorizontalAlignment = HorizontalAlignment.Left, Margin = new Thickness(0, 14, 0, 0) });
+                foreach (var s in found)
                 {
                     var item = new StackPanel { Padding = new Thickness(2, 8, 2, 8) };
-                    item.Children.Add(Words(s.Name, 14, strong: true));
-                    item.Children.Add(Words(s.Detail, 12, haze: true));
-                    list.Items.Add(new ListViewItem { Content = item, IsSelected = s.Picked });
+                    item.Children.Add(Words(s.Title, 14, strong: true));
+                    item.Children.Add(Words(ReleasePicker.Detail(s), 12, haze: true));
+                    list.Items.Add(new ListViewItem { Content = item });
                 }
-                at.Children.Add(list);
+                list.SelectedIndex = ReleasePicker.Preselected(found);
+                if (found.Length > 0)
+                    at.Children.Add(list);
                 var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 14, 0, 0) };
-                var inRoom = new Button { Content = RoomWords.PlayInRoom, Style = (Style)Application.Current.Resources["AccentButtonStyle"], Height = 36 };
-                inRoom.Click += (_, _) => SendRoom(new RoomCommand.ChoosingSource(false));
+                var inRoom = new Button { Content = RoomWords.PlayInRoom, Style = (Style)Application.Current.Resources["AccentButtonStyle"], Height = 36, IsEnabled = list.SelectedIndex >= 0 };
+                list.SelectionChanged += (_, _) => inRoom.IsEnabled = list.SelectedIndex >= 0;
+                inRoom.Click += (_, _) =>
+                {
+                    if (list.SelectedIndex >= 0 && list.SelectedIndex < found.Length)
+                        RoomSourcePicked?.Invoke(found[list.SelectedIndex]);
+                };
                 var notNow = new Button { Content = RoomWords.NotNow, Height = 36 };
                 notNow.Click += (_, _) => SendRoom(new RoomCommand.ChoosingSource(false));
                 buttons.Children.Add(inRoom);
@@ -605,13 +635,14 @@ public sealed partial class PlayerView
                 at.Children.Add(looked);
                 var fix = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 16, 0, 0) };
                 var open = new Button { Content = RoomWords.OpenSources, Style = (Style)Application.Current.Resources["AccentButtonStyle"], Height = 36 };
-                open.Click += (_, _) => SendRoom(new RoomCommand.ChoosingSource(true));
+                open.Click += (_, _) => RoomGo?.Invoke("sources");
                 var search = new Button
                 {
                     Height = 36,
                     Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new FontIcon { Glyph = "", FontSize = 14 }, new TextBlock { Text = RoomWords.SearchTitles } } },
                 };
                 AutomationProperties.SetName(search, RoomWords.SearchTitles);
+                search.Click += (_, _) => RoomGo?.Invoke("search");
                 fix.Children.Add(open);
                 fix.Children.Add(search);
                 at.Children.Add(fix);
@@ -626,10 +657,10 @@ public sealed partial class PlayerView
         var at = new StackPanel { HorizontalAlignment = HorizontalAlignment.Center, VerticalAlignment = VerticalAlignment.Center, Spacing = 4 };
         var title = new TextBlock { Text = panel.Show, Style = (Style)Application.Current.Resources["ShowTitleStyle"], FontSize = 22, HorizontalAlignment = HorizontalAlignment.Center };
         at.Children.Add(title);
-        var ep = Words(T.PlayerStartingText(panel.Episode), 15);
+        var ep = Words(RoomWords.StartingEpisode(panel.Episode), 15);
         ep.HorizontalAlignment = HorizontalAlignment.Center;
         at.Children.Add(ep);
-        var secs = roomScene is { } s && s.View.Waiting.FirstOrDefault(w => w.Name == s.Members.FirstOrDefault(m => m.You)?.Name) is { } mine ? Rooms.Seconds(mine.SinceMs, s.NowMs) : 0;
+        var secs = roomScene is { } s && (s.View.Waiting ?? []).FirstOrDefault(w => w.You) is { } mine ? Rooms.Seconds(mine.SinceMs, s.NowMs) : 0;
         var note = Words(RoomWords.RoomPausedUntil(secs), 13, haze: true);
         note.HorizontalAlignment = HorizontalAlignment.Center;
         note.Margin = new Thickness(0, 6, 0, 0);

@@ -1,4 +1,4 @@
-using Kaeri.App.RoomStand;
+using Kaeri.Engine.Model;
 
 namespace Kaeri.App;
 
@@ -12,25 +12,31 @@ public abstract record RoomStart
     public sealed record Started : RoomStart;
 }
 
-/// <summary>The room opened from an invite, before joining: who invited, and how many are in.</summary>
-public record RoomInvited(string By, string Show, string Episode, int People);
-
 /// <summary>
 /// Everything the room's views read at one moment: the engine's room and members, the clock,
-/// and what the app keeps itself (the start, an invite not yet answered, a move offer, who
-/// carried on last, the room's place and its words for the episode).
+/// and what is still open to answer (an invite looked into, a move offer).
 /// </summary>
 public record RoomScene(
     RoomView View,
     RoomMember[] Members,
     long NowMs,
-    RoomStart Start,
-    double Position,
-    string EpisodeName,
-    string? NextEpisodeName = null,
-    RoomInvited? Invited = null,
-    RoomMoveOffer? Offer = null,
-    string? CarriedBy = null);
+    RoomGlimpse? Invited = null,
+    RoomMoveOffer? Offer = null)
+{
+    /// <summary>Before play, the count to it once everyone is ready, or started.</summary>
+    public RoomStart Start => !View.BeforePlay ? new RoomStart.Started()
+        : View.StartsAtMs is { } at ? new RoomStart.Counting(Math.Max(0, (at - NowMs + 999) / 1000))
+        : new RoomStart.Before();
+
+    /// <summary>The room's place now, in seconds: where it was, plus the time since while it plays.</summary>
+    public double Position => (View.Position ?? 0) + (View.Playing && View.Position is not null ? Math.Max(0, NowMs - View.PositionAtMs) / 1000.0 : 0);
+
+    /// <summary>The room's episode, as the engine names it ("9").</summary>
+    public string Episode => View.RoomEpisode?.Episode ?? View.Episode?.Episode ?? "";
+
+    /// <summary>The episode Up next plays.</summary>
+    public string NextEpisode => View.UpNext?.Episode.Episode ?? View.NextEpisode?.Episode ?? "";
+}
 
 /// <summary>What the room's line asks of the viewer, if anything.</summary>
 public enum RoomAsk
@@ -86,13 +92,13 @@ public static class Rooms
     public static readonly TimeSpan LeftRowHold = TimeSpan.FromSeconds(4);
 
     /// <summary>Whole seconds since an epoch millisecond, floored, never below zero.</summary>
-    public static long Seconds(long sinceMs, long nowMs) => Math.Max(0, (nowMs - sinceMs) / 1000);
+    public static long Seconds(long? sinceMs, long nowMs) => sinceMs is { } since ? Math.Max(0, (nowMs - since) / 1000) : 0;
 
-    /// <summary>m:ss.</summary>
+    /// <summary>m:ss, or h:mm:ss past an hour.</summary>
     public static string Clock(double seconds)
     {
-        var s = (long)Math.Max(0, Math.Round(seconds));
-        return $"{s / 60}:{s % 60:00}";
+        var s = (long)Math.Max(0, Math.Floor(seconds));
+        return s >= 3600 ? $"{s / 3600}:{s / 60 % 60:00}:{s % 60:00}" : $"{s / 60}:{s % 60:00}";
     }
 
     /// <summary>Names joined as the board says them: one, "A and B", or "3 people".</summary>
@@ -104,6 +110,11 @@ public static class Rooms
         _ => RoomWords.People(names.Count),
     };
 
+    /// <summary>An invite looked into, as a room not yet joined: its episode and who is there.</summary>
+    public static RoomScene Invited(RoomGlimpse glimpse, long nowMs) =>
+        new(new RoomView(glimpse.RoomId ?? "", "", new RoomConnection.Joining(), RoomEpisode: glimpse.RoomEpisode, Playing: glimpse.Playing),
+            glimpse.Members ?? [], nowMs, Invited: glimpse);
+
     static RoomMember? Me(RoomScene s) => s.Members.FirstOrDefault(m => m.You);
 
     /// <summary>The room's line, highest first as the board orders it.</summary>
@@ -114,31 +125,32 @@ public static class Rooms
         var at = Clock(s.Position);
         if (s.Offer is { } offer)
         {
-            var others = offer.Names.Where(n => n != me?.Name).ToList();
+            var others = (offer.Names ?? []).Where(n => n != me?.Name).ToList();
             return new RoomLine(RoomWords.MovedTheRoom(offer.By), RoomWords.GoAlongAsk(Names(others), others.Count, at),
                 RoomAsk.GoAlong, RoomWords.GoAlong, RoomWords.StayHere) { Kind = "offer" };
         }
         if (s.Invited is { } inv)
         {
-            var over = inv.People >= 10;
-            return new RoomLine(RoomWords.Invited(inv.By), over ? RoomWords.Over(inv.People) : $"{inv.Show} · {inv.Episode}",
-                over ? RoomAsk.JoinAnyway : RoomAsk.Join, over ? RoomWords.JoinAnyway : RoomWords.JoinRoom, RoomWords.NotNow) { Kind = "invited" };
+            var people = (inv.Members ?? []).Length;
+            var by = inv.By ?? inv.Members?.FirstOrDefault()?.Name ?? "";
+            var detail = inv.RoomEpisode is { } e ? RoomWords.InvitedTo(e.Title, e.Episode) : "";
+            return new RoomLine(RoomWords.Invited(by), inv.Full ? RoomWords.Over(people) : detail,
+                inv.Full ? RoomAsk.JoinAnyway : RoomAsk.Join, inv.Full ? RoomWords.JoinAnyway : RoomWords.JoinRoom, RoomWords.NotNow) { Kind = "invited" };
         }
         if (v.Connection is RoomConnection.Reconnecting)
             return new RoomLine(RoomWords.ReconnectingRoom, RoomWords.NoRelayAnswers) { Kind = "self-reconnecting" };
         if (me is { State: MemberState.Behind, BehindS: { } behind })
             return new RoomLine(RoomWords.Watching, RoomWords.YouBehind((long)Math.Round(behind))) { Kind = "self-behind" };
 
-        var waits = v.Waiting;
+        var waits = v.Waiting ?? [];
         var waitSecs = waits.Length == 0 ? 0 : Seconds(waits.Min(w => w.SinceMs), s.NowMs);
-        if (me is not null && waits.Any(w => w.Name == me.Name))
+        if (waits.Any(w => w.You))
         {
             var waiting = s.Members.Where(m => !m.You && m.State != MemberState.Left).Select(m => m.Name).ToList();
             return new RoomLine(RoomWords.PausedForYou, RoomWords.Waiting(Names(waiting), waiting.Count, waitSecs)) { Kind = "self-wait" };
         }
         var names = waits.Select(w => w.Name).Distinct().ToList();
         var who = Names(names);
-        var them = names.Count > 1 ? RoomWords.Them : who;
 
         if (s.Start is not RoomStart.Started)
         {
@@ -147,37 +159,45 @@ public static class Rooms
             if (names.Count == 0)
                 return new RoomLine(RoomWords.NotStarted, RoomWords.PlayStartsIt) { Kind = "before" };
             if (v.CanCarryOn)
-                return new RoomLine(RoomWords.StillLoading(who, names.Count), RoomWords.WaitedCap, RoomAsk.Start, RoomWords.StartWithout(them)) { Kind = "before-cap" };
-            return new RoomLine(RoomWords.StartingWhen(who, names.Count), RoomWords.Why(RoomWords.WhyLoading, waitSecs)) { Kind = "before-wait" };
+                return new RoomLine(RoomWords.StillLoading(who, names.Count), RoomWords.WaitedCap, RoomAsk.Start,
+                    names.Count > 1 ? RoomWords.StartWithoutThem : RoomWords.StartWithout(who)) { Kind = "before-cap" };
+            return new RoomLine(RoomWords.StartingWhen(who, names.Count), RoomWords.Loading(waitSecs)) { Kind = "before-wait" };
         }
         if (v.UpNext is { EndsAtMs: { } ends, CancelledBy: null } && names.Count == 0)
-            return new RoomLine(RoomWords.UpNextIn(Math.Max(0, (ends - s.NowMs + 999) / 1000)), RoomWords.PlaysForEveryone(s.NextEpisodeName ?? "")) { Kind = "up-next" };
+            return new RoomLine(RoomWords.UpNextIn(Math.Max(0, (ends - s.NowMs + 999) / 1000)), RoomWords.PlaysForEveryone(s.NextEpisode)) { Kind = "up-next" };
         if (names.Count > 0 && v.CanCarryOn)
-            return new RoomLine(RoomWords.StillLoading(who, names.Count), RoomWords.WaitedCap, RoomAsk.CarryOn, RoomWords.CarryOnWithout(them)) { Kind = "cap" };
-        if (names.Count == 0 && s.CarriedBy is { } by)
+            return new RoomLine(RoomWords.StillLoading(who, names.Count), RoomWords.WaitedCap, RoomAsk.CarryOn,
+                names.Count > 1 ? RoomWords.CarryOnWithoutThem : RoomWords.CarryOnWithout(who)) { Kind = "cap" };
+        if (names.Count == 0 && v.CarriedOn is { } carried && (carried.Past ?? []).Length > 0)
         {
-            var still = s.Members.Where(m => m.State == MemberState.Loading).Select(m => m.Name).ToList();
-            if (still.Count > 0)
-                return new RoomLine(RoomWords.Watching, RoomWords.CarriedOn(by, Names(still), still.Count)) { Kind = "carried" };
+            var past = carried.Past!;
+            var by = carried.ByYou ? RoomWords.YouAlone : carried.By;
+            return new RoomLine(RoomWords.Watching, RoomWords.CarriedOn(by, Names(past), past.Length)) { Kind = "carried" };
         }
         if (names.Count > 0)
         {
-            var why = waits.Length == 1 && waits[0].Reason == PauseReason.Buffering ? RoomWords.WhyBuffering : RoomWords.WhyLoading;
-            return new RoomLine(RoomWords.PausedFor(who), RoomWords.Why(why, waitSecs)) { Kind = "wait" };
+            var secs = waits.Length == 1 && waits[0].Reason == WaitReason.Buffering ? RoomWords.Buffering(waitSecs) : RoomWords.Loading(waitSecs);
+            return new RoomLine(RoomWords.PausedFor(who), secs) { Kind = "wait" };
         }
         if (!v.Playing)
         {
-            var pauser = v.PausedBy is { } p && p == me?.Name ? RoomWords.YouPaused : RoomWords.Paused(v.PausedBy ?? "");
-            return new RoomLine(v.PausedBy is null ? RoomWords.StatePaused : pauser, RoomWords.PausedAt(at)) { Kind = "paused" };
+            var title = v.PausedByYou ? RoomWords.YouPaused : v.PausedBy is { } p ? RoomWords.Paused(p) : RoomWords.StatePaused;
+            return new RoomLine(title, RoomWords.PausedAt(at)) { Kind = "paused" };
         }
-        var down = v.Relays.Count(r => !r.Healthy);
-        if (down > 0 && down < v.Relays.Length)
-            return new RoomLine(RoomWords.Watching, RoomWords.RelaysDown(down, v.Relays.Length)) { Kind = "relay-trouble" };
-        return new RoomLine(RoomWords.Watching, RoomWords.WatchingAt(s.EpisodeName, at)) { Kind = "watching" };
+        if (v.Moved is { } moved)
+        {
+            var went = moved.Went ?? [];
+            return new RoomLine(RoomWords.MovedAway(moved.By), went.Length > 0 ? RoomWords.WentAlong(Names(went)) : RoomWords.WatchingAt(s.Episode, at)) { Kind = "moved" };
+        }
+        var relays = v.Relays ?? [];
+        var down = relays.Count(r => !r.Healthy);
+        if (down > 0 && down < relays.Length)
+            return new RoomLine(RoomWords.Watching, RoomWords.RelaysDown(down, relays.Length)) { Kind = "relay-trouble" };
+        return new RoomLine(RoomWords.Watching, RoomWords.WatchingAt(s.Episode, at)) { Kind = "watching" };
     }
 
     /// <summary>Whether a member counts as with the room: watching, or ready before play.</summary>
-    public static bool IsWatching(RoomMember m) => m.State is MemberState.Watching;
+    public static bool IsWatching(RoomMember m) => m.State is MemberState.Watching or MemberState.Ready;
 
     /// <summary>A member's word, as the row and the strip's label say it.</summary>
     public static string Word(RoomScene s, RoomMember m)
@@ -186,15 +206,16 @@ public static class Rooms
         var before = s.Start is not RoomStart.Started;
         return m.State switch
         {
+            MemberState.Ready => RoomWords.StateReady,
             MemberState.Watching => before ? RoomWords.StateReady : RoomWords.StateWatching,
             MemberState.Paused when before => RoomWords.StateReady,
             MemberState.Paused => m.PausedRoom ? RoomWords.StatePausedIt : RoomWords.StatePaused,
             MemberState.Loading => RoomWords.StateLoading(secs),
             MemberState.Buffering => RoomWords.StateBuffering(secs),
             MemberState.Behind => RoomWords.StateBehind((long)Math.Round(m.BehindS ?? 0)),
-            MemberState.OtherEpisode => m.Episode is { } e ? RoomWords.StateOther(e.Episode) : RoomWords.StateOtherUnknown,
+            MemberState.OtherEpisode => RoomWords.StateOther(m.Episode?.Episode),
             MemberState.Choosing => RoomWords.StateChoosing,
-            MemberState.NoSource => RoomWords.StateNoSource(s.View.Episode?.Episode ?? ""),
+            MemberState.NoSource => RoomWords.StateNoSource(s.Episode),
             MemberState.PlayerClosed => RoomWords.StateClosed,
             MemberState.Reconnecting => RoomWords.StateReconnecting,
             MemberState.Left => RoomWords.StateLeft,
@@ -209,10 +230,11 @@ public static class Rooms
         var before = s.Start is not RoomStart.Started;
         return m.State switch
         {
-            MemberState.Watching or MemberState.Behind => new(RingKind.Water, 1, 1, false, false),
+            MemberState.Watching or MemberState.Ready or MemberState.Behind => new(RingKind.Water, 1, 1, false, false),
             MemberState.Paused when before => new(RingKind.Water, 1, 1, false, false),
             MemberState.Paused => new(RingKind.Haze, 1, 1, m.PausedRoom, false),
-            MemberState.Loading or MemberState.Buffering => new(RingKind.Progress, Math.Clamp(secs / CapSeconds, 0.04, 1), 1, false, false),
+            MemberState.Loading or MemberState.Buffering when m.Waited || before =>
+                new(RingKind.Progress, Math.Clamp(secs / CapSeconds, 0.04, 1), 1, false, false),
             MemberState.NoSource => new(RingKind.None, 0, 0.5, false, true),
             MemberState.Left => new(RingKind.None, 0, 0.35, false, false),
             _ => new(RingKind.None, 0, 0.5, false, false),
@@ -220,17 +242,17 @@ public static class Rooms
     }
 
     /// <summary>The rows, this device's first, then join order; muted people say so.</summary>
-    public static IReadOnlyList<RoomRow> Rows(RoomScene s, IReadOnlyCollection<string>? muted = null)
+    public static IReadOnlyList<RoomRow> Rows(RoomScene s)
     {
         var rows = new List<RoomRow>();
         foreach (var m in s.Members.OrderByDescending(m => m.You))
         {
             var word = Word(s, m);
-            var isMuted = muted is not null && muted.Contains(m.Name) && !m.You;
-            if (isMuted)
+            var muted = m.Muted && !m.You;
+            if (muted)
                 word = RoomWords.Muted(word);
-            var name = m.You ? RoomWords.You(m.Name) : m.Name;
-            rows.Add(new RoomRow(m.Id, m.Name, word, Face(s, m), m.You, IsWatching(m), isMuted, m.State == MemberState.Left, $"{name}, {word}"));
+            var name = m.You ? $"{m.Name} {RoomWords.YouMark}" : m.Name;
+            rows.Add(new RoomRow(m.Id, m.Name, word, Face(s, m), m.You, IsWatching(m), muted, m.State == MemberState.Left, RoomWords.Spoken(name, word)));
         }
         return rows;
     }
@@ -249,20 +271,22 @@ public static class Rooms
     /// change. Before play nobody is watching yet, so it shows.
     /// </summary>
     public static bool StripShows(RoomScene s, long lastChangeMs) =>
-        s.Members.Any(m => m.State is not (MemberState.Watching or MemberState.Left))
-        || s.View.Waiting.Length > 0
+        s.Start is not RoomStart.Started
+        || s.Members.Any(m => m.State is not (MemberState.Watching or MemberState.Left))
+        || (s.View.Waiting ?? []).Length > 0
         || s.NowMs - lastChangeMs < (long)StripAfterChange.TotalMilliseconds;
 
     /// <summary>The strip's words: the line's first, with the counting seconds while the room waits.</summary>
     public static string StripWords(RoomScene s)
     {
         var line = Line(s);
-        if (line.Kind is "wait" or "before-wait" && s.View.Waiting.Length > 0)
-            return $"{line.Title} · {Seconds(s.View.Waiting.Min(w => w.SinceMs), s.NowMs)} s";
+        var waits = s.View.Waiting ?? [];
+        if (line.Kind is "wait" or "before-wait" && waits.Length > 0)
+            return RoomWords.WithSeconds(line.Title, Seconds(waits.Min(w => w.SinceMs), s.NowMs));
         return line.Title;
     }
 
-    /// <summary>A member's state for the line that keeps the strip up: the fingerprint of what the room shows.</summary>
+    /// <summary>What the room shows, as one string: a change keeps the strip up.</summary>
     public static string Fingerprint(RoomScene s) =>
         string.Join("|", s.Members.Select(m => $"{m.Id}:{m.State}")) + "#" + Line(s).Kind;
 
@@ -275,16 +299,22 @@ public static class Rooms
         var trimmed = name.Trim();
         return trimmed.Length == 0 ? "?" : System.Globalization.StringInfo.GetNextTextElement(trimmed).ToUpperInvariant();
     }
-}
 
-/// <summary>A line of the room's chat: what the room did, what someone said, or a reaction.</summary>
-public abstract record RoomChatLine
-{
-    public sealed record Note(string Text) : RoomChatLine;
-
-    public sealed record Said(string From, string Text, bool You) : RoomChatLine;
-
-    public sealed record Reacted(string From, Kaeri.Engine.Model.Reaction Reaction, string At) : RoomChatLine;
+    /// <summary>What the video area shows for this device, from its own row and the room.</summary>
+    public static RoomPanelKind PanelFor(RoomScene s)
+    {
+        if (s.Invited is not null)
+            return RoomPanelKind.Invited;
+        var me = Me(s);
+        return me?.State switch
+        {
+            MemberState.Choosing => RoomPanelKind.Choosing,
+            MemberState.NoSource => RoomPanelKind.NoSource,
+            MemberState.Loading when s.View.CanDontWait => RoomPanelKind.SelfLoading,
+            _ when s.View.BeforePlay => RoomPanelKind.Before,
+            _ => RoomPanelKind.None,
+        };
+    }
 }
 
 /// <summary>What the video area shows when the player has nothing to show, or before play.</summary>
@@ -295,7 +325,7 @@ public enum RoomPanelKind
     Before,
     /// <summary>Opened from an invite: the room is watching behind the banner.</summary>
     Invited,
-    /// <summary>Your sources for the room's episode, to play in the room.</summary>
+    /// <summary>Choosing a source for the room's episode, in the app's own list.</summary>
     Choosing,
     /// <summary>None of your sources has the room's episode.</summary>
     NoSource,
@@ -303,9 +333,6 @@ public enum RoomPanelKind
     SelfLoading,
 }
 
-/// <summary>A source in the Choosing panel.</summary>
-public record RoomSourceChoice(string Name, string Detail, bool Picked);
-
 /// <summary>The video area's panel: its kind and what it names.</summary>
-public record RoomPanel(RoomPanelKind Kind, string Show, string EpisodeLine, string Episode, long Minutes = 24,
-    RoomSourceChoice[]? Sources = null, int SourceCount = 0, bool Pressed = false);
+public record RoomPanel(RoomPanelKind Kind, string Show, string Episode, string? EpisodeName = null, long Minutes = 24,
+    int SourceCount = 0, bool Pressed = false);
