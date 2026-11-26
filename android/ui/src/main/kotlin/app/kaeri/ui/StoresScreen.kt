@@ -597,12 +597,19 @@ private fun JoinPreview(preview: StoresModel.Preview?, offline: Boolean) {
             }
             // What a plugin is, then whose plugins these are: the risk line comes first, as the
             // first-run Join and the large panel board put it.
+            // Who answers for them: the owners the invite names, else the store's host.
+            val owner = Strings.storesJoinOwnerResponsible(
+                LocalContext.current,
+                if (invited.owners.isEmpty()) invited.host else app.kaeri.store.Wording.list(invited.owners),
+            )
             if (app.kaeri.ui.reading.largePaper) {
                 val notice = app.kaeri.eink.EinkType.Secondary.copy(lineHeight = app.kaeri.eink.EinkType.Secondary.fontSize * 1.4f)
                 Text(stringResource(R.string.plugin_risk_warning), style = notice, modifier = Modifier.padding(top = 16.dp))
+                Text(owner, style = notice, modifier = Modifier.padding(top = 8.dp))
                 Text(stringResource(R.string.stores_not_from_app), style = notice, modifier = Modifier.padding(top = 8.dp))
             } else {
                 SheetText(stringResource(R.string.plugin_risk_warning), Modifier.padding(top = 16.dp))
+                SheetText(owner, Modifier.padding(top = 8.dp))
                 SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 8.dp))
             }
         }
