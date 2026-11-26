@@ -89,6 +89,7 @@ struct PhoneRoomUpright: View {
                         .glassEffect(.regular.interactive(), in: .circle)
                 }
                 .accessibilityLabel(RoomCopy.more)
+                .accessibilityIdentifier("room-more")
             }
         }
     }
