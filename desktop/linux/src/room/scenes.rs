@@ -29,6 +29,8 @@ const DEVICE: &str = "Ada";
 /// Up next. A seek past the clip would end the episode.
 const OPENING_ENDS: f64 = 20.0;
 const SEEK_TO: f64 = 35.0;
+/// Where a room already watching is when the device joins.
+const STARTED_AT: f64 = 12.0;
 
 /// One scene per frame family on the room board.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -216,7 +218,13 @@ impl Staged {
         }
         let before_play =
             matches!(scene, S::BeforePlay | S::BeforePlayWait | S::BeforePlayCap | S::Starting);
-        self.run(|f| f.member_starts("Mika", ep(EPISODE), Some(ep(NEXT)), !before_play));
+        if before_play {
+            self.run(|f| f.member_starts("Mika", ep(EPISODE), Some(ep(NEXT)), false));
+        } else {
+            // A room that has been watching a while: no count before play, so a pause, a seek or
+            // a stall reads as one.
+            self.run(|f| f.member_started("Mika", ep(EPISODE), Some(ep(NEXT)), STARTED_AT));
+        }
         if matches!(scene, S::BeforePlay | S::BeforePlayWait | S::BeforePlayCap) {
             let secs = match scene {
                 S::BeforePlay => 4.0,
