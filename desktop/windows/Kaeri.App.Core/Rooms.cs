@@ -143,7 +143,7 @@ public static class Rooms
             return new RoomLine(RoomWords.Watching, RoomWords.YouBehind((long)Math.Round(behind))) { Kind = "self-behind" };
 
         var waits = v.Waiting ?? [];
-        var waitSecs = waits.Length == 0 ? 0 : Seconds(waits.Min(w => w.SinceMs), s.NowMs);
+        var waitSecs = waits.Length == 0 ? 0 : Seconds(waits[0].SinceMs, s.NowMs);
         if (waits.Any(w => w.You))
         {
             // Those waiting: not this device, not gone, and not waited for themselves (their rows say so).
@@ -294,7 +294,7 @@ public static class Rooms
         var line = Line(s);
         var waits = s.View.Waiting ?? [];
         if (line.Kind is "wait" or "before-wait" && waits.Length > 0)
-            return RoomWords.WithSeconds(line.Title, Seconds(waits.Min(w => w.SinceMs), s.NowMs));
+            return RoomWords.WithSeconds(line.Title, Seconds(waits[0].SinceMs, s.NowMs));
         return line.Title;
     }
 

@@ -90,7 +90,7 @@ public class ChatTests
         Assert.Equal("20", Chat.Tail(new string('a', 130), 150, 0));
         Assert.Equal("0", Chat.Tail(new string('a', 40), 40, 0));
         Assert.Null(Chat.Tail(new string(' ', 140), 150, 0));
-        Assert.Equal("Wait 3 s", Chat.Tail("hello", 150, 3));
+        Assert.Equal("Wait 3\u00A0s", Chat.Tail("hello", 150, 3));
     }
 
     [Fact]

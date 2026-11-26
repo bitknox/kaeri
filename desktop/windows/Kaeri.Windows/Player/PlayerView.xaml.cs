@@ -1421,8 +1421,28 @@ public sealed partial class PlayerView : UserControl
         panelSent = size;
         player.CompositionSize(size.W, size.H);
         player.Display(size.W, size.H, size.Scale, null);
+        RedrawFrame();
         LiftSubtitles(animated: false);
         panelPace?.Start();
+    }
+
+    bool redrawNudge;
+
+    /// <summary>
+    /// mpv takes a new panel size on the next frame it draws, and a paused or stalled player
+    /// draws none: in and out of full screen the last frame stayed at the old size, top left.
+    /// A change on the OSD makes mpv draw that frame again, now at the new size; the OSD's
+    /// margin changes, and the OSD shows nothing here (osd-level 0).
+    /// </summary>
+    void RedrawFrame()
+    {
+        ulong now;
+        lock (loads)
+            now = playback;
+        if (player is null || now == 0)
+            return;
+        redrawNudge = !redrawNudge;
+        player.Apply(now, [new PlayerOp.Set("osd-margin-x", new MpvValue.Int(redrawNudge ? 26 : 25))]);
     }
 
     // Showing and hiding the controls.

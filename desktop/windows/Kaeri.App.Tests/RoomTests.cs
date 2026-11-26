@@ -44,7 +44,7 @@ public class RoomTests
     {
         var waiting = new[] { Wait("Ren", 6_400, WaitReason.Loading) };
         var line = Rooms.Line(Scene(View(playing: false, waiting: waiting), Three(MemberState.Loading, 6_400)));
-        Assert.Equal(("Paused for Ren", "Loading · 6 s"), (line.Title, line.Detail));
+        Assert.Equal(("Paused for Ren", "Loading · 6\u00A0s"), (line.Title, line.Detail));
         Assert.Equal("wait", line.Kind);
     }
 
@@ -53,7 +53,7 @@ public class RoomTests
     {
         var waiting = new[] { Wait("Ren", 3_000, WaitReason.Buffering) };
         var line = Rooms.Line(Scene(View(playing: false, waiting: waiting), Three(MemberState.Buffering, 3_000)));
-        Assert.Equal(("Paused for Ren", "Buffering · 3 s"), (line.Title, line.Detail));
+        Assert.Equal(("Paused for Ren", "Buffering · 3\u00A0s"), (line.Title, line.Detail));
     }
 
     [Fact]
@@ -62,8 +62,8 @@ public class RoomTests
         var waiting = new[] { Wait("Ren", 2_000, WaitReason.Seeking) };
         var scene = Scene(View(playing: false, waiting: waiting), Three(MemberState.Loading, 2_000));
         var line = Rooms.Line(scene);
-        Assert.Equal(("Paused for Ren", "Seeking · 2 s"), (line.Title, line.Detail));
-        Assert.Equal("Seeking · 2 s", Rooms.Word(scene, scene.Members[2]));
+        Assert.Equal(("Paused for Ren", "Seeking · 2\u00A0s"), (line.Title, line.Detail));
+        Assert.Equal("Seeking · 2\u00A0s", Rooms.Word(scene, scene.Members[2]));
     }
 
     [Fact]
@@ -78,7 +78,7 @@ public class RoomTests
     {
         var waiting = new[] { Wait("Ren", 20_000, WaitReason.Loading) };
         var line = Rooms.Line(Scene(View(playing: false, waiting: waiting, cap: true), Three(MemberState.Loading, 20_000)));
-        Assert.Equal(("Ren is still loading", "The room has waited 20 s"), (line.Title, line.Detail));
+        Assert.Equal(("Ren is still loading", "The room has waited 20\u00A0s"), (line.Title, line.Detail));
         Assert.Equal((RoomAsk.CarryOn, "Carry on without Ren"), (line.Ask, line.AskText));
     }
 
@@ -104,7 +104,7 @@ public class RoomTests
         var members = new[] { M("Ren", MemberState.Loading, you: true, ago: 6_000), M("Mika", MemberState.Paused), M("Ada", MemberState.Paused) };
         var waiting = new[] { Wait("Ren", 6_000, WaitReason.Loading, you: true) };
         var line = Rooms.Line(Scene(View(playing: false, waiting: waiting), members));
-        Assert.Equal(("Paused for you", "Mika and Ada are waiting · 6 s"), (line.Title, line.Detail));
+        Assert.Equal(("Paused for you", "Mika and Ada are waiting · 6\u00A0s"), (line.Title, line.Detail));
     }
 
     [Fact]
@@ -113,7 +113,7 @@ public class RoomTests
         var members = new[] { M("Ada", MemberState.Loading, you: true, ago: 6_000), M("Mika", MemberState.Paused), M("Ren", MemberState.Loading, ago: 6_000) };
         var waiting = new[] { Wait("Ada", 6_000, WaitReason.Seeking, you: true), Wait("Ren", 6_000, WaitReason.Seeking) };
         var line = Rooms.Line(Scene(View(playing: false, waiting: waiting), members));
-        Assert.Equal(("Paused for you", "Mika is waiting · 6 s"), (line.Title, line.Detail));
+        Assert.Equal(("Paused for you", "Mika is waiting · 6\u00A0s"), (line.Title, line.Detail));
     }
 
     [Fact]
@@ -129,7 +129,7 @@ public class RoomTests
         Assert.Equal(("Not started yet", "Play starts it for everyone"), Pair(Rooms.Line(Scene(View(playing: false, before: true), Three(MemberState.Loading, 4_000)))));
         Assert.Equal(("Starting in 3", "Everyone is ready"), Pair(Rooms.Line(Scene(View(playing: false, before: true, startsAt: Now + 3_000), Three()))));
         var waiting = new[] { Wait("Ren", 6_000, WaitReason.Loading) };
-        Assert.Equal(("Starting when Ren is ready", "Loading · 6 s"), Pair(Rooms.Line(Scene(View(playing: false, waiting: waiting, before: true), Three(MemberState.Loading, 6_000)))));
+        Assert.Equal(("Starting when Ren is ready", "Loading · 6\u00A0s"), Pair(Rooms.Line(Scene(View(playing: false, waiting: waiting, before: true), Three(MemberState.Loading, 6_000)))));
         var cap = Rooms.Line(Scene(View(playing: false, waiting: waiting, cap: true, before: true), Three(MemberState.Loading, 20_000)));
         Assert.Equal((RoomAsk.Start, "Start without Ren"), (cap.Ask, cap.AskText));
     }
@@ -139,7 +139,7 @@ public class RoomTests
     {
         var scene = Scene(View(playing: false, before: true), Three(MemberState.Loading, 4_000));
         var rows = Rooms.Rows(scene);
-        Assert.Equal(["Ready", "Ready", "Loading · 4 s"], rows.Select(r => r.Word));
+        Assert.Equal(["Ready", "Ready", "Loading · 4\u00A0s"], rows.Select(r => r.Word));
         Assert.Equal("Ada (you), Ready", rows[0].Spoken);
     }
 
@@ -176,14 +176,14 @@ public class RoomTests
     public void BehindYourselfSaysTheGap()
     {
         var members = new[] { M("Ada", MemberState.Behind, you: true, behind: 4.2f), M("Mika", MemberState.Watching), M("Ren", MemberState.Watching) };
-        Assert.Equal(("Watching together", "You're 4 s behind · catching up"), Pair(Rooms.Line(Scene(View(), members))));
+        Assert.Equal(("Watching together", "You're 4\u00A0s behind · catching up"), Pair(Rooms.Line(Scene(View(), members))));
     }
 
     [Fact]
     public void UpNextCountsDownForEveryone()
     {
         var up = new RoomUpNext(new RoomEpisodeInfo(1, "10", "Natsukaze Relay"), Now + 7_200, [], null);
-        Assert.Equal(("Up next in 8 s", "Episode 10 plays for everyone"), Pair(Rooms.Line(Scene(View(upNext: up), Three()))));
+        Assert.Equal(("Up next in 8\u00A0s", "Episode 10 plays for everyone"), Pair(Rooms.Line(Scene(View(upNext: up), Three()))));
     }
 
     [Fact]
@@ -199,10 +199,10 @@ public class RoomTests
         Assert.Equal(("Paused it", RingKind.Haze, 1), Of(M("Ren", MemberState.Paused, pausedRoom: true)));
         Assert.True(Rooms.Face(s, M("Ren", MemberState.Paused, pausedRoom: true)).PauseBadge);
         Assert.Equal(("Paused", RingKind.Haze, 1), Of(M("Ren", MemberState.Paused)));
-        Assert.Equal(("Behind · 4 s", RingKind.Water, 1), Of(M("Ren", MemberState.Behind, behind: 4)));
-        Assert.Equal(("Loading · 6 s", RingKind.Progress, 1), Of(M("Ren", MemberState.Loading, ago: 6_900)));
+        Assert.Equal(("Behind · 4\u00A0s", RingKind.Water, 1), Of(M("Ren", MemberState.Behind, behind: 4)));
+        Assert.Equal(("Loading · 6\u00A0s", RingKind.Progress, 1), Of(M("Ren", MemberState.Loading, ago: 6_900)));
         Assert.Equal(0.3, Rooms.Face(s, M("Ren", MemberState.Loading, ago: 6_000)).Fraction, 3);
-        Assert.Equal(("Buffering · 3 s", RingKind.Progress, 1), Of(M("Ren", MemberState.Buffering, ago: 3_000)));
+        Assert.Equal(("Buffering · 3\u00A0s", RingKind.Progress, 1), Of(M("Ren", MemberState.Buffering, ago: 3_000)));
         Assert.Equal(("On episode 8", RingKind.None, 0.5), Of(M("Ren", MemberState.OtherEpisode, episode: "8")));
         Assert.Equal(("Choosing a source", RingKind.None, 0.5), Of(M("Ren", MemberState.Choosing)));
         Assert.Equal(("No source for episode 9", RingKind.None, 0.5), Of(M("Ren", MemberState.NoSource)));
@@ -239,7 +239,7 @@ public class RoomTests
         Assert.False(Rooms.StripShows(calm, Now - 8_000));
         Assert.True(Rooms.StripShows(Scene(View(), Three(MemberState.Choosing)), Now - 60_000));
         var waiting = new[] { Wait("Ren", 6_000, WaitReason.Loading) };
-        Assert.Equal("Paused for Ren · 6 s", Rooms.StripWords(Scene(View(playing: false, waiting: waiting), Three(MemberState.Loading, 6_000))));
+        Assert.Equal("Paused for Ren · 6\u00A0s", Rooms.StripWords(Scene(View(playing: false, waiting: waiting), Three(MemberState.Loading, 6_000))));
     }
 
     [Fact]
