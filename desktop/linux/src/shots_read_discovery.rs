@@ -21,7 +21,7 @@ use kaeri_model::{
 use crate::{hub::ReadAnswer, pages::Dest, window::Shell};
 
 /// Every discovery shot, in the order a run takes them.
-pub const NAMES: [&str; 30] = [
+pub const NAMES: [&str; 32] = [
     "read-disc-home-first",
     "read-disc-home-first-end",
     "read-disc-home-history",
@@ -39,6 +39,8 @@ pub const NAMES: [&str; 30] = [
     "read-disc-poster-menu",
     "read-disc-poster-menu-own",
     "read-disc-home-demo",
+    "read-disc-home-nosources-end",
+    "read-disc-home-blank",
     "read-disc-home-loading-history",
     "read-disc-home-offline",
     "read-disc-home-offline-first",
@@ -423,6 +425,21 @@ fn first_run_demo() -> ReadingHomeView {
         end: Some(ReadHomeEnd::NoSources),
         ..first_run()
     }
+}
+
+/// Rows from AniList with no source to read from and the demo off: the end line asks for one.
+fn first_run_no_sources() -> ReadingHomeView {
+    ReadingHomeView {
+        spotlight: None,
+        spot: None,
+        end: Some(ReadHomeEnd::NoSources),
+        ..first_run()
+    }
+}
+
+/// No source and nothing to show: the blank page.
+fn blank_no_sources() -> ReadingHomeView {
+    ReadingHomeView { end: Some(ReadHomeEnd::NoSources), ..ReadingHomeView::default() }
 }
 
 fn with_history() -> ReadingHomeView {
@@ -832,6 +849,8 @@ fn answer_for(shot: &str) -> Option<ReadAnswer> {
             _ => None,
         }),
         "read-disc-home-demo" => home(first_run_demo),
+        "read-disc-home-nosources-end" => home(first_run_no_sources),
+        "read-disc-home-blank" => home(blank_no_sources),
         "read-disc-home-loading-history" => home(loading_history),
         "read-disc-home-offline" => home(offline),
         "read-disc-home-offline-first" => home(offline_first),
