@@ -156,6 +156,9 @@ pub struct SyncHub {
     /// Book servers a paired device handed over with their sign-ins, not yet added: in memory
     /// only (see [`crate::setup_from`]).
     pub(crate) book_servers: Mutex<Vec<crate::setup_from::HeldServer>>,
+    /// Tracker sign-ins that came with a setup, held until the person keeps them with Copy
+    /// sign-ins or turns them down: in memory only (see [`crate::handoff`]).
+    pub(crate) tracker_gifts: Mutex<Vec<crate::handoff::HeldSignIn>>,
     /// This device's answer to Watch, read, or both, for a paired device that asks.
     medium: Mutex<Option<kaeri_model::medium::KaeriIsFor>>,
     /// How many devices hold history in the folder the last set-up found holding another

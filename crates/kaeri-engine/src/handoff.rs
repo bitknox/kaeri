@@ -148,6 +148,91 @@ struct TrackerGift {
     expires_at: Option<i64>,
 }
 
+/// A tracker's sign-in that came with another device's setup, held in memory until the
+/// person answers Copy sign-ins on the setup's summary: kept and signed in with the switch on,
+/// dropped with it off. Nothing is signed in before the person has seen the switch.
+pub(crate) struct HeldSignIn {
+    from: String,
+    gift: TrackerGift,
+}
+
+impl std::fmt::Debug for HeldSignIn {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // Never the sign-in.
+        f.debug_struct("HeldSignIn")
+            .field("from", &self.from)
+            .field("tracker", &self.gift.id)
+            .finish_non_exhaustive()
+    }
+}
+
+fn held(syncing: &syncing::SyncHub) -> std::sync::MutexGuard<'_, Vec<HeldSignIn>> {
+    syncing.tracker_gifts.lock().unwrap_or_else(std::sync::PoisonError::into_inner)
+}
+
+/// The trackers whose sign-ins are held from `device`, by id.
+pub(crate) fn held_from(syncing: &syncing::SyncHub, device: &str) -> Vec<String> {
+    held(syncing).iter().filter(|h| h.from == device).map(|h| h.gift.id.clone()).collect()
+}
+
+/// Drop every sign-in held, as when this device leaves the group.
+pub(crate) fn forget_held(syncing: &syncing::SyncHub) {
+    held(syncing).clear();
+}
+
+/// Take the sign-ins held from `device` (`keep`) or drop them. Taken ones are said with
+/// `Event::SyncSignInsCopied`. Whether any were held.
+async fn settle_held(ctx: &Ctx, tx: &Outbox, device: &str, keep: bool) -> bool {
+    let gifts: Vec<TrackerGift> = {
+        let mut held = held(&ctx.syncing);
+        let (mine, others): (Vec<_>, Vec<_>) =
+            std::mem::take(&mut *held).into_iter().partition(|h| h.from == device);
+        *held = others;
+        mine.into_iter().map(|h| h.gift).collect()
+    };
+    if gifts.is_empty() {
+        return false;
+    }
+    if keep {
+        let trackers = sign_in_with(ctx, tx, gifts).await;
+        let _ = tx.send(Event::SyncSignInsCopied {
+            device: device.to_owned(),
+            trackers,
+            clouds: Vec::new(),
+            lacking: Vec::new(),
+        });
+    }
+    true
+}
+
+/// Keep each tracker sign-in given and sign in with it; the trackers signed in, by id.
+async fn sign_in_with(ctx: &Ctx, tx: &Outbox, gifts: Vec<TrackerGift>) -> Vec<String> {
+    let mut trackers = Vec::new();
+    for gift in gifts {
+        let kept = ctx.sync.tokens.set_pair(
+            &gift.id,
+            &gift.access,
+            gift.refresh.as_deref(),
+            gift.expires_at,
+        );
+        if let Err(e) = kept {
+            tracing::warn!(tracker = %gift.id, error = %e, "a copied sign-in could not be kept");
+            continue;
+        }
+        let pair = kaeri_track::TokenPair {
+            access: gift.access,
+            refresh: gift.refresh,
+            expires_at: gift.expires_at,
+        };
+        tracking::activate(&ctx.sync, &gift.id, &pair, tx).await;
+        trackers.push(gift.id);
+    }
+    if !trackers.is_empty() {
+        tracking::commands::announce_signed_in(&ctx.store, &ctx.sync);
+    }
+    trackers
+}
+
 /// A folder's sign-in, as given. `ring` (the group keyring, hex) comes with the login of the
 /// folder the giving device syncs through, so the asking device can take that folder.
 #[derive(Serialize, Deserialize)]
@@ -320,7 +405,15 @@ pub async fn copy_sign_ins(
     copy: &[SyncCopy],
     address: Option<String>,
 ) {
-    let ids: Vec<String> = copy.iter().filter_map(copy_id).collect();
+    let mut ids: Vec<String> = copy.iter().filter_map(copy_id).collect();
+    // Sign-ins that came with a setup are held for this answer: taken with Trackers asked,
+    // dropped without. Held ones are all that device had, so they are not asked again.
+    if let Some(device) = device.as_deref() {
+        let keep = ids.iter().any(|id| id == TRACKERS);
+        if settle_held(ctx, tx, device, keep).await {
+            ids.retain(|id| id != TRACKERS);
+        }
+    }
     // The plugin store and setup asks are kept: they are `JoinStoresFrom`'s and
     // `AskSetupFrom`'s.
     let key = device.as_deref().unwrap_or(NEXT);
@@ -336,8 +429,9 @@ pub async fn copy_sign_ins(
     }
 }
 
-/// Take what a device answered: trackers signed in at once, a Dropbox sign-in kept, and the
-/// folder the group uses taken when this device has none.
+/// Take what a device answered: trackers signed in at once (or, when its setup was asked, held
+/// for Copy sign-ins on the setup's summary), a Dropbox sign-in kept, and the folder the group
+/// uses taken when this device has none.
 pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
     let from = received.from.device.clone();
     set_wants(&ctx.store, &from, &[]);
@@ -366,33 +460,20 @@ pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
         }
         return;
     }
-    let mut trackers = Vec::new();
-    for gift in tracker_gifts {
-        let asked = received.asked.iter().any(|a| a.strip_prefix(TRACKER) == Some(&gift.id));
-        if !asked {
-            continue;
-        }
-        let kept = ctx.sync.tokens.set_pair(
-            &gift.id,
-            &gift.access,
-            gift.refresh.as_deref(),
-            gift.expires_at,
-        );
-        if let Err(e) = kept {
-            tracing::warn!(tracker = %gift.id, error = %e, "a copied sign-in could not be kept");
-            continue;
-        }
-        let pair = kaeri_track::TokenPair {
-            access: gift.access,
-            refresh: gift.refresh,
-            expires_at: gift.expires_at,
-        };
-        tracking::activate(&ctx.sync, &gift.id, &pair, tx).await;
-        trackers.push(gift.id);
-    }
-    if !trackers.is_empty() {
-        tracking::commands::announce_signed_in(&ctx.store, &ctx.sync);
-    }
+    let gifts: Vec<TrackerGift> = tracker_gifts
+        .into_iter()
+        .filter(|gift| received.asked.iter().any(|a| a.strip_prefix(TRACKER) == Some(&gift.id)))
+        .collect();
+    // With the setup, the sign-ins wait for the person's answer on its summary.
+    let holding = setup_asked && !gifts.is_empty();
+    let trackers = if setup_asked {
+        let mut held = held(&ctx.syncing);
+        held.retain(|h| h.from != from);
+        held.extend(gifts.into_iter().map(|gift| HeldSignIn { from: from.clone(), gift }));
+        Vec::new()
+    } else {
+        sign_in_with(ctx, tx, gifts).await
+    };
     let mut clouds = Vec::new();
     for gift in cloud_gifts {
         let Some(kind) = kind_of(&gift.kind) else { continue };
@@ -413,8 +494,11 @@ pub async fn take(ctx: &Ctx, tx: &Outbox, received: &Received) {
         clouds.push(kind);
     }
     syncing::announce_cloud(ctx);
-    let lacking = lacking.iter().filter_map(|k| kind_of(k)).collect();
-    let _ = tx.send(Event::SyncSignInsCopied { device: from, trackers, clouds, lacking });
+    let lacking: Vec<SyncFolderKind> = lacking.iter().filter_map(|k| kind_of(k)).collect();
+    // Held sign-ins are said when Copy sign-ins takes them.
+    if !(holding && clouds.is_empty() && lacking.is_empty()) {
+        let _ = tx.send(Event::SyncSignInsCopied { device: from, trackers, clouds, lacking });
+    }
     // Said after the sign-ins were taken, so it can tell whether Lists is answered.
     if setup_asked {
         setup_from::take(ctx, tx, &received.from, setup);
