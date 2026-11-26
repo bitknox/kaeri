@@ -73,6 +73,7 @@ import app.kaeri.engine.model.RoomMember
 import app.kaeri.engine.model.RoomView
 import app.kaeri.store.room.Ring
 import app.kaeri.store.room.RoomLine
+import app.kaeri.store.room.RoomInvited
 import app.kaeri.store.room.RoomModel
 import app.kaeri.store.room.RoomWords
 import app.kaeri.ui.REACTIONS
@@ -418,3 +419,72 @@ fun RoomMorph(room: RoomModel, inRoom: Boolean, positionS: Double, video: @Compo
 }
 
 private fun Modifier.graphicsAlpha(a: Float) = this.graphicsLayer { alpha = a }
+
+/**
+ * The player in the room, on a phone: upright, the player sits in the room's video box over the
+ * room; sideways ([sideways]), it fills the screen with the strip over it. [player] is composed
+ * in one place whatever the shape, so its video surface lives on through a turn, and the box
+ * grows and shrinks between the two (the morph) as the room comes and goes. With Remove
+ * animations the box takes its size at once and the room crossfades.
+ */
+@Composable
+fun RoomAround(
+    room: RoomModel,
+    inRoom: Boolean,
+    sideways: Boolean,
+    positionS: Double,
+    controls: Boolean,
+    player: @Composable (Modifier) -> Unit,
+    modifier: Modifier = Modifier,
+    panel: (@Composable (Modifier) -> Unit)? = null,
+    onBack: () -> Unit = {},
+    onSubtitles: () -> Unit = {},
+    onCopyLink: () -> Unit = {},
+) {
+    val removed = rememberAnimationsRemoved()
+    val upright = inRoom && !sideways
+    BoxWithConstraints(modifier.fillMaxSize().background(if (upright) ObiSilk.Ground else Color.Black)) {
+        val roomAlpha by androidx.compose.animation.core.animateFloatAsState(
+            if (upright) 1f else 0f,
+            if (removed) app.kaeri.design.Motion.fadeIn<Float>() else app.kaeri.design.Motion.standard<Float>(),
+            label = "room-around", // i18n-skip
+        )
+        if (upright || roomAlpha > 0f) {
+            Box(Modifier.fillMaxSize().graphicsAlpha(roomAlpha)) {
+                RoomUpright(room, positionS, video = { Box(it) }, onBack = onBack, onSubtitles = onSubtitles, onCopyLink = onCopyLink)
+            }
+        }
+        val target = if (upright) RoomVideoHeight else maxHeight
+        val height = if (removed) target else animateDpAsState(target, app.kaeri.design.Motion.standard(), label = "room-video").value // i18n-skip
+        Box(
+            Modifier.fillMaxWidth()
+                .then(if (upright) Modifier.statusBarsPadding() else Modifier)
+                .height(height)
+                .background(Color.Black),
+        ) {
+            player(Modifier.fillMaxSize())
+            if (upright) panel?.invoke(Modifier.fillMaxSize())
+        }
+        if (inRoom && sideways) RoomStripOver(room, positionS, controls, Modifier.align(Alignment.TopCenter))
+    }
+}
+
+/**
+ * A room an invite opened, before joining, as its own upright screen over the app: the still,
+ * who invited, what it watches and who is there, then Join and Not now.
+ */
+@Composable
+fun RoomInvitedScreen(room: RoomModel, invited: RoomInvited, onClose: () -> Unit) {
+    // A model of its own shows the glimpse as the room; Join goes out through the real one.
+    val glimpse = remember(room) { RoomModel { room.send(it) } }
+    androidx.compose.runtime.SideEffect {
+        if (glimpse.invited.value != invited) glimpse.show(invited.asView(), invited.glimpse?.members.orEmpty(), invited)
+    }
+    val art = invited.glimpse?.roomEpisode?.let { it.bannerUrl ?: it.coverUrl }
+    RoomUpright(
+        glimpse,
+        positionS = 0.0,
+        video = { m -> app.kaeri.ui.ArtworkImage(art, ObiSilk.Raised, app.kaeri.ui.pixels(RoomVideoHeight * 2), m) },
+        onBack = onClose,
+    )
+}

@@ -250,6 +250,14 @@ interface PlayerSlot {
     /** The player itself, filling the screen. */
     @Composable
     fun Content()
+
+    /** The room's bar above the navigation bar, while this device is in a room with the player closed. */
+    @Composable
+    fun Bar() {}
+
+    /** Over every screen: a room invite's Join screen, and the alert when a room drops this device. */
+    @Composable
+    fun Over() {}
 }
 
 /** The player's route: outside the destinations' graphs, over whichever is on screen. */
@@ -564,6 +572,8 @@ private fun AppRootFrame(
                         if (!onPlayer) CastMiniSlot()
                         // Watch together's bar, above the navigation bar while a party is on.
                         if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
+                        // The room's bar, in the same place, while a room is on and its player closed.
+                        if (!onPlayer) player?.Bar()
                         if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
                             // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
                             if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
@@ -705,6 +715,8 @@ private fun AppRootFrame(
         app.kaeri.ui.reading.ReadingAppHost(start, firstLaunch, covered)
         MatchPickerHost()
         SurpriseHost()
+        // A room invite's Join screen and a room's alerts, over whatever is on screen.
+        player?.Over()
         EngineDown()
     }
 }

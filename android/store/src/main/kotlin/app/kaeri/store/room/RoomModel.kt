@@ -6,7 +6,11 @@ package app.kaeri.store.room
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.RoomChatState
 import app.kaeri.engine.model.RoomCommand
+import app.kaeri.engine.model.RoomConnection
 import app.kaeri.engine.model.RoomConversation
+import app.kaeri.engine.model.RoomEpisode
+import app.kaeri.engine.model.RoomEpisodeInfo
+import app.kaeri.engine.model.RoomGlimpse
 import app.kaeri.engine.model.RoomLeftWhy
 import app.kaeri.engine.model.RoomMember
 import app.kaeri.engine.model.RoomMoveOffer
@@ -23,9 +27,33 @@ data class RoomInvited(
     val title: String,
     val episode: String,
     val names: List<String> = emptyList(),
+    /** What the room's relays said of it, once they did. */
+    val glimpse: RoomGlimpse? = null,
 ) {
     /** Rooms work best with ten or fewer: past it, Join asks first. */
-    val over: Boolean get() = names.size >= ROOM_SOFT_CAP
+    val over: Boolean get() = glimpse?.full ?: (names.size >= ROOM_SOFT_CAP)
+
+    /** The room as the Join screen draws it before joining: who is there and what it watches. */
+    fun asView(): RoomView {
+        val info = glimpse?.roomEpisode ?: RoomEpisodeInfo(0u, episode, title, null, null, null)
+        val playing = glimpse?.playing == true
+        return RoomView(
+            roomId = glimpse?.roomId ?: "",
+            name = title,
+            episode = RoomEpisode(info.id, info.episode),
+            roomEpisode = info,
+            position = null,
+            positionAtMs = 0,
+            connection = RoomConnection.Joining,
+            link = invite,
+            beforePlay = !playing,
+            playing = playing,
+            waiting = emptyList(),
+            canCarryOn = false,
+            relays = emptyList(),
+            moveCandidates = emptyList(),
+        )
+    }
 }
 
 class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
@@ -120,6 +148,7 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
                     title = asked.title.ifEmpty { glimpse.roomEpisode?.title ?: "" },
                     episode = asked.episode.ifEmpty { glimpse.roomEpisode?.episode ?: "" },
                     names = glimpse.members.map { it.name },
+                    glimpse = glimpse,
                 )
             }
             is Event.RoomLeft -> {

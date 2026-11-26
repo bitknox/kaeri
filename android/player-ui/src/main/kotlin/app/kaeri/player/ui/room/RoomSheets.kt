@@ -92,13 +92,27 @@ fun RoomAlert(title: String, body: String, onRetry: (() -> Unit)?, onClose: () -
         onDismissRequest = onClose,
         containerColor = ObiSilk.RaisedHigh,
         title = { Text(title, color = ObiSilk.Silk) },
-        text = { Text(body, color = ObiSilk.Haze) },
+        text = if (body.isNotBlank()) ({ Text(body, color = ObiSilk.Haze) }) else null,
         dismissButton = if (onRetry != null) ({ TextButton(onClick = onClose) { Text(c.CLOSE, color = ObiSilk.Amber) } }) else null,
         confirmButton = {
             if (onRetry != null) TextButton(onClick = onRetry) { Text(c.TRY_AGAIN, color = ObiSilk.Amber) }
             else TextButton(onClick = onClose) { Text(c.CLOSE, color = ObiSilk.Amber) }
         },
     )
+}
+
+/** Why the room dropped this device, when it didn't leave or go along: the alert to say so. */
+@Composable
+fun RoomLeftAlert(room: RoomModel, why: app.kaeri.engine.model.RoomLeftWhy) {
+    val c = roomCopy()
+    val (title, body) = when (why) {
+        is app.kaeri.engine.model.RoomLeftWhy.Unreachable -> c.UNREACHABLE_TITLE to c.UNREACHABLE_BODY
+        is app.kaeri.engine.model.RoomLeftWhy.Full -> c.FULL to ""
+        is app.kaeri.engine.model.RoomLeftWhy.OldInvite -> c.OLD_INVITE to ""
+        is app.kaeri.engine.model.RoomLeftWhy.Failed -> c.UNREACHABLE_TITLE to why.reason
+        else -> return
+    }
+    RoomAlert(title, body, onRetry = null, onClose = room::dismissLeft)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

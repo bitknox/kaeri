@@ -190,6 +190,10 @@ fun TvPlayerScreen(
     var head by remember { mutableStateOf<ScrubHead?>(null) }
     var headAt by remember { mutableStateOf<Double?>(null) }
     var heldSince by remember { mutableLongStateOf(0L) }
+    // In a room: the full picture with the strip, or the people rail beside a smaller picture.
+    val inRoom = store.room.view.collectAsStateWithLifecycle().value != null
+    val roomState = remember { app.kaeri.tv.player.room.TvRoomState() }
+    val rail = inRoom && roomState.rail
 
     // A screen reader keeps the chrome up, and Up next waits for it: it reads only what takes focus.
     val screenReader by rememberScreenReader()
@@ -197,7 +201,7 @@ fun TvPlayerScreen(
 
     // A playback that failed keeps the starting screen up, saying so.
     val starting = model.starting != null || !model.hasPicture && !model.holding || model.failure != null
-    val chrome = !starting && (model.paused || panel != null || model.marking != null || headAt != null || model.clock - model.lastInput < CHROME_HIDE || model.assisted)
+    val chrome = !starting && !rail && (model.paused || panel != null || model.marking != null || headAt != null || model.clock - model.lastInput < CHROME_HIDE || model.assisted)
     val skip = model.skip?.takeIf { model.corner == PlayerModel.Corner.Skip }
     val skipFresh = skip != null && model.clock - skip.since < SKIP_FRESH
 
@@ -272,6 +276,8 @@ fun TvPlayerScreen(
                 headAt = null
             }
             model.corner == PlayerModel.Corner.UpNext -> model.cancelNext()
+            // In a room: the rail goes back to the picture, the picture asks before leaving.
+            inRoom -> roomState.back()
             else -> model.viewerClosed()
         }
     }
@@ -301,9 +307,10 @@ fun TvPlayerScreen(
             model.corner == PlayerModel.Corner.Stall && model.stall != null && !model.choosingSource ||
             model.corner == PlayerModel.Corner.UpNext && model.upNext != null
         )
-    LaunchedEffect(chrome, wanted, onRoot, layerButtons, cardUp) {
+    LaunchedEffect(chrome, wanted, onRoot, layerButtons, cardUp, roomState.holdsFocus) {
         if (!chrome) {
-            if (layerButtons) return@LaunchedEffect
+            // The room's own buttons (Carry on, Go along, the Leave dialog) keep the focus they take.
+            if (layerButtons || inRoom && roomState.holdsFocus) return@LaunchedEffect
             val home = if (cardUp) cardFocus else root
             repeat(3) {
                 androidx.compose.runtime.withFrameNanos { }
@@ -352,11 +359,13 @@ fun TvPlayerScreen(
                 true
             }
             Key.DirectionUp -> {
-                show(ChromeFocus.SeekBar)
+                // In a room Up reaches Carry on first; on the rail it does nothing else.
+                if (!(inRoom && roomState.up()) && !rail) show(ChromeFocus.SeekBar)
                 true
             }
             Key.DirectionDown -> {
-                show(ChromeFocus.Episodes)
+                // In a room Down opens the people rail.
+                if (!(inRoom && roomState.down()) && !rail) show(ChromeFocus.Episodes)
                 true
             }
             else -> false
@@ -426,8 +435,20 @@ fun TvPlayerScreen(
             .onFocusChanged { onRoot = it.isFocused }
             .focusable(),
     ) {
-        video(Modifier.fillMaxSize())
-        TvHeldPicture(model, Modifier.fillMaxSize())
+        if (inRoom) {
+            app.kaeri.tv.player.room.TvRoom(
+                store.room,
+                positionS = model.position,
+                episodeLine = model.episodeLine(context),
+                durationS = model.duration ?: 0.0,
+                video = video,
+                state = roomState,
+                onLeft = { model.viewerClosed() },
+            )
+        } else {
+            video(Modifier.fillMaxSize())
+        }
+        if (!rail) TvHeldPicture(model, Modifier.fillMaxSize())
         StartingLayer(model, starting, startFocus, onClose = { model.viewerClosed() })
         // The Episodes and Sources panel stands over the picture alone, as the board draws it.
         val sidePanel = panel == PlayerPanel.Episodes || panel == PlayerPanel.Sources

@@ -422,7 +422,8 @@ class MainActivity : ComponentActivity() {
     /** A watch party invite, the https one or on kaeri://party, opens that room's lobby. */
     private fun party(intent: Intent?): Boolean {
         val link = intent?.data?.toString() ?: return false
-        if (!app.store.followPartyLink(link)) return false
+        // A room invite opens the room's Join screen; an old Syncplay one still opens the party's lobby.
+        if (!app.store.followRoomLink(link) && !app.store.followPartyLink(link)) return false
         // Taken off the intent, so a recreated activity does not open the lobby again.
         intent.data = null
         return true

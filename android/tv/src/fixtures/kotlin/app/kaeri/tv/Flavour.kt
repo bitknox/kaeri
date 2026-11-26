@@ -21,6 +21,7 @@
 //             lands or fails as scripted (PanelDemo), on the playing scene
 //             sources: episode 7 plays and the panel opens on Sources once its picture is up,
 //             for the sourcesloading scene's sources answering one by one
+//   room      the room on the testing engine's fake room (FfiRoomScene, as watching or wait-loading)
 //   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
 //             chatline, chatreact, chatloop and the rest; the log says "KAERI_PARTY ready <shot>"
 //             once it is there. chatloop waits for `am broadcast -a app.kaeri.fixtures.PARTY_GO`
@@ -134,6 +135,11 @@ internal object Flavour {
             FixtureParty.listen(app)
             MainScope().launch {
                 if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
+            }
+        }
+        app.kaeri.store.FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
+            MainScope().launch {
+                if (!app.kaeri.store.FixtureRoom.stage(scene, store) { player.isPresented && player.hasPicture }) Log.w(TvApp.TAG, "the room scene did not set up")
             }
         }
         when (intent.getStringExtra("panel")) {

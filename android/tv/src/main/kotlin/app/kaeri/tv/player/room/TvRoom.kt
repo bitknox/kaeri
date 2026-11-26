@@ -5,11 +5,13 @@
 
 package app.kaeri.tv.player.room
 
-import androidx.activity.compose.BackHandler
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,6 +27,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,13 +39,11 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
@@ -61,10 +63,12 @@ import androidx.tv.material3.Text
 import app.kaeri.design.FaceRing
 import app.kaeri.design.KeptFade
 import app.kaeri.design.MoreFace
+import app.kaeri.design.Motion
 import app.kaeri.design.ObiSilk
 import app.kaeri.design.RoomFace
 import app.kaeri.design.ShowTitle
 import app.kaeri.design.SwapFade
+import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.design.rememberRoomNow
 import app.kaeri.design.tabular
 import app.kaeri.engine.model.MemberState
@@ -74,7 +78,6 @@ import app.kaeri.engine.model.RoomMember
 import app.kaeri.engine.model.RoomView
 import app.kaeri.store.room.Ring
 import app.kaeri.store.room.RoomCopy
-import androidx.compose.ui.platform.LocalContext
 import app.kaeri.store.room.RoomLine
 import app.kaeri.store.room.RoomModel
 import app.kaeri.store.room.RoomWords
@@ -100,8 +103,50 @@ private fun TvFace(view: RoomView, member: RoomMember, now: Long, disc: Dp, grou
 enum class TvRoomMode { Full, Rail, Leave }
 
 /**
- * The TV room as one screen. [mode] starts where a shot or the player puts it; Down, Up and Back
- * move between them as the board says. [video] draws the picture into the box it is given.
+ * Where the TV room is, held by the player so its keys reach it: the player's root keeps focus
+ * while the controls are hidden, so Down, Up and Back come to [down], [up] and [back] from there.
+ */
+@Stable
+class TvRoomState(start: TvRoomMode = TvRoomMode.Full) {
+    var mode by mutableStateOf(start)
+
+    /** What shows under the Leave dialog, and what Back from it returns to. */
+    var under by mutableStateOf(if (start == TvRoomMode.Rail) TvRoomMode.Rail else TvRoomMode.Full)
+    val carryFocus = FocusRequester()
+
+    /** Whether Carry on shows now, so Up reaches it. */
+    var carry by mutableStateOf(false)
+
+    /** Whether focus is on the room's own buttons: the player leaves it there. */
+    var holdsFocus by mutableStateOf(false)
+
+    val rail: Boolean get() = (if (mode == TvRoomMode.Leave) under else mode) == TvRoomMode.Rail
+
+    /** Down on the full picture opens the people rail. */
+    fun down(): Boolean {
+        if (mode != TvRoomMode.Full) return false
+        mode = TvRoomMode.Rail
+        under = TvRoomMode.Rail
+        return true
+    }
+
+    /** Up reaches Carry on when there is one. */
+    fun up(): Boolean = carry && runCatching { carryFocus.requestFocus() }.isSuccess
+
+    /** Back: the rail goes back to the picture, the picture asks to leave, the dialog goes. */
+    fun back() {
+        when (mode) {
+            TvRoomMode.Rail -> { mode = TvRoomMode.Full; under = TvRoomMode.Full }
+            TvRoomMode.Full -> { under = TvRoomMode.Full; mode = TvRoomMode.Leave }
+            TvRoomMode.Leave -> mode = under
+        }
+    }
+}
+
+/**
+ * The TV room around the player's picture. [state] says where it is; the player sends it Down,
+ * Up and Back. [video] draws the picture into the box it is given, which moves between the full
+ * screen and the rail, so it is drawn once.
  */
 @Composable
 fun TvRoom(
@@ -112,6 +157,7 @@ fun TvRoom(
     video: @Composable (Modifier) -> Unit,
     modifier: Modifier = Modifier,
     start: TvRoomMode = TvRoomMode.Full,
+    state: TvRoomState = remember(start) { TvRoomState(start) },
     focusCarry: Boolean = false,
     forceStrip: Boolean = false,
     onLeft: () -> Unit = {},
@@ -120,52 +166,51 @@ fun TvRoom(
     val members by room.members.collectAsStateWithLifecycle()
     val offer by room.offer.collectAsStateWithLifecycle()
     val now = rememberRoomNow()
-    var mode by remember(start) { mutableStateOf(start) }
-    var under by remember(start) { mutableStateOf(if (start == TvRoomMode.Rail) TvRoomMode.Rail else TvRoomMode.Full) }
-    val carryFocus = remember { FocusRequester() }
     val c = tvRoomCopy()
     val v = view ?: return
     val carry = RoomWords.carryLabel(c, v, now)
-
-    BackHandler(enabled = true) {
-        when (mode) {
-            TvRoomMode.Rail -> { mode = TvRoomMode.Full; under = TvRoomMode.Full }
-            TvRoomMode.Full -> { under = mode; mode = TvRoomMode.Leave }
-            TvRoomMode.Leave -> mode = under
-        }
-    }
+    val carryFocus = state.carryFocus
+    SideEffect { state.carry = carry != null }
     LaunchedEffect(focusCarry, carry != null) { if (focusCarry && carry != null) runCatching { carryFocus.requestFocus() } }
+    val mode = state.mode
 
-    Box(
-        modifier.fillMaxSize().background(ObiSilk.Ground).onPreviewKeyEvent { e ->
-            if (e.type != KeyEventType.KeyDown || mode == TvRoomMode.Leave) return@onPreviewKeyEvent false
-            when (e.key) {
-                Key.DirectionDown -> if (mode == TvRoomMode.Full) { mode = TvRoomMode.Rail; under = mode; true } else false
-                // Up reaches Carry on when there is one; otherwise the player's own Up runs.
-                Key.DirectionUp -> if (carry != null) { runCatching { carryFocus.requestFocus() }; true } else false
-                else -> false
+    BoxWithConstraints(modifier.fillMaxSize().background(ObiSilk.Ground).onFocusChanged { state.holdsFocus = it.hasFocus }) {
+        // One video box, drawn once, that moves between the full screen and the rail's 640 x 360,
+        // so the picture's surface lives on; the rail's words crossfade around it.
+        val removed = rememberAnimationsRemoved()
+        val rail = state.rail
+        val railAlpha by animateFloatAsState(if (rail) 1f else 0f, Motion.fadeIn(), label = "tv-rail") // i18n-skip
+        if (rail || railAlpha > 0f) {
+            Box(Modifier.fillMaxSize().graphicsLayer { alpha = railAlpha }) {
+                TvRail(v, members, now, positionS, durationS, episodeLine, carry, carryFocus) { room.send(RoomCommand.CarryOn) }
             }
-        },
-    ) {
-        SwapFade(if (mode == TvRoomMode.Leave) under else mode, Modifier.fillMaxSize(), label = "tv-room") { shown -> // i18n-skip
-            if (shown == TvRoomMode.Rail) {
-                TvRail(v, members, now, positionS, durationS, episodeLine, video, carry, carryFocus, onPlay = { room.send(RoomCommand.Play(true)) }) { room.send(RoomCommand.CarryOn) }
-            } else {
-                Box(Modifier.fillMaxSize().background(Color.Black)) {
-                    video(Modifier.fillMaxSize())
-                    val o = offer
-                    val wanted = forceStrip || RoomWords.stripWanted(v, members) || o != null || carry != null
-                    KeptFade(if (wanted) v else null, Modifier.align(Alignment.TopEnd).padding(top = 27.dp, end = 48.dp)) { sv ->
-                        Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(10.dp)) {
-                            TvStrip(sv, members, now, positionS, carry, carryFocus) { room.send(RoomCommand.CarryOn) }
-                            if (o != null) TvOffer(o.by, o.names, RoomWords.clock(positionS), { room.send(RoomCommand.AnswerMove(o.id, true)) }, { room.send(RoomCommand.AnswerMove(o.id, false)) })
-                        }
-                    }
+        }
+        @Composable
+        fun moving(target: Dp, label: String): Dp =
+            if (removed) target else animateDpAsState(target, Motion.standard(), label = label).value
+        val x = moving(if (rail) 48.dp else 0.dp, "tv-video-x") // i18n-skip
+        val y = moving(if (rail) 27.dp else 0.dp, "tv-video-y") // i18n-skip
+        val w = moving(if (rail) 640.dp else maxWidth, "tv-video-w") // i18n-skip
+        val h = moving(if (rail) 360.dp else maxHeight, "tv-video-h") // i18n-skip
+        val corner = moving(if (rail) 12.dp else 0.dp, "tv-video-corner") // i18n-skip
+        Box(Modifier.offset(x, y).size(w, h).clip(RoundedCornerShape(corner)).background(Color.Black)) {
+            video(Modifier.fillMaxSize())
+            if (rail && v.beforePlay) {
+                TvBeforePlay(v.roomEpisode?.title ?: v.name, episodeLine, started = v.startsAtMs != null || v.waiting.isNotEmpty()) { room.send(RoomCommand.Play(true)) }
+            }
+        }
+        if (!rail) {
+            val o = offer
+            val wanted = forceStrip || RoomWords.stripWanted(v, members) || o != null || carry != null
+            KeptFade(if (wanted) v else null, Modifier.align(Alignment.TopEnd).padding(top = 27.dp, end = 48.dp)) { sv ->
+                Column(horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                    TvStrip(sv, members, now, positionS, carry, carryFocus) { room.send(RoomCommand.CarryOn) }
+                    if (o != null) TvOffer(o.by, o.names, RoomWords.clock(positionS), { room.send(RoomCommand.AnswerMove(o.id, true)) }, { room.send(RoomCommand.AnswerMove(o.id, false)) })
                 }
             }
         }
         if (mode == TvRoomMode.Leave) {
-            TvLeaveDialog(onLeave = { room.send(RoomCommand.Leave); onLeft() }, onKeep = { mode = under })
+            TvLeaveDialog(onLeave = { room.send(RoomCommand.Leave); onLeft() }, onKeep = { state.mode = state.under })
         }
     }
 }
@@ -231,21 +276,16 @@ private fun TvRail(
     positionS: Double,
     durationS: Double,
     episodeLine: String,
-    video: @Composable (Modifier) -> Unit,
     carry: String?,
     carryFocus: FocusRequester,
-    onPlay: () -> Unit,
     onCarry: () -> Unit,
 ) {
     val c = tvRoomCopy()
     val line = RoomWords.line(c, view, members, now, positionS)
     Box(Modifier.fillMaxSize().padding(horizontal = 48.dp, vertical = 27.dp)) {
         Column(Modifier.width(640.dp)) {
-            if (view.beforePlay) {
-                TvBeforePlay(view.roomEpisode?.title ?: view.name, episodeLine, started = view.startsAtMs != null || view.waiting.isNotEmpty(), still = video, onPlay = onPlay)
-            } else {
-                Box(Modifier.size(640.dp, 360.dp).clip(RoundedCornerShape(12.dp)).background(Color.Black)) { video(Modifier.fillMaxSize()) }
-            }
+            // The video's place: TvRoom draws the one picture over it.
+            Spacer(Modifier.size(640.dp, 360.dp))
             Row(Modifier.padding(top = 12.dp).fillMaxWidth(), verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(view.roomEpisode?.title ?: view.name, style = ShowTitle.page.copy(lineHeight = 30.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis, modifier = Modifier.weight(1f, fill = false))
                 Text(episodeLine, fontSize = 16.sp, color = ObiSilk.Silk, maxLines = 1)
@@ -351,12 +391,11 @@ fun TvLeaveDialog(onLeave: () -> Unit, onKeep: () -> Unit) {
  * everyone, focused; the rail beside it as in the room.
  */
 @Composable
-fun TvBeforePlay(title: String, episodeLine: String, started: Boolean, still: @Composable (Modifier) -> Unit, onPlay: () -> Unit) {
+fun TvBeforePlay(title: String, episodeLine: String, started: Boolean, onPlay: () -> Unit) {
     val c = tvRoomCopy()
     val focus = remember { FocusRequester() }
     LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
-    Box(Modifier.size(640.dp, 360.dp).clip(RoundedCornerShape(12.dp)).background(Color.Black)) {
-        still(Modifier.fillMaxSize())
+    Box(Modifier.fillMaxSize()) {
         Box(Modifier.fillMaxSize().background(Brush.verticalGradient(listOf(Color(0x4D0B0D18), Color(0xE60B0D18)))))
         Column(Modifier.align(Alignment.BottomStart).padding(start = 24.dp, bottom = 20.dp)) {
             Text(title, style = ShowTitle.page.copy(fontSize = 30.sp, lineHeight = 38.sp), color = ObiSilk.Silk)

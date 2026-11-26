@@ -22,7 +22,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,9 +57,9 @@ import app.kaeri.engine.model.RoomCommand
 import app.kaeri.engine.model.RoomMember
 import app.kaeri.engine.model.RoomView
 import app.kaeri.engine.model.WaitReason
+import app.kaeri.store.room.CARRY_ON_AFTER_S
 import app.kaeri.store.room.RoomModel
 import app.kaeri.store.room.RoomWords
-import app.kaeri.store.room.CARRY_ON_AFTER_S
 
 /**
  * The faces strip: up to four faces (or three and +N), the line's title, its seconds while the
@@ -277,5 +281,47 @@ fun RoomBar(room: RoomModel, positionS: Double, still: @Composable (Modifier) ->
         Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
             Icon(if (v.playing) RoomGlyphs.Pause else RoomGlyphs.Play, contentDescription = null, tint = ObiSilk.Silk, modifier = Modifier.size(22.dp))
         }
+    }
+}
+
+/**
+ * The strip over the full picture: while anyone isn't watching, and for 8 s after anyone's state
+ * changes. It sits under the controls' top bar while they are up.
+ */
+@Composable
+fun RoomStripOver(room: RoomModel, positionS: Double, controls: Boolean, modifier: Modifier = Modifier) {
+    val view by room.view.collectAsStateWithLifecycle()
+    val members by room.members.collectAsStateWithLifecycle()
+    val now = rememberRoomNow()
+    val shown = view ?: return
+    val change = members.map { it.id to it.state } to shown.waiting.map { it.id }
+    var recent by remember { mutableStateOf(false) }
+    LaunchedEffect(change) {
+        recent = true
+        kotlinx.coroutines.delay(RoomWords.STRIP_AFTER_CHANGE_MS)
+        recent = false
+    }
+    val wanted = recent || RoomWords.stripWanted(shown, members) || RoomWords.carryShown(shown, now)
+    KeptFade(if (wanted) shown else null, modifier.padding(top = if (controls) 78.dp else 14.dp)) { v ->
+        RoomStrip(v, members, now, 28.dp, positionS) { room.send(RoomCommand.CarryOn) }
+    }
+}
+
+/**
+ * What lies over the room's video for this device, if anything: before play, its own No source,
+ * or its own loading with Don't wait for me. Choosing a source is the app's source sheet.
+ */
+@Composable
+fun RoomPanel(room: RoomModel, modifier: Modifier = Modifier, onSources: () -> Unit = {}, onSearch: () -> Unit = {}) {
+    val view by room.view.collectAsStateWithLifecycle()
+    val members by room.members.collectAsStateWithLifecycle()
+    val now = rememberRoomNow()
+    val v = view ?: return
+    val you = members.firstOrNull { it.you }
+    when {
+        v.beforePlay -> BeforePlayPanel(started = v.startsAtMs != null || v.waiting.isNotEmpty(), modifier = modifier) { room.send(RoomCommand.Play(true)) }
+        you?.state == MemberState.NO_SOURCE -> NoSourcePanel(v.episode?.episode ?: "", modifier, onSources, onSearch)
+        v.waiting.any { it.you } -> LoadingPanel(RoomWords.waitSeconds(v, now), v.canDontWait, modifier) { room.send(RoomCommand.DontWait) }
+        else -> Unit
     }
 }

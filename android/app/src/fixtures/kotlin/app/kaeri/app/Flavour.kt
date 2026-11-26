@@ -66,6 +66,8 @@
 //             chatshort, chatloop, lobby or bar; with media=<path> the player plays that file.
 //             chatloop and bar wait for `am broadcast -a app.kaeri.fixtures.PARTY_GO` before
 //             their timeline, so a recording can roll first
+//   room      the room on the testing engine's fake room (FfiRoomScene, as before-play, watching,
+//             wait-loading, up-next, move-offer, ...): scenes with a player open the room's episode
 
 package app.kaeri.app
 
@@ -107,6 +109,7 @@ import app.kaeri.store.FixtureCasts
 import app.kaeri.store.FixtureTvBrowser
 import app.kaeri.store.FixtureScene
 import app.kaeri.store.FixtureParty
+import app.kaeri.store.FixtureRoom
 import app.kaeri.store.PartyShot
 import app.kaeri.store.PartyStage
 import app.kaeri.store.FixtureTvs
@@ -321,6 +324,10 @@ internal object Flavour {
     suspend fun reachedTv(intent: Intent, store: AppStore): Boolean {
         if (!StartReplay.held()) return false
         if (!reachedReading(intent, store)) return false
+        FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
+            val app = appContext as? KaeriApp ?: return false
+            return FixtureRoom.stage(scene, store) { app.player.isPresented && app.player.hasPicture }
+        }
         PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
             val app = appContext as? KaeriApp ?: return false
             FixtureParty.listen(app)
