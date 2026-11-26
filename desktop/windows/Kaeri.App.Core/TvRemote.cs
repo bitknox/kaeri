@@ -979,6 +979,9 @@ public static class TvWords
     /// <summary>The note an automatic skip leaves on the casting card.</summary>
     public static string CastSkipped(FfiCastUndo undo) => undo.Kind switch { SkipKind.Ending => T.PlayerSkippedEnding, SkipKind.Recap => T.PlayerSkippedRecap, _ => T.PlayerSkippedOpening };
 
+    /// <summary>The skip a card offers, in the catalogue's words: the card names the part in English.</summary>
+    public static string SkipOffered(FfiSkipCard skip) => skip.Label switch { "Skip ending" => T.PlayerSkipEnding, "Skip recap" => T.PlayerSkipRecap, _ => T.PlayerSkipOpening }; // i18n-skip
+
     /// <summary>The TV volume row's value: the level for a TV that has one, "Set on the TV" for one that doesn't.</summary>
     public static string CastVolume(FfiCastCard card) => card.VolumeControl == FfiVolumeControl.Fixed || card.Card.Now?.Volume is null
         ? T.TvCastVolumeOnTv
