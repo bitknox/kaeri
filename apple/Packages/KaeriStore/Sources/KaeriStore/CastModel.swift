@@ -352,19 +352,26 @@ public final class CastModel {
         return (card?.notice ?? (stage == .stopped ? .noticeCastLost(name: tvName) : .noticeCastRefused(name: tvName))).text
     }
 
-    /// What a failed or stopped card offers, the first in amber.
+    /// What a failed or stopped card offers, the first in amber: the spec's table, by the reason
+    /// the engine gave, whether or not the cast had played. Without a reason, a cast that stopped
+    /// offers another TV, and one that never started another source.
     public var actions: [CastAction] {
         switch stage {
         case .playing, .starting:
             return []
-        case .stopped:
-            return [.playHere, .chooseAnotherTV]
-        case .failed:
+        case .stopped, .failed:
             switch card?.notice {
-            case .noticeCastNeverFetches?: return [.tryAgain, .playHere]
-            case .noticeCastNotSameNetwork?: return [.playHere, .chooseAnotherTV]
-            case .noticeCastDeepLink?: return [.chooseSource]
-            default: return [.chooseSource, .playHere]
+            case .noticeCastVideoCodec?, .noticeCastAudioCodec?, .noticeCastContainer?, .noticeCastRefused?,
+                 .noticeCastSegment?:
+                return [.chooseSource, .playHere]
+            case .noticeCastNeverFetches?, .noticeCastLostStream?:
+                return [.tryAgain, .playHere]
+            case .noticeCastDeepLink?:
+                return [.chooseSource]
+            case .noticeCastNotSameNetwork?, .noticeCastLost?, .noticeCastNoDevice?:
+                return [.playHere, .chooseAnotherTV]
+            default:
+                return stage == .stopped ? [.playHere, .chooseAnotherTV] : [.chooseSource, .playHere]
             }
         }
     }

@@ -129,6 +129,40 @@ struct CastTests {
         }
     }
 
+    /// The actions follow the reason, not whether the cast had played: the spec's table.
+    @Test func theActionsFollowTheReasonBeforeAndAfterTheFirstFrame() async throws {
+        let failed: [(Msg, [CastAction])] = [
+            (.noticeCastLostStream(name: "Living room"), [.tryAgain, .playHere]),
+            (.noticeCastLost(name: "Living room"), [.playHere, .chooseAnotherTV]),
+            (.noticeCastNoDevice, [.playHere, .chooseAnotherTV]),
+        ]
+        for (notice, actions) in failed {
+            let (model, session) = casting()
+            session.change {
+                $0.notice = notice
+                $0.over = true
+            }
+            try await waitFor { model.stage == .failed }
+            #expect(model.actions == actions, "\(notice)")
+        }
+        let stopped: [(Msg, [CastAction])] = [
+            (.noticeCastSegment(name: "Living room"), [.chooseSource, .playHere]),
+            (.noticeCastLostStream(name: "Living room"), [.tryAgain, .playHere]),
+        ]
+        for (notice, actions) in stopped {
+            let (model, session) = casting()
+            play(session)
+            try await waitFor { model.stage == .playing }
+            model.expanded = true
+            session.change {
+                $0.notice = notice
+                $0.over = true
+            }
+            try await waitFor { model.stage == .stopped }
+            #expect(model.actions == actions, "\(notice)")
+        }
+    }
+
     @Test func aTvThatDropsOffStopsTheCastAndPlayHereCarriesOn() async throws {
         let (model, session) = casting()
         var played: (AnilistId, String, Double?)?
