@@ -1032,6 +1032,7 @@ impl Task {
         if self.joined {
             self.up_next(now);
             self.stall(now);
+            self.relays_check(now);
         }
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
@@ -1369,6 +1370,18 @@ impl Task {
                 self.cues = None;
             }
         }
+    }
+
+    /// Swap or add a relay when the health reports call for it (see `Room::relay_change`).
+    fn relays_check(&mut self, now: i64) {
+        let spares: Vec<String> = SPARE_RELAYS.iter().map(|r| (*r).to_owned()).collect();
+        let Some(list) = self.room.relay_change(now, &spares) else { return };
+        let seq = self.room.relays_seq() + 1;
+        tracing::info!(relays = list.len(), "room: the room's relays change");
+        self.room.set_relays(list.clone(), seq);
+        self.target.relays = list.clone();
+        self.send(Message::Relays { seq, list: list.clone() });
+        let _ = self.link.out.send(Out::Relays(list));
     }
 
     /// The app's phase. In the background without playing, this device reads Player closed and
@@ -1830,6 +1843,7 @@ impl Task {
         self.link = link;
         self.target = target;
         self.room = Room::new(&self.me, &self.name, &self.session, now);
+        self.room.set_relays(self.target.relays.clone(), 0);
         self.room.set_status(self.status.clone(), now);
         self.chat = Chat::new(self.env.hidden);
         self.muted.clear();
@@ -2126,6 +2140,7 @@ async fn run(
         episodes,
         remembered: None,
     };
+    task.room.set_relays(task.target.relays.clone(), 0);
     // A playback going takes its seat first: starting from the player keeps it.
     let settle = tokio::time::sleep(Duration::from_millis(300));
     tokio::pin!(settle);
