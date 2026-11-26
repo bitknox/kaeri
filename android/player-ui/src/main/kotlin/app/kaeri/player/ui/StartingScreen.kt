@@ -420,24 +420,24 @@ private fun act(
 private fun DetailsList(model: PlayerModel, progress: StartProgress?, failure: PlaybackFailure?, now: Long) {
     val context = LocalContext.current
     val shown = failure?.trail?.let { trail -> trail.details(context, failure.endedAt) } ?: progress?.details(context, now).orEmpty()
+    // Unknown until the streams are found: then neither shows as chosen.
     val translation = progress?.translation() ?: failure?.trail?.translation()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(top = 6.dp)) {
         for (row in shown) DetailsRow(row, model)
-        if (translation != null) {
+        // From the first step, and after a failure: the other translation is often the way out.
+        if (progress != null || failure != null) {
             Box(Modifier.fillMaxWidth().padding(vertical = 6.dp).height(1.dp).background(ObiSilk.Silk.copy(alpha = 0.10f)))
             Row(Modifier.fillMaxWidth().heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically) {
                 Spacer(Modifier.width(16.dp + 12.dp))
                 Text(Strings.playerStartTranslation(context), style = DetailStyle, color = ObiSilk.Haze, modifier = Modifier.weight(1f))
-                // The other translation restarts the player behind this screen, so it can be asked
-                // for once the player has opened a stream; before that it shows what was found.
-                val can = model.menus != null && failure == null
+                // The other translation restarts the player behind this screen once it has opened
+                // a stream; before that, and after a failure, it asks for the episode again in it.
                 SingleChoiceSegmentedButtonRow {
                     for ((index, option) in listOf(Translation.SUB, Translation.DUB).withIndex()) {
                         SegmentedButton(
                             selected = translation == option,
                             onClick = { if (translation != option) model.chooseTranslation(option) },
                             shape = SegmentedButtonDefaults.itemShape(index, 2),
-                            enabled = can || translation == option,
                             modifier = Modifier.height(40.dp),
                             label = { Text(if (option == Translation.SUB) Strings.audioSubbed(context) else Strings.audioDubbed(context)) },
                         )

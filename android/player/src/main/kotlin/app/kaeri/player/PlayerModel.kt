@@ -1918,10 +1918,22 @@ class PlayerModel(
         startCommand(PlayerCommand.PlayFromBeginning)
     }
 
-    /** Switch to the other translation: the player restarts behind the screen. */
+    /**
+     * Switch to the other translation: the player restarts behind the screen. Before the player
+     * has opened a stream, or after the start failed, there is nothing to restart: the session's
+     * translation is set and the episode asked for again, so the switch is a way out of a start
+     * that found nothing in this translation.
+     */
     fun chooseTranslation(translation: app.kaeri.engine.core.Translation) {
         input()
-        startCommand(PlayerCommand.Choose(app.kaeri.engine.model.PlayerChoice.Translation(translation)))
+        if (failure == null && menus != null) {
+            startCommand(PlayerCommand.Choose(app.kaeri.engine.model.PlayerChoice.Translation(translation)))
+            return
+        }
+        val id = staged?.id ?: failure?.id ?: return
+        val episode = startingEpisode ?: return
+        send(Command.SetTranslation(translation))
+        send(Command.Play(id, episode, fromStart = false))
     }
 
     /** Ask for the same episode again, from "Couldn't play episode 7". */

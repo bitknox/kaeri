@@ -421,6 +421,20 @@ class ClosingTest {
     }
 
     @Test
+    fun theOtherTranslationAfterAFailureAsksForTheEpisodeAgain() = runTest {
+        val rig = Rig(this)
+        staged(rig, "7")
+        rig.model.apply(Event.PlaybackEnded(false, Ending.Failed, false))
+        assertNotNull(rig.model.failure)
+        rig.sent.clear()
+        rig.model.chooseTranslation(app.kaeri.engine.core.Translation.DUB)
+        assertEquals(
+            listOf(Command.SetTranslation(app.kaeri.engine.core.Translation.DUB), Command.Play(900_001u, "7", false)),
+            rig.sent,
+        )
+    }
+
+    @Test
     fun aFailureOnScreenLetsTheClockRest() = runTest {
         val rig = Rig(this)
         staged(rig, "7")
