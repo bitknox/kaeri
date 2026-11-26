@@ -151,7 +151,7 @@ public sealed partial class MainWindow
                 case Event.Sources s when roomSourcesFor == $"{s.Id}/{s.Episode}":
                     Player.ShowRoomSources(s.Candidates);
                     break;
-                case Event.RoomState or Event.RoomMembers or Event.RoomChat or Event.RoomGlimpse
+                case Event.RoomState or Event.RoomMembers or Event.RoomChat or Event.RoomGlimpse or Event.RoomNoSource
                     or Event.RoomMoveOffer or Event.RoomMoveOfferGone:
                     touched = true;
                     break;

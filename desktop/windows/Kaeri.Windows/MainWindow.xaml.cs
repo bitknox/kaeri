@@ -1963,9 +1963,9 @@ public sealed partial class MainWindow : Window
             await new OpenedDialog(ctx, Root.XamlRoot, opened.Input).ShowAsync();
             return;
         }
-        if (link is Link.Party party)
+        if (link is Link.Room room)
         {
-            OpenRoomInvite(party.Text);
+            OpenRoomInvite(room.Text);
             return;
         }
         if (link is Link.Invite invite)

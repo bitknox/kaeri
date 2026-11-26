@@ -1,16 +1,14 @@
-using System.Globalization;
 
 namespace Kaeri.App;
 
 /// <summary>
 /// The room's words, from the catalogue (i18n/en/ui-room.ftl), named as the board draws them.
-/// Episodes come in as the engine's text ("9") and go to the catalogue as numbers.
+/// Episodes stay the engine's text ("9").
 /// </summary>
 public static class RoomWords
 {
-    /// <summary>An episode's number for the catalogue; an episode that isn't a whole number reads 0.</summary>
-    public static long N(string? episode) =>
-        long.TryParse(episode, NumberStyles.Integer, CultureInfo.InvariantCulture, out var n) ? n : 0;
+    /// <summary>An episode for the catalogue, as the engine names it ("9", "12.5").</summary>
+    public static string N(string? episode) => episode ?? "";
 
     // The column's header
     public static string Title => T.RoomSettingsGroup;
@@ -105,7 +103,7 @@ public static class RoomWords
     /// <summary>"Episode 9 · The Long Leg · 24 min"; without a name, the plain episode and its length.</summary>
     public static string EpisodeLength(string episode, string? title, long minutes) => title is { Length: > 0 }
         ? T.RoomBannerEpisode(N(episode), title, T.RoomMinutes(minutes))
-        : T.RoomLineWatchingDetail(N(episode), T.RoomMinutes(minutes));
+        : T.RoomBannerEpisodePlain(N(episode), T.RoomMinutes(minutes));
     public static string PlaysFromYourSources => T.RoomPlaysFromSources;
     public static string PlayForEveryone => T.RoomPlayForEveryone;
     public static string AnyoneCanStart => T.RoomAnyoneCanStart;

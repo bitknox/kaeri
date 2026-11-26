@@ -1,4 +1,5 @@
 // The Windows app's own rules, and the testing engine's Watching scene read the way the app
+
 // reads it: through EngineSession into Known, then the model's own queue rules.
 
 using Kaeri.App;
@@ -1271,11 +1272,14 @@ public class LinkTests
     }
 
     [Fact]
-    public void APartyInviteIsHandedOnWholeForTheEngineToRead()
+    public void ARoomInviteIsHandedOnWholeForTheEngineToRead()
     {
-        const string invite = "kaeri://party?server=party.example%3A8999&room=quiet-harbor-k7m2xq9ad4tnwe3p&title=900001&episode=7";
-        Assert.Equal(new Link.Party(invite), Link.Parse(invite));
-        Assert.Equal(new Link.Party("KAERI://party?room=x"), Link.Parse("\"KAERI://party?room=x\""));
+        const string invite = "kaeri://room#v=3&k=Q2m4xR9dK7tWbH3nPzL8sYe&r=wss%3A%2F%2Frelay-one.example";
+        Assert.Equal(new Link.Room(invite), Link.Parse(invite));
+        const string https = "https://kaeri.app/room#v=3&k=Q2m4xR9dK7tWbH3nPzL8sYe";
+        Assert.Equal(new Link.Room(https), Link.Parse(https));
+        // An old party link still reaches the engine, which says it is from an older version.
+        Assert.Equal(new Link.Room("KAERI://party?room=x"), Link.Parse("\"KAERI://party?room=x\""));
         Assert.Equal(invite, Link.InCommandLine($"\"C:\\kaeri.exe\" \"{invite}\""));
     }
 
