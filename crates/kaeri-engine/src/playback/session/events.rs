@@ -188,6 +188,9 @@ impl Run<'_> {
 
         // Whether the file has loaded, which a track has to wait for before it can be added.
         let mut loaded = false;
+        // The room's seek for a wait, until the player has its first frame there: its cue and
+        // target.
+        let mut room_cue: Option<(u64, f64)> = None;
         let mut waiting: Vec<kaeri_core::stream::Subtitle> = Vec::new();
         // Stats for nerds, open as the window left it.
         let mut stats = StatsWatch::new(player.stats);
@@ -398,7 +401,12 @@ impl Run<'_> {
                 // before then fails in the player, and its own start would undo it.
                 cue = async { seat.as_mut().expect("guarded").cue().await }, if seat.is_some() && (loaded || ever_played) => {
                     match cue {
-                        Some(cue) => apply_cue(link, cue).await,
+                        Some(cue) => {
+                            if let SeatCue::Seek { to, cue: Some(id) } = &cue {
+                                room_cue = Some((*id, *to));
+                            }
+                            apply_cue(link, cue).await;
+                        }
                         // The party is over: this plays on as a private session, from here.
                         None => {
                             seat = None;
@@ -661,6 +669,14 @@ impl Run<'_> {
                 }
                 PlaybackEvent::Seeking(now) => {
                     seeking = *now;
+                    // The seek landed: ready for the room's wait at its first frame there.
+                    if !*now
+                        && !buffering
+                        && let Some(seat) = &seat
+                        && let Some((id, _)) = room_cue.take()
+                    {
+                        seat.report(SeatReport::Ready { cue: Some(id) });
+                    }
                     continue;
                 }
                 PlaybackEvent::Script(ScriptEvent::Choose(Choice::Upscaling(id))) => {
@@ -728,6 +744,9 @@ impl Run<'_> {
                 }
                 PlaybackEvent::Buffering(held) => {
                     buffering = *held;
+                    if ever_played && let Some(seat) = &seat {
+                        seat.report(SeatReport::Stalled(*held));
+                    }
                     if *held && ever_played {
                         stalled_since.get_or_insert_with(tokio::time::Instant::now);
                     } else if !*held {
@@ -939,6 +958,17 @@ impl Run<'_> {
                     }
                     _ => false,
                 };
+                // An in-buffer seek can land without a `seeking` change: a frame at the target is
+                // the room's Ready too.
+                if let Some((id, to)) = room_cue
+                    && matches!(event, PlaybackEvent::Progress { .. })
+                    && !seeking
+                    && !buffering
+                    && (tracker.position() - to).abs() <= 1.5
+                {
+                    room_cue = None;
+                    seat.report(SeatReport::Ready { cue: Some(id) });
+                }
                 if due {
                     seat_sent = Some(now);
                     seat.report(SeatReport::Sample {
@@ -1044,7 +1074,7 @@ impl Run<'_> {
 async fn apply_cue(link: &dyn PlayerLink, cue: SeatCue) {
     let done = match cue {
         SeatCue::Pause(paused) => link.set("pause", paused.into()).await,
-        SeatCue::Seek(to) => link.seek(to, true).await,
+        SeatCue::Seek { to, .. } => link.seek(to, true).await,
         SeatCue::Speed(speed) => link.set("speed", speed.into()).await,
         SeatCue::Notice(text) => {
             let level = kaeri_playback::companion::Level::Info;

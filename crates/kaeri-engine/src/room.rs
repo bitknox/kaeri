@@ -39,6 +39,10 @@ const SYNC_WAIT: Duration = Duration::from_secs(3);
 /// The heartbeat, and the faster one while this device is waited for.
 const HEARTBEAT_MS: i64 = 15_000;
 const HEARTBEAT_WAITED_MS: i64 = 5_000;
+/// A stall this long reads Buffering, and may hold the room.
+const STALL_GRACE_MS: i64 = 1_500;
+/// A member who stalled twice in this long doesn't hold the room again.
+const STALL_REPEAT_MS: i64 = 600_000;
 /// A Move offer lasts this long.
 const OFFER_LIFE_MS: i64 = 600_000;
 /// The app's version as a Hello says it.
@@ -534,6 +538,13 @@ struct Task {
     last_sent: i64,
     /// What the player was last told, paused or not, and whether its samples caught up.
     pause: PlayerPause,
+    /// This player kept with the room's position.
+    drift: kaeri_room::drift::Drift,
+    /// Since when this player has been held waiting for data mid-episode.
+    stall_since: Option<i64>,
+    /// When this device wrote a stall wait: not again for a member who stalled twice in 10
+    /// minutes.
+    stall_writes: Vec<i64>,
     /// The last wait said in the chat.
     said_wait: u64,
     told_view: Option<RoomView>,
@@ -618,8 +629,11 @@ impl Task {
         let now = self.now();
         let old = self.room.playhead().cloned();
         if let Some(head) = self.room.write(now, now, change, ep) {
-            // Ready for a wait this device started, when its player has the episode open.
-            if head.wseq == head.seq && self.status.s == StateCode::Watching {
+            // Ready for a seek's wait the viewer made here: the player is already there.
+            if head.wseq == head.seq
+                && head.cause == Cause::Seek
+                && self.status.s == StateCode::Watching
+            {
                 self.status.rdy = Some(head.wseq);
                 self.room.set_status(self.status.clone(), now);
             }
@@ -669,15 +683,17 @@ impl Task {
             self.message(kind);
         }
         let new_episode = old.as_ref().is_none_or(|o| o.ep != new.ep);
-        // A seek's wait: a player already on the episode is ready once it has moved there.
-        // (The player's own Ready for the cue comes with the transport's seat changes.)
         let new_wait = old.as_ref().is_none_or(|o| o.wseq != new.wseq);
-        if new_wait
+        let seek_wait = new_wait
             && !new_episode
-            && self.status.s == StateCode::Watching
+            && matches!(new.cause, Cause::Seek | Cause::SkipOpening)
+            && !(new.by == self.me && new.cause == Cause::Seek);
+        if seek_wait
+            && self.status.s.player_open()
             && self.status.ep.as_ref() == Some(&new.ep)
-            && self.status.rdy != Some(new.wseq)
+            && self.cues.is_none()
         {
+            // No player seated here: nothing to wait for.
             let wseq = new.wseq;
             self.set_status(|s| s.rdy = Some(wseq));
         }
@@ -701,8 +717,15 @@ impl Task {
                     at: None,
                 });
             }
-        } else if matches!(new.cause, Cause::Seek | Cause::SkipOpening | Cause::CarryOn) {
-            self.cue(SeatCue::Seek(new.pos));
+        } else if seek_wait {
+            // The player moves there and answers Ready at its first frame.
+            let now = self.now();
+            self.drift.cued_seek(new.pos, now);
+            self.cue(SeatCue::Seek { to: new.pos, cue: Some(new.wseq) });
+        } else if new.cause == Cause::CarryOn {
+            let now = self.now();
+            self.drift.cued_seek(new.pos, now);
+            self.cue(SeatCue::Seek { to: new.pos, cue: None });
         }
         self.cue_play();
     }
@@ -982,6 +1005,7 @@ impl Task {
         self.room.settle(now);
         if self.joined {
             self.up_next(now);
+            self.stall(now);
         }
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
@@ -1221,16 +1245,46 @@ impl Task {
                     s.dw = false;
                 });
                 self.pause.forget();
+                self.drift.reset();
+                self.stall_since = None;
                 self.cue_play();
                 if on_room
                     && self.room.playing()
                     && let Some(pos) = self.room.position(self.now())
                 {
-                    self.cue(SeatCue::Seek(pos));
+                    let now = self.now();
+                    self.drift.cued_seek(pos, now);
+                    self.cue(SeatCue::Seek { to: pos, cue: None });
                 }
             }
-            SeatReport::Sample { position, paused, .. } => {
+            SeatReport::Ready { cue } => {
+                let head = self.room.playhead().cloned();
+                if let (Some(cue), Some(head)) = (cue, head)
+                    && cue == head.wseq
+                    && self.status.ep.as_ref() == Some(&head.ep)
+                {
+                    self.set_status(|s| s.rdy = Some(cue));
+                }
+            }
+            SeatReport::Stalled(true) => {
+                if self.stall_since.is_none() && self.status.s.player_open() {
+                    self.stall_since = Some(self.now());
+                }
+            }
+            SeatReport::Stalled(false) => {
+                self.stall_since = None;
+                if self.status.s == StateCode::Buffering {
+                    // Playing again where it stalled: ready for the room's wait.
+                    let wseq = self.room.playhead().map(|h| h.wseq);
+                    self.set_status(|s| {
+                        s.s = StateCode::Watching;
+                        s.rdy = wseq;
+                    });
+                }
+            }
+            SeatReport::Sample { position, paused, speed } => {
                 self.status.pos = Some(position);
+                self.follow(position, paused, speed);
                 // The viewer pressed play or pause on the player; a sample from before the
                 // player took the room's last cue is not a press.
                 match self.pause.sample(paused, self.now()) {
@@ -1256,6 +1310,64 @@ impl Task {
                 }
                 self.cues = None;
             }
+        }
+    }
+
+    /// Keep the player with the room: the viewer's own seek is the room's, the player is moved
+    /// or slowed to stay with it, and Behind is said as it comes and goes.
+    fn follow(&mut self, position: f64, paused: bool, speed: f64) {
+        let now = self.now();
+        let on_room = self.room.playhead().is_some_and(|h| {
+            self.status.ep.as_ref() == Some(&h.ep) && self.status.s.player_open()
+        });
+        if !on_room {
+            return;
+        }
+        let room = self.room.position(now).map(|p| (p, self.room.playing()));
+        for act in self.drift.sample(position, paused, speed, now, room) {
+            match act {
+                kaeri_room::drift::Act::ViewerSeek(to) => self.write(
+                    |h| {
+                        h.pos = to;
+                        h.cause = Cause::Seek;
+                    },
+                    None,
+                ),
+                kaeri_room::drift::Act::Seek(to) => self.cue(SeatCue::Seek { to, cue: None }),
+                kaeri_room::drift::Act::Speed(rate) => self.cue(SeatCue::Speed(rate)),
+                kaeri_room::drift::Act::Behind(behind) => {
+                    if matches!(self.status.s, StateCode::Watching | StateCode::Behind) {
+                        self.set_status(|s| {
+                            s.s = if behind { StateCode::Behind } else { StateCode::Watching };
+                        });
+                    }
+                }
+            }
+        }
+    }
+
+    /// A stall past 1.5 s reads Buffering, and in a room of 5 or fewer holds the room for this
+    /// player alone, unless this member stalled twice in the last 10 minutes.
+    fn stall(&mut self, now: i64) {
+        let Some(since) = self.stall_since else { return };
+        if now - since < STALL_GRACE_MS || self.status.s == StateCode::Buffering {
+            return;
+        }
+        self.set_status(|s| s.s = StateCode::Buffering);
+        self.status_at = since;
+        self.stall_writes.retain(|at| now - at < STALL_REPEAT_MS);
+        if self.room.playing() && self.room.stall_may_wait(now) && self.stall_writes.len() < 2 {
+            self.stall_writes.push(now);
+            let pos = self.status.pos;
+            self.write(
+                |h| {
+                    h.cause = Cause::Stall;
+                    if let Some(pos) = pos {
+                        h.pos = pos;
+                    }
+                },
+                None,
+            );
         }
     }
 
@@ -1882,6 +1994,9 @@ async fn run(
         connection: RoomConnection::Joining,
         last_sent: now,
         pause: PlayerPause::default(),
+        drift: kaeri_room::drift::Drift::default(),
+        stall_since: None,
+        stall_writes: Vec::new(),
         said_wait: 0,
         told_view: None,
         told_members: Vec::new(),
