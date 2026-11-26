@@ -24,6 +24,8 @@ public struct PhonePlayerView: View {
     @State private var sheetAtChat = false
     /// The phone is held sideways: the party opens as a trailing panel over the video, not a sheet.
     @State private var sideways = false
+    /// Held upright in a room: the room's own chevron folds it, so the header's is hidden.
+    @State private var roomUpright = false
     @GestureState private var drag: CGFloat = 0
     @GestureState private var held = false
     @State private var heldSpeed: Double?
@@ -123,6 +125,7 @@ public struct PhonePlayerView: View {
             .animation(reduceMotion ? .fadeIn : .standard, value: upright)
             .animation(reduceMotion ? .fadeIn : .standard, value: beside)
             .statusBarHidden(!upright)
+            .onChange(of: upright, initial: true) { _, on in roomUpright = on }
         }
         // Measured on the whole screen: the upright room's video is wider than tall too.
         .onGeometryChange(for: Bool.self, of: Self.isSideways) { sideways = $0 }
@@ -156,6 +159,23 @@ public struct PhonePlayerView: View {
         }
         if room.inRoom, sideways, room.writing {
             roomField
+        }
+        if room.inRoom, upright {
+            // The chevron folds the room into the bar over the tabs.
+            Button { close() } label: {
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 16, weight: .semibold))
+                    .frame(width: 36, height: 36)
+                    .glassEffect(.regular.interactive(), in: .circle)
+                    .frame(width: 44, height: 44)
+                    .contentShape(.circle)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(RoomCopy.closeToBar)
+            .padding(.leading, 12)
+            .padding(.top, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+            .transition(.opacity)
         }
     }
 
@@ -385,8 +405,8 @@ public struct PhonePlayerView: View {
 
     private var header: some View {
         HStack(spacing: 12) {
-            Button { model.viewerClosed() } label: {
-                Image(systemName: "xmark")
+            Button { close() } label: {
+                Image(systemName: store.room.inRoom ? "chevron.down" : "xmark")
                     .font(.system(size: 17, weight: .semibold))
                     .frame(width: 44, height: 44)
                     .background(.overVideo(0.62), in: .circle)
@@ -394,7 +414,9 @@ public struct PhonePlayerView: View {
                     .contentShape(.circle)
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(L.playerClose)
+            .accessibilityLabel(store.room.inRoom ? RoomCopy.closeToBar : L.playerClose)
+            .opacity(store.room.inRoom && roomUpright ? 0 : 1)
+            .allowsHitTesting(!(store.room.inRoom && roomUpright))
             VStack(alignment: .leading, spacing: 1) {
                 Text(model.showTitle)
                     .font(.showTitle(size: 15))
@@ -457,6 +479,12 @@ public struct PhonePlayerView: View {
     }
 
     private var chatShown: Bool { store.party.inParty && store.party.chat.shown }
+
+    /// Close, or in a room fold it into the bar over the tabs: the player closes and the room
+    /// stays, "Player closed" to the others.
+    private func close() {
+        if store.room.inRoom { store.room.keepRoom() } else { model.viewerClosed() }
+    }
 
     /// The four reactions in a column at the trailing edge, where the thumb rests.
     @ViewBuilder
@@ -797,7 +825,7 @@ public struct PhonePlayerView: View {
             }
             .onEnded { value in
                 guard model.scrubbing == nil else { return }
-                if value.translation.height > 120 || value.velocity.height > 800 { model.viewerClosed() }
+                if value.translation.height > 120 || value.velocity.height > 800 { close() }
             }
     }
 

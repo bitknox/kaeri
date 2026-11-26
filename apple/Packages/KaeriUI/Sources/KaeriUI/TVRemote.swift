@@ -109,6 +109,12 @@ struct TVAccessory: ViewModifier {
     @Environment(AppStore.self) private var store
     @Environment(\.playerUp) private var playerUp
     @Environment(Navigator.self) private var navigator
+    @Environment(\.roomBar) private var roomBarView
+
+    /// The room you are in, folded into the bar while its player is closed.
+    private var roomBar: Bool {
+        roomBarView != nil && store.room.inRoom && !playerUp && navigator.section != .together
+    }
 
     /// The party's bar, away from Watch together itself.
     private var partyBar: Bool {
@@ -127,13 +133,15 @@ struct TVAccessory: ViewModifier {
             let mini = store.tv.cast.miniShown && !playerUp
             let tv = !mini && store.tv.connected != nil && store.tv.now != nil
             content
-                .tabViewBottomAccessory(isEnabled: mini || tv || partyBar) {
+                .tabViewBottomAccessory(isEnabled: mini || tv || roomBar || partyBar) {
                     if mini {
                         CastMini()
                             .background(CastMiniProbe(anchor: anchor))
                             .environment(drawer)
                     } else if tv {
                         TVNowPlayingBar()
+                    } else if roomBar, let roomBarView {
+                        roomBarView
                     } else {
                         PartyBar()
                     }
