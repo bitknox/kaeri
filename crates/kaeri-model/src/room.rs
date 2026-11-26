@@ -779,7 +779,8 @@ const WEB_ROOM: &str = "https://kaeri.app/room";
 /// The app's own scheme for the same, which the web page opens.
 const APP_ROOM: &str = "kaeri://room";
 /// Where the watch party's invites pointed: any link there is from an older version.
-const OLD_LINKS: [&str; 3] = ["https://kaeri.app/party", "https://www.kaeri.app/party", "kaeri://party"];
+const OLD_LINKS: [&str; 3] =
+    ["https://kaeri.app/party", "https://www.kaeri.app/party", "kaeri://party"];
 
 impl RoomShare {
     fn fragment(&self) -> String {

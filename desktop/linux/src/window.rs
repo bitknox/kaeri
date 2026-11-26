@@ -1788,6 +1788,17 @@ impl Shell {
             pages::opened::open_input(&self.ctx, link);
             return;
         }
+        // A room's invite, https://kaeri.app/room#… or kaeri://room#…: the room shows in the
+        // player with Join the room and Not now. An older version's says to ask for a new one.
+        if let Some(target) = kaeri_model::room::RoomTarget::parse(link) {
+            if target.old.is_some() {
+                self.ctx.toast(&kaeri_i18n::t::room_error_old_invite());
+            } else {
+                self.show_player(true);
+                self.player.room.peek(&target.link);
+            }
+            return;
+        }
         if is_party_link(link) {
             crate::party::open_invite(self, link);
             return;
