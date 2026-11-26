@@ -352,13 +352,8 @@ private fun CloudPicker(store: AppStore, memory: FocusMemory, first: Modifier, n
                 modifier = (if (index == 0) first else Modifier).remembered(memory, "picker/${kind.name}"),
             )
         }
-        TvListRow(
-            stringResource(R.string.cloud_webdav),
-            onClick = {},
-            supporting = stringResource(R.string.cloud_webdav_line),
-            icon = SyncIcons.Server,
-            modifier = Modifier.remembered(memory, "picker/webdav"),
-        )
+        // No WebDAV row: a WebDAV folder is set up on a phone or computer, as the footnote says,
+        // and the TV has nothing to do with one picked here.
         Footnote(stringResource(R.string.tv_cloud_pick_foot))
         if (status == null) Box(Modifier.size(1.dp))
     }
