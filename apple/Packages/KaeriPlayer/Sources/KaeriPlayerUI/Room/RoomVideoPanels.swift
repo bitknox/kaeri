@@ -72,6 +72,8 @@ struct RoomMacVideoPanel: View {
                     ], startPoint: .bottom, endPoint: .top)
                 content
                     .padding(.leading, 56)
+                    // A narrow video (an iPad upright, beside the room's column) narrows the words.
+                    .padding(.trailing, 32)
                     .padding(.top, max(60, proxy.size.height - (panel == .choosing ? 330 : 236)))
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             }
@@ -124,7 +126,7 @@ struct RoomMacVideoPanel: View {
                 }
                 .padding(.top, 14)
             }
-            .frame(width: 520, alignment: .leading)
+            .frame(maxWidth: 520, alignment: .leading)
         case .noSource:
             VStack(alignment: .leading, spacing: 0) {
                 Text(title).font(.macShowTitle(size: 28)).lineLimit(1)
@@ -139,7 +141,7 @@ struct RoomMacVideoPanel: View {
                 }
                 .padding(.top, 16)
             }
-            .frame(width: 560, alignment: .leading)
+            .frame(maxWidth: 560, alignment: .leading)
         }
     }
 
