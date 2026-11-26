@@ -111,9 +111,11 @@ struct TVAccessory: ViewModifier {
     @Environment(Navigator.self) private var navigator
     @Environment(\.roomBar) private var roomBarView
 
-    /// The room you are in, folded into the bar while its player is closed.
+    /// The room you are in, folded into the bar while its player is closed: away from Watch
+    /// together, whose room card shows it already (its section, or the page pushed on Home).
     private var roomBar: Bool {
         roomBarView != nil && store.room.inRoom && !playerUp && navigator.section != .together
+            && !store.party.placeShown
     }
 
     /// The party's bar, away from Watch together itself.

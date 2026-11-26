@@ -1052,7 +1052,7 @@ public final class AppStore {
         #if FIXTURES
         if ProcessInfo.processInfo.environment["KAERI_ROOM_TRACE"] == "1" {
             let name = String(describing: event)
-            if name.hasPrefix("room") || name.hasPrefix("playback") || name.hasPrefix("play") || name.hasPrefix("toast") || name.hasPrefix("sources(") {
+            if name.hasPrefix("room") || name.hasPrefix("playback") || name.hasPrefix("play") || name.hasPrefix("toast") || name.hasPrefix("sources(") || name.hasPrefix("party") {
                 print("trace:", name.prefix(400))
             }
         }
@@ -1271,8 +1271,9 @@ public final class AppStore {
             // The field and the glyphs already show the wait; the engine has said no.
             break
         case .partyNoSource:
-            // The party's sheet says it, and the player steps aside for it.
-            party.apply(event)
+            // The party's sheet says it, and the player steps aside for it. In a room the room's
+            // panel says it instead: the party's sheet would be a second, older answer.
+            if !room.inRoom { party.apply(event) }
             onPlayback?(event)
 
         case .roomJoined, .roomState, .roomMembers, .roomMessage, .roomChat, .roomChatState, .roomLeft, .roomStarted,

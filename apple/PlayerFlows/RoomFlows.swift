@@ -20,10 +20,14 @@ final class RoomFlows: XCTestCase {
         XCTAssertTrue(more.waitForExistence(timeout: 120), "the room did not come up with its More button")
         // Soon: the Fixtures episode is a minute long, and the room's scene starts 12 s in. A tap
         // before the room takes touches is lost, so it is tried again.
+        // An open menu hides what is behind it, More too, so it is tapped again only while it is
+        // still there to tap.
+        let leave = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH %@", "Leave the room")).firstMatch
         var opened = false
         for _ in 0..<4 where !opened {
-            more.tap()
-            opened = app.buttons["Leave the room…"].waitForExistence(timeout: 3)
+            if more.exists, more.isHittable { more.tap() }
+            opened = leave.waitForExistence(timeout: 3)
         }
         Thread.sleep(forTimeInterval: 1)
         let picture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
