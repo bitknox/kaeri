@@ -1351,6 +1351,21 @@ impl Actor {
         {
             self.state.translation_picked = Some((front.id, picked.toggled()));
         }
+        // A play in a room found no source here: the room's No source, for its dialog, and this
+        // device reads No source in the room (the reason stays here).
+        #[cfg(feature = "room")]
+        if let Event::PartyNoSource { id, episode, why, reason } = &*event
+            && crate::room::is_going(&self.state)
+        {
+            crate::room::no_source(&self.state);
+            let _ = self.inbox.sender().send(Event::RoomNoSource {
+                id: *id,
+                episode: episode.clone(),
+                why: *why,
+                reason: reason.clone(),
+            });
+            return Vec::new();
+        }
         // The room starts or moves on: this device opens the episode from its own sources.
         #[cfg(feature = "party")]
         if let Event::PartyStarted { id, episode, .. } = event {

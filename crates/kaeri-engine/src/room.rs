@@ -44,9 +44,16 @@ const OFFER_LIFE_MS: i64 = 600_000;
 /// The app's version as a Hello says it.
 const APP: &str = "0.6";
 
+/// What the engine tells the room's task.
+enum Control {
+    Command(RoomCommand),
+    /// The sources check for the room's episode found nothing here.
+    NoSource,
+}
+
 /// The room going, as the engine steers it.
 pub struct Running {
-    control: mpsc::UnboundedSender<RoomCommand>,
+    control: mpsc::UnboundedSender<Control>,
 }
 
 impl Running {
@@ -100,13 +107,13 @@ pub fn command(
         }
         RoomCommand::Leave => {
             if let Some(running) = going(engine) {
-                let _ = running.control.send(RoomCommand::Leave);
+                let _ = running.control.send(Control::Command(RoomCommand::Leave));
             }
             engine.room = None;
         }
         other => {
             if let Some(running) = going(engine) {
-                let _ = running.control.send(other);
+                let _ = running.control.send(Control::Command(other));
             }
         }
     }
@@ -123,7 +130,20 @@ fn relays(engine: &EngineState, tx: &Outbox) {
 /// The engine is going away, or another room takes this one's place.
 pub fn leave(engine: &mut EngineState) {
     if let Some(running) = engine.room.take() {
-        let _ = running.control.send(RoomCommand::Leave);
+        let _ = running.control.send(Control::Command(RoomCommand::Leave));
+    }
+}
+
+/// A room is going on this device.
+pub fn is_going(engine: &EngineState) -> bool {
+    going(engine).is_some()
+}
+
+/// The room's episode has no source here: this device reads No source (the reason stays here),
+/// unless the source picker is open for it, which it still reads as Choosing.
+pub fn no_source(engine: &EngineState) {
+    if let Some(running) = going(engine) {
+        let _ = running.control.send(Control::NoSource);
     }
 }
 
@@ -1600,7 +1620,7 @@ async fn run(
     start: Start,
     name: String,
     env: Env,
-    mut controls: mpsc::UnboundedReceiver<RoomCommand>,
+    mut controls: mpsc::UnboundedReceiver<Control>,
     mut seats: mpsc::UnboundedReceiver<SeatMessage>,
 ) {
     let link = match link::open(target.secret, target.relays.clone()).await {
@@ -1683,10 +1703,19 @@ async fn run(
                 }
             },
             command = controls.recv() => match command {
-                Some(command) => {
+                Some(Control::Command(command)) => {
                     if task.on_command(command).await {
                         return;
                     }
+                    task.refresh();
+                }
+                Some(Control::NoSource) => {
+                    task.set_status(|s| {
+                        if s.s != StateCode::Choosing {
+                            s.s = StateCode::NoSource;
+                            s.rdy = None;
+                        }
+                    });
                     task.refresh();
                 }
                 None => {

@@ -50,10 +50,20 @@ fn until(
     engine: &Arc<FfiEngine>,
     until: impl Fn(&RoomView, &[RoomMember], &[Event]) -> bool + Send + 'static,
 ) -> (RoomView, Vec<RoomMember>, Vec<Event>) {
+    until_from(engine, (None, Vec::new()), until)
+}
+
+/// [`until`], starting from the view and members an earlier wait saw: a state that doesn't
+/// change sends no new event.
+fn until_from(
+    engine: &Arc<FfiEngine>,
+    (view, members): (Option<RoomView>, Vec<RoomMember>),
+    until: impl Fn(&RoomView, &[RoomMember], &[Event]) -> bool + Send + 'static,
+) -> (RoomView, Vec<RoomMember>, Vec<Event>) {
     let engine = Arc::clone(engine);
     let (tx, rx) = mpsc::channel();
     thread::spawn(move || {
-        let (mut view, mut members, mut read) = (None, Vec::new(), Vec::new());
+        let (mut view, mut members, mut read) = (view, members, Vec::new());
         loop {
             let batch = futures::executor::block_on(engine.next_events());
             if batch.is_empty() {
@@ -370,5 +380,46 @@ fn up_next_shows_the_next_episodes_art() {
     let next = view.up_next.unwrap().episode;
     assert_eq!(next.episode, "10");
     assert!(next.banner_url.is_some(), "{next:?}");
+    engine.shutdown();
+}
+
+/// What the app does on RoomStarted: play the room's episode from this device's own sources.
+fn play_like_the_app(engine: &Arc<FfiEngine>, read: &[Event]) {
+    let (id, episode) = read
+        .iter()
+        .find_map(|e| match e {
+            Event::RoomStarted { id, episode, .. } => Some((*id, episode.clone())),
+            _ => None,
+        })
+        .expect("the room started here");
+    engine.send(Command::Play { id, episode, from_start: false });
+}
+
+#[test]
+fn an_episode_with_no_source_here_reads_no_source_in_the_room() {
+    let (_root, engine) = staged(FfiRoomScene::YouNoSource);
+    let (view, members, read) =
+        until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    play_like_the_app(&engine, &read);
+    let (_, members, read) = until_from(&engine, (Some(view), members), |_, m, r| {
+        state(m, "Ada") == Some(MemberState::NoSource)
+            && r.iter().any(|e| matches!(e, Event::RoomNoSource { .. }))
+    });
+    assert_eq!(state(&members, "Ada"), Some(MemberState::NoSource));
+    assert!(
+        !read.iter().any(|e| matches!(e, Event::Toast(_))),
+        "the dialog says it, not a toast"
+    );
+    engine.shutdown();
+
+    // With the picker open for it, the failed play leaves you Choosing.
+    let (_root, engine) = staged(FfiRoomScene::YouChoosing);
+    let (view, members, read) =
+        until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    play_like_the_app(&engine, &read);
+    let (_, members, _) = until_from(&engine, (Some(view), members), |_, m, r| {
+        r.iter().any(|e| matches!(e, Event::RoomNoSource { .. })) && state(m, "Ada").is_some()
+    });
+    assert_eq!(state(&members, "Ada"), Some(MemberState::Choosing));
     engine.shutdown();
 }

@@ -104,8 +104,13 @@ pub fn play(
     };
     let billing = named(id, &episode, engine);
     let start = if from_start { Start::Beginning } else { Start::Resume };
+    // In a room, an episode with no source here is the room's No source, not a toast.
+    #[cfg(feature = "room")]
+    let in_room = crate::room::is_going(engine);
+    #[cfg(not(feature = "room"))]
+    let in_room = false;
     let staged = play_staged(
-        id, episode, None, start, false, false, billing, opener, job, engine, services, tx,
+        id, episode, None, start, in_room, false, billing, opener, job, engine, services, tx,
     );
     let _ = tx.send(staged);
 }

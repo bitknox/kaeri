@@ -82,6 +82,8 @@ mod fake {
     /// The board's episode, and the one after it.
     const EPISODE: &str = "9";
     const NEXT: &str = "10";
+    /// An episode no device can play yet: Natsukaze Relay (fixtures 900006) has aired 8 of 12.
+    const UNAIRED: (u32, &str) = (900_006, "9");
     /// The device's name in every scene.
     const DEVICE: &str = "Ada";
 
@@ -416,7 +418,14 @@ mod fake {
                 // A room that has been watching a while: no count before play, so a pause, a
                 // seek or a stall reads as one, not as "Starting when Ren is ready".
                 let at = super::scene::at(0.2);
-                self.run(|f| f.member_started("Mika", ep(EPISODE), Some(ep(NEXT)), at));
+                // Your own No source and Choosing: the room watches an episode that hasn't aired,
+                // so the app's own play of it fails as a real one would.
+                let (room_ep, next) = if matches!(scene, S::YouNoSource | S::YouChoosing) {
+                    (Ep(UNAIRED.0, UNAIRED.1.to_owned()), None)
+                } else {
+                    (ep(EPISODE), Some(ep(NEXT)))
+                };
+                self.run(|f| f.member_started("Mika", room_ep, next, at));
             }
             if matches!(scene, S::BeforePlay | S::BeforePlayWait | S::BeforePlayCap) {
                 let secs = match scene {
