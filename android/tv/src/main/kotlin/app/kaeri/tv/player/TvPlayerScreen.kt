@@ -449,8 +449,8 @@ fun TvPlayerScreen(
                 durationS = model.duration ?: 0.0,
                 video = video,
                 state = roomState,
-                // Under the clock while the controls are up, and under the held picture's note.
-                stripTop = if (chrome || model.heldPicture != null) 104.dp else 27.dp,
+                // Under the clock while the controls are up, and under the player's own alert.
+                stripTop = if (chrome || model.alert != null) 104.dp else 27.dp,
                 onLeft = { model.viewerClosed() },
             )
         } else {
