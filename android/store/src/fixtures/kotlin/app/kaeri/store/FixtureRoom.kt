@@ -36,6 +36,9 @@ object FixtureRoom {
     /** Scenes with the player open on the room's episode: all but the invites and a room nobody reaches. */
     private fun playing(scene: FfiRoomScene) = !invited(scene) && scene != FfiRoomScene.UNREACHABLE
 
+    /** Scenes where this device's play fails on purpose (an unaired episode), so no picture comes. */
+    private fun pictureless(scene: FfiRoomScene) = scene == FfiRoomScene.YOU_NO_SOURCE || scene == FfiRoomScene.YOU_CHOOSING
+
     /**
      * Bring the room to [scene]; true once it is there. [presented] says whether the player is up
      * with a picture. The engine's stage blocks for a few seconds, so it runs off the main thread.
@@ -71,7 +74,12 @@ object FixtureRoom {
                 val episode = store.room.view.value?.episode
                 if (episode != null) store.send(Command.Play(episode.id, episode.episode))
             }
-            if (!waited(60, presented)) return false.also { log("scene ${scene.name}: no picture") }
+            if (pictureless(scene)) {
+                // The play fails on its own; give it the time to say so.
+                delay(6_000)
+            } else if (!waited(60, presented)) {
+                return false.also { log("scene ${scene.name}: no picture") }
+            }
         }
         delay(1_000)
         log("ready ${scene.name.lowercase()}")

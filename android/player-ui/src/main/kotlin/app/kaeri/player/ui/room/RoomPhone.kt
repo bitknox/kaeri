@@ -187,7 +187,8 @@ fun RoomUpright(
         HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp), color = ObiSilk.FaintRule)
         Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.BottomStart) {
             if (inv != null) {
-                Text(c.CHAT_OPENS, style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze))
+                // No composer below it on the Join screen, so it clears the gesture bar itself.
+                Text(c.CHAT_OPENS, Modifier.navigationBarsPadding(), style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze))
             } else {
                 RoomChatList(room, Modifier.fillMaxWidth())
             }
