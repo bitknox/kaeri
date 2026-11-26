@@ -129,6 +129,27 @@ public enum RoomScene: String, CaseIterable, Sendable {
 @MainActor
 enum RoomStage {
     static var fake: FfiFakeRoom?
+    static var ticker: Task<Void, Never>?
+
+    /// The fake members' rooms follow the clock only when ticked (the count before play, Up
+    /// next): tick them through the run, off the main thread.
+    static func tick(_ fake: FfiFakeRoom) {
+        ticker?.cancel()
+        ticker = Task.detached {
+            while !Task.isCancelled {
+                fake.tick()
+                try? await Task.sleep(for: .milliseconds(250))
+            }
+        }
+    }
+
+    /// Before play: the room hasn't started, and a tick would start the count.
+    static func beforePlay(_ scene: RoomScene) -> Bool {
+        switch scene {
+        case .before, .beforewait, .beforecap, .count, .invited, .invitedover: true
+        default: false
+        }
+    }
 
     /// The engine's scene for a board frame; the app's own panels open over Watching.
     static func scene(_ scene: RoomScene) -> FfiRoomScene {
@@ -194,10 +215,21 @@ extension PlayerModel {
             try? await Task.sleep(for: .milliseconds(900))
             return true
         }
+        if scene == .invited || scene == .invitedover {
+            // An invite looks into the room without joining it: its banner covers the room's
+            // episode, opened here and held, which nobody in the room sees.
+            store.send(.play(id: 900_001, episode: "9"))
+            guard await roomWaited(30, { self.isPresented && self.hasPicture }) else { return false }
+            if !paused { togglePause() }
+        }
         let engineScene = RoomStage.scene(scene)
         // The fake blocks while its members act: off the main thread.
         let staged = await Task.detached { fake.stage(scene: engineScene) }.value
         guard staged, await roomWaited(15, { room.active }) else { return false }
+        if !RoomStage.beforePlay(scene) {
+            RoomStage.tick(fake)
+            guard await roomWaited(15, { room.view?.started == true }) else { return false }
+        }
         if !scene.panelOnly {
             guard await roomWaited(30, { self.isPresented && self.hasPicture }) else { return false }
         }
