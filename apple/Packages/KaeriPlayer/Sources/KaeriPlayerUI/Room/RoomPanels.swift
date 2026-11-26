@@ -108,7 +108,10 @@ struct RoomDetailsPanel: View {
             ForEach(Array(relays.enumerated()), id: \.element.id) { index, relay in
                 HStack(spacing: 8) {
                     Circle().fill(relay.healthy ? Palette.water : Palette.haze).frame(width: 7, height: 7)
-                    Text(relay.url).font(.system(size: 11, design: .monospaced)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(relay.url).font(.system(size: 11, design: .monospaced))
+                        // A long address wraps whole: there's no other way to read it.
+                        .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Text(relay.healthy ? relay.rttMs.map { RoomCopy.ms(Int($0)) } ?? "" : RoomCopy.notAnswering)
                         .font(.system(size: 12)).foregroundStyle(.haze).monospacedDigit()
                 }
@@ -149,7 +152,10 @@ struct RoomRelayEditor: View {
             ForEach(Array(relays.enumerated()), id: \.element) { index, relay in
                 HStack(spacing: 8) {
                     Circle().fill(Palette.water).frame(width: 7, height: 7)
-                    Text(relay).font(.system(size: 11, design: .monospaced)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
+                    Text(relay).font(.system(size: 11, design: .monospaced))
+                        // A long address wraps whole: there's no other way to read it.
+                        .fixedSize(horizontal: false, vertical: true).textSelection(.enabled)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     Button { relays.removeAll { $0 == relay } } label: {
                         Image(systemName: "xmark").font(.system(size: 9, weight: .bold)).foregroundStyle(.haze)
                             .frame(width: 24, height: 24).contentShape(.circle)

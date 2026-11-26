@@ -254,6 +254,11 @@ extension PlayerModel {
             room.startMove()
         case .skip:
             room.stage(skipTo: 20)
+        case .youchoosing:
+            // The app's player plays the room's episode, which the fake's pose can't hold: choose
+            // a source as a viewer would.
+            room.chooseSource()
+            _ = await roomWaited(10) { room.you?.state == .choosing }
         case .sidewayswrite:
             room.draft = "that bridge again" // i18n-skip
             room.writing = true
@@ -304,7 +309,8 @@ extension PlayerModel {
             guard let fake = store.startFakeRoom() else { return false }
             RoomStage.fake = fake
             _ = await Task.detached { fake.stage(scene: .watching) }.value
-            guard await roomWaited(30, { room.inRoom && self.isPresented }) else { return false }
+            RoomStage.tick(fake)
+            guard await roomWaited(30, { room.inRoom && self.isPresented && room.view?.started == true }) else { return false }
             room.keepRoom()
             guard await roomWaited(10, { room.you?.state == .playerClosed }) else { return false }
             room.shown = false
