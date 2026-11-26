@@ -420,6 +420,7 @@ pub fn tracker_name(id: &str) -> String {
         "anilist" => "AniList",
         "kitsu" => "Kitsu",
         "mal" | "myanimelist" => "MyAnimeList",
+        "mangaupdates" => "MangaUpdates",
         "simkl" => "Simkl",
         "trakt" => "Trakt",
         other => other,
@@ -665,6 +666,7 @@ mod tests {
         assert_eq!(track_name(None, ""), "Unnamed track");
         assert_eq!(language_name("xx"), "xx");
         assert_eq!(tracker_name("anilist"), "AniList");
+        assert_eq!(tracker_name("mangaupdates"), "MangaUpdates");
     }
 
     #[test]
