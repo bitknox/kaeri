@@ -1098,6 +1098,16 @@ fn store_row(run: &Rc<Run>, join: &Join, offer: &SyncStoreOffer, device: &str) -
     row.upcast()
 }
 
+/// The answer to the paired page's Copy sign-ins switch. The engine holds the setup's tracker
+/// sign-ins until it comes: `Trackers` signs in with them, an empty `copy` drops them.
+fn copy_sign_ins_answer(device: &str, on: bool) -> Command {
+    Command::SyncGroup(SyncCommand::CopySignIns {
+        device: Some(device.to_owned()),
+        copy: if on { vec![SyncCopy::Trackers] } else { Vec::new() },
+        address: None,
+    })
+}
+
 fn note(text: &str) -> gtk::Label {
     let label = widgets::haze(text, "caption");
     label.set_xalign(0.0);
@@ -1125,14 +1135,8 @@ fn carry_on(run: &Rc<Run>) {
             run.answer.set(Some(answer));
             medium::first_run_answered(ctx, answer);
         }
-        if !join.sign_ins
-            && let Some(id) = &device_id
-        {
-            ctx.hub.send(Command::SyncGroup(SyncCommand::CopySignIns {
-                device: Some(id.clone()),
-                copy: Vec::new(),
-                address: None,
-            }));
+        if let Some(id) = &device_id {
+            ctx.hub.send(copy_sign_ins_answer(id, join.sign_ins));
         }
         if let (Some(setup), Some(id)) = (&setup, &device_id) {
             let servers: Vec<String> = setup
@@ -1602,4 +1606,27 @@ pub fn shot_added(ctx: &Rc<Ctx>, added: came_in::Added) -> Option<()> {
     run.added.borrow_mut().push(added);
     draw_added(&run);
     Some(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::copy_sign_ins_answer;
+    use kaeri_model::{
+        command::Command,
+        group::{SyncCommand, SyncCopy},
+    };
+
+    #[test]
+    fn continue_answers_the_copy_sign_ins_switch_either_way() {
+        let copy = |on| match copy_sign_ins_answer("tablet-1", on) {
+            Command::SyncGroup(SyncCommand::CopySignIns { device, copy, address }) => {
+                assert_eq!(device.as_deref(), Some("tablet-1"));
+                assert_eq!(address, None);
+                copy
+            }
+            other => panic!("not CopySignIns: {other:?}"),
+        };
+        assert_eq!(copy(true), vec![SyncCopy::Trackers]);
+        assert_eq!(copy(false), Vec::new());
+    }
 }
