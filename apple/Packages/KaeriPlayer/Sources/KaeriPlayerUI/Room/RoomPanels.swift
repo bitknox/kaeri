@@ -211,49 +211,54 @@ struct RoomRelayEditor: View {
 
 // MARK: Dialogs
 
-/// Leave the room?, and ⌘W's three ways out. Glass over a dimmed window.
+/// Leave the room?, and ⌘W's three ways out. Glass over a dimmed window; at touch sizes on iPhone
+/// and iPad, drawn in the player rather than presented, since an alert's presentation takes the
+/// player's cover down with it.
 struct RoomLeaveDialog: View {
     let room: RoomModel
     let ask: RoomLeaveAsk
+    var touch = false
+
+    private var button: CGFloat { touch ? 48 : 32 }
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.25).onTapGesture { room.leaving = nil }
+            Color.black.opacity(touch ? 0.35 : 0.25).ignoresSafeArea().onTapGesture { room.leaving = nil }
             VStack(spacing: 0) {
-                Text(RoomCopy.leaveTheRoom).font(.system(size: 15, weight: .bold))
+                Text(RoomCopy.leaveTheRoom).font(.system(size: touch ? 17 : 15, weight: touch ? .semibold : .bold))
                 Text(ask == .close ? RoomCopy.othersKeepWatchingKeep : RoomCopy.othersKeepWatching)
-                    .font(.system(size: 13)).foregroundStyle(.haze).multilineTextAlignment(.center)
+                    .font(.system(size: touch ? 15 : 13)).foregroundStyle(.haze).multilineTextAlignment(.center)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 6)
                 if ask == .close {
                     VStack(spacing: 8) {
                         Button(RoomCopy.leave) { room.leave() }
-                            .buttonStyle(RoomButtonStyle(kind: .primary, height: 32, wide: true))
+                            .buttonStyle(RoomButtonStyle(kind: .primary, height: button, size: touch ? 17 : 13, wide: true))
                             .keyboardShortcut(.defaultAction)
                         Button(RoomCopy.keepTheRoom) { room.keepRoom() }
-                            .buttonStyle(RoomButtonStyle(kind: .secondary, height: 32, wide: true))
+                            .buttonStyle(RoomButtonStyle(kind: .secondary, height: button, size: touch ? 17 : 13, wide: true))
                         Button(RoomCopy.cancel) { room.leaving = nil }
-                            .buttonStyle(RoomButtonStyle(kind: .secondary, height: 32, wide: true))
+                            .buttonStyle(RoomButtonStyle(kind: .secondary, height: button, size: touch ? 17 : 13, wide: true))
                             .keyboardShortcut(.cancelAction)
                     }
-                    .padding(.top, 16)
+                    .padding(.top, touch ? 18 : 16)
                 } else {
                     HStack(spacing: 8) {
                         Button(RoomCopy.cancel) { room.leaving = nil }
-                            .buttonStyle(RoomButtonStyle(kind: .secondary, height: 32, wide: true))
+                            .buttonStyle(RoomButtonStyle(kind: .secondary, height: button, size: touch ? 17 : 13, wide: true))
                             .keyboardShortcut(.cancelAction)
                         Button(RoomCopy.leave) { room.leave() }
-                            .buttonStyle(RoomButtonStyle(kind: .primary, height: 32, wide: true))
+                            .buttonStyle(RoomButtonStyle(kind: .primary, height: button, size: touch ? 17 : 13, wide: true))
                             .keyboardShortcut(.defaultAction)
                     }
-                    .padding(.top, 16)
+                    .padding(.top, touch ? 18 : 16)
                 }
             }
             .padding(.top, 22)
             .padding(.horizontal, 18)
             .padding(.bottom, 16)
             .frame(width: 300)
-            .roomDialogGlass(radius: 26)
+            .roomDialogGlass(radius: touch ? 32 : 26)
         }
         .transition(.opacity)
     }

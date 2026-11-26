@@ -126,6 +126,14 @@ public struct PhonePlayerView: View {
             .animation(reduceMotion ? .fadeIn : .standard, value: beside)
             .statusBarHidden(!upright)
             .onChange(of: upright, initial: true) { _, on in roomUpright = on }
+            // Leave the room?, over the whole player: drawn here, as an alert's presentation
+            // takes the player's cover down with it.
+            .overlay {
+                if let ask = store.room.leaving {
+                    RoomLeaveDialog(room: store.room, ask: ask, touch: true)
+                }
+            }
+            .animation(.fadeIn, value: store.room.leaving)
         }
         // Measured on the whole screen: the upright room's video is wider than tall too.
         .onGeometryChange(for: Bool.self, of: Self.isSideways) { sideways = $0 }

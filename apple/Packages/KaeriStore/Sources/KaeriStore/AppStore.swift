@@ -1052,7 +1052,7 @@ public final class AppStore {
         #if FIXTURES
         if ProcessInfo.processInfo.environment["KAERI_ROOM_TRACE"] == "1" {
             let name = String(describing: event)
-            if name.hasPrefix("room") || name.hasPrefix("playback") || name.hasPrefix("play") || name.hasPrefix("toast") {
+            if name.hasPrefix("room") || name.hasPrefix("playback") || name.hasPrefix("play") || name.hasPrefix("toast") || name.hasPrefix("sources(") {
                 print("trace:", name.prefix(400))
             }
         }

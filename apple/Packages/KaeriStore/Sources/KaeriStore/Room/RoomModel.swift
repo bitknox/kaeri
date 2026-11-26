@@ -496,7 +496,6 @@ public final class RoomModel {
             changed()
         case .roomState(let view):
             self.view = view
-            if case .found? = view.sources { choices = [] }
         case .roomMembers(let members):
             self.members = members
             changed()

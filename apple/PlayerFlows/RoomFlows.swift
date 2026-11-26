@@ -18,9 +18,13 @@ final class RoomFlows: XCTestCase {
         // Home's own More waits behind the player: the room's has an identifier of its own.
         let more = app.buttons["room-more"].firstMatch
         XCTAssertTrue(more.waitForExistence(timeout: 120), "the room did not come up with its More button")
-        // At once: the Fixtures episode is a minute long, and the room's scene starts 12 s in.
-        more.tap()
-        let opened = app.buttons["Leave the room…"].waitForExistence(timeout: 5)
+        // Soon: the Fixtures episode is a minute long, and the room's scene starts 12 s in. A tap
+        // before the room takes touches is lost, so it is tried again.
+        var opened = false
+        for _ in 0..<4 where !opened {
+            more.tap()
+            opened = app.buttons["Leave the room…"].waitForExistence(timeout: 3)
+        }
         Thread.sleep(forTimeInterval: 1)
         let picture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         picture.name = "\(Self.form)-room-menu"

@@ -228,15 +228,6 @@ struct PhoneRoomSheets: ViewModifier {
                     .presentationBackground(.thinMaterial)
                     .preferredColorScheme(.dark)
             }
-            .alert(
-                RoomCopy.leaveTheRoom,
-                isPresented: Binding(get: { room.leaving != nil }, set: { if !$0 { room.leaving = nil } })
-            ) {
-                Button(RoomCopy.cancel, role: .cancel) { room.leaving = nil }
-                Button(RoomCopy.leave, role: .destructive) { room.leave() }
-            } message: {
-                Text(RoomCopy.othersKeepWatching)
-            }
     }
 }
 
