@@ -16,4 +16,11 @@ struct RoomClockTests {
         #expect(RoomModel.clock(-3) == "0:00")
         #expect(RoomModel.clock(.nan) == "0:00")
     }
+
+    @Test func theBannersEpisodeLineEndsWithTheLengthWhenKnown() {
+        #expect(RoomCopy.bannerEpisode("9", "The Long Leg", minutes: 24) == "Episode 9 · The Long Leg · 24 min")
+        #expect(RoomCopy.bannerEpisode("9", nil, minutes: 24) == "Episode 9 · 24 min")
+        #expect(RoomCopy.bannerEpisode("9", "The Long Leg", minutes: nil) == "Episode 9 · The Long Leg")
+        #expect(RoomCopy.bannerEpisode("9", nil, minutes: 0) == "Episode 9")
+    }
 }

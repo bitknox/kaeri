@@ -149,6 +149,13 @@ public enum RoomCopy {
     public static func upNextEpisode(_ episode: String, _ name: String?) -> String {
         name.map { L.roomUpNextEpisode(episode: episode, title: $0) } ?? L.roomUpNextEpisodePlain(episode: episode)
     }
+    /// The banner's episode line before play: "Episode 9 · The Long Leg · 24 min", the length
+    /// when the title's details know it.
+    public static func bannerEpisode(_ episode: String, _ name: String?, minutes: Int?) -> String {
+        let line = upNextEpisode(episode, name)
+        guard let minutes, minutes > 0 else { return line }
+        return line + " · " + L.durationMinutes(minutes: minutes)
+    }
     public static func playsForEveryoneIn(_ s: Int) -> String { L.roomUpNextCount(seconds: s) }
     public static func waitingToFinish(_ names: [String]) -> String { L.roomUpNextWaiting(name: Self.names(names)) }
     public static var skipOpening: String { L.roomSkipOpening }

@@ -315,6 +315,7 @@ struct PhoneRoomMove: View {
 /// Over the video held upright: the room before play, its invitation, choosing a source, no
 /// source.
 struct PhoneRoomVideoPanel: View {
+    @Environment(AppStore.self) private var store
     let room: RoomModel
     let panel: RoomVideoPanel
 
@@ -385,7 +386,9 @@ struct PhoneRoomVideoPanel: View {
 
     private var episodeLine: String {
         guard let number = room.invitation?.episode ?? room.view?.episodeNumber, !number.isEmpty else { return "" }
-        return RoomCopy.upNextEpisode(number, room.invitation == nil ? room.view?.roomEpisode?.name : nil)
+        return RoomCopy.bannerEpisode(
+            number, room.invitation == nil ? room.view?.roomEpisode?.name : nil,
+            minutes: room.episodeId.flatMap { store.titles[$0]?.duration }.map(Int.init))
     }
 }
 #endif

@@ -57,6 +57,7 @@ extension RoomModel {
 
 /// The Mac's panel: the banner under a dusk gradient, the words at the bottom leading corner.
 struct RoomMacVideoPanel: View {
+    @Environment(AppStore.self) private var store
     let room: RoomModel
     let panel: RoomVideoPanel
 
@@ -147,7 +148,9 @@ struct RoomMacVideoPanel: View {
 
     private var episodeLine: String {
         guard !number.isEmpty else { return "" }
-        return RoomCopy.upNextEpisode(number, room.invitation == nil ? room.view?.roomEpisode?.name : nil)
+        return RoomCopy.bannerEpisode(
+            number, room.invitation == nil ? room.view?.roomEpisode?.name : nil,
+            minutes: room.episodeId.flatMap { store.titles[$0]?.duration }.map(Int.init))
     }
 }
 
