@@ -12,9 +12,9 @@ struct FirstJoinPaired: View {
     @Environment(AppStore.self) private var store
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     let device: String
-    var done: () -> Void = {}
-    /// The first-run pages left after this one: the page names the other device answered.
-    var skip: (Set<FirstRunPage>) -> Void = { _ in }
+    /// On to the first-run pages left after this one: the page names the other device
+    /// answered, and the medium answered here. With none left, first run ends.
+    var skip: (Set<FirstRunPage>, KaeriIsFor?) -> Void = { _, _ in }
     @State private var medium: KaeriIsFor?
     @State private var copySignIns = true
     @State private var offStores: Set<String> = []
@@ -153,9 +153,13 @@ struct FirstJoinPaired: View {
 
     private func apply() {
         let sync = store.sync
+        var answeredMedium: KaeriIsFor?
         if let setup = sync.setup {
-            if let medium, setup.medium != nil, !setup.answered.contains(.medium) {
+            // The other device's answer is only offered here: this device keeps it once the
+            // row is left on, or changed.
+            if let medium, setup.medium != nil {
                 store.medium.answer(.firstRun, with: medium)
+                answeredMedium = medium
             }
             let stores = setup.stores.map(\.address).filter { !offStores.contains($0) }
             if !stores.isEmpty { sync.joinStores(from: device, stores) }
@@ -167,7 +171,6 @@ struct FirstJoinPaired: View {
         sync.resetPair()
         sync.close()
         sync.noteJoined(device)
-        skip(answered)
-        done()
+        skip(answered, answeredMedium)
     }
 }

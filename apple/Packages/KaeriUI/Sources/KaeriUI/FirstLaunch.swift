@@ -257,10 +257,11 @@ struct FirstLaunch: View {
     /// Set up from another device: the code this device shows, and the way to a cloud folder.
     private var setup: some View {
         PairShowSheet(first: true, restore: restore, leave: { page = asks ? .join : .welcome }, finished: { finish(nil) },
-                      answeredPages: { answered in
-                          guard asks else { return }
+                      answeredPages: { answered, medium in
+                          guard asks else { finish(nil); return }
                           let left = [FirstRunPage.medium, .lists, .sources].filter { !answered.contains($0) }
-                          if answered.contains(.medium) { chosen = store.medium.answer }
+                          // The engine's answer may not be back yet: the one just given counts.
+                          if answered.contains(.medium) { chosen = medium ?? store.medium.answer }
                           switch left.first {
                           case nil: finish(nil)
                           case .medium?: page = .medium
