@@ -120,7 +120,14 @@ struct HostsPlayer<Over: ViewModifier>: ViewModifier {
                     get: { presented },
                     // SwiftUI says so for its own dismissals too: the picture going into Picture
                     // in Picture, or the player already closed, are not the viewer closing it.
-                    set: { up in if !up, model.inMainWindow { model.viewerClosed() } })
+                    set: { up in
+                        #if FIXTURES
+                        if ProcessInfo.processInfo.environment["KAERI_ROOM_TRACE"] == "1" {
+                            print("trace: the player's cover was set \(up) by SwiftUI")
+                        }
+                        #endif
+                        if !up, model.inMainWindow { model.viewerClosed() }
+                    })
             ) {
                 PhonePlayerView(model: model)
                     .modifier(over)

@@ -18,8 +18,7 @@ final class RoomFlows: XCTestCase {
         // Home's own More waits behind the player: the room's has an identifier of its own.
         let more = app.buttons["room-more"].firstMatch
         XCTAssertTrue(more.waitForExistence(timeout: 120), "the room did not come up with its More button")
-        // The scene's own settling (the room's clocks are held once it is staged).
-        Thread.sleep(forTimeInterval: 3)
+        // At once: the Fixtures episode is a minute long, and the room's scene starts 12 s in.
         more.tap()
         let opened = app.buttons["Leave the room…"].waitForExistence(timeout: 5)
         Thread.sleep(forTimeInterval: 1)

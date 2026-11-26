@@ -99,6 +99,9 @@ public final class RoomModel {
     /// What this device's sources list for the room's episode, while choosing one.
     public internal(set) var choices: [SourceCandidate] = []
     public var chosen: String?
+    /// The episode whose sources Choose a source asked for: its answer can come before the room
+    /// says you are choosing.
+    private var asked: (id: AnilistId, episode: String)?
 
     // MARK: What the screens have open
 
@@ -431,6 +434,7 @@ public final class RoomModel {
         guard let view, let id = view.episodeId else { return }
         choices = []
         chosen = nil
+        asked = (id, view.episodeNumber)
         act(.choosingSource(open: true))
         send(.loadSources(id: id, episode: view.episodeNumber))
     }
@@ -438,11 +442,15 @@ public final class RoomModel {
     /// Play in the room: the source picked plays at the room's place.
     public func playChosen() {
         guard let view, let id = view.episodeId, let chosen, let choice = choices.first(where: { $0.roomKey == chosen }) else { return }
+        asked = nil
         send(.playSource(id: id, episode: view.episodeNumber, providerId: choice.providerId, sourceId: choice.id))
     }
 
     /// Not now, from choosing a source: back to before.
-    public func stopChoosing() { act(.choosingSource(open: false)) }
+    public func stopChoosing() {
+        asked = nil
+        act(.choosingSource(open: false))
+    }
 
     public func rejoin(_ room: RecentRoom) {
         quiet.remove(room.roomId)
@@ -532,7 +540,8 @@ public final class RoomModel {
         case .roomMoveOfferGone(let id):
             if offer?.id == id { offer = nil }
         case .sources(let id, let episode, let candidates, _):
-            if view?.episodeId == id, view?.episodeNumber == episode, you?.state == .choosing {
+            let wanted = asked.map { $0.id == id && $0.episode == episode } ?? false
+            if wanted || (view?.episodeId == id && view?.episodeNumber == episode && you?.state == .choosing) {
                 choices = candidates
                 chosen = chosen ?? candidates.first?.roomKey
             }
