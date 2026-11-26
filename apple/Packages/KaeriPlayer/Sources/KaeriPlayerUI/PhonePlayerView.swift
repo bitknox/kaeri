@@ -94,7 +94,7 @@ public struct PhonePlayerView: View {
                     // Upright, the video sits under the status bar: the padding takes the top
                     // inset, so the player's own ignoresSafeArea has none left to grow into.
                     playerBody
-                        .overlay { roomLayer(upright: upright) }
+                        .overlay { roomLayer(upright: upright, beside: beside) }
                         .frame(height: upright ? (outer.size.width * 220 / 390).rounded() : nil)
                         .clipped()
                         .padding(.top, upright ? outer.safeAreaInsets.top : 0)
@@ -141,11 +141,17 @@ public struct PhonePlayerView: View {
 
     /// Over the video in a room: the room's panel, and the strip while sideways.
     @ViewBuilder
-    private func roomLayer(upright: Bool) -> some View {
+    private func roomLayer(upright: Bool, beside: Bool) -> some View {
         let room = store.room
         if let panel = room.videoPanel {
-            PhoneRoomVideoPanel(room: room, panel: panel)
-                .transition(.opacity)
+            // An iPad with the Mac's column beside the video takes the Mac's panel too.
+            if beside {
+                RoomMacVideoPanel(room: room, panel: panel)
+                    .transition(.opacity)
+            } else {
+                PhoneRoomVideoPanel(room: room, panel: panel)
+                    .transition(.opacity)
+            }
         }
         if room.inRoom, !upright, sideways || !room.shown {
             RoomStrip(room: room, disc: 26, touch: true)
