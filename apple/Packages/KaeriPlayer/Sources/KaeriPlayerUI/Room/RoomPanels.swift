@@ -109,7 +109,7 @@ struct RoomDetailsPanel: View {
                 HStack(spacing: 8) {
                     Circle().fill(relay.healthy ? Palette.water : Palette.haze).frame(width: 7, height: 7)
                     Text(relay.url).font(.system(size: 11, design: .monospaced)).lineLimit(1).frame(maxWidth: .infinity, alignment: .leading)
-                    Text(relay.healthy ? relay.rttMs.map(RoomCopy.ms) ?? "" : RoomCopy.notAnswering)
+                    Text(relay.healthy ? relay.rttMs.map { RoomCopy.ms(Int($0)) } ?? "" : RoomCopy.notAnswering)
                         .font(.system(size: 12)).foregroundStyle(.haze).monospacedDigit()
                 }
                 .frame(height: 28)
@@ -192,7 +192,7 @@ struct RoomRelayEditor: View {
             .buttonStyle(RoomButtonStyle(kind: .primary, height: 28, size: 12, padding: 14))
         }
         .padding(.top, 8)
-        .onAppear { relays = (room.view?.relays ?? []).map(\.url).map { $0.replacingOccurrences(of: "wss://", with: "") } + room.extraRelays }
+        .onAppear { relays = (room.view?.relays ?? []).map(\.url).map { $0.replacingOccurrences(of: "wss://", with: "") } }
     }
 
     private func add() {
@@ -295,7 +295,7 @@ struct RoomMoveList: View {
             }
             ForEach(others) { member in
                 let on = room.moveTicks.contains(member.id)
-                let note = room.muted.contains(member.name) && !on ? RoomCopy.mutedNotTicked : nil
+                let note = member.muted && !on ? RoomCopy.mutedNotTicked : nil
                 row(name: member.name, face: member, note: note, on: on, locked: false, disc: disc, first: false) {
                     if on { room.moveTicks.remove(member.id) } else { room.moveTicks.insert(member.id) }
                 }
@@ -419,16 +419,10 @@ struct RoomUpNextCard: View {
                     .clipShape(.rect(cornerRadius: 8))
                 VStack(alignment: .leading, spacing: 0) {
                     Text(RoomCopy.upNextForRoom).font(.system(size: 12)).foregroundStyle(.haze)
-                    Text(up.name.map { "\(room.episodeName(up.episode)) · \($0)" } ?? room.episodeName(up.episode))
+                    Text(RoomCopy.upNextEpisode(up.episode.episode, up.episode.name))
                         .font(.system(size: 14, weight: .semibold)).lineLimit(1)
-                    Group {
-                        if let ends = up.endsAtMs {
-                            Text(RoomCopy.playsForEveryoneIn(max(0, Int((Double(ends - now) / 1000).rounded(.up)))))
-                        } else {
-                            Text(RoomCopy.waitingToFinish(RoomCopy.names(up.waitingFor)))
-                        }
-                    }
-                    .font(.system(size: 12)).foregroundStyle(.haze).monospacedDigit()
+                    Text(Self.when(up, now: now))
+                        .font(.system(size: 12)).foregroundStyle(.haze).monospacedDigit()
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -443,5 +437,12 @@ struct RoomUpNextCard: View {
                 Button(RoomCopy.playNextNow) { room.playNextNow() }
             }
         }
+    }
+
+    /// "Plays for everyone in 8 s", or whom it waits for.
+    static func when(_ up: RoomUpNext, now: Int64) -> String {
+        guard let ends = up.endsAtMs else { return RoomCopy.waitingToFinish(up.waitingFor) }
+        let seconds = Int((Double(ends - now) / 1000).rounded(.up))
+        return RoomCopy.playsForEveryoneIn(max(0, seconds))
     }
 }

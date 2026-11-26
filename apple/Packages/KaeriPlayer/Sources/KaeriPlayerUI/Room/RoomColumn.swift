@@ -213,8 +213,7 @@ struct RoomRow: View {
         .accessibilityLabel("\(member.name)\(member.you ? " \(RoomCopy.youMark)" : ""), \(room.word(member, now: now))")
         .contextMenu {
             if !member.you {
-                let muted = room.muted.contains(member.name)
-                Button(muted ? L.partyUnmute(name: member.name) : L.partyMute(name: member.name)) { room.mute(member.name, !muted) }
+                Button(member.muted ? L.partyUnmute(name: member.name) : L.partyMute(name: member.name)) { room.mute(member, !member.muted) }
             }
         }
     }
@@ -300,7 +299,7 @@ struct RoomConversation: View {
         case .reaction(let from, let reaction, let at):
             HStack(spacing: 6) {
                 ReactionGlyphView(ReactionGlyphKind(reaction), size: size + 3, weight: 1.6)
-                Text(RoomCopy.reacted(from, RoomCopy.reactionVerb(reaction), at))
+                Text(RoomCopy.reacted(from, reaction, at))
             }
             .font(.system(size: size - 1))
             .foregroundStyle(.haze)

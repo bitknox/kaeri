@@ -49,6 +49,7 @@ struct RoomPlace: View {
         .navigationBarTitleDisplayMode(.large)
         #endif
         .animation(.standard, value: room.active)
+        .onAppear { room.loadRecent() }
     }
 
     // MARK: Join a room
@@ -89,7 +90,8 @@ struct RoomPlace: View {
             }
             .frame(maxWidth: 640)
             if failed {
-                failure(RoomCopy.relaysUnreachable, RoomCopy.relaysUnreachableHint, size: 13)
+                let words = Self.words(room.joinFailure ?? .unreachable)
+                failure(words.title, words.hint, size: 13)
                     .frame(maxWidth: 640, alignment: .leading)
             }
         }
@@ -103,12 +105,26 @@ struct RoomPlace: View {
         #endif
     }
 
+    /// What a Join that didn't happen says: the title, and what to do.
+    static func words(_ failure: RoomJoinFailure) -> (title: String, hint: String) {
+        switch failure {
+        case .unreachable: (RoomCopy.relaysUnreachable, RoomCopy.relaysUnreachableHint(8))
+        case .full: (RoomCopy.full, "")
+        case .oldInvite: (RoomCopy.oldInvite, "")
+        case .failed(let reason): (reason, "")
+        }
+    }
+
+    /// The failure line: the catalogue's title has no stop of its own, so the hint goes under it.
     private func failure(_ title: String, _ hint: String, size: CGFloat = 12) -> some View {
         HStack(alignment: .firstTextBaseline, spacing: 8) {
             Circle().fill(Palette.vermilion).frame(width: 7, height: 7).alignmentGuide(.firstTextBaseline) { $0[.bottom] - 1 }
-            Text("\(Text(title).fontWeight(.semibold)) \(Text(hint).foregroundStyle(.haze))")
-                .font(.system(size: compact ? 13 : size))
-                .fixedSize(horizontal: false, vertical: true)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).fontWeight(.semibold)
+                if !hint.isEmpty { Text(hint).foregroundStyle(.haze) }
+            }
+            .font(.system(size: compact ? 13 : size))
+            .fixedSize(horizontal: false, vertical: true)
         }
     }
 
@@ -118,7 +134,7 @@ struct RoomPlace: View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(RoomCopy.recentRooms).font(.system(size: compact ? 17 : 15, weight: .semibold))
-                Text(compact ? RoomCopy.lastTenPhone : RoomCopy.lastTenMac).font(.system(size: 12)).foregroundStyle(.haze)
+                Text(RoomCopy.lastTen).font(.system(size: 12)).foregroundStyle(.haze)
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
@@ -161,7 +177,7 @@ struct RoomPlaceCard: View {
             let status = room.status(now: now)
             let layout = compact ? AnyLayout(VStackLayout(alignment: .leading, spacing: 12)) : AnyLayout(HStackLayout(spacing: 18))
             layout {
-                TogetherStill(id: room.view?.episode.id ?? room.invitation?.episode.id, width: compact ? 120 : 192, height: compact ? 68 : 108)
+                TogetherStill(id: room.view?.episodeId ?? room.invitation?.id, width: compact ? 120 : 192, height: compact ? 68 : 108)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(RoomCopy.yourRoom).font(.system(size: 12, weight: .semibold)).foregroundStyle(.haze)
                     Text(room.view?.title ?? room.invitation?.title ?? "").font(.showTitle(size: 18))

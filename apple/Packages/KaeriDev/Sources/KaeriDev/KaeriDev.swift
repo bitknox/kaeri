@@ -338,7 +338,7 @@ final class Delegate: NSObject, NSApplicationDelegate {
             FileHandle.standardError.write(Data("KaeriDev: \(error)\n".utf8))
         }
         if options.playerShot != nil || PartyScene.named() != nil || TogetherScene.named() != nil || RoomScene.named() != nil {
-            store.room.clear()
+            if store.room.inRoom { store.room.leave() }
             store.party.leave()
             player.viewerClosed()
             try? await Task.sleep(for: .milliseconds(300))

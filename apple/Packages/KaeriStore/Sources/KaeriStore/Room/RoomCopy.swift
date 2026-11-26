@@ -1,226 +1,242 @@
-// The room's words, as the approved board has them (v5). A stand-in: the engine branch owns the
-// catalogue (i18n/), and each of these becomes its `L.room…` string when that lands. Nothing else
-// in the room's screens holds English.
+// The room's words, from the catalogue (i18n/en/ui-room.ftl, `L.room…`): the names the room's
+// screens use, each one a string of the catalogue. Nothing in the room's screens holds English.
 
 import Foundation
 import KaeriKit
+import KaeriStrings
 
 public enum RoomCopy {
+    /// The catalogue counts episodes as whole numbers; a "7.5" shows as its whole part.
+    static func number(_ episode: String) -> Int { Int(episode) ?? Int(Double(episode) ?? 0) }
+
     // MARK: Words on a row
 
-    public static let watching = "Watching"
-    public static let ready = "Ready"
-    public static let pausedIt = "Paused it"
-    public static let paused = "Paused"
-    public static let behind = "Behind"
-    public static let loading = "Loading"
-    public static let buffering = "Buffering"
-    public static func onEpisode(_ episode: String) -> String { "On episode \(episode)" }
-    public static let choosing = "Choosing a source"
-    public static func noSourceFor(_ episode: String) -> String { "No source for episode \(episode)" }
-    public static let playerClosed = "Player closed"
-    public static let reconnecting = "Reconnecting"
-    public static let left = "Left"
-    public static let muted = "Muted"
-    public static let you = "You"
-    public static let youMark = "(you)"
-    public static func seconds(_ word: String, _ s: Int) -> String { "\(word) · \(s) s" }
-    public static let more = "More"
-    public static func notWatching(_ n: Int) -> String { "\(n) not watching" }
-    public static let allWatching = "All watching"
+    public static var watching: String { L.roomStateWatching }
+    public static var ready: String { L.roomStateReady }
+    public static var pausedIt: String { L.roomStatePausedIt }
+    public static var paused: String { L.roomStatePaused }
+    public static func behind(_ s: Int) -> String { L.roomStateBehind(seconds: s) }
+    public static func loading(_ s: Int) -> String { L.roomStateLoading(seconds: s) }
+    public static func buffering(_ s: Int) -> String { L.roomStateBuffering(seconds: s) }
+    public static func onEpisode(_ episode: String) -> String { L.roomStateOtherEpisode(episode: number(episode)) }
+    public static var choosing: String { L.roomStateChoosing }
+    public static func noSourceFor(_ episode: String) -> String { L.roomStateNoSource(episode: number(episode)) }
+    public static var playerClosed: String { L.roomStatePlayerClosed }
+    public static var reconnecting: String { L.roomStateReconnecting }
+    public static var left: String { L.roomStateLeft }
+    public static func andMuted(_ word: String) -> String { L.roomStateAndMuted(state: word) }
+    public static var you: String { L.roomYou }
+    public static var youMark: String { L.roomYouMarker }
+    public static func faceLabel(_ name: String, _ state: String) -> String { L.roomFaceLabel(name: name, state: state) }
+    public static func moreFaces(_ n: Int) -> String { L.roomMoreFaces(count: n) }
+    public static func moreFacesLabel(_ n: Int) -> String { L.roomMoreFacesLabel(count: n) }
+    public static var more: String { L.roomMore }
+    public static func notWatching(_ n: Int) -> String { L.roomMoreNotWatching(count: n) }
+    public static var allWatching: String { L.roomMoreAllWatching }
 
     // MARK: The room's line
 
-    public static let watchingTogether = "Watching together"
-    public static func episodeAt(_ episode: String, _ at: String) -> String { "Episode \(episode) · \(at)" }
-    public static func invitedBy(_ name: String) -> String { "\(name) invited you" }
-    public static let overCap = "10 people are here already · rooms work best with 10 or fewer"
-    public static func relaysDown(_ down: Int, _ of: Int) -> String {
-        down == 1 ? "1 of \(of) relays isn't answering · the room carries on" : "\(down) of \(of) relays aren't answering · the room carries on"
+    public static var watchingTogether: String { L.roomLineWatching }
+    public static func episodeAt(_ episode: String, _ at: String) -> String { L.roomLineWatchingDetail(episode: number(episode), at: at) }
+    public static func invitedBy(_ name: String) -> String { L.roomInvitedBy(name: name) }
+    public static func invitedDetail(_ title: String, _ episode: String) -> String {
+        L.roomInvitedDetail(title: title, episode: number(episode))
     }
-    public static let reconnectingToRoom = "Reconnecting to the room"
-    public static let noRelay = "No relay is answering · your episode keeps playing"
-    public static func youreBehind(_ s: Int) -> String { "You're \(s) s behind · catching up" }
-    public static let pausedForYou = "Paused for you"
-    public static func areWaiting(_ names: String, _ many: Bool, _ s: Int) -> String {
-        "\(names) \(many ? "are" : "is") waiting · \(s) s"
+    public static func overCap(_ n: Int) -> String { L.roomInvitedOver(count: n) }
+    public static func relaysDown(_ down: Int, _ of: Int) -> String { L.roomLineRelaysDown(count: down, total: of) }
+    public static var reconnectingToRoom: String { L.roomLineReconnecting }
+    public static var noRelay: String { L.roomLineReconnectingDetail }
+    public static func youreBehind(_ s: Int) -> String { L.roomLineYouBehind(seconds: s) }
+    public static var pausedForYou: String { L.roomLinePausedForYou }
+    public static func areWaiting(_ names: [String], _ s: Int) -> String {
+        L.roomLineWaitingForYou(names: Self.names(names), count: names.count, seconds: s)
     }
-    public static let notStarted = "Not started yet"
-    public static let playStartsIt = "Play starts it for everyone"
-    public static func startingIn(_ n: Int) -> String { "Starting in \(n)" }
-    public static let everyoneReady = "Everyone is ready"
-    public static func stillLoading(_ names: String, _ many: Bool) -> String { "\(names) \(many ? "are" : "is") still loading" }
-    public static let waited20 = "The room has waited 20 s"
-    public static func startingWhen(_ names: String, _ many: Bool) -> String { "Starting when \(names) \(many ? "are" : "is") ready" }
-    public static func upNextIn(_ s: Int) -> String { "Up next in \(s) s" }
-    public static func playsForEveryone(_ episode: String) -> String { "Episode \(episode) plays for everyone" }
-    public static func carriedOn(_ by: String, _ names: String, _ many: Bool) -> String {
-        "\(by) carried on · \(many ? "they join" : "\(names) joins") when ready"
+    public static var notStarted: String { L.roomLineNotStarted }
+    public static var playStartsIt: String { L.roomLinePlayStarts }
+    public static func startingIn(_ n: Int) -> String { L.roomLineStartingIn(seconds: n) }
+    public static var everyoneReady: String { L.roomLineEveryoneReady }
+    public static func stillLoading(_ names: [String]) -> String { L.roomLineStillLoading(names: Self.names(names), count: names.count) }
+    public static func waited(_ s: Int) -> String { L.roomLineWaited(seconds: s) }
+    public static func startingWhen(_ names: [String]) -> String { L.roomLineStartingWhen(names: Self.names(names), count: names.count) }
+    public static func upNextIn(_ s: Int) -> String { L.roomLineUpNext(seconds: s) }
+    public static func playsForEveryone(_ episode: String) -> String { L.roomLineUpNextDetail(episode: number(episode)) }
+    public static func carriedOn(_ by: String, _ past: [String]) -> String {
+        past.count == 1 ? L.roomLineCarriedOnOne(carrier: by, name: past[0]) : L.roomLineCarriedOnMany(carrier: by)
     }
-    public static func pausedFor(_ names: String) -> String { "Paused for \(names)" }
-    public static func paused(_ by: String) -> String { "\(by) paused" }
-    public static func at(_ time: String) -> String { "at \(time)" }
-    public static func movedTheRoom(_ by: String) -> String { "\(by) moved the room" }
+    public static func pausedFor(_ names: [String]) -> String { L.roomLinePausedFor(names: Self.names(names)) }
+    public static func paused(by name: String?) -> String { name.map { L.roomLinePausedBy(name: $0) } ?? L.roomLineYouPaused }
+    public static func at(_ time: String) -> String { L.roomLinePausedAt(at: time) }
+    public static func movedTheRoom(_ by: String) -> String { L.roomLineMoved(name: by) }
     public static func goAlongAsk(_ others: [String], _ at: String) -> String {
-        let asked = others.isEmpty ? "" : " \(list(others)) \(others.count > 1 ? "are" : "is") asked too."
-        return "Go along?\(asked) The episode carries on from \(at)."
+        others.isEmpty
+            ? L.roomLineMovedDetailAlone(at: at)
+            : L.roomLineMovedDetail(names: list(others), count: others.count, at: at)
     }
-    public static func movedToNew(_ by: String) -> String { "\(by) moved to a new room" }
-    public static func wentAlong(_ names: [String]) -> String { "\(list(names)) went along · this room carries on" }
+    public static func movedToNew(_ by: String) -> String { L.roomLineMovedAway(name: by) }
+    public static func wentAlong(_ names: [String]) -> String { L.roomLineWentAlong(names: list(names)) }
 
     // MARK: Buttons
 
-    public static func carryOnWithout(_ names: String) -> String { "Carry on without \(names)" }
-    public static func startWithout(_ names: String) -> String { "Start without \(names)" }
-    public static let them = "them"
-    public static let joinTheRoom = "Join the room"
-    public static let joinAnyway = "Join anyway"
-    public static let notNow = "Not now"
-    public static let goAlong = "Go along"
-    public static let stayHere = "Stay here"
-    public static let dontWait = "Don't wait for me"
-    public static let playForEveryone = "Play for everyone"
-    public static let anyoneCanStart = "Anyone in the room can start it"
-    public static let waitingFirstFrames = "Waiting for first frames"
-    public static let invite = "Invite"
-    public static let details = "Details"
-    public static let leave = "Leave"
-    public static let leaveDots = "Leave…"
-    public static let leaveTheRoomDots = "Leave the room…"
-    public static let columnTitle = "Watch together"
-    public static let saySomething = "Say something"
-    public static let send = "Send"
-    public static let react = "React"
-    public static let hideRoom = "Hide room"
-    public static let showRoom = "Show room"
-    public static let closeToBar = "Close the room to the bar"
+    /// "Carry on without Ren", or "… without them" for more than one.
+    public static func carryOnWithout(_ names: [String]) -> String {
+        names.count == 1 ? L.roomCarryOnWithout(name: names[0]) : L.roomCarryOnWithoutThem
+    }
+    public static func startWithout(_ names: [String]) -> String {
+        names.count == 1 ? L.roomStartWithout(name: names[0]) : L.roomStartWithoutThem
+    }
+    public static var joinTheRoom: String { L.roomJoin }
+    public static var joinAnyway: String { L.roomJoinAnyway }
+    public static var notNow: String { L.actionNotNow }
+    public static var goAlong: String { L.roomGoAlong }
+    public static var stayHere: String { L.roomStay }
+    public static var dontWait: String { L.roomDontWait }
+    public static var playForEveryone: String { L.roomPlayForEveryone }
+    public static var anyoneCanStart: String { L.roomAnyoneCanStart }
+    public static var waitingFirstFrames: String { L.roomWaitingFirstFramesShort }
+    public static var invite: String { L.roomInvite }
+    public static var details: String { L.roomDetails }
+    public static var leave: String { L.actionLeave }
+    public static var leaveDots: String { L.roomLeaveEllipsis }
+    public static var leaveTheRoomDots: String { L.roomLeaveMenu }
+    public static var columnTitle: String { L.navWatchTogether }
+    public static var saySomething: String { L.roomChatField }
+    public static var send: String { L.roomChatSend }
+    public static var react: String { L.roomReact }
+    public static var hideRoom: String { L.roomHide }
+    public static var showRoom: String { L.roomShow }
+    public static var closeToBar: String { L.roomFold }
 
     // MARK: Before play and your own reasons
 
-    public static let upInTheRoom = "Up in the room"
-    public static let roomIsWatching = "The room is watching"
-    public static func minutes(_ m: Int) -> String { "\(m) min" }
-    public static let playsFromYourSources = "Plays from your sources"
-    public static func chooseSourceFor(_ episode: String) -> String { "Choose a source for episode \(episode)" }
-    public static let roomKeepsWatching = "The room keeps watching; you join at its place."
-    public static let playInTheRoom = "Play in the room"
-    public static func noneHas(_ episode: String) -> String { "None of your sources has episode \(episode)" }
-    public static func lookedIn(_ n: Int) -> String {
-        "Kaeri looked in your \(n) sources. You stay in the room and the chat while the others watch."
-    }
-    public static let youStay = "You stay in the room and the chat."
-    public static let openSources = "Open sources"
-    public static let searchTitles = "Search titles"
-    public static let roomPausedUntil = "The room is paused until this starts"
-    public static func startingEpisode(_ episode: String) -> String { "Starting episode \(episode)" }
+    public static var upInTheRoom: String { L.roomUpInRoom }
+    public static var roomIsWatching: String { L.roomRoomIsWatching }
+    public static func minutes(_ m: Int) -> String { L.roomMinutes(minutes: m) }
+    public static var playsFromYourSources: String { L.roomPlaysFromSources }
+    public static func chooseSourceFor(_ episode: String) -> String { L.roomChooseSource(episode: number(episode)) }
+    public static var roomKeepsWatching: String { L.roomChooseSourceLine }
+    public static var playInTheRoom: String { L.roomPlayInRoom }
+    public static func noneHas(_ episode: String) -> String { L.roomNoSourceTitle(episode: number(episode)) }
+    public static func lookedIn(_ n: Int) -> String { L.roomNoSourceLine(count: n) }
+    public static var youStay: String { L.roomNoSourceLineShort }
+    public static var openSources: String { L.roomOpenSources }
+    public static var searchTitles: String { L.roomSearchTitles }
+    public static func roomPausedUntil(_ s: Int) -> String { L.roomPausedUntilStart(seconds: s) }
+    public static func startingEpisode(_ episode: String) -> String { L.roomStartingEpisode(episode: number(episode)) }
 
-    // MARK: Chat lines the room says
+    // MARK: Chat
 
-    public static func startedTheRoom(_ by: String, _ episode: String) -> String { "\(by) started the room · Episode \(episode)" }
-    public static func pausedAt(_ by: String, _ at: String) -> String { "\(by) paused at \(at)" }
-    public static func resumed(_ by: String) -> String { "\(by) resumed" }
-    public static func pausedForLoading(_ names: String) -> String { "Paused for \(names) · loading" }
-    public static let pausedForYouLoading = "Paused for you · loading"
-    public static func carriedOnWithout(_ by: String, _ names: String) -> String { "\(by) carried on without \(names)" }
-    public static func joinedAt(_ name: String, _ at: String) -> String { "\(name) joined at \(at)" }
-    public static func skippedOpening(_ by: String) -> String { "\(by) skipped the opening" }
-    public static func upNextLine(_ episode: String) -> String { "Up next: episode \(episode) for everyone" }
-    public static func wentToNew(_ name: String) -> String { "\(name) went to the new room" }
-    public static let chatOpensWhenJoin = "The chat opens when you join"
-    public static func reactionVerb(_ reaction: Reaction) -> String {
+    public static var chatOpensWhenJoin: String { L.roomChatOpens }
+    public static var notSent: String { L.roomChatNotSent }
+    /// "Ren laughed at 11:52"
+    public static func reacted(_ name: String, _ reaction: Reaction, _ at: String) -> String {
         switch reaction {
-        case .laugh: "laughs"
-        case .gasp: "gasps"
-        case .clap: "claps"
-        case .cry: "cries"
+        case .laugh: L.roomReactedLaugh(name: name, at: at)
+        case .gasp: L.roomReactedGasp(name: name, at: at)
+        case .clap: L.roomReactedClap(name: name, at: at)
+        case .cry: L.roomReactedCry(name: name, at: at)
         }
     }
-    public static func reacted(_ name: String, _ word: String, _ at: String) -> String { "\(name) \(word) at \(at)" }
+    public static func reaction(_ reaction: Reaction) -> String {
+        switch reaction {
+        case .laugh: L.roomReactLaugh
+        case .gasp: L.roomReactGasp
+        case .clap: L.roomReactClap
+        case .cry: L.roomReactCry
+        }
+    }
 
     // MARK: Up next and Skip
 
-    public static let upNextForRoom = "Up next for the room"
-    public static func playsForEveryoneIn(_ s: Int) -> String { "Plays for everyone in \(s) s" }
-    public static func waitingToFinish(_ names: String) -> String { "Waiting for \(names) to finish" }
-    public static let skipOpening = "Skip opening"
-    public static let cancel = "Cancel"
-    public static let playNextNow = "Play next now"
+    public static var upNextForRoom: String { L.roomUpNext }
+    public static func upNextEpisode(_ episode: String, _ name: String?) -> String {
+        name.map { L.roomUpNextEpisode(episode: number(episode), title: $0) } ?? L.roomUpNextEpisodePlain(episode: number(episode))
+    }
+    public static func playsForEveryoneIn(_ s: Int) -> String { L.roomUpNextCount(seconds: s) }
+    public static func waitingToFinish(_ names: [String]) -> String { L.roomUpNextWaiting(name: Self.names(names)) }
+    public static var skipOpening: String { L.roomSkipOpening }
+    public static var cancel: String { L.actionCancel }
+    public static var playNextNow: String { L.roomPlayNextNow }
 
     // MARK: Invite
 
-    public static let inviteBody = "Anyone with this link can join. The link carries the room's key, so only people who have it can read the room."
-    public static let inviteBodyPhone = "Anyone with this link can join. Only people with the link can read the room."
-    public static let copyLink = "Copy link"
-    public static let copyInviteLink = "Copy invite link"
-    public static let share = "Share…"
-    public static let newInvite = "New invite"
-    public static let newInviteNote = "New invite stops the old link working. Everyone in the room moves to the new one."
-    public static let stopsOldLink = "Stops the old link"
-    public static let moveToNewDots = "Move to a new room…"
-    public static let moveNote = "For someone already here: start a new room and pick who comes along."
-    public static let scanNote = "Someone beside you can scan this with their camera."
-    public static let qrLabel = "Invite as a QR code"
-    public static let linkCopied = "Invite link copied"
+    public static var inviteBody: String { "\(L.roomInviteAnyone) \(L.roomInviteKey)" }
+    public static var inviteBodyPhone: String { "\(L.roomInviteAnyone) \(L.roomInviteKeyShort)" }
+    public static var copyLink: String { L.roomCopyLink }
+    public static var copyInviteLink: String { L.roomCopyInviteLink }
+    public static var share: String { L.roomShare }
+    public static var newInvite: String { L.roomNewInvite }
+    public static var newInviteNote: String { L.roomNewInviteLine }
+    public static var stopsOldLink: String { L.roomNewInviteShort }
+    public static var moveToNewDots: String { L.roomMoveOpen }
+    public static var moveNote: String { L.roomMoveOpenLine }
+    public static var scanNote: String { L.roomInviteQrLine }
+    public static var qrLabel: String { L.roomInviteQr }
+    public static var linkCopied: String { L.roomLinkCopied }
 
     // MARK: Details and relays
 
-    public static let encryption = "Encryption"
-    public static let endToEnd = "End to end"
-    public static let relays = "Relays"
-    public static func answering(_ n: Int, _ of: Int) -> String { n == of ? "\(n) answering" : "\(n) of \(of) answering" }
-    public static let notAnswering = "Not answering"
-    public static func ms(_ n: Int) -> String { "\(n) ms" }
-    public static let relaysNote = "Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare."
-    public static let editRelaysDots = "Edit relays…"
-    public static let editRelays = "Edit relays"
-    public static let editRelaysNote = "Changes this room's relays for everyone in it. New invites carry the list."
-    public static func remove(_ what: String) -> String { "Remove \(what)" }
-    public static let add = "Add"
-    public static let settingsRelaysNote = "Settings ▸ Playback ▸ Relays sets the list for new rooms."
-    public static let done = "Done"
+    public static var encryption: String { L.roomDetailsEncryption }
+    public static var endToEnd: String { L.roomDetailsEndToEnd }
+    public static var relays: String { L.roomRelays }
+    public static func answering(_ n: Int, _ of: Int) -> String {
+        n == of ? L.roomRelaysAnswering(count: n) : L.roomRelaysAnsweringOf(count: n, total: of)
+    }
+    public static var notAnswering: String { L.roomRelayNotAnswering }
+    public static func ms(_ n: Int) -> String { L.roomRelayLatency(ms: n) }
+    public static var relaysNote: String { L.roomDetailsRelaysLine }
+    public static var editRelaysDots: String { L.roomEditRelays }
+    public static var editRelays: String { L.roomEditRelaysTitle }
+    public static var editRelaysNote: String { L.roomEditRelaysLine }
+    public static func remove(_ what: String) -> String { L.roomRelayRemove(relay: what) }
+    public static var add: String { L.roomRelayAdd }
+    public static var settingsRelaysNote: String { L.roomEditRelaysSettings }
+    public static var done: String { L.actionDone }
 
     // MARK: Leave
 
-    public static let leaveTheRoom = "Leave the room?"
-    public static let othersKeepWatching = "The others keep watching."
-    public static let othersKeepWatchingKeep = "The others keep watching. Keep the room closes the player and keeps your place."
-    public static let keepTheRoom = "Keep the room"
+    public static var leaveTheRoom: String { L.roomLeaveTitle }
+    public static var othersKeepWatching: String { L.roomLeaveLine }
+    public static var othersKeepWatchingKeep: String { L.roomLeaveLineKeep }
+    public static var keepTheRoom: String { L.roomKeep }
 
     // MARK: Move
 
-    public static let moveToNew = "Move to a new room"
-    public static let moveBody = "Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room."
-    public static func moveFoot(_ at: String) -> String { "The new room picks up at \(at) with a new key. Its link reaches only the people ticked." }
-    public static let alwaysGoes = "Always goes"
-    public static let mutedNotTicked = "Muted, so not ticked"
-    public static func moveWith(_ n: Int) -> String { n == 1 ? "Move with 1 other" : "Move with \(n) others" }
+    public static var moveToNew: String { L.roomMoveTitle }
+    public static var moveBody: String { L.roomMoveBody }
+    public static func moveFoot(_ at: String) -> String { L.roomMoveFoot(at: at) }
+    public static var alwaysGoes: String { L.roomMoveAlwaysGoes }
+    public static var mutedNotTicked: String { L.roomMoveMuted }
+    public static func moveWith(_ n: Int) -> String { L.roomMoveWith(count: n) }
 
     // MARK: The place
 
-    public static let placeIntro = "Each of you plays the episode from your own sources; the room keeps you in step. Start a room from any episode with Watch together, in the player or on its page."
-    public static let yourRoom = "Your room"
-    public static let openThePlayer = "Open the player"
-    public static let joinARoom = "Join a room"
-    public static let inviteLink = "Invite link"
-    public static let paste = "Paste"
-    public static let join = "Join"
-    public static let tryAgain = "Try again"
-    public static let recentRooms = "Recent rooms"
-    public static let lastTenMac = "The last ten, kept on this Mac"
-    public static let lastTenPhone = "The last ten, kept on this device"
-    public static let rejoin = "Rejoin"
-    public static let relaysUnreachable = "Couldn't reach this room's relays."
-    public static let relaysUnreachableHint = "Ask for a new invite. Kaeri tried the link's 3 relays and 3 spares for 8 s each."
-    public static let nobodyAnswered = "Nobody answered in this room."
-    public static let nobodyAnsweredHint = "If someone made a new invite, the old one stopped working; ask them for the new link."
+    public static var placeIntro: String { L.roomPlaceLine }
+    public static var yourRoom: String { L.roomPlaceYours }
+    public static var openThePlayer: String { L.roomOpenPlayer }
+    public static var joinARoom: String { L.roomPlaceJoin }
+    public static var inviteLink: String { L.roomPlaceLink }
+    public static var paste: String { L.roomPlacePaste }
+    public static var join: String { L.actionJoin }
+    public static var tryAgain: String { L.actionTryAgain }
+    public static var recentRooms: String { L.roomRecent }
+    public static var lastTen: String { L.roomRecentNote }
+    public static var rejoin: String { L.roomRejoin }
+    public static var relaysUnreachable: String { L.roomErrorUnreachableTitle }
+    /// What Join tried, in seconds per relay.
+    public static func relaysUnreachableHint(_ seconds: Int) -> String { "\(L.roomErrorAskNewInvite) \(L.roomErrorTried(seconds: seconds))" }
+    public static var nobodyAnswered: String { L.roomErrorNobodyAnswered }
+    public static var nobodyAnsweredHint: String { L.roomErrorNobodyAnsweredLine }
+    public static var full: String { L.roomErrorFull }
+    public static var oldInvite: String { L.roomErrorOldInvite }
     public static func withNames(_ episode: String, _ names: [String], _ when: String) -> String {
-        names.isEmpty ? "Episode \(episode) · \(when)" : "Episode \(episode) · with \(list(names)) · \(when)"
+        names.isEmpty
+            ? L.roomRecentRowAlone(episode: number(episode), when: when)
+            : L.roomRecentRow(episode: number(episode), names: list(names), when: when)
     }
-    public static let oldInvite = "This invite is from an older version of Kaeri. Ask for a new one."
 
     // MARK: Phone
 
-    public static func inTheRoom(_ episode: String, _ n: Int) -> String { "Episode \(episode) · \(n) in the room" }
+    public static func inTheRoom(_ episode: String, _ n: Int) -> String { L.roomHeaderLine(episode: number(episode), count: n) }
 
     // MARK: Joining names
 
@@ -229,14 +245,15 @@ public enum RoomCopy {
         switch names.count {
         case 0: ""
         case 1: names[0]
-        case 2: "\(names[0]) and \(names[1])"
-        default: "\(names.count) people"
+        case 2: L.roomNamesAnd(names: names[0], last: names[1])
+        default: L.roomNamesPeople(count: names.count)
         }
     }
 
     /// "Ada and Ren", "Ada, Ren and Sora".
     public static func list(_ names: [String]) -> String {
         guard names.count > 1 else { return names.first ?? "" }
-        return names.dropLast().joined(separator: ", ") + " and " + names[names.count - 1]
+        let head = names.dropLast().dropFirst().reduce(names[0]) { L.roomNamesComma(first: $0, rest: $1) }
+        return L.roomNamesAnd(names: head, last: names[names.count - 1])
     }
 }
