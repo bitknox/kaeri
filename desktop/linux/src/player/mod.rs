@@ -247,8 +247,6 @@ pub struct PlayerView {
     party: Rc<crate::party::panel::Panel>,
     /// The room around the player: the column beside the video, the strip and the banner.
     pub(crate) room: Rc<crate::room::Room>,
-    /// A scene's room plays another episode than the player's: the player stays on its own.
-    room_holds_player: Cell<bool>,
     stats: Rc<stats::Stats>,
 }
 
@@ -530,7 +528,6 @@ impl PlayerView {
             mpris: RefCell::default(),
             party,
             room,
-            room_holds_player: Cell::new(false),
             stats,
         });
         view.room.on_act({
@@ -3224,8 +3221,10 @@ impl PlayerView {
     fn room_heard(&self, event: &Event) {
         self.room.heard(event);
         match event {
-            Event::RoomStarted { id, episode, .. } if !self.room_holds_player.get() => {
-                let same = self.title_id.get() == Some(*id)
+            Event::RoomStarted { id, episode, .. } => {
+                let open = self.shell().is_some_and(|shell| shell.is_player());
+                let same = open
+                    && self.title_id.get() == Some(*id)
                     && self.episode_line.borrow().0 == *episode;
                 if !same {
                     self.ctx.hub.send(Command::Play {
@@ -3339,10 +3338,22 @@ impl PlayerView {
         // Each shot's own room: the one before is left.
         self.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::Leave));
         self.room.clear();
-        // The scene's room plays Stardust Wayfarer 9; the player stays on the scene's episode.
-        self.room_holds_player.set(true);
         let staged = Staged::start(runtime, self.ctx.hub.engine_link());
         SCENE_ROOM.with(|r| r.replace(Some(Arc::clone(&staged))));
+        if shot == "room-morph" {
+            // Watch together, pressed in the player: the player becomes a new room, on the fake
+            // relays the scene started.
+            let me = Rc::downgrade(self);
+            glib::timeout_add_local_once(Duration::from_millis(800), move || {
+                if let Some(me) = me.upgrade() {
+                    me.show_party();
+                    me.shot_room_after("room-morph", None, false);
+                }
+            });
+            return;
+        }
+        // The room opens its own episode in a fresh player, as joining from an invite does.
+        self.close();
         let (done, heard) = async_channel::bounded::<bool>(1);
         std::thread::spawn({
             let staged = Arc::clone(&staged);
@@ -3363,7 +3374,10 @@ impl PlayerView {
             if matches!(scene, Scene::Invited | Scene::InvitedFull) {
                 me.room.peek(&staged.invite("Mika"));
             }
-            me.shot_room_after(&shot, open, full);
+            // The room counts in and the episode loads at its place before the frame is taken.
+            glib::timeout_add_local_once(Duration::from_secs(6), move || {
+                me.shot_room_after(&shot, open, full);
+            });
         });
     }
 

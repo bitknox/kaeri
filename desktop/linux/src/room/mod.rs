@@ -448,6 +448,7 @@ impl Room {
     pub fn clear(&self) {
         self.view.replace(None);
         self.banner.show(&RoomView::default(), None);
+        self.column.show_conversation(&[]);
         self.split.set_show_sidebar(false);
         self.toggle.set_visible(false);
         self.toggle.set_active(false);

@@ -480,9 +480,9 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         );
         // The scene takes a few seconds to stage off the main loop.
         return match (first, morph) {
-            (_, true) => 18.0,
-            (true, _) => 12.0,
-            _ => 7.0,
+            (_, true) => 24.0,
+            (true, _) => 18.0,
+            _ => 13.0,
         };
     }
     let window = &shell.ctx.window;
