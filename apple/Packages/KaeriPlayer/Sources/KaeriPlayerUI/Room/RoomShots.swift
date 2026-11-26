@@ -96,6 +96,10 @@ public enum RoomScene: String, CaseIterable, Sendable {
     case morph
     /// For a recording: into full screen and out again.
     case fullloop
+    /// For a menu check: watching, then Mika seeks 12 s after the scene is up.
+    case menuseek
+    /// For a menu check: watching, then Mika says a line 12 s after the scene is up.
+    case menusay
     /// Watch together with no room: Join a room and recent rooms.
     case place
     /// Watch together in a room whose player is closed (Keep the room): the room's card on top.
@@ -186,7 +190,7 @@ enum RoomStage {
         case .moved: .movedAway
         case .placejoinfail: .unreachable
         case .watching, .invite, .details, .editrelays, .leave, .cmdw, .quit, .skip, .movestart, .movepick, .full, .hidden,
-             .menu, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail:
+             .menu, .menuseek, .menusay, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail:
             .watching
         }
     }
@@ -272,6 +276,12 @@ extension PlayerModel {
         case .full, .fullcap:
             fullScreen = true
             try? await Task.sleep(for: .milliseconds(1800))
+        case .menuseek, .menusay:
+            let seek = scene == .menuseek
+            Task.detached {
+                try? await Task.sleep(for: .seconds(12))
+                if seek { fake.memberSeeks(name: "Mika", to: 30) } else { fake.memberSays(name: "Mika", message: "that bridge again") } // i18n-skip
+            }
         case .fullloop:
             Task { @MainActor in
                 try? await Task.sleep(for: .milliseconds(1500))

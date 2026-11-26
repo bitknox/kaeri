@@ -37,6 +37,38 @@ final class RoomFlows: XCTestCase {
         XCTAssertTrue(opened, "More did not open its menu")
     }
 
+    /// The upright room's More stays open while the room goes on: a seek by someone else (which
+    /// moves your player and posts a line) and a chat line both come 12 s after the scene is up.
+    func testTheMoreMenuStaysOpenThroughASeek() throws { try menuStaysOpen("menuseek") }
+    func testTheMoreMenuStaysOpenThroughAChatLine() throws { try menuStaysOpen("menusay") }
+
+    private func menuStaysOpen(_ scene: String) throws {
+        let app = launch(room: scene)
+        defer { app.terminate() }
+        let more = app.buttons["room-more"].firstMatch
+        XCTAssertTrue(more.waitForExistence(timeout: 120), "the room did not come up with its More button")
+        let leave = app.descendants(matching: .any)
+            .matching(NSPredicate(format: "label BEGINSWITH %@", "Leave the room")).firstMatch
+        var opened = false
+        for _ in 0..<4 where !opened {
+            if more.exists, more.isHittable { more.tap() }
+            opened = leave.waitForExistence(timeout: 3)
+        }
+        XCTAssertTrue(opened, "More did not open its menu")
+        keep("\(Self.form)-\(scene)-open")
+        // Past the event, which comes 12 s after the scene is up.
+        Thread.sleep(forTimeInterval: 16)
+        keep("\(Self.form)-\(scene)-after")
+        XCTAssertTrue(leave.exists, "the menu closed during \(scene)")
+    }
+
+    private func keep(_ name: String) {
+        let picture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
+        picture.name = name
+        picture.lifetime = .keepAlways
+        add(picture)
+    }
+
     private func launch(room scene: String) -> XCUIApplication {
         let app = XCUIApplication()
         var arguments = ["-KaeriScene", "playing", "-KaeriRoom", scene]
