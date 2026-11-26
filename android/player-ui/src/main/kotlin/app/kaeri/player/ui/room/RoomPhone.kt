@@ -67,18 +67,14 @@ import app.kaeri.design.SwapFade
 import app.kaeri.design.rememberAnimationsRemoved
 import app.kaeri.design.rememberRoomNow
 import app.kaeri.design.tabular
-import app.kaeri.store.room.MemberState
+import app.kaeri.engine.model.MemberState
+import app.kaeri.engine.model.RoomCommand
+import app.kaeri.engine.model.RoomMember
+import app.kaeri.engine.model.RoomView
 import app.kaeri.store.room.Ring
-import app.kaeri.store.room.RoomAsk
-import app.kaeri.store.room.RoomCopy
 import app.kaeri.store.room.RoomLine
-import app.kaeri.store.room.RoomMember
 import app.kaeri.store.room.RoomModel
-import app.kaeri.store.room.RoomView
 import app.kaeri.store.room.RoomWords
-import app.kaeri.ui.ChatConversation
-import app.kaeri.ui.ChatField
-import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.REACTIONS
 import app.kaeri.ui.reactionGlyph
 import app.kaeri.ui.reactionLabel
@@ -135,9 +131,8 @@ fun RoomUpright(
     val members by room.members.collectAsStateWithLifecycle()
     val invited by room.invited.collectAsStateWithLifecycle()
     val offer by room.offer.collectAsStateWithLifecycle()
-    val moved by room.moved.collectAsStateWithLifecycle()
-    val carried by room.carried.collectAsStateWithLifecycle()
     val now = rememberRoomNow()
+    val c = roomCopy()
     var open by remember(opened) { mutableStateOf(opened) }
     val shown = view ?: return
 
@@ -148,7 +143,7 @@ fun RoomUpright(
         }
         RoomHeader(
             view = shown,
-            count = members.count { it.state != MemberState.Left },
+            count = members.count { it.state != MemberState.LEFT },
             onBack = onBack,
             onInvite = { open = RoomOpen.Invite },
             onMore = { open = RoomOpen.Menu },
@@ -170,20 +165,18 @@ fun RoomUpright(
         val inv = invited
         val off = offer
         if (inv != null) {
-            line = RoomLine(RoomCopy.invited(inv.by), if (inv.over) RoomCopy.overCap(inv.names.size) else RoomCopy.titleEpisode(inv.title, inv.episode))
+            line = RoomLine(inv.by?.let { c.invited(it) } ?: c.JOIN, if (inv.over) c.overCap(inv.names.size) else c.titleEpisode(inv.title, inv.episode))
             buttons = {
-                PairButtons(if (inv.over) RoomCopy.JOIN_ANYWAY else RoomCopy.JOIN, RoomCopy.NOT_NOW, { room.ask(RoomAsk.Join(inv.over)) }, { room.ask(RoomAsk.NotNow) })
+                PairButtons(if (inv.over) c.JOIN_ANYWAY else c.JOIN, c.NOT_NOW, { room.join(inv.over) }, { room.notNow(); onBack() })
             }
         } else if (off != null) {
-            line = RoomLine(RoomCopy.movedTheRoom(off.by), RoomCopy.goAlong(off.names, RoomWords.clock(positionS)))
+            line = RoomLine(c.movedTheRoom(off.by), c.goAlong(off.names, RoomWords.clock(positionS)))
             buttons = {
-                PairButtons(RoomCopy.GO_ALONG, RoomCopy.STAY_HERE, { room.ask(RoomAsk.AnswerMove(off.id, true)) }, { room.ask(RoomAsk.AnswerMove(off.id, false)) })
+                PairButtons(c.GO_ALONG, c.STAY_HERE, { room.send(RoomCommand.AnswerMove(off.id, true)) }, { room.send(RoomCommand.AnswerMove(off.id, false)) })
             }
-        } else if (moved != null) {
-            line = RoomLine(RoomCopy.movedAway(moved!!.by), RoomCopy.wentAlong(moved!!.went))
         } else {
-            line = RoomWords.line(shown, members, now, positionS, carried?.let { it.by to it.past })
-            RoomWords.carryLabel(shown, now)?.let { label -> buttons = { CarryOnButton(label) { room.ask(RoomAsk.CarryOn) } } }
+            line = RoomWords.line(c, shown, members, now, positionS)
+            RoomWords.carryLabel(c, shown, now)?.let { label -> buttons = { CarryOnButton(label) { room.send(RoomCommand.CarryOn) } } }
         }
         RoomLineBlock(line, Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp))
         SwapFade(buttons != null, label = "room-carry") { has -> // i18n-skip
@@ -193,20 +186,20 @@ fun RoomUpright(
         HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp), color = ObiSilk.FaintRule)
         Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.BottomStart) {
             if (inv != null) {
-                Text(RoomCopy.CHAT_OPENS, style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze))
+                Text(c.CHAT_OPENS, style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze))
             } else {
-                ChatConversation(Modifier.fillMaxWidth())
+                RoomChatList(room, Modifier.fillMaxWidth())
             }
         }
-        if (inv == null) RoomChatBar(open == RoomOpen.React, { open = if (it) RoomOpen.React else RoomOpen.None })
+        if (inv == null) RoomChatBar(room, open == RoomOpen.React, { open = if (it) RoomOpen.React else RoomOpen.None })
     }
 
     when (open) {
-        RoomOpen.Leave -> LeaveDialog(onLeave = { open = RoomOpen.None; room.ask(RoomAsk.Leave) }, onCancel = { open = RoomOpen.None })
-        RoomOpen.Invite -> InviteSheet(shown, onCopy = onCopyLink, onNew = { room.ask(RoomAsk.NewInvite) }, onDismiss = { open = RoomOpen.None })
+        RoomOpen.Leave -> LeaveDialog(onLeave = { open = RoomOpen.None; room.send(RoomCommand.Leave); onBack() }, onCancel = { open = RoomOpen.None })
+        RoomOpen.Invite -> InviteSheet(shown, onCopy = onCopyLink, onNew = { room.send(RoomCommand.NewInvite) }, onDismiss = { open = RoomOpen.None })
         RoomOpen.Details -> DetailsSheet(shown, onEdit = { open = RoomOpen.EditRelays }, onDismiss = { open = RoomOpen.None })
-        RoomOpen.EditRelays -> EditRelaysSheet(shown, onDone = { room.ask(RoomAsk.SetRelays(it)); open = RoomOpen.None }, onDismiss = { open = RoomOpen.None })
-        RoomOpen.Move -> MoveSheet(shown, positionS, members.firstOrNull { it.you }?.name ?: RoomCopy.YOU, onMove = { room.ask(RoomAsk.MoveRoom(it)); open = RoomOpen.None }, onDismiss = { open = RoomOpen.None })
+        RoomOpen.EditRelays -> EditRelaysSheet(shown, onDone = { room.send(RoomCommand.EditRelays(it)); open = RoomOpen.None }, onDismiss = { open = RoomOpen.None })
+        RoomOpen.Move -> MoveSheet(shown, positionS, members.firstOrNull { it.you }?.name ?: c.YOU, onMove = { room.send(RoomCommand.MoveRoom(it)); open = RoomOpen.None }, onDismiss = { open = RoomOpen.None })
         RoomOpen.Everyone -> EveryoneSheet(shown, members, now, onDismiss = { open = RoomOpen.None })
         else -> Unit
     }
@@ -215,25 +208,26 @@ fun RoomUpright(
 /** The header row, 64 dp: back, the show and "Episode 9 · 3 in the room", Invite, More. */
 @Composable
 internal fun RoomHeader(view: RoomView, count: Int, onBack: () -> Unit, onInvite: () -> Unit, onMore: () -> Unit, menu: @Composable () -> Unit) {
+    val c = roomCopy()
     Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-            Icon(RoomGlyphs.Back, contentDescription = RoomCopy.CLOSE_TO_BAR, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
+            Icon(RoomGlyphs.Back, contentDescription = c.CLOSE_TO_BAR, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
         }
         Column(Modifier.weight(1f).padding(start = 4.dp)) {
-            Text(view.title, style = ShowTitle.row.copy(lineHeight = 22.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text(view.roomEpisode?.title ?: view.name, style = ShowTitle.row.copy(lineHeight = 22.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
             Text(
-                RoomCopy.inTheRoom(view.episode?.episode ?: "", count),
+                c.inTheRoom(view.episode?.episode ?: "", count),
                 style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp).tabular(),
                 color = ObiSilk.Haze,
                 maxLines = 1,
             )
         }
         IconButton(onClick = onInvite, modifier = Modifier.size(48.dp)) {
-            Icon(RoomGlyphs.Invite, contentDescription = RoomCopy.INVITE, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
+            Icon(RoomGlyphs.Invite, contentDescription = c.INVITE, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
         }
         Box {
             IconButton(onClick = onMore, modifier = Modifier.size(48.dp)) {
-                Icon(RoomGlyphs.More, contentDescription = RoomCopy.MORE, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
+                Icon(RoomGlyphs.More, contentDescription = c.MORE, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
             }
             menu()
         }
@@ -251,6 +245,7 @@ internal fun RoomMenu(
     onDetails: () -> Unit,
     onSubtitles: () -> Unit,
 ) {
+    val c = roomCopy()
     DropdownMenu(expanded, onDismiss, containerColor = ObiSilk.RaisedHigh, modifier = Modifier.width(240.dp)) {
         val colors = MenuDefaults.itemColors(textColor = ObiSilk.Silk, leadingIconColor = ObiSilk.Silk)
         @Composable
@@ -261,11 +256,11 @@ internal fun RoomMenu(
             colors = colors,
             modifier = Modifier.height(48.dp),
         )
-        item(RoomGlyphs.Leave, RoomCopy.LEAVE_MORE, onLeave)
-        item(RoomGlyphs.Copy, RoomCopy.COPY_INVITE, onCopy)
-        item(RoomGlyphs.People, RoomCopy.MOVE_MORE, onMove)
-        item(RoomGlyphs.Info, RoomCopy.DETAILS, onDetails)
-        item(RoomGlyphs.Captions, RoomCopy.SUBTITLES_AUDIO, onSubtitles)
+        item(RoomGlyphs.Leave, c.LEAVE_MORE, onLeave)
+        item(RoomGlyphs.Copy, c.COPY_INVITE, onCopy)
+        item(RoomGlyphs.People, c.MOVE_MORE, onMove)
+        item(RoomGlyphs.Info, c.DETAILS, onDetails)
+        item(RoomGlyphs.Captions, c.SUBTITLES_AUDIO, onSubtitles)
     }
 }
 
@@ -311,13 +306,14 @@ internal fun PairButtons(first: String, second: String, onFirst: () -> Unit, onS
  */
 @Composable
 fun FacesRow(view: RoomView, members: List<RoomMember>, now: Long, modifier: Modifier = Modifier, onMore: () -> Unit) {
-    val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.Left || it.sinceMs?.let { s -> now - s < LEFT_KEPT_MS } != false })
+    val c = roomCopy()
+    val (shown, hidden) = RoomWords.capped(members.filter { it.state != MemberState.LEFT || it.sinceMs?.let { s -> now - s < LEFT_KEPT_MS } != false })
     Row(modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.Top) {
         for (m in shown) {
-            val name = if (m.you) RoomCopy.YOU else m.name
-            val word = RoomWords.word(view, m, now)
+            val name = if (m.you) c.YOU else m.name
+            val word = RoomWords.word(c, view, m, now)
             Column(
-                Modifier.width(88.dp).clearAndSetSemantics { contentDescription = RoomCopy.spoken(name, word) },
+                Modifier.width(88.dp).clearAndSetSemantics { contentDescription = c.spoken(name, word) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 PersonFace(view, m, now, 48.dp)
@@ -326,14 +322,14 @@ fun FacesRow(view: RoomView, members: List<RoomMember>, now: Long, modifier: Mod
             }
         }
         if (hidden.isNotEmpty()) {
-            val word = RoomWords.moreWord(hidden)
+            val word = RoomWords.moreWord(c, hidden)
             Column(
                 Modifier.width(88.dp).clip(androidx.compose.foundation.shape.RoundedCornerShape(12.dp)).clickable(onClick = onMore)
-                    .clearAndSetSemantics { contentDescription = RoomCopy.spoken(RoomCopy.MORE, word) },
+                    .clearAndSetSemantics { contentDescription = c.spoken(c.MORE, word) },
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                MoreFace(RoomCopy.plus(hidden.size), 48.dp)
-                Text(RoomCopy.MORE, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk, modifier = Modifier.padding(top = 4.dp))
+                MoreFace(c.plus(hidden.size), 48.dp)
+                Text(c.MORE, fontSize = 14.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk, modifier = Modifier.padding(top = 4.dp))
                 Text(word, fontSize = 12.sp, lineHeight = 16.sp, color = ObiSilk.Haze, textAlign = TextAlign.Center)
             }
         }
@@ -345,9 +341,9 @@ const val LEFT_KEPT_MS = 4000L
 
 /** The chat bar on the side colour: React, the field, Send. */
 @Composable
-internal fun RoomChatBar(reacting: Boolean, onReacting: (Boolean) -> Unit) {
-    val store = LocalAppStore.current
+internal fun RoomChatBar(room: RoomModel, reacting: Boolean, onReacting: (Boolean) -> Unit) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val c = roomCopy()
     Row(
         Modifier.fillMaxWidth().background(ObiSilk.RaisedLow).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
@@ -355,19 +351,19 @@ internal fun RoomChatBar(reacting: Boolean, onReacting: (Boolean) -> Unit) {
     ) {
         Box {
             IconButton(onClick = { onReacting(true) }, modifier = Modifier.size(48.dp)) {
-                Icon(reactionGlyph(REACTIONS.first()), contentDescription = RoomCopy.REACT, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
+                Icon(reactionGlyph(REACTIONS.first()), contentDescription = c.REACT, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
             }
             DropdownMenu(reacting, { onReacting(false) }, containerColor = ObiSilk.RaisedHigh) {
                 Row {
                     for (r in REACTIONS) {
-                        IconButton(onClick = { store.partyReact(r); onReacting(false) }, modifier = Modifier.size(48.dp)) {
+                        IconButton(onClick = { room.send(RoomCommand.React(r)); onReacting(false) }, modifier = Modifier.size(48.dp)) {
                             Icon(reactionGlyph(r), contentDescription = reactionLabel(context, r), tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
                         }
                     }
                 }
             }
         }
-        ChatField(Modifier.weight(1f), height = 48.dp, fieldColor = ObiSilk.RaisedHigh, sendColor = ObiSilk.RaisedSelected)
+        RoomChatField(room, Modifier.weight(1f))
     }
 }
 

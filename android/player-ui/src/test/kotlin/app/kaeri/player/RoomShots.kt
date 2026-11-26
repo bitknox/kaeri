@@ -16,10 +16,6 @@ import app.kaeri.design.KaeriTheme
 import app.kaeri.design.LocalRoomClock
 import app.kaeri.design.RoomClock
 import app.kaeri.engine.model.Event
-import app.kaeri.engine.model.PartyChatBody
-import app.kaeri.engine.model.PartyChatLine
-import app.kaeri.engine.model.PartyChatState
-import app.kaeri.engine.model.PartyConversation
 import app.kaeri.player.ui.room.BeforePlayPanel
 import app.kaeri.player.ui.room.ChoosingPanel
 import app.kaeri.player.ui.room.InvitedPanel
@@ -30,18 +26,23 @@ import app.kaeri.player.ui.room.RoomOpen
 import app.kaeri.player.ui.room.RoomPhone
 import app.kaeri.player.ui.room.RoomSourceChoice
 import app.kaeri.store.AppStore
-import app.kaeri.store.room.MemberState
-import app.kaeri.store.room.MoveCandidate
-import app.kaeri.store.room.PausedFor
-import app.kaeri.store.room.RelayHealth
-import app.kaeri.store.room.RoomConnection
-import app.kaeri.store.room.RoomEpisode
+import app.kaeri.engine.model.MemberState
+import app.kaeri.engine.model.MoveCandidate
+import app.kaeri.engine.model.PausedFor
+import app.kaeri.engine.model.RelayHealth
+import app.kaeri.engine.model.RoomChatBody
+import app.kaeri.engine.model.RoomChatLine
+import app.kaeri.engine.model.RoomChatState
+import app.kaeri.engine.model.RoomConnection
+import app.kaeri.engine.model.RoomConversation
+import app.kaeri.engine.model.RoomEpisode
+import app.kaeri.engine.model.RoomEpisodeInfo
+import app.kaeri.engine.model.RoomMember
+import app.kaeri.engine.model.RoomMoveOffer
+import app.kaeri.engine.model.RoomMoved
+import app.kaeri.engine.model.RoomView
+import app.kaeri.engine.model.WaitReason
 import app.kaeri.store.room.RoomInvited
-import app.kaeri.store.room.RoomMember
-import app.kaeri.store.room.RoomMoveOffer
-import app.kaeri.store.room.RoomMoved
-import app.kaeri.store.room.RoomView
-import app.kaeri.store.room.WaitReason
 import app.kaeri.testkit.FixtureArt
 import app.kaeri.testkit.captureRoboImage
 import app.kaeri.ui.LocalAppStore
@@ -84,9 +85,9 @@ class RoomShots {
     private fun ago(s: Int) = now - s * 1000L
 
     private val relays = listOf(
-        RelayHealth("wss://relay-one.example", true, 40),
-        RelayHealth("wss://relay-two.example", true, 40),
-        RelayHealth("wss://relay-three.example", true, 40),
+        RelayHealth("wss://relay-one.example", true, 40u),
+        RelayHealth("wss://relay-two.example", true, 40u),
+        RelayHealth("wss://relay-three.example", true, 40u),
     )
 
     private fun view(
@@ -97,9 +98,12 @@ class RoomShots {
         connection: RoomConnection = RoomConnection.Connected,
         relays: List<RelayHealth> = this.relays,
     ) = RoomView(
-        title = "Natsukaze Relay",
-        episode = RoomEpisode(9, "9"),
+        roomId = "room-1",
         name = "Mika's room",
+        episode = RoomEpisode(900001u, "9"),
+        roomEpisode = RoomEpisodeInfo(900001u, "9", "Natsukaze Relay", "The Long Leg", null, null),
+        position = pos,
+        positionAtMs = now,
         connection = connection,
         link = "https://kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe",
         beforePlay = beforePlay,
@@ -114,16 +118,16 @@ class RoomShots {
         ),
     )
 
-    private fun ada(state: MemberState = MemberState.Watching) = RoomMember("ada", "Ada", you = true, state = state)
-    private fun mika(state: MemberState = MemberState.Watching) = RoomMember("mika", "Mika", you = false, state = state)
-    private fun ren(state: MemberState = MemberState.Watching, secs: Int = 0, behind: Float? = null) =
+    private fun ada(state: MemberState = MemberState.WATCHING) = RoomMember("ada", "Ada", you = true, state = state)
+    private fun mika(state: MemberState = MemberState.WATCHING) = RoomMember("mika", "Mika", you = false, state = state)
+    private fun ren(state: MemberState = MemberState.WATCHING, secs: Int = 0, behind: Float? = null) =
         RoomMember("ren", "Ren", you = false, state = state, sinceMs = ago(secs), behindS = behind)
 
     private val three = listOf(ada(), mika(), ren())
 
-    private fun waitRen(secs: Int, reason: WaitReason = WaitReason.Loading) = listOf(PausedFor("Ren", reason, ago(secs)))
+    private fun waitRen(secs: Int, reason: WaitReason = WaitReason.LOADING) = listOf(PausedFor(id = "ren", name = "Ren", you = false, reason = reason, sinceMs = ago(secs)))
 
-    private fun said(id: ULong, from: String, text: String, you: Boolean = false) = PartyChatLine(id, from, you, PartyChatBody.Said(text), false)
+    private fun said(id: ULong, from: String, text: String, you: Boolean = false) = RoomChatLine(id, from, you, RoomChatBody.Said(text), false)
 
     private val talk = listOf(
         said(1u, "Mika", "everyone here?"),
@@ -142,16 +146,14 @@ class RoomShots {
         opened: RoomOpen = RoomOpen.None,
         invited: RoomInvited? = null,
         offer: RoomMoveOffer? = null,
-        moved: RoomMoved? = null,
-        chat: List<PartyChatLine> = talk,
+        chat: List<RoomChatLine> = talk,
         screen: Boolean = false,
         panel: (@androidx.compose.runtime.Composable (Modifier) -> Unit)? = null,
     ) {
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         compose.runOnUiThread {
-            store.apply(Event.PartyChatState(PartyChatState(allowed = true, maxLength = 150u)))
-            store.apply(Event.PartyChat(PartyConversation(lines = chat, marks = emptyList())))
-            store.room.show(view, members, invited = invited, offer = offer, moved = moved)
+            store.apply(Event.RoomChatState(RoomChatState(maxLength = 150u)))
+            store.room.show(view, members, invited = invited, offer = offer, conversation = RoomConversation(lines = chat, marks = emptyList(), failed = null))
         }
         val art = FixtureArt.bytes("${FixtureArt.HOST}banner/900001.jpg")!!
         val still = android.graphics.BitmapFactory.decodeByteArray(art, 0, art.size).asImageBitmap()
@@ -182,7 +184,7 @@ class RoomShots {
     fun before_play() = shoot(
         "before-play",
         view(beforePlay = true),
-        listOf(ada(), mika(), ren(MemberState.Loading, 4)),
+        listOf(ada(), mika(), ren(MemberState.LOADING, 4)),
         chat = listOf(said(1u, "Mika", "everyone here?"), said(2u, "Ren", "two minutes, making tea"), said(3u, "Ada", "ready when you are", you = true)),
         panel = { m -> BeforePlayPanel(started = false, modifier = m) {} },
     )
@@ -191,10 +193,10 @@ class RoomShots {
     fun watching() = shoot("watching", view(), three)
 
     @Test
-    fun paused_for_ren() = shoot("paused-for-ren", view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.Loading, 6)))
+    fun paused_for_ren() = shoot("paused-for-ren", view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 6)))
 
     @Test
-    fun twenty_seconds() = shoot("twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), listOf(ada(), mika(), ren(MemberState.Loading, 20)))
+    fun twenty_seconds() = shoot("twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 20)))
 
     @Test
     fun more_menu() = shoot("more-menu", view(), three, opened = RoomOpen.Menu, screen = true)
@@ -204,11 +206,11 @@ class RoomShots {
 
     @Test
     @Config(qualifiers = PlayerShots.PHONE_LANDSCAPE)
-    fun sideways_buffering() = shoot("sideways-buffering", view(waitRen(3, WaitReason.Buffering), playing = false), listOf(ada(), mika(), ren(MemberState.Buffering, 3)), full = true, controls = false)
+    fun sideways_buffering() = shoot("sideways-buffering", view(waitRen(3, WaitReason.BUFFERING), playing = false), listOf(ada(), mika(), ren(MemberState.BUFFERING, 3)), full = true, controls = false)
 
     @Test
     @Config(qualifiers = PlayerShots.PHONE_LANDSCAPE)
-    fun sideways_twenty_seconds() = shoot("sideways-twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), listOf(ada(), mika(), ren(MemberState.Loading, 20)), full = true)
+    fun sideways_twenty_seconds() = shoot("sideways-twenty-seconds", view(waitRen(20), canCarryOn = true, playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 20)), full = true)
 
     // Every other state the board names for every platform.
 
@@ -217,7 +219,7 @@ class RoomShots {
         "invited",
         view(),
         listOf(mika(), ren()),
-        invited = RoomInvited("Mika", "Natsukaze Relay", "9", listOf("Mika", "Ren")),
+        invited = RoomInvited("https://kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe", "Mika", "Natsukaze Relay", "9", listOf("Mika", "Ren")),
         panel = { m -> InvitedPanel("Natsukaze Relay", "Episode 9 · The Long Leg", m) },
     )
 
@@ -225,8 +227,8 @@ class RoomShots {
     fun invited_over_cap() = shoot(
         "invited-over-cap",
         view(),
-        listOf("Mika", "Ren", "Sora", "Kenji", "Noa", "Yui", "Taro", "Hana", "Kai", "Rio").map { RoomMember(it.lowercase(), it, false, MemberState.Watching) },
-        invited = RoomInvited("Mika", "Natsukaze Relay", "9", listOf("Mika", "Ren", "Sora", "Kenji", "Noa", "Yui", "Taro", "Hana", "Kai", "Rio")),
+        listOf("Mika", "Ren", "Sora", "Kenji", "Noa", "Yui", "Taro", "Hana", "Kai", "Rio").map { RoomMember(it.lowercase(), it, false, MemberState.WATCHING) },
+        invited = RoomInvited("https://kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe", "Mika", "Natsukaze Relay", "9", listOf("Mika", "Ren", "Sora", "Kenji", "Noa", "Yui", "Taro", "Hana", "Kai", "Rio")),
         panel = { m -> InvitedPanel("Natsukaze Relay", "Episode 9 · The Long Leg", m) },
     )
 
@@ -235,9 +237,9 @@ class RoomShots {
         "six-people",
         view(),
         three + listOf(
-            RoomMember("sora", "Sora", false, MemberState.Watching),
-            RoomMember("kenji", "Kenji", false, MemberState.PlayerClosed),
-            RoomMember("noa", "Noa", false, MemberState.Reconnecting),
+            RoomMember("sora", "Sora", false, MemberState.WATCHING),
+            RoomMember("kenji", "Kenji", false, MemberState.PLAYER_CLOSED),
+            RoomMember("noa", "Noa", false, MemberState.RECONNECTING),
         ),
     )
 
@@ -246,9 +248,9 @@ class RoomShots {
         "everyone",
         view(),
         three + listOf(
-            RoomMember("sora", "Sora", false, MemberState.Watching),
-            RoomMember("kenji", "Kenji", false, MemberState.PlayerClosed),
-            RoomMember("noa", "Noa", false, MemberState.Reconnecting),
+            RoomMember("sora", "Sora", false, MemberState.WATCHING),
+            RoomMember("kenji", "Kenji", false, MemberState.PLAYER_CLOSED),
+            RoomMember("noa", "Noa", false, MemberState.RECONNECTING),
         ),
         opened = RoomOpen.Everyone,
         screen = true,
@@ -258,17 +260,17 @@ class RoomShots {
     fun paused_by_mika() = shoot(
         "paused-by-mika",
         view(playing = false).copy(pausedBy = "Mika"),
-        listOf(ada(MemberState.Paused), mika(MemberState.Paused).copy(pausedRoom = true), ren(MemberState.Paused)),
+        listOf(ada(MemberState.PAUSED), mika(MemberState.PAUSED).copy(pausedRoom = true), ren(MemberState.PAUSED)),
     )
 
     @Test
-    fun ren_behind() = shoot("ren-behind", view(), listOf(ada(), mika(), ren(MemberState.Behind, behind = 4f)))
+    fun ren_behind() = shoot("ren-behind", view(), listOf(ada(), mika(), ren(MemberState.BEHIND, behind = 4f)))
 
     @Test
     fun you_loading() = shoot(
         "you-loading",
-        view(listOf(PausedFor("Ada", WaitReason.Loading, ago(5))), playing = false).copy(canDontWait = true),
-        listOf(ada(MemberState.Loading).copy(sinceMs = ago(5)), mika(), ren()),
+        view(listOf(PausedFor(id = "ada", name = "Ada", you = true, reason = WaitReason.LOADING, sinceMs = ago(5))), playing = false).copy(canDontWait = true),
+        listOf(ada(MemberState.LOADING).copy(sinceMs = ago(5)), mika(), ren()),
         panel = { m -> LoadingPanel(5, canDontWait = true, modifier = m) },
     )
 
@@ -276,7 +278,7 @@ class RoomShots {
     fun no_source() = shoot(
         "no-source",
         view(),
-        listOf(ada(MemberState.NoSource), mika(), ren()),
+        listOf(ada(MemberState.NO_SOURCE), mika(), ren()),
         panel = { m -> NoSourcePanel("9", m) },
     )
 
@@ -284,15 +286,15 @@ class RoomShots {
     fun choosing() = shoot(
         "choosing",
         view(),
-        listOf(ada(MemberState.Choosing), mika(), ren()),
+        listOf(ada(MemberState.CHOOSING), mika(), ren()),
         panel = { m -> ChoosingPanel("9", listOf(RoomSourceChoice("Local files", "1080p · 1.2 GB"), RoomSourceChoice("night-index", "720p · 640 MB")), 0, m) },
     )
 
     @Test
-    fun ren_other_episode() = shoot("ren-other-episode", view(), listOf(ada(), mika(), ren(MemberState.OtherEpisode).copy(episode = RoomEpisode(8, "8"))))
+    fun ren_other_episode() = shoot("ren-other-episode", view(), listOf(ada(), mika(), ren(MemberState.OTHER_EPISODE).copy(episode = RoomEpisode(900001u, "8"))))
 
     @Test
-    fun reconnecting() = shoot("reconnecting", view(connection = RoomConnection.Reconnecting(0)), three)
+    fun reconnecting() = shoot("reconnecting", view(connection = RoomConnection.Reconnecting(0u)), three)
 
     @Test
     fun relay_down() = shoot(
@@ -305,16 +307,15 @@ class RoomShots {
     fun go_along() = shoot(
         "go-along",
         view(),
-        listOf(ada(), ren(), RoomMember("taro", "Taro", false, MemberState.Watching), mika(MemberState.Left).copy(sinceMs = ago(1))),
+        listOf(ada(), ren(), RoomMember("taro", "Taro", false, MemberState.WATCHING), mika(MemberState.LEFT).copy(sinceMs = ago(1))),
         offer = RoomMoveOffer("offer-1", "Mika", listOf("Ren"), "Natsukaze Relay", "9", now + 60_000),
     )
 
     @Test
     fun after_move() = shoot(
         "after-move",
-        view(),
-        listOf(RoomMember("taro", "Taro", true, MemberState.Watching), ren(MemberState.Left, 1), RoomMember("ada", "Ada", false, MemberState.Left, sinceMs = ago(1))),
-        moved = RoomMoved("Mika", listOf("Ada", "Ren")),
+        view().copy(moved = RoomMoved("Mika", listOf("Ada", "Ren"))),
+        listOf(RoomMember("taro", "Taro", true, MemberState.WATCHING), ren(MemberState.LEFT, 1), RoomMember("ada", "Ada", false, MemberState.LEFT, sinceMs = ago(1))),
     )
 
     @Test
@@ -338,7 +339,7 @@ class RoomShots {
     @Test
     fun room_bar() {
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
-        compose.runOnUiThread { store.room.show(view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.Loading, 6))) }
+        compose.runOnUiThread { store.room.show(view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 6))) }
         val art = FixtureArt.bytes("${FixtureArt.HOST}banner/900001.jpg")!!
         val still = android.graphics.BitmapFactory.decodeByteArray(art, 0, art.size).asImageBitmap()
         compose.setContent {

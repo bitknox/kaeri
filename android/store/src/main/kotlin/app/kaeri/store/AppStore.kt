@@ -223,8 +223,8 @@ class AppStore(
         model.kept = { notices.log(EngineNotice(kind = NoticeKind.INFO, text = "", hint = null, msg = it)) }
     }
 
-    /** The room this device is in, as the room's screens read it (stand-in until the room's FFI lands). */
-    val room = app.kaeri.store.room.RoomModel()
+    /** The room this device is in, as the room's screens read it. */
+    val room = app.kaeri.store.room.RoomModel { send(Command.Room(it)) }
 
     /** Watch together: the party this device is in, its room, and the rooms kept. */
     val party = PartyModel().also { model ->
@@ -1418,7 +1418,8 @@ class AppStore(
         if (event is Event.PlaybackStaged) playbackFailed = false
         if (event is Event.PlaybackEnded && !event.rollingOn) playbackFailed = event.ending == app.kaeri.engine.model.Ending.Failed
         // The room started or moved on: the engine opens the episode, and the player takes it.
-        if (event is Event.PartyStarted) onPlayAsked?.invoke()
+        if (event is Event.PartyStarted || event is Event.RoomStarted) onPlayAsked?.invoke()
+        if (room.apply(event)) return
         if (party.apply(event)) return
         when (event) {
             is Event.JobStarted -> jobs.started(event.job, event.activity)
@@ -1648,6 +1649,22 @@ class AppStore(
         val target = parsePartyTarget(text) ?: return null
         openParty(target)
         return target
+    }
+
+    /**
+     * A room invite the app was opened with, or one pasted: the room's invited state comes up and
+     * the engine looks in; false when [text] is not a room invite this version can join.
+     */
+    fun followRoomLink(text: String): Boolean {
+        val target = app.kaeri.engine.ffi.parseRoomTarget(text) ?: return false
+        if (target.old != null) return false
+        room.invitedBy(target)
+        return true
+    }
+
+    /** Start a room watching [id] episode [episode]: from the player, the player becomes the room. */
+    fun startRoom(id: AnilistId, episode: String) {
+        send(Command.Room(app.kaeri.engine.model.RoomCommand.Lobby(null, null, app.kaeri.engine.model.RoomEpisode(id, episode), false)))
     }
 
     /** A party link the app was opened with: its lobby comes up; false when [link] is not one. */

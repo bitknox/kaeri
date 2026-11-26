@@ -1,159 +1,201 @@
-// The room's words, as the approved board writes them (design/room board v5, Strings). The
-// English sits in RoomCopy until feat/room-engine adds the room's catalogue to i18n/; then each
-// RoomCopy entry becomes its Strings call and the i18n-skip marks go. Nothing here is a source
-// name or a host.
+// The room's words, as the approved board writes them (design/room board v5), from the room's
+// catalogue, and how each face reads.
 
 package app.kaeri.store.room
+
+import android.content.Context
+import app.kaeri.engine.model.MemberState
+import app.kaeri.engine.model.PausedFor
+import app.kaeri.engine.model.Reaction
+import app.kaeri.engine.model.RoomChatBody
+import app.kaeri.engine.model.RoomChatLine
+import app.kaeri.engine.model.RoomConnection
+import app.kaeri.engine.model.RoomMember
+import app.kaeri.engine.model.RoomView
+import app.kaeri.engine.model.WaitReason
+import app.kaeri.i18n.Strings
+
+/** Carry on comes forward when the room has waited this long. */
+const val CARRY_ON_AFTER_S = 20
+
+/** Rooms work best with this many people or fewer: past it, Join asks first. */
+const val ROOM_SOFT_CAP = 10
 
 /** A line of the room: the bold words and the haze words under them. */
 data class RoomLine(val title: String, val detail: String)
 
-/** The board's English for the room, one place to swap for the catalogue. */
-object RoomCopy {
-    const val WATCH_TOGETHER = "Watch together" // i18n-skip
-    const val NOT_STARTED = "Not started yet" // i18n-skip
-    const val PLAY_STARTS_IT = "Play starts it for everyone" // i18n-skip
-    const val EVERYONE_READY = "Everyone is ready" // i18n-skip
-    const val WAITED_20 = "The room has waited 20 s" // i18n-skip
-    const val RECONNECTING_TITLE = "Reconnecting to the room" // i18n-skip
-    const val RECONNECTING_DETAIL = "No relay is answering · your episode keeps playing" // i18n-skip
-    const val PAUSED_FOR_YOU = "Paused for you" // i18n-skip
-    const val YOU_PAUSED = "You paused" // i18n-skip
-    const val YOU = "You" // i18n-skip
-    const val MORE = "More" // i18n-skip
-    const val ALL_WATCHING = "All watching" // i18n-skip
-    const val PLAY_FOR_EVERYONE = "Play for everyone" // i18n-skip
-    const val WAITING_FIRST_FRAMES = "Waiting for first frames" // i18n-skip
-    const val DONT_WAIT = "Don't wait for me" // i18n-skip
-    const val CARRY_ON_THEM = "Carry on without them" // i18n-skip
-    const val START_THEM = "Start without them" // i18n-skip
-    const val JOIN = "Join the room" // i18n-skip
-    const val JOIN_ANYWAY = "Join anyway" // i18n-skip
-    const val NOT_NOW = "Not now" // i18n-skip
-    const val CHAT_OPENS = "The chat opens when you join" // i18n-skip
-    const val SAY_SOMETHING = "Say something" // i18n-skip
-    const val REACT = "React" // i18n-skip
-    const val INVITE = "Invite" // i18n-skip
-    const val INVITE_BODY = "Anyone with this link can join. The link carries the room's key, so only people who have it can read the room." // i18n-skip
-    const val INVITE_SCAN = "Someone beside you can scan this with their camera." // i18n-skip
-    const val COPY_LINK = "Copy link" // i18n-skip
-    const val SHARE = "Share…" // i18n-skip
-    const val NEW_INVITE = "New invite" // i18n-skip
-    const val NEW_INVITE_NOTE = "Stops the old link" // i18n-skip
-    const val NEW_INVITE_BODY = "New invite stops the old link working. Everyone in the room moves to the new one." // i18n-skip
-    const val DETAILS = "Details" // i18n-skip
-    const val ENCRYPTION = "Encryption" // i18n-skip
-    const val END_TO_END = "End to end" // i18n-skip
-    const val RELAYS = "Relays" // i18n-skip
-    const val NOT_ANSWERING = "Not answering" // i18n-skip
-    const val RELAYS_ABOUT = "Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare." // i18n-skip
-    const val EDIT_RELAYS_MORE = "Edit relays…" // i18n-skip
-    const val EDIT_RELAYS = "Edit relays" // i18n-skip
-    const val EDIT_RELAYS_BODY = "Changes this room's relays for everyone in it. New invites carry the list." // i18n-skip
-    const val RELAY_FIELD = "wss://" // i18n-skip
-    const val ADD = "Add" // i18n-skip
-    const val RELAYS_SETTINGS = "Settings ▸ Playback ▸ Relays sets the list for new rooms." // i18n-skip
-    const val DONE = "Done" // i18n-skip
-    const val MOVE_MORE = "Move to a new room…" // i18n-skip
-    const val MOVE = "Move to a new room" // i18n-skip
-    const val MOVE_BODY = "Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room." // i18n-skip
-    const val ALWAYS_GOES = "Always goes" // i18n-skip
-    const val MUTED_UNTICKED = "Muted, so not ticked" // i18n-skip
-    const val GO_ALONG = "Go along" // i18n-skip
-    const val STAY_HERE = "Stay here" // i18n-skip
-    const val CANCEL = "Cancel" // i18n-skip
-    const val LEAVE = "Leave" // i18n-skip
-    const val LEAVE_MORE = "Leave the room…" // i18n-skip
-    const val LEAVE_TITLE = "Leave the room?" // i18n-skip
-    const val LEAVE_BODY = "The others keep watching." // i18n-skip
-    const val KEEP_WATCHING = "Keep watching" // i18n-skip
-    const val COPY_INVITE = "Copy invite link" // i18n-skip
-    const val SUBTITLES_AUDIO = "Subtitles and audio" // i18n-skip
-    const val EPISODES = "Episodes" // i18n-skip
-    const val CLOSE_TO_BAR = "Close the room to the bar" // i18n-skip
-    const val FULL_SCREEN = "Full screen" // i18n-skip
-    const val PLAY_IN_ROOM = "Play in the room" // i18n-skip
-    const val CHOOSE_BODY = "The room keeps watching; you join at its place." // i18n-skip
-    const val OPEN_SOURCES = "Open sources" // i18n-skip
-    const val SEARCH_TITLES = "Search titles" // i18n-skip
-    const val STAY_IN_ROOM = "You stay in the room and the chat." // i18n-skip
-    const val WRITE_ON_PHONE = "Write from your phone" // i18n-skip
-    const val TV_HINT = "OK for the controls · Back closes the room" // i18n-skip
-    const val UNREACHABLE_TITLE = "Couldn't reach this room's relays" // i18n-skip
-    const val UNREACHABLE_BODY = "Ask for a new invite." // i18n-skip
-    const val QUIET_TITLE = "Nobody answered in this room" // i18n-skip
-    const val QUIET_BODY = "If someone made a new invite, the old one stopped working. Ask them for the new link." // i18n-skip
-    const val OLD_INVITE = "This invite is from an older version of Kaeri. Ask for a new one." // i18n-skip
-    const val TRY_AGAIN = "Try again" // i18n-skip
-    const val CLOSE = "Close" // i18n-skip
-    const val OVER_CAP = "people are here already · rooms work best with 10 or fewer" // i18n-skip
+/** The room's words from the catalogue (i18n/en/ui-room.ftl), read through [context]. */
+class RoomCopy(private val context: Context) {
+    private val x get() = context
+    private fun ep(e: String?) = e?.toIntOrNull() ?: 0
+    val WATCH_TOGETHER get() = Strings.roomLineWatching(x)
+    val NOT_STARTED get() = Strings.roomLineNotStarted(x)
+    val PLAY_STARTS_IT get() = Strings.roomLinePlayStarts(x)
+    val EVERYONE_READY get() = Strings.roomLineEveryoneReady(x)
+    val RECONNECTING_TITLE get() = Strings.roomLineReconnecting(x)
+    val RECONNECTING_DETAIL get() = Strings.roomLineReconnectingDetail(x)
+    val PAUSED_FOR_YOU get() = Strings.roomLinePausedForYou(x)
+    val YOU_PAUSED get() = Strings.roomLineYouPaused(x)
+    val YOU get() = Strings.roomYou(x)
+    val MORE get() = Strings.roomMore(x)
+    val MORE_ACTIONS get() = Strings.roomMoreActions(x)
+    val ALL_WATCHING get() = Strings.roomMoreAllWatching(x)
+    val PLAY_FOR_EVERYONE get() = Strings.roomPlayForEveryone(x)
+    val WAITING_FIRST_FRAMES get() = Strings.roomWaitingFirstFramesShort(x)
+    val DONT_WAIT get() = Strings.roomDontWait(x)
+    val CARRY_ON_THEM get() = Strings.roomCarryOnWithoutThem(x)
+    val START_THEM get() = Strings.roomStartWithoutThem(x)
+    val JOIN get() = Strings.roomJoin(x)
+    val JOIN_ANYWAY get() = Strings.roomJoinAnyway(x)
+    val NOT_NOW get() = Strings.actionNotNow(x)
+    val CHAT_OPENS get() = Strings.roomChatOpens(x)
+    val SAY_SOMETHING get() = Strings.roomChatField(x)
+    val SEND get() = Strings.roomChatSend(x)
+    val REACT get() = Strings.roomReact(x)
+    val INVITE get() = Strings.roomInvite(x)
+    val INVITE_BODY get() = Strings.roomInviteAnyone(x) + " " + Strings.roomInviteKey(x)
+    val INVITE_SCAN get() = Strings.roomInviteQrLine(x)
+    val COPY_LINK get() = Strings.roomCopyLink(x)
+    val SHARE get() = Strings.roomShare(x)
+    val NEW_INVITE get() = Strings.roomNewInvite(x)
+    val NEW_INVITE_NOTE get() = Strings.roomNewInviteShort(x)
+    val NEW_INVITE_BODY get() = Strings.roomNewInviteLine(x)
+    val DETAILS get() = Strings.roomDetails(x)
+    val ENCRYPTION get() = Strings.roomDetailsEncryption(x)
+    val END_TO_END get() = Strings.roomDetailsEndToEnd(x)
+    val RELAYS get() = Strings.roomRelays(x)
+    val NOT_ANSWERING get() = Strings.roomRelayNotAnswering(x)
+    val RELAYS_ABOUT get() = Strings.roomDetailsRelaysLine(x)
+    val EDIT_RELAYS_MORE get() = Strings.roomEditRelays(x)
+    val EDIT_RELAYS get() = Strings.roomEditRelaysTitle(x)
+    val EDIT_RELAYS_BODY get() = Strings.roomEditRelaysLine(x)
+    val RELAY_FIELD = "wss://" // i18n-skip: a scheme, not words
+    val ADD get() = Strings.roomRelayAdd(x)
+    val RELAYS_SETTINGS get() = Strings.roomEditRelaysSettings(x)
+    val DONE get() = Strings.actionDone(x)
+    val MOVE_MORE get() = Strings.roomMoveOpen(x)
+    val MOVE get() = Strings.roomMoveTitle(x)
+    val MOVE_BODY get() = Strings.roomMoveBody(x)
+    val ALWAYS_GOES get() = Strings.roomMoveAlwaysGoes(x)
+    val MUTED_UNTICKED get() = Strings.roomMoveMuted(x)
+    val GO_ALONG get() = Strings.roomGoAlong(x)
+    val STAY_HERE get() = Strings.roomStay(x)
+    val CANCEL get() = Strings.actionCancel(x)
+    val LEAVE get() = Strings.actionLeave(x)
+    val LEAVE_MORE get() = Strings.roomLeaveMenu(x)
+    val LEAVE_TITLE get() = Strings.roomLeaveTitle(x)
+    val LEAVE_BODY get() = Strings.roomLeaveLine(x)
+    val KEEP_WATCHING get() = Strings.roomKeepWatching(x)
+    val COPY_INVITE get() = Strings.roomCopyInviteLink(x)
+    val SUBTITLES_AUDIO get() = Strings.playerSubtitlesAndAudio(x)
+    val EPISODES get() = Strings.playerEpisodes(x)
+    val CLOSE_TO_BAR get() = Strings.roomFold(x)
+    val PLAY_IN_ROOM get() = Strings.roomPlayInRoom(x)
+    val CHOOSE_BODY get() = Strings.roomChooseSourceLine(x)
+    val OPEN_SOURCES get() = Strings.roomOpenSources(x)
+    val SEARCH_TITLES get() = Strings.roomSearchTitles(x)
+    val STAY_IN_ROOM get() = Strings.roomNoSourceLineShort(x)
+    val WRITE_ON_PHONE get() = Strings.roomTvWriteFromPhone(x)
+    val TV_HINT get() = Strings.roomTvKeys(x)
+    val UNREACHABLE_TITLE get() = Strings.roomErrorUnreachableTitle(x)
+    val UNREACHABLE_BODY get() = Strings.roomErrorAskNewInvite(x)
+    val QUIET_TITLE get() = Strings.roomErrorNobodyAnswered(x)
+    val QUIET_BODY get() = Strings.roomErrorNobodyAnsweredLine(x)
+    val FULL get() = Strings.roomErrorFull(x)
+    val OLD_INVITE get() = Strings.roomErrorOldInvite(x)
+    val TRY_AGAIN get() = Strings.actionTryAgain(x)
+    val CLOSE get() = Strings.actionClose(x)
+    val UP_NEXT get() = Strings.roomUpNext(x)
+    val PLAY_NEXT_NOW get() = Strings.roomPlayNextNow(x)
+    val UP_IN_ROOM get() = Strings.roomUpInRoom(x)
+    val ROOM_IS_WATCHING get() = Strings.roomRoomIsWatching(x)
 
-    fun names(n: List<String>): String = when (n.size) {
-        0 -> ""
-        1 -> n[0]
-        2 -> "${n[0]} and ${n[1]}" // i18n-skip
-        else -> "${n.size} people" // i18n-skip
-    }
+    /** "Ren", "Ren and Mika", "Ada, Ren and Mika". */
     fun list(n: List<String>): String = when (n.size) {
         0 -> ""
         1 -> n[0]
-        else -> n.dropLast(1).joinToString(", ") + " and " + n.last() // i18n-skip
+        else -> Strings.roomNamesAnd(x, n.dropLast(1).reduce { a, b -> Strings.roomNamesComma(x, a, b) }, n.last())
     }
-    fun seconds(s: Int) = "$s s" // i18n-skip
-    fun episodeAt(episode: String, at: String) = "Episode $episode · $at" // i18n-skip
-    fun inTheRoom(episode: String, n: Int) = "Episode $episode · $n in the room" // i18n-skip
-    fun pausedBy(name: String) = "$name paused" // i18n-skip
-    fun at(time: String) = "at $time" // i18n-skip
-    fun pausedFor(names: String) = "Paused for $names" // i18n-skip
-    fun stillLoading(names: String, many: Boolean) = if (many) "$names are still loading" else "$names is still loading" // i18n-skip
-    fun startingWhen(names: String, many: Boolean) = if (many) "Starting when $names are ready" else "Starting when $names is ready" // i18n-skip
-    fun startingIn(n: Int) = "Starting in $n" // i18n-skip
-    fun reasonFor(reason: WaitReason, s: Int) = (if (reason == WaitReason.Buffering) "Buffering" else "Loading") + " · " + seconds(s) // i18n-skip
-    fun othersWaiting(names: String, s: Int) = "$names are waiting · ${seconds(s)}" // i18n-skip
-    fun carriedOn(by: String, names: String, many: Boolean) = "$by carried on · " + (if (many) "they join" else "$names joins") + " when ready" // i18n-skip
-    fun behindYou(s: Int) = "You're $s s behind · catching up" // i18n-skip
-    fun relaysDown(down: Int, of: Int) = "$down of $of relays isn't answering · the room carries on" // i18n-skip
-    fun upNextIn(s: Int) = "Up next in $s s" // i18n-skip
-    fun upNextFor(episode: String) = "Episode $episode plays for everyone" // i18n-skip
-    fun invited(by: String) = "$by invited you" // i18n-skip
-    fun overCap(n: Int) = "$n $OVER_CAP" // i18n-skip
-    fun titleEpisode(title: String, episode: String) = "$title · Episode $episode" // i18n-skip
-    fun carryOn(name: String) = "Carry on without $name" // i18n-skip
-    fun startWithout(name: String) = "Start without $name" // i18n-skip
-    fun relaysAnswering(up: Int, of: Int) = if (up == of) "$up answering" else "$up of $of answering" // i18n-skip
-    fun ms(ms: Int) = "$ms ms" // i18n-skip
-    fun movedTheRoom(by: String) = "$by moved the room" // i18n-skip
+    /** Up to two names, then "3 people". */
+    fun names(n: List<String>): String = if (n.size <= 2) list(n) else Strings.roomNamesPeople(x, n.size)
+    fun episodeAt(episode: String, at: String) = Strings.roomLineWatchingDetail(x, ep(episode), at)
+    fun inTheRoom(episode: String, n: Int) = Strings.roomHeaderLine(x, ep(episode), n)
+    fun pausedBy(name: String) = Strings.roomLinePausedBy(x, name)
+    fun at(time: String) = Strings.roomLinePausedAt(x, time)
+    fun pausedFor(names: String) = Strings.roomLinePausedFor(x, names)
+    fun stillLoading(names: String, count: Int) = Strings.roomLineStillLoading(x, names, count)
+    fun startingWhen(names: String, count: Int) = Strings.roomLineStartingWhen(x, names, count)
+    fun startingIn(n: Int) = Strings.roomLineStartingIn(x, n)
+    fun waited(s: Int) = Strings.roomLineWaited(x, s)
+    fun reasonFor(reason: WaitReason, s: Int) = if (reason == WaitReason.BUFFERING) Strings.roomStateBuffering(x, s) else Strings.roomStateLoading(x, s)
+    fun othersWaiting(names: String, count: Int, s: Int) = Strings.roomLineWaitingForYou(x, names, count, s)
+    fun carriedOn(by: String, past: List<String>) = if (past.size == 1) Strings.roomLineCarriedOnOne(x, by, past[0]) else Strings.roomLineCarriedOnMany(x, by)
+    fun behindYou(s: Int) = Strings.roomLineYouBehind(x, s)
+    fun relaysDown(down: Int, of: Int) = Strings.roomLineRelaysDown(x, down, of)
+    fun upNextIn(s: Int) = Strings.roomLineUpNext(x, s)
+    fun upNextFor(episode: String) = Strings.roomLineUpNextDetail(x, ep(episode))
+    fun upNextCount(s: Int) = Strings.roomUpNextCount(x, s)
+    fun upNextEpisode(episode: String, title: String?) = if (title.isNullOrEmpty()) Strings.roomUpNextEpisodePlain(x, ep(episode)) else Strings.roomUpNextEpisode(x, ep(episode), title)
+    fun upNextWaiting(name: String) = Strings.roomUpNextWaiting(x, name)
+    fun invited(by: String) = Strings.roomInvitedBy(x, by)
+    fun overCap(n: Int) = Strings.roomInvitedOver(x, n)
+    fun titleEpisode(title: String, episode: String) = Strings.roomInvitedDetail(x, title, ep(episode))
+    fun carryOn(name: String) = Strings.roomCarryOnWithout(x, name)
+    fun startWithout(name: String) = Strings.roomStartWithout(x, name)
+    fun relaysAnswering(up: Int, of: Int) = if (up == of) Strings.roomRelaysAnswering(x, up) else Strings.roomRelaysAnsweringOf(x, up, of)
+    fun ms(ms: Int) = Strings.roomRelayLatency(x, ms)
+    fun relayRemove(relay: String) = Strings.roomRelayRemove(x, relay)
+    fun movedTheRoom(by: String) = Strings.roomLineMoved(x, by)
     fun goAlong(others: List<String>, at: String) =
-        "Go along? " + (if (others.isEmpty()) "" else "${list(others)} ${if (others.size == 1) "is" else "are"} asked too. ") + "The episode carries on from $at." // i18n-skip
-    fun movedAway(by: String) = "$by moved to a new room" // i18n-skip
-    fun wentAlong(names: List<String>) = "${list(names)} went along · this room carries on" // i18n-skip
-    fun moveWith(n: Int) = if (n == 1) "Move with 1 other" else "Move with $n others" // i18n-skip
-    fun moveFoot(at: String) = "The new room picks up at $at with a new key. Its link reaches only the people ticked." // i18n-skip
-    fun chooseFor(episode: String) = "Choose a source for episode $episode" // i18n-skip
-    fun noneHas(episode: String) = "None of your sources has episode $episode" // i18n-skip
-    fun pausedUntil(s: Int) = "The room is paused until this starts · ${seconds(s)}" // i18n-skip
-    fun notWatching(n: Int) = "$n not watching" // i18n-skip
-    fun plus(n: Int) = "+$n" // i18n-skip
-    fun upNextCard() = "Up next for the room" // i18n-skip
-    fun playsIn(s: Int) = "Plays for everyone in $s s" // i18n-skip
+        if (others.isEmpty()) Strings.roomLineMovedDetailAlone(x, at) else Strings.roomLineMovedDetail(x, list(others), others.size, at)
+    fun movedAway(by: String) = Strings.roomLineMovedAway(x, by)
+    fun wentAlong(names: List<String>) = Strings.roomLineWentAlong(x, list(names))
+    fun moveWith(n: Int) = Strings.roomMoveWith(x, n)
+    fun moveFoot(at: String) = Strings.roomMoveFoot(x, at)
+    fun chooseFor(episode: String) = Strings.roomChooseSource(x, ep(episode))
+    fun noneHas(episode: String) = Strings.roomNoSourceTitle(x, ep(episode))
+    fun pausedUntil(s: Int) = Strings.roomPausedUntilStart(x, s)
+    fun notWatching(n: Int) = Strings.roomMoreNotWatching(x, n)
+    fun plus(n: Int) = Strings.roomMoreFaces(x, n)
+    fun plusLabel(n: Int) = Strings.roomMoreFacesLabel(x, n)
+    fun withSeconds(line: String, s: Int) = Strings.roomLineWithSeconds(x, line, s)
 
     // Words on a face.
-    const val WATCHING = "Watching" // i18n-skip
-    const val READY = "Ready" // i18n-skip
-    const val PAUSED_IT = "Paused it" // i18n-skip
-    const val PAUSED = "Paused" // i18n-skip
-    const val BEHIND = "Behind" // i18n-skip
-    const val LOADING = "Loading" // i18n-skip
-    const val BUFFERING = "Buffering" // i18n-skip
-    const val CHOOSING = "Choosing a source" // i18n-skip
-    const val PLAYER_CLOSED = "Player closed" // i18n-skip
-    const val RECONNECTING = "Reconnecting" // i18n-skip
-    const val LEFT = "Left" // i18n-skip
-    const val MUTED = "Muted" // i18n-skip
-    fun onEpisode(e: String) = "On episode $e" // i18n-skip
-    fun noSourceFor(e: String) = "No source for episode $e" // i18n-skip
-    fun withSeconds(word: String, s: Int) = "$word · ${seconds(s)}" // i18n-skip
-    fun spoken(name: String, word: String) = "$name, $word" // i18n-skip
+    val WATCHING get() = Strings.roomStateWatching(x)
+    val READY get() = Strings.roomStateReady(x)
+    val PAUSED_IT get() = Strings.roomStatePausedIt(x)
+    val PAUSED get() = Strings.roomStatePaused(x)
+    val CHOOSING get() = Strings.roomStateChoosing(x)
+    val PLAYER_CLOSED get() = Strings.roomStatePlayerClosed(x)
+    val RECONNECTING get() = Strings.roomStateReconnecting(x)
+    val LEFT get() = Strings.roomStateLeft(x)
+    fun behind(s: Int) = Strings.roomStateBehind(x, s)
+    fun loading(s: Int) = Strings.roomStateLoading(x, s)
+    fun buffering(s: Int) = Strings.roomStateBuffering(x, s)
+    fun onEpisode(e: String) = Strings.roomStateOtherEpisode(x, ep(e))
+    fun noSourceFor(e: String) = Strings.roomStateNoSource(x, ep(e))
+    fun muted(word: String) = Strings.roomStateAndMuted(x, word)
+    fun spoken(name: String, word: String) = Strings.roomFaceLabel(x, name, word)
+
+    val NOT_SENT get() = Strings.roomChatNotSent(x)
+
+    /** "Ren laughed at 12:04", or "Ren and Mika laughed at 12:04". */
+    fun reacted(reaction: Reaction, names: String, at: String) = when (reaction) {
+        Reaction.LAUGH -> Strings.roomReactedLaugh(x, names, at)
+        Reaction.GASP -> Strings.roomReactedGasp(x, names, at)
+        Reaction.CLAP -> Strings.roomReactedClap(x, names, at)
+        Reaction.CRY -> Strings.roomReactedCry(x, names, at)
+    }
+
+    /** A chat line's name: "You" for this device's own. */
+    fun chatName(line: RoomChatLine) = if (line.you) YOU else line.from
+
+    /** A reaction or the room's own words, as one haze sentence; null for a typed line. */
+    fun chatSentence(line: RoomChatLine): String? = when (val body = line.body) {
+        is RoomChatBody.Said -> null
+        is RoomChatBody.Reacted -> reacted(body.reaction, list(listOf(chatName(line)) + body.with), RoomWords.clock(body.at))
+        is RoomChatBody.Room -> body.message.text
+    }
 }
 
 /** The ring a face wears: with the room, the room waits for them, or not with the room. */
@@ -171,100 +213,107 @@ object RoomWords {
 
     private fun secs(sinceMs: Long?, nowMs: Long): Int = if (sinceMs == null) 0 else ((nowMs - sinceMs) / 1000).toInt().coerceAtLeast(0)
 
-    /** A wait the line shows: past its first second, so a fast seek never flashes it. */
-    fun shownWaits(view: RoomView, nowMs: Long): List<PausedFor> = view.waiting.filter { nowMs - it.sinceMs >= 1000 }
+    /** The room's place now: its position, run on from when it was read while it plays. */
+    fun position(view: RoomView, nowMs: Long): Double {
+        val at = view.position ?: return 0.0
+        return if (view.playing && view.waiting.isEmpty() && view.positionAtMs > 0) at + (nowMs - view.positionAtMs).coerceAtLeast(0) / 1000.0 else at
+    }
+
+    /** A wait the line shows: from the engine's wait_shown_at, or past its first second. */
+    fun shownWaits(view: RoomView, nowMs: Long): List<PausedFor> {
+        val shown = view.waitShownAtMs
+        return if (shown != null) (if (nowMs >= shown) view.waiting else emptyList()) else view.waiting.filter { nowMs - it.sinceMs >= 1000 }
+    }
 
     /** The oldest wait's seconds. */
     fun waitSeconds(view: RoomView, nowMs: Long): Int = view.waiting.minOfOrNull { it.sinceMs }?.let { secs(it, nowMs) } ?: 0
 
-    /**
-     * The room's line: what is happening, in words. [positionS] is the room's place, [you] this
-     * device's member, [carried] who carried on past whom while they still load.
-     */
-    fun line(view: RoomView, members: List<RoomMember>, nowMs: Long, positionS: Double, carried: Pair<String, List<String>>? = null): RoomLine {
-        val c = RoomCopy
-        val you = members.firstOrNull { it.you }
+    /** Whether Carry on shows: the engine says so, or the wait is past 20 s. */
+    fun carryShown(view: RoomView, nowMs: Long): Boolean =
+        view.waiting.isNotEmpty() && (view.canCarryOn || view.carryOnAtMs?.let { nowMs >= it } == true || waitSeconds(view, nowMs) >= CARRY_ON_AFTER_S)
+
+    /** The room's line: what is happening, in words. [positionS] is the room's place. */
+    fun line(c: RoomCopy, view: RoomView, members: List<RoomMember>, nowMs: Long, positionS: Double): RoomLine {
         val waits = shownWaits(view, nowMs)
         val names = waits.map { it.name }
-        val many = names.size > 1
         val s = waitSeconds(view, nowMs)
         val ep = view.episode?.episode ?: ""
         val up = view.relays.count { it.healthy }
+        val you = members.firstOrNull { it.you }
         if (view.connection is RoomConnection.Reconnecting) return RoomLine(c.RECONNECTING_TITLE, c.RECONNECTING_DETAIL)
-        if (you != null && waits.any { it.name == you.name }) {
-            val others = members.filter { !it.you && it.state != MemberState.Left }.map { it.name }
-            return RoomLine(c.PAUSED_FOR_YOU, c.othersWaiting(c.list(others), s))
+        if (waits.any { it.you }) {
+            val others = members.filter { !it.you && it.state != MemberState.LEFT }.map { it.name }
+            return RoomLine(c.PAUSED_FOR_YOU, c.othersWaiting(c.names(others), others.size, s))
         }
         if (view.beforePlay) {
-            if (view.startingIn != null) return RoomLine(c.startingIn(view.startingIn), c.EVERYONE_READY)
-            if (waits.isNotEmpty() && s >= CARRY_ON_AFTER_S) return RoomLine(c.stillLoading(c.names(names), many), c.WAITED_20)
-            if (waits.isNotEmpty()) return RoomLine(c.startingWhen(c.names(names), many), c.reasonFor(WaitReason.Loading, s))
+            view.startsAtMs?.let { at -> return RoomLine(c.startingIn(((at - nowMs + 999) / 1000).toInt().coerceAtLeast(0)), c.EVERYONE_READY) }
+            if (waits.isNotEmpty() && carryShown(view, nowMs)) return RoomLine(c.stillLoading(c.names(names), names.size), c.waited(s))
+            if (waits.isNotEmpty()) return RoomLine(c.startingWhen(c.names(names), names.size), c.reasonFor(WaitReason.LOADING, s))
             return RoomLine(c.NOT_STARTED, c.PLAY_STARTS_IT)
         }
-        view.upNext?.endsAtMs?.takeIf { view.upNext.cancelledBy == null }?.let { ends ->
-            return RoomLine(c.upNextIn(((ends - nowMs + 999) / 1000).toInt().coerceAtLeast(0)), c.upNextFor(view.upNext.episode))
+        view.upNext?.takeIf { it.cancelledBy == null }?.endsAtMs?.let { ends ->
+            return RoomLine(c.upNextIn(((ends - nowMs + 999) / 1000).toInt().coerceAtLeast(0)), c.upNextFor(view.upNext!!.episode.episode))
         }
-        if (waits.isNotEmpty() && s >= CARRY_ON_AFTER_S) return RoomLine(c.stillLoading(c.names(names), many), c.WAITED_20)
+        if (waits.isNotEmpty() && carryShown(view, nowMs)) return RoomLine(c.stillLoading(c.names(names), names.size), c.waited(s))
         if (waits.isNotEmpty()) return RoomLine(c.pausedFor(c.names(names)), c.reasonFor(waits.first().reason, s))
-        if (carried != null && carried.second.isNotEmpty()) {
-            return RoomLine(c.WATCH_TOGETHER, c.carriedOn(carried.first, c.names(carried.second), carried.second.size > 1))
-        }
+        view.carriedOn?.takeIf { it.past.isNotEmpty() }?.let { return RoomLine(c.WATCH_TOGETHER, c.carriedOn(if (it.byYou) c.YOU else it.by, it.past)) }
+        view.moved?.let { return RoomLine(c.movedAway(it.by), if (it.went.isEmpty()) c.episodeAt(ep, clock(positionS)) else c.wentAlong(it.went)) }
         if (view.relays.isNotEmpty() && up < view.relays.size) return RoomLine(c.WATCH_TOGETHER, c.relaysDown(view.relays.size - up, view.relays.size))
-        if (you?.state == MemberState.Behind && you.behindS != null) return RoomLine(c.WATCH_TOGETHER, c.behindYou(you.behindS.toInt()))
-        if (!view.playing && view.pausedBy != null) {
-            val by = if (view.pausedBy == you?.name) c.YOU_PAUSED else c.pausedBy(view.pausedBy)
+        if (you?.state == MemberState.BEHIND && you.behindS != null) return RoomLine(c.WATCH_TOGETHER, c.behindYou(you.behindS!!.toInt()))
+        if (!view.playing && (view.pausedBy != null || view.pausedByYou)) {
+            val by = if (view.pausedByYou) c.YOU_PAUSED else c.pausedBy(view.pausedBy!!)
             return RoomLine(by, c.at(clock(positionS)))
         }
         return RoomLine(c.WATCH_TOGETHER, c.episodeAt(ep, clock(positionS)))
     }
 
     /** The button the wait brings forward at 20 s: "Carry on without Ren", or "Start without Ren" before play. */
-    fun carryLabel(view: RoomView, nowMs: Long): String? {
-        if (!view.canCarryOn && waitSeconds(view, nowMs) < CARRY_ON_AFTER_S) return null
-        val names = view.waiting.map { it.name }
+    fun carryLabel(c: RoomCopy, view: RoomView, nowMs: Long): String? {
+        if (!carryShown(view, nowMs)) return null
+        val names = view.waiting.filterNot { it.you }.map { it.name }
         if (names.isEmpty()) return null
         val many = names.size > 1
-        return if (view.beforePlay) (if (many) RoomCopy.START_THEM else RoomCopy.startWithout(names[0]))
-        else (if (many) RoomCopy.CARRY_ON_THEM else RoomCopy.carryOn(names[0]))
+        return if (view.beforePlay) (if (many) c.START_THEM else c.startWithout(names[0]))
+        else (if (many) c.CARRY_ON_THEM else c.carryOn(names[0]))
     }
 
     /** Whether the room waits for [member] now. */
-    fun waitedFor(view: RoomView, member: RoomMember): Boolean = view.waiting.any { it.name == member.name }
+    fun waitedFor(view: RoomView, member: RoomMember): Boolean = view.waiting.any { it.id == member.id }
 
     /** The one word under a face, with its seconds where it counts them. */
-    fun word(view: RoomView, member: RoomMember, nowMs: Long): String {
-        val c = RoomCopy
+    fun word(c: RoomCopy, view: RoomView, member: RoomMember, nowMs: Long): String {
         val base = when (member.state) {
-            MemberState.Watching -> if (view.beforePlay) c.READY else c.WATCHING
-            MemberState.Paused -> if (member.pausedRoom) c.PAUSED_IT else c.PAUSED
-            MemberState.Behind -> c.withSeconds(c.BEHIND, (member.behindS ?: 0f).toInt())
-            MemberState.Loading -> c.withSeconds(c.LOADING, secs(member.sinceMs, nowMs))
-            MemberState.Buffering -> c.withSeconds(c.BUFFERING, secs(member.sinceMs, nowMs))
-            MemberState.OtherEpisode -> c.onEpisode(member.episode?.episode ?: "")
-            MemberState.Choosing -> c.CHOOSING
-            MemberState.NoSource -> c.noSourceFor(view.episode?.episode ?: "")
-            MemberState.PlayerClosed -> c.PLAYER_CLOSED
-            MemberState.Reconnecting -> c.RECONNECTING
-            MemberState.Left -> c.LEFT
+            MemberState.WATCHING -> if (view.beforePlay) c.READY else c.WATCHING
+            MemberState.READY -> c.READY
+            MemberState.PAUSED -> if (member.pausedRoom) c.PAUSED_IT else c.PAUSED
+            MemberState.BEHIND -> c.behind((member.behindS ?: 0f).toInt())
+            MemberState.LOADING -> c.loading(secs(member.sinceMs, nowMs))
+            MemberState.BUFFERING -> c.buffering(secs(member.sinceMs, nowMs))
+            MemberState.OTHER_EPISODE -> c.onEpisode(member.episode?.episode ?: "")
+            MemberState.CHOOSING -> c.CHOOSING
+            MemberState.NO_SOURCE -> c.noSourceFor(view.episode?.episode ?: "")
+            MemberState.PLAYER_CLOSED -> c.PLAYER_CLOSED
+            MemberState.RECONNECTING -> c.RECONNECTING
+            MemberState.LEFT -> c.LEFT
         }
-        return if (member.muted) "$base · ${c.MUTED}" else base // i18n-skip
+        return if (member.muted) c.muted(base) else base
     }
 
     /** How the face reads: the ring, the arc toward 20 s, how dim, the badge and the dot. */
     fun look(view: RoomView, member: RoomMember, nowMs: Long): FaceLook = when (member.state) {
-        MemberState.Watching -> FaceLook(Ring.Water)
-        MemberState.Behind -> FaceLook(Ring.Water)
-        MemberState.Paused -> FaceLook(Ring.Haze, badge = member.pausedRoom)
+        MemberState.WATCHING, MemberState.READY, MemberState.BEHIND -> FaceLook(Ring.Water)
+        MemberState.PAUSED -> FaceLook(Ring.Haze, badge = member.pausedRoom)
         // The arc fills toward the 20 s cap, a step a second.
-        MemberState.Loading, MemberState.Buffering ->
+        MemberState.LOADING, MemberState.BUFFERING ->
             FaceLook(Ring.Arc, arc = (secs(member.sinceMs, nowMs) / CARRY_ON_AFTER_S.toFloat()).coerceIn(0.04f, 1f))
-        MemberState.NoSource -> FaceLook(Ring.None, dim = 0.5f, error = true)
-        MemberState.Left -> FaceLook(Ring.None, dim = 0.35f)
+        MemberState.NO_SOURCE -> FaceLook(Ring.None, dim = 0.5f, error = true)
+        MemberState.LEFT -> FaceLook(Ring.None, dim = 0.35f)
         else -> FaceLook(Ring.None, dim = 0.5f)
     }
 
     /** Whether someone is not with the room: the strip stays while anyone is. */
-    fun notWatching(member: RoomMember): Boolean = member.state !in setOf(MemberState.Watching, MemberState.Paused, MemberState.Behind)
+    fun notWatching(member: RoomMember): Boolean =
+        member.state !in setOf(MemberState.WATCHING, MemberState.READY, MemberState.PAUSED, MemberState.BEHIND)
 
     /** Up to 4 faces in join order, this device's first; past 4, three and a +N. */
     fun capped(members: List<RoomMember>, max: Int = 4): Pair<List<RoomMember>, List<RoomMember>> {
@@ -273,14 +322,14 @@ object RoomWords {
     }
 
     /** The +N face's word: "All watching" or "2 not watching". */
-    fun moreWord(hidden: List<RoomMember>): String {
+    fun moreWord(c: RoomCopy, hidden: List<RoomMember>): String {
         val n = hidden.count { notWatching(it) }
-        return if (n == 0) RoomCopy.ALL_WATCHING else RoomCopy.notWatching(n)
+        return if (n == 0) c.ALL_WATCHING else c.notWatching(n)
     }
 
     /** The strip shows while anyone isn't watching, and for 8 s after any change. */
     const val STRIP_AFTER_CHANGE_MS = 8000L
 
     fun stripWanted(view: RoomView, members: List<RoomMember>): Boolean =
-        view.waiting.isNotEmpty() || members.any { notWatching(it) && it.state != MemberState.Left } || view.connection is RoomConnection.Reconnecting
+        view.waiting.isNotEmpty() || members.any { notWatching(it) && it.state != MemberState.LEFT } || view.connection is RoomConnection.Reconnecting
 }
