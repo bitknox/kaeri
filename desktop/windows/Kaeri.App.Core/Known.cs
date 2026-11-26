@@ -73,6 +73,13 @@ public sealed class Known
     /// <summary>Play the demo was pressed and the player has not opened yet: the starting screen is the demo's.</summary>
     public bool DemoPlay { get; set; }
 
+    /// <summary>
+    /// Where a play sent here should start, when the engine's own resume is not it: Play here from
+    /// a cast, at the TV's playhead. The player moves there at its first frame; any other play
+    /// staged first gives the place up.
+    /// </summary>
+    public StartAt? StartAt { get; set; }
+
     /// <summary>The last alert the engine raised, which a bug report can start from.</summary>
     public BugError? LastError { get; set; }
 
@@ -497,6 +504,9 @@ public sealed class Known
             case Event.CalendarWindow w:
                 CalendarAnchor = w.Anchor;
                 break;
+            case Event.PlaybackStaged staged when StartAt is { } at && !at.Is(staged.Id, staged.Episode):
+                StartAt = null;
+                break;
             case Event.Settings s:
                 Settings = s.V1;
                 break;
@@ -771,4 +781,13 @@ public sealed class Known
     /// <summary>A setting's row as it stands.</summary>
     public SettingRow? Setting(SettingKey key) =>
         Settings is { } view ? view.Rows.Concat(view.NativeRows).FirstOrDefault(r => r.Key == key) : null;
+}
+
+/// <summary>A play's own start: <paramref name="Position"/> seconds into <paramref name="Episode"/> of <paramref name="Id"/>.</summary>
+public sealed record StartAt(uint Id, string Episode, double Position)
+{
+    public bool Is(uint id, string episode) => Id == id && Episode == episode;
+
+    /// <summary>The place for Play here from a cast: the TV's playhead, when it was past the first 5 s.</summary>
+    public static StartAt? From(uint id, string episode, double? at) => at is { } s && s >= 5 ? new(id, episode, s) : null;
 }

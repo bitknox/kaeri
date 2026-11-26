@@ -82,7 +82,7 @@ public sealed partial class MainWindow
         castLayer = new CastLayer(ctx, tv, PaneGrid, new CastHost
         {
             OpenShow = OpenTitle,
-            PlayHere = play => ctx.Play(play.Id, play.Episode),
+            PlayHere = play => ctx.PlayAt(play.Id, play.Episode, play.From),
             ChooseSource = ChooseCastSource,
             // Over the mini while it shows; at the foot, over the remote, while that is open.
             MiniShown = shown => Toast.Margin = new Thickness(24, 0, 24, shown ? 92 : 16),
@@ -153,7 +153,7 @@ public sealed partial class MainWindow
             castLayer.Refresh();
             return;
         }
-        ShowToast(InfoBarSeverity.Informational, text, T.CastPlayHere, () => ctx.Play(play.Id, play.Episode), hold: NoticeTime.Timed(text, screenReader: false));
+        ShowToast(InfoBarSeverity.Informational, text, T.CastPlayHere, () => ctx.PlayAt(play.Id, play.Episode, play.From), hold: NoticeTime.Timed(text, screenReader: false));
         castEndToast = toastShown;
         castLayer?.Refresh();
     }
