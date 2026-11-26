@@ -6093,6 +6093,10 @@ object Strings {
     fun discussionSpoiler(context: Context): String =
         context.getString(R.string.discussion_spoiler)
 
+    /** Screen reader action on text with hidden spoilers: opens all of them at once. */
+    fun discussionShowSpoilers(context: Context): String =
+        context.getString(R.string.discussion_show_spoilers)
+
     /** Line in place of an image in a comment. It opens the image in the browser. */
     fun discussionImage(context: Context): String =
         context.getString(R.string.discussion_image)
@@ -14291,6 +14295,18 @@ object Strings {
     /** Secondary action under it. */
     fun storeTurnOnWatching(context: Context): String =
         context.getString(R.string.store_turn_on_watching)
+
+    /** Info title when every plugin in a store is for reading, and reading is off here. */
+    fun storeOtherMediumReading(context: Context, store: String): String =
+        context.getString(R.string.store_other_medium_reading, store)
+
+    /** Line under it. */
+    fun storeOtherMediumReadingLine(context: Context): String =
+        context.getString(R.string.store_other_medium_reading_line)
+
+    /** Secondary action under it. */
+    fun storeTurnOnReading(context: Context): String =
+        context.getString(R.string.store_turn_on_reading)
 
     /** Info title when a store has no plugins. */
     fun storeEmpty(context: Context, store: String): String =

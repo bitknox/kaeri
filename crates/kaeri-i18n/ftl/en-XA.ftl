@@ -6936,6 +6936,9 @@ discussion-more-replies =
 # Muted bar in place of a spoiler in a comment, until it is opened.
 discussion-spoiler = [Šþöîļéŕ~~~]
 
+# Screen reader action on text with hidden spoilers: opens all of them at once.
+discussion-show-spoilers = [Šĥöŵ šþöîļéŕš~~~~]
+
 # Line in place of an image in a comment. It opens the image in the browser.
 discussion-image = [Îɱàĝé~~]
 
@@ -13383,6 +13386,15 @@ store-other-medium-line = [Ŵàţçĥîñĝ îš öƒƒ öñ ţĥîš ðéṽî�
 
 # Secondary action under it.
 store-turn-on-watching = [Ţüŕñ öñ ŵàţçĥîñĝ~~~~~]
+
+# Info title when every plugin in a store is for reading, and reading is off here.
+store-other-medium-reading = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŕéàðîñĝ~~~~~~~~~~~]
+
+# Line under it.
+store-other-medium-reading-line = [Ŕéàðîñĝ îš öƒƒ öñ ţĥîš ðéṽîçé, šö ñöñé öƒ ţĥéɱ šĥöŵ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Secondary action under it.
+store-turn-on-reading = [Ţüŕñ öñ ŕéàðîñĝ~~~~~]
 
 # Info title when a store has no plugins.
 store-empty = [{ $store } ĥàš ñö þļüĝîñš ýéţ~~~~~~~]

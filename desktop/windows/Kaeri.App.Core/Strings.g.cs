@@ -3543,6 +3543,9 @@ public static partial class T
     /// <summary>Muted bar in place of a spoiler in a comment, until it is opened.</summary>
     public static string DiscussionSpoiler => Get("DiscussionSpoiler");
 
+    /// <summary>Screen reader action on text with hidden spoilers: opens all of them at once.</summary>
+    public static string DiscussionShowSpoilers => Get("DiscussionShowSpoilers");
+
     /// <summary>Line in place of an image in a comment. It opens the image in the browser.</summary>
     public static string DiscussionImage => Get("DiscussionImage");
 
@@ -9656,6 +9659,15 @@ public static partial class T
     /// <summary>Secondary action under it.</summary>
     public static string StoreTurnOnWatching => Get("StoreTurnOnWatching");
 
+    /// <summary>Info title when every plugin in a store is for reading, and reading is off here.</summary>
+    public static string StoreOtherMediumReading(string store) => Fill(Get("StoreOtherMediumReading"), ("store", store));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreOtherMediumReadingLine => Get("StoreOtherMediumReadingLine");
+
+    /// <summary>Secondary action under it.</summary>
+    public static string StoreTurnOnReading => Get("StoreTurnOnReading");
+
     /// <summary>Info title when a store has no plugins.</summary>
     public static string StoreEmpty(string store) => Fill(Get("StoreEmpty"), ("store", store));
 
@@ -13796,6 +13808,7 @@ public static partial class T
         ["DiscussionMoreReplies_one"] = "One more reply",
         ["DiscussionMoreReplies_other"] = "{count} more replies",
         ["DiscussionSpoiler"] = "Spoiler",
+        ["DiscussionShowSpoilers"] = "Show spoilers",
         ["DiscussionImage"] = "Image",
         ["DiscussionVideo"] = "Video",
         ["DiscussionAddComment"] = "Add a comment",
@@ -15925,6 +15938,9 @@ public static partial class T
         ["StoreOtherMedium"] = "Every plugin in {store} is for watching",
         ["StoreOtherMediumLine"] = "Watching is off on this device, so none of them show in Your sources.",
         ["StoreTurnOnWatching"] = "Turn on watching",
+        ["StoreOtherMediumReading"] = "Every plugin in {store} is for reading",
+        ["StoreOtherMediumReadingLine"] = "Reading is off on this device, so none of them show in Your sources.",
+        ["StoreTurnOnReading"] = "Turn on reading",
         ["StoreEmpty"] = "{store} has no plugins yet",
         ["StoreEmptyLine"] = "You're a member, so new plugins show in Plugin stores when {owner} adds them.",
         ["StoreErrUnreachable"] = "Couldn't reach {host}",

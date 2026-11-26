@@ -4977,6 +4977,10 @@
     <value>[Šþöîļéŕ~~~]</value>
     <comment>Muted bar in place of a spoiler in a comment, until it is opened.</comment>
   </data>
+  <data name="DiscussionShowSpoilers" xml:space="preserve">
+    <value>[Šĥöŵ šþöîļéŕš~~~~]</value>
+    <comment>Screen reader action on text with hidden spoilers: opens all of them at once.</comment>
+  </data>
   <data name="DiscussionImage" xml:space="preserve">
     <value>[Îɱàĝé~~]</value>
     <comment>Line in place of an image in a comment. It opens the image in the browser.</comment>
@@ -13466,6 +13470,18 @@
   </data>
   <data name="StoreTurnOnWatching" xml:space="preserve">
     <value>[Ţüŕñ öñ ŵàţçĥîñĝ~~~~~]</value>
+    <comment>Secondary action under it.</comment>
+  </data>
+  <data name="StoreOtherMediumReading" xml:space="preserve">
+    <value>[Éṽéŕý þļüĝîñ îñ {store} îš ƒöŕ ŕéàðîñĝ~~~~~~~~~~~]</value>
+    <comment>Info title when every plugin in a store is for reading, and reading is off here.</comment>
+  </data>
+  <data name="StoreOtherMediumReadingLine" xml:space="preserve">
+    <value>[Ŕéàðîñĝ îš öƒƒ öñ ţĥîš ðéṽîçé, šö ñöñé öƒ ţĥéɱ šĥöŵ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="StoreTurnOnReading" xml:space="preserve">
+    <value>[Ţüŕñ öñ ŕéàðîñĝ~~~~~]</value>
     <comment>Secondary action under it.</comment>
   </data>
   <data name="StoreEmpty" xml:space="preserve">

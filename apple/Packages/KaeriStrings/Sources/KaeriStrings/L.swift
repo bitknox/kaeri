@@ -5576,6 +5576,9 @@ public enum L {
     /// Muted bar in place of a spoiler in a comment, until it is opened.
     public static var discussionSpoiler: String { string("discussion-spoiler", fallback: "Spoiler") }
 
+    /// Screen reader action on text with hidden spoilers: opens all of them at once.
+    public static var discussionShowSpoilers: String { string("discussion-show-spoilers", fallback: "Show spoilers") }
+
     /// Line in place of an image in a comment. It opens the image in the browser.
     public static var discussionImage: String { string("discussion-image", fallback: "Image") }
 
@@ -12809,6 +12812,17 @@ public enum L {
 
     /// Secondary action under it.
     public static var storeTurnOnWatching: String { string("store-turn-on-watching", fallback: "Turn on watching") }
+
+    /// Info title when every plugin in a store is for reading, and reading is off here.
+    public static func storeOtherMediumReading(store: String) -> String {
+        Self.format("store-other-medium-reading", fallback: "Every plugin in %1$@ is for reading", store)
+    }
+
+    /// Line under it.
+    public static var storeOtherMediumReadingLine: String { string("store-other-medium-reading-line", fallback: "Reading is off on this device, so none of them show in Your sources.") }
+
+    /// Secondary action under it.
+    public static var storeTurnOnReading: String { string("store-turn-on-reading", fallback: "Turn on reading") }
 
     /// Info title when a store has no plugins.
     public static func storeEmpty(store: String) -> String {

@@ -4977,6 +4977,10 @@
     <value>Spoiler</value>
     <comment>Muted bar in place of a spoiler in a comment, until it is opened.</comment>
   </data>
+  <data name="DiscussionShowSpoilers" xml:space="preserve">
+    <value>Show spoilers</value>
+    <comment>Screen reader action on text with hidden spoilers: opens all of them at once.</comment>
+  </data>
   <data name="DiscussionImage" xml:space="preserve">
     <value>Image</value>
     <comment>Line in place of an image in a comment. It opens the image in the browser.</comment>
@@ -13466,6 +13470,18 @@
   </data>
   <data name="StoreTurnOnWatching" xml:space="preserve">
     <value>Turn on watching</value>
+    <comment>Secondary action under it.</comment>
+  </data>
+  <data name="StoreOtherMediumReading" xml:space="preserve">
+    <value>Every plugin in {store} is for reading</value>
+    <comment>Info title when every plugin in a store is for reading, and reading is off here.</comment>
+  </data>
+  <data name="StoreOtherMediumReadingLine" xml:space="preserve">
+    <value>Reading is off on this device, so none of them show in Your sources.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="StoreTurnOnReading" xml:space="preserve">
+    <value>Turn on reading</value>
     <comment>Secondary action under it.</comment>
   </data>
   <data name="StoreEmpty" xml:space="preserve">

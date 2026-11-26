@@ -11005,6 +11005,11 @@ pub fn discussion_spoiler() -> String {
     text("discussion-spoiler", &[])
 }
 
+/// Screen reader action on text with hidden spoilers: opens all of them at once.
+pub fn discussion_show_spoilers() -> String {
+    text("discussion-show-spoilers", &[])
+}
+
 /// Line in place of an image in a comment. It opens the image in the browser.
 pub fn discussion_image() -> String {
     text("discussion-image", &[])
@@ -21213,6 +21218,21 @@ pub fn store_other_medium_line() -> String {
 /// Secondary action under it.
 pub fn store_turn_on_watching() -> String {
     text("store-turn-on-watching", &[])
+}
+
+/// Info title when every plugin in a store is for reading, and reading is off here.
+pub fn store_other_medium_reading(store: &str) -> String {
+    text("store-other-medium-reading", &[("store", Arg::Text(store))])
+}
+
+/// Line under it.
+pub fn store_other_medium_reading_line() -> String {
+    text("store-other-medium-reading-line", &[])
+}
+
+/// Secondary action under it.
+pub fn store_turn_on_reading() -> String {
+    text("store-turn-on-reading", &[])
 }
 
 /// Info title when a store has no plugins.
