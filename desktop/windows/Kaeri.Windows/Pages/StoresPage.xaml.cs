@@ -288,14 +288,21 @@ public sealed partial class StoresPage : Page
         grid.Children.Add(text);
 
         var buttons = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, VerticalAlignment = VerticalAlignment.Center };
+        // Install and Update fetch from the store, so they are offered only while it answers;
+        // the banner above says why when it does not. Remove works whatever the store's state.
+        var ready = store.State is StoreState.Ready;
         switch (plugin.Status)
         {
-            case StorePluginStatus.Available:
+            case StorePluginStatus.Available when ready:
                 // Held with a ring until the install ends: the row then says it is installed.
                 buttons.Children.Add(JobButton.Make(ctx, plugin.Id, T.ActionInstall, () => Task.FromResult(ctx.Send(new Command.InstallPlugin(store.Id, plugin.Id)))));
                 break;
+            case StorePluginStatus.Available:
+                buttons.Children.Add(Ui.Text(store.State is StoreState.Revoked ? T.StoresPluginUnavailable : T.StoresPluginOffline, "HazeCaptionStyle", wrap: false));
+                break;
             case StorePluginStatus.Update:
-                buttons.Children.Add(JobButton.Make(ctx, plugin.Id, T.ActionUpdate, () => Update(store, plugin)));
+                if (ready)
+                    buttons.Children.Add(JobButton.Make(ctx, plugin.Id, T.ActionUpdate, () => Update(store, plugin)));
                 buttons.Children.Add(Ui.Label(T.ActionRemove, (_, _) => RemovePlugin(plugin)));
                 break;
             case StorePluginStatus.Installed or StorePluginStatus.AddedByHand:
