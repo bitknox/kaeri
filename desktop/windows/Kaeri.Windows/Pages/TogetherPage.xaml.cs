@@ -383,6 +383,11 @@ public sealed partial class TogetherPage : Page
         return at.ToString("M");
     }
 
+#if KAERI_TESTING
+    /// <summary>A shot's: the link pasted into Join a room, as if typed.</summary>
+    internal void ShotFill(string link) => join.Text = link;
+#endif
+
     static TextBlock Section(string text)
     {
         var block = Ui.Text(text, "BodyStrongTextBlockStyle");

@@ -879,7 +879,9 @@ public sealed partial class SettingsPage : Page
     /// </summary>
     void AddWatchTogether()
     {
-        Cards.Children.Add(Heading(T.RoomSettingsGroup));
+        var heading = Heading(T.RoomSettingsGroup);
+        watchTogetherCard = heading;
+        Cards.Children.Add(heading);
         Cards.Children.Add(Note(T.RoomSettingsGroupLine));
         Cards.Children.Add(HideChatCard());
         var count = new TextBlock { TextWrapping = TextWrapping.WrapWholeWords };
@@ -1160,6 +1162,7 @@ public sealed partial class SettingsPage : Page
     // The Chromecast switch under Play on TV, for the testing build to scroll to.
     FrameworkElement? castCard;
     FrameworkElement? findCard;
+    FrameworkElement? watchTogetherCard;
 
 #if KAERI_TESTING
     bool demoed;
@@ -1181,6 +1184,21 @@ public sealed partial class SettingsPage : Page
             demoed = true;
             await Task.Delay(800);
             cast.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.6, AnimationDesired = false });
+            return;
+        }
+        // --show=room-settings(-relays): Playback scrolled to Watch together, and its relays editor open.
+        if (!demoed && pane.Name == "playback" && ctx.Options.Show?.StartsWith("room-settings", StringComparison.Ordinal) == true && watchTogetherCard is { } together)
+        {
+            demoed = true;
+            await Task.Delay(800);
+            together.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.4, AnimationDesired = false });
+            if (ctx.Options.Show == "room-settings-relays")
+            {
+                for (var i = 0; i < 30 && ctx.Known.RoomRelays is null; i++)
+                    await Task.Delay(100);
+                if (ctx.Known.RoomRelays is { } relays && XamlRoot is { } root)
+                    _ = Kaeri.Windows.Player.RoomPopups.EditDefaultRelays(root, relays);
+            }
             return;
         }
         // --show=found-set-*: Playback scrolled to Find skip times, for a screenshot.

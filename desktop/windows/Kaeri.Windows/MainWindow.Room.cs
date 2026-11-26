@@ -165,6 +165,10 @@ public sealed partial class MainWindow
     /// <summary>The room as the engine last said it, into the player, when the player is up.</summary>
     internal void ShowRoomNow(bool morph = false)
     {
+#if KAERI_TESTING
+        if (holdRoom)
+            return;
+#endif
         var now = DateTimeOffset.UtcNow.ToUnixTimeMilliseconds();
         var known = ctx.Known;
         RoomScene? scene = known.Room is { } view ? new RoomScene(view, known.RoomMembers, now, Offer: known.RoomMoveOffer)
@@ -206,6 +210,9 @@ public sealed partial class MainWindow
 public sealed partial class MainWindow
 {
     FfiFakeRoom? fakeRoom;
+
+    /// <summary>A shot's: the room joined but not shown yet, for the morph to start on the second.</summary>
+    bool holdRoom;
 
     /// <summary>The board's frame names, by the engine's scenes.</summary>
     static FfiRoomScene SceneFor(string state) => state switch
@@ -265,14 +272,21 @@ public sealed partial class MainWindow
             state = state[..^3];
         }
         WireRoom();
+        // Settings' frames are the page's own (--page=settings --pane=playback).
+        if (state.StartsWith("room-settings", StringComparison.Ordinal))
+            return;
+        if (state.StartsWith("room-place", StringComparison.Ordinal))
+        {
+            await RehearsePlace(state);
+            return;
+        }
         await Task.Delay(1500);
         ctx.Play(900001, "9", fromStart: true);
         for (var i = 0; i < 100 && !Player.Playing; i++)
             await Task.Delay(200);
-        if (state is "room-morph" or "room-wait-story")
-            await AtUptime(14);
-        else
-            await Task.Delay(600);
+        await Task.Delay(600);
+        // The morph is staged held back, then shown at 14 s, so the frames land on it.
+        holdRoom = state == "room-morph";
         var scene = SceneFor(state);
         var fake = fakeRoom = ctx.Session.Engine.StartFakeRoom();
         if (scene is FfiRoomScene.Invited or FfiRoomScene.InvitedFull)
@@ -282,6 +296,13 @@ public sealed partial class MainWindow
         if (!staged)
             System.Diagnostics.Debug.WriteLine("room fixture: the device never got into the room");
         await Task.Delay(800);
+        if (state is "room-morph" or "room-wait-story")
+            await AtUptime(14);
+        if (holdRoom)
+        {
+            holdRoom = false;
+            ShowRoomNow(morph: true);
+        }
         switch (state)
         {
             case "room-full-wait" or "room-full-cap":
@@ -326,6 +347,42 @@ public sealed partial class MainWindow
         }
     }
 
+
+    /// <summary>
+    /// The place's frames (--page=together): <c>room-place</c> with a recent room,
+    /// <c>room-place-room</c> in a room with the player closed (Keep the room), and
+    /// <c>room-place-fail</c> a pasted link none of whose relays answer.
+    /// </summary>
+    async Task RehearsePlace(string state)
+    {
+        await Task.Delay(1500);
+        var fake = fakeRoom = ctx.Session.Engine.StartFakeRoom();
+        switch (state)
+        {
+            case "room-place-fail":
+                var link = fake.Invite("Mika");
+                RoomInvite = link;
+                (ContentFrame.Content as Pages.TogetherPage)?.ShotFill(link);
+                await Task.Run(() => fake.Stage(FfiRoomScene.Unreachable));
+                break;
+            case "room-place-room":
+                await Task.Run(() => fake.Stage(FfiRoomScene.Watching));
+                await Task.Delay(1500);
+                ctx.Send(new Command.Room(new RoomCommand.ClosePlayer()));
+                Player.Close();
+                Go("together");
+                break;
+            default:
+                await Task.Run(() => fake.Stage(FfiRoomScene.Watching));
+                await Task.Delay(1500);
+                ctx.Send(new Command.Room(new RoomCommand.Leave()));
+                Player.Close();
+                await Task.Delay(500);
+                Go("together");
+                ctx.Send(new Command.Room(new RoomCommand.LoadRecent()));
+                break;
+        }
+    }
     /// <summary>The board's wait story at 1×: Ren loads at 1 s, the cap at 20 s, Mika carries on at 23 s, Ren lands at 27 s.</summary>
     static async Task RoomWaitStory(FfiFakeRoom fake)
     {
