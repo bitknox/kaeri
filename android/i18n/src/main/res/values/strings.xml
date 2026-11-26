@@ -7623,6 +7623,12 @@
     <string name="store_other_medium_line">Watching is off on this device, so none of them show in Your sources.</string>
     <!-- Secondary action under it. -->
     <string name="store_turn_on_watching">Turn on watching</string>
+    <!-- Info title when every plugin in a store is for reading, and reading is off here. -->
+    <string name="store_other_medium_reading">Every plugin in %1$s is for reading</string>
+    <!-- Line under it. -->
+    <string name="store_other_medium_reading_line">Reading is off on this device, so none of them show in Your sources.</string>
+    <!-- Secondary action under it. -->
+    <string name="store_turn_on_reading">Turn on reading</string>
     <!-- Info title when a store has no plugins. -->
     <string name="store_empty">%1$s has no plugins yet</string>
     <!-- Line under it. -->

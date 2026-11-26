@@ -13468,6 +13468,18 @@
     <value>[Ţüŕñ öñ ŵàţçĥîñĝ~~~~~]</value>
     <comment>Secondary action under it.</comment>
   </data>
+  <data name="StoreOtherMediumReading" xml:space="preserve">
+    <value>[Éṽéŕý þļüĝîñ îñ {store} îš ƒöŕ ŕéàðîñĝ~~~~~~~~~~~]</value>
+    <comment>Info title when every plugin in a store is for reading, and reading is off here.</comment>
+  </data>
+  <data name="StoreOtherMediumReadingLine" xml:space="preserve">
+    <value>[Ŕéàðîñĝ îš öƒƒ öñ ţĥîš ðéṽîçé, šö ñöñé öƒ ţĥéɱ šĥöŵ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="StoreTurnOnReading" xml:space="preserve">
+    <value>[Ţüŕñ öñ ŕéàðîñĝ~~~~~]</value>
+    <comment>Secondary action under it.</comment>
+  </data>
   <data name="StoreEmpty" xml:space="preserve">
     <value>[{store} ĥàš ñö þļüĝîñš ýéţ~~~~~~~]</value>
     <comment>Info title when a store has no plugins.</comment>

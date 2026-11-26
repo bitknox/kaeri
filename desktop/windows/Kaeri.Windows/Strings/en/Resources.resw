@@ -13468,6 +13468,18 @@
     <value>Turn on watching</value>
     <comment>Secondary action under it.</comment>
   </data>
+  <data name="StoreOtherMediumReading" xml:space="preserve">
+    <value>Every plugin in {store} is for reading</value>
+    <comment>Info title when every plugin in a store is for reading, and reading is off here.</comment>
+  </data>
+  <data name="StoreOtherMediumReadingLine" xml:space="preserve">
+    <value>Reading is off on this device, so none of them show in Your sources.</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="StoreTurnOnReading" xml:space="preserve">
+    <value>Turn on reading</value>
+    <comment>Secondary action under it.</comment>
+  </data>
   <data name="StoreEmpty" xml:space="preserve">
     <value>{store} has no plugins yet</value>
     <comment>Info title when a store has no plugins.</comment>

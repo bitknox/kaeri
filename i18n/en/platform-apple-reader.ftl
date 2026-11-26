@@ -180,6 +180,11 @@ reader-mode-auto = Auto · { $mode }
 reader-mode-paged = Paged
 reader-mode-scrolled = Scroll
 
+# Reading mode value for a series read as whole pages one under another, chosen on another
+# device or from the series details; the picker here doesn't offer it.
+# @max 24
+reader-mode-vertical-pages = Vertical pages
+
 # Under the reading mode picker for a guessed mode.
 reader-mode-detected-note = Detected from the series details.
 

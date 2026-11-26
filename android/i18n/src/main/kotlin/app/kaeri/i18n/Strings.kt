@@ -14292,6 +14292,18 @@ object Strings {
     fun storeTurnOnWatching(context: Context): String =
         context.getString(R.string.store_turn_on_watching)
 
+    /** Info title when every plugin in a store is for reading, and reading is off here. */
+    fun storeOtherMediumReading(context: Context, store: String): String =
+        context.getString(R.string.store_other_medium_reading, store)
+
+    /** Line under it. */
+    fun storeOtherMediumReadingLine(context: Context): String =
+        context.getString(R.string.store_other_medium_reading_line)
+
+    /** Secondary action under it. */
+    fun storeTurnOnReading(context: Context): String =
+        context.getString(R.string.store_turn_on_reading)
+
     /** Info title when a store has no plugins. */
     fun storeEmpty(context: Context, store: String): String =
         context.getString(R.string.store_empty, store)
