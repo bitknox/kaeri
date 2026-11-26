@@ -189,12 +189,12 @@ private fun ShowsLibrary(actions: AppActions, scope: Boolean) {
                 is ListState.Loaded -> items(entries, key = { it.id.toLong() }, contentType = { "poster" }) { entry ->
                     // The Library keeps one line: the count, with the dub after it.
                     val count = entry.countLineNow()
-                    PosterCell(entry, itemMotion(), from = "library", detail = if (count == null) libraryDetail(LocalContext.current, entry) else null, fresh = hasNew(entry), count = count, narrow = !wideWindow())
+                    PosterCell(entry, itemMotion(), from = "library", detail = if (count == null) libraryDetail(LocalContext.current, entry) else null, fresh = hasNew(entry), count = count, narrow = !wideWindow(), list = app.kaeri.ui.reading.listInsteadOfGrid())
                 }
                 else -> if (offline) {
                     item(span = { GridItemSpan(maxLineSpan) }, key = "offline", contentType = "quiet") { Box(itemMotion()) { AfterWait { OfflineState() } } }
                 } else {
-                    items(9, key = { "placeholder-$it" }, contentType = { "placeholder" }) { Box(itemMotion()) { AfterWait { PosterPlaceholder() } } }
+                    items(9, key = { "placeholder-$it" }, contentType = { "placeholder" }) { Box(itemMotion()) { AfterWait { PosterPlaceholder(list = app.kaeri.ui.reading.listInsteadOfGrid()) } } }
                 }
             }
         }

@@ -924,7 +924,7 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, 
         placeholders = {
             PosterGrid(grid, gridState) {
                 resultsHeader(query, searching, status.livePaused, phone)
-                items(9, contentType = { "placeholder" }) { PosterPlaceholder() }
+                items(9, contentType = { "placeholder" }) { PosterPlaceholder(list = app.kaeri.ui.reading.listInsteadOfGrid()) }
             }
         },
     ) { list ->
@@ -934,12 +934,12 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, 
                 is ListState.Loaded -> {
                     val entries = list.ids.mapNotNull { titles[it] }
                     items(entries, key = { it.id.toLong() }, contentType = { "poster" }) {
-                        PosterCell(it, itemMotion(), from = "search", detail = searchDetail(LocalContext.current, it), onOpen = store::rememberSearch, detailLines = 2, count = it.countLineNow(), narrow = phone)
+                        PosterCell(it, itemMotion(), from = "search", detail = searchDetail(LocalContext.current, it), onOpen = store::rememberSearch, detailLines = 2, count = it.countLineNow(), narrow = phone, list = app.kaeri.ui.reading.listInsteadOfGrid())
                     }
                     if (status.hasNext) {
                         items(3, key = { "more-$it" }, contentType = { "placeholder" }) { index ->
                             if (index == 0) LaunchedEffect(status.pages) { store.searchMore() }
-                            PosterPlaceholder()
+                            PosterPlaceholder(list = app.kaeri.ui.reading.listInsteadOfGrid())
                         }
                     }
                 }

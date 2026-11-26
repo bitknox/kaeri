@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -66,30 +67,21 @@ internal fun PosterCell(
     count: CountLine? = null,
     /** Whether the cell is narrow, so its count takes the short form. */
     narrow: Boolean = true,
+    /** A one-column list's row rather than a poster over its words: [PosterGrid] at the largest text. */
+    list: Boolean = false,
 ) {
     val navigator = LocalNavigator.current
     val newWord = stringResource(R.string.poster_new)
-    Column(
-        modifier
-            .shared(Shared.Page, entry.id, from)
-            // The water dot is colour alone; the state says it too.
-            .semantics { if (fresh) stateDescription = newWord }
-            .clickable(onClickLabel = stringResource(R.string.title_open), role = Role.Button) {
-                onOpen?.invoke()
-                navigator.openTitle(entry.id, from)
-            },
-    ) {
-        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
-            CoverArt(entry, maxWidth, Modifier.size(maxWidth, maxWidth * 1.5f).shared(Shared.Cover, entry.id, from))
-        }
+    // The largest text turns the grid into a one-column list: a 60 dp cover with the words beside it.
+    val words: @Composable () -> Unit = {
         Text(
             entry.showTitle,
             style = ShowTitle.caption,
-            maxLines = 2,
+            maxLines = if (list) 3 else 2,
             overflow = TextOverflow.Ellipsis,
-            modifier = Modifier.padding(top = 8.dp),
+            modifier = Modifier.padding(top = if (list) 0.dp else 8.dp),
         )
-        count?.let { CountText(it, narrow, Modifier.padding(top = 2.dp)) }
+        count?.let { CountText(it, narrow && !list, Modifier.padding(top = 2.dp)) }
         detail?.let {
             Row(
                 Modifier.padding(top = 2.dp),
@@ -101,11 +93,33 @@ internal fun PosterCell(
                     it,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = detailLines,
+                    maxLines = if (list) maxOf(detailLines, 2) else detailLines,
                     overflow = TextOverflow.Ellipsis,
                 )
             }
         }
+    }
+    val cell = modifier
+        .shared(Shared.Page, entry.id, from)
+        // The water dot is colour alone; the state says it too.
+        .semantics { if (fresh) stateDescription = newWord }
+        .clickable(onClickLabel = stringResource(R.string.title_open), role = Role.Button) {
+            onOpen?.invoke()
+            navigator.openTitle(entry.id, from)
+        }
+    if (list) {
+        Row(cell.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            val cover = app.kaeri.ui.reading.LIST_COVER
+            CoverArt(entry, cover, Modifier.size(cover, cover * 1.5f).shared(Shared.Cover, entry.id, from))
+            Column(Modifier.weight(1f).padding(top = 4.dp)) { words() }
+        }
+        return
+    }
+    Column(cell) {
+        androidx.compose.foundation.layout.BoxWithConstraints(Modifier.fillMaxWidth()) {
+            CoverArt(entry, maxWidth, Modifier.size(maxWidth, maxWidth * 1.5f).shared(Shared.Cover, entry.id, from))
+        }
+        words()
     }
 }
 
@@ -115,7 +129,8 @@ internal fun PosterCell(
  * just as the poster will: [titleLines] title lines in the show face, [lines] lines under them.
  */
 @Composable
-internal fun PosterPlaceholder(titleLines: Int = 1, lines: Int = 1) {
+internal fun PosterPlaceholder(titleLines: Int = 1, lines: Int = 1, list: Boolean = false) {
+    if (list) return app.kaeri.ui.reading.ListRowPlaceholder()
     val density = androidx.compose.ui.platform.LocalDensity.current
     val titleLine = with(density) { app.kaeri.design.ShowTitle.caption.lineHeight.toDp() }
     val line = with(density) { MaterialTheme.typography.bodySmall.lineHeight.toDp() }

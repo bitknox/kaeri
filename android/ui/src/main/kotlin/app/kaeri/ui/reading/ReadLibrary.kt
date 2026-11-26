@@ -162,7 +162,7 @@ internal fun ReadLibraryScreen(actions: AppActions) {
                         }
                     }
                     tiles == null -> items(9, key = { "placeholder-$it" }, contentType = { "placeholder" }) {
-                        Box(itemMotion()) { AfterWait { CellPlaceholder() } }
+                        Box(itemMotion()) { AfterWait { if (listInsteadOfGrid()) ListRowPlaceholder() else CellPlaceholder() } }
                     }
                     tiles.isEmpty() -> item(span = { GridItemSpan(maxLineSpan) }, key = "quiet", contentType = "quiet") {
                         Box(itemMotion()) { EmptyList(segment) }
@@ -221,7 +221,7 @@ private fun LibraryCell(tile: WorkTile, segment: LibrarySegmentRead, width: Dp) 
     var menu by remember { mutableStateOf(false) }
     var opened by remember { mutableStateOf(false) }
     Box {
-        ReadTile(tile, width, from = "read-library", lines = if (wideWindow()) 1 else 2, onLongClick = { menu = true; opened = true }, actions = readTileActions(tile, current = segment))
+        ReadTile(tile, width, from = "read-library", lines = if (wideWindow()) 1 else 2, list = listInsteadOfGrid(), onLongClick = { menu = true; opened = true }, actions = readTileActions(tile, current = segment))
         if (opened) ReadTileMenu(tile, menu, current = segment) { menu = false }
     }
 }
