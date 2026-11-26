@@ -2752,3 +2752,40 @@ async fn the_other_version_that_shows_no_frame_goes_back_to_the_one_playing() {
     assert_eq!(last_menus(&calls).translation.current, "sub");
     assert!(toasts(&events).is_empty(), "{:?}", toasts(&events));
 }
+
+/// The room's cues wait for the file: a pause or a seek sent to a player that hasn't loaded its
+/// file fails there ("That didn't work"), and the file's own start would undo it.
+#[tokio::test]
+async fn the_rooms_cues_wait_until_the_file_has_loaded() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![Vec::new()]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let paused =
+        |calls: &[Call]| calls.contains(&Call::Set { property: "pause", value: json!(true) });
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        cues.send(SeatCue::Pause(true)).unwrap();
+        cues.send(SeatCue::Seek(35.0)).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        assert!(!paused(&rig.opener.calls()), "{:#?}", rig.opener.calls());
+        let window = rig.opener.window().expect("a window is open");
+        window.send(PlaybackEvent::Loaded).unwrap();
+        for _ in 0..200 {
+            if paused(&rig.opener.calls()) {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        let calls = rig.opener.calls();
+        assert!(paused(&calls), "{calls:#?}");
+        assert!(calls.contains(&Call::Seek { seconds: 35.0, absolute: true }), "{calls:#?}");
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let _ = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+}

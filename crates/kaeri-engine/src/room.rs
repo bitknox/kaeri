@@ -554,7 +554,13 @@ impl Task {
                 Some(RoomMessageKind::EpisodeChanged { by, episode: new.ep.1.clone() })
             }
             Cause::CarryOn => {
-                let past = new.carry.iter().map(|m| self.who_in_list(m)).collect();
+                // Nobody carries on without themselves.
+                let past = new
+                    .carry
+                    .iter()
+                    .filter(|m| **m != new.by)
+                    .map(|m| self.who_in_list(m))
+                    .collect();
                 Some(RoomMessageKind::CarriedOn { by, past })
             }
             Cause::UpNext => {
@@ -1062,18 +1068,19 @@ impl Task {
                 self.status.pos = Some(position);
                 // The viewer pressed play or pause on the player; a sample from before the
                 // player took the room's last cue is not a press.
-                if let Some(paused) = self.pause.sample(paused, self.now()) {
-                    if paused {
-                        self.write(
-                            |h| {
-                                h.play = false;
-                                h.cause = Cause::Pause;
-                            },
-                            None,
-                        );
-                    } else {
-                        self.play();
-                    }
+                match self.pause.sample(paused, self.now()) {
+                    Sampled::Same => {}
+                    // The player never showed what it was told (its own file start unpaused it):
+                    // tell it again, never take it as the viewer's.
+                    Sampled::Again(paused) => self.cue(SeatCue::Pause(paused)),
+                    Sampled::Pressed(true) => self.write(
+                        |h| {
+                            h.play = false;
+                            h.cause = Cause::Pause;
+                        },
+                        None,
+                    ),
+                    Sampled::Pressed(false) => self.play(),
                 }
             }
             SeatReport::Ended { finished, .. } => {
@@ -1090,15 +1097,37 @@ impl Task {
     /// Play: Play for everyone before play, Carry on during a wait, else play.
     fn play(&mut self) {
         let now = self.now();
+        let waiting = !self.room.waited(now).is_empty();
+        if self.room.playhead().is_some_and(|h| h.play) && waiting {
+            self.carry_on();
+        } else {
+            self.write(
+                |h| {
+                    h.play = true;
+                    h.cause = Cause::Play;
+                },
+                None,
+            );
+        }
+    }
+
+    /// Carry on without whoever the room waits for. This device never carries on past itself:
+    /// when it is among them, that part is Don't wait for me.
+    fn carry_on(&mut self) {
+        let now = self.now();
         let waited: Vec<Mid> = self.room.waited(now).into_iter().map(|w| w.mid).collect();
-        let carry = self.room.playhead().is_some_and(|h| h.play) && !waited.is_empty();
+        if waited.contains(&self.me) {
+            self.set_status(|s| s.dw = true);
+        }
+        let others: Vec<Mid> = waited.into_iter().filter(|m| *m != self.me).collect();
+        if others.is_empty() {
+            return;
+        }
         self.write(
             |h| {
                 h.play = true;
-                h.cause = if carry { Cause::CarryOn } else { Cause::Play };
-                if carry {
-                    h.carry.extend(waited);
-                }
+                h.cause = Cause::CarryOn;
+                h.carry.extend(others);
             },
             None,
         );
@@ -1120,19 +1149,7 @@ impl Task {
                 },
                 None,
             ),
-            RoomCommand::CarryOn => {
-                let now = self.now();
-                let waited: Vec<Mid> =
-                    self.room.waited(now).into_iter().map(|w| w.mid).collect();
-                self.write(
-                    |h| {
-                        h.play = true;
-                        h.cause = Cause::CarryOn;
-                        h.carry.extend(waited);
-                    },
-                    None,
-                );
-            }
+            RoomCommand::CarryOn => self.carry_on(),
             RoomCommand::DontWait => self.set_status(|s| s.dw = true),
             RoomCommand::SkipOpening { to } => self.write(
                 |h| {
@@ -1794,38 +1811,57 @@ impl PlayerPause {
         *self = Self::default();
     }
 
-    /// A sample from the player: `Some(paused)` when it is the viewer's own press.
-    fn sample(&mut self, paused: bool, now: i64) -> Option<bool> {
-        let told = self.told?;
+    /// A sample from the player: the viewer's own press, the told state to send again, or
+    /// nothing to do.
+    fn sample(&mut self, paused: bool, now: i64) -> Sampled {
+        let Some(told) = self.told else { return Sampled::Same };
         if let Some((want, until)) = self.expect {
             if paused == want {
                 self.expect = None;
-                return None;
+                return Sampled::Same;
             }
             if now < until {
-                return None;
+                return Sampled::Same;
             }
-            // The player never took the cue: what it reports now is the viewer's.
-            self.expect = None;
+            // It never showed the told state: something else moved it (a file's own start).
+            // A press counts only once the player has done what it was told.
+            self.expect = Some((want, now + EXPECT_PAUSE_MS));
+            return Sampled::Again(want);
         }
         if paused == told {
-            return None;
+            return Sampled::Same;
         }
         self.told = Some(paused);
-        Some(paused)
+        Sampled::Pressed(paused)
     }
+}
+
+/// What a player's sample means for the room.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum Sampled {
+    Same,
+    /// The viewer pressed pause (`true`) or play.
+    Pressed(bool),
+    /// Send the player its told state again.
+    Again(bool),
 }
 
 #[cfg(test)]
 mod pause_tests {
-    use super::PlayerPause;
+    use super::{PlayerPause, Sampled};
 
     /// The room and a player that applies cues a moment late, with samples every 250 ms: what
     /// the room writes as the viewer's presses over 5 s. The player's first samples after each
     /// cue still show the state before it.
     fn presses(guarded: bool) -> usize {
+        presses_with(guarded, None, false)
+    }
+
+    /// [`presses`], with the room waiting (paused) from the start, and the player's own file
+    /// start unpausing it at `file_start` ms.
+    fn presses_with(guarded: bool, file_start: Option<i64>, waiting: bool) -> usize {
         let mut pause = PlayerPause::default();
-        let mut room_paused = false;
+        let mut room_paused = waiting;
         let mut player_paused = true;
         // Cues in flight, applied in order 600 ms after each was sent.
         let mut cues: std::collections::VecDeque<(bool, i64)> = Default::default();
@@ -1841,8 +1877,21 @@ mod pause_tests {
                 player_paused = to;
                 cues.pop_front();
             }
+            if file_start == Some(now) {
+                // The file starts: the player unpauses by itself, and its seat reports Playing,
+                // which tells the player the room's state again from here.
+                player_paused = false;
+                pause.forget();
+            }
             let press = if guarded {
-                pause.sample(player_paused, now)
+                match pause.sample(player_paused, now) {
+                    Sampled::Pressed(p) => Some(p),
+                    Sampled::Again(p) => {
+                        cues.push_back((p, now + 600));
+                        None
+                    }
+                    Sampled::Same => None,
+                }
             } else {
                 // The old rule: any sample that differs from what was told is a press.
                 pause.told().is_some_and(|t| t != player_paused).then_some(player_paused)
@@ -1857,25 +1906,40 @@ mod pause_tests {
     }
 
     #[test]
+    fn a_files_own_start_playing_over_a_wait_is_never_your_press() {
+        assert!(presses_with(false, Some(1_000), true) > 0, "the old rule takes it as yours");
+        assert_eq!(presses_with(true, Some(1_000), true), 0);
+    }
+
+    #[test]
     fn stale_samples_no_longer_pause_and_resume_the_room_for_ever() {
         assert!(presses(false) > 4, "the old rule loops: {}", presses(false));
         assert_eq!(presses(true), 0);
     }
 
     #[test]
-    fn a_real_press_still_counts_once_the_cue_is_taken_or_its_time_is_up() {
+    fn a_real_press_still_counts_once_the_player_has_done_what_it_was_told() {
         let mut pause = PlayerPause::default();
         assert!(pause.tell(false, 0));
-        assert_eq!(pause.sample(true, 100), None, "stale");
-        assert_eq!(pause.sample(false, 300), None, "caught up");
-        assert_eq!(pause.sample(true, 400), Some(true), "the viewer paused");
+        assert_eq!(pause.sample(true, 100), Sampled::Same, "stale");
+        assert_eq!(pause.sample(false, 300), Sampled::Same, "caught up");
+        assert_eq!(pause.sample(true, 400), Sampled::Pressed(true), "the viewer paused");
         assert!(!pause.tell(true, 450), "already paused there");
-        // A player that never takes a cue: after 2 s its state is the viewer's.
-        assert!(pause.tell(false, 1_000));
-        assert_eq!(pause.sample(true, 2_900), None);
-        assert_eq!(pause.sample(true, 3_000), Some(true));
         // Nothing told yet: no press.
         pause.forget();
-        assert_eq!(pause.sample(false, 4_000), None);
+        assert_eq!(pause.sample(false, 4_000), Sampled::Same);
+    }
+
+    #[test]
+    fn a_player_that_unpauses_at_its_files_start_is_told_again_not_taken_as_a_press() {
+        let mut pause = PlayerPause::default();
+        // The room waits: pause. The player's own file start plays over it and never pauses.
+        assert!(pause.tell(true, 0));
+        assert_eq!(pause.sample(false, 500), Sampled::Same);
+        assert_eq!(pause.sample(false, 2_500), Sampled::Again(true));
+        assert_eq!(pause.sample(false, 3_000), Sampled::Same, "waiting for the cue again");
+        assert_eq!(pause.sample(true, 3_400), Sampled::Same, "it took it");
+        // Now a play is the viewer's.
+        assert_eq!(pause.sample(false, 6_000), Sampled::Pressed(false));
     }
 }

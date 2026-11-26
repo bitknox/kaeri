@@ -423,3 +423,17 @@ fn an_episode_with_no_source_here_reads_no_source_in_the_room() {
     assert_eq!(state(&members, "Ada"), Some(MemberState::Choosing));
     engine.shutdown();
 }
+
+#[test]
+fn carry_on_never_carries_on_without_yourself() {
+    // The room waits for you alone: Carry on is your own Don't wait, and names nobody.
+    let (_root, engine) = staged(FfiRoomScene::YouLoading);
+    until(&engine, |v, _, _| v.waiting.iter().any(|w| w.you));
+    engine.send(Command::Room(RoomCommand::CarryOn));
+    let (_, _, read) = until(&engine, |v, _, _| !v.waiting.iter().any(|w| w.you));
+    assert!(
+        !read.iter().any(|e| matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::CarriedOn { .. }))),
+        "{read:?}"
+    );
+    engine.shutdown();
+}

@@ -394,7 +394,9 @@ impl Run<'_> {
                     }
                     continue;
                 }
-                cue = async { seat.as_mut().expect("guarded").cue().await }, if seat.is_some() => {
+                // The room's cues wait in their queue until the file has loaded: a seek or a pause
+                // before then fails in the player, and its own start would undo it.
+                cue = async { seat.as_mut().expect("guarded").cue().await }, if seat.is_some() && (loaded || ever_played) => {
                     match cue {
                         Some(cue) => apply_cue(link, cue).await,
                         // The party is over: this plays on as a private session, from here.
