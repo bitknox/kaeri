@@ -107,6 +107,7 @@ impl Invite {
 
 pub struct Details {
     pub popover: gtk::Popover,
+    #[cfg_attr(not(feature = "fixtures"), allow(dead_code))]
     stack: gtk::Stack,
     answering: gtk::Label,
     relays: gtk::ListBox,
@@ -218,7 +219,8 @@ impl Details {
         me
     }
 
-    /// Open on the relay editor (or Details).
+    /// Open on the relay editor (or Details), for a shot.
+    #[cfg(feature = "fixtures")]
     pub fn edit(&self, on: bool) {
         self.stack.set_visible_child_name(if on { "edit" } else { "info" });
     }

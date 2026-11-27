@@ -734,6 +734,7 @@ impl Room {
     }
 
     /// For shots: the popovers and dialogs by name.
+    #[cfg(feature = "fixtures")]
     pub fn shot_open(self: &Rc<Self>, which: &str) {
         match which {
             "invite" | "details" | "edit-relays" => self.column.shot_popover(which),

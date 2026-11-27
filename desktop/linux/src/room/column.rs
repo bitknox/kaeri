@@ -477,6 +477,7 @@ impl Column {
     }
 
     /// For a shot: open the Invite or Details popover, or Details' relay editor.
+    #[cfg(feature = "fixtures")]
     pub fn shot_popover(&self, which: &str) {
         match which {
             "invite" => self.invite.popup(),

@@ -7,9 +7,11 @@
 
 pub use kaeri_model::room::{
     MemberState, MoveCandidate, PausedFor, RelayHealth, RoomCarriedOn, RoomConnection,
-    RoomEpisode, RoomEpisodeInfo, RoomGlimpse, RoomMember, RoomUpNext, WaitReason,
+    RoomGlimpse, RoomMember, RoomUpNext, WaitReason,
 };
 use kaeri_model::room::{RoomChatBody, RoomConversation};
+#[cfg(any(test, feature = "fixtures"))]
+pub use kaeri_model::room::{RoomEpisode, RoomEpisodeInfo};
 
 /// The room before play.
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
