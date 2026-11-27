@@ -161,14 +161,14 @@ public static class Rooms
             if (names.Count == 0)
                 return new RoomLine(RoomWords.NotStarted, RoomWords.PlayStartsIt) { Kind = "before" };
             if (v.CanCarryOn)
-                return new RoomLine(RoomWords.StillLoading(who, names.Count), RoomWords.WaitedCap, RoomAsk.Start,
+                return new RoomLine(Still(waits, who, names.Count), RoomWords.WaitedCap, RoomAsk.Start,
                     names.Count > 1 ? RoomWords.StartWithoutThem : RoomWords.StartWithout(who)) { Kind = "before-cap" };
             return new RoomLine(RoomWords.StartingWhen(who, names.Count), RoomWords.Loading(waitSecs)) { Kind = "before-wait" };
         }
         if (v.UpNext is { EndsAtMs: { } ends, CancelledBy: null } && names.Count == 0)
             return new RoomLine(RoomWords.UpNextIn(Math.Max(0, (ends - s.NowMs + 999) / 1000)), RoomWords.PlaysForEveryone(s.NextEpisode)) { Kind = "up-next" };
         if (names.Count > 0 && v.CanCarryOn)
-            return new RoomLine(RoomWords.StillLoading(who, names.Count), RoomWords.WaitedCap, RoomAsk.CarryOn,
+            return new RoomLine(Still(waits, who, names.Count), RoomWords.WaitedCap, RoomAsk.CarryOn,
                 names.Count > 1 ? RoomWords.CarryOnWithoutThem : RoomWords.CarryOnWithout(who)) { Kind = "cap" };
         if (names.Count == 0 && v.CarriedOn is { } carried && (carried.Past ?? []).Length > 0)
         {
@@ -287,6 +287,12 @@ public static class Rooms
         || s.Members.Any(m => m.State is not (MemberState.Watching or MemberState.Left))
         || (s.View.Waiting ?? []).Length > 0
         || s.NowMs - lastChangeMs < (long)StripAfterChange.TotalMilliseconds;
+
+    /// <summary>The cap's line by why the room waits: seeking or buffering when everyone it waits for is, loading otherwise.</summary>
+    static string Still(PausedFor[] waits, string who, int many) =>
+        waits.All(w => w.Reason == WaitReason.Seeking) ? RoomWords.StillSeeking(who, many)
+        : waits.All(w => w.Reason == WaitReason.Buffering) ? RoomWords.StillBuffering(who, many)
+        : RoomWords.StillLoading(who, many);
 
     /// <summary>The strip's words: the line's first, with the counting seconds while the room waits.</summary>
     public static string StripWords(RoomScene s)

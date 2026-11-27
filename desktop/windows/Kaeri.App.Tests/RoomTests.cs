@@ -83,6 +83,16 @@ public class RoomTests
     }
 
     [Fact]
+    public void TheCapSaysWhyItWaitsWhenEveryoneWaitedForWaitsTheSameWay()
+    {
+        string Title(params PausedFor[] waiting) =>
+            Rooms.Line(Scene(View(playing: false, waiting: waiting, cap: true), Three(MemberState.Loading, 20_000))).Title;
+        Assert.Equal("Ren is still seeking", Title(Wait("Ren", 20_000, WaitReason.Seeking)));
+        Assert.Equal("Ren is still buffering", Title(Wait("Ren", 20_000, WaitReason.Buffering)));
+        Assert.Equal("Ren and Mika are still loading", Title(Wait("Ren", 20_000, WaitReason.Seeking), Wait("Mika", 20_000, WaitReason.Buffering)));
+    }
+
+    [Fact]
     public void TwoWaitedForAreNamedAndCarryOnSaysThem()
     {
         var waiting = new[] { Wait("Ren", 21_000, WaitReason.Loading), Wait("Mika", 20_000, WaitReason.Loading) };

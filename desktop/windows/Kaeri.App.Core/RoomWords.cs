@@ -28,6 +28,8 @@ public static class RoomWords
     public static string Buffering(long seconds) => T.RoomStateBuffering(seconds);
     public static string Seeking(long seconds) => T.RoomStateSeeking(seconds);
     public static string StillLoading(string names, int many) => T.RoomLineStillLoading(names, many);
+    public static string StillSeeking(string names, int many) => T.RoomLineStillSeeking(names, many);
+    public static string StillBuffering(string names, int many) => T.RoomLineStillBuffering(names, many);
     public static string WaitedCap => T.RoomLineWaited((long)Rooms.CapSeconds);
     public static string CarryOnWithout(string name) => T.RoomCarryOnWithout(name);
     public static string CarryOnWithoutThem => T.RoomCarryOnWithoutThem;

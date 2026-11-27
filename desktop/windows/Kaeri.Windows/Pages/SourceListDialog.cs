@@ -191,7 +191,8 @@ sealed class SourceListDialog
             openProviders = true;
             return;
         }
-        line.Text = T.SourcesFound(found.Length);
+        // In a room the pick plays for everyone, and the line says so.
+        line.Text = ctx.Known.Room is not null ? T.RoomSourcesFoundLine(found.Length) : T.PlayerSourcesFoundLine(found.Length);
         foreach (var c in found)
         {
             var row = new StackPanel { Padding = new Thickness(0, 4, 0, 4) };
