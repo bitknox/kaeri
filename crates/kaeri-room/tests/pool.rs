@@ -288,6 +288,56 @@ async fn what_is_sent_right_after_a_refresh_still_goes_out() {
 }
 
 #[tokio::test]
+async fn what_is_said_while_no_relay_is_up_goes_out_when_one_is() {
+    // Back in the foreground, a line of chat said before any socket was open again was lost.
+    let relays = start(1).await;
+    relays[0].retain(60);
+    let mut ada = Member::new(SECRET, &relays).await;
+    let mut ren = Member::new(SECRET, &relays).await;
+    ada.hello();
+    ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Hello { .. })))
+        .await
+        .unwrap();
+    relays[0].down(true);
+    ada.next(|h| matches!(h, Heard::Up { relays_up: 0 })).await.expect("down");
+    ada.say(Message::Chat { id: "c4".into(), text: "while away".into() });
+    // A heartbeat said meanwhile is not worth keeping.
+    ada.say(Message::Heartbeat);
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    relays[0].down(false);
+    timeout(Duration::from_secs(10), async {
+        while ren.next(is_chat("while away")).await.is_none() {}
+    })
+    .await
+    .expect("sent once a relay was up");
+}
+
+#[tokio::test]
+async fn what_waits_under_the_cap_survives_a_refresh() {
+    // Back in the foreground after a burst: the line waiting for room under the relay's cap was
+    // thrown away when the refresh closed the socket.
+    let relays = start(1).await;
+    let mut ada = Member::new(SECRET, &relays).await;
+    let mut ren = Member::new(SECRET, &relays).await;
+    ada.hello();
+    ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Hello { .. })))
+        .await
+        .unwrap();
+    for n in 0..pool::CAP_BURST {
+        ada.say(Message::Chat { id: format!("b{n}"), text: format!("burst {n}") });
+    }
+    ada.say(Message::Chat { id: "c5".into(), text: "over the cap".into() });
+    ada.link.out.send(Out::Refresh).unwrap();
+    // The burst goes again too (none of it was echoed before the refresh), so the line waits
+    // for room under the cap once more.
+    timeout(Duration::from_secs(30), async {
+        while ren.next(is_chat("over the cap")).await.is_none() {}
+    })
+    .await
+    .expect("sent once there was room");
+}
+
+#[tokio::test]
 async fn no_relay_answers_and_the_join_says_so() {
     let dead = FakeRelay::start().await;
     dead.down(true);
