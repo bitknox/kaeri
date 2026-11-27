@@ -247,6 +247,8 @@ pub struct PlayerView {
     /// An invite opened the player over the main window: when it goes unjoined, so does the
     /// player.
     invite_alone: Cell<bool>,
+    /// The room's reaction ticks as last heard, shown on the seek bar unless chat is hidden.
+    room_marks: RefCell<Vec<kaeri_model::room::RoomReactionMark>>,
     stall_tick: RefCell<Option<glib::SourceId>>,
     /// The media controls on the session bus, once served.
     mpris: RefCell<Option<Rc<Mpris>>>,
@@ -533,6 +535,7 @@ impl PlayerView {
             stall_since: Cell::new(None),
             room_toasts: RefCell::default(),
             invite_alone: Cell::new(false),
+            room_marks: RefCell::default(),
             stall_tick: RefCell::default(),
             mpris: RefCell::default(),
             room,
@@ -752,7 +755,10 @@ impl PlayerView {
     /// player as it is, with Join the room and Not now.
     pub fn open_invite(&self, link: &str) {
         let shell = self.shell();
-        self.invite_alone.set(shell.as_ref().is_some_and(|s| !s.is_player()));
+        // A second invite over one only looked at is still alone: nothing was playing before.
+        let showing_invite_alone = self.invite_alone.get() && self.room.looking();
+        self.invite_alone
+            .set(showing_invite_alone || shell.as_ref().is_some_and(|s| !s.is_player()));
         if let Some(shell) = shell {
             shell.show_player(true);
         }
@@ -770,10 +776,14 @@ impl PlayerView {
     /// Back, as the viewer closes the player: in a room, Leave the room? asks first, with Keep
     /// the room, which closes the player and keeps this device's place in it.
     pub fn close_asking(&self) {
-        // An invite only looked at goes with the player, as Not now: there is no room to leave.
-        if !self.room.joined() {
+        // An invite only looked at goes first, as Not now: with no room to leave the player
+        // goes with it; over the room you are in, that room shows again.
+        if self.room.looking() || !self.room.joined() {
+            let joined = self.room.joined();
             self.room.drop_invite();
-            self.close();
+            if !joined {
+                self.close();
+            }
             return;
         }
         let me = self.me.clone();
@@ -3238,21 +3248,25 @@ impl PlayerView {
             }
             Event::RoomJoined(_) | Event::RoomState(_) => {
                 if matches!(event, Event::RoomJoined(_)) {
+                    self.room_marks.replace(Vec::new());
                     self.room.set_chat_hidden(self.ctx.prefs.hide_chat());
+                    self.show_reactions();
                 }
                 self.room_sources();
             }
-            Event::RoomChatState(state) => self.room.set_chat_hidden(state.hidden),
-            // Hide chat in rooms hides the reactions' ticks too.
+            // Hide chat in rooms hides the reactions' ticks too, and showing chat again brings
+            // back the ones heard meanwhile.
+            Event::RoomChatState(state) => {
+                self.room.set_chat_hidden(state.hidden);
+                self.show_reactions();
+            }
             Event::RoomChat(conversation) => {
-                self.ui.marked.set_reactions(if self.room.chat_hidden() {
-                    Vec::new()
-                } else {
-                    conversation.marks.clone()
-                })
+                self.room_marks.replace(conversation.marks.clone());
+                self.show_reactions();
             }
             // A room that couldn't be joined, or ended on this device: why, as a notice.
             Event::RoomLeft { why } => {
+                self.room_marks.replace(Vec::new());
                 self.ui.marked.set_reactions(Vec::new());
                 let shown: Vec<adw::Toast> = self
                     .room_toasts
@@ -3277,6 +3291,13 @@ impl PlayerView {
             }
             _ => {}
         }
+    }
+
+    /// The room's reaction ticks on the seek bar, or none while chat is hidden.
+    fn show_reactions(&self) {
+        let marks =
+            if self.room.chat_hidden() { Vec::new() } else { self.room_marks.borrow().clone() };
+        self.ui.marked.set_reactions(marks);
     }
 
     /// Your sources for the room's episode, for Choose a source.

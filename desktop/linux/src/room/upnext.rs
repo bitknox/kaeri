@@ -94,12 +94,6 @@ impl UpNext {
             None => c::up_next_episode_plain(&next.episode),
         };
         self.episode.set_label(&episode);
-        if self.said.borrow().as_deref() != Some(episode.as_str()) {
-            use gtk::AccessibleAnnouncementPriority as P;
-            self.widget.announce(&c::up_next_for_room(), P::Medium);
-            self.widget.announce(&episode, P::Medium);
-            self.said.replace(Some(episode));
-        }
         let count = match (up.ends_at_ms, up.waiting_for.first()) {
             (Some(ends), _) => c::plays_for_everyone_in(
                 ((ends - now_ms) as f64 / 1000.0).ceil().max(0.0) as i64,
@@ -108,6 +102,13 @@ impl UpNext {
             (None, None) => String::new(),
         };
         self.count.set_label(&count);
+        // Said once as the card comes, in one announcement: what, and when or who it waits
+        // for. The count isn't said again each second.
+        if self.said.borrow().as_deref() != Some(episode.as_str()) {
+            let said = spoken(&c::up_next_for_room(), &episode, &count);
+            self.widget.announce(&said, gtk::AccessibleAnnouncementPriority::Medium);
+            self.said.replace(Some(episode));
+        }
         self.count.set_visible(!count.is_empty());
         let url = next.banner_url.clone().or_else(|| next.cover_url.clone());
         if *self.shown_art.borrow() != url {
@@ -118,5 +119,27 @@ impl UpNext {
             self.shown_art.replace(url);
         }
         self.fader.set(&self.widget, true);
+    }
+}
+
+/// The card's announcement: its parts as lines, the empty ones left out.
+fn spoken(heading: &str, episode: &str, count: &str) -> String {
+    [heading, episode, count]
+        .iter()
+        .filter(|p| !p.is_empty())
+        .copied()
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+#[cfg(test)]
+mod spoken_tests {
+    #[test]
+    fn up_next_is_said_once_with_its_count() {
+        assert_eq!(
+            super::spoken("Up next", "Episode 10", "In 8 s"),
+            "Up next\nEpisode 10\nIn 8 s"
+        );
+        assert_eq!(super::spoken("Up next", "Episode 10", ""), "Up next\nEpisode 10");
     }
 }

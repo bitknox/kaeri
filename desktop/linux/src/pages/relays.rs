@@ -127,6 +127,10 @@ pub struct Relays {
     restore: gtk::Button,
     /// The rows drawn in each group, to take out when the lists change.
     drawn: RefCell<Vec<(adw::PreferencesGroup, gtk::Widget)>>,
+    /// The lists the rows show, as the engine last said them.
+    drawn_for: RefCell<Option<RoomRelaySettings>>,
+    /// The lists as they stand with the edits sent since: each edit builds on the one before,
+    /// so two quick ones don't undo each other before the engine answers.
     now: RefCell<Option<RoomRelaySettings>>,
     send: Box<dyn Fn(RoomCommand)>,
 }
@@ -175,6 +179,7 @@ impl Relays {
             add,
             restore,
             drawn: RefCell::default(),
+            drawn_for: RefCell::default(),
             now: RefCell::default(),
             send: Box::new(send),
         });
@@ -214,22 +219,50 @@ impl Relays {
     fn add_typed(&self) {
         if let Some(relays) = self.adds(&self.field.text()) {
             self.field.set_text("");
-            (self.send)(RoomCommand::SetRelays { relays });
+            self.set_new_rooms(relays);
+        }
+    }
+
+    /// Send the list for new rooms, and build the next edit on it.
+    fn set_new_rooms(&self, relays: Vec<String>) {
+        if let Some(now) = self.now.borrow_mut().as_mut() {
+            now.chosen.clone_from(&relays);
+        }
+        (self.send)(RoomCommand::SetRelays { relays });
+    }
+
+    fn set_spares(&self, relays: Vec<String>) {
+        if let Some(now) = self.now.borrow_mut().as_mut() {
+            now.spares.clone_from(&relays);
+        }
+        (self.send)(RoomCommand::SetSpareRelays { relays });
+    }
+
+    /// × on a relay: gone from the lists as they stand now, not as they were drawn.
+    fn remove(&self, url: &str, spare: bool) {
+        let Some(now) = self.now.borrow().clone() else { return };
+        if spare {
+            if let Some(rest) = without(&now.spares, url, false) {
+                self.set_spares(rest);
+            }
+        } else if let Some(rest) = without(for_new_rooms(&now), url, true) {
+            self.set_new_rooms(rest);
         }
     }
 
     fn restore_defaults(&self) {
         let Some(now) = self.now.borrow().clone() else { return };
-        (self.send)(RoomCommand::SetRelays { relays: Vec::new() });
-        (self.send)(RoomCommand::SetSpareRelays { relays: now.default_spares });
+        self.set_new_rooms(Vec::new());
+        self.set_spares(now.default_spares);
     }
 
     /// What the engine says the relays are now.
     pub fn heard(self: &Rc<Self>, s: &RoomRelaySettings) {
-        if self.now.borrow().as_ref() == Some(s) {
+        self.now.replace(Some(s.clone()));
+        if self.drawn_for.borrow().as_ref() == Some(s) {
             return;
         }
-        self.now.replace(Some(s.clone()));
+        self.drawn_for.replace(Some(s.clone()));
         for (group, row) in self.drawn.take() {
             group.remove(&row);
         }
@@ -241,10 +274,10 @@ impl Relays {
         }
         for url in &list {
             let me = Rc::downgrade(self);
-            let gone = without(&list, url, true);
-            let row = relay_row(url, gone.is_some(), move || {
-                if let (Some(me), Some(relays)) = (me.upgrade(), gone.clone()) {
-                    (me.send)(RoomCommand::SetRelays { relays });
+            let gone = url.clone();
+            let row = relay_row(url, list.len() > 1, move || {
+                if let Some(me) = me.upgrade() {
+                    me.remove(&gone, false);
                 }
             });
             self.new_rooms.add(&row);
@@ -255,10 +288,10 @@ impl Relays {
         }
         for url in &s.spares {
             let me = Rc::downgrade(self);
-            let gone = without(&s.spares, url, false);
+            let gone = url.clone();
             let row = relay_row(url, true, move || {
-                if let (Some(me), Some(relays)) = (me.upgrade(), gone.clone()) {
-                    (me.send)(RoomCommand::SetSpareRelays { relays });
+                if let Some(me) = me.upgrade() {
+                    me.remove(&gone, true);
                 }
             });
             self.spares.add(&row);
@@ -368,7 +401,9 @@ mod tests {
             relays.heard(&s);
             assert!(!relays.restore.is_sensitive());
             let root: gtk::Widget = relays.column.clone().upcast();
+            // Quick edits, before the engine answers: each builds on the one before.
             remove_button(&root, &s.defaults[1]).emit_clicked();
+            remove_button(&root, &s.defaults[2]).emit_clicked();
             remove_button(&root, &s.spares[0]).emit_clicked();
             relays.field.set_text("wss://home.example");
             relays.add.emit_clicked();
@@ -376,12 +411,17 @@ mod tests {
                 *sent.borrow(),
                 vec![
                     RoomCommand::SetRelays { relays: urls(&["relay-1", "relay-3"]) },
+                    RoomCommand::SetRelays { relays: urls(&["relay-1"]) },
                     RoomCommand::SetSpareRelays { relays: urls(&["spare-2"]) },
-                    RoomCommand::SetRelays {
-                        relays: urls(&["relay-1", "relay-2", "relay-3", "home"])
-                    },
+                    RoomCommand::SetRelays { relays: urls(&["relay-1", "home"]) },
                 ]
             );
+            // The last relay for new rooms stays, even before the rows are redrawn.
+            sent.borrow_mut().clear();
+            relays.set_new_rooms(urls(&["relay-1"]));
+            sent.borrow_mut().clear();
+            remove_button(&root, &s.defaults[0]).emit_clicked();
+            assert!(sent.borrow().is_empty());
             // One relay left for new rooms: its × is off. The spares changed: Restore is on.
             s.chosen = urls(&["home"]);
             s.spares = Vec::new();

@@ -231,8 +231,10 @@ impl Details {
             self.draw_relays(view);
             self.drawn.replace(drawn);
         }
-        if !self.popover.is_visible() {
-            *self.edited.borrow_mut() = view.relays.iter().map(|r| r.url.clone()).collect();
+        // Closed, the editor starts again from the room's list: redrawn only when it differs.
+        let urls: Vec<String> = view.relays.iter().map(|r| r.url.clone()).collect();
+        if !self.popover.is_visible() && *self.edited.borrow() != urls {
+            *self.edited.borrow_mut() = urls;
             fill_edit(&self.edit_list, &self.edited);
         }
     }

@@ -206,6 +206,15 @@ impl Room {
                 room.handle(a);
             })));
         }
+        // Your name's "you" and your chat lines carry the haze in markup: drawn again when
+        // High Contrast changes.
+        let weak = Rc::downgrade(&room);
+        crate::style::on_contrast_change(&room.widget, move || {
+            if let Some(room) = weak.upgrade() {
+                room.column.redraw_conversation();
+                room.redraw();
+            }
+        });
         room
     }
 
@@ -452,6 +461,11 @@ impl Room {
         }
     }
 
+    /// Whether an invite opened here is showing, or being looked at, over whatever else.
+    pub fn looking(&self) -> bool {
+        self.glimpse.borrow().is_some()
+    }
+
     /// Whether this device is in a room the engine joined, rather than looking at an invite.
     pub fn joined(&self) -> bool {
         self.engine_view.borrow().is_some()
@@ -636,10 +650,9 @@ impl Room {
             let me = Rc::downgrade(self);
             let turn = self.next_turn();
             glib::timeout_add_local_once(CONTENT_DELAY, move || {
+                // A later turn (full screen, or the room gone) owns the column's opacity now.
                 if me.upgrade().is_some_and(|me| me.turn.get() == turn) {
                     crate::motion::fade_in(&content);
-                } else {
-                    content.set_opacity(1.0);
                 }
             });
         }
@@ -890,6 +903,30 @@ mod tests {
             room.heard(&Event::RoomLeft { why: RoomLeftWhy::Full });
             assert!(!room.in_room() && room.glimpse.borrow().is_none());
             assert_eq!(*passed.borrow(), vec![Act::Join, Act::InviteGone]);
+        });
+    }
+
+    #[test]
+    fn back_on_an_invite_over_your_room_shows_your_room_again() {
+        run(|| {
+            let (room, _, _window) = room();
+            room.heard(&Event::RoomJoined(joined()));
+            room.peek(INVITE);
+            room.heard(&Event::RoomGlimpse(empty_look()));
+            assert!(room.looking() && room.joined());
+            room.drop_invite();
+            assert!(!room.looking() && room.joined() && room.in_room());
+        });
+    }
+
+    #[test]
+    fn full_screen_right_after_the_room_comes_in_keeps_the_column_faded() {
+        run(|| {
+            let (room, _, _window) = room();
+            room.heard(&Event::RoomJoined(joined()));
+            room.set_fullscreen(true);
+            pump(800);
+            assert!(room.column.widget.opacity() < 0.5, "the morph's late step stood down");
         });
     }
 

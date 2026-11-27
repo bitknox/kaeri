@@ -59,6 +59,27 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         shown: RefCell::default(),
     });
     page.refresh();
+    // The failed invite's hint carries the haze in markup: drawn again when High Contrast
+    // changes.
+    crate::style::on_contrast_change(&holder, {
+        let weak = Rc::downgrade(&page);
+        move || {
+            if let Some(page) = weak.upgrade() {
+                page.shown.replace(None);
+                page.refresh();
+            }
+        }
+    });
+    // Back on the place, the player closed and any invite it looked at went with it: a late
+    // answer for that look no longer belongs to the form.
+    holder.connect_map({
+        let weak = Rc::downgrade(&page);
+        move |_| {
+            if let Some(page) = weak.upgrade() {
+                page.joining.replace(None);
+            }
+        }
+    });
     let weak = Rc::downgrade(&page);
     ctx.hub.listen(move |event| {
         let Some(page) = weak.upgrade() else { return };
@@ -89,11 +110,15 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                 let joined = page.joining.take();
                 page.failed.replace(joined);
             }
+            // A Rejoin or a look-in that found nobody: the row says so, with Try again.
             Event::RoomLookFailed { room_id, invite: None, .. } => {
-                if page.rejoining.borrow().as_deref() != Some(room_id.as_str()) {
+                let rejoined = page.rejoining.borrow().as_deref() == Some(room_id.as_str());
+                let looked = page.recent.borrow().iter().any(|r| &r.room_id == room_id);
+                if !rejoined && !looked {
                     return;
                 }
                 page.rejoining.replace(None);
+                page.here.borrow_mut().remove(room_id);
                 page.rejoin_failed.replace(Some(room_id.clone()));
             }
             // A look into a recent room: who is there now. A failed Rejoin's row returns to
@@ -193,9 +218,8 @@ impl Page {
                 }
                 // Only an invite the room will look at waits for its answer; the window says
                 // what is wrong with any other.
-                if let Some(looked) = looks_into(&link) {
-                    self.joining.replace(Some(looked));
-                }
+                // A link the window turns away clears the wait for an earlier one.
+                self.joining.replace(looks_into(&link));
                 if self.failed.take().is_some() {
                     self.shown.replace(None);
                     self.refresh();

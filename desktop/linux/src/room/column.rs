@@ -430,6 +430,12 @@ impl Column {
     }
 
     /// The conversation, newest last, scrolled to its end.
+    /// The conversation drawn again as it stands: its colours follow High Contrast.
+    pub fn redraw_conversation(&self) {
+        let lines = self.conv_shown.take();
+        self.show_conversation(&lines);
+    }
+
     pub fn show_conversation(&self, lines: &[ConvLine]) {
         if *self.conv_shown.borrow() == lines {
             return;
