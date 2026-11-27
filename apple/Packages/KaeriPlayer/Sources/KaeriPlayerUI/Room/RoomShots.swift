@@ -141,6 +141,13 @@ enum RoomStage {
 
     /// The fake members' rooms follow the clock only when ticked (the count before play, Up
     /// next): tick them through the run, off the main thread.
+    /// A staging step on the console at once, with the time: a scene that never gets ready says
+    /// where it was.
+    static func note(_ what: String) {
+        print("KaeriDev: \(Date.now.formatted(.dateTime.hour().minute().second())) \(what)")
+        fflush(stdout)
+    }
+
     static func tick(_ fake: FfiFakeRoom) {
         ticker?.cancel()
         ticker = Task.detached {
@@ -211,6 +218,7 @@ extension PlayerModel {
         #endif
         guard let fake = store.startFakeRoom() else { return false }
         RoomStage.fake = fake
+        RoomStage.note("staging \(scene.rawValue)")
         if scene == .morph {
             // For the recording: the plain player first, then Watch together from it.
             guard let item = store.continuing.queue(store.titles).all.first else { return false }
@@ -233,6 +241,7 @@ extension PlayerModel {
         let engineScene = RoomStage.scene(scene)
         // The fake blocks while its members act: off the main thread.
         let staged = await Task.detached { fake.stage(scene: engineScene) }.value
+        RoomStage.note("the fake staged \(scene.rawValue): \(staged)")
         if !staged {
             print("KaeriDev: the fake room did not stage \(scene.rawValue)")
             fflush(stdout)
@@ -298,6 +307,7 @@ extension PlayerModel {
         }
         // The column's contents fade in after the window grows.
         try? await Task.sleep(for: .milliseconds(900))
+        RoomStage.note("staged \(scene.rawValue)")
         room.staged = room.active
         return room.active
     }
@@ -347,6 +357,7 @@ extension PlayerModel {
 
     private func roomWaited(_ seconds: Int, line: Int = #line, _ condition: @MainActor () -> Bool) async -> Bool {
         let deadline = ContinuousClock.now + .seconds(seconds)
+        if !condition() { RoomStage.note("waits at RoomShots.swift:\(line)") }
         while !condition() {
             guard ContinuousClock.now < deadline else {
                 // Flushed: the console is a file, and a shot that never gets ready is killed.
