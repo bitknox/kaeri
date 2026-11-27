@@ -50,6 +50,9 @@ const FIRST_FRAME_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// A seek or a pause the player makes this soon after the room cued one is the room's.
 const CUED_FOR_MS: u64 = 10_000;
+/// A player is still opening until its first room cue has had this long: its own start seeks
+/// (to where it was told to open, or late) are never the viewer's.
+const OPENING_FOR_MS: u64 = 3_000;
 
 /// How long a mid-episode stall lasts before the player offers another stream.
 const STALL_PROMPT: Duration = Duration::from_secs(8);
@@ -199,6 +202,9 @@ impl Run<'_> {
         let mut cued_seek: Option<tokio::time::Instant> = None;
         let mut cued_pause: Option<(bool, tokio::time::Instant)> = None;
         let mut viewer_seeked = false;
+        // When the room's first cue reached this player: before then, and just after, it is
+        // still opening.
+        let mut first_cue: Option<tokio::time::Instant> = None;
         let mut viewer_pressed = false;
         let mut waiting: Vec<kaeri_core::stream::Subtitle> = Vec::new();
         // Stats for nerds, open as the window left it.
@@ -411,6 +417,7 @@ impl Run<'_> {
                 cue = async { seat.as_mut().expect("guarded").cue().await }, if seat.is_some() && (loaded || ever_played) => {
                     match cue {
                         Some(cue) => {
+                            first_cue.get_or_insert_with(tokio::time::Instant::now);
                             if let SeatCue::Seek { to, cue: Some(id) } = &cue {
                                 room_cue = Some((*id, *to));
                             }
@@ -694,7 +701,11 @@ impl Run<'_> {
                         let cued = cued_seek.take().is_some_and(|at| {
                             at.elapsed() < Duration::from_millis(CUED_FOR_MS)
                         });
-                        viewer_seeked |= !cued;
+                        let opened = ever_played
+                            && first_cue.is_some_and(|at| {
+                                at.elapsed() >= Duration::from_millis(OPENING_FOR_MS)
+                            });
+                        viewer_seeked |= !cued && opened;
                     }
                     // The seek landed: ready for the room's wait at its first frame there.
                     if !*now

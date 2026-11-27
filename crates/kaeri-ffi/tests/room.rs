@@ -885,6 +885,64 @@ fn a_slow_decoders_bursty_positions_are_never_your_seek_or_pause() {
 }
 
 #[test]
+fn a_player_opening_mid_wait_never_seeks_for_you() {
+    // Android's wait-loading: "You jumped from 0:35 to 0:04" between two wait lines. The player
+    // opened near 0:04 (where the room started) and the room's cue put it at 0:35; its opening
+    // seeks, before or just after the cue, are never yours.
+    let (_root, engine) = staged(FfiRoomScene::WaitLoading);
+    let (view, members, read) =
+        until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    play_like_the_app(&engine, &read);
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| loads(e).is_some())
+    });
+    let playback = read.iter().find_map(loads).unwrap();
+    let property = |name: &str, json: String| {
+        let report = PlayerReport::Property { name: name.into(), json };
+        assert_eq!(engine.send(Command::PlayerReport { playback, report }), None);
+    };
+    assert_eq!(
+        engine.send(Command::PlayerReport { playback, report: PlayerReport::FileLoaded }),
+        None
+    );
+    property("duration", "1440.0".into());
+    property("pause", "true".into());
+    // Its own start: a seek to near 0:04 before the room's cue.
+    property("seeking", "true".into());
+    property("time-pos", "4.20".into());
+    property("seeking", "false".into());
+    for _ in 0..3 {
+        property("time-pos", "4.20".into());
+        thread::sleep(Duration::from_millis(250));
+    }
+    // The room's cue lands at 0:35, then a late seek back to the start it opened with.
+    property("seeking", "true".into());
+    property("time-pos", "35.00".into());
+    property("seeking", "false".into());
+    thread::sleep(Duration::from_millis(400));
+    property("seeking", "true".into());
+    property("time-pos", "4.20".into());
+    property("seeking", "false".into());
+    for _ in 0..8 {
+        property("time-pos", "4.20".into());
+        thread::sleep(Duration::from_millis(250));
+    }
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (_, _, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    let seeks: Vec<_> = read
+        .iter()
+        .chain(&later)
+        .filter(|e| {
+            matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::Seeked { to, .. } if to < 10.0))
+        })
+        .collect();
+    assert!(seeks.is_empty(), "{seeks:?}");
+    engine.shutdown();
+}
+
+#[test]
 fn the_wait_line_and_the_row_count_from_one_start() {
     let (_root, engine) = staged(FfiRoomScene::WaitLoading);
     let (view, members, _) = until(&engine, |v, m, _| {

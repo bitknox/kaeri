@@ -151,8 +151,12 @@ impl Drift {
                 // from where it was by less than the time says: behind, never a seek.
                 let lagged =
                     !last.paused && pos >= last.pos - LANDED && pos <= last.pos + played;
+                // Toward the room's place is catching up, whoever moved it.
+                let toward = room.is_some_and(|(room_pos, _)| {
+                    (pos - room_pos).abs() + LANDED < (last.pos + played - room_pos).abs()
+                });
                 let viewers = self.viewer_seek_at.is_some_and(|at| now - at <= VIEWER_SEEK_MS);
-                if viewers && !told && !rooms && !lagged {
+                if viewers && !told && !rooms && !lagged && !toward {
                     self.viewer_seek_at = None;
                     out.push(Act::ViewerSeek(pos));
                     return out;
@@ -287,6 +291,21 @@ mod tests {
             drift.sample(40.0, true, 1.0, 900, paused_at(12.3)),
             vec![Act::ViewerSeek(40.0)]
         );
+    }
+
+    #[test]
+    fn a_seek_toward_the_rooms_place_is_never_the_viewers() {
+        // Even when the player says a seek began: closer to where the room is, it caught up.
+        let mut drift = Drift::default();
+        let room = Some((35.0, false));
+        drift.sample(4.0, true, 1.0, 0, room);
+        drift.viewer_seeked(500);
+        let acts = drift.sample(30.0, true, 1.0, 1_000, room);
+        assert!(!acts.iter().any(|a| matches!(a, Act::ViewerSeek(_))), "{acts:?}");
+        // Away from it, it is the viewer's.
+        drift.viewer_seeked(1_500);
+        let acts = drift.sample(4.0, true, 1.0, 2_000, room);
+        assert!(acts.contains(&Act::ViewerSeek(4.0)), "{acts:?}");
     }
 
     #[test]
