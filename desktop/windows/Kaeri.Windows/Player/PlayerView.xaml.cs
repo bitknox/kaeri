@@ -2676,6 +2676,12 @@ public sealed partial class PlayerView : UserControl
     /// <summary>The new episode has its first picture: pause and ask when nobody has been here for a run of them.</summary>
     void FirstPicture()
     {
+        // Play here from a cast: on from where the TV was, rather than the last place history kept.
+        if (ctx?.Known.StartAt is { } at && at.Is(playingId, playingEpisode))
+        {
+            ctx.Known.StartAt = null;
+            SendControl(new PlayerCommand.SeekTo(at.Position));
+        }
         if (still.FirstPicture())
             AskStillWatching();
 #if KAERI_TESTING

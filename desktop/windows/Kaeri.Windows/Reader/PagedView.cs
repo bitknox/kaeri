@@ -723,27 +723,37 @@ sealed class PagedView : Grid
     }
 
     /// <summary>
-    /// A tap or click, as a fraction of the width, from the overlay. A finger's tap while the
-    /// chrome is up only puts it away; the mouse brings the chrome up as it moves, so a click on
-    /// an edge turns whether the chrome shows or not. While zoomed the zones are off.
+    /// A tap or click, as fractions of the width and height, from the overlay. A finger's tap
+    /// while the chrome is up only puts it away; the mouse brings the chrome up as it moves, so a
+    /// click in Next or Previous turns whether the chrome shows or not. While zoomed the zones are
+    /// off. Which zone a tap is in is the engine's hit test, on the device's tap zone settings
+    /// (a layout chosen before they came, Off or Sides, carried over).
     /// </summary>
-    public void Tap(double x)
+    public void Tap(double x, double y)
     {
-        var layout = owner.Reader.Choice(ReaderSettingKey.TapLayout) ?? "edges";
-        if ((owner.ChromeShown && owner.TouchInput) || layout == "off" || Zoomed)
+        if ((owner.ChromeShown && owner.TouchInput) || Zoomed)
         {
             owner.ToggleChrome();
             return;
         }
-        // Edges: the outer thirds turn. Sides: the outer 40 percent, and the middle still brings the chrome up.
-        var edge = layout == "sides" ? 0.4 : 0.33;
-        if (x < edge || x > 1 - edge)
+        var action = owner.Reader.Settings?.TapZones is { } zones && Reader.View is { } view
+            ? KaeriModelMethods.TapAction(zones, new TapReading(view.Mode, view.Direction, Zoomed: false, ScreenReader: false), x, y)
+            // No settings yet: Sides at its standard size, the desktop's own start.
+            : x < 1 / 3.0 ? (owner.Rtl ? TapAction.Next : TapAction.Previous)
+            : x > 2 / 3.0 ? (owner.Rtl ? TapAction.Previous : TapAction.Next)
+            : TapAction.Controls;
+        switch (action)
         {
-            var leftSide = x < 0.5;
-            Turn(leftSide == owner.Rtl, TurnHow.Turn);
+            case TapAction.Next:
+                Turn(true, TurnHow.Turn);
+                break;
+            case TapAction.Previous:
+                Turn(false, TurnHow.Turn);
+                break;
+            default:
+                owner.ToggleChrome();
+                break;
         }
-        else
-            owner.ToggleChrome();
     }
 
     /// <summary>Home and End: the first leaf and the last.</summary>

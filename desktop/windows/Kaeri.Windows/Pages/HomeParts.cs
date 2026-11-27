@@ -105,6 +105,10 @@ static class SynopsisText
             return;
         }
         var bars = new List<(Border Bar, TextBlock Text)>();
+        // A screen reader meets each spoiler once: its first word's bar stands for the whole of
+        // it, "Spoiler" until shown and its words after, and the rest of its bars and every
+        // hidden word are left out of the tree.
+        var heads = new List<(Border Bar, string Words)>();
         var open = false;
         void Set(bool on)
         {
@@ -113,8 +117,9 @@ static class SynopsisText
             {
                 text.Opacity = on ? 1 : 0;
                 bar.Opacity = on ? 0.55 : 1;
-                AutomationProperties.SetName(bar, on ? text.Text : T.DiscussionSpoiler);
             }
+            foreach (var (bar, words) in heads)
+                AutomationProperties.SetName(bar, on ? words : T.DiscussionSpoiler);
         }
         foreach (var span in spans)
         {
@@ -123,9 +128,11 @@ static class SynopsisText
                 block.Inlines.Add(new Run { Text = span.Text });
                 continue;
             }
+            var head = true;
             foreach (Match m in Regex.Matches(span.Text, @"\S+\s*|\s+"))
             {
                 var text = new TextBlock { Text = m.Value.Replace('\n', ' '), FontSize = block.FontSize, Opacity = 0 };
+                AutomationProperties.SetAccessibilityView(text, AccessibilityView.Raw);
                 var bar = new Border
                 {
                     Background = Ui.Res<Brush>("SpoilerBarBrush"),
@@ -149,6 +156,11 @@ static class SynopsisText
                         Set(!open);
                     }
                 };
+                if (head)
+                    heads.Add((bar, span.Text.Replace('\n', ' ').Trim()));
+                else
+                    AutomationProperties.SetAccessibilityView(bar, AccessibilityView.Raw);
+                head = false;
                 bars.Add((bar, text));
                 block.Inlines.Add(new InlineUIContainer { Child = bar });
             }

@@ -82,7 +82,7 @@ public sealed partial class MainWindow
         castLayer = new CastLayer(ctx, tv, PaneGrid, new CastHost
         {
             OpenShow = OpenTitle,
-            PlayHere = play => ctx.Play(play.Id, play.Episode),
+            PlayHere = play => ctx.PlayAt(play.Id, play.Episode, play.From),
             ChooseSource = ChooseCastSource,
             // Over the mini while it shows; at the foot, over the remote, while that is open.
             MiniShown = shown => Toast.Margin = new Thickness(24, 0, 24, shown ? 92 : 16),
@@ -99,7 +99,6 @@ public sealed partial class MainWindow
         // The button knows whether TVs exist, and a cast left running is joined again, only by
         // browsing: from launch while the window is up.
         BrowseForButton(true);
-        Root.PreviewKeyDown += CastVolumeKeys;
         // The link waits between tries while the TV is away; a network back, or the window
         // brought to the front, tries now.
         NetworkInformation.NetworkStatusChanged += TvNetworkChanged;
@@ -154,7 +153,7 @@ public sealed partial class MainWindow
             castLayer.Refresh();
             return;
         }
-        ShowToast(InfoBarSeverity.Informational, text, T.CastPlayHere, () => ctx.Play(play.Id, play.Episode), hold: NoticeTime.Timed(text, screenReader: false));
+        ShowToast(InfoBarSeverity.Informational, text, T.CastPlayHere, () => ctx.PlayAt(play.Id, play.Episode, play.From), hold: NoticeTime.Timed(text, screenReader: false));
         castEndToast = toastShown;
         castLayer?.Refresh();
     }
@@ -276,33 +275,6 @@ public sealed partial class MainWindow
                 break;
         }
         castLayer?.Refresh();
-    }
-
-    /// <summary>
-    /// The keyboard's volume keys while a TV is held: the TV's volume moves too, where the TV takes
-    /// a level or a mute. Windows still moves this PC's own, as it does for every app.
-    /// </summary>
-    // The keyboard's volume keys, which VirtualKey has no names for.
-    const global::Windows.System.VirtualKey VolumeMuteKey = (global::Windows.System.VirtualKey)0xAD,
-        VolumeDownKey = (global::Windows.System.VirtualKey)0xAE, VolumeUpKey = (global::Windows.System.VirtualKey)0xAF;
-
-    void CastVolumeKeys(object sender, Microsoft.UI.Xaml.Input.KeyRoutedEventArgs e)
-    {
-        if (!tv.SessionHeld)
-            return;
-        var settable = tv.Session?.VolumeControl == FfiVolumeControl.Level;
-        switch (e.Key)
-        {
-            case VolumeUpKey when settable:
-                tv.SessionCommand(new FfiTvCommand.Volume(5));
-                break;
-            case VolumeDownKey when settable:
-                tv.SessionCommand(new FfiTvCommand.Volume(-5));
-                break;
-            case VolumeMuteKey when tv.Session?.CanMute == true:
-                tv.SessionCommand(new FfiTvCommand.Mute(!(tv.Session?.Muted ?? false)));
-                break;
-        }
     }
 
     /// <summary>The title bar's end: the cast button in a slot of its own, then where sync stands and the private badge.</summary>

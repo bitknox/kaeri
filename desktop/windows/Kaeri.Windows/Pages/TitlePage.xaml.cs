@@ -1019,7 +1019,9 @@ public sealed partial class TitlePage : Page, IPageKeys
                 case Event.Private:
                 case Event.AlwaysPrivate { Title: PrivateTitle.Show shown } when shown.Id == id:
                 case Event.ShowSettings sheet when sheet.V1.Id == id:
+                    // Private and Spoiler protection both follow the show's own settings.
                     ShowPrivate();
+                    ShowSpoilers();
                     break;
                 case Event.Progress p when p.Id == id:
                     ShowPrivate();
@@ -1076,9 +1078,6 @@ public sealed partial class TitlePage : Page, IPageKeys
                     ShowSpoilers();
                     // The switch went off: the people fade away until the page is said again without them.
                     following.Update(Current(), !Waits());
-                    break;
-                case Event.ShowSettings sheet when sheet.V1.Id == id:
-                    ShowSpoilers();
                     break;
                 case Event.TitlesChanged:
                     // Named another way now, with its relations and recommendations.

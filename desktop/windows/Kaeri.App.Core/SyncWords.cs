@@ -250,6 +250,13 @@ public static class SyncWords
     public static SyncCopy[] CopyAll(SyncDeviceView device) =>
         [new SyncCopy.Trackers(), .. device.SignIns.Select(s => (SyncCopy)new SyncCopy.Cloud(s))];
 
+    /// <summary>
+    /// The answer to a first-run setup's Copy sign-ins switch: on keeps and signs in with the
+    /// tracker sign-ins the engine holds from that device, off drops them.
+    /// </summary>
+    public static SyncCommand SetupSignIns(string device, bool copy) =>
+        new SyncCommand.CopySignIns(device, copy ? [new SyncCopy.Trackers()] : [], null);
+
     /// <summary>The device a pairing just added: the newest one that is not this device.</summary>
     public static SyncDeviceView? Newest(SyncStatus status) => status.Devices.LastOrDefault(d => !d.ThisDevice);
 

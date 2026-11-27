@@ -570,6 +570,8 @@ public class StoresTests
         Assert.Equal("Version 1.0.0 installed, 1.1.0 available", Stores.Standing(store.Plugins[0]));
         Assert.Equal("Run by Ren, Aki · one.example", Stores.RunBy(["Ren", "Aki"], "one.example"));
         Assert.Equal("one.example", Stores.RunBy([], "one.example"));
+        Assert.StartsWith("Ren, Aki runs this plugin store", Stores.OwnerResponsible(["Ren", "Aki"], "one.example"));
+        Assert.StartsWith("one.example runs this plugin store", Stores.OwnerResponsible(null, "one.example"));
         Assert.Equal("Joined without a name", Stores.JoinedAs(store with { Anonymous = true }));
     }
 

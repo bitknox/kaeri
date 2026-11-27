@@ -19,7 +19,7 @@
         <ColumnDefinition Width="Auto" />
       </Grid.ColumnDefinitions>
       <StackPanel Spacing="2">
-        <TextBlock Text="{x:Bind app:T.DownloadsTitle}" Style="{StaticResource PageTitleStyle}" />
+        <TextBlock Text="{x:Bind app:T.DownloadsTitle}" Style="{StaticResource PageTitleStyle}" AutomationProperties.HeadingLevel="Level1" />
         <TextBlock x:Name="Subtitle" Style="{StaticResource HazeBodyStyle}" />
       </StackPanel>
       <StackPanel x:Name="Actions" Grid.Column="1" Orientation="Horizontal" Spacing="8" VerticalAlignment="Center">

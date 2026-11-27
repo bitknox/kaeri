@@ -925,12 +925,17 @@ public static class TvWords
     /// <summary>What a card that ended offers, by the engine's reason.</summary>
     public static CastOffer[] OffersFor(Msg? notice) => notice switch
     {
-        Msg.NoticeCastRefused or Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec or Msg.NoticeCastContainer =>
-            [CastOffer.ChooseSource, CastOffer.PlayHere],
-        Msg.NoticeCastNeverFetches => [CastOffer.TryAgain, CastOffer.PlayHere],
+        Msg.NoticeCastRefused or Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec or Msg.NoticeCastContainer
+            or Msg.NoticeCastSegment => [CastOffer.ChooseSource, CastOffer.PlayHere],
+        Msg.NoticeCastNeverFetches or Msg.NoticeCastLostStream => [CastOffer.TryAgain, CastOffer.PlayHere],
         Msg.NoticeCastDeepLink => [CastOffer.ChooseSource],
         _ => [CastOffer.PlayHere, CastOffer.ChooseAnother],
     };
+
+    /// <summary>Whether the spec's failure table names this reason; any other keeps the line's own two actions.</summary>
+    public static bool Tabled(Msg? notice) => notice is Msg.NoticeCastRefused or Msg.NoticeCastVideoCodec or Msg.NoticeCastAudioCodec
+        or Msg.NoticeCastContainer or Msg.NoticeCastSegment or Msg.NoticeCastNeverFetches or Msg.NoticeCastLostStream
+        or Msg.NoticeCastDeepLink or Msg.NoticeCastNotSameNetwork or Msg.NoticeCastLost or Msg.NoticeCastNoDevice;
 
     /// <summary>
     /// The line while a cast starts: the engine's phase line, else "Starting on Living room",
@@ -973,6 +978,9 @@ public static class TvWords
 
     /// <summary>The note an automatic skip leaves on the casting card.</summary>
     public static string CastSkipped(FfiCastUndo undo) => undo.Kind switch { SkipKind.Ending => T.PlayerSkippedEnding, SkipKind.Recap => T.PlayerSkippedRecap, _ => T.PlayerSkippedOpening };
+
+    /// <summary>The skip a card offers, in the catalogue's words: the card names the part in English.</summary>
+    public static string SkipOffered(FfiSkipCard skip) => skip.Label switch { "Skip ending" => T.PlayerSkipEnding, "Skip recap" => T.PlayerSkipRecap, _ => T.PlayerSkipOpening }; // i18n-skip
 
     /// <summary>The TV volume row's value: the level for a TV that has one, "Set on the TV" for one that doesn't.</summary>
     public static string CastVolume(FfiCastCard card) => card.VolumeControl == FfiVolumeControl.Fixed || card.Card.Now?.Volume is null

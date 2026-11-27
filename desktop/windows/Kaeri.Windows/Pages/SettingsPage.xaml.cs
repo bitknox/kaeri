@@ -56,7 +56,7 @@ public sealed partial class SettingsPage : Page
         ]),
         new("playback", "",
         [
-            ("watching", [K.Trailers, K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
+            ("watching", [K.Trailers, K.HoverCards, K.Translation, K.Quality, K.Subtitles, K.CommitThreshold]),
             ("player", [K.AutoNext, K.UpNextCountdown, K.PreloadMetered, K.SkipOpening, K.SkipRecap, K.SkipFiller, K.MarkChapters, K.SkipButton, K.FindSkipTimes, K.AskWasOpening, K.ShareSkipTimes, K.Fullscreen]),
             ("picture", [K.Upscaling, K.NightMode, K.SpoilerProtection, K.Motion]),
             // Laid out by SubtitleSettings: the preview and its ten rows.
@@ -119,6 +119,7 @@ public sealed partial class SettingsPage : Page
         K.Motion => T.SettingsMotion,
         K.Titles => T.SettingsTitleLanguage,
         K.Trailers => T.SettingsLabelTrailers,
+        K.HoverCards => T.SettingsLabelHoverCards,
         K.Translation => T.SettingsAudio,
         K.Quality => T.SettingsQuality,
         K.Subtitles => T.PlayerSubtitles,
@@ -1498,6 +1499,7 @@ public sealed partial class SettingsPage : Page
     static string? Detail(K key) => key switch
     {
         K.AdultTitles => T.SettingsAdultDetail(KaeriFfiMethods.TrackerName("anilist")),
+        K.HoverCards => T.SettingsHoverCardsNote,
         K.Translation => T.SettingsAudioDetail,
         K.CommitThreshold => T.SettingsCountsWatchedDetail,
         K.SkipButton => T.SettingsSkipButtonDetail,
@@ -1522,7 +1524,9 @@ public sealed partial class SettingsPage : Page
         Cards.Children.Add(under);
         Cards.Children.Add(Heading(T.SettingsTrackers));
         // Each card keeps itself current: sync, an expired sign-in, and one under way.
-        foreach (var tracker in new[] { "anilist", "mal", "kitsu", "simkl", "trakt" })
+        // MangaUpdates tracks reading only, so it is here while reading is on, as onboarding says.
+        string[] trackers = ctx.Known.Medium.Reads ? ["anilist", "mal", "kitsu", "simkl", "trakt", "mangaupdates"] : ["anilist", "mal", "kitsu", "simkl", "trakt"];
+        foreach (var tracker in trackers)
         {
             Cards.Children.Add(AccountCard.For(ctx, tracker));
             // What the last pull found different from AniList, under its card, with Review.

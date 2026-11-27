@@ -138,7 +138,8 @@ public sealed partial class PlayerView
         rollOn = rolling ? new RollOnHold() : null;
         Motion.Set(StartingContent, !rolling);
         var resume = staged is { } st && st.Id == s.Id && st.Episode == s.EpisodeValue ? st.Resume : null;
-        start = new StartScreen(s.Id, s.EpisodeValue, resume) { DetailsOpen = DetailsRemembered() };
+        // The switch shows the version in force for the session until a stream is found in one.
+        start = new StartScreen(s.Id, s.EpisodeValue, resume) { DetailsOpen = DetailsRemembered(), Configured = StartScreen.InForce(ctx?.Known.Settings, ctx?.Known.ShowSheets.GetValueOrDefault(s.Id)) };
         startingEpisode = s.EpisodeValue;
         startingDemo = ctx is { } k && (k.Known.DemoPlay || k.Known.Entries.TryGetValue(s.Id, out var shown) && shown.IsDemo);
         if (ctx is not null)
@@ -831,11 +832,13 @@ public sealed partial class PlayerView
         // Before a stream has been handed to the player, a choice queued for it would only apply
         // once the old translation's stream opened, or be lost if it failed: the search starts
         // again at once in the new translation, behind the same screen (as the Mac's startWith).
-        if (findingFor is { } id && start is { } s && ctx is { } c)
+        // So too while it is still searching or once it failed: the switch is the way out when
+        // one version has no source.
+        if (start is { } s && ctx is { } c && (findingFor is not null || s.Failed || !s.StreamFound))
         {
             still.Input();
             c.Send(new Command.SetTranslation(translation));
-            c.Send(new Command.Play(id, s.Episode, false));
+            c.Send(new Command.Play(findingFor ?? s.Id, s.Episode, false));
             return;
         }
         Send(new PlayerCommand.Choose(new PlayerChoice.Translation(translation)));

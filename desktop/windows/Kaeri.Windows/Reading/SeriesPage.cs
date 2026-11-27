@@ -44,6 +44,8 @@ public sealed partial class SeriesPage : Page
     bool newestFirst = true, wide = true;
     /// <summary>The chapters ticked while choosing; null when not choosing.</summary>
     HashSet<string>? choosing;
+    /// <summary>The chapter choosing starts from, brought into view as its row is drawn.</summary>
+    string? startRow;
     /// <summary>Volumes opened or folded by hand, which a redraw keeps.</summary>
     readonly Dictionary<string, bool> folded = [];
     /// <summary>Remove from lists was asked: its answer opens the result.</summary>
@@ -877,6 +879,12 @@ public sealed partial class SeriesPage : Page
         var menu = new MenuFlyout();
         menu.Opening += (_, _) => FillMenu(menu, series, row);
         button.ContextFlyout = menu;
+        // Choosing began: the first chapter ticked comes into view, about halfway down.
+        if (row.Id == startRow)
+        {
+            startRow = null;
+            button.Loaded += (_, _) => button.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.5, AnimationDesired = Motion.Enabled });
+        }
         return button;
     }
 
@@ -954,7 +962,9 @@ public sealed partial class SeriesPage : Page
     void StartChoosing()
     {
         // The next ten unread chapters not downloaded yet, from where the reader is, start ticked.
-        choosing = [.. ChooseChapters.Start([.. Volumes().SelectMany(v => v.Chapters)])];
+        var start = ChooseChapters.Start([.. Volumes().SelectMany(v => v.Chapters)]);
+        choosing = [.. start];
+        startRow = start.FirstOrDefault();
         // Every volume opens while choosing, so a whole volume can be ticked.
         foreach (var group in Volumes())
             folded[group.Volume ?? ""] = true;
