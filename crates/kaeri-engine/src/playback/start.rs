@@ -484,6 +484,12 @@ fn play_staged(
     tx: &Outbox,
 ) -> Event {
     let Services { paths, sync, prefetch, store, .. } = services;
+    // In a room, never this device's own resume point: the room's place, or the start.
+    #[cfg(feature = "room")]
+    let start = match (start, crate::room::opens_at(id, &episode, engine)) {
+        (Start::Resume, Some(at)) => at.map_or(Start::Beginning, Start::At),
+        (start, _) => start,
+    };
     let played = engine.next_playback(id, &episode);
     let told = follows || table_told(id, engine);
     // Where the episode opens, for the starting screen to say it resumes there. Not for a play

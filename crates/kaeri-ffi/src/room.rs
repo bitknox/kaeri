@@ -424,9 +424,10 @@ mod fake {
                 // A room that has been watching a while: no count before play, so a pause, a
                 // seek or a stall reads as one, not as "Starting when Ren is ready".
                 let at = super::scene::at(0.2);
-                // Your own No source and Choosing: the room watches an episode that hasn't aired,
-                // so the app's own play of it fails as a real one would.
-                let (room_ep, next) = if matches!(scene, S::YouNoSource | S::YouChoosing) {
+                // Your own No source: the room watches an episode that hasn't aired, so the
+                // app's own play of it fails as a real one would. Choosing is held over whatever
+                // the player does, so its room watches the board's episode, which plays.
+                let (room_ep, next) = if matches!(scene, S::YouNoSource) {
                     (Ep(UNAIRED.0, UNAIRED.1.to_owned()), None)
                 } else {
                     (ep(EPISODE), Some(ep(NEXT)))

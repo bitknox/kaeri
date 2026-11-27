@@ -413,11 +413,17 @@ fn an_episode_with_no_source_here_reads_no_source_in_the_room() {
     );
     engine.shutdown();
 
-    // With the picker open for it (Android's you-choosing), the failed play leaves you Choosing
-    // and says no "No source" over the picker.
+    // With the picker open for it (Android's you-choosing), the play leaves you Choosing and
+    // says no "No source" over the picker. Its episode is one the fixtures have aired, so the
+    // player above the picker plays rather than reading "Couldn't play episode 9".
     let (_root, engine) = staged(FfiRoomScene::YouChoosing);
     let (view, members, read) =
         until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    let started = read.iter().find_map(|e| match e {
+        Event::RoomStarted { id, episode, .. } => Some((id.get(), episode.clone())),
+        _ => None,
+    });
+    assert_eq!(started, Some((900_001, "9".to_owned())), "an aired episode");
     play_like_the_app(&engine, &read);
     thread::sleep(Duration::from_millis(3_000));
     engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
@@ -1213,4 +1219,61 @@ fn a_room_with_no_episode_says_so_in_your_language() {
     };
     assert_eq!(reason, kaeri_model::Msg::RoomNeedsEpisode);
     engine.shutdown();
+}
+
+/// The `start` a play's file was loaded with, from the events read.
+fn load_start(read: &[Event]) -> Option<Option<String>> {
+    read.iter().find_map(|e| match e {
+        Event::PlayerOps { ops, .. } => ops.iter().find_map(|op| match op {
+            PlayerOp::Load { options, .. } => {
+                Some(options.iter().find(|o| o.name == "start").map(|o| o.value.clone()))
+            }
+            _ => None,
+        }),
+        _ => None,
+    })
+}
+
+#[test]
+fn in_a_room_a_play_opens_at_the_rooms_place_never_your_own() {
+    // Linux: a source chosen in a room opened at this device's private resume point. In a room,
+    // every play opens at the room's place, or at the start before play.
+    for scene in [FfiRoomScene::BeforePlay, FfiRoomScene::Paused] {
+        let root = tempfile::tempdir().expect("a temporary directory");
+        {
+            std::fs::create_dir_all(root.path().join("data")).unwrap();
+            let store = kaeri_store::Store::open(root.path().join("data/kaeri.db")).unwrap();
+            let left = kaeri_store::WatchEvent {
+                duration_secs: Some(1_440.0),
+                watched_secs: 600.0,
+                ..kaeri_store::WatchEvent::new(
+                    kaeri_core::ids::AnilistId::new(900_001),
+                    "9",
+                    600.0,
+                )
+            };
+            store.record_event(&left).unwrap();
+        }
+        let engine = engine(&root);
+        let room = Arc::clone(&engine).start_fake_room();
+        assert!(room.stage(scene), "{scene:?} staged");
+        std::mem::forget(room);
+        let (view, members, read) = until(&engine, |v, _, r| {
+            v.room_episode.is_some() && r.iter().any(|e| matches!(e, Event::RoomStarted { .. }))
+        });
+        let place = view.position.filter(|p| *p > 0.5);
+        assert_eq!(place.is_some(), scene == FfiRoomScene::Paused, "{view:?}");
+        play_like_the_app(&engine, &read);
+        let (_, _, read) =
+            until_from(&engine, (Some(view), members), |_, _, r| load_start(r).is_some());
+        let start = load_start(&read).unwrap();
+        match place {
+            None => assert_eq!(start, None, "{scene:?}: from the start"),
+            Some(place) => {
+                let at: f64 = start.expect("at the room's place").parse().unwrap();
+                assert!((at - place).abs() < 1.0, "{scene:?}: {at} for {place}");
+            }
+        }
+        engine.shutdown();
+    }
 }
