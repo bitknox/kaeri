@@ -4,6 +4,7 @@
 package app.kaeri.store.room
 
 import app.kaeri.engine.model.Event
+import app.kaeri.engine.model.MemberState
 import app.kaeri.engine.model.RoomChatBody
 import app.kaeri.engine.model.RoomChatLine
 import app.kaeri.engine.model.RoomChatState
@@ -32,7 +33,7 @@ class RoomModelTest {
         link = "https://kaeri.app/r#v1.$id",
     )
 
-    private val mika = RoomMember("mika", "Mika", you = false)
+    private val mika = RoomMember("mika", "Mika", you = false, state = MemberState.WATCHING)
     private val said = RoomChatLine(1u, "Mika", false, RoomChatBody.Said("everyone here?"), false)
 
     /** A room with people, a line said, the chat's limits and a move offer, as a room in use has. */
