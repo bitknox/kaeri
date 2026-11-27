@@ -486,6 +486,21 @@ fn paused_waiting_and_before_play_scenes_open_the_player() {
 }
 
 #[test]
+fn play_pressed_before_the_room_ever_played_is_no_resume() {
+    // Windows' before-cap frame said "Mika resumed": a room that hasn't started can't resume.
+    let (_root, engine) = staged(FfiRoomScene::BeforePlayCap);
+    let (view, _, read) = until(&engine, |v, _, _| v.before_play && !v.waiting.is_empty());
+    let resumed: Vec<_> = read
+        .iter()
+        .filter(|e| {
+            matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::Resumed { .. }))
+        })
+        .collect();
+    assert!(resumed.is_empty(), "{resumed:?} {view:?}");
+    engine.shutdown();
+}
+
+#[test]
 fn a_room_started_from_a_playing_player_keeps_playing_and_says_no_resume() {
     // The morph: the player becomes the room. It must never be paused for the room's start,
     // and the room's start is no one's Resume.
