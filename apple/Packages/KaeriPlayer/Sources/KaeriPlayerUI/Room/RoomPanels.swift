@@ -443,18 +443,24 @@ struct RoomUpNextCard: View {
                         Text(RoomCopy.upNextEpisode(up.episode.episode, up.episode.name))
                             .font(.system(size: metrics.body, weight: .semibold))
                             .lineLimit(2)
+                        // The room's words are longer than the player's: the count sits here,
+                        // where the player's card has the episode's title, and the buttons
+                        // keep a row of their own, never shortened.
+                        Text(Self.when(up, now: now))
+                            .font(.system(size: 13))
+                            .monospacedDigit()
+                            .foregroundStyle(.haze)
+                            .fixedSize(horizontal: false, vertical: true)
                     }
                 }
                 HStack(spacing: 8) {
-                    Text(Self.when(up, now: now))
-                        .font(.system(size: 13))
-                        .monospacedDigit()
-                        .foregroundStyle(.haze)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Spacer(minLength: 0)
                     Button(RoomCopy.cancel) { room.cancelUpNext() }
                         .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
+                        .fixedSize()
                     Button(RoomCopy.playNextNow) { room.playNextNow() }
                         .buttonStyle(PillButtonStyle(kind: .primary, metrics: metrics))
+                        .fixedSize()
                 }
                 .padding(.top, metrics.touch ? 4 : 10)
             }

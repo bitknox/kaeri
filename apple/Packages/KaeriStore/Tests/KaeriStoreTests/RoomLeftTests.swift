@@ -93,6 +93,18 @@ struct RoomLeftTests {
         #expect(sent.count == 1, "with the player gone, Search titles opens at once")
     }
 
+    @Test func hiddenChatKeepsOnlyTheRoomsOwnLines() {
+        let room = RoomModel()
+        room.lines = [
+            RoomLine(id: 1, kind: .system("Ren paused at 3:10")),
+            RoomLine(id: 2, kind: .chat(from: "Mika", text: "that bridge again", you: false)),
+            RoomLine(id: 3, kind: .reaction(from: "Ren", reaction: .laugh, at: "3:12")),
+        ]
+        #expect(room.shownLines.count == 3)
+        room.chatHidden = true
+        #expect(room.shownLines.map(\.id) == [1], "people's lines and reactions stay off the screen")
+    }
+
     @Test(arguments: [
         ("relay.example", "wss://relay.example"),
         ("wss://relay.example/path", "wss://relay.example/path"),

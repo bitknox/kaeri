@@ -290,13 +290,13 @@ struct RoomConversation: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: gap) {
-            ForEach(room.lines) { line in
+            ForEach(room.shownLines) { line in
                 lineView(line)
                     .transition(.opacity)
             }
         }
         .frame(maxWidth: .infinity, alignment: .leading)
-        .animation(.fadeIn, value: room.lines.map(\.id))
+        .animation(.fadeIn, value: room.shownLines.map(\.id))
     }
 
     @ViewBuilder

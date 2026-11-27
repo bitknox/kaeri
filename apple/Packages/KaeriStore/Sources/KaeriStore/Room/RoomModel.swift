@@ -87,6 +87,11 @@ public final class RoomModel {
     /// Hide chat in rooms: lines, reactions and their ticks stay off the screen and the field is
     /// gone; the people stay. The setting holds until the room says so itself.
     public var chatOff: Bool { chatHidden || hidesChat }
+    /// The lines the conversation shows: with the chat off, only what the room itself says.
+    public var shownLines: [RoomLine] {
+        guard chatOff else { return lines }
+        return lines.filter { if case .system = $0.kind { true } else { false } }
+    }
     /// An invite opened and not joined yet.
     public internal(set) var invitation: RoomInvitation?
     /// Someone moved the room and ticked this member.
