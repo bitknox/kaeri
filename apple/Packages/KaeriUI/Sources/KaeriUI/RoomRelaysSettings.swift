@@ -40,6 +40,7 @@ struct RelaysPane: View {
     @Environment(AppStore.self) private var store
     @Environment(Navigator.self) private var navigator
     @State private var adding = "wss://"
+    @FocusState private var typing: Bool
 
     var body: some View {
         let room = store.room
@@ -73,6 +74,15 @@ struct RelaysPane: View {
                         .frame(height: 26)
                         .background(Palette.silk.opacity(0.06), in: .rect(cornerRadius: 6))
                         .overlay(RoundedRectangle(cornerRadius: 6).strokeBorder(Palette.glassRule, lineWidth: 1))
+                        .focused($typing)
+                        #if os(macOS)
+                        // The page opens with nothing focused: the first responder the window
+                        // picks is let go.
+                        .task {
+                            try? await Task.sleep(for: .milliseconds(80))
+                            if typing { typing = false }
+                        }
+                        #endif
                         .onSubmit(add)
                         .accessibilityLabel(L.roomRelayAdd)
                     Button(L.roomRelayAdd, action: add)
