@@ -321,7 +321,7 @@ impl Choose {
             self.providers.set_visible(true);
             return;
         }
-        self.line.set_label(&t::party_sources_found_line(found.len() as i64));
+        self.line.set_label(&t::room_sources_found_line(found.len() as i64));
         for candidate in found {
             let row = adw::ActionRow::builder()
                 .title(gtk::glib::markup_escape_text(&candidate.title))

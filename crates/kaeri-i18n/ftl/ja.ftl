@@ -1728,12 +1728,6 @@ party-choose-a-source = ソースを選択
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = どのソースにもエピソード{ $episode }がありません。ソースはプラグインから、プラグインはプラグインストアから追加します。
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-       *[other] { $count }件のソースにあります。選んだソースが同時視聴で再生されます。
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = プレーヤーを起動できませんでした。もう一度試すか、別のソースを選んでください。
 

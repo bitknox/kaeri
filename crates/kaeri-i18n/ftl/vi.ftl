@@ -1728,12 +1728,6 @@ party-choose-a-source = Chọn một nguồn
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Không nguồn nào có tập { $episode }. Các nguồn đến từ các plugin bạn thêm từ một cửa hàng plugin.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-       *[other] { $count } nguồn có tập này. Nguồn bạn chọn sẽ phát cùng xem chung.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Trình phát không khởi động được. Hãy thử lại hoặc chọn nguồn khác.
 

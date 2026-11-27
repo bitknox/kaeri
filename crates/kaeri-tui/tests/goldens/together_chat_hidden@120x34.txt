@@ -2,11 +2,11 @@ Kaeri                                                                           
 ────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────
   ▸  Home                   │  Together                               Natsukaze Relay
   ▤  Calendar               │  ────────────────────────────────────   Episode 9 · 3 in the room
-  ▦  Seasonal               │  Natsukaze Relay                        End to end · 2 of 2 relays answering · 42 ms
+  ▦  Seasonal               │  Natsukaze Relay                        End to end · 2 of 2 relays answering · 42 ms
   /  Search                 │
   ▥  Library                │    ● Ada (you)       Ready              Not started yet
   ↓  Downloads              │  ▌ ● Mika            Ready              Play starts it for everyone
-  ◇  Sources                │    · Ren             Loading · 4 s      Plays from your sources
+  ◇  Sources                │    · Ren             Loading · 4 s      Plays from your sources
   ◎  Accounts               │
   ≡  Settings               │    Join a room  [invite link]           Invite
 ▌ ⇄  Together               │                                         https://kaeri.app/party#v=3&k=BwcHBwcHBwcHBwcHB…
