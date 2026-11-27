@@ -259,9 +259,9 @@ fn a_newcomer_by_a_new_invite_meets_everyone_already_there() {
         matches!(e, Event::RoomMembers(m)
             if m.iter().any(|m| m.name == "Ada") && m.iter().any(|m| m.name == "Mika"))
     });
-    // Back, with its sockets open again (chat said while none is open is not kept).
+    // Back, and says something at once, while its sockets are still opening again: it goes
+    // out once one is up.
     ada.send(Command::AppPhase { phase: AppState::Foreground });
-    thread::sleep(Duration::from_millis(3_000));
     // And hears each of them: neither is dropped as unproved.
     for (engine, line) in [(&ada, "from Ada"), (&mika, "from Mika")] {
         engine.send(Command::Room(RoomCommand::Say { text: line.into() }));

@@ -76,10 +76,28 @@ pub struct Running {
     episodes: Episodes,
     /// A scene holds this device as Choosing (testing builds only).
     held: Held,
+    place: Place,
 }
 
 /// Whether a scene holds this device as Choosing, as the engine reads it.
 type Held = std::sync::Arc<std::sync::atomic::AtomicBool>;
+
+/// The room's place as the task last saw it, for the engine's plays: the episode, the second,
+/// when (epoch ms), and whether the room was playing on from there.
+type Place = std::sync::Arc<std::sync::Mutex<Option<(Ep, f64, i64, bool)>>>;
+
+/// Where a play of episode `episode` of `id` opens while a room is going: never this device's
+/// own resume point, but the room's place on the room's episode (`Some(at)`), or the start
+/// (`None`) before play and on any other episode. `None` outside a room.
+pub fn opens_at(id: AnilistId, episode: &str, engine: &EngineState) -> Option<Option<f64>> {
+    let running = going(engine)?;
+    let place = running.place.lock().unwrap_or_else(std::sync::PoisonError::into_inner).clone();
+    let at = place.and_then(|(ep, pos, at, playing)| {
+        let pos = if playing { pos + (now_ms() - at).max(0) as f64 / 1000.0 } else { pos };
+        (ep == Ep(id.get(), episode.to_owned()) && pos > 0.5).then_some(pos)
+    });
+    Some(at)
+}
 
 /// Whether a scene holds this device as Choosing: the app's real play finding no source is not
 /// said over the picker the scene shows (testing builds only; never in a product build).
@@ -427,6 +445,7 @@ fn begin(
     let (control, controls) = mpsc::unbounded_channel();
     let seats = services.party.open();
     let held = Held::default();
+    let place = Place::default();
     let env = Env {
         meta: services.meta.clone(),
         store: services.store.clone(),
@@ -434,10 +453,11 @@ fn begin(
         hidden: engine.config.effective().room.hide_chat,
         spares: spares(engine),
         held: held.clone(),
+        place: place.clone(),
     };
     let episodes = Episodes::default();
     tokio::spawn(run(target, start, name, env, controls, seats, episodes.clone()));
-    engine.room = Some(Running { control, episodes, held });
+    engine.room = Some(Running { control, episodes, held, place });
 }
 
 #[derive(Clone)]
@@ -451,6 +471,8 @@ struct Env {
     /// Whether a scene holds this device as Choosing, for the engine to read.
     #[cfg_attr(not(feature = "testing"), allow(dead_code))]
     held: Held,
+    /// The room's place, for the engine's plays.
+    place: Place,
 }
 
 /// Look into a room without anyone seeing: an invite's, or a recent room's (`room_id`).
@@ -1163,6 +1185,11 @@ impl Task {
         self.remember();
         let now = self.room.playhead().map(|h| (h.ep.clone(), h.next.clone()));
         *self.episodes.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = now;
+        let at = self.now();
+        let place = self.room.playhead().map(|h| {
+            (h.ep.clone(), self.room.position(at).unwrap_or(0.0), at, self.room.playing())
+        });
+        *self.env.place.lock().unwrap_or_else(std::sync::PoisonError::into_inner) = place;
         let view = self.view();
         let mut compare = view.clone();
         compare.position_at_ms = 0;
