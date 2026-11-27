@@ -15410,12 +15410,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-choose-server": {
-    "source": "fb720f0cb925",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-choose-source": {
     "source": "44762908fde2",
     "state": "draft",
@@ -15884,12 +15878,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-needs-server": {
-    "source": "743b76505cad",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-next-joined-at": {
     "source": "c35190d6b42e",
     "state": "draft",
@@ -16136,12 +16124,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-rejoined": {
-    "source": "b9cddf56b027",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-room": {
     "source": "ca7d152bef51",
     "state": "draft",
@@ -16255,12 +16237,6 @@
     "state": "draft",
     "by": "opus",
     "at": "2026-11-07"
-  },
-  "party-server-lost": {
-    "source": "7be517418a8f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
   },
   "party-server-public": {
     "source": "21ab64ccf178",

@@ -713,13 +713,21 @@ object Strings {
     fun noticeKeepNextFull(context: Context): String =
         context.getString(R.string.notice_keep_next_full)
 
-    /** Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps. */
-    fun partyNeedsServer(context: Context, server: String, operator: String): String =
-        context.getString(R.string.party_needs_server, server, operator)
+    /** Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on. */
+    fun roomLookUnreachable(context: Context): String =
+        context.getString(R.string.room_look_unreachable)
 
-    /** Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it. */
-    fun partyChooseServer(context: Context, server: String, operator: String): String =
-        context.getString(R.string.party_choose_server, server, operator)
+    /** Why a look into a room found nothing: the pasted text is no room's invite. */
+    fun roomLookNotAnInvite(context: Context): String =
+        context.getString(R.string.room_look_not_an_invite)
+
+    /** Why a look into a recent room found nothing: it's no longer in this device's recent rooms. */
+    fun roomLookNotKept(context: Context): String =
+        context.getString(R.string.room_look_not_kept)
+
+    /** Why a look into a room found nothing: the invite comes from an older version. */
+    fun roomLookOldInvite(context: Context): String =
+        context.getString(R.string.room_look_old_invite)
 
     /** Toast when a watch party is asked for in a build without watch parties. */
     fun noticeNoParty(context: Context): String =
@@ -728,14 +736,6 @@ object Strings {
     /** Message when a watch party was asked for with no room named. */
     fun partyNeedsRoom(context: Context): String =
         context.getString(R.string.party_needs_room)
-
-    /** Message in a watch party when its server connection dropped and is retried. */
-    fun partyServerLost(context: Context): String =
-        context.getString(R.string.party_server_lost)
-
-    /** Message in a watch party when the connection came back. */
-    fun partyRejoined(context: Context): String =
-        context.getString(R.string.party_rejoined)
 
     /** Message when the person left a watch party. */
     fun partyLeft(context: Context): String =

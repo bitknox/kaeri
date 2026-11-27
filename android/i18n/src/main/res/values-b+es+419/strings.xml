@@ -203,12 +203,8 @@
         <item quantity="other">Se añadieron %1$,d episodios a la cola y luego se detuvo. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">No hay suficiente espacio libre para mantener descargados los siguientes episodios. Libera espacio para descargar más.</string>
-    <string name="party_needs_server">Primero elige un servidor para la watch party, en el ajuste syncplay.server. %1$s es operado por %2$s.</string>
-    <string name="party_choose_server">Primero elige un servidor para la watch party. %1$s es operado por %2$s.</string>
     <string name="notice_no_party">Las watch parties no están disponibles en esta versión de Kaeri.</string>
     <string name="party_needs_room">La watch party necesita una sala para reunirse. Elige una primero.</string>
-    <string name="party_server_lost">Se perdió el servidor de la watch party. Intentando de nuevo.</string>
-    <string name="party_rejoined">De vuelta en la watch party.</string>
     <string name="party_left">Saliste de la watch party.</string>
     <string name="party_server_unreachable">No se pudo conectar con %1$s. Revisa el servidor o inténtalo de nuevo.</string>
     <string name="reading_next_chapter">Capítulo %1$s</string>

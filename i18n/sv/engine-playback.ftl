@@ -114,11 +114,7 @@ notice-episodes-queued-existing-stopped = { $count ->
    *[other] { $count } avsnitt lades i kön, sedan stoppade det. { $existing } { $reason }
  }
 notice-keep-next-full = Inte tillräckligt med ledigt utrymme för att hålla kommande avsnitt nedladdade. Frigör lite utrymme för att ladda ner fler.
-party-needs-server = Välj först en server för { -watch-party }, som syncplay.server. { $server } drivs av { $operator }.
-party-choose-server = Välj först en server för { -watch-party }. { $server } drivs av { $operator }.
 notice-no-party = { -watch-party-cap-pl } finns inte i den här versionen av { -app-name }.
 party-needs-room = En { -watch-party } behöver ett rum att träffas i. Välj ett först.
-party-server-lost = Servern för { -watch-party } tappades. Försöker igen.
-party-rejoined = Tillbaka i { -watch-party }.
 party-left = Lämnade { -watch-party }.
 party-server-unreachable = Kunde inte nå { $server }. Kontrollera servern eller försök igen.

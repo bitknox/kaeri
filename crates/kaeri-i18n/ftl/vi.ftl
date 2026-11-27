@@ -531,23 +531,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Không đủ dung lượng trống để giữ các tập sau đã tải. Hãy giải phóng thêm dung lượng để tải thêm.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Hãy chọn máy chủ cho xem chung trước, dưới tên syncplay.server. { $server } do { $operator } vận hành.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Hãy chọn máy chủ cho xem chung trước. { $server } do { $operator } vận hành.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Các buổi xem chung không có trong phiên bản Kaeri này.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = Một buổi xem chung cần một phòng để gặp nhau. Hãy chọn phòng trước.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Mất máy chủ của xem chung. Đang thử lại.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Đã trở lại xem chung.
 
 # Message when the person left a watch party.
 party-left = Đã rời xem chung.

@@ -71,6 +71,17 @@ type Episodes = std::sync::Arc<std::sync::Mutex<Option<(Ep, Option<Ep>)>>>;
 pub struct Running {
     control: mpsc::UnboundedSender<Control>,
     episodes: Episodes,
+    /// A scene holds this device as Choosing (testing builds only).
+    held: Held,
+}
+
+/// Whether a scene holds this device as Choosing, as the engine reads it.
+type Held = std::sync::Arc<std::sync::atomic::AtomicBool>;
+
+/// Whether a scene holds this device as Choosing: the app's real play finding no source is not
+/// said over the picker the scene shows (testing builds only; never in a product build).
+pub fn held_choosing(engine: &EngineState) -> bool {
+    going(engine).is_some_and(|r| r.held.load(std::sync::atomic::Ordering::Relaxed))
 }
 
 impl Running {
@@ -104,11 +115,10 @@ pub fn command(
         RoomCommand::Lobby { invite, name, pick, anyway } => {
             join(invite.as_deref(), name, pick, anyway, engine, services, tx);
         }
+        // A look never leaves the room this device is in: it fails as a look.
         RoomCommand::PeekInvite { invite } => match target(&invite) {
-            Ok(target) => peek(target, None, services, tx),
-            Err(why) => {
-                let _ = tx.send(Event::RoomLeft { why });
-            }
+            Ok(target) => peek(target, Look::Invite(invite), services, tx),
+            Err(why) => look_failed(Look::Invite(invite), String::new(), why, tx),
         },
         RoomCommand::Rejoin { room_id } => match recent(&room_id, services) {
             Some((target, name)) => {
@@ -117,7 +127,7 @@ pub fn command(
             None => gone(room_id, tx),
         },
         RoomCommand::LookIn { room_id } => match recent(&room_id, services) {
-            Some((target, _)) => peek(target, Some(room_id), services, tx),
+            Some((target, _)) => peek(target, Look::Recent(room_id), services, tx),
             None => gone(room_id, tx),
         },
         RoomCommand::LoadRecent => {
@@ -142,6 +152,11 @@ pub fn command(
             }
         }
         RoomCommand::LoadRelays => relays(engine, tx),
+        RoomCommand::SetSpareRelays { relays: list } => {
+            let list = list.into_iter().filter(|r| kaeri_model::room::valid_relay(r)).collect();
+            crate::settings::save_room_spares(list, engine, services, tx);
+            relays(engine, tx);
+        }
         RoomCommand::SetRelays { relays: list } => {
             let list = list.into_iter().filter(|r| kaeri_model::room::valid_relay(r)).collect();
             crate::settings::save_room_relays(list, engine, services, tx);
@@ -171,10 +186,28 @@ pub fn command(
 
 fn relays(engine: &EngineState, tx: &Outbox) {
     let _ = tx.send(Event::RoomRelays(RoomRelaySettings {
-        defaults: DEFAULT_RELAYS.iter().map(|r| (*r).to_owned()).collect(),
-        spares: SPARE_RELAYS.iter().map(|r| (*r).to_owned()).collect(),
+        defaults: shown(&DEFAULT_RELAYS),
+        spares: spares(engine),
+        default_spares: shown(&SPARE_RELAYS),
         chosen: engine.config.effective().room.relays.clone(),
     }));
+}
+
+/// A built-in relay list as Settings shows it. Testing builds (the apps' Fixtures, shots) show
+/// made-up hosts, never real ones.
+fn shown(list: &[&str; 3]) -> Vec<String> {
+    #[cfg(feature = "testing")]
+    {
+        let base = if list == &SPARE_RELAYS { 4 } else { 1 };
+        (base..base + 3).map(|n| format!("wss://relay-{n}.example")).collect()
+    }
+    #[cfg(not(feature = "testing"))]
+    list.iter().map(|r| (*r).to_owned()).collect()
+}
+
+/// The spares in use: Settings' own, or the built-in ones.
+fn spares(engine: &EngineState) -> Vec<String> {
+    engine.config.effective().room.spare_relays.clone().unwrap_or_else(|| shown(&SPARE_RELAYS))
 }
 
 /// The engine is going away, or another room takes this one's place.
@@ -269,9 +302,7 @@ fn target(invite: &str) -> Result<Target, RoomLeftWhy> {
             };
             Ok(Target { secret: share.secret, relays, by: share.by, title: share.title })
         }
-        Ok(None) => {
-            Err(RoomLeftWhy::Failed { reason: Msg::verbatim("That isn't a room's invite.") })
-        }
+        Ok(None) => Err(RoomLeftWhy::Failed { reason: Msg::RoomLookNotAnInvite }),
         Err(OldInvite::SyncplayLink | OldInvite::Code) => Err(RoomLeftWhy::OldInvite),
     }
 }
@@ -303,8 +334,30 @@ fn recent(room_id: &str, services: &Services) -> Option<(Target, String)> {
 fn gone(room_id: String, tx: &Outbox) {
     let _ = tx.send(Event::RoomLookFailed {
         room_id,
-        reason: Msg::verbatim("That room isn't kept any more."),
+        reason: Msg::RoomLookNotKept,
+        invite: None,
+        why: None,
     });
+}
+
+/// What a look is into: an invite before joining it, or a recent room by its id.
+enum Look {
+    Invite(String),
+    Recent(String),
+}
+
+/// A look into a room found nothing.
+fn look_failed(look: Look, room_id: String, why: RoomLeftWhy, tx: &Outbox) {
+    let reason = match &why {
+        RoomLeftWhy::OldInvite => Msg::RoomLookOldInvite,
+        RoomLeftWhy::Failed { reason } => reason.clone(),
+        _ => Msg::RoomLookUnreachable,
+    };
+    let (room_id, invite) = match look {
+        Look::Invite(invite) => (room_id, Some(invite)),
+        Look::Recent(id) => (id, None),
+    };
+    let _ = tx.send(Event::RoomLookFailed { room_id, reason, invite, why: Some(why) });
 }
 
 fn join(
@@ -363,15 +416,18 @@ fn begin(
     let name = if name.trim().is_empty() { "kaeri".to_owned() } else { name };
     let (control, controls) = mpsc::unbounded_channel();
     let seats = services.party.open();
+    let held = Held::default();
     let env = Env {
         meta: services.meta.clone(),
         store: services.store.clone(),
         tx: tx.clone(),
         hidden: engine.config.effective().room.hide_chat,
+        spares: spares(engine),
+        held: held.clone(),
     };
     let episodes = Episodes::default();
     tokio::spawn(run(target, start, name, env, controls, seats, episodes.clone()));
-    engine.room = Some(Running { control, episodes });
+    engine.room = Some(Running { control, episodes, held });
 }
 
 #[derive(Clone)]
@@ -380,15 +436,25 @@ struct Env {
     store: kaeri_store::Store,
     tx: Outbox,
     hidden: bool,
+    /// The relays this room swaps in, as Settings had them when it started.
+    spares: Vec<String>,
+    /// Whether a scene holds this device as Choosing, for the engine to read.
+    #[cfg_attr(not(feature = "testing"), allow(dead_code))]
+    held: Held,
 }
 
 /// Look into a room without anyone seeing: an invite's, or a recent room's (`room_id`).
-fn peek(target: Target, room_id: Option<String>, services: &Services, tx: &Outbox) {
+fn peek(target: Target, look: Look, services: &Services, tx: &Outbox) {
     let tx = tx.clone();
     let meta = services.meta.clone();
+    let (room_id, invite) = match &look {
+        Look::Recent(id) => (Some(id.clone()), None),
+        Look::Invite(invite) => (None, Some(invite.clone())),
+    };
     tokio::spawn(async move {
         let Ok(mut link) = link::open(target.secret, target.relays.clone()).await else {
-            let _ = tx.send(Event::RoomLeft { why: RoomLeftWhy::Unreachable });
+            let id = RoomKeys::new(target.secret).room_id_hex();
+            look_failed(look, id, RoomLeftWhy::Unreachable, &tx);
             return;
         };
         let now = now_ms();
@@ -439,6 +505,7 @@ fn peek(target: Target, room_id: Option<String>, services: &Services, tx: &Outbo
             members,
             room_episode,
             playing: room.playing(),
+            invite,
         }));
     });
 }
@@ -490,6 +557,12 @@ fn word_state(word: Word) -> kaeri_model::room::MemberState {
         Word::Reconnecting => S::Reconnecting,
         Word::Left => S::Left,
     }
+}
+
+/// The position a Status says: the player's own while it is open (so the others can see how far
+/// behind it is), else where the room is.
+fn wire_pos(st: &Status, room: Option<f64>) -> Option<f64> {
+    st.pos.filter(|_| st.s.player_open()).or(room)
 }
 
 /// Local ms to epoch ms: the room's clock is the epoch already.
@@ -647,7 +720,7 @@ impl Task {
         st.age = (now - self.status_at).max(0) as u32;
         st.dg = [self.room.seq(), self.room.relays_seq(), self.room.epoch().0];
         st.play = self.room.playing();
-        st.pos = self.room.position(now).or(st.pos);
+        st.pos = wire_pos(&st, self.room.position(now));
         Body {
             v: wire::VERSION,
             from: self.session.clone(),
@@ -1112,6 +1185,7 @@ impl Task {
             self.up_next(now);
             self.stall(now);
             self.relays_check(now);
+            self.answer_due();
         }
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
@@ -1230,6 +1304,8 @@ impl Task {
                 #[cfg(feature = "testing")]
                 {
                     self.held = hold;
+                    let choosing = hold && s == StateCode::Choosing;
+                    self.env.held.store(choosing, std::sync::atomic::Ordering::Relaxed);
                     self.held_behind = behind.filter(|_| hold);
                 }
                 #[cfg(not(feature = "testing"))]
@@ -1301,10 +1377,10 @@ impl Task {
                 self.say(Event::RoomChat(self.chat.conversation()));
             }
             Happening::SyncRequested { nonce, .. } => {
-                let now = self.now();
-                if self.joined && self.room.rank(&nonce, now) == 0 {
-                    let answer = self.room.sync_answer(&nonce, now);
-                    self.send(answer);
+                if self.joined {
+                    let now = self.now();
+                    self.room.will_answer(&nonce, now);
+                    self.answer_due();
                 }
             }
             Happening::Move { by, id, to } => {
@@ -1361,7 +1437,7 @@ impl Task {
                 };
                 if self.room.take_epoch(seq, t, &session) {
                     let _ = self.link.out.send(Out::Rekey(secret));
-                    self.target.secret = secret;
+                    self.reprove(secret);
                     let by = self.who(&by);
                     self.message(RoomMessageKind::NewInvite { by });
                 }
@@ -1499,7 +1575,7 @@ impl Task {
 
     /// Swap or add a relay when the health reports call for it (see `Room::relay_change`).
     fn relays_check(&mut self, now: i64) {
-        let spares: Vec<String> = SPARE_RELAYS.iter().map(|r| (*r).to_owned()).collect();
+        let spares = self.env.spares.clone();
         let Some(list) = self.room.relay_change(now, &spares) else { return };
         let seq = self.room.relays_seq() + 1;
         tracing::info!(relays = list.len(), "room: the room's relays change");
@@ -1712,15 +1788,23 @@ impl Task {
         // A held pose stands against the player opening and closing, never against what you
         // choose yourself (testing builds only).
         #[cfg(feature = "testing")]
-        if !matches!(
+        // An app closes its picker or opens its player by itself as it plays; Choosing a source,
+        // Play, Carry on and the like are what you choose.
+        if matches!(
             command,
-            RoomCommand::OpenPlayer
-                | RoomCommand::ClosePlayer
-                | RoomCommand::Say { .. }
-                | RoomCommand::React { .. }
+            RoomCommand::Play { .. }
+                | RoomCommand::ChangeEpisode { .. }
+                | RoomCommand::CarryOn
+                | RoomCommand::DontWait
+                | RoomCommand::SkipOpening { .. }
+                | RoomCommand::CancelUpNext
+                | RoomCommand::PlayNextNow
+                | RoomCommand::ChoosingSource { open: true }
+                | RoomCommand::Leave
         ) {
             self.held = false;
             self.held_behind = None;
+            self.env.held.store(false, std::sync::atomic::Ordering::Relaxed);
         }
         match command {
             RoomCommand::Leave => {
@@ -1847,7 +1931,7 @@ impl Task {
                 self.room.take_epoch(seq, body.t, &self.session.clone());
                 let _ = self.link.out.send(Out::Body(body));
                 let _ = self.link.out.send(Out::Rekey(secret));
-                self.target.secret = secret;
+                self.reprove(secret);
                 self.message(RoomMessageKind::NewInvite { by: kaeri_i18n::t::room_you() });
             }
             RoomCommand::MoveRoom { take } => return self.move_room(&take).await,
@@ -1926,6 +2010,7 @@ impl Task {
             | RoomCommand::Rejoin { .. }
             | RoomCommand::LoadRelays
             | RoomCommand::SetRelays { .. }
+            | RoomCommand::SetSpareRelays { .. }
             | RoomCommand::LoadRecent
             | RoomCommand::ForgetRoom { .. }
             | RoomCommand::LookIn { .. }
@@ -2079,6 +2164,25 @@ impl Task {
             }
         }
         false
+    }
+
+    /// A new invite's key: this device proves itself for the new room id and says Hello again,
+    /// so the others answer a newcomer by the new link with proofs it can check.
+    fn reprove(&mut self, secret: [u8; 16]) {
+        self.target.secret = secret;
+        self.link.room_id = RoomKeys::new(secret).room_id();
+        if self.joined {
+            self.hello();
+        }
+    }
+
+    /// Answer the sync requests whose turn has come here.
+    fn answer_due(&mut self) {
+        let now = self.now();
+        for nonce in self.room.answers_due(now) {
+            let answer = self.room.sync_answer(&nonce, now);
+            self.send(answer);
+        }
     }
 
     fn hello(&mut self) {
@@ -2577,6 +2681,68 @@ mod pause_tests {
         assert_eq!(pause.sample(true, 1_900), Sampled::Same);
         // A real play, later, is the viewer's.
         assert_eq!(pause.sample(false, 4_000), Sampled::Pressed(false));
+    }
+
+    #[test]
+    fn the_others_see_how_far_behind_your_player_is() {
+        // Neon: your Status said the room's clock as your place, so the others read Behind 0 s.
+        use kaeri_room::wire::{Body, Ep, Message, StateCode, Status, VERSION};
+        use std::collections::HashMap;
+        let ep = Ep(4242, "9".into());
+        let mut mika = kaeri_room::room::Room::new("m", "Mika", "pm", 0);
+        mika.write(
+            0,
+            0,
+            |h| {
+                h.play = true;
+                h.cause = kaeri_room::wire::Cause::Episode;
+            },
+            Some(ep.clone()),
+        );
+        let wseq = mika.playhead().unwrap().wseq;
+        mika.set_status(
+            Status {
+                s: StateCode::Watching,
+                ep: Some(ep.clone()),
+                rdy: Some(wseq),
+                ..Status::default()
+            },
+            0,
+        );
+        mika.settle(3_000);
+        // Ada's player is 6 s behind the room at 20 s.
+        let now = 23_000;
+        let room = mika.position(now);
+        assert_eq!(room, Some(20.0));
+        let mut st = Status {
+            s: StateCode::Behind,
+            ep: Some(ep),
+            pos: Some(14.0),
+            play: true,
+            ..Status::default()
+        };
+        st.pos = super::wire_pos(&st, room);
+        let hello = Message::Hello {
+            name: "Ada".into(),
+            app: "0.6".into(),
+            caps: vec![],
+            idpk: String::new(),
+            idsig: String::new(),
+        };
+        let body = |m| Body {
+            v: VERSION,
+            from: "pa".into(),
+            mid: "a".into(),
+            ctr: 1,
+            t: 0,
+            st: st.clone(),
+            m,
+        };
+        mika.receive(body(hello), now);
+        mika.receive(body(Message::Status), now);
+        let ada = mika.members().into_iter().find(|m| m.mid == "a").unwrap();
+        let row = super::member_of(&mika, ada, now, &HashMap::new(), None);
+        assert_eq!(row.behind_s, Some(6.0));
     }
 
     #[test]

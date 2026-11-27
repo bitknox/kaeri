@@ -203,12 +203,8 @@
         <item quantity="other">Aggiunti in coda %1$,d episodi, poi l\'operazione si è fermata. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Spazio libero insufficiente per tenere scaricati i prossimi episodi. Libera un po\' di spazio per scaricarne altri.</string>
-    <string name="party_needs_server">Scegli prima un server per il watch party, come syncplay.server. %1$s è gestito da %2$s.</string>
-    <string name="party_choose_server">Scegli prima un server per il watch party. %1$s è gestito da %2$s.</string>
     <string name="notice_no_party">I Watch party non sono disponibili in questa edizione di Kaeri.</string>
     <string name="party_needs_room">Per il watch party serve una stanza in cui incontrarsi. Scegline prima una.</string>
-    <string name="party_server_lost">Persa la connessione al server del watch party. Riprovo.</string>
-    <string name="party_rejoined">Di nuovo nel watch party.</string>
     <string name="party_left">Uscito dal watch party.</string>
     <string name="party_server_unreachable">Impossibile raggiungere %1$s. Controlla il server o riprova.</string>
     <string name="reading_next_chapter">Capitolo %1$s</string>

@@ -37,6 +37,7 @@ pub const SHARED: &[(&[&str], &str)] = &[
     (&["reading", "novel"], "font"),
     (&["room"], "name"),
     (&["room"], "relays"),
+    (&["room"], "spare_relays"),
 ];
 
 /// Whether `table.key` is a shared setting.

@@ -505,6 +505,9 @@ pub struct RoomConfig {
     /// The relays new rooms use, `wss://` URLs. Empty means the built-in set: public relays run
     /// by others.
     pub relays: Vec<String>,
+    /// The relays a room swaps in when one of its own stops answering, `wss://` URLs, in order.
+    /// Unset means the built-in spares; an empty list means none.
+    pub spare_relays: Option<Vec<String>>,
     /// Hide chat in every room on this device: lines, reactions and the moments they make stay
     /// off the video. The terminal's `i` turns it over; the apps keep their own.
     pub hide_chat: bool,
@@ -512,7 +515,7 @@ pub struct RoomConfig {
 
 impl Default for RoomConfig {
     fn default() -> Self {
-        Self { name: "kaeri".into(), relays: Vec::new(), hide_chat: false }
+        Self { name: "kaeri".into(), relays: Vec::new(), spare_relays: None, hide_chat: false }
     }
 }
 

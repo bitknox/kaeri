@@ -590,23 +590,11 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>No hay suficiente espacio libre para mantener descargados los siguientes episodios. Libera espacio para descargar más.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Primero elige un servidor para la watch party, en el ajuste syncplay.server. {server} es operado por {operator}.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Primero elige un servidor para la watch party. {server} es operado por {operator}.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Las watch parties no están disponibles en esta versión de Kaeri.</value>
   </data>
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>La watch party necesita una sala para reunirse. Elige una primero.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Se perdió el servidor de la watch party. Intentando de nuevo.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>De vuelta en la watch party.</value>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>Saliste de la watch party.</value>
