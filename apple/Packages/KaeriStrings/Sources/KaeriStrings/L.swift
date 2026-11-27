@@ -733,6 +733,9 @@ public enum L {
     /// Why a look into a room found nothing: the invite comes from an older version.
     public static var roomLookOldInvite: String { string("room-look-old-invite", fallback: "This invite is from an older version of Kaeri. Ask for a new one.") }
 
+    /// Why a room couldn't start: it has no episode yet. Shown where the room would open.
+    public static var roomNeedsEpisode: String { string("room-needs-episode", fallback: "Choose an episode for the room first.") }
+
     /// Toast when a watch party is asked for in a build without watch parties.
     public static var noticeNoParty: String { string("notice-no-party", fallback: "Watch parties aren't available in this version of Kaeri.") }
 

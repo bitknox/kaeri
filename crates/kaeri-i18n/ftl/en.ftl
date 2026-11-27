@@ -576,6 +576,9 @@ room-look-not-kept = That room isn't kept any more.
 # Why a look into a room found nothing: the invite comes from an older version.
 room-look-old-invite = This invite is from an older version of Kaeri. Ask for a new one.
 
+# Why a room couldn't start: it has no episode yet. Shown where the room would open.
+room-needs-episode = Choose an episode for the room first.
+
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watch parties aren't available in this version of Kaeri.
 

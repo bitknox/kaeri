@@ -1189,3 +1189,28 @@ fn settings_edit_the_spare_relays_and_show_made_up_hosts_in_testing_builds() {
     assert_eq!(back.spares, back.default_spares);
     engine.shutdown();
 }
+
+#[test]
+fn a_room_with_no_episode_says_so_in_your_language() {
+    // Neon: the reason was English text, outside the catalogue.
+    let root = tempfile::tempdir().unwrap();
+    let engine = engine(&root);
+    engine.send(Command::Room(RoomCommand::Lobby {
+        invite: None,
+        name: Some("Ada".into()),
+        pick: None,
+        anyway: false,
+    }));
+    let started = std::time::Instant::now();
+    let reason = loop {
+        assert!(started.elapsed() < PATIENCE, "no RoomLeft");
+        let batch = futures::executor::block_on(engine.next_events());
+        if let Some(Event::RoomLeft { why: RoomLeftWhy::Failed { reason } }) =
+            batch.into_iter().find(|e| matches!(e, Event::RoomLeft { .. }))
+        {
+            break reason;
+        }
+    };
+    assert_eq!(reason, kaeri_model::Msg::RoomNeedsEpisode);
+    engine.shutdown();
+}

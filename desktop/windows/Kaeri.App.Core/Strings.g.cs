@@ -555,6 +555,9 @@ public static partial class T
     /// <summary>Why a look into a room found nothing: the invite comes from an older version.</summary>
     public static string RoomLookOldInvite => Get("RoomLookOldInvite");
 
+    /// <summary>Why a room couldn't start: it has no episode yet. Shown where the room would open.</summary>
+    public static string RoomNeedsEpisode => Get("RoomNeedsEpisode");
+
     /// <summary>Toast when a watch party is asked for in a build without watch parties.</summary>
     public static string NoticeNoParty => Get("NoticeNoParty");
 
@@ -13519,6 +13522,7 @@ public static partial class T
         ["RoomLookNotAnInvite"] = "That isn't a room's invite.",
         ["RoomLookNotKept"] = "That room isn't kept any more.",
         ["RoomLookOldInvite"] = "This invite is from an older version of Kaeri. Ask for a new one.",
+        ["RoomNeedsEpisode"] = "Choose an episode for the room first.",
         ["NoticeNoParty"] = "Watch parties aren't available in this version of Kaeri.",
         ["PartyNeedsRoom"] = "A watch party needs a room to meet in. Choose one first.",
         ["PartyLeft"] = "Left the watch party.",
