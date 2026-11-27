@@ -534,15 +534,6 @@ notice-keep-next-full = この先のエピソードをダウンロードした�
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = このバージョンのKaeriでは同時視聴は利用できません。
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = 同時視聴に参加する部屋を、先に選んでください。
-
-# Message when the person left a watch party.
-party-left = 同時視聴から退出しました。
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = { $server }に接続できません。サーバーを確認するか、もう一度お試しください。
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = 第{ $chapter }話
 

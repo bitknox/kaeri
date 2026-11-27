@@ -569,15 +569,6 @@
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Birlikte izlemeler bu Kaeri sürümünde yok.</value>
   </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>Birlikte izleme için bir oda gerekli. Önce birini seçin.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Birlikte izlemeden ayrıldı.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>{server} sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.</value>
-  </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Bölüm {chapter}</value>
   </data>

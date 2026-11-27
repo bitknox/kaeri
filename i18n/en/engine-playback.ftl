@@ -436,13 +436,3 @@ room-needs-episode = Choose an episode for the room first.
 # Toast when a watch party is asked for in a build without watch parties.
 # @allow release
 notice-no-party = { -watch-party-cap-pl } aren't available in this version of { -app-name }.
-
-# Message when a watch party was asked for with no room named.
-party-needs-room = A { -watch-party } needs a room to meet in. Choose one first.
-
-# Message when the person left a watch party.
-party-left = Left the { -watch-party }.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-# @arg server: text
-party-server-unreachable = Couldn't reach { $server }. Check the server, or try again.

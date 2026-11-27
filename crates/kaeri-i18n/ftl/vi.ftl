@@ -534,15 +534,6 @@ notice-keep-next-full = Không đủ dung lượng trống để giữ các tậ
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Các buổi xem chung không có trong phiên bản Kaeri này.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = Một buổi xem chung cần một phòng để gặp nhau. Hãy chọn phòng trước.
-
-# Message when the person left a watch party.
-party-left = Đã rời xem chung.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = Không kết nối được với { $server }. Hãy kiểm tra máy chủ hoặc thử lại.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Chương { $chapter }
 

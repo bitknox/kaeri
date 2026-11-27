@@ -337,12 +337,6 @@ pub enum Msg {
     RoomNeedsEpisode,
     /// Toast when a watch party is asked for in a build without watch parties.
     NoticeNoParty,
-    /// Message when a watch party was asked for with no room named.
-    PartyNeedsRoom,
-    /// Message when the person left a watch party.
-    PartyLeft,
-    /// Message when a watch party's server could not be reached, in the lobby or when looking in.
-    PartyServerUnreachable { server: String },
     /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
     CloudLoopbackDone,
     /// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
@@ -658,9 +652,6 @@ impl Msg {
             Self::RoomLookOldInvite => "room-look-old-invite",
             Self::RoomNeedsEpisode => "room-needs-episode",
             Self::NoticeNoParty => "notice-no-party",
-            Self::PartyNeedsRoom => "party-needs-room",
-            Self::PartyLeft => "party-left",
-            Self::PartyServerUnreachable { .. } => "party-server-unreachable",
             Self::CloudLoopbackDone => "cloud-loopback-done",
             Self::SyncDeviceRemoved => "sync-device-removed",
             Self::NoticeProfileInUse { .. } => "notice-profile-in-use",
@@ -903,9 +894,6 @@ impl Msg {
             Self::RoomLookOldInvite => Vec::new(),
             Self::RoomNeedsEpisode => Vec::new(),
             Self::NoticeNoParty => Vec::new(),
-            Self::PartyNeedsRoom => Vec::new(),
-            Self::PartyLeft => Vec::new(),
-            Self::PartyServerUnreachable { server } => vec![("server", Value::Text(server.clone()))],
             Self::CloudLoopbackDone => Vec::new(),
             Self::SyncDeviceRemoved => Vec::new(),
             Self::NoticeProfileInUse { name } => vec![("name", Value::Text(name.clone()))],

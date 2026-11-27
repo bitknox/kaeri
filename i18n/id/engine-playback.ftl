@@ -107,6 +107,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = Ruang kosong tidak cukup untuk menyimpan episode setelahnya. Kosongkan ruang untuk mengunduh lebih banyak.
 notice-no-party = { -watch-party-cap-pl } tidak tersedia di versi { -app-name } ini.
-party-needs-room = Untuk { -watch-party } diperlukan ruangan. Pilih satu dulu.
-party-left = Keluar dari { -watch-party }.
-party-server-unreachable = Tidak bisa menjangkau { $server }. Periksa servernya, atau coba lagi.

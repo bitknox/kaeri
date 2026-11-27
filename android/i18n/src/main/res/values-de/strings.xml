@@ -196,9 +196,6 @@
     </plurals>
     <string name="notice_keep_next_full">Nicht genug freier Speicher, um die nächsten Folgen herunterzuladen. Gib Speicherplatz frei, um mehr herunterzuladen.</string>
     <string name="notice_no_party">Watchpartys sind in dieser Version von Kaeri nicht verfügbar.</string>
-    <string name="party_needs_room">Eine Watchparty braucht einen Raum zum Treffen. Wähle zuerst einen aus.</string>
-    <string name="party_left">Du hast die Watchparty verlassen.</string>
-    <string name="party_server_unreachable">%1$s ist nicht erreichbar. Prüfe den Server oder versuche es erneut.</string>
     <string name="reading_next_chapter">Kapitel %1$s</string>
     <string name="reading_usually_mondays">Meist montags</string>
     <string name="reading_usually_tuesdays">Meist dienstags</string>

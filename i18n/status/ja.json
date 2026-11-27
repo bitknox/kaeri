@@ -16748,13 +16748,6 @@
     "at": "2026-10-31",
     "back": "Leaving…"
   },
-  "party-left": {
-    "source": "ea3ce6454bda",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Left { -watch-party }."
-  },
   "party-left-note": {
     "source": "c35339b3c7a6",
     "state": "draft",
@@ -16932,13 +16925,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "{ -watch-party } needs a connection. You are offline now."
-  },
-  "party-needs-room": {
-    "source": "04c05ee12036",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "First choose a room to join for { -watch-party }."
   },
   "party-next-joined-at": {
     "source": "c35190d6b42e",
@@ -17338,12 +17324,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Don't have your own server? { $server } is a public server run by { $operator }."
-  },
-  "party-server-unreachable": {
-    "source": "625c230a72d4",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "party-share": {
     "source": "313b0c2e009a",

@@ -582,15 +582,6 @@ room-needs-episode = [Çĥööšé àñ éþîšöðé ƒöŕ ţĥé ŕööɱ ƒ
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = [Ŵàţçĥ þàŕţîéš àŕéñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~~~]
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = [Å ŵàţçĥ þàŕţý ñééðš à ŕööɱ ţö ɱééţ îñ. Çĥööšé öñé ƒîŕšţ.~~~~~~~~~~~~~~~~~]
-
-# Message when the person left a watch party.
-party-left = [Ļéƒţ ţĥé ŵàţçĥ þàŕţý.~~~~~~~]
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = [Çöüļðñ'ţ ŕéàçĥ { $server }. Çĥéçķ ţĥé šéŕṽéŕ, öŕ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = [Çĥàþţéŕ { $chapter }~~~~]
 

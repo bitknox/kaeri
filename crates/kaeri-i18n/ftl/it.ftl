@@ -550,15 +550,6 @@ notice-keep-next-full = Spazio libero insufficiente per tenere scaricati i pross
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = I Watch party non sono disponibili in questa edizione di Kaeri.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = Per il watch party serve una stanza in cui incontrarsi. Scegline prima una.
-
-# Message when the person left a watch party.
-party-left = Uscito dal watch party.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = Impossibile raggiungere { $server }. Controlla il server o riprova.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Capitolo { $chapter }
 

@@ -172,9 +172,6 @@ extension Msg {
         case .roomLookOldInvite: L.roomLookOldInvite
         case .roomNeedsEpisode: L.roomNeedsEpisode
         case .noticeNoParty: L.noticeNoParty
-        case .partyNeedsRoom: L.partyNeedsRoom
-        case .partyLeft: L.partyLeft
-        case .partyServerUnreachable(let server): L.partyServerUnreachable(server: server)
         case .cloudLoopbackDone: L.cloudLoopbackDone
         case .syncDeviceRemoved: L.syncDeviceRemoved
         case .noticeProfileInUse(let name): L.noticeProfileInUse(name: name)

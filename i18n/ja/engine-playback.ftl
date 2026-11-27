@@ -107,6 +107,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = この先のエピソードをダウンロードしたままにするための空き容量が足りません。さらにダウンロードするには、空き容量を確保してください。
 notice-no-party = このバージョンの{ -app-name }では{ -watch-party-cap-pl }は利用できません。
-party-needs-room = { -watch-party }に参加する部屋を、先に選んでください。
-party-left = { -watch-party }から退出しました。
-party-server-unreachable = { $server }に接続できません。サーバーを確認するか、もう一度お試しください。

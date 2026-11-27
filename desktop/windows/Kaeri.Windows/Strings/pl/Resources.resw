@@ -617,15 +617,6 @@
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Wspólne oglądania nie są dostępne w tej wersji Kaeri.</value>
   </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>Wspólne oglądanie wymaga pokoju, w którym można się spotkać. Najpierw wybierz pokój.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Opuszczono wspólne oglądanie.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>Nie można połączyć się z {server}. Sprawdź serwer lub spróbuj ponownie.</value>
-  </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Rozdział {chapter}</value>
   </data>

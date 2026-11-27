@@ -188,9 +188,6 @@
     </plurals>
     <string name="notice_keep_next_full">Ruang kosong tidak cukup untuk menyimpan episode setelahnya. Kosongkan ruang untuk mengunduh lebih banyak.</string>
     <string name="notice_no_party">Nonton bareng tidak tersedia di versi Kaeri ini.</string>
-    <string name="party_needs_room">Untuk nonton bareng diperlukan ruangan. Pilih satu dulu.</string>
-    <string name="party_left">Keluar dari nonton bareng.</string>
-    <string name="party_server_unreachable">Tidak bisa menjangkau %1$s. Periksa servernya, atau coba lagi.</string>
     <string name="reading_next_chapter">Bab %1$s</string>
     <string name="reading_usually_mondays">Biasanya hari Senin</string>
     <string name="reading_usually_tuesdays">Biasanya hari Selasa</string>

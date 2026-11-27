@@ -915,21 +915,6 @@ pub fn notice_no_party() -> String {
     text("notice-no-party", &[])
 }
 
-/// Message when a watch party was asked for with no room named.
-pub fn party_needs_room() -> String {
-    text("party-needs-room", &[])
-}
-
-/// Message when the person left a watch party.
-pub fn party_left() -> String {
-    text("party-left", &[])
-}
-
-/// Message when a watch party's server could not be reached, in the lobby or when looking in.
-pub fn party_server_unreachable(server: &str) -> String {
-    text("party-server-unreachable", &[("server", Arg::Text(server))])
-}
-
 /// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 pub fn reading_next_chapter(chapter: &str) -> String {
     text("reading-next-chapter", &[("chapter", Arg::Text(chapter))])

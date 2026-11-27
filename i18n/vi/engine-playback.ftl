@@ -107,6 +107,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = Không đủ dung lượng trống để giữ các tập sau đã tải. Hãy giải phóng thêm dung lượng để tải thêm.
 notice-no-party = { -watch-party-cap-pl } không có trong phiên bản { -app-name } này.
-party-needs-room = Một buổi { -watch-party } cần một phòng để gặp nhau. Hãy chọn phòng trước.
-party-left = Đã rời { -watch-party }.
-party-server-unreachable = Không kết nối được với { $server }. Hãy kiểm tra máy chủ hoặc thử lại.

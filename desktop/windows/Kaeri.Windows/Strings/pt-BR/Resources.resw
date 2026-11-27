@@ -593,15 +593,6 @@
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Sessões em grupo não estão disponíveis nesta versão do Kaeri.</value>
   </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>Uma sessão em grupo precisa de uma sala. Escolha uma antes.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Você saiu da sessão em grupo.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>Não foi possível acessar {server}. Verifique o servidor ou tente de novo.</value>
-  </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Capítulo {chapter}</value>
   </data>

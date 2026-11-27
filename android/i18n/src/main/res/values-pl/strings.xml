@@ -212,9 +212,6 @@
     </plurals>
     <string name="notice_keep_next_full">Za mało wolnego miejsca, by zachować pobrane kolejne odcinki. Zwolnij trochę miejsca, aby pobrać więcej.</string>
     <string name="notice_no_party">Wspólne oglądania nie są dostępne w tej wersji Kaeri.</string>
-    <string name="party_needs_room">Wspólne oglądanie wymaga pokoju, w którym można się spotkać. Najpierw wybierz pokój.</string>
-    <string name="party_left">Opuszczono wspólne oglądanie.</string>
-    <string name="party_server_unreachable">Nie można połączyć się z %1$s. Sprawdź serwer lub spróbuj ponownie.</string>
     <string name="reading_next_chapter">Rozdział %1$s</string>
     <string name="reading_usually_mondays">Zwykle w poniedziałki</string>
     <string name="reading_usually_tuesdays">Zwykle we wtorki</string>

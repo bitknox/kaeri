@@ -545,15 +545,6 @@
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Nonton bareng tidak tersedia di versi Kaeri ini.</value>
   </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>Untuk nonton bareng diperlukan ruangan. Pilih satu dulu.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Keluar dari nonton bareng.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>Tidak bisa menjangkau {server}. Periksa servernya, atau coba lagi.</value>
-  </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Bab {chapter}</value>
   </data>

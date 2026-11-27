@@ -593,15 +593,6 @@
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Les visionnages en groupe ne sont pas disponibles dans cette version de Kaeri.</value>
   </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>Un visionnage en groupe a besoin d'un salon où se retrouver. Choisissez-en un d'abord.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Vous avez quitté le visionnage en groupe.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>Impossible de joindre {server}. Vérifiez le serveur ou réessayez.</value>
-  </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Chapitre {chapter}</value>
   </data>

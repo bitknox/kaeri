@@ -131,6 +131,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = Недостаточно свободного места, чтобы сохранить следующие эпизоды в загрузках. Освободите место, чтобы загрузить больше.
 notice-no-party = { -watch-party-cap-pl } недоступны в этой версии { -app-name }.
-party-needs-room = { -watch-party-cap } требует комнату. Сначала выберите её.
-party-left = Вы покинули { -watch-party }.
-party-server-unreachable = Не удалось связаться с { $server }. Проверьте сервер или попробуйте ещё раз.

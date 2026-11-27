@@ -188,9 +188,6 @@
     </plurals>
     <string name="notice_keep_next_full">Không đủ dung lượng trống để giữ các tập sau đã tải. Hãy giải phóng thêm dung lượng để tải thêm.</string>
     <string name="notice_no_party">Các buổi xem chung không có trong phiên bản Kaeri này.</string>
-    <string name="party_needs_room">Một buổi xem chung cần một phòng để gặp nhau. Hãy chọn phòng trước.</string>
-    <string name="party_left">Đã rời xem chung.</string>
-    <string name="party_server_unreachable">Không kết nối được với %1$s. Hãy kiểm tra máy chủ hoặc thử lại.</string>
     <string name="reading_next_chapter">Chương %1$s</string>
     <string name="reading_usually_mondays">Thường ra vào thứ Hai</string>
     <string name="reading_usually_tuesdays">Thường ra vào thứ Ba</string>

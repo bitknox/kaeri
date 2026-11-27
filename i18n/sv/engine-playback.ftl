@@ -115,6 +115,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = Inte tillräckligt med ledigt utrymme för att hålla kommande avsnitt nedladdade. Frigör lite utrymme för att ladda ner fler.
 notice-no-party = { -watch-party-cap-pl } finns inte i den här versionen av { -app-name }.
-party-needs-room = En { -watch-party } behöver ett rum att träffas i. Välj ett först.
-party-left = Lämnade { -watch-party }.
-party-server-unreachable = Kunde inte nå { $server }. Kontrollera servern eller försök igen.

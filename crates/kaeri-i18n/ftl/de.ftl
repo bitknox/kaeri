@@ -542,15 +542,6 @@ notice-keep-next-full = Nicht genug freier Speicher, um die nächsten Folgen her
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watchpartys sind in dieser Version von Kaeri nicht verfügbar.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = Eine Watchparty braucht einen Raum zum Treffen. Wähle zuerst einen aus.
-
-# Message when the person left a watch party.
-party-left = Du hast die Watchparty verlassen.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = { $server } ist nicht erreichbar. Prüfe den Server oder versuche es erneut.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Kapitel { $chapter }
 

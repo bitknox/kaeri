@@ -799,18 +799,6 @@
     <value>[Ŵàţçĥ þàŕţîéš àŕéñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast when a watch party is asked for in a build without watch parties.</comment>
   </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>[Å ŵàţçĥ þàŕţý ñééðš à ŕööɱ ţö ɱééţ îñ. Çĥööšé öñé ƒîŕšţ.~~~~~~~~~~~~~~~~~]</value>
-    <comment>Message when a watch party was asked for with no room named.</comment>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>[Ļéƒţ ţĥé ŵàţçĥ þàŕţý.~~~~~~~]</value>
-    <comment>Message when the person left a watch party.</comment>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>[Çöüļðñ'ţ ŕéàçĥ {server}. Çĥéçķ ţĥé šéŕṽéŕ, öŕ ţŕý àĝàîñ.~~~~~~~~~~~~~~~~]</value>
-    <comment>Message when a watch party's server could not be reached, in the lobby or when looking in.</comment>
-  </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>[Çĥàþţéŕ {chapter}~~~~]</value>
     <comment>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</comment>

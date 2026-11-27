@@ -115,6 +115,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = Sonraki bölümleri tutmak için yeterli boş alan yok. Daha fazla indirmek için biraz alan açın.
 notice-no-party = { -watch-party-cap-pl } bu { -app-name } sürümünde yok.
-party-needs-room = { -watch-party-cap } için bir oda gerekli. Önce birini seçin.
-party-left = { -watch-party-cap }den ayrıldı.
-party-server-unreachable = { $server } sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.

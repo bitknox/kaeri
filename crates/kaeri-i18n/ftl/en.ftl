@@ -582,15 +582,6 @@ room-needs-episode = Choose an episode for the room first.
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watch parties aren't available in this version of Kaeri.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = A watch party needs a room to meet in. Choose one first.
-
-# Message when the person left a watch party.
-party-left = Left the watch party.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = Couldn't reach { $server }. Check the server, or try again.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Chapter { $chapter }
 

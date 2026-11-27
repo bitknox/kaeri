@@ -561,15 +561,6 @@ public static partial class T
     /// <summary>Toast when a watch party is asked for in a build without watch parties.</summary>
     public static string NoticeNoParty => Get("NoticeNoParty");
 
-    /// <summary>Message when a watch party was asked for with no room named.</summary>
-    public static string PartyNeedsRoom => Get("PartyNeedsRoom");
-
-    /// <summary>Message when the person left a watch party.</summary>
-    public static string PartyLeft => Get("PartyLeft");
-
-    /// <summary>Message when a watch party's server could not be reached, in the lobby or when looking in.</summary>
-    public static string PartyServerUnreachable(string server) => Fill(Get("PartyServerUnreachable"), ("server", server));
-
     /// <summary>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</summary>
     public static string ReadingNextChapter(string chapter) => Fill(Get("ReadingNextChapter"), ("chapter", chapter));
 
@@ -13542,9 +13533,6 @@ public static partial class T
         ["RoomLookOldInvite"] = "This invite is from an older version of Kaeri. Ask for a new one.",
         ["RoomNeedsEpisode"] = "Choose an episode for the room first.",
         ["NoticeNoParty"] = "Watch parties aren't available in this version of Kaeri.",
-        ["PartyNeedsRoom"] = "A watch party needs a room to meet in. Choose one first.",
-        ["PartyLeft"] = "Left the watch party.",
-        ["PartyServerUnreachable"] = "Couldn't reach {server}. Check the server, or try again.",
         ["ReadingNextChapter"] = "Chapter {chapter}",
         ["ReadingUsuallyMondays"] = "Usually Mondays",
         ["ReadingUsuallyTuesdays"] = "Usually Tuesdays",

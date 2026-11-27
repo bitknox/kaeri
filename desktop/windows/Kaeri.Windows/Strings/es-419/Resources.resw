@@ -593,15 +593,6 @@
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Las watch parties no están disponibles en esta versión de Kaeri.</value>
   </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>La watch party necesita una sala para reunirse. Elige una primero.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Saliste de la watch party.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>No se pudo conectar con {server}. Revisa el servidor o inténtalo de nuevo.</value>
-  </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Capítulo {chapter}</value>
   </data>

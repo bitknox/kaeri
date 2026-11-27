@@ -737,18 +737,6 @@ object Strings {
     fun noticeNoParty(context: Context): String =
         context.getString(R.string.notice_no_party)
 
-    /** Message when a watch party was asked for with no room named. */
-    fun partyNeedsRoom(context: Context): String =
-        context.getString(R.string.party_needs_room)
-
-    /** Message when the person left a watch party. */
-    fun partyLeft(context: Context): String =
-        context.getString(R.string.party_left)
-
-    /** Message when a watch party's server could not be reached, in the lobby or when looking in. */
-    fun partyServerUnreachable(context: Context, server: String): String =
-        context.getString(R.string.party_server_unreachable, server)
-
     /** Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5. */
     fun readingNextChapter(context: Context, chapter: String): String =
         context.getString(R.string.reading_next_chapter, chapter)

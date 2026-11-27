@@ -131,6 +131,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = Za mało wolnego miejsca, by zachować pobrane kolejne odcinki. Zwolnij trochę miejsca, aby pobrać więcej.
 notice-no-party = { -watch-party-cap-pl } nie są dostępne w tej wersji { -app-name }.
-party-needs-room = { -watch-party-cap } wymaga pokoju, w którym można się spotkać. Najpierw wybierz pokój.
-party-left = Opuszczono { -watch-party }.
-party-server-unreachable = Nie można połączyć się z { $server }. Sprawdź serwer lub spróbuj ponownie.

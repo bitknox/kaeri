@@ -558,15 +558,6 @@ notice-keep-next-full = Za mało wolnego miejsca, by zachować pobrane kolejne o
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Wspólne oglądania nie są dostępne w tej wersji Kaeri.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = Wspólne oglądanie wymaga pokoju, w którym można się spotkać. Najpierw wybierz pokój.
-
-# Message when the person left a watch party.
-party-left = Opuszczono wspólne oglądanie.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = Nie można połączyć się z { $server }. Sprawdź serwer lub spróbuj ponownie.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Rozdział { $chapter }
 

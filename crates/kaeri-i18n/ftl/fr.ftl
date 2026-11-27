@@ -550,15 +550,6 @@ notice-keep-next-full = Espace libre insuffisant pour garder les épisodes suiva
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Les visionnages en groupe ne sont pas disponibles dans cette version de Kaeri.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = Un visionnage en groupe a besoin d'un salon où se retrouver. Choisissez-en un d'abord.
-
-# Message when the person left a watch party.
-party-left = Vous avez quitté le visionnage en groupe.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = Impossible de joindre { $server }. Vérifiez le serveur ou réessayez.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Chapitre { $chapter }
 

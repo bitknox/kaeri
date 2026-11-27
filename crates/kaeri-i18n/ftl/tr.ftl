@@ -542,15 +542,6 @@ notice-keep-next-full = Sonraki bölümleri tutmak için yeterli boş alan yok. 
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Birlikte izlemeler bu Kaeri sürümünde yok.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = Birlikte izleme için bir oda gerekli. Önce birini seçin.
-
-# Message when the person left a watch party.
-party-left = Birlikte izlemeden ayrıldı.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = { $server } sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Bölüm { $chapter }
 

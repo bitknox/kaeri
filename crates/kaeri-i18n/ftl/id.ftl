@@ -534,15 +534,6 @@ notice-keep-next-full = Ruang kosong tidak cukup untuk menyimpan episode setelah
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Nonton bareng tidak tersedia di versi Kaeri ini.
 
-# Message when a watch party was asked for with no room named.
-party-needs-room = Untuk nonton bareng diperlukan ruangan. Pilih satu dulu.
-
-# Message when the person left a watch party.
-party-left = Keluar dari nonton bareng.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = Tidak bisa menjangkau { $server }. Periksa servernya, atau coba lagi.
-
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Bab { $chapter }
 

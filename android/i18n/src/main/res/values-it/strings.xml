@@ -204,9 +204,6 @@
     </plurals>
     <string name="notice_keep_next_full">Spazio libero insufficiente per tenere scaricati i prossimi episodi. Libera un po\' di spazio per scaricarne altri.</string>
     <string name="notice_no_party">I Watch party non sono disponibili in questa edizione di Kaeri.</string>
-    <string name="party_needs_room">Per il watch party serve una stanza in cui incontrarsi. Scegline prima una.</string>
-    <string name="party_left">Uscito dal watch party.</string>
-    <string name="party_server_unreachable">Impossibile raggiungere %1$s. Controlla il server o riprova.</string>
     <string name="reading_next_chapter">Capitolo %1$s</string>
     <string name="reading_usually_mondays">Di solito il lunedì</string>
     <string name="reading_usually_tuesdays">Di solito il martedì</string>

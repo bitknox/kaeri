@@ -123,6 +123,3 @@ notice-episodes-queued-existing-stopped = { $count ->
  }
 notice-keep-next-full = Spazio libero insufficiente per tenere scaricati i prossimi episodi. Libera un po' di spazio per scaricarne altri.
 notice-no-party = I { -watch-party-cap-pl } non sono disponibili in questa edizione di { -app-name }.
-party-needs-room = Per il { -watch-party } serve una stanza in cui incontrarsi. Scegline prima una.
-party-left = Uscito dal { -watch-party }.
-party-server-unreachable = Impossibile raggiungere { $server }. Controlla il server o riprova.

@@ -15404,12 +15404,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-left": {
-    "source": "ea3ce6454bda",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-left-note": {
     "source": "c35339b3c7a6",
     "state": "draft",
@@ -15574,12 +15568,6 @@
   },
   "party-needs-connection": {
     "source": "d9359d3dbfc9",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "party-needs-room": {
-    "source": "04c05ee12036",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
@@ -15961,12 +15949,6 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
-  },
-  "party-server-unreachable": {
-    "source": "625c230a72d4",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "party-share": {
     "source": "313b0c2e009a",

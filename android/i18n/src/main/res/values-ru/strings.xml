@@ -212,9 +212,6 @@
     </plurals>
     <string name="notice_keep_next_full">Недостаточно свободного места, чтобы сохранить следующие эпизоды в загрузках. Освободите место, чтобы загрузить больше.</string>
     <string name="notice_no_party">Совместные просмотры недоступны в этой версии Kaeri.</string>
-    <string name="party_needs_room">Совместный просмотр требует комнату. Сначала выберите её.</string>
-    <string name="party_left">Вы покинули совместный просмотр.</string>
-    <string name="party_server_unreachable">Не удалось связаться с %1$s. Проверьте сервер или попробуйте ещё раз.</string>
     <string name="reading_next_chapter">Глава %1$s</string>
     <string name="reading_usually_mondays">Обычно по понедельникам</string>
     <string name="reading_usually_tuesdays">Обычно по вторникам</string>
