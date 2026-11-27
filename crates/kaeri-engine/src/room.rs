@@ -152,6 +152,11 @@ pub fn command(
             }
         }
         RoomCommand::LoadRelays => relays(engine, tx),
+        RoomCommand::SetSpareRelays { relays: list } => {
+            let list = list.into_iter().filter(|r| kaeri_model::room::valid_relay(r)).collect();
+            crate::settings::save_room_spares(list, engine, services, tx);
+            relays(engine, tx);
+        }
         RoomCommand::SetRelays { relays: list } => {
             let list = list.into_iter().filter(|r| kaeri_model::room::valid_relay(r)).collect();
             crate::settings::save_room_relays(list, engine, services, tx);
@@ -181,10 +186,28 @@ pub fn command(
 
 fn relays(engine: &EngineState, tx: &Outbox) {
     let _ = tx.send(Event::RoomRelays(RoomRelaySettings {
-        defaults: DEFAULT_RELAYS.iter().map(|r| (*r).to_owned()).collect(),
-        spares: SPARE_RELAYS.iter().map(|r| (*r).to_owned()).collect(),
+        defaults: shown(&DEFAULT_RELAYS),
+        spares: spares(engine),
+        default_spares: shown(&SPARE_RELAYS),
         chosen: engine.config.effective().room.relays.clone(),
     }));
+}
+
+/// A built-in relay list as Settings shows it. Testing builds (the apps' Fixtures, shots) show
+/// made-up hosts, never real ones.
+fn shown(list: &[&str; 3]) -> Vec<String> {
+    #[cfg(feature = "testing")]
+    {
+        let base = if list == &SPARE_RELAYS { 4 } else { 1 };
+        (base..base + 3).map(|n| format!("wss://relay-{n}.example")).collect()
+    }
+    #[cfg(not(feature = "testing"))]
+    list.iter().map(|r| (*r).to_owned()).collect()
+}
+
+/// The spares in use: Settings' own, or the built-in ones.
+fn spares(engine: &EngineState) -> Vec<String> {
+    engine.config.effective().room.spare_relays.clone().unwrap_or_else(|| shown(&SPARE_RELAYS))
 }
 
 /// The engine is going away, or another room takes this one's place.
@@ -399,6 +422,7 @@ fn begin(
         store: services.store.clone(),
         tx: tx.clone(),
         hidden: engine.config.effective().room.hide_chat,
+        spares: spares(engine),
         held: held.clone(),
     };
     let episodes = Episodes::default();
@@ -412,6 +436,8 @@ struct Env {
     store: kaeri_store::Store,
     tx: Outbox,
     hidden: bool,
+    /// The relays this room swaps in, as Settings had them when it started.
+    spares: Vec<String>,
     /// Whether a scene holds this device as Choosing, for the engine to read.
     #[cfg_attr(not(feature = "testing"), allow(dead_code))]
     held: Held,
@@ -1549,7 +1575,7 @@ impl Task {
 
     /// Swap or add a relay when the health reports call for it (see `Room::relay_change`).
     fn relays_check(&mut self, now: i64) {
-        let spares: Vec<String> = SPARE_RELAYS.iter().map(|r| (*r).to_owned()).collect();
+        let spares = self.env.spares.clone();
         let Some(list) = self.room.relay_change(now, &spares) else { return };
         let seq = self.room.relays_seq() + 1;
         tracing::info!(relays = list.len(), "room: the room's relays change");
@@ -1984,6 +2010,7 @@ impl Task {
             | RoomCommand::Rejoin { .. }
             | RoomCommand::LoadRelays
             | RoomCommand::SetRelays { .. }
+            | RoomCommand::SetSpareRelays { .. }
             | RoomCommand::LoadRecent
             | RoomCommand::ForgetRoom { .. }
             | RoomCommand::LookIn { .. }

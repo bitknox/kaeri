@@ -1145,3 +1145,47 @@ fn a_glimpse_names_the_invite_it_answers() {
     assert_eq!(glimpse.and_then(|g| g.invite), Some(invite));
     engine.shutdown();
 }
+
+#[test]
+fn settings_edit_the_spare_relays_and_show_made_up_hosts_in_testing_builds() {
+    // Apple's Settings ▸ Relays: the board draws × on the spares, and shots never show real
+    // relay hosts.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let relays = |engine: &Arc<FfiEngine>, command: RoomCommand| {
+        engine.send(Command::Room(command));
+        let (_, _, read) =
+            until_from(engine, (Some(RoomView::default()), Vec::new()), |_, _, r| {
+                r.iter().any(|e| matches!(e, Event::RoomRelays(_)))
+            });
+        read.into_iter()
+            .find_map(|e| match e {
+                Event::RoomRelays(r) => Some(r),
+                _ => None,
+            })
+            .unwrap()
+    };
+    let shown = relays(&engine, RoomCommand::LoadRelays);
+    let all = shown.defaults.iter().chain(&shown.spares).chain(&shown.default_spares);
+    assert!(all.clone().all(|r| r.ends_with(".example")), "{shown:?}");
+    assert_eq!(shown.spares, shown.default_spares);
+    assert_eq!(shown.spares.len(), 3);
+
+    // × on the first spare: the rest stay, in order.
+    let rest = shown.spares[1..].to_vec();
+    let edited = relays(&engine, RoomCommand::SetSpareRelays { relays: rest.clone() });
+    assert_eq!(edited.spares, rest);
+    let file =
+        std::fs::read_to_string(root.path().join("config/config.toml")).unwrap_or_default();
+    assert!(
+        file.contains("spare_relays") && file.contains(&rest[0]),
+        "kept in the file: {file}"
+    );
+    // None left, then the built-in ones put back.
+    let none = relays(&engine, RoomCommand::SetSpareRelays { relays: Vec::new() });
+    assert!(none.spares.is_empty(), "{none:?}");
+    let back =
+        relays(&engine, RoomCommand::SetSpareRelays { relays: none.default_spares.clone() });
+    assert_eq!(back.spares, back.default_spares);
+    engine.shutdown();
+}

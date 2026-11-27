@@ -421,9 +421,12 @@ pub struct RoomRelaySettings {
     /// [`DEFAULT_RELAYS`].
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub defaults: Vec<String>,
-    /// [`SPARE_RELAYS`].
+    /// The spares in use: [`SPARE_RELAYS`] unless Settings set them.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub spares: Vec<String>,
+    /// [`SPARE_RELAYS`], to put back.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub default_spares: Vec<String>,
     /// The list set in Settings; empty means the defaults.
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub chosen: Vec<String>,
@@ -708,6 +711,12 @@ pub enum RoomCommand {
     /// Settings ▸ Relays: the list for new rooms; empty for the defaults. Answered with
     /// `Event::RoomRelays`.
     SetRelays {
+        relays: Vec<String>,
+    },
+    /// Settings ▸ Relays: the spares, in order (× on one sends the rest); empty for none.
+    /// `RoomRelaySettings::default_spares` puts the built-in ones back. Answered with
+    /// `Event::RoomRelays`.
+    SetSpareRelays {
         relays: Vec<String>,
     },
     /// Ask for Settings ▸ Relays: answered with `Event::RoomRelays`.
