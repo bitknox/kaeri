@@ -166,12 +166,12 @@ extension Msg {
         case .noticeEpisodesQueuedStopped(let count, let reason): L.noticeEpisodesQueuedStopped(count: Int(count), reason: reason.text)
         case .noticeEpisodesQueuedExistingStopped(let count, let existing, let reason): L.noticeEpisodesQueuedExistingStopped(count: Int(count), existing: existing.text, reason: reason.text)
         case .noticeKeepNextFull: L.noticeKeepNextFull
-        case .partyNeedsServer(let server, let `operator`): L.partyNeedsServer(server: server, `operator`: `operator`)
-        case .partyChooseServer(let server, let `operator`): L.partyChooseServer(server: server, `operator`: `operator`)
+        case .roomLookUnreachable: L.roomLookUnreachable
+        case .roomLookNotAnInvite: L.roomLookNotAnInvite
+        case .roomLookNotKept: L.roomLookNotKept
+        case .roomLookOldInvite: L.roomLookOldInvite
         case .noticeNoParty: L.noticeNoParty
         case .partyNeedsRoom: L.partyNeedsRoom
-        case .partyServerLost: L.partyServerLost
-        case .partyRejoined: L.partyRejoined
         case .partyLeft: L.partyLeft
         case .partyServerUnreachable(let server): L.partyServerUnreachable(server: server)
         case .cloudLoopbackDone: L.cloudLoopbackDone

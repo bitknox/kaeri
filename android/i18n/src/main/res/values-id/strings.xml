@@ -187,12 +187,8 @@
         <item quantity="other">%1$,d episode masuk antrean, lalu berhenti. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Ruang kosong tidak cukup untuk menyimpan episode setelahnya. Kosongkan ruang untuk mengunduh lebih banyak.</string>
-    <string name="party_needs_server">Pilih server untuk nonton bareng dulu, sebagai syncplay.server. %1$s dijalankan oleh %2$s.</string>
-    <string name="party_choose_server">Pilih server untuk nonton bareng dulu. %1$s dijalankan oleh %2$s.</string>
     <string name="notice_no_party">Nonton bareng tidak tersedia di versi Kaeri ini.</string>
     <string name="party_needs_room">Untuk nonton bareng diperlukan ruangan. Pilih satu dulu.</string>
-    <string name="party_server_lost">Koneksi ke server nonton bareng terputus. Mencoba lagi.</string>
-    <string name="party_rejoined">Kembali ke nonton bareng.</string>
     <string name="party_left">Keluar dari nonton bareng.</string>
     <string name="party_server_unreachable">Tidak bisa menjangkau %1$s. Periksa servernya, atau coba lagi.</string>
     <string name="reading_next_chapter">Bab %1$s</string>

@@ -531,23 +531,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Ruang kosong tidak cukup untuk menyimpan episode setelahnya. Kosongkan ruang untuk mengunduh lebih banyak.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Pilih server untuk nonton bareng dulu, sebagai syncplay.server. { $server } dijalankan oleh { $operator }.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Pilih server untuk nonton bareng dulu. { $server } dijalankan oleh { $operator }.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Nonton bareng tidak tersedia di versi Kaeri ini.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = Untuk nonton bareng diperlukan ruangan. Pilih satu dulu.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Koneksi ke server nonton bareng terputus. Mencoba lagi.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Kembali ke nonton bareng.
 
 # Message when the person left a watch party.
 party-left = Keluar dari nonton bareng.

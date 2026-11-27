@@ -850,9 +850,18 @@ pub enum Event {
     },
     /// What a look into a room, or an invite's, found.
     RoomGlimpse(RoomGlimpse),
+    /// A look into a room found nothing. Never [`Event::RoomLeft`]: the room this device is
+    /// in, if any, carries on.
     RoomLookFailed {
+        /// The room looked into; for an invite, its room's id (empty when the text is no invite).
         room_id: String,
         reason: Msg,
+        /// The invite looked into, as given; `None` for a recent room.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        invite: Option<String>,
+        /// Why, as a join failing would say it.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        why: Option<RoomLeftWhy>,
     },
     /// The last ten rooms, newest first.
     RoomRecent(Vec<RoomRecent>),

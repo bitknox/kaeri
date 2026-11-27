@@ -187,12 +187,8 @@
         <item quantity="other">Đã thêm %1$,d tập vào hàng chờ, sau đó dừng. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Không đủ dung lượng trống để giữ các tập sau đã tải. Hãy giải phóng thêm dung lượng để tải thêm.</string>
-    <string name="party_needs_server">Hãy chọn máy chủ cho xem chung trước, dưới tên syncplay.server. %1$s do %2$s vận hành.</string>
-    <string name="party_choose_server">Hãy chọn máy chủ cho xem chung trước. %1$s do %2$s vận hành.</string>
     <string name="notice_no_party">Các buổi xem chung không có trong phiên bản Kaeri này.</string>
     <string name="party_needs_room">Một buổi xem chung cần một phòng để gặp nhau. Hãy chọn phòng trước.</string>
-    <string name="party_server_lost">Mất máy chủ của xem chung. Đang thử lại.</string>
-    <string name="party_rejoined">Đã trở lại xem chung.</string>
     <string name="party_left">Đã rời xem chung.</string>
     <string name="party_server_unreachable">Không kết nối được với %1$s. Hãy kiểm tra máy chủ hoặc thử lại.</string>
     <string name="reading_next_chapter">Chương %1$s</string>

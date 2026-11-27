@@ -195,12 +195,8 @@
         <item quantity="other">%1$,d Folgen in die Warteschlange gestellt, dann wurde angehalten. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Nicht genug freier Speicher, um die nächsten Folgen herunterzuladen. Gib Speicherplatz frei, um mehr herunterzuladen.</string>
-    <string name="party_needs_server">Wähle zuerst einen Server für die Watchparty als syncplay.server. %1$s wird von %2$s betrieben.</string>
-    <string name="party_choose_server">Wähle zuerst einen Server für die Watchparty. %1$s wird von %2$s betrieben.</string>
     <string name="notice_no_party">Watchpartys sind in dieser Version von Kaeri nicht verfügbar.</string>
     <string name="party_needs_room">Eine Watchparty braucht einen Raum zum Treffen. Wähle zuerst einen aus.</string>
-    <string name="party_server_lost">Verbindung zum Server der Watchparty verloren. Neuer Versuch läuft.</string>
-    <string name="party_rejoined">Wieder in der Watchparty.</string>
     <string name="party_left">Du hast die Watchparty verlassen.</string>
     <string name="party_server_unreachable">%1$s ist nicht erreichbar. Prüfe den Server oder versuche es erneut.</string>
     <string name="reading_next_chapter">Kapitel %1$s</string>

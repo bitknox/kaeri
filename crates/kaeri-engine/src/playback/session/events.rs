@@ -50,6 +50,13 @@ const FIRST_FRAME_TIMEOUT: Duration = Duration::from_secs(20);
 
 /// A seek or a pause the player makes this soon after the room cued one is the room's.
 const CUED_FOR_MS: u64 = 10_000;
+/// A player is still opening until its first room cue has had this long: its own start seeks
+/// (to where it was told to open, or late) are never the viewer's.
+const OPENING_FOR_MS: u64 = 3_000;
+/// A seek this soon after a place within [`END_SECONDS`] of the file's end is its loop or restart.
+const LOOPED_WITHIN_MS: u64 = 2_000;
+/// The file's last moments, for [`LOOPED_WITHIN_MS`].
+const END_SECONDS: f64 = 1.5;
 
 /// How long a mid-episode stall lasts before the player offers another stream.
 const STALL_PROMPT: Duration = Duration::from_secs(8);
@@ -196,9 +203,15 @@ impl Run<'_> {
         let mut room_cue: Option<(u64, f64)> = None;
         // The room's own seek and pause, when last cued: the player's seek or pause that
         // follows is the room's. Any other is the viewer's, said with the next sample.
-        let mut cued_seek: Option<tokio::time::Instant> = None;
+        let mut cued_seek: Option<(f64, tokio::time::Instant)> = None;
         let mut cued_pause: Option<(bool, tokio::time::Instant)> = None;
         let mut viewer_seeked = false;
+        // When the room's first cue reached this player: before then, and just after, it is
+        // still opening.
+        let mut first_cue: Option<tokio::time::Instant> = None;
+        // When the player last reported a place in the file's last moments: a seek just after
+        // is the file looping or restarting at its end, never the viewer's.
+        let mut near_end: Option<tokio::time::Instant> = None;
         let mut viewer_pressed = false;
         let mut waiting: Vec<kaeri_core::stream::Subtitle> = Vec::new();
         // Stats for nerds, open as the window left it.
@@ -411,16 +424,20 @@ impl Run<'_> {
                 cue = async { seat.as_mut().expect("guarded").cue().await }, if seat.is_some() && (loaded || ever_played) => {
                     match cue {
                         Some(cue) => {
+                            first_cue.get_or_insert_with(tokio::time::Instant::now);
                             if let SeatCue::Seek { to, cue: Some(id) } = &cue {
                                 room_cue = Some((*id, *to));
                             }
                             match &cue {
-                                SeatCue::Seek { .. } => {
-                                    cued_seek = Some(tokio::time::Instant::now());
+                                SeatCue::Seek { to, .. } => {
+                                    cued_seek = Some((*to, tokio::time::Instant::now()));
                                 }
-                                SeatCue::Pause(p) => {
+                                // A pause the player is already in says nothing back: nothing
+                                // to wait for.
+                                SeatCue::Pause(p) if tracker.is_paused() != *p => {
                                     cued_pause = Some((*p, tokio::time::Instant::now()));
                                 }
+                                SeatCue::Pause(_) => cued_pause = None,
                                 _ => {}
                             }
                             apply_cue(link, cue).await;
@@ -691,10 +708,17 @@ impl Run<'_> {
                     seeking = *now;
                     // A seek the room cued moments ago is the room's; any other, the viewer's.
                     if *now {
-                        let cued = cued_seek.take().is_some_and(|at| {
+                        let cued = cued_seek.take().is_some_and(|(_, at)| {
                             at.elapsed() < Duration::from_millis(CUED_FOR_MS)
                         });
-                        viewer_seeked |= !cued;
+                        let opened = ever_played
+                            && first_cue.is_some_and(|at| {
+                                at.elapsed() >= Duration::from_millis(OPENING_FOR_MS)
+                            });
+                        let looped = near_end.is_some_and(|at| {
+                            at.elapsed() < Duration::from_millis(LOOPED_WITHIN_MS)
+                        });
+                        viewer_seeked |= !cued && opened && !looped;
                     }
                     // The seek landed: ready for the room's wait at its first frame there.
                     if !*now
@@ -806,6 +830,9 @@ impl Run<'_> {
                 // Our own `loadfile` ending the file it replaced; nothing to record.
                 PlaybackEvent::Replaced => continue,
                 PlaybackEvent::Progress { position, duration } => {
+                    if duration.is_some_and(|length| *position >= length - END_SECONDS) {
+                        near_end = Some(tokio::time::Instant::now());
+                    }
                     if let Some(next) = duration.and_then(|length| self.learn_length(length)) {
                         let _ = link.overlay(next).await;
                     }
@@ -929,7 +956,8 @@ impl Run<'_> {
                 match action {
                     Action::OfferSkip { kind, to } => {
                         let to = skip_target(to, tracker.duration());
-                        if tracker.auto_skips_kind(kind) {
+                        // Personal auto-skip stays off in a room: its seek would move everyone.
+                        if tracker.auto_skips_kind(kind) && !self.in_party {
                             let from = tracker.position();
                             let _ = link.seek(to, true).await;
                             let _ = link.overlay(Overlay::Skipped { kind, from, to }).await;
@@ -987,6 +1015,16 @@ impl Run<'_> {
                 };
                 // An in-buffer seek can land without a `seeking` change: a frame at the target is
                 // the room's Ready too.
+                // A frame at the room's seek target with no `seeking`: it landed quietly, and
+                // the viewer's next seek is theirs.
+                if let Some((to, at)) = cued_seek
+                    && matches!(event, PlaybackEvent::Progress { .. })
+                    && !seeking
+                    && at.elapsed() >= Duration::from_secs(1)
+                    && (tracker.position() - to).abs() <= 1.5
+                {
+                    cued_seek = None;
+                }
                 if let Some((id, to)) = room_cue
                     && matches!(event, PlaybackEvent::Progress { .. })
                     && !seeking

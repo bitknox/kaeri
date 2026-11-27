@@ -130,11 +130,7 @@ notice-episodes-queued-existing-stopped = { $count ->
    *[other] Dodano do kolejki { $count } odcinków, potem zatrzymano. { $existing } { $reason }
  }
 notice-keep-next-full = Za mało wolnego miejsca, by zachować pobrane kolejne odcinki. Zwolnij trochę miejsca, aby pobrać więcej.
-party-needs-server = Najpierw wybierz serwer, zanim rozpoczniesz { -watch-party } (syncplay.server). { $server } jest prowadzony przez { $operator }.
-party-choose-server = Najpierw wybierz serwer, zanim rozpoczniesz { -watch-party }. { $server } jest prowadzony przez { $operator }.
 notice-no-party = { -watch-party-cap-pl } nie są dostępne w tej wersji { -app-name }.
 party-needs-room = { -watch-party-cap } wymaga pokoju, w którym można się spotkać. Najpierw wybierz pokój.
-party-server-lost = Połączenie z serwerem zostało utracone. Trwa ponowna próba.
-party-rejoined = Ponownie połączono. { -watch-party-cap } trwa.
 party-left = Opuszczono { -watch-party }.
 party-server-unreachable = Nie można połączyć się z { $server }. Sprawdź serwer lub spróbuj ponownie.

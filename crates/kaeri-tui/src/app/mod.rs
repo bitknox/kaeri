@@ -737,12 +737,15 @@ impl App {
             Event::RoomChat(conversation) => self.set_room_chat(conversation),
             Event::RoomChatState(state) => self.room_chat_state = Some(state),
             Event::RoomChatRefused(refusal) => self.chat_refused(refusal),
+            // The room's episode starts here as an app's does: the terminal plays it, and the
+            // room moves the player to its place.
+            Event::RoomStarted { id, episode, .. } => {
+                self.commands.push(Command::Play { id, episode, from_start: false });
+            }
             // The room's own words are already lines in its chat; a reaction shows there too.
-            // The player opening is the engine's; a look into a room, a move to a new one and
-            // the relay settings are a native app's.
+            // A look into a room, a move to a new one and the relay settings are a native app's.
             Event::RoomMessage(_)
             | Event::RoomReaction(_)
-            | Event::RoomStarted { .. }
             | Event::RoomGlimpse(_)
             | Event::RoomLookFailed { .. }
             | Event::RoomLastOut { .. }

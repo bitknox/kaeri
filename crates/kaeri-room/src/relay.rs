@@ -231,12 +231,15 @@ impl Conn {
         self.after_auth.clear();
         self.resubscribe_after_auth = false;
         self.announced = false;
-        // A subscription waiting in the queue goes in the first REQ.
+        // A subscription waiting in the queue goes in the first REQ; events sent while this
+        // socket was being opened (right after a refresh) go out after it.
+        let mut waiting = Vec::new();
         while let Ok(command) = rx.try_recv() {
             match command {
                 ToRelay::Subscribe(filter) => self.filter = Some(filter),
                 ToRelay::Stop => return Ended::Stop,
-                ToRelay::Refresh | ToRelay::Send(_) => {}
+                ToRelay::Send(event) => waiting.push(event),
+                ToRelay::Refresh => {}
             }
         }
         // Up once the subscription is live (its EOSE), so nothing sent after Up is missed.
@@ -246,6 +249,13 @@ impl Conn {
         if let Some(filter) = &self.filter {
             let req = json!(["REQ", SUB, filter]).to_string();
             if write.send(Ws::text(req)).await.is_err() {
+                return Ended::Lost;
+            }
+        }
+        for event in waiting {
+            let text = json!(["EVENT", *event]).to_string();
+            self.sent.insert(event.id.to_hex(), (*event, Instant::now()));
+            if write.send(Ws::text(text)).await.is_err() {
                 return Ended::Lost;
             }
         }

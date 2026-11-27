@@ -1328,9 +1328,12 @@ fn copy(update: &Event) -> Event {
             Event::RoomStarted { id: *id, episode: episode.clone(), kind: *kind, at: *at }
         }
         Event::RoomGlimpse(g) => Event::RoomGlimpse(g.clone()),
-        Event::RoomLookFailed { room_id, reason } => {
-            Event::RoomLookFailed { room_id: room_id.clone(), reason: reason.clone() }
-        }
+        Event::RoomLookFailed { room_id, reason, invite, why } => Event::RoomLookFailed {
+            room_id: room_id.clone(),
+            reason: reason.clone(),
+            invite: invite.clone(),
+            why: why.clone(),
+        },
         Event::RoomRecent(r) => Event::RoomRecent(r.clone()),
         Event::RoomLastOut { episode, airs } => {
             Event::RoomLastOut { episode: episode.clone(), airs: airs.clone() }
