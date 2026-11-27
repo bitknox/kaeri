@@ -26,7 +26,7 @@ use super::{
 pub const WIDTH: i32 = 336;
 /// More people than this scroll in the list.
 const ROWS: i32 = 5;
-/// A row as libadwaita draws it at the app's font: two lines and the 28 px face, 54 px.
+/// The least a row is: two lines and the 28 px face. The list measures its rows for the real one.
 const ROW_HEIGHT: i32 = 54;
 
 /// A handler of the room's buttons, and the cell that holds one.
@@ -402,6 +402,12 @@ impl Column {
             ))]); // i18n-skip
         }
         let many = members.len() as i32 > ROWS;
+        // Five whole rows, as tall as a row draws at this font, then the list scrolls.
+        if many && let Some(first) = self.list.row_at_index(0) {
+            let (_, natural, _, _) = first.measure(gtk::Orientation::Vertical, WIDTH);
+            let row = natural.max(ROW_HEIGHT) + 1;
+            self.list_scroll.set_max_content_height(ROWS * row + 2);
+        }
         self.list_scroll.set_vscrollbar_policy(if many {
             gtk::PolicyType::Automatic
         } else {
