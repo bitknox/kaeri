@@ -38,6 +38,9 @@ use crate::{
 const SYNC_WAIT: Duration = Duration::from_secs(3);
 /// The heartbeat, and the faster one while this device is waited for.
 const HEARTBEAT_MS: i64 = 15_000;
+/// After a new invite's key, Hello again this long after the first: members still moving to
+/// the new key missed the first, and hold an older proof to answer newcomers with.
+const REHELLO_MS: i64 = 2_000;
 const HEARTBEAT_WAITED_MS: i64 = 5_000;
 /// A pause taken as the viewer's this soon before the app goes to the background was the
 /// system's, and is withdrawn.
@@ -117,7 +120,7 @@ pub fn command(
         }
         // A look never leaves the room this device is in: it fails as a look.
         RoomCommand::PeekInvite { invite } => match target(&invite) {
-            Ok(target) => peek(target, Look::Invite(invite), services, tx),
+            Ok(target) => peek(target, Look::Invite(invite), spares(engine), services, tx),
             Err(why) => look_failed(Look::Invite(invite), String::new(), why, tx),
         },
         RoomCommand::Rejoin { room_id } => match recent(&room_id, services) {
@@ -127,7 +130,9 @@ pub fn command(
             None => gone(room_id, tx),
         },
         RoomCommand::LookIn { room_id } => match recent(&room_id, services) {
-            Some((target, _)) => peek(target, Look::Recent(room_id), services, tx),
+            Some((target, _)) => {
+                peek(target, Look::Recent(room_id), spares(engine), services, tx)
+            }
             None => gone(room_id, tx),
         },
         RoomCommand::LoadRecent => {
@@ -155,6 +160,13 @@ pub fn command(
         RoomCommand::SetSpareRelays { relays: list } => {
             let list = list.into_iter().filter(|r| kaeri_model::room::valid_relay(r)).collect();
             crate::settings::save_room_spares(list, engine, services, tx);
+            // A room going swaps in the new spares from now on.
+            if let Some(running) = going(engine) {
+                let relays = spares(engine);
+                let _ = running
+                    .control
+                    .send(Control::Command(RoomCommand::SetSpareRelays { relays }));
+            }
             relays(engine, tx);
         }
         RoomCommand::SetRelays { relays: list } => {
@@ -380,9 +392,7 @@ fn join(
         None => {
             let Some(pick) = pick.clone() else {
                 let _ = tx.send(Event::RoomLeft {
-                    why: RoomLeftWhy::Failed {
-                        reason: Msg::verbatim("Choose an episode for the room first."),
-                    },
+                    why: RoomLeftWhy::Failed { reason: Msg::RoomNeedsEpisode },
                 });
                 return;
             };
@@ -436,7 +446,7 @@ struct Env {
     store: kaeri_store::Store,
     tx: Outbox,
     hidden: bool,
-    /// The relays this room swaps in, as Settings had them when it started.
+    /// The relays this room swaps in or opens on when the room's own are down: Settings'.
     spares: Vec<String>,
     /// Whether a scene holds this device as Choosing, for the engine to read.
     #[cfg_attr(not(feature = "testing"), allow(dead_code))]
@@ -444,7 +454,7 @@ struct Env {
 }
 
 /// Look into a room without anyone seeing: an invite's, or a recent room's (`room_id`).
-fn peek(target: Target, look: Look, services: &Services, tx: &Outbox) {
+fn peek(target: Target, look: Look, spares: Vec<String>, services: &Services, tx: &Outbox) {
     let tx = tx.clone();
     let meta = services.meta.clone();
     let (room_id, invite) = match &look {
@@ -452,7 +462,8 @@ fn peek(target: Target, look: Look, services: &Services, tx: &Outbox) {
         Look::Invite(invite) => (None, Some(invite.clone())),
     };
     tokio::spawn(async move {
-        let Ok(mut link) = link::open(target.secret, target.relays.clone()).await else {
+        let Ok(mut link) = link::open(target.secret, target.relays.clone(), spares).await
+        else {
             let id = RoomKeys::new(target.secret).room_id_hex();
             look_failed(look, id, RoomLeftWhy::Unreachable, &tx);
             return;
@@ -679,6 +690,8 @@ struct Task {
     offers: HashMap<String, Offer>,
     moved: Option<(Mid, Vec<Mid>)>,
     joined: bool,
+    /// When to say Hello again after a new key.
+    rehello_at: Option<i64>,
     /// The room's episode and the next, for the engine's plays.
     episodes: Episodes,
     /// What recent rooms last kept of this room: its id, episode, title and who was there.
@@ -1186,6 +1199,10 @@ impl Task {
             self.stall(now);
             self.relays_check(now);
             self.answer_due();
+            if self.rehello_at.is_some_and(|at| now >= at) {
+                self.rehello_at = None;
+                self.hello();
+            }
         }
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
@@ -1997,6 +2014,8 @@ impl Task {
                 self.say(Event::RoomChat(self.chat.conversation()));
                 self.say_chat_state();
             }
+            // Settings' spares changed: the engine sends the list in use.
+            RoomCommand::SetSpareRelays { relays } => self.env.spares = relays,
             RoomCommand::HideChat { hidden } => {
                 self.env.hidden = hidden;
                 self.chat.set_hidden(hidden);
@@ -2010,7 +2029,6 @@ impl Task {
             | RoomCommand::Rejoin { .. }
             | RoomCommand::LoadRelays
             | RoomCommand::SetRelays { .. }
-            | RoomCommand::SetSpareRelays { .. }
             | RoomCommand::LoadRecent
             | RoomCommand::ForgetRoom { .. }
             | RoomCommand::LookIn { .. }
@@ -2064,7 +2082,8 @@ impl Task {
     /// Leave this room with an ordinary Leave and join `target`, keeping the player.
     async fn switch(&mut self, target: Target, start: Start) -> bool {
         self.send(Message::Leave);
-        let link = match link::open(target.secret, target.relays.clone()).await {
+        let spares = self.env.spares.clone();
+        let link = match link::open(target.secret, target.relays.clone(), spares).await {
             Ok(link) => link,
             Err(_) => {
                 self.say(Event::RoomLeft { why: RoomLeftWhy::Unreachable });
@@ -2173,6 +2192,7 @@ impl Task {
         self.link.room_id = RoomKeys::new(secret).room_id();
         if self.joined {
             self.hello();
+            self.rehello_at = Some(self.now() + REHELLO_MS);
         }
     }
 
@@ -2342,7 +2362,8 @@ async fn run(
     mut seats: mpsc::UnboundedReceiver<SeatMessage>,
     episodes: Episodes,
 ) {
-    let link = match link::open(target.secret, target.relays.clone()).await {
+    let link = match link::open(target.secret, target.relays.clone(), env.spares.clone()).await
+    {
         Ok(link) => link,
         Err(_) => {
             let _ = env.tx.send(Event::RoomLeft { why: RoomLeftWhy::Unreachable });
@@ -2403,6 +2424,7 @@ async fn run(
         offers: HashMap::new(),
         moved: None,
         joined: false,
+        rehello_at: None,
         episodes,
         remembered: None,
     };

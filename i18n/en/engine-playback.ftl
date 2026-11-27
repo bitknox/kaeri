@@ -430,6 +430,9 @@ room-look-not-kept = That room isn't kept any more.
 # Why a look into a room found nothing: the invite comes from an older version.
 room-look-old-invite = This invite is from an older version of { -app-name }. Ask for a new one.
 
+# Why a room couldn't start: it has no episode yet. Shown where the room would open.
+room-needs-episode = Choose an episode for the room first.
+
 # Toast when a watch party is asked for in a build without watch parties.
 # @allow release
 notice-no-party = { -watch-party-cap-pl } aren't available in this version of { -app-name }.

@@ -423,3 +423,76 @@ fn a_sync_request_is_answered_in_turn_when_the_ones_before_stay_quiet() {
     ada.receive(body("m", answer, watching(None)), 1_100);
     assert!(ada.answers_due(2_000).is_empty());
 }
+
+#[test]
+fn a_sync_answer_whose_playhead_lost_the_tie_applies_no_place() {
+    // Neon: Mika's seek tied Ada's pause on seq and lost on time; a sync answer carrying it
+    // still moved Ada's place, because only the seq was compared.
+    let mut ada = room(&[]);
+    start(&mut ada, 0);
+    ada.settle(3_000);
+    let mut answer = ada.sync_answer("n", 13_000);
+    let mine = ada
+        .write(
+            14_000,
+            14_000,
+            |h| {
+                h.pos = 720.0;
+                h.play = false;
+                h.cause = Cause::Pause;
+            },
+            None,
+        )
+        .unwrap();
+    if let Message::SyncAns { playhead: Some(h), now_pos, playing_now, .. } = &mut answer {
+        (h.seq, h.t, h.by) = (mine.seq, 14_500, "m".into());
+        (h.pos, h.play) = (900.0, true);
+        (*now_pos, *playing_now) = (Some(900.0), true);
+    }
+    ada.receive(body("m", answer, watching(Some(1))), 14_600);
+    assert_eq!(ada.position(15_600), Some(720.0));
+    assert!(!ada.playing());
+}
+
+#[test]
+fn a_sync_answer_never_rebinds_a_member_heard_here() {
+    // Neon: Mika still held Ren's session from before his restart; her roster put it back over
+    // the one Ren had just said Hello with.
+    let mut ada = room(&["r"]);
+    let mut mika = Room::new("m", "Mika", "pm", 0);
+    mika.receive(body("r", Message::Heartbeat, Status::default()), 0);
+    let mut answer = mika.sync_answer("n", 100);
+    if let Message::SyncAns { roster, .. } = &mut answer {
+        let ren = roster.iter_mut().find(|e| e.mid == "r");
+        if let Some(ren) = ren {
+            ren.pk = "old-session".into();
+        } else {
+            roster.push(crate::wire::RosterEntry {
+                mid: "r".into(),
+                name: "R".into(),
+                pk: "old-session".into(),
+                idpk: String::new(),
+                idsig: String::new(),
+                st: Status::default(),
+                joined_ms_ago: 0,
+                gone: false,
+            });
+        }
+    }
+    ada.receive(body("m", answer, Status::default()), 200);
+    assert_eq!(ada.member("r").unwrap().session, "pr");
+}
+
+#[test]
+fn a_newcomer_takes_the_rooms_key_epoch_from_a_sync_answer() {
+    // Neon: a newcomer by a new invite stayed at epoch 0, so its own New invite went out at
+    // seq 1, lost to the room's, and split it.
+    let mut ada = room(&[]);
+    ada.take_epoch(3, 50, "pa");
+    let answer = ada.sync_answer("n", 100);
+    let mut ren = Room::new("r", "Ren", "pr", 0);
+    ren.receive(body("a", answer, Status::default()), 200);
+    assert_eq!(ren.epoch().0, 3);
+    // Its own new invite goes past the room's, and the room takes it.
+    assert!(ada.take_epoch(ren.epoch().0 + 1, 300, "pr"));
+}

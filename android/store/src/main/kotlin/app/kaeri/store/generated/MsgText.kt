@@ -177,6 +177,7 @@ fun Msg.text(context: Context): String =
         is Msg.RoomLookNotAnInvite -> Strings.roomLookNotAnInvite(context)
         is Msg.RoomLookNotKept -> Strings.roomLookNotKept(context)
         is Msg.RoomLookOldInvite -> Strings.roomLookOldInvite(context)
+        is Msg.RoomNeedsEpisode -> Strings.roomNeedsEpisode(context)
         is Msg.NoticeNoParty -> Strings.noticeNoParty(context)
         is Msg.PartyNeedsRoom -> Strings.partyNeedsRoom(context)
         is Msg.PartyLeft -> Strings.partyLeft(context)
