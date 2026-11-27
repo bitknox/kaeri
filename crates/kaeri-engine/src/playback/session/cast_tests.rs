@@ -1292,7 +1292,8 @@ async fn a_cast_another_device_started_takes_the_controls_of_a_phone_that_joins_
     let pauses = rig.receiver.heard("PAUSE").len();
     session.command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
-    assert_eq!(rig.receiver.heard("PAUSE").len(), pauses + 1, "the TV paused");
+    // The phone reads paused once it asks, before the TV has the PAUSE: wait for the TV.
+    heard_until(&rig.receiver, "PAUSE", pauses + 1).await;
     assert!(session.card().card.now.is_some_and(|now| now.paused));
     sender.cast_command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| !i.paused)).await;
@@ -1349,9 +1350,11 @@ async fn a_joined_phone_follows_the_next_episode_the_other_device_casts() {
     assert_eq!(now.episode, "2");
     assert_eq!(now.episode_line, "Episode 2 · Low Tide");
 
+    let pauses = rig.receiver.heard("PAUSE").len();
     session.command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
-    let pause = rig.receiver.heard("PAUSE").pop().expect("a pause");
+    // CI: the phone reads paused once it asks, before the TV has the PAUSE. Wait for the TV.
+    let pause = heard_until(&rig.receiver, "PAUSE", pauses + 1).await;
     assert_eq!(pause["mediaSessionId"], 2, "the new episode's media session");
     assert!(phone.disconnect());
 }
@@ -1399,7 +1402,8 @@ async fn a_joined_cast_that_does_not_say_what_it_plays_has_controls_and_no_card(
     let pauses = rig.receiver.heard("PAUSE").len();
     sender.cast_command(RemoteCommand::TogglePause);
     session_until(&phone, |v| v.item.as_ref().is_some_and(|i| i.paused)).await;
-    assert_eq!(rig.receiver.heard("PAUSE").len(), pauses + 1, "the TV paused");
+    // The phone reads paused once it asks, before the TV has the PAUSE: wait for the TV.
+    heard_until(&rig.receiver, "PAUSE", pauses + 1).await;
     assert!(phone.disconnect());
 }
 
