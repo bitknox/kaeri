@@ -121,6 +121,7 @@ import app.kaeri.player.SeekPreview
 import app.kaeri.store.HeroArt
 import app.kaeri.ui.ArtworkImage
 import app.kaeri.ui.LocalAppStore
+import app.kaeri.ui.openSources
 import app.kaeri.store.DiscussionKey
 import app.kaeri.store.PlayerDiscussion
 import app.kaeri.ui.LocalPageAnimation
@@ -572,8 +573,9 @@ fun PlayerScreen(
     }
 
     // In a room on a phone, the player sits in the room: upright under the video's box, sideways
-    // full with the strip. Its place in the tree stays the same through a turn.
-    if (phone) {
+    // full with the strip. Its place in the tree stays the same through a turn. A tablet has the
+    // full picture with the strip and the room's panels, as a phone held sideways does.
+    run {
         val room = LocalAppStore.current.room
         val roomView by room.view.collectAsStateWithLifecycle()
         val inRoom = roomView != null
@@ -584,19 +586,25 @@ fun PlayerScreen(
         app.kaeri.player.ui.room.RoomAround(
             room,
             inRoom = inRoom,
-            sideways = sideways,
+            sideways = sideways || !phone,
             positionS = model.position,
             controls = model.controlsVisible,
             player = playerBox,
             panel = { m ->
-                app.kaeri.player.ui.room.RoomPanel(room, m, onSources = { sheet = PlayerSheet.Sources.also { model.chooseSource() } }, onSearch = { close() })
+                // No source for the room's episode: the player folds to the room's bar (you stay in
+                // the room and its chat) and the app opens your sources, or Search.
+                val navigator = app.kaeri.ui.LocalNavigatorOrNull.current
+                app.kaeri.player.ui.room.RoomPanel(
+                    room,
+                    m,
+                    onSources = { close(); navigator?.openSources() },
+                    onSearch = { close(); navigator?.go(app.kaeri.ui.Destination.Search) },
+                )
             },
             onBack = { still.freeze(surfaceView) { close() } },
             onSubtitles = { sheet = PlayerSheet.Tracks },
             onCopyLink = { roomView?.link?.let { copyToClipboard(context, it) } },
         )
-    } else {
-        playerBox(Modifier.fillMaxSize())
     }
 }
 

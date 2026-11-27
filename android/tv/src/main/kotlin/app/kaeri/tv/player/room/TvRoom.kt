@@ -5,8 +5,8 @@
 
 package app.kaeri.tv.player.room
 
+import app.kaeri.store.text
 import androidx.compose.animation.core.animateDpAsState
-import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -48,7 +48,6 @@ import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -196,7 +195,8 @@ fun TvRoom(
         // so the picture's surface lives on; the rail's words crossfade around it.
         val removed = rememberAnimationsRemoved()
         val rail = state.rail
-        val railAlpha by animateFloatAsState(if (rail) 1f else 0f, Motion.fadeIn(), label = "tv-rail") // i18n-skip
+        // Still a crossfade with Remove animations, at full speed: the rail's words and the picture both drawn.
+        val railAlpha = app.kaeri.design.animateKeptAlpha(rail)
         if (rail || railAlpha > 0f) {
             Box(Modifier.fillMaxSize().graphicsLayer { alpha = railAlpha }) {
                 TvRail(v, members, now, positionS, durationS, episodeLine, carry, carryFocus) { room.send(RoomCommand.CarryOn) }
@@ -212,7 +212,9 @@ fun TvRoom(
         val corner = moving(if (rail) 12.dp else 0.dp, "tv-video-corner") // i18n-skip
         Box(Modifier.offset(x, y).size(w, h).clip(RoundedCornerShape(corner)).background(Color.Black)) {
             video(Modifier.fillMaxSize())
-            if (rail && v.beforePlay) {
+            // Before play the room waits on this screen: Play for everyone shows on the full picture too,
+            // focused, so OK starts the room rather than this player alone.
+            if (v.beforePlay) {
                 TvBeforePlay(v.roomEpisode?.title ?: v.name, episodeLine, started = v.startsAtMs != null || v.waiting.isNotEmpty()) { room.send(RoomCommand.Play(true)) }
             }
         }
@@ -241,7 +243,9 @@ fun TvStrip(view: RoomView, members: List<RoomMember>, now: Long, positionS: Dou
     val line = RoomWords.line(c, view, members, now, positionS)
     val waiting = RoomWords.shownWaits(view, now).isNotEmpty() && carry == null
     val disc = 32.dp
-    val spoken = (shown.map { c.spoken(it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
+    // Said when the words change, not each second a face's or the line's seconds tick.
+    val words = (shown.map { c.spoken(it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
+    val spoken = remember(RoomWords.numberless(words)) { words }
     Row(
         Modifier.shadow(18.dp, CircleShape).height(disc + 16.dp).clip(CircleShape).background(ObiSilk.Raised)
             .border(1.dp, ObiSilk.Silk.copy(alpha = 0.10f), CircleShape).padding(horizontal = 10.dp),
@@ -350,14 +354,17 @@ private fun TvRail(
             }
             Box(Modifier.padding(vertical = 10.dp).fillMaxWidth().height(1.dp).background(ObiSilk.FaintRule))
             Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.BottomStart) { TvReadOnlyChat() }
-            Text(c.WRITE_ON_PHONE, fontSize = 13.sp, lineHeight = 18.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
+            if (!LocalAppStore.current.room.hideChat.collectAsStateWithLifecycle().value) Text(c.WRITE_ON_PHONE, fontSize = 13.sp, lineHeight = 18.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
         }
     }
 }
 
 @Composable
 private fun TvLineBlock(line: RoomLine) {
-    Column(Modifier.padding(bottom = 14.dp).semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
+    // Said when its words change, not each second its clock or seconds tick.
+    val words = line.title + ". " + line.detail // i18n-skip
+    val spoken = remember(RoomWords.numberless(words)) { words }
+    Column(Modifier.padding(bottom = 14.dp).clearAndSetSemantics { contentDescription = spoken; liveRegion = LiveRegionMode.Polite }) {
         Text(line.title, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
         Text(line.detail, style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze).tabular())
     }
@@ -369,7 +376,11 @@ private fun TvReadOnlyChat() {
     val store = LocalAppStore.current
     val c = tvRoomCopy()
     val conversation by store.room.conversation.collectAsStateWithLifecycle()
-    val lines = conversation?.lines.orEmpty().filter { !it.muted }.takeLast(6)
+    // Hide chat in rooms: only the room's own lines; what people said and reactions stay away.
+    val context = androidx.compose.ui.platform.LocalContext.current
+    LaunchedEffect(Unit) { store.room.loadHideChat(context) }
+    val hideChat by store.room.hideChat.collectAsStateWithLifecycle()
+    val lines = conversation?.lines.orEmpty().filter { !it.muted && (!hideChat || it.body is RoomChatBody.Room) }.takeLast(6)
     Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         for (l in lines) {
             when (val b = l.body) {
@@ -399,6 +410,36 @@ fun TvLeaveDialog(onLeave: () -> Unit, onKeep: () -> Unit) {
             Row(Modifier.padding(top = 24.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 TonalButton(onClick = onLeave, modifier = Modifier.focusRequester(first), height = 44.dp) { Text(c.LEAVE, fontSize = 16.sp) }
                 TonalButton(onClick = onKeep, height = 44.dp) { Text(c.KEEP_WATCHING, fontSize = 16.sp) }
+            }
+        }
+    }
+}
+
+/**
+ * Why the room dropped this TV, when it didn't leave or go along (a room a phone handed it that
+ * could not be reached, was full or came from an older invite): said over whatever shows, with
+ * Close, which Back also is.
+ */
+@Composable
+fun TvRoomLeftAlert(why: app.kaeri.engine.model.RoomLeftWhy, onClose: () -> Unit) {
+    val c = tvRoomCopy()
+    val context = LocalContext.current
+    val (title, body) = when (why) {
+        is app.kaeri.engine.model.RoomLeftWhy.Unreachable -> c.UNREACHABLE_TITLE to c.UNREACHABLE_BODY
+        is app.kaeri.engine.model.RoomLeftWhy.Full -> c.FULL to ""
+        is app.kaeri.engine.model.RoomLeftWhy.OldInvite -> c.OLD_INVITE to ""
+        is app.kaeri.engine.model.RoomLeftWhy.Failed -> c.UNREACHABLE_TITLE to why.reason.text(context)
+        else -> return
+    }
+    val first = remember { FocusRequester() }
+    LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
+    androidx.activity.compose.BackHandler(onBack = onClose)
+    Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
+        Column(Modifier.width(440.dp).clip(RoundedCornerShape(16.dp)).background(ObiSilk.RaisedHigh).padding(28.dp)) {
+            Text(title, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
+            if (body.isNotBlank()) Text(body, fontSize = 16.sp, lineHeight = 22.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
+            Row(Modifier.padding(top = 24.dp)) {
+                TonalButton(onClick = onClose, modifier = Modifier.focusRequester(first), height = 44.dp) { Text(c.CLOSE, fontSize = 16.sp) }
             }
         }
     }

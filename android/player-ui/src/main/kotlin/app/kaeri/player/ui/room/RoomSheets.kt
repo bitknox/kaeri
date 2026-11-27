@@ -78,6 +78,8 @@ fun LeaveDialog(onLeave: () -> Unit, onCancel: () -> Unit) {
     val c = roomCopy()
     AlertDialog(
         onDismissRequest = onCancel,
+        // It asks a question: Back is its Cancel, a tap outside does nothing.
+        properties = Asking,
         containerColor = ObiSilk.RaisedHigh,
         title = { Text(c.LEAVE_TITLE, color = ObiSilk.Silk) },
         text = { Text(c.LEAVE_BODY, color = ObiSilk.Haze) },
@@ -120,9 +122,11 @@ fun RoomLeftAlert(room: RoomModel, why: app.kaeri.engine.model.RoomLeftWhy) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun RoomSheet(onDismiss: () -> Unit, content: @Composable ColumnScope.() -> Unit) {
+private fun RoomSheet(onDismiss: () -> Unit, holdsInput: Boolean = false, content: @Composable ColumnScope.() -> Unit) {
     ModalBottomSheet(
         onDismissRequest = onDismiss,
+        // A tap on the scrim closes it until something in it is typed or changed; Back always does.
+        properties = androidx.compose.material3.ModalBottomSheetProperties(shouldDismissOnClickOutside = !holdsInput),
         sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true),
         containerColor = ObiSilk.RaisedHigh,
         contentColor = ObiSilk.Silk,
@@ -179,6 +183,7 @@ fun InviteSheet(view: RoomView, onCopy: () -> Unit, onNew: () -> Unit, onDismiss
     if (asking) {
         AlertDialog(
             onDismissRequest = { asking = false },
+            properties = Asking,
             containerColor = ObiSilk.RaisedHigh,
             title = { Text(c.NEW_INVITE, color = ObiSilk.Silk) },
             text = { Text(c.NEW_INVITE_BODY, color = ObiSilk.Haze) },
@@ -260,14 +265,20 @@ private fun Pair(label: String, value: String) {
 /** Edit relays: this room's list for everyone in it; remove, add, Done. */
 @Composable
 fun EditRelaysSheet(view: RoomView, onDone: (List<String>) -> Unit, onDismiss: () -> Unit) {
-    RoomSheet(onDismiss) { EditRelaysContent(view, onDone) }
+    var changed by remember { mutableStateOf(false) }
+    RoomSheet(onDismiss, holdsInput = changed) { EditRelaysContent(view, onDone) { changed = it } }
 }
 
 @Composable
-fun EditRelaysContent(view: RoomView, onDone: (List<String>) -> Unit) {
+fun EditRelaysContent(view: RoomView, onDone: (List<String>) -> Unit, onChanged: (Boolean) -> Unit = {}) {
     val c = roomCopy()
-    val list = remember(view.relays) { mutableStateListOf(*view.relays.map { it.url }.toTypedArray()) }
+    // The list as the sheet opened: the room's updates (a relay's health, its round trip) come
+    // every few seconds and never undo what was removed or added here.
+    val opened = remember { view.relays.map { it.url } }
+    val list = remember { mutableStateListOf(*opened.toTypedArray()) }
     var typed by remember { mutableStateOf(RELAY_FIELD) }
+    val changed = list.toList() != opened || typed != RELAY_FIELD
+    androidx.compose.runtime.SideEffect { onChanged(changed) }
     Text(c.EDIT_RELAYS, style = Title)
     Text(c.EDIT_RELAYS_BODY, style = Body, modifier = Modifier.padding(top = 4.dp))
     Group(Modifier.padding(top = 16.dp)) {
@@ -277,7 +288,7 @@ fun EditRelaysContent(view: RoomView, onDone: (List<String>) -> Unit) {
                 Box(Modifier.size(8.dp).clip(CircleShape).background(ObiSilk.Water))
                 Text(url, style = Mono, modifier = Modifier.weight(1f), maxLines = 1)
                 IconButton(onClick = { list.remove(url) }, modifier = Modifier.size(48.dp)) {
-                    Icon(RoomGlyphs.Close, contentDescription = c.CLOSE, tint = ObiSilk.Haze, modifier = Modifier.size(18.dp))
+                    Icon(RoomGlyphs.Close, contentDescription = c.relayRemove(url), tint = ObiSilk.Haze, modifier = Modifier.size(18.dp))
                 }
             }
         }
@@ -291,7 +302,7 @@ fun EditRelaysContent(view: RoomView, onDone: (List<String>) -> Unit) {
             singleLine = true,
             cursorBrush = SolidColor(ObiSilk.Silk),
         )
-        Tonal(c.ADD, enabled = addable(typed)) { list.add(typed); typed = RELAY_FIELD }
+        Tonal(c.ADD, enabled = RoomWords.relayAddable(typed, list)) { list.add(typed); typed = RELAY_FIELD }
     }
     Text(c.RELAYS_SETTINGS, style = Body.copy(fontSize = 13.sp, lineHeight = 18.sp), modifier = Modifier.padding(top = 12.dp))
     Row(Modifier.padding(top = 16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {
@@ -299,22 +310,29 @@ fun EditRelaysContent(view: RoomView, onDone: (List<String>) -> Unit) {
     }
 }
 
-/** Add is only live for a wss:// address with a host after it. */
 /** What a new relay starts as: a scheme, not words. */
 private const val RELAY_FIELD = "wss://" // i18n-skip
 
-private fun addable(typed: String): Boolean = typed.length > RELAY_FIELD.length && typed.startsWith(RELAY_FIELD)
+/** A dialog that asks a question: Back is its Cancel, and a tap outside does nothing. */
+private val Asking = androidx.compose.ui.window.DialogProperties(dismissOnClickOutside = false)
 
 /** Move to a new room: tick who is asked along; you always go; muted people start unticked. */
 @Composable
 fun MoveSheet(view: RoomView, positionS: Double, you: String, onMove: (List<String>) -> Unit, onDismiss: () -> Unit) {
-    RoomSheet(onDismiss) { MoveContent(view, positionS, you, onMove, onDismiss) }
+    var changed by remember { mutableStateOf(false) }
+    RoomSheet(onDismiss, holdsInput = changed) { MoveContent(view, positionS, you, onMove, onDismiss) { changed = it } }
 }
 
 @Composable
-fun MoveContent(view: RoomView, positionS: Double, you: String, onMove: (List<String>) -> Unit, onCancel: () -> Unit) {
+fun MoveContent(view: RoomView, positionS: Double, you: String, onMove: (List<String>) -> Unit, onCancel: () -> Unit, onChanged: (Boolean) -> Unit = {}) {
     val c = roomCopy()
-    val ticked = remember(view.moveCandidates) { mutableStateListOf(*view.moveCandidates.filter { it.ticked }.map { it.id }.toTypedArray()) }
+    // The ticks as the sheet opened, kept through the room's updates; someone who left since
+    // drops out of the list and of what is sent.
+    val opened = remember { view.moveCandidates.filter { it.ticked }.map { it.id } }
+    val ticked = remember { mutableStateListOf(*opened.toTypedArray()) }
+    val here = view.moveCandidates.map { it.id }.toSet()
+    val asked = ticked.filter { it in here }
+    androidx.compose.runtime.SideEffect { onChanged(ticked.toSet() != opened.toSet()) }
     Text(c.MOVE, style = Title)
     Text(c.MOVE_BODY, style = Body, modifier = Modifier.padding(top = 4.dp))
     Group(Modifier.padding(top = 16.dp)) {
@@ -329,7 +347,7 @@ fun MoveContent(view: RoomView, positionS: Double, you: String, onMove: (List<St
     Text(c.moveFoot(RoomWords.clock(positionS)), style = Body.copy(fontSize = 13.sp, lineHeight = 18.sp), modifier = Modifier.padding(top = 10.dp))
     Row(Modifier.padding(top = 16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
         Tonal(c.CANCEL, Modifier.weight(1f), onClick = onCancel)
-        Amber(c.moveWith(ticked.size), Modifier.weight(1f), enabled = ticked.isNotEmpty()) { onMove(ticked.toList()) }
+        Amber(c.moveWith(asked.size), Modifier.weight(1f), enabled = asked.isNotEmpty()) { onMove(asked) }
     }
 }
 

@@ -101,9 +101,10 @@ class TvRoomShots {
 
     private fun said(id: ULong, from: String, text: String) = RoomChatLine(id, from, false, RoomChatBody.Said(text), false)
 
-    private fun shoot(name: String, view: RoomView, members: List<RoomMember>, start: TvRoomMode = TvRoomMode.Full, focusCarry: Boolean = false, strip: Boolean = true, offer: RoomMoveOffer? = null) {
+    private fun shoot(name: String, view: RoomView, members: List<RoomMember>, start: TvRoomMode = TvRoomMode.Full, focusCarry: Boolean = false, strip: Boolean = true, offer: RoomMoveOffer? = null, hideChat: Boolean = false, left: app.kaeri.engine.model.RoomLeftWhy? = null) {
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         compose.runOnUiThread {
+            store.room.setHideChat(compose.activity, hideChat)
             store.apply(Event.RoomChatState(RoomChatState(maxLength = 150u)))
             val talk = listOf(said(1u, "Ren", "yes, go"), said(2u, "Ada", "the relay handoff at the bridge"), said(3u, "Mika", "every week this song"))
             store.room.show(view, members, offer = offer, conversation = RoomConversation(lines = talk, marks = emptyList(), failed = null))
@@ -123,6 +124,7 @@ class TvRoomShots {
                         focusCarry = focusCarry,
                         forceStrip = strip,
                     )
+                    left?.let { app.kaeri.tv.player.room.TvRoomLeftAlert(it) {} }
                 }
             }
         }
@@ -133,6 +135,18 @@ class TvRoomShots {
 
     @Test
     fun before_play() = shoot("before-play", view(beforePlay = true), members(MemberState.LOADING, 4), start = TvRoomMode.Rail)
+
+    /** Before play on the full picture, where the TV opens: Play for everyone, focused. */
+    @Test
+    fun before_play_full() = shoot("before-play-full", view(beforePlay = true), members(MemberState.LOADING, 4))
+
+    /** Hide chat in rooms: the rail keeps the room's own lines; what people said and Write from your phone go. */
+    @Test
+    fun rail_hide_chat() = shoot("rail-hide-chat", view(), members(), start = TvRoomMode.Rail, hideChat = true)
+
+    /** A room a phone handed the TV that could not be reached: said over the screen, with Close. */
+    @Test
+    fun room_left_alert() = shoot("room-left-alert", view(), members(), strip = false, left = app.kaeri.engine.model.RoomLeftWhy.Unreachable)
 
     @Test
     fun at_rest() = shoot("at-rest", view(), members(), strip = false)

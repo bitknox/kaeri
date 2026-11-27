@@ -444,7 +444,11 @@ fun TvPlayerScreen(
             video(Modifier.fillMaxSize())
         }
         if (!rail) TvHeldPicture(model, Modifier.fillMaxSize())
-        StartingLayer(model, starting, startFocus, onClose = { model.viewerClosed() })
+        // Closing a failed start in a room keeps the room: the others read "Player closed".
+        StartingLayer(model, starting, startFocus, onClose = {
+            if (inRoom) store.room.send(app.kaeri.engine.model.RoomCommand.ClosePlayer)
+            model.viewerClosed()
+        })
         // The Episodes and Sources panel stands over the picture alone, as the board draws it.
         val sidePanel = panel == PlayerPanel.Episodes || panel == PlayerPanel.Sources
         AnimatedVisibility(

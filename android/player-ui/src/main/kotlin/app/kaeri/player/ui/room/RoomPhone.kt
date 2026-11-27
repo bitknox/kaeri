@@ -21,6 +21,10 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBarsPadding
+import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.union
+import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBarsPadding
@@ -132,14 +136,24 @@ fun RoomUpright(
     opened: RoomOpen = RoomOpen.None,
     /** The Join screen with a TV driven from this phone: "Join on Living room" hands it the invite. */
     joinOnTv: Pair<String, () -> Unit>? = null,
+    /**
+     * The Join screen's invite: Join and Not now in the line, no Invite or More in the header, no
+     * chat. Only the Join screen passes it, so an invite never takes over the room you are in.
+     */
+    invited: RoomInvited? = null,
 ) {
-    val view by room.view.collectAsStateWithLifecycle()
-    val members by room.members.collectAsStateWithLifecycle()
-    val invited by room.invited.collectAsStateWithLifecycle()
-    val offer by room.offer.collectAsStateWithLifecycle()
+    // Once you leave, the room fades out as it was: its view, people and offer are kept while it does.
+    val live = room.view.collectAsStateWithLifecycle().value
+    val view = app.kaeri.design.keptWhile(live != null, live)
+    val members = app.kaeri.design.keptWhile(live != null, room.members.collectAsStateWithLifecycle().value)
+    val offer = app.kaeri.design.keptWhile(live != null, room.offer.collectAsStateWithLifecycle().value)
     val now = rememberRoomNow()
     val c = roomCopy()
     var open by remember(opened) { mutableStateOf(opened) }
+    // Hide chat in rooms: the people and the room's own lines stay; what people said, reactions and the field go.
+    val context = LocalContext.current
+    androidx.compose.runtime.LaunchedEffect(room) { room.loadHideChat(context) }
+    val hideChat by room.hideChat.collectAsStateWithLifecycle()
     val shown = view ?: return
 
     Column(modifier.fillMaxSize().background(ObiSilk.Ground)) {
@@ -151,8 +165,9 @@ fun RoomUpright(
             view = shown,
             count = members.count { it.state != MemberState.LEFT },
             onBack = onBack,
-            onInvite = { open = RoomOpen.Invite },
-            onMore = { open = RoomOpen.Menu },
+            // Not joined yet: nothing in the room is yours to invite to, move or leave.
+            onInvite = if (invited != null) null else { { open = RoomOpen.Invite } },
+            onMore = if (invited != null) null else { { open = RoomOpen.Menu } },
             menu = {
                 RoomMenu(
                     expanded = open == RoomOpen.Menu,
@@ -192,8 +207,10 @@ fun RoomUpright(
             RoomWords.carryLabel(c, shown, now)?.let { label -> buttons = { CarryOnButton(label) { room.send(RoomCommand.CarryOn) } } }
         }
         RoomLineBlock(line, Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp))
+        // The buttons as they last were, so Carry on or Go along fades out drawn, not as nothing.
+        val drawn = app.kaeri.design.keptWhile(buttons != null, buttons)
         SwapFade(buttons != null, label = "room-carry") { has -> // i18n-skip
-            if (has) Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)) { buttons?.invoke() } else Spacer(Modifier.height(0.dp))
+            if (has) Box(Modifier.padding(start = 16.dp, end = 16.dp, top = 12.dp)) { drawn?.invoke() } else Spacer(Modifier.height(0.dp))
         }
         FacesRow(shown, members, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp)) { open = RoomOpen.Everyone }
         HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp), color = ObiSilk.FaintRule)
@@ -202,10 +219,10 @@ fun RoomUpright(
                 // No composer below it on the Join screen, so it clears the gesture bar itself.
                 Text(c.CHAT_OPENS, Modifier.navigationBarsPadding(), style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze))
             } else {
-                RoomChatList(room, Modifier.fillMaxWidth())
+                RoomChatList(room, Modifier.fillMaxWidth().then(if (hideChat) Modifier.navigationBarsPadding() else Modifier), roomOnly = hideChat, held = live == null)
             }
         }
-        if (inv == null) RoomChatBar(room, open == RoomOpen.React, { open = if (it) RoomOpen.React else RoomOpen.None })
+        if (inv == null && !hideChat) RoomChatBar(room, open == RoomOpen.React, { open = if (it) RoomOpen.React else RoomOpen.None })
     }
 
     when (open) {
@@ -221,7 +238,7 @@ fun RoomUpright(
 
 /** The header row, 64 dp: back, the show and "Episode 9 · 3 in the room", Invite, More. */
 @Composable
-internal fun RoomHeader(view: RoomView, count: Int, onBack: () -> Unit, onInvite: () -> Unit, onMore: () -> Unit, menu: @Composable () -> Unit) {
+internal fun RoomHeader(view: RoomView, count: Int, onBack: () -> Unit, onInvite: (() -> Unit)?, onMore: (() -> Unit)?, menu: @Composable () -> Unit) {
     val c = roomCopy()
     Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
@@ -236,10 +253,10 @@ internal fun RoomHeader(view: RoomView, count: Int, onBack: () -> Unit, onInvite
                 maxLines = 1,
             )
         }
-        IconButton(onClick = onInvite, modifier = Modifier.size(48.dp)) {
+        if (onInvite != null) IconButton(onClick = onInvite, modifier = Modifier.size(48.dp)) {
             Icon(RoomGlyphs.Invite, contentDescription = c.INVITE, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
         }
-        Box {
+        if (onMore != null) Box {
             IconButton(onClick = onMore, modifier = Modifier.size(48.dp)) {
                 Icon(RoomGlyphs.More, contentDescription = c.MORE, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
             }
@@ -278,10 +295,15 @@ internal fun RoomMenu(
     }
 }
 
-/** The room's line: 22/500 over a 14 haze detail, read out as it changes. */
+/**
+ * The room's line: 22/500 over a 14 haze detail, read out when its words change. Its clock and
+ * seconds tick every second, so what is said holds while only they move.
+ */
 @Composable
 fun RoomLineBlock(line: RoomLine, modifier: Modifier = Modifier, titleSize: Int = 22, titleLine: Int = 28) {
-    Column(modifier.fillMaxWidth().semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }) {
+    val words = line.title + ". " + line.detail // i18n-skip
+    val spoken = remember(RoomWords.numberless(words)) { words }
+    Column(modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = spoken; liveRegion = LiveRegionMode.Polite }) {
         Text(line.title, style = TextStyle(fontSize = titleSize.sp, lineHeight = titleLine.sp, fontWeight = FontWeight.Medium), color = ObiSilk.Silk)
         Text(line.detail, style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp).tabular(), color = ObiSilk.Haze)
     }
@@ -360,7 +382,11 @@ internal fun RoomChatBar(room: RoomModel, reacting: Boolean, onReacting: (Boolea
     val context = androidx.compose.ui.platform.LocalContext.current
     val c = roomCopy()
     Row(
-        Modifier.fillMaxWidth().background(ObiSilk.RaisedLow).navigationBarsPadding().padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
+        // The app draws edge to edge, so the window doesn't resize for the keyboard: the bar
+        // rises above it, or clears the gesture bar when it's down.
+        Modifier.fillMaxWidth().background(ObiSilk.RaisedLow)
+            .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars.union(androidx.compose.foundation.layout.WindowInsets.ime))
+            .padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 8.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.spacedBy(8.dp),
     ) {
@@ -400,12 +426,14 @@ fun RoomPhone(
     onSubtitles: () -> Unit = {},
     onCopyLink: () -> Unit = {},
     opened: RoomOpen = RoomOpen.None,
+    /** The Join screen's invite, as [RoomUpright] takes it. */
+    invited: RoomInvited? = null,
 ) {
     SwapFade(full, modifier.fillMaxSize(), label = "room-full") { sideways -> // i18n-skip
         if (sideways) {
             RoomSideways(room, positionS, video, controls = controls)
         } else {
-            RoomUpright(room, positionS, video, panel = panel, onBack = onBack, onSubtitles = onSubtitles, onCopyLink = onCopyLink, opened = opened)
+            RoomUpright(room, positionS, video, panel = panel, onBack = onBack, onSubtitles = onSubtitles, onCopyLink = onCopyLink, opened = opened, invited = invited)
         }
     }
 }
@@ -458,10 +486,10 @@ fun RoomAround(
     val removed = rememberAnimationsRemoved()
     val upright = inRoom && !sideways
     BoxWithConstraints(modifier.fillMaxSize().background(if (upright) ObiSilk.Ground else Color.Black)) {
-        val roomAlpha by androidx.compose.animation.core.animateFloatAsState(
-            if (upright) 1f else 0f,
-            if (removed) app.kaeri.design.Motion.fadeIn<Float>() else app.kaeri.design.Motion.standard<Float>(),
-            label = "room-around", // i18n-skip
+        // Still a crossfade with Remove animations, at full speed: the room and the picture both drawn.
+        val roomAlpha = app.kaeri.design.animateKeptAlpha(
+            upright,
+            if (removed) app.kaeri.design.Motion.fadeIn() else app.kaeri.design.Motion.standard(),
         )
         if (upright || roomAlpha > 0f) {
             Box(Modifier.fillMaxSize().graphicsAlpha(roomAlpha)) {
@@ -477,7 +505,8 @@ fun RoomAround(
                 .background(Color.Black),
         ) {
             player(Modifier.fillMaxSize())
-            if (upright) panel?.invoke(Modifier.fillMaxSize())
+            // Before play, No source and your own loading lie over the video sideways too.
+            if (inRoom) panel?.invoke(Modifier.fillMaxSize())
         }
         if (inRoom && sideways) RoomStripOver(room, positionS, controls, Modifier.align(Alignment.TopCenter))
     }
@@ -501,5 +530,6 @@ fun RoomInvitedScreen(room: RoomModel, invited: RoomInvited, onClose: () -> Unit
         video = { m -> app.kaeri.ui.ArtworkImage(art, ObiSilk.Raised, app.kaeri.ui.pixels(RoomVideoHeight * 2), m) },
         onBack = onClose,
         joinOnTv = joinOnTv,
+        invited = invited,
     )
 }

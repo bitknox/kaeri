@@ -149,9 +149,13 @@ class RoomShots {
         chat: List<RoomChatLine> = talk,
         screen: Boolean = false,
         panel: (@androidx.compose.runtime.Composable (Modifier) -> Unit)? = null,
+        /** The player's own room layout sideways, as a turned phone and a tablet draw it. */
+        around: Boolean = false,
+        hideChat: Boolean = false,
     ) {
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         compose.runOnUiThread {
+            store.room.setHideChat(compose.activity, hideChat)
             store.apply(Event.RoomChatState(RoomChatState(maxLength = 150u)))
             store.room.show(view, members, invited = invited, offer = offer, conversation = RoomConversation(lines = chat, marks = emptyList(), failed = null))
         }
@@ -160,7 +164,17 @@ class RoomShots {
         compose.setContent {
             KaeriTheme {
                 CompositionLocalProvider(LocalAppStore provides store, LocalRoomClock provides RoomClock({ now }, ticks = false)) {
-                    RoomPhone(
+                    if (around) {
+                        app.kaeri.player.ui.room.RoomAround(
+                            store.room,
+                            inRoom = true,
+                            sideways = true,
+                            positionS = pos,
+                            controls = controls,
+                            player = { m -> Image(still, null, m, contentScale = ContentScale.Crop) },
+                            panel = panel,
+                        )
+                    } else RoomPhone(
                         store.room,
                         full = full,
                         positionS = pos,
@@ -168,6 +182,7 @@ class RoomShots {
                         video = { m -> Image(still, null, m, contentScale = ContentScale.Crop) },
                         panel = panel,
                         opened = opened,
+                        invited = invited,
                     )
                 }
             }
@@ -191,6 +206,45 @@ class RoomShots {
 
     @Test
     fun watching() = shoot("watching", view(), three)
+
+    /** Hide chat in rooms: the people and the room's own lines stay; what people said and the field go. */
+    @Test
+    fun hide_chat() = shoot(
+        "hide-chat",
+        view(),
+        three,
+        chat = talk + RoomChatLine(6u, "Ren", false, RoomChatBody.Room(app.kaeri.engine.model.RoomMessage(app.kaeri.engine.model.RoomMessageKind.Joined("Ren"), "Ren joined")), false),
+        hideChat = true,
+    )
+
+    // The room's panels over the full picture: a phone held sideways, and a tablet.
+
+    @Test
+    @Config(qualifiers = PlayerShots.PHONE_LANDSCAPE)
+    fun sideways_no_source() = shoot("sideways-no-source", view(), listOf(ada(MemberState.NO_SOURCE), mika(), ren()), around = true, controls = false, panel = { m -> NoSourcePanel("9", m) })
+
+    @Test
+    @Config(qualifiers = PlayerShots.PHONE_LANDSCAPE)
+    fun sideways_before_play() = shoot("sideways-before-play", view(beforePlay = true), listOf(ada(), mika(), ren(MemberState.LOADING, 4)), around = true, controls = false, panel = { m -> BeforePlayPanel(started = false, modifier = m) {} })
+
+    @Test
+    @Config(qualifiers = PlayerShots.PHONE_LANDSCAPE)
+    fun sideways_you_loading() = shoot(
+        "sideways-you-loading",
+        view(listOf(PausedFor(id = "ada", name = "Ada", you = true, reason = WaitReason.LOADING, sinceMs = ago(7))), playing = false),
+        listOf(ada(MemberState.LOADING), mika(), ren()),
+        around = true,
+        controls = false,
+        panel = { m -> LoadingPanel(7, canDontWait = false, modifier = m) },
+    )
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_no_source() = shoot("tablet-no-source", view(), listOf(ada(MemberState.NO_SOURCE), mika(), ren()), around = true, controls = false, panel = { m -> NoSourcePanel("9", m) })
+
+    @Test
+    @Config(qualifiers = TABLET)
+    fun tablet_paused_for_ren() = shoot("tablet-paused-for-ren", view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 6)), around = true, controls = false)
 
     @Test
     fun paused_for_ren() = shoot("paused-for-ren", view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 6)))
@@ -361,5 +415,10 @@ class RoomShots {
         compose.mainClock.advanceTimeBy(1_000)
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("${roborazziSystemPropertyOutputDirectory()}/room-bar.png")
+    }
+
+    private companion object {
+        /** A 10-inch tablet held sideways. */
+        const val TABLET = "w1280dp-h800dp-land-xhdpi"
     }
 }

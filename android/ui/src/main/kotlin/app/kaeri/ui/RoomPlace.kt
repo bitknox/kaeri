@@ -181,6 +181,7 @@ internal fun RoomPlaceScreen() {
     if (leaving) {
         AlertDialog(
             onDismissRequest = { leaving = false },
+            properties = AskingDialog,
             title = { Text(c.LEAVE_TITLE) },
             text = { Text(c.LEAVE_BODY) },
             dismissButton = { TextButton(onClick = { leaving = false }) { Text(c.CANCEL) } },

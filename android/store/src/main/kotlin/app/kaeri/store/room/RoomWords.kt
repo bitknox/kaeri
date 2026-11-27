@@ -265,6 +265,30 @@ object RoomWords {
      * The wait's seconds, from the first waited member's start: the clock that member's row counts,
      * so the line and the row read the same. wait_shown_at only says when the wait may show.
      */
+    /**
+     * Whether [url] is a relay a room may use, as the engine's own rule has it: `wss://` with a
+     * host, or plain `ws://` only to `localhost`, `127.0.0.1` or a `.local` name.
+     */
+    fun validRelay(url: String): Boolean {
+        fun host(rest: String) = rest.split('/', ':').first()
+        if (url.startsWith("wss://", ignoreCase = true)) return host(url.substring(6)).isNotEmpty() // i18n-skip
+        if (url.startsWith("ws://", ignoreCase = true)) { // i18n-skip
+            val h = host(url.substring(5)).lowercase()
+            return h == "localhost" || h == "127.0.0.1" || h.endsWith(".local") // i18n-skip
+        }
+        return false
+    }
+
+    /** Whether Add takes [typed]: a relay a room may use that the list doesn't have yet. */
+    fun relayAddable(typed: String, list: List<String>): Boolean =
+        validRelay(typed) && list.none { it.equals(typed, ignoreCase = true) }
+
+    /**
+     * The words of [text] without its numbers: what a live region is keyed on, so a screen reader
+     * hears the room's line when its words change, and not each second its clock or counters tick.
+     */
+    fun numberless(text: String): String = text.filterNot(Char::isDigit)
+
     fun waitSeconds(view: RoomView, nowMs: Long): Int = view.waiting.firstOrNull()?.let { secs(it.sinceMs, nowMs) } ?: 0
 
     /** Whether Carry on shows: the engine says so, or the wait is past 20 s. */

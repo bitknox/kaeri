@@ -170,8 +170,7 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
             is RoomCommand.AnswerMove -> _offer.value = null
             is RoomCommand.Leave -> {
                 _view.value = null
-                _members.value = emptyList()
-                _conversation.value = null
+                forgetRoom()
             }
             else -> Unit
         }
@@ -181,12 +180,15 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
     /** An invite opened: show who invited and what the room watches while its glimpse comes. */
     fun invitedBy(target: RoomTarget) {
         _invited.value = RoomInvited(target.link, target.by, target.title ?: "", target.episode ?: "")
+        // Asked from an invite, not from Watch together: a failure is an alert, not that place's line.
+        placeAsked = null
         out(RoomCommand.PeekInvite(target.link))
     }
 
     /** Join the room the invite opened. */
     fun join(anyway: Boolean = false) {
         val invite = _invited.value?.invite ?: return
+        placeAsked = null
         out(RoomCommand.Lobby(invite, null, null, anyway))
     }
 
@@ -205,6 +207,8 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
         if (event is Event.RoomStarted) _noSource.value = null
         when (event) {
             is Event.RoomJoined -> {
+                // Another room: nothing of the last one's people, chat or offer carries over.
+                if (_view.value?.roomId != event.v1.roomId) forgetRoom()
                 _view.value = event.v1
                 _invited.value = null
                 _left.value = null
@@ -235,9 +239,7 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
             is Event.RoomLeft -> {
                 _noSource.value = null
                 _view.value = null
-                _members.value = emptyList()
-                _conversation.value = null
-                _offer.value = null
+                forgetRoom()
                 val asked = placeAsked
                 placeAsked = null
                 val why = event.why
@@ -252,6 +254,14 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
             else -> return false
         }
         return true
+    }
+
+    /** What belongs to the room just left: its people, its chat and its state, a move offer. */
+    private fun forgetRoom() {
+        _members.value = emptyList()
+        _conversation.value = null
+        _chat.value = null
+        _offer.value = null
     }
 
     /** Sets Watch together's recent rooms and failures: for tests and previews. */

@@ -195,6 +195,9 @@ fun Navigator.openDownloads() = open(DOWNLOADS_ROUTE)
 /** Open the plugin stores page, from a start that has no source to ask. */
 fun Navigator.openStores() = open(STORES_ROUTE)
 
+/** Open your sources, from a room's episode that none of them has. */
+fun Navigator.openSources() = open(PROVIDERS_ROUTE)
+
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("no Navigator in this composition") }
 
 /** The same navigator, or null where none is provided (the player on its own, in a test). */

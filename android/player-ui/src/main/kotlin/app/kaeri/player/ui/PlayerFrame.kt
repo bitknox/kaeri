@@ -60,8 +60,9 @@ class PlayerFrame(
         val view by room.view.collectAsStateWithLifecycle()
         val invited by room.invited.collectAsStateWithLifecycle()
         val left by room.left.collectAsStateWithLifecycle()
-        // An invite opened with the player closed: the room's Join screen, upright, its video the still.
-        if (invited != null && !model.isPresented) {
+        // An invite opened: the room's Join screen, upright, its video the still, over whatever is
+        // on screen, the player included. Not now leaves what was playing as it was.
+        if (invited != null) {
             val inv = invited!!
             // A TV driven from this phone and in no room: the TV can take the invite, playing from its own sources.
             val tv = LocalAppStore.current.tv

@@ -122,7 +122,11 @@ fun TvRoot(
     val addStore: (() -> Unit)? = if (providersLoaded && providers.none { it.usable }) {
         remember(player, nav) {
             {
-                if (player.isPresented) player.viewerClosed()
+                if (player.isPresented) {
+                    // In a room the room stays: the others read "Player closed".
+                    if (store.room.view.value != null) store.room.send(app.kaeri.engine.model.RoomCommand.ClosePlayer)
+                    player.viewerClosed()
+                }
                 nav.openJoinStore()
             }
         }
@@ -155,6 +159,10 @@ fun TvRoot(
             TvSyncHost()
             if (remote != null) RemoteOverlays(remote, playing = player.isPresented, nav = nav)
             Notices(store, player, remote, notices, onUpdatePage = nav.top is Page.Update)
+            // A room that dropped this TV, or that a phone handed it and could not be joined.
+            val left by store.room.left.collectAsStateWithLifecycle()
+            val roomView by store.room.view.collectAsStateWithLifecycle()
+            if (roomView == null) left?.let { why -> app.kaeri.tv.player.room.TvRoomLeftAlert(why) { store.room.dismissLeft() } }
             EngineDown()
         }
     }

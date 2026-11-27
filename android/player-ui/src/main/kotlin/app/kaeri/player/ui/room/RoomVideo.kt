@@ -37,7 +37,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -75,7 +74,9 @@ fun RoomStrip(view: RoomView, members: List<RoomMember>, now: Long, disc: Dp, po
     val gap = if (disc >= 32.dp) 8.dp else 6.dp
     val height = if (carry != null && touch) 52.dp else disc + 16.dp
     val fs = if (disc >= 28.dp) 14.sp else 13.sp
-    val spoken = (shown.map { c.spoken(if (it.you) c.YOU else it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
+    // Said when the words change, not each second a face's or the line's seconds tick.
+    val words = (shown.map { c.spoken(if (it.you) c.YOU else it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
+    val spoken = remember(RoomWords.numberless(words)) { words }
     Row(
         modifier
             .shadow(18.dp, CircleShape, ambientColor = Color.Black, spotColor = Color.Black)
@@ -229,7 +230,11 @@ fun LoadingPanel(seconds: Int, canDontWait: Boolean, modifier: Modifier = Modifi
     val c = roomCopy()
     Box(modifier) {
         Scrim(0.5f) {
-            Column(Modifier.align(Alignment.Center).semantics(mergeDescendants = true) { liveRegion = LiveRegionMode.Polite }, horizontalAlignment = Alignment.CenterHorizontally) {
+            // Said once as the wait starts, not each second it counts.
+            val words = c.reasonFor(WaitReason.LOADING, seconds)
+            val spoken = remember(RoomWords.numberless(words)) { words }
+            Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally) {
+              Column(Modifier.clearAndSetSemantics { contentDescription = spoken; liveRegion = LiveRegionMode.Polite }, horizontalAlignment = Alignment.CenterHorizontally) {
                 androidx.compose.material3.CircularProgressIndicator(
                     progress = { (seconds / CARRY_ON_AFTER_S.toFloat()).coerceIn(0.04f, 1f) },
                     modifier = Modifier.size(44.dp),
@@ -237,7 +242,8 @@ fun LoadingPanel(seconds: Int, canDontWait: Boolean, modifier: Modifier = Modifi
                     trackColor = ObiSilk.Rule,
                     strokeWidth = 3.dp,
                 )
-                Text(c.reasonFor(WaitReason.LOADING, seconds), fontSize = 13.sp, color = ObiSilk.Silk, modifier = Modifier.padding(top = 10.dp))
+                Text(words, fontSize = 13.sp, color = ObiSilk.Silk, modifier = Modifier.padding(top = 10.dp))
+              }
                 if (canDontWait) {
                     androidx.compose.material3.FilledTonalButton(
                         onClick = onDontWait,

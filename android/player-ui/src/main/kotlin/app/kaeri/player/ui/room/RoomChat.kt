@@ -50,13 +50,17 @@ fun roomCopy(): RoomCopy {
     return remember(context) { RoomCopy(context) }
 }
 
-/** The conversation, newest at the foot, then "Couldn't send" when a line never came back. */
+/**
+ * The conversation, newest at the foot, then "Couldn't send" when a line never came back.
+ * [roomOnly]: Hide chat in rooms is on, so only the room's own lines show.
+ */
 @Composable
-fun RoomChatList(room: RoomModel, modifier: Modifier = Modifier) {
+fun RoomChatList(room: RoomModel, modifier: Modifier = Modifier, roomOnly: Boolean = false, held: Boolean = false) {
     val c = roomCopy()
-    val conversation by room.conversation.collectAsStateWithLifecycle()
-    val lines = conversation?.lines.orEmpty().filterNot { it.muted }
-    val failed = conversation?.failed
+    // Held while the room fades out after you left: its lines as they were.
+    val conversation = app.kaeri.design.keptWhile(!held, room.conversation.collectAsStateWithLifecycle().value)
+    val lines = conversation?.lines.orEmpty().filterNot { it.muted || (roomOnly && it.body !is RoomChatBody.Room) }
+    val failed = conversation?.failed?.takeUnless { roomOnly }
     val state = rememberLazyListState()
     val count = lines.size + if (failed != null) 1 else 0
     LaunchedEffect(count) { if (count > 0) state.scrollToItem(count - 1) }
