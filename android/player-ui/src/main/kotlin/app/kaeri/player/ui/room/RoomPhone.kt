@@ -26,6 +26,9 @@ import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.ime
 import androidx.compose.foundation.layout.only
+import androidx.compose.foundation.layout.safeDrawing
+import androidx.compose.foundation.layout.WindowInsetsSides
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -530,6 +533,7 @@ fun RoomAround(
         // upright room, less its video, at the end edge over the picture; Back or a tap on the
         // picture closes it.
         val side = inRoom && sideways && roomOpen
+        val sideWidth = minOf(RoomSideWidth, maxWidth * 0.5f)
         androidx.compose.animation.AnimatedVisibility(
             side,
             modifier = Modifier.fillMaxSize(),
@@ -552,9 +556,8 @@ fun RoomAround(
                     onSubtitles = onSubtitles,
                     onCopyLink = onCopyLink,
                     modifier = Modifier.align(Alignment.CenterEnd)
-                        .width(minOf(RoomSideWidth, maxWidth * 0.5f))
-                        .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars.only(androidx.compose.foundation.layout.WindowInsetsSides.End))
-                        .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.displayCutout.only(androidx.compose.foundation.layout.WindowInsetsSides.End)),
+                        .width(sideWidth)
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.End)),
                 )
             }
         }
