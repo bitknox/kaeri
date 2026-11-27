@@ -325,18 +325,18 @@ pub enum Msg {
     NoticeEpisodesQueuedExistingStopped { count: i64, existing: Cause, reason: Cause },
     /// Toast when keep next found no room for another episode.
     NoticeKeepNextFull,
-    /// Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-    PartyNeedsServer { server: String, operator: String },
-    /// Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-    PartyChooseServer { server: String, operator: String },
+    /// Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.
+    RoomLookUnreachable,
+    /// Why a look into a room found nothing: the pasted text is no room's invite.
+    RoomLookNotAnInvite,
+    /// Why a look into a recent room found nothing: it's no longer in this device's recent rooms.
+    RoomLookNotKept,
+    /// Why a look into a room found nothing: the invite comes from an older version.
+    RoomLookOldInvite,
     /// Toast when a watch party is asked for in a build without watch parties.
     NoticeNoParty,
     /// Message when a watch party was asked for with no room named.
     PartyNeedsRoom,
-    /// Message in a watch party when its server connection dropped and is retried.
-    PartyServerLost,
-    /// Message in a watch party when the connection came back.
-    PartyRejoined,
     /// Message when the person left a watch party.
     PartyLeft,
     /// Message when a watch party's server could not be reached, in the lobby or when looking in.
@@ -646,12 +646,12 @@ impl Msg {
             Self::NoticeEpisodesQueuedStopped { .. } => "notice-episodes-queued-stopped",
             Self::NoticeEpisodesQueuedExistingStopped { .. } => "notice-episodes-queued-existing-stopped",
             Self::NoticeKeepNextFull => "notice-keep-next-full",
-            Self::PartyNeedsServer { .. } => "party-needs-server",
-            Self::PartyChooseServer { .. } => "party-choose-server",
+            Self::RoomLookUnreachable => "room-look-unreachable",
+            Self::RoomLookNotAnInvite => "room-look-not-an-invite",
+            Self::RoomLookNotKept => "room-look-not-kept",
+            Self::RoomLookOldInvite => "room-look-old-invite",
             Self::NoticeNoParty => "notice-no-party",
             Self::PartyNeedsRoom => "party-needs-room",
-            Self::PartyServerLost => "party-server-lost",
-            Self::PartyRejoined => "party-rejoined",
             Self::PartyLeft => "party-left",
             Self::PartyServerUnreachable { .. } => "party-server-unreachable",
             Self::CloudLoopbackDone => "cloud-loopback-done",
@@ -888,12 +888,12 @@ impl Msg {
             Self::NoticeEpisodesQueuedStopped { count, reason } => vec![("count", Value::Int(*count)), ("reason", Value::Cause(reason.clone()))],
             Self::NoticeEpisodesQueuedExistingStopped { count, existing, reason } => vec![("count", Value::Int(*count)), ("existing", Value::Cause(existing.clone())), ("reason", Value::Cause(reason.clone()))],
             Self::NoticeKeepNextFull => Vec::new(),
-            Self::PartyNeedsServer { server, operator } => vec![("server", Value::Text(server.clone())), ("operator", Value::Text(operator.clone()))],
-            Self::PartyChooseServer { server, operator } => vec![("server", Value::Text(server.clone())), ("operator", Value::Text(operator.clone()))],
+            Self::RoomLookUnreachable => Vec::new(),
+            Self::RoomLookNotAnInvite => Vec::new(),
+            Self::RoomLookNotKept => Vec::new(),
+            Self::RoomLookOldInvite => Vec::new(),
             Self::NoticeNoParty => Vec::new(),
             Self::PartyNeedsRoom => Vec::new(),
-            Self::PartyServerLost => Vec::new(),
-            Self::PartyRejoined => Vec::new(),
             Self::PartyLeft => Vec::new(),
             Self::PartyServerUnreachable { server } => vec![("server", Value::Text(server.clone()))],
             Self::CloudLoopbackDone => Vec::new(),

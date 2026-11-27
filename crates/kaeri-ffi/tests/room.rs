@@ -413,15 +413,19 @@ fn an_episode_with_no_source_here_reads_no_source_in_the_room() {
     );
     engine.shutdown();
 
-    // With the picker open for it, the failed play leaves you Choosing.
+    // With the picker open for it (Android's you-choosing), the failed play leaves you Choosing
+    // and says no "No source" over the picker.
     let (_root, engine) = staged(FfiRoomScene::YouChoosing);
     let (view, members, read) =
         until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
     play_like_the_app(&engine, &read);
-    let (_, members, _) = until_from(&engine, (Some(view), members), |_, m, r| {
-        r.iter().any(|e| matches!(e, Event::RoomNoSource { .. })) && state(m, "Ada").is_some()
+    thread::sleep(Duration::from_millis(3_000));
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (_, members, read) = until_from(&engine, (Some(view), members), |_, m, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_))) && state(m, "Ada").is_some()
     });
     assert_eq!(state(&members, "Ada"), Some(MemberState::Choosing));
+    assert!(!read.iter().any(|e| matches!(e, Event::RoomNoSource { .. })), "{read:?}");
     engine.shutdown();
 }
 
@@ -737,8 +741,20 @@ fn your_held_behind_scene_keeps_its_posed_amount() {
     );
     property("duration", "1440.0".into());
     property("pause", "false".into());
-    for i in 0..12 {
+    // Android: a player that really plays, changes state and closes its picker as it opens.
+    engine.send(Command::Room(RoomCommand::ChoosingSource { open: false }));
+    engine.send(Command::Room(RoomCommand::OpenPlayer));
+    for i in 0..24 {
         property("time-pos", format!("{:.2}", i as f64 * 0.25));
+        match i {
+            6 => property("pause", "true".into()),
+            8 => property("pause", "false".into()),
+            12 => property("seeking", "true".into()),
+            13 => property("seeking", "false".into()),
+            16 => property("paused-for-cache", "true".into()),
+            17 => property("paused-for-cache", "false".into()),
+            _ => {}
+        }
         thread::sleep(Duration::from_millis(250));
     }
     engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
@@ -885,6 +901,64 @@ fn a_slow_decoders_bursty_positions_are_never_your_seek_or_pause() {
 }
 
 #[test]
+fn a_player_opening_mid_wait_never_seeks_for_you() {
+    // Android's wait-loading: "You jumped from 0:35 to 0:04" between two wait lines. The player
+    // opened near 0:04 (where the room started) and the room's cue put it at 0:35; its opening
+    // seeks, before or just after the cue, are never yours.
+    let (_root, engine) = staged(FfiRoomScene::WaitLoading);
+    let (view, members, read) =
+        until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    play_like_the_app(&engine, &read);
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| loads(e).is_some())
+    });
+    let playback = read.iter().find_map(loads).unwrap();
+    let property = |name: &str, json: String| {
+        let report = PlayerReport::Property { name: name.into(), json };
+        assert_eq!(engine.send(Command::PlayerReport { playback, report }), None);
+    };
+    assert_eq!(
+        engine.send(Command::PlayerReport { playback, report: PlayerReport::FileLoaded }),
+        None
+    );
+    property("duration", "1440.0".into());
+    property("pause", "true".into());
+    // Its own start: a seek to near 0:04 before the room's cue.
+    property("seeking", "true".into());
+    property("time-pos", "4.20".into());
+    property("seeking", "false".into());
+    for _ in 0..3 {
+        property("time-pos", "4.20".into());
+        thread::sleep(Duration::from_millis(250));
+    }
+    // The room's cue lands at 0:35, then a late seek back to the start it opened with.
+    property("seeking", "true".into());
+    property("time-pos", "35.00".into());
+    property("seeking", "false".into());
+    thread::sleep(Duration::from_millis(400));
+    property("seeking", "true".into());
+    property("time-pos", "4.20".into());
+    property("seeking", "false".into());
+    for _ in 0..8 {
+        property("time-pos", "4.20".into());
+        thread::sleep(Duration::from_millis(250));
+    }
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (_, _, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    let seeks: Vec<_> = read
+        .iter()
+        .chain(&later)
+        .filter(|e| {
+            matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::Seeked { to, .. } if to < 10.0))
+        })
+        .collect();
+    assert!(seeks.is_empty(), "{seeks:?}");
+    engine.shutdown();
+}
+
+#[test]
 fn the_wait_line_and_the_row_count_from_one_start() {
     let (_root, engine) = staged(FfiRoomScene::WaitLoading);
     let (view, members, _) = until(&engine, |v, m, _| {
@@ -1000,5 +1074,118 @@ fn the_background_says_player_closed_once_and_the_foreground_comes_back() {
         m.iter().any(|m| m.you && !m.background && m.state != MemberState::PlayerClosed)
     });
     assert_ne!(state(&members, "Ada"), Some(MemberState::PlayerClosed));
+    engine.shutdown();
+}
+
+#[test]
+fn a_look_that_fails_never_leaves_the_room_youre_in() {
+    // Linux: a failed PeekInvite sent RoomLeft(Unreachable), and the apps tore down the room
+    // this device was in. A look fails as a look.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let room = Arc::clone(&engine).start_fake_room();
+    assert!(room.stage(FfiRoomScene::Watching));
+    let (view, members, _) = until(&engine, |v, _, _| v.link.is_some());
+    let link = view.link.clone().unwrap();
+
+    // Text that is no invite.
+    engine.send(Command::Room(RoomCommand::PeekInvite { invite: "hello".into() }));
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomLookFailed { .. }))
+    });
+    let failed = read.iter().find_map(|e| match e {
+        Event::RoomLookFailed { invite, why, .. } => Some((invite.clone(), why.clone())),
+        _ => None,
+    });
+    assert!(
+        matches!(&failed, Some((Some(i), Some(RoomLeftWhy::Failed { .. }))) if i == "hello"),
+        "{failed:?}"
+    );
+
+    // An invite whose relays don't answer.
+    room.unreachable(true);
+    engine.send(Command::Room(RoomCommand::PeekInvite { invite: link.clone() }));
+    let (_, _, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomLookFailed { .. }))
+    });
+    let failed = later.iter().find_map(|e| match e {
+        Event::RoomLookFailed { invite, why, room_id, .. } => {
+            Some((invite.clone(), why.clone(), room_id.clone()))
+        }
+        _ => None,
+    });
+    assert!(
+        matches!(&failed, Some((Some(i), Some(RoomLeftWhy::Unreachable), id)) if *i == link && !id.is_empty()),
+        "{failed:?}"
+    );
+    let left: Vec<_> =
+        read.iter().chain(&later).filter(|e| matches!(e, Event::RoomLeft { .. })).collect();
+    assert!(left.is_empty(), "{left:?}");
+    engine.shutdown();
+}
+
+#[test]
+fn a_glimpse_names_the_invite_it_answers() {
+    // Android's review: a slow answer for invite A must not stand in for invite B's, so the
+    // glimpse carries the invite it was asked for, as the look's failure does.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let room = Arc::clone(&engine).start_fake_room();
+    let invite = room.invite("Mika".into());
+    engine.send(Command::Room(RoomCommand::PeekInvite { invite: invite.clone() }));
+    // No room joined here: no view to wait from.
+    let (_, _, read) =
+        until_from(&engine, (Some(RoomView::default()), Vec::new()), |_, _, r| {
+            r.iter().any(|e| matches!(e, Event::RoomGlimpse(_)))
+        });
+    let glimpse = read.iter().find_map(|e| match e {
+        Event::RoomGlimpse(g) => Some(g.clone()),
+        _ => None,
+    });
+    assert_eq!(glimpse.and_then(|g| g.invite), Some(invite));
+    engine.shutdown();
+}
+
+#[test]
+fn settings_edit_the_spare_relays_and_show_made_up_hosts_in_testing_builds() {
+    // Apple's Settings ▸ Relays: the board draws × on the spares, and shots never show real
+    // relay hosts.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let relays = |engine: &Arc<FfiEngine>, command: RoomCommand| {
+        engine.send(Command::Room(command));
+        let (_, _, read) =
+            until_from(engine, (Some(RoomView::default()), Vec::new()), |_, _, r| {
+                r.iter().any(|e| matches!(e, Event::RoomRelays(_)))
+            });
+        read.into_iter()
+            .find_map(|e| match e {
+                Event::RoomRelays(r) => Some(r),
+                _ => None,
+            })
+            .unwrap()
+    };
+    let shown = relays(&engine, RoomCommand::LoadRelays);
+    let all = shown.defaults.iter().chain(&shown.spares).chain(&shown.default_spares);
+    assert!(all.clone().all(|r| r.ends_with(".example")), "{shown:?}");
+    assert_eq!(shown.spares, shown.default_spares);
+    assert_eq!(shown.spares.len(), 3);
+
+    // × on the first spare: the rest stay, in order.
+    let rest = shown.spares[1..].to_vec();
+    let edited = relays(&engine, RoomCommand::SetSpareRelays { relays: rest.clone() });
+    assert_eq!(edited.spares, rest);
+    let file =
+        std::fs::read_to_string(root.path().join("config/config.toml")).unwrap_or_default();
+    assert!(
+        file.contains("spare_relays") && file.contains(&rest[0]),
+        "kept in the file: {file}"
+    );
+    // None left, then the built-in ones put back.
+    let none = relays(&engine, RoomCommand::SetSpareRelays { relays: Vec::new() });
+    assert!(none.spares.is_empty(), "{none:?}");
+    let back =
+        relays(&engine, RoomCommand::SetSpareRelays { relays: none.default_spares.clone() });
+    assert_eq!(back.spares, back.default_spares);
     engine.shutdown();
 }

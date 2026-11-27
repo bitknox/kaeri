@@ -775,13 +775,21 @@
     <value>[Ñöţ éñöüĝĥ ƒŕéé šþàçé ţö ķééþ ţĥé ñéẋţ éþîšöðéš ðöŵñļöàðéð. Ƒŕéé üþ šöɱé šþàçé ţö ðöŵñļöàð ɱöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast when keep next found no room for another episode.</comment>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>[Çĥööšé à šéŕṽéŕ ƒöŕ ţĥé ŵàţçĥ þàŕţý ƒîŕšţ, àš šýñçþļàý.šéŕṽéŕ. {server} îš ŕüñ ƀý {operator}.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.</comment>
+  <data name="RoomLookUnreachable" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš. Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.</comment>
   </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>[Çĥööšé à šéŕṽéŕ ƒöŕ ţĥé ŵàţçĥ þàŕţý ƒîŕšţ. {server} îš ŕüñ ƀý {operator}.~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.</comment>
+  <data name="RoomLookNotAnInvite" xml:space="preserve">
+    <value>[Ţĥàţ îšñ'ţ à ŕööɱ'š îñṽîţé.~~~~~~~~~]</value>
+    <comment>Why a look into a room found nothing: the pasted text is no room's invite.</comment>
+  </data>
+  <data name="RoomLookNotKept" xml:space="preserve">
+    <value>[Ţĥàţ ŕööɱ îšñ'ţ ķéþţ àñý ɱöŕé.~~~~~~~~~]</value>
+    <comment>Why a look into a recent room found nothing: it's no longer in this device's recent rooms.</comment>
+  </data>
+  <data name="RoomLookOldInvite" xml:space="preserve">
+    <value>[Ţĥîš îñṽîţé îš ƒŕöɱ àñ öļðéŕ ṽéŕšîöñ öƒ Ķàéŕî. Åšķ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a look into a room found nothing: the invite comes from an older version.</comment>
   </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>[Ŵàţçĥ þàŕţîéš àŕéñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~~~]</value>
@@ -790,14 +798,6 @@
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>[Å ŵàţçĥ þàŕţý ñééðš à ŕööɱ ţö ɱééţ îñ. Çĥööšé öñé ƒîŕšţ.~~~~~~~~~~~~~~~~~]</value>
     <comment>Message when a watch party was asked for with no room named.</comment>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>[Ļöšţ ţĥé ŵàţçĥ þàŕţý šéŕṽéŕ. Ţŕýîñĝ àĝàîñ.~~~~~~~~~~~~~]</value>
-    <comment>Message in a watch party when its server connection dropped and is retried.</comment>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>[Ɓàçķ îñ ţĥé ŵàţçĥ þàŕţý.~~~~~~~~]</value>
-    <comment>Message in a watch party when the connection came back.</comment>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>[Ļéƒţ ţĥé ŵàţçĥ þàŕţý.~~~~~~~]</value>

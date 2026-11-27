@@ -885,14 +885,24 @@ pub fn notice_keep_next_full() -> String {
     text("notice-keep-next-full", &[])
 }
 
-/// Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-pub fn party_needs_server(server: &str, operator: &str) -> String {
-    text("party-needs-server", &[("server", Arg::Text(server)), ("operator", Arg::Text(operator))])
+/// Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.
+pub fn room_look_unreachable() -> String {
+    text("room-look-unreachable", &[])
 }
 
-/// Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-pub fn party_choose_server(server: &str, operator: &str) -> String {
-    text("party-choose-server", &[("server", Arg::Text(server)), ("operator", Arg::Text(operator))])
+/// Why a look into a room found nothing: the pasted text is no room's invite.
+pub fn room_look_not_an_invite() -> String {
+    text("room-look-not-an-invite", &[])
+}
+
+/// Why a look into a recent room found nothing: it's no longer in this device's recent rooms.
+pub fn room_look_not_kept() -> String {
+    text("room-look-not-kept", &[])
+}
+
+/// Why a look into a room found nothing: the invite comes from an older version.
+pub fn room_look_old_invite() -> String {
+    text("room-look-old-invite", &[])
 }
 
 /// Toast when a watch party is asked for in a build without watch parties.
@@ -903,16 +913,6 @@ pub fn notice_no_party() -> String {
 /// Message when a watch party was asked for with no room named.
 pub fn party_needs_room() -> String {
     text("party-needs-room", &[])
-}
-
-/// Message in a watch party when its server connection dropped and is retried.
-pub fn party_server_lost() -> String {
-    text("party-server-lost", &[])
-}
-
-/// Message in a watch party when the connection came back.
-pub fn party_rejoined() -> String {
-    text("party-rejoined", &[])
 }
 
 /// Message when the person left a watch party.

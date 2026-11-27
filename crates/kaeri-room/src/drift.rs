@@ -151,8 +151,12 @@ impl Drift {
                 // from where it was by less than the time says: behind, never a seek.
                 let lagged =
                     !last.paused && pos >= last.pos - LANDED && pos <= last.pos + played;
+                // Toward the room's place is catching up, whoever moved it.
+                let toward = room.is_some_and(|(room_pos, _)| {
+                    (pos - room_pos).abs() + LANDED < (last.pos + played - room_pos).abs()
+                });
                 let viewers = self.viewer_seek_at.is_some_and(|at| now - at <= VIEWER_SEEK_MS);
-                if viewers && !told && !rooms && !lagged {
+                if viewers && !told && !rooms && !lagged && !toward {
                     self.viewer_seek_at = None;
                     out.push(Act::ViewerSeek(pos));
                     return out;
@@ -196,7 +200,12 @@ impl Drift {
         } else if ahead > SLOWDOWN_THRESHOLD && !self.slowed {
             self.slowed = true;
             out.push(Act::Speed(SLOWDOWN_RATE));
-        } else if self.slowed && ahead.abs() <= SLOWDOWN_RESET {
+            return out;
+        }
+        // Slowed, and no longer ahead (back with the room, behind it, or moved to it): normal
+        // speed again.
+        let moved = matches!(out.last(), Some(Act::Seek(_)));
+        if self.slowed && (moved || ahead <= SLOWDOWN_RESET) {
             self.slowed = false;
             out.push(Act::Speed(1.0));
         }
@@ -287,6 +296,36 @@ mod tests {
             drift.sample(40.0, true, 1.0, 900, paused_at(12.3)),
             vec![Act::ViewerSeek(40.0)]
         );
+    }
+
+    #[test]
+    fn a_slowed_player_that_fell_behind_goes_back_to_normal_speed() {
+        // Neon: slowed at +1.7 s, then a short stall put it 0.2 s behind; it stayed at 0.95x.
+        let mut drift = Drift::default();
+        let room = |at: i64| Some((10.0 + at as f64 / 1000.0, true));
+        let mut acts = drift.sample(11.7, false, 1.0, 0, room(0));
+        assert_eq!(acts, [Act::Speed(SLOWDOWN_RATE)]);
+        let mut pos = 10.8;
+        for at in (1_000..=6_000).step_by(1_000) {
+            acts.extend(drift.sample(pos, false, SLOWDOWN_RATE, at, room(at)));
+            pos += SLOWDOWN_RATE;
+        }
+        assert_eq!(acts.last(), Some(&Act::Speed(1.0)), "{acts:?}");
+    }
+
+    #[test]
+    fn a_seek_toward_the_rooms_place_is_never_the_viewers() {
+        // Even when the player says a seek began: closer to where the room is, it caught up.
+        let mut drift = Drift::default();
+        let room = Some((35.0, false));
+        drift.sample(4.0, true, 1.0, 0, room);
+        drift.viewer_seeked(500);
+        let acts = drift.sample(30.0, true, 1.0, 1_000, room);
+        assert!(!acts.iter().any(|a| matches!(a, Act::ViewerSeek(_))), "{acts:?}");
+        // Away from it, it is the viewer's.
+        drift.viewer_seeked(1_500);
+        let acts = drift.sample(4.0, true, 1.0, 2_000, room);
+        assert!(acts.contains(&Act::ViewerSeek(4.0)), "{acts:?}");
     }
 
     #[test]

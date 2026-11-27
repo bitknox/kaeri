@@ -211,12 +211,8 @@
         <item quantity="other">Dodano do kolejki %1$,d odcinków, potem zatrzymano. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Za mało wolnego miejsca, by zachować pobrane kolejne odcinki. Zwolnij trochę miejsca, aby pobrać więcej.</string>
-    <string name="party_needs_server">Najpierw wybierz serwer, zanim rozpoczniesz wspólne oglądanie (syncplay.server). %1$s jest prowadzony przez %2$s.</string>
-    <string name="party_choose_server">Najpierw wybierz serwer, zanim rozpoczniesz wspólne oglądanie. %1$s jest prowadzony przez %2$s.</string>
     <string name="notice_no_party">Wspólne oglądania nie są dostępne w tej wersji Kaeri.</string>
     <string name="party_needs_room">Wspólne oglądanie wymaga pokoju, w którym można się spotkać. Najpierw wybierz pokój.</string>
-    <string name="party_server_lost">Połączenie z serwerem zostało utracone. Trwa ponowna próba.</string>
-    <string name="party_rejoined">Ponownie połączono. Wspólne oglądanie trwa.</string>
     <string name="party_left">Opuszczono wspólne oglądanie.</string>
     <string name="party_server_unreachable">Nie można połączyć się z %1$s. Sprawdź serwer lub spróbuj ponownie.</string>
     <string name="reading_next_chapter">Rozdział %1$s</string>

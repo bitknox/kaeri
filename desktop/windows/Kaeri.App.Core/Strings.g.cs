@@ -543,23 +543,23 @@ public static partial class T
     /// <summary>Toast when keep next found no room for another episode.</summary>
     public static string NoticeKeepNextFull => Get("NoticeKeepNextFull");
 
-    /// <summary>Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.</summary>
-    public static string PartyNeedsServer(string server, string @operator) => Fill(Get("PartyNeedsServer"), ("server", server), ("operator", @operator));
+    /// <summary>Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.</summary>
+    public static string RoomLookUnreachable => Get("RoomLookUnreachable");
 
-    /// <summary>Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.</summary>
-    public static string PartyChooseServer(string server, string @operator) => Fill(Get("PartyChooseServer"), ("server", server), ("operator", @operator));
+    /// <summary>Why a look into a room found nothing: the pasted text is no room's invite.</summary>
+    public static string RoomLookNotAnInvite => Get("RoomLookNotAnInvite");
+
+    /// <summary>Why a look into a recent room found nothing: it's no longer in this device's recent rooms.</summary>
+    public static string RoomLookNotKept => Get("RoomLookNotKept");
+
+    /// <summary>Why a look into a room found nothing: the invite comes from an older version.</summary>
+    public static string RoomLookOldInvite => Get("RoomLookOldInvite");
 
     /// <summary>Toast when a watch party is asked for in a build without watch parties.</summary>
     public static string NoticeNoParty => Get("NoticeNoParty");
 
     /// <summary>Message when a watch party was asked for with no room named.</summary>
     public static string PartyNeedsRoom => Get("PartyNeedsRoom");
-
-    /// <summary>Message in a watch party when its server connection dropped and is retried.</summary>
-    public static string PartyServerLost => Get("PartyServerLost");
-
-    /// <summary>Message in a watch party when the connection came back.</summary>
-    public static string PartyRejoined => Get("PartyRejoined");
 
     /// <summary>Message when the person left a watch party.</summary>
     public static string PartyLeft => Get("PartyLeft");
@@ -13515,12 +13515,12 @@ public static partial class T
         ["NoticeEpisodesQueuedExistingStopped_one"] = "Queued one episode, then it stopped. {existing} {reason}",
         ["NoticeEpisodesQueuedExistingStopped_other"] = "Queued {count} episodes, then it stopped. {existing} {reason}",
         ["NoticeKeepNextFull"] = "Not enough free space to keep the next episodes downloaded. Free up some space to download more.",
-        ["PartyNeedsServer"] = "Choose a server for the watch party first, as syncplay.server. {server} is run by {operator}.",
-        ["PartyChooseServer"] = "Choose a server for the watch party first. {server} is run by {operator}.",
+        ["RoomLookUnreachable"] = "Couldn't reach this room's relays. Ask for a new invite.",
+        ["RoomLookNotAnInvite"] = "That isn't a room's invite.",
+        ["RoomLookNotKept"] = "That room isn't kept any more.",
+        ["RoomLookOldInvite"] = "This invite is from an older version of Kaeri. Ask for a new one.",
         ["NoticeNoParty"] = "Watch parties aren't available in this version of Kaeri.",
         ["PartyNeedsRoom"] = "A watch party needs a room to meet in. Choose one first.",
-        ["PartyServerLost"] = "Lost the watch party server. Trying again.",
-        ["PartyRejoined"] = "Back in the watch party.",
         ["PartyLeft"] = "Left the watch party.",
         ["PartyServerUnreachable"] = "Couldn't reach {server}. Check the server, or try again.",
         ["ReadingNextChapter"] = "Chapter {chapter}",

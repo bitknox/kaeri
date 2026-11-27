@@ -151,6 +151,21 @@ pub fn save_room_relays(
     write_setting(&["room"], "relays", V::Strings(relays), engine, services, tx);
 }
 
+/// Settings ▸ Relays' spares, in effect for rooms started from now on and kept in the file.
+pub fn save_room_spares(
+    spares: Vec<String>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    use kaeri_core::settings::SettingValue as V;
+    if engine.config.effective().room.spare_relays.as_ref() == Some(&spares) {
+        return;
+    }
+    engine.config.effective_mut().room.spare_relays = Some(spares.clone());
+    write_setting(&["room"], "spare_relays", V::Strings(spares), engine, services, tx);
+}
+
 /// Hide chat in rooms, in effect at once and kept in the file. It has no Settings row: the
 /// terminal's `i` turns it over, and the apps keep their own.
 pub fn save_hide_chat(

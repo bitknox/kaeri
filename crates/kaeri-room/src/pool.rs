@@ -67,6 +67,9 @@ fn system_now() -> i64 {
 }
 
 struct Slot {
+    /// This connection's own number: reports carry it, so a replaced relay's late ones are
+    /// never taken for its successor's in the same place.
+    id: usize,
     url: String,
     handle: RelayHandle,
     open: bool,
@@ -117,6 +120,8 @@ struct Pool {
     session: Session,
     gate: Gate,
     slots: Vec<Slot>,
+    /// The next connection's number.
+    next_id: usize,
     reports: mpsc::UnboundedSender<(usize, FromRelay)>,
     heard: mpsc::UnboundedSender<Heard>,
     seen: HashSet<String>,
@@ -161,27 +166,8 @@ pub async fn open_with(
     let (heard_tx, heard_rx) = mpsc::unbounded_channel();
     let (reports_tx, reports_rx) = mpsc::unbounded_channel();
     let (clock_tx, clock_rx) = mpsc::unbounded_channel();
-    let offset = Arc::new(AtomicI64::new(0));
-    let keys = RoomKeys::new(secret);
-    let mut pool = Pool {
-        now: Arc::clone(&options.now),
-        offset: Arc::clone(&offset),
-        gate: Gate::new(keys.room_id()),
-        keys,
-        old: None,
-        session: session.clone(),
-        slots: Vec::new(),
-        reports: reports_tx,
-        heard: heard_tx,
-        seen: HashSet::new(),
-        seen_order: VecDeque::new(),
-        flushing: None,
-        tags: Vec::new(),
-        told_up: None,
-        told_relays: Vec::new(),
-        http: reqwest::Client::builder().use_rustls_tls().build().unwrap_or_default(),
-        clock_tx,
-    };
+    let mut pool = Pool::new(secret, session.clone(), &options, reports_tx, heard_tx, clock_tx);
+    let offset = Arc::clone(&pool.offset);
     pool.set_relays(&relays);
     if options.check_clock {
         pool.check_clock();
@@ -224,10 +210,9 @@ async fn wait_up(
         tokio::select! {
             () = &mut deadline => return false,
             report = reports.recv() => match report {
-                Some((i, report)) => {
+                Some((id, report)) => {
                     let up = matches!(report, FromRelay::Up);
-                    pool.on_report(i, report);
-                    if up {
+                    if pool.on_report(id, report) && up {
                         return true;
                     }
                 }
@@ -251,7 +236,9 @@ async fn run(
                 Some(o) => pool.on_out(o),
                 None => break,
             },
-            Some((i, report)) = reports.recv() => pool.on_report(i, report),
+            Some((id, report)) = reports.recv() => {
+                pool.on_report(id, report);
+            }
             Some(samples) = clock.recv() => {
                 if let Some(off) = clock::offset(&samples) {
                     tracing::info!(offset_ms = off, "room: clock corrected from the relays");
@@ -277,6 +264,37 @@ async fn run(
 }
 
 impl Pool {
+    fn new(
+        secret: [u8; 16],
+        session: Session,
+        options: &Options,
+        reports: mpsc::UnboundedSender<(usize, FromRelay)>,
+        heard: mpsc::UnboundedSender<Heard>,
+        clock_tx: mpsc::UnboundedSender<Vec<i64>>,
+    ) -> Self {
+        let keys = RoomKeys::new(secret);
+        Self {
+            now: Arc::clone(&options.now),
+            offset: Arc::new(AtomicI64::new(0)),
+            gate: Gate::new(keys.room_id()),
+            keys,
+            old: None,
+            session,
+            slots: Vec::new(),
+            next_id: 0,
+            reports,
+            heard,
+            seen: HashSet::new(),
+            seen_order: VecDeque::new(),
+            flushing: None,
+            tags: Vec::new(),
+            told_up: None,
+            told_relays: Vec::new(),
+            http: reqwest::Client::builder().use_rustls_tls().build().unwrap_or_default(),
+            clock_tx,
+        }
+    }
+
     fn local(&self) -> i64 {
         (self.now)()
     }
@@ -287,26 +305,31 @@ impl Pool {
     }
 
     fn set_relays(&mut self, urls: &[String]) {
-        // Reports name a relay by its place, so a relay keeps its connection only in its place.
+        // A relay keeps its connection in its place; a new one in a place gets a new number.
         let mut old: Vec<Option<Slot>> =
             std::mem::take(&mut self.slots).into_iter().map(Some).collect();
-        self.slots = urls
-            .iter()
-            .enumerate()
-            .map(|(i, url)| {
-                old.get_mut(i)
-                    .and_then(|s| s.take_if(|s| s.url == *url))
-                    .unwrap_or_else(|| self.slot(i, url))
-            })
-            .collect();
+        let mut slots = Vec::with_capacity(urls.len());
+        for (i, url) in urls.iter().enumerate() {
+            let kept = old.get_mut(i).and_then(|s| s.take_if(|s| s.url == *url));
+            slots.push(kept.unwrap_or_else(|| self.slot(url)));
+        }
+        self.slots = slots;
         self.subscribe();
         self.tell_relays();
     }
 
-    fn slot(&self, i: usize, url: &str) -> Slot {
+    fn slot(&mut self, url: &str) -> Slot {
+        let id = self.next_id;
+        self.next_id += 1;
         Slot {
+            id,
             url: url.to_owned(),
-            handle: relay::spawn(i, url.to_owned(), self.session.clone(), self.reports.clone()),
+            handle: relay::spawn(
+                id,
+                url.to_owned(),
+                self.session.clone(),
+                self.reports.clone(),
+            ),
             open: false,
             failures: 0,
             unusable: false,
@@ -443,9 +466,10 @@ impl Pool {
         true
     }
 
-    fn on_report(&mut self, i: usize, report: FromRelay) {
+    /// A relay connection's report; `false` when that connection was replaced already.
+    fn on_report(&mut self, id: usize, report: FromRelay) -> bool {
         let now = self.local();
-        let Some(slot) = self.slots.get_mut(i) else { return };
+        let Some(slot) = self.slots.iter_mut().find(|s| s.id == id) else { return false };
         match report {
             FromRelay::Up => {
                 slot.open = true;
@@ -498,6 +522,7 @@ impl Pool {
             }
         }
         self.tell_relays();
+        true
     }
 
     fn take(&mut self, event: &Event) {
@@ -542,5 +567,30 @@ impl Pool {
             self.subscribe();
         }
         self.tell_relays();
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn a_replaced_relays_late_reports_never_reach_the_one_in_its_place() {
+        // Neon: reports named a relay by its place, so the old relay 0's last "unusable" marked
+        // the spare that took its place.
+        let (reports, _reports_rx) = mpsc::unbounded_channel();
+        let (heard, _heard_rx) = mpsc::unbounded_channel();
+        let (clock, _clock_rx) = mpsc::unbounded_channel();
+        let options = Options { check_clock: false, ..Options::default() };
+        let mut pool = Pool::new([5; 16], Session::new(), &options, reports, heard, clock);
+        pool.set_relays(&["ws://127.0.0.1:9/old".into()]);
+        let old = pool.slots[0].id;
+        pool.set_relays(&["ws://127.0.0.1:9/spare".into()]);
+        assert!(!pool.on_report(old, FromRelay::Unusable("restricted: no".into())));
+        assert!(!pool.on_report(old, FromRelay::Up));
+        assert!(!pool.slots[0].unusable && !pool.slots[0].open);
+        let spare = pool.slots[0].id;
+        assert!(pool.on_report(spare, FromRelay::Up));
+        assert!(pool.slots[0].open);
     }
 }
