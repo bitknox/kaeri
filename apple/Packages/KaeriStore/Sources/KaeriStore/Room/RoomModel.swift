@@ -678,9 +678,10 @@ public final class RoomModel {
             guard view != nil || joining != nil || rejoining != nil else { return }
             left(why)
         case .roomStarted(let id, let episode, _, _):
-            // The room plays: the player opens at its place, and the seat follows the room.
+            // The room plays: the player opens its episode from the start, never this device's
+            // own resume point, and the room's seat moves it to the room's place.
             shown = true
-            send(.play(id: id, episode: episode))
+            send(.play(id: id, episode: episode, fromStart: true))
         case .roomGlimpse(let glimpse):
             if glimpse.invite == nil, let room = glimpse.roomId, room == lookingIn {
                 lookingIn = nil

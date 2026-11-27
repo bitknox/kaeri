@@ -212,4 +212,15 @@ struct RoomTicksTests {
         room.popover = .details
         #expect(room.popoverClosesOutside)
     }
+
+    @Test func aRoomsEpisodeNeverOpensAtThisDevicesResumePoint() {
+        let room = joined()
+        var sent: [Command] = []
+        room.send = { sent.append($0) }
+        for kind in [RoomStartKind.start, .moveOn, .rejoin] {
+            room.apply(.roomStarted(id: 900_001, episode: "9", kind: kind, at: kind == .rejoin ? 724 : nil))
+        }
+        #expect(sent == Array(repeating: .play(id: 900_001, episode: "9", fromStart: true), count: 3),
+                "from the start; the room's seat moves the player to its place")
+    }
 }
