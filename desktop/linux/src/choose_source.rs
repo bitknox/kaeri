@@ -231,7 +231,13 @@ impl Choose {
             self.providers.set_visible(true);
             return;
         }
-        self.line.set_label(&t::room_sources_found_line(found.len() as i64));
+        // In a room the pick plays for the room; outside one, for this player or the TV.
+        let in_room = self.ctx.hub.known.borrow().room.is_some();
+        self.line.set_label(&if in_room {
+            t::room_sources_found_line(found.len() as i64)
+        } else {
+            t::player_sources_found_line(found.len() as i64)
+        });
         for candidate in found {
             let row = adw::ActionRow::builder()
                 .title(gtk::glib::markup_escape_text(&candidate.title))

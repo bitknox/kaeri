@@ -142,7 +142,7 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
             let secs = oldest.unwrap_or(0);
             if carry {
                 return Line {
-                    title: c::line_still_loading(&names, waited.len()),
+                    title: still(view, shows, &names, waited.len()),
                     sub: c::line_waited(secs),
                     buttons: LineButtons::CarryOn(c::start_without(without)),
                     holds: true,
@@ -177,7 +177,7 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
         let secs = oldest.unwrap_or(0);
         if carry {
             return Line {
-                title: c::line_still_loading(&names, waited.len()),
+                title: still(view, shows, &names, waited.len()),
                 sub: c::line_waited(secs),
                 buttons: LineButtons::CarryOn(c::carry_on_without(without)),
                 holds: true,
@@ -300,6 +300,20 @@ pub fn anyone_not_watching(view: &RoomView) -> bool {
         })
 }
 
+/// "Ren is still loading", or still seeking or still buffering when everyone waited for is.
+fn still(view: &RoomView, shows: bool, names: &str, count: usize) -> String {
+    let mut reasons = view.waiting.iter().filter(|w| shows && !w.you).map(|w| w.reason);
+    let first = reasons.next();
+    match first {
+        Some(r) if reasons.all(|other| other == r) => match r {
+            WaitReason::Seeking => c::line_still_seeking(names, count),
+            WaitReason::Buffering => c::line_still_buffering(names, count),
+            WaitReason::Loading => c::line_still_loading(names, count),
+        },
+        _ => c::line_still_loading(names, count),
+    }
+}
+
 /// The members in the column's order: you first, then join order.
 pub fn ordered(view: &RoomView) -> Vec<&RoomMember> {
     let mut list: Vec<&RoomMember> = view.members.iter().collect();
@@ -346,6 +360,15 @@ mod tests {
         v.waiting.push(other);
         let l = line(&v, &Moves::default(), fixture::NOW);
         assert_eq!(l.sub, "Loading · 6\u{a0}s");
+    }
+
+    #[test]
+    fn the_cap_says_why_when_everyone_waited_for_has_the_same_reason() {
+        let mut v = fixture::view("cap");
+        v.waiting[0].reason = WaitReason::Seeking;
+        assert_eq!(line(&v, &Moves::default(), fixture::NOW).title, "Ren is still seeking");
+        v.waiting[0].reason = WaitReason::Buffering;
+        assert_eq!(line(&v, &Moves::default(), fixture::NOW).title, "Ren is still buffering");
     }
 
     #[test]

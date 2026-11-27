@@ -62,6 +62,12 @@ pub fn line_why(reason: WaitReason, secs: i64) -> String {
 pub fn line_still_loading(names: &str, count: usize) -> String {
     t::room_line_still_loading(names, n(count))
 }
+pub fn line_still_seeking(names: &str, count: usize) -> String {
+    t::room_line_still_seeking(names, n(count))
+}
+pub fn line_still_buffering(names: &str, count: usize) -> String {
+    t::room_line_still_buffering(names, n(count))
+}
 pub fn line_waited(secs: i64) -> String {
     t::room_line_waited(secs)
 }
