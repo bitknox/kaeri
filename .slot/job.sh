@@ -1,0 +1,1 @@
+android/scripts/mpv.sh || exit 1; android/scripts/engine.sh testing || exit 1; cd android && KAERI_PLAYER_NATIVE=on ./gradlew --console=plain --max-workers=3 :app:assembleFixturesDebug :tv:assembleFixturesDebug

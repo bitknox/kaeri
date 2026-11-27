@@ -1,0 +1,2 @@
+android/app/build/outputs/apk/fixtures/debug/*.apk
+android/tv/build/outputs/apk/fixtures/debug/*arm64*.apk
