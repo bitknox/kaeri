@@ -16,7 +16,7 @@ use kaeri_model::{
 
 use crate::{
     room::{
-        dialogs,
+        copy, dialogs,
         model::RoomView,
         place::{self, Place, PlaceAct, Recent},
         words::{self, Moves},
@@ -38,6 +38,8 @@ struct Page {
     rejoining: RefCell<Option<String>>,
     /// The recent room whose Rejoin nobody answered.
     rejoin_failed: RefCell<Option<String>>,
+    /// What the last look into each recent room found, by room id.
+    here: RefCell<std::collections::HashMap<String, String>>,
     /// What the place last drew, so a tick of the room's clock doesn't rebuild it.
     shown: RefCell<Option<String>>,
 }
@@ -53,6 +55,7 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
         recent: RefCell::default(),
         rejoining: RefCell::default(),
         rejoin_failed: RefCell::default(),
+        here: RefCell::default(),
         shown: RefCell::default(),
     });
     page.refresh();
@@ -84,6 +87,21 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                 if page.rejoining.borrow().as_deref() == Some(room_id.as_str()) {
                     page.rejoining.replace(None);
                     page.rejoin_failed.replace(Some(room_id.clone()));
+                }
+            }
+            // A look into a recent room: who is there now. A failed Rejoin's row returns to
+            // Rejoin on the next look-in.
+            Event::RoomGlimpse(glimpse) => {
+                let Some(room_id) = &glimpse.room_id else { return };
+                let names: Vec<&str> = glimpse
+                    .members
+                    .iter()
+                    .filter(|m| !m.you)
+                    .map(|m| m.name.as_str())
+                    .collect();
+                page.here.borrow_mut().insert(room_id.clone(), copy::here(&names));
+                if page.rejoin_failed.borrow().as_deref() == Some(room_id.as_str()) {
+                    page.rejoin_failed.replace(None);
                 }
             }
             Event::RoomRecent(rooms) => {
@@ -119,6 +137,8 @@ impl Page {
             .map(|r| Recent {
                 title: r.title.clone(),
                 line: recent_line(r, now / 1000),
+                cover: r.cover_url.clone(),
+                here: self.here.borrow().get(&r.room_id).cloned(),
                 failed: failed.as_deref() == Some(r.room_id.as_str()),
             })
             .collect();
@@ -132,7 +152,7 @@ impl Page {
             self.holder.remove(&child);
         }
         let weak = Rc::downgrade(self);
-        let content = place::build(&place, now, move |act| {
+        let content = place::build(&self.ctx.hub, &place, now, move |act| {
             if let Some(page) = weak.upgrade() {
                 page.act(act);
             }
@@ -179,6 +199,20 @@ impl Page {
                     self.refresh();
                 }
                 self.ctx.hub.send(Command::Room(RoomCommand::Rejoin { room_id }));
+            }
+            PlaceAct::LookIn(i) => {
+                if let Some(room_id) = self.recent.borrow().get(i).map(|r| r.room_id.clone()) {
+                    self.ctx.hub.send(Command::Room(RoomCommand::LookIn { room_id }));
+                }
+            }
+            PlaceAct::Forget(i) => {
+                let Some(room_id) = self.recent.borrow().get(i).map(|r| r.room_id.clone())
+                else {
+                    return;
+                };
+                self.here.borrow_mut().remove(&room_id);
+                self.ctx.hub.send(Command::Room(RoomCommand::ForgetRoom { room_id }));
+                self.ctx.hub.send(Command::Room(RoomCommand::LoadRecent));
             }
         }
     }

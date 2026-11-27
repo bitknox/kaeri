@@ -45,6 +45,30 @@ pub fn leave(
     dialog
 }
 
+/// An invite opened here whose relays didn't answer: an alert over where you were, with Close
+/// and Try again.
+pub fn unreachable(
+    parent: &impl IsA<gtk::Widget>,
+    again: impl Fn() + 'static,
+) -> adw::AlertDialog {
+    let dialog = adw::AlertDialog::new(
+        Some(&kaeri_i18n::t::room_error_unreachable_title()),
+        Some(&kaeri_i18n::t::room_error_ask_new_invite()),
+    );
+    dialog.add_response("close", &kaeri_i18n::t::action_close());
+    dialog.add_response("again", &c::try_again());
+    dialog.set_response_appearance("again", adw::ResponseAppearance::Suggested);
+    dialog.set_default_response(Some("again"));
+    dialog.set_close_response("close");
+    dialog.connect_response(None, move |_, response| {
+        if response == "again" {
+            again();
+        }
+    });
+    dialog.present(Some(parent));
+    dialog
+}
+
 /// Move to a new room: everyone present, ticked unless muted; you always go. The button counts
 /// the others ticked, and answers with their ids.
 pub fn move_room(

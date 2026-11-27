@@ -265,8 +265,13 @@ pub fn view(name: &str) -> RoomView {
 /// The place's shots: no room yet, in a room with the player closed, a link whose relays don't
 /// answer, and a Rejoin nobody answered.
 #[cfg(feature = "fixtures")]
-pub const PLACE_SHOTS: [&str; 4] =
-    ["room-place", "room-place-in", "room-join-fail", "room-recent-fail"];
+pub const PLACE_SHOTS: [&str; 5] =
+    ["room-place", "room-place-in", "room-join-fail", "room-recent-fail", "room-recent-look"];
+
+#[cfg(feature = "fixtures")]
+fn cover(id: u32) -> String {
+    format!("{}cover/{id}.jpg", kaeri_testkit::fixtures::ART_HOST) // i18n-skip
+}
 
 #[cfg(feature = "fixtures")]
 pub fn place(shot: &str) -> Option<super::place::Place> {
@@ -278,16 +283,22 @@ pub fn place(shot: &str) -> Option<super::place::Place> {
         Recent {
             title: "The Library Above the Clouds".into(),
             line: "Episode 4 · with Mika and Ren · 19:25".into(),
+            cover: Some(cover(900_002)),
+            here: None,
             failed: shot == "room-recent-fail",
         },
         Recent {
             title: "Stardust Wayfarer".into(),
             line: "Episode 3 · with Mika · Tuesday".into(),
+            cover: Some(cover(900_001)),
+            here: (shot == "room-recent-look").then(|| super::copy::here(&["Mika"])),
             failed: false,
         },
         Recent {
             title: "The Steel Gardener".into(),
             line: "Episode 1 · 18 November".into(),
+            cover: Some(cover(900_005)),
+            here: (shot == "room-recent-look").then(|| super::copy::here(&[])),
             failed: false,
         },
     ];

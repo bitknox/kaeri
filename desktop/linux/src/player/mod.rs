@@ -1244,11 +1244,14 @@ impl PlayerView {
         // A failure shows at once, whatever a roll-on's wait has left.
         self.reveal_start();
         self.show_start();
+        self.ui.start.quiet(self.in_room());
         let frame = self.start.borrow().as_ref().map(|s| s.frame(self.start_elapsed()));
         if let Some(Some((title, reason))) = frame.map(|f| f.failure) {
             self.announce_high(&t::player_start_failed_announce(&title, &reason));
         }
-        self.ui.start.focus_primary();
+        if !self.in_room() {
+            self.ui.start.focus_primary();
+        }
         self.open();
     }
 
@@ -3216,10 +3219,12 @@ impl PlayerView {
             // A room that couldn't be joined, or ended on this device: why, as a notice.
             Event::RoomLeft { why } => {
                 self.ui.marked.set_reactions(Vec::new());
+                // Out of the room, a failed start is the player's own to say again.
+                self.ui.start.quiet(false);
                 use kaeri_model::room::RoomLeftWhy as W;
                 let said = match why {
-                    W::Left | W::Moved => None,
-                    W::Unreachable => Some(kaeri_i18n::t::room_error_unreachable()),
+                    // Unreachable is the room's alert, or a recent room's row on Watch together.
+                    W::Left | W::Moved | W::Unreachable => None,
                     W::Full => Some(kaeri_i18n::t::room_error_full()),
                     W::OldInvite => Some(kaeri_i18n::t::room_error_old_invite()),
                     W::Failed { reason } => Some(crate::say::msg(reason)),

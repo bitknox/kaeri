@@ -118,10 +118,10 @@ impl Strip {
             self.faces.append(&more);
         }
         // The line, with the seconds while it waits and nobody has carried on yet.
-        let secs = view.waiting.iter().map(|w| words::secs_since(w.since_ms, now_ms)).max();
+        let secs = view.waiting.first().map(|w| words::secs_since(w.since_ms, now_ms));
         let text = match (&line.buttons, secs) {
             (LineButtons::None, Some(s)) if line.holds => format!(
-                "{}  <span weight=\"normal\" foreground=\"#A3A9C4\">· {s} s</span>",
+                "{}  <span weight=\"normal\" foreground=\"#A3A9C4\">· {s}\u{a0}s</span>",
                 glib::markup_escape_text(&line.title)
             ), // i18n-skip
             _ => glib::markup_escape_text(&line.title).to_string(),

@@ -73,6 +73,10 @@ pub enum Scene {
     Unreachable,
 }
 
+/// When Play goes in for the count's shot, from the start of staging (the frame is taken about
+/// 11.4 s after it).
+const STARTING_PLAY_AFTER: std::time::Duration = std::time::Duration::from_millis(9_800);
+
 /// The room's shots: the scene each stages, what it opens over the room, and whether it is
 /// full screen.
 pub const SHOTS: [(&str, Scene, Option<&str>, bool); 46] = [
@@ -202,6 +206,7 @@ impl Staged {
     /// device never got into the room.
     pub fn stage(&self, scene: Scene) -> bool {
         use Scene as S;
+        let began = std::time::Instant::now();
         let six = matches!(scene, S::BufferingSix | S::Six);
         let mut names = vec!["Mika", "Ren"];
         if six {
@@ -260,7 +265,13 @@ impl Staged {
         self.pause(200);
         match scene {
             S::BeforePlay | S::Invited | S::InvitedFull | S::Unreachable | S::Watching => {}
-            S::BeforePlayWait | S::BeforePlayCap | S::Starting => {
+            S::BeforePlayWait | S::BeforePlayCap => {
+                self.run(|f| f.member_plays("Mika"));
+            }
+            // The count lasts 3 s: Play goes in late enough that the shot, taken at a set time
+            // after staging begins, catches it running.
+            S::Starting => {
+                std::thread::sleep(STARTING_PLAY_AFTER.saturating_sub(began.elapsed()));
                 self.run(|f| f.member_plays("Mika"));
             }
             S::Paused => self.run(|f| f.member_pauses("Mika")),

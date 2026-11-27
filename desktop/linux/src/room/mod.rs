@@ -311,8 +311,9 @@ impl Room {
             }
             Event::RoomGlimpse(glimpse) => {
                 let mut held = self.glimpse.borrow_mut();
-                // Only the invite this device opened shows as one.
-                if let Some((_, g)) = held.as_mut() {
+                // Only the invite this device opened shows as one; a look into a recent room
+                // (with its room id) is the place's.
+                if let Some((_, g)) = held.as_mut().filter(|_| glimpse.room_id.is_none()) {
                     *g = glimpse.clone();
                     drop(held);
                     self.redraw();
@@ -330,6 +331,16 @@ impl Room {
                 }
             }
             Event::RoomLeft { why } => {
+                // An invite opened here whose relays didn't answer: say so over where you were.
+                let invite = self.glimpse.borrow().as_ref().map(|(invite, _)| invite.clone());
+                if let (RoomLeftWhy::Unreachable, Some(invite)) = (why, invite) {
+                    let me = Rc::downgrade(self);
+                    dialogs::unreachable(&self.widget, move || {
+                        if let Some(me) = me.upgrade() {
+                            me.peek(&invite);
+                        }
+                    });
+                }
                 self.engine_view.replace(None);
                 self.members.replace(Vec::new());
                 self.offer.replace(None);

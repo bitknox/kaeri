@@ -443,3 +443,17 @@ pub fn reacted(reaction: Reaction, name: &str, at: f64) -> String {
         Reaction::Cry => t::room_reacted_cry(name, &at),
     }
 }
+pub fn more() -> String {
+    t::action_more()
+}
+pub fn forget_room() -> String {
+    t::together_forget_room()
+}
+/// After a look into a recent room: who is there now.
+pub fn here(names: &[&str]) -> String {
+    if names.is_empty() {
+        t::together_nobody_here()
+    } else {
+        t::together_someone_here(&super::words::join_names(names), names.len() as i64)
+    }
+}

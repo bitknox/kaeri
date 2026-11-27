@@ -419,7 +419,12 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         shell.ctx.notices.dismiss_each();
         shell.player.close();
         shell.go(Dest::Together);
-        let content = crate::room::place::build(&place, crate::room::fixture::NOW, |_| {});
+        let content = crate::room::place::build(
+            &shell.ctx.hub,
+            &place,
+            crate::room::fixture::NOW,
+            |_| {},
+        );
         let header = adw::HeaderBar::new();
         let page = crate::widgets::page(&crate::room::copy::room_title(), &header, &content);
         if let Some(nav) = shell.ctx.nav() {
@@ -435,6 +440,8 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         }
         let player = Rc::clone(&shell.player);
         let morph = shot == "room-morph";
+        // An invite whose relays don't answer: the alert comes after the relays' 8 s.
+        let unreachable = shot == "room-unreachable";
         let shot = shot.to_owned();
         let first = !shell.is_player();
         glib::timeout_add_local_once(
@@ -446,6 +453,7 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
         // The scene takes a few seconds to stage off the main loop.
         return match (first, morph) {
             (_, true) => 24.0,
+            (_, false) if unreachable => 18.0,
             (true, _) => 18.0,
             _ => 13.0,
         };

@@ -109,7 +109,8 @@ pub fn line(view: &RoomView, moves: &Moves, now_ms: i64) -> Line {
     let waited: Vec<&str> =
         view.waiting.iter().filter(|w| shows && !w.you).map(|w| w.name.as_str()).collect();
     let waits_for_you = shows && view.waiting.iter().any(|w| w.you);
-    let oldest = view.waiting.iter().map(|w| w.since_ms).min().map(|s| secs_since(s, now_ms));
+    // The seconds count from the first waited member's start: the same clock as its row.
+    let oldest = view.waiting.first().map(|w| secs_since(w.since_ms, now_ms));
     if waits_for_you {
         let others: Vec<&str> = view
             .members
@@ -325,12 +326,26 @@ mod tests {
         let v = fixture::view("wait");
         let l = line(&v, &Moves::default(), fixture::NOW);
         assert_eq!(l.title, "Paused for Ren");
-        assert_eq!(l.sub, "Loading · 6 s");
+        assert_eq!(l.sub, "Loading · 6\u{a0}s");
         assert!(l.holds);
         let v = fixture::view("cap");
         let l = line(&v, &Moves::default(), fixture::NOW);
         assert_eq!(l.title, "Ren is still loading");
         assert_eq!(l.buttons, LineButtons::CarryOn("Carry on without Ren".into()));
+    }
+
+    #[test]
+    fn the_wait_counts_from_the_first_waited_start() {
+        // wait_shown_at_ms only says when the wait may show; the seconds are waiting[0]'s, as
+        // its row's are, even when a later waiter started earlier.
+        let mut v = fixture::view("wait");
+        v.wait_shown_at_ms = Some(fixture::NOW - 5_000);
+        let mut other = v.waiting[0].clone();
+        other.name = "Mika".into();
+        other.since_ms = fixture::NOW - 30_000;
+        v.waiting.push(other);
+        let l = line(&v, &Moves::default(), fixture::NOW);
+        assert_eq!(l.sub, "Loading · 6\u{a0}s");
     }
 
     #[test]
@@ -356,7 +371,7 @@ mod tests {
     fn own_wait_offers_dont_wait() {
         let l = line(&fixture::view("self-wait"), &Moves::default(), fixture::NOW);
         assert_eq!(l.title, "Paused for you");
-        assert_eq!(l.sub, "Ada and Mika are waiting · 6 s");
+        assert_eq!(l.sub, "Ada and Mika are waiting · 6\u{a0}s");
         assert_eq!(l.buttons, LineButtons::DontWait);
     }
 

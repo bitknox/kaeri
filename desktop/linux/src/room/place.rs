@@ -19,6 +19,10 @@ use super::{
 pub struct Recent {
     pub title: String,
     pub line: String,
+    /// The show's cover, drawn 64×36 at the row's start.
+    pub cover: Option<String>,
+    /// What a look into the room found: "Mika and Ren are in the room", "Nobody here now".
+    pub here: Option<String>,
     /// Nobody answered the last Rejoin.
     pub failed: bool,
 }
@@ -39,9 +43,14 @@ pub enum PlaceAct {
     Leave,
     Join(String),
     Rejoin(usize),
+    /// Selecting a recent room looks in without anyone seeing.
+    LookIn(usize),
+    /// Remove from recent rooms.
+    Forget(usize),
 }
 
 pub fn build(
+    hub: &crate::hub::Hub,
     place: &Place,
     now_ms: i64,
     act: impl Fn(PlaceAct) + 'static,
@@ -184,12 +193,30 @@ pub fn build(
     list.set_margin_top(8);
     for (i, r) in place.recent.iter().enumerate() {
         let esc = |s: &str| gtk::glib::markup_escape_text(s).to_string();
-        let row = adw::ActionRow::builder().title(esc(&r.title)).subtitle(esc(&r.line)).build();
+        let line = match &r.here {
+            Some(here) => format!("{} · {}", esc(&r.line), esc(here)), // i18n-skip
+            None => esc(&r.line),
+        };
+        let row = adw::ActionRow::builder()
+            .title(esc(&r.title))
+            .subtitle(&line)
+            .activatable(true)
+            .build();
+        // 64 × 36 as the board draws it, cropped from the show's cover.
+        let (frame, _) = crate::widgets::art(hub, r.cover.as_deref(), None, "cover");
+        frame.add_css_class("small");
+        let art = crate::fit::Fit::new(&frame, 64.0 / 36.0, 64, true, 0);
+        art.set_valign(gtk::Align::Center);
+        art.set_hexpand(false);
+        art.set_vexpand(false);
+        row.add_prefix(&art);
+        let a = Rc::clone(&act);
+        row.connect_activated(move |_| a(PlaceAct::LookIn(i)));
         if r.failed {
             // The lead in bold and the hint after it, on one line under the row's own.
             row.set_subtitle(&format!(
                 "{}\n<b>{}</b> {}",
-                esc(&r.line),
+                line,
                 esc(&c::nobody_answered()),
                 esc(&c::nobody_answered_note())
             )); // i18n-skip
@@ -200,6 +227,24 @@ pub fn build(
         let a = Rc::clone(&act);
         b.connect_clicked(move |_| a(PlaceAct::Rejoin(i)));
         row.add_suffix(&b);
+        // More: Remove from recent rooms.
+        let menu = gtk::gio::Menu::new();
+        menu.append(Some(&c::forget_room()), Some("recent.forget"));
+        let more = gtk::MenuButton::builder()
+            .icon_name("view-more-symbolic")
+            .menu_model(&menu)
+            .valign(gtk::Align::Center)
+            .tooltip_text(c::more())
+            .build();
+        more.add_css_class("flat");
+        more.update_property(&[gtk::accessible::Property::Label(&c::more())]);
+        let actions = gtk::gio::SimpleActionGroup::new();
+        let forget = gtk::gio::SimpleAction::new("forget", None);
+        let a = Rc::clone(&act);
+        forget.connect_activate(move |_, _| a(PlaceAct::Forget(i)));
+        actions.add_action(&forget);
+        row.insert_action_group("recent", Some(&actions));
+        row.add_suffix(&more);
         list.append(&row);
     }
     column.append(&list);

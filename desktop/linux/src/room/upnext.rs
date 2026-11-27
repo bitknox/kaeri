@@ -27,15 +27,13 @@ impl UpNext {
     pub fn new() -> Self {
         let picture = gtk::Picture::builder()
             .content_fit(gtk::ContentFit::Cover)
-            .width_request(96)
-            .height_request(54)
+            .can_shrink(true)
             .build();
         picture.add_css_class("room-upnext-art");
         picture.set_overflow(gtk::Overflow::Hidden);
-        let frame = gtk::Box::new(gtk::Orientation::Vertical, 0);
-        frame.set_size_request(96, 54);
+        // 96 × 54 whatever the art's own size: a size request is only a minimum.
+        let frame = crate::fit::Fit::new(&picture, 16.0 / 9.0, 96, true, 0);
         frame.set_valign(gtk::Align::Center);
-        frame.append(&picture);
         let over = crate::widgets::haze(&c::up_next_for_room(), "caption");
         over.set_xalign(0.0);
         let episode = gtk::Label::new(None);
