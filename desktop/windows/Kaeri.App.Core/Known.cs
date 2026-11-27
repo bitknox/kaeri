@@ -307,8 +307,19 @@ public sealed class Known
     /// <summary>The look-in is done with: Not now, or another link tried, whose own answer comes next.</summary>
     public void ForgetRoomGlimpse() => RoomGlimpse = null;
 
-    /// <summary>Why looking into a recent room failed.</summary>
-    public string? RoomLookFailure { get; private set; }
+    /// <summary>The invite this device is looking into now; only its answer shows.</summary>
+    public string? RoomLooking { get; private set; }
+
+    /// <summary>Look into <paramref name="invite"/> (or stop looking, with null): any other look's answer is someone else's.</summary>
+    public void LookInto(string? invite)
+    {
+        RoomLooking = invite;
+        RoomGlimpse = null;
+        RoomLookFailure = null;
+    }
+
+    /// <summary>Why the look into <see cref="RoomLooking"/> found nothing: the engine's own words, and its join reason when it has one.</summary>
+    public (string Reason, RoomLeftWhy? Why)? RoomLookFailure { get; private set; }
 
     /// <summary>The last ten rooms, kept on this device, newest first.</summary>
     public RoomRecent[] RoomRecent { get; private set; } = [];
@@ -642,9 +653,13 @@ public sealed class Known
                     RoomChatState = null;
                     // A move offer is the old room's: it never asks over another.
                     RoomMoveOffer = null;
+                    // In another room now, so the look that led here is done. The same room said
+                    // again leaves a look opened from inside it waiting for its answer.
+                    RoomLooking = null;
+                    RoomGlimpse = null;
+                    RoomLookFailure = null;
                 }
                 Room = j.V1;
-                RoomGlimpse = null;
                 RoomLeftWhy = null;
                 break;
             case Event.RoomState r:
@@ -659,14 +674,15 @@ public sealed class Known
             case Event.RoomChatState c:
                 RoomChatState = c.V1;
                 break;
-            case Event.RoomGlimpse g:
+            // A slow answer to an earlier look never stands in for the one waited on.
+            case Event.RoomGlimpse g when RoomLooking is not null && g.V1.Invite == RoomLooking:
                 RoomGlimpse = g.V1;
                 RoomLookFailure = null;
                 RoomLeftWhy = null;
                 break;
-            case Event.RoomLookFailed f:
+            case Event.RoomLookFailed f when RoomLooking is not null && f.Invite == RoomLooking:
                 RoomGlimpse = null;
-                RoomLookFailure = f.Reason.Text();
+                RoomLookFailure = (f.Reason.Text(), f.Why);
                 break;
             case Event.RoomRecent r:
                 RoomRecent = r.V1;
@@ -682,11 +698,11 @@ public sealed class Known
                 RoomRelays = r.V1;
                 break;
             case Event.RoomLeft l:
+                // The room this device is in, or a join that failed: a look is never left.
                 Room = null;
                 RoomMembers = [];
                 RoomChat = null;
                 RoomChatState = null;
-                RoomGlimpse = null;
                 RoomMoveOffer = null;
                 RoomLeftWhy = l.Why is global::Kaeri.Engine.Model.RoomLeftWhy.Left ? null : l.Why;
                 break;

@@ -75,7 +75,21 @@ public sealed partial class TogetherPage : Page
             or Event.RoomRecent or Event.RoomGlimpse or Event.RoomLookFailed))
         {
             if (rejoining is null && batch.Any(e => e is Event.RoomLeft { Why: not RoomLeftWhy.Left and not RoomLeftWhy.Moved }))
-                failedLink = ctx.Window.RoomInvite ?? join.Text.Trim();
+            {
+                // A join that failed: the invite it was for keeps its link here, and its look-in goes.
+                var link = ctx.Window.RoomInvite ?? join.Text.Trim();
+                failedLink = link.Length > 0 ? link : null;
+                ctx.Known.ForgetRoomGlimpse();
+            }
+            // The look waited on found nothing (another link's answer never gets this far): its link
+            // stays in the field, with why and Try again, also when it came from outside the app.
+            if (batch.Any(e => e is Event.RoomLookFailed) && ctx.Known.RoomLookFailure is not null
+                && ctx.Window.RoomInvite is { } looked)
+            {
+                if (KaeriFfiMethods.ParseRoomTarget(join.Text.Trim())?.Link != looked)
+                    join.Text = looked;
+                failedLink = join.Text.Trim();
+            }
             Show();
         }
     }
@@ -95,7 +109,7 @@ public sealed partial class TogetherPage : Page
         // A link tried after a Rejoin is its own try: its failure shows here, not on the recent row.
         rejoining = null;
         // Another invite's look-in is not this one's: nothing shows until this link's answer.
-        ctx.Known.ForgetRoomGlimpse();
+        ctx.Window.RoomInvite = null;
         if (KaeriFfiMethods.ParseRoomTarget(text.Trim()) is not { } target)
         {
             failedLink = text.Trim();
@@ -251,7 +265,6 @@ public sealed partial class TogetherPage : Page
             row.Children.Add(Ui.Label(RoomWords.NotNow, (_, _) =>
             {
                 ctx.Window.RoomInvite = null;
-                ctx.Known.ForgetRoomGlimpse();
                 Show();
             }));
             text.Children.Add(row);
@@ -289,7 +302,8 @@ public sealed partial class TogetherPage : Page
         });
         if (failed)
         {
-            var (lead, then) = ctx.Known.RoomLeftWhy is { } left ? RoomWords.LeftLine(left)
+            var (lead, then) = ctx.Known.RoomLookFailure is { } look ? RoomWords.LookLine(look)
+                : ctx.Known.RoomLeftWhy is { } left ? RoomWords.LeftLine(left)
                 : KaeriFfiMethods.ParseRoomTarget(join.Text.Trim()) is { Old: not null } ? (T.RoomErrorOldInvite, null)
                 : RoomWords.LeftLine(new Kaeri.Engine.Model.RoomLeftWhy.Unreachable());
             Block("join-failed", () => Failure(), b => SetFailure(b, lead, then));

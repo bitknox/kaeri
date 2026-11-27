@@ -329,9 +329,93 @@ public class RoomTests
     public void ALookInIsForgottenOnNotNowAndWhenAnotherLinkIsTried()
     {
         var known = new Known();
-        known.Take(new Event.RoomGlimpse(new RoomGlimpse(By: "Mika", Members: [])));
+        known.LookInto(InviteA);
+        known.Take(Glimpse(InviteA));
         Assert.NotNull(known.RoomGlimpse);
-        known.ForgetRoomGlimpse();
+        known.LookInto(null);
         Assert.Null(known.RoomGlimpse);
+
+        // Another link tried: the first look's glimpse goes, and its late answer never comes back.
+        known.LookInto(InviteA);
+        known.Take(Glimpse(InviteA));
+        known.LookInto(InviteB);
+        Assert.Null(known.RoomGlimpse);
+        known.Take(Glimpse(InviteA));
+        Assert.Null(known.RoomGlimpse);
+    }
+
+    const string InviteA = "https://kaeri.app/room#v=3&k=first";
+    const string InviteB = "https://kaeri.app/room#v=3&k=second";
+
+    static Event Glimpse(string? invite) => new Event.RoomGlimpse(new RoomGlimpse(By: "Mika", Members: [], Invite: invite));
+
+    static Event LookFailed(string? invite, RoomLeftWhy? why) =>
+        new Event.RoomLookFailed(RoomId: "room-1", Reason: new Msg.RoomLookUnreachable(), Invite: invite, Why: why);
+
+    [Fact]
+    public void OnlyTheLookWaitedOnShowsItsAnswer()
+    {
+        var known = new Known();
+        // Nothing asked: a glimpse or a failure is nobody's.
+        known.Take(Glimpse(InviteA));
+        known.Take(LookFailed(InviteA, new RoomLeftWhy.Unreachable()));
+        Assert.Null(known.RoomGlimpse);
+        Assert.Null(known.RoomLookFailure);
+
+        known.LookInto(InviteB);
+        known.Take(Glimpse(InviteA));
+        known.Take(LookFailed(InviteA, new RoomLeftWhy.Unreachable()));
+        known.Take(Glimpse(null));
+        Assert.Null(known.RoomGlimpse);
+        Assert.Null(known.RoomLookFailure);
+
+        known.Take(Glimpse(InviteB));
+        Assert.NotNull(known.RoomGlimpse);
+        known.Take(LookFailed(InviteB, new RoomLeftWhy.Unreachable()));
+        Assert.Null(known.RoomGlimpse);
+        Assert.Equal(("Couldn't reach this room's relays.", "Ask for a new invite."), RoomWords.LookLine(known.RoomLookFailure!.Value));
+
+        // Looking again starts clean.
+        known.LookInto(InviteB);
+        Assert.Null(known.RoomLookFailure);
+    }
+
+    [Fact]
+    public void AFailedLookLeavesTheRoomYouAreIn()
+    {
+        var known = new Known();
+        known.Take(new Event.RoomJoined(View()));
+        known.LookInto(InviteA);
+        // The room said again while the look is out: it still waits for its answer.
+        known.Take(new Event.RoomJoined(View()));
+        known.Take(LookFailed(InviteA, new RoomLeftWhy.Unreachable()));
+        Assert.NotNull(known.Room);
+        Assert.NotNull(known.RoomLookFailure);
+        Assert.Null(known.RoomLeftWhy);
+
+        // In another room: the look that led there is done.
+        known.LookInto(InviteB);
+        known.Take(new Event.RoomJoined(View() with { RoomId = "another" }));
+        Assert.Null(known.RoomLooking);
+    }
+
+    [Fact]
+    public void LeavingARoomNeverEndsALook()
+    {
+        var known = new Known();
+        known.Take(new Event.RoomJoined(View()));
+        known.LookInto(InviteA);
+        known.Take(Glimpse(InviteA));
+        known.Take(new Event.RoomLeft(new RoomLeftWhy.Unreachable()));
+        Assert.Null(known.Room);
+        Assert.Equal(InviteA, known.RoomLooking);
+        Assert.NotNull(known.RoomGlimpse);
+    }
+
+    [Fact]
+    public void ALookFailureWithoutAJoinReasonSaysTheEnginesWords()
+    {
+        Assert.Equal(("That isn't a room's invite.", null), RoomWords.LookLine(("That isn't a room's invite.", null)));
+        Assert.Equal("Couldn't reach this room's relays. Ask for a new invite.", RoomWords.Look(("x", new RoomLeftWhy.Unreachable())));
     }
 }

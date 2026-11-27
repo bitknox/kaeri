@@ -18,8 +18,12 @@ public sealed partial class MainWindow
     RoomPanel? roomPanelShown;
     string? roomSourcesFor;
 
-    /// <summary>An invite looked into and not answered yet: Join sends it.</summary>
-    internal string? RoomInvite { get; set; }
+    /// <summary>An invite looked into and not answered yet: Join sends it. Only its own glimpse or failure shows.</summary>
+    internal string? RoomInvite
+    {
+        get => ctx.Known.RoomLooking;
+        set => ctx.Known.LookInto(value);
+    }
 
     void WireRoom()
     {
@@ -136,9 +140,9 @@ public sealed partial class MainWindow
         {
             switch (e)
             {
+                // Known ends the look when the room changes; the same room said again keeps it.
                 case Event.RoomJoined:
                     joined = true;
-                    RoomInvite = null;
                     touched = true;
                     break;
                 case Event.RoomLeft left:
@@ -153,6 +157,20 @@ public sealed partial class MainWindow
                         else
                             ShowToast(InfoBarSeverity.Warning, RoomWords.Left(left.Why));
                     }
+                    break;
+                // The look waited on found nothing; the room this device is in, if any, carries on.
+                // The place shows it by its link; over the video, or elsewhere, it is said here.
+                case Event.RoomLookFailed failed when failed.Invite is not null && failed.Invite == RoomInvite
+                    && ctx.Known.RoomLookFailure is { } look:
+                    if (Player.Showing)
+                    {
+                        RoomInvite = null;
+                        if (ctx.Known.Room is null)
+                            Player.EndRoom();
+                        Player.Say(RoomWords.Look(look));
+                    }
+                    else if (ContentFrame.Content is not Pages.TogetherPage)
+                        ShowToast(InfoBarSeverity.Warning, RoomWords.Look(look));
                     break;
                 case Event.Sources s when roomSourcesFor == $"{s.Id}/{s.Episode}":
                     Player.ShowRoomSources(s.Candidates);
@@ -255,7 +273,7 @@ public sealed partial class MainWindow
         "room-upnext-waiting" => FfiRoomScene.UpNextWaiting,
         "room-skip" => FfiRoomScene.SkippedOpening,
         "room-chat" or "room-chat-hidden" => FfiRoomScene.Chat,
-        "room-invite-new" => FfiRoomScene.Watching,
+        "room-invite-new" or "room-look-fail" => FfiRoomScene.Watching,
         "room-move-offer" => FfiRoomScene.MoveOffer,
         "room-move-after" => FfiRoomScene.MovedAway,
         "room-unreachable" => FfiRoomScene.Unreachable,
@@ -337,6 +355,13 @@ public sealed partial class MainWindow
                 await AtUptime(95);
                 ctx.Send(new Command.Room(new RoomCommand.NewInvite()));
                 break;
+            case "room-look-fail":
+                // In the room, an invite opened at 97 s whose relays never answer: said over the video for 4 s,
+                // and the room carries on.
+                await AtUptime(97);
+                fake.Unreachable(true);
+                OpenRoomInvite(fake.Invite("Ren"));
+                break;
             case "room-move-start":
                 Player.ShotRoomInvite(true);
                 break;
@@ -369,7 +394,8 @@ public sealed partial class MainWindow
     /// <summary>
     /// The place's frames (--page=together): <c>room-place</c> with a recent room,
     /// <c>room-place-room</c> in a room with the player closed (Keep the room), and
-    /// <c>room-place-fail</c> a pasted link none of whose relays answer.
+    /// <c>room-place-fail</c> a pasted link none of whose relays answer, and <c>room-place-look-fail</c>
+    /// an invite opened from outside the app whose look finds nothing.
     /// </summary>
     async Task RehearsePlace(string state)
     {
@@ -382,6 +408,13 @@ public sealed partial class MainWindow
                 RoomInvite = link;
                 (ContentFrame.Content as Pages.TogetherPage)?.ShotFill(link);
                 await Task.Run(() => fake.Stage(FfiRoomScene.Unreachable));
+                break;
+            case "room-place-look-fail":
+                // An invite opened from outside the app at 80 s, whose relays never answer: the place
+                // keeps its link in the field, with why and Try again.
+                await AtUptime(80);
+                fake.Unreachable(true);
+                OpenRoomInvite(fake.Invite("Mika"));
                 break;
             case "room-place-typing":
                 // Typed a key at a time: the field keeps the focus through every redraw.

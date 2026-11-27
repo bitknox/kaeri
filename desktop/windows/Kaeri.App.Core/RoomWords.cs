@@ -193,4 +193,15 @@ public static class RoomWords
         Kaeri.Engine.Model.RoomLeftWhy.Full or Kaeri.Engine.Model.RoomLeftWhy.OldInvite or Kaeri.Engine.Model.RoomLeftWhy.Failed => (Left(why), null),
         _ => (T.RoomErrorNobodyAnsweredLead, T.RoomErrorNobodyAnsweredLine),
     };
+
+    /// <summary>Why a look into a room found nothing, in the same two parts: as a join would say it, else the engine's own words.</summary>
+    public static (string Lead, string? Then) LookLine((string Reason, Kaeri.Engine.Model.RoomLeftWhy? Why) failure) =>
+        failure.Why is { } why and not Kaeri.Engine.Model.RoomLeftWhy.Left and not Kaeri.Engine.Model.RoomLeftWhy.Moved ? LeftLine(why) : (failure.Reason, null);
+
+    /// <summary>The same, on one line, for over the video or a toast.</summary>
+    public static string Look((string Reason, Kaeri.Engine.Model.RoomLeftWhy? Why) failure)
+    {
+        var (lead, then) = LookLine(failure);
+        return then is null ? lead : $"{lead} {then}";
+    }
 }
