@@ -538,7 +538,7 @@ private fun PanelSources(model: PlayerModel) {
     val id = model.staged?.id ?: return
     val optionsAll by store.sourceChoices.options.collectAsStateWithLifecycle()
     val dubs by store.titles.dubLines.collectAsStateWithLifecycle()
-    val inParty = store.party.view.collectAsStateWithLifecycle().value != null
+    val inRoom = store.room.view.collectAsStateWithLifecycle().value != null
     LaunchedEffect(id) { store.loadSourceOptions(id) }
     // Asked again when another episode plays under the open tab.
     LaunchedEffect(id, model.staged?.episode) { model.loadPanelReleases() }
@@ -585,7 +585,7 @@ private fun PanelSources(model: PlayerModel) {
                 )
             }
         }
-        item(key = "translation") { TranslationSwitch(model, id, dubs[id], inParty) }
+        item(key = "translation") { TranslationSwitch(model, id, dubs[id], inRoom) }
         item(key = "rule") { Box(Modifier.padding(start = 10.dp, end = 10.dp, top = 10.dp, bottom = 4.dp).fillMaxWidth().height(1.dp).background(ObiSilk.Silk.copy(alpha = 0.10f))) }
         item(key = "others-heading") { Heading(Strings.playerPanelOtherSources(context)) }
         others(model, options, playingProvider, expanded) { provider -> expanded = if (provider in expanded) expanded - provider else expanded + provider }
@@ -616,7 +616,7 @@ private fun Heading(text: String) {
  * failure says so under the switch.
  */
 @Composable
-private fun TranslationSwitch(model: PlayerModel, id: AnilistId, dub: app.kaeri.engine.model.DubExtent?, inParty: Boolean) {
+private fun TranslationSwitch(model: PlayerModel, id: AnilistId, dub: app.kaeri.engine.model.DubExtent?, inRoom: Boolean) {
     val context = LocalContext.current
     val pending = model.versionSwitch
     val current = pending?.takeIf { it.failed == null }?.to ?: model.menus?.translation ?: Translation.SUB
@@ -669,7 +669,7 @@ private fun TranslationSwitch(model: PlayerModel, id: AnilistId, dub: app.kaeri.
         }
         val notes = buildList {
             dub?.let { add(it.line(context)) }
-            if (inParty) add(Strings.partyVersionOwn(context))
+            if (inRoom) add(Strings.roomVersionOwn(context))
         }
         for (note in notes) Text(note, style = DetailStyle, color = ObiSilk.Haze)
     }

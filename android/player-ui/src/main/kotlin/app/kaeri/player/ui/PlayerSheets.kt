@@ -8,6 +8,7 @@ package app.kaeri.player.ui
 import java.text.NumberFormat
 import androidx.annotation.StringRes
 import app.kaeri.i18n.R
+import app.kaeri.i18n.Strings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
@@ -101,7 +102,7 @@ import app.kaeri.engine.model.PlayerChoice
 import app.kaeri.player.PlayerModel
 
 /** Which of the player's sheets is open. */
-enum class PlayerSheet { Tracks, Episodes, Sources, SkipTimes, People }
+enum class PlayerSheet { Tracks, Episodes, Sources, SkipTimes }
 
 /** The speeds the Speed list offers. */
 private val SPEEDS = listOf(0.5, 0.75, 1.0, 1.25, 1.5, 2.0)
@@ -135,7 +136,7 @@ fun PlayerSheets(model: PlayerModel, sheet: PlayerSheet?, onMoreSubtitleSettings
         },
         // The Episodes sheet opens at its own height, its list capped below, so the footer under the
         // list is never left past the bottom of a half-open sheet.
-        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = sheet == PlayerSheet.People || sheet == PlayerSheet.Episodes),
+        sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = sheet == PlayerSheet.Episodes),
         containerColor = ObiSilk.Raised,
         scrimColor = androidx.compose.material3.MaterialTheme.colorScheme.scrim.copy(alpha = 0.32f),
         dragHandle = { BottomSheetDefaults.DragHandle(color = ObiSilk.Haze.copy(alpha = 0.4f)) },
@@ -157,7 +158,7 @@ private fun SheetList(model: PlayerModel, sheet: PlayerSheet, onMoreSubtitleSett
     val current = when (sheet) {
         PlayerSheet.Episodes -> model.menus?.episodes?.indexOfFirst { it.current }?.takeIf { it > 1 } ?: 0
         PlayerSheet.Tracks -> tracksOpeningRow(model.subtitleTracks.map { it.id }, model.subtitleTrack)
-        PlayerSheet.Sources, PlayerSheet.SkipTimes, PlayerSheet.People -> 0
+        PlayerSheet.Sources, PlayerSheet.SkipTimes -> 0
     }
     // The people sheet stops 44 dp under the top, as the board has it, so the picture stays in
     // sight above it held sideways: its list, under the 48 dp handle, scrolls inside.
@@ -202,7 +203,6 @@ private fun SheetList(model: PlayerModel, sheet: PlayerSheet, onMoreSubtitleSett
                 .then(
                     when (sheet) {
                         PlayerSheet.Episodes -> Modifier.heightIn(max = (configuration.screenHeightDp * 0.45f).dp)
-                        PlayerSheet.People -> Modifier.heightIn(max = configuration.screenHeightDp.dp - 44.dp - 48.dp - bottom)
                         else -> Modifier
                     },
                 ),
@@ -212,7 +212,6 @@ private fun SheetList(model: PlayerModel, sheet: PlayerSheet, onMoreSubtitleSett
                 PlayerSheet.Episodes -> episodes(model, picker, range) { number, on -> if (on) pointed = number else if (pointed == number) pointed = null }
                 PlayerSheet.Sources -> sources(model, onDismiss)
                 PlayerSheet.SkipTimes -> skipTimes(model, onDismiss)
-                PlayerSheet.People -> item(key = "people") { app.kaeri.ui.PartyPeopleContent(onDone = onDismiss) } // i18n-skip
             }
         }
         if (sheet == PlayerSheet.Episodes) {
@@ -437,17 +436,25 @@ private fun LazyListScope.sources(model: PlayerModel, onDismiss: () -> Unit) {
             }
         }
         choices.isEmpty() -> item(key = "none") { Note(stringResource(R.string.player_sheet_none)) }
-        else -> items(choices, key = { "${it.providerId}-${it.id}" }) { candidate ->
-            val detail = listOfNotNull(
-                candidate.providerName.ifEmpty { candidate.providerId },
-                candidate.quality?.let { "${it}p" }, // i18n-skip
-                candidate.size,
-                if (candidate.dubbed) stringResource(R.string.audio_dubbed) else null,
-                if (candidate.dualAudio) stringResource(R.string.player_dual_audio) else null,
-            ).joinToString(" · ").ifEmpty { null }
-            Choice(candidate.title, detail = detail, checked = false, radio = false) {
-                model.play(candidate)
-                onDismiss()
+        else -> {
+            // How many have it, and in a room that the pick plays for everyone there.
+            item(key = "found") {
+                val inRoom = app.kaeri.ui.LocalAppStore.current.room.view.collectAsStateWithLifecycle().value != null
+                val context = LocalContext.current
+                Note(if (inRoom) Strings.roomSourcesFoundLine(context, choices.size) else Strings.playerSourcesFoundLine(context, choices.size))
+            }
+            items(choices, key = { "${it.providerId}-${it.id}" }) { candidate ->
+                val detail = listOfNotNull(
+                    candidate.providerName.ifEmpty { candidate.providerId },
+                    candidate.quality?.let { "${it}p" }, // i18n-skip
+                    candidate.size,
+                    if (candidate.dubbed) stringResource(R.string.audio_dubbed) else null,
+                    if (candidate.dualAudio) stringResource(R.string.player_dual_audio) else null,
+                ).joinToString(" · ").ifEmpty { null }
+                Choice(candidate.title, detail = detail, checked = false, radio = false) {
+                    model.play(candidate)
+                    onDismiss()
+                }
             }
         }
     }

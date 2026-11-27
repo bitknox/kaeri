@@ -21,9 +21,7 @@
 //             lands or fails as scripted (PanelDemo), on the playing scene
 //             sources: episode 7 plays and the panel opens on Sources once its picture is up,
 //             for the sourcesloading scene's sources answering one by one
-//   party     a watch party on the testing engine's fake server, for the chat board (PartyShot):
-//             chatline, chatreact, chatloop and the rest; the log says "KAERI_PARTY ready <shot>"
-//             once it is there. chatloop waits for `am broadcast -a app.kaeri.fixtures.PARTY_GO`
+//   room      the room on the testing engine's fake room (FfiRoomScene, as watching or wait-loading)
 
 package app.kaeri.tv
 
@@ -45,9 +43,7 @@ import app.kaeri.store.EngineLaunch
 import app.kaeri.store.FixtureScene
 import app.kaeri.store.Prelaunch
 import app.kaeri.store.FixtureSync
-import app.kaeri.store.FixtureParty
-import app.kaeri.store.PartyShot
-import app.kaeri.store.PartyStage
+import app.kaeri.store.FixtureRoom
 import app.kaeri.store.enginePlatform
 import app.kaeri.store.fixtureMedia
 import app.kaeri.store.fixtures
@@ -129,11 +125,9 @@ internal object Flavour {
 
     fun started(context: Context, store: AppStore, intent: Intent, player: app.kaeri.player.PlayerModel, host: app.kaeri.player.PlayerHost? = null) {
         StartReplay.from(context, store, player, intent)
-        PartyShot.named(intent.getStringExtra("party"))?.let { shot ->
-            val app = app ?: return@let
-            FixtureParty.listen(app)
+        FixtureRoom.named(intent.getStringExtra("room"))?.let { scene ->
             MainScope().launch {
-                if (!FixtureParty.stage(shot, store, TvStage(app))) Log.w(TvApp.TAG, "the party scene did not set up")
+                if (!FixtureRoom.stage(scene, store, { player.isPresented && player.hasPicture }, intent.getStringExtra("roomat")?.toLongOrNull())) Log.w(TvApp.TAG, "the room scene did not set up")
             }
         }
         when (intent.getStringExtra("panel")) {
@@ -178,19 +172,3 @@ internal object Flavour {
     }
 }
 
-/** The TV's player, as the party scenes steer it. */
-private class TvStage(private val app: TvApp) : PartyStage {
-    private val player get() = app.player
-
-    override val playing: Boolean get() = player.isPresented && player.hasPicture && player.duration != null
-
-    override fun holdControls(on: Boolean) = player.hold("shot", on) // i18n-skip
-
-    override fun hideControls() = player.hideControls()
-
-    override fun seekTo(seconds: Double) = player.seekTo(seconds)
-
-    override fun setPlaying(playing: Boolean) = player.setPlaying(playing)
-
-    override fun hideChat(on: Boolean) = app.store.party.setHideChat(app, on)
-}

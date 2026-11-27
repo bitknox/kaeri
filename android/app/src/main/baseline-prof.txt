@@ -216,7 +216,6 @@ Lapp/kaeri/engine/model/Command$OpenAdmin;
 Lapp/kaeri/engine/model/Command$OpenExternal;
 Lapp/kaeri/engine/model/Command$Play;
 Lapp/kaeri/engine/model/Command$PlayLocal;
-Lapp/kaeri/engine/model/Command$PlayParty;
 Lapp/kaeri/engine/model/Command$PlaySource;
 Lapp/kaeri/engine/model/Command$PlayTrailer;
 Lapp/kaeri/engine/model/Command$Player;

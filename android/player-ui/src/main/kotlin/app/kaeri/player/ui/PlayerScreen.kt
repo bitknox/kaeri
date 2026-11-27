@@ -121,6 +121,8 @@ import app.kaeri.player.SeekPreview
 import app.kaeri.store.HeroArt
 import app.kaeri.ui.ArtworkImage
 import app.kaeri.ui.LocalAppStore
+import app.kaeri.ui.leavingPlayer
+import app.kaeri.ui.openSources
 import app.kaeri.store.DiscussionKey
 import app.kaeri.store.PlayerDiscussion
 import app.kaeri.ui.LocalPageAnimation
@@ -160,7 +162,6 @@ fun PlayerScreen(
     val context = LocalContext.current
     var surfaceView by remember { mutableStateOf<SurfaceView?>(null) }
     var sheet by remember { mutableStateOf<PlayerSheet?>(null) }
-    var typing by remember { mutableStateOf(false) }
     val discussion = discussionEntry(model)
 
     // TalkBack and Switch Access keep the controls up, and Up Next waits for them (T4, T5).
@@ -192,7 +193,14 @@ fun PlayerScreen(
     val ground = animateFloatAsState(if (through) 1f else 0f, if (through) ThroughGround else Motion.fadeIn(), label = "ground") // i18n-skip
     val groundUp by remember { derivedStateOf { ground.value > 0f } }
 
-    Immersive()
+    val appRoom = LocalAppStore.current.room
+    val roomed = appRoom.view.collectAsStateWithLifecycle().value != null
+    // Upright in a room the status bar stays, above the room's video, as the board has it.
+    val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    // The room upright, phone or tablet; sideways the room opens beside the picture from the chrome.
+    Immersive(hide = !(roomed && !landscape))
+    var roomOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(roomed, landscape) { if (!roomed || !landscape) roomOpen = false }
     KeepAwake(playing = model.hasPicture && !model.paused)
     // Landscape on a phone once the shared bounds have settled, so the turn never cuts into the grow,
     // and portrait again whenever the player stops being up, however it went: the viewer's close,
@@ -200,10 +208,13 @@ fun PlayerScreen(
     val page = LocalPageAnimation.current
     val settled = page == null || !page.transition.isRunning
     val presented = model.isPresented
-    LaunchedEffect(settled, phone, presented) {
+    // In a room the phone turns as it is held: upright is the room, sideways the full picture.
+    LaunchedEffect(settled, phone, presented, roomed) {
         if (!phone) return@LaunchedEffect
         if (!presented) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+        } else if (roomed) {
+            activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_FULL_USER
         } else if (settled) {
             activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE
         }
@@ -222,6 +233,8 @@ fun PlayerScreen(
     fun close() {
         if (closing) return
         closing = true
+        // Closing the player in a room keeps the room: the others read "Player closed".
+        if (appRoom.view.value != null) appRoom.send(app.kaeri.engine.model.RoomCommand.ClosePlayer)
         if (phone) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
         model.viewerClosed()
     }
@@ -257,335 +270,357 @@ fun PlayerScreen(
     val keys = remember { FocusRequester() }
     var keysFocused by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { runCatching { keys.requestFocus() } }
-    BoxWithConstraints(
-        Modifier
-            .fillMaxSize()
-            .background(Color.Black)
-            .focusRequester(keys)
-            .onFocusChanged { keysFocused = it.isFocused }
-            .onPreviewKeyEvent { event ->
-                if (event.type != KeyEventType.KeyDown || model.inPip) return@onPreviewKeyEvent false
-                if (model.panelOpen) {
-                    // The panel takes the keys; Escape closes it, as Back does.
-                    if (event.key == Key.Escape) {
-                        model.closePanel()
-                        return@onPreviewKeyEvent true
-                    }
-                    return@onPreviewKeyEvent false
-                }
-                model.poke()
-                if (sheet != null) return@onPreviewKeyEvent false
-                when (event.key) {
-                    // A card is answered first (Up next cancelled, the stall waited on), then the player closes.
-                    Key.Escape -> { if (!model.answerCard()) close(); true }
-                    else -> if (!keysFocused) false else when (event.key) {
-                        Key.Spacebar, Key.K -> { model.togglePause(); true }
-                        Key.DirectionLeft -> { model.seekBy(-SEEK_STEP); true }
-                        Key.DirectionRight -> { model.seekBy(SEEK_STEP); true }
-                        // Up and Down show the controls (done above) and move focus onto them.
-                        else -> false
-                    }
-                }
-            }
-            .focusable(),
-    ) {
-        val rect = videoRect(maxWidth, maxHeight, model.aspect ?: (16.0 / 9.0))
-        val density = LocalDensity.current
-        val pip = model.inPip
-        // The panel takes the controls' place while it is open; a switch's held picture keeps them.
-        val chromeVisible = model.controlsVisible && (model.hasPicture || model.holding) && !closing && still.frame == null && !pip && !model.panelOpen
-        // Where the video sits in the window, the hint the window grows from. Said once it has
-        // settled: while the player grows (T2), closes (T3) or turns, it changes every frame, and
-        // each change would set the window's parameters again across the binder.
-        var videoBounds by remember { mutableStateOf<android.graphics.Rect?>(null) }
-        PictureInPicture(model, videoBounds)
-        // In the window the video shows alone: what was open closes, at once.
-        LaunchedEffect(pip) {
-            if (pip) {
-                sheet = null
-                model.closePanel()
-            }
-        }
-
-        // The picture, where mpv draws it.
-        Box(
-            Modifier.offset(rect.x, rect.y).size(rect.width, rect.height).onLayoutRectChanged(throttleMillis = 0, debounceMillis = BOUNDS_SETTLE_MS) { layout ->
-                val bounds = layout.boundsInWindow
-                videoBounds = android.graphics.Rect(bounds.left, bounds.top, bounds.right, bounds.bottom)
-            },
-        ) {
-            video(model, Modifier.fillMaxSize()) { surfaceView = it }
-            HeldPictureLayer(model, Modifier.fillMaxSize())
-        }
-
-        // The ground the picture fades through between episodes.
-        if (groundUp) Box(Modifier.fillMaxSize().graphicsLayer { alpha = ground.value }.background(ObiSilk.Ground))
-
-        // Waiting for data mid-episode: the thin amber line along the video's top edge, from 1 s
-        // in until playback goes on. The stall prompt comes at 8 s, as ever.
-        val bufferingLabel = stringResource(R.string.player_buffering)
-        AnimatedVisibility(
-            model.showsBuffering && !pip,
-            enter = fadeIn(Motion.fadeIn()),
-            exit = fadeOut(Motion.fadeOut()),
-            modifier = Modifier.offset(rect.x, rect.y).width(rect.width),
-        ) {
-            BufferingLine(Modifier.fillMaxWidth().height(BUFFERING_LINE).semantics { contentDescription = bufferingLabel })
-        }
-
-        // Taps on the video: the middle third shows and hides the controls at once; the sides
-        // wait for a second tap, which seeks 10 s, and each tap after it within 0.6 s 10 s more.
-        // A press held anywhere plays at 2× until it lifts.
-        var run by remember { mutableStateOf<SeekRun?>(null) }
-        var runShown by remember { mutableStateOf(false) }
-        var pressedAt by remember { mutableStateOf(0L) }
-        var holding by remember { mutableStateOf<Double?>(null) }
-        val dragState = rememberDraggableState { delta ->
-            val before = drag.value
-            val after = (before + with(density) { delta.toDp().value }).coerceAtLeast(0f)
-            scope.launch { drag.snapTo(after) }
-            if (before < DISMISS_DP && after >= DISMISS_DP) haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-        }
-        if (!pip) Row(
-            Modifier
-                .fillMaxSize()
-                .draggable(
-                    dragState,
-                    Orientation.Vertical,
-                    onDragStarted = { still.freeze(surfaceView) },
-                    onDragStopped = { velocity ->
-                        val fling = with(density) { velocity.toDp().value }
-                        if (drag.value > DISMISS_DP || fling > FLING_DP) {
-                            close()
-                        } else {
-                            drag.animateTo(0f, Motion.standard())
-                            still.unfreeze()
+    val playerBox: @Composable (Modifier) -> Unit = { outer ->
+        BoxWithConstraints(
+            outer
+                .background(Color.Black)
+                .focusRequester(keys)
+                .onFocusChanged { keysFocused = it.isFocused }
+                .onPreviewKeyEvent { event ->
+                    if (event.type != KeyEventType.KeyDown || model.inPip) return@onPreviewKeyEvent false
+                    if (model.panelOpen) {
+                        // The panel takes the keys; Escape closes it, as Back does.
+                        if (event.key == Key.Escape) {
+                            model.closePanel()
+                            return@onPreviewKeyEvent true
                         }
-                    },
-                ),
+                        return@onPreviewKeyEvent false
+                    }
+                    model.poke()
+                    if (sheet != null) return@onPreviewKeyEvent false
+                    when (event.key) {
+                        // A card is answered first (Up next cancelled, the stall waited on), then the player closes.
+                        Key.Escape -> { if (!model.answerCard()) close(); true }
+                        else -> if (!keysFocused) false else when (event.key) {
+                            Key.Spacebar, Key.K -> { model.togglePause(); true }
+                            Key.DirectionLeft -> { model.seekBy(-SEEK_STEP); true }
+                            Key.DirectionRight -> { model.seekBy(SEEK_STEP); true }
+                            // Up and Down show the controls (done above) and move focus onto them.
+                            else -> false
+                        }
+                    }
+                }
+                .focusable(),
         ) {
-            for (third in Third.entries) {
-                Box(
-                    Modifier
-                        .weight(1f)
-                        .fillMaxHeight()
-                        .pointerInput(third, chromeVisible) {
-                            val toggle = { if (chromeVisible) model.hideControls() else model.poke() }
-                            // Each press: held past the long-press time, 2× until it lifts.
-                            val press: suspend androidx.compose.foundation.gestures.PressGestureScope.(androidx.compose.ui.geometry.Offset) -> Unit = {
-                                pressedAt = System.nanoTime() / 1_000_000
-                                tryAwaitRelease()
-                                holding?.let { before ->
-                                    holding = null
-                                    model.playAt(before)
-                                }
-                            }
-                            val hold: (androidx.compose.ui.geometry.Offset) -> Unit = {
-                                if (holding == null && model.speed < HOLD_SPEED) {
-                                    holding = model.speed
-                                    model.playAt(HOLD_SPEED)
-                                    haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
-                                }
-                            }
-                            if (third == Third.Middle) {
-                                detectTapGestures(onPress = press, onLongPress = hold, onTap = { toggle() })
-                            } else {
-                                val step = if (third == Third.Start) -SEEK_STEP else SEEK_STEP
-                                // A tap within 0.6 s of the last seek on this side seeks another 10 s.
-                                val seek = {
-                                    val going = run?.takeIf { it.third == third && pressedAt - it.at <= SEEK_RUN_MS }
-                                    model.seekBy(step)
-                                    run = SeekRun(third, (going?.taps ?: 0) + 1, pressedAt)
-                                    runShown = true
-                                }
-                                detectTapGestures(
-                                    onPress = press,
-                                    onLongPress = hold,
-                                    onTap = {
-                                        val going = run?.let { it.third == third && pressedAt - it.at <= SEEK_RUN_MS } == true
-                                        if (going) seek() else toggle()
-                                    },
-                                    onDoubleTap = { seek() },
-                                )
-                            }
-                        },
-                    contentAlignment = Alignment.Center,
-                ) {
-                    // "+30 s": counts up with each tap of a run, gone 0.6 s after the last.
-                    val shown = run?.takeIf { it.third == third }
-                    FadingLabel(runShown && shown != null, (if (third == Third.Start) "\u2212" else "+") + Strings.durationSeconds(LocalContext.current, (shown?.taps ?: 1) * SEEK_STEP.toInt())) // i18n-skip
+            val rect = videoRect(maxWidth, maxHeight, model.aspect ?: (16.0 / 9.0))
+            val density = LocalDensity.current
+            val pip = model.inPip
+            // The panel takes the controls' place while it is open; a switch's held picture keeps them.
+            val chromeVisible = model.controlsVisible && (model.hasPicture || model.holding) && !closing && still.frame == null && !pip && !model.panelOpen
+            // Where the video sits in the window, the hint the window grows from. Said once it has
+            // settled: while the player grows (T2), closes (T3) or turns, it changes every frame, and
+            // each change would set the window's parameters again across the binder.
+            var videoBounds by remember { mutableStateOf<android.graphics.Rect?>(null) }
+            PictureInPicture(model, videoBounds)
+            // In the window the video shows alone: what was open closes, at once.
+            LaunchedEffect(pip) {
+                if (pip) {
+                    sheet = null
+                    model.closePanel()
                 }
             }
-        }
-        LaunchedEffect(run) {
-            if (run != null) {
-                kotlinx.coroutines.delay(SEEK_RUN_MS)
-                runShown = false
-            }
-        }
-        // "2×" while a press holds the speed up.
-        AnimatedVisibility(
-            holding != null,
-            enter = fadeIn(Motion.fadeIn()),
-            exit = fadeOut(Motion.fadeOut()),
-            modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp),
-        ) {
-            GestureLabel("2\u00d7")
-        }
 
-        // Over the taps, so its own buttons take theirs: Choose source, and Close on a play that
-        // never played. Nothing else in it takes a touch, so a drag down still closes the player.
-        StartingLayer(model, rect, art = !through) { sheet = PlayerSheet.Sources.also { model.chooseSource() } }
-
-        // The subtitles rise above the controls while they are up, and fall back with them (T4).
-        val lift by animateFloatAsState(if (chromeVisible) SUBTITLES_UP else SUBTITLES_DOWN, if (pip) snap() else Motion.standard())
-        LaunchedEffect(rect.height) {
-            snapshotFlow { lift }.collectLatest { above ->
-                val percent = 100.0 - (above - SUBTITLES_DOWN) / rect.height.value * 100.0
-                model.liftSubtitles(percent)
-                kotlinx.coroutines.delay(40)
-            }
-        }
-
-        val inParty = LocalAppStore.current.party.view.collectAsStateWithLifecycle().value != null
-        val chatOn = inParty && rememberChatOn()
-        val partyMarks = LocalAppStore.current.party.conversation.collectAsStateWithLifecycle().value.marks
-        val ticks = if (chatOn) remember(partyMarks) { tickSeconds(partyMarks) } else emptyList()
-        // "Still watching?" is the only thing a screen reader reaches while it shows.
-        // While the chat field is open the controls make way for it, as the board has it: the
-        // picture above the keyboard stays in view, with the column over it.
-        AnimatedVisibility(
-            chromeVisible && !typing,
-            modifier = if (model.stillWatching) Modifier.clearAndSetSemantics { } else Modifier,
-            enter = fadeIn(Motion.fadeIn()),
-            exit = fadeOut(Motion.fadeOut()),
-        ) {
-            PlayerChrome(
-                model,
-                onClose = { still.freeze(surfaceView) { close() } },
-                onTracks = { sheet = PlayerSheet.Tracks },
-                onEpisodes = { model.openPanel(app.kaeri.player.PanelTab.Episodes) },
-                onSkipTimes = { sheet = PlayerSheet.SkipTimes },
-                preview = preview.takeIf { previewSource != null && !Device.power(context).lowPower },
-                onPlayOnTv = playOnTv,
-                discussion = discussion,
-                onPeople = if (inParty) ({ sheet = PlayerSheet.People }) else null,
-                onChat = if (chatOn) ({ typing = true }) else null,
-                ticks = ticks,
-            )
-        }
-
-        // Stats for nerds, which stays up while the controls hide: over the picture at the top
-        // trailing corner, below the top bar's buttons, as on the iPhone. A phone held sideways is
-        // too short for that: the panel is compact there and ends above the subtitles, which sit
-        // higher while the controls are up, and its rows scroll when that leaves them too little
-        // room. In a window too narrow for it, upright, under the picture at the full width less 16.
-        val upright = maxHeight > maxWidth && maxWidth < 600.dp
-        val short = maxHeight < 500.dp
-        val statsTop by animateDpAsState(
-            when {
-                upright -> rect.y + rect.height + 16.dp
-                short && !chromeVisible -> 16.dp
-                else -> 80.dp
-            },
-            Motion.standard(),
-            label = "stats", // i18n-skip
-        )
-        val statsBottom by animateDpAsState(
-            when {
-                upright -> 32.dp
-                // The subtitles' two lines above where they sit, lifted with the controls.
-                short -> (if (chromeVisible) SUBTITLES_UP else SUBTITLES_DOWN).dp + 56.dp
-                else -> 84.dp
-            },
-            Motion.standard(),
-            label = "stats-bottom", // i18n-skip
-        )
-        DisposableEffect(model, context) {
-            model.copyText = { copyToClipboard(context, it) }
-            model.statsAbout = { statsAbout(context) }
-            onDispose {}
-        }
-        if (still.frame == null && !pip) {
-            app.kaeri.design.KeptFade(
-                model.statsPanel,
-                Modifier
-                    .align(if (upright) Alignment.TopStart else Alignment.TopEnd)
-                    .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
-                    .padding(start = 16.dp, end = 16.dp, top = statsTop, bottom = statsBottom),
-            ) { panel ->
-                StatsPanel(model, panel, width = if (upright) maxWidth - 32.dp else STATS_WIDTH, compact = short && !upright)
-            }
-        }
-
-        if (still.frame == null && !pip) {
-            // A reaction's moment stands above the corner card, bottom trailing.
-            Column(Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 88.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                if (inParty) ReactionMoments()
-                CornerCard(model, chromeVisible, { ground.value })
-            }
-            ResumeNote(model, Modifier.align(Alignment.BottomStart).padding(start = 48.dp, bottom = 84.dp))
-            // In a party the notice leads the chat column at the top leading corner; else it stands top centre.
-            if (inParty) {
-                // Above the keyboard there is little room left, so the column moves up while typing.
-                val columnTop by animateDpAsState(if (typing) 16.dp else 80.dp, Motion.standard(), label = "column") // i18n-skip
-                PartyColumn(model, onMore = { sheet = PlayerSheet.People }, Modifier.align(Alignment.TopStart).padding(start = 48.dp, top = columnTop), compact = typing)
-            } else {
-                AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
-            }
-            StillWatching(model)
-            MarkingPanel(model)
-            ShareSkipTimes(model)
-        }
-        // The controls make way for the field; the hold keeps their clock from running out under
-        // it, so they come back as it closes.
-        DisposableEffect(typing) {
-            model.hold("chat", typing) // i18n-skip
-            onDispose { model.hold("chat", false) } // i18n-skip
-        }
-        AnimatedVisibility(typing && chatOn, modifier = Modifier.align(Alignment.BottomCenter), enter = fadeIn(Motion.fadeIn()), exit = fadeOut(Motion.fadeOut())) {
-            TypingBar(onClose = { typing = false })
-        }
-        PlayerSheets(model, sheet, onMoreSubtitleSettings = { sheet = null; openSubtitleSettings() }) { sheet = null }
-        PlayerPanelLayer(model)
-
-        // A drag or a back gesture moves a still of the frame over the ground, the bars with it.
-        // The gesture is read in the layer alone, so following the finger redraws the still and
-        // composes nothing.
-        still.frame?.let { frame ->
-            Box(Modifier.fillMaxSize().background(ObiSilk.Ground))
-            val image = remember(frame) { frame.asImageBitmap() }
-            // Remove animations: the dismiss drag fades as it follows the finger, rather than shrinking.
-            val removed = app.kaeri.design.rememberAnimationsRemoved()
+            // The picture, where mpv draws it.
             Box(
+                Modifier.offset(rect.x, rect.y).size(rect.width, rect.height).onLayoutRectChanged(throttleMillis = 0, debounceMillis = BOUNDS_SETTLE_MS) { layout ->
+                    val bounds = layout.boundsInWindow
+                    videoBounds = android.graphics.Rect(bounds.left, bounds.top, bounds.right, bounds.bottom)
+                },
+            ) {
+                video(model, Modifier.fillMaxSize()) { surfaceView = it }
+                HeldPictureLayer(model, Modifier.fillMaxSize())
+            }
+
+            // The ground the picture fades through between episodes.
+            if (groundUp) Box(Modifier.fillMaxSize().graphicsLayer { alpha = ground.value }.background(ObiSilk.Ground))
+
+            // Waiting for data mid-episode: the thin amber line along the video's top edge, from 1 s
+            // in until playback goes on. The stall prompt comes at 8 s, as ever.
+            val bufferingLabel = stringResource(R.string.player_buffering)
+            AnimatedVisibility(
+                model.showsBuffering && !pip,
+                enter = fadeIn(Motion.fadeIn()),
+                exit = fadeOut(Motion.fadeOut()),
+                modifier = Modifier.offset(rect.x, rect.y).width(rect.width),
+            ) {
+                BufferingLine(Modifier.fillMaxWidth().height(BUFFERING_LINE).semantics { contentDescription = bufferingLabel })
+            }
+
+            // Taps on the video: the middle third shows and hides the controls at once; the sides
+            // wait for a second tap, which seeks 10 s, and each tap after it within 0.6 s 10 s more.
+            // A press held anywhere plays at 2× until it lifts.
+            var run by remember { mutableStateOf<SeekRun?>(null) }
+            var runShown by remember { mutableStateOf(false) }
+            var pressedAt by remember { mutableStateOf(0L) }
+            var holding by remember { mutableStateOf<Double?>(null) }
+            val dragState = rememberDraggableState { delta ->
+                val before = drag.value
+                val after = (before + with(density) { delta.toDp().value }).coerceAtLeast(0f)
+                scope.launch { drag.snapTo(after) }
+                if (before < DISMISS_DP && after >= DISMISS_DP) haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+            }
+            if (!pip) Row(
                 Modifier
                     .fillMaxSize()
-                    .graphicsLayer {
-                        val k = (drag.value / DISMISS_DP).coerceIn(0f, 1f)
-                        val p = back.value
-                        val edge = if (backEdge == BackEventCompat.EDGE_LEFT) 1f else -1f
-                        if (removed) {
-                            alpha = (1f - 0.5f * k) * (1f - 0.5f * p)
-                        } else {
-                            val scale = (1f - 0.1f * k) * (1f - 0.1f * p)
-                            scaleX = scale
-                            scaleY = scale
-                        }
-                        translationY = (drag.value - 12.6f * p).dp.toPx()
-                        translationX = (37.75f * p * edge).dp.toPx()
-                        shape = RoundedCornerShape((16f * k + 28f * p).dp)
-                        clip = true
-                    }
-                    .background(Color.Black),
+                    .draggable(
+                        dragState,
+                        Orientation.Vertical,
+                        onDragStarted = { still.freeze(surfaceView) },
+                        onDragStopped = { velocity ->
+                            val fling = with(density) { velocity.toDp().value }
+                            if (drag.value > DISMISS_DP || fling > FLING_DP) {
+                                close()
+                            } else {
+                                drag.animateTo(0f, Motion.standard())
+                                still.unfreeze()
+                            }
+                        },
+                    ),
             ) {
-                Image(
-                    image,
-                    contentDescription = null,
-                    contentScale = ContentScale.FillBounds,
-                    modifier = Modifier.offset(rect.x, rect.y).size(rect.width, rect.height),
+                for (third in Third.entries) {
+                    Box(
+                        Modifier
+                            .weight(1f)
+                            .fillMaxHeight()
+                            .pointerInput(third, chromeVisible) {
+                                val toggle = { if (chromeVisible) model.hideControls() else model.poke() }
+                                // Each press: held past the long-press time, 2× until it lifts.
+                                val press: suspend androidx.compose.foundation.gestures.PressGestureScope.(androidx.compose.ui.geometry.Offset) -> Unit = {
+                                    pressedAt = System.nanoTime() / 1_000_000
+                                    tryAwaitRelease()
+                                    holding?.let { before ->
+                                        holding = null
+                                        model.playAt(before)
+                                    }
+                                }
+                                val hold: (androidx.compose.ui.geometry.Offset) -> Unit = {
+                                    if (holding == null && model.speed < HOLD_SPEED) {
+                                        holding = model.speed
+                                        model.playAt(HOLD_SPEED)
+                                        haptics.performHapticFeedback(HapticFeedbackType.GestureThresholdActivate)
+                                    }
+                                }
+                                if (third == Third.Middle) {
+                                    detectTapGestures(onPress = press, onLongPress = hold, onTap = { toggle() })
+                                } else {
+                                    val step = if (third == Third.Start) -SEEK_STEP else SEEK_STEP
+                                    // A tap within 0.6 s of the last seek on this side seeks another 10 s.
+                                    val seek = {
+                                        val going = run?.takeIf { it.third == third && pressedAt - it.at <= SEEK_RUN_MS }
+                                        model.seekBy(step)
+                                        run = SeekRun(third, (going?.taps ?: 0) + 1, pressedAt)
+                                        runShown = true
+                                    }
+                                    detectTapGestures(
+                                        onPress = press,
+                                        onLongPress = hold,
+                                        onTap = {
+                                            val going = run?.let { it.third == third && pressedAt - it.at <= SEEK_RUN_MS } == true
+                                            if (going) seek() else toggle()
+                                        },
+                                        onDoubleTap = { seek() },
+                                    )
+                                }
+                            },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        // "+30 s": counts up with each tap of a run, gone 0.6 s after the last.
+                        val shown = run?.takeIf { it.third == third }
+                        FadingLabel(runShown && shown != null, (if (third == Third.Start) "\u2212" else "+") + Strings.durationSeconds(LocalContext.current, (shown?.taps ?: 1) * SEEK_STEP.toInt())) // i18n-skip
+                    }
+                }
+            }
+            LaunchedEffect(run) {
+                if (run != null) {
+                    kotlinx.coroutines.delay(SEEK_RUN_MS)
+                    runShown = false
+                }
+            }
+            // "2×" while a press holds the speed up.
+            AnimatedVisibility(
+                holding != null,
+                enter = fadeIn(Motion.fadeIn()),
+                exit = fadeOut(Motion.fadeOut()),
+                modifier = Modifier.align(Alignment.TopCenter).padding(top = 80.dp),
+            ) {
+                GestureLabel("2\u00d7")
+            }
+
+            // Over the taps, so its own buttons take theirs: Choose source, and Close on a play that
+            // never played. Nothing else in it takes a touch, so a drag down still closes the player.
+            StartingLayer(model, rect, art = !through) { sheet = PlayerSheet.Sources.also { model.chooseSource() } }
+
+            // The subtitles rise above the controls while they are up, and fall back with them (T4).
+            val lift by animateFloatAsState(if (chromeVisible) SUBTITLES_UP else SUBTITLES_DOWN, if (pip) snap() else Motion.standard())
+            LaunchedEffect(rect.height) {
+                snapshotFlow { lift }.collectLatest { above ->
+                    val percent = 100.0 - (above - SUBTITLES_DOWN) / rect.height.value * 100.0
+                    model.liftSubtitles(percent)
+                    kotlinx.coroutines.delay(40)
+                }
+            }
+
+            // Watch together starts a room with what plays: the player becomes the room. In a room
+            // the room itself is around the player, so the button goes.
+            val store = LocalAppStore.current
+            val inRoom = store.room.view.collectAsStateWithLifecycle().value != null
+            val roomId = model.titleId
+            val roomEpisode = model.episode?.number
+            val startRoom = if (!inRoom && roomId != null && roomEpisode != null) ({ store.startRoom(roomId, roomEpisode) }) else null
+            // Sideways in a room the same button opens the room beside the picture.
+            val openRoom = if (inRoom && landscape) ({ roomOpen = true }) else null
+            // "Still watching?" is the only thing a screen reader reaches while it shows.
+            AnimatedVisibility(
+                chromeVisible,
+                modifier = if (model.stillWatching) Modifier.clearAndSetSemantics { } else Modifier,
+                enter = fadeIn(Motion.fadeIn()),
+                exit = fadeOut(Motion.fadeOut()),
+            ) {
+                PlayerChrome(
+                    model,
+                    onClose = { still.freeze(surfaceView) { close() } },
+                    onTracks = { sheet = PlayerSheet.Tracks },
+                    onEpisodes = { model.openPanel(app.kaeri.player.PanelTab.Episodes) },
+                    onSkipTimes = { sheet = PlayerSheet.SkipTimes },
+                    preview = preview.takeIf { previewSource != null && !Device.power(context).lowPower },
+                    onPlayOnTv = playOnTv,
+                    discussion = discussion,
+                    onPeople = startRoom ?: openRoom,
                 )
             }
+
+            // Stats for nerds, which stays up while the controls hide: over the picture at the top
+            // trailing corner, below the top bar's buttons, as on the iPhone. A phone held sideways is
+            // too short for that: the panel is compact there and ends above the subtitles, which sit
+            // higher while the controls are up, and its rows scroll when that leaves them too little
+            // room. In a window too narrow for it, upright, under the picture at the full width less 16.
+            val upright = maxHeight > maxWidth && maxWidth < 600.dp
+            val short = maxHeight < 500.dp
+            val statsTop by animateDpAsState(
+                when {
+                    upright -> rect.y + rect.height + 16.dp
+                    short && !chromeVisible -> 16.dp
+                    else -> 80.dp
+                },
+                Motion.standard(),
+                label = "stats", // i18n-skip
+            )
+            val statsBottom by animateDpAsState(
+                when {
+                    upright -> 32.dp
+                    // The subtitles' two lines above where they sit, lifted with the controls.
+                    short -> (if (chromeVisible) SUBTITLES_UP else SUBTITLES_DOWN).dp + 56.dp
+                    else -> 84.dp
+                },
+                Motion.standard(),
+                label = "stats-bottom", // i18n-skip
+            )
+            DisposableEffect(model, context) {
+                model.copyText = { copyToClipboard(context, it) }
+                model.statsAbout = { statsAbout(context) }
+                onDispose {}
+            }
+            if (still.frame == null && !pip) {
+                app.kaeri.design.KeptFade(
+                    model.statsPanel,
+                    Modifier
+                        .align(if (upright) Alignment.TopStart else Alignment.TopEnd)
+                        .windowInsetsPadding(WindowInsets.displayCutout.only(WindowInsetsSides.Horizontal))
+                        .padding(start = 16.dp, end = 16.dp, top = statsTop, bottom = statsBottom),
+                ) { panel ->
+                    StatsPanel(model, panel, width = if (upright) maxWidth - 32.dp else STATS_WIDTH, compact = short && !upright)
+                }
+            }
+
+            if (still.frame == null && !pip) {
+                // A reaction's moment stands above the corner card, bottom trailing.
+                Column(Modifier.align(Alignment.BottomEnd).padding(end = 48.dp, bottom = 88.dp), horizontalAlignment = Alignment.End, verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    CornerCard(model, chromeVisible, { ground.value })
+                }
+                ResumeNote(model, Modifier.align(Alignment.BottomStart).padding(start = 48.dp, bottom = 84.dp))
+                AlertNote(model, Modifier.align(Alignment.TopCenter).padding(top = 80.dp))
+                StillWatching(model)
+                MarkingPanel(model)
+                ShareSkipTimes(model)
+            }
+            PlayerSheets(model, sheet, onMoreSubtitleSettings = { sheet = null; openSubtitleSettings() }) { sheet = null }
+            PlayerPanelLayer(model)
+
+            // A drag or a back gesture moves a still of the frame over the ground, the bars with it.
+            // The gesture is read in the layer alone, so following the finger redraws the still and
+            // composes nothing.
+            still.frame?.let { frame ->
+                Box(Modifier.fillMaxSize().background(ObiSilk.Ground))
+                val image = remember(frame) { frame.asImageBitmap() }
+                // Remove animations: the dismiss drag fades as it follows the finger, rather than shrinking.
+                val removed = app.kaeri.design.rememberAnimationsRemoved()
+                Box(
+                    Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            val k = (drag.value / DISMISS_DP).coerceIn(0f, 1f)
+                            val p = back.value
+                            val edge = if (backEdge == BackEventCompat.EDGE_LEFT) 1f else -1f
+                            if (removed) {
+                                alpha = (1f - 0.5f * k) * (1f - 0.5f * p)
+                            } else {
+                                val scale = (1f - 0.1f * k) * (1f - 0.1f * p)
+                                scaleX = scale
+                                scaleY = scale
+                            }
+                            translationY = (drag.value - 12.6f * p).dp.toPx()
+                            translationX = (37.75f * p * edge).dp.toPx()
+                            shape = RoundedCornerShape((16f * k + 28f * p).dp)
+                            clip = true
+                        }
+                        .background(Color.Black),
+                ) {
+                    Image(
+                        image,
+                        contentDescription = null,
+                        contentScale = ContentScale.FillBounds,
+                        modifier = Modifier.offset(rect.x, rect.y).size(rect.width, rect.height),
+                    )
+                }
+            }
         }
+    }
+
+    // In a room, the player sits in the room: upright under the video's box, sideways full with
+    // the strip and the room beside it on a tap. Its place in the tree stays the same through a
+    // turn. A tablet does as a phone does, until a tablet layout of its own is drawn.
+    run {
+        val room = LocalAppStore.current.room
+        val roomView by room.view.collectAsStateWithLifecycle()
+        val inRoom = roomView != null
+        val sideways = landscape
+        // The source sheet open in a room reads "Choosing a source" on this device's face.
+        val choosing = inRoom && sheet == PlayerSheet.Sources
+        LaunchedEffect(choosing) { if (inRoom) room.send(app.kaeri.engine.model.RoomCommand.ChoosingSource(choosing)) }
+        app.kaeri.player.ui.room.RoomAround(
+            room,
+            inRoom = inRoom,
+            sideways = sideways,
+            roomOpen = roomOpen,
+            onRoomClose = { roomOpen = false },
+            positionS = model.position,
+            controls = model.controlsVisible,
+            player = playerBox,
+            panel = { m ->
+                // No source for the room's episode: the player folds to the room's bar (you stay in
+                // the room and its chat) and the app opens your sources, or Search.
+                val navigator = app.kaeri.ui.LocalNavigatorOrNull.current
+                app.kaeri.player.ui.room.RoomPanel(
+                    room,
+                    m,
+                    onSources = { close(); navigator?.leavingPlayer()?.openSources() },
+                    onSearch = { close(); navigator?.leavingPlayer()?.go(app.kaeri.ui.Destination.Search) },
+                )
+            },
+            onBack = { still.freeze(surfaceView) { close() } },
+            onSubtitles = { sheet = PlayerSheet.Tracks },
+            onCopyLink = { roomView?.link?.let { copyToClipboard(context, it) } },
+        )
     }
 }
 
@@ -655,13 +690,13 @@ fun VideoSurface(model: PlayerModel, modifier: Modifier, view: (SurfaceView?) ->
 
 /** The system bars hidden while the player is up, and back when it goes; a swipe shows them a moment. */
 @Composable
-private fun Immersive() {
+private fun Immersive(hide: Boolean = true) {
     val activity = LocalActivity.current ?: return
     val view = LocalView.current
-    DisposableEffect(activity) {
+    DisposableEffect(activity, hide) {
         val controller = WindowCompat.getInsetsController(activity.window, view)
         controller.systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-        controller.hide(WindowInsetsCompat.Type.systemBars())
+        if (hide) controller.hide(WindowInsetsCompat.Type.systemBars()) else controller.show(WindowInsetsCompat.Type.systemBars())
         onDispose { controller.show(WindowInsetsCompat.Type.systemBars()) }
     }
 }

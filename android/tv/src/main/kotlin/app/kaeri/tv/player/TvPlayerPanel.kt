@@ -492,7 +492,7 @@ private fun TvPanelSources(model: PlayerModel, entry: FocusRequester, toTabs: ()
     val id = model.staged?.id ?: return
     val optionsAll by store.sourceChoices.options.collectAsStateWithLifecycle()
     val dubs by store.titles.dubLines.collectAsStateWithLifecycle()
-    val inParty = store.party.view.collectAsStateWithLifecycle().value != null
+    val inRoom = store.room.view.collectAsStateWithLifecycle().value != null
     LaunchedEffect(id) { store.loadSourceOptions(id) }
     // Asked again when another episode plays under the open tab.
     LaunchedEffect(id, model.staged?.episode) { model.loadPanelReleases() }
@@ -560,7 +560,7 @@ private fun TvPanelSources(model: PlayerModel, entry: FocusRequester, toTabs: ()
             }
         }
         val translationTop = firstOf("translation")
-        item(key = "translation") { TvTranslationSwitch(model, dubs[id], inParty, onUp = if (translationTop) toTabs else null, modifier = if (translationTop) Modifier.focusRequester(entry) else Modifier) }
+        item(key = "translation") { TvTranslationSwitch(model, dubs[id], inRoom, onUp = if (translationTop) toTabs else null, modifier = if (translationTop) Modifier.focusRequester(entry) else Modifier) }
         item(key = "rule") { Box(Modifier.padding(horizontal = 12.dp, vertical = 8.dp).fillMaxWidth().height(1.dp).background(ObiSilk.Silk.copy(alpha = 0.10f))) }
         item(key = "others-heading") { Heading(Strings.playerPanelOtherSources(context)) }
         tvOthers(model, options, playingProvider, expanded) { provider -> expanded = if (provider in expanded) expanded - provider else expanded + provider }
@@ -592,7 +592,7 @@ private fun Heading(text: String) {
  * failure says so under the pill.
  */
 @Composable
-private fun TvTranslationSwitch(model: PlayerModel, dub: DubExtent?, inParty: Boolean, onUp: (() -> Boolean)?, modifier: Modifier) {
+private fun TvTranslationSwitch(model: PlayerModel, dub: DubExtent?, inRoom: Boolean, onUp: (() -> Boolean)?, modifier: Modifier) {
     val context = LocalContext.current
     val pending = model.versionSwitch
     val current = pending?.takeIf { it.failed == null }?.to ?: model.menus?.translation ?: Translation.SUB
@@ -671,7 +671,7 @@ private fun TvTranslationSwitch(model: PlayerModel, dub: DubExtent?, inParty: Bo
             }
         }
         dub?.let { Text(it.line(context), style = DetailStyle, color = ObiSilk.Haze) }
-        if (inParty) Text(Strings.partyVersionOwn(context), style = DetailStyle, color = ObiSilk.Haze)
+        if (inRoom) Text(Strings.roomVersionOwn(context), style = DetailStyle, color = ObiSilk.Haze)
     }
 }
 

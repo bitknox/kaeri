@@ -98,32 +98,32 @@ class TvShots {
 
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_tv_party_chat() = shoot("phone-tv-party-chat", TvScene.PARTY, scrollTo = "Chat")
+    fun phone_tv_room_chat() = shoot("phone-tv-room-chat", TvScene.ROOM, scrollTo = "Chat")
 
     /** The remote's Chat heading with its one menu open: Mute or Unmute for each member. */
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_tv_party_chat_menu() = shoot("phone-tv-party-chat-menu", TvScene.PARTY, scrollTo = "Chat", after = {
+    fun phone_tv_room_chat_menu() = shoot("phone-tv-room-chat-menu", TvScene.ROOM, scrollTo = "Chat", after = {
         // Only a recording draws a menu's window, which its semantics need.
         org.junit.Assume.assumeTrue(com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType().isEnabled())
         pressWindow(lowest = true) { SemanticsProperties.ContentDescription in it.config && "More" in it.config[SemanticsProperties.ContentDescription] }
         compose.mainClock.advanceTimeBy(600)
-        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-party-chat-scratch.png")
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-room-chat-scratch.png")
         compose.mainClock.advanceTimeBy(300)
     })
 
     /** A member muted from that menu: "Name is muted · Unmute" stands as a line of the conversation. */
     @Test
     @Config(qualifiers = PHONE)
-    fun phone_tv_party_chat_muted() = shoot("phone-tv-party-chat-muted", TvScene.PARTY, scrollTo = "Chat", after = {
+    fun phone_tv_room_chat_muted() = shoot("phone-tv-room-chat-muted", TvScene.ROOM, scrollTo = "Chat", after = {
         // Only a recording draws a menu's window, which its semantics need.
         org.junit.Assume.assumeTrue(com.github.takahirom.roborazzi.roborazziSystemPropertyTaskType().isEnabled())
         pressWindow(lowest = true) { SemanticsProperties.ContentDescription in it.config && "More" in it.config[SemanticsProperties.ContentDescription] }
         compose.mainClock.advanceTimeBy(600)
         // Robolectric lays a popup out as it draws one, so the menu is drawn once to be read.
-        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-party-chat-scratch.png")
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-room-chat-scratch.png")
         compose.mainClock.advanceTimeBy(300)
-        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-party-chat-scratch.png")
+        captureScreenRoboImage("${roborazziSystemPropertyOutputDirectory()}/phone-tv-room-chat-scratch.png")
         pressWindow { node -> node.config.getOrNull(SemanticsProperties.Text)?.any { it.text.startsWith("Mute ") } == true && SemanticsActions.OnClick in node.config }
         repeat(100) {
             ShadowLooper.idleMainLooper()

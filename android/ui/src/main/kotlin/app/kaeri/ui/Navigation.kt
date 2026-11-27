@@ -197,6 +197,11 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         nav.navigate("${owner().route}/read/${android.net.Uri.encode(page)}")
     }
 
+    /** Takes the player's route off the top of the back stack, if it is there. */
+    internal fun popPlayer() {
+        if (nav.currentBackStackEntry?.destination?.route == PLAYER_ROUTE) nav.popBackStack()
+    }
+
     fun open(route: String) {
         nav.currentBackStackEntry?.destinationOf()?.let { openedFrom = it }
         nav.navigate(route) { launchSingleTop = true }
@@ -208,6 +213,16 @@ fun Navigator.openDownloads() = open(DOWNLOADS_ROUTE)
 
 /** Open the plugin stores page, from a start that has no source to ask. */
 fun Navigator.openStores() = open(STORES_ROUTE)
+
+/**
+ * The player is closing for a page it opens: its route comes off the back stack now, before that
+ * page goes on, so Back from the page never lands on a player that is gone. The app's own pop
+ * waits a frame for the player's state and would find the page on top instead.
+ */
+fun Navigator.leavingPlayer(): Navigator = apply { popPlayer() }
+
+/** Open your sources, from a room's episode that none of them has. */
+fun Navigator.openSources() = open(PROVIDERS_ROUTE)
 
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("no Navigator in this composition") }
 

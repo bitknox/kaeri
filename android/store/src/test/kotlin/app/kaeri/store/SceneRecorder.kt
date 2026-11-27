@@ -167,9 +167,8 @@ class SceneRecorder {
         add("the recent searches" to { store.send(Command.LoadRecentSearches) })
         // Trending's other periods, which the rail asks for when its menu is used.
         for (period in listOf(TrendPeriod.WEEK, TrendPeriod.MONTH, TrendPeriod.TODAY)) add("Trending $period" to { store.loadTrending(period) })
-        // Watch together's place: the rooms kept and Start a party's servers.
-        add("the party rooms" to { store.loadPartyRooms() })
-        add("the party form" to { store.loadPartyForm() })
+        // Watch together's place: the rooms kept.
+        add("the recent rooms" to { store.room.loadRecent() })
         add("a search" to { store.search(SearchQuery(text = "hoshi")) })
         for (segment in LibraryModel.order) add("the library's $segment" to { store.loadLibrary(segment) })
         for (id in FIXTURE_IDS) {

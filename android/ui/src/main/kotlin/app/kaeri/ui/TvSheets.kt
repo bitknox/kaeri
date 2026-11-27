@@ -462,7 +462,7 @@ private fun TvRemote(tv: TvRemoteModel) {
         // What to do from here only once the TV can be reached: the line under the title says why not.
         TvSheetRow(if (live) stringResource(R.string.tv_sheet_nothing_playing) else card?.tvName ?: stringResource(R.string.tv_sheet_title_fallback), if (live) stringResource(TvWords.NOTHING) else null)
     }
-    card?.party?.let { party -> TvPartySection(tv, card.tvName, party, live) }
+    card?.room?.let { room -> TvRoomSection(tv, card.tvName, room, live) }
     TvHeading(stringResource(R.string.tv_search_on_tv))
     SheetField(
         search,
@@ -493,53 +493,49 @@ private fun TvRemote(tv: TvRemoteModel) {
 }
 
 /**
- * The TV is in a watch party: "Living room TV is in this party", Ready on the TV, its invite to
- * share, and Leave on the TV.
+ * The TV is in a room: what the room watches, Carry on while it waits for someone, the invite to
+ * share, the chat as the TV, and Leave the room on the TV.
  */
 @Composable
-private fun TvPartySection(tv: TvRemoteModel, tvName: String, party: app.kaeri.engine.ffi.FfiTvParty, live: Boolean) {
+private fun TvRoomSection(tv: TvRemoteModel, tvName: String, room: app.kaeri.engine.ffi.FfiTvRoom, live: Boolean) {
     val context = LocalContext.current
-    TvHeading(Strings.partyDeviceInParty(context, tvName))
-    val line = listOfNotNull(party.title, party.episode?.let { Strings.partyFormEpisode(context, it.toDoubleOrNull()?.toInt() ?: 0) }).joinToString(" · ") // i18n-skip
-    if (line.isNotEmpty()) SheetText(line)
+    val c = remember(context) { app.kaeri.store.room.RoomCopy(context) }
+    TvHeading(Strings.roomDeviceInRoom(context, tvName))
+    val title = room.title
+    val episode = room.episode
+    if (title != null && episode != null) SheetText(c.titleEpisode(title, episode))
     Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        if (!party.playing) {
-            FilledTonalButton(onClick = { tv.send(FfiTvCommand.PartyReady(!party.ready)) }, enabled = live) {
-                if (party.ready) {
-                    Icon(Icons.Check, contentDescription = null, modifier = Modifier.size(18.dp))
-                    Spacer(Modifier.width(8.dp))
-                    Text(Strings.partyReadyOn(context))
-                } else {
-                    Text(Strings.partyReadyOnDevice(context, tvName))
-                }
+        if (room.canCarryOn && room.waiting.isNotEmpty()) {
+            FilledTonalButton(onClick = { tv.send(FfiTvCommand.RoomCarryOn) }, enabled = live) {
+                Text(if (room.waiting.size == 1) c.carryOn(room.waiting[0]) else c.CARRY_ON_THEM)
             }
         }
-        party.link?.let { link ->
+        room.link?.let { link ->
             FilledTonalButton(onClick = {
-                val text = if (party.title != null && party.episode != null) Strings.partyShareText(context, party.title!!, party.episode!!) + "\n" + link else link // i18n-skip
-                val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, text) // i18n-skip
+                val send = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, link) // i18n-skip
                 context.startActivity(android.content.Intent.createChooser(send, null))
-            }) { Text(Strings.partyShareInvite(context)) }
+            }) { Text(c.INVITE) }
         }
     }
-    TvChatBlock(tv, tvName, party, live)
-    QuietButton(Strings.partyLeaveOnDevice(context, tvName), onClick = { tv.send(FfiTvCommand.PartyLeave) })
+    TvChatBlock(tv, tvName, room, live, c)
+    QuietButton(Strings.roomLeaveOnDevice(context, tvName), onClick = { tv.send(FfiTvCommand.RoomLeave) })
     TvDivider(Modifier.padding(top = 8.dp))
 }
 
 /**
- * Chat for a TV in a party: the conversation the TV sends, a field that sends as the TV, and a
- * Mute for each member beside it. The TV shows nothing while this phone types.
+ * Chat for a TV in a room: the conversation the TV sends, a field that sends as the TV, and a
+ * Mute for each person beside it. The TV shows nothing while this phone types.
  */
 @Composable
-private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engine.ffi.FfiTvParty, live: Boolean) {
+private fun TvChatBlock(tv: TvRemoteModel, tvName: String, room: app.kaeri.engine.ffi.FfiTvRoom, live: Boolean, c: app.kaeri.store.room.RoomCopy) {
     val context = LocalContext.current
-    val hidden by LocalAppStore.current.party.hideChat.collectAsStateWithLifecycle()
     val store = LocalAppStore.current
-    LaunchedEffect(Unit) { store.party.loadHideChat(context) }
+    val hidden by store.room.hideChat.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { store.room.loadHideChat(context) }
     if (hidden) return
-    val names = party.members
-    // Mute lives in one menu at the end of the heading, so it doesn't grow a button per member.
+    val people = room.members
+    val nameOf = { id: String -> people.firstOrNull { it.id == id }?.name ?: id }
+    // Mute lives in one menu at the end of the heading, so it doesn't grow a button per person.
     Row(Modifier.padding(top = 16.dp), verticalAlignment = Alignment.CenterVertically) {
         Text(
             Strings.partyChatTitle(context),
@@ -547,20 +543,20 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.weight(1f).semantics { heading() },
         )
-        if (!party.chatOff && names.isNotEmpty()) {
+        if (people.isNotEmpty()) {
             var menu by remember { mutableStateOf(false) }
             Box {
                 IconButton(onClick = { menu = true }, modifier = Modifier.size(48.dp)) {
                     Icon(Icons.More, contentDescription = stringResource(R.string.action_more), tint = MaterialTheme.colorScheme.onSurfaceVariant)
                 }
                 DropdownMenu(expanded = menu, onDismissRequest = { menu = false }) {
-                    for (name in names) {
-                        val muted = name in party.muted
+                    for (person in people) {
+                        val muted = person.id in room.muted
                         DropdownMenuItem(
-                            text = { Text(if (muted) Strings.partyUnmute(context, name) else Strings.partyMute(context, name)) },
+                            text = { Text(if (muted) Strings.roomUnmute(context, person.name) else Strings.roomMute(context, person.name)) },
                             onClick = {
                                 menu = false
-                                tv.send(FfiTvCommand.PartyMute(name, !muted))
+                                tv.send(FfiTvCommand.RoomMute(person.id, !muted))
                             },
                         )
                     }
@@ -568,51 +564,41 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
             }
         }
     }
-    if (party.chatOff) {
-        SheetText(Strings.partyChatOff(context))
-        return
-    }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp)) {
-        for (line in party.messages) {
+        for (line in room.messages) {
             val said = line.text
             // The TV's own lines are this phone's: "You", as the board has it.
-            val name = if (line.you) Strings.partyChatYou(context) else line.from
+            val name = if (line.you) c.YOU else line.from
             if (said != null) {
                 Text(saidText(name, said, if (line.you) ObiSilk.Haze else androidx.compose.ui.graphics.Color.Unspecified), style = conversationStyle())
             } else {
                 val reaction = REACTIONS.firstOrNull { reactionWord(it) == line.reaction }
                 if (reaction != null) {
-                    val who = chatNames(context, name, line.with)
-                    val at = chatClock(line.at ?: 0.0)
-                    val sentence = when (reaction) {
-                        app.kaeri.engine.model.Reaction.LAUGH -> Strings.partyReactedLaugh(context, who)
-                        app.kaeri.engine.model.Reaction.GASP -> Strings.partyReactedGasp(context, who)
-                        app.kaeri.engine.model.Reaction.CLAP -> Strings.partyReactedClap(context, who)
-                        app.kaeri.engine.model.Reaction.CRY -> Strings.partyReactedCry(context, who)
-                    }
-                    Text(Strings.partyReactedAt(context, sentence, at), style = conversationStyle(), color = ObiSilk.Haze)
+                    val who = c.list(listOf(name) + line.with)
+                    val at = app.kaeri.store.room.RoomWords.clock(line.at ?: 0.0)
+                    Text(c.reacted(reaction, who, at), style = conversationStyle(), color = ObiSilk.Haze)
                 }
             }
         }
         // A muted member is a line in the conversation, with the way back.
-        for (name in party.muted) {
+        for (id in room.muted) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Text(Strings.partyMutedLine(context, name) + " · ", style = conversationStyle(), color = ObiSilk.Haze) // i18n-skip
+                Text(Strings.roomChatMuted(context, nameOf(id)) + " · ", style = conversationStyle(), color = ObiSilk.Haze) // i18n-skip
                 Text(
                     Strings.partyUnmuteShort(context),
                     style = conversationStyle(),
                     color = ObiSilk.Silk,
-                    modifier = Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button) { tv.send(FfiTvCommand.PartyMute(name, false)) }.padding(vertical = 13.dp),
+                    modifier = Modifier.clickable(role = androidx.compose.ui.semantics.Role.Button) { tv.send(FfiTvCommand.RoomMute(id, false)) }.padding(vertical = 13.dp),
                 )
             }
         }
     }
     var text by remember { mutableStateOf("") }
-    val max = if (party.chatMax > 0u) party.chatMax.toInt() else 150
+    val max = if (room.chatMax > 0u) room.chatMax.toInt() else 150
     val send = {
         val said = text.trim()
         if (said.isNotEmpty()) {
-            tv.send(FfiTvCommand.PartyChat(said))
+            tv.send(FfiTvCommand.RoomChat(said))
             text = ""
         }
     }
@@ -621,7 +607,7 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
     var focused by remember { mutableStateOf(false) }
     val bring = remember { BringIntoViewRequester() }
     val keyboard = WindowInsets.ime.getBottom(LocalDensity.current)
-    LaunchedEffect(focused, keyboard, party.messages.size) { if (focused) bring.bringIntoView() }
+    LaunchedEffect(focused, keyboard, room.messages.size) { if (focused) bring.bringIntoView() }
     Column(Modifier.bringIntoViewRequester(bring)) {
         Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
             Row(
@@ -631,7 +617,7 @@ private fun TvChatBlock(tv: TvRemoteModel, tvName: String, party: app.kaeri.engi
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 Box(Modifier.weight(1f)) {
-                    if (text.isEmpty()) Text(Strings.partyChatField(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1)
+                    if (text.isEmpty()) Text(Strings.roomChatField(context), style = MaterialTheme.typography.bodyLarge, color = ObiSilk.Haze, maxLines = 1)
                     androidx.compose.foundation.text.BasicTextField(
                         value = text,
                         onValueChange = { if (it.length <= max && '\n' !in it) text = it },
@@ -1021,3 +1007,4 @@ internal fun ProblemLine(text: String) {
         Text(text, style = style, color = MaterialTheme.colorScheme.onSurface)
     }
 }
+

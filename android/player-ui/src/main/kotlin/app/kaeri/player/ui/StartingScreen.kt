@@ -108,11 +108,18 @@ import app.kaeri.player.StartTiming
 import app.kaeri.store.HeroArt
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigatorOrNull
+import app.kaeri.ui.leavingPlayer
 import app.kaeri.ui.openDownloads
 import app.kaeri.ui.openStores
 
 /** The column's width on the board: centred in the window, its content leading-aligned. */
 private val COLUMN = 520.dp
+
+/**
+ * A video rect shorter than this holds the compact column: the room's upright slot on a phone, where
+ * the room's own header under it already names the title and episode.
+ */
+private val COMPACT_UNDER = 300.dp
 
 /**
  * The starting screen, in the player at full size: the ground, the title's wide art cropped to the
@@ -139,7 +146,8 @@ internal fun StartingLayer(model: PlayerModel, rect: VideoRect, art: Boolean, on
         if (filled > 0f) {
             Box(Modifier.offset(rect.x, rect.y).size(rect.width, rect.height).graphicsLayer { alpha = filled }) {
                 StartingArt(wide, Modifier.fillMaxSize())
-                StartingColumn(model, reduced, onChooseSource, Modifier.fillMaxSize())
+                val compact = rect.height < COMPACT_UNDER
+                StartingColumn(model, reduced, compact, onChooseSource, Modifier.fillMaxSize().then(if (compact) Modifier.padding(horizontal = 16.dp) else Modifier))
             }
         }
     }
@@ -185,7 +193,7 @@ private val DetailStyle
     ).tabular()
 
 @Composable
-private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource: () -> Unit, modifier: Modifier) {
+private fun StartingColumn(model: PlayerModel, reduced: Boolean, compact: Boolean, onChooseSource: () -> Unit, modifier: Modifier) {
     val context = LocalContext.current
     val failure = model.failure
     val progress = failure?.trail ?: model.progress
@@ -197,20 +205,21 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource:
     StartColumn(
         width = COLUMN,
         open = fraction,
-        top = 24.dp,
-        bottom = 24.dp,
+        top = if (compact) 12.dp else 24.dp,
+        bottom = if (compact) 12.dp else 24.dp,
         modifier = modifier,
         details = { DetailsList(model, progress, failure, now) },
     ) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-            Text(
+            // Compact, the title and episode are the room's header's, just under the slot.
+            if (!compact) Text(
                 model.showTitle,
                 style = ShowTitle.page.copy(shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 1f)),
                 color = ObiSilk.Silk,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
+            if (!compact) Text(
                 model.episodeLine(context),
                 style = DetailStyle.copy(fontSize = 14.sp),
                 color = ObiSilk.Haze,
@@ -219,7 +228,7 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource:
                 modifier = Modifier.padding(top = 6.dp),
             )
             // Kaeri's line keeps its room through a failure, so the column does not close up.
-            Box(Modifier.padding(top = 14.dp).alpha(if (failure == null) 1f else 0f)) {
+            Box(Modifier.padding(top = if (compact) 0.dp else 14.dp).alpha(if (failure == null) 1f else 0f)) {
                 KaeriLoaderLine(progress?.determinate(now).takeIf { failure == null }, reduced)
             }
             val said = startingWords(context, model, progress, failure, now)
@@ -399,11 +408,11 @@ private fun act(
         StartAction.TryAgain -> model.tryAgain()
         StartAction.Downloads -> {
             model.viewerClosed()
-            navigator?.openDownloads()
+            navigator?.leavingPlayer()?.openDownloads()
         }
         StartAction.AddStore -> {
             model.viewerClosed()
-            navigator?.openStores()
+            navigator?.leavingPlayer()?.openStores()
         }
         StartAction.FixMatch -> {
             val id = failure?.id ?: return

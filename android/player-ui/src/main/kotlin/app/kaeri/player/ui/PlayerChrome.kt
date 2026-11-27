@@ -130,10 +130,8 @@ fun PlayerChrome(
     onPlayOnTv: (() -> Unit)? = null,
     /** The discussion in the More menu, from the point the episode counts as watched. */
     discussion: DiscussionEntry? = null,
-    /** Watch together's people, while this device is in a party. */
+    /** Watch together: starts a room with what plays. Null in a room, and with nothing to start one with. */
     onPeople: (() -> Unit)? = null,
-    /** Watch together's Chat, after People: opens the field. Null while chat is off or hidden. */
-    onChat: (() -> Unit)? = null,
     /** Where on the seek line somebody reacted, in seconds. */
     ticks: List<Double> = emptyList(),
 ) {
@@ -143,10 +141,7 @@ fun PlayerChrome(
             model, onClose, onTracks, onEpisodes, onSkipTimes, onPlayOnTv, discussion,
             Modifier.align(Alignment.TopStart).padding(start = 48.dp, end = 48.dp, top = 16.dp).fillMaxWidth().heightIn(min = 48.dp),
             onPeople,
-            onChat,
         )
-        // The four reactions stand at the trailing edge, where the thumb rests, clear of the subtitles.
-        if (onChat != null) ReactionColumn(Modifier.align(Alignment.TopEnd).padding(end = 48.dp, top = 76.dp))
         BottomBar(
             model,
             preview,
@@ -167,7 +162,6 @@ private fun TopBar(
     discussion: DiscussionEntry?,
     modifier: Modifier,
     onPeople: (() -> Unit)? = null,
-    onChat: (() -> Unit)? = null,
 ) {
     Row(modifier, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
         ControlButton(PlayerIcons.Back, stringResource(R.string.action_back), onClick = onClose)
@@ -217,7 +211,6 @@ private fun TopBar(
         }
         onPlayOnTv?.let { ControlButton(PlayerIcons.Tv, stringResource(R.string.tv_play_on), onClick = it) }
         onPeople?.let { ControlButton(PlayerIcons.People, stringResource(R.string.together_people_button), onClick = it) }
-        onChat?.let { ControlButton(app.kaeri.design.ChatGlyphs.Chat, Strings.partyChatTitle(LocalContext.current), onClick = it) }
         ControlButton(PlayerIcons.Subtitles, stringResource(R.string.player_subtitles_audio_picture), onClick = onTracks)
         ControlButton(PlayerIcons.Episodes, stringResource(R.string.player_episodes), onClick = onEpisodes)
         MoreMenu(model, discussion, onSkipTimes)

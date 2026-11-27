@@ -317,7 +317,7 @@ class MainActivity : ComponentActivity() {
         app.googleDrive.showIn(this, googleSheet)
         // A restored activity, or one opened again from Recents, has its navigation already.
         val fresh = savedInstanceState == null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
-        if (!signIn.handle(intent) && !(fresh && follow(intent)) && !invite(intent) && !party(intent) && !opened(intent)) remote(intent)
+        if (!signIn.handle(intent) && !(fresh && follow(intent)) && !invite(intent) && !roomInvite(intent) && !opened(intent)) remote(intent)
         keepDownloadsRunning()
         startUpdateActivities()
     }
@@ -427,11 +427,11 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
-    /** A watch party invite, the https one or on kaeri://party, opens that room's lobby. */
-    private fun party(intent: Intent?): Boolean {
+    /** A room invite, the https one or on kaeri://room, opens that room's Join screen. */
+    private fun roomInvite(intent: Intent?): Boolean {
         val link = intent?.data?.toString() ?: return false
-        if (!app.store.followPartyLink(link)) return false
-        // Taken off the intent, so a recreated activity does not open the lobby again.
+        if (!app.store.followRoomLink(link)) return false
+        // Taken off the intent, so a recreated activity does not open the Join screen again.
         intent.data = null
         return true
     }
@@ -653,7 +653,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // The redirect a sign-in comes back with is the engine's, and is not kept as the
         // activity's intent.
-        if (signIn.handle(intent) || quietRule(intent) || follow(intent) || invite(intent) || party(intent) || opened(intent) || remote(intent)) return
+        if (signIn.handle(intent) || quietRule(intent) || follow(intent) || invite(intent) || roomInvite(intent) || opened(intent) || remote(intent)) return
         setIntent(intent)
     }
 
