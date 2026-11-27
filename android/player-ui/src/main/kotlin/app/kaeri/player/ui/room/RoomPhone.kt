@@ -92,8 +92,18 @@ import app.kaeri.ui.REACTIONS
 import app.kaeri.ui.reactionGlyph
 import app.kaeri.ui.reactionLabel
 
-/** The video's height when the room is upright. */
+/** The video's height when the room is upright on a phone. */
 val RoomVideoHeight = 232.dp
+
+/**
+ * The upright video's height for a room [width] wide: 16:9 of it, never under the phone's 232
+ * (a tablet held upright shows the whole picture, not a band of it).
+ */
+fun roomVideoHeight(width: androidx.compose.ui.unit.Dp): androidx.compose.ui.unit.Dp = maxOf(RoomVideoHeight, width * 9f / 16f)
+
+/** The upright video's height for this window's width. */
+@Composable
+fun roomVideoHeight(): androidx.compose.ui.unit.Dp = roomVideoHeight(androidx.compose.ui.platform.LocalConfiguration.current.screenWidthDp.dp)
 
 internal fun Ring.face(): FaceRing = when (this) {
     Ring.Water -> FaceRing.Water
@@ -171,7 +181,7 @@ fun RoomUpright(
             .then(if (joinScreen) Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier),
     ) {
         if (showVideo) {
-            Box(Modifier.fillMaxWidth().background(Color.Black).statusBarsPadding().height(RoomVideoHeight)) {
+            Box(Modifier.fillMaxWidth().background(Color.Black).statusBarsPadding().height(roomVideoHeight())) {
                 video(Modifier.fillMaxSize())
                 panel?.invoke(Modifier.fillMaxSize())
             }
@@ -470,7 +480,7 @@ fun RoomMorph(room: RoomModel, inRoom: Boolean, positionS: Double, video: @Compo
         return
     }
     BoxWithConstraints(modifier.fillMaxSize().background(ObiSilk.Ground)) {
-        val height by animateDpAsState(if (inRoom) RoomVideoHeight else maxHeight, app.kaeri.design.Motion.standard(), label = "morph") // i18n-skip
+        val height by animateDpAsState(if (inRoom) roomVideoHeight(maxWidth) else maxHeight, app.kaeri.design.Motion.standard(), label = "morph") // i18n-skip
         val alpha by androidx.compose.animation.core.animateFloatAsState(if (inRoom) 1f else 0f, app.kaeri.design.Motion.standard(), label = "morph-room") // i18n-skip
         Box(Modifier.fillMaxSize().graphicsAlpha(alpha)) { RoomUpright(room, positionS, video = { Box(it) }) }
         Box(Modifier.fillMaxWidth().height(height).background(Color.Black)) { video(Modifier.fillMaxSize()) }
@@ -516,7 +526,7 @@ fun RoomAround(
                 RoomUpright(room, positionS, video = { Box(it) }, onBack = onBack, onSubtitles = onSubtitles, onCopyLink = onCopyLink)
             }
         }
-        val target = if (upright) RoomVideoHeight else maxHeight
+        val target = if (upright) roomVideoHeight(maxWidth) else maxHeight
         val height = if (removed) target else animateDpAsState(target, app.kaeri.design.Motion.standard(), label = "room-video").value // i18n-skip
         Box(
             Modifier.fillMaxWidth()
@@ -528,7 +538,14 @@ fun RoomAround(
             // Before play, No source and your own loading lie over the video sideways too.
             if (inRoom) panel?.invoke(Modifier.fillMaxSize())
         }
-        if (inRoom && sideways) RoomStripOver(room, positionS, controls, Modifier.align(Alignment.TopCenter))
+        // The strip steps aside while the room is open beside the picture, which shows the same.
+        val stripAlpha = app.kaeri.design.animateKeptAlpha(
+            !roomOpen,
+            if (removed) app.kaeri.design.Motion.fadeIn() else app.kaeri.design.Motion.standard(),
+        )
+        if (inRoom && sideways && stripAlpha > 0f) {
+            RoomStripOver(room, positionS, controls, Modifier.align(Alignment.TopCenter).graphicsAlpha(stripAlpha))
+        }
         // Sideways, every room control is one tap away: Watch together in the chrome opens the
         // upright room, less its video, at the end edge over the picture; Back or a tap on the
         // picture closes it.
