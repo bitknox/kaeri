@@ -8646,6 +8646,14 @@
     <value>Less</value>
     <comment>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</comment>
   </data>
+  <data name="PlayerSourcesFoundLine_one" xml:space="preserve">
+    <value>One source has it. Choose it to play.</value>
+    <comment>Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).</comment>
+  </data>
+  <data name="PlayerSourcesFoundLine_other" xml:space="preserve">
+    <value>{count} sources have it. Choose the one to play.</value>
+    <comment>Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).</comment>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>Private mode</value>
     <comment>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</comment>
@@ -11438,11 +11446,27 @@
   </data>
   <data name="RoomLineStillLoading_one" xml:space="preserve">
     <value>{names} is still loading</value>
-    <comment>First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.</comment>
+    <comment>First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.</comment>
   </data>
   <data name="RoomLineStillLoading_other" xml:space="preserve">
     <value>{names} are still loading</value>
-    <comment>First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.</comment>
+    <comment>First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillSeeking_one" xml:space="preserve">
+    <value>{names} is still seeking</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillSeeking_other" xml:space="preserve">
+    <value>{names} are still seeking</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillBuffering_one" xml:space="preserve">
+    <value>{names} is still buffering</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillBuffering_other" xml:space="preserve">
+    <value>{names} are still buffering</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.</comment>
   </data>
   <data name="RoomLineWaited" xml:space="preserve">
     <value>The room has waited {seconds} s</value>
@@ -12447,6 +12471,14 @@
   <data name="RoomTvJoinFromPhone" xml:space="preserve">
     <value>To join someone's room, open their invite on a paired phone and choose this TV.</value>
     <comment>Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.</comment>
+  </data>
+  <data name="RoomSourcesFoundLine_one" xml:space="preserve">
+    <value>One source has it. It plays for everyone in the room.</value>
+    <comment>Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.</comment>
+  </data>
+  <data name="RoomSourcesFoundLine_other" xml:space="preserve">
+    <value>{count} sources have it. Your pick plays for everyone in the room.</value>
+    <comment>Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.</comment>
   </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>Previous season</value>

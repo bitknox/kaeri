@@ -1728,12 +1728,6 @@ party-choose-a-source = Pilih sumber
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Tidak ada sumber dengan episode { $episode }. Sumber-sumber berasal dari plugin-plugin yang Anda tambahkan dari toko plugin.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-       *[other] { $count } sumber memilikinya. Yang Anda pilih akan diputar dalam nonton bareng.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Pemutar tidak bisa dimulai. Coba lagi, atau pilih sumber lain.
 

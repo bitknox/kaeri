@@ -5138,6 +5138,11 @@
     <string name="player_panel_more">More</string>
     <!-- Player panel: button under a synopsis shown whole after More, that folds it back to three lines. -->
     <string name="player_panel_less">Less</string>
+    <!-- Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting). -->
+    <plurals name="player_sources_found_line">
+        <item quantity="one">One source has it. Choose it to play.</item>
+        <item quantity="other">%1$,d sources have it. Choose the one to play.</item>
+    </plurals>
     <!-- The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. -->
     <string name="private_mode">Private mode</string>
     <!-- The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux. -->
@@ -6589,10 +6594,20 @@
         <item quantity="one">%1$s is waiting · %3$,d s</item>
         <item quantity="other">%1$s are waiting · %3$,d s</item>
     </plurals>
-    <!-- First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for. -->
+    <!-- First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for. -->
     <plurals name="room_line_still_loading">
         <item quantity="one">%1$s is still loading</item>
         <item quantity="other">%1$s are still loading</item>
+    </plurals>
+    <!-- First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for. -->
+    <plurals name="room_line_still_seeking">
+        <item quantity="one">%1$s is still seeking</item>
+        <item quantity="other">%1$s are still seeking</item>
+    </plurals>
+    <!-- First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for. -->
+    <plurals name="room_line_still_buffering">
+        <item quantity="one">%1$s is still buffering</item>
+        <item quantity="other">%1$s are still buffering</item>
     </plurals>
     <!-- Second line once the room has waited as long as it will. -->
     <string name="room_line_waited">The room has waited %1$,d s</string>
@@ -7106,6 +7121,11 @@
     <string name="room_leave_on_device">Leave the room on %1$s</string>
     <!-- Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links. -->
     <string name="room_tv_join_from_phone">To join someone\'s room, open their invite on a paired phone and choose this TV.</string>
+    <!-- Line above the list of sources that have the room's episode, in the Choose a source dialog in a room. -->
+    <plurals name="room_sources_found_line">
+        <item quantity="one">One source has it. It plays for everyone in the room.</item>
+        <item quantity="other">%1$,d sources have it. Your pick plays for everyone in the room.</item>
+    </plurals>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->

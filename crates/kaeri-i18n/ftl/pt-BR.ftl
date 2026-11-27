@@ -1804,14 +1804,6 @@ party-choose-a-source = Escolha uma fonte
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Nenhuma fonte lista o episódio { $episode }. As fontes vêm de plugins, que você adiciona de uma loja de plugins.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] { $count } fonte tem o episódio. A que você escolher reproduz com a sessão em grupo.
-        [many] { $count } fontes têm o episódio. A que você escolher reproduz com a sessão em grupo.
-       *[other] { $count } fontes têm o episódio. A que você escolher reproduz com a sessão em grupo.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = O player não iniciou. Tente de novo ou escolha outra fonte.
 

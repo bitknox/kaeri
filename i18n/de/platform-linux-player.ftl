@@ -2,10 +2,6 @@ party-status = { -watch-party-cap }-Status
 party-members = Mitglieder
 party-choose-a-source = Eine { -source } wählen
 party-sources-none-listed = Keine { -source } listet Episode { $episode } auf. { -source-cap-pl } stammen von { -plugin-pl }, die du aus einem { -plugin-store } hinzufügst.
-party-sources-found-line = { $count ->
-    [one] Eine { -source } hat sie. Die gewählte spielt mit der { -watch-party } ab.
-   *[other] { $count } { -source-pl } haben sie. Die gewählte spielt mit der { -watch-party } ab.
- }
 player-could-not-start = Der Player konnte nicht starten. Versuch es noch einmal oder wähle eine andere { -source }.
 player-file-unreadable = Datei nicht lesbar. Versuch eine andere.
 player-inhibit-reason = Spielt eine Episode ab

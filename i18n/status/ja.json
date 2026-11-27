@@ -17405,13 +17405,6 @@
     "at": "2026-10-31",
     "back": "Found in { $count } { -source-pl }"
   },
-  "party-sources-found-line": {
-    "source": "07cb8e3aa15e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Available from { $count } { -source-pl }. The { -source } you pick plays in the { -watch-party }."
-  },
   "party-sources-label": {
     "source": "444a0b13c12b",
     "state": "draft",

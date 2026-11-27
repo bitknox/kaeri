@@ -1842,15 +1842,6 @@ party-choose-a-source = Выберите источник
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Ни один источник не содержит эпизод { $episode }. Источники дают плагины, а их добавляют через магазин плагинов.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] { $count } источник содержит эпизод. Выбранный источник запускает совместный просмотр.
-        [few] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
-        [many] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
-       *[other] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Плеер не запустился. Попробуйте ещё раз или выберите другой источник.
 

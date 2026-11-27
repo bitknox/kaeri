@@ -8776,6 +8776,11 @@ public enum L {
     /// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
     public static var playerPanelLess: String { string("player-panel-less", fallback: "Less") }
 
+    /// Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+    public static func playerSourcesFoundLine(count: Int) -> String {
+        Self.format("player-sources-found-line", fallback: "%1$lld sources have it. Choose the one to play.", count)
+    }
+
     /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
     public static var privateMode: String { string("private-mode", fallback: "Private mode") }
 
@@ -11153,9 +11158,19 @@ public enum L {
         Self.format("room-line-waiting-for-you", fallback: "%1$@ are waiting · %3$lld s", names, count, seconds)
     }
 
-    /// First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
+    /// First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
     public static func roomLineStillLoading(names: String, count: Int) -> String {
         Self.format("room-line-still-loading", fallback: "%1$@ are still loading", names, count)
+    }
+
+    /// First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+    public static func roomLineStillSeeking(names: String, count: Int) -> String {
+        Self.format("room-line-still-seeking", fallback: "%1$@ are still seeking", names, count)
+    }
+
+    /// First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+    public static func roomLineStillBuffering(names: String, count: Int) -> String {
+        Self.format("room-line-still-buffering", fallback: "%1$@ are still buffering", names, count)
     }
 
     /// Second line once the room has waited as long as it will.
@@ -12092,6 +12107,11 @@ public enum L {
 
     /// Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
     public static var roomTvJoinFromPhone: String { string("room-tv-join-from-phone", fallback: "To join someone's room, open their invite on a paired phone and choose this TV.") }
+
+    /// Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+    public static func roomSourcesFoundLine(count: Int) -> String {
+        Self.format("room-sources-found-line", fallback: "%1$lld sources have it. Your pick plays for everyone in the room.", count)
+    }
 
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }

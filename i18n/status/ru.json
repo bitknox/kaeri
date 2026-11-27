@@ -16102,17 +16102,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-sources-found-line": {
-    "source": "07cb8e3aa15e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-13",
-    "flags": [
-      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
-      "back-translation: 'запускает' means starts, where the English says plays with."
-    ],
-    "back": "one: { $count } { -source } contains the episode. The chosen { -source } starts the { -watch-party }. | few: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }. | many: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }. | other: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }."
-  },
   "party-sources-label": {
     "source": "444a0b13c12b",
     "state": "draft",
