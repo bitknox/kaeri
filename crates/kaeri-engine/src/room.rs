@@ -701,6 +701,8 @@ impl Task {
         let at = new.pos;
         let kind = match new.cause {
             Cause::Pause => Some(RoomMessageKind::Paused { by, at }),
+            // Play before the room ever played starts the count, not a resume.
+            Cause::Play if self.room.before_play() => None,
             Cause::Play => {
                 old.as_ref().filter(|o| !o.play).map(|_| RoomMessageKind::Resumed { by })
             }
