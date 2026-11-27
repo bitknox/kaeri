@@ -435,11 +435,13 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
     #[cfg(feature = "fixtures")]
     if crate::room::scenes::frame(shot).is_some() {
         close_dialogs(&shell.ctx.window);
+        let morph = shot == "room-morph";
+        // The morph starts from a playing episode (Watch together comes at about 6.8 s), so
+        // the usual pause 7 s in would still the room it becomes.
         if !shell.is_player() {
-            play(shell);
+            play_then(shell, !morph);
         }
         let player = Rc::clone(&shell.player);
-        let morph = shot == "room-morph";
         // An invite whose relays don't answer: the alert comes after the relays' 8 s.
         let unreachable = shot == "room-unreachable";
         let shot = shot.to_owned();
@@ -1937,12 +1939,20 @@ fn pad_press(shell: &Rc<Shell>, buttons: &[PadButton], after: u64) {
 }
 
 pub(crate) fn play(shell: &Rc<Shell>) {
+    play_then(shell, true);
+}
+
+/// Play the shots' episode; `pause` pauses it 7 s in, as [`play`] does.
+pub(crate) fn play_then(shell: &Rc<Shell>, pause: bool) {
     let (id, episode) = PLAYING;
     let _ = WidgetExt::activate_action(
         &shell.ctx.window,
         "win.play",
         Some(&(id, episode.to_owned()).to_variant()),
     );
+    if !pause {
+        return;
+    }
     let hub = Rc::clone(&shell.ctx.hub);
     glib::timeout_add_local_once(Duration::from_secs(7), move || {
         hub.send(Command::Player(kaeri_model::command::PlayerCommand::TogglePause));

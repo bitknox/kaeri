@@ -211,6 +211,13 @@ impl Ctx {
         self.show_notice(text, true, None, None);
     }
 
+    /// [`Ctx::alert`], with the toast, for dismissing it early through [`Notices::dismiss`].
+    ///
+    /// [`Notices::dismiss`]: crate::notices::Notices::dismiss
+    pub fn alert_toast(&self, text: &str) -> adw::Toast {
+        self.show_notice(text, true, None, None)
+    }
+
     /// One of the engine's notices: an alert stays 8 s, its hint is the button, and clicking
     /// it anywhere dismisses it.
     pub fn notice(&self, notice: &Notice) {

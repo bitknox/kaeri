@@ -15,9 +15,9 @@ pub fn secs_since(since_ms: i64, now_ms: i64) -> i64 {
     ((now_ms - since_ms) / 1000).max(0)
 }
 
-/// "12:04".
+/// "12:04". Whole seconds passed, as the engine counts them: 12.7 s is 0:12.
 pub fn mmss(secs: f64) -> String {
-    let s = secs.max(0.0).round() as i64;
+    let s = secs.max(0.0).trunc() as i64;
     format!("{}:{:02}", s / 60, s % 60)
 }
 
@@ -346,6 +346,14 @@ mod tests {
         let l = line(&v, &Moves::default(), fixture::NOW);
         assert_eq!(l.title, "Ren is still loading");
         assert_eq!(l.buttons, LineButtons::CarryOn("Carry on without Ren".into()));
+    }
+
+    /// The engine counts whole seconds passed, so the header and the chat's "paused at" agree.
+    #[test]
+    fn a_place_counts_whole_seconds_passed() {
+        assert_eq!(mmss(12.7), "0:12");
+        assert_eq!(mmss(59.99), "0:59");
+        assert_eq!(mmss(-1.0), "0:00");
     }
 
     #[test]

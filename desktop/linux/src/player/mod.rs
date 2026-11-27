@@ -241,6 +241,9 @@ pub struct PlayerView {
     speed_asked: Cell<Option<(f64, Instant)>>,
     /// Since when the stream has stalled, while the card says so, and the card's tick.
     stall_since: Cell<Option<Instant>>,
+    /// The notices the player showed in a room (what members did, what they said): they go
+    /// when the room is left, so none is still up in the next room or out of one.
+    room_toasts: RefCell<Vec<glib::WeakRef<adw::Toast>>>,
     stall_tick: RefCell<Option<glib::SourceId>>,
     /// The media controls on the session bus, once served.
     mpris: RefCell<Option<Rc<Mpris>>>,
@@ -525,6 +528,7 @@ impl PlayerView {
             frame: Cell::new(None),
             mini_at: Cell::new(None),
             stall_since: Cell::new(None),
+            room_toasts: RefCell::default(),
             stall_tick: RefCell::default(),
             mpris: RefCell::default(),
             room,
@@ -1510,7 +1514,10 @@ impl PlayerView {
             }
             PlayerUi::StallCleared => self.stall_over(),
             PlayerUi::Alert { text, .. } => {
-                self.ctx.alert(&crate::catalog::shown(text));
+                let toast = self.ctx.alert_toast(&crate::catalog::shown(text));
+                if self.in_room() {
+                    self.room_toasts.borrow_mut().push(toast.downgrade());
+                }
             }
             PlayerUi::Thumbnails { url } => self.preview.thumbnails(url.as_deref()),
             PlayerUi::Resumed { position } => self.resumed(*position),
@@ -3219,6 +3226,13 @@ impl PlayerView {
             // A room that couldn't be joined, or ended on this device: why, as a notice.
             Event::RoomLeft { why } => {
                 self.ui.marked.set_reactions(Vec::new());
+                let shown: Vec<adw::Toast> = self
+                    .room_toasts
+                    .take()
+                    .iter()
+                    .filter_map(|toast| toast.upgrade())
+                    .collect();
+                self.ctx.notices.dismiss(shown);
                 // Out of the room, a failed start is the player's own to say again.
                 self.ui.start.quiet(false);
                 use kaeri_model::room::RoomLeftWhy as W;
