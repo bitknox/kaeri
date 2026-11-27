@@ -263,6 +263,9 @@ struct RoomLeaveDialog: View {
             .padding(.bottom, 16)
             .frame(width: 300)
             .roomDialogGlass(radius: touch ? 32 : 26)
+            // VoiceOver stays in the question, not the player behind it.
+            .accessibilityElement(children: .contain)
+            .accessibilityAddTraits(.isModal)
         }
         .transition(.opacity)
     }
@@ -380,6 +383,8 @@ struct RoomMoveDialog: View {
             .padding(.bottom, 16)
             .frame(width: 340)
             .roomDialogGlass(radius: 26)
+            .accessibilityElement(children: .contain)
+            .accessibilityAddTraits(.isModal)
         }
         .transition(.opacity)
     }

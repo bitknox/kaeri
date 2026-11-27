@@ -91,6 +91,12 @@ public final class RoomModel {
     /// Hide chat in rooms: lines, reactions and their ticks stay off the screen and the field is
     /// gone; the people stay. The setting holds until the room says so itself.
     public var chatOff: Bool { chatHidden || hidesChat }
+    /// A question or popover is over the player: it has the keys, and nothing plays, seeks or
+    /// skips behind it.
+    public var holdsKeys: Bool { leaving != nil || moving || popover != nil }
+    /// The popover open closes on a click outside: Invite and Details, which have nothing to
+    /// lose. Edit relays holds edits not yet saved.
+    public var popoverClosesOutside: Bool { popover.map { $0 != .editRelays } ?? false }
     /// The lines the conversation shows: with the chat off, only what the room itself says.
     public var shownLines: [RoomLine] {
         guard chatOff else { return lines }
@@ -528,10 +534,11 @@ public final class RoomModel {
     public func loadRelays() { send(.room(.loadRelays)) }
 
     /// Adds a relay to the list for new rooms when the room protocol takes the address; false
-    /// when it doesn't. One already listed is left as it is.
+    /// when it doesn't, or before the engine has said what the list is. One already listed is
+    /// left as it is.
     @discardableResult
     public func addRelay(_ typed: String) -> Bool {
-        guard let address = RoomRelays.address(typed) else { return false }
+        guard relaySettings != nil, let address = RoomRelays.address(typed) else { return false }
         if !newRoomRelays.contains(address) { chooseRelays(newRoomRelays + [address]) }
         return true
     }

@@ -52,7 +52,7 @@ public struct PlaybackMenu: View {
             .plainKey("s", when: keys)
             .disabled(!keys || model.skip == nil)
         Button(L.menuSaySomething) { model.requestChat() }
-            .disabled(!playing || !model.inRoom)
+            .disabled(!playing || !model.inRoom || model.roomChatOff)
         Button(L.menuMarkSkipTimes) { model.beginSkipMark() }
             .keyboardShortcut("k", modifiers: .option)
             .disabled(!model.canMarkSkips)

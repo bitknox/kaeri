@@ -8,7 +8,7 @@ public enum RoomRelays {
         let text = typed.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !text.isEmpty, !text.contains(where: \.isWhitespace) else { return nil }
         let full = text.contains("://") ? text : "wss://" + text
-        guard let parts = URLComponents(string: full), let scheme = parts.scheme?.lowercased(),
+        guard var parts = URLComponents(string: full), let scheme = parts.scheme?.lowercased(),
               let host = parts.host?.lowercased(), !host.isEmpty, parts.user == nil
         else { return nil }
         let local = host == "localhost" || host.hasSuffix(".local")
@@ -17,7 +17,10 @@ public enum RoomRelays {
         case "ws": guard local else { return nil }
         default: return nil
         }
-        return full
+        // As the protocol compares them: scheme and host in lower case, the path as typed.
+        parts.scheme = scheme
+        parts.host = host
+        return parts.string
     }
 
     /// How the list shows an address: `wss://` goes without saying.

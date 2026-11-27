@@ -42,8 +42,9 @@ struct RoomColumn: View {
             .background(Color(rgb: 0x1C2034), in: .rect(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.glassEdge, lineWidth: 1))
             .overlay {
-                // Invite and Details have nothing to lose: a click outside closes them.
-                if room.popover != nil {
+                // Invite and Details have nothing to lose: a click outside closes them. Edit
+                // relays holds edits not yet saved, so it stays until Done or Esc.
+                if room.popoverClosesOutside {
                     Color.clear.contentShape(.rect).onTapGesture { room.popover = nil }
                 }
             }

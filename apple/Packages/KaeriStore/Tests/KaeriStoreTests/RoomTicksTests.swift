@@ -180,4 +180,36 @@ struct RoomTicksTests {
         room.apply(.roomLeft(why: .unreachable))
         #expect(room.invitation != nil, "nothing was joined, so nothing is left")
     }
+
+    // MARK: Neon's second pass
+
+    @Test func noRelayIsAddedBeforeTheEngineHasSaidTheList() {
+        let room = RoomModel()
+        var sent: [Command] = []
+        room.send = { sent.append($0) }
+        #expect(!room.addRelay("wss://home.example"), "the defaults aren't known yet")
+        #expect(sent.isEmpty)
+    }
+
+    @Test func relayAddressesAreKeptInLowerCase() {
+        #expect(RoomRelays.address("WSS://Relay.Home.Example") == "wss://relay.home.example")
+        #expect(RoomRelays.address("Relay.Home.Example/Path") == "wss://relay.home.example/Path")
+        #expect(RoomRelays.shown(RoomRelays.address("WSS://one.example")!) == "one.example")
+        let (room, sent) = relays()
+        #expect(room.addRelay("wss://ONE.example"))
+        #expect(sent().isEmpty, "the same relay in other letters is already listed")
+    }
+
+    @Test func questionsOverThePlayerHoldTheKeys() {
+        let room = joined()
+        #expect(!room.holdsKeys)
+        room.moving = true
+        #expect(room.holdsKeys)
+        room.moving = false
+        room.popover = .editRelays
+        #expect(room.holdsKeys)
+        #expect(!room.popoverClosesOutside, "Edit relays keeps its edits")
+        room.popover = .details
+        #expect(room.popoverClosesOutside)
+    }
 }

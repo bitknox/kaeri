@@ -228,6 +228,8 @@ public final class PlayerModel {
     public var marksBlocked = false
     /// Whether this device is in a room, which the menus' Say Something… needs.
     public var inRoom = false
+    /// Hide chat in rooms, or the room's own: Say Something… is dimmed.
+    public var roomChatOff = false
     /// In a room the opening's skip is the room's: it skips for everyone and the chat says who.
     @ObservationIgnored public var skipsWithRoom: (@MainActor (Double) -> Void)?
     /// The room draws its own Skip opening (the Mac's, over the room's column edge).

@@ -73,6 +73,7 @@ public struct PhonePlayerView: View {
     }
 
     private func freshenStrip() {
+        guard store.room.inRoom else { return }
         stripTask?.cancel()
         stripFresh = true
         stripTask = Task {
@@ -151,6 +152,7 @@ public struct PhonePlayerView: View {
             store.room.closesPlayer = { [model] in model.viewerClosed() }
         }
         .onChange(of: store.room.changedAt) { freshenStrip() }
+        .onChange(of: store.room.chatOff, initial: true) { _, off in model.roomChatOff = off }
         .onDisappear {
             stripTask?.cancel()
             stripTask = nil
@@ -328,7 +330,7 @@ public struct PhonePlayerView: View {
         }
         .ignoresSafeArea()
         .persistentSystemOverlays(.hidden)
-        .playerAccessibility(model)
+        .playerAccessibility(model, escape: close)
         .sensoryFeedback(.impact(weight: .light), trigger: drag > 120) { _, crossed in crossed }
         .sheet(item: $sheet) { sheet in sheetContent(sheet) }
         .onChange(of: sheet) { _, open in model.hold("sheet", open != nil) }
@@ -342,7 +344,12 @@ public struct PhonePlayerView: View {
         }
         .onChange(of: sheet) { _, open in if open != nil { episodesPanel = false } }
         .onChange(of: store.room.inRoom, initial: true) { _, inRoom in roomChanged(inRoom) }
-        .onChange(of: model.chatRequests) { if store.room.inRoom, !store.room.chatOff { store.room.writing = true } }
+        .onChange(of: model.chatRequests) {
+            guard store.room.inRoom, !store.room.chatOff else { return }
+            // Sideways the field opens over the video; with the column beside, or upright under
+            // the player, the room's own field takes the keys.
+            if sideways { store.room.writing = true } else { store.room.chatAsked += 1 }
+        }
         .background {
             // A hardware keyboard's C opens the room's field, as on the Mac (iPad).
             if store.room.inRoom, !store.room.writing, !store.room.chatOff {
@@ -454,6 +461,12 @@ public struct PhonePlayerView: View {
     private func roomChanged(_ inRoom: Bool) {
         model.marksBlocked = inRoom
         model.inRoom = inRoom
+        if !inRoom {
+            stripTask?.cancel()
+            stripTask = nil
+            stripFresh = false
+            store.room.writing = false
+        }
         let room = store.room
         if inRoom {
             model.skipsWithRoom = { to in

@@ -21,6 +21,7 @@ public struct PersonFace: View {
     let pauseBadge: Bool
     let error: Bool
     let disc: CGFloat
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     public init(name: String, ring: FaceRing, dim: Double = 1, pauseBadge: Bool = false, error: Bool = false, disc: CGFloat) {
         self.name = name
@@ -86,7 +87,8 @@ public struct PersonFace: View {
                     .trim(from: 0, to: part)
                     .stroke(Palette.silk, style: StrokeStyle(lineWidth: stroke, lineCap: .round))
                     .rotationEffect(.degrees(-90))
-                    .animation(.linear(duration: 1), value: part)
+                    // The wait's draw-on sweeps each second; Reduce Motion steps it.
+                    .animation(reduceMotion ? nil : .linear(duration: 1), value: part)
             }
         case .none:
             EmptyView()

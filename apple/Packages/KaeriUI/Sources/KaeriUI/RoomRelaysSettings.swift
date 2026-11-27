@@ -87,7 +87,7 @@ struct RelaysPane: View {
                         .accessibilityLabel(L.roomRelayAdd)
                     Button(L.roomRelayAdd, action: add)
                         .buttonStyle(SecondaryCapsuleStyle(height: 26, fontSize: 12))
-                        .disabled(RoomRelays.address(adding) == nil)
+                        .disabled(room.relaySettings == nil || RoomRelays.address(adding) == nil)
                 }
                 .padding(EdgeInsets(top: 6, leading: 14, bottom: 6, trailing: 12))
             }
@@ -160,25 +160,25 @@ struct PhoneRelaysPage: View {
                 }
                 HStack(spacing: 8) {
                     TextField("", text: $adding)
-                        .font(.system(size: 14, design: .monospaced))
+                        .font(.system(.subheadline, design: .monospaced))
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
                         .keyboardType(.URL)
                         .padding(.horizontal, 10)
-                        .frame(height: 36)
+                        .frame(minHeight: 44)
                         .background(Palette.silk.opacity(0.06), in: .rect(cornerRadius: 10))
                         .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(Palette.glassRule, lineWidth: 1))
                         .onSubmit(add)
                         .accessibilityLabel(L.roomRelayAdd)
                     Button(L.roomRelayAdd, action: add)
-                        .buttonStyle(SecondaryCapsuleStyle(height: 36, fontSize: 15))
-                        .disabled(RoomRelays.address(adding) == nil)
+                        .buttonStyle(SecondaryCapsuleStyle(height: 44, fontSize: 15))
+                        .disabled(room.relaySettings == nil || RoomRelays.address(adding) == nil)
                 }
                 .listRowBackground(Palette.raised)
             } header: {
                 VStack(alignment: .leading, spacing: 18) {
                     Text(L.roomRelaysIntroShort)
-                        .font(.system(size: 15)).foregroundStyle(.haze).textCase(nil)
+                        .font(.subheadline).foregroundStyle(.haze).textCase(nil)
                         .fixedSize(horizontal: false, vertical: true)
                     PhoneSectionHeader(L.roomRelaysNewRooms)
                 }
@@ -196,7 +196,7 @@ struct PhoneRelaysPage: View {
             }
             Section {
                 Button(L.roomRelaysRestore) { room.restoreRelays() }
-                    .font(.system(size: 17))
+                    .font(.body)
                     .foregroundStyle(room.relaysAreDefault ? Palette.haze : Palette.amber)
                     .disabled(room.relaysAreDefault)
                     .frame(maxWidth: .infinity, minHeight: 44)
@@ -222,14 +222,14 @@ private struct PhoneRelayRow: View {
         let shown = RoomRelays.shown(relay)
         HStack(spacing: 8) {
             Text(shown)
-                .font(.system(size: 15, design: .monospaced))
+                .font(.system(.subheadline, design: .monospaced))
                 .fixedSize(horizontal: false, vertical: true)
                 .textSelection(.enabled)
                 .frame(maxWidth: .infinity, alignment: .leading)
             if let remove {
                 Button(action: remove) {
-                    Image(systemName: "xmark").font(.system(size: 15, weight: .semibold)).foregroundStyle(.haze)
-                        .frame(width: 44, height: 44).contentShape(.rect)
+                    Image(systemName: "xmark").font(.body.weight(.semibold)).foregroundStyle(.haze)
+                        .frame(minWidth: 44, minHeight: 44).contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .disabled(!removable)

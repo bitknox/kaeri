@@ -115,6 +115,7 @@ public struct MacPlayerView: View {
         .ignoresSafeArea()
         .onChange(of: columnShown) { _, shown in roomColumn(shown) }
         .onChange(of: store.room.changedAt) { freshenStrip() }
+        .onChange(of: store.room.chatOff, initial: true) { _, off in model.roomChatOff = off }
         .animation(.fadeIn, value: store.room.leaving)
         .animation(.fadeIn, value: store.room.moving)
         .animation(.fadeIn, value: store.room.videoPanel)
@@ -133,10 +134,6 @@ public struct MacPlayerView: View {
     @ViewBuilder
     private var roomVideoLayer: some View {
         let room = store.room
-        if room.popover != nil {
-            // A click on the video closes Invite or Details, as one outside any card does.
-            Color.clear.contentShape(.rect).onTapGesture { room.popover = nil }
-        }
         if let panel = room.videoPanel {
             RoomMacVideoPanel(room: room, panel: panel)
                 .transition(.opacity)
@@ -144,6 +141,11 @@ public struct MacPlayerView: View {
                     // The window's own buttons sit on the banner, as on the player's top bar.
                     Color.clear.frame(height: 52)
                 }
+        }
+        if room.popoverClosesOutside {
+            // A click on the video, or on the room's panel over it, closes Invite or Details, as
+            // one outside any card does. Edit relays keeps its edits until Done or Esc.
+            Color.clear.contentShape(.rect).onTapGesture { room.popover = nil }
         }
         if room.inRoom, settledFull || !room.shown {
             RoomStrip(room: room)
@@ -155,7 +157,7 @@ public struct MacPlayerView: View {
                 .animation(.standard, value: visible)
                 .allowsHitTesting(stripShown)
         }
-        if room.inRoom, room.skipShown, room.view?.upNext.map({ $0.cancelledBy != nil }) ?? true {
+        if room.inRoom, room.skipShown, room.view?.upNext.map({ $0.cancelledBy != nil }) ?? true, !cornerTaken {
             Button(RoomCopy.skipOpening) { room.skipOpening() }
                 .buttonStyle(RoomButtonStyle(kind: .glass, height: 36, size: 14, padding: 18))
                 .padding(.trailing, 20)
@@ -164,6 +166,10 @@ public struct MacPlayerView: View {
                 .transition(.opacity)
         }
     }
+
+    /// The player's corner holds a stall, a found-times question or Undo: the room's Skip opening
+    /// waits, as the player's own Skip does.
+    private var cornerTaken: Bool { ReturnKey.cornerTaken(model.corner) }
 
     /// The strip shows while anyone isn't watching, for 8 s after any change, and with the
     /// controls (decision 8).
@@ -231,7 +237,7 @@ public struct MacPlayerView: View {
         // Hidden with the controls, and shown again on any way out (PlayerPointer).
         .modifier(IdlePointer(idle: pointerIdle, window: window))
         .contextMenu { contextMenu }
-        .playerAccessibility(model)
+        .playerAccessibility(model, escape: backAsking)
         .focusable()
         .focusEffectDisabled()
         .focused($focused)
@@ -384,6 +390,12 @@ public struct MacPlayerView: View {
         model.marksBlocked = inRoom
         model.inRoom = inRoom
         model.roomDrawsSkip = true
+        if !inRoom {
+            // Out of the room, its strip is done: nothing of it times out later.
+            stripTask?.cancel()
+            stripTask = nil
+            stripFresh = false
+        }
         let room = store.room
         if inRoom {
             model.skipsWithRoom = { to in
@@ -768,6 +780,12 @@ public struct MacPlayerView: View {
         let command = press.modifiers.contains(.command)
         let option = press.modifiers.contains(.option)
         if model.skipMark != nil || model.skipTimesOpen, let result = markKey(press, shift: shift) { return result }
+        let room = store.room
+        if room.holdsKeys {
+            // A question or popover over the player has the keys: Esc closes it, Return is its
+            // own button's, and nothing plays, seeks or skips behind it.
+            guard press.key == .escape else { return .ignored }
+        }
         switch press.key {
         case .space:
             model.togglePause()
@@ -782,26 +800,20 @@ public struct MacPlayerView: View {
         case .downArrow:
             model.stepVolume(by: -5)
         case .return:
-            // The room's own corner first: its Up next, then its Skip opening.
-            let room = store.room
-            if room.inRoom, let up = room.view?.upNext, up.cancelledBy == nil {
-                room.playNextNow()
-                return .handled
-            }
-            if room.inRoom, room.skipShown {
-                room.skipOpening()
-                return .handled
-            }
-            switch model.corner {
-            case .stall: model.switchSource()
+            // The corner's order: a stall, a found-times question or Undo before the room's Up
+            // next and Skip opening, then the player's own.
+            let up = room.inRoom && room.view?.upNext.map { $0.cancelledBy == nil } == true
+            switch ReturnKey.action(corner: model.corner, roomUpNext: up, roomSkip: room.inRoom && room.skipShown) {
+            case .switchSource: model.switchSource()
+            case .roomUpNext: room.playNextNow()
+            case .roomSkip: room.skipOpening()
             case .upNext: model.playNext()
             case .skip: model.takeSkip()
-            default: return .ignored
+            case .none: return .ignored
             }
         case .escape:
             // In a room, Esc closes what is open over the player before the player itself: the
             // question, Move's list, a popover, then the room's Up next.
-            let room = store.room
             if room.leaving != nil {
                 room.leaving = nil
             } else if room.moving {
@@ -1042,6 +1054,7 @@ public struct MacPlayerView: View {
 
     /// Any change in the room: the strip shows for 8 s.
     private func freshenStrip() {
+        guard store.room.inRoom else { return }
         stripTask?.cancel()
         stripFresh = true
         stripTask = Task {
