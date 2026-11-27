@@ -110,6 +110,13 @@ public static class Rooms
         _ => RoomWords.People(names.Count),
     };
 
+    /// <summary>
+    /// How the app answers the room starting, moving on, or this device coming in: it plays the
+    /// room's episode from the start, never this device's own resume point, and the room moves the
+    /// player to its place (the event's <c>At</c>) from there.
+    /// </summary>
+    public static Command Open(Event.RoomStarted started) => new Command.Play(started.Id, started.Episode, FromStart: true);
+
     /// <summary>An invite looked into, as a room not yet joined: its episode and who is there.</summary>
     public static RoomScene Invited(RoomGlimpse glimpse, long nowMs) =>
         new(new RoomView(glimpse.RoomId ?? "", "", new RoomConnection.Joining(), RoomEpisode: glimpse.RoomEpisode, Playing: glimpse.Playing),

@@ -172,6 +172,10 @@ public sealed partial class MainWindow
                     else if (ContentFrame.Content is not Pages.TogetherPage)
                         ShowToast(InfoBarSeverity.Warning, RoomWords.Look(look));
                     break;
+                // The room's episode opens here from its start, never this device's resume point.
+                case Event.RoomStarted started:
+                    ctx.Send(Rooms.Open(started));
+                    break;
                 case Event.Sources s when roomSourcesFor == $"{s.Id}/{s.Episode}":
                     Player.ShowRoomSources(s.Candidates);
                     break;
@@ -427,6 +431,17 @@ public sealed partial class MainWindow
                 await AtUptime(70);
                 if (ContentFrame.Content is Pages.TogetherPage typing)
                     await typing.ShotType("https://kaeri.app/room#v=3&k=typed");
+                break;
+            case "room-place-reopen":
+                // Keep the room, then Open the player at 80 s: the episode opens from its start and
+                // the room moves it to its place, never this device's resume point.
+                await Task.Run(() => fake.Stage(FfiRoomScene.Watching));
+                await Task.Delay(1500);
+                ctx.Send(new Command.Room(new RoomCommand.ClosePlayer()));
+                Player.Close();
+                Go("together");
+                await AtUptime(80);
+                ctx.Send(new Command.Room(new RoomCommand.OpenPlayer()));
                 break;
             case "room-place-room":
                 await Task.Run(() => fake.Stage(FfiRoomScene.Watching));

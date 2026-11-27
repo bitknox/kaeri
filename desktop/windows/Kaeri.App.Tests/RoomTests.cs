@@ -507,4 +507,15 @@ public class RoomTests
         Assert.Equal((T.RoomErrorNobodyAnsweredLead, T.RoomErrorNobodyAnsweredLine), place.RejoinFailed);
         Assert.Null(place.FailedLink);
     }
+
+    [Fact]
+    public void TheRoomsEpisodeOpensFromItsStartNeverTheResumePoint()
+    {
+        foreach (var (kind, at) in new (RoomStartKind, double?)[] { (RoomStartKind.Start, null), (RoomStartKind.MoveOn, null), (RoomStartKind.Rejoin, 12.0) })
+        {
+            var play = Assert.IsType<Command.Play>(Rooms.Open(new Event.RoomStarted(900001u, "9", kind, at)));
+            Assert.Equal("9", play.Episode);
+            Assert.True(play.FromStart, $"{kind} at {at}");
+        }
+    }
 }
