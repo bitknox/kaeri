@@ -108,6 +108,10 @@ public enum RoomScene: String, CaseIterable, Sendable {
     case placejoinfail
     /// Rejoin found nobody answering in the first recent room.
     case placerecentfail
+    /// An invite opened on Watch together's page: Join the room and Not now.
+    case placeinvite
+    /// Watching with Hide chat in rooms on: Mika's line stays off the video, no field.
+    case chatoff
 
     public static let argument = "-KaeriRoom"
     /// The scene this run stages, if any.
@@ -198,8 +202,9 @@ enum RoomStage {
         case .moveoffer: .moveOffer
         case .moved: .movedAway
         case .placejoinfail: .unreachable
+        case .placeinvite: .invited
         case .watching, .invite, .details, .editrelays, .leave, .cmdw, .quit, .skip, .movestart, .movepick, .full, .hidden,
-             .menu, .menuseek, .menusay, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail:
+             .menu, .menuseek, .menusay, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail, .chatoff:
             .watching
         }
     }
@@ -279,6 +284,13 @@ extension PlayerModel {
             // Paused for Ren, folded into the bar over the tabs with the chevron.
             room.keepRoom()
             guard await roomWaited(10, { room.you?.state == .playerClosed && !self.isPresented }) else { return false }
+        case .chatoff:
+            // The engine's Hide chat for this run only (the setting would outlive it), then a
+            // line from Mika, which the engine keeps off the video.
+            store.send(.room(.hideChat(hidden: true)))
+            guard await roomWaited(10, { room.chatHidden }) else { return false }
+            _ = await Task.detached { fake.memberSays(name: "Mika", message: "that bridge again") }.value // i18n-skip
+            try? await Task.sleep(for: .milliseconds(600))
         case .youchoosing:
             // The app's player plays the room's episode, which the fake's pose can't hold: choose
             // a source as a viewer would.
@@ -337,6 +349,12 @@ extension PlayerModel {
             _ = await Task.detached { fake.stage(scene: .unreachable) }.value
             guard await roomWaited(40, { room.joinFailure != nil }) else { return false }
             room.stage(recent: recent, joinFailed: room.joinFailed)
+        case .placeinvite:
+            // The link opened looks into the room without joining it.
+            guard let fake = store.startFakeRoom() else { return false }
+            RoomStage.fake = fake
+            _ = await Task.detached { fake.stage(scene: .invited) }.value
+            guard await roomWaited(30, { room.invitation != nil }) else { return false }
         case .placeroom:
             // In a room whose player was closed with Keep the room.
             guard let fake = store.startFakeRoom() else { return false }
