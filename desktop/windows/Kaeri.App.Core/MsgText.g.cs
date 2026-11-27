@@ -174,6 +174,7 @@ public static class MsgText
         Msg.RoomLookNotAnInvite => T.RoomLookNotAnInvite,
         Msg.RoomLookNotKept => T.RoomLookNotKept,
         Msg.RoomLookOldInvite => T.RoomLookOldInvite,
+        Msg.RoomNeedsEpisode => T.RoomNeedsEpisode,
         Msg.NoticeNoParty => T.NoticeNoParty,
         Msg.PartyNeedsRoom => T.PartyNeedsRoom,
         Msg.PartyLeft => T.PartyLeft,

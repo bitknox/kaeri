@@ -729,6 +729,10 @@ object Strings {
     fun roomLookOldInvite(context: Context): String =
         context.getString(R.string.room_look_old_invite)
 
+    /** Why a room couldn't start: it has no episode yet. Shown where the room would open. */
+    fun roomNeedsEpisode(context: Context): String =
+        context.getString(R.string.room_needs_episode)
+
     /** Toast when a watch party is asked for in a build without watch parties. */
     fun noticeNoParty(context: Context): String =
         context.getString(R.string.notice_no_party)

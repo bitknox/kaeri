@@ -389,6 +389,8 @@
     <string name="room_look_not_kept">That room isn\'t kept any more.</string>
     <!-- Why a look into a room found nothing: the invite comes from an older version. -->
     <string name="room_look_old_invite">This invite is from an older version of Kaeri. Ask for a new one.</string>
+    <!-- Why a room couldn't start: it has no episode yet. Shown where the room would open. -->
+    <string name="room_needs_episode">Choose an episode for the room first.</string>
     <!-- Toast when a watch party is asked for in a build without watch parties. -->
     <string name="notice_no_party">Watch parties aren\'t available in this version of Kaeri.</string>
     <!-- Message when a watch party was asked for with no room named. -->

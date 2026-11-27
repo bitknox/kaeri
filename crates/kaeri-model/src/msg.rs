@@ -333,6 +333,8 @@ pub enum Msg {
     RoomLookNotKept,
     /// Why a look into a room found nothing: the invite comes from an older version.
     RoomLookOldInvite,
+    /// Why a room couldn't start: it has no episode yet. Shown where the room would open.
+    RoomNeedsEpisode,
     /// Toast when a watch party is asked for in a build without watch parties.
     NoticeNoParty,
     /// Message when a watch party was asked for with no room named.
@@ -650,6 +652,7 @@ impl Msg {
             Self::RoomLookNotAnInvite => "room-look-not-an-invite",
             Self::RoomLookNotKept => "room-look-not-kept",
             Self::RoomLookOldInvite => "room-look-old-invite",
+            Self::RoomNeedsEpisode => "room-needs-episode",
             Self::NoticeNoParty => "notice-no-party",
             Self::PartyNeedsRoom => "party-needs-room",
             Self::PartyLeft => "party-left",
@@ -892,6 +895,7 @@ impl Msg {
             Self::RoomLookNotAnInvite => Vec::new(),
             Self::RoomLookNotKept => Vec::new(),
             Self::RoomLookOldInvite => Vec::new(),
+            Self::RoomNeedsEpisode => Vec::new(),
             Self::NoticeNoParty => Vec::new(),
             Self::PartyNeedsRoom => Vec::new(),
             Self::PartyLeft => Vec::new(),
