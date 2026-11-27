@@ -68,6 +68,8 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
     let column = gtk::Box::new(gtk::Orientation::Vertical, 12);
     column.append(&widgets::heading(&t::stores_joined()));
     column.append(&list);
+    // Plugins are installed from here: what a plugin is, then whose they are.
+    column.append(&widgets::haze(&t::plugin_risk_warning(), "caption"));
     column.append(&widgets::haze(&t::stores_not_from_app(), "caption"));
 
     let empty_join = gtk::Button::with_label(&t::stores_join_menu());

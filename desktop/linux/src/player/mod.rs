@@ -22,7 +22,8 @@ use kaeri_model::{
     command::{Command, PlayerCommand},
     event::Event,
     hosted::{
-        MenuChoices, MenuEpisode, MenuSource, PlayerChoice, PlayerOp, PlayerUi, TrackKind,
+        MenuChoices, MenuEpisode, MenuSource, PlayerChoice, PlayerOp, PlayerReport, PlayerUi,
+        TrackKind,
     },
     input::{PadContext, PlayerCard, PlayerFocus, PlayerPanel},
     playback::{PlaybackId, SkipKind, SkipMarkView, SkipPrompt, TimelineMark},
@@ -171,6 +172,11 @@ pub struct PlayerView {
     roll_on: Cell<Option<Instant>>,
     /// The roll-on the start on screen came from: its screen waits 600 ms before it shows.
     start_roll: Cell<Option<Instant>>,
+    /// Sub or Dub picked on a starting screen that had no playback to hear it, for the start
+    /// that play begins.
+    start_wanted: Cell<Option<Translation>>,
+    /// Where to go once the file opens: the place Play here carried from a TV.
+    seek_on_load: Cell<Option<f64>>,
     /// Whether that screen is still held back, only its ground showing.
     start_held: Cell<bool>,
     /// When the held screen showed, for its 0.6 s hold.
@@ -182,6 +188,9 @@ pub struct PlayerView {
     start_leave: RefCell<Option<glib::SourceId>>,
     /// Where the playback resumed, while "Resumed at" shows: it goes 6 s of playback later.
     resumed_from: Cell<Option<f64>>,
+    /// The playhead has been seen where the episode resumed. Until then mpv may still report
+    /// positions from the start, which say nothing of the note.
+    resume_reached: Cell<bool>,
     /// The last automatic skip, while Undo is offered for it.
     undo: Cell<Option<Undo>>,
     /// Since when the skip offer has shown, for a controller's A to take it only while it is new.
@@ -361,6 +370,11 @@ impl PlayerView {
         // Reports go to the engine from mpv's thread; the rest to the main loop.
         let sink = Arc::new(move |event: HostEvent| match event {
             HostEvent::Report { playback, report } => {
+                // The main loop hears the file open too, for a place carried from a TV.
+                if report == PlayerReport::FileLoaded {
+                    let _ = host_tx
+                        .send_blocking(HostEvent::Report { playback, report: report.clone() });
+                }
                 if let Some(engine) = engine.upgrade() {
                     engine.send(Command::PlayerReport { playback, report });
                 }
@@ -448,12 +462,15 @@ impl PlayerView {
             start_tick: RefCell::default(),
             roll_on: Cell::new(None),
             start_roll: Cell::new(None),
+            start_wanted: Cell::new(None),
+            seek_on_load: Cell::new(None),
             start_held: Cell::new(false),
             start_shown: Cell::new(None),
             start_ground: RefCell::default(),
             start_reveal: RefCell::default(),
             start_leave: RefCell::default(),
             resumed_from: Cell::new(None),
+            resume_reached: Cell::new(false),
             undo: Cell::new(None),
             skip_since: Cell::new(None),
             marking: RefCell::new(None),
@@ -1072,7 +1089,28 @@ impl PlayerView {
         let carried = self.start_roll.get().filter(|_| again);
         let rolled = self.roll_on.take().filter(|at| at.elapsed() < ROLL_ON_FRESH);
         self.stop_start_timers();
-        self.start.replace(Some(start_model::Start::new(id, episode, resume)));
+        // The translation it looks for: the one just picked on this screen for the same
+        // episode, or the configured one.
+        // A place carried for this episode (Play here from a TV) is gone to once its file opens.
+        // The same start begun again keeps it.
+        match self.ctx.start_at.take() {
+            Some((i, e, at)) if i == id && e == episode => self.seek_on_load.set(Some(at)),
+            _ if again => {}
+            _ => self.seek_on_load.set(None),
+        }
+        let picked = self.start_wanted.take().filter(|_| again);
+        let wanted = picked.unwrap_or_else(|| {
+            self.ctx
+                .hub
+                .known
+                .borrow()
+                .settings
+                .as_ref()
+                .map_or(Translation::Sub, |s| s.translation)
+        });
+        self.start.replace(Some(
+            start_model::Start::new(id, episode, resume).with_translation(wanted),
+        ));
         self.start_chrome(true);
         if let Some(start) = self.start.borrow_mut().as_mut() {
             start.details_open = self.ctx.prefs.starting_details();
@@ -1198,6 +1236,31 @@ impl PlayerView {
     }
 
     /// What a button on the starting screen does.
+    /// Sub or Dub picked on the starting screen. A playback that found its source switches
+    /// itself. Before that, and after a failure, there is no playback to hear it, so the play
+    /// starts again looking for the other translation, for this session only.
+    fn start_translation(&self, translation: Translation) {
+        let again = {
+            let mut start = self.start.borrow_mut();
+            let Some(start) = start.as_mut() else { return };
+            if start.found_live() {
+                None
+            } else if start.translation() == translation {
+                return;
+            } else {
+                Some((start.id, start.episode.clone(), start.plays_from_beginning()))
+            }
+        };
+        match again {
+            None => self.send(PlayerCommand::Choose(PlayerChoice::Translation(translation))),
+            Some((id, episode, from_start)) => {
+                self.start_wanted.set(Some(translation));
+                self.ctx.hub.send(Command::SetTranslation { translation });
+                self.ctx.hub.send(Command::Play { id, episode, from_start });
+            }
+        }
+    }
+
     fn start_action(&self, action: start_model::Action) {
         use start_model::Action as A;
         let Some((id, episode)) =
@@ -1265,6 +1328,7 @@ impl PlayerView {
         self.ui.resumed_line.set_label(&t::player_resumed_at(&say::clock(position)));
         self.announce(&self.ui.resumed_line.label());
         self.resumed_from.set(Some(position));
+        self.resume_reached.set(false);
         self.ui.resumed.set_visible(true);
         crate::motion::fade_in(&self.ui.resumed);
     }
@@ -1748,6 +1812,11 @@ impl PlayerView {
             HostEvent::Closed => self.closed(),
             HostEvent::Fullscreen(on) => self.fullscreen(on),
             HostEvent::State(state) => self.show_state(state),
+            HostEvent::Report { report: PlayerReport::FileLoaded, .. } => {
+                if let Some(at) = self.seek_on_load.take() {
+                    self.send(PlayerCommand::SeekTo(at));
+                }
+            }
             HostEvent::Report { .. } => {}
         }
     }
@@ -1833,10 +1902,13 @@ impl PlayerView {
             self.leave_start();
         }
         // Six seconds of playback on, or a seek back past it, and "Resumed at" goes.
-        if let (Some(from), Some(position)) = (self.resumed_from.get(), state.position)
-            && (position > from + RESUMED_FOR || position + 1.0 < from)
-        {
-            self.resumed_done();
+        if let (Some(from), Some(position)) = (self.resumed_from.get(), state.position) {
+            let mut reached = self.resume_reached.get();
+            let ends = resume_note_ends(from, position, &mut reached);
+            self.resume_reached.set(reached);
+            if ends {
+                self.resumed_done();
+            }
         }
         self.update_provisional();
         if let (Some(player), Some(duration)) = (&self.player, state.duration) {
@@ -2299,7 +2371,7 @@ impl PlayerView {
             let weak = Rc::downgrade(self);
             Rc::new(move |translation| {
                 if let Some(view) = weak.upgrade() {
-                    view.send(PlayerCommand::Choose(PlayerChoice::Translation(translation)));
+                    view.start_translation(translation);
                 }
             })
         });
@@ -4382,9 +4454,34 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     }
 }
 
+/// Whether "Resumed at" goes at `position`: six seconds played past `from`, or a seek back
+/// before it. Positions before the playhead has been seen within 2 s of `from` are mpv's from
+/// the start, before the resume seek lands, and are passed over (`reached` records the sighting).
+fn resume_note_ends(from: f64, position: f64, reached: &mut bool) -> bool {
+    if !*reached {
+        *reached = (position - from).abs() < 2.0;
+        return false;
+    }
+    position > from + RESUMED_FOR || position + 1.0 < from
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn the_resume_note_waits_for_the_playhead_to_reach_the_resume_point() {
+        let mut reached = false;
+        // mpv's first ticks are from the start, before the resume seek lands.
+        assert!(!resume_note_ends(606.0, 0.0, &mut reached));
+        assert!(!resume_note_ends(606.0, 0.4, &mut reached));
+        assert!(!reached);
+        assert!(!resume_note_ends(606.0, 606.1, &mut reached));
+        assert!(reached);
+        assert!(!resume_note_ends(606.0, 611.0, &mut reached));
+        assert!(resume_note_ends(606.0, 612.5, &mut reached), "six seconds on");
+        assert!(resume_note_ends(606.0, 300.0, &mut reached), "a seek back before it");
+    }
 
     #[test]
     fn only_a_dub_is_marked_on_the_episode_line() {

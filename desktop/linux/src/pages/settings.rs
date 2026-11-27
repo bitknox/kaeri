@@ -98,7 +98,7 @@ const PANES: [Pane; 13] = [
         name: "general",
         icon: "preferences-system-symbolic", // i18n-skip
         groups: &[
-            (Group::Titles, &[K::Titles, K::Trailers]),
+            (Group::Titles, &[K::Titles, K::Trailers, K::HoverCards]),
             (Group::Controller, &[K::ControllerInput, K::SwapFaceButtons]),
         ],
     },

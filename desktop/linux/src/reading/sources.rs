@@ -262,6 +262,20 @@ fn draw_folders(ctx: &Rc<Ctx>, column: &gtk::Box, folders: &[&BookFolderRow]) {
             }
         };
         let row = row("folder-symbolic", &folder.name, &line, None);
+        // Look again: new files in a folder show only once the engine looks through it again.
+        let again = gtk::Button::from_icon_name("view-refresh-symbolic");
+        again.add_css_class("flat");
+        again.set_tooltip_text(Some(&t::book_sources_scan()));
+        again.set_sensitive(!matches!(folder.scan, BookFolderScan::Scanning { .. }));
+        again.connect_clicked({
+            let hub = Rc::downgrade(&ctx.hub);
+            move |_| {
+                if let Some(hub) = hub.upgrade() {
+                    send(&hub, BookSourceCommand::Scan);
+                }
+            }
+        });
+        row.suffix.append(&again);
         let remove = gtk::Button::from_icon_name("user-trash-symbolic");
         remove.add_css_class("flat");
         remove.set_tooltip_text(Some(&t::action_remove()));

@@ -922,20 +922,16 @@ impl StartView {
         }
         self.first.set(false);
 
-        // Details: rows when there are any, and the translation switch once it is known.
+        // Details: rows when there are any, and the translation switch from the first step, so a
+        // start that finds nothing in one translation can try the other.
         let can_open = frame.buttons.iter().any(|b| b.action == Action::Details);
         self.open_details(details_open && can_open);
         self.fill_rows(&frame.rows);
-        match frame.translation {
-            Some(translation) => {
-                self.quiet.set(true);
-                self.language.set_visible(true);
-                self.sub.set_active(translation == Translation::Sub);
-                self.dub.set_active(translation == Translation::Dub);
-                self.quiet.set(false);
-            }
-            None => self.language.set_visible(false),
-        }
+        self.quiet.set(true);
+        self.language.set_visible(true);
+        self.sub.set_active(frame.translation == Translation::Sub);
+        self.dub.set_active(frame.translation == Translation::Dub);
+        self.quiet.set(false);
     }
 
     /// Details opens under the row and closes again, fading; the column above stays put.

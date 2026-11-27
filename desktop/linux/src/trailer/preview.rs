@@ -121,6 +121,15 @@ impl Rest {
     fn rest(self: &Rc<Self>, target: &gtk::Widget) {
         self.cancel();
         let Some(hub) = self.hub.upgrade() else { return };
+        // Hover cards off: a cover shows nothing on hover.
+        let on = hub
+            .known
+            .borrow()
+            .setting(kaeri_model::settings::SettingKey::HoverCards)
+            .is_none_or(|row| crate::catalog::is_on(&row));
+        if !on {
+            return;
+        }
         // A title the lists have not shown has its card asked for while the pointer rests: the
         // list's fields, from what is kept or one low-priority lookup, not the page.
         let id = kaeri_core::ids::AnilistId::new(self.id);

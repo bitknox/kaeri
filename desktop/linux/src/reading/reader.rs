@@ -31,6 +31,7 @@ use kaeri_model::{
         TurnHow,
     },
     reading::{ChapterRow, ReadingCommand, ReadingEvent, ReadingFailure},
+    tap_zones::{TapAction, TapReading, TapZoneSettings, ZoneLayout, ZoneSize, tap_action},
 };
 
 use super::{
@@ -2935,6 +2936,7 @@ impl Reader {
                     }
                     NovelSays::Middle => this.toggle_chrome(),
                     NovelSays::End => this.novel_end(),
+                    NovelSays::Note(words) => this.show_note(&words),
                     // Try again opens the chapter afresh, in a new page.
                     NovelSays::Failed => this.open_failed(&ReadingFailure::Other {
                         reason: t::linux_reader_novel_stopped(),
@@ -3152,7 +3154,12 @@ impl Reader {
         if let Some(id) = self.hide_timer.borrow_mut().take() {
             id.remove();
         }
-        if self.pinned.get() || self.keyboard_in_chrome() {
+        // Under a screen reader the chrome stays: its controls are how the page is reached, as
+        // the player keeps its controls up.
+        if self.pinned.get()
+            || self.keyboard_in_chrome()
+            || crate::window::screen_reader_running()
+        {
             return;
         }
         self.head_fade.set(&self.head, false);
@@ -3457,6 +3464,16 @@ impl Reader {
         }
     }
 
+    /// A footnote over the page, which keeps its place: Close or Esc returns to it, and a
+    /// screen reader reads the note as the dialog opens.
+    fn show_note(&self, words: &str) {
+        let dialog = adw::AlertDialog::new(None, Some(words));
+        dialog.add_response("close", &t::action_close());
+        dialog.set_default_response(Some("close"));
+        dialog.set_close_response("close");
+        dialog.present(Some(&self.widget));
+    }
+
     fn rtl(&self) -> bool {
         matches!(self.state.borrow().direction, Some(ReadDirection::RightToLeft))
     }
@@ -3504,12 +3521,13 @@ impl Reader {
             }
         });
 
-        // Tap zones: the outer thirds turn, the middle brings the chrome or takes it away.
+        // Tap zones: the engine's hit test on the device's layout says whether a click turns
+        // forward, back, or brings the chrome or takes it away.
         let click = gtk::GestureClick::new();
         click.set_button(gdk::BUTTON_PRIMARY);
         click.connect_released({
             let this = Rc::downgrade(self);
-            move |gesture, _, x, _| {
+            move |gesture, _, x, y| {
                 let Some(this) = this.upgrade() else { return };
                 // A click on the page takes the keys back from the chrome, which may go then.
                 if this.focus_in_chrome() {
@@ -3519,14 +3537,24 @@ impl Reader {
                     this.reveal_chrome();
                     return;
                 }
-                let width = f64::from(this.widget.width().max(1));
-                let rtl = this.rtl();
-                if x < width / 3.0 {
-                    this.turn(rtl, TurnHow::Turn);
-                } else if x > width * 2.0 / 3.0 {
-                    this.turn(!rtl, TurnHow::Turn);
-                } else {
-                    this.toggle_chrome();
+                // The zones span the page as shown, a spread's both pages together.
+                let width = f64::from(this.picture.width().max(1));
+                let height = f64::from(this.picture.height().max(1));
+                let action = {
+                    let state = this.state.borrow();
+                    tap_on_page(
+                        state.settings.as_ref().and_then(|s| s.tap_zones.clone()),
+                        state.mode.unwrap_or(ReaderMode::Paged),
+                        state.direction.unwrap_or(ReadDirection::LeftToRight),
+                        crate::window::screen_reader_running(),
+                        x / width,
+                        y / height,
+                    )
+                };
+                match action {
+                    TapAction::Next => this.turn(true, TurnHow::Turn),
+                    TapAction::Previous => this.turn(false, TurnHow::Turn),
+                    TapAction::Controls => this.toggle_chrome(),
                 }
                 gesture.set_state(gtk::EventSequenceState::Claimed);
             }
@@ -3704,8 +3732,13 @@ impl Reader {
                 return self.tab_into_chrome(back);
             }
             K::Escape => self.close(),
+            // Left and Right follow the page; in a strip they do nothing.
+            K::Right | K::Left if self.flows() => return false,
             K::Right => self.turn(!rtl, TurnHow::Key),
             K::Left => self.turn(rtl, TurnHow::Key),
+            K::space | K::KP_Space if modifiers.contains(gdk::ModifierType::SHIFT_MASK) => {
+                self.turn(false, TurnHow::Key);
+            }
             K::space | K::Page_Down | K::Down => self.turn(true, TurnHow::Key),
             K::Page_Up | K::Up => self.turn(false, TurnHow::Key),
             // A novel's first and last page are the chapter's, across its spine's documents.
@@ -3739,6 +3772,9 @@ impl Reader {
                 self.ask_page();
                 turned = false;
             }
+            // ] and [ change chapter.
+            K::bracketright => self.step_chapter(1),
+            K::bracketleft => self.step_chapter(-1),
             _ => return false,
         }
         if turned {
@@ -4372,6 +4408,77 @@ impl FullBefore {
     /// The reader closes with the window's full screen at `now`: what to set it to, if anything.
     fn give_back(&self, now: bool) -> Option<bool> {
         self.0.take().filter(|&before| before != now)
+    }
+}
+
+/// What a click at (`x`, `y`), as fractions of the page, asks for: the engine's hit test on the
+/// device's tap zones. Before the engine has sent them, the outer thirds turn and the middle
+/// asks for the controls, as Sides does.
+fn tap_on_page(
+    zones: Option<TapZoneSettings>,
+    mode: ReaderMode,
+    direction: ReadDirection,
+    screen_reader: bool,
+    x: f64,
+    y: f64,
+) -> TapAction {
+    let zones = zones.unwrap_or(TapZoneSettings {
+        paged: ZoneLayout::Sides,
+        scrolling: ZoneLayout::Off,
+        size: ZoneSize::Standard,
+        flip_sides: false,
+        flip_ends: false,
+        eink: false,
+        swipes_turn: false,
+        guide_seen_paged: String::new(),
+        guide_seen_scrolling: String::new(),
+    });
+    let reading = TapReading { screen_reader, ..TapReading::new(mode, direction) };
+    tap_action(zones, reading, x, y)
+}
+
+#[cfg(test)]
+mod tap_tests {
+    use super::*;
+
+    fn zones(paged: ZoneLayout) -> Option<TapZoneSettings> {
+        Some(TapZoneSettings {
+            paged,
+            scrolling: ZoneLayout::Off,
+            size: ZoneSize::Standard,
+            flip_sides: false,
+            flip_ends: false,
+            eink: false,
+            swipes_turn: false,
+            guide_seen_paged: String::new(),
+            guide_seen_scrolling: String::new(),
+        })
+    }
+
+    #[test]
+    fn a_click_asks_the_engine_s_zones() {
+        let (paged, ltr, rtl) =
+            (ReaderMode::Paged, ReadDirection::LeftToRight, ReadDirection::RightToLeft);
+        // Sides, and the thirds before the engine said: the right turns forward left to right.
+        for z in [zones(ZoneLayout::Sides), None] {
+            assert_eq!(tap_on_page(z.clone(), paged, ltr, false, 0.9, 0.5), TapAction::Next);
+            assert_eq!(
+                tap_on_page(z.clone(), paged, ltr, false, 0.1, 0.5),
+                TapAction::Previous
+            );
+            assert_eq!(
+                tap_on_page(z.clone(), paged, ltr, false, 0.5, 0.5),
+                TapAction::Controls
+            );
+            assert_eq!(tap_on_page(z, paged, rtl, false, 0.1, 0.5), TapAction::Next);
+        }
+        // Off, as saved before the zones moved to the engine: every click is the controls.
+        let off = zones(ZoneLayout::Off);
+        assert_eq!(tap_on_page(off.clone(), paged, ltr, false, 0.9, 0.5), TapAction::Controls);
+        assert_eq!(tap_on_page(off, paged, ltr, false, 0.1, 0.5), TapAction::Controls);
+        // Under a screen reader the zones are off.
+        let sides = zones(ZoneLayout::Sides);
+        assert_eq!(tap_on_page(sides, paged, ltr, true, 0.9, 0.5), TapAction::Controls);
     }
 }
 

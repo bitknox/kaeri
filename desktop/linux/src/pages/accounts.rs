@@ -1,14 +1,15 @@
 //! Accounts: AniList first, as the tracker the library and Continue read, then the other
 //! trackers progress syncs to. Each row says where its account stands and offers the one thing
 //! to do next. AniList and MyAnimeList sign in in the browser, through the portal, and come back
-//! by an `kaeri://auth/…` link; Simkl and Trakt show a code to type on their site; Kitsu
-//! asks for a password in a dialog, sent once for a token.
+//! by an `kaeri://auth/…` link; Simkl and Trakt show a code to type on their site; Kitsu, and
+//! MangaUpdates while reading is on, ask for a password in a dialog, sent once for a token.
 
 use std::{cell::RefCell, rc::Rc};
 
 use adw::prelude::*;
 use kaeri_model::{
     command::Command,
+    reading::ReadingCommand,
     settings::SettingKey,
     stores::Secret,
     sync::{DeviceCodePrompt, SyncState},
@@ -46,7 +47,11 @@ pub fn fill(ctx: &Rc<Ctx>, page: &adw::PreferencesPage, rebuild: Rc<dyn Fn()>) {
         others.set_description(Some(t::accounts_offline_changes().as_str()));
     }
 
-    for tracker in std::iter::once("anilist").chain(OTHERS) {
+    // MangaUpdates counts only reading: listed while reading is on.
+    let reads = crate::reading::reads(&ctx.hub);
+    let trackers =
+        std::iter::once("anilist").chain(OTHERS).chain(reads.then_some("mangaupdates"));
+    for tracker in trackers {
         let state = known.sync.get(tracker);
         let signing = known.signing.get(tracker).copied();
         let shown =
@@ -289,8 +294,8 @@ fn sign_in_action(
     let (ctx, tracker, rebuild) = (Rc::downgrade(ctx), tracker.to_owned(), rebuild.clone());
     move |_| {
         let Some(ctx) = ctx.upgrade() else { return };
-        if tracker == "kitsu" {
-            kitsu(&ctx, rebuild.clone());
+        if matches!(tracker.as_str(), "kitsu" | "mangaupdates") {
+            password_sign_in(&ctx, &tracker, rebuild.clone());
             return;
         }
         let job = ctx.hub.send_job(Command::Connect { tracker: tracker.clone() });
@@ -301,12 +306,24 @@ fn sign_in_action(
 
 /// Kitsu's sign-in: an email or user name and a password, sent once for a token.
 pub fn kitsu(ctx: &Rc<Ctx>, rebuild: Rc<dyn Fn()>) -> adw::AlertDialog {
-    let kitsu = say::tracker_name("kitsu");
+    password_sign_in(ctx, "kitsu", rebuild)
+}
+
+/// A sign-in by name and password, sent once for a token: Kitsu (an email or user name) and
+/// MangaUpdates (a user name), which signs in through reading's command.
+pub fn password_sign_in(
+    ctx: &Rc<Ctx>,
+    tracker: &str,
+    rebuild: Rc<dyn Fn()>,
+) -> adw::AlertDialog {
+    let name = say::tracker_name(tracker);
     let dialog = adw::AlertDialog::new(
-        Some(&t::accounts_form_title(kitsu)),
-        Some(&t::accounts_form_detail(kitsu)),
+        Some(&t::accounts_form_title(name)),
+        Some(&t::accounts_form_detail(name)),
     );
-    let user = adw::EntryRow::builder().title(t::accounts_user_or_email()).build();
+    let user_title =
+        if tracker == "kitsu" { t::accounts_user_or_email() } else { t::accounts_username() };
+    let user = adw::EntryRow::builder().title(user_title).build();
     let password = adw::PasswordEntryRow::builder().title(t::accounts_password()).build();
     let list = gtk::ListBox::new();
     list.add_css_class("boxed-list");
@@ -342,14 +359,21 @@ pub fn kitsu(ctx: &Rc<Ctx>, rebuild: Rc<dyn Fn()>) -> adw::AlertDialog {
         }
     });
     let hub = Rc::downgrade(&ctx.hub);
+    let tracker = tracker.to_owned();
     dialog.connect_response(Some("sign-in"), move |_, _| {
         let Some(hub) = hub.upgrade() else { return };
-        let job = hub.send_job(Command::ConnectKitsu {
-            username: user.text().trim().to_owned(),
-            password: Secret(password.text().into()),
+        let username = user.text().trim().to_owned();
+        let password_given = Secret(password.text().into());
+        let job = hub.send_job(if tracker == "kitsu" {
+            Command::ConnectKitsu { username, password: password_given }
+        } else {
+            Command::Reading(ReadingCommand::ConnectMangaUpdates {
+                username,
+                password: password_given,
+            })
         });
         password.set_text("");
-        hub.known.borrow_mut().signing.insert("kitsu".into(), SignIn::Job(job));
+        hub.known.borrow_mut().signing.insert(tracker.clone(), SignIn::Job(job));
         rebuild();
     });
     dialog.present(Some(&ctx.window));

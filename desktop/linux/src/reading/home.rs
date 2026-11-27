@@ -92,7 +92,14 @@ struct Home {
 type Spot = (glib::WeakRef<gtk::Box>, Option<glib::WeakRef<gtk::Box>>);
 
 pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
-    let empty = crate::states::plain(&t::home_read_end(), &t::home_read_no_sources());
+    // Nothing to read from yet: say how to add a source, with the way to Sources under it.
+    let empty = crate::states::plain(&t::sources_add_title(), &t::home_read_no_sources());
+    let to_sources = gtk::Button::with_label(&t::sources_title());
+    to_sources.add_css_class("pill");
+    to_sources.set_halign(gtk::Align::Center);
+    to_sources.set_action_target_value(Some(&Dest::ReadSources.name().to_variant()));
+    to_sources.set_action_name(Some("win.go"));
+    empty.set_child(Some(&to_sources));
     let Place { page, header, states, column } = place(
         ctx,
         &super::title_of(Dest::Read),
@@ -527,6 +534,7 @@ impl Home {
                 None => None,
             }
         };
+        let add_source = !offline_rows && !demo && view.end == Some(ReadHomeEnd::NoSources);
         let Some((text, links)) = words else { return };
         let column = gtk::Box::new(gtk::Orientation::Vertical, 16);
         column.set_margin_top(ABOVE_END);
@@ -553,6 +561,14 @@ impl Home {
             }
         });
         column.append(&label);
+        if add_source {
+            let add = gtk::Button::with_label(&t::sources_add_title());
+            add.add_css_class("pill");
+            add.set_halign(gtk::Align::Start);
+            add.set_action_target_value(Some(&Dest::ReadSources.name().to_variant()));
+            add.set_action_name(Some("win.go"));
+            column.append(&add);
+        }
         self.end.append(&column);
         if self.drawn.get() {
             let shown = column.clone();
