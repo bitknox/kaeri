@@ -259219,6 +259219,18 @@
         }
       }
     },
+    "room-needs-episode" : {
+      "comment" : "Why a room couldn't start: it has no episode yet. Shown where the room would open.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an episode for the room first."
+          }
+        }
+      }
+    },
     "room-new-invite" : {
       "comment" : "Button that makes a new invite link and stops the old one.",
       "extractionState" : "manual",

@@ -415,23 +415,27 @@ mod tests {
     #[test]
     fn the_rooms_episode_starting_plays_it_here() {
         // Neon: the engine leaves the player to the front end, and the terminal ignored
-        // RoomStarted, so its room stayed Loading.
-        let mut a = app();
-        a.take_commands();
-        a.apply(Event::RoomStarted {
-            id: AnilistId::new(900_001),
-            episode: "9".into(),
-            kind: kaeri_model::room::RoomStartKind::Rejoin,
-            at: Some(12.0),
-        });
-        assert_eq!(
-            a.take_commands(),
-            [Command::Play {
+        // RoomStarted, so its room stayed Loading. Then it opened at this device's own resume
+        // point: a room before play is at the start, and the room moves a player only from there.
+        for at in [None, Some(12.0)] {
+            let mut a = app();
+            a.take_commands();
+            a.apply(Event::RoomStarted {
                 id: AnilistId::new(900_001),
                 episode: "9".into(),
-                from_start: false
-            }]
-        );
+                kind: kaeri_model::room::RoomStartKind::Rejoin,
+                at,
+            });
+            assert_eq!(
+                a.take_commands(),
+                [Command::Play {
+                    id: AnilistId::new(900_001),
+                    episode: "9".into(),
+                    from_start: true
+                }],
+                "{at:?}"
+            );
+        }
     }
 
     #[test]

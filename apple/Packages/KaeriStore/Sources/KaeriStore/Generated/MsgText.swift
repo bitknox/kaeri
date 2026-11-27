@@ -170,6 +170,7 @@ extension Msg {
         case .roomLookNotAnInvite: L.roomLookNotAnInvite
         case .roomLookNotKept: L.roomLookNotKept
         case .roomLookOldInvite: L.roomLookOldInvite
+        case .roomNeedsEpisode: L.roomNeedsEpisode
         case .noticeNoParty: L.noticeNoParty
         case .partyNeedsRoom: L.partyNeedsRoom
         case .partyLeft: L.partyLeft

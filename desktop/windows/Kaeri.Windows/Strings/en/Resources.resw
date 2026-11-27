@@ -791,6 +791,10 @@
     <value>This invite is from an older version of Kaeri. Ask for a new one.</value>
     <comment>Why a look into a room found nothing: the invite comes from an older version.</comment>
   </data>
+  <data name="RoomNeedsEpisode" xml:space="preserve">
+    <value>Choose an episode for the room first.</value>
+    <comment>Why a room couldn't start: it has no episode yet. Shown where the room would open.</comment>
+  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Watch parties aren't available in this version of Kaeri.</value>
     <comment>Toast when a watch party is asked for in a build without watch parties.</comment>

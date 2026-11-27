@@ -905,6 +905,11 @@ pub fn room_look_old_invite() -> String {
     text("room-look-old-invite", &[])
 }
 
+/// Why a room couldn't start: it has no episode yet. Shown where the room would open.
+pub fn room_needs_episode() -> String {
+    text("room-needs-episode", &[])
+}
+
 /// Toast when a watch party is asked for in a build without watch parties.
 pub fn notice_no_party() -> String {
     text("notice-no-party", &[])

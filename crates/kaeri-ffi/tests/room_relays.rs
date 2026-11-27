@@ -240,7 +240,13 @@ fn a_newcomer_by_a_new_invite_meets_everyone_already_there() {
         &mika,
         |e, _| matches!(e, Event::RoomMessage(m) if matches!(m.kind, kaeri_model::room::RoomMessageKind::NewInvite { .. })),
     );
-    thread::sleep(Duration::from_millis(1_500));
+    thread::sleep(Duration::from_millis(3_000));
+    // Ada steps away, so Mika is the one who answers Ren (a member in the background never
+    // does), from what Mika holds of Ada: Ada's first Hello under the new key went out before
+    // Mika had moved to it.
+    use kaeri_model::command::AppState;
+    ada.send(Command::AppPhase { phase: AppState::Background { playing: false } });
+    until(&ada, |e, _| matches!(e, Event::RoomFlushed));
 
     // Ren comes in by the new link and meets both.
     ren.send(Command::Room(RoomCommand::Lobby {
@@ -253,8 +259,74 @@ fn a_newcomer_by_a_new_invite_meets_everyone_already_there() {
         matches!(e, Event::RoomMembers(m)
             if m.iter().any(|m| m.name == "Ada") && m.iter().any(|m| m.name == "Mika"))
     });
+    // Back, with its sockets open again (chat said while none is open is not kept).
+    ada.send(Command::AppPhase { phase: AppState::Foreground });
+    thread::sleep(Duration::from_millis(3_000));
+    // And hears each of them: neither is dropped as unproved.
+    for (engine, line) in [(&ada, "from Ada"), (&mika, "from Mika")] {
+        engine.send(Command::Room(RoomCommand::Say { text: line.into() }));
+        until(
+            &ren,
+            move |e, _| matches!(e, Event::RoomChat(c) if c.lines.iter().any(|l| matches!(&l.body, RoomChatBody::Said { text } if text == line))),
+        );
+    }
     for engine in [ada, mika, ren] {
         engine.shutdown();
     }
     drop(relays);
+}
+
+#[test]
+fn a_join_whose_invite_relays_are_down_finds_the_room_on_your_spares() {
+    // Neon: joining and peeking never tried the spares, while the copy says they were tried.
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let relay = runtime.block_on(FakeRelay::start());
+    let live = relay.url();
+    // A loopback port nothing listens on.
+    let dead = {
+        let socket = std::net::TcpListener::bind("127.0.0.1:0").unwrap();
+        format!("ws://localhost:{}", socket.local_addr().unwrap().port())
+    };
+    let (root_a, root_b) = (tempfile::tempdir().unwrap(), tempfile::tempdir().unwrap());
+    let (ada, ren) = (engine(&root_a), engine(&root_b));
+    let pick = RoomEpisode { id: AnilistId::new(900_001), episode: "9".into() };
+
+    ada.send(Command::Room(RoomCommand::SetRelays { relays: vec![live.clone()] }));
+    ada.send(Command::Room(RoomCommand::Lobby {
+        invite: None,
+        name: Some("Ada".into()),
+        pick: Some(pick),
+        anyway: false,
+    }));
+    let (view, _) = until(&ada, |e, v| {
+        matches!(e, Event::RoomJoined(_) | Event::RoomState(_))
+            && v.is_some_and(|v| v.link.is_some() && v.room_episode.is_some())
+    });
+    let link = view.unwrap().link.unwrap();
+    // The same room, its invite naming only a relay that is down.
+    let (head, _) = link.split_once("&rl=").expect("the invite names its relays");
+    let link = format!("{head}&rl={}", dead.replace(':', "%3A").replace('/', "%2F"));
+
+    // A look finds it on the spares.
+    ren.send(Command::Room(RoomCommand::SetSpareRelays { relays: vec![live.clone()] }));
+    ren.send(Command::Room(RoomCommand::PeekInvite { invite: link.clone() }));
+    let (_, read) =
+        until(&ren, |e, _| matches!(e, Event::RoomGlimpse(_) | Event::RoomLookFailed { .. }));
+    assert!(
+        matches!(read.last(), Some(Event::RoomGlimpse(g)) if g.members.iter().any(|m| m.name == "Ada")),
+        "{:?}",
+        read.last()
+    );
+
+    // And a join meets Ada there.
+    ren.send(Command::Room(RoomCommand::Lobby {
+        invite: Some(link),
+        name: Some("Ren".into()),
+        pick: None,
+        anyway: false,
+    }));
+    until(&ren, |e, _| matches!(e, Event::RoomMembers(m) if m.iter().any(|m| m.name == "Ada")));
+    ada.shutdown();
+    ren.shutdown();
+    drop(relay);
 }

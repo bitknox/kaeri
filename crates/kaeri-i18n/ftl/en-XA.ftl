@@ -576,6 +576,9 @@ room-look-not-kept = [Ţĥàţ ŕööɱ îšñ'ţ ķéþţ àñý ɱöŕé.~~~~~
 # Why a look into a room found nothing: the invite comes from an older version.
 room-look-old-invite = [Ţĥîš îñṽîţé îš ƒŕöɱ àñ öļðéŕ ṽéŕšîöñ öƒ Ķàéŕî. Åšķ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~]
 
+# Why a room couldn't start: it has no episode yet. Shown where the room would open.
+room-needs-episode = [Çĥööšé àñ éþîšöðé ƒöŕ ţĥé ŕööɱ ƒîŕšţ.~~~~~~~~~~~~]
+
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = [Ŵàţçĥ þàŕţîéš àŕéñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~~~]
 
