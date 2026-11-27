@@ -48,6 +48,9 @@ use crate::playback::{
 /// measured happy path is half a second, so twenty is far past "slow" and firmly in "wrong".
 const FIRST_FRAME_TIMEOUT: Duration = Duration::from_secs(20);
 
+/// A seek or a pause the player makes this soon after the room cued one is the room's.
+const CUED_FOR_MS: u64 = 10_000;
+
 /// How long a mid-episode stall lasts before the player offers another stream.
 const STALL_PROMPT: Duration = Duration::from_secs(8);
 
@@ -191,6 +194,12 @@ impl Run<'_> {
         // The room's seek for a wait, until the player has its first frame there: its cue and
         // target.
         let mut room_cue: Option<(u64, f64)> = None;
+        // The room's own seek and pause, when last cued: the player's seek or pause that
+        // follows is the room's. Any other is the viewer's, said with the next sample.
+        let mut cued_seek: Option<tokio::time::Instant> = None;
+        let mut cued_pause: Option<(bool, tokio::time::Instant)> = None;
+        let mut viewer_seeked = false;
+        let mut viewer_pressed = false;
         let mut waiting: Vec<kaeri_core::stream::Subtitle> = Vec::new();
         // Stats for nerds, open as the window left it.
         let mut stats = StatsWatch::new(player.stats);
@@ -405,6 +414,15 @@ impl Run<'_> {
                             if let SeatCue::Seek { to, cue: Some(id) } = &cue {
                                 room_cue = Some((*id, *to));
                             }
+                            match &cue {
+                                SeatCue::Seek { .. } => {
+                                    cued_seek = Some(tokio::time::Instant::now());
+                                }
+                                SeatCue::Pause(p) => {
+                                    cued_pause = Some((*p, tokio::time::Instant::now()));
+                                }
+                                _ => {}
+                            }
                             apply_cue(link, cue).await;
                         }
                         // The party is over: this plays on as a private session, from here.
@@ -430,6 +448,8 @@ impl Run<'_> {
                                 position: tracker.position(),
                                 paused: tracker.is_paused(),
                                 speed: tracker.speed(),
+                                seeked: false,
+                                pressed: false,
                             });
                         }
                     }
@@ -669,6 +689,13 @@ impl Run<'_> {
                 }
                 PlaybackEvent::Seeking(now) => {
                     seeking = *now;
+                    // A seek the room cued moments ago is the room's; any other, the viewer's.
+                    if *now {
+                        let cued = cued_seek.take().is_some_and(|at| {
+                            at.elapsed() < Duration::from_millis(CUED_FOR_MS)
+                        });
+                        viewer_seeked |= !cued;
+                    }
                     // The seek landed: ready for the room's wait at its first frame there.
                     if !*now
                         && !buffering
@@ -969,12 +996,20 @@ impl Run<'_> {
                     room_cue = None;
                     seat.report(SeatReport::Ready { cue: Some(id) });
                 }
+                if let PlaybackEvent::Paused(p) = &event {
+                    let cued = cued_pause.take().is_some_and(|(want, at)| {
+                        want == *p && at.elapsed() < Duration::from_millis(CUED_FOR_MS)
+                    });
+                    viewer_pressed |= !cued;
+                }
                 if due {
                     seat_sent = Some(now);
                     seat.report(SeatReport::Sample {
                         position: tracker.position(),
                         paused: tracker.is_paused(),
                         speed: tracker.speed(),
+                        seeked: std::mem::take(&mut viewer_seeked),
+                        pressed: std::mem::take(&mut viewer_pressed),
                     });
                 }
             }

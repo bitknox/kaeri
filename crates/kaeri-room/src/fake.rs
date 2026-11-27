@@ -873,6 +873,25 @@ impl FakeRoom {
         behind: Option<f64>,
         ue: bool,
     ) {
+        self.pose(s, seconds, ep, behind, ue, false);
+    }
+
+    /// [`FakeRoom::pose_you`], held: the device stays in `s` whatever its own player reports,
+    /// until the next pose. For scenes of your own state, which the app's real player would
+    /// otherwise overwrite as it opens.
+    pub fn hold_you(&self, s: StateCode, seconds: f64, ep: Option<Ep>, behind: Option<f64>) {
+        self.pose(s, seconds, ep, behind, false, true);
+    }
+
+    fn pose(
+        &self,
+        s: StateCode,
+        seconds: f64,
+        ep: Option<Ep>,
+        behind: Option<f64>,
+        ue: bool,
+        hold: bool,
+    ) {
         let state = self.bus.lock();
         for device in state.devices.values() {
             let _ = device.tx.send(Heard::Pose {
@@ -881,6 +900,7 @@ impl FakeRoom {
                 ep: ep.clone(),
                 behind,
                 ue,
+                hold,
             });
         }
     }
