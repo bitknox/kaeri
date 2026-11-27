@@ -16329,17 +16329,6 @@
     ],
     "back": "one: { $count } { -source } offers it | many: { $count } { -source-pl } offer it | other: { $count } { -source-pl } offer it"
   },
-  "party-sources-found-line": {
-    "source": "07cb8e3aa15e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-13",
-    "flags": [
-      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed.",
-      "back-translation: 'Celle' is feminine; check it against the term's gender."
-    ],
-    "back": "one: { $count } { -source } has it. The one (feminine) you choose plays with the (masculine) { -watch-party }. | many: { $count } { -source-pl } have it. The one (feminine) you choose plays with the (masculine) { -watch-party }. | other: { $count } { -source-pl } have it. The one (feminine) you choose plays with the (masculine) { -watch-party }."
-  },
   "party-sources-label": {
     "source": "444a0b13c12b",
     "state": "draft",

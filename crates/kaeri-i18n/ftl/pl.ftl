@@ -1842,15 +1842,6 @@ party-choose-a-source = Wybierz źródło
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Żadne źródło nie ma odcinka { $episode }. Źródła dodają wtyczki, które instalujesz ze sklepu z wtyczkami.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] Jedno źródło ma go. Wybrane odtwarza się: wspólne oglądanie.
-        [few] { $count } źródła mają go. Wybrane odtwarza się: wspólne oglądanie.
-        [many] { $count } źródeł ma go. Wybrane odtwarza się: wspólne oglądanie.
-       *[other] { $count } źródła mają go. Wybrane odtwarza się: wspólne oglądanie.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Odtwarzacz nie wystartował. Spróbuj ponownie albo wybierz inne źródło.
 

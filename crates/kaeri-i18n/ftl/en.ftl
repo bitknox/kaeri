@@ -1914,13 +1914,6 @@ party-choose-a-source = Choose a source
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = No source lists episode { $episode }. Sources come from plugins, which you add from a plugin store.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] One source has it. The one you choose plays with the watch party.
-       *[other] { $count } sources have it. The one you choose plays with the watch party.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = The player couldn't start. Try again, or choose another source.
 
@@ -9717,6 +9710,13 @@ player-panel-more = More
 # Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
 player-panel-less = Less
 
+# Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+player-sources-found-line =
+    { $count ->
+        [one] One source has it. Choose it to play.
+       *[other] { $count } sources have it. Choose the one to play.
+    }
+
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = Private mode
 
@@ -11850,11 +11850,25 @@ room-line-waiting-for-you =
        *[other] { $names } are waiting · { $seconds } s
     }
 
-# First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
+# First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
 room-line-still-loading =
     { $count ->
         [one] { $names } is still loading
        *[other] { $names } are still loading
+    }
+
+# First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+room-line-still-seeking =
+    { $count ->
+        [one] { $names } is still seeking
+       *[other] { $names } are still seeking
+    }
+
+# First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+room-line-still-buffering =
+    { $count ->
+        [one] { $names } is still buffering
+       *[other] { $names } are still buffering
     }
 
 # Second line once the room has waited as long as it will.
@@ -12619,6 +12633,13 @@ room-leave-on-device = Leave the room on { $device }
 
 # Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
 room-tv-join-from-phone = To join someone's room, open their invite on a paired phone and choose this TV.
+
+# Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+room-sources-found-line =
+    { $count ->
+        [one] One source has it. It plays for everyone in the room.
+       *[other] { $count } sources have it. Your pick plays for everyone in the room.
+    }
 
 # Button that shows the season before.
 seasonal-previous = Previous season

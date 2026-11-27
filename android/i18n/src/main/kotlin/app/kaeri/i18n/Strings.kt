@@ -9662,6 +9662,10 @@ object Strings {
     fun playerPanelLess(context: Context): String =
         context.getString(R.string.player_panel_less)
 
+    /** Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting). */
+    fun playerSourcesFoundLine(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.player_sources_found_line, count, count)
+
     /** The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. */
     fun privateMode(context: Context): String =
         context.getString(R.string.private_mode)
@@ -12320,9 +12324,17 @@ object Strings {
     fun roomLineWaitingForYou(context: Context, names: String, count: Int, seconds: Int): String =
         context.resources.getQuantityString(R.plurals.room_line_waiting_for_you, count, names, count, seconds)
 
-    /** First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for. */
+    /** First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for. */
     fun roomLineStillLoading(context: Context, names: String, count: Int): String =
         context.resources.getQuantityString(R.plurals.room_line_still_loading, count, names, count)
+
+    /** First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for. */
+    fun roomLineStillSeeking(context: Context, names: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_still_seeking, count, names, count)
+
+    /** First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for. */
+    fun roomLineStillBuffering(context: Context, names: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_still_buffering, count, names, count)
 
     /** Second line once the room has waited as long as it will. */
     fun roomLineWaited(context: Context, seconds: Int): String =
@@ -13287,6 +13299,10 @@ object Strings {
     /** Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links. */
     fun roomTvJoinFromPhone(context: Context): String =
         context.getString(R.string.room_tv_join_from_phone)
+
+    /** Line above the list of sources that have the room's episode, in the Choose a source dialog in a room. */
+    fun roomSourcesFoundLine(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_sources_found_line, count, count)
 
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =

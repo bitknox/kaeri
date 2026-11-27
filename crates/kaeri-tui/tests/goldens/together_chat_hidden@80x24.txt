@@ -7,7 +7,7 @@ Kaeri                                                                  plugins �
  ▥ │
  ↓ │    ● Ada (you)                                           Ready
  ◇ │  ▌ ● Mika                                                Ready
- ◎ │    · Ren                                                 Loading · 4 s
+ ◎ │    · Ren                                                 Loading · 4 s
  ≡ │
 ▌⇄ │  Not started yet
    │  Play starts it for everyone

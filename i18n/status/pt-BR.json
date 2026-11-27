@@ -16320,16 +16320,6 @@
     ],
     "back": "one: { $count } { -source } has the episode | many: { $count } { -source-pl } have the episode | other: { $count } { -source-pl } have the episode"
   },
-  "party-sources-found-line": {
-    "source": "07cb8e3aa15e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-13",
-    "flags": [
-      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 0 and 1 here. A person reviews this translation before it is marked reviewed."
-    ],
-    "back": "one: { $count } { -source } has the episode. The one (feminine) you choose plays with the { -watch-party }. | many: { $count } { -source-pl } have the episode. The one (feminine) you choose plays with the { -watch-party }. | other: { $count } { -source-pl } have the episode. The one (feminine) you choose plays with the { -watch-party }."
-  },
   "party-sources-label": {
     "source": "444a0b13c12b",
     "state": "draft",

@@ -1766,13 +1766,6 @@ party-choose-a-source = Bir kaynak seçin
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Hiçbir kaynak { $episode }. bölümü listelemiyor. Kaynaklar, bir eklenti mağazasından eklediğiniz eklentilerden gelir.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] Bir kaynak bu bölümü içeriyor. Seçtiğiniz birlikte izleme ile oynar.
-       *[other] { $count } kaynak bu bölümü içeriyor. Seçtiğiniz birlikte izleme ile oynar.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Oynatıcı başlatılamadı. Yeniden deneyin ya da başka bir kaynak seçin.
 

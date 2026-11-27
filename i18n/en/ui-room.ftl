@@ -33,13 +33,31 @@ room-line-waiting-for-you = { $count ->
    *[other] { $names } are waiting · { $seconds } s
 }
 
-# First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
+# First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
 # @arg names: text
 # @arg count: int
 # @max 40
 room-line-still-loading = { $count ->
     [one] { $names } is still loading
    *[other] { $names } are still loading
+}
+
+# First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+# @arg names: text
+# @arg count: int
+# @max 40
+room-line-still-seeking = { $count ->
+    [one] { $names } is still seeking
+   *[other] { $names } are still seeking
+}
+
+# First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+# @arg names: text
+# @arg count: int
+# @max 40
+room-line-still-buffering = { $count ->
+    [one] { $names } is still buffering
+   *[other] { $names } are still buffering
 }
 
 # Second line once the room has waited as long as it will.
@@ -1076,3 +1094,11 @@ room-leave-on-device = Leave the room on { $device }
 
 # Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
 room-tv-join-from-phone = To join someone's room, open their invite on a paired phone and choose this TV.
+
+# Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+# @arg count: int
+# @max 90
+room-sources-found-line = { $count ->
+    [one] One { -source } has it. It plays for everyone in the room.
+   *[other] { $count } { -source-pl } have it. Your pick plays for everyone in the room.
+}

@@ -1914,13 +1914,6 @@ party-choose-a-source = [Çĥööšé à šöüŕçé~~~~~]
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = [Ñö šöüŕçé ļîšţš éþîšöðé { $episode }. Šöüŕçéš çöɱé ƒŕöɱ þļüĝîñš, ŵĥîçĥ ýöü àðð ƒŕöɱ à þļüĝîñ šţöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~]
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] [Öñé šöüŕçé ĥàš îţ. Ţĥé öñé ýöü çĥööšé þļàýš ŵîţĥ ţĥé ŵàţçĥ þàŕţý.~~~~~~~~~~~~~~~~~~~~]
-       *[other] [{ $count } šöüŕçéš ĥàṽé îţ. Ţĥé öñé ýöü çĥööšé þļàýš ŵîţĥ ţĥé ŵàţçĥ þàŕţý.~~~~~~~~~~~~~~~~~~~~~]
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = [Ţĥé þļàýéŕ çöüļðñ'ţ šţàŕţ. Ţŕý àĝàîñ, öŕ çĥööšé àñöţĥéŕ šöüŕçé.~~~~~~~~~~~~~~~~~~~]
 
@@ -9717,6 +9710,13 @@ player-panel-more = [Ṁöŕé~~]
 # Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
 player-panel-less = [Ļéšš~~]
 
+# Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+player-sources-found-line =
+    { $count ->
+        [one] [Öñé šöüŕçé ĥàš îţ. Çĥööšé îţ ţö þļàý.~~~~~~~~~~~~]
+       *[other] [{ $count } šöüŕçéš ĥàṽé îţ. Çĥööšé ţĥé öñé ţö þļàý.~~~~~~~~~~~~~~]
+    }
+
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = [Þŕîṽàţé ɱöðé~~~~]
 
@@ -11850,11 +11850,25 @@ room-line-waiting-for-you =
        *[other] [{ $names } àŕé ŵàîţîñĝ · { $seconds } š~~~~~~~]
     }
 
-# First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
+# First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
 room-line-still-loading =
     { $count ->
         [one] [{ $names } îš šţîļļ ļöàðîñĝ~~~~~~]
        *[other] [{ $names } àŕé šţîļļ ļöàðîñĝ~~~~~~~]
+    }
+
+# First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+room-line-still-seeking =
+    { $count ->
+        [one] [{ $names } îš šţîļļ šééķîñĝ~~~~~~]
+       *[other] [{ $names } àŕé šţîļļ šééķîñĝ~~~~~~~]
+    }
+
+# First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+room-line-still-buffering =
+    { $count ->
+        [one] [{ $names } îš šţîļļ ƀüƒƒéŕîñĝ~~~~~~~]
+       *[other] [{ $names } àŕé šţîļļ ƀüƒƒéŕîñĝ~~~~~~~]
     }
 
 # Second line once the room has waited as long as it will.
@@ -12619,6 +12633,13 @@ room-leave-on-device = [Ļéàṽé ţĥé ŕööɱ öñ { $device }~~~~~~~]
 
 # Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
 room-tv-join-from-phone = [Ţö ĵöîñ šöɱéöñé'š ŕööɱ, öþéñ ţĥéîŕ îñṽîţé öñ à þàîŕéð þĥöñé àñð çĥööšé ţĥîš ŢṼ.~~~~~~~~~~~~~~~~~~~~~~~~]
+
+# Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+room-sources-found-line =
+    { $count ->
+        [one] [Öñé šöüŕçé ĥàš îţ. Îţ þļàýš ƒöŕ éṽéŕýöñé îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~]
+       *[other] [{ $count } šöüŕçéš ĥàṽé îţ. Ýöüŕ þîçķ þļàýš ƒöŕ éṽéŕýöñé îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~]
+    }
 
 # Button that shows the season before.
 seasonal-previous = [Þŕéṽîöüš šéàšöñ~~~~~]

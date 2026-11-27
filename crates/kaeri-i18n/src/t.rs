@@ -2915,11 +2915,6 @@ pub fn party_sources_none_listed(episode: i64) -> String {
     text("party-sources-none-listed", &[("episode", Arg::Plain(episode))])
 }
 
-/// Line above the list of sources that have the watch party's episode.
-pub fn party_sources_found_line(count: i64) -> String {
-    text("party-sources-found-line", &[("count", Arg::Int(count))])
-}
-
 /// Notice when the player could not start, or could not be reached to add a track.
 pub fn player_could_not_start() -> String {
     text("player-could-not-start", &[])
@@ -15482,6 +15477,11 @@ pub fn player_panel_less() -> String {
     text("player-panel-less", &[])
 }
 
+/// Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+pub fn player_sources_found_line(count: i64) -> String {
+    text("player-sources-found-line", &[("count", Arg::Int(count))])
+}
+
 /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 pub fn private_mode() -> String {
     text("private-mode", &[])
@@ -18765,9 +18765,19 @@ pub fn room_line_waiting_for_you(names: &str, count: i64, seconds: i64) -> Strin
     text("room-line-waiting-for-you", &[("names", Arg::Text(names)), ("count", Arg::Int(count)), ("seconds", Arg::Int(seconds))])
 }
 
-/// First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.
+/// First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
 pub fn room_line_still_loading(names: &str, count: i64) -> String {
     text("room-line-still-loading", &[("names", Arg::Text(names)), ("count", Arg::Int(count))])
+}
+
+/// First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+pub fn room_line_still_seeking(names: &str, count: i64) -> String {
+    text("room-line-still-seeking", &[("names", Arg::Text(names)), ("count", Arg::Int(count))])
+}
+
+/// First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+pub fn room_line_still_buffering(names: &str, count: i64) -> String {
+    text("room-line-still-buffering", &[("names", Arg::Text(names)), ("count", Arg::Int(count))])
 }
 
 /// Second line once the room has waited as long as it will.
@@ -19973,6 +19983,11 @@ pub fn room_leave_on_device(device: &str) -> String {
 /// Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
 pub fn room_tv_join_from_phone() -> String {
     text("room-tv-join-from-phone", &[])
+}
+
+/// Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+pub fn room_sources_found_line(count: i64) -> String {
+    text("room-sources-found-line", &[("count", Arg::Int(count))])
 }
 
 /// Button that shows the season before.
