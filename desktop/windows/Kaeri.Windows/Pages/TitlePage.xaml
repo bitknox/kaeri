@@ -108,7 +108,7 @@
                       <MenuFlyoutItem x:Name="DownloadItem" Text="{x:Bind s:T.TitleDownloadMenu}" Click="OnDownloadRange">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE896;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
-                      <MenuFlyoutItem x:Name="PartyItem" Text="{x:Bind s:T.PartyOpen}" Click="OnWatchParty">
+                      <MenuFlyoutItem x:Name="RoomItem" Text="{x:Bind s:T.RoomSettingsGroup}" Click="OnWatchTogether">
                         <MenuFlyoutItem.Icon><FontIcon Glyph="&#xE716;" /></MenuFlyoutItem.Icon>
                       </MenuFlyoutItem>
                       <MenuFlyoutItem x:Name="SourceItem" Click="OnPickSource">

@@ -40,10 +40,10 @@ public abstract record Link
     }
 
     /// <summary>
-    /// A watch party's invite, <c>kaeri://party?server=…&amp;room=…&amp;title=…&amp;episode=…</c>, as
-    /// it came: the engine reads it (<c>parse_party_invite</c>), so every app agrees on what it says.
+    /// A room's invite, <c>kaeri://room#…</c> or <c>https://kaeri.app/room#…</c>, as it came (an old
+    /// <c>kaeri://party</c> link too): the engine reads it (<c>parse_room_target</c>), so every app agrees on it.
     /// </summary>
-    public sealed record Party(string Text) : Link;
+    public sealed record Room(string Text) : Link;
 
     /// <summary>
     /// What <paramref name="text"/> opens, or null when it is not a link the app answers. A store
@@ -59,7 +59,7 @@ public abstract record Link
         if (text.StartsWith("magnet:", StringComparison.OrdinalIgnoreCase) || text.EndsWith(".torrent", StringComparison.OrdinalIgnoreCase))
             return new Opened(text);
         if (text.StartsWith("https://", StringComparison.OrdinalIgnoreCase))
-            return InviteIn(text) is { } https ? new Invite(https) : null;
+            return RoomIn(text) ? new Room(text) : InviteIn(text) is { } https ? new Invite(https) : null;
         var prefix = Scheme + "://";
         if (!text.StartsWith(prefix, StringComparison.OrdinalIgnoreCase))
             return null;
@@ -77,8 +77,8 @@ public abstract record Link
                 return parts is [var tracker, ..] && tracker.All(c => char.IsAsciiLetterOrDigit(c) || c == '-')
                     ? new Auth(tracker.ToLowerInvariant(), text)
                     : null;
-            case "party":
-                return new Party(text);
+            case "room" or "party":
+                return new Room(text);
             case "title" when parts is [var id] && uint.TryParse(id, out var t) && t > 0:
                 return new Title(t);
             case "play" when parts is [var id, var ep] && uint.TryParse(id, out var p) && p > 0
@@ -180,6 +180,11 @@ public abstract record Link
     }
 
     /// <summary>The https invite <paramref name="text"/> is, as the store makes it: a path with <c>/join/</c> in it.</summary>
+    /// <summary>A room's https invite: <c>https://kaeri.app/room#v=3&amp;…</c>.</summary>
+    static bool RoomIn(string text) =>
+        Uri.TryCreate(text, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps
+        && uri.Host.Equals("kaeri.app", StringComparison.OrdinalIgnoreCase) && uri.AbsolutePath.TrimEnd('/') == "/room";
+
     static string? InviteIn(string text) =>
         Uri.TryCreate(text, UriKind.Absolute, out var uri) && uri.Scheme == Uri.UriSchemeHttps
             && uri.AbsolutePath.Contains("/join/", StringComparison.Ordinal) && uri.Host.Length > 0

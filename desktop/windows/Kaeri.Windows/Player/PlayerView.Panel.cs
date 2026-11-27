@@ -801,7 +801,7 @@ public sealed partial class PlayerView
                 break;
             case EpisodeAction.FromBeginning:
                 ClosePanel();
-                if (InParty)
+                if (RoomKnown)
                     PlayInRoom(number);
                 else
                     c.Send(new Command.Play(playingId, number, true));
@@ -1528,8 +1528,8 @@ public sealed partial class PlayerView
         var notes = new StackPanel { Spacing = 2 };
         if (Wording.DubLine(dub) is { } line)
             notes.Children.Add(DetailText(line));
-        if (InParty)
-            notes.Children.Add(DetailText(T.PartyVersionOwn));
+        if (RoomKnown)
+            notes.Children.Add(DetailText(T.RoomVersionOwn));
         if (notes.Children.Count > 0)
             block.Children.Add(notes);
         return block;
@@ -1777,7 +1777,7 @@ public sealed partial class PlayerView
                     BuildSources();
                 break;
             case Event.TitleDub td when td.Id == playingId && panel.Open:
-            case Event.PartyJoined or Event.PartyLeft when panel.Open:
+            case Event.RoomJoined or Event.RoomLeft when panel.Open:
                 BuildSources();
                 break;
             case Event.StartingStep { Step: StartStep.Found found } step:

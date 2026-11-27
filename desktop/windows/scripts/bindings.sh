@@ -7,9 +7,9 @@
 #   desktop/windows/scripts/bindings.sh --cache-key <release|testing>
 #
 #   release   the engine the app ships: --no-default-features, so without mpv's child process,
-#             with watch parties (`party`) and Play on TV's sender (`remote`)
+#             with the room (`room`) and Play on TV's sender (`remote`)
 #   testing   the same, plus the test kit's fake AniList and fixture source (`StartTesting`), a
-#             fake party server (`StartFakeParty`) and fake TVs (`StartFakeTv`), for the tests
+#             fake room (`StartFakeRoom`) and fake TVs (`StartFakeTv`), for the tests
 #             and the app's fixture runs
 #
 # On Windows both have the `mpv-host` feature too: `FfiPlayer`, kaeri-mpv-host's libmpv
@@ -66,8 +66,8 @@ for arg in "$@"; do
   esac
 done
 case "$flavour" in
-  release) features="party,remote" ;;
-  testing) features="testing,party,remote" ;;
+  release) features="room,remote" ;;
+  testing) features="testing,room,remote" ;;
   *) usage ;;
 esac
 

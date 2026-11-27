@@ -1,4 +1,5 @@
 // The Windows app's own rules, and the testing engine's Watching scene read the way the app
+
 // reads it: through EngineSession into Known, then the model's own queue rules.
 
 using Kaeri.App;
@@ -418,7 +419,6 @@ public class SettingsCatalogTests
     {
         Assert.True(SettingsCatalog.IsSwitch(SettingKey.PresenceRich));
         Assert.Equal([SettingKey.Presence, SettingKey.PresenceTitle], SettingsCatalog.Needs(SettingKey.PresenceRich));
-        Assert.Equal([SettingKey.Syncplay], SettingsCatalog.Needs(SettingKey.SyncplayRoom));
         Assert.Empty(SettingsCatalog.Needs(SettingKey.Presence));
     }
 
@@ -467,7 +467,7 @@ public class SettingsCatalogTests
         Assert.Equal(["off", "1 episode", "2 episodes", "3 episodes", "5 episodes", "10 episodes"], SettingsCatalog.Options(SettingKey.KeepNextEpisodes).Select(o => o.Label));
         Assert.Equal("unlimited", SettingsCatalog.Options(SettingKey.UploadLimit)[0].Label);
         Assert.Equal("262 kB/s", SettingsCatalog.Options(SettingKey.UploadLimit)[1].Label);
-        Assert.Equal(new SettingValue[] { new SettingValue.Bool(false), new SettingValue.Bool(true) }, SettingsCatalog.Options(SettingKey.Syncplay).Select(o => o.Value));
+        Assert.Equal(new SettingValue[] { new SettingValue.Bool(false), new SettingValue.Bool(true) }, SettingsCatalog.Options(SettingKey.Torrents).Select(o => o.Value));
         Assert.Empty(SettingsCatalog.Options(SettingKey.DownloadDir));
         Assert.Empty(SettingsCatalog.Options(SettingKey.MpvOptions));
     }
@@ -609,15 +609,15 @@ public class StoresTests
         var known = new Known();
         Assert.False(known.ServersLoaded);
         Assert.False(known.HiddenLoaded);
-        Assert.False(known.PartyRecentLoaded);
+        Assert.False(known.RoomRecentLoaded);
         Assert.False(known.Queue.Loaded);
         known.Take(new Event.Server(new ServerEvent.Servers([])));
         known.Take(new Event.HiddenTitles([]));
-        known.Take(new Event.PartyRecent([]));
+        known.Take(new Event.RoomRecent([]));
         known.Take(new Event.Downloads([]));
         Assert.True(known.ServersLoaded);
         Assert.True(known.HiddenLoaded);
-        Assert.True(known.PartyRecentLoaded);
+        Assert.True(known.RoomRecentLoaded);
         Assert.True(known.Queue.Loaded);
     }
 }
@@ -1273,11 +1273,14 @@ public class LinkTests
     }
 
     [Fact]
-    public void APartyInviteIsHandedOnWholeForTheEngineToRead()
+    public void ARoomInviteIsHandedOnWholeForTheEngineToRead()
     {
-        const string invite = "kaeri://party?server=party.example%3A8999&room=quiet-harbor-k7m2xq9ad4tnwe3p&title=900001&episode=7";
-        Assert.Equal(new Link.Party(invite), Link.Parse(invite));
-        Assert.Equal(new Link.Party("KAERI://party?room=x"), Link.Parse("\"KAERI://party?room=x\""));
+        const string invite = "kaeri://room#v=3&k=Q2m4xR9dK7tWbH3nPzL8sYe&r=wss%3A%2F%2Frelay-one.example";
+        Assert.Equal(new Link.Room(invite), Link.Parse(invite));
+        const string https = "https://kaeri.app/room#v=3&k=Q2m4xR9dK7tWbH3nPzL8sYe";
+        Assert.Equal(new Link.Room(https), Link.Parse(https));
+        // An old party link still reaches the engine, which says it is from an older version.
+        Assert.Equal(new Link.Room("KAERI://party?room=x"), Link.Parse("\"KAERI://party?room=x\""));
         Assert.Equal(invite, Link.InCommandLine($"\"C:\\kaeri.exe\" \"{invite}\""));
     }
 
@@ -1526,72 +1529,6 @@ public class UpdateTests
             Updates.Line(available, new UpdateState(UpdateStep.Failed, "0.11.0", Reason: "The download stopped: the connection was lost."), false, true));
         Assert.Equal(0.5, new UpdateState(UpdateStep.Downloading, "0.11.0", 50, 100).Fraction);
         Assert.Null(new UpdateState(UpdateStep.Failed, "0.11.0").Fraction);
-    }
-}
-
-public class PartyTests
-{
-    static PartyMember Member(string name, bool? ready, bool you = false, string? file = "Stardust Wayfarer · Episode 7", bool? matches = true) =>
-        new(Name: name, Ready: ready, File: file, Duration: 30, FileMatches: matches, You: you);
-
-    [Fact]
-    public void TheRoomWaitsForWhoeverIsNotReady()
-    {
-        var you = Member("Ada", false, you: true);
-        Assert.Equal("Nobody else is here yet. Send the invite link.", Parties.ReadyLine([you]));
-        Assert.Equal("Play starts once you're ready", Parties.ReadyLine([you, Member("Mika", true)]));
-        Assert.Equal("Play starts once Ren is ready", Parties.ReadyLine([you with { Ready = true }, Member("Ren", false)]));
-        Assert.Equal("Play starts once you and Ren are ready", Parties.ReadyLine([you, Member("Mika", true), Member("Ren", false)]));
-        Assert.Equal("Everyone is ready", Parties.ReadyLine([you with { Ready = true }, Member("Mika", true), Member("Ren", null)]));
-        Assert.False(Parties.AllReady([you with { Ready = true }]));
-    }
-
-    [Fact]
-    public void TheLobbyLineNamesWhoIsNotReadyEvenWhileTheRoomPlays()
-    {
-        var you = Member("Ada", true, you: true);
-        Assert.Equal("Play starts once Ren is ready", Parties.StartLine(null, [you, Member("Ren", false)]));
-        Assert.Equal("Everyone is ready", Parties.StartLine(null, [you, Member("Ren", true)]));
-        Assert.Equal("Starts at 0:00 when everyone is ready", Parties.StartLine(null, [you with { Ready = false }, Member("Ren", false)]));
-        Assert.Equal("Nobody else is here yet. Send the invite link.", Parties.StartLine(null, [you]));
-        Assert.StartsWith("Starting", Parties.StartLine(3, [you, Member("Ren", false)]));
-    }
-
-    [Fact]
-    public void AMemberSaysTheirStateAndAFileThatDiffers()
-    {
-        Assert.Equal("Ada (you)", Parties.MemberName(Member("Ada", true, you: true)));
-        Assert.Equal("Ready", Parties.MemberState(Member("Mika", true)));
-        Assert.Equal("No ready state", Parties.MemberState(Member("Ren", null)));
-        Assert.Equal("Playing a different file", Parties.MemberFile(Member("Ren", false, matches: false)));
-        Assert.Equal("Nothing open yet", Parties.MemberFile(Member("Ren", false, file: null, matches: null)));
-        Assert.Null(Parties.MemberFile(Member("Mika", true)));
-    }
-
-    [Fact]
-    public void TheConnectionLineSaysEncryptionTheRoundTripAndRetries()
-    {
-        var view = new PartyView(Server: "party.example:8999", Room: "r", Name: "Ada", Connection: new PartyConnection.Connected(),
-            Encrypted: true, Ready: false, Episode: null, Invite: null, Motd: null, LatencyMs: 32);
-        Assert.Equal("Connected, encrypted · 32 ms", Parties.ConnectionLine(view));
-        Assert.Equal("Connection lost. Trying again, 2 of 6", Parties.ConnectionLine(view with { Connection = new PartyConnection.Reconnecting(2, 6) }));
-    }
-
-    [Fact]
-    public void TheSuggestedServerSaysWhoRunsIt()
-    {
-        var form = new PartyForm(RecentServers: [], SuggestedServer: "syncplay.pl:8995", SuggestedRunBy: "the Syncplay project", Room: "r", Name: "Ada");
-        Assert.Equal("No server of your own? syncplay.pl:8995 is a public one, run by the Syncplay project.", Parties.ServerHint("", form));
-        Assert.Equal("A public server run by the Syncplay project, not by Kaeri.", Parties.ServerHint(" syncplay.pl:8995 ", form));
-    }
-
-    [Fact]
-    public void AServerReadsAsAHostAndAPort()
-    {
-        foreach (var ok in new[] { "", "party.example", "party.example:8999", "[::1]:8999", "127.0.0.1:8999" })
-            Assert.Null(Parties.ServerProblem(ok));
-        foreach (var bad in new[] { "party.example:", "party.example:0", "party.example:99999", "https://party.example", "a:b:c", ":8999", "[::1" })
-            Assert.NotNull(Parties.ServerProblem(bad));
     }
 }
 

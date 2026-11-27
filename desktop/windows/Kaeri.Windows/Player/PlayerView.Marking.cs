@@ -117,9 +117,10 @@ public sealed partial class PlayerView
 
     void BeginMarking(SkipKind? kind)
     {
-        if (ctx?.Known.Party is not null)
+        // In a room, marking waits: its seeks would move everyone.
+        if (ctx?.Known.Room is not null)
         {
-            Say(T.PlayerMarkUnavailable);
+            Say(T.RoomMarkUnavailable);
             return;
         }
         Send(new PlayerCommand.BeginSkipMark(kind));
@@ -635,11 +636,11 @@ public sealed partial class PlayerView
     {
         foreach (var old in menu.Items.Where(i => i.Tag as string == "skips").ToList())
             menu.Items.Remove(old);
-        var inParty = ctx?.Known.Party is not null;
+        var inRoom = ctx?.Known.Room is not null;
         var mark = new MenuFlyoutItem
         {
             Text = T.PlayerMarkSkipTimes, Tag = "skips", KeyboardAcceleratorTextOverride = "Alt+K",
-            IsEnabled = !inParty && duration > 0,
+            IsEnabled = !inRoom && duration > 0,
         };
         mark.Click += (_, _) => BeginMarking(null);
         var times = new MenuFlyoutItem { Text = T.PlayerSkipTimes, Tag = "skips" };
@@ -647,8 +648,8 @@ public sealed partial class PlayerView
         menu.Items.Insert(0, mark);
         menu.Items.Insert(1, times);
         menu.Items.Insert(2, new MenuFlyoutSeparator { Tag = "skips" });
-        if (inParty)
-            ToolTipService.SetToolTip(mark, T.PlayerMarkUnavailable);
+        if (inRoom)
+            ToolTipService.SetToolTip(mark, T.RoomMarkUnavailable);
     }
 
     async void ShowSkipTimes()

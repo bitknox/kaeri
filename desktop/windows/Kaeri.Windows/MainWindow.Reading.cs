@@ -188,10 +188,10 @@ public sealed partial class MainWindow
             return;
 #if KAERI_TESTING
         // A cast or sync scene's shots show the cast or the sync dialog, not the question, which
-        // would take WinUI's one dialog first; a starting screen's shots show the screen under it.
+        // would take WinUI's one dialog first; a starting screen's and the room's shots show the screen under it.
         if (options.Show is { } show && (show.StartsWith("cast-", StringComparison.Ordinal)
             || show.StartsWith("sync-", StringComparison.Ordinal) || show.StartsWith("startover-", StringComparison.Ordinal)
-            || show.StartsWith("starting-", StringComparison.Ordinal)))
+            || show.StartsWith("starting-", StringComparison.Ordinal) || show.StartsWith("room-", StringComparison.Ordinal)))
             return;
 #endif
         askingMedium = true;

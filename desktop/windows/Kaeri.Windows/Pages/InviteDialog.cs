@@ -51,7 +51,7 @@ static class InviteDialog
     }
 
     /// <summary>The system's share sheet for the link, on the app's window.</summary>
-    static void Share(Ctx ctx, string link)
+    internal static void Share(Ctx ctx, string link)
     {
         try
         {

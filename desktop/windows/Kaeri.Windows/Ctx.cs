@@ -328,14 +328,12 @@ sealed class Ctx
 
     /// <summary>
     /// Plays an episode from where it was left, or from its start with <paramref name="fromStart"/>.
-    /// In a party the engine picks it for the room instead, and the lobby shows the pick.
+    /// In a room the engine plays it for the room.
     /// </summary>
     public void Play(uint id, string episode, bool fromStart = false)
     {
         Known.StartAt = null;
         Send(new Command.Play(id, episode, fromStart));
-        if (Known.Party is not null && !Window.PlayerUp)
-            Window.Go("together");
     }
 
     public void Search(string query) => Window.ShowSearch(query);

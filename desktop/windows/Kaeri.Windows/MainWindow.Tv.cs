@@ -303,7 +303,7 @@ public sealed partial class MainWindow
     {
         try
         {
-            await PartySourceDialog.ForEpisode(ctx, Root.XamlRoot, play.Id, play.Episode).ShowAsync();
+            await new SourceListDialog(ctx, Root.XamlRoot, play.Id, play.Episode).ShowAsync();
         }
         catch (COMException)
         {

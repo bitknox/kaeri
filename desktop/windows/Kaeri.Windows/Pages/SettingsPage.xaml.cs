@@ -149,9 +149,6 @@ public sealed partial class SettingsPage : Page
         K.SeedHours => T.SettingsSeedFor,
         K.UploadLimit => T.SettingsUploadLimit,
         K.TokenStorage => T.SettingsTokenStorage,
-        K.Syncplay => T.SettingsWatchParties,
-        K.SyncplayServer => T.PartyServer,
-        K.SyncplayRoom => T.PartyRoom,
         K.UpdateCheck => T.SettingsCheckUpdates,
         K.UpdateBeta => T.UpdatesBeta,
         K.SourceOrder => T.SettingsSourceOrder,
@@ -289,6 +286,8 @@ public sealed partial class SettingsPage : Page
         if (batch.Any(e => e is Event.Settings || e is Event.Profiles && pane.Name == "profiles"
             || pane.Name == "devices" && (e is Event.SyncStatus || e is Event.Cards cards && cards.V1.Any(c => notesWaiting.Remove(c.Id)))))
             Show();
+        else if (batch.Any(e => e is Event.RoomRelays))
+            Refresh();
         else if (batch.Any(e => e is Event.TorrentProxy))
             ShowProxyCheck();
     }
@@ -654,7 +653,7 @@ public sealed partial class SettingsPage : Page
                                 ctx.Send(new Command.ClearSkipMarks());
                         };
                         Cards.Children.Add(CardFrame(T.SettingsClearSkips, null, clear));
-                        Cards.Children.Add(HideChatCard());
+                        AddWatchTogether();
                     }
                     // Beside Motion: how the mouse wheel moves a page.
                     if (pane.Name == "playback" && group == "picture")
@@ -860,7 +859,7 @@ public sealed partial class SettingsPage : Page
     SettingsCard HideChatCard()
     {
         var toggle = new ToggleSwitch { IsOn = ChatSetting.Hidden, OnContent = "", OffContent = "", MinWidth = 0 };
-        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.SettingsHideChat);
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(toggle, T.RoomSettingsHideChat);
         toggle.Toggled += (_, _) =>
         {
             if (!quiet)
@@ -871,9 +870,43 @@ public sealed partial class SettingsPage : Page
             if (toggle.IsOn != ChatSetting.Hidden)
                 toggle.IsOn = ChatSetting.Hidden;
         });
-        return CardFrame(T.SettingsHideChat, T.SettingsHideChatLine, toggle);
+        return CardFrame(T.RoomSettingsHideChat, T.RoomSettingsHideChatLine, toggle);
     }
 
+
+    /// <summary>
+    /// Playback › Watch together: Hide chat in rooms, and the relays new rooms start on, with
+    /// Edit. The relays are the engine's; this device keeps Hide chat itself.
+    /// </summary>
+    void AddWatchTogether()
+    {
+        var heading = Heading(T.RoomSettingsGroup);
+        watchTogetherCard = heading;
+        Cards.Children.Add(heading);
+        Cards.Children.Add(Note(T.RoomSettingsGroupLine));
+        Cards.Children.Add(HideChatCard());
+        var count = new TextBlock { TextWrapping = TextWrapping.WrapWholeWords };
+        void Count()
+        {
+            var relays = ctx.Known.RoomRelays;
+            var chosen = relays?.Chosen is { Length: > 0 } c ? c : relays?.Defaults ?? [];
+            count.Text = relays is null ? "" : T.RoomSettingsRelaysCount(chosen.Length);
+        }
+        Count();
+        refresh.Add(Count);
+        var edit = new Button { Content = T.RoomSettingsRelaysEdit };
+        Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(edit, T.RoomEditRelays);
+        edit.Click += async (_, _) =>
+        {
+            if (ctx.Known.RoomRelays is { } relays && XamlRoot is { } root
+                && await Kaeri.Windows.Player.RoomPopups.EditDefaultRelays(root, relays) is { } chosen)
+                ctx.Send(new Command.Room(new RoomCommand.SetRelays(chosen)));
+        };
+        var card = CardFrame(T.RoomRelays, null, edit);
+        card.Description = count;
+        Cards.Children.Add(card);
+        ctx.Send(new Command.Room(new RoomCommand.LoadRelays()));
+    }
     /// <summary>A card's description with the reason a feature is paused under it, in the text colour.</summary>
     static StackPanel PausedLine(string detail, string reason)
     {
@@ -1130,6 +1163,7 @@ public sealed partial class SettingsPage : Page
     // The Chromecast switch under Play on TV, for the testing build to scroll to.
     FrameworkElement? castCard;
     FrameworkElement? findCard;
+    FrameworkElement? watchTogetherCard;
 
 #if KAERI_TESTING
     bool demoed;
@@ -1151,6 +1185,21 @@ public sealed partial class SettingsPage : Page
             demoed = true;
             await Task.Delay(800);
             cast.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.6, AnimationDesired = false });
+            return;
+        }
+        // --show=room-settings(-relays): Playback scrolled to Watch together, and its relays editor open.
+        if (!demoed && pane.Name == "playback" && ctx.Options.Show?.StartsWith("room-settings", StringComparison.Ordinal) == true && watchTogetherCard is { } together)
+        {
+            demoed = true;
+            await Task.Delay(800);
+            together.StartBringIntoView(new BringIntoViewOptions { VerticalAlignmentRatio = 0.4, AnimationDesired = false });
+            if (ctx.Options.Show == "room-settings-relays")
+            {
+                for (var i = 0; i < 30 && ctx.Known.RoomRelays is null; i++)
+                    await Task.Delay(100);
+                if (ctx.Known.RoomRelays is { } relays && XamlRoot is { } root)
+                    _ = Kaeri.Windows.Player.RoomPopups.EditDefaultRelays(root, relays);
+            }
             return;
         }
         // --show=found-set-*: Playback scrolled to Find skip times, for a screenshot.
@@ -1625,7 +1674,7 @@ public sealed partial class SettingsPage : Page
             string[] own = p.Name switch
             {
                 "general" => [T.SettingsLanguageApp, T.SettingsHiddenTitles],
-                "playback" => [T.SettingsClearSkips, T.SettingsHideChat, T.SettingsSmoothScrolling],
+                "playback" => [T.SettingsClearSkips, T.RoomSettingsHideChat, T.RoomRelays, T.SettingsSmoothScrolling],
                 "downloads" => [T.DownloadsBackgroundTitle],
                 "sources" => [T.TorrentsProxyRoute],
                 "accounts" => [T.PrivateMode, .. new[] { "anilist", "mal", "kitsu", "simkl", "trakt" }.Select(KaeriFfiMethods.TrackerName), T.AccountsSyncAll,
