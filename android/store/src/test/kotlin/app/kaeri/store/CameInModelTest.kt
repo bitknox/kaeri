@@ -15,7 +15,11 @@ import app.kaeri.engine.model.NothingCameIn
 import app.kaeri.engine.model.PluginsInstalled
 import app.kaeri.engine.model.ServerFound
 import app.kaeri.engine.model.ServerLibrary
+import app.kaeri.engine.model.StorePluginRow
+import app.kaeri.engine.model.StorePluginStatus
 import app.kaeri.engine.model.StoreReport
+import app.kaeri.engine.model.StoreRow
+import app.kaeri.engine.model.StoreState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.advanceTimeBy
@@ -284,6 +288,51 @@ class CameInModelTest {
         model.close()
         assertEquals(CameInModel.Notice.Plugins(2, "Kim’s shelf"), model.notice.value)
         assertNull(model.outcome.value)
+    }
+
+    private fun kim(vararg plugins: Pair<String, StorePluginStatus>) = listOf(
+        StoreRow(
+            id = "kim", name = "Kim’s shelf", url = "https://shelf.kim.example", host = "shelf.kim.example",
+            fingerprint = "0c41 77de", member = "Mika", owner = false, state = StoreState.Ready, checkedAt = null,
+            plugins = plugins.map { (id, status) -> StorePluginRow(id, id, "1.0.0", listOf("$id.example"), status) },
+        ),
+    )
+
+    @Test
+    fun a_plugin_installed_one_by_one_counts_only_once_it_lands() = runTest {
+        val model = model()
+        model.open(Adding.STORE)
+        model.apply(CameIn.Store(store()))
+        advanceTimeBy(1_000)
+        model.installingOne("tsuru")
+        model.installingOne("lantern")
+        // Asked is not installed: a failed install never shows as done.
+        assertEquals(emptySet<String>(), model.installedHere.value)
+        model.storesNow(kim("tsuru" to StorePluginStatus.Installed, "lantern" to StorePluginStatus.Available))
+        assertEquals(setOf("tsuru"), model.installedHere.value)
+        model.close()
+        assertEquals(CameInModel.Notice.Plugins(1, "Kim’s shelf"), model.notice.value)
+    }
+
+    @Test
+    fun a_failed_install_leaves_no_notice() = runTest {
+        val model = model()
+        model.open(Adding.STORE)
+        model.apply(CameIn.Store(store()))
+        advanceTimeBy(1_000)
+        model.installingOne("tsuru")
+        model.storesNow(kim("tsuru" to StorePluginStatus.Available))
+        model.close()
+        assertNull(model.notice.value)
+    }
+
+    @Test
+    fun a_plugin_installed_before_the_form_is_not_counted() = runTest {
+        val model = model()
+        model.open(Adding.STORE)
+        model.apply(CameIn.Store(store()))
+        model.storesNow(kim("tsuru" to StorePluginStatus.Installed))
+        assertEquals(emptySet<String>(), model.installedHere.value)
     }
 
     @Test

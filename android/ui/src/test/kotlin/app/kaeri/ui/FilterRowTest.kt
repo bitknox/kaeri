@@ -18,6 +18,7 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import app.kaeri.design.KaeriTheme
 import app.kaeri.engine.model.AiringStatus
+import app.kaeri.engine.model.Available
 import app.kaeri.engine.model.MediaFormat
 import app.kaeri.engine.model.Season
 import app.kaeri.engine.model.SearchQuery
@@ -46,6 +47,17 @@ class FilterRowTest {
         assertEquals(0, state.sheetCount)
         assertEquals("All filters", state.sheetSpoken)
         assertEquals("Genres, any", state.genres.spoken)
+    }
+
+    @Test
+    fun available_says_its_name_until_set_then_where() {
+        val rest = row(SearchQuery())
+        assertEquals("Available", rest.available.label)
+        assertFalse(rest.available.set)
+        val here = row(SearchQuery(available = Available.PLAYS_HERE))
+        assertEquals("Plays here", here.available.label)
+        assertTrue(here.available.set)
+        assertEquals("On your services", row(SearchQuery(available = Available.ON_YOUR_SERVICES)).available.label)
     }
 
     @Test

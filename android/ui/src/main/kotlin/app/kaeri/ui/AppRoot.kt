@@ -349,6 +349,8 @@ fun AppRoot(
     player: PlayerSlot? = null,
     /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
     links: Flow<AppLink> = emptyFlow(),
+    /** The keyboard's shortcuts, as they are pressed (Ctrl+1 to a section, Ctrl+F to Search). */
+    shortcuts: Flow<KeyShortcut> = emptyFlow(),
     /** The destination on screen, each time it changes: where the Updated notification comes back to. */
     onSection: (Destination) -> Unit = {},
     /** Whether first launch's pages may show, until this device has been through them. */
@@ -366,6 +368,7 @@ fun AppRoot(
             startPage = startPage,
             player = player,
             links = links,
+            shortcuts = shortcuts,
             onSection = onSection,
             firstLaunch = firstLaunch,
         )
@@ -390,6 +393,8 @@ private fun AppRootFrame(
     player: PlayerSlot? = null,
     /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
     links: Flow<AppLink> = emptyFlow(),
+    /** The keyboard's shortcuts, as they are pressed (Ctrl+1 to a section, Ctrl+F to Search). */
+    shortcuts: Flow<KeyShortcut> = emptyFlow(),
     /** The destination on screen, each time it changes: where the Updated notification comes back to. */
     onSection: (Destination) -> Unit = {},
     /** Whether first launch's pages may show, until this device has been through them. */
@@ -496,6 +501,21 @@ private fun AppRootFrame(
                 navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE)
             }
         }
+        // The reader closed for Open downloads or Series: the app goes there.
+        val readerExit by app.kaeri.reader.phone.ReaderLauncher.exit.collectAsStateWithLifecycle()
+        androidx.compose.runtime.LaunchedEffect(readerExit) {
+            val exit = readerExit ?: return@LaunchedEffect
+            when (exit) {
+                app.kaeri.reader.phone.ReaderExit.Downloads ->
+                    if (eink && Destination.Downloads in einkBarDestinations(answer, einkReader)) {
+                        navigator.go(Destination.Downloads)
+                    } else if (nav.currentBackStackEntry?.destination?.route != DOWNLOADS_ROUTE) {
+                        navigator.open(DOWNLOADS_ROUTE)
+                    }
+                is app.kaeri.reader.phone.ReaderExit.Series -> navigator.showSeries(exit.work, "reader")
+            }
+            app.kaeri.reader.phone.ReaderLauncher.exited(exit)
+        }
         // The player comes up over whatever is on screen, and goes back to it as it closes.
         if (player != null) {
             androidx.compose.runtime.LaunchedEffect(player.presented) {
@@ -539,6 +559,14 @@ private fun AppRootFrame(
             // A new link takes over from one still waiting to play.
             links.collectLatest { link -> navigator.follow(link, store, following) { searchOpening = true } }
         }
+        // A shortcut acts on the pages, never under the player, which takes its own keys.
+        val shortcutAnswer by rememberUpdatedState(answer)
+        val shortcutsOff by rememberUpdatedState(onPlayer)
+        androidx.compose.runtime.LaunchedEffect(shortcuts, navigator) {
+            shortcuts.collect { key ->
+                if (!shortcutsOff) navigator.follow(key, shortcutAnswer, store, following) { searchOpening = true }
+            }
+        }
         // First launch's pages stand over the app, which TalkBack then does not reach.
         var covered by remember { mutableStateOf(false) }
         // The cast controller grows out of its mini over the navigation bar, over the whole app.
@@ -577,6 +605,7 @@ private fun AppRootFrame(
                         CompositionLocalProvider(
                             LocalSharedTransitions provides this,
                             LocalSharedTransitionsView provides androidx.compose.ui.platform.LocalView.current,
+                            LocalAnimationsRemoved provides removed,
                         ) {
                             NavHost(
                                 nav,

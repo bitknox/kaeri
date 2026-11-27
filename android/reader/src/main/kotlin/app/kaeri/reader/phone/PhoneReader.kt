@@ -206,6 +206,7 @@ import app.kaeri.engine.model.tapScrollStep
 import app.kaeri.reader.onKeyDown
 import app.kaeri.reader.readerKeys
 import app.kaeri.reader.takesKeyUp
+import app.kaeri.reader.ReaderSize
 import app.kaeri.reader.readerSurface
 import app.kaeri.reader.rememberPagedReaderState
 import app.kaeri.reader.rightToLeft
@@ -509,6 +510,13 @@ fun PhoneReader(
         stripKeys.go(move, keyScope, stripList, stripStep, line = with(density) { StripKeyLine.toPx() }, smooth = fades && !motionRemoved, spec = Motion.standard())
     }
 
+    // The engine draws a System-look novel by the system's dark state: sent again when it changes,
+    // not only when the reader's size does.
+    val readerSize = remember { ReaderSize() }
+    LaunchedEffect(systemDark) {
+        if (state.view == null && !state.opening) return@LaunchedEffect
+        readerSize.surface(density, eink = false, dark = systemDark)?.let(session::surface)
+    }
     CompositionLocalProvider(LocalChrome provides colours, LocalPageTone provides tone) {
       Box(modifier.fillMaxSize().then(if (enabled) Modifier else Modifier.pointerInput(Unit) { awaitPointerEventScope { while (true) awaitPointerEvent(PointerEventPass.Initial).changes.forEach { it.consume() } } })) {
         Box(
@@ -520,7 +528,7 @@ fun PhoneReader(
                     alpha = 1f - 0.2f * backProgress
                 }
                 .background(background)
-                .readerSurface(density, eink = false, dark = !light) { surface ->
+                .readerSurface(density, eink = false, dark = systemDark, held = readerSize) { surface ->
                     if (state.view == null && !state.opening) return@readerSurface
                     session.surface(surface)
                 }

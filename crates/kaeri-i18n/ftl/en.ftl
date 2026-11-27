@@ -6942,6 +6942,9 @@ discussion-more-replies =
 # Muted bar in place of a spoiler in a comment, until it is opened.
 discussion-spoiler = Spoiler
 
+# Screen reader action on text with hidden spoilers: opens all of them at once.
+discussion-show-spoilers = Show spoilers
+
 # Line in place of an image in a comment. It opens the image in the browser.
 discussion-image = Image
 

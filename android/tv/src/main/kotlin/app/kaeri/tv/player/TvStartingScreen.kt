@@ -377,20 +377,21 @@ private fun ButtonsFlow(modifier: Modifier, content: @Composable () -> Unit) {
 private fun DetailsList(model: PlayerModel, progress: StartProgress?, failure: PlaybackFailure?, now: Long, focus: StartFocus) {
     val context = LocalContext.current
     val shown = failure?.trail?.details(context, failure.endedAt) ?: progress?.details(context, now).orEmpty()
+    // Unknown until the streams are found: then neither shows as chosen.
     val translation = progress?.translation() ?: failure?.trail?.translation()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(top = 6.dp)) {
         for (row in shown) DetailsRow(row, model)
-        if (translation != null) {
+        // From the first step, and after a failure: the other translation is often the way out.
+        if (progress != null || failure != null) {
             Box(Modifier.fillMaxWidth().padding(vertical = 6.dp).height(1.dp).background(ObiSilk.Silk.copy(alpha = 0.10f)))
             Row(Modifier.fillMaxWidth().heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically) {
                 Spacer(Modifier.width(28.dp))
                 Text(Strings.playerStartTranslation(context), style = MaterialTheme.typography.bodyLarge.copy(fontSize = 16.sp, lineHeight = 24.sp), color = ObiSilk.Haze, modifier = Modifier.weight(1f))
-                val can = model.menus != null && failure == null
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     for (option in listOf(Translation.SUB, Translation.DUB)) {
                         val on = translation == option
                         Box(Modifier.alpha(if (on) 1f else 0.6f)) {
-                            TonalButton(onClick = { if (!on) model.chooseTranslation(option) }, enabled = can || on, height = 40.dp) {
+                            TonalButton(onClick = { if (!on) model.chooseTranslation(option) }, height = 40.dp) {
                                 ButtonLabel(if (option == Translation.SUB) Strings.audioSubbed(context) else Strings.audioDubbed(context))
                             }
                         }

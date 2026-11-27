@@ -6101,6 +6101,10 @@ object Strings {
     fun discussionSpoiler(context: Context): String =
         context.getString(R.string.discussion_spoiler)
 
+    /** Screen reader action on text with hidden spoilers: opens all of them at once. */
+    fun discussionShowSpoilers(context: Context): String =
+        context.getString(R.string.discussion_show_spoilers)
+
     /** Line in place of an image in a comment. It opens the image in the browser. */
     fun discussionImage(context: Context): String =
         context.getString(R.string.discussion_image)

@@ -116,6 +116,20 @@ class Navigator(private val nav: NavHostController, private val start: Destinati
         nav.navigate(seriesRoute(owner(), work))
     }
 
+
+    /** Whether the page on screen is [work]'s series page. */
+    fun showsSeries(work: WorkId): Boolean {
+        val entry = nav.currentBackStackEntry ?: return false
+        val destination = entry.destinationOf() ?: return false
+        return entry.destination.route == seriesPattern(destination) &&
+            entry.arguments?.getString("work")?.let(android.net.Uri::decode) == work
+    }
+
+    /** Open [work]'s series page, from [from], unless it is the page on screen already. */
+    fun showSeries(work: WorkId, from: String) {
+        if (!showsSeries(work)) openSeries(work, from)
+    }
+
     /** Whether a title page is being swapped for another in place (Another): the pages crossfade. */
     var replacing: Boolean by mutableStateOf(false)
         private set
@@ -196,6 +210,9 @@ fun Navigator.openDownloads() = open(DOWNLOADS_ROUTE)
 fun Navigator.openStores() = open(STORES_ROUTE)
 
 val LocalNavigator = staticCompositionLocalOf<Navigator> { error("no Navigator in this composition") }
+
+/** Whether the system's Remove animations is on, as the app's host reads it once for every screen. */
+val LocalAnimationsRemoved = staticCompositionLocalOf { false }
 
 /** The same navigator, or null where none is provided (the player on its own, in a test). */
 val LocalNavigatorOrNull = staticCompositionLocalOf<Navigator?> { null }

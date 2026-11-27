@@ -60,14 +60,14 @@ fun SeasonalScreen() {
                 if (offline) {
                     Column(Modifier.padding(top = padding.calculateTopPadding())) { OfflineState() }
                 } else {
-                    PosterGrid(grid) { items(9) { PosterPlaceholder() } }
+                    PosterGrid(grid) { items(9) { PosterPlaceholder(list = app.kaeri.ui.reading.listInsteadOfGrid()) } }
                 }
             },
         ) { list ->
             Refreshable({ store.loadSeasonal(force = true) }, top = padding.calculateTopPadding()) {
                 when (list) {
                     is ListState.Loaded -> PosterGrid(grid) {
-                        items(list.ids.mapNotNull { titles[it] }, key = { it.id.toLong() }) { PosterCell(it, itemMotion(), from = "seasonal") }
+                        items(list.ids.mapNotNull { titles[it] }, key = { it.id.toLong() }) { PosterCell(it, itemMotion(), from = "seasonal", list = app.kaeri.ui.reading.listInsteadOfGrid()) }
                     }
                     is ListState.Failed -> Column(Modifier.padding(top = padding.calculateTopPadding()).verticalScroll(rememberScrollState())) {
                         FailedState(stringResource(R.string.seasonal_load_failed), list.reason, retry = { store.loadSeasonal(force = true) })
@@ -81,7 +81,7 @@ fun SeasonalScreen() {
 
 /**
  * Posters three to a row on a phone, 13 apart across and 16 down; as many as fit at 140 dp or
- * more on a tablet.
+ * more on a tablet. At the largest text, one column of list rows, as the spec's grids become.
  */
 @Composable
 internal fun PosterGrid(
@@ -91,7 +91,11 @@ internal fun PosterGrid(
 ) {
     LazyVerticalGrid(
         state = state,
-        columns = if (wideWindow()) GridCells.Adaptive(POSTER_CELL_MIN) else GridCells.Fixed(POSTER_COLUMNS),
+        columns = when {
+            app.kaeri.ui.reading.listInsteadOfGrid() -> GridCells.Fixed(1)
+            wideWindow() -> GridCells.Adaptive(POSTER_CELL_MIN)
+            else -> GridCells.Fixed(POSTER_COLUMNS)
+        },
         contentPadding = padding,
         horizontalArrangement = Arrangement.spacedBy(POSTER_GAP),
         verticalArrangement = Arrangement.spacedBy(16.dp),
@@ -141,11 +145,16 @@ private fun posterCells(width: Int, padding: PaddingValues): PosterCells {
     val density = LocalDensity.current
     val direction = LocalLayoutDirection.current
     val wide = wideWindow()
-    return remember(width, padding, density, direction, wide) {
+    val list = app.kaeri.ui.reading.listInsteadOfGrid()
+    return remember(width, padding, density, direction, wide, list) {
         with(density) {
             val gap = POSTER_GAP.roundToPx()
             val inside = width - padding.calculateStartPadding(direction).roundToPx() - padding.calculateEndPadding(direction).roundToPx()
-            val columns = if (wide) maxOf((inside + gap) / (POSTER_CELL_MIN.roundToPx() + gap), 1) else POSTER_COLUMNS
+            val columns = when {
+                list -> 1
+                wide -> maxOf((inside + gap) / (POSTER_CELL_MIN.roundToPx() + gap), 1)
+                else -> POSTER_COLUMNS
+            }
             val cells = inside - gap * (columns - 1)
             PosterCells(List(columns) { (cells / columns + if (it < cells % columns) 1 else 0).toDp() })
         }

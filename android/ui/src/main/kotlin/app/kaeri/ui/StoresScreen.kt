@@ -207,7 +207,7 @@ internal fun StoreScreen(id: String) {
                             plugin.name,
                             plugin.contactsLine(LocalContext.current),
                             onClick = { navigator.open(pluginRoute(row.id, plugin.id)) },
-                            trailing = { PluginAction(plugin, installing, onUpdate = { updating = plugin }) { store.installPlugin(row.id, plugin.id) } },
+                            trailing = { PluginAction(plugin, row.state, installing, onUpdate = { updating = plugin }) { store.installPlugin(row.id, plugin.id) } },
                         )
                     }
                 },
@@ -306,19 +306,27 @@ internal fun StoreScreen(id: String) {
     InviteLinkSheetHost()
 }
 
-/** What a store's plugin offers: Installed with a water check, Update in amber, Install tonal. */
+/**
+ * What a store's plugin offers: Installed with a water check, Update in amber, Install tonal.
+ * Install needs the store answering; Update and Replace need it to still let this device in.
+ */
 @Composable
-private fun PluginAction(plugin: StorePluginRow, installing: Boolean, onUpdate: () -> Unit, onInstall: () -> Unit) {
+private fun PluginAction(plugin: StorePluginRow, state: StoreState, installing: Boolean, onUpdate: () -> Unit, onInstall: () -> Unit) {
     val colors = MaterialTheme.colorScheme
+    val live = state != StoreState.Revoked
+    val quiet = MaterialTheme.typography.labelLarge
     when (val status = plugin.status) {
         StorePluginStatus.Installed -> Row(horizontalArrangement = Arrangement.spacedBy(4.dp), verticalAlignment = Alignment.CenterVertically) {
             Icon(Icons.Check, contentDescription = null, tint = colors.secondary, modifier = Modifier.size(18.dp))
-            Text(stringResource(R.string.stores_plugin_state_installed), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
+            Text(stringResource(R.string.stores_plugin_state_installed), style = quiet, color = colors.onSurfaceVariant)
         }
-        is StorePluginStatus.Update -> Button(onClick = onUpdate, enabled = !installing) { Text(stringResource(R.string.action_update)) }
-        StorePluginStatus.Available -> FilledTonalButton(onClick = onInstall, enabled = !installing) { WorkLabel(stringResource(R.string.action_install), installing) }
-        StorePluginStatus.AddedByHand -> FilledTonalButton(onClick = onUpdate, enabled = !installing) { Text(stringResource(R.string.action_replace)) }
-        is StorePluginStatus.OtherStore -> Text(stringResource(R.string.stores_plugin_from, status.v1), style = MaterialTheme.typography.labelLarge, color = colors.onSurfaceVariant)
+        is StorePluginStatus.Update -> if (live) Button(onClick = onUpdate, enabled = !installing) { Text(stringResource(R.string.action_update)) }
+        StorePluginStatus.Available -> when {
+            state == StoreState.Ready -> FilledTonalButton(onClick = onInstall, enabled = !installing) { WorkLabel(stringResource(R.string.action_install), installing) }
+            else -> Text(stringResource(if (live) R.string.stores_plugin_offline else R.string.stores_plugin_unavailable), style = quiet, color = colors.onSurfaceVariant)
+        }
+        StorePluginStatus.AddedByHand -> if (live) FilledTonalButton(onClick = onUpdate, enabled = !installing) { Text(stringResource(R.string.action_replace)) }
+        is StorePluginStatus.OtherStore -> Text(stringResource(R.string.stores_plugin_from, status.v1), style = quiet, color = colors.onSurfaceVariant)
     }
 }
 
@@ -347,9 +355,12 @@ internal fun PluginScreen(storeId: String, pluginId: String) {
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(Modifier.padding(horizontal = 4.dp, vertical = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                when (status) {
-                    is StorePluginStatus.Update -> Button(onClick = { updating = true }, enabled = !installing) { Text(stringResource(R.string.updates_update_to, plugin.version)) }
-                    StorePluginStatus.Available -> Button(onClick = { store.installPlugin(row.id, plugin.id) }, enabled = !installing) { WorkLabel(stringResource(R.string.action_install), installing) }
+                // As the list's rows: Install while the store answers, Update while it still lets this device in.
+                when {
+                    status is StorePluginStatus.Update && row.state != StoreState.Revoked ->
+                        Button(onClick = { updating = true }, enabled = !installing) { Text(stringResource(R.string.updates_update_to, plugin.version)) }
+                    status == StorePluginStatus.Available && row.state == StoreState.Ready ->
+                        Button(onClick = { store.installPlugin(row.id, plugin.id) }, enabled = !installing) { WorkLabel(stringResource(R.string.action_install), installing) }
                     else -> {}
                 }
                 if (status is StorePluginStatus.Installed || status is StorePluginStatus.Update) {
@@ -460,7 +471,11 @@ internal fun storeForm(state: app.kaeri.ui.reading.CameInState, onClose: () -> U
         )
     }
     val secondary = if (step is CameInSteps.StoreStep.OtherMedium) {
-        app.kaeri.ui.reading.CameInAction(stringResource(R.string.store_turn_on_watching)) { store.medium.choose(app.kaeri.engine.model.KaeriIsFor.BOTH) }
+        // The store's plugins are for the medium this device has off: the action turns that one on.
+        val reading = step.report.otherIsReading
+        app.kaeri.ui.reading.CameInAction(stringResource(if (reading) R.string.store_turn_on_reading else R.string.store_turn_on_watching)) {
+            store.medium.choose(app.kaeri.engine.model.KaeriIsFor.BOTH)
+        }
     } else {
         null
     }
@@ -504,8 +519,8 @@ internal fun storeForm(state: app.kaeri.ui.reading.CameInState, onClose: () -> U
                         is CameInSteps.StoreStep.OtherMedium -> {
                             app.kaeri.ui.reading.CameInNote(
                                 app.kaeri.ui.reading.NoteKind.INFO,
-                                Strings.storeOtherMedium(context, at.report.name),
-                                stringResource(R.string.store_other_medium_line),
+                                if (at.report.otherIsReading) Strings.storeOtherMediumReading(context, at.report.name) else Strings.storeOtherMedium(context, at.report.name),
+                                stringResource(if (at.report.otherIsReading) R.string.store_other_medium_reading_line else R.string.store_other_medium_line),
                             )
                             val others = row?.plugins.orEmpty()
                             if (others.isNotEmpty()) {
@@ -582,12 +597,19 @@ private fun JoinPreview(preview: StoresModel.Preview?, offline: Boolean) {
             }
             // What a plugin is, then whose plugins these are: the risk line comes first, as the
             // first-run Join and the large panel board put it.
+            // Who answers for them: the owners the invite names, else the store's host.
+            val owner = Strings.storesJoinOwnerResponsible(
+                LocalContext.current,
+                if (invited.owners.isEmpty()) invited.host else app.kaeri.store.Wording.list(invited.owners),
+            )
             if (app.kaeri.ui.reading.largePaper) {
                 val notice = app.kaeri.eink.EinkType.Secondary.copy(lineHeight = app.kaeri.eink.EinkType.Secondary.fontSize * 1.4f)
                 Text(stringResource(R.string.plugin_risk_warning), style = notice, modifier = Modifier.padding(top = 16.dp))
+                Text(owner, style = notice, modifier = Modifier.padding(top = 8.dp))
                 Text(stringResource(R.string.stores_not_from_app), style = notice, modifier = Modifier.padding(top = 8.dp))
             } else {
                 SheetText(stringResource(R.string.plugin_risk_warning), Modifier.padding(top = 16.dp))
+                SheetText(owner, Modifier.padding(top = 8.dp))
                 SheetText(stringResource(R.string.stores_not_from_app), Modifier.padding(top = 8.dp))
             }
         }
@@ -632,7 +654,7 @@ private fun JoinedPlugins(
                             FilledTonalButton(
                                 onClick = {
                                     store.installPlugin(report.store, plugin.id)
-                                    model.installedOne(plugin.id)
+                                    model.installingOne(plugin.id)
                                 },
                                 enabled = !busy,
                                 contentPadding = androidx.compose.foundation.layout.PaddingValues(horizontal = 16.dp),

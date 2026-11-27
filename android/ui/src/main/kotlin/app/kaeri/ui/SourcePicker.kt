@@ -90,6 +90,57 @@ fun SourcePickerSheet(entry: Entry, onDismiss: () -> Unit) {
     }
 }
 
+/**
+ * One episode's releases, from a failed cast's Choose source: picking one plays it, which casts
+ * it to the TV the session still holds, and closes the sheet.
+ */
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@Composable
+fun EpisodeReleasesSheet(id: app.kaeri.engine.core.AnilistId, title: String, episodeLine: String, episode: String, onDismiss: () -> Unit) {
+    val store = LocalAppStore.current
+    val choices by store.sources.collectAsStateWithLifecycle()
+    LaunchedEffect(id, episode) { store.loadSources(id, episode) }
+    DisposableEffect(id, episode) { onDispose { store.closeSources() } }
+    val colors = MaterialTheme.colorScheme
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = rememberBottomSheetState(SheetValue.Hidden, setOf(SheetValue.Hidden, SheetValue.Expanded)),
+        containerColor = colors.surfaceContainer,
+        scrimColor = colors.scrim.copy(alpha = 0.32f),
+        dragHandle = { androidx.compose.material3.BottomSheetDefaults.DragHandle(color = colors.onSurfaceVariant.copy(alpha = 0.4f)) },
+    ) {
+        val candidates = choices?.takeIf { it.id == id && it.episode == episode }?.candidates
+        Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
+            Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp)) {
+                Text(stringResource(R.string.player_choose_source), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
+                Text("$title · $episodeLine", style = ShowTitle.row, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+            }
+            candidates?.forEach { candidate ->
+                PickerLine(title = candidate.title, detail = releaseDetail(candidate), chosen = false) {
+                    store.playSource(id, episode, candidate)
+                    onDismiss()
+                }
+            }
+            if (candidates != null && candidates.isEmpty()) {
+                Text(
+                    stringResource(R.string.sources_empty),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = colors.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+            }
+            if (candidates == null) {
+                AfterWait {
+                    Column(Modifier.heightIn(min = 64.dp).padding(horizontal = 16.dp, vertical = 12.dp), verticalArrangement = Arrangement.Center) {
+                        TextPlaceholder(0.4f)
+                        TextPlaceholder(0.25f, lineHeight = 16.dp)
+                    }
+                }
+            }
+        }
+    }
+}
+
 /** The list inside the sheet, apart from the store so a shot and a test can fill it. */
 @Composable
 internal fun SourcePickerContent(

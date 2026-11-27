@@ -243,16 +243,23 @@ object ArtFocus {
 }
 
 /**
+ * A focused control's scale, or none under Remove animations: TV keeps the focus ring and drops
+ * the scale.
+ */
+@Composable
+fun focusedScale(scale: Float): Float = if (LocalReducedMotion.current) 1f else scale
+
+/**
  * Scale on focus, on `graphicsLayer` so a focus move never re-lays out a row: on quick, or at once
- * while a key is held.
+ * while a key is held. Under Remove animations there is no scale: the focus ring says it alone.
  */
 @Composable
 fun Modifier.focusScale(focused: Boolean, scale: Float): Modifier {
     val repeat = LocalKeyRepeat.current
     val reduced = LocalReducedMotion.current
     val value = remember { Animatable(1f) }
-    LaunchedEffect(focused) {
-        val target = if (focused) scale else 1f
+    LaunchedEffect(focused, reduced) {
+        val target = if (focused && !reduced) scale else 1f
         // Held keys and Remove animations land at once.
         if (repeat.held || reduced) value.snapTo(target) else value.animateTo(target, Motion.quick())
     }

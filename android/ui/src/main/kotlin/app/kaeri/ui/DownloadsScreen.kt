@@ -67,6 +67,7 @@ import app.kaeri.engine.model.DownloadState
 import app.kaeri.engine.model.Entry
 import app.kaeri.engine.model.EpisodeRow
 import app.kaeri.engine.model.SeedRow
+import app.kaeri.store.AppStore
 import app.kaeri.store.DownloadGroup
 import app.kaeri.store.DownloadsModel
 import app.kaeri.store.Wording
@@ -85,6 +86,12 @@ internal const val DOWNLOADS_ROUTE = "downloads"
 /** The Downloads screen's route. */
 internal fun NavGraphBuilder.downloadPages(actions: AppActions) {
     composable(DOWNLOADS_ROUTE) { DownloadsScreen(actions) }
+}
+
+/** Pull to refresh on Downloads: the shows' downloads, and the books' when reading is on. */
+internal fun refreshDownloads(store: AppStore, reads: Boolean) {
+    store.loadDownloads(force = true)
+    if (reads) store.reading.loadDownloads()
 }
 
 /** The bytes free where downloads are kept: Kaeri's own space on the device. */
@@ -210,7 +217,8 @@ internal fun DownloadsScreen(actions: AppActions = AppActions()) {
             return@Scaffold
         }
         val groups = DownloadsModel.groups(rows)
-        Refreshable({ store.loadDownloads(force = true) }, top = padding.calculateTopPadding()) {
+        // Both media's downloads are asked again: reading's too, when it is on.
+        Refreshable({ refreshDownloads(store, reads) }, top = padding.calculateTopPadding()) {
         LazyColumn(
             Modifier.fillMaxSize(),
             contentPadding = PaddingValues(top = padding.calculateTopPadding(), bottom = 48.dp),

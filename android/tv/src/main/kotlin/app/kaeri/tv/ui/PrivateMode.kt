@@ -83,7 +83,7 @@ fun PrivateRailBadge(onClick: () -> Unit, modifier: Modifier = Modifier) {
                     pressedContainerColor = ObiSilk.Silk,
                     pressedContentColor = ObiSilk.Ground,
                 ),
-                scale = ClickableSurfaceDefaults.scale(focusedScale = 1.1f),
+                scale = ClickableSurfaceDefaults.scale(focusedScale = focusedScale(1.1f)),
             ) {
                 Box(Modifier.size(40.dp), contentAlignment = Alignment.Center) {
                     Icon(PrivateGlyph.EyeSlash, contentDescription = null, modifier = Modifier.size(20.dp))

@@ -3549,6 +3549,9 @@ public static partial class T
     /// <summary>Muted bar in place of a spoiler in a comment, until it is opened.</summary>
     public static string DiscussionSpoiler => Get("DiscussionSpoiler");
 
+    /// <summary>Screen reader action on text with hidden spoilers: opens all of them at once.</summary>
+    public static string DiscussionShowSpoilers => Get("DiscussionShowSpoilers");
+
     /// <summary>Line in place of an image in a comment. It opens the image in the browser.</summary>
     public static string DiscussionImage => Get("DiscussionImage");
 
@@ -13813,6 +13816,7 @@ public static partial class T
         ["DiscussionMoreReplies_one"] = "One more reply",
         ["DiscussionMoreReplies_other"] = "{count} more replies",
         ["DiscussionSpoiler"] = "Spoiler",
+        ["DiscussionShowSpoilers"] = "Show spoilers",
         ["DiscussionImage"] = "Image",
         ["DiscussionVideo"] = "Video",
         ["DiscussionAddComment"] = "Add a comment",

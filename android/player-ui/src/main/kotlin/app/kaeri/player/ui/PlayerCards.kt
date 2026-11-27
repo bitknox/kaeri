@@ -92,11 +92,7 @@ import app.kaeri.ui.pixels
 @Composable
 fun CornerCard(model: PlayerModel, chromeVisible: Boolean, throughGround: () -> Float, modifier: Modifier = Modifier) {
     val corner = model.corner
-    val shown = when (corner) {
-        Corner.Skip -> !chromeVisible
-        null -> false
-        else -> true
-    }
+    val shown = cornerShown(corner, chromeVisible, model.assisted)
     AnimatedContent(
         if (shown) corner else null,
         modifier = modifier.graphicsLayer { alpha = 1f - throughGround() },
@@ -115,6 +111,16 @@ fun CornerCard(model: PlayerModel, chromeVisible: Boolean, throughGround: () -> 
             null -> Box(Modifier.size(1.dp))
         }
     }
+}
+
+/**
+ * Whether the corner draws [corner]. Skip hides under the controls, except while a screen reader or
+ * Switch Access runs: the controls then never hide, and the card is the only way to skip.
+ */
+internal fun cornerShown(corner: Corner?, chromeVisible: Boolean, assisted: Boolean): Boolean = when (corner) {
+    Corner.Skip -> !chromeVisible || assisted
+    null -> false
+    else -> true
 }
 
 /** "Skip opening": a 40 dp surfaceContainer pill in a 48 dp target, dimming 8 s after the segment starts. */

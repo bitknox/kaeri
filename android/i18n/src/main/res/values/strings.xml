@@ -3291,6 +3291,8 @@
     </plurals>
     <!-- Muted bar in place of a spoiler in a comment, until it is opened. -->
     <string name="discussion_spoiler">Spoiler</string>
+    <!-- Screen reader action on text with hidden spoilers: opens all of them at once. -->
+    <string name="discussion_show_spoilers">Show spoilers</string>
     <!-- Line in place of an image in a comment. It opens the image in the browser. -->
     <string name="discussion_image">Image</string>
     <!-- Line in place of a video in a comment. It opens the video in the browser. -->

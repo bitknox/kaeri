@@ -475,13 +475,32 @@ class AppStore(
         if (command is Command.Reader && readerAnswer?.invoke(command.v1) == true) return null
         if (command is Command.Play || command is Command.PlaySource || command is Command.PlayLocal || command is Command.PlayParty) {
             onPlayAsked?.invoke()
+            // Another play gives a pending position up.
+            startAt = null
         }
         val client = client
         if (client == null) {
             if (_phase.value == Phase.Starting) early += command
             return null
         }
-        return client.send(command)
+        val job = client.send(command)
+        startAt?.after(command)?.let { then ->
+            startAt = null
+            send(then)
+        }
+        return job
+    }
+
+    /** A play to move to a position once its file is open: Play here from a TV. */
+    private var startAt: StartAt? = null
+
+    /**
+     * Play [episode] of [id] from [position] seconds, as Play here does with the TV's playhead:
+     * the engine plays it from where history has it, then the player seeks once the file is open.
+     */
+    fun play(id: AnilistId, episode: String, position: Double) {
+        send(Command.Play(id, episode, false))
+        startAt = StartAt(id, episode, position)
     }
 
     /** The commands waiting for the engine to start, for a test to look at. */
@@ -1412,7 +1431,11 @@ class AppStore(
         // An alert is also the player's: one while an episode starts is why it could not, which
         // its "Couldn't play episode 7" says. The notice below still says it too.
         if (event is Event.Toast && event.v1.kind == NoticeKind.ALERT) onPlayback?.invoke(event)
-        if (event is Event.PlaybackStaged) playbackFailed = false
+        if (event is Event.PlaybackStaged) {
+            playbackFailed = false
+            // Another play staged first: the position was for this one only.
+            if (startAt?.staged(event.id, event.episode) == false) startAt = null
+        }
         if (event is Event.PlaybackEnded && !event.rollingOn) playbackFailed = event.ending == app.kaeri.engine.model.Ending.Failed
         // The room started or moved on: the engine opens the episode, and the player takes it.
         if (event is Event.PartyStarted) onPlayAsked?.invoke()
@@ -1543,7 +1566,10 @@ class AppStore(
             is Event.SourceOptions -> sourceChoices.apply(event.id, event.options)
             is Event.EpisodeChecked -> missing.apply(event.v1)
             is Event.PinUnavailable -> sourceChoices.pinUnavailable(event.id, event.providerId, event.name)
-            is Event.Stores -> stores.apply(event.v1)
+            is Event.Stores -> {
+                stores.apply(event.v1)
+                cameIn.storesNow(event.v1)
+            }
             is Event.LinkOpened -> opened.linkOpened(event.v1)
             is Event.OpenedChoices -> opened.choices(event.link, event.query, event.candidates, event.failed)
             is Event.StorePreview -> stores.previewed(event.v1)

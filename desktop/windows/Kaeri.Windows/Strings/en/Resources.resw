@@ -4985,6 +4985,10 @@
     <value>Spoiler</value>
     <comment>Muted bar in place of a spoiler in a comment, until it is opened.</comment>
   </data>
+  <data name="DiscussionShowSpoilers" xml:space="preserve">
+    <value>Show spoilers</value>
+    <comment>Screen reader action on text with hidden spoilers: opens all of them at once.</comment>
+  </data>
   <data name="DiscussionImage" xml:space="preserve">
     <value>Image</value>
     <comment>Line in place of an image in a comment. It opens the image in the browser.</comment>

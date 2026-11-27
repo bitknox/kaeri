@@ -59647,6 +59647,18 @@
         }
       }
     },
+    "discussion-show-spoilers" : {
+      "comment" : "Screen reader action on text with hidden spoilers: opens all of them at once.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show spoilers"
+          }
+        }
+      }
+    },
     "discussion-sign-in" : {
       "comment" : "Line in place of the field when nobody is signed in to AniList. It opens the sign-in.",
       "extractionState" : "manual",

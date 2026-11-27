@@ -11015,6 +11015,11 @@ pub fn discussion_spoiler() -> String {
     text("discussion-spoiler", &[])
 }
 
+/// Screen reader action on text with hidden spoilers: opens all of them at once.
+pub fn discussion_show_spoilers() -> String {
+    text("discussion-show-spoilers", &[])
+}
+
 /// Line in place of an image in a comment. It opens the image in the browser.
 pub fn discussion_image() -> String {
     text("discussion-image", &[])

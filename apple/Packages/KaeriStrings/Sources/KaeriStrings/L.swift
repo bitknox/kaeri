@@ -5589,6 +5589,9 @@ public enum L {
     /// Muted bar in place of a spoiler in a comment, until it is opened.
     public static var discussionSpoiler: String { string("discussion-spoiler", fallback: "Spoiler") }
 
+    /// Screen reader action on text with hidden spoilers: opens all of them at once.
+    public static var discussionShowSpoilers: String { string("discussion-show-spoilers", fallback: "Show spoilers") }
+
     /// Line in place of an image in a comment. It opens the image in the browser.
     public static var discussionImage: String { string("discussion-image", fallback: "Image") }
 

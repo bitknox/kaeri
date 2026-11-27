@@ -27,9 +27,23 @@ data class ReaderRequest(
     val from: String? = null,
 )
 
+/** Where the app goes as the reader closes for one of its own links, such as Open downloads. */
+sealed interface ReaderExit {
+    /** Downloads: its tab on an e-reader, the page over the screen under the reader elsewhere. */
+    data object Downloads : ReaderExit
+
+    /** [work]'s series page, unless that page is already the one under the reader. */
+    data class Series(val work: WorkId) : ReaderExit
+}
+
 object ReaderLauncher {
     private val _request = MutableStateFlow<ReaderRequest?>(null)
     val request: StateFlow<ReaderRequest?> = _request.asStateFlow()
+
+    private val _exit = MutableStateFlow<ReaderExit?>(null)
+
+    /** Where the app is to go now that the reader closed, until the app has gone there. */
+    val exit: StateFlow<ReaderExit?> = _exit.asStateFlow()
 
     private val _settings = MutableStateFlow<SettingsPane?>(null)
 
@@ -64,6 +78,17 @@ object ReaderLauncher {
         kept = null
         drop()
         _request.value = null
+    }
+
+    /** Close the reader and have the app go to [exit]. */
+    fun closeTo(exit: ReaderExit) {
+        close()
+        _exit.value = exit
+    }
+
+    /** The app went where [exit] asked. */
+    fun exited(exit: ReaderExit) {
+        _exit.compareAndSet(exit, null)
     }
 
     /**

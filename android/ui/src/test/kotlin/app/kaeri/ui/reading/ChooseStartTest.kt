@@ -65,4 +65,25 @@ class ChooseStartTest {
         assertNull(groups((1..30).map { row(it) }).readerPlace())
         assertNull(groups((1..30).map { row(it, ChapterReadState.Read) }).readerPlace())
     }
+
+    @Test
+    fun the_large_e_ink_pager_opens_on_the_page_with_the_readers_place() {
+        val reading = (1..60).map { n -> if (n < 25) row(n, ChapterReadState.Read) else if (n == 25) row(n, ChapterReadState.InProgress(3u, 20u)) else row(n) }
+        val volumes = groups(reading)
+        val focus = choosingFocus(volumes, reading, volumes.chooseStart())
+        assertEquals("c25", focus)
+        // 20 rows a page: chapter 25 is on the second page, oldest first, and the second of three newest first.
+        assertEquals(1, pageHolding(reading, focus!!, 20))
+        assertEquals(1, pageHolding(reading.reversed(), focus, 20))
+        assertEquals(2, pageHolding(reading, "c60", 20))
+    }
+
+    @Test
+    fun with_no_place_the_pager_opens_on_the_first_ticked_chapter() {
+        val fresh = (1..30).map { row(it) }
+        val volumes = groups(fresh)
+        assertEquals("c1", choosingFocus(volumes, fresh, volumes.chooseStart()))
+        assertEquals(1, pageHolding(fresh.reversed(), "c1", 20))
+        assertNull(pageHolding(fresh, "c99", 20))
+    }
 }

@@ -421,6 +421,20 @@ class ClosingTest {
     }
 
     @Test
+    fun theOtherTranslationAfterAFailureAsksForTheEpisodeAgain() = runTest {
+        val rig = Rig(this)
+        staged(rig, "7")
+        rig.model.apply(Event.PlaybackEnded(false, Ending.Failed, false))
+        assertNotNull(rig.model.failure)
+        rig.sent.clear()
+        rig.model.chooseTranslation(app.kaeri.engine.core.Translation.DUB)
+        assertEquals(
+            listOf(Command.SetTranslation(app.kaeri.engine.core.Translation.DUB), Command.Play(900_001u, "7", false)),
+            rig.sent,
+        )
+    }
+
+    @Test
     fun aFailureOnScreenLetsTheClockRest() = runTest {
         val rig = Rig(this)
         staged(rig, "7")
@@ -682,6 +696,24 @@ class CardTest {
         assertFalse(rig.model.upNextShown)
         rig.playhead(60.0)
         assertFalse(PlayerCommand.PlayNext in rig.controls)
+    }
+
+    @Test
+    fun escAnswersUpNextAndTheStallBeforeAnythingCloses() = runTest {
+        val rig = Rig(this)
+        rig.opened()
+        assertFalse("no card: Esc goes on to close", rig.model.answerCard())
+        upNext(rig)
+        rig.playhead(43.0)
+        assertTrue(rig.model.answerCard())
+        assertEquals(PlayerCommand.CancelNext, rig.controls.last())
+        assertFalse(rig.model.upNextShown)
+        rig.ui(1u, PlayerUi.Stall(8u))
+        assertTrue(rig.model.answerCard())
+        assertEquals(PlayerCommand.StallWait, rig.controls.last())
+        assertNull(rig.model.stall)
+        rig.ui(1u, PlayerUi.Skip(SkipKind.ENDING, 56.0))
+        assertFalse("Skip is no card to answer", rig.model.answerCard())
     }
 
     @Test
