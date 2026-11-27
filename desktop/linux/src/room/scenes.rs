@@ -292,7 +292,7 @@ impl Staged {
             S::YouLoading => {
                 self.run(|f| f.member_seeks("Mika", SEEK_TO));
                 self.pause(200);
-                self.run(|f| f.pose_you(StateCode::Loading, 6.0, None, None, false));
+                self.run(|f| f.hold_you(StateCode::Loading, 6.0, None, None));
             }
             S::Buffering | S::BufferingSix => self.run(|f| f.member_stalls("Ren", 3.0)),
             S::Choosing => self.run(|f| f.member_chooses_source("Ren")),
@@ -302,14 +302,15 @@ impl Staged {
             S::Behind => self.run(|f| f.member_behind("Ren", 4.0)),
             S::OtherEpisode => self.run(|f| f.member_on_episode("Ren", ep("8"))),
             S::Left => self.run(|f| f.member_leaves("Ren")),
+            // Your own states are held: the app's player opening never overwrites them.
             S::YouChoosing => {
-                self.run(|f| f.pose_you(StateCode::Choosing, 0.0, None, None, false));
+                self.run(|f| f.hold_you(StateCode::Choosing, 0.0, None, None));
             }
             S::YouNoSource => {
-                self.run(|f| f.pose_you(StateCode::NoSource, 0.0, None, None, false));
+                self.run(|f| f.hold_you(StateCode::NoSource, 0.0, None, None));
             }
             S::YouBehind => {
-                self.run(|f| f.pose_you(StateCode::Behind, 4.0, None, Some(4.0), false));
+                self.run(|f| f.hold_you(StateCode::Behind, 4.0, None, Some(4.0)));
             }
             S::YouReconnecting => self.run(|f| {
                 for i in 0..3 {
