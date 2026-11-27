@@ -45,7 +45,7 @@ pub async fn run(
     images: bool,
     config_problem: Option<kaeri_core::config::ConfigProblem>,
     set_aside: Option<std::path::PathBuf>,
-    party: Option<kaeri_model::party::PartyTarget>,
+    room: Option<String>,
     private: bool,
 ) -> Result<()> {
     // The colour depth first: every colour the palette hands out is drawn at it.
@@ -84,9 +84,6 @@ pub async fn run(
         EngineOptions::new(paths.clone(), config.clone(), http, store, player_theme());
     options.saved = Some(saved.clone());
     options.set_aside = set_aside;
-    // `syncplay.enabled` sends every play to the party: the terminal's way in, which the apps,
-    // starting parties when asked, do without.
-    options.every_play_a_party = true;
     options.reading = true;
     // The terminal's own reader settings: the text width of a light novel, in columns.
     options.terminal = true;
@@ -139,19 +136,12 @@ pub async fn run(
     if let Some(task) = app.reload() {
         engine.send(task);
     }
-    // `kaeri party <link or code>`: the Together section, with the lobby opening in it.
-    if let Some(target) = party {
+    // `kaeri room <invite link>`: the Together section, with the room coming up in it.
+    if let Some(invite) = room {
         if let Some(task) = app.go_to_section(kaeri_tui::nav::Section::Together) {
             engine.send(task);
         }
-        engine.send(kaeri_model::command::Command::Party(
-            kaeri_model::party::PartyCommand::Lobby {
-                server: target.server,
-                room: target.room,
-                name: None,
-                pick: None,
-            },
-        ));
+        engine.send(app.join_room(invite));
     }
 
     // What was true at launch, applied before the first frame so that it shows the app as it

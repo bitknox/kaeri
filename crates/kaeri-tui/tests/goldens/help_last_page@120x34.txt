@@ -25,7 +25,7 @@ Kaeri                                                                           
     Move down                  j / ↓    Recommendations                b    Slower                         [
     Move left                  h / ←    Play the trailer               v    Faster                         ]
     Move right                 l / →    Open on AniList                o    Volume down                    9
-    Jump to top                    g    Play in a watch party          y    Volume up                      0
+    Jump to top                    g    Start a room                   y    Volume up                      0
     Jump to bottom                 G  Episodes                              Full screen                    F
     Jump to today                  T    Download a range of episodes   D    Leave player running           q
     Jump to previous day           {    Toggle watched                 u    Stop playback                  x
@@ -327,8 +327,8 @@ r27 c02-14 fg=text-dim bg=ground
 r27 c15-34 fg=rule bg=ground
 r27 c35-35 fg=text bg=ground
 r27 c36-37 fg=rule bg=ground
-r27 c38-60 fg=text-dim bg=ground
-r27 c61-70 fg=rule bg=ground
+r27 c38-51 fg=text-dim bg=ground
+r27 c52-70 fg=rule bg=ground
 r27 c71-71 fg=text bg=ground
 r27 c72-73 fg=rule bg=ground
 r27 c74-84 fg=text-dim bg=ground

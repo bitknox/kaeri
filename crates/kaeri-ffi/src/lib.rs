@@ -44,12 +44,12 @@ mod engine;
 mod folders;
 mod host;
 mod log;
-mod party;
 #[cfg(feature = "mpv-host")]
 mod player;
 mod reading;
 #[cfg(feature = "remote")]
 mod remote;
+mod room;
 #[cfg(feature = "testing")]
 mod scenes;
 #[cfg(feature = "remote")]
@@ -68,12 +68,6 @@ pub use engine::FfiEngine;
 pub use folders::{FfiFolderAccess, FfiFolderEntry, FfiOpenedFile};
 pub use host::{FfiDecodedImage, FfiHost, FfiPageDecoder};
 pub use log::{FfiLogLevel, log_line, start_log};
-#[cfg(all(feature = "party", feature = "testing"))]
-pub use party::{FfiChatFixture, FfiFakeParty};
-pub use party::{
-    clean_party_code, parse_party_invite, parse_party_target, party_invite_link,
-    party_share_app_link, party_share_link,
-};
 #[cfg(feature = "mpv-host")]
 pub use player::{
     FfiPlayer, FfiPlayerEvent, FfiPlayerOptions, FfiPlayerSink, FfiPlayerState, FfiSnapshot,
@@ -81,6 +75,9 @@ pub use player::{
 };
 #[cfg(feature = "remote")]
 pub use remote::{FfiAdvert, FfiLinkSent, FfiPairedPhone, FfiScreen, FfiTvRemote, FfiTxtPair};
+#[cfg(all(feature = "room", feature = "testing"))]
+pub use room::{FfiFakeRoom, FfiRoomScene};
+pub use room::{parse_room_target, room_app_link};
 #[cfg(feature = "testing")]
 pub use scenes::{FIXTURE_OPENED_LINK, FfiScene, MISSING_AIRED_AGO, fixture_opened_link};
 #[cfg(feature = "remote")]

@@ -590,23 +590,11 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Não há espaço livre suficiente para manter os próximos episódios baixados. Libere espaço para baixar mais.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Escolha primeiro um servidor para a sessão em grupo, em syncplay.server. {server} é mantido por {operator}.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Escolha primeiro um servidor para a sessão em grupo. {server} é mantido por {operator}.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Sessões em grupo não estão disponíveis nesta versão do Kaeri.</value>
   </data>
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>Uma sessão em grupo precisa de uma sala. Escolha uma antes.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>A conexão com o servidor da sessão em grupo caiu. Tentando de novo.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>De volta à sessão em grupo.</value>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>Você saiu da sessão em grupo.</value>

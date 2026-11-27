@@ -35,10 +35,6 @@ pub struct EngineOptions {
     /// finding skip times needs: the app's libmpv carries the tap, and it handed
     /// `kaeri_audio_tap` to `mpv_set_audio_tap`. Off unless the front end says so.
     pub audio_tap: bool,
-    /// Whether `syncplay.enabled` sends every play to the watch party the settings name: the
-    /// terminal's way in, on for it alone. An app starts parties when asked, with `PartyJoin`
-    /// or `PlayParty`, and the setting does nothing there. Off unless the front end turns it on.
-    pub every_play_a_party: bool,
     /// The sign-in clients a native app ships with, none for the terminal app, whose user
     /// registers their own in the config.
     pub app_clients: AppClients,
@@ -121,7 +117,6 @@ impl EngineOptions {
             player_theme,
             hosted_player: !cfg!(feature = "desktop"),
             audio_tap: false,
-            every_play_a_party: false,
             app_clients: AppClients::default(),
             device_label: kaeri_model::stores::COMPUTER.to_owned(),
             handheld: false,

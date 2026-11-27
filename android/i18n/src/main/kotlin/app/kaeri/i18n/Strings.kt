@@ -713,13 +713,25 @@ object Strings {
     fun noticeKeepNextFull(context: Context): String =
         context.getString(R.string.notice_keep_next_full)
 
-    /** Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps. */
-    fun partyNeedsServer(context: Context, server: String, operator: String): String =
-        context.getString(R.string.party_needs_server, server, operator)
+    /** Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on. */
+    fun roomLookUnreachable(context: Context): String =
+        context.getString(R.string.room_look_unreachable)
 
-    /** Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it. */
-    fun partyChooseServer(context: Context, server: String, operator: String): String =
-        context.getString(R.string.party_choose_server, server, operator)
+    /** Why a look into a room found nothing: the pasted text is no room's invite. */
+    fun roomLookNotAnInvite(context: Context): String =
+        context.getString(R.string.room_look_not_an_invite)
+
+    /** Why a look into a recent room found nothing: it's no longer in this device's recent rooms. */
+    fun roomLookNotKept(context: Context): String =
+        context.getString(R.string.room_look_not_kept)
+
+    /** Why a look into a room found nothing: the invite comes from an older version. */
+    fun roomLookOldInvite(context: Context): String =
+        context.getString(R.string.room_look_old_invite)
+
+    /** Why a room couldn't start: it has no episode yet. Shown where the room would open. */
+    fun roomNeedsEpisode(context: Context): String =
+        context.getString(R.string.room_needs_episode)
 
     /** Toast when a watch party is asked for in a build without watch parties. */
     fun noticeNoParty(context: Context): String =
@@ -728,14 +740,6 @@ object Strings {
     /** Message when a watch party was asked for with no room named. */
     fun partyNeedsRoom(context: Context): String =
         context.getString(R.string.party_needs_room)
-
-    /** Message in a watch party when its server connection dropped and is retried. */
-    fun partyServerLost(context: Context): String =
-        context.getString(R.string.party_server_lost)
-
-    /** Message in a watch party when the connection came back. */
-    fun partyRejoined(context: Context): String =
-        context.getString(R.string.party_rejoined)
 
     /** Message when the person left a watch party. */
     fun partyLeft(context: Context): String =
@@ -9674,6 +9678,10 @@ object Strings {
     fun playerPanelLess(context: Context): String =
         context.getString(R.string.player_panel_less)
 
+    /** Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting). */
+    fun playerSourcesFoundLine(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.player_sources_found_line, count, count)
+
     /** The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. */
     fun privateMode(context: Context): String =
         context.getString(R.string.private_mode)
@@ -12311,6 +12319,1006 @@ object Strings {
     /** Notification, new chapter: the action that opens the reader on the chapter. */
     fun notifChapterRead(context: Context): String =
         context.getString(R.string.notif_chapter_read)
+
+    /** First line while the room plays and nobody holds it. */
+    fun roomLineWatching(context: Context): String =
+        context.getString(R.string.room_line_watching)
+
+    /** Second line while the room plays: the room's episode and its place in it. */
+    fun roomLineWatchingDetail(context: Context, episode: String, at: String): String =
+        context.getString(R.string.room_line_watching_detail, episode, at)
+
+    /** First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people. */
+    fun roomLinePausedFor(context: Context, names: String): String =
+        context.getString(R.string.room_line_paused_for, names)
+
+    /** First line on your own device while the room waits for you. */
+    fun roomLinePausedForYou(context: Context): String =
+        context.getString(R.string.room_line_paused_for_you)
+
+    /** Second line while the room waits for you: who waits, and for how many seconds so far. */
+    fun roomLineWaitingForYou(context: Context, names: String, count: Int, seconds: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_waiting_for_you, count, names, count, seconds)
+
+    /** First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for. */
+    fun roomLineStillLoading(context: Context, names: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_still_loading, count, names, count)
+
+    /** First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for. */
+    fun roomLineStillSeeking(context: Context, names: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_still_seeking, count, names, count)
+
+    /** First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for. */
+    fun roomLineStillBuffering(context: Context, names: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_still_buffering, count, names, count)
+
+    /** Second line once the room has waited as long as it will. */
+    fun roomLineWaited(context: Context, seconds: Int): String =
+        context.getString(R.string.room_line_waited, seconds)
+
+    /** Second line after someone pressed Carry on, when the room waited for one person. */
+    fun roomLineCarriedOnOne(context: Context, carrier: String, name: String): String =
+        context.getString(R.string.room_line_carried_on_one, carrier, name)
+
+    /** Second line after someone pressed Carry on, when the room waited for more than one person. */
+    fun roomLineCarriedOnMany(context: Context, carrier: String): String =
+        context.getString(R.string.room_line_carried_on_many, carrier)
+
+    /** First line while the room is paused by someone. */
+    fun roomLinePausedBy(context: Context, name: String): String =
+        context.getString(R.string.room_line_paused_by, name)
+
+    /** First line while the room is paused by you. */
+    fun roomLineYouPaused(context: Context): String =
+        context.getString(R.string.room_line_you_paused)
+
+    /** Second line while the room is paused: the place it paused at. */
+    fun roomLinePausedAt(context: Context, at: String): String =
+        context.getString(R.string.room_line_paused_at, at)
+
+    /** Second line while one of the room's relays is not answering. */
+    fun roomLineRelaysDown(context: Context, count: Int, total: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_relays_down, count, count, total)
+
+    /** First line when your own device lost every relay. */
+    fun roomLineReconnecting(context: Context): String =
+        context.getString(R.string.room_line_reconnecting)
+
+    /** Second line when your own device lost every relay. */
+    fun roomLineReconnectingDetail(context: Context): String =
+        context.getString(R.string.room_line_reconnecting_detail)
+
+    /** Second line when your own player is behind the room. */
+    fun roomLineYouBehind(context: Context, seconds: Int): String =
+        context.getString(R.string.room_line_you_behind, seconds)
+
+    /** The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines. */
+    fun roomLineWithSeconds(context: Context, line: String, seconds: Int): String =
+        context.getString(R.string.room_line_with_seconds, line, seconds)
+
+    /** Stands for the people the room waits for when there are more than two, inside "Paused for …". */
+    fun roomNamesPeople(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_names_people, count, count)
+
+    /** State word: in step with the room and playing. */
+    fun roomStateWatching(context: Context): String =
+        context.getString(R.string.room_state_watching)
+
+    /** State word before play: this person's first frame is ready. */
+    fun roomStateReady(context: Context): String =
+        context.getString(R.string.room_state_ready)
+
+    /** State word: the room is paused and this person paused it. */
+    fun roomStatePausedIt(context: Context): String =
+        context.getString(R.string.room_state_paused_it)
+
+    /** State word: the room is paused; this person was watching. */
+    fun roomStatePaused(context: Context): String =
+        context.getString(R.string.room_state_paused)
+
+    /** State word: the slowest player, holding the room back, with the gap in seconds. */
+    fun roomStateBehind(context: Context, seconds: Int): String =
+        context.getString(R.string.room_state_behind, seconds)
+
+    /** State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person. */
+    fun roomStateLoading(context: Context, seconds: Int): String =
+        context.getString(R.string.room_state_loading, seconds)
+
+    /** State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person. */
+    fun roomStateBuffering(context: Context, seconds: Int): String =
+        context.getString(R.string.room_state_buffering, seconds)
+
+    /** State word: this person plays another episode than the room's. */
+    fun roomStateOtherEpisode(context: Context, episode: String): String =
+        context.getString(R.string.room_state_other_episode, episode)
+
+    /** State word: this person is picking which source to play from. */
+    fun roomStateChoosing(context: Context): String =
+        context.getString(R.string.room_state_choosing)
+
+    /** State word: none of this person's sources lists the room's episode. */
+    fun roomStateNoSource(context: Context, episode: String): String =
+        context.getString(R.string.room_state_no_source, episode)
+
+    /** State word: this person is in the room with the player closed. */
+    fun roomStatePlayerClosed(context: Context): String =
+        context.getString(R.string.room_state_player_closed)
+
+    /** State word: this person's device stopped answering. */
+    fun roomStateReconnecting(context: Context): String =
+        context.getString(R.string.room_state_reconnecting)
+
+    /** State word: this person left the room. The row stays dimmed for a moment. */
+    fun roomStateLeft(context: Context): String =
+        context.getString(R.string.room_state_left)
+
+    /** State word: you muted this person. Shown alone or after the state word with room-state-and-muted. */
+    fun roomStateMuted(context: Context): String =
+        context.getString(R.string.room_state_muted)
+
+    /** A state word followed by Muted, for a person you muted. */
+    fun roomStateAndMuted(context: Context, state: String): String =
+        context.getString(R.string.room_state_and_muted, state)
+
+    /** Marker after your own name in the people list. */
+    fun roomYouMarker(context: Context): String =
+        context.getString(R.string.room_you_marker)
+
+    /** Your own name under your face on a phone and in the place's room card. */
+    fun roomYou(context: Context): String =
+        context.getString(R.string.room_you)
+
+    /** You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so. */
+    fun roomYouInList(context: Context): String =
+        context.getString(R.string.room_you_in_list)
+
+    /** Accessibility label of a face in the full screen strip: the name and the state word. */
+    fun roomFaceLabel(context: Context, name: String, state: String): String =
+        context.getString(R.string.room_face_label, name, state)
+
+    /** The last face in a row of faces, standing for the people not shown. */
+    fun roomMoreFaces(context: Context, count: Int): String =
+        context.getString(R.string.room_more_faces, count)
+
+    /** Accessibility label of the last face, which opens the full people list. */
+    fun roomMoreFacesLabel(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_more_faces_label, count, count)
+
+    /** Name under the last face on a phone and the TV: it opens everyone. */
+    fun roomMore(context: Context): String =
+        context.getString(R.string.room_more)
+
+    /** State under the last face: how many of the hidden people are not watching. */
+    fun roomMoreNotWatching(context: Context, count: Int): String =
+        context.getString(R.string.room_more_not_watching, count)
+
+    /** State under the last face when everyone hidden is watching. */
+    fun roomMoreAllWatching(context: Context): String =
+        context.getString(R.string.room_more_all_watching)
+
+    /** Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode. */
+    fun roomWaitLoading(context: Context, seconds: Int): String =
+        context.getString(R.string.room_wait_loading, seconds)
+
+    /** Reason in the waiting capsule, after Paused for, lower case: their player stalled. */
+    fun roomWaitBuffering(context: Context, seconds: Int): String =
+        context.getString(R.string.room_wait_buffering, seconds)
+
+    /** Button once the room has waited 20 seconds for one person. */
+    fun roomCarryOnWithout(context: Context, name: String): String =
+        context.getString(R.string.room_carry_on_without, name)
+
+    /** Button once the room has waited 20 seconds for more than one person. */
+    fun roomCarryOnWithoutThem(context: Context): String =
+        context.getString(R.string.room_carry_on_without_them)
+
+    /** Capsule over the video after someone pressed Carry on. */
+    fun roomCarryingOnWithout(context: Context, names: String): String =
+        context.getString(R.string.room_carrying_on_without, names)
+
+    /** Second part of the capsule after Carry on, when the room waited for one person. */
+    fun roomJoinsAtPlace(context: Context, name: String): String =
+        context.getString(R.string.room_joins_at_place, name)
+
+    /** Second part of the capsule after Carry on, when the room waited for more than one person. */
+    fun roomJoinAtPlaceMany(context: Context): String =
+        context.getString(R.string.room_join_at_place_many)
+
+    /** Line on your own starting screen while the room waits for you, with the seconds so far. */
+    fun roomPausedUntilStart(context: Context, seconds: Int): String =
+        context.getString(R.string.room_paused_until_start, seconds)
+
+    /** Button on your own starting screen that lets the room carry on without you. */
+    fun roomDontWait(context: Context): String =
+        context.getString(R.string.room_dont_wait)
+
+    /** First line before anyone pressed Play. */
+    fun roomLineNotStarted(context: Context): String =
+        context.getString(R.string.room_line_not_started)
+
+    /** Second line before anyone pressed Play. */
+    fun roomLinePlayStarts(context: Context): String =
+        context.getString(R.string.room_line_play_starts)
+
+    /** First line after Play, while the room waits for people still loading. */
+    fun roomLineStartingWhen(context: Context, names: String, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_line_starting_when, count, names, count)
+
+    /** First line counting down once everyone is ready. */
+    fun roomLineStartingIn(context: Context, seconds: Int): String =
+        context.getString(R.string.room_line_starting_in, seconds)
+
+    /** Second line when everyone is ready. */
+    fun roomLineEveryoneReady(context: Context): String =
+        context.getString(R.string.room_line_everyone_ready)
+
+    /** Button once the room has waited 20 seconds before play, for one person. */
+    fun roomStartWithout(context: Context, name: String): String =
+        context.getString(R.string.room_start_without, name)
+
+    /** Button once the room has waited 20 seconds before play, for more than one person. */
+    fun roomStartWithoutThem(context: Context): String =
+        context.getString(R.string.room_start_without_them)
+
+    /** Small heading over the episode in the video area before play. */
+    fun roomUpInRoom(context: Context): String =
+        context.getString(R.string.room_up_in_room)
+
+    /** Small heading over the episode in the video area when you opened an invite. */
+    fun roomRoomIsWatching(context: Context): String =
+        context.getString(R.string.room_room_is_watching)
+
+    /** Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min. */
+    fun roomBannerEpisode(context: Context, episode: String, title: String, length: String): String =
+        context.getString(R.string.room_banner_episode, episode, title, length)
+
+    /** Line under the episode before play: one of your sources has it. */
+    fun roomPlaysFromSources(context: Context): String =
+        context.getString(R.string.room_plays_from_sources)
+
+    /** Button that starts the episode for everyone in the room. */
+    fun roomPlayForEveryone(context: Context): String =
+        context.getString(R.string.room_play_for_everyone)
+
+    /** Line beside Play for everyone. */
+    fun roomAnyoneCanStart(context: Context): String =
+        context.getString(R.string.room_anyone_can_start)
+
+    /** Label of the Play for everyone button after it was pressed. */
+    fun roomPlaying(context: Context): String =
+        context.getString(R.string.room_playing)
+
+    /** Line beside the button after Play was pressed, on a desktop. */
+    fun roomWaitingFirstFrames(context: Context): String =
+        context.getString(R.string.room_waiting_first_frames)
+
+    /** Line under the play button after Play was pressed, on a phone. */
+    fun roomWaitingFirstFramesShort(context: Context): String =
+        context.getString(R.string.room_waiting_first_frames_short)
+
+    /** First line of the room when an invite link opened it. */
+    fun roomInvitedBy(context: Context, name: String): String =
+        context.getString(R.string.room_invited_by, name)
+
+    /** Second line when an invite link opened the room: the show and the episode. */
+    fun roomInvitedDetail(context: Context, title: String, episode: String): String =
+        context.getString(R.string.room_invited_detail, title, episode)
+
+    /** Second line when an invite link opened a room with 10 or more people in it. */
+    fun roomInvitedOver(context: Context, count: Int): String =
+        context.getString(R.string.room_invited_over, count)
+
+    /** Button that joins the room from an invite. */
+    fun roomJoin(context: Context): String =
+        context.getString(R.string.room_join)
+
+    /** Button that joins a room with 10 or more people in it. */
+    fun roomJoinAnyway(context: Context): String =
+        context.getString(R.string.room_join_anyway)
+
+    /** Heading over the list of sources for the room's episode. */
+    fun roomChooseSource(context: Context, episode: String): String =
+        context.getString(R.string.room_choose_source, episode)
+
+    /** Line under it. */
+    fun roomChooseSourceLine(context: Context): String =
+        context.getString(R.string.room_choose_source_line)
+
+    /** Button that plays the chosen source at the room's place. */
+    fun roomPlayInRoom(context: Context): String =
+        context.getString(R.string.room_play_in_room)
+
+    /** Heading when none of your sources has the room's episode. */
+    fun roomNoSourceTitle(context: Context, episode: String): String =
+        context.getString(R.string.room_no_source_title, episode)
+
+    /** Line under it on a desktop: how many sources were looked in. */
+    fun roomNoSourceLine(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_no_source_line, count, count)
+
+    /** Line under it on a phone. */
+    fun roomNoSourceLineShort(context: Context): String =
+        context.getString(R.string.room_no_source_line_short)
+
+    /** Button that opens your sources. */
+    fun roomOpenSources(context: Context): String =
+        context.getString(R.string.room_open_sources)
+
+    /** Button that searches titles in your sources. */
+    fun roomSearchTitles(context: Context): String =
+        context.getString(R.string.room_search_titles)
+
+    /** Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room. */
+    fun roomHeaderLine(context: Context, episode: String, count: Int): String =
+        context.getString(R.string.room_header_line, episode, count)
+
+    /** Button and accessibility label that opens the invite. */
+    fun roomInvite(context: Context): String =
+        context.getString(R.string.room_invite)
+
+    /** Button and accessibility label that opens the room's details. */
+    fun roomDetails(context: Context): String =
+        context.getString(R.string.room_details)
+
+    /** Accessibility label of the More button on a phone. */
+    fun roomMoreActions(context: Context): String =
+        context.getString(R.string.room_more_actions)
+
+    /** Accessibility label of the player's button that hides the room column. */
+    fun roomHide(context: Context): String =
+        context.getString(R.string.room_hide)
+
+    /** Accessibility label of the chevron on a phone that folds the room into the bar over the tabs. */
+    fun roomFold(context: Context): String =
+        context.getString(R.string.room_fold)
+
+    /** Accessibility label of the player's button that opens the chat in full screen. */
+    fun roomChat(context: Context): String =
+        context.getString(R.string.room_chat)
+
+    /** Line in the invite: anyone with the link can join. */
+    fun roomInviteAnyone(context: Context): String =
+        context.getString(R.string.room_invite_anyone)
+
+    /** Line after it on a desktop: the link carries the key. */
+    fun roomInviteKey(context: Context): String =
+        context.getString(R.string.room_invite_key)
+
+    /** Line after it on a phone. */
+    fun roomInviteKeyShort(context: Context): String =
+        context.getString(R.string.room_invite_key_short)
+
+    /** Accessibility label of the invite's QR code. */
+    fun roomInviteQr(context: Context): String =
+        context.getString(R.string.room_invite_qr)
+
+    /** Line beside the QR code. */
+    fun roomInviteQrLine(context: Context): String =
+        context.getString(R.string.room_invite_qr_line)
+
+    /** Button that copies the invite link. */
+    fun roomCopyLink(context: Context): String =
+        context.getString(R.string.room_copy_link)
+
+    /** Button that opens the system's share sheet with the invite link. */
+    fun roomShare(context: Context): String =
+        context.getString(R.string.room_share)
+
+    /** Menu item on a phone that copies the invite link. */
+    fun roomCopyInviteLink(context: Context): String =
+        context.getString(R.string.room_copy_invite_link)
+
+    /** Button that makes a new invite link and stops the old one. */
+    fun roomNewInvite(context: Context): String =
+        context.getString(R.string.room_new_invite)
+
+    /** Line under New invite on a desktop. */
+    fun roomNewInviteLine(context: Context): String =
+        context.getString(R.string.room_new_invite_line)
+
+    /** Short line beside New invite on a phone. */
+    fun roomNewInviteShort(context: Context): String =
+        context.getString(R.string.room_new_invite_short)
+
+    /** Button in the invite and menu item on a phone that opens the move. */
+    fun roomMoveOpen(context: Context): String =
+        context.getString(R.string.room_move_open)
+
+    /** Line under the button in the invite. */
+    fun roomMoveOpenLine(context: Context): String =
+        context.getString(R.string.room_move_open_line)
+
+    /** Title of the move dialog and sheet. */
+    fun roomMoveTitle(context: Context): String =
+        context.getString(R.string.room_move_title)
+
+    /** Line under the title. */
+    fun roomMoveBody(context: Context): String =
+        context.getString(R.string.room_move_body)
+
+    /** Note under your own row: you always go. */
+    fun roomMoveAlwaysGoes(context: Context): String =
+        context.getString(R.string.room_move_always_goes)
+
+    /** Note under a person you muted, who starts unticked. */
+    fun roomMoveMuted(context: Context): String =
+        context.getString(R.string.room_move_muted)
+
+    /** Line under the list. */
+    fun roomMoveFoot(context: Context, at: String): String =
+        context.getString(R.string.room_move_foot, at)
+
+    /** Button that moves, counting the others ticked. */
+    fun roomMoveWith(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_move_with, count, count)
+
+    /** The offer to someone ticked, in a notice or alert, as one sentence pair. */
+    fun roomMoveOffer(context: Context, name: String): String =
+        context.getString(R.string.room_move_offer, name)
+
+    /** First line of the room while the offer waits for an answer. */
+    fun roomLineMoved(context: Context, name: String): String =
+        context.getString(R.string.room_line_moved, name)
+
+    /** Second line with the offer: who else is asked, and the place the episode carries on from. */
+    fun roomLineMovedDetail(context: Context, names: String, count: Int, at: String): String =
+        context.resources.getQuantityString(R.plurals.room_line_moved_detail, count, names, count, at)
+
+    /** Second line with the offer when nobody else is asked. */
+    fun roomLineMovedDetailAlone(context: Context, at: String): String =
+        context.getString(R.string.room_line_moved_detail_alone, at)
+
+    /** Button that goes along to the new room. */
+    fun roomGoAlong(context: Context): String =
+        context.getString(R.string.room_go_along)
+
+    /** Short button that stays in this room, in a notice. */
+    fun roomStay(context: Context): String =
+        context.getString(R.string.room_stay)
+
+    /** First line of the old room for someone who stayed. */
+    fun roomLineMovedAway(context: Context, name: String): String =
+        context.getString(R.string.room_line_moved_away, name)
+
+    /** Second line of the old room: who went along. */
+    fun roomLineWentAlong(context: Context, names: String): String =
+        context.getString(R.string.room_line_went_along, names)
+
+    /** Label of the encryption row. */
+    fun roomDetailsEncryption(context: Context): String =
+        context.getString(R.string.room_details_encryption)
+
+    /** Value of the encryption row. */
+    fun roomDetailsEndToEnd(context: Context): String =
+        context.getString(R.string.room_details_end_to_end)
+
+    /** Label of the relays row, and the title of the relays page in Settings. */
+    fun roomRelays(context: Context): String =
+        context.getString(R.string.room_relays)
+
+    /** Value of the relays row when all answer. */
+    fun roomRelaysAnswering(context: Context, count: Int): String =
+        context.getString(R.string.room_relays_answering, count)
+
+    /** Value of the relays row when some don't answer. */
+    fun roomRelaysAnsweringOf(context: Context, count: Int, total: Int): String =
+        context.getString(R.string.room_relays_answering_of, count, total)
+
+    /** State of a relay that doesn't answer. */
+    fun roomRelayNotAnswering(context: Context): String =
+        context.getString(R.string.room_relay_not_answering)
+
+    /** Round trip time of a relay. */
+    fun roomRelayLatency(context: Context, ms: Int): String =
+        context.getString(R.string.room_relay_latency, ms)
+
+    /** Line under the relays in Details. */
+    fun roomDetailsRelaysLine(context: Context): String =
+        context.getString(R.string.room_details_relays_line)
+
+    /** Button in Details that edits the room's relays. */
+    fun roomEditRelays(context: Context): String =
+        context.getString(R.string.room_edit_relays)
+
+    /** Title of the room's relay editor. */
+    fun roomEditRelaysTitle(context: Context): String =
+        context.getString(R.string.room_edit_relays_title)
+
+    /** Line under it. */
+    fun roomEditRelaysLine(context: Context): String =
+        context.getString(R.string.room_edit_relays_line)
+
+    /** Accessibility label of the button that removes a relay. `relay` is its address. */
+    fun roomRelayRemove(context: Context, relay: String): String =
+        context.getString(R.string.room_relay_remove, relay)
+
+    /** Button that adds the address typed beside it. */
+    fun roomRelayAdd(context: Context): String =
+        context.getString(R.string.room_relay_add)
+
+    /** Line under the room's relay editor. */
+    fun roomEditRelaysSettings(context: Context): String =
+        context.getString(R.string.room_edit_relays_settings)
+
+    /** Heading of the group in Settings › Playback. */
+    fun roomSettingsGroup(context: Context): String =
+        context.getString(R.string.room_settings_group)
+
+    /** Switch that hides chat in every room on this device. */
+    fun roomSettingsHideChat(context: Context): String =
+        context.getString(R.string.room_settings_hide_chat)
+
+    /** Line under it. */
+    fun roomSettingsHideChatLine(context: Context): String =
+        context.getString(R.string.room_settings_hide_chat_line)
+
+    /** Line under the Relays row: how many relays new rooms use. */
+    fun roomSettingsRelaysCount(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_settings_relays_count, count, count)
+
+    /** Button at the end of the Relays row. */
+    fun roomSettingsRelaysEdit(context: Context): String =
+        context.getString(R.string.room_settings_relays_edit)
+
+    /** Line under the group. */
+    fun roomSettingsGroupLine(context: Context): String =
+        context.getString(R.string.room_settings_group_line)
+
+    /** Line at the top of the Relays page on a desktop. */
+    fun roomRelaysIntro(context: Context): String =
+        context.getString(R.string.room_relays_intro)
+
+    /** Line at the top of the Relays page on a phone. */
+    fun roomRelaysIntroShort(context: Context): String =
+        context.getString(R.string.room_relays_intro_short)
+
+    /** Heading of the list of relays for new rooms. */
+    fun roomRelaysNewRooms(context: Context): String =
+        context.getString(R.string.room_relays_new_rooms)
+
+    /** Line under the list for new rooms. */
+    fun roomRelaysNewRoomsLine(context: Context): String =
+        context.getString(R.string.room_relays_new_rooms_line)
+
+    /** Heading of the list of spare relays. */
+    fun roomRelaysSpares(context: Context): String =
+        context.getString(R.string.room_relays_spares)
+
+    /** Line under the spares on a desktop. */
+    fun roomRelaysSparesLine(context: Context): String =
+        context.getString(R.string.room_relays_spares_line)
+
+    /** Line under the spares on a phone. */
+    fun roomRelaysSparesLineShort(context: Context): String =
+        context.getString(R.string.room_relays_spares_line_short)
+
+    /** Button that puts the default relays and spares back. */
+    fun roomRelaysRestore(context: Context): String =
+        context.getString(R.string.room_relays_restore)
+
+    /** Button in the room column's header that leaves, on the place's room card, with the dialog after it. */
+    fun roomLeaveEllipsis(context: Context): String =
+        context.getString(R.string.room_leave_ellipsis)
+
+    /** Menu item on an iPhone that leaves, asking first. */
+    fun roomLeaveMenu(context: Context): String =
+        context.getString(R.string.room_leave_menu)
+
+    /** Menu item on Android that leaves, asking first. */
+    fun roomLeaveMenuPlain(context: Context): String =
+        context.getString(R.string.room_leave_menu_plain)
+
+    /** Title of the confirmation before leaving. */
+    fun roomLeaveTitle(context: Context): String =
+        context.getString(R.string.room_leave_title)
+
+    /** Line under it. */
+    fun roomLeaveLine(context: Context): String =
+        context.getString(R.string.room_leave_line)
+
+    /** Line under it when closing the window on a Mac, which offers Keep the room. */
+    fun roomLeaveLineKeep(context: Context): String =
+        context.getString(R.string.room_leave_line_keep)
+
+    /** Button in the confirmation on closing the window: close the player and stay in the room. */
+    fun roomKeep(context: Context): String =
+        context.getString(R.string.room_keep)
+
+    /** Button in the TV's confirmation that goes back to the room. */
+    fun roomKeepWatching(context: Context): String =
+        context.getString(R.string.room_keep_watching)
+
+    /** Small heading of the up next card. */
+    fun roomUpNext(context: Context): String =
+        context.getString(R.string.room_up_next)
+
+    /** Line on the card naming the next episode. */
+    fun roomUpNextEpisode(context: Context, episode: String, title: String): String =
+        context.getString(R.string.room_up_next_episode, episode, title)
+
+    /** Line on the card naming the next episode when it has no title. */
+    fun roomUpNextEpisodePlain(context: Context, episode: String): String =
+        context.getString(R.string.room_up_next_episode_plain, episode)
+
+    /** Line on the card counting down for everyone. */
+    fun roomUpNextCount(context: Context, seconds: Int): String =
+        context.getString(R.string.room_up_next_count, seconds)
+
+    /** Line on the card while your file ended sooner and the room waits for someone's longer file. */
+    fun roomUpNextWaiting(context: Context, name: String): String =
+        context.getString(R.string.room_up_next_waiting, name)
+
+    /** Button on the card that moves the room on at once. */
+    fun roomPlayNextNow(context: Context): String =
+        context.getString(R.string.room_play_next_now)
+
+    /** First line of the room while up next counts down. */
+    fun roomLineUpNext(context: Context, seconds: Int): String =
+        context.getString(R.string.room_line_up_next, seconds)
+
+    /** Second line while up next counts down. */
+    fun roomLineUpNextDetail(context: Context, episode: String): String =
+        context.getString(R.string.room_line_up_next_detail, episode)
+
+    /** Placeholder of the chat field. */
+    fun roomChatField(context: Context): String =
+        context.getString(R.string.room_chat_field)
+
+    /** Button and accessibility label that sends a chat line. */
+    fun roomChatSend(context: Context): String =
+        context.getString(R.string.room_chat_send)
+
+    /** Accessibility label of the button beside the chat field that opens the reactions. */
+    fun roomReact(context: Context): String =
+        context.getString(R.string.room_react)
+
+    /** Line in the chat of a room opened from an invite, before joining. */
+    fun roomChatOpens(context: Context): String =
+        context.getString(R.string.room_chat_opens)
+
+    /** Line under a chat line that didn't reach any relay. */
+    fun roomChatNotSent(context: Context): String =
+        context.getString(R.string.room_chat_not_sent)
+
+    /** Chat line: someone started the room. */
+    fun roomChatStarted(context: Context, name: String, episode: String): String =
+        context.getString(R.string.room_chat_started, name, episode)
+
+    /** Chat line: you started the room. */
+    fun roomChatYouStarted(context: Context, episode: String): String =
+        context.getString(R.string.room_chat_you_started, episode)
+
+    /** Chat line: someone paused, at a place in the episode. */
+    fun roomChatPaused(context: Context, name: String, at: String): String =
+        context.getString(R.string.room_chat_paused, name, at)
+
+    /** Chat line: you paused. */
+    fun roomChatYouPaused(context: Context, at: String): String =
+        context.getString(R.string.room_chat_you_paused, at)
+
+    /** Chat line: someone played after a pause. */
+    fun roomChatResumed(context: Context, name: String): String =
+        context.getString(R.string.room_chat_resumed, name)
+
+    /** Chat line: the room waits for people whose player is opening the episode. */
+    fun roomChatPausedForLoading(context: Context, names: String): String =
+        context.getString(R.string.room_chat_paused_for_loading, names)
+
+    /** Chat line: the room waits for people whose player stalled. */
+    fun roomChatPausedForBuffering(context: Context, names: String): String =
+        context.getString(R.string.room_chat_paused_for_buffering, names)
+
+    /** Chat line on your own device: the room waits for you. */
+    fun roomChatPausedForYou(context: Context): String =
+        context.getString(R.string.room_chat_paused_for_you)
+
+    /** Chat line: someone pressed Carry on. */
+    fun roomChatCarriedOn(context: Context, carrier: String, names: String): String =
+        context.getString(R.string.room_chat_carried_on, carrier, names)
+
+    /** Chat line: someone's first frame landed and they joined at the room's place. */
+    fun roomChatJoinedAt(context: Context, name: String, at: String): String =
+        context.getString(R.string.room_chat_joined_at, name, at)
+
+    /** Chat line: someone left the room. */
+    fun roomChatLeft(context: Context, name: String): String =
+        context.getString(R.string.room_chat_left, name)
+
+    /** Chat line: someone moved to a new room. */
+    fun roomChatMoved(context: Context, name: String): String =
+        context.getString(R.string.room_chat_moved, name)
+
+    /** Chat line in the old room: someone went along to the new room. */
+    fun roomChatWent(context: Context, name: String): String =
+        context.getString(R.string.room_chat_went, name)
+
+    /** Chat line: up next moved the room on. */
+    fun roomChatUpNext(context: Context, episode: String): String =
+        context.getString(R.string.room_chat_up_next, episode)
+
+    /** Chat line: someone skipped the opening for the room. */
+    fun roomChatSkippedOpening(context: Context, name: String): String =
+        context.getString(R.string.room_chat_skipped_opening, name)
+
+    /** Label of the laugh reaction button. */
+    fun roomReactLaugh(context: Context): String =
+        context.getString(R.string.room_react_laugh)
+
+    /** Label of the gasp reaction button. */
+    fun roomReactGasp(context: Context): String =
+        context.getString(R.string.room_react_gasp)
+
+    /** Label of the clap reaction button. */
+    fun roomReactClap(context: Context): String =
+        context.getString(R.string.room_react_clap)
+
+    /** Label of the cry reaction button. */
+    fun roomReactCry(context: Context): String =
+        context.getString(R.string.room_react_cry)
+
+    /** Chat line: someone laughed, at a place in the episode. */
+    fun roomReactedLaugh(context: Context, name: String, at: String): String =
+        context.getString(R.string.room_reacted_laugh, name, at)
+
+    /** Chat line: someone gasped, at a place in the episode. */
+    fun roomReactedGasp(context: Context, name: String, at: String): String =
+        context.getString(R.string.room_reacted_gasp, name, at)
+
+    /** Chat line: someone clapped, at a place in the episode. */
+    fun roomReactedClap(context: Context, name: String, at: String): String =
+        context.getString(R.string.room_reacted_clap, name, at)
+
+    /** Chat line: someone cried, at a place in the episode. */
+    fun roomReactedCry(context: Context, name: String, at: String): String =
+        context.getString(R.string.room_reacted_cry, name, at)
+
+    /** Line under the video on the TV rail: what the remote's buttons do. */
+    fun roomTvKeys(context: Context): String =
+        context.getString(R.string.room_tv_keys)
+
+    /** Line under the chat on the TV rail: chat is read-only there. */
+    fun roomTvWriteFromPhone(context: Context): String =
+        context.getString(R.string.room_tv_write_from_phone)
+
+    /** Line under the place's heading. */
+    fun roomPlaceLine(context: Context): String =
+        context.getString(R.string.room_place_line)
+
+    /** Small heading of the card for the room you are in. */
+    fun roomPlaceYours(context: Context): String =
+        context.getString(R.string.room_place_yours)
+
+    /** Button on the card that opens the room's player. */
+    fun roomOpenPlayer(context: Context): String =
+        context.getString(R.string.room_open_player)
+
+    /** Heading of the field that joins a room. */
+    fun roomPlaceJoin(context: Context): String =
+        context.getString(R.string.room_place_join)
+
+    /** Placeholder of the field that takes an invite link. */
+    fun roomPlaceLink(context: Context): String =
+        context.getString(R.string.room_place_link)
+
+    /** Button that pastes the clipboard into the field. */
+    fun roomPlacePaste(context: Context): String =
+        context.getString(R.string.room_place_paste)
+
+    /** Heading of the list of recent rooms. */
+    fun roomRecent(context: Context): String =
+        context.getString(R.string.room_recent)
+
+    /** Line beside the heading. */
+    fun roomRecentNote(context: Context): String =
+        context.getString(R.string.room_recent_note)
+
+    /** Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25. */
+    fun roomRecentRow(context: Context, episode: String, names: String, `when`: String): String =
+        context.getString(R.string.room_recent_row, episode, names, `when`)
+
+    /** Line of a recent room where you were alone. */
+    fun roomRecentRowAlone(context: Context, episode: String, `when`: String): String =
+        context.getString(R.string.room_recent_row_alone, episode, `when`)
+
+    /** Button on a recent room that joins it again. */
+    fun roomRejoin(context: Context): String =
+        context.getString(R.string.room_rejoin)
+
+    /** Title of the alert when none of an invite's relays answers, and the bold start of the line in the place. */
+    fun roomErrorUnreachableTitle(context: Context): String =
+        context.getString(R.string.room_error_unreachable_title)
+
+    /** Line under it, and the next sentence in the place. */
+    fun roomErrorAskNewInvite(context: Context): String =
+        context.getString(R.string.room_error_ask_new_invite)
+
+    /** The same error in one line, where there is no room for a title. */
+    fun roomErrorUnreachable(context: Context): String =
+        context.getString(R.string.room_error_unreachable)
+
+    /** Line after it in the place: what was tried. */
+    fun roomErrorTried(context: Context, seconds: Int): String =
+        context.getString(R.string.room_error_tried, seconds)
+
+    /** Title of the alert when a recent room has nobody answering, such as after a new invite. */
+    fun roomErrorNobodyAnswered(context: Context): String =
+        context.getString(R.string.room_error_nobody_answered)
+
+    /** Line under it. */
+    fun roomErrorNobodyAnsweredLine(context: Context): String =
+        context.getString(R.string.room_error_nobody_answered_line)
+
+    /** Notice when the room already has 10 people and you can't join. */
+    fun roomErrorFull(context: Context): String =
+        context.getString(R.string.room_error_full)
+
+    /** Notice when an invite link or code is from an older version. */
+    fun roomErrorOldInvite(context: Context): String =
+        context.getString(R.string.room_error_old_invite)
+
+    /** Chat line: someone came into the room. */
+    fun roomChatJoined(context: Context, name: String): String =
+        context.getString(R.string.room_chat_joined, name)
+
+    /** Chat line: someone moved the room to another place in the episode. */
+    fun roomChatJumped(context: Context, name: String, from: String, to: String): String =
+        context.getString(R.string.room_chat_jumped, name, from, to)
+
+    /** Chat line: the room waits for people catching up after a jump. */
+    fun roomChatPausedForSeeking(context: Context, names: String): String =
+        context.getString(R.string.room_chat_paused_for_seeking, names)
+
+    /** Chat line: this device's player was moved to stay with the room. */
+    fun roomChatCorrected(context: Context): String =
+        context.getString(R.string.room_chat_corrected)
+
+    /** Chat line: someone put on another episode for the room. */
+    fun roomChatEpisodeChanged(context: Context, name: String, episode: String): String =
+        context.getString(R.string.room_chat_episode_changed, name, episode)
+
+    /** Chat line: someone who was behind caught up with the room. */
+    fun roomChatCaughtUp(context: Context, name: String): String =
+        context.getString(R.string.room_chat_caught_up, name)
+
+    /** Chat line on a device whose Play lost to someone's Pause pressed at the same moment. */
+    fun roomChatAlreadyPaused(context: Context, name: String): String =
+        context.getString(R.string.room_chat_already_paused, name)
+
+    /** Chat line: someone made a new invite; the old link stopped working. */
+    fun roomChatNewInvite(context: Context, name: String): String =
+        context.getString(R.string.room_chat_new_invite, name)
+
+    /** Chat line: someone cancelled Up next for everyone. */
+    fun roomChatUpNextCancelled(context: Context, name: String): String =
+        context.getString(R.string.room_chat_up_next_cancelled, name)
+
+    /** Chat line on your own device: your name was taken, so the room knows you by this one. */
+    fun roomChatRenamed(context: Context, name: String): String =
+        context.getString(R.string.room_chat_renamed, name)
+
+    /** Button that shows the room's column again after Hide room. */
+    fun roomShow(context: Context): String =
+        context.getString(R.string.room_show)
+
+    /** The room's Skip opening button on the player: skips for everyone. */
+    fun roomSkipOpening(context: Context): String =
+        context.getString(R.string.room_skip_opening)
+
+    /** Confirmation after Copy invite link. */
+    fun roomLinkCopied(context: Context): String =
+        context.getString(R.string.room_link_copied)
+
+    /** The starting screen's line on the device opening the room's episode. */
+    fun roomStartingEpisode(context: Context, episode: String): String =
+        context.getString(R.string.room_starting_episode, episode)
+
+    /** A short length in minutes, on the banner before play. */
+    fun roomMinutes(context: Context, minutes: Int): String =
+        context.getString(R.string.room_minutes, minutes)
+
+    /** Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma. */
+    fun roomNamesAnd(context: Context, names: String, last: String): String =
+        context.getString(R.string.room_names_and, names, last)
+
+    /** Joins two names in a longer list: "Mika, Ren". */
+    fun roomNamesComma(context: Context, first: String, rest: String): String =
+        context.getString(R.string.room_names_comma, first, rest)
+
+    /** Person menu item and accessibility action that hides someone's lines and reactions in this room. */
+    fun roomMute(context: Context, name: String): String =
+        context.getString(R.string.room_mute, name)
+
+    /** Person menu item and accessibility action that shows a muted person's lines again. */
+    fun roomUnmute(context: Context, name: String): String =
+        context.getString(R.string.room_unmute, name)
+
+    /** Line in the conversation where a muted person's lines were. */
+    fun roomChatMuted(context: Context, name: String): String =
+        context.getString(R.string.room_chat_muted, name)
+
+    /** Line after the newest chat lines over the video, which opens the conversation. */
+    fun roomChatMore(context: Context, count: Int): String =
+        context.getString(R.string.room_chat_more, count)
+
+    /** Spoken by a screen reader when a chat line arrives. */
+    fun roomChatAnnounce(context: Context, name: String, message: String): String =
+        context.getString(R.string.room_chat_announce, name, message)
+
+    /** End of the chat field while sending waits, after three messages in five seconds. */
+    fun roomChatWait(context: Context, seconds: Int): String =
+        context.getString(R.string.room_chat_wait, seconds)
+
+    /** Spoken once when sending waits, for screen readers. */
+    fun roomChatWaitSpoken(context: Context, seconds: Int): String =
+        context.resources.getQuantityString(R.plurals.room_chat_wait_spoken, seconds, seconds)
+
+    /** Spoken by a screen reader once, when 20 characters are left in the chat field. */
+    fun roomChatCharactersLeft(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_chat_characters_left, count, count)
+
+    /** A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds. */
+    fun roomReactedAt(context: Context, line: String, time: String): String =
+        context.getString(R.string.room_reacted_at, line, time)
+
+    /** Label on the seek bar when pointing near a reaction tick: the moment and who reacted. */
+    fun roomTickLabel(context: Context, time: String, names: String): String =
+        context.getString(R.string.room_tick_label, time, names)
+
+    /** Two people named together, for a reaction made by both: "Ren and Mika". */
+    fun roomNamesTwo(context: Context, first: String, second: String): String =
+        context.getString(R.string.room_names_two, first, second)
+
+    /** Three people named together. */
+    fun roomNamesThree(context: Context, first: String, second: String, third: String): String =
+        context.getString(R.string.room_names_three, first, second, third)
+
+    /** More than three people named together: two names and how many others. */
+    fun roomNamesOthers(context: Context, first: String, second: String, count: Int): String =
+        context.getString(R.string.room_names_others, first, second, count)
+
+    /** Player panel, under the subtitled or dubbed switch in a room. */
+    fun roomVersionOwn(context: Context): String =
+        context.getString(R.string.room_version_own)
+
+    /** The banner over the room when the episode has no name of its own: the episode and its length. */
+    fun roomBannerEpisodePlain(context: Context, episode: String, length: String): String =
+        context.getString(R.string.room_banner_episode_plain, episode, length)
+
+    /** Menu item dimmed in a room, with this reason under it. */
+    fun roomMarkUnavailable(context: Context): String =
+        context.getString(R.string.room_mark_unavailable)
+
+    /** Heading of the people list in the room, and its accessibility label. */
+    fun roomPeople(context: Context): String =
+        context.getString(R.string.room_people)
+
+    /** State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person. */
+    fun roomStateSeeking(context: Context, seconds: Int): String =
+        context.getString(R.string.room_state_seeking, seconds)
+
+    /** Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title. */
+    fun roomErrorUnreachableLead(context: Context): String =
+        context.getString(R.string.room_error_unreachable_lead)
+
+    /** Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title. */
+    fun roomErrorNobodyAnsweredLead(context: Context): String =
+        context.getString(R.string.room_error_nobody_answered_lead)
+
+    /** Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV. */
+    fun roomDeviceInRoom(context: Context, device: String): String =
+        context.getString(R.string.room_device_in_room, device)
+
+    /** Button on the phone's remote screen that leaves the room on the paired TV. */
+    fun roomLeaveOnDevice(context: Context, device: String): String =
+        context.getString(R.string.room_leave_on_device, device)
+
+    /** Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links. */
+    fun roomTvJoinFromPhone(context: Context): String =
+        context.getString(R.string.room_tv_join_from_phone)
+
+    /** Line above the list of sources that have the room's episode, in the Choose a source dialog in a room. */
+    fun roomSourcesFoundLine(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.room_sources_found_line, count, count)
 
     /** Button that shows the season before. */
     fun seasonalPrevious(context: Context): String =
@@ -14951,6 +15959,30 @@ object Strings {
     /** Line under the sources page's list when a source is dragged: first-party sources are tried in this order too. */
     fun sourcesOrderAll(context: Context): String =
         context.getString(R.string.sources_order_all)
+
+    /** Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5. */
+    fun sourcesChooseFor(context: Context, episode: String): String =
+        context.getString(R.string.sources_choose_for, episode)
+
+    /** Line while the sources are searched for the episode. */
+    fun sourcesLooking(context: Context): String =
+        context.getString(R.string.sources_looking)
+
+    /** Line over the list of sources that list the episode. */
+    fun sourcesFound(context: Context, count: Int): String =
+        context.resources.getQuantityString(R.plurals.sources_found, count, count)
+
+    /** Line when no source lists the episode. */
+    fun sourcesNoneList(context: Context, episode: String): String =
+        context.getString(R.string.sources_none_list, episode)
+
+    /** Button that goes to the Sources page, when no source is set up. */
+    fun sourcesOpen(context: Context): String =
+        context.getString(R.string.sources_open)
+
+    /** Accessibility label of the list of sources for the episode. */
+    fun sourcesLabel(context: Context): String =
+        context.getString(R.string.sources_label)
 
     /** Short label for a joined store, on a row. */
     fun storesJoined(context: Context): String =

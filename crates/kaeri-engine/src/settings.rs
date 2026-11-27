@@ -135,8 +135,39 @@ pub fn set_translation(translation: Translation, engine: &mut EngineState, tx: &
     let _ = tx.send(Event::Settings(engine.config.view()));
 }
 
-/// The terminal's Hide chat for watch parties, in effect at once and kept in the file. It has
-/// no Settings row: `i` in Together turns it over.
+/// Settings ▸ Relays: the relays new rooms use, kept in the config's `[room]`. Empty means the
+/// built-in set.
+pub fn save_room_relays(
+    relays: Vec<String>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    use kaeri_core::settings::SettingValue as V;
+    if engine.config.effective().room.relays == relays {
+        return;
+    }
+    engine.config.effective_mut().room.relays.clone_from(&relays);
+    write_setting(&["room"], "relays", V::Strings(relays), engine, services, tx);
+}
+
+/// Settings ▸ Relays' spares, in effect for rooms started from now on and kept in the file.
+pub fn save_room_spares(
+    spares: Vec<String>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) {
+    use kaeri_core::settings::SettingValue as V;
+    if engine.config.effective().room.spare_relays.as_ref() == Some(&spares) {
+        return;
+    }
+    engine.config.effective_mut().room.spare_relays = Some(spares.clone());
+    write_setting(&["room"], "spare_relays", V::Strings(spares), engine, services, tx);
+}
+
+/// Hide chat in rooms, in effect at once and kept in the file. It has no Settings row: the
+/// terminal's `i` turns it over, and the apps keep their own.
 pub fn save_hide_chat(
     hidden: bool,
     engine: &mut EngineState,
@@ -144,11 +175,11 @@ pub fn save_hide_chat(
     tx: &Outbox,
 ) {
     use kaeri_core::settings::SettingValue as V;
-    if engine.config.effective().syncplay.hide_chat == hidden {
+    if engine.config.effective().room.hide_chat == hidden {
         return;
     }
-    engine.config.effective_mut().syncplay.hide_chat = hidden;
-    write_setting(&["syncplay"], "hide_chat", V::Bool(hidden), engine, services, tx);
+    engine.config.effective_mut().room.hide_chat = hidden;
+    write_setting(&["room"], "hide_chat", V::Bool(hidden), engine, services, tx);
 }
 
 /// Write a setting the config already has in effect, and say how that went: the settings as
@@ -251,33 +282,13 @@ pub fn remember(
     tx: impl FnOnce() -> Outbox,
 ) {
     use kaeri_core::settings::SettingValue as V;
-    // A party joined puts its server first among the ones the form offers, and keeps it there
-    // across launches.
-    if let Event::PartyJoined(view) = event {
-        let syncplay = &mut engine.config.effective_mut().syncplay;
-        let recent = syncplay.used(&view.server);
-        let moved = recent != syncplay.recent_servers;
-        // The first name given is kept, so the next party does not ask again.
-        let name = (syncplay.name.trim().is_empty() && !view.name.trim().is_empty())
-            .then(|| view.name.clone());
-        if !moved && name.is_none() {
-            return;
-        }
-        let tx = tx();
-        if moved {
-            syncplay.recent_servers.clone_from(&recent);
-            write_setting(
-                &["syncplay"],
-                "recent_servers",
-                V::Strings(recent),
-                engine,
-                services,
-                &tx,
-            );
-        }
-        if let Some(name) = name {
-            engine.config.effective_mut().syncplay.name.clone_from(&name);
-            write_setting(&["syncplay"], "name", V::Str(name), engine, services, &tx);
+    // The first name given in a room is kept, so the next room doesn't ask again.
+    if let Event::RoomJoined(view) = event {
+        let room = &mut engine.config.effective_mut().room;
+        if room.name.trim().is_empty() && !view.name.trim().is_empty() {
+            room.name.clone_from(&view.name);
+            let name = view.name.clone();
+            write_setting(&["room"], "name", V::Str(name), engine, services, &tx());
         }
         return;
     }

@@ -775,13 +775,25 @@
     <value>[Ñöţ éñöüĝĥ ƒŕéé šþàçé ţö ķééþ ţĥé ñéẋţ éþîšöðéš ðöŵñļöàðéð. Ƒŕéé üþ šöɱé šþàçé ţö ðöŵñļöàð ɱöŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
     <comment>Toast when keep next found no room for another episode.</comment>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>[Çĥööšé à šéŕṽéŕ ƒöŕ ţĥé ŵàţçĥ þàŕţý ƒîŕšţ, àš šýñçþļàý.šéŕṽéŕ. {server} îš ŕüñ ƀý {operator}.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.</comment>
+  <data name="RoomLookUnreachable" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš. Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.</comment>
   </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>[Çĥööšé à šéŕṽéŕ ƒöŕ ţĥé ŵàţçĥ þàŕţý ƒîŕšţ. {server} îš ŕüñ ƀý {operator}.~~~~~~~~~~~~~~~~~~~]</value>
-    <comment>Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.</comment>
+  <data name="RoomLookNotAnInvite" xml:space="preserve">
+    <value>[Ţĥàţ îšñ'ţ à ŕööɱ'š îñṽîţé.~~~~~~~~~]</value>
+    <comment>Why a look into a room found nothing: the pasted text is no room's invite.</comment>
+  </data>
+  <data name="RoomLookNotKept" xml:space="preserve">
+    <value>[Ţĥàţ ŕööɱ îšñ'ţ ķéþţ àñý ɱöŕé.~~~~~~~~~]</value>
+    <comment>Why a look into a recent room found nothing: it's no longer in this device's recent rooms.</comment>
+  </data>
+  <data name="RoomLookOldInvite" xml:space="preserve">
+    <value>[Ţĥîš îñṽîţé îš ƒŕöɱ àñ öļðéŕ ṽéŕšîöñ öƒ Ķàéŕî. Åšķ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Why a look into a room found nothing: the invite comes from an older version.</comment>
+  </data>
+  <data name="RoomNeedsEpisode" xml:space="preserve">
+    <value>[Çĥööšé àñ éþîšöðé ƒöŕ ţĥé ŕööɱ ƒîŕšţ.~~~~~~~~~~~~]</value>
+    <comment>Why a room couldn't start: it has no episode yet. Shown where the room would open.</comment>
   </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>[Ŵàţçĥ þàŕţîéš àŕéñ'ţ àṽàîļàƀļé îñ ţĥîš ṽéŕšîöñ öƒ Ķàéŕî.~~~~~~~~~~~~~~~~~]</value>
@@ -790,14 +802,6 @@
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>[Å ŵàţçĥ þàŕţý ñééðš à ŕööɱ ţö ɱééţ îñ. Çĥööšé öñé ƒîŕšţ.~~~~~~~~~~~~~~~~~]</value>
     <comment>Message when a watch party was asked for with no room named.</comment>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>[Ļöšţ ţĥé ŵàţçĥ þàŕţý šéŕṽéŕ. Ţŕýîñĝ àĝàîñ.~~~~~~~~~~~~~]</value>
-    <comment>Message in a watch party when its server connection dropped and is retried.</comment>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>[Ɓàçķ îñ ţĥé ŵàţçĥ þàŕţý.~~~~~~~~]</value>
-    <comment>Message in a watch party when the connection came back.</comment>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>[Ļéƒţ ţĥé ŵàţçĥ þàŕţý.~~~~~~~]</value>
@@ -8658,6 +8662,14 @@
     <value>[Ļéšš~~]</value>
     <comment>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</comment>
   </data>
+  <data name="PlayerSourcesFoundLine_one" xml:space="preserve">
+    <value>[Öñé šöüŕçé ĥàš îţ. Çĥööšé îţ ţö þļàý.~~~~~~~~~~~~]</value>
+    <comment>Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).</comment>
+  </data>
+  <data name="PlayerSourcesFoundLine_other" xml:space="preserve">
+    <value>[{count} šöüŕçéš ĥàṽé îţ. Çĥööšé ţĥé öñé ţö þļàý.~~~~~~~~~~~~~~]</value>
+    <comment>Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).</comment>
+  </data>
   <data name="PrivateMode" xml:space="preserve">
     <value>[Þŕîṽàţé ɱöðé~~~~]</value>
     <comment>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</comment>
@@ -11424,6 +11436,1066 @@
     <value>[Ŕéàð~~]</value>
     <comment>Notification, new chapter: the action that opens the reader on the chapter.</comment>
   </data>
+  <data name="RoomLineWatching" xml:space="preserve">
+    <value>[Ŵàţçĥîñĝ ţöĝéţĥéŕ~~~~~~]</value>
+    <comment>First line while the room plays and nobody holds it.</comment>
+  </data>
+  <data name="RoomLineWatchingDetail" xml:space="preserve">
+    <value>[Éþîšöðé {episode} · {at}~~~~~~]</value>
+    <comment>Second line while the room plays: the room's episode and its place in it.</comment>
+  </data>
+  <data name="RoomLinePausedFor" xml:space="preserve">
+    <value>[Þàüšéð ƒöŕ {names}~~~~~]</value>
+    <comment>First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.</comment>
+  </data>
+  <data name="RoomLinePausedForYou" xml:space="preserve">
+    <value>[Þàüšéð ƒöŕ ýöü~~~~~]</value>
+    <comment>First line on your own device while the room waits for you.</comment>
+  </data>
+  <data name="RoomLineWaitingForYou_one" xml:space="preserve">
+    <value>[{names} îš ŵàîţîñĝ · {seconds} š~~~~~~~]</value>
+    <comment>Second line while the room waits for you: who waits, and for how many seconds so far.</comment>
+  </data>
+  <data name="RoomLineWaitingForYou_other" xml:space="preserve">
+    <value>[{names} àŕé ŵàîţîñĝ · {seconds} š~~~~~~~]</value>
+    <comment>Second line while the room waits for you: who waits, and for how many seconds so far.</comment>
+  </data>
+  <data name="RoomLineStillLoading_one" xml:space="preserve">
+    <value>[{names} îš šţîļļ ļöàðîñĝ~~~~~~]</value>
+    <comment>First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillLoading_other" xml:space="preserve">
+    <value>[{names} àŕé šţîļļ ļöàðîñĝ~~~~~~~]</value>
+    <comment>First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillSeeking_one" xml:space="preserve">
+    <value>[{names} îš šţîļļ šééķîñĝ~~~~~~]</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillSeeking_other" xml:space="preserve">
+    <value>[{names} àŕé šţîļļ šééķîñĝ~~~~~~~]</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillBuffering_one" xml:space="preserve">
+    <value>[{names} îš šţîļļ ƀüƒƒéŕîñĝ~~~~~~~]</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineStillBuffering_other" xml:space="preserve">
+    <value>[{names} àŕé šţîļļ ƀüƒƒéŕîñĝ~~~~~~~]</value>
+    <comment>First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.</comment>
+  </data>
+  <data name="RoomLineWaited" xml:space="preserve">
+    <value>[Ţĥé ŕööɱ ĥàš ŵàîţéð {seconds} š~~~~~~~~]</value>
+    <comment>Second line once the room has waited as long as it will.</comment>
+  </data>
+  <data name="RoomLineCarriedOnOne" xml:space="preserve">
+    <value>[{carrier} çàŕŕîéð öñ · {name} ĵöîñš ŵĥéñ ŕéàðý~~~~~~~~~~~~]</value>
+    <comment>Second line after someone pressed Carry on, when the room waited for one person.</comment>
+  </data>
+  <data name="RoomLineCarriedOnMany" xml:space="preserve">
+    <value>[{carrier} çàŕŕîéð öñ · ţĥéý ĵöîñ ŵĥéñ ŕéàðý~~~~~~~~~~~~]</value>
+    <comment>Second line after someone pressed Carry on, when the room waited for more than one person.</comment>
+  </data>
+  <data name="RoomLinePausedBy" xml:space="preserve">
+    <value>[{name} þàüšéð~~~]</value>
+    <comment>First line while the room is paused by someone.</comment>
+  </data>
+  <data name="RoomLineYouPaused" xml:space="preserve">
+    <value>[Ýöü þàüšéð~~~]</value>
+    <comment>First line while the room is paused by you.</comment>
+  </data>
+  <data name="RoomLinePausedAt" xml:space="preserve">
+    <value>[àţ {at}~~]</value>
+    <comment>Second line while the room is paused: the place it paused at.</comment>
+  </data>
+  <data name="RoomLineRelaysDown_one" xml:space="preserve">
+    <value>[{count} öƒ {total} ŕéļàýš îšñ'ţ àñšŵéŕîñĝ · ţĥé ŕööɱ çàŕŕîéš öñ~~~~~~~~~~~~~~~~~]</value>
+    <comment>Second line while one of the room's relays is not answering.</comment>
+  </data>
+  <data name="RoomLineRelaysDown_other" xml:space="preserve">
+    <value>[{count} öƒ {total} ŕéļàýš àŕéñ'ţ àñšŵéŕîñĝ · ţĥé ŕööɱ çàŕŕîéš öñ~~~~~~~~~~~~~~~~~]</value>
+    <comment>Second line while one of the room's relays is not answering.</comment>
+  </data>
+  <data name="RoomLineReconnecting" xml:space="preserve">
+    <value>[Ŕéçöññéçţîñĝ ţö ţĥé ŕööɱ~~~~~~~~]</value>
+    <comment>First line when your own device lost every relay.</comment>
+  </data>
+  <data name="RoomLineReconnectingDetail" xml:space="preserve">
+    <value>[Ñö ŕéļàý îš àñšŵéŕîñĝ · ýöüŕ éþîšöðé ķééþš þļàýîñĝ~~~~~~~~~~~~~~~]</value>
+    <comment>Second line when your own device lost every relay.</comment>
+  </data>
+  <data name="RoomLineYouBehind" xml:space="preserve">
+    <value>[Ýöü'ŕé {seconds} š ƀéĥîñð · çàţçĥîñĝ üþ~~~~~~~~~~]</value>
+    <comment>Second line when your own player is behind the room.</comment>
+  </data>
+  <data name="RoomLineWithSeconds" xml:space="preserve">
+    <value>[{line} · {seconds} š~~~~]</value>
+    <comment>The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.</comment>
+  </data>
+  <data name="RoomNamesPeople_one" xml:space="preserve">
+    <value>[{count} þéŕšöñ~~~]</value>
+    <comment>Stands for the people the room waits for when there are more than two, inside "Paused for …".</comment>
+  </data>
+  <data name="RoomNamesPeople_other" xml:space="preserve">
+    <value>[{count} þéöþļé~~~]</value>
+    <comment>Stands for the people the room waits for when there are more than two, inside "Paused for …".</comment>
+  </data>
+  <data name="RoomStateWatching" xml:space="preserve">
+    <value>[Ŵàţçĥîñĝ~~~]</value>
+    <comment>State word: in step with the room and playing.</comment>
+  </data>
+  <data name="RoomStateReady" xml:space="preserve">
+    <value>[Ŕéàðý~~]</value>
+    <comment>State word before play: this person's first frame is ready.</comment>
+  </data>
+  <data name="RoomStatePausedIt" xml:space="preserve">
+    <value>[Þàüšéð îţ~~~]</value>
+    <comment>State word: the room is paused and this person paused it.</comment>
+  </data>
+  <data name="RoomStatePaused" xml:space="preserve">
+    <value>[Þàüšéð~~]</value>
+    <comment>State word: the room is paused; this person was watching.</comment>
+  </data>
+  <data name="RoomStateBehind" xml:space="preserve">
+    <value>[Ɓéĥîñð · {seconds} š~~~~~]</value>
+    <comment>State word: the slowest player, holding the room back, with the gap in seconds.</comment>
+  </data>
+  <data name="RoomStateLoading" xml:space="preserve">
+    <value>[Ļöàðîñĝ · {seconds} š~~~~~]</value>
+    <comment>State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.</comment>
+  </data>
+  <data name="RoomStateBuffering" xml:space="preserve">
+    <value>[Ɓüƒƒéŕîñĝ · {seconds} š~~~~~~]</value>
+    <comment>State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.</comment>
+  </data>
+  <data name="RoomStateOtherEpisode" xml:space="preserve">
+    <value>[Öñ éþîšöðé {episode}~~~~~]</value>
+    <comment>State word: this person plays another episode than the room's.</comment>
+  </data>
+  <data name="RoomStateChoosing" xml:space="preserve">
+    <value>[Çĥööšîñĝ à šöüŕçé~~~~~~]</value>
+    <comment>State word: this person is picking which source to play from.</comment>
+  </data>
+  <data name="RoomStateNoSource" xml:space="preserve">
+    <value>[Ñö šöüŕçé ƒöŕ éþîšöðé {episode}~~~~~~~~]</value>
+    <comment>State word: none of this person's sources lists the room's episode.</comment>
+  </data>
+  <data name="RoomStatePlayerClosed" xml:space="preserve">
+    <value>[Þļàýéŕ çļöšéð~~~~]</value>
+    <comment>State word: this person is in the room with the player closed.</comment>
+  </data>
+  <data name="RoomStateReconnecting" xml:space="preserve">
+    <value>[Ŕéçöññéçţîñĝ~~~~]</value>
+    <comment>State word: this person's device stopped answering.</comment>
+  </data>
+  <data name="RoomStateLeft" xml:space="preserve">
+    <value>[Ļéƒţ~~]</value>
+    <comment>State word: this person left the room. The row stays dimmed for a moment.</comment>
+  </data>
+  <data name="RoomStateMuted" xml:space="preserve">
+    <value>[Ṁüţéð~~]</value>
+    <comment>State word: you muted this person. Shown alone or after the state word with room-state-and-muted.</comment>
+  </data>
+  <data name="RoomStateAndMuted" xml:space="preserve">
+    <value>[{state} · Ṁüţéð~~~~]</value>
+    <comment>A state word followed by Muted, for a person you muted.</comment>
+  </data>
+  <data name="RoomYouMarker" xml:space="preserve">
+    <value>[(ýöü)~~]</value>
+    <comment>Marker after your own name in the people list.</comment>
+  </data>
+  <data name="RoomYou" xml:space="preserve">
+    <value>[Ýöü~]</value>
+    <comment>Your own name under your face on a phone and in the place's room card.</comment>
+  </data>
+  <data name="RoomYouInList" xml:space="preserve">
+    <value>[ýöü~]</value>
+    <comment>You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.</comment>
+  </data>
+  <data name="RoomFaceLabel" xml:space="preserve">
+    <value>[{name}, {state}~~~]</value>
+    <comment>Accessibility label of a face in the full screen strip: the name and the state word.</comment>
+  </data>
+  <data name="RoomMoreFaces" xml:space="preserve">
+    <value>[+{count}~~]</value>
+    <comment>The last face in a row of faces, standing for the people not shown.</comment>
+  </data>
+  <data name="RoomMoreFacesLabel_one" xml:space="preserve">
+    <value>[{count} ɱöŕé þéŕšöñ~~~~~]</value>
+    <comment>Accessibility label of the last face, which opens the full people list.</comment>
+  </data>
+  <data name="RoomMoreFacesLabel_other" xml:space="preserve">
+    <value>[{count} ɱöŕé þéöþļé~~~~~]</value>
+    <comment>Accessibility label of the last face, which opens the full people list.</comment>
+  </data>
+  <data name="RoomMore" xml:space="preserve">
+    <value>[Ṁöŕé~~]</value>
+    <comment>Name under the last face on a phone and the TV: it opens everyone.</comment>
+  </data>
+  <data name="RoomMoreNotWatching" xml:space="preserve">
+    <value>[{count} ñöţ ŵàţçĥîñĝ~~~~~]</value>
+    <comment>State under the last face: how many of the hidden people are not watching.</comment>
+  </data>
+  <data name="RoomMoreAllWatching" xml:space="preserve">
+    <value>[Åļļ ŵàţçĥîñĝ~~~~]</value>
+    <comment>State under the last face when everyone hidden is watching.</comment>
+  </data>
+  <data name="RoomWaitLoading" xml:space="preserve">
+    <value>[ļöàðîñĝ · {seconds} š~~~~~]</value>
+    <comment>Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.</comment>
+  </data>
+  <data name="RoomWaitBuffering" xml:space="preserve">
+    <value>[ƀüƒƒéŕîñĝ · {seconds} š~~~~~~]</value>
+    <comment>Reason in the waiting capsule, after Paused for, lower case: their player stalled.</comment>
+  </data>
+  <data name="RoomCarryOnWithout" xml:space="preserve">
+    <value>[Çàŕŕý öñ ŵîţĥöüţ {name}~~~~~~]</value>
+    <comment>Button once the room has waited 20 seconds for one person.</comment>
+  </data>
+  <data name="RoomCarryOnWithoutThem" xml:space="preserve">
+    <value>[Çàŕŕý öñ ŵîţĥöüţ ţĥéɱ~~~~~~~]</value>
+    <comment>Button once the room has waited 20 seconds for more than one person.</comment>
+  </data>
+  <data name="RoomCarryingOnWithout" xml:space="preserve">
+    <value>[Çàŕŕýîñĝ öñ ŵîţĥöüţ {names}~~~~~~~]</value>
+    <comment>Capsule over the video after someone pressed Carry on.</comment>
+  </data>
+  <data name="RoomJoinsAtPlace" xml:space="preserve">
+    <value>[{name} ĵöîñš àţ ţĥé ŕööɱ'š þļàçé~~~~~~~~~]</value>
+    <comment>Second part of the capsule after Carry on, when the room waited for one person.</comment>
+  </data>
+  <data name="RoomJoinAtPlaceMany" xml:space="preserve">
+    <value>[Ţĥéý ĵöîñ àţ ţĥé ŕööɱ'š þļàçé~~~~~~~~~]</value>
+    <comment>Second part of the capsule after Carry on, when the room waited for more than one person.</comment>
+  </data>
+  <data name="RoomPausedUntilStart" xml:space="preserve">
+    <value>[Ţĥé ŕööɱ îš þàüšéð üñţîļ ţĥîš šţàŕţš · {seconds} š~~~~~~~~~~~~~~]</value>
+    <comment>Line on your own starting screen while the room waits for you, with the seconds so far.</comment>
+  </data>
+  <data name="RoomDontWait" xml:space="preserve">
+    <value>[Ðöñ'ţ ŵàîţ ƒöŕ ɱé~~~~~~]</value>
+    <comment>Button on your own starting screen that lets the room carry on without you.</comment>
+  </data>
+  <data name="RoomLineNotStarted" xml:space="preserve">
+    <value>[Ñöţ šţàŕţéð ýéţ~~~~~]</value>
+    <comment>First line before anyone pressed Play.</comment>
+  </data>
+  <data name="RoomLinePlayStarts" xml:space="preserve">
+    <value>[Þļàý šţàŕţš îţ ƒöŕ éṽéŕýöñé~~~~~~~~~]</value>
+    <comment>Second line before anyone pressed Play.</comment>
+  </data>
+  <data name="RoomLineStartingWhen_one" xml:space="preserve">
+    <value>[Šţàŕţîñĝ ŵĥéñ {names} îš ŕéàðý~~~~~~~~]</value>
+    <comment>First line after Play, while the room waits for people still loading.</comment>
+  </data>
+  <data name="RoomLineStartingWhen_other" xml:space="preserve">
+    <value>[Šţàŕţîñĝ ŵĥéñ {names} àŕé ŕéàðý~~~~~~~~~]</value>
+    <comment>First line after Play, while the room waits for people still loading.</comment>
+  </data>
+  <data name="RoomLineStartingIn" xml:space="preserve">
+    <value>[Šţàŕţîñĝ îñ {seconds}~~~~~]</value>
+    <comment>First line counting down once everyone is ready.</comment>
+  </data>
+  <data name="RoomLineEveryoneReady" xml:space="preserve">
+    <value>[Éṽéŕýöñé îš ŕéàðý~~~~~~]</value>
+    <comment>Second line when everyone is ready.</comment>
+  </data>
+  <data name="RoomStartWithout" xml:space="preserve">
+    <value>[Šţàŕţ ŵîţĥöüţ {name}~~~~~~]</value>
+    <comment>Button once the room has waited 20 seconds before play, for one person.</comment>
+  </data>
+  <data name="RoomStartWithoutThem" xml:space="preserve">
+    <value>[Šţàŕţ ŵîţĥöüţ ţĥéɱ~~~~~~]</value>
+    <comment>Button once the room has waited 20 seconds before play, for more than one person.</comment>
+  </data>
+  <data name="RoomUpInRoom" xml:space="preserve">
+    <value>[Ûþ îñ ţĥé ŕööɱ~~~~~]</value>
+    <comment>Small heading over the episode in the video area before play.</comment>
+  </data>
+  <data name="RoomRoomIsWatching" xml:space="preserve">
+    <value>[Ţĥé ŕööɱ îš ŵàţçĥîñĝ~~~~~~]</value>
+    <comment>Small heading over the episode in the video area when you opened an invite.</comment>
+  </data>
+  <data name="RoomBannerEpisode" xml:space="preserve">
+    <value>[Éþîšöðé {episode} · {title} · {length}~~~~~~~]</value>
+    <comment>Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.</comment>
+  </data>
+  <data name="RoomPlaysFromSources" xml:space="preserve">
+    <value>[Þļàýš ƒŕöɱ ýöüŕ šöüŕçéš~~~~~~~]</value>
+    <comment>Line under the episode before play: one of your sources has it.</comment>
+  </data>
+  <data name="RoomPlayForEveryone" xml:space="preserve">
+    <value>[Þļàý ƒöŕ éṽéŕýöñé~~~~~~]</value>
+    <comment>Button that starts the episode for everyone in the room.</comment>
+  </data>
+  <data name="RoomAnyoneCanStart" xml:space="preserve">
+    <value>[Åñýöñé îñ ţĥé ŕööɱ çàñ šţàŕţ îţ~~~~~~~~~~]</value>
+    <comment>Line beside Play for everyone.</comment>
+  </data>
+  <data name="RoomPlaying" xml:space="preserve">
+    <value>[Þļàýîñĝ…~~~]</value>
+    <comment>Label of the Play for everyone button after it was pressed.</comment>
+  </data>
+  <data name="RoomWaitingFirstFrames" xml:space="preserve">
+    <value>[Ŵàîţîñĝ ƒöŕ éṽéŕýöñé'š ƒîŕšţ ƒŕàɱé~~~~~~~~~~~]</value>
+    <comment>Line beside the button after Play was pressed, on a desktop.</comment>
+  </data>
+  <data name="RoomWaitingFirstFramesShort" xml:space="preserve">
+    <value>[Ŵàîţîñĝ ƒöŕ ƒîŕšţ ƒŕàɱéš~~~~~~~~]</value>
+    <comment>Line under the play button after Play was pressed, on a phone.</comment>
+  </data>
+  <data name="RoomInvitedBy" xml:space="preserve">
+    <value>[{name} îñṽîţéð ýöü~~~~~]</value>
+    <comment>First line of the room when an invite link opened it.</comment>
+  </data>
+  <data name="RoomInvitedDetail" xml:space="preserve">
+    <value>[{title} · Éþîšöðé {episode}~~~~~~]</value>
+    <comment>Second line when an invite link opened the room: the show and the episode.</comment>
+  </data>
+  <data name="RoomInvitedOver" xml:space="preserve">
+    <value>[{count} þéöþļé àŕé ĥéŕé àļŕéàðý · ŕööɱš ŵöŕķ ƀéšţ ŵîţĥ 10 öŕ ƒéŵéŕ~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Second line when an invite link opened a room with 10 or more people in it.</comment>
+  </data>
+  <data name="RoomJoin" xml:space="preserve">
+    <value>[Ĵöîñ ţĥé ŕööɱ~~~~]</value>
+    <comment>Button that joins the room from an invite.</comment>
+  </data>
+  <data name="RoomJoinAnyway" xml:space="preserve">
+    <value>[Ĵöîñ àñýŵàý~~~~]</value>
+    <comment>Button that joins a room with 10 or more people in it.</comment>
+  </data>
+  <data name="RoomChooseSource" xml:space="preserve">
+    <value>[Çĥööšé à šöüŕçé ƒöŕ éþîšöðé {episode}~~~~~~~~~~]</value>
+    <comment>Heading over the list of sources for the room's episode.</comment>
+  </data>
+  <data name="RoomChooseSourceLine" xml:space="preserve">
+    <value>[Ţĥé ŕööɱ ķééþš ŵàţçĥîñĝ; ýöü ĵöîñ àţ îţš þļàçé.~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="RoomPlayInRoom" xml:space="preserve">
+    <value>[Þļàý îñ ţĥé ŕööɱ~~~~~]</value>
+    <comment>Button that plays the chosen source at the room's place.</comment>
+  </data>
+  <data name="RoomNoSourceTitle" xml:space="preserve">
+    <value>[Ñöñé öƒ ýöüŕ šöüŕçéš ĥàš éþîšöðé {episode}~~~~~~~~~~~]</value>
+    <comment>Heading when none of your sources has the room's episode.</comment>
+  </data>
+  <data name="RoomNoSourceLine_one" xml:space="preserve">
+    <value>[Ķàéŕî ļööķéð îñ ýöüŕ öñé šöüŕçé. Ýöü šţàý îñ ţĥé ŕööɱ àñð ţĥé çĥàţ ŵĥîļé ţĥé öţĥéŕš ŵàţçĥ.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it on a desktop: how many sources were looked in.</comment>
+  </data>
+  <data name="RoomNoSourceLine_other" xml:space="preserve">
+    <value>[Ķàéŕî ļööķéð îñ ýöüŕ {count} šöüŕçéš. Ýöü šţàý îñ ţĥé ŕööɱ àñð ţĥé çĥàţ ŵĥîļé ţĥé öţĥéŕš ŵàţçĥ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it on a desktop: how many sources were looked in.</comment>
+  </data>
+  <data name="RoomNoSourceLineShort" xml:space="preserve">
+    <value>[Ýöü šţàý îñ ţĥé ŕööɱ àñð ţĥé çĥàţ.~~~~~~~~~~~]</value>
+    <comment>Line under it on a phone.</comment>
+  </data>
+  <data name="RoomOpenSources" xml:space="preserve">
+    <value>[Öþéñ šöüŕçéš~~~~]</value>
+    <comment>Button that opens your sources.</comment>
+  </data>
+  <data name="RoomSearchTitles" xml:space="preserve">
+    <value>[Šéàŕçĥ ţîţļéš~~~~]</value>
+    <comment>Button that searches titles in your sources.</comment>
+  </data>
+  <data name="RoomHeaderLine" xml:space="preserve">
+    <value>[Éþîšöðé {episode} · {count} îñ ţĥé ŕööɱ~~~~~~~~~]</value>
+    <comment>Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.</comment>
+  </data>
+  <data name="RoomInvite" xml:space="preserve">
+    <value>[Îñṽîţé~~]</value>
+    <comment>Button and accessibility label that opens the invite.</comment>
+  </data>
+  <data name="RoomDetails" xml:space="preserve">
+    <value>[Ðéţàîļš~~~]</value>
+    <comment>Button and accessibility label that opens the room's details.</comment>
+  </data>
+  <data name="RoomMoreActions" xml:space="preserve">
+    <value>[Ṁöŕé~~]</value>
+    <comment>Accessibility label of the More button on a phone.</comment>
+  </data>
+  <data name="RoomHide" xml:space="preserve">
+    <value>[Ĥîðé ŕööɱ~~~]</value>
+    <comment>Accessibility label of the player's button that hides the room column.</comment>
+  </data>
+  <data name="RoomFold" xml:space="preserve">
+    <value>[Çļöšé ţĥé ŕööɱ ţö ţĥé ƀàŕ~~~~~~~~]</value>
+    <comment>Accessibility label of the chevron on a phone that folds the room into the bar over the tabs.</comment>
+  </data>
+  <data name="RoomChat" xml:space="preserve">
+    <value>[Çĥàţ~~]</value>
+    <comment>Accessibility label of the player's button that opens the chat in full screen.</comment>
+  </data>
+  <data name="RoomInviteAnyone" xml:space="preserve">
+    <value>[Åñýöñé ŵîţĥ ţĥîš ļîñķ çàñ ĵöîñ.~~~~~~~~~~]</value>
+    <comment>Line in the invite: anyone with the link can join.</comment>
+  </data>
+  <data name="RoomInviteKey" xml:space="preserve">
+    <value>[Ţĥé ļîñķ çàŕŕîéš ţĥé ŕööɱ'š ķéý, šö öñļý þéöþļé ŵĥö ĥàṽé îţ çàñ ŕéàð ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line after it on a desktop: the link carries the key.</comment>
+  </data>
+  <data name="RoomInviteKeyShort" xml:space="preserve">
+    <value>[Öñļý þéöþļé ŵîţĥ ţĥé ļîñķ çàñ ŕéàð ţĥé ŕööɱ.~~~~~~~~~~~~~~]</value>
+    <comment>Line after it on a phone.</comment>
+  </data>
+  <data name="RoomInviteQr" xml:space="preserve">
+    <value>[Îñṽîţé àš à ǪŔ çöðé~~~~~~]</value>
+    <comment>Accessibility label of the invite's QR code.</comment>
+  </data>
+  <data name="RoomInviteQrLine" xml:space="preserve">
+    <value>[Šöɱéöñé ƀéšîðé ýöü çàñ šçàñ ţĥîš ŵîţĥ ţĥéîŕ çàɱéŕà.~~~~~~~~~~~~~~~~]</value>
+    <comment>Line beside the QR code.</comment>
+  </data>
+  <data name="RoomCopyLink" xml:space="preserve">
+    <value>[Çöþý ļîñķ~~~]</value>
+    <comment>Button that copies the invite link.</comment>
+  </data>
+  <data name="RoomShare" xml:space="preserve">
+    <value>[Šĥàŕé…~~]</value>
+    <comment>Button that opens the system's share sheet with the invite link.</comment>
+  </data>
+  <data name="RoomCopyInviteLink" xml:space="preserve">
+    <value>[Çöþý îñṽîţé ļîñķ~~~~~]</value>
+    <comment>Menu item on a phone that copies the invite link.</comment>
+  </data>
+  <data name="RoomNewInvite" xml:space="preserve">
+    <value>[Ñéŵ îñṽîţé~~~]</value>
+    <comment>Button that makes a new invite link and stops the old one.</comment>
+  </data>
+  <data name="RoomNewInviteLine" xml:space="preserve">
+    <value>[Ñéŵ îñṽîţé šţöþš ţĥé öļð ļîñķ ŵöŕķîñĝ. Éṽéŕýöñé îñ ţĥé ŕööɱ ɱöṽéš ţö ţĥé ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under New invite on a desktop.</comment>
+  </data>
+  <data name="RoomNewInviteShort" xml:space="preserve">
+    <value>[Šţöþš ţĥé öļð ļîñķ~~~~~~]</value>
+    <comment>Short line beside New invite on a phone.</comment>
+  </data>
+  <data name="RoomMoveOpen" xml:space="preserve">
+    <value>[Ṁöṽé ţö à ñéŵ ŕööɱ…~~~~~~]</value>
+    <comment>Button in the invite and menu item on a phone that opens the move.</comment>
+  </data>
+  <data name="RoomMoveOpenLine" xml:space="preserve">
+    <value>[Ƒöŕ šöɱéöñé àļŕéàðý ĥéŕé: šţàŕţ à ñéŵ ŕööɱ àñð þîçķ ŵĥö çöɱéš àļöñĝ.~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the button in the invite.</comment>
+  </data>
+  <data name="RoomMoveTitle" xml:space="preserve">
+    <value>[Ṁöṽé ţö à ñéŵ ŕööɱ~~~~~~]</value>
+    <comment>Title of the move dialog and sheet.</comment>
+  </data>
+  <data name="RoomMoveBody" xml:space="preserve">
+    <value>[Éṽéŕýöñé ýöü ţîçķ îš àšķéð ţö ĝö àļöñĝ. Ñöƀöðý ɱöṽéš ŵîţĥöüţ šàýîñĝ ýéš, àñð àñýöñé ñöţ ţîçķéð šţàýš îñ ţĥîš ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the title.</comment>
+  </data>
+  <data name="RoomMoveAlwaysGoes" xml:space="preserve">
+    <value>[Åļŵàýš ĝöéš~~~~]</value>
+    <comment>Note under your own row: you always go.</comment>
+  </data>
+  <data name="RoomMoveMuted" xml:space="preserve">
+    <value>[Ṁüţéð, šö ñöţ ţîçķéð~~~~~~]</value>
+    <comment>Note under a person you muted, who starts unticked.</comment>
+  </data>
+  <data name="RoomMoveFoot" xml:space="preserve">
+    <value>[Ţĥé ñéŵ ŕööɱ þîçķš üþ àţ {at} ŵîţĥ à ñéŵ ķéý. Îţš ļîñķ ŕéàçĥéš öñļý ţĥé þéöþļé ţîçķéð.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the list.</comment>
+  </data>
+  <data name="RoomMoveWith_one" xml:space="preserve">
+    <value>[Ṁöṽé ŵîţĥ {count} öţĥéŕ~~~~~~]</value>
+    <comment>Button that moves, counting the others ticked.</comment>
+  </data>
+  <data name="RoomMoveWith_other" xml:space="preserve">
+    <value>[Ṁöṽé ŵîţĥ {count} öţĥéŕš~~~~~~]</value>
+    <comment>Button that moves, counting the others ticked.</comment>
+  </data>
+  <data name="RoomMoveOffer" xml:space="preserve">
+    <value>[{name} ɱöṽéð ţĥé ŕööɱ. Ĝö àļöñĝ?~~~~~~~~~]</value>
+    <comment>The offer to someone ticked, in a notice or alert, as one sentence pair.</comment>
+  </data>
+  <data name="RoomLineMoved" xml:space="preserve">
+    <value>[{name} ɱöṽéð ţĥé ŕööɱ~~~~~~]</value>
+    <comment>First line of the room while the offer waits for an answer.</comment>
+  </data>
+  <data name="RoomLineMovedDetail_one" xml:space="preserve">
+    <value>[Ĝö àļöñĝ? {names} îš àšķéð ţöö. Ţĥé éþîšöðé çàŕŕîéš öñ ƒŕöɱ {at}.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Second line with the offer: who else is asked, and the place the episode carries on from.</comment>
+  </data>
+  <data name="RoomLineMovedDetail_other" xml:space="preserve">
+    <value>[Ĝö àļöñĝ? {names} àŕé àšķéð ţöö. Ţĥé éþîšöðé çàŕŕîéš öñ ƒŕöɱ {at}.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Second line with the offer: who else is asked, and the place the episode carries on from.</comment>
+  </data>
+  <data name="RoomLineMovedDetailAlone" xml:space="preserve">
+    <value>[Ĝö àļöñĝ? Ţĥé éþîšöðé çàŕŕîéš öñ ƒŕöɱ {at}.~~~~~~~~~~~~~]</value>
+    <comment>Second line with the offer when nobody else is asked.</comment>
+  </data>
+  <data name="RoomGoAlong" xml:space="preserve">
+    <value>[Ĝö àļöñĝ~~~]</value>
+    <comment>Button that goes along to the new room.</comment>
+  </data>
+  <data name="RoomStay" xml:space="preserve">
+    <value>[Šţàý~~]</value>
+    <comment>Short button that stays in this room, in a notice.</comment>
+  </data>
+  <data name="RoomLineMovedAway" xml:space="preserve">
+    <value>[{name} ɱöṽéð ţö à ñéŵ ŕööɱ~~~~~~~]</value>
+    <comment>First line of the old room for someone who stayed.</comment>
+  </data>
+  <data name="RoomLineWentAlong" xml:space="preserve">
+    <value>[{names} ŵéñţ àļöñĝ · ţĥîš ŕööɱ çàŕŕîéš öñ~~~~~~~~~~~~]</value>
+    <comment>Second line of the old room: who went along.</comment>
+  </data>
+  <data name="RoomDetailsEncryption" xml:space="preserve">
+    <value>[Éñçŕýþţîöñ~~~]</value>
+    <comment>Label of the encryption row.</comment>
+  </data>
+  <data name="RoomDetailsEndToEnd" xml:space="preserve">
+    <value>[Éñð ţö éñð~~~]</value>
+    <comment>Value of the encryption row.</comment>
+  </data>
+  <data name="RoomRelays" xml:space="preserve">
+    <value>[Ŕéļàýš~~]</value>
+    <comment>Label of the relays row, and the title of the relays page in Settings.</comment>
+  </data>
+  <data name="RoomRelaysAnswering" xml:space="preserve">
+    <value>[{count} àñšŵéŕîñĝ~~~~]</value>
+    <comment>Value of the relays row when all answer.</comment>
+  </data>
+  <data name="RoomRelaysAnsweringOf" xml:space="preserve">
+    <value>[{count} öƒ {total} àñšŵéŕîñĝ~~~~~~]</value>
+    <comment>Value of the relays row when some don't answer.</comment>
+  </data>
+  <data name="RoomRelayNotAnswering" xml:space="preserve">
+    <value>[Ñöţ àñšŵéŕîñĝ~~~~]</value>
+    <comment>State of a relay that doesn't answer.</comment>
+  </data>
+  <data name="RoomRelayLatency" xml:space="preserve">
+    <value>[{ms} ɱš~~]</value>
+    <comment>Round trip time of a relay.</comment>
+  </data>
+  <data name="RoomDetailsRelaysLine" xml:space="preserve">
+    <value>[Ŕéļàýš þàšš ţĥé ŕööɱ'š ɱéššàĝéš àļöñĝ àñð çàñ'ţ ŕéàð ţĥéɱ. Ţĥéšé àŕé þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš; Ķàéŕî ðöéšñ'ţ ŕüñ àñý öƒ ţĥéɱ. Îƒ öñé šţöþš àñšŵéŕîñĝ, ţĥé ŕööɱ šŵàþš îñ à šþàŕé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the relays in Details.</comment>
+  </data>
+  <data name="RoomEditRelays" xml:space="preserve">
+    <value>[Éðîţ ŕéļàýš…~~~~]</value>
+    <comment>Button in Details that edits the room's relays.</comment>
+  </data>
+  <data name="RoomEditRelaysTitle" xml:space="preserve">
+    <value>[Éðîţ ŕéļàýš~~~~]</value>
+    <comment>Title of the room's relay editor.</comment>
+  </data>
+  <data name="RoomEditRelaysLine" xml:space="preserve">
+    <value>[Çĥàñĝéš ţĥîš ŕööɱ'š ŕéļàýš ƒöŕ éṽéŕýöñé îñ îţ. Ñéŵ îñṽîţéš çàŕŕý ţĥé ļîšţ.~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="RoomRelayRemove" xml:space="preserve">
+    <value>[Ŕéɱöṽé {relay}~~~]</value>
+    <comment>Accessibility label of the button that removes a relay. `relay` is its address.</comment>
+  </data>
+  <data name="RoomRelayAdd" xml:space="preserve">
+    <value>[Åðð~]</value>
+    <comment>Button that adds the address typed beside it.</comment>
+  </data>
+  <data name="RoomEditRelaysSettings" xml:space="preserve">
+    <value>[Šéţţîñĝš › Þļàýƀàçķ › Ŕéļàýš šéţš ţĥé ļîšţ ƒöŕ ñéŵ ŕööɱš.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the room's relay editor.</comment>
+  </data>
+  <data name="RoomSettingsGroup" xml:space="preserve">
+    <value>[Ŵàţçĥ ţöĝéţĥéŕ~~~~~]</value>
+    <comment>Heading of the group in Settings › Playback.</comment>
+  </data>
+  <data name="RoomSettingsHideChat" xml:space="preserve">
+    <value>[Ĥîðé çĥàţ îñ ŕööɱš~~~~~~]</value>
+    <comment>Switch that hides chat in every room on this device.</comment>
+  </data>
+  <data name="RoomSettingsHideChatLine" xml:space="preserve">
+    <value>[Çĥàţ ļîñéš, ŕéàçţîöñš àñð ţĥéîŕ ţîçķš öñ ţĥé šééķ ƀàŕ šţàý öƒƒ ţĥé ṽîðéö, àñð ţĥé çĥàţ ƒîéļð îš ĝöñé. Ţĥé þéöþļé ļîšţ šţîļļ šĥöŵš ŵĥö îš îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="RoomSettingsRelaysCount_one" xml:space="preserve">
+    <value>[{count} þüƀļîç ŕéļàý ŕüñ ƀý öţĥéŕš~~~~~~~~~]</value>
+    <comment>Line under the Relays row: how many relays new rooms use.</comment>
+  </data>
+  <data name="RoomSettingsRelaysCount_other" xml:space="preserve">
+    <value>[{count} þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš~~~~~~~~~~]</value>
+    <comment>Line under the Relays row: how many relays new rooms use.</comment>
+  </data>
+  <data name="RoomSettingsRelaysEdit" xml:space="preserve">
+    <value>[Éðîţ~~]</value>
+    <comment>Button at the end of the Relays row.</comment>
+  </data>
+  <data name="RoomSettingsGroupLine" xml:space="preserve">
+    <value>[Éàçĥ öƒ ýöü þļàýš ţĥé éþîšöðé ƒŕöɱ ýöüŕ öŵñ šöüŕçéš; ŕéļàýš öñļý çàŕŕý ţĥé ŕööɱ'š ɱéššàĝéš, šéàļéð šö ţĥéý çàñ'ţ ŕéàð ţĥéɱ.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the group.</comment>
+  </data>
+  <data name="RoomRelaysIntro" xml:space="preserve">
+    <value>[Ŕööɱš ýöü šţàŕţ üšé ţĥéšé ŕéļàýš, àñð ýöüŕ îñṽîţéš çàŕŕý ţĥéɱ. Ŕéļàýš þàšš ţĥé ŕööɱ'š ɱéššàĝéš àļöñĝ àñð çàñ'ţ ŕéàð ţĥéɱ. Ţĥéšé àŕé þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš; Ķàéŕî ðöéšñ'ţ ŕüñ àñý öƒ ţĥéɱ. Å ŕööɱ'š öŵñ ļîšţ îš îñ îţš Ðéţàîļš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line at the top of the Relays page on a desktop.</comment>
+  </data>
+  <data name="RoomRelaysIntroShort" xml:space="preserve">
+    <value>[Ŕööɱš ýöü šţàŕţ üšé ţĥéšé ŕéļàýš, àñð ýöüŕ îñṽîţéš çàŕŕý ţĥéɱ. Ţĥéý çàñ'ţ ŕéàð ţĥé ŕööɱ. Ţĥéšé àŕé þüƀļîç ŕéļàýš ŕüñ ƀý öţĥéŕš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line at the top of the Relays page on a phone.</comment>
+  </data>
+  <data name="RoomRelaysNewRooms" xml:space="preserve">
+    <value>[Ƒöŕ ñéŵ ŕööɱš~~~~]</value>
+    <comment>Heading of the list of relays for new rooms.</comment>
+  </data>
+  <data name="RoomRelaysNewRoomsLine" xml:space="preserve">
+    <value>[Ķàéŕî šéñðš éṽéŕý ŕööɱ éṽéñţ ţö àļļ öƒ ţĥéɱ. Þļàîñ ŵš:// ŵöŕķš öñļý ƒöŕ ļöçàļĥöšţ àñð .ļöçàļ àððŕéššéš.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the list for new rooms.</comment>
+  </data>
+  <data name="RoomRelaysSpares" xml:space="preserve">
+    <value>[Šþàŕéš~~]</value>
+    <comment>Heading of the list of spare relays.</comment>
+  </data>
+  <data name="RoomRelaysSparesLine" xml:space="preserve">
+    <value>[Ŵĥéñ à ŕööɱ ĥàš ƒéŵéŕ ţĥàñ ţŵö ŕéļàýš àñšŵéŕîñĝ, îţ šŵàþš îñ ţĥé ƒîŕšţ šþàŕé ţĥàţ àñšŵéŕš.~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the spares on a desktop.</comment>
+  </data>
+  <data name="RoomRelaysSparesLineShort" xml:space="preserve">
+    <value>[Ûšéð ŵĥéñ à ŕööɱ ĥàš ƒéŵéŕ ţĥàñ ţŵö ŕéļàýš àñšŵéŕîñĝ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the spares on a phone.</comment>
+  </data>
+  <data name="RoomRelaysRestore" xml:space="preserve">
+    <value>[Ŕéšţöŕé ţĥé ðéƒàüļţš~~~~~~]</value>
+    <comment>Button that puts the default relays and spares back.</comment>
+  </data>
+  <data name="RoomLeaveEllipsis" xml:space="preserve">
+    <value>[Ļéàṽé…~~]</value>
+    <comment>Button in the room column's header that leaves, on the place's room card, with the dialog after it.</comment>
+  </data>
+  <data name="RoomLeaveMenu" xml:space="preserve">
+    <value>[Ļéàṽé ţĥé ŕööɱ…~~~~~]</value>
+    <comment>Menu item on an iPhone that leaves, asking first.</comment>
+  </data>
+  <data name="RoomLeaveMenuPlain" xml:space="preserve">
+    <value>[Ļéàṽé ţĥé ŕööɱ~~~~~]</value>
+    <comment>Menu item on Android that leaves, asking first.</comment>
+  </data>
+  <data name="RoomLeaveTitle" xml:space="preserve">
+    <value>[Ļéàṽé ţĥé ŕööɱ?~~~~~]</value>
+    <comment>Title of the confirmation before leaving.</comment>
+  </data>
+  <data name="RoomLeaveLine" xml:space="preserve">
+    <value>[Ţĥé öţĥéŕš ķééþ ŵàţçĥîñĝ.~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="RoomLeaveLineKeep" xml:space="preserve">
+    <value>[Ţĥé öţĥéŕš ķééþ ŵàţçĥîñĝ. Ķééþ ţĥé ŕööɱ çļöšéš ţĥé þļàýéŕ àñð ķééþš ýöüŕ þļàçé.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it when closing the window on a Mac, which offers Keep the room.</comment>
+  </data>
+  <data name="RoomKeep" xml:space="preserve">
+    <value>[Ķééþ ţĥé ŕööɱ~~~~]</value>
+    <comment>Button in the confirmation on closing the window: close the player and stay in the room.</comment>
+  </data>
+  <data name="RoomKeepWatching" xml:space="preserve">
+    <value>[Ķééþ ŵàţçĥîñĝ~~~~]</value>
+    <comment>Button in the TV's confirmation that goes back to the room.</comment>
+  </data>
+  <data name="RoomUpNext" xml:space="preserve">
+    <value>[Ûþ ñéẋţ ƒöŕ ţĥé ŕööɱ~~~~~~]</value>
+    <comment>Small heading of the up next card.</comment>
+  </data>
+  <data name="RoomUpNextEpisode" xml:space="preserve">
+    <value>[Éþîšöðé {episode} · {title}~~~~~~]</value>
+    <comment>Line on the card naming the next episode.</comment>
+  </data>
+  <data name="RoomUpNextEpisodePlain" xml:space="preserve">
+    <value>[Éþîšöðé {episode}~~~~]</value>
+    <comment>Line on the card naming the next episode when it has no title.</comment>
+  </data>
+  <data name="RoomUpNextCount" xml:space="preserve">
+    <value>[Þļàýš ƒöŕ éṽéŕýöñé îñ {seconds} š~~~~~~~~~]</value>
+    <comment>Line on the card counting down for everyone.</comment>
+  </data>
+  <data name="RoomUpNextWaiting" xml:space="preserve">
+    <value>[Ŵàîţîñĝ ƒöŕ {name} ţö ƒîñîšĥ~~~~~~~~]</value>
+    <comment>Line on the card while your file ended sooner and the room waits for someone's longer file.</comment>
+  </data>
+  <data name="RoomPlayNextNow" xml:space="preserve">
+    <value>[Þļàý ñéẋţ ñöŵ~~~~]</value>
+    <comment>Button on the card that moves the room on at once.</comment>
+  </data>
+  <data name="RoomLineUpNext" xml:space="preserve">
+    <value>[Ûþ ñéẋţ îñ {seconds} š~~~~~]</value>
+    <comment>First line of the room while up next counts down.</comment>
+  </data>
+  <data name="RoomLineUpNextDetail" xml:space="preserve">
+    <value>[Éþîšöðé {episode} þļàýš ƒöŕ éṽéŕýöñé~~~~~~~~~]</value>
+    <comment>Second line while up next counts down.</comment>
+  </data>
+  <data name="RoomChatField" xml:space="preserve">
+    <value>[Šàý šöɱéţĥîñĝ~~~~]</value>
+    <comment>Placeholder of the chat field.</comment>
+  </data>
+  <data name="RoomChatSend" xml:space="preserve">
+    <value>[Šéñð~~]</value>
+    <comment>Button and accessibility label that sends a chat line.</comment>
+  </data>
+  <data name="RoomReact" xml:space="preserve">
+    <value>[Ŕéàçţ~~]</value>
+    <comment>Accessibility label of the button beside the chat field that opens the reactions.</comment>
+  </data>
+  <data name="RoomChatOpens" xml:space="preserve">
+    <value>[Ţĥé çĥàţ öþéñš ŵĥéñ ýöü ĵöîñ~~~~~~~~~]</value>
+    <comment>Line in the chat of a room opened from an invite, before joining.</comment>
+  </data>
+  <data name="RoomChatNotSent" xml:space="preserve">
+    <value>[Çöüļðñ'ţ šéñð~~~~]</value>
+    <comment>Line under a chat line that didn't reach any relay.</comment>
+  </data>
+  <data name="RoomChatStarted" xml:space="preserve">
+    <value>[{name} šţàŕţéð ţĥé ŕööɱ · Éþîšöðé {episode}~~~~~~~~~~~]</value>
+    <comment>Chat line: someone started the room.</comment>
+  </data>
+  <data name="RoomChatYouStarted" xml:space="preserve">
+    <value>[Ýöü šţàŕţéð ţĥé ŕööɱ · Éþîšöðé {episode}~~~~~~~~~~~]</value>
+    <comment>Chat line: you started the room.</comment>
+  </data>
+  <data name="RoomChatPaused" xml:space="preserve">
+    <value>[{name} þàüšéð àţ {at}~~~~~~]</value>
+    <comment>Chat line: someone paused, at a place in the episode.</comment>
+  </data>
+  <data name="RoomChatYouPaused" xml:space="preserve">
+    <value>[Ýöü þàüšéð àţ {at}~~~~~~]</value>
+    <comment>Chat line: you paused.</comment>
+  </data>
+  <data name="RoomChatResumed" xml:space="preserve">
+    <value>[{name} ŕéšüɱéð~~~~]</value>
+    <comment>Chat line: someone played after a pause.</comment>
+  </data>
+  <data name="RoomChatPausedForLoading" xml:space="preserve">
+    <value>[Þàüšéð ƒöŕ {names} · ļöàðîñĝ~~~~~~~~]</value>
+    <comment>Chat line: the room waits for people whose player is opening the episode.</comment>
+  </data>
+  <data name="RoomChatPausedForBuffering" xml:space="preserve">
+    <value>[Þàüšéð ƒöŕ {names} · ƀüƒƒéŕîñĝ~~~~~~~~]</value>
+    <comment>Chat line: the room waits for people whose player stalled.</comment>
+  </data>
+  <data name="RoomChatPausedForYou" xml:space="preserve">
+    <value>[Þàüšéð ƒöŕ ýöü · ļöàðîñĝ~~~~~~~~]</value>
+    <comment>Chat line on your own device: the room waits for you.</comment>
+  </data>
+  <data name="RoomChatCarriedOn" xml:space="preserve">
+    <value>[{carrier} çàŕŕîéð öñ ŵîţĥöüţ {names}~~~~~~~~]</value>
+    <comment>Chat line: someone pressed Carry on.</comment>
+  </data>
+  <data name="RoomChatJoinedAt" xml:space="preserve">
+    <value>[{name} ĵöîñéð àţ {at}~~~~~~]</value>
+    <comment>Chat line: someone's first frame landed and they joined at the room's place.</comment>
+  </data>
+  <data name="RoomChatLeft" xml:space="preserve">
+    <value>[{name} ļéƒţ~~~]</value>
+    <comment>Chat line: someone left the room.</comment>
+  </data>
+  <data name="RoomChatMoved" xml:space="preserve">
+    <value>[{name} ɱöṽéð ţö à ñéŵ ŕööɱ~~~~~~~]</value>
+    <comment>Chat line: someone moved to a new room.</comment>
+  </data>
+  <data name="RoomChatWent" xml:space="preserve">
+    <value>[{name} ŵéñţ ţö ţĥé ñéŵ ŕööɱ~~~~~~~~]</value>
+    <comment>Chat line in the old room: someone went along to the new room.</comment>
+  </data>
+  <data name="RoomChatUpNext" xml:space="preserve">
+    <value>[Ûþ ñéẋţ: éþîšöðé {episode} ƒöŕ éṽéŕýöñé~~~~~~~~~~]</value>
+    <comment>Chat line: up next moved the room on.</comment>
+  </data>
+  <data name="RoomChatSkippedOpening" xml:space="preserve">
+    <value>[{name} šķîþþéð ţĥé öþéñîñĝ~~~~~~~]</value>
+    <comment>Chat line: someone skipped the opening for the room.</comment>
+  </data>
+  <data name="RoomReactLaugh" xml:space="preserve">
+    <value>[Ļàüĝĥ~~]</value>
+    <comment>Label of the laugh reaction button.</comment>
+  </data>
+  <data name="RoomReactGasp" xml:space="preserve">
+    <value>[Ĝàšþ~~]</value>
+    <comment>Label of the gasp reaction button.</comment>
+  </data>
+  <data name="RoomReactClap" xml:space="preserve">
+    <value>[Çļàþ~~]</value>
+    <comment>Label of the clap reaction button.</comment>
+  </data>
+  <data name="RoomReactCry" xml:space="preserve">
+    <value>[Çŕý~]</value>
+    <comment>Label of the cry reaction button.</comment>
+  </data>
+  <data name="RoomReactedLaugh" xml:space="preserve">
+    <value>[{name} ļàüĝĥéð àţ {at}~~~~~~]</value>
+    <comment>Chat line: someone laughed, at a place in the episode.</comment>
+  </data>
+  <data name="RoomReactedGasp" xml:space="preserve">
+    <value>[{name} ĝàšþéð àţ {at}~~~~~~]</value>
+    <comment>Chat line: someone gasped, at a place in the episode.</comment>
+  </data>
+  <data name="RoomReactedClap" xml:space="preserve">
+    <value>[{name} çļàþþéð àţ {at}~~~~~~]</value>
+    <comment>Chat line: someone clapped, at a place in the episode.</comment>
+  </data>
+  <data name="RoomReactedCry" xml:space="preserve">
+    <value>[{name} çŕîéð àţ {at}~~~~~]</value>
+    <comment>Chat line: someone cried, at a place in the episode.</comment>
+  </data>
+  <data name="RoomTvKeys" xml:space="preserve">
+    <value>[ÖĶ ƒöŕ ţĥé çöñţŕöļš · Ɓàçķ çļöšéš ţĥé ŕööɱ~~~~~~~~~~~~~]</value>
+    <comment>Line under the video on the TV rail: what the remote's buttons do.</comment>
+  </data>
+  <data name="RoomTvWriteFromPhone" xml:space="preserve">
+    <value>[Ŵŕîţé ƒŕöɱ ýöüŕ þĥöñé~~~~~~~]</value>
+    <comment>Line under the chat on the TV rail: chat is read-only there.</comment>
+  </data>
+  <data name="RoomPlaceLine" xml:space="preserve">
+    <value>[Éàçĥ öƒ ýöü þļàýš ţĥé éþîšöðé ƒŕöɱ ýöüŕ öŵñ šöüŕçéš; ţĥé ŕööɱ ķééþš ýöü îñ šţéþ. Šţàŕţ à ŕööɱ ƒŕöɱ àñý éþîšöðé ŵîţĥ Ŵàţçĥ ţöĝéţĥéŕ, îñ ţĥé þļàýéŕ öŕ öñ îţš þàĝé.~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under the place's heading.</comment>
+  </data>
+  <data name="RoomPlaceYours" xml:space="preserve">
+    <value>[Ýöüŕ ŕööɱ~~~]</value>
+    <comment>Small heading of the card for the room you are in.</comment>
+  </data>
+  <data name="RoomOpenPlayer" xml:space="preserve">
+    <value>[Öþéñ ţĥé þļàýéŕ~~~~~]</value>
+    <comment>Button on the card that opens the room's player.</comment>
+  </data>
+  <data name="RoomPlaceJoin" xml:space="preserve">
+    <value>[Ĵöîñ à ŕööɱ~~~~]</value>
+    <comment>Heading of the field that joins a room.</comment>
+  </data>
+  <data name="RoomPlaceLink" xml:space="preserve">
+    <value>[Îñṽîţé ļîñķ~~~~]</value>
+    <comment>Placeholder of the field that takes an invite link.</comment>
+  </data>
+  <data name="RoomPlacePaste" xml:space="preserve">
+    <value>[Þàšţé~~]</value>
+    <comment>Button that pastes the clipboard into the field.</comment>
+  </data>
+  <data name="RoomRecent" xml:space="preserve">
+    <value>[Ŕéçéñţ ŕööɱš~~~~]</value>
+    <comment>Heading of the list of recent rooms.</comment>
+  </data>
+  <data name="RoomRecentNote" xml:space="preserve">
+    <value>[Ţĥé ļàšţ ţéñ, ķéþţ öñ ţĥîš ðéṽîçé~~~~~~~~~~]</value>
+    <comment>Line beside the heading.</comment>
+  </data>
+  <data name="RoomRecentRow" xml:space="preserve">
+    <value>[Éþîšöðé {episode} · ŵîţĥ {names} · {when}~~~~~~~~~]</value>
+    <comment>Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.</comment>
+  </data>
+  <data name="RoomRecentRowAlone" xml:space="preserve">
+    <value>[Éþîšöðé {episode} · {when}~~~~~~]</value>
+    <comment>Line of a recent room where you were alone.</comment>
+  </data>
+  <data name="RoomRejoin" xml:space="preserve">
+    <value>[Ŕéĵöîñ~~]</value>
+    <comment>Button on a recent room that joins it again.</comment>
+  </data>
+  <data name="RoomErrorUnreachableTitle" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš~~~~~~~~~~]</value>
+    <comment>Title of the alert when none of an invite's relays answers, and the bold start of the line in the place.</comment>
+  </data>
+  <data name="RoomErrorAskNewInvite" xml:space="preserve">
+    <value>[Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~]</value>
+    <comment>Line under it, and the next sentence in the place.</comment>
+  </data>
+  <data name="RoomErrorUnreachable" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš. Åšķ ƒöŕ à ñéŵ îñṽîţé.~~~~~~~~~~~~~~~~~]</value>
+    <comment>The same error in one line, where there is no room for a title.</comment>
+  </data>
+  <data name="RoomErrorTried" xml:space="preserve">
+    <value>[Ķàéŕî ţŕîéð ţĥé ļîñķ'š ŕéļàýš àñð ýöüŕ šþàŕéš, {seconds} š éàçĥ.~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line after it in the place: what was tried.</comment>
+  </data>
+  <data name="RoomErrorNobodyAnswered" xml:space="preserve">
+    <value>[Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ~~~~~~~~~]</value>
+    <comment>Title of the alert when a recent room has nobody answering, such as after a new invite.</comment>
+  </data>
+  <data name="RoomErrorNobodyAnsweredLine" xml:space="preserve">
+    <value>[Îƒ šöɱéöñé ɱàðé à ñéŵ îñṽîţé, ţĥé öļð öñé šţöþþéð ŵöŕķîñĝ. Åšķ ţĥéɱ ƒöŕ ţĥé ñéŵ ļîñķ.~~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line under it.</comment>
+  </data>
+  <data name="RoomErrorFull" xml:space="preserve">
+    <value>[Ţĥîš ŕööɱ îš ƒüļļ~~~~~~]</value>
+    <comment>Notice when the room already has 10 people and you can't join.</comment>
+  </data>
+  <data name="RoomErrorOldInvite" xml:space="preserve">
+    <value>[Ţĥîš îñṽîţé îš ƒŕöɱ àñ öļðéŕ ṽéŕšîöñ öƒ Ķàéŕî. Åšķ ƒöŕ à ñéŵ öñé.~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Notice when an invite link or code is from an older version.</comment>
+  </data>
+  <data name="RoomChatJoined" xml:space="preserve">
+    <value>[{name} ĵöîñéð~~~]</value>
+    <comment>Chat line: someone came into the room.</comment>
+  </data>
+  <data name="RoomChatJumped" xml:space="preserve">
+    <value>[{name} ĵüɱþéð ƒŕöɱ {from} ţö {to}~~~~~~~~]</value>
+    <comment>Chat line: someone moved the room to another place in the episode.</comment>
+  </data>
+  <data name="RoomChatPausedForSeeking" xml:space="preserve">
+    <value>[Þàüšéð ƒöŕ {names} · çàţçĥîñĝ üþ~~~~~~~~~]</value>
+    <comment>Chat line: the room waits for people catching up after a jump.</comment>
+  </data>
+  <data name="RoomChatCorrected" xml:space="preserve">
+    <value>[Ṁöṽéð ţö šţàý ŵîţĥ ţĥé ŕööɱ~~~~~~~~~]</value>
+    <comment>Chat line: this device's player was moved to stay with the room.</comment>
+  </data>
+  <data name="RoomChatEpisodeChanged" xml:space="preserve">
+    <value>[{name} þüţ öñ éþîšöðé {episode}~~~~~~~]</value>
+    <comment>Chat line: someone put on another episode for the room.</comment>
+  </data>
+  <data name="RoomChatCaughtUp" xml:space="preserve">
+    <value>[{name} çàüĝĥţ üþ ŵîţĥ ţĥé ŕööɱ~~~~~~~~~]</value>
+    <comment>Chat line: someone who was behind caught up with the room.</comment>
+  </data>
+  <data name="RoomChatAlreadyPaused" xml:space="preserve">
+    <value>[{name} àļŕéàðý þàüšéð~~~~~~]</value>
+    <comment>Chat line on a device whose Play lost to someone's Pause pressed at the same moment.</comment>
+  </data>
+  <data name="RoomChatNewInvite" xml:space="preserve">
+    <value>[{name} ɱàðé à ñéŵ îñṽîţé~~~~~~~]</value>
+    <comment>Chat line: someone made a new invite; the old link stopped working.</comment>
+  </data>
+  <data name="RoomChatUpNextCancelled" xml:space="preserve">
+    <value>[{name} çàñçéļļéð üþ ñéẋţ~~~~~~~]</value>
+    <comment>Chat line: someone cancelled Up next for everyone.</comment>
+  </data>
+  <data name="RoomChatRenamed" xml:space="preserve">
+    <value>[Ýöü'ŕé {name} îñ ţĥîš ŕööɱ~~~~~~~]</value>
+    <comment>Chat line on your own device: your name was taken, so the room knows you by this one.</comment>
+  </data>
+  <data name="RoomShow" xml:space="preserve">
+    <value>[Šĥöŵ ŕööɱ~~~]</value>
+    <comment>Button that shows the room's column again after Hide room.</comment>
+  </data>
+  <data name="RoomSkipOpening" xml:space="preserve">
+    <value>[Šķîþ öþéñîñĝ~~~~]</value>
+    <comment>The room's Skip opening button on the player: skips for everyone.</comment>
+  </data>
+  <data name="RoomLinkCopied" xml:space="preserve">
+    <value>[Îñṽîţé ļîñķ çöþîéð~~~~~~]</value>
+    <comment>Confirmation after Copy invite link.</comment>
+  </data>
+  <data name="RoomStartingEpisode" xml:space="preserve">
+    <value>[Šţàŕţîñĝ éþîšöðé {episode}~~~~~~]</value>
+    <comment>The starting screen's line on the device opening the room's episode.</comment>
+  </data>
+  <data name="RoomMinutes" xml:space="preserve">
+    <value>[{minutes} ɱîñ~~~]</value>
+    <comment>A short length in minutes, on the banner before play.</comment>
+  </data>
+  <data name="RoomNamesAnd" xml:space="preserve">
+    <value>[{names} àñð {last}~~~~]</value>
+    <comment>Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.</comment>
+  </data>
+  <data name="RoomNamesComma" xml:space="preserve">
+    <value>[{first}, {rest}~~~]</value>
+    <comment>Joins two names in a longer list: "Mika, Ren".</comment>
+  </data>
+  <data name="RoomMute" xml:space="preserve">
+    <value>[Ṁüţé {name}~~~]</value>
+    <comment>Person menu item and accessibility action that hides someone's lines and reactions in this room.</comment>
+  </data>
+  <data name="RoomUnmute" xml:space="preserve">
+    <value>[Ûñɱüţé {name}~~~]</value>
+    <comment>Person menu item and accessibility action that shows a muted person's lines again.</comment>
+  </data>
+  <data name="RoomChatMuted" xml:space="preserve">
+    <value>[{name} îš ɱüţéð~~~~]</value>
+    <comment>Line in the conversation where a muted person's lines were.</comment>
+  </data>
+  <data name="RoomChatMore" xml:space="preserve">
+    <value>[{count} ɱöŕé îñ çĥàţ~~~~~]</value>
+    <comment>Line after the newest chat lines over the video, which opens the conversation.</comment>
+  </data>
+  <data name="RoomChatAnnounce" xml:space="preserve">
+    <value>[{name} šàýš {message}~~~~]</value>
+    <comment>Spoken by a screen reader when a chat line arrives.</comment>
+  </data>
+  <data name="RoomChatWait" xml:space="preserve">
+    <value>[Ŵàîţ {seconds} š~~~]</value>
+    <comment>End of the chat field while sending waits, after three messages in five seconds.</comment>
+  </data>
+  <data name="RoomChatWaitSpoken_one" xml:space="preserve">
+    <value>[Ŵàîţ öñé šéçöñð~~~~~]</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="RoomChatWaitSpoken_other" xml:space="preserve">
+    <value>[Ŵàîţ {seconds} šéçöñðš~~~~~]</value>
+    <comment>Spoken once when sending waits, for screen readers.</comment>
+  </data>
+  <data name="RoomChatCharactersLeft_one" xml:space="preserve">
+    <value>[{count} çĥàŕàçţéŕ ļéƒţ~~~~~~]</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
+  <data name="RoomChatCharactersLeft_other" xml:space="preserve">
+    <value>[{count} çĥàŕàçţéŕš ļéƒţ~~~~~~]</value>
+    <comment>Spoken by a screen reader once, when 20 characters are left in the chat field.</comment>
+  </data>
+  <data name="RoomReactedAt" xml:space="preserve">
+    <value>[{line} àţ {time}~~~]</value>
+    <comment>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.</comment>
+  </data>
+  <data name="RoomTickLabel" xml:space="preserve">
+    <value>[{time} · {names}~~~]</value>
+    <comment>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</comment>
+  </data>
+  <data name="RoomNamesTwo" xml:space="preserve">
+    <value>[{first} àñð {second}~~~~]</value>
+    <comment>Two people named together, for a reaction made by both: "Ren and Mika".</comment>
+  </data>
+  <data name="RoomNamesThree" xml:space="preserve">
+    <value>[{first}, {second} àñð {third}~~~~~]</value>
+    <comment>Three people named together.</comment>
+  </data>
+  <data name="RoomNamesOthers" xml:space="preserve">
+    <value>[{first}, {second} àñð {count} öţĥéŕš~~~~~~~]</value>
+    <comment>More than three people named together: two names and how many others.</comment>
+  </data>
+  <data name="RoomVersionOwn" xml:space="preserve">
+    <value>[Öñļý ýöüŕ þļàýéŕ šŵîţçĥéš. Ţĥé ŕööɱ ķééþš þļàýîñĝ.~~~~~~~~~~~~~~~]</value>
+    <comment>Player panel, under the subtitled or dubbed switch in a room.</comment>
+  </data>
+  <data name="RoomBannerEpisodePlain" xml:space="preserve">
+    <value>[Éþîšöðé {episode} · {length}~~~~~~]</value>
+    <comment>The banner over the room when the episode has no name of its own: the episode and its length.</comment>
+  </data>
+  <data name="RoomMarkUnavailable" xml:space="preserve">
+    <value>[Ṁàŕķ šķîþ ţîɱéš àƒţéŕ ýöü ļéàṽé ţĥé ŕööɱ.~~~~~~~~~~~~~]</value>
+    <comment>Menu item dimmed in a room, with this reason under it.</comment>
+  </data>
+  <data name="RoomPeople" xml:space="preserve">
+    <value>[Þéöþļé îñ ţĥé ŕööɱ~~~~~~]</value>
+    <comment>Heading of the people list in the room, and its accessibility label.</comment>
+  </data>
+  <data name="RoomStateSeeking" xml:space="preserve">
+    <value>[Šééķîñĝ · {seconds} š~~~~~]</value>
+    <comment>State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.</comment>
+  </data>
+  <data name="RoomErrorUnreachableLead" xml:space="preserve">
+    <value>[Çöüļðñ'ţ ŕéàçĥ ţĥîš ŕööɱ'š ŕéļàýš.~~~~~~~~~~~]</value>
+    <comment>Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.</comment>
+  </data>
+  <data name="RoomErrorNobodyAnsweredLead" xml:space="preserve">
+    <value>[Ñöƀöðý àñšŵéŕéð îñ ţĥîš ŕööɱ.~~~~~~~~~]</value>
+    <comment>Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.</comment>
+  </data>
+  <data name="RoomDeviceInRoom" xml:space="preserve">
+    <value>[{device} îš îñ ţĥîš ŕööɱ~~~~~~]</value>
+    <comment>Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.</comment>
+  </data>
+  <data name="RoomLeaveOnDevice" xml:space="preserve">
+    <value>[Ļéàṽé ţĥé ŕööɱ öñ {device}~~~~~~~]</value>
+    <comment>Button on the phone's remote screen that leaves the room on the paired TV.</comment>
+  </data>
+  <data name="RoomTvJoinFromPhone" xml:space="preserve">
+    <value>[Ţö ĵöîñ šöɱéöñé'š ŕööɱ, öþéñ ţĥéîŕ îñṽîţé öñ à þàîŕéð þĥöñé àñð çĥööšé ţĥîš ŢṼ.~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.</comment>
+  </data>
+  <data name="RoomSourcesFoundLine_one" xml:space="preserve">
+    <value>[Öñé šöüŕçé ĥàš îţ. Îţ þļàýš ƒöŕ éṽéŕýöñé îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~]</value>
+    <comment>Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.</comment>
+  </data>
+  <data name="RoomSourcesFoundLine_other" xml:space="preserve">
+    <value>[{count} šöüŕçéš ĥàṽé îţ. Ýöüŕ þîçķ þļàýš ƒöŕ éṽéŕýöñé îñ ţĥé ŕööɱ.~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.</comment>
+  </data>
   <data name="SeasonalPrevious" xml:space="preserve">
     <value>[Þŕéṽîöüš šéàšöñ~~~~~]</value>
     <comment>Button that shows the season before.</comment>
@@ -14171,6 +15243,34 @@
   <data name="SourcesOrderAll" xml:space="preserve">
     <value>[Éṽéŕý šöüŕçé îš ţŕîéð îñ ţĥîš öŕðéŕ, ŵĥàţéṽéŕ îţš ķîñð.~~~~~~~~~~~~~~~~~]</value>
     <comment>Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.</comment>
+  </data>
+  <data name="SourcesChooseFor" xml:space="preserve">
+    <value>[Çĥööšé à šöüŕçé ƒöŕ éþîšöðé {episode}~~~~~~~~~~]</value>
+    <comment>Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.</comment>
+  </data>
+  <data name="SourcesLooking" xml:space="preserve">
+    <value>[Ļööķîñĝ ţĥŕöüĝĥ ýöüŕ šöüŕçéš…~~~~~~~~~]</value>
+    <comment>Line while the sources are searched for the episode.</comment>
+  </data>
+  <data name="SourcesFound_one" xml:space="preserve">
+    <value>[Öñé šöüŕçé ĥàš îţ~~~~~~]</value>
+    <comment>Line over the list of sources that list the episode.</comment>
+  </data>
+  <data name="SourcesFound_other" xml:space="preserve">
+    <value>[{count} šöüŕçéš ĥàṽé îţ~~~~~~]</value>
+    <comment>Line over the list of sources that list the episode.</comment>
+  </data>
+  <data name="SourcesNoneList" xml:space="preserve">
+    <value>[Ñö šöüŕçé ļîšţš éþîšöðé {episode}. Šöüŕçéš çöɱé ƒŕöɱ þļüĝîñš, ŵĥîçĥ à þļüĝîñ šţöŕé àððš.~~~~~~~~~~~~~~~~~~~~~~~~~]</value>
+    <comment>Line when no source lists the episode.</comment>
+  </data>
+  <data name="SourcesOpen" xml:space="preserve">
+    <value>[Öþéñ šöüŕçéš~~~~]</value>
+    <comment>Button that goes to the Sources page, when no source is set up.</comment>
+  </data>
+  <data name="SourcesLabel" xml:space="preserve">
+    <value>[Šöüŕçéš ƒöŕ ţĥîš éþîšöðé~~~~~~~~]</value>
+    <comment>Accessibility label of the list of sources for the episode.</comment>
   </data>
   <data name="StoresJoined" xml:space="preserve">
     <value>[Ĵöîñéð~~]</value>

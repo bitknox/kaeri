@@ -29,44 +29,51 @@ pub struct RemoteState {
     pub screen: Screen,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub now_playing: Option<NowPlaying>,
-    /// The watch party the TV is in, while it is in one.
+    /// The room the TV is in, while it is in one.
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub party: Option<Box<PartyInfo>>,
+    pub room: Option<Box<RoomInfo>>,
 }
 
-/// The watch party the TV is in: what a phone shows on the TV's remote page.
+/// The room the TV is in: what a phone shows on the TV's remote page.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct PartyInfo {
-    pub room: String,
-    /// The room's code, when it is one on the suggested server.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub code: Option<String>,
-    /// The https invite, which the phone can share on.
+pub struct RoomInfo {
+    /// The https invite, which the phone can share on. It holds the room's secret.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub link: Option<String>,
-    /// The title and episode the room is set to.
+    /// The title and episode the room watches.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub episode: Option<String>,
-    pub ready: bool,
+    /// The room plays now.
     pub playing: bool,
+    /// Who the room waits for, by name, while it waits.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub waiting: Vec<String>,
+    /// Carry on is offered: the wait passed 20 s.
+    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
+    pub can_carry_on: bool,
     /// The last [`MESSAGES`] of the room's conversation, the newest last, without the muted
-    /// members' lines. In memory on the TV for the party.
+    /// members' lines. In memory on the TV for the room.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub messages: Vec<PartyLine>,
-    /// The members in the room beside the TV, for a phone's Mute.
+    pub messages: Vec<RoomLine>,
+    /// The people in the room beside the TV, for a phone's Mute.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub members: Vec<String>,
-    /// The members muted on the TV.
+    pub members: Vec<RoomPerson>,
+    /// The ids of the people muted on the TV.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub muted: Vec<String>,
-    /// The room's server has chat turned off: a phone hides its field.
-    #[serde(default, skip_serializing_if = "std::ops::Not::not")]
-    pub chat_off: bool,
-    /// The most characters in a message, when the TV knows; 0 is 150.
+    /// The most characters in a message.
     #[serde(default, skip_serializing_if = "is_zero")]
     pub chat_max: u32,
+}
+
+/// Someone in the room beside the TV.
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct RoomPerson {
+    /// Their id in the room, for `room_mute`.
+    pub id: String,
+    pub name: String,
 }
 
 /// How many lines of the conversation a remote is told.
@@ -76,11 +83,13 @@ fn is_zero(n: &u32) -> bool {
     *n == 0
 }
 
-/// One line of the party's conversation, for a phone's remote page. A typed line has `text`; a
+/// One line of the room's conversation, for a phone's remote page. A typed line has `text`; a
 /// reaction has `reaction`, one of `laughs`, `gasps`, `claps` or `cries`, and `at`, the seconds
-/// into the episode, and `with`, the others who reacted the same at the same moment.
+/// into the episode, and `with`, the others who reacted the same at the same moment. The room's
+/// own lines ("Mika paused at 0:34") have `text` and an empty `from`.
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-pub struct PartyLine {
+pub struct RoomLine {
+    #[serde(default)]
     pub from: String,
     /// Said as the TV.
     #[serde(default, skip_serializing_if = "std::ops::Not::not")]
@@ -173,9 +182,9 @@ impl SkipPart {
     }
 }
 
-fn party_line(line: &kaeri_model::party::PartyChatLine) -> PartyLine {
-    use kaeri_model::party::{PartyChatBody, Reaction};
-    let mut out = PartyLine {
+fn room_line(line: &kaeri_model::room::RoomChatLine) -> RoomLine {
+    use kaeri_model::room::{Reaction, RoomChatBody};
+    let mut out = RoomLine {
         from: line.from.clone(),
         you: line.you,
         text: None,
@@ -184,8 +193,9 @@ fn party_line(line: &kaeri_model::party::PartyChatLine) -> PartyLine {
         with: Vec::new(),
     };
     match &line.body {
-        PartyChatBody::Said { text } => out.text = Some(text.clone()),
-        PartyChatBody::Reacted { reaction, at, with } => {
+        RoomChatBody::Said { text } => out.text = Some(text.clone()),
+        RoomChatBody::Room { message } => out.text = Some(message.text.clone()),
+        RoomChatBody::Reacted { reaction, at, with } => {
             let word = match reaction {
                 Reaction::Laugh => "laughs",
                 Reaction::Gasp => "gasps",
@@ -318,20 +328,18 @@ impl StateFolder {
                     let c = replace(&mut now.title, show.clone());
                     a || b || c
                 }),
-            Event::PartyJoined(view) | Event::PartyState(view) => {
-                let kept = self.state.party.take();
-                let mut info = PartyInfo {
-                    room: view.room.clone(),
-                    code: view.code.clone(),
+            Event::RoomJoined(view) | Event::RoomState(view) => {
+                let kept = self.state.room.take();
+                let mut info = RoomInfo {
                     link: view.link.clone(),
                     title: view.room_episode.as_ref().map(|r| r.title.clone()),
                     episode: view.room_episode.as_ref().map(|r| r.episode.clone()),
-                    ready: view.ready,
                     playing: view.playing,
+                    waiting: view.waiting.iter().map(|w| w.name.clone()).collect(),
+                    can_carry_on: view.can_carry_on,
                     messages: Vec::new(),
                     members: Vec::new(),
                     muted: Vec::new(),
-                    chat_off: false,
                     chat_max: 0,
                 };
                 // The conversation, members and chat state come in their own events.
@@ -339,41 +347,42 @@ impl StateFolder {
                     info.messages.clone_from(&kept.messages);
                     info.members.clone_from(&kept.members);
                     info.muted.clone_from(&kept.muted);
-                    (info.chat_off, info.chat_max) = (kept.chat_off, kept.chat_max);
+                    info.chat_max = kept.chat_max;
                 }
                 let changed = kept.as_deref() != Some(&info);
-                self.state.party = Some(Box::new(info));
+                self.state.room = Some(Box::new(info));
                 changed
             }
-            Event::PartyMembers(members) => self.with_party(|info| {
-                let names: Vec<String> =
-                    members.iter().filter(|m| !m.you).map(|m| m.name.clone()).collect();
-                replace(&mut info.members, names)
+            Event::RoomMembers(members) => self.with_room(|info| {
+                let people: Vec<RoomPerson> = members
+                    .iter()
+                    .filter(|m| !m.you)
+                    .map(|m| RoomPerson { id: m.id.clone(), name: m.name.clone() })
+                    .collect();
+                replace(&mut info.members, people)
             }),
-            Event::PartyChatState(chat) => self.with_party(|info| {
-                let off = !chat.allowed;
-                let a = replace(&mut info.chat_off, off);
-                let b = replace(&mut info.chat_max, chat.max_length);
-                let c = replace(&mut info.muted, chat.muted.clone());
-                a || b || c
+            Event::RoomChatState(chat) => self.with_room(|info| {
+                let a = replace(&mut info.chat_max, chat.max_length);
+                let b = replace(&mut info.muted, chat.muted.clone());
+                a || b
             }),
-            Event::PartyChat(conversation) => self.with_party(|info| {
-                let lines: Vec<PartyLine> = conversation
+            Event::RoomChat(conversation) => self.with_room(|info| {
+                let lines: Vec<RoomLine> = conversation
                     .lines
                     .iter()
                     .filter(|line| !line.muted)
-                    .map(party_line)
+                    .map(room_line)
                     .collect();
                 let from = lines.len().saturating_sub(MESSAGES);
                 replace(&mut info.messages, lines[from..].to_vec())
             }),
-            Event::PartyLeft { .. } => self.state.party.take().is_some(),
+            Event::RoomLeft { .. } => self.state.room.take().is_some(),
             _ => false,
         }
     }
 
-    fn with_party(&mut self, change: impl FnOnce(&mut PartyInfo) -> bool) -> bool {
-        self.state.party.as_deref_mut().is_some_and(change)
+    fn with_room(&mut self, change: impl FnOnce(&mut RoomInfo) -> bool) -> bool {
+        self.state.room.as_deref_mut().is_some_and(change)
     }
 
     /// What the TV's hosted player reported, as the front end hands it to the engine: only its
@@ -526,100 +535,78 @@ mod tests {
         assert_eq!(tracks[1].title.as_deref(), Some("Full"));
     }
 
-    fn party_view() -> kaeri_model::party::PartyView {
-        use kaeri_model::party::{PartyConnection, PartyView};
-        PartyView {
-            server: "party.example:8999".into(),
-            room: "kite-7qm4-xr9d".into(),
+    fn room_view() -> kaeri_model::room::RoomView {
+        kaeri_model::room::RoomView {
             name: "Living room TV".into(),
-            connection: PartyConnection::Connected,
-            encrypted: false,
-            ready: false,
-            episode: None,
-            invite: None,
-            motd: None,
-            latency_ms: None,
-            room_episode: None,
-            next_episode: None,
-            starter: None,
-            starter_present: false,
-            can_start_anyway: false,
-            code: None,
-            link: None,
-            playing: false,
-            starting_in: None,
-            sources: None,
-            guesses: Vec::new(),
-            looking: false,
-            moves_on: false,
+            link: Some("https://kaeri.app/room#v=3&k=MDEyMzQ1Njc4OWFiY2RlZg".into()),
+            playing: true,
+            ..Default::default()
         }
     }
 
-    fn line(id: u64, from: &str, text: &str, muted: bool) -> kaeri_model::party::PartyChatLine {
-        use kaeri_model::party::{PartyChatBody, PartyChatLine};
-        PartyChatLine {
+    fn line(id: u64, from: &str, text: &str, muted: bool) -> kaeri_model::room::RoomChatLine {
+        use kaeri_model::room::{RoomChatBody, RoomChatLine};
+        RoomChatLine {
             id,
             from: from.into(),
             you: false,
-            body: PartyChatBody::Said { text: text.into() },
+            body: RoomChatBody::Said { text: text.into() },
             muted,
         }
     }
 
     #[test]
-    fn the_party_carries_the_last_twenty_unmuted_lines_and_keeps_them_across_states() {
-        use kaeri_model::party::{PartyChatBody, PartyChatState, PartyConversation, Reaction};
+    fn the_room_carries_the_last_twenty_unmuted_lines_and_keeps_them_across_states() {
+        use kaeri_model::room::{
+            Reaction, RoomChatBody, RoomChatLine, RoomChatState, RoomConversation, RoomLeftWhy,
+        };
         let mut folder = StateFolder::new();
         assert!(
-            !folder.event(&Event::PartyChat(PartyConversation::default())),
-            "no party, nothing to tell"
+            !folder.event(&Event::RoomChat(RoomConversation::default())),
+            "no room, nothing to tell"
         );
-        assert!(folder.event(&Event::PartyJoined(party_view())));
+        assert!(folder.event(&Event::RoomJoined(room_view())));
         let mut lines: Vec<_> =
             (1..=25).map(|i| line(i, "Mika", &format!("line {i}"), false)).collect();
         lines.push(line(26, "Ren", "muted words", true));
-        lines.push(kaeri_model::party::PartyChatLine {
+        lines.push(RoomChatLine {
             id: 27,
             from: "Sol".into(),
             you: false,
-            body: PartyChatBody::Reacted {
+            body: RoomChatBody::Reacted {
                 reaction: Reaction::Laugh,
-                at: 724.0,
+                at: 34.0,
                 with: vec!["Ren".into()],
             },
             muted: false,
         });
-        let conversation = PartyConversation { lines, ..PartyConversation::default() };
-        assert!(folder.event(&Event::PartyChat(conversation.clone())));
-        assert!(!folder.event(&Event::PartyChat(conversation)), "the same conversation");
-        let party = folder.state().party.clone().unwrap();
-        assert_eq!(party.messages.len(), MESSAGES);
-        assert_eq!(party.messages[0].text.as_deref(), Some("line 7"));
-        let last = party.messages.last().unwrap();
+        let conversation = RoomConversation { lines, ..RoomConversation::default() };
+        assert!(folder.event(&Event::RoomChat(conversation.clone())));
+        assert!(!folder.event(&Event::RoomChat(conversation)), "the same conversation");
+        let room = folder.state().room.clone().unwrap();
+        assert_eq!(room.messages.len(), MESSAGES);
+        assert_eq!(room.messages[0].text.as_deref(), Some("line 7"));
+        let last = room.messages.last().unwrap();
         assert_eq!(last.reaction.as_deref(), Some("laughs"));
-        assert_eq!((last.at, last.with.clone()), (Some(724.0), vec!["Ren".to_owned()]));
-        assert!(party.messages.iter().all(|m| m.text.as_deref() != Some("muted words")));
+        assert_eq!((last.at, last.with.clone()), (Some(34.0), vec!["Ren".to_owned()]));
+        assert!(room.messages.iter().all(|m| m.text.as_deref() != Some("muted words")));
 
-        let state = PartyChatState {
-            allowed: false,
-            max_length: 300,
-            muted: vec!["Ren".into()],
+        let state = RoomChatState {
+            max_length: 500,
+            muted: vec!["0123456789abcdef".into()],
             wait_seconds: 0,
             react_wait_seconds: 0,
             hidden: false,
         };
-        assert!(folder.event(&Event::PartyChatState(state)));
-        folder.event(&Event::PartyState(party_view()));
-        let party = folder.state().party.clone().unwrap();
-        assert_eq!(party.messages.len(), MESSAGES, "a new state keeps the conversation");
-        assert_eq!(
-            (party.chat_off, party.chat_max, party.muted.clone()),
-            (true, 300, vec!["Ren".into()])
-        );
+        assert!(folder.event(&Event::RoomChatState(state)));
+        folder.event(&Event::RoomState(room_view()));
+        let room = folder.state().room.clone().unwrap();
+        assert_eq!(room.messages.len(), MESSAGES, "a new state keeps the conversation");
+        assert_eq!((room.chat_max, room.muted.clone()), (500, vec!["0123456789abcdef".into()]));
 
-        let json = serde_json::to_value(&*party).unwrap();
+        let json = serde_json::to_value(&*room).unwrap();
         assert!(json.get("members").is_none(), "empty lists are left out: {json}");
-        folder.event(&Event::PartyLeft { reason: None });
-        assert!(folder.state().party.is_none());
+        folder.event(&Event::RoomLeft { why: RoomLeftWhy::Left });
+        assert!(folder.state().room.is_none());
     }
 }

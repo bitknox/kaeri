@@ -230,9 +230,9 @@ pub struct FfiRemoteCard {
     pub phase_line: Option<String>,
     pub screen: FfiScreen,
     pub now: Option<FfiNowCard>,
-    /// The watch party the TV is in, while it is in one.
+    /// The room the TV is in, while it is in one.
     #[uniffi(default)]
-    pub party: Option<FfiTvParty>,
+    pub room: Option<FfiTvRoom>,
     /// Counts up with every state the TV sends.
     pub rev: u64,
     /// The session is over: the TV forgot this device, has played nothing for a while after
@@ -246,36 +246,43 @@ pub struct FfiRemoteCard {
     pub reached: bool,
 }
 
-/// The watch party a TV is in, for the phone beside it.
+/// The room a TV is in, for the phone beside it.
 #[derive(Debug, Clone, PartialEq, uniffi::Record)]
-pub struct FfiTvParty {
-    pub room: String,
-    /// The room's code, when it is one.
-    pub code: Option<String>,
+pub struct FfiTvRoom {
     /// The https invite the phone can share on.
     pub link: Option<String>,
     pub title: Option<String>,
     pub episode: Option<String>,
-    pub ready: bool,
     pub playing: bool,
-    /// The last lines of the room's conversation, the newest last, without the muted members'.
+    /// Who the room waits for, by name.
+    #[uniffi(default)]
+    pub waiting: Vec<String>,
+    /// Carry on is offered.
+    #[uniffi(default)]
+    pub can_carry_on: bool,
+    /// The last lines of the room's conversation, the newest last, without the muted people's.
     #[uniffi(default)]
     pub messages: Vec<FfiTvLine>,
-    /// The members in the room beside the TV, for Mute.
+    /// The people in the room beside the TV, for Mute.
     #[uniffi(default)]
-    pub members: Vec<String>,
-    /// The members muted on the TV.
+    pub members: Vec<FfiTvPerson>,
+    /// The ids of the people muted on the TV.
     #[uniffi(default)]
     pub muted: Vec<String>,
-    /// The room's server has chat turned off: the phone hides its field.
-    #[uniffi(default)]
-    pub chat_off: bool,
     /// The most characters in one message; 0 when the TV has not said.
     #[uniffi(default)]
     pub chat_max: u32,
 }
 
-/// One line of a TV's party conversation: something said, or a reaction at a second.
+/// Someone in the TV's room.
+#[derive(Debug, Clone, PartialEq, uniffi::Record)]
+pub struct FfiTvPerson {
+    /// Their id in the room, for `RoomMute`.
+    pub id: String,
+    pub name: String,
+}
+
+/// One line of a TV's room conversation: something said, or a reaction at a second.
 #[derive(Debug, Clone, PartialEq, uniffi::Record)]
 pub struct FfiTvLine {
     pub from: String,
@@ -380,14 +387,13 @@ impl From<&RemoteCard> for FfiRemoteCard {
             phase_line: card.phase_line.clone(),
             screen: screen(&card.screen),
             now: card.now.as_ref().map(FfiNowCard::from),
-            party: card.party.as_ref().map(|p| FfiTvParty {
-                room: p.room.clone(),
-                code: p.code.clone(),
+            room: card.room.as_ref().map(|p| FfiTvRoom {
                 link: p.link.clone(),
                 title: p.title.clone(),
                 episode: p.episode.clone(),
-                ready: p.ready,
                 playing: p.playing,
+                waiting: p.waiting.clone(),
+                can_carry_on: p.can_carry_on,
                 messages: p
                     .messages
                     .iter()
@@ -400,9 +406,12 @@ impl From<&RemoteCard> for FfiRemoteCard {
                         with: l.with.clone(),
                     })
                     .collect(),
-                members: p.members.clone(),
+                members: p
+                    .members
+                    .iter()
+                    .map(|m| FfiTvPerson { id: m.id.clone(), name: m.name.clone() })
+                    .collect(),
                 muted: p.muted.clone(),
-                chat_off: p.chat_off,
                 chat_max: p.chat_max,
             }),
             rev: card.rev,
@@ -476,23 +485,19 @@ pub enum FfiTvCommand {
     OpenLink {
         link: String,
     },
-    /// Join a watch party on the TV, from the server and room an invite names.
-    PartyJoin {
-        server: String,
-        room: String,
+    /// Join a room on the TV with the invite link this phone holds.
+    RoomJoin {
+        invite: String,
     },
-    PartyReady {
-        ready: bool,
-    },
-    /// Start the TV's room without those who are not ready.
-    PartyStart,
-    PartyLeave,
+    RoomLeave,
+    /// Play without whoever the TV's room waits for.
+    RoomCarryOn,
     /// Say something in the TV's room, as the TV.
-    PartyChat {
+    RoomChat {
         text: String,
     },
-    /// Hide a member's lines on the TV, or show them again.
-    PartyMute {
+    /// Hide a person's lines on the TV, or show them again: `member` is their id.
+    RoomMute {
         member: String,
         muted: bool,
     },
@@ -521,12 +526,11 @@ impl From<FfiTvCommand> for RemoteCommand {
             FfiTvCommand::Text { text, submit } => Self::Text { text, submit },
             FfiTvCommand::Open { id } => Self::Open { id },
             FfiTvCommand::OpenLink { link } => Self::OpenLink { link },
-            FfiTvCommand::PartyJoin { server, room } => Self::PartyJoin { server, room },
-            FfiTvCommand::PartyReady { ready } => Self::PartyReady { ready },
-            FfiTvCommand::PartyStart => Self::PartyStart,
-            FfiTvCommand::PartyLeave => Self::PartyLeave,
-            FfiTvCommand::PartyChat { text } => Self::PartyChat { text },
-            FfiTvCommand::PartyMute { member, muted } => Self::PartyMute { member, muted },
+            FfiTvCommand::RoomJoin { invite } => Self::RoomJoin { invite },
+            FfiTvCommand::RoomLeave => Self::RoomLeave,
+            FfiTvCommand::RoomCarryOn => Self::RoomCarryOn,
+            FfiTvCommand::RoomChat { text } => Self::RoomChat { text },
+            FfiTvCommand::RoomMute { member, muted } => Self::RoomMute { member, muted },
         }
     }
 }
@@ -886,11 +890,11 @@ mod fake {
             self.with(FakeTv::open_code).unwrap_or_default()
         }
 
-        /// Put the TV in a watch party in `room` set to `title`'s `episode`, with Mika, Ren and
-        /// Sol and the chat board's conversation so far: the phone's remote screen for a TV in a
-        /// party. A line sent as the TV comes back as its own.
-        pub fn join_party(&self, room: String, title: String, episode: String) {
-            self.with(|tv| tv.join_party(&room, &title, &episode));
+        /// Put the TV in a room watching `title`'s `episode`, with Mika, Ren and Sol and the
+        /// chat board's conversation so far: the phone's remote screen for a TV in a room. A
+        /// line sent as the TV comes back as its own.
+        pub fn join_room(&self, title: String, episode: String) {
+            self.with(|tv| tv.join_room(&title, &episode));
         }
 
         /// The code it shows for a device that asked.
@@ -1933,7 +1937,7 @@ mod tests {
                 phase_line: None,
                 screen: Screen::Player,
                 now: None,
-                party: None,
+                room: None,
                 rev: 1,
                 over: false,
                 reached: true,

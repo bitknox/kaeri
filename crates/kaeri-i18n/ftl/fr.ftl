@@ -547,23 +547,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Espace libre insuffisant pour garder les épisodes suivants téléchargés. Libérez de l'espace pour en télécharger davantage.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Choisissez d'abord un serveur pour le visionnage en groupe, dans syncplay.server. { $server } est géré par { $operator }.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Choisissez d'abord un serveur pour le visionnage en groupe. { $server } est géré par { $operator }.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Les visionnages en groupe ne sont pas disponibles dans cette version de Kaeri.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = Un visionnage en groupe a besoin d'un salon où se retrouver. Choisissez-en un d'abord.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Connexion au serveur du visionnage en groupe perdue. Nouvelle tentative en cours.
-
-# Message in a watch party when the connection came back.
-party-rejoined = De retour dans le visionnage en groupe.
 
 # Message when the person left a watch party.
 party-left = Vous avez quitté le visionnage en groupe.
@@ -1803,14 +1791,6 @@ party-choose-a-source = Choisir une source
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Aucune source n’a l’épisode { $episode }. Les sources viennent des plugins, que vous ajoutez via une boutique de plugins.
-
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] { $count } source l’a. Celle que vous choisissez se lit avec le visionnage en groupe.
-        [many] { $count } sources l’ont. Celle que vous choisissez se lit avec le visionnage en groupe.
-       *[other] { $count } sources l’ont. Celle que vous choisissez se lit avec le visionnage en groupe.
-    }
 
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Le lecteur n’a pas pu démarrer. Réessayez, ou choisissez une autre source.
@@ -3208,9 +3188,6 @@ keys-action-toggle-demo = Retirer ou ajouter la démo
 keys-action-download-range = Télécharger une plage d’épisodes
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Lire dans un visionnage en groupe
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Marquer comme vu ou non vu
 
 # Action label in the help overlay and the command palette.
@@ -3610,24 +3587,18 @@ nav-rail-collapsed = Réduite
 nav-rail-hidden = Masquée
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Prêt
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Copier le lien
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Quitter
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Dire
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Muet
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Son
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Masquer chat
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4372,9 +4343,6 @@ settings-value-player-ui-mpv = Votre configuration mpv
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Dans le cache des torrents
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Non défini (nécessaire pour les visionnages en groupe)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Jusqu’au ratio { $ratio }
 
@@ -4476,15 +4444,6 @@ settings-label-keep-seeding = Continuer le partage
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = Après chaque téléchargement
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Visionnages en groupe avec Syncplay
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Serveur Syncplay
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Salon Syncplay
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Rechercher les mises à jour
@@ -4593,15 +4552,6 @@ settings-note-keep-seeding = Désactivé par défaut pour économiser l’envoi�
 
 # Note under the after each download row.
 settings-note-download-hook = Appuyez sur Entrée pour saisir une commande. Elle s’exécute après chaque téléchargement terminé.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Appuyez sur { $key } pour lire un seul épisode dans le salon ci-dessous. Tant que c’est activé, chaque lecture s’y fait.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Appuyez sur Entrée pour saisir host:port. Aucun serveur n’est défini tant que vous n’en choisissez pas.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Appuyez sur Entrée pour saisir le salon d’un ami. Laissez vide pour en créer un que personne ne peut deviner.
 
 # Note under the check for updates row.
 settings-note-update-check = Une requête mise en cache par jour, envoyée au démarrage.
@@ -5714,12 +5664,6 @@ hint-open-stores = Allez dans Sources et appuyez sur Entrée pour ouvrir les bou
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Appuyez sur Entrée sur sa ligne pour saisir vos identifiants.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Vous avez rejoint le visionnage en groupe dans la salle { $room } sur { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Vous êtes toujours dans le visionnage en groupe.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Rechargement des sources…
 
@@ -5728,15 +5672,6 @@ pin-unavailable = La source { $name } est épinglée pour ce titre, mais elle n�
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Ensemble
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = lien ou code
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Les lignes et réactions restent hors du lecteur dans chaque groupe.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Ce n’est ni un lien ni un code de groupe.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Épisode { $episode } · { $when }

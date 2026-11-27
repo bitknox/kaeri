@@ -114,11 +114,7 @@ notice-episodes-queued-existing-stopped = { $count ->
    *[other] { $count } bölüm kuyruğa eklendi, sonra durdu. { $existing } { $reason }
  }
 notice-keep-next-full = Sonraki bölümleri tutmak için yeterli boş alan yok. Daha fazla indirmek için biraz alan açın.
-party-needs-server = Önce { -watch-party } için bir sunucu seçin, syncplay.server olarak. { $server } sunucusu { $operator } tarafından işletiliyor.
-party-choose-server = Önce { -watch-party } için bir sunucu seçin. { $server } sunucusu { $operator } tarafından işletiliyor.
 notice-no-party = { -watch-party-cap-pl } bu { -app-name } sürümünde yok.
 party-needs-room = { -watch-party-cap } için bir oda gerekli. Önce birini seçin.
-party-server-lost = { -watch-party-cap } sunucusuyla bağlantı koptu. Yeniden deneniyor.
-party-rejoined = { -watch-party-cap }ye yeniden bağlandı.
 party-left = { -watch-party-cap }den ayrıldı.
 party-server-unreachable = { $server } sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.

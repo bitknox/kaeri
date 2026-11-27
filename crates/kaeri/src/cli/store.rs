@@ -27,7 +27,7 @@ pub async fn store_command(command: Subcommand, paths: &Paths) -> Result<()> {
     let outcome = match command {
         Subcommand::Store(command) => kaeri_store_server::run(command, Some(&cache)).await,
         // Read in `main`: it opens the terminal interface and never gets here.
-        Subcommand::Party { .. } => Ok(()),
+        Subcommand::Room { .. } => Ok(()),
         Subcommand::Plugin(PluginCommand::Stamp(args)) => {
             kaeri_store_server::stamp(&args, Some(&cache)).await.map(|info| {
                 println!("stamped {} {}", info.id, info.version);

@@ -542,23 +542,11 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Không đủ dung lượng trống để giữ các tập sau đã tải. Hãy giải phóng thêm dung lượng để tải thêm.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Hãy chọn máy chủ cho xem chung trước, dưới tên syncplay.server. {server} do {operator} vận hành.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Hãy chọn máy chủ cho xem chung trước. {server} do {operator} vận hành.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Các buổi xem chung không có trong phiên bản Kaeri này.</value>
   </data>
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>Một buổi xem chung cần một phòng để gặp nhau. Hãy chọn phòng trước.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Mất máy chủ của xem chung. Đang thử lại.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>Đã trở lại xem chung.</value>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>Đã rời xem chung.</value>

@@ -68,9 +68,6 @@ pub struct Services {
     /// Whether a play opens the front end's hosted player rather than mpv's process: always
     /// without the desktop feature, and on the desktop when the front end asks for it.
     pub hosted_player: bool,
-    /// Whether `syncplay.enabled` sends every play to a party: see
-    /// [`EngineOptions::every_play_a_party`](crate::options::EngineOptions::every_play_a_party).
-    pub every_play_a_party: bool,
     /// The next episode's streams, found while the current one's ending plays.
     pub prefetch: Prefetch,
     /// The sources the last failed start couldn't reach, for Try again to give another chance.
@@ -178,7 +175,6 @@ impl Services {
             power,
             hosted,
             hosted_player: !cfg!(feature = "desktop"),
-            every_play_a_party: false,
             prefetch: Prefetch::default(),
             unreached: Default::default(),
             tokens,

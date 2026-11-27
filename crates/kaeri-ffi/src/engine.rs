@@ -242,7 +242,7 @@ impl FfiEngine {
     }
 }
 
-#[cfg(any(feature = "remote", all(feature = "party", feature = "testing")))]
+#[cfg(any(feature = "remote", all(feature = "room", feature = "testing")))]
 impl FfiEngine {
     /// The runtime the engine runs on, for a server started beside it.
     pub(crate) fn runtime_handle(&self) -> Handle {

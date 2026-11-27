@@ -25,7 +25,7 @@ Kaeri                                                                           
     Move down                  j / ↓    Recommendations                b    Slower                         [
     Move left                  h / ←    Play the trailer               v    Faster                         ]
     Move right                 l / →    Open on AniList                o    Volume down                    9
-    Jump to top                    g    Play in a watch party          y    Volume up                      0
+    Jump to top                    g    Start a room                   y    Volume up                      0
     Jump to bottom                 G  Episodes                              Full screen                    F
     Jump to today                  T    Download a range of episodes   D    Leave player running           q
     Jump to previous day           {    Toggle watched                 u    Stop playback                  x

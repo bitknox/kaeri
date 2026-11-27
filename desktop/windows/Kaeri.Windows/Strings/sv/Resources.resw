@@ -566,23 +566,11 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Inte tillräckligt med ledigt utrymme för att hålla kommande avsnitt nedladdade. Frigör lite utrymme för att ladda ner fler.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Välj först en server för watch party, som syncplay.server. {server} drivs av {operator}.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Välj först en server för watch party. {server} drivs av {operator}.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Watch partyn finns inte i den här versionen av Kaeri.</value>
   </data>
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>En watch party behöver ett rum att träffas i. Välj ett först.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Servern för watch party tappades. Försöker igen.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>Tillbaka i watch party.</value>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>Lämnade watch party.</value>

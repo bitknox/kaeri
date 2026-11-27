@@ -130,11 +130,7 @@ notice-episodes-queued-existing-stopped = { $count ->
    *[other] В очередь добавлено { $count } эпизода, затем добавление остановилось. { $existing } { $reason }
  }
 notice-keep-next-full = Недостаточно свободного места, чтобы сохранить следующие эпизоды в загрузках. Освободите место, чтобы загрузить больше.
-party-needs-server = { -watch-party-cap }: сначала выберите сервер в настройке syncplay.server. Предлагаем { $server }, управляется { $operator }.
-party-choose-server = { -watch-party-cap }: сначала выберите сервер. Предлагаем { $server }, управляется { $operator }.
 notice-no-party = { -watch-party-cap-pl } недоступны в этой версии { -app-name }.
 party-needs-room = { -watch-party-cap } требует комнату. Сначала выберите её.
-party-server-lost = { -watch-party-cap }: связь с сервером потеряна. Пробуем снова.
-party-rejoined = { -watch-party-cap } снова на связи.
 party-left = Вы покинули { -watch-party }.
 party-server-unreachable = Не удалось связаться с { $server }. Проверьте сервер или попробуйте ещё раз.

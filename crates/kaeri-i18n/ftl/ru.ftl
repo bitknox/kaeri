@@ -555,23 +555,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Недостаточно свободного места, чтобы сохранить следующие эпизоды в загрузках. Освободите место, чтобы загрузить больше.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Совместный просмотр: сначала выберите сервер в настройке syncplay.server. Предлагаем { $server }, управляется { $operator }.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Совместный просмотр: сначала выберите сервер. Предлагаем { $server }, управляется { $operator }.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Совместные просмотры недоступны в этой версии Kaeri.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = Совместный просмотр требует комнату. Сначала выберите её.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Совместный просмотр: связь с сервером потеряна. Пробуем снова.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Совместный просмотр снова на связи.
 
 # Message when the person left a watch party.
 party-left = Вы покинули совместный просмотр.
@@ -1841,15 +1829,6 @@ party-choose-a-source = Выберите источник
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Ни один источник не содержит эпизод { $episode }. Источники дают плагины, а их добавляют через магазин плагинов.
-
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] { $count } источник содержит эпизод. Выбранный источник запускает совместный просмотр.
-        [few] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
-        [many] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
-       *[other] Источники с эпизодом: { $count }. Выбранный источник запускает совместный просмотр.
-    }
 
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Плеер не запустился. Попробуйте ещё раз или выберите другой источник.
@@ -3265,9 +3244,6 @@ keys-action-toggle-demo = Удалить или добавить демо
 keys-action-download-range = Скачать диапазон эпизодов
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Смотреть через совместный просмотр
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Отметить как просмотренное
 
 # Action label in the help overlay and the command palette.
@@ -3667,24 +3643,18 @@ nav-rail-collapsed = Свёрнута
 nav-rail-hidden = Скрыта
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Готов
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Копировать ссылку
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Выйти
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Написать
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Скрыть
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Показать
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Скрыть чат
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4435,9 +4405,6 @@ settings-value-player-ui-mpv = Ваша настройка mpv
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = В кэше торрентов
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Не задана. Без неё не работают совместные просмотры
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = До коэффициента { $ratio }
 
@@ -4539,15 +4506,6 @@ settings-label-keep-seeding = Продолжать раздачу
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = После каждой загрузки
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay: совместные просмотры
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Сервер Syncplay
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Комната Syncplay
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Проверять обновления
@@ -4656,15 +4614,6 @@ settings-note-keep-seeding = По умолчанию выключено, что�
 
 # Note under the after each download row.
 settings-note-download-hook = Нажмите Enter, чтобы ввести команду. Она запускается после каждой загрузки.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Нажмите { $key }, чтобы посмотреть один эпизод в комнате ниже. Пока включено, каждый запуск идёт туда.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Нажмите Enter, чтобы ввести host:port. Сервер не задан, пока вы его не выберете.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Нажмите Enter, чтобы ввести комнату друга. Оставьте пустым, чтобы создать комнату, которую никто не угадает.
 
 # Note under the check for updates row.
 settings-note-update-check = Один кэшированный запрос в день, при запуске.
@@ -5788,12 +5737,6 @@ hint-open-stores = Перейдите в Источники и нажмите En
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Нажмите Enter на её строке, чтобы ввести данные для входа.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Совместный просмотр: вы присоединились к комнате { $room } на сервере { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Вы остаётесь в совместном просмотре.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Перезагружаем источники…
 
@@ -5802,15 +5745,6 @@ pin-unavailable = { $name } закреплён для этого тайтла, �
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Смотреть вместе
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = ссылка или код
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Сообщения и реакции не показываются в плеере ни в одном совместном просмотре.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Это не ссылка и не код комнаты.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Эпизод { $episode } · { $when }

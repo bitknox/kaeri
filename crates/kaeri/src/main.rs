@@ -255,10 +255,10 @@ enum Subcommand {
     /// Work with plugin files.
     #[command(subcommand)]
     Plugin(PluginCommand),
-    /// Join a watch party: an invite link, or a code, opens its lobby.
-    Party {
-        /// The invite link or the code a friend sent.
-        target: String,
+    /// Join a room by its invite link: the room opens in Together.
+    Room {
+        /// The invite link someone sent.
+        invite: String,
     },
 }
 
@@ -274,14 +274,16 @@ async fn main() -> Result<()> {
     let paths = Paths::resolve().context("resolving config paths")?;
     // A store server is a long-running service in someone's terminal or a unit file, so it logs
     // where they are looking rather than to the app's log file.
-    let mut party = None;
+    let mut room = None;
     match args.command {
-        Some(Subcommand::Party { target }) => {
-            // Read before anything starts, so a mistyped link is said at the prompt.
-            party = Some(
-                kaeri_model::party::PartyTarget::parse(&target)
-                    .with_context(|| "that is not a watch party link or code")?,
-            );
+        Some(Subcommand::Room { invite }) => {
+            // Read before anything starts, so a mistyped or old link is said at the prompt.
+            let target = kaeri_model::room::RoomTarget::parse(&invite)
+                .with_context(kaeri_i18n::t::tui_room_not_a_link)?;
+            if target.old.is_some() {
+                anyhow::bail!(kaeri_i18n::t::room_error_old_invite());
+            }
+            room = Some(target.link);
         }
         Some(command) => return store_command(command, &paths).await,
         None => {}
@@ -421,8 +423,7 @@ async fn main() -> Result<()> {
     }
 
     let images = !args.no_images;
-    run(config, paths, http, store, images, config_problem, set_aside, party, args.private)
-        .await
+    run(config, paths, http, store, images, config_problem, set_aside, room, args.private).await
 }
 
 /// What the terminal's graphics support amounts to, in words.

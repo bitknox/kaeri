@@ -15,11 +15,11 @@ use kaeri_model::{
     command::{Command, PlayerCommand},
     event::Event,
     hosted::{PlayerReport, TrackKind},
-    party::{
-        PartyChatBody, PartyChatLine, PartyChatState, PartyCommand, PartyConnection,
-        PartyConversation, PartyFound, PartyMember, PartyRoomEpisode, PartyView, Reaction,
-    },
     playback::{Ending, SkipKind},
+    room::{
+        MemberState, Reaction, RoomChatBody, RoomChatLine, RoomChatState, RoomCommand,
+        RoomConnection, RoomConversation, RoomEpisodeInfo, RoomMember, RoomView,
+    },
 };
 use tokio::{sync::mpsc, task::JoinHandle};
 
@@ -81,37 +81,42 @@ struct Script {
     shown: Option<String>,
     query: String,
     commands: Vec<String>,
-    /// The watch party the TV is in, when the Fixtures app put it in one.
-    party: Option<FakeParty>,
+    /// The room the TV is in, when the Fixtures app put it in one.
+    room: Option<FakeRoom>,
 }
 
-/// The fake TV's watch party: a room of three beside it, and what was said there.
-struct FakeParty {
-    view: PartyView,
-    lines: Vec<PartyChatLine>,
+/// The fake TV's room: three people beside it, and what was said there.
+struct FakeRoom {
+    view: RoomView,
+    lines: Vec<RoomChatLine>,
+    /// Muted ids.
     muted: Vec<String>,
 }
 
-impl FakeParty {
-    /// The members beside the TV.
+/// A made-up id for someone in the fake room.
+fn fake_id(name: &str) -> String {
+    format!("{:0>16}", name.to_ascii_lowercase())
+}
+
+impl FakeRoom {
+    /// The people beside the TV.
     const MEMBERS: [&'static str; 3] = ["Mika", "Ren", "Sol"];
 
-    fn conversation(&self) -> PartyConversation {
+    fn conversation(&self) -> RoomConversation {
         let lines = self
             .lines
             .iter()
-            .map(|line| PartyChatLine {
-                muted: self.muted.contains(&line.from),
+            .map(|line| RoomChatLine {
+                muted: self.muted.contains(&fake_id(&line.from)),
                 ..line.clone()
             })
             .collect();
-        PartyConversation { lines, ..PartyConversation::default() }
+        RoomConversation { lines, ..RoomConversation::default() }
     }
 
-    fn chat_state(&self) -> PartyChatState {
-        PartyChatState {
-            allowed: true,
-            max_length: 150,
+    fn chat_state(&self) -> RoomChatState {
+        RoomChatState {
+            max_length: kaeri_model::room::CHAT_MAX_LENGTH,
             muted: self.muted.clone(),
             wait_seconds: 0,
             react_wait_seconds: 0,
@@ -202,99 +207,81 @@ impl FakeTv {
         lock(&self.script).volume
     }
 
-    /// Put the TV in a watch party in `room`, with Mika, Ren and Sol beside it and the
+    /// Put the TV in a room watching `title` `episode`, with Mika, Ren and Sol beside it and the
     /// conversation of the chat board so far: what the phone's remote screen shows of a TV in a
-    /// party. A line the phone sends as the TV comes back as the TV's own, as a server's echo
-    /// would.
-    pub fn join_party(&self, room: &str, title: &str, episode: &str) {
-        let view = PartyView {
-            server: "127.0.0.1:8999".into(),
-            room: room.into(),
+    /// room. A line the phone sends as the TV comes back as the TV's own, as a relay's echo would.
+    pub fn join_room(&self, title: &str, episode: &str) {
+        let view = RoomView {
+            room_id: "fake-room".into(),
             name: self.name.clone(),
-            connection: PartyConnection::Connected,
-            encrypted: false,
-            ready: true,
-            episode: None,
-            invite: None,
-            motd: None,
-            latency_ms: None,
-            room_episode: Some(PartyRoomEpisode {
-                id: None,
+            connection: RoomConnection::Connected,
+            room_episode: Some(RoomEpisodeInfo {
+                id: AnilistId::new(900_001),
                 episode: episode.into(),
                 title: title.into(),
-                file: format!("{title} {episode}"),
-                found: PartyFound::Name,
-                plain_by: None,
+                name: None,
+                banner_url: None,
+                cover_url: None,
             }),
-            next_episode: None,
-            starter: None,
-            starter_present: false,
-            can_start_anyway: false,
-            code: None,
-            link: Some(format!("https://kaeri.app/party#{room}")),
+            link: Some("https://kaeri.app/room#v=3&k=ZmFrZS1yb29tLXNlY3JldA".into()),
             playing: true,
-            starting_in: None,
-            sources: None,
-            guesses: Vec::new(),
-            looking: false,
-            moves_on: false,
+            ..RoomView::default()
         };
-        let said = |id: u64, from: &str, text: &str| PartyChatLine {
+        let said = |id: u64, from: &str, text: &str| RoomChatLine {
             id,
             from: from.into(),
             you: false,
-            body: PartyChatBody::Said { text: text.into() },
+            body: RoomChatBody::Said { text: text.into() },
             muted: false,
         };
         let lines = vec![
             said(1, "Mika", "ok starting"),
             said(2, "Ren", "the handoff in the rain, I knew it"),
-            PartyChatLine {
+            RoomChatLine {
                 id: 3,
                 from: "Ren".into(),
                 you: false,
-                body: PartyChatBody::Reacted {
+                body: RoomChatBody::Reacted {
                     reaction: Reaction::Laugh,
-                    at: 724.0,
+                    at: 34.0,
                     with: vec!["Mika".into()],
                 },
                 muted: false,
             },
             said(4, "Sol", "wait, who is the new runner"),
-            PartyChatLine {
+            RoomChatLine {
                 you: true,
                 ..said(5, &view.name, "back in 2, pause if it gets good")
             },
             said(6, "Mika", "this part again"),
         ];
-        let party = FakeParty { view, lines, muted: Vec::new() };
-        observe_party(&self.server, &party);
-        lock(&self.script).party = Some(party);
+        let room = FakeRoom { view, lines, muted: Vec::new() };
+        observe_room(&self.server, &room);
+        lock(&self.script).room = Some(room);
     }
 }
 
-/// Everything a TV's engine says of its party, for the remote state.
-fn observe_party(server: &RemoteServer, party: &FakeParty) {
-    server.observe(&Event::PartyJoined(party.view.clone()));
-    let mut members = vec![PartyMember {
-        name: party.view.name.clone(),
-        ready: Some(true),
-        file: None,
-        duration: None,
-        file_matches: None,
-        you: true,
-    }];
-    members.extend(FakeParty::MEMBERS.iter().map(|name| PartyMember {
-        name: (*name).into(),
-        ready: Some(true),
-        file: None,
-        duration: None,
-        file_matches: None,
-        you: false,
-    }));
-    server.observe(&Event::PartyMembers(members));
-    server.observe(&Event::PartyChatState(party.chat_state()));
-    server.observe(&Event::PartyChat(party.conversation()));
+/// Everything a TV's engine says of its room, for the remote state.
+fn observe_room(server: &RemoteServer, room: &FakeRoom) {
+    server.observe(&Event::RoomJoined(room.view.clone()));
+    let member = |name: &str, you: bool| RoomMember {
+        id: fake_id(name),
+        name: name.into(),
+        you,
+        state: MemberState::Watching,
+        since_ms: None,
+        behind_s: None,
+        episode: None,
+        paused_room: false,
+        waited: false,
+        background: false,
+        muted: false,
+    };
+    let mut members = vec![member(&room.view.name, true)];
+    members.extend(FakeRoom::MEMBERS.iter().map(|name| member(name, false)));
+    server.observe(&Event::RoomMembers(members));
+    server.observe(&Event::RoomChatState(room.chat_state()));
+    server.observe(&Event::RoomChat(room.conversation()));
 }
 
 impl Drop for FakeTv {
@@ -476,27 +463,27 @@ fn engine(server: &RemoteServer, script: &mut Script, titles: &[FakeTitle], comm
             }
             server.observe(&position(playing));
         }
-        Command::Party(PartyCommand::Say { text }) => {
-            let Some(party) = &mut script.party else { return };
-            let id = party.lines.last().map_or(1, |line| line.id + 1);
-            let from = party.view.name.clone();
-            party.lines.push(PartyChatLine {
+        Command::Room(RoomCommand::Say { text }) => {
+            let Some(room) = &mut script.room else { return };
+            let id = room.lines.last().map_or(1, |line| line.id + 1);
+            let from = room.view.name.clone();
+            room.lines.push(RoomChatLine {
                 id,
                 from,
                 you: true,
-                body: PartyChatBody::Said { text },
+                body: RoomChatBody::Said { text },
                 muted: false,
             });
-            server.observe(&Event::PartyChat(party.conversation()));
+            server.observe(&Event::RoomChat(room.conversation()));
         }
-        Command::Party(PartyCommand::Mute { name, muted }) => {
-            let Some(party) = &mut script.party else { return };
-            party.muted.retain(|n| *n != name);
+        Command::Room(RoomCommand::Mute { id, muted }) => {
+            let Some(room) = &mut script.room else { return };
+            room.muted.retain(|n| *n != id);
             if muted {
-                party.muted.push(name);
+                room.muted.push(id);
             }
-            server.observe(&Event::PartyChatState(party.chat_state()));
-            server.observe(&Event::PartyChat(party.conversation()));
+            server.observe(&Event::RoomChatState(room.chat_state()));
+            server.observe(&Event::RoomChat(room.conversation()));
         }
         _ => {}
     }

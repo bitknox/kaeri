@@ -169,7 +169,7 @@ pub enum StartStep {
 #[derive(Debug, Clone, PartialEq)]
 #[cfg_attr(feature = "ffi", derive(uniffi::Record))]
 pub struct StartFailure {
-    pub why: crate::party::NoSourceWhy,
+    pub why: crate::room::NoSourceWhy,
     pub text: crate::Msg,
     /// The names of the sources that were asked, in the order they were asked. Those not
     /// unreached answered without the episode, said as "Brook doesn't have episode 7." Empty when

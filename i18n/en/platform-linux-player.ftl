@@ -19,15 +19,6 @@ party-choose-a-source = Choose a { -source }
 # @max 120
 party-sources-none-listed = No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which you add from a { -plugin-store }.
 
-# Line above the list of sources that have the watch party's episode.
-# @only linux
-# @arg count: int
-# @max 90
-party-sources-found-line = { $count ->
-    [one] One { -source } has it. The one you choose plays with the { -watch-party }.
-   *[other] { $count } { -source-pl } have it. The one you choose plays with the { -watch-party }.
- }
-
 # Notice when the player could not start, or could not be reached to add a track.
 # @only linux
 # @max 90

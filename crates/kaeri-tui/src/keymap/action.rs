@@ -107,8 +107,8 @@ pub enum Action {
     // Episodes
     /// Queue a typed range of episodes for download: `4`, `1-12`, `7-`.
     DownloadRange,
-    /// Play an episode with the watch party set up in the settings, instead of a private session.
-    PlayParty,
+    /// Start a room watching an episode: the one playing, or the one Enter would play.
+    StartRoom,
     ToggleWatched,
     MarkAllPrevious,
     Filter,
@@ -257,7 +257,7 @@ impl Action {
         Self::PlayDemo,
         Self::ToggleDemo,
         Self::DownloadRange,
-        Self::PlayParty,
+        Self::StartRoom,
         Self::ToggleWatched,
         Self::MarkAllPrevious,
         Self::Filter,
@@ -388,7 +388,7 @@ impl Action {
             Self::PlayDemo => t::keys_action_play_demo(),
             Self::ToggleDemo => t::keys_action_toggle_demo(),
             Self::DownloadRange => t::keys_action_download_range(),
-            Self::PlayParty => t::keys_action_play_party(),
+            Self::StartRoom => t::keys_action_start_room(),
             Self::ToggleWatched => t::keys_action_toggle_watched(),
             Self::MarkAllPrevious => t::keys_action_mark_all_previous(),
             Self::Filter => t::keys_action_filter(),
@@ -532,7 +532,7 @@ impl Action {
             | Self::Recommendations
             | Self::PlayTrailer
             | Self::OpenInBrowser
-            | Self::PlayParty
+            | Self::StartRoom
             | Self::ToggleAlwaysPrivate => Scope::Title,
 
             Self::ToggleWatched

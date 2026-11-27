@@ -2919,83 +2919,106 @@ fn accounts_none(s: &mut Screen) {
     s.act(Action::JumpSection(8));
 }
 
-/// No party and no rooms kept: what Together offers, and the Join line to start with.
+/// No room and no rooms kept: what Together offers, and the Join line to start with.
 fn together_empty(s: &mut Screen) {
     s.apply(sources_ready());
     s.act(Action::JumpSection(10));
-    s.apply(Event::PartyRecent(Vec::new()));
+    s.apply(Event::RoomRecent(Vec::new()));
 }
 
 /// The last rooms, newest first, with the Join line above them; none is joined.
 fn together_recent(s: &mut Screen) {
     s.apply(sources_ready());
     s.act(Action::JumpSection(10));
-    s.apply(Event::PartyRecent(vec![
-        recent_room("kite-7qm4-xr9d", "Natsukaze Relay", "8", &["Mika", "Ren"], NOW - 3 * HOUR),
-        recent_room("ember-2hv8-kd4p", "Lantern Harbour", "3", &["Mika"], NOW - 2 * DAY),
-        recent_room("ember-9wz3-tn6c", "Glass Orchard", "1", &[], NOW - 9 * DAY),
+    s.apply(Event::RoomRecent(vec![
+        recent_room("room-1", "Natsukaze Relay", "8", &["Mika", "Ren"], NOW - 3 * HOUR),
+        recent_room("room-2", "Lantern Harbour", "3", &["Mika"], NOW - 2 * DAY),
+        recent_room("room-3", "Glass Orchard", "1", &[], NOW - 9 * DAY),
     ]));
     s.press(&["j"]);
 }
 
-/// In a lobby: three in the room, one ready, this device not, with its sources checked.
+/// In a room before play: three people, two ready, one still loading, this device's sources
+/// checked.
 fn together_lobby(s: &mut Screen) {
+    use kaeri_model::room::MemberState;
     s.apply(sources_ready());
     s.act(Action::JumpSection(10));
-    s.apply(Event::PartyRecent(vec![recent_room(
-        "kite-7qm4-xr9d",
+    s.apply(Event::RoomRecent(vec![recent_room(
+        "room-1",
         "Natsukaze Relay",
         "9",
         &["Mika", "Ren"],
         NOW - 60,
     )]));
-    s.apply(Event::PartyJoined(party_view()));
-    s.apply(Event::PartyMembers(vec![
-        party_member("Ada", Some(false), true),
-        party_member("Mika", Some(true), false),
-        party_member("Ren", Some(false), false),
+    s.apply(Event::RoomJoined(room_view()));
+    s.apply(Event::RoomMembers(vec![
+        room_member("Ada", MemberState::Ready, true, false),
+        room_member("Mika", MemberState::Ready, false, false),
+        room_member("Ren", MemberState::Loading, false, false),
     ]));
 }
 
-/// In a party with a conversation going: a reaction, a muted member, the cursor on that
-/// member, and the Say line open with something typed. The board's "Together, typing".
+/// In a room with a conversation going: a reaction, the room's own word, a muted member, the
+/// cursor on that member, and the Say line open with something typed. The board's "Together,
+/// typing".
 fn together_chat(s: &mut Screen) {
-    use kaeri_model::party::{
-        PartyChatBody, PartyChatLine, PartyChatState, PartyConversation, Reaction,
+    use kaeri_model::room::{
+        MemberState, Reaction, RoomChatBody, RoomChatLine, RoomChatState, RoomConversation,
+        RoomMessage, RoomMessageKind,
     };
     together_lobby(s);
-    s.apply(Event::PartyMembers(vec![
-        party_member("Ada", Some(true), true),
-        party_member("Mika", Some(true), false),
-        party_member("Ren", Some(true), false),
-        party_member("Sol", Some(true), false),
+    s.apply(Event::RoomState(kaeri_model::room::RoomView {
+        before_play: false,
+        playing: true,
+        position: Some(724.0),
+        position_at_ms: NOW * 1000,
+        ..room_view()
+    }));
+    s.apply(Event::RoomMembers(vec![
+        room_member("Ada", MemberState::Watching, true, false),
+        room_member("Mika", MemberState::Watching, false, false),
+        room_member("Ren", MemberState::Watching, false, false),
+        room_member("Sol", MemberState::Watching, false, true),
     ]));
-    let said = |id: u64, from: &str, text: &str| PartyChatLine {
+    let said = |id: u64, from: &str, text: &str| RoomChatLine {
         id,
         from: from.into(),
         you: from == "Ada",
-        body: PartyChatBody::Said { text: text.into() },
+        body: RoomChatBody::Said { text: text.into() },
         muted: from == "Sol",
     };
-    s.apply(Event::PartyChat(PartyConversation {
+    s.apply(Event::RoomChat(RoomConversation {
         lines: vec![
             said(1, "Mika", "ok starting"),
-            said(2, "Ren", "the handoff in the rain, I knew it"),
-            PartyChatLine {
-                id: 3,
+            RoomChatLine {
+                id: 2,
+                from: String::new(),
+                you: false,
+                body: RoomChatBody::Room {
+                    message: RoomMessage {
+                        kind: RoomMessageKind::Joined { name: "Sol".into() },
+                        text: "Sol joined".into(),
+                    },
+                },
+                muted: false,
+            },
+            said(3, "Ren", "the handoff in the rain, I knew it"),
+            RoomChatLine {
+                id: 4,
                 from: "Ren".into(),
                 you: false,
-                body: PartyChatBody::Reacted {
+                body: RoomChatBody::Reacted {
                     reaction: Reaction::Laugh,
                     at: 724.0,
                     with: vec!["Mika".into()],
                 },
                 muted: false,
             },
-            said(4, "Sol", "wait, who is the new runner"),
-            said(5, "Ada", "back in 2, pause if it gets good"),
+            said(5, "Sol", "wait, who is the new runner"),
+            said(6, "Ada", "back in 2, pause if it gets good"),
             said(
-                6,
+                7,
                 "Mika",
                 "this part again, the long leg before the relay station where it all turns",
             ),
@@ -3003,9 +3026,8 @@ fn together_chat(s: &mut Screen) {
         marks: Vec::new(),
         failed: None,
     }));
-    s.apply(Event::PartyChatState(PartyChatState {
-        allowed: true,
-        max_length: 150,
+    s.apply(Event::RoomChatState(RoomChatState {
+        max_length: 500,
         muted: vec!["Sol".into()],
         wait_seconds: 0,
         react_wait_seconds: 0,
@@ -3018,11 +3040,10 @@ fn together_chat(s: &mut Screen) {
 
 /// Hide chat on: the conversation says so, and the status line offers Show chat.
 fn together_chat_hidden(s: &mut Screen) {
-    use kaeri_model::party::PartyChatState;
+    use kaeri_model::room::RoomChatState;
     together_lobby(s);
-    s.apply(Event::PartyChatState(PartyChatState {
-        allowed: true,
-        max_length: 150,
+    s.apply(Event::RoomChatState(RoomChatState {
+        max_length: 500,
         muted: Vec::new(),
         wait_seconds: 0,
         react_wait_seconds: 0,
@@ -3031,15 +3052,14 @@ fn together_chat_hidden(s: &mut Screen) {
 }
 
 fn recent_room(
-    room: &str,
+    room_id: &str,
     title: &str,
     episode: &str,
     names: &[&str],
     last_at: i64,
-) -> kaeri_model::party::PartyRecentRoom {
-    kaeri_model::party::PartyRecentRoom {
-        server: "party.example:8999".into(),
-        room: room.into(),
+) -> kaeri_model::room::RoomRecent {
+    kaeri_model::room::RoomRecent {
+        room_id: room_id.into(),
         id: AnilistId::new(104_321),
         title: title.into(),
         episode: episode.into(),
@@ -3049,54 +3069,50 @@ fn recent_room(
     }
 }
 
-fn party_member(name: &str, ready: Option<bool>, you: bool) -> kaeri_model::party::PartyMember {
-    kaeri_model::party::PartyMember {
+fn room_member(
+    name: &str,
+    state: kaeri_model::room::MemberState,
+    you: bool,
+    muted: bool,
+) -> kaeri_model::room::RoomMember {
+    kaeri_model::room::RoomMember {
+        id: name.into(),
         name: name.into(),
-        ready,
-        file: None,
-        duration: None,
-        file_matches: None,
         you,
+        state,
+        since_ms: Some((NOW - 4) * 1000),
+        behind_s: None,
+        episode: None,
+        paused_room: false,
+        waited: false,
+        background: false,
+        muted,
     }
 }
 
-fn party_view() -> kaeri_model::party::PartyView {
-    use kaeri_model::party::{
-        PartyConnection, PartyFound, PartyRoomEpisode, PartySources, PartyView,
+fn room_view() -> kaeri_model::room::RoomView {
+    use kaeri_model::room::{
+        RelayHealth, RoomConnection, RoomEpisodeInfo, RoomSources, RoomView,
     };
-    PartyView {
-        server: "party.example:8999".into(),
-        room: "kite-7qm4-xr9d".into(),
+    let relay = |url: &str| RelayHealth { url: url.into(), healthy: true, rtt_ms: Some(40) };
+    RoomView {
+        room_id: "room-1".into(),
         name: "Ada".into(),
-        connection: PartyConnection::Connected,
-        encrypted: true,
-        ready: false,
-        episode: None,
-        invite: None,
-        motd: None,
-        latency_ms: Some(42),
-        room_episode: Some(PartyRoomEpisode {
-            id: Some(AnilistId::new(104_321)),
+        connection: RoomConnection::Connected,
+        room_episode: Some(RoomEpisodeInfo {
+            id: AnilistId::new(104_321),
             episode: "9".into(),
             title: "Natsukaze Relay".into(),
-            file: "Natsukaze Relay, episode 9 [anilist:104321:9]".into(),
-            found: PartyFound::Tag,
-            plain_by: None,
+            name: None,
+            banner_url: None,
+            cover_url: None,
         }),
-        next_episode: None,
-        starter: Some("Mika".into()),
-        starter_present: true,
-        can_start_anyway: false,
-        code: Some("kite-7qm4-xr9d".into()),
-        link: Some(
-            "https://kaeri.app/party#s=party.example%3A8999&r=kite-7qm4-xr9d&e=9".into(),
-        ),
-        playing: false,
-        starting_in: None,
-        sources: Some(PartySources::Found),
-        guesses: Vec::new(),
-        looking: false,
-        moves_on: true,
+        link: Some("https://kaeri.app/party#v=3&k=BwcHBwcHBwcHBwcHBwcHBw&by=Mika".into()),
+        before_play: true,
+        sources: Some(RoomSources::Found),
+        relays: vec![relay("wss://relay-a.example"), relay("wss://relay-b.example")],
+        latency_ms: Some(42),
+        ..Default::default()
     }
 }
 

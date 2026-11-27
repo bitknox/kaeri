@@ -1,14 +1,17 @@
-//! The Together screen: the watch party this terminal is in, a line to join another, and the
-//! last rooms. Only metadata crosses the server: names, a file name and where it is up to.
+//! The Together screen: the room this terminal is in, a line to join another by its invite
+//! link, and the last rooms. Each person plays from their own sources; the room's messages are
+//! sealed end to end, and relays only pass them along.
 
 use kaeri_i18n::t;
-use kaeri_model::party::{
-    PartyChatBody, PartyChatLine, PartyConnection, PartyRecentRoom, PartySources, Reaction,
+use kaeri_model::room::{
+    MemberState, Reaction, RoomChatBody, RoomChatLine, RoomConnection, RoomMember, RoomRecent,
+    RoomSources, RoomView, WaitReason,
 };
 use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 
 use crate::{
     app::{App, say},
+    keymap::Action,
     nav::{Focus, Overlay},
     theme::{Role, glyph},
     widgets::{Cells, Hairline, truncate, wrap},
@@ -21,8 +24,8 @@ use super::{
 
 /// The width from which the stage keeps a detail pane beside the list.
 const DETAIL_FROM: u16 = 80;
-/// The list's width when the detail pane is beside it: the party, its members, the Join line
-/// and the recent rooms. The pane takes the rest, for the party and its conversation.
+/// The list's width when the detail pane is beside it: the room, its people, the Join line and
+/// the recent rooms. The pane takes the rest, for the room's line, its invite and the chat.
 const LIST_WIDTH: u16 = 36;
 /// The widest a name's column grows in the conversation.
 const NAME_COLUMN: usize = 12;
@@ -58,7 +61,7 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
     let width = main.width as usize;
     let mut y = main.top();
     // A line of the list on its row, or nothing when that row is below the stage. The screen
-    // draws on a stage of four rows, which the party's lines and the start line outgrow, and
+    // draws on a stage of four rows, which the room's lines and the start line outgrow, and
     // under the stage are the status rows or the end of the terminal.
     let put_line = |buf: &mut Buffer, x: u16, y: u16, line: &str, style| {
         if y < main.bottom() {
@@ -66,41 +69,32 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
         }
     };
 
-    buf.set_string(main.left(), y, truncate(&t::together_title(), width), dim);
+    buf.set_string(main.left(), y, truncate(&t::tui_together_section(), width), dim);
     y += 1;
     Hairline::new(&app.palette).render(Rect { y, height: 1, ..main }, buf);
     y += 1;
 
-    // The party this terminal is in, or what to do to be in one.
-    match &app.party {
-        Some(party) => {
-            let title = party
-                .room_episode
-                .as_ref()
-                .map_or_else(|| party.room.clone(), |room| room.title.clone());
-            put_line(buf, main.left(), y, &title, text.add_modifier(Modifier::BOLD));
+    // The room this terminal is in, or how to be in one.
+    match &app.room {
+        Some(room) => {
+            put_line(buf, main.left(), y, &room_title(room), text.add_modifier(Modifier::BOLD));
             y += 1;
             if detail.is_none()
-                && let Some(line) = episode_line(app)
+                && let Some(line) = header_line(app, room)
             {
                 put_line(buf, main.left(), y, &line, dim);
                 y += 1;
             }
-            let code = party.code.as_deref().unwrap_or(&party.room);
-            put_line(buf, main.left(), y, code, dim);
-            y += 2;
+            y += 1;
             y = render_members(buf, app, main, y, focused);
-            if app.party_members.len() <= 1 {
-                put_line(buf, main.left() + 2, y, &t::party_alone(), dim);
-                y += 1;
-            }
             y += 1;
             if detail.is_none() {
-                y = render_standing(buf, app, main, y) + 1;
+                y = render_standing(buf, app, room, main, y) + 1;
             }
         }
         None => {
-            for line in wrap(&t::together_start_line(), width, 3) {
+            let key = app.key_for(Action::StartRoom);
+            for line in wrap(&t::tui_room_start_line(&key), width, 4) {
                 put_line(buf, main.left(), y, &line, dim);
                 y += 1;
             }
@@ -110,7 +104,7 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
 
     // Without the detail pane the conversation sits here, above the Join line, as much as fits.
     // While the Say line is open it takes every row left: the Join line and the rooms can wait.
-    if detail.is_none() && app.party.is_some() {
+    if detail.is_none() && app.room.is_some() {
         let saying = app.nav.overlay() == Some(&Overlay::Say);
         if saying && y + 3 < main.bottom() {
             render_chat(buf, app, Rect { y, height: main.bottom() - y, ..main });
@@ -122,7 +116,7 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
         }
     }
 
-    // The Join line.
+    // The Join line: Join anyway once a room said it was full.
     if y >= main.bottom() {
         return;
     }
@@ -130,7 +124,8 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
     if selected {
         mark_selected(buf, app, main.left(), y, focused);
     }
-    let label = t::together_join();
+    let label =
+        if app.room_full.is_some() { t::room_join_anyway() } else { t::room_place_join() };
     buf.set_string(
         main.left() + 2,
         y,
@@ -138,7 +133,7 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
         if selected { text.add_modifier(Modifier::BOLD) } else { text },
     );
     let x = main.left() + 2 + label.chars().count() as u16 + 2;
-    if x + 4 < main.right() {
+    if app.room_full.is_none() && x + 4 < main.right() {
         buf.set_string(
             x,
             y,
@@ -158,15 +153,15 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
         }
         return;
     }
-    buf.set_string(main.left(), y, truncate(&t::together_recent(), width), dim);
+    buf.set_string(main.left(), y, truncate(&t::room_recent(), width), dim);
     y += 1;
     Hairline::new(&app.palette).render(Rect { y, height: 1, ..main }, buf);
     y += 1;
-    if app.party_recent.is_empty() {
-        put_line(buf, main.left(), y, &t::together_recent_empty(), dim);
+    if app.room_recent.is_empty() {
+        put_line(buf, main.left(), y, &t::tui_room_recent_empty(), dim);
     }
     let first = app.join_row() + 1;
-    for (i, room) in app.party_recent.iter().enumerate() {
+    for (i, room) in app.room_recent.iter().enumerate() {
         // Two rows each: the title, and who was there when.
         if y + 1 >= main.bottom() {
             break;
@@ -195,19 +190,75 @@ pub(super) fn render_together(buf: &mut Buffer, app: &App, area: Rect) {
     }
 }
 
-/// The members, this device's first: a mark for their ready state, the name, and the state,
-/// or "Muted". The others are rows the cursor walks, so `M` can mute one. Returns the next row.
+/// What the room watches, or "Your room" while it is still being read.
+fn room_title(room: &RoomView) -> String {
+    room.room_episode.as_ref().map_or_else(t::room_place_yours, |e| e.title.clone())
+}
+
+/// "Episode 9 · 3 in the room".
+fn header_line(app: &App, room: &RoomView) -> Option<String> {
+    let episode = room.room_episode.as_ref()?;
+    Some(t::room_header_line(number(&episode.episode), app.room_members.len() as i64))
+}
+
+/// Now, in the epoch milliseconds the room's times are in.
+fn now_ms(app: &App) -> i64 {
+    app.clock.now_epoch() * 1000
+}
+
+/// Whole seconds from `since_ms` to now; never below nothing.
+fn seconds_since(app: &App, since_ms: i64) -> i64 {
+    ((now_ms(app) - since_ms) / 1000).max(0)
+}
+
+/// An episode as the catalogue takes it: its label, "9" or "9.5".
+fn number(episode: &str) -> &str {
+    episode.trim()
+}
+
+/// A place in an episode: "12:04", "1:02:03".
+fn clock(seconds: f64) -> String {
+    let total = seconds.max(0.0).round() as i64;
+    let (h, m, s) = (total / 3600, total / 60 % 60, total % 60);
+    if h > 0 { format!("{h}:{m:02}:{s:02}") } else { format!("{m}:{s:02}") }
+}
+
+/// Names as a sentence lists them: "Mika", "Mika and Ren", "Mika, Ren and Sol".
+fn names(list: &[&str]) -> String {
+    match list {
+        [] => String::new(),
+        [one] => (*one).to_owned(),
+        [before @ .., last] => {
+            let joined = before
+                .iter()
+                .skip(1)
+                .fold(before[0].to_owned(), |acc, name| t::room_names_comma(&acc, name));
+            t::room_names_and(&joined, last)
+        }
+    }
+}
+
+/// The people the room waits for, inside "Paused for …": one or two by name, more counted.
+fn waited_names(list: &[&str]) -> String {
+    match list {
+        [_, _, _, ..] => t::room_names_people(list.len() as i64),
+        _ => names(list),
+    }
+}
+
+/// The members, this device's first: a mark for how they are, the name, and their word. The
+/// others are rows the cursor walks, so `M` can mute one. Returns the next row.
 fn render_members(buf: &mut Buffer, app: &App, area: Rect, mut y: u16, focused: bool) -> u16 {
     let dim = app.palette.style(Role::TextDim);
     let text = app.palette.style(Role::Text);
     let width = area.width as usize;
-    let state_x = area.left() + (width.saturating_sub(14).max(14)) as u16;
+    let state_x = area.left() + (width.saturating_sub(16).max(16)) as u16;
     let mut row = 0;
     let members = app
-        .party_members
+        .room_members
         .iter()
         .filter(|m| m.you)
-        .chain(app.party_members.iter().filter(|m| !m.you));
+        .chain(app.room_members.iter().filter(|m| !m.you));
     for member in members {
         if y >= area.bottom().saturating_sub(5) {
             break;
@@ -219,17 +270,29 @@ fn render_members(buf: &mut Buffer, app: &App, area: Rect, mut y: u16, focused: 
         if selected {
             mark_selected(buf, app, area.left(), y, focused);
         }
-        let muted = !member.you && app.is_muted(&member.name);
-        let (mark, state, role) = match member.ready {
-            _ if muted => (glyph::STATE_OFF, t::party_member_muted(), Role::TextDim),
-            Some(true) => (glyph::STATE_READY, t::party_member_ready(), Role::State),
-            Some(false) => (glyph::STATE_OFF, t::party_member_not_ready(), Role::TextDim),
-            None => (glyph::STATE_UNKNOWN, t::party_member_no_ready_state(), Role::TextDim),
+        let (mark, role) = match member.state {
+            MemberState::Watching | MemberState::Ready => (glyph::STATE_READY, Role::State),
+            MemberState::Loading
+            | MemberState::Buffering
+            | MemberState::Behind
+            | MemberState::Choosing
+            | MemberState::Reconnecting => (glyph::STATE_UNKNOWN, Role::TextDim),
+            MemberState::NoSource => (glyph::STATE_OFF, Role::Alert),
+            MemberState::Paused
+            | MemberState::OtherEpisode
+            | MemberState::PlayerClosed
+            | MemberState::Left => (glyph::STATE_OFF, Role::TextDim),
         };
-        let name =
-            if member.you { t::party_member_you(&member.name) } else { member.name.clone() };
+        let role = if member.muted { Role::TextDim } else { role };
+        let word = state_word(app, member);
+        let word = if member.muted { t::room_state_and_muted(&word) } else { word };
+        let name = if member.you {
+            format!("{} {}", member.name, t::room_you_marker()) // i18n-skip: a name and its mark
+        } else {
+            member.name.clone()
+        };
         buf.set_string(area.left() + 2, y, mark.to_string(), app.palette.style(role));
-        let name_style = match (selected, muted) {
+        let name_style = match (selected, member.muted || member.state == MemberState::Left) {
             (_, true) => dim,
             (true, false) => text.add_modifier(Modifier::BOLD),
             (false, false) => text,
@@ -244,7 +307,7 @@ fn render_members(buf: &mut Buffer, app: &App, area: Rect, mut y: u16, focused: 
             buf.set_string(
                 state_x,
                 y,
-                truncate(&state, area.right().saturating_sub(state_x) as usize),
+                truncate(&word, area.right().saturating_sub(state_x) as usize),
                 app.palette.style(role),
             );
         }
@@ -253,84 +316,155 @@ fn render_members(buf: &mut Buffer, app: &App, area: Rect, mut y: u16, focused: 
     y
 }
 
-/// "Episode 9 · 3 in the room · 1 ready".
-fn episode_line(app: &App) -> Option<String> {
-    let room = app.party.as_ref()?.room_episode.as_ref()?;
-    let (count, ready) = (
-        app.party_members.len(),
-        app.party_members.iter().filter(|m| m.ready == Some(true)).count(),
-    );
-    Some(t::together_in_party_line(&room.episode, count as i64, ready as i64))
+/// A person's one word: Watching, Loading · 4 s, On episode 8, Paused it.
+fn state_word(app: &App, member: &RoomMember) -> String {
+    let seconds = || member.since_ms.map_or(0, |since| seconds_since(app, since));
+    let room_episode =
+        app.room.as_ref().and_then(|r| r.room_episode.as_ref()).map(|e| e.episode.as_str());
+    match member.state {
+        MemberState::Watching => t::room_state_watching(),
+        MemberState::Ready => t::room_state_ready(),
+        MemberState::Paused if member.paused_room => t::room_state_paused_it(),
+        MemberState::Paused => t::room_state_paused(),
+        MemberState::Loading => t::room_state_loading(seconds()),
+        MemberState::Buffering => t::room_state_buffering(seconds()),
+        MemberState::Behind => {
+            t::room_state_behind(member.behind_s.map_or(0, |s| s.round() as i64))
+        }
+        MemberState::OtherEpisode => t::room_state_other_episode(number(
+            member.episode.as_ref().map_or("", |e| e.episode.as_str()),
+        )),
+        MemberState::Choosing => t::room_state_choosing(),
+        MemberState::NoSource => t::room_state_no_source(number(room_episode.unwrap_or(""))),
+        MemberState::PlayerClosed => t::room_state_player_closed(),
+        MemberState::Reconnecting => t::room_state_reconnecting(),
+        MemberState::Left => t::room_state_left(),
+    }
+}
+
+/// The room's line: what it is doing, in a first line and a quieter second one.
+fn room_lines(app: &App, room: &RoomView) -> (Option<String>, Option<String>) {
+    let now = now_ms(app);
+    if let RoomConnection::Reconnecting { .. } = room.connection {
+        return (Some(t::room_line_reconnecting()), Some(t::room_line_reconnecting_detail()));
+    }
+    if let Some(moved) = &room.moved {
+        let went: Vec<&str> = moved.went.iter().map(String::as_str).collect();
+        let second = (!went.is_empty()).then(|| t::room_line_went_along(&names(&went)));
+        return (Some(t::room_line_moved_away(&moved.by)), second);
+    }
+    if !room.waiting.is_empty() && now >= room.wait_shown_at_ms.unwrap_or(0) {
+        let since = room.waiting.iter().map(|w| w.since_ms).min().unwrap_or(now);
+        let seconds = seconds_since(app, since);
+        let others: Vec<&str> =
+            room.waiting.iter().filter(|w| !w.you).map(|w| w.name.as_str()).collect();
+        if room.waiting.iter().any(|w| w.you) {
+            return (
+                Some(t::room_line_with_seconds(&t::room_line_paused_for_you(), seconds)),
+                None,
+            );
+        }
+        if room.can_carry_on {
+            return (
+                Some(still(room, &names(&others), others.len() as i64)),
+                Some(t::room_line_waited(seconds)),
+            );
+        }
+        let first = t::room_line_paused_for(&waited_names(&others));
+        return (Some(t::room_line_with_seconds(&first, seconds)), None);
+    }
+    if let Some(carried) = &room.carried_on
+        && !carried.past.is_empty()
+    {
+        let carrier = if carried.by_you { t::room_you() } else { carried.by.clone() };
+        let second = match carried.past.as_slice() {
+            [one] => t::room_line_carried_on_one(&carrier, one),
+            _ => t::room_line_carried_on_many(&carrier),
+        };
+        return (Some(t::room_line_watching()), Some(second));
+    }
+    if let Some(up_next) = &room.up_next
+        && up_next.cancelled_by.is_none()
+    {
+        let episode = number(&up_next.episode.episode);
+        return match (up_next.ends_at_ms, up_next.waiting_for.first()) {
+            (Some(ends), _) => (
+                Some(t::room_line_up_next(((ends - now) / 1000).max(0))),
+                Some(t::room_line_up_next_detail(episode)),
+            ),
+            (None, Some(name)) => (Some(t::room_up_next_waiting(name)), None),
+            (None, None) => (None, None),
+        };
+    }
+    if room.before_play {
+        return match room.starts_at_ms {
+            Some(at) => (Some(t::room_line_starting_in(((at - now) / 1000).max(0))), None),
+            None => (Some(t::room_line_not_started()), Some(t::room_line_play_starts())),
+        };
+    }
+    let at = room.position.map(|position| {
+        let moved =
+            if room.playing { (now - room.position_at_ms) as f64 / 1000.0 } else { 0.0 };
+        clock(position + moved.max(0.0))
+    });
+    if room.playing {
+        let detail = room
+            .room_episode
+            .as_ref()
+            .zip(at)
+            .map(|(e, at)| t::room_line_watching_detail(number(&e.episode), &at));
+        return (Some(t::room_line_watching()), detail);
+    }
+    let first = if room.paused_by_you {
+        t::room_line_you_paused()
+    } else if let Some(by) = &room.paused_by {
+        t::room_line_paused_by(by)
+    } else {
+        return (None, None);
+    };
+    (Some(first), at.map(|at| t::room_line_paused_at(&at)))
 }
 
 /// How the room stands and whether this device's sources have its episode. Returns the next
 /// row.
-fn render_standing(buf: &mut Buffer, app: &App, area: Rect, mut y: u16) -> u16 {
+fn render_standing(
+    buf: &mut Buffer,
+    app: &App,
+    room: &RoomView,
+    area: Rect,
+    mut y: u16,
+) -> u16 {
     let width = area.width as usize;
-    if let Some(line) = status_line(app)
-        && y < area.bottom()
-    {
-        buf.set_string(area.left(), y, truncate(&line, width), app.palette.style(Role::Text));
-        y += 1;
+    let mut put = |line: &str, role| {
+        if y < area.bottom() {
+            buf.set_string(area.left(), y, truncate(line, width), app.palette.style(role));
+            y += 1;
+        }
+    };
+    let (first, second) = room_lines(app, room);
+    if let Some(first) = first {
+        put(&first, Role::Text);
     }
-    if let Some(sources) = sources_line(app)
-        && y < area.bottom()
-    {
-        buf.set_string(
-            area.left(),
-            y,
-            truncate(&sources, width),
-            app.palette.style(Role::TextDim),
-        );
-        y += 1;
+    if let Some(second) = second {
+        put(&second, Role::TextDim);
+    }
+    match &room.sources {
+        Some(RoomSources::Found) => put(&t::room_plays_from_sources(), Role::TextDim),
+        Some(RoomSources::Missing { reason, .. }) => put(&say(reason), Role::Alert),
+        Some(RoomSources::Checking) | None => {}
     }
     y
 }
 
-/// How the room stands: counting down, everyone ready, or who it waits for.
-fn status_line(app: &App) -> Option<String> {
-    let party = app.party.as_ref()?;
-    if let Some(seconds) = party.starting_in {
-        return Some(t::party_starting(i64::from(seconds)));
-    }
-    if party.playing {
-        return None;
-    }
-    let waiting: Vec<&str> = app
-        .party_members
-        .iter()
-        .filter(|m| m.ready == Some(false))
-        .map(|m| m.name.as_str())
-        .collect();
-    if waiting.is_empty() {
-        return (!app.party_members.is_empty()).then(t::party_all_ready);
-    }
-    if app.party_members.iter().any(|m| m.you && m.ready == Some(false)) {
-        return Some(t::party_wait_you());
-    }
-    Some(match waiting.as_slice() {
-        [one] => t::party_wait_one(one),
-        [first, second] => t::party_wait_two(first, second),
-        many => t::party_wait_many(many.len() as i64),
-    })
-}
-
-/// Whether this device's sources have the room's episode.
-fn sources_line(app: &App) -> Option<String> {
-    Some(match &app.party.as_ref()?.sources.as_ref()? {
-        PartySources::Checking => t::party_looking_sources(),
-        PartySources::Found => t::party_lobby_sources_found(),
-        PartySources::Missing { reason, .. } => say(reason),
-    })
-}
-
 /// A recent room's second line: the episode it reached, who was there and when.
-fn recent_line(app: &App, room: &PartyRecentRoom) -> String {
+fn recent_line(app: &App, room: &RoomRecent) -> String {
     let when = when(app, room.last_at);
+    let episode = number(&room.episode);
     if room.names.is_empty() {
-        return t::tui_together_recent_alone(&room.episode, &when);
+        return t::room_recent_row_alone(episode, &when);
     }
-    t::together_recent_row(&room.episode, &room.names.join(", "), &when)
+    let list: Vec<&str> = room.names.iter().map(String::as_str).collect();
+    t::room_recent_row(episode, &names(&list), &when)
 }
 
 /// A day, by the clock the app runs on: today, yesterday, a weekday, or the date.
@@ -344,9 +478,25 @@ fn when(app: &App, epoch: i64) -> String {
     }
 }
 
-/// The pane beside the list at wide sizes. In a party: what the room plays, where it is and how
-/// the connection is, how the room stands, then the conversation. Otherwise where the
-/// highlighted recent room was.
+/// The room's connection: sealed end to end, how many of its relays answer, the round trip.
+fn connection_line(room: &RoomView) -> String {
+    let total = room.relays.len() as i64;
+    let answering = room.relays.iter().filter(|r| r.healthy).count() as i64;
+    let line = if total == 0 {
+        t::room_details_end_to_end()
+    } else {
+        t::tui_room_relays_line(answering, total)
+    };
+    match room.latency_ms {
+        // Joins the line and the round trip.
+        Some(ms) => format!("{line} · {}", t::room_relay_latency(i64::from(ms))), // i18n-skip
+        None => line,
+    }
+}
+
+/// The pane beside the list at wide sizes. In a room: what it plays and how it is connected,
+/// its line, the invite, then the conversation. Otherwise who was in the highlighted recent
+/// room.
 fn render_detail(buf: &mut Buffer, app: &App, area: Rect) {
     let dim = app.palette.style(Role::TextDim);
     let text = app.palette.style(Role::Text);
@@ -358,38 +508,25 @@ fn render_detail(buf: &mut Buffer, app: &App, area: Rect) {
             *y += 1;
         }
     };
-    if let Some(party) = &app.party {
-        let title = party
-            .room_episode
-            .as_ref()
-            .map_or_else(|| party.room.clone(), |room| room.title.clone());
-        put(buf, &mut y, &title, text.add_modifier(Modifier::BOLD));
-        if let Some(line) = episode_line(app) {
+    if let Some(room) = &app.room {
+        put(buf, &mut y, &room_title(room), text.add_modifier(Modifier::BOLD));
+        if let Some(line) = header_line(app, room) {
             put(buf, &mut y, &line, dim);
         }
-        let link = match party.connection {
-            PartyConnection::Connected if party.encrypted => t::party_connected_encrypted(),
-            PartyConnection::Connected => t::party_connected_plain(),
-            PartyConnection::Reconnecting { attempt, of } => {
-                t::party_connection_lost(i64::from(attempt), i64::from(of))
-            }
-        };
-        let link = match party.latency_ms {
-            Some(ms) => t::party_connected_latency(&link, i64::from(ms)),
-            None => link,
-        };
-        // The server and the connection on one line when they fit, else one under the other.
-        let both = format!("{} · {link}", party.server); // i18n-skip
-        if both.cells() <= width {
-            put(buf, &mut y, &both, dim);
-        } else {
-            put(buf, &mut y, &party.server, dim);
-            put(buf, &mut y, &link, dim);
-        }
+        put(buf, &mut y, &connection_line(room), dim);
         y += 1;
         let before = y;
-        y = render_standing(buf, app, area, y);
+        y = render_standing(buf, app, room, area, y);
         if y > before {
+            y += 1;
+        }
+        // The invite: the link to copy, and what having it means.
+        if let Some(link) = &room.link
+            && y + 6 < area.bottom()
+        {
+            put(buf, &mut y, &t::room_invite(), dim);
+            put(buf, &mut y, link, text);
+            put(buf, &mut y, &t::room_invite_anyone(), dim);
             y += 1;
         }
         if y + 3 < area.bottom() {
@@ -397,33 +534,26 @@ fn render_detail(buf: &mut Buffer, app: &App, area: Rect) {
             render_chat(buf, app, room);
         }
     } else if let Some(room) = app.selected_room() {
-        put(buf, &mut y, &t::party_server(), dim);
-        put(buf, &mut y, &room.server, text);
+        put(buf, &mut y, &room.title, text.add_modifier(Modifier::BOLD));
+        put(buf, &mut y, &recent_line(app, room), dim);
         y += 1;
-        put(buf, &mut y, &t::party_room(), dim);
-        put(buf, &mut y, &room.room, text);
+        put(buf, &mut y, &t::room_recent_note(), dim);
     }
 }
 
 /// A reaction line as the conversation says it: "Ren and Mika laughed at 12:04".
-fn reaction_line(line: &PartyChatLine, who: &str) -> Option<String> {
-    let PartyChatBody::Reacted { reaction, at, with } = &line.body else { return None };
-    let names = match with.as_slice() {
-        [] => who.to_owned(),
-        [second] => t::party_names_two(who, second),
-        [second, third] => t::party_names_three(who, second, third),
-        [second, rest @ ..] => t::party_names_others(who, second, rest.len() as i64),
-    };
-    let did = match reaction {
-        Reaction::Laugh => t::party_reacted_laugh(&names),
-        Reaction::Gasp => t::party_reacted_gasp(&names),
-        Reaction::Clap => t::party_reacted_clap(&names),
-        Reaction::Cry => t::party_reacted_cry(&names),
-    };
-    let total = at.max(0.0).round() as i64;
-    let (h, m, s) = (total / 3600, total / 60 % 60, total % 60);
-    let time = if h > 0 { format!("{h}:{m:02}:{s:02}") } else { format!("{m}:{s:02}") };
-    Some(t::party_reacted_at(&did, &time))
+fn reaction_line(line: &RoomChatLine, who: &str) -> Option<String> {
+    let RoomChatBody::Reacted { reaction, at, with } = &line.body else { return None };
+    let mut list = vec![who];
+    list.extend(with.iter().map(String::as_str));
+    let who = names(&list);
+    let at = clock(*at);
+    Some(match reaction {
+        Reaction::Laugh => t::room_reacted_laugh(&who, &at),
+        Reaction::Gasp => t::room_reacted_gasp(&who, &at),
+        Reaction::Clap => t::room_reacted_clap(&who, &at),
+        Reaction::Cry => t::room_reacted_cry(&who, &at),
+    })
 }
 
 /// One row of the conversation: the name in its column (bold, "You" dim), then the words; or
@@ -434,16 +564,15 @@ enum ChatRow {
 }
 
 /// The conversation: the newest lines that fit, each name in a column and its words wrapped
-/// under the words, a reaction as a dim line, a muted member's line as "Ren is muted",
-/// "Couldn't send" after a line the server never echoed, and the privacy line when there is
-/// room. When the room's server has no chat it says so and nothing else; with Hide chat on, it
-/// says that instead. Returns the rows used.
+/// under the words, a reaction or the room's own word as a dim line, a muted member's line as
+/// "Ren is muted", "Couldn't send" after a line no relay echoed, and the privacy line when there
+/// is room. With Hide chat on, it says that instead. Returns the rows used.
 fn render_chat(buf: &mut Buffer, app: &App, area: Rect) -> u16 {
     let dim = app.palette.style(Role::TextDim);
     let text = app.palette.style(Role::Text);
     let width = area.width as usize;
     let mut y = area.top();
-    buf.set_string(area.left(), y, truncate(&t::party_chat_title(), width), dim);
+    buf.set_string(area.left(), y, truncate(&t::room_chat(), width), dim);
     y += 1;
     if y < area.bottom() {
         Hairline::new(&app.palette).render(Rect { y, height: 1, ..area }, buf);
@@ -457,59 +586,53 @@ fn render_chat(buf: &mut Buffer, app: &App, area: Rect) -> u16 {
             }
         }
     };
-    if app.party_chat_state.as_ref().is_some_and(|s| !s.allowed) {
-        quiet(buf, &mut y, &t::party_chat_off(), dim);
-        return y - area.top();
-    }
     if app.chat_hidden() {
-        quiet(buf, &mut y, &t::party_chat_hidden(), text);
+        quiet(buf, &mut y, &t::tui_room_chat_hidden(), text);
         quiet(buf, &mut y, &t::tui_together_chat_hidden_line(), dim);
         return y - area.top();
     }
     // Rows for the lines: what is left after the failure and the privacy line.
-    let failed = app.party_chat.failed.is_some();
+    let failed = app.room_chat.failed.is_some();
     let reserve = u16::from(failed) + if area.height >= 6 { 3 } else { 0 };
     let budget = area.bottom().saturating_sub(y).saturating_sub(reserve) as usize;
 
-    let lines: Vec<(String, bool, &PartyChatLine)> = app
-        .party_chat
+    let lines: Vec<(String, &RoomChatLine)> = app
+        .room_chat
         .lines
         .iter()
-        .map(|line| {
-            let who = if line.you { t::party_chat_you() } else { line.from.clone() };
-            (who, line.you, line)
-        })
+        .map(|line| (if line.you { t::room_you() } else { line.from.clone() }, line))
         .collect();
     let column = lines
         .iter()
-        .filter(|(_, _, line)| !line.muted && matches!(line.body, PartyChatBody::Said { .. }))
-        .map(|(who, _, _)| who.cells())
+        .filter(|(_, line)| !line.muted && matches!(line.body, RoomChatBody::Said { .. }))
+        .map(|(who, _)| who.cells())
         .max()
         .unwrap_or(0)
         .min(NAME_COLUMN);
     let words_width = width.saturating_sub(column + 2).max(8);
     let mut rows: Vec<ChatRow> = Vec::new();
-    for (who, you, line) in &lines {
+    for (who, line) in &lines {
         if line.muted {
-            rows.push(ChatRow::Quiet(t::party_muted_line(&line.from)));
+            rows.push(ChatRow::Quiet(t::tui_room_muted_line(&line.from)));
             continue;
         }
         match &line.body {
-            PartyChatBody::Said { text } => {
+            RoomChatBody::Said { text } => {
                 for (i, part) in wrap(text, words_width, 3).into_iter().enumerate() {
                     let who = if i == 0 { who.clone() } else { String::new() };
-                    rows.push(ChatRow::Said { who, you: *you, words: part });
+                    rows.push(ChatRow::Said { who, you: line.you, words: part });
                 }
             }
-            PartyChatBody::Reacted { .. } => {
+            RoomChatBody::Reacted { .. } => {
                 if let Some(said) = reaction_line(line, who) {
                     rows.push(ChatRow::Quiet(said));
                 }
             }
+            RoomChatBody::Room { message } => rows.push(ChatRow::Quiet(message.text.clone())),
         }
     }
     if rows.is_empty() && budget > 0 {
-        buf.set_string(area.left(), y, truncate(&t::party_chat_field(), width), dim);
+        buf.set_string(area.left(), y, truncate(&t::room_chat_field(), width), dim);
         y += 1;
     }
     let skip = rows.len().saturating_sub(budget);
@@ -527,15 +650,33 @@ fn render_chat(buf: &mut Buffer, app: &App, area: Rect) -> u16 {
         y += 1;
     }
     if failed && y < area.bottom() {
-        let line = format!("{} · {}", t::party_chat_not_sent(), t::party_chat_retry()); // i18n-skip
-        buf.set_string(area.left(), y, truncate(&line, width), app.palette.style(Role::Alert));
+        buf.set_string(
+            area.left(),
+            y,
+            truncate(&t::room_chat_not_sent(), width),
+            app.palette.style(Role::Alert),
+        );
         y += 1;
     }
     if area.height >= 6 && y + 1 < area.bottom() {
         y += 1;
-        quiet(buf, &mut y, &t::party_chat_privacy(), dim);
+        quiet(buf, &mut y, &t::tui_room_chat_privacy(), dim);
     }
     y - area.top()
+}
+
+/// The room's first line at the cap, by why it waits: seeking or buffering when everyone it
+/// waits for is, else loading.
+fn still(room: &RoomView, names: &str, count: i64) -> String {
+    let all =
+        |reason: WaitReason| room.waiting.iter().filter(|w| !w.you).all(|w| w.reason == reason);
+    if all(WaitReason::Seeking) {
+        t::room_line_still_seeking(names, count)
+    } else if all(WaitReason::Buffering) {
+        t::room_line_still_buffering(names, count)
+    } else {
+        t::room_line_still_loading(names, count)
+    }
 }
 
 #[cfg(test)]
@@ -545,7 +686,7 @@ mod tests {
     use kaeri_model::{
         catalog::ContentList,
         event::Event,
-        party::{PartyConversation, PartyFound, PartyMember, PartyRoomEpisode, PartyView},
+        room::{PausedFor, RoomConversation, RoomEpisodeInfo, WaitReason},
     };
 
     use crate::{
@@ -556,57 +697,46 @@ mod tests {
         },
     };
 
-    /// A room whose episode is known, as starting a party from an episode leaves it.
-    fn party() -> PartyView {
-        PartyView {
-            server: "party.example:8999".into(),
-            room: "kite-7qm4-xr9d".into(),
+    /// A room whose episode is known, as starting one from an episode leaves it.
+    fn room() -> RoomView {
+        RoomView {
+            room_id: "room-1".into(),
             name: "Ada".into(),
-            connection: PartyConnection::Connected,
-            encrypted: true,
-            ready: false,
-            episode: None,
-            invite: None,
-            motd: None,
-            latency_ms: Some(42),
-            room_episode: Some(PartyRoomEpisode {
-                id: Some(AnilistId::new(104_321)),
+            connection: RoomConnection::Connected,
+            room_episode: Some(RoomEpisodeInfo {
+                id: AnilistId::new(104_321),
                 episode: "9".into(),
                 title: "Natsukaze Relay".into(),
-                file: "Natsukaze Relay, episode 9 [anilist:104321:9]".into(),
-                found: PartyFound::Tag,
-                plain_by: None,
+                name: None,
+                banner_url: None,
+                cover_url: None,
             }),
-            next_episode: None,
-            starter: Some("Ada".into()),
-            starter_present: true,
-            can_start_anyway: false,
-            code: Some("kite-7qm4-xr9d".into()),
-            link: None,
-            playing: false,
-            starting_in: None,
-            sources: None,
-            guesses: Vec::new(),
-            looking: false,
-            moves_on: false,
+            link: Some("https://kaeri.app/party#v=3&k=BwcHBwcHBwcHBwcHBwcHBw".into()),
+            before_play: true,
+            latency_ms: Some(42),
+            ..Default::default()
         }
     }
 
-    fn member(name: &str, you: bool) -> PartyMember {
-        PartyMember {
+    fn member(name: &str, you: bool) -> RoomMember {
+        RoomMember {
+            id: name.into(),
             name: name.into(),
-            ready: Some(false),
-            file: None,
-            duration: None,
-            file_matches: None,
             you,
+            state: MemberState::Ready,
+            since_ms: None,
+            behind_s: None,
+            episode: None,
+            paused_room: false,
+            waited: false,
+            background: false,
+            muted: false,
         }
     }
 
-    fn recent(room: &str) -> PartyRecentRoom {
-        PartyRecentRoom {
-            server: "party.example:8999".into(),
-            room: room.into(),
+    fn recent(room_id: &str) -> RoomRecent {
+        RoomRecent {
+            room_id: room_id.into(),
             id: AnilistId::new(104_321),
             title: "Lantern Harbour".into(),
             episode: "3".into(),
@@ -616,7 +746,7 @@ mod tests {
         }
     }
 
-    /// Together, before any party.
+    /// Together, before any room.
     fn outside() -> App {
         let mut app = app_with(ContentList::Empty);
         app.go_to_section(Section::Together);
@@ -626,52 +756,86 @@ mod tests {
     /// In a room nobody else has joined yet.
     fn alone() -> App {
         let mut app = outside();
-        app.apply(Event::PartyJoined(party()));
-        app.apply(Event::PartyMembers(vec![member("Ada", true)]));
+        app.apply(Event::RoomJoined(room()));
+        app.apply(Event::RoomMembers(vec![member("Ada", true)]));
         app
     }
 
     /// In a full room with a conversation, and rooms from before.
     fn full() -> App {
         let mut app = alone();
-        app.apply(Event::PartyMembers(vec![
+        app.apply(Event::RoomMembers(vec![
             member("Ada", true),
             member("Mika", false),
             member("Ren", false),
             member("Sol", false),
         ]));
-        let said = |id: u64, from: &str, text: &str| PartyChatLine {
+        let said = |id: u64, from: &str, text: &str| RoomChatLine {
             id,
             from: from.into(),
             you: from == "Ada",
-            body: PartyChatBody::Said { text: text.into() },
+            body: RoomChatBody::Said { text: text.into() },
             muted: false,
         };
-        app.apply(Event::PartyChat(PartyConversation {
+        app.apply(Event::RoomChat(RoomConversation {
             lines: vec![said(1, "Mika", "ok starting"), said(2, "Ada", "back in 2")],
             marks: Vec::new(),
             failed: None,
         }));
-        app.apply(Event::PartyRecent(vec![
-            recent("ember-2hv8-kd4p"),
-            recent("ember-9wz3-tn6c"),
-        ]));
+        app.apply(Event::RoomRecent(vec![recent("room-2"), recent("room-3")]));
         app
     }
 
-    /// Outside a party, with rooms from before.
+    /// Outside a room, with rooms from before.
     fn outside_with_rooms() -> App {
         let mut app = outside();
-        app.apply(Event::PartyRecent(vec![recent("ember-2hv8-kd4p")]));
+        app.apply(Event::RoomRecent(vec![recent("room-2")]));
         app
     }
 
     #[test]
-    fn a_party_waiting_for_others_draws_in_an_eight_row_terminal() {
+    fn a_room_waiting_to_start_draws_in_an_eight_row_terminal() {
         let mut app = alone();
         let text = text_of(&render_to_buffer(&mut app, 80, 8));
         assert!(text.contains("Natsukaze Relay"), "{text}");
         assert!(text.contains("Episode 9"), "{text}");
+    }
+
+    #[test]
+    fn names_read_as_a_sentence() {
+        assert_eq!(names(&["Mika"]), "Mika");
+        assert_eq!(names(&["Mika", "Ren"]), "Mika and Ren");
+        assert_eq!(names(&["Mika", "Ren", "Sol"]), "Mika, Ren and Sol");
+        assert_eq!(waited_names(&["Mika", "Ren", "Sol"]), "3 people");
+        assert_eq!(number(" 9.5 "), "9.5");
+        assert_eq!(clock(724.0), "12:04");
+    }
+
+    #[test]
+    fn the_rooms_line_says_who_it_waits_for_once_the_wait_shows() {
+        let mut app = alone();
+        let now = app.clock.now_epoch() * 1000;
+        let waiting = |shown: i64| RoomView {
+            before_play: false,
+            waiting: vec![PausedFor {
+                id: "Ren".into(),
+                name: "Ren".into(),
+                you: false,
+                reason: WaitReason::Loading,
+                since_ms: now - 4_000,
+            }],
+            wait_shown_at_ms: Some(shown),
+            ..room()
+        };
+        let view = waiting(now + 1_000);
+        assert_eq!(room_lines(&app, &view).0, None, "not before a second has passed");
+        app.apply(Event::RoomState(waiting(now - 3_000)));
+        let view = app.room.clone().unwrap();
+        assert_eq!(
+            room_lines(&app, &view).0.as_deref(),
+            Some("Paused for Ren · 4\u{a0}s"),
+            "no-break space"
+        );
     }
 
     /// A state to draw, by name.
@@ -683,8 +847,8 @@ mod tests {
         // the buffer and panics here, where in a frame it would cover the status line or, at
         // the terminal's last row, take the app down.
         let states: [State; 4] = [
-            ("outside a party", outside),
-            ("outside a party, with rooms", outside_with_rooms),
+            ("outside a room", outside),
+            ("outside a room, with rooms", outside_with_rooms),
             ("alone in a room", alone),
             ("in a full room", full),
         ];

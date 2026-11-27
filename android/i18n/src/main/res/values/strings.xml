@@ -381,18 +381,20 @@
     </plurals>
     <!-- Toast when keep next found no room for another episode. -->
     <string name="notice_keep_next_full">Not enough free space to keep the next episodes downloaded. Free up some space to download more.</string>
-    <!-- Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps. -->
-    <string name="party_needs_server">Choose a server for the watch party first, as syncplay.server. %1$s is run by %2$s.</string>
-    <!-- Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it. -->
-    <string name="party_choose_server">Choose a server for the watch party first. %1$s is run by %2$s.</string>
+    <!-- Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on. -->
+    <string name="room_look_unreachable">Couldn\'t reach this room\'s relays. Ask for a new invite.</string>
+    <!-- Why a look into a room found nothing: the pasted text is no room's invite. -->
+    <string name="room_look_not_an_invite">That isn\'t a room\'s invite.</string>
+    <!-- Why a look into a recent room found nothing: it's no longer in this device's recent rooms. -->
+    <string name="room_look_not_kept">That room isn\'t kept any more.</string>
+    <!-- Why a look into a room found nothing: the invite comes from an older version. -->
+    <string name="room_look_old_invite">This invite is from an older version of Kaeri. Ask for a new one.</string>
+    <!-- Why a room couldn't start: it has no episode yet. Shown where the room would open. -->
+    <string name="room_needs_episode">Choose an episode for the room first.</string>
     <!-- Toast when a watch party is asked for in a build without watch parties. -->
     <string name="notice_no_party">Watch parties aren\'t available in this version of Kaeri.</string>
     <!-- Message when a watch party was asked for with no room named. -->
     <string name="party_needs_room">A watch party needs a room to meet in. Choose one first.</string>
-    <!-- Message in a watch party when its server connection dropped and is retried. -->
-    <string name="party_server_lost">Lost the watch party server. Trying again.</string>
-    <!-- Message in a watch party when the connection came back. -->
-    <string name="party_rejoined">Back in the watch party.</string>
     <!-- Message when the person left a watch party. -->
     <string name="party_left">Left the watch party.</string>
     <!-- Message when a watch party's server could not be reached, in the lobby or when looking in. -->
@@ -5144,6 +5146,11 @@
     <string name="player_panel_more">More</string>
     <!-- Player panel: button under a synopsis shown whole after More, that folds it back to three lines. -->
     <string name="player_panel_less">Less</string>
+    <!-- Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting). -->
+    <plurals name="player_sources_found_line">
+        <item quantity="one">One source has it. Choose it to play.</item>
+        <item quantity="other">%1$,d sources have it. Choose the one to play.</item>
+    </plurals>
     <!-- The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu. -->
     <string name="private_mode">Private mode</string>
     <!-- The switch's description: the footer on Apple, supporting text on Android and the TV, the SettingsCard description on Windows, the AdwSwitchRow subtitle on Linux. -->
@@ -6582,6 +6589,551 @@
     <string name="notif_chapter_hidden">New chapter</string>
     <!-- Notification, new chapter: the action that opens the reader on the chapter. -->
     <string name="notif_chapter_read">Read</string>
+    <!-- First line while the room plays and nobody holds it. -->
+    <string name="room_line_watching">Watching together</string>
+    <!-- Second line while the room plays: the room's episode and its place in it. -->
+    <string name="room_line_watching_detail">Episode %1$s · %2$s</string>
+    <!-- First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people. -->
+    <string name="room_line_paused_for">Paused for %1$s</string>
+    <!-- First line on your own device while the room waits for you. -->
+    <string name="room_line_paused_for_you">Paused for you</string>
+    <!-- Second line while the room waits for you: who waits, and for how many seconds so far. -->
+    <plurals name="room_line_waiting_for_you">
+        <item quantity="one">%1$s is waiting · %3$,d s</item>
+        <item quantity="other">%1$s are waiting · %3$,d s</item>
+    </plurals>
+    <!-- First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for. -->
+    <plurals name="room_line_still_loading">
+        <item quantity="one">%1$s is still loading</item>
+        <item quantity="other">%1$s are still loading</item>
+    </plurals>
+    <!-- First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for. -->
+    <plurals name="room_line_still_seeking">
+        <item quantity="one">%1$s is still seeking</item>
+        <item quantity="other">%1$s are still seeking</item>
+    </plurals>
+    <!-- First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for. -->
+    <plurals name="room_line_still_buffering">
+        <item quantity="one">%1$s is still buffering</item>
+        <item quantity="other">%1$s are still buffering</item>
+    </plurals>
+    <!-- Second line once the room has waited as long as it will. -->
+    <string name="room_line_waited">The room has waited %1$,d s</string>
+    <!-- Second line after someone pressed Carry on, when the room waited for one person. -->
+    <string name="room_line_carried_on_one">%1$s carried on · %2$s joins when ready</string>
+    <!-- Second line after someone pressed Carry on, when the room waited for more than one person. -->
+    <string name="room_line_carried_on_many">%1$s carried on · they join when ready</string>
+    <!-- First line while the room is paused by someone. -->
+    <string name="room_line_paused_by">%1$s paused</string>
+    <!-- First line while the room is paused by you. -->
+    <string name="room_line_you_paused">You paused</string>
+    <!-- Second line while the room is paused: the place it paused at. -->
+    <string name="room_line_paused_at">at %1$s</string>
+    <!-- Second line while one of the room's relays is not answering. -->
+    <plurals name="room_line_relays_down">
+        <item quantity="one">%1$,d of %2$,d relays isn\'t answering · the room carries on</item>
+        <item quantity="other">%1$,d of %2$,d relays aren\'t answering · the room carries on</item>
+    </plurals>
+    <!-- First line when your own device lost every relay. -->
+    <string name="room_line_reconnecting">Reconnecting to the room</string>
+    <!-- Second line when your own device lost every relay. -->
+    <string name="room_line_reconnecting_detail">No relay is answering · your episode keeps playing</string>
+    <!-- Second line when your own player is behind the room. -->
+    <string name="room_line_you_behind">You\'re %1$,d s behind · catching up</string>
+    <!-- The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines. -->
+    <string name="room_line_with_seconds">%1$s · %2$,d s</string>
+    <!-- Stands for the people the room waits for when there are more than two, inside "Paused for …". -->
+    <plurals name="room_names_people">
+        <item quantity="one">%1$,d person</item>
+        <item quantity="other">%1$,d people</item>
+    </plurals>
+    <!-- State word: in step with the room and playing. -->
+    <string name="room_state_watching">Watching</string>
+    <!-- State word before play: this person's first frame is ready. -->
+    <string name="room_state_ready">Ready</string>
+    <!-- State word: the room is paused and this person paused it. -->
+    <string name="room_state_paused_it">Paused it</string>
+    <!-- State word: the room is paused; this person was watching. -->
+    <string name="room_state_paused">Paused</string>
+    <!-- State word: the slowest player, holding the room back, with the gap in seconds. -->
+    <string name="room_state_behind">Behind · %1$,d s</string>
+    <!-- State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person. -->
+    <string name="room_state_loading">Loading · %1$,d s</string>
+    <!-- State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person. -->
+    <string name="room_state_buffering">Buffering · %1$,d s</string>
+    <!-- State word: this person plays another episode than the room's. -->
+    <string name="room_state_other_episode">On episode %1$s</string>
+    <!-- State word: this person is picking which source to play from. -->
+    <string name="room_state_choosing">Choosing a source</string>
+    <!-- State word: none of this person's sources lists the room's episode. -->
+    <string name="room_state_no_source">No source for episode %1$s</string>
+    <!-- State word: this person is in the room with the player closed. -->
+    <string name="room_state_player_closed">Player closed</string>
+    <!-- State word: this person's device stopped answering. -->
+    <string name="room_state_reconnecting">Reconnecting</string>
+    <!-- State word: this person left the room. The row stays dimmed for a moment. -->
+    <string name="room_state_left">Left</string>
+    <!-- State word: you muted this person. Shown alone or after the state word with room-state-and-muted. -->
+    <string name="room_state_muted">Muted</string>
+    <!-- A state word followed by Muted, for a person you muted. -->
+    <string name="room_state_and_muted">%1$s · Muted</string>
+    <!-- Marker after your own name in the people list. -->
+    <string name="room_you_marker">(you)</string>
+    <!-- Your own name under your face on a phone and in the place's room card. -->
+    <string name="room_you">You</string>
+    <!-- You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so. -->
+    <string name="room_you_in_list">you</string>
+    <!-- Accessibility label of a face in the full screen strip: the name and the state word. -->
+    <string name="room_face_label">%1$s, %2$s</string>
+    <!-- The last face in a row of faces, standing for the people not shown. -->
+    <string name="room_more_faces">+%1$,d</string>
+    <!-- Accessibility label of the last face, which opens the full people list. -->
+    <plurals name="room_more_faces_label">
+        <item quantity="one">%1$,d more person</item>
+        <item quantity="other">%1$,d more people</item>
+    </plurals>
+    <!-- Name under the last face on a phone and the TV: it opens everyone. -->
+    <string name="room_more">More</string>
+    <!-- State under the last face: how many of the hidden people are not watching. -->
+    <string name="room_more_not_watching">%1$,d not watching</string>
+    <!-- State under the last face when everyone hidden is watching. -->
+    <string name="room_more_all_watching">All watching</string>
+    <!-- Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode. -->
+    <string name="room_wait_loading">loading · %1$,d s</string>
+    <!-- Reason in the waiting capsule, after Paused for, lower case: their player stalled. -->
+    <string name="room_wait_buffering">buffering · %1$,d s</string>
+    <!-- Button once the room has waited 20 seconds for one person. -->
+    <string name="room_carry_on_without">Carry on without %1$s</string>
+    <!-- Button once the room has waited 20 seconds for more than one person. -->
+    <string name="room_carry_on_without_them">Carry on without them</string>
+    <!-- Capsule over the video after someone pressed Carry on. -->
+    <string name="room_carrying_on_without">Carrying on without %1$s</string>
+    <!-- Second part of the capsule after Carry on, when the room waited for one person. -->
+    <string name="room_joins_at_place">%1$s joins at the room\'s place</string>
+    <!-- Second part of the capsule after Carry on, when the room waited for more than one person. -->
+    <string name="room_join_at_place_many">They join at the room\'s place</string>
+    <!-- Line on your own starting screen while the room waits for you, with the seconds so far. -->
+    <string name="room_paused_until_start">The room is paused until this starts · %1$,d s</string>
+    <!-- Button on your own starting screen that lets the room carry on without you. -->
+    <string name="room_dont_wait">Don\'t wait for me</string>
+    <!-- First line before anyone pressed Play. -->
+    <string name="room_line_not_started">Not started yet</string>
+    <!-- Second line before anyone pressed Play. -->
+    <string name="room_line_play_starts">Play starts it for everyone</string>
+    <!-- First line after Play, while the room waits for people still loading. -->
+    <plurals name="room_line_starting_when">
+        <item quantity="one">Starting when %1$s is ready</item>
+        <item quantity="other">Starting when %1$s are ready</item>
+    </plurals>
+    <!-- First line counting down once everyone is ready. -->
+    <string name="room_line_starting_in">Starting in %1$,d</string>
+    <!-- Second line when everyone is ready. -->
+    <string name="room_line_everyone_ready">Everyone is ready</string>
+    <!-- Button once the room has waited 20 seconds before play, for one person. -->
+    <string name="room_start_without">Start without %1$s</string>
+    <!-- Button once the room has waited 20 seconds before play, for more than one person. -->
+    <string name="room_start_without_them">Start without them</string>
+    <!-- Small heading over the episode in the video area before play. -->
+    <string name="room_up_in_room">Up in the room</string>
+    <!-- Small heading over the episode in the video area when you opened an invite. -->
+    <string name="room_room_is_watching">The room is watching</string>
+    <!-- Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min. -->
+    <string name="room_banner_episode">Episode %1$s · %2$s · %3$s</string>
+    <!-- Line under the episode before play: one of your sources has it. -->
+    <string name="room_plays_from_sources">Plays from your sources</string>
+    <!-- Button that starts the episode for everyone in the room. -->
+    <string name="room_play_for_everyone">Play for everyone</string>
+    <!-- Line beside Play for everyone. -->
+    <string name="room_anyone_can_start">Anyone in the room can start it</string>
+    <!-- Label of the Play for everyone button after it was pressed. -->
+    <string name="room_playing">Playing…</string>
+    <!-- Line beside the button after Play was pressed, on a desktop. -->
+    <string name="room_waiting_first_frames">Waiting for everyone\'s first frame</string>
+    <!-- Line under the play button after Play was pressed, on a phone. -->
+    <string name="room_waiting_first_frames_short">Waiting for first frames</string>
+    <!-- First line of the room when an invite link opened it. -->
+    <string name="room_invited_by">%1$s invited you</string>
+    <!-- Second line when an invite link opened the room: the show and the episode. -->
+    <string name="room_invited_detail">%1$s · Episode %2$s</string>
+    <!-- Second line when an invite link opened a room with 10 or more people in it. -->
+    <string name="room_invited_over">%1$,d people are here already · rooms work best with 10 or fewer</string>
+    <!-- Button that joins the room from an invite. -->
+    <string name="room_join">Join the room</string>
+    <!-- Button that joins a room with 10 or more people in it. -->
+    <string name="room_join_anyway">Join anyway</string>
+    <!-- Heading over the list of sources for the room's episode. -->
+    <string name="room_choose_source">Choose a source for episode %1$s</string>
+    <!-- Line under it. -->
+    <string name="room_choose_source_line">The room keeps watching; you join at its place.</string>
+    <!-- Button that plays the chosen source at the room's place. -->
+    <string name="room_play_in_room">Play in the room</string>
+    <!-- Heading when none of your sources has the room's episode. -->
+    <string name="room_no_source_title">None of your sources has episode %1$s</string>
+    <!-- Line under it on a desktop: how many sources were looked in. -->
+    <plurals name="room_no_source_line">
+        <item quantity="one">Kaeri looked in your one source. You stay in the room and the chat while the others watch.</item>
+        <item quantity="other">Kaeri looked in your %1$,d sources. You stay in the room and the chat while the others watch.</item>
+    </plurals>
+    <!-- Line under it on a phone. -->
+    <string name="room_no_source_line_short">You stay in the room and the chat.</string>
+    <!-- Button that opens your sources. -->
+    <string name="room_open_sources">Open sources</string>
+    <!-- Button that searches titles in your sources. -->
+    <string name="room_search_titles">Search titles</string>
+    <!-- Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room. -->
+    <string name="room_header_line">Episode %1$s · %2$,d in the room</string>
+    <!-- Button and accessibility label that opens the invite. -->
+    <string name="room_invite">Invite</string>
+    <!-- Button and accessibility label that opens the room's details. -->
+    <string name="room_details">Details</string>
+    <!-- Accessibility label of the More button on a phone. -->
+    <string name="room_more_actions">More</string>
+    <!-- Accessibility label of the player's button that hides the room column. -->
+    <string name="room_hide">Hide room</string>
+    <!-- Accessibility label of the chevron on a phone that folds the room into the bar over the tabs. -->
+    <string name="room_fold">Close the room to the bar</string>
+    <!-- Accessibility label of the player's button that opens the chat in full screen. -->
+    <string name="room_chat">Chat</string>
+    <!-- Line in the invite: anyone with the link can join. -->
+    <string name="room_invite_anyone">Anyone with this link can join.</string>
+    <!-- Line after it on a desktop: the link carries the key. -->
+    <string name="room_invite_key">The link carries the room\'s key, so only people who have it can read the room.</string>
+    <!-- Line after it on a phone. -->
+    <string name="room_invite_key_short">Only people with the link can read the room.</string>
+    <!-- Accessibility label of the invite's QR code. -->
+    <string name="room_invite_qr">Invite as a QR code</string>
+    <!-- Line beside the QR code. -->
+    <string name="room_invite_qr_line">Someone beside you can scan this with their camera.</string>
+    <!-- Button that copies the invite link. -->
+    <string name="room_copy_link">Copy link</string>
+    <!-- Button that opens the system's share sheet with the invite link. -->
+    <string name="room_share">Share…</string>
+    <!-- Menu item on a phone that copies the invite link. -->
+    <string name="room_copy_invite_link">Copy invite link</string>
+    <!-- Button that makes a new invite link and stops the old one. -->
+    <string name="room_new_invite">New invite</string>
+    <!-- Line under New invite on a desktop. -->
+    <string name="room_new_invite_line">New invite stops the old link working. Everyone in the room moves to the new one.</string>
+    <!-- Short line beside New invite on a phone. -->
+    <string name="room_new_invite_short">Stops the old link</string>
+    <!-- Button in the invite and menu item on a phone that opens the move. -->
+    <string name="room_move_open">Move to a new room…</string>
+    <!-- Line under the button in the invite. -->
+    <string name="room_move_open_line">For someone already here: start a new room and pick who comes along.</string>
+    <!-- Title of the move dialog and sheet. -->
+    <string name="room_move_title">Move to a new room</string>
+    <!-- Line under the title. -->
+    <string name="room_move_body">Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room.</string>
+    <!-- Note under your own row: you always go. -->
+    <string name="room_move_always_goes">Always goes</string>
+    <!-- Note under a person you muted, who starts unticked. -->
+    <string name="room_move_muted">Muted, so not ticked</string>
+    <!-- Line under the list. -->
+    <string name="room_move_foot">The new room picks up at %1$s with a new key. Its link reaches only the people ticked.</string>
+    <!-- Button that moves, counting the others ticked. -->
+    <plurals name="room_move_with">
+        <item quantity="one">Move with %1$,d other</item>
+        <item quantity="other">Move with %1$,d others</item>
+    </plurals>
+    <!-- The offer to someone ticked, in a notice or alert, as one sentence pair. -->
+    <string name="room_move_offer">%1$s moved the room. Go along?</string>
+    <!-- First line of the room while the offer waits for an answer. -->
+    <string name="room_line_moved">%1$s moved the room</string>
+    <!-- Second line with the offer: who else is asked, and the place the episode carries on from. -->
+    <plurals name="room_line_moved_detail">
+        <item quantity="one">Go along? %1$s is asked too. The episode carries on from %3$s.</item>
+        <item quantity="other">Go along? %1$s are asked too. The episode carries on from %3$s.</item>
+    </plurals>
+    <!-- Second line with the offer when nobody else is asked. -->
+    <string name="room_line_moved_detail_alone">Go along? The episode carries on from %1$s.</string>
+    <!-- Button that goes along to the new room. -->
+    <string name="room_go_along">Go along</string>
+    <!-- Short button that stays in this room, in a notice. -->
+    <string name="room_stay">Stay</string>
+    <!-- First line of the old room for someone who stayed. -->
+    <string name="room_line_moved_away">%1$s moved to a new room</string>
+    <!-- Second line of the old room: who went along. -->
+    <string name="room_line_went_along">%1$s went along · this room carries on</string>
+    <!-- Label of the encryption row. -->
+    <string name="room_details_encryption">Encryption</string>
+    <!-- Value of the encryption row. -->
+    <string name="room_details_end_to_end">End to end</string>
+    <!-- Label of the relays row, and the title of the relays page in Settings. -->
+    <string name="room_relays">Relays</string>
+    <!-- Value of the relays row when all answer. -->
+    <string name="room_relays_answering">%1$,d answering</string>
+    <!-- Value of the relays row when some don't answer. -->
+    <string name="room_relays_answering_of">%1$,d of %2$,d answering</string>
+    <!-- State of a relay that doesn't answer. -->
+    <string name="room_relay_not_answering">Not answering</string>
+    <!-- Round trip time of a relay. -->
+    <string name="room_relay_latency">%1$,d ms</string>
+    <!-- Line under the relays in Details. -->
+    <string name="room_details_relays_line">Relays pass the room\'s messages along and can\'t read them. These are public relays run by others; Kaeri doesn\'t run any of them. If one stops answering, the room swaps in a spare.</string>
+    <!-- Button in Details that edits the room's relays. -->
+    <string name="room_edit_relays">Edit relays…</string>
+    <!-- Title of the room's relay editor. -->
+    <string name="room_edit_relays_title">Edit relays</string>
+    <!-- Line under it. -->
+    <string name="room_edit_relays_line">Changes this room\'s relays for everyone in it. New invites carry the list.</string>
+    <!-- Accessibility label of the button that removes a relay. `relay` is its address. -->
+    <string name="room_relay_remove">Remove %1$s</string>
+    <!-- Button that adds the address typed beside it. -->
+    <string name="room_relay_add">Add</string>
+    <!-- Line under the room's relay editor. -->
+    <string name="room_edit_relays_settings">Settings › Playback › Relays sets the list for new rooms.</string>
+    <!-- Heading of the group in Settings › Playback. -->
+    <string name="room_settings_group">Watch together</string>
+    <!-- Switch that hides chat in every room on this device. -->
+    <string name="room_settings_hide_chat">Hide chat in rooms</string>
+    <!-- Line under it. -->
+    <string name="room_settings_hide_chat_line">Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.</string>
+    <!-- Line under the Relays row: how many relays new rooms use. -->
+    <plurals name="room_settings_relays_count">
+        <item quantity="one">%1$,d public relay run by others</item>
+        <item quantity="other">%1$,d public relays run by others</item>
+    </plurals>
+    <!-- Button at the end of the Relays row. -->
+    <string name="room_settings_relays_edit">Edit</string>
+    <!-- Line under the group. -->
+    <string name="room_settings_group_line">Each of you plays the episode from your own sources; relays only carry the room\'s messages, sealed so they can\'t read them.</string>
+    <!-- Line at the top of the Relays page on a desktop. -->
+    <string name="room_relays_intro">Rooms you start use these relays, and your invites carry them. Relays pass the room\'s messages along and can\'t read them. These are public relays run by others; Kaeri doesn\'t run any of them. A room\'s own list is in its Details.</string>
+    <!-- Line at the top of the Relays page on a phone. -->
+    <string name="room_relays_intro_short">Rooms you start use these relays, and your invites carry them. They can\'t read the room. These are public relays run by others.</string>
+    <!-- Heading of the list of relays for new rooms. -->
+    <string name="room_relays_new_rooms">For new rooms</string>
+    <!-- Line under the list for new rooms. -->
+    <string name="room_relays_new_rooms_line">Kaeri sends every room event to all of them. Plain ws:// works only for localhost and .local addresses.</string>
+    <!-- Heading of the list of spare relays. -->
+    <string name="room_relays_spares">Spares</string>
+    <!-- Line under the spares on a desktop. -->
+    <string name="room_relays_spares_line">When a room has fewer than two relays answering, it swaps in the first spare that answers.</string>
+    <!-- Line under the spares on a phone. -->
+    <string name="room_relays_spares_line_short">Used when a room has fewer than two relays answering.</string>
+    <!-- Button that puts the default relays and spares back. -->
+    <string name="room_relays_restore">Restore the defaults</string>
+    <!-- Button in the room column's header that leaves, on the place's room card, with the dialog after it. -->
+    <string name="room_leave_ellipsis">Leave…</string>
+    <!-- Menu item on an iPhone that leaves, asking first. -->
+    <string name="room_leave_menu">Leave the room…</string>
+    <!-- Menu item on Android that leaves, asking first. -->
+    <string name="room_leave_menu_plain">Leave the room</string>
+    <!-- Title of the confirmation before leaving. -->
+    <string name="room_leave_title">Leave the room?</string>
+    <!-- Line under it. -->
+    <string name="room_leave_line">The others keep watching.</string>
+    <!-- Line under it when closing the window on a Mac, which offers Keep the room. -->
+    <string name="room_leave_line_keep">The others keep watching. Keep the room closes the player and keeps your place.</string>
+    <!-- Button in the confirmation on closing the window: close the player and stay in the room. -->
+    <string name="room_keep">Keep the room</string>
+    <!-- Button in the TV's confirmation that goes back to the room. -->
+    <string name="room_keep_watching">Keep watching</string>
+    <!-- Small heading of the up next card. -->
+    <string name="room_up_next">Up next for the room</string>
+    <!-- Line on the card naming the next episode. -->
+    <string name="room_up_next_episode">Episode %1$s · %2$s</string>
+    <!-- Line on the card naming the next episode when it has no title. -->
+    <string name="room_up_next_episode_plain">Episode %1$s</string>
+    <!-- Line on the card counting down for everyone. -->
+    <string name="room_up_next_count">Plays for everyone in %1$,d s</string>
+    <!-- Line on the card while your file ended sooner and the room waits for someone's longer file. -->
+    <string name="room_up_next_waiting">Waiting for %1$s to finish</string>
+    <!-- Button on the card that moves the room on at once. -->
+    <string name="room_play_next_now">Play next now</string>
+    <!-- First line of the room while up next counts down. -->
+    <string name="room_line_up_next">Up next in %1$,d s</string>
+    <!-- Second line while up next counts down. -->
+    <string name="room_line_up_next_detail">Episode %1$s plays for everyone</string>
+    <!-- Placeholder of the chat field. -->
+    <string name="room_chat_field">Say something</string>
+    <!-- Button and accessibility label that sends a chat line. -->
+    <string name="room_chat_send">Send</string>
+    <!-- Accessibility label of the button beside the chat field that opens the reactions. -->
+    <string name="room_react">React</string>
+    <!-- Line in the chat of a room opened from an invite, before joining. -->
+    <string name="room_chat_opens">The chat opens when you join</string>
+    <!-- Line under a chat line that didn't reach any relay. -->
+    <string name="room_chat_not_sent">Couldn\'t send</string>
+    <!-- Chat line: someone started the room. -->
+    <string name="room_chat_started">%1$s started the room · Episode %2$s</string>
+    <!-- Chat line: you started the room. -->
+    <string name="room_chat_you_started">You started the room · Episode %1$s</string>
+    <!-- Chat line: someone paused, at a place in the episode. -->
+    <string name="room_chat_paused">%1$s paused at %2$s</string>
+    <!-- Chat line: you paused. -->
+    <string name="room_chat_you_paused">You paused at %1$s</string>
+    <!-- Chat line: someone played after a pause. -->
+    <string name="room_chat_resumed">%1$s resumed</string>
+    <!-- Chat line: the room waits for people whose player is opening the episode. -->
+    <string name="room_chat_paused_for_loading">Paused for %1$s · loading</string>
+    <!-- Chat line: the room waits for people whose player stalled. -->
+    <string name="room_chat_paused_for_buffering">Paused for %1$s · buffering</string>
+    <!-- Chat line on your own device: the room waits for you. -->
+    <string name="room_chat_paused_for_you">Paused for you · loading</string>
+    <!-- Chat line: someone pressed Carry on. -->
+    <string name="room_chat_carried_on">%1$s carried on without %2$s</string>
+    <!-- Chat line: someone's first frame landed and they joined at the room's place. -->
+    <string name="room_chat_joined_at">%1$s joined at %2$s</string>
+    <!-- Chat line: someone left the room. -->
+    <string name="room_chat_left">%1$s left</string>
+    <!-- Chat line: someone moved to a new room. -->
+    <string name="room_chat_moved">%1$s moved to a new room</string>
+    <!-- Chat line in the old room: someone went along to the new room. -->
+    <string name="room_chat_went">%1$s went to the new room</string>
+    <!-- Chat line: up next moved the room on. -->
+    <string name="room_chat_up_next">Up next: episode %1$s for everyone</string>
+    <!-- Chat line: someone skipped the opening for the room. -->
+    <string name="room_chat_skipped_opening">%1$s skipped the opening</string>
+    <!-- Label of the laugh reaction button. -->
+    <string name="room_react_laugh">Laugh</string>
+    <!-- Label of the gasp reaction button. -->
+    <string name="room_react_gasp">Gasp</string>
+    <!-- Label of the clap reaction button. -->
+    <string name="room_react_clap">Clap</string>
+    <!-- Label of the cry reaction button. -->
+    <string name="room_react_cry">Cry</string>
+    <!-- Chat line: someone laughed, at a place in the episode. -->
+    <string name="room_reacted_laugh">%1$s laughed at %2$s</string>
+    <!-- Chat line: someone gasped, at a place in the episode. -->
+    <string name="room_reacted_gasp">%1$s gasped at %2$s</string>
+    <!-- Chat line: someone clapped, at a place in the episode. -->
+    <string name="room_reacted_clap">%1$s clapped at %2$s</string>
+    <!-- Chat line: someone cried, at a place in the episode. -->
+    <string name="room_reacted_cry">%1$s cried at %2$s</string>
+    <!-- Line under the video on the TV rail: what the remote's buttons do. -->
+    <string name="room_tv_keys">OK for the controls · Back closes the room</string>
+    <!-- Line under the chat on the TV rail: chat is read-only there. -->
+    <string name="room_tv_write_from_phone">Write from your phone</string>
+    <!-- Line under the place's heading. -->
+    <string name="room_place_line">Each of you plays the episode from your own sources; the room keeps you in step. Start a room from any episode with Watch together, in the player or on its page.</string>
+    <!-- Small heading of the card for the room you are in. -->
+    <string name="room_place_yours">Your room</string>
+    <!-- Button on the card that opens the room's player. -->
+    <string name="room_open_player">Open the player</string>
+    <!-- Heading of the field that joins a room. -->
+    <string name="room_place_join">Join a room</string>
+    <!-- Placeholder of the field that takes an invite link. -->
+    <string name="room_place_link">Invite link</string>
+    <!-- Button that pastes the clipboard into the field. -->
+    <string name="room_place_paste">Paste</string>
+    <!-- Heading of the list of recent rooms. -->
+    <string name="room_recent">Recent rooms</string>
+    <!-- Line beside the heading. -->
+    <string name="room_recent_note">The last ten, kept on this device</string>
+    <!-- Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25. -->
+    <string name="room_recent_row">Episode %1$s · with %2$s · %3$s</string>
+    <!-- Line of a recent room where you were alone. -->
+    <string name="room_recent_row_alone">Episode %1$s · %2$s</string>
+    <!-- Button on a recent room that joins it again. -->
+    <string name="room_rejoin">Rejoin</string>
+    <!-- Title of the alert when none of an invite's relays answers, and the bold start of the line in the place. -->
+    <string name="room_error_unreachable_title">Couldn\'t reach this room\'s relays</string>
+    <!-- Line under it, and the next sentence in the place. -->
+    <string name="room_error_ask_new_invite">Ask for a new invite.</string>
+    <!-- The same error in one line, where there is no room for a title. -->
+    <string name="room_error_unreachable">Couldn\'t reach this room\'s relays. Ask for a new invite.</string>
+    <!-- Line after it in the place: what was tried. -->
+    <string name="room_error_tried">Kaeri tried the link\'s relays and your spares, %1$,d s each.</string>
+    <!-- Title of the alert when a recent room has nobody answering, such as after a new invite. -->
+    <string name="room_error_nobody_answered">Nobody answered in this room</string>
+    <!-- Line under it. -->
+    <string name="room_error_nobody_answered_line">If someone made a new invite, the old one stopped working. Ask them for the new link.</string>
+    <!-- Notice when the room already has 10 people and you can't join. -->
+    <string name="room_error_full">This room is full</string>
+    <!-- Notice when an invite link or code is from an older version. -->
+    <string name="room_error_old_invite">This invite is from an older version of Kaeri. Ask for a new one.</string>
+    <!-- Chat line: someone came into the room. -->
+    <string name="room_chat_joined">%1$s joined</string>
+    <!-- Chat line: someone moved the room to another place in the episode. -->
+    <string name="room_chat_jumped">%1$s jumped from %2$s to %3$s</string>
+    <!-- Chat line: the room waits for people catching up after a jump. -->
+    <string name="room_chat_paused_for_seeking">Paused for %1$s · catching up</string>
+    <!-- Chat line: this device's player was moved to stay with the room. -->
+    <string name="room_chat_corrected">Moved to stay with the room</string>
+    <!-- Chat line: someone put on another episode for the room. -->
+    <string name="room_chat_episode_changed">%1$s put on episode %2$s</string>
+    <!-- Chat line: someone who was behind caught up with the room. -->
+    <string name="room_chat_caught_up">%1$s caught up with the room</string>
+    <!-- Chat line on a device whose Play lost to someone's Pause pressed at the same moment. -->
+    <string name="room_chat_already_paused">%1$s already paused</string>
+    <!-- Chat line: someone made a new invite; the old link stopped working. -->
+    <string name="room_chat_new_invite">%1$s made a new invite</string>
+    <!-- Chat line: someone cancelled Up next for everyone. -->
+    <string name="room_chat_up_next_cancelled">%1$s cancelled up next</string>
+    <!-- Chat line on your own device: your name was taken, so the room knows you by this one. -->
+    <string name="room_chat_renamed">You\'re %1$s in this room</string>
+    <!-- Button that shows the room's column again after Hide room. -->
+    <string name="room_show">Show room</string>
+    <!-- The room's Skip opening button on the player: skips for everyone. -->
+    <string name="room_skip_opening">Skip opening</string>
+    <!-- Confirmation after Copy invite link. -->
+    <string name="room_link_copied">Invite link copied</string>
+    <!-- The starting screen's line on the device opening the room's episode. -->
+    <string name="room_starting_episode">Starting episode %1$s</string>
+    <!-- A short length in minutes, on the banner before play. -->
+    <string name="room_minutes">%1$,d min</string>
+    <!-- Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma. -->
+    <string name="room_names_and">%1$s and %2$s</string>
+    <!-- Joins two names in a longer list: "Mika, Ren". -->
+    <string name="room_names_comma">%1$s, %2$s</string>
+    <!-- Person menu item and accessibility action that hides someone's lines and reactions in this room. -->
+    <string name="room_mute">Mute %1$s</string>
+    <!-- Person menu item and accessibility action that shows a muted person's lines again. -->
+    <string name="room_unmute">Unmute %1$s</string>
+    <!-- Line in the conversation where a muted person's lines were. -->
+    <string name="room_chat_muted">%1$s is muted</string>
+    <!-- Line after the newest chat lines over the video, which opens the conversation. -->
+    <string name="room_chat_more">%1$,d more in chat</string>
+    <!-- Spoken by a screen reader when a chat line arrives. -->
+    <string name="room_chat_announce">%1$s says %2$s</string>
+    <!-- End of the chat field while sending waits, after three messages in five seconds. -->
+    <string name="room_chat_wait">Wait %1$,d s</string>
+    <!-- Spoken once when sending waits, for screen readers. -->
+    <plurals name="room_chat_wait_spoken">
+        <item quantity="one">Wait one second</item>
+        <item quantity="other">Wait %1$,d seconds</item>
+    </plurals>
+    <!-- Spoken by a screen reader once, when 20 characters are left in the chat field. -->
+    <plurals name="room_chat_characters_left">
+        <item quantity="one">%1$,d character left</item>
+        <item quantity="other">%1$,d characters left</item>
+    </plurals>
+    <!-- A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds. -->
+    <string name="room_reacted_at">%1$s at %2$s</string>
+    <!-- Label on the seek bar when pointing near a reaction tick: the moment and who reacted. -->
+    <string name="room_tick_label">%1$s · %2$s</string>
+    <!-- Two people named together, for a reaction made by both: "Ren and Mika". -->
+    <string name="room_names_two">%1$s and %2$s</string>
+    <!-- Three people named together. -->
+    <string name="room_names_three">%1$s, %2$s and %3$s</string>
+    <!-- More than three people named together: two names and how many others. -->
+    <string name="room_names_others">%1$s, %2$s and %3$,d others</string>
+    <!-- Player panel, under the subtitled or dubbed switch in a room. -->
+    <string name="room_version_own">Only your player switches. The room keeps playing.</string>
+    <!-- The banner over the room when the episode has no name of its own: the episode and its length. -->
+    <string name="room_banner_episode_plain">Episode %1$s · %2$s</string>
+    <!-- Menu item dimmed in a room, with this reason under it. -->
+    <string name="room_mark_unavailable">Mark skip times after you leave the room.</string>
+    <!-- Heading of the people list in the room, and its accessibility label. -->
+    <string name="room_people">People in the room</string>
+    <!-- State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person. -->
+    <string name="room_state_seeking">Seeking · %1$,d s</string>
+    <!-- Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title. -->
+    <string name="room_error_unreachable_lead">Couldn\'t reach this room\'s relays.</string>
+    <!-- Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title. -->
+    <string name="room_error_nobody_answered_lead">Nobody answered in this room.</string>
+    <!-- Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV. -->
+    <string name="room_device_in_room">%1$s is in this room</string>
+    <!-- Button on the phone's remote screen that leaves the room on the paired TV. -->
+    <string name="room_leave_on_device">Leave the room on %1$s</string>
+    <!-- Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links. -->
+    <string name="room_tv_join_from_phone">To join someone\'s room, open their invite on a paired phone and choose this TV.</string>
+    <!-- Line above the list of sources that have the room's episode, in the Choose a source dialog in a room. -->
+    <plurals name="room_sources_found_line">
+        <item quantity="one">One source has it. It plays for everyone in the room.</item>
+        <item quantity="other">%1$,d sources have it. Your pick plays for everyone in the room.</item>
+    </plurals>
     <!-- Button that shows the season before. -->
     <string name="seasonal_previous">Previous season</string>
     <!-- Button that shows the season after. -->
@@ -7989,6 +8541,21 @@
     <string name="sources_add_demo">Add the demo</string>
     <!-- Line under the sources page's list when a source is dragged: first-party sources are tried in this order too. -->
     <string name="sources_order_all">Every source is tried in this order, whatever its kind.</string>
+    <!-- Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5. -->
+    <string name="sources_choose_for">Choose a source for episode %1$s</string>
+    <!-- Line while the sources are searched for the episode. -->
+    <string name="sources_looking">Looking through your sources…</string>
+    <!-- Line over the list of sources that list the episode. -->
+    <plurals name="sources_found">
+        <item quantity="one">One source has it</item>
+        <item quantity="other">%1$,d sources have it</item>
+    </plurals>
+    <!-- Line when no source lists the episode. -->
+    <string name="sources_none_list">No source lists episode %1$s. Sources come from plugins, which a plugin store adds.</string>
+    <!-- Button that goes to the Sources page, when no source is set up. -->
+    <string name="sources_open">Open sources</string>
+    <!-- Accessibility label of the list of sources for the episode. -->
+    <string name="sources_label">Sources for this episode</string>
     <!-- Short label for a joined store, on a row. -->
     <string name="stores_joined">Joined</string>
     <!-- Title of the empty list. -->

@@ -118,8 +118,8 @@ impl Keymap {
             // `v` — video, the one thing about a title that is not text.
             bind(Binding::plain(Char('v')), A::PlayTrailer);
             bind(Binding::plain(Char('o')), A::OpenInBrowser);
-            // `y` — you, plural: the same episode Enter would play, but with the room.
-            bind(Binding::plain(Char('y')), A::PlayParty);
+            // `y` — you, plural: a room watching the episode Enter would play.
+            bind(Binding::plain(Char('y')), A::StartRoom);
 
             // Episodes. `u` reads as "(un)watched" — Space belongs to the playback table
             // and `m` to fixing the match.

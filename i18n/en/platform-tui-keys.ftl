@@ -174,7 +174,7 @@ keys-action-toggle-demo = Remove or add the demo
 keys-action-download-range = Download a range of episodes
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Play in a { -watch-party }
+keys-action-start-room = Start a room
 
 # Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Toggle watched
@@ -690,32 +690,36 @@ nav-rail-hidden = Hidden
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 # @max 20
-keys-hint-ready = Ready
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-# @max 20
 keys-hint-copy-link = Copy link
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 # @max 20
-keys-hint-leave-party = Leave
+keys-hint-leave-room = Leave
+
+# Status line hint beside a key, in a room the others wait in: play on without those it waits for. Keep it to a word or two.
+# @max 20
+keys-hint-carry-on = Carry on
+
+# Status line hint beside a key, on a recent room: take it off the list. Keep it to a word or two.
+# @max 20
+keys-hint-forget-room = Forget
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 # @max 20
 keys-hint-say = Say
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions
-# for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions
+# on this device. Keep it to a word or two.
 # @max 20
 keys-hint-mute = Mute
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again.
+# Status line hint beside a key, on a muted room member's row: show their lines again.
 # Keep it to a word or two.
 # @max 20
 keys-hint-unmute = Unmute
 
 # Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off
-# the screen in every watch party. Keep it to a word or two.
+# the screen in every room. Keep it to a word or two.
 # @max 20
 keys-hint-hide-chat = Hide chat
 

@@ -914,7 +914,15 @@ mod tests {
             a.handle(Action::ShowSources, 5),
             Some(Command::LoadSources { id: row, episode: first() })
         );
-        assert_eq!(a.handle(Action::PlayParty, 5), Some(Command::play_party(row, first())));
+        assert_eq!(
+            a.handle(Action::StartRoom, 5),
+            Some(Command::Room(kaeri_model::room::RoomCommand::Lobby {
+                invite: None,
+                name: None,
+                pick: Some(kaeri_model::room::RoomEpisode { id: row, episode: first() }),
+                anyway: false,
+            }))
+        );
         assert_eq!(
             a.handle(Action::OpenInBrowser, 5),
             Some(Command::OpenExternal { url: "https://anilist.co/anime/3".into() })

@@ -721,27 +721,26 @@ public enum L {
     /// Toast when keep next found no room for another episode.
     public static var noticeKeepNextFull: String { string("notice-keep-next-full", fallback: "Not enough free space to keep the next episodes downloaded. Free up some space to download more.") }
 
-    /// Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-    public static func partyNeedsServer(server: String, `operator`: String) -> String {
-        Self.format("party-needs-server", fallback: "Choose a server for the watch party first, as syncplay.server. %1$@ is run by %2$@.", server, `operator`)
-    }
+    /// Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.
+    public static var roomLookUnreachable: String { string("room-look-unreachable", fallback: "Couldn't reach this room's relays. Ask for a new invite.") }
 
-    /// Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-    public static func partyChooseServer(server: String, `operator`: String) -> String {
-        Self.format("party-choose-server", fallback: "Choose a server for the watch party first. %1$@ is run by %2$@.", server, `operator`)
-    }
+    /// Why a look into a room found nothing: the pasted text is no room's invite.
+    public static var roomLookNotAnInvite: String { string("room-look-not-an-invite", fallback: "That isn't a room's invite.") }
+
+    /// Why a look into a recent room found nothing: it's no longer in this device's recent rooms.
+    public static var roomLookNotKept: String { string("room-look-not-kept", fallback: "That room isn't kept any more.") }
+
+    /// Why a look into a room found nothing: the invite comes from an older version.
+    public static var roomLookOldInvite: String { string("room-look-old-invite", fallback: "This invite is from an older version of Kaeri. Ask for a new one.") }
+
+    /// Why a room couldn't start: it has no episode yet. Shown where the room would open.
+    public static var roomNeedsEpisode: String { string("room-needs-episode", fallback: "Choose an episode for the room first.") }
 
     /// Toast when a watch party is asked for in a build without watch parties.
     public static var noticeNoParty: String { string("notice-no-party", fallback: "Watch parties aren't available in this version of Kaeri.") }
 
     /// Message when a watch party was asked for with no room named.
     public static var partyNeedsRoom: String { string("party-needs-room", fallback: "A watch party needs a room to meet in. Choose one first.") }
-
-    /// Message in a watch party when its server connection dropped and is retried.
-    public static var partyServerLost: String { string("party-server-lost", fallback: "Lost the watch party server. Trying again.") }
-
-    /// Message in a watch party when the connection came back.
-    public static var partyRejoined: String { string("party-rejoined", fallback: "Back in the watch party.") }
 
     /// Message when the person left a watch party.
     public static var partyLeft: String { string("party-left", fallback: "Left the watch party.") }
@@ -8792,6 +8791,11 @@ public enum L {
     /// Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
     public static var playerPanelLess: String { string("player-panel-less", fallback: "Less") }
 
+    /// Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+    public static func playerSourcesFoundLine(count: Int) -> String {
+        Self.format("player-sources-found-line", fallback: "%1$lld sources have it. Choose the one to play.", count)
+    }
+
     /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
     public static var privateMode: String { string("private-mode", fallback: "Private mode") }
 
@@ -11148,6 +11152,982 @@ public enum L {
     /// Notification, new chapter: the action that opens the reader on the chapter.
     public static var notifChapterRead: String { string("notif-chapter-read", fallback: "Read") }
 
+    /// First line while the room plays and nobody holds it.
+    public static var roomLineWatching: String { string("room-line-watching", fallback: "Watching together") }
+
+    /// Second line while the room plays: the room's episode and its place in it.
+    public static func roomLineWatchingDetail(episode: String, at: String) -> String {
+        Self.format("room-line-watching-detail", fallback: "Episode %1$@ · %2$@", episode, at)
+    }
+
+    /// First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.
+    public static func roomLinePausedFor(names: String) -> String {
+        Self.format("room-line-paused-for", fallback: "Paused for %1$@", names)
+    }
+
+    /// First line on your own device while the room waits for you.
+    public static var roomLinePausedForYou: String { string("room-line-paused-for-you", fallback: "Paused for you") }
+
+    /// Second line while the room waits for you: who waits, and for how many seconds so far.
+    public static func roomLineWaitingForYou(names: String, count: Int, seconds: Int) -> String {
+        Self.format("room-line-waiting-for-you", fallback: "%1$@ are waiting · %3$lld s", names, count, seconds)
+    }
+
+    /// First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
+    public static func roomLineStillLoading(names: String, count: Int) -> String {
+        Self.format("room-line-still-loading", fallback: "%1$@ are still loading", names, count)
+    }
+
+    /// First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+    public static func roomLineStillSeeking(names: String, count: Int) -> String {
+        Self.format("room-line-still-seeking", fallback: "%1$@ are still seeking", names, count)
+    }
+
+    /// First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+    public static func roomLineStillBuffering(names: String, count: Int) -> String {
+        Self.format("room-line-still-buffering", fallback: "%1$@ are still buffering", names, count)
+    }
+
+    /// Second line once the room has waited as long as it will.
+    public static func roomLineWaited(seconds: Int) -> String {
+        Self.format("room-line-waited", fallback: "The room has waited %1$lld s", seconds)
+    }
+
+    /// Second line after someone pressed Carry on, when the room waited for one person.
+    public static func roomLineCarriedOnOne(carrier: String, name: String) -> String {
+        Self.format("room-line-carried-on-one", fallback: "%1$@ carried on · %2$@ joins when ready", carrier, name)
+    }
+
+    /// Second line after someone pressed Carry on, when the room waited for more than one person.
+    public static func roomLineCarriedOnMany(carrier: String) -> String {
+        Self.format("room-line-carried-on-many", fallback: "%1$@ carried on · they join when ready", carrier)
+    }
+
+    /// First line while the room is paused by someone.
+    public static func roomLinePausedBy(name: String) -> String {
+        Self.format("room-line-paused-by", fallback: "%1$@ paused", name)
+    }
+
+    /// First line while the room is paused by you.
+    public static var roomLineYouPaused: String { string("room-line-you-paused", fallback: "You paused") }
+
+    /// Second line while the room is paused: the place it paused at.
+    public static func roomLinePausedAt(at: String) -> String {
+        Self.format("room-line-paused-at", fallback: "at %1$@", at)
+    }
+
+    /// Second line while one of the room's relays is not answering.
+    public static func roomLineRelaysDown(count: Int, total: Int) -> String {
+        Self.format("room-line-relays-down", fallback: "%1$lld of %2$lld relays aren't answering · the room carries on", count, total)
+    }
+
+    /// First line when your own device lost every relay.
+    public static var roomLineReconnecting: String { string("room-line-reconnecting", fallback: "Reconnecting to the room") }
+
+    /// Second line when your own device lost every relay.
+    public static var roomLineReconnectingDetail: String { string("room-line-reconnecting-detail", fallback: "No relay is answering · your episode keeps playing") }
+
+    /// Second line when your own player is behind the room.
+    public static func roomLineYouBehind(seconds: Int) -> String {
+        Self.format("room-line-you-behind", fallback: "You're %1$lld s behind · catching up", seconds)
+    }
+
+    /// The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.
+    public static func roomLineWithSeconds(line: String, seconds: Int) -> String {
+        Self.format("room-line-with-seconds", fallback: "%1$@ · %2$lld s", line, seconds)
+    }
+
+    /// Stands for the people the room waits for when there are more than two, inside "Paused for …".
+    public static func roomNamesPeople(count: Int) -> String {
+        Self.format("room-names-people", fallback: "%1$lld people", count)
+    }
+
+    /// State word: in step with the room and playing.
+    public static var roomStateWatching: String { string("room-state-watching", fallback: "Watching") }
+
+    /// State word before play: this person's first frame is ready.
+    public static var roomStateReady: String { string("room-state-ready", fallback: "Ready") }
+
+    /// State word: the room is paused and this person paused it.
+    public static var roomStatePausedIt: String { string("room-state-paused-it", fallback: "Paused it") }
+
+    /// State word: the room is paused; this person was watching.
+    public static var roomStatePaused: String { string("room-state-paused", fallback: "Paused") }
+
+    /// State word: the slowest player, holding the room back, with the gap in seconds.
+    public static func roomStateBehind(seconds: Int) -> String {
+        Self.format("room-state-behind", fallback: "Behind · %1$lld s", seconds)
+    }
+
+    /// State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.
+    public static func roomStateLoading(seconds: Int) -> String {
+        Self.format("room-state-loading", fallback: "Loading · %1$lld s", seconds)
+    }
+
+    /// State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.
+    public static func roomStateBuffering(seconds: Int) -> String {
+        Self.format("room-state-buffering", fallback: "Buffering · %1$lld s", seconds)
+    }
+
+    /// State word: this person plays another episode than the room's.
+    public static func roomStateOtherEpisode(episode: String) -> String {
+        Self.format("room-state-other-episode", fallback: "On episode %1$@", episode)
+    }
+
+    /// State word: this person is picking which source to play from.
+    public static var roomStateChoosing: String { string("room-state-choosing", fallback: "Choosing a source") }
+
+    /// State word: none of this person's sources lists the room's episode.
+    public static func roomStateNoSource(episode: String) -> String {
+        Self.format("room-state-no-source", fallback: "No source for episode %1$@", episode)
+    }
+
+    /// State word: this person is in the room with the player closed.
+    public static var roomStatePlayerClosed: String { string("room-state-player-closed", fallback: "Player closed") }
+
+    /// State word: this person's device stopped answering.
+    public static var roomStateReconnecting: String { string("room-state-reconnecting", fallback: "Reconnecting") }
+
+    /// State word: this person left the room. The row stays dimmed for a moment.
+    public static var roomStateLeft: String { string("room-state-left", fallback: "Left") }
+
+    /// State word: you muted this person. Shown alone or after the state word with room-state-and-muted.
+    public static var roomStateMuted: String { string("room-state-muted", fallback: "Muted") }
+
+    /// A state word followed by Muted, for a person you muted.
+    public static func roomStateAndMuted(state: String) -> String {
+        Self.format("room-state-and-muted", fallback: "%1$@ · Muted", state)
+    }
+
+    /// Marker after your own name in the people list.
+    public static var roomYouMarker: String { string("room-you-marker", fallback: "(you)") }
+
+    /// Your own name under your face on a phone and in the place's room card.
+    public static var roomYou: String { string("room-you", fallback: "You") }
+
+    /// You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.
+    public static var roomYouInList: String { string("room-you-in-list", fallback: "you") }
+
+    /// Accessibility label of a face in the full screen strip: the name and the state word.
+    public static func roomFaceLabel(name: String, state: String) -> String {
+        Self.format("room-face-label", fallback: "%1$@, %2$@", name, state)
+    }
+
+    /// The last face in a row of faces, standing for the people not shown.
+    public static func roomMoreFaces(count: Int) -> String {
+        Self.format("room-more-faces", fallback: "+%1$lld", count)
+    }
+
+    /// Accessibility label of the last face, which opens the full people list.
+    public static func roomMoreFacesLabel(count: Int) -> String {
+        Self.format("room-more-faces-label", fallback: "%1$lld more people", count)
+    }
+
+    /// Name under the last face on a phone and the TV: it opens everyone.
+    public static var roomMore: String { string("room-more", fallback: "More") }
+
+    /// State under the last face: how many of the hidden people are not watching.
+    public static func roomMoreNotWatching(count: Int) -> String {
+        Self.format("room-more-not-watching", fallback: "%1$lld not watching", count)
+    }
+
+    /// State under the last face when everyone hidden is watching.
+    public static var roomMoreAllWatching: String { string("room-more-all-watching", fallback: "All watching") }
+
+    /// Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.
+    public static func roomWaitLoading(seconds: Int) -> String {
+        Self.format("room-wait-loading", fallback: "loading · %1$lld s", seconds)
+    }
+
+    /// Reason in the waiting capsule, after Paused for, lower case: their player stalled.
+    public static func roomWaitBuffering(seconds: Int) -> String {
+        Self.format("room-wait-buffering", fallback: "buffering · %1$lld s", seconds)
+    }
+
+    /// Button once the room has waited 20 seconds for one person.
+    public static func roomCarryOnWithout(name: String) -> String {
+        Self.format("room-carry-on-without", fallback: "Carry on without %1$@", name)
+    }
+
+    /// Button once the room has waited 20 seconds for more than one person.
+    public static var roomCarryOnWithoutThem: String { string("room-carry-on-without-them", fallback: "Carry on without them") }
+
+    /// Capsule over the video after someone pressed Carry on.
+    public static func roomCarryingOnWithout(names: String) -> String {
+        Self.format("room-carrying-on-without", fallback: "Carrying on without %1$@", names)
+    }
+
+    /// Second part of the capsule after Carry on, when the room waited for one person.
+    public static func roomJoinsAtPlace(name: String) -> String {
+        Self.format("room-joins-at-place", fallback: "%1$@ joins at the room's place", name)
+    }
+
+    /// Second part of the capsule after Carry on, when the room waited for more than one person.
+    public static var roomJoinAtPlaceMany: String { string("room-join-at-place-many", fallback: "They join at the room's place") }
+
+    /// Line on your own starting screen while the room waits for you, with the seconds so far.
+    public static func roomPausedUntilStart(seconds: Int) -> String {
+        Self.format("room-paused-until-start", fallback: "The room is paused until this starts · %1$lld s", seconds)
+    }
+
+    /// Button on your own starting screen that lets the room carry on without you.
+    public static var roomDontWait: String { string("room-dont-wait", fallback: "Don't wait for me") }
+
+    /// First line before anyone pressed Play.
+    public static var roomLineNotStarted: String { string("room-line-not-started", fallback: "Not started yet") }
+
+    /// Second line before anyone pressed Play.
+    public static var roomLinePlayStarts: String { string("room-line-play-starts", fallback: "Play starts it for everyone") }
+
+    /// First line after Play, while the room waits for people still loading.
+    public static func roomLineStartingWhen(names: String, count: Int) -> String {
+        Self.format("room-line-starting-when", fallback: "Starting when %1$@ are ready", names, count)
+    }
+
+    /// First line counting down once everyone is ready.
+    public static func roomLineStartingIn(seconds: Int) -> String {
+        Self.format("room-line-starting-in", fallback: "Starting in %1$lld", seconds)
+    }
+
+    /// Second line when everyone is ready.
+    public static var roomLineEveryoneReady: String { string("room-line-everyone-ready", fallback: "Everyone is ready") }
+
+    /// Button once the room has waited 20 seconds before play, for one person.
+    public static func roomStartWithout(name: String) -> String {
+        Self.format("room-start-without", fallback: "Start without %1$@", name)
+    }
+
+    /// Button once the room has waited 20 seconds before play, for more than one person.
+    public static var roomStartWithoutThem: String { string("room-start-without-them", fallback: "Start without them") }
+
+    /// Small heading over the episode in the video area before play.
+    public static var roomUpInRoom: String { string("room-up-in-room", fallback: "Up in the room") }
+
+    /// Small heading over the episode in the video area when you opened an invite.
+    public static var roomRoomIsWatching: String { string("room-room-is-watching", fallback: "The room is watching") }
+
+    /// Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.
+    public static func roomBannerEpisode(episode: String, title: String, length: String) -> String {
+        Self.format("room-banner-episode", fallback: "Episode %1$@ · %2$@ · %3$@", episode, title, length)
+    }
+
+    /// Line under the episode before play: one of your sources has it.
+    public static var roomPlaysFromSources: String { string("room-plays-from-sources", fallback: "Plays from your sources") }
+
+    /// Button that starts the episode for everyone in the room.
+    public static var roomPlayForEveryone: String { string("room-play-for-everyone", fallback: "Play for everyone") }
+
+    /// Line beside Play for everyone.
+    public static var roomAnyoneCanStart: String { string("room-anyone-can-start", fallback: "Anyone in the room can start it") }
+
+    /// Label of the Play for everyone button after it was pressed.
+    public static var roomPlaying: String { string("room-playing", fallback: "Playing…") }
+
+    /// Line beside the button after Play was pressed, on a desktop.
+    public static var roomWaitingFirstFrames: String { string("room-waiting-first-frames", fallback: "Waiting for everyone's first frame") }
+
+    /// Line under the play button after Play was pressed, on a phone.
+    public static var roomWaitingFirstFramesShort: String { string("room-waiting-first-frames-short", fallback: "Waiting for first frames") }
+
+    /// First line of the room when an invite link opened it.
+    public static func roomInvitedBy(name: String) -> String {
+        Self.format("room-invited-by", fallback: "%1$@ invited you", name)
+    }
+
+    /// Second line when an invite link opened the room: the show and the episode.
+    public static func roomInvitedDetail(title: String, episode: String) -> String {
+        Self.format("room-invited-detail", fallback: "%1$@ · Episode %2$@", title, episode)
+    }
+
+    /// Second line when an invite link opened a room with 10 or more people in it.
+    public static func roomInvitedOver(count: Int) -> String {
+        Self.format("room-invited-over", fallback: "%1$lld people are here already · rooms work best with 10 or fewer", count)
+    }
+
+    /// Button that joins the room from an invite.
+    public static var roomJoin: String { string("room-join", fallback: "Join the room") }
+
+    /// Button that joins a room with 10 or more people in it.
+    public static var roomJoinAnyway: String { string("room-join-anyway", fallback: "Join anyway") }
+
+    /// Heading over the list of sources for the room's episode.
+    public static func roomChooseSource(episode: String) -> String {
+        Self.format("room-choose-source", fallback: "Choose a source for episode %1$@", episode)
+    }
+
+    /// Line under it.
+    public static var roomChooseSourceLine: String { string("room-choose-source-line", fallback: "The room keeps watching; you join at its place.") }
+
+    /// Button that plays the chosen source at the room's place.
+    public static var roomPlayInRoom: String { string("room-play-in-room", fallback: "Play in the room") }
+
+    /// Heading when none of your sources has the room's episode.
+    public static func roomNoSourceTitle(episode: String) -> String {
+        Self.format("room-no-source-title", fallback: "None of your sources has episode %1$@", episode)
+    }
+
+    /// Line under it on a desktop: how many sources were looked in.
+    public static func roomNoSourceLine(count: Int) -> String {
+        Self.format("room-no-source-line", fallback: "Kaeri looked in your %1$lld sources. You stay in the room and the chat while the others watch.", count)
+    }
+
+    /// Line under it on a phone.
+    public static var roomNoSourceLineShort: String { string("room-no-source-line-short", fallback: "You stay in the room and the chat.") }
+
+    /// Button that opens your sources.
+    public static var roomOpenSources: String { string("room-open-sources", fallback: "Open sources") }
+
+    /// Button that searches titles in your sources.
+    public static var roomSearchTitles: String { string("room-search-titles", fallback: "Search titles") }
+
+    /// Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.
+    public static func roomHeaderLine(episode: String, count: Int) -> String {
+        Self.format("room-header-line", fallback: "Episode %1$@ · %2$lld in the room", episode, count)
+    }
+
+    /// Button and accessibility label that opens the invite.
+    public static var roomInvite: String { string("room-invite", fallback: "Invite") }
+
+    /// Button and accessibility label that opens the room's details.
+    public static var roomDetails: String { string("room-details", fallback: "Details") }
+
+    /// Accessibility label of the More button on a phone.
+    public static var roomMoreActions: String { string("room-more-actions", fallback: "More") }
+
+    /// Accessibility label of the player's button that hides the room column.
+    public static var roomHide: String { string("room-hide", fallback: "Hide room") }
+
+    /// Accessibility label of the chevron on a phone that folds the room into the bar over the tabs.
+    public static var roomFold: String { string("room-fold", fallback: "Close the room to the bar") }
+
+    /// Accessibility label of the player's button that opens the chat in full screen.
+    public static var roomChat: String { string("room-chat", fallback: "Chat") }
+
+    /// Line in the invite: anyone with the link can join.
+    public static var roomInviteAnyone: String { string("room-invite-anyone", fallback: "Anyone with this link can join.") }
+
+    /// Line after it on a desktop: the link carries the key.
+    public static var roomInviteKey: String { string("room-invite-key", fallback: "The link carries the room's key, so only people who have it can read the room.") }
+
+    /// Line after it on a phone.
+    public static var roomInviteKeyShort: String { string("room-invite-key-short", fallback: "Only people with the link can read the room.") }
+
+    /// Accessibility label of the invite's QR code.
+    public static var roomInviteQr: String { string("room-invite-qr", fallback: "Invite as a QR code") }
+
+    /// Line beside the QR code.
+    public static var roomInviteQrLine: String { string("room-invite-qr-line", fallback: "Someone beside you can scan this with their camera.") }
+
+    /// Button that copies the invite link.
+    public static var roomCopyLink: String { string("room-copy-link", fallback: "Copy link") }
+
+    /// Button that opens the system's share sheet with the invite link.
+    public static var roomShare: String { string("room-share", fallback: "Share…") }
+
+    /// Menu item on a phone that copies the invite link.
+    public static var roomCopyInviteLink: String { string("room-copy-invite-link", fallback: "Copy invite link") }
+
+    /// Button that makes a new invite link and stops the old one.
+    public static var roomNewInvite: String { string("room-new-invite", fallback: "New invite") }
+
+    /// Line under New invite on a desktop.
+    public static var roomNewInviteLine: String { string("room-new-invite-line", fallback: "New invite stops the old link working. Everyone in the room moves to the new one.") }
+
+    /// Short line beside New invite on a phone.
+    public static var roomNewInviteShort: String { string("room-new-invite-short", fallback: "Stops the old link") }
+
+    /// Button in the invite and menu item on a phone that opens the move.
+    public static var roomMoveOpen: String { string("room-move-open", fallback: "Move to a new room…") }
+
+    /// Line under the button in the invite.
+    public static var roomMoveOpenLine: String { string("room-move-open-line", fallback: "For someone already here: start a new room and pick who comes along.") }
+
+    /// Title of the move dialog and sheet.
+    public static var roomMoveTitle: String { string("room-move-title", fallback: "Move to a new room") }
+
+    /// Line under the title.
+    public static var roomMoveBody: String { string("room-move-body", fallback: "Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room.") }
+
+    /// Note under your own row: you always go.
+    public static var roomMoveAlwaysGoes: String { string("room-move-always-goes", fallback: "Always goes") }
+
+    /// Note under a person you muted, who starts unticked.
+    public static var roomMoveMuted: String { string("room-move-muted", fallback: "Muted, so not ticked") }
+
+    /// Line under the list.
+    public static func roomMoveFoot(at: String) -> String {
+        Self.format("room-move-foot", fallback: "The new room picks up at %1$@ with a new key. Its link reaches only the people ticked.", at)
+    }
+
+    /// Button that moves, counting the others ticked.
+    public static func roomMoveWith(count: Int) -> String {
+        Self.format("room-move-with", fallback: "Move with %1$lld others", count)
+    }
+
+    /// The offer to someone ticked, in a notice or alert, as one sentence pair.
+    public static func roomMoveOffer(name: String) -> String {
+        Self.format("room-move-offer", fallback: "%1$@ moved the room. Go along?", name)
+    }
+
+    /// First line of the room while the offer waits for an answer.
+    public static func roomLineMoved(name: String) -> String {
+        Self.format("room-line-moved", fallback: "%1$@ moved the room", name)
+    }
+
+    /// Second line with the offer: who else is asked, and the place the episode carries on from.
+    public static func roomLineMovedDetail(names: String, count: Int, at: String) -> String {
+        Self.format("room-line-moved-detail", fallback: "Go along? %1$@ are asked too. The episode carries on from %3$@.", names, count, at)
+    }
+
+    /// Second line with the offer when nobody else is asked.
+    public static func roomLineMovedDetailAlone(at: String) -> String {
+        Self.format("room-line-moved-detail-alone", fallback: "Go along? The episode carries on from %1$@.", at)
+    }
+
+    /// Button that goes along to the new room.
+    public static var roomGoAlong: String { string("room-go-along", fallback: "Go along") }
+
+    /// Short button that stays in this room, in a notice.
+    public static var roomStay: String { string("room-stay", fallback: "Stay") }
+
+    /// First line of the old room for someone who stayed.
+    public static func roomLineMovedAway(name: String) -> String {
+        Self.format("room-line-moved-away", fallback: "%1$@ moved to a new room", name)
+    }
+
+    /// Second line of the old room: who went along.
+    public static func roomLineWentAlong(names: String) -> String {
+        Self.format("room-line-went-along", fallback: "%1$@ went along · this room carries on", names)
+    }
+
+    /// Label of the encryption row.
+    public static var roomDetailsEncryption: String { string("room-details-encryption", fallback: "Encryption") }
+
+    /// Value of the encryption row.
+    public static var roomDetailsEndToEnd: String { string("room-details-end-to-end", fallback: "End to end") }
+
+    /// Label of the relays row, and the title of the relays page in Settings.
+    public static var roomRelays: String { string("room-relays", fallback: "Relays") }
+
+    /// Value of the relays row when all answer.
+    public static func roomRelaysAnswering(count: Int) -> String {
+        Self.format("room-relays-answering", fallback: "%1$lld answering", count)
+    }
+
+    /// Value of the relays row when some don't answer.
+    public static func roomRelaysAnsweringOf(count: Int, total: Int) -> String {
+        Self.format("room-relays-answering-of", fallback: "%1$lld of %2$lld answering", count, total)
+    }
+
+    /// State of a relay that doesn't answer.
+    public static var roomRelayNotAnswering: String { string("room-relay-not-answering", fallback: "Not answering") }
+
+    /// Round trip time of a relay.
+    public static func roomRelayLatency(ms: Int) -> String {
+        Self.format("room-relay-latency", fallback: "%1$lld ms", ms)
+    }
+
+    /// Line under the relays in Details.
+    public static var roomDetailsRelaysLine: String { string("room-details-relays-line", fallback: "Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare.") }
+
+    /// Button in Details that edits the room's relays.
+    public static var roomEditRelays: String { string("room-edit-relays", fallback: "Edit relays…") }
+
+    /// Title of the room's relay editor.
+    public static var roomEditRelaysTitle: String { string("room-edit-relays-title", fallback: "Edit relays") }
+
+    /// Line under it.
+    public static var roomEditRelaysLine: String { string("room-edit-relays-line", fallback: "Changes this room's relays for everyone in it. New invites carry the list.") }
+
+    /// Accessibility label of the button that removes a relay. `relay` is its address.
+    public static func roomRelayRemove(relay: String) -> String {
+        Self.format("room-relay-remove", fallback: "Remove %1$@", relay)
+    }
+
+    /// Button that adds the address typed beside it.
+    public static var roomRelayAdd: String { string("room-relay-add", fallback: "Add") }
+
+    /// Line under the room's relay editor.
+    public static var roomEditRelaysSettings: String { string("room-edit-relays-settings", fallback: "Settings › Playback › Relays sets the list for new rooms.") }
+
+    /// Heading of the group in Settings › Playback.
+    public static var roomSettingsGroup: String { string("room-settings-group", fallback: "Watch together") }
+
+    /// Switch that hides chat in every room on this device.
+    public static var roomSettingsHideChat: String { string("room-settings-hide-chat", fallback: "Hide chat in rooms") }
+
+    /// Line under it.
+    public static var roomSettingsHideChatLine: String { string("room-settings-hide-chat-line", fallback: "Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.") }
+
+    /// Line under the Relays row: how many relays new rooms use.
+    public static func roomSettingsRelaysCount(count: Int) -> String {
+        Self.format("room-settings-relays-count", fallback: "%1$lld public relays run by others", count)
+    }
+
+    /// Button at the end of the Relays row.
+    public static var roomSettingsRelaysEdit: String { string("room-settings-relays-edit", fallback: "Edit") }
+
+    /// Line under the group.
+    public static var roomSettingsGroupLine: String { string("room-settings-group-line", fallback: "Each of you plays the episode from your own sources; relays only carry the room's messages, sealed so they can't read them.") }
+
+    /// Line at the top of the Relays page on a desktop.
+    public static var roomRelaysIntro: String { string("room-relays-intro", fallback: "Rooms you start use these relays, and your invites carry them. Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. A room's own list is in its Details.") }
+
+    /// Line at the top of the Relays page on a phone.
+    public static var roomRelaysIntroShort: String { string("room-relays-intro-short", fallback: "Rooms you start use these relays, and your invites carry them. They can't read the room. These are public relays run by others.") }
+
+    /// Heading of the list of relays for new rooms.
+    public static var roomRelaysNewRooms: String { string("room-relays-new-rooms", fallback: "For new rooms") }
+
+    /// Line under the list for new rooms.
+    public static var roomRelaysNewRoomsLine: String { string("room-relays-new-rooms-line", fallback: "Kaeri sends every room event to all of them. Plain ws:// works only for localhost and .local addresses.") }
+
+    /// Heading of the list of spare relays.
+    public static var roomRelaysSpares: String { string("room-relays-spares", fallback: "Spares") }
+
+    /// Line under the spares on a desktop.
+    public static var roomRelaysSparesLine: String { string("room-relays-spares-line", fallback: "When a room has fewer than two relays answering, it swaps in the first spare that answers.") }
+
+    /// Line under the spares on a phone.
+    public static var roomRelaysSparesLineShort: String { string("room-relays-spares-line-short", fallback: "Used when a room has fewer than two relays answering.") }
+
+    /// Button that puts the default relays and spares back.
+    public static var roomRelaysRestore: String { string("room-relays-restore", fallback: "Restore the defaults") }
+
+    /// Button in the room column's header that leaves, on the place's room card, with the dialog after it.
+    public static var roomLeaveEllipsis: String { string("room-leave-ellipsis", fallback: "Leave…") }
+
+    /// Menu item on an iPhone that leaves, asking first.
+    public static var roomLeaveMenu: String { string("room-leave-menu", fallback: "Leave the room…") }
+
+    /// Menu item on Android that leaves, asking first.
+    public static var roomLeaveMenuPlain: String { string("room-leave-menu-plain", fallback: "Leave the room") }
+
+    /// Title of the confirmation before leaving.
+    public static var roomLeaveTitle: String { string("room-leave-title", fallback: "Leave the room?") }
+
+    /// Line under it.
+    public static var roomLeaveLine: String { string("room-leave-line", fallback: "The others keep watching.") }
+
+    /// Line under it when closing the window on a Mac, which offers Keep the room.
+    public static var roomLeaveLineKeep: String { string("room-leave-line-keep", fallback: "The others keep watching. Keep the room closes the player and keeps your place.") }
+
+    /// Button in the confirmation on closing the window: close the player and stay in the room.
+    public static var roomKeep: String { string("room-keep", fallback: "Keep the room") }
+
+    /// Button in the TV's confirmation that goes back to the room.
+    public static var roomKeepWatching: String { string("room-keep-watching", fallback: "Keep watching") }
+
+    /// Small heading of the up next card.
+    public static var roomUpNext: String { string("room-up-next", fallback: "Up next for the room") }
+
+    /// Line on the card naming the next episode.
+    public static func roomUpNextEpisode(episode: String, title: String) -> String {
+        Self.format("room-up-next-episode", fallback: "Episode %1$@ · %2$@", episode, title)
+    }
+
+    /// Line on the card naming the next episode when it has no title.
+    public static func roomUpNextEpisodePlain(episode: String) -> String {
+        Self.format("room-up-next-episode-plain", fallback: "Episode %1$@", episode)
+    }
+
+    /// Line on the card counting down for everyone.
+    public static func roomUpNextCount(seconds: Int) -> String {
+        Self.format("room-up-next-count", fallback: "Plays for everyone in %1$lld s", seconds)
+    }
+
+    /// Line on the card while your file ended sooner and the room waits for someone's longer file.
+    public static func roomUpNextWaiting(name: String) -> String {
+        Self.format("room-up-next-waiting", fallback: "Waiting for %1$@ to finish", name)
+    }
+
+    /// Button on the card that moves the room on at once.
+    public static var roomPlayNextNow: String { string("room-play-next-now", fallback: "Play next now") }
+
+    /// First line of the room while up next counts down.
+    public static func roomLineUpNext(seconds: Int) -> String {
+        Self.format("room-line-up-next", fallback: "Up next in %1$lld s", seconds)
+    }
+
+    /// Second line while up next counts down.
+    public static func roomLineUpNextDetail(episode: String) -> String {
+        Self.format("room-line-up-next-detail", fallback: "Episode %1$@ plays for everyone", episode)
+    }
+
+    /// Placeholder of the chat field.
+    public static var roomChatField: String { string("room-chat-field", fallback: "Say something") }
+
+    /// Button and accessibility label that sends a chat line.
+    public static var roomChatSend: String { string("room-chat-send", fallback: "Send") }
+
+    /// Accessibility label of the button beside the chat field that opens the reactions.
+    public static var roomReact: String { string("room-react", fallback: "React") }
+
+    /// Line in the chat of a room opened from an invite, before joining.
+    public static var roomChatOpens: String { string("room-chat-opens", fallback: "The chat opens when you join") }
+
+    /// Line under a chat line that didn't reach any relay.
+    public static var roomChatNotSent: String { string("room-chat-not-sent", fallback: "Couldn't send") }
+
+    /// Chat line: someone started the room.
+    public static func roomChatStarted(name: String, episode: String) -> String {
+        Self.format("room-chat-started", fallback: "%1$@ started the room · Episode %2$@", name, episode)
+    }
+
+    /// Chat line: you started the room.
+    public static func roomChatYouStarted(episode: String) -> String {
+        Self.format("room-chat-you-started", fallback: "You started the room · Episode %1$@", episode)
+    }
+
+    /// Chat line: someone paused, at a place in the episode.
+    public static func roomChatPaused(name: String, at: String) -> String {
+        Self.format("room-chat-paused", fallback: "%1$@ paused at %2$@", name, at)
+    }
+
+    /// Chat line: you paused.
+    public static func roomChatYouPaused(at: String) -> String {
+        Self.format("room-chat-you-paused", fallback: "You paused at %1$@", at)
+    }
+
+    /// Chat line: someone played after a pause.
+    public static func roomChatResumed(name: String) -> String {
+        Self.format("room-chat-resumed", fallback: "%1$@ resumed", name)
+    }
+
+    /// Chat line: the room waits for people whose player is opening the episode.
+    public static func roomChatPausedForLoading(names: String) -> String {
+        Self.format("room-chat-paused-for-loading", fallback: "Paused for %1$@ · loading", names)
+    }
+
+    /// Chat line: the room waits for people whose player stalled.
+    public static func roomChatPausedForBuffering(names: String) -> String {
+        Self.format("room-chat-paused-for-buffering", fallback: "Paused for %1$@ · buffering", names)
+    }
+
+    /// Chat line on your own device: the room waits for you.
+    public static var roomChatPausedForYou: String { string("room-chat-paused-for-you", fallback: "Paused for you · loading") }
+
+    /// Chat line: someone pressed Carry on.
+    public static func roomChatCarriedOn(carrier: String, names: String) -> String {
+        Self.format("room-chat-carried-on", fallback: "%1$@ carried on without %2$@", carrier, names)
+    }
+
+    /// Chat line: someone's first frame landed and they joined at the room's place.
+    public static func roomChatJoinedAt(name: String, at: String) -> String {
+        Self.format("room-chat-joined-at", fallback: "%1$@ joined at %2$@", name, at)
+    }
+
+    /// Chat line: someone left the room.
+    public static func roomChatLeft(name: String) -> String {
+        Self.format("room-chat-left", fallback: "%1$@ left", name)
+    }
+
+    /// Chat line: someone moved to a new room.
+    public static func roomChatMoved(name: String) -> String {
+        Self.format("room-chat-moved", fallback: "%1$@ moved to a new room", name)
+    }
+
+    /// Chat line in the old room: someone went along to the new room.
+    public static func roomChatWent(name: String) -> String {
+        Self.format("room-chat-went", fallback: "%1$@ went to the new room", name)
+    }
+
+    /// Chat line: up next moved the room on.
+    public static func roomChatUpNext(episode: String) -> String {
+        Self.format("room-chat-up-next", fallback: "Up next: episode %1$@ for everyone", episode)
+    }
+
+    /// Chat line: someone skipped the opening for the room.
+    public static func roomChatSkippedOpening(name: String) -> String {
+        Self.format("room-chat-skipped-opening", fallback: "%1$@ skipped the opening", name)
+    }
+
+    /// Label of the laugh reaction button.
+    public static var roomReactLaugh: String { string("room-react-laugh", fallback: "Laugh") }
+
+    /// Label of the gasp reaction button.
+    public static var roomReactGasp: String { string("room-react-gasp", fallback: "Gasp") }
+
+    /// Label of the clap reaction button.
+    public static var roomReactClap: String { string("room-react-clap", fallback: "Clap") }
+
+    /// Label of the cry reaction button.
+    public static var roomReactCry: String { string("room-react-cry", fallback: "Cry") }
+
+    /// Chat line: someone laughed, at a place in the episode.
+    public static func roomReactedLaugh(name: String, at: String) -> String {
+        Self.format("room-reacted-laugh", fallback: "%1$@ laughed at %2$@", name, at)
+    }
+
+    /// Chat line: someone gasped, at a place in the episode.
+    public static func roomReactedGasp(name: String, at: String) -> String {
+        Self.format("room-reacted-gasp", fallback: "%1$@ gasped at %2$@", name, at)
+    }
+
+    /// Chat line: someone clapped, at a place in the episode.
+    public static func roomReactedClap(name: String, at: String) -> String {
+        Self.format("room-reacted-clap", fallback: "%1$@ clapped at %2$@", name, at)
+    }
+
+    /// Chat line: someone cried, at a place in the episode.
+    public static func roomReactedCry(name: String, at: String) -> String {
+        Self.format("room-reacted-cry", fallback: "%1$@ cried at %2$@", name, at)
+    }
+
+    /// Line under the video on the TV rail: what the remote's buttons do.
+    public static var roomTvKeys: String { string("room-tv-keys", fallback: "OK for the controls · Back closes the room") }
+
+    /// Line under the chat on the TV rail: chat is read-only there.
+    public static var roomTvWriteFromPhone: String { string("room-tv-write-from-phone", fallback: "Write from your phone") }
+
+    /// Line under the place's heading.
+    public static var roomPlaceLine: String { string("room-place-line", fallback: "Each of you plays the episode from your own sources; the room keeps you in step. Start a room from any episode with Watch together, in the player or on its page.") }
+
+    /// Small heading of the card for the room you are in.
+    public static var roomPlaceYours: String { string("room-place-yours", fallback: "Your room") }
+
+    /// Button on the card that opens the room's player.
+    public static var roomOpenPlayer: String { string("room-open-player", fallback: "Open the player") }
+
+    /// Heading of the field that joins a room.
+    public static var roomPlaceJoin: String { string("room-place-join", fallback: "Join a room") }
+
+    /// Placeholder of the field that takes an invite link.
+    public static var roomPlaceLink: String { string("room-place-link", fallback: "Invite link") }
+
+    /// Button that pastes the clipboard into the field.
+    public static var roomPlacePaste: String { string("room-place-paste", fallback: "Paste") }
+
+    /// Heading of the list of recent rooms.
+    public static var roomRecent: String { string("room-recent", fallback: "Recent rooms") }
+
+    /// Line beside the heading.
+    public static var roomRecentNote: String { string("room-recent-note", fallback: "The last ten, kept on this device") }
+
+    /// Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.
+    public static func roomRecentRow(episode: String, names: String, when: String) -> String {
+        Self.format("room-recent-row", fallback: "Episode %1$@ · with %2$@ · %3$@", episode, names, when)
+    }
+
+    /// Line of a recent room where you were alone.
+    public static func roomRecentRowAlone(episode: String, when: String) -> String {
+        Self.format("room-recent-row-alone", fallback: "Episode %1$@ · %2$@", episode, when)
+    }
+
+    /// Button on a recent room that joins it again.
+    public static var roomRejoin: String { string("room-rejoin", fallback: "Rejoin") }
+
+    /// Title of the alert when none of an invite's relays answers, and the bold start of the line in the place.
+    public static var roomErrorUnreachableTitle: String { string("room-error-unreachable-title", fallback: "Couldn't reach this room's relays") }
+
+    /// Line under it, and the next sentence in the place.
+    public static var roomErrorAskNewInvite: String { string("room-error-ask-new-invite", fallback: "Ask for a new invite.") }
+
+    /// The same error in one line, where there is no room for a title.
+    public static var roomErrorUnreachable: String { string("room-error-unreachable", fallback: "Couldn't reach this room's relays. Ask for a new invite.") }
+
+    /// Line after it in the place: what was tried.
+    public static func roomErrorTried(seconds: Int) -> String {
+        Self.format("room-error-tried", fallback: "Kaeri tried the link's relays and your spares, %1$lld s each.", seconds)
+    }
+
+    /// Title of the alert when a recent room has nobody answering, such as after a new invite.
+    public static var roomErrorNobodyAnswered: String { string("room-error-nobody-answered", fallback: "Nobody answered in this room") }
+
+    /// Line under it.
+    public static var roomErrorNobodyAnsweredLine: String { string("room-error-nobody-answered-line", fallback: "If someone made a new invite, the old one stopped working. Ask them for the new link.") }
+
+    /// Notice when the room already has 10 people and you can't join.
+    public static var roomErrorFull: String { string("room-error-full", fallback: "This room is full") }
+
+    /// Notice when an invite link or code is from an older version.
+    public static var roomErrorOldInvite: String { string("room-error-old-invite", fallback: "This invite is from an older version of Kaeri. Ask for a new one.") }
+
+    /// Chat line: someone came into the room.
+    public static func roomChatJoined(name: String) -> String {
+        Self.format("room-chat-joined", fallback: "%1$@ joined", name)
+    }
+
+    /// Chat line: someone moved the room to another place in the episode.
+    public static func roomChatJumped(name: String, from: String, to: String) -> String {
+        Self.format("room-chat-jumped", fallback: "%1$@ jumped from %2$@ to %3$@", name, from, to)
+    }
+
+    /// Chat line: the room waits for people catching up after a jump.
+    public static func roomChatPausedForSeeking(names: String) -> String {
+        Self.format("room-chat-paused-for-seeking", fallback: "Paused for %1$@ · catching up", names)
+    }
+
+    /// Chat line: this device's player was moved to stay with the room.
+    public static var roomChatCorrected: String { string("room-chat-corrected", fallback: "Moved to stay with the room") }
+
+    /// Chat line: someone put on another episode for the room.
+    public static func roomChatEpisodeChanged(name: String, episode: String) -> String {
+        Self.format("room-chat-episode-changed", fallback: "%1$@ put on episode %2$@", name, episode)
+    }
+
+    /// Chat line: someone who was behind caught up with the room.
+    public static func roomChatCaughtUp(name: String) -> String {
+        Self.format("room-chat-caught-up", fallback: "%1$@ caught up with the room", name)
+    }
+
+    /// Chat line on a device whose Play lost to someone's Pause pressed at the same moment.
+    public static func roomChatAlreadyPaused(name: String) -> String {
+        Self.format("room-chat-already-paused", fallback: "%1$@ already paused", name)
+    }
+
+    /// Chat line: someone made a new invite; the old link stopped working.
+    public static func roomChatNewInvite(name: String) -> String {
+        Self.format("room-chat-new-invite", fallback: "%1$@ made a new invite", name)
+    }
+
+    /// Chat line: someone cancelled Up next for everyone.
+    public static func roomChatUpNextCancelled(name: String) -> String {
+        Self.format("room-chat-up-next-cancelled", fallback: "%1$@ cancelled up next", name)
+    }
+
+    /// Chat line on your own device: your name was taken, so the room knows you by this one.
+    public static func roomChatRenamed(name: String) -> String {
+        Self.format("room-chat-renamed", fallback: "You're %1$@ in this room", name)
+    }
+
+    /// Button that shows the room's column again after Hide room.
+    public static var roomShow: String { string("room-show", fallback: "Show room") }
+
+    /// The room's Skip opening button on the player: skips for everyone.
+    public static var roomSkipOpening: String { string("room-skip-opening", fallback: "Skip opening") }
+
+    /// Confirmation after Copy invite link.
+    public static var roomLinkCopied: String { string("room-link-copied", fallback: "Invite link copied") }
+
+    /// The starting screen's line on the device opening the room's episode.
+    public static func roomStartingEpisode(episode: String) -> String {
+        Self.format("room-starting-episode", fallback: "Starting episode %1$@", episode)
+    }
+
+    /// A short length in minutes, on the banner before play.
+    public static func roomMinutes(minutes: Int) -> String {
+        Self.format("room-minutes", fallback: "%1$lld min", minutes)
+    }
+
+    /// Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.
+    public static func roomNamesAnd(names: String, last: String) -> String {
+        Self.format("room-names-and", fallback: "%1$@ and %2$@", names, last)
+    }
+
+    /// Joins two names in a longer list: "Mika, Ren".
+    public static func roomNamesComma(first: String, rest: String) -> String {
+        Self.format("room-names-comma", fallback: "%1$@, %2$@", first, rest)
+    }
+
+    /// Person menu item and accessibility action that hides someone's lines and reactions in this room.
+    public static func roomMute(name: String) -> String {
+        Self.format("room-mute", fallback: "Mute %1$@", name)
+    }
+
+    /// Person menu item and accessibility action that shows a muted person's lines again.
+    public static func roomUnmute(name: String) -> String {
+        Self.format("room-unmute", fallback: "Unmute %1$@", name)
+    }
+
+    /// Line in the conversation where a muted person's lines were.
+    public static func roomChatMuted(name: String) -> String {
+        Self.format("room-chat-muted", fallback: "%1$@ is muted", name)
+    }
+
+    /// Line after the newest chat lines over the video, which opens the conversation.
+    public static func roomChatMore(count: Int) -> String {
+        Self.format("room-chat-more", fallback: "%1$lld more in chat", count)
+    }
+
+    /// Spoken by a screen reader when a chat line arrives.
+    public static func roomChatAnnounce(name: String, message: String) -> String {
+        Self.format("room-chat-announce", fallback: "%1$@ says %2$@", name, message)
+    }
+
+    /// End of the chat field while sending waits, after three messages in five seconds.
+    public static func roomChatWait(seconds: Int) -> String {
+        Self.format("room-chat-wait", fallback: "Wait %1$lld s", seconds)
+    }
+
+    /// Spoken once when sending waits, for screen readers.
+    public static func roomChatWaitSpoken(seconds: Int) -> String {
+        Self.format("room-chat-wait-spoken", fallback: "Wait %1$lld seconds", seconds)
+    }
+
+    /// Spoken by a screen reader once, when 20 characters are left in the chat field.
+    public static func roomChatCharactersLeft(count: Int) -> String {
+        Self.format("room-chat-characters-left", fallback: "%1$lld characters left", count)
+    }
+
+    /// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+    public static func roomReactedAt(line: String, time: String) -> String {
+        Self.format("room-reacted-at", fallback: "%1$@ at %2$@", line, time)
+    }
+
+    /// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+    public static func roomTickLabel(time: String, names: String) -> String {
+        Self.format("room-tick-label", fallback: "%1$@ · %2$@", time, names)
+    }
+
+    /// Two people named together, for a reaction made by both: "Ren and Mika".
+    public static func roomNamesTwo(first: String, second: String) -> String {
+        Self.format("room-names-two", fallback: "%1$@ and %2$@", first, second)
+    }
+
+    /// Three people named together.
+    public static func roomNamesThree(first: String, second: String, third: String) -> String {
+        Self.format("room-names-three", fallback: "%1$@, %2$@ and %3$@", first, second, third)
+    }
+
+    /// More than three people named together: two names and how many others.
+    public static func roomNamesOthers(first: String, second: String, count: Int) -> String {
+        Self.format("room-names-others", fallback: "%1$@, %2$@ and %3$lld others", first, second, count)
+    }
+
+    /// Player panel, under the subtitled or dubbed switch in a room.
+    public static var roomVersionOwn: String { string("room-version-own", fallback: "Only your player switches. The room keeps playing.") }
+
+    /// The banner over the room when the episode has no name of its own: the episode and its length.
+    public static func roomBannerEpisodePlain(episode: String, length: String) -> String {
+        Self.format("room-banner-episode-plain", fallback: "Episode %1$@ · %2$@", episode, length)
+    }
+
+    /// Menu item dimmed in a room, with this reason under it.
+    public static var roomMarkUnavailable: String { string("room-mark-unavailable", fallback: "Mark skip times after you leave the room.") }
+
+    /// Heading of the people list in the room, and its accessibility label.
+    public static var roomPeople: String { string("room-people", fallback: "People in the room") }
+
+    /// State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+    public static func roomStateSeeking(seconds: Int) -> String {
+        Self.format("room-state-seeking", fallback: "Seeking · %1$lld s", seconds)
+    }
+
+    /// Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+    public static var roomErrorUnreachableLead: String { string("room-error-unreachable-lead", fallback: "Couldn't reach this room's relays.") }
+
+    /// Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+    public static var roomErrorNobodyAnsweredLead: String { string("room-error-nobody-answered-lead", fallback: "Nobody answered in this room.") }
+
+    /// Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+    public static func roomDeviceInRoom(device: String) -> String {
+        Self.format("room-device-in-room", fallback: "%1$@ is in this room", device)
+    }
+
+    /// Button on the phone's remote screen that leaves the room on the paired TV.
+    public static func roomLeaveOnDevice(device: String) -> String {
+        Self.format("room-leave-on-device", fallback: "Leave the room on %1$@", device)
+    }
+
+    /// Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+    public static var roomTvJoinFromPhone: String { string("room-tv-join-from-phone", fallback: "To join someone's room, open their invite on a paired phone and choose this TV.") }
+
+    /// Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+    public static func roomSourcesFoundLine(count: Int) -> String {
+        Self.format("room-sources-found-line", fallback: "%1$lld sources have it. Your pick plays for everyone in the room.", count)
+    }
+
     /// Button that shows the season before.
     public static var seasonalPrevious: String { string("seasonal-previous", fallback: "Previous season") }
 
@@ -13412,6 +14392,30 @@ public enum L {
 
     /// Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
     public static var sourcesOrderAll: String { string("sources-order-all", fallback: "Every source is tried in this order, whatever its kind.") }
+
+    /// Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+    public static func sourcesChooseFor(episode: String) -> String {
+        Self.format("sources-choose-for", fallback: "Choose a source for episode %1$@", episode)
+    }
+
+    /// Line while the sources are searched for the episode.
+    public static var sourcesLooking: String { string("sources-looking", fallback: "Looking through your sources…") }
+
+    /// Line over the list of sources that list the episode.
+    public static func sourcesFound(count: Int) -> String {
+        Self.format("sources-found", fallback: "%1$lld sources have it", count)
+    }
+
+    /// Line when no source lists the episode.
+    public static func sourcesNoneList(episode: String) -> String {
+        Self.format("sources-none-list", fallback: "No source lists episode %1$@. Sources come from plugins, which a plugin store adds.", episode)
+    }
+
+    /// Button that goes to the Sources page, when no source is set up.
+    public static var sourcesOpen: String { string("sources-open", fallback: "Open sources") }
+
+    /// Accessibility label of the list of sources for the episode.
+    public static var sourcesLabel: String { string("sources-label", fallback: "Sources for this episode") }
 
     /// Short label for a joined store, on a row.
     public static var storesJoined: String { string("stores-joined", fallback: "Joined") }

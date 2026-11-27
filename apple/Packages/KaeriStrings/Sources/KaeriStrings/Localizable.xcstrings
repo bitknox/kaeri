@@ -159621,90 +159621,6 @@
         }
       }
     },
-    "party-choose-server" : {
-      "comment" : "Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it. Argument 1: server (Text). Argument 2: operator (Text).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle zuerst einen Server für die Watchparty. %1$@ wird von %2$@ betrieben."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a server for the watch party first. %1$@ is run by %2$@."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Primero elige un servidor para la watch party. %1$@ es operado por %2$@."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez d'abord un serveur pour le visionnage en groupe. %1$@ est géré par %2$@."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih server untuk nonton bareng dulu. %1$@ dijalankan oleh %2$@."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scegli prima un server per il watch party. %1$@ è gestito da %2$@."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先に同時視聴のサーバーを選んでください。%1$@は%2$@が運営しています。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Najpierw wybierz serwer, zanim rozpoczniesz wspólne oglądanie. %1$@ jest prowadzony przez %2$@."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolha primeiro um servidor para a sessão em grupo. %1$@ é mantido por %2$@."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Совместный просмотр: сначала выберите сервер. Предлагаем %1$@, управляется %2$@."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Välj först en server för watch party. %1$@ drivs av %2$@."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Önce birlikte izleme için bir sunucu seçin. %1$@ sunucusu %2$@ tarafından işletiliyor."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hãy chọn máy chủ cho xem chung trước. %1$@ do %2$@ vận hành."
-          }
-        }
-      }
-    },
     "party-choose-source" : {
       "comment" : "Button that lists what each source has for the episode.",
       "extractionState" : "manual",
@@ -166089,90 +166005,6 @@
         }
       }
     },
-    "party-needs-server" : {
-      "comment" : "Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps. Argument 1: server (Text). Argument 2: operator (Text).",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wähle zuerst einen Server für die Watchparty als syncplay.server. %1$@ wird von %2$@ betrieben."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choose a server for the watch party first, as syncplay.server. %1$@ is run by %2$@."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Primero elige un servidor para la watch party, en el ajuste syncplay.server. %1$@ es operado por %2$@."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Choisissez d'abord un serveur pour le visionnage en groupe, dans syncplay.server. %1$@ est géré par %2$@."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Pilih server untuk nonton bareng dulu, sebagai syncplay.server. %1$@ dijalankan oleh %2$@."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Scegli prima un server per il watch party, come syncplay.server. %1$@ è gestito da %2$@."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "先に同時視聴のサーバーを選んでください（syncplay.server）。%1$@は%2$@が運営しています。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Najpierw wybierz serwer, zanim rozpoczniesz wspólne oglądanie (syncplay.server). %1$@ jest prowadzony przez %2$@."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Escolha primeiro um servidor para a sessão em grupo, em syncplay.server. %1$@ é mantido por %2$@."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Совместный просмотр: сначала выберите сервер в настройке syncplay.server. Предлагаем %1$@, управляется %2$@."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Välj först en server för watch party, som syncplay.server. %1$@ drivs av %2$@."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Önce birlikte izleme için bir sunucu seçin, syncplay.server olarak. %1$@ sunucusu %2$@ tarafından işletiliyor."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Hãy chọn máy chủ cho xem chung trước, dưới tên syncplay.server. %1$@ do %2$@ vận hành."
-          }
-        }
-      }
-    },
     "party-next-joined-at" : {
       "comment" : "Notice when a member who was behind joins. The time is already formatted. Argument 1: name (Text). Argument 2: time (Text).",
       "extractionState" : "manual",
@@ -169449,90 +169281,6 @@
         }
       }
     },
-    "party-rejoined" : {
-      "comment" : "Message in a watch party when the connection came back.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Wieder in der Watchparty."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Back in the watch party."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De vuelta en la watch party."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De retour dans le visionnage en groupe."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Kembali ke nonton bareng."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Di nuovo nel watch party."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同時視聴に戻りました。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Ponownie połączono. Wspólne oglądanie trwa."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "De volta à sessão em grupo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Совместный просмотр снова на связи."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Tillbaka i watch party."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Birlikte izlemeye yeniden bağlandı."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Đã trở lại xem chung."
-          }
-        }
-      }
-    },
     "party-room" : {
       "comment" : "Label of the room field.",
       "extractionState" : "manual",
@@ -171125,90 +170873,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Người mời bạn đã chọn máy chủ này. Kaeri không vận hành nó."
-          }
-        }
-      }
-    },
-    "party-server-lost" : {
-      "comment" : "Message in a watch party when its server connection dropped and is retried.",
-      "extractionState" : "manual",
-      "localizations" : {
-        "de" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Verbindung zum Server der Watchparty verloren. Neuer Versuch läuft."
-          }
-        },
-        "en" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Lost the watch party server. Trying again."
-          }
-        },
-        "es-419" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Se perdió el servidor de la watch party. Intentando de nuevo."
-          }
-        },
-        "fr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Connexion au serveur du visionnage en groupe perdue. Nouvelle tentative en cours."
-          }
-        },
-        "id" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Koneksi ke server nonton bareng terputus. Mencoba lagi."
-          }
-        },
-        "it" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Persa la connessione al server del watch party. Riprovo."
-          }
-        },
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "同時視聴のサーバーから切断されました。再接続しています。"
-          }
-        },
-        "pl" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Połączenie z serwerem zostało utracone. Trwa ponowna próba."
-          }
-        },
-        "pt-BR" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "A conexão com o servidor da sessão em grupo caiu. Tentando de novo."
-          }
-        },
-        "ru" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Совместный просмотр: связь с сервером потеряна. Пробуем снова."
-          }
-        },
-        "sv" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Servern för watch party tappades. Försöker igen."
-          }
-        },
-        "tr" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Birlikte izleme sunucusuyla bağlantı koptu. Yeniden deneniyor."
-          }
-        },
-        "vi" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "Mất máy chủ của xem chung. Đang thử lại."
           }
         }
       }
@@ -187159,6 +186823,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Các nguồn"
+          }
+        }
+      }
+    },
+    "player-sources-found-line" : {
+      "comment" : "Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting). Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One source has it. Choose it to play."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sources have it. Choose the one to play."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -257469,6 +257167,3396 @@
         }
       }
     },
+    "room-anyone-can-start" : {
+      "comment" : "Line beside Play for everyone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anyone in the room can start it"
+          }
+        }
+      }
+    },
+    "room-banner-episode" : {
+      "comment" : "Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min. Argument 1: episode (Text). Argument 2: title (Text). Argument 3: length (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "room-banner-episode-plain" : {
+      "comment" : "The banner over the room when the episode has no name of its own: the episode and its length. Argument 1: episode (Text). Argument 2: length (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "room-carry-on-without" : {
+      "comment" : "Button once the room has waited 20 seconds for one person. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carry on without %1$@"
+          }
+        }
+      }
+    },
+    "room-carry-on-without-them" : {
+      "comment" : "Button once the room has waited 20 seconds for more than one person.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carry on without them"
+          }
+        }
+      }
+    },
+    "room-carrying-on-without" : {
+      "comment" : "Capsule over the video after someone pressed Carry on. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Carrying on without %1$@"
+          }
+        }
+      }
+    },
+    "room-chat" : {
+      "comment" : "Accessibility label of the player's button that opens the chat in full screen.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat"
+          }
+        }
+      }
+    },
+    "room-chat-already-paused" : {
+      "comment" : "Chat line on a device whose Play lost to someone's Pause pressed at the same moment. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ already paused"
+          }
+        }
+      }
+    },
+    "room-chat-announce" : {
+      "comment" : "Spoken by a screen reader when a chat line arrives. Argument 1: name (Text). Argument 2: message (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ says %2$@"
+          }
+        }
+      }
+    },
+    "room-chat-carried-on" : {
+      "comment" : "Chat line: someone pressed Carry on. Argument 1: carrier (Text). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ carried on without %2$@"
+          }
+        }
+      }
+    },
+    "room-chat-caught-up" : {
+      "comment" : "Chat line: someone who was behind caught up with the room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ caught up with the room"
+          }
+        }
+      }
+    },
+    "room-chat-characters-left" : {
+      "comment" : "Spoken by a screen reader once, when 20 characters are left in the chat field. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld character left"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld characters left"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-chat-corrected" : {
+      "comment" : "Chat line: this device's player was moved to stay with the room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Moved to stay with the room"
+          }
+        }
+      }
+    },
+    "room-chat-episode-changed" : {
+      "comment" : "Chat line: someone put on another episode for the room. Argument 1: name (Text). Argument 2: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ put on episode %2$@"
+          }
+        }
+      }
+    },
+    "room-chat-field" : {
+      "comment" : "Placeholder of the chat field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Say something"
+          }
+        }
+      }
+    },
+    "room-chat-joined" : {
+      "comment" : "Chat line: someone came into the room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined"
+          }
+        }
+      }
+    },
+    "room-chat-joined-at" : {
+      "comment" : "Chat line: someone's first frame landed and they joined at the room's place. Argument 1: name (Text). Argument 2: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joined at %2$@"
+          }
+        }
+      }
+    },
+    "room-chat-jumped" : {
+      "comment" : "Chat line: someone moved the room to another place in the episode. Argument 1: name (Text). Argument 2: from (Text). Argument 3: to (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ jumped from %2$@ to %3$@"
+          }
+        }
+      }
+    },
+    "room-chat-left" : {
+      "comment" : "Chat line: someone left the room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ left"
+          }
+        }
+      }
+    },
+    "room-chat-more" : {
+      "comment" : "Line after the newest chat lines over the video, which opens the conversation. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld more in chat"
+          }
+        }
+      }
+    },
+    "room-chat-moved" : {
+      "comment" : "Chat line: someone moved to a new room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ moved to a new room"
+          }
+        }
+      }
+    },
+    "room-chat-muted" : {
+      "comment" : "Line in the conversation where a muted person's lines were. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is muted"
+          }
+        }
+      }
+    },
+    "room-chat-new-invite" : {
+      "comment" : "Chat line: someone made a new invite; the old link stopped working. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ made a new invite"
+          }
+        }
+      }
+    },
+    "room-chat-not-sent" : {
+      "comment" : "Line under a chat line that didn't reach any relay.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't send"
+          }
+        }
+      }
+    },
+    "room-chat-opens" : {
+      "comment" : "Line in the chat of a room opened from an invite, before joining.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The chat opens when you join"
+          }
+        }
+      }
+    },
+    "room-chat-paused" : {
+      "comment" : "Chat line: someone paused, at a place in the episode. Argument 1: name (Text). Argument 2: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ paused at %2$@"
+          }
+        }
+      }
+    },
+    "room-chat-paused-for-buffering" : {
+      "comment" : "Chat line: the room waits for people whose player stalled. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused for %1$@ · buffering"
+          }
+        }
+      }
+    },
+    "room-chat-paused-for-loading" : {
+      "comment" : "Chat line: the room waits for people whose player is opening the episode. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused for %1$@ · loading"
+          }
+        }
+      }
+    },
+    "room-chat-paused-for-seeking" : {
+      "comment" : "Chat line: the room waits for people catching up after a jump. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused for %1$@ · catching up"
+          }
+        }
+      }
+    },
+    "room-chat-paused-for-you" : {
+      "comment" : "Chat line on your own device: the room waits for you.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused for you · loading"
+          }
+        }
+      }
+    },
+    "room-chat-renamed" : {
+      "comment" : "Chat line on your own device: your name was taken, so the room knows you by this one. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're %1$@ in this room"
+          }
+        }
+      }
+    },
+    "room-chat-resumed" : {
+      "comment" : "Chat line: someone played after a pause. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ resumed"
+          }
+        }
+      }
+    },
+    "room-chat-send" : {
+      "comment" : "Button and accessibility label that sends a chat line.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Send"
+          }
+        }
+      }
+    },
+    "room-chat-skipped-opening" : {
+      "comment" : "Chat line: someone skipped the opening for the room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ skipped the opening"
+          }
+        }
+      }
+    },
+    "room-chat-started" : {
+      "comment" : "Chat line: someone started the room. Argument 1: name (Text). Argument 2: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ started the room · Episode %2$@"
+          }
+        }
+      }
+    },
+    "room-chat-up-next" : {
+      "comment" : "Chat line: up next moved the room on. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up next: episode %1$@ for everyone"
+          }
+        }
+      }
+    },
+    "room-chat-up-next-cancelled" : {
+      "comment" : "Chat line: someone cancelled Up next for everyone. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ cancelled up next"
+          }
+        }
+      }
+    },
+    "room-chat-wait" : {
+      "comment" : "End of the chat field while sending waits, after three messages in five seconds. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Wait %1$lld s"
+          }
+        }
+      }
+    },
+    "room-chat-wait-spoken" : {
+      "comment" : "Spoken once when sending waits, for screen readers. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@seconds@"
+          },
+          "substitutions" : {
+            "seconds" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Wait one second"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Wait %1$lld seconds"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-chat-went" : {
+      "comment" : "Chat line in the old room: someone went along to the new room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ went to the new room"
+          }
+        }
+      }
+    },
+    "room-chat-you-paused" : {
+      "comment" : "Chat line: you paused. Argument 1: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You paused at %1$@"
+          }
+        }
+      }
+    },
+    "room-chat-you-started" : {
+      "comment" : "Chat line: you started the room. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You started the room · Episode %1$@"
+          }
+        }
+      }
+    },
+    "room-choose-source" : {
+      "comment" : "Heading over the list of sources for the room's episode. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a source for episode %1$@"
+          }
+        }
+      }
+    },
+    "room-choose-source-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The room keeps watching; you join at its place."
+          }
+        }
+      }
+    },
+    "room-copy-invite-link" : {
+      "comment" : "Menu item on a phone that copies the invite link.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy invite link"
+          }
+        }
+      }
+    },
+    "room-copy-link" : {
+      "comment" : "Button that copies the invite link.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy link"
+          }
+        }
+      }
+    },
+    "room-details" : {
+      "comment" : "Button and accessibility label that opens the room's details.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Details"
+          }
+        }
+      }
+    },
+    "room-details-encryption" : {
+      "comment" : "Label of the encryption row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Encryption"
+          }
+        }
+      }
+    },
+    "room-details-end-to-end" : {
+      "comment" : "Value of the encryption row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "End to end"
+          }
+        }
+      }
+    },
+    "room-details-relays-line" : {
+      "comment" : "Line under the relays in Details.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare."
+          }
+        }
+      }
+    },
+    "room-device-in-room" : {
+      "comment" : "Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ is in this room"
+          }
+        }
+      }
+    },
+    "room-dont-wait" : {
+      "comment" : "Button on your own starting screen that lets the room carry on without you.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Don't wait for me"
+          }
+        }
+      }
+    },
+    "room-edit-relays" : {
+      "comment" : "Button in Details that edits the room's relays.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit relays…"
+          }
+        }
+      }
+    },
+    "room-edit-relays-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Changes this room's relays for everyone in it. New invites carry the list."
+          }
+        }
+      }
+    },
+    "room-edit-relays-settings" : {
+      "comment" : "Line under the room's relay editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Settings › Playback › Relays sets the list for new rooms."
+          }
+        }
+      }
+    },
+    "room-edit-relays-title" : {
+      "comment" : "Title of the room's relay editor.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit relays"
+          }
+        }
+      }
+    },
+    "room-error-ask-new-invite" : {
+      "comment" : "Line under it, and the next sentence in the place.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ask for a new invite."
+          }
+        }
+      }
+    },
+    "room-error-full" : {
+      "comment" : "Notice when the room already has 10 people and you can't join.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This room is full"
+          }
+        }
+      }
+    },
+    "room-error-nobody-answered" : {
+      "comment" : "Title of the alert when a recent room has nobody answering, such as after a new invite.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nobody answered in this room"
+          }
+        }
+      }
+    },
+    "room-error-nobody-answered-lead" : {
+      "comment" : "Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Nobody answered in this room."
+          }
+        }
+      }
+    },
+    "room-error-nobody-answered-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "If someone made a new invite, the old one stopped working. Ask them for the new link."
+          }
+        }
+      }
+    },
+    "room-error-old-invite" : {
+      "comment" : "Notice when an invite link or code is from an older version.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This invite is from an older version of Kaeri. Ask for a new one."
+          }
+        }
+      }
+    },
+    "room-error-tried" : {
+      "comment" : "Line after it in the place: what was tried. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri tried the link's relays and your spares, %1$lld s each."
+          }
+        }
+      }
+    },
+    "room-error-unreachable" : {
+      "comment" : "The same error in one line, where there is no room for a title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach this room's relays. Ask for a new invite."
+          }
+        }
+      }
+    },
+    "room-error-unreachable-lead" : {
+      "comment" : "Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach this room's relays."
+          }
+        }
+      }
+    },
+    "room-error-unreachable-title" : {
+      "comment" : "Title of the alert when none of an invite's relays answers, and the bold start of the line in the place.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach this room's relays"
+          }
+        }
+      }
+    },
+    "room-face-label" : {
+      "comment" : "Accessibility label of a face in the full screen strip: the name and the state word. Argument 1: name (Text). Argument 2: state (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "room-fold" : {
+      "comment" : "Accessibility label of the chevron on a phone that folds the room into the bar over the tabs.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Close the room to the bar"
+          }
+        }
+      }
+    },
+    "room-go-along" : {
+      "comment" : "Button that goes along to the new room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go along"
+          }
+        }
+      }
+    },
+    "room-header-line" : {
+      "comment" : "Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room. Argument 1: episode (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · %2$lld in the room"
+          }
+        }
+      }
+    },
+    "room-hide" : {
+      "comment" : "Accessibility label of the player's button that hides the room column.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide room"
+          }
+        }
+      }
+    },
+    "room-invite" : {
+      "comment" : "Button and accessibility label that opens the invite.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite"
+          }
+        }
+      }
+    },
+    "room-invite-anyone" : {
+      "comment" : "Line in the invite: anyone with the link can join.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Anyone with this link can join."
+          }
+        }
+      }
+    },
+    "room-invite-key" : {
+      "comment" : "Line after it on a desktop: the link carries the key.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The link carries the room's key, so only people who have it can read the room."
+          }
+        }
+      }
+    },
+    "room-invite-key-short" : {
+      "comment" : "Line after it on a phone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only people with the link can read the room."
+          }
+        }
+      }
+    },
+    "room-invite-qr" : {
+      "comment" : "Accessibility label of the invite's QR code.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite as a QR code"
+          }
+        }
+      }
+    },
+    "room-invite-qr-line" : {
+      "comment" : "Line beside the QR code.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Someone beside you can scan this with their camera."
+          }
+        }
+      }
+    },
+    "room-invited-by" : {
+      "comment" : "First line of the room when an invite link opened it. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ invited you"
+          }
+        }
+      }
+    },
+    "room-invited-detail" : {
+      "comment" : "Second line when an invite link opened the room: the show and the episode. Argument 1: title (Text). Argument 2: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Episode %2$@"
+          }
+        }
+      }
+    },
+    "room-invited-over" : {
+      "comment" : "Second line when an invite link opened a room with 10 or more people in it. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld people are here already · rooms work best with 10 or fewer"
+          }
+        }
+      }
+    },
+    "room-join" : {
+      "comment" : "Button that joins the room from an invite.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join the room"
+          }
+        }
+      }
+    },
+    "room-join-anyway" : {
+      "comment" : "Button that joins a room with 10 or more people in it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join anyway"
+          }
+        }
+      }
+    },
+    "room-join-at-place-many" : {
+      "comment" : "Second part of the capsule after Carry on, when the room waited for more than one person.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "They join at the room's place"
+          }
+        }
+      }
+    },
+    "room-joins-at-place" : {
+      "comment" : "Second part of the capsule after Carry on, when the room waited for one person. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ joins at the room's place"
+          }
+        }
+      }
+    },
+    "room-keep" : {
+      "comment" : "Button in the confirmation on closing the window: close the player and stay in the room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep the room"
+          }
+        }
+      }
+    },
+    "room-keep-watching" : {
+      "comment" : "Button in the TV's confirmation that goes back to the room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Keep watching"
+          }
+        }
+      }
+    },
+    "room-leave-ellipsis" : {
+      "comment" : "Button in the room column's header that leaves, on the place's room card, with the dialog after it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave…"
+          }
+        }
+      }
+    },
+    "room-leave-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The others keep watching."
+          }
+        }
+      }
+    },
+    "room-leave-line-keep" : {
+      "comment" : "Line under it when closing the window on a Mac, which offers Keep the room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The others keep watching. Keep the room closes the player and keeps your place."
+          }
+        }
+      }
+    },
+    "room-leave-menu" : {
+      "comment" : "Menu item on an iPhone that leaves, asking first.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the room…"
+          }
+        }
+      }
+    },
+    "room-leave-menu-plain" : {
+      "comment" : "Menu item on Android that leaves, asking first.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the room"
+          }
+        }
+      }
+    },
+    "room-leave-on-device" : {
+      "comment" : "Button on the phone's remote screen that leaves the room on the paired TV. Argument 1: device (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the room on %1$@"
+          }
+        }
+      }
+    },
+    "room-leave-title" : {
+      "comment" : "Title of the confirmation before leaving.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Leave the room?"
+          }
+        }
+      }
+    },
+    "room-line-carried-on-many" : {
+      "comment" : "Second line after someone pressed Carry on, when the room waited for more than one person. Argument 1: carrier (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ carried on · they join when ready"
+          }
+        }
+      }
+    },
+    "room-line-carried-on-one" : {
+      "comment" : "Second line after someone pressed Carry on, when the room waited for one person. Argument 1: carrier (Text). Argument 2: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ carried on · %2$@ joins when ready"
+          }
+        }
+      }
+    },
+    "room-line-everyone-ready" : {
+      "comment" : "Second line when everyone is ready.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyone is ready"
+          }
+        }
+      }
+    },
+    "room-line-moved" : {
+      "comment" : "First line of the room while the offer waits for an answer. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ moved the room"
+          }
+        }
+      }
+    },
+    "room-line-moved-away" : {
+      "comment" : "First line of the old room for someone who stayed. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ moved to a new room"
+          }
+        }
+      }
+    },
+    "room-line-moved-detail" : {
+      "comment" : "Second line with the offer: who else is asked, and the place the episode carries on from. Argument 1: names (Text). Argument 2: count (Int). Argument 3: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Go along? %1$@ is asked too. The episode carries on from %3$@."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Go along? %1$@ are asked too. The episode carries on from %3$@."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-moved-detail-alone" : {
+      "comment" : "Second line with the offer when nobody else is asked. Argument 1: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Go along? The episode carries on from %1$@."
+          }
+        }
+      }
+    },
+    "room-line-not-started" : {
+      "comment" : "First line before anyone pressed Play.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not started yet"
+          }
+        }
+      }
+    },
+    "room-line-paused-at" : {
+      "comment" : "Second line while the room is paused: the place it paused at. Argument 1: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "at %1$@"
+          }
+        }
+      }
+    },
+    "room-line-paused-by" : {
+      "comment" : "First line while the room is paused by someone. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ paused"
+          }
+        }
+      }
+    },
+    "room-line-paused-for" : {
+      "comment" : "First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused for %1$@"
+          }
+        }
+      }
+    },
+    "room-line-paused-for-you" : {
+      "comment" : "First line on your own device while the room waits for you.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused for you"
+          }
+        }
+      }
+    },
+    "room-line-play-starts" : {
+      "comment" : "Second line before anyone pressed Play.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play starts it for everyone"
+          }
+        }
+      }
+    },
+    "room-line-reconnecting" : {
+      "comment" : "First line when your own device lost every relay.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnecting to the room"
+          }
+        }
+      }
+    },
+    "room-line-reconnecting-detail" : {
+      "comment" : "Second line when your own device lost every relay.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No relay is answering · your episode keeps playing"
+          }
+        }
+      }
+    },
+    "room-line-relays-down" : {
+      "comment" : "Second line while one of the room's relays is not answering. Argument 1: count (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld relays isn't answering · the room carries on"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld of %2$lld relays aren't answering · the room carries on"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-starting-in" : {
+      "comment" : "First line counting down once everyone is ready. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting in %1$lld"
+          }
+        }
+      }
+    },
+    "room-line-starting-when" : {
+      "comment" : "First line after Play, while the room waits for people still loading. Argument 1: names (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Starting when %1$@ is ready"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Starting when %1$@ are ready"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-still-buffering" : {
+      "comment" : "First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for. Argument 1: names (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is still buffering"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are still buffering"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-still-loading" : {
+      "comment" : "First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for. Argument 1: names (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is still loading"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are still loading"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-still-seeking" : {
+      "comment" : "First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for. Argument 1: names (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is still seeking"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are still seeking"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-up-next" : {
+      "comment" : "First line of the room while up next counts down. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up next in %1$lld s"
+          }
+        }
+      }
+    },
+    "room-line-up-next-detail" : {
+      "comment" : "Second line while up next counts down. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ plays for everyone"
+          }
+        }
+      }
+    },
+    "room-line-waited" : {
+      "comment" : "Second line once the room has waited as long as it will. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The room has waited %1$lld s"
+          }
+        }
+      }
+    },
+    "room-line-waiting-for-you" : {
+      "comment" : "Second line while the room waits for you: who waits, and for how many seconds so far. Argument 1: names (Text). Argument 2: count (Int). Argument 3: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is waiting · %3$lld s"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are waiting · %3$lld s"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-watching" : {
+      "comment" : "First line while the room plays and nobody holds it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watching together"
+          }
+        }
+      }
+    },
+    "room-line-watching-detail" : {
+      "comment" : "Second line while the room plays: the room's episode and its place in it. Argument 1: episode (Text). Argument 2: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "room-line-went-along" : {
+      "comment" : "Second line of the old room: who went along. Argument 1: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ went along · this room carries on"
+          }
+        }
+      }
+    },
+    "room-line-with-seconds" : {
+      "comment" : "The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines. Argument 1: line (Text). Argument 2: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$lld s"
+          }
+        }
+      }
+    },
+    "room-line-you-behind" : {
+      "comment" : "Second line when your own player is behind the room. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You're %1$lld s behind · catching up"
+          }
+        }
+      }
+    },
+    "room-line-you-paused" : {
+      "comment" : "First line while the room is paused by you.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You paused"
+          }
+        }
+      }
+    },
+    "room-link-copied" : {
+      "comment" : "Confirmation after Copy invite link.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite link copied"
+          }
+        }
+      }
+    },
+    "room-look-not-an-invite" : {
+      "comment" : "Why a look into a room found nothing: the pasted text is no room's invite.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That isn't a room's invite."
+          }
+        }
+      }
+    },
+    "room-look-not-kept" : {
+      "comment" : "Why a look into a recent room found nothing: it's no longer in this device's recent rooms.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "That room isn't kept any more."
+          }
+        }
+      }
+    },
+    "room-look-old-invite" : {
+      "comment" : "Why a look into a room found nothing: the invite comes from an older version.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This invite is from an older version of Kaeri. Ask for a new one."
+          }
+        }
+      }
+    },
+    "room-look-unreachable" : {
+      "comment" : "Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Couldn't reach this room's relays. Ask for a new invite."
+          }
+        }
+      }
+    },
+    "room-mark-unavailable" : {
+      "comment" : "Menu item dimmed in a room, with this reason under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mark skip times after you leave the room."
+          }
+        }
+      }
+    },
+    "room-minutes" : {
+      "comment" : "A short length in minutes, on the banner before play. Argument 1: minutes (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld min"
+          }
+        }
+      }
+    },
+    "room-more" : {
+      "comment" : "Name under the last face on a phone and the TV: it opens everyone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "room-more-actions" : {
+      "comment" : "Accessibility label of the More button on a phone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "More"
+          }
+        }
+      }
+    },
+    "room-more-all-watching" : {
+      "comment" : "State under the last face when everyone hidden is watching.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "All watching"
+          }
+        }
+      }
+    },
+    "room-more-faces" : {
+      "comment" : "The last face in a row of faces, standing for the people not shown. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "+%1$lld"
+          }
+        }
+      }
+    },
+    "room-more-faces-label" : {
+      "comment" : "Accessibility label of the last face, which opens the full people list. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld more person"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld more people"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-more-not-watching" : {
+      "comment" : "State under the last face: how many of the hidden people are not watching. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld not watching"
+          }
+        }
+      }
+    },
+    "room-move-always-goes" : {
+      "comment" : "Note under your own row: you always go.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Always goes"
+          }
+        }
+      }
+    },
+    "room-move-body" : {
+      "comment" : "Line under the title.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room."
+          }
+        }
+      }
+    },
+    "room-move-foot" : {
+      "comment" : "Line under the list. Argument 1: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The new room picks up at %1$@ with a new key. Its link reaches only the people ticked."
+          }
+        }
+      }
+    },
+    "room-move-muted" : {
+      "comment" : "Note under a person you muted, who starts unticked.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muted, so not ticked"
+          }
+        }
+      }
+    },
+    "room-move-offer" : {
+      "comment" : "The offer to someone ticked, in a notice or alert, as one sentence pair. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ moved the room. Go along?"
+          }
+        }
+      }
+    },
+    "room-move-open" : {
+      "comment" : "Button in the invite and menu item on a phone that opens the move.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to a new room…"
+          }
+        }
+      }
+    },
+    "room-move-open-line" : {
+      "comment" : "Line under the button in the invite.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For someone already here: start a new room and pick who comes along."
+          }
+        }
+      }
+    },
+    "room-move-title" : {
+      "comment" : "Title of the move dialog and sheet.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Move to a new room"
+          }
+        }
+      }
+    },
+    "room-move-with" : {
+      "comment" : "Button that moves, counting the others ticked. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Move with %1$lld other"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Move with %1$lld others"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-mute" : {
+      "comment" : "Person menu item and accessibility action that hides someone's lines and reactions in this room. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mute %1$@"
+          }
+        }
+      }
+    },
+    "room-names-and" : {
+      "comment" : "Joins the last name to the ones before it: \"Mika, Ren and Sol\". `names` is the ones before, already joined with room-names-comma. Argument 1: names (Text). Argument 2: last (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$@"
+          }
+        }
+      }
+    },
+    "room-names-comma" : {
+      "comment" : "Joins two names in a longer list: \"Mika, Ren\". Argument 1: first (Text). Argument 2: rest (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@"
+          }
+        }
+      }
+    },
+    "room-names-others" : {
+      "comment" : "More than three people named together: two names and how many others. Argument 1: first (Text). Argument 2: second (Text). Argument 3: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ and %3$lld others"
+          }
+        }
+      }
+    },
+    "room-names-people" : {
+      "comment" : "Stands for the people the room waits for when there are more than two, inside \"Paused for …\". Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld person"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld people"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-names-three" : {
+      "comment" : "Three people named together. Argument 1: first (Text). Argument 2: second (Text). Argument 3: third (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@, %2$@ and %3$@"
+          }
+        }
+      }
+    },
+    "room-names-two" : {
+      "comment" : "Two people named together, for a reaction made by both: \"Ren and Mika\". Argument 1: first (Text). Argument 2: second (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ and %2$@"
+          }
+        }
+      }
+    },
+    "room-needs-episode" : {
+      "comment" : "Why a room couldn't start: it has no episode yet. Shown where the room would open.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose an episode for the room first."
+          }
+        }
+      }
+    },
+    "room-new-invite" : {
+      "comment" : "Button that makes a new invite link and stops the old one.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New invite"
+          }
+        }
+      }
+    },
+    "room-new-invite-line" : {
+      "comment" : "Line under New invite on a desktop.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "New invite stops the old link working. Everyone in the room moves to the new one."
+          }
+        }
+      }
+    },
+    "room-new-invite-short" : {
+      "comment" : "Short line beside New invite on a phone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stops the old link"
+          }
+        }
+      }
+    },
+    "room-no-source-line" : {
+      "comment" : "Line under it on a desktop: how many sources were looked in. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Kaeri looked in your one source. You stay in the room and the chat while the others watch."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "Kaeri looked in your %1$lld sources. You stay in the room and the chat while the others watch."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-no-source-line-short" : {
+      "comment" : "Line under it on a phone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You stay in the room and the chat."
+          }
+        }
+      }
+    },
+    "room-no-source-title" : {
+      "comment" : "Heading when none of your sources has the room's episode. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "None of your sources has episode %1$@"
+          }
+        }
+      }
+    },
+    "room-open-player" : {
+      "comment" : "Button on the card that opens the room's player.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open the player"
+          }
+        }
+      }
+    },
+    "room-open-sources" : {
+      "comment" : "Button that opens your sources.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open sources"
+          }
+        }
+      }
+    },
+    "room-paused-until-start" : {
+      "comment" : "Line on your own starting screen while the room waits for you, with the seconds so far. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The room is paused until this starts · %1$lld s"
+          }
+        }
+      }
+    },
+    "room-people" : {
+      "comment" : "Heading of the people list in the room, and its accessibility label.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "People in the room"
+          }
+        }
+      }
+    },
+    "room-place-join" : {
+      "comment" : "Heading of the field that joins a room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Join a room"
+          }
+        }
+      }
+    },
+    "room-place-line" : {
+      "comment" : "Line under the place's heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each of you plays the episode from your own sources; the room keeps you in step. Start a room from any episode with Watch together, in the player or on its page."
+          }
+        }
+      }
+    },
+    "room-place-link" : {
+      "comment" : "Placeholder of the field that takes an invite link.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Invite link"
+          }
+        }
+      }
+    },
+    "room-place-paste" : {
+      "comment" : "Button that pastes the clipboard into the field.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paste"
+          }
+        }
+      }
+    },
+    "room-place-yours" : {
+      "comment" : "Small heading of the card for the room you are in.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Your room"
+          }
+        }
+      }
+    },
+    "room-play-for-everyone" : {
+      "comment" : "Button that starts the episode for everyone in the room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play for everyone"
+          }
+        }
+      }
+    },
+    "room-play-in-room" : {
+      "comment" : "Button that plays the chosen source at the room's place.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play in the room"
+          }
+        }
+      }
+    },
+    "room-play-next-now" : {
+      "comment" : "Button on the card that moves the room on at once.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Play next now"
+          }
+        }
+      }
+    },
+    "room-playing" : {
+      "comment" : "Label of the Play for everyone button after it was pressed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Playing…"
+          }
+        }
+      }
+    },
+    "room-plays-from-sources" : {
+      "comment" : "Line under the episode before play: one of your sources has it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plays from your sources"
+          }
+        }
+      }
+    },
+    "room-react" : {
+      "comment" : "Accessibility label of the button beside the chat field that opens the reactions.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "React"
+          }
+        }
+      }
+    },
+    "room-react-clap" : {
+      "comment" : "Label of the clap reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Clap"
+          }
+        }
+      }
+    },
+    "room-react-cry" : {
+      "comment" : "Label of the cry reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Cry"
+          }
+        }
+      }
+    },
+    "room-react-gasp" : {
+      "comment" : "Label of the gasp reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Gasp"
+          }
+        }
+      }
+    },
+    "room-react-laugh" : {
+      "comment" : "Label of the laugh reaction button.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Laugh"
+          }
+        }
+      }
+    },
+    "room-reacted-at" : {
+      "comment" : "A reaction line with the moment in the episode it was made at, such as \"Ren and Mika laughed at 12:04\". The time is minutes and seconds. Argument 1: line (Text). Argument 2: time (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ at %2$@"
+          }
+        }
+      }
+    },
+    "room-reacted-clap" : {
+      "comment" : "Chat line: someone clapped, at a place in the episode. Argument 1: name (Text). Argument 2: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ clapped at %2$@"
+          }
+        }
+      }
+    },
+    "room-reacted-cry" : {
+      "comment" : "Chat line: someone cried, at a place in the episode. Argument 1: name (Text). Argument 2: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ cried at %2$@"
+          }
+        }
+      }
+    },
+    "room-reacted-gasp" : {
+      "comment" : "Chat line: someone gasped, at a place in the episode. Argument 1: name (Text). Argument 2: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ gasped at %2$@"
+          }
+        }
+      }
+    },
+    "room-reacted-laugh" : {
+      "comment" : "Chat line: someone laughed, at a place in the episode. Argument 1: name (Text). Argument 2: at (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ laughed at %2$@"
+          }
+        }
+      }
+    },
+    "room-recent" : {
+      "comment" : "Heading of the list of recent rooms.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Recent rooms"
+          }
+        }
+      }
+    },
+    "room-recent-note" : {
+      "comment" : "Line beside the heading.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The last ten, kept on this device"
+          }
+        }
+      }
+    },
+    "room-recent-row" : {
+      "comment" : "Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25. Argument 1: episode (Text). Argument 2: names (Text). Argument 3: when (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · with %2$@ · %3$@"
+          }
+        }
+      }
+    },
+    "room-recent-row-alone" : {
+      "comment" : "Line of a recent room where you were alone. Argument 1: episode (Text). Argument 2: when (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "room-rejoin" : {
+      "comment" : "Button on a recent room that joins it again.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rejoin"
+          }
+        }
+      }
+    },
+    "room-relay-add" : {
+      "comment" : "Button that adds the address typed beside it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Add"
+          }
+        }
+      }
+    },
+    "room-relay-latency" : {
+      "comment" : "Round trip time of a relay. Argument 1: ms (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld ms"
+          }
+        }
+      }
+    },
+    "room-relay-not-answering" : {
+      "comment" : "State of a relay that doesn't answer.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Not answering"
+          }
+        }
+      }
+    },
+    "room-relay-remove" : {
+      "comment" : "Accessibility label of the button that removes a relay. `relay` is its address. Argument 1: relay (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Remove %1$@"
+          }
+        }
+      }
+    },
+    "room-relays" : {
+      "comment" : "Label of the relays row, and the title of the relays page in Settings.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Relays"
+          }
+        }
+      }
+    },
+    "room-relays-answering" : {
+      "comment" : "Value of the relays row when all answer. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld answering"
+          }
+        }
+      }
+    },
+    "room-relays-answering-of" : {
+      "comment" : "Value of the relays row when some don't answer. Argument 1: count (Int). Argument 2: total (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$lld of %2$lld answering"
+          }
+        }
+      }
+    },
+    "room-relays-intro" : {
+      "comment" : "Line at the top of the Relays page on a desktop.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rooms you start use these relays, and your invites carry them. Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. A room's own list is in its Details."
+          }
+        }
+      }
+    },
+    "room-relays-intro-short" : {
+      "comment" : "Line at the top of the Relays page on a phone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Rooms you start use these relays, and your invites carry them. They can't read the room. These are public relays run by others."
+          }
+        }
+      }
+    },
+    "room-relays-new-rooms" : {
+      "comment" : "Heading of the list of relays for new rooms.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "For new rooms"
+          }
+        }
+      }
+    },
+    "room-relays-new-rooms-line" : {
+      "comment" : "Line under the list for new rooms.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Kaeri sends every room event to all of them. Plain ws:// works only for localhost and .local addresses."
+          }
+        }
+      }
+    },
+    "room-relays-restore" : {
+      "comment" : "Button that puts the default relays and spares back.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Restore the defaults"
+          }
+        }
+      }
+    },
+    "room-relays-spares" : {
+      "comment" : "Heading of the list of spare relays.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Spares"
+          }
+        }
+      }
+    },
+    "room-relays-spares-line" : {
+      "comment" : "Line under the spares on a desktop.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When a room has fewer than two relays answering, it swaps in the first spare that answers."
+          }
+        }
+      }
+    },
+    "room-relays-spares-line-short" : {
+      "comment" : "Line under the spares on a phone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Used when a room has fewer than two relays answering."
+          }
+        }
+      }
+    },
+    "room-room-is-watching" : {
+      "comment" : "Small heading over the episode in the video area when you opened an invite.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "The room is watching"
+          }
+        }
+      }
+    },
+    "room-search-titles" : {
+      "comment" : "Button that searches titles in your sources.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Search titles"
+          }
+        }
+      }
+    },
+    "room-settings-group" : {
+      "comment" : "Heading of the group in Settings › Playback.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watch together"
+          }
+        }
+      }
+    },
+    "room-settings-group-line" : {
+      "comment" : "Line under the group.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Each of you plays the episode from your own sources; relays only carry the room's messages, sealed so they can't read them."
+          }
+        }
+      }
+    },
+    "room-settings-hide-chat" : {
+      "comment" : "Switch that hides chat in every room on this device.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Hide chat in rooms"
+          }
+        }
+      }
+    },
+    "room-settings-hide-chat-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room."
+          }
+        }
+      }
+    },
+    "room-settings-relays-count" : {
+      "comment" : "Line under the Relays row: how many relays new rooms use. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld public relay run by others"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld public relays run by others"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-settings-relays-edit" : {
+      "comment" : "Button at the end of the Relays row.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Edit"
+          }
+        }
+      }
+    },
+    "room-share" : {
+      "comment" : "Button that opens the system's share sheet with the invite link.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share…"
+          }
+        }
+      }
+    },
+    "room-show" : {
+      "comment" : "Button that shows the room's column again after Hide room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Show room"
+          }
+        }
+      }
+    },
+    "room-skip-opening" : {
+      "comment" : "The room's Skip opening button on the player: skips for everyone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Skip opening"
+          }
+        }
+      }
+    },
+    "room-sources-found-line" : {
+      "comment" : "Line above the list of sources that have the room's episode, in the Choose a source dialog in a room. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One source has it. It plays for everyone in the room."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sources have it. Your pick plays for everyone in the room."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-start-without" : {
+      "comment" : "Button once the room has waited 20 seconds before play, for one person. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start without %1$@"
+          }
+        }
+      }
+    },
+    "room-start-without-them" : {
+      "comment" : "Button once the room has waited 20 seconds before play, for more than one person.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Start without them"
+          }
+        }
+      }
+    },
+    "room-starting-episode" : {
+      "comment" : "The starting screen's line on the device opening the room's episode. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Starting episode %1$@"
+          }
+        }
+      }
+    },
+    "room-state-and-muted" : {
+      "comment" : "A state word followed by Muted, for a person you muted. Argument 1: state (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · Muted"
+          }
+        }
+      }
+    },
+    "room-state-behind" : {
+      "comment" : "State word: the slowest player, holding the room back, with the gap in seconds. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Behind · %1$lld s"
+          }
+        }
+      }
+    },
+    "room-state-buffering" : {
+      "comment" : "State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Buffering · %1$lld s"
+          }
+        }
+      }
+    },
+    "room-state-choosing" : {
+      "comment" : "State word: this person is picking which source to play from.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choosing a source"
+          }
+        }
+      }
+    },
+    "room-state-left" : {
+      "comment" : "State word: this person left the room. The row stays dimmed for a moment.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Left"
+          }
+        }
+      }
+    },
+    "room-state-loading" : {
+      "comment" : "State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Loading · %1$lld s"
+          }
+        }
+      }
+    },
+    "room-state-muted" : {
+      "comment" : "State word: you muted this person. Shown alone or after the state word with room-state-and-muted.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Muted"
+          }
+        }
+      }
+    },
+    "room-state-no-source" : {
+      "comment" : "State word: none of this person's sources lists the room's episode. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No source for episode %1$@"
+          }
+        }
+      }
+    },
+    "room-state-other-episode" : {
+      "comment" : "State word: this person plays another episode than the room's. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "On episode %1$@"
+          }
+        }
+      }
+    },
+    "room-state-paused" : {
+      "comment" : "State word: the room is paused; this person was watching.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused"
+          }
+        }
+      }
+    },
+    "room-state-paused-it" : {
+      "comment" : "State word: the room is paused and this person paused it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Paused it"
+          }
+        }
+      }
+    },
+    "room-state-player-closed" : {
+      "comment" : "State word: this person is in the room with the player closed.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Player closed"
+          }
+        }
+      }
+    },
+    "room-state-ready" : {
+      "comment" : "State word before play: this person's first frame is ready.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Ready"
+          }
+        }
+      }
+    },
+    "room-state-reconnecting" : {
+      "comment" : "State word: this person's device stopped answering.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reconnecting"
+          }
+        }
+      }
+    },
+    "room-state-seeking" : {
+      "comment" : "State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Seeking · %1$lld s"
+          }
+        }
+      }
+    },
+    "room-state-watching" : {
+      "comment" : "State word: in step with the room and playing.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Watching"
+          }
+        }
+      }
+    },
+    "room-stay" : {
+      "comment" : "Short button that stays in this room, in a notice.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Stay"
+          }
+        }
+      }
+    },
+    "room-tick-label" : {
+      "comment" : "Label on the seek bar when pointing near a reaction tick: the moment and who reacted. Argument 1: time (Text). Argument 2: names (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "room-tv-join-from-phone" : {
+      "comment" : "Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "To join someone's room, open their invite on a paired phone and choose this TV."
+          }
+        }
+      }
+    },
+    "room-tv-keys" : {
+      "comment" : "Line under the video on the TV rail: what the remote's buttons do.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OK for the controls · Back closes the room"
+          }
+        }
+      }
+    },
+    "room-tv-write-from-phone" : {
+      "comment" : "Line under the chat on the TV rail: chat is read-only there.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Write from your phone"
+          }
+        }
+      }
+    },
+    "room-unmute" : {
+      "comment" : "Person menu item and accessibility action that shows a muted person's lines again. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unmute %1$@"
+          }
+        }
+      }
+    },
+    "room-up-in-room" : {
+      "comment" : "Small heading over the episode in the video area before play.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up in the room"
+          }
+        }
+      }
+    },
+    "room-up-next" : {
+      "comment" : "Small heading of the up next card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Up next for the room"
+          }
+        }
+      }
+    },
+    "room-up-next-count" : {
+      "comment" : "Line on the card counting down for everyone. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Plays for everyone in %1$lld s"
+          }
+        }
+      }
+    },
+    "room-up-next-episode" : {
+      "comment" : "Line on the card naming the next episode. Argument 1: episode (Text). Argument 2: title (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@ · %2$@"
+          }
+        }
+      }
+    },
+    "room-up-next-episode-plain" : {
+      "comment" : "Line on the card naming the next episode when it has no title. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Episode %1$@"
+          }
+        }
+      }
+    },
+    "room-up-next-waiting" : {
+      "comment" : "Line on the card while your file ended sooner and the room waits for someone's longer file. Argument 1: name (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for %1$@ to finish"
+          }
+        }
+      }
+    },
+    "room-version-own" : {
+      "comment" : "Player panel, under the subtitled or dubbed switch in a room.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Only your player switches. The room keeps playing."
+          }
+        }
+      }
+    },
+    "room-wait-buffering" : {
+      "comment" : "Reason in the waiting capsule, after Paused for, lower case: their player stalled. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "buffering · %1$lld s"
+          }
+        }
+      }
+    },
+    "room-wait-loading" : {
+      "comment" : "Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode. Argument 1: seconds (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "loading · %1$lld s"
+          }
+        }
+      }
+    },
+    "room-waiting-first-frames" : {
+      "comment" : "Line beside the button after Play was pressed, on a desktop.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for everyone's first frame"
+          }
+        }
+      }
+    },
+    "room-waiting-first-frames-short" : {
+      "comment" : "Line under the play button after Play was pressed, on a phone.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Waiting for first frames"
+          }
+        }
+      }
+    },
+    "room-you" : {
+      "comment" : "Your own name under your face on a phone and in the place's room card.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "You"
+          }
+        }
+      }
+    },
+    "room-you-in-list" : {
+      "comment" : "You, inside a list of names mid-sentence: \"Paused for Ren and you\", \"Mika carried on without you\". Lowercase where the language writes it so.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "you"
+          }
+        }
+      }
+    },
+    "room-you-marker" : {
+      "comment" : "Marker after your own name in the people list.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "(you)"
+          }
+        }
+      }
+    },
     "search-all-filters" : {
       "comment" : "Accessible label of the pinned filter button on iPhone, which shows only a glyph. The count of filters set follows it, as \"All filters, 2 set\".",
       "extractionState" : "manual",
@@ -326019,6 +329107,18 @@
         }
       }
     },
+    "sources-choose-for" : {
+      "comment" : "Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Choose a source for episode %1$@"
+          }
+        }
+      }
+    },
     "sources-contacts-label" : {
       "comment" : "Row label: the hosts a plugin contacts.",
       "extractionState" : "manual",
@@ -329299,6 +332399,40 @@
         }
       }
     },
+    "sources-found" : {
+      "comment" : "Line over the list of sources that list the episode. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One source has it"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sources have it"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "sources-found-server" : {
       "comment" : "What the address answered, before the sign-in. Argument 1: kind (Text).",
       "extractionState" : "manual",
@@ -329783,6 +332917,18 @@
         }
       }
     },
+    "sources-label" : {
+      "comment" : "Accessibility label of the list of sources for the episode.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Sources for this episode"
+          }
+        }
+      }
+    },
     "sources-listed-by-store" : {
       "comment" : "Value: how the plugin is listed.",
       "extractionState" : "manual",
@@ -329947,6 +333093,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không tải được các nguồn"
+          }
+        }
+      }
+    },
+    "sources-looking" : {
+      "comment" : "Line while the sources are searched for the episode.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Looking through your sources…"
           }
         }
       }
@@ -330287,6 +333445,18 @@
         }
       }
     },
+    "sources-none-list" : {
+      "comment" : "Line when no source lists the episode. Argument 1: episode (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "No source lists episode %1$@. Sources come from plugins, which a plugin store adds."
+          }
+        }
+      }
+    },
     "sources-not-checked" : {
       "comment" : "Value: not checked yet.",
       "extractionState" : "manual",
@@ -330367,6 +333537,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Chưa kiểm tra"
+          }
+        }
+      }
+    },
+    "sources-open" : {
+      "comment" : "Button that goes to the Sources page, when no source is set up.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open sources"
           }
         }
       }

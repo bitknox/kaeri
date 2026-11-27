@@ -251,53 +251,57 @@ names the show, so it goes out only while the title is shown: with the title off
 The Mac app's Integrations settings set these for the terminal app too, which shares its config.
 On Windows and Linux the switches are under Discord in Settings.
 
-## Watch parties
+## Rooms
 
-A watch party connects Kaeri to the Syncplay server you choose. Kaeri has no server of its
-own and suggests the Syncplay project's public one, which other people run. Anyone can run a
-server, so pick one you trust.
+A room is how you watch together. Kaeri runs no server for it. The room's messages go through
+three public Nostr relays run by others (Settings lists them, and you can set your own), and
+everything a room says is end to end encrypted with a key that only the people holding the invite
+have.
 
-The server, and everyone in the room, sees:
+Everyone in the room sees:
 
-- the name you join with and the room's name;
-- the show and episode you have open, as "Title · Episode 3", and its length;
-- when you play, pause and seek, with the position, and whether you're ready;
-- how long messages take to reach you;
-- what you type in the room's chat, and your reactions, which are chat lines such as
-  `*laughs* 12:04` with the position in the episode.
+- the name you join with;
+- the show and episode the room watches, by its AniList number;
+- whether you're watching, loading, paused, behind, choosing a source or have none, and your
+  position in the episode;
+- what you type in the room's chat, and your reactions;
+- who pressed play, pause, seek, Carry on or Skip opening.
 
-They never see the stream's address, your sources or your sign-ins. A party shares no video:
-everyone plays the episode from their own sources.
+They never see your address, the stream, your sources, your plugins or your sign-ins, or why a
+source failed. A room shares no video: everyone plays the episode from their own sources.
 
-The connection is encrypted when the server supports it. The party panel says whether it is.
+The relays see each device's IP address, when it sends, and a room tag that changes every day,
+so a relay can tell how many devices are in one room that day. They can't read names, the show,
+positions, chat or anything else, and they can't write into the room. Messages are never stored
+on them: each one asks to be dropped within a minute. Each device joins with a new throwaway key
+every time, so a relay can't link one evening's room to another.
 
-An invite link carries the server, the room, the name of the person who sent it, the show's
-title and the episode number, and nothing else. Anyone with the link can join the room, so share it with the people you want there.
+An invite link carries the room's key, the name of the person who sent it, the show's title and
+the episode number, and nothing else. Anyone with the link can join the room, so share it with
+the people you want there. New invite makes a fresh link and stops the old one from working for
+anyone who hasn't joined yet. Someone already in the room stays in it; Move to a new room lets
+the people you pick go on in a new room without them.
 
-The invite link is an address on this website, `https://kaeri.app/party`, with the invite after
+The invite link is an address on this website, `https://kaeri.app/room`, with the invite after
 the `#`. When you open it, the page reads that part in your browser, shows who invited you and
 which episode, and offers to open the app. Browsers never send the part after `#` to a server, so
 this website never receives the invite. The page makes no other request, runs no analytics, and
 passes the invite only to the Kaeri app on your device. Cloudflare sees that the page was
 opened, as it does for any page here, but not whose room it was.
 
-Messages others send in the room show up on your player, and you can answer them.
-
-A party doesn't save your position while you watch. When the episode ends, it's marked watched and
+A room doesn't save your position while you watch. When the episode ends, it's marked watched and
 synced to your trackers, as any other play is.
 
-Chat goes through the room's server, to its operator and to everyone in the room, and is never
-end to end encrypted. Kaeri keeps chat in memory for as long as you are in the party and nowhere
-else: not on disk, not in the last ten rooms, not in a bug report and not in the log. Leaving
-drops it, and someone who joins later sees nothing said before. Links in chat are plain text and
-never open from the app. Mute hides a member for that party on your device only, and Hide chat in
-Settings turns chat off on the screen, though the room still has it. A server can turn chat off,
-and then the app says so and sends nothing.
+Kaeri keeps chat in memory for as long as you are in the room and nowhere else: not on disk, not
+in your recent rooms, not in a bug report and not in the log. Leaving drops it, and someone who
+joins later sees nothing said before. Links in chat are plain text and never open from the app.
+Mute hides a person for that room on your device only, and Hide chat in Settings turns chat off
+on the screen, though the room still has it.
 
 Watch together keeps the last ten rooms you were in on your device, so you can go back to one:
-the server and room, the show and the last episode the room reached, the names of the people who
-were there, and the show's cover address. It keeps no source or stream, and it sends this list
-nowhere.
+the room's key and your key in it, its relays, the name you used, the show and the last episode
+the room reached, the names of the people who were there, and the show's cover address. It keeps
+no source or stream, and it sends this list nowhere.
 
 ## Sync between your devices
 
@@ -367,7 +371,7 @@ position, to your own devices signed in to the same Apple Account, and Apple car
 them. Handoff is turned off in the system's settings, under AirPlay and Handoff.
 
 On Android, installing or updating the app makes Android fetch
-`https://kaeri.app/.well-known/assetlinks.json`, to confirm that the sign-in and watch party
+`https://kaeri.app/.well-known/assetlinks.json`, to confirm that the sign-in and room
 addresses belong to the app. Android does this itself.
 
 To remove everything, uninstall the app on iPhone, iPad, Android or Android TV. On a Mac, Windows or

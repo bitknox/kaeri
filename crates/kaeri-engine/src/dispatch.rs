@@ -637,14 +637,13 @@ pub(crate) fn dispatch(
         // Each refused where this build has no player to play in: see `playback::refuse`.
         // A play wants the source's time: a dub or episode names lookup running stops for it.
         Command::Play { id, episode, from_start } => {
-            #[cfg(feature = "party")]
-            if crate::party::play_in_room(id, &episode, engine, services) {
+            // In a room a play is the room's: see `room::play_in_room`.
+            #[cfg(feature = "room")]
+            if crate::room::play_in_room(id, &episode, engine) {
                 return;
             }
             engine.dubs.stop();
             engine.names.stop();
-            #[cfg(feature = "party")]
-            crate::party::join_by_default(engine, services, tx);
             play(id, episode, from_start, job, engine, services, tx)
         }
         // The demo: added or taken out of the chain, or played from part 1 by the ordinary play.
@@ -663,8 +662,6 @@ pub(crate) fn dispatch(
         Command::PlaySource { id, episode, provider_id, source_id } => {
             engine.dubs.stop();
             engine.names.stop();
-            #[cfg(feature = "party")]
-            crate::party::join_by_default(engine, services, tx);
             play_source(id, episode, provider_id, source_id, job, engine, services, tx)
         }
         // Another release of the episode playing, from where it is: see `playback::switch`.
@@ -680,32 +677,10 @@ pub(crate) fn dispatch(
                 tx,
             );
         }
-        // Watch parties, where this build has them: see `party`.
-        #[cfg(feature = "party")]
-        Command::PlayParty { id, episode, server, room, name } => {
-            engine.dubs.stop();
-            engine.names.stop();
-            crate::party::play(id, episode, (server, room, name), job, engine, services, tx)
-        }
-        #[cfg(feature = "party")]
-        Command::LoadPartyForm => crate::party::form(engine, tx),
-        #[cfg(feature = "party")]
-        Command::PartyJoin { server, room, name } => {
-            crate::party::join(&server, &room, name.as_deref(), engine, services, tx);
-        }
-        #[cfg(feature = "party")]
-        Command::PartyReady { ready } => crate::party::ready(ready, engine, tx),
-        #[cfg(feature = "party")]
-        Command::PartyLeave => crate::party::leave(engine, tx),
-        #[cfg(feature = "party")]
-        Command::Party(command) => crate::party::command(command, engine, services, tx),
-        #[cfg(not(feature = "party"))]
-        Command::PlayParty { .. }
-        | Command::LoadPartyForm
-        | Command::PartyJoin { .. }
-        | Command::PartyReady { .. }
-        | Command::PartyLeave
-        | Command::Party(_) => {
+        #[cfg(feature = "room")]
+        Command::Room(command) => crate::room::command(command, engine, services, tx),
+        #[cfg(not(feature = "room"))]
+        Command::Room(_) => {
             let _ =
                 tx.send(Event::Toast(Notice::alert(Msg::Store(StoreMsg::NoticePartyNotBuilt))));
         }
@@ -726,8 +701,6 @@ pub(crate) fn dispatch(
         // A link the viewer opened: see `opened`.
         Command::Opened(command) => crate::opened::run(command, job, engine, services, tx),
         Command::PlayLocal { id, episode, title, path } => {
-            #[cfg(feature = "party")]
-            crate::party::join_by_default(engine, services, tx);
             play_local(id, episode, title, path, job, engine, services, tx)
         }
         Command::LoadSourceOptions(id) => {
@@ -754,6 +727,8 @@ pub(crate) fn dispatch(
         Command::AppPhase { phase } => {
             services.sync.pulls.set_away(phase != kaeri_model::command::AppState::Foreground);
             crate::phases::app_phase(phase, engine);
+            #[cfg(feature = "room")]
+            crate::room::app_phase(phase, engine);
             let EngineState { config, reader, .. } = engine;
             let cx = reader.cx(config, services, tx);
             if phase == kaeri_model::command::AppState::Foreground {
@@ -767,6 +742,9 @@ pub(crate) fn dispatch(
         Command::NetworkPath { cellular, constrained, offline } => {
             let network = crate::phases::Network { cellular, constrained, offline };
             let moved = engine.network.offline != offline;
+            // Every path change opens the room's sockets again at once.
+            #[cfg(feature = "room")]
+            crate::room::network_changed(engine);
             services.offline.store(offline, std::sync::atomic::Ordering::Relaxed);
             services.connection.send_replace(offline);
             // The metadata ladder blames no source for a path that is gone.

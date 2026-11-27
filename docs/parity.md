@@ -165,7 +165,7 @@ terminal (`screens/lists.rs`). Only dubs are marked.
     a Together place that lists the last ten rooms. Adding a server and server use counts come
     in a later release. The settings rows (on, server, room) are the terminal's:
     in an app the on switch does nothing, as apps start parties when asked. See
-    `docs/party-protocol.md`.
+    `docs/room-protocol.md`.
 11. The engine sends the Translation choice in the player's menu (`PlayerChoice::Translation`);
     Windows, Linux and the terminal show it (`desktop/linux/src/player/mod.rs`). Apple's track
     menu (`PlayerParts.swift`), Android's sheet (`pui/PlayerSheets.kt`) and the TV's

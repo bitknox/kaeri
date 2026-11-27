@@ -564,23 +564,26 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Not enough free space to keep the next episodes downloaded. Free up some space to download more.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Choose a server for the watch party first, as syncplay.server. { $server } is run by { $operator }.
+# Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.
+room-look-unreachable = Couldn't reach this room's relays. Ask for a new invite.
 
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Choose a server for the watch party first. { $server } is run by { $operator }.
+# Why a look into a room found nothing: the pasted text is no room's invite.
+room-look-not-an-invite = That isn't a room's invite.
+
+# Why a look into a recent room found nothing: it's no longer in this device's recent rooms.
+room-look-not-kept = That room isn't kept any more.
+
+# Why a look into a room found nothing: the invite comes from an older version.
+room-look-old-invite = This invite is from an older version of Kaeri. Ask for a new one.
+
+# Why a room couldn't start: it has no episode yet. Shown where the room would open.
+room-needs-episode = Choose an episode for the room first.
 
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watch parties aren't available in this version of Kaeri.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = A watch party needs a room to meet in. Choose one first.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Lost the watch party server. Trying again.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Back in the watch party.
 
 # Message when the person left a watch party.
 party-left = Left the watch party.
@@ -1919,13 +1922,6 @@ party-choose-a-source = Choose a source
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = No source lists episode { $episode }. Sources come from plugins, which you add from a plugin store.
-
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] One source has it. The one you choose plays with the watch party.
-       *[other] { $count } sources have it. The one you choose plays with the watch party.
-    }
 
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = The player couldn't start. Try again, or choose another source.
@@ -3372,7 +3368,7 @@ keys-action-toggle-demo = Remove or add the demo
 keys-action-download-range = Download a range of episodes
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = Play in a watch party
+keys-action-start-room = Start a room
 
 # Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Toggle watched
@@ -3774,24 +3770,27 @@ nav-rail-collapsed = Collapsed
 nav-rail-hidden = Hidden
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Ready
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Copy link
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Leave
+keys-hint-leave-room = Leave
+
+# Status line hint beside a key, in a room the others wait in: play on without those it waits for. Keep it to a word or two.
+keys-hint-carry-on = Carry on
+
+# Status line hint beside a key, on a recent room: take it off the list. Keep it to a word or two.
+keys-hint-forget-room = Forget
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Say
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Mute
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Unmute
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Hide chat
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4533,9 +4532,6 @@ settings-value-player-ui-mpv = Your mpv setup
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Kept with the torrent cache
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Not set (needed for watch parties)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Until ratio { $ratio }
 
@@ -4637,15 +4633,6 @@ settings-label-keep-seeding = Keep seeding
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = After each download
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay watch parties
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Syncplay server
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Syncplay room
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Check for updates
@@ -4754,15 +4741,6 @@ settings-note-keep-seeding = Off by default to save upload; turn it on to give b
 
 # Note under the after each download row.
 settings-note-download-hook = Press Enter to type a command. It runs after each finished download.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Press { $key } to play one episode in the room set below. While on, every play goes there.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Press Enter to type host:port. There is no server until you choose one.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Press Enter to type a friend's room. Leave it empty to start one nobody can guess.
 
 # Note under the check for updates row.
 settings-note-update-check = One cached request a day, made at startup.
@@ -5970,12 +5948,6 @@ hint-open-stores = Go to Sources and press Enter to open the plugin stores.
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Press Enter on its row to enter your credentials.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Joined the watch party in room { $room } on { $server }.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } You're still in the watch party.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Reloading sources…
 
@@ -5985,14 +5957,11 @@ pin-unavailable = { $name } is pinned for this title but isn't available. Trying
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Together
 
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = link or code
+# Prompt of the Join line in the Together section: what to paste there.
+tui-together-join-prompt = invite link
 
 # Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Lines and reactions stay off the player in every party.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = That is not a party link or code.
+tui-together-chat-hidden-line = Lines and reactions stay off the player in every room.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Episode { $episode } · { $when }
@@ -6011,6 +5980,39 @@ report-player-log-saved-to = Player log saved to { $path }
 
 # That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
 report-player-log-failed-here = Couldn't save the log to { $folder }.
+
+# Toast when this terminal is in a room, said away from the Together section. The key is the one that goes to Together, as the key map draws it.
+tui-room-joined = You're in the room. Press { $key } to see it.
+
+# Toast when what was pasted in the Together section's Join line isn't a room's invite link.
+tui-room-not-a-link = That isn't a room's invite link.
+
+# Toast when the room behind an invite already has 10 people or more. The key is Enter's, as the key map draws it; the Join line then reads Join anyway.
+tui-room-full = This room is full: rooms work best with 10 or fewer. Press { $key } on the Join line to join anyway.
+
+# Line in the field that takes an invite link.
+tui-room-join-line = Paste the invite link someone sent you.
+
+# Line under the Together section's conversation and in the field for saying something. States who can read the chat.
+tui-room-chat-privacy = Messages are sealed end to end. Relays pass them along and can't read them.
+
+# The conversation's only line while Hide chat is on, and a toast when the field is asked for then.
+tui-room-chat-hidden = Chat is hidden
+
+# Toast when a message was sent too soon after the last ones.
+tui-room-chat-wait = Wait { $seconds } s to send again.
+
+# A muted person's line in the conversation, in place of what they said.
+tui-room-muted-line = { $name } is muted
+
+# Line in the Together section when this terminal isn't in a room. The key is the one that starts a room, as the key map draws it.
+tui-room-start-line = Each of you plays the episode from your own sources; the room keeps you in step. Press { $key } on an episode to start a room.
+
+# Line in place of the recent rooms when none are kept yet.
+tui-room-recent-empty = The last ten rooms you're in show here.
+
+# The room's connection, under its title: the room's messages are sealed end to end, and how many of its relays answer.
+tui-room-relays-line = End to end · { $count } of { $total } relays answering
 
 # Title of the about page.
 about-title = About
@@ -9720,6 +9722,13 @@ player-panel-more = More
 # Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
 player-panel-less = Less
 
+# Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+player-sources-found-line =
+    { $count ->
+        [one] One source has it. Choose it to play.
+       *[other] { $count } sources have it. Choose the one to play.
+    }
+
 # The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 private-mode = Private mode
 
@@ -11834,6 +11843,816 @@ notif-chapter-hidden = New chapter
 # Notification, new chapter: the action that opens the reader on the chapter.
 notif-chapter-read = Read
 
+# First line while the room plays and nobody holds it.
+room-line-watching = Watching together
+
+# Second line while the room plays: the room's episode and its place in it.
+room-line-watching-detail = Episode { $episode } · { $at }
+
+# First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.
+room-line-paused-for = Paused for { $names }
+
+# First line on your own device while the room waits for you.
+room-line-paused-for-you = Paused for you
+
+# Second line while the room waits for you: who waits, and for how many seconds so far.
+room-line-waiting-for-you =
+    { $count ->
+        [one] { $names } is waiting · { $seconds } s
+       *[other] { $names } are waiting · { $seconds } s
+    }
+
+# First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
+room-line-still-loading =
+    { $count ->
+        [one] { $names } is still loading
+       *[other] { $names } are still loading
+    }
+
+# First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+room-line-still-seeking =
+    { $count ->
+        [one] { $names } is still seeking
+       *[other] { $names } are still seeking
+    }
+
+# First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+room-line-still-buffering =
+    { $count ->
+        [one] { $names } is still buffering
+       *[other] { $names } are still buffering
+    }
+
+# Second line once the room has waited as long as it will.
+room-line-waited = The room has waited { $seconds } s
+
+# Second line after someone pressed Carry on, when the room waited for one person.
+room-line-carried-on-one = { $carrier } carried on · { $name } joins when ready
+
+# Second line after someone pressed Carry on, when the room waited for more than one person.
+room-line-carried-on-many = { $carrier } carried on · they join when ready
+
+# First line while the room is paused by someone.
+room-line-paused-by = { $name } paused
+
+# First line while the room is paused by you.
+room-line-you-paused = You paused
+
+# Second line while the room is paused: the place it paused at.
+room-line-paused-at = at { $at }
+
+# Second line while one of the room's relays is not answering.
+room-line-relays-down =
+    { $count ->
+        [one] { $count } of { $total } relays isn't answering · the room carries on
+       *[other] { $count } of { $total } relays aren't answering · the room carries on
+    }
+
+# First line when your own device lost every relay.
+room-line-reconnecting = Reconnecting to the room
+
+# Second line when your own device lost every relay.
+room-line-reconnecting-detail = No relay is answering · your episode keeps playing
+
+# Second line when your own player is behind the room.
+room-line-you-behind = You're { $seconds } s behind · catching up
+
+# The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.
+room-line-with-seconds = { $line } · { $seconds } s
+
+# Stands for the people the room waits for when there are more than two, inside "Paused for …".
+room-names-people =
+    { $count ->
+        [one] { $count } person
+       *[other] { $count } people
+    }
+
+# State word: in step with the room and playing.
+room-state-watching = Watching
+
+# State word before play: this person's first frame is ready.
+room-state-ready = Ready
+
+# State word: the room is paused and this person paused it.
+room-state-paused-it = Paused it
+
+# State word: the room is paused; this person was watching.
+room-state-paused = Paused
+
+# State word: the slowest player, holding the room back, with the gap in seconds.
+room-state-behind = Behind · { $seconds } s
+
+# State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.
+room-state-loading = Loading · { $seconds } s
+
+# State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.
+room-state-buffering = Buffering · { $seconds } s
+
+# State word: this person plays another episode than the room's.
+room-state-other-episode = On episode { $episode }
+
+# State word: this person is picking which source to play from.
+room-state-choosing = Choosing a source
+
+# State word: none of this person's sources lists the room's episode.
+room-state-no-source = No source for episode { $episode }
+
+# State word: this person is in the room with the player closed.
+room-state-player-closed = Player closed
+
+# State word: this person's device stopped answering.
+room-state-reconnecting = Reconnecting
+
+# State word: this person left the room. The row stays dimmed for a moment.
+room-state-left = Left
+
+# State word: you muted this person. Shown alone or after the state word with room-state-and-muted.
+room-state-muted = Muted
+
+# A state word followed by Muted, for a person you muted.
+room-state-and-muted = { $state } · Muted
+
+# Marker after your own name in the people list.
+room-you-marker = (you)
+
+# Your own name under your face on a phone and in the place's room card.
+room-you = You
+
+# You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.
+room-you-in-list = you
+
+# Accessibility label of a face in the full screen strip: the name and the state word.
+room-face-label = { $name }, { $state }
+
+# The last face in a row of faces, standing for the people not shown.
+room-more-faces = +{ $count }
+
+# Accessibility label of the last face, which opens the full people list.
+room-more-faces-label =
+    { $count ->
+        [one] { $count } more person
+       *[other] { $count } more people
+    }
+
+# Name under the last face on a phone and the TV: it opens everyone.
+room-more = More
+
+# State under the last face: how many of the hidden people are not watching.
+room-more-not-watching = { $count } not watching
+
+# State under the last face when everyone hidden is watching.
+room-more-all-watching = All watching
+
+# Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.
+room-wait-loading = loading · { $seconds } s
+
+# Reason in the waiting capsule, after Paused for, lower case: their player stalled.
+room-wait-buffering = buffering · { $seconds } s
+
+# Button once the room has waited 20 seconds for one person.
+room-carry-on-without = Carry on without { $name }
+
+# Button once the room has waited 20 seconds for more than one person.
+room-carry-on-without-them = Carry on without them
+
+# Capsule over the video after someone pressed Carry on.
+room-carrying-on-without = Carrying on without { $names }
+
+# Second part of the capsule after Carry on, when the room waited for one person.
+room-joins-at-place = { $name } joins at the room's place
+
+# Second part of the capsule after Carry on, when the room waited for more than one person.
+room-join-at-place-many = They join at the room's place
+
+# Line on your own starting screen while the room waits for you, with the seconds so far.
+room-paused-until-start = The room is paused until this starts · { $seconds } s
+
+# Button on your own starting screen that lets the room carry on without you.
+room-dont-wait = Don't wait for me
+
+# First line before anyone pressed Play.
+room-line-not-started = Not started yet
+
+# Second line before anyone pressed Play.
+room-line-play-starts = Play starts it for everyone
+
+# First line after Play, while the room waits for people still loading.
+room-line-starting-when =
+    { $count ->
+        [one] Starting when { $names } is ready
+       *[other] Starting when { $names } are ready
+    }
+
+# First line counting down once everyone is ready.
+room-line-starting-in = Starting in { $seconds }
+
+# Second line when everyone is ready.
+room-line-everyone-ready = Everyone is ready
+
+# Button once the room has waited 20 seconds before play, for one person.
+room-start-without = Start without { $name }
+
+# Button once the room has waited 20 seconds before play, for more than one person.
+room-start-without-them = Start without them
+
+# Small heading over the episode in the video area before play.
+room-up-in-room = Up in the room
+
+# Small heading over the episode in the video area when you opened an invite.
+room-room-is-watching = The room is watching
+
+# Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.
+room-banner-episode = Episode { $episode } · { $title } · { $length }
+
+# Line under the episode before play: one of your sources has it.
+room-plays-from-sources = Plays from your sources
+
+# Button that starts the episode for everyone in the room.
+room-play-for-everyone = Play for everyone
+
+# Line beside Play for everyone.
+room-anyone-can-start = Anyone in the room can start it
+
+# Label of the Play for everyone button after it was pressed.
+room-playing = Playing…
+
+# Line beside the button after Play was pressed, on a desktop.
+room-waiting-first-frames = Waiting for everyone's first frame
+
+# Line under the play button after Play was pressed, on a phone.
+room-waiting-first-frames-short = Waiting for first frames
+
+# First line of the room when an invite link opened it.
+room-invited-by = { $name } invited you
+
+# Second line when an invite link opened the room: the show and the episode.
+room-invited-detail = { $title } · Episode { $episode }
+
+# Second line when an invite link opened a room with 10 or more people in it.
+room-invited-over = { $count } people are here already · rooms work best with 10 or fewer
+
+# Button that joins the room from an invite.
+room-join = Join the room
+
+# Button that joins a room with 10 or more people in it.
+room-join-anyway = Join anyway
+
+# Heading over the list of sources for the room's episode.
+room-choose-source = Choose a source for episode { $episode }
+
+# Line under it.
+room-choose-source-line = The room keeps watching; you join at its place.
+
+# Button that plays the chosen source at the room's place.
+room-play-in-room = Play in the room
+
+# Heading when none of your sources has the room's episode.
+room-no-source-title = None of your sources has episode { $episode }
+
+# Line under it on a desktop: how many sources were looked in.
+room-no-source-line =
+    { $count ->
+        [one] Kaeri looked in your one source. You stay in the room and the chat while the others watch.
+       *[other] Kaeri looked in your { $count } sources. You stay in the room and the chat while the others watch.
+    }
+
+# Line under it on a phone.
+room-no-source-line-short = You stay in the room and the chat.
+
+# Button that opens your sources.
+room-open-sources = Open sources
+
+# Button that searches titles in your sources.
+room-search-titles = Search titles
+
+# Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.
+room-header-line = Episode { $episode } · { $count } in the room
+
+# Button and accessibility label that opens the invite.
+room-invite = Invite
+
+# Button and accessibility label that opens the room's details.
+room-details = Details
+
+# Accessibility label of the More button on a phone.
+room-more-actions = More
+
+# Accessibility label of the player's button that hides the room column.
+room-hide = Hide room
+
+# Accessibility label of the chevron on a phone that folds the room into the bar over the tabs.
+room-fold = Close the room to the bar
+
+# Accessibility label of the player's button that opens the chat in full screen.
+room-chat = Chat
+
+# Line in the invite: anyone with the link can join.
+room-invite-anyone = Anyone with this link can join.
+
+# Line after it on a desktop: the link carries the key.
+room-invite-key = The link carries the room's key, so only people who have it can read the room.
+
+# Line after it on a phone.
+room-invite-key-short = Only people with the link can read the room.
+
+# Accessibility label of the invite's QR code.
+room-invite-qr = Invite as a QR code
+
+# Line beside the QR code.
+room-invite-qr-line = Someone beside you can scan this with their camera.
+
+# Button that copies the invite link.
+room-copy-link = Copy link
+
+# Button that opens the system's share sheet with the invite link.
+room-share = Share…
+
+# Menu item on a phone that copies the invite link.
+room-copy-invite-link = Copy invite link
+
+# Button that makes a new invite link and stops the old one.
+room-new-invite = New invite
+
+# Line under New invite on a desktop.
+room-new-invite-line = New invite stops the old link working. Everyone in the room moves to the new one.
+
+# Short line beside New invite on a phone.
+room-new-invite-short = Stops the old link
+
+# Button in the invite and menu item on a phone that opens the move.
+room-move-open = Move to a new room…
+
+# Line under the button in the invite.
+room-move-open-line = For someone already here: start a new room and pick who comes along.
+
+# Title of the move dialog and sheet.
+room-move-title = Move to a new room
+
+# Line under the title.
+room-move-body = Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room.
+
+# Note under your own row: you always go.
+room-move-always-goes = Always goes
+
+# Note under a person you muted, who starts unticked.
+room-move-muted = Muted, so not ticked
+
+# Line under the list.
+room-move-foot = The new room picks up at { $at } with a new key. Its link reaches only the people ticked.
+
+# Button that moves, counting the others ticked.
+room-move-with =
+    { $count ->
+        [one] Move with { $count } other
+       *[other] Move with { $count } others
+    }
+
+# The offer to someone ticked, in a notice or alert, as one sentence pair.
+room-move-offer = { $name } moved the room. Go along?
+
+# First line of the room while the offer waits for an answer.
+room-line-moved = { $name } moved the room
+
+# Second line with the offer: who else is asked, and the place the episode carries on from.
+room-line-moved-detail =
+    { $count ->
+        [one] Go along? { $names } is asked too. The episode carries on from { $at }.
+       *[other] Go along? { $names } are asked too. The episode carries on from { $at }.
+    }
+
+# Second line with the offer when nobody else is asked.
+room-line-moved-detail-alone = Go along? The episode carries on from { $at }.
+
+# Button that goes along to the new room.
+room-go-along = Go along
+
+# Short button that stays in this room, in a notice.
+room-stay = Stay
+
+# First line of the old room for someone who stayed.
+room-line-moved-away = { $name } moved to a new room
+
+# Second line of the old room: who went along.
+room-line-went-along = { $names } went along · this room carries on
+
+# Label of the encryption row.
+room-details-encryption = Encryption
+
+# Value of the encryption row.
+room-details-end-to-end = End to end
+
+# Label of the relays row, and the title of the relays page in Settings.
+room-relays = Relays
+
+# Value of the relays row when all answer.
+room-relays-answering = { $count } answering
+
+# Value of the relays row when some don't answer.
+room-relays-answering-of = { $count } of { $total } answering
+
+# State of a relay that doesn't answer.
+room-relay-not-answering = Not answering
+
+# Round trip time of a relay.
+room-relay-latency = { $ms } ms
+
+# Line under the relays in Details.
+room-details-relays-line = Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare.
+
+# Button in Details that edits the room's relays.
+room-edit-relays = Edit relays…
+
+# Title of the room's relay editor.
+room-edit-relays-title = Edit relays
+
+# Line under it.
+room-edit-relays-line = Changes this room's relays for everyone in it. New invites carry the list.
+
+# Accessibility label of the button that removes a relay. `relay` is its address.
+room-relay-remove = Remove { $relay }
+
+# Button that adds the address typed beside it.
+room-relay-add = Add
+
+# Line under the room's relay editor.
+room-edit-relays-settings = Settings › Playback › Relays sets the list for new rooms.
+
+# Heading of the group in Settings › Playback.
+room-settings-group = Watch together
+
+# Switch that hides chat in every room on this device.
+room-settings-hide-chat = Hide chat in rooms
+
+# Line under it.
+room-settings-hide-chat-line = Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.
+
+# Line under the Relays row: how many relays new rooms use.
+room-settings-relays-count =
+    { $count ->
+        [one] { $count } public relay run by others
+       *[other] { $count } public relays run by others
+    }
+
+# Button at the end of the Relays row.
+room-settings-relays-edit = Edit
+
+# Line under the group.
+room-settings-group-line = Each of you plays the episode from your own sources; relays only carry the room's messages, sealed so they can't read them.
+
+# Line at the top of the Relays page on a desktop.
+room-relays-intro = Rooms you start use these relays, and your invites carry them. Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. A room's own list is in its Details.
+
+# Line at the top of the Relays page on a phone.
+room-relays-intro-short = Rooms you start use these relays, and your invites carry them. They can't read the room. These are public relays run by others.
+
+# Heading of the list of relays for new rooms.
+room-relays-new-rooms = For new rooms
+
+# Line under the list for new rooms.
+room-relays-new-rooms-line = Kaeri sends every room event to all of them. Plain ws:// works only for localhost and .local addresses.
+
+# Heading of the list of spare relays.
+room-relays-spares = Spares
+
+# Line under the spares on a desktop.
+room-relays-spares-line = When a room has fewer than two relays answering, it swaps in the first spare that answers.
+
+# Line under the spares on a phone.
+room-relays-spares-line-short = Used when a room has fewer than two relays answering.
+
+# Button that puts the default relays and spares back.
+room-relays-restore = Restore the defaults
+
+# Button in the room column's header that leaves, on the place's room card, with the dialog after it.
+room-leave-ellipsis = Leave…
+
+# Menu item on an iPhone that leaves, asking first.
+room-leave-menu = Leave the room…
+
+# Menu item on Android that leaves, asking first.
+room-leave-menu-plain = Leave the room
+
+# Title of the confirmation before leaving.
+room-leave-title = Leave the room?
+
+# Line under it.
+room-leave-line = The others keep watching.
+
+# Line under it when closing the window on a Mac, which offers Keep the room.
+room-leave-line-keep = The others keep watching. Keep the room closes the player and keeps your place.
+
+# Button in the confirmation on closing the window: close the player and stay in the room.
+room-keep = Keep the room
+
+# Button in the TV's confirmation that goes back to the room.
+room-keep-watching = Keep watching
+
+# Small heading of the up next card.
+room-up-next = Up next for the room
+
+# Line on the card naming the next episode.
+room-up-next-episode = Episode { $episode } · { $title }
+
+# Line on the card naming the next episode when it has no title.
+room-up-next-episode-plain = Episode { $episode }
+
+# Line on the card counting down for everyone.
+room-up-next-count = Plays for everyone in { $seconds } s
+
+# Line on the card while your file ended sooner and the room waits for someone's longer file.
+room-up-next-waiting = Waiting for { $name } to finish
+
+# Button on the card that moves the room on at once.
+room-play-next-now = Play next now
+
+# First line of the room while up next counts down.
+room-line-up-next = Up next in { $seconds } s
+
+# Second line while up next counts down.
+room-line-up-next-detail = Episode { $episode } plays for everyone
+
+# Placeholder of the chat field.
+room-chat-field = Say something
+
+# Button and accessibility label that sends a chat line.
+room-chat-send = Send
+
+# Accessibility label of the button beside the chat field that opens the reactions.
+room-react = React
+
+# Line in the chat of a room opened from an invite, before joining.
+room-chat-opens = The chat opens when you join
+
+# Line under a chat line that didn't reach any relay.
+room-chat-not-sent = Couldn't send
+
+# Chat line: someone started the room.
+room-chat-started = { $name } started the room · Episode { $episode }
+
+# Chat line: you started the room.
+room-chat-you-started = You started the room · Episode { $episode }
+
+# Chat line: someone paused, at a place in the episode.
+room-chat-paused = { $name } paused at { $at }
+
+# Chat line: you paused.
+room-chat-you-paused = You paused at { $at }
+
+# Chat line: someone played after a pause.
+room-chat-resumed = { $name } resumed
+
+# Chat line: the room waits for people whose player is opening the episode.
+room-chat-paused-for-loading = Paused for { $names } · loading
+
+# Chat line: the room waits for people whose player stalled.
+room-chat-paused-for-buffering = Paused for { $names } · buffering
+
+# Chat line on your own device: the room waits for you.
+room-chat-paused-for-you = Paused for you · loading
+
+# Chat line: someone pressed Carry on.
+room-chat-carried-on = { $carrier } carried on without { $names }
+
+# Chat line: someone's first frame landed and they joined at the room's place.
+room-chat-joined-at = { $name } joined at { $at }
+
+# Chat line: someone left the room.
+room-chat-left = { $name } left
+
+# Chat line: someone moved to a new room.
+room-chat-moved = { $name } moved to a new room
+
+# Chat line in the old room: someone went along to the new room.
+room-chat-went = { $name } went to the new room
+
+# Chat line: up next moved the room on.
+room-chat-up-next = Up next: episode { $episode } for everyone
+
+# Chat line: someone skipped the opening for the room.
+room-chat-skipped-opening = { $name } skipped the opening
+
+# Label of the laugh reaction button.
+room-react-laugh = Laugh
+
+# Label of the gasp reaction button.
+room-react-gasp = Gasp
+
+# Label of the clap reaction button.
+room-react-clap = Clap
+
+# Label of the cry reaction button.
+room-react-cry = Cry
+
+# Chat line: someone laughed, at a place in the episode.
+room-reacted-laugh = { $name } laughed at { $at }
+
+# Chat line: someone gasped, at a place in the episode.
+room-reacted-gasp = { $name } gasped at { $at }
+
+# Chat line: someone clapped, at a place in the episode.
+room-reacted-clap = { $name } clapped at { $at }
+
+# Chat line: someone cried, at a place in the episode.
+room-reacted-cry = { $name } cried at { $at }
+
+# Line under the video on the TV rail: what the remote's buttons do.
+room-tv-keys = OK for the controls · Back closes the room
+
+# Line under the chat on the TV rail: chat is read-only there.
+room-tv-write-from-phone = Write from your phone
+
+# Line under the place's heading.
+room-place-line = Each of you plays the episode from your own sources; the room keeps you in step. Start a room from any episode with Watch together, in the player or on its page.
+
+# Small heading of the card for the room you are in.
+room-place-yours = Your room
+
+# Button on the card that opens the room's player.
+room-open-player = Open the player
+
+# Heading of the field that joins a room.
+room-place-join = Join a room
+
+# Placeholder of the field that takes an invite link.
+room-place-link = Invite link
+
+# Button that pastes the clipboard into the field.
+room-place-paste = Paste
+
+# Heading of the list of recent rooms.
+room-recent = Recent rooms
+
+# Line beside the heading.
+room-recent-note = The last ten, kept on this device
+
+# Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.
+room-recent-row = Episode { $episode } · with { $names } · { $when }
+
+# Line of a recent room where you were alone.
+room-recent-row-alone = Episode { $episode } · { $when }
+
+# Button on a recent room that joins it again.
+room-rejoin = Rejoin
+
+# Title of the alert when none of an invite's relays answers, and the bold start of the line in the place.
+room-error-unreachable-title = Couldn't reach this room's relays
+
+# Line under it, and the next sentence in the place.
+room-error-ask-new-invite = Ask for a new invite.
+
+# The same error in one line, where there is no room for a title.
+room-error-unreachable = Couldn't reach this room's relays. Ask for a new invite.
+
+# Line after it in the place: what was tried.
+room-error-tried = Kaeri tried the link's relays and your spares, { $seconds } s each.
+
+# Title of the alert when a recent room has nobody answering, such as after a new invite.
+room-error-nobody-answered = Nobody answered in this room
+
+# Line under it.
+room-error-nobody-answered-line = If someone made a new invite, the old one stopped working. Ask them for the new link.
+
+# Notice when the room already has 10 people and you can't join.
+room-error-full = This room is full
+
+# Notice when an invite link or code is from an older version.
+room-error-old-invite = This invite is from an older version of Kaeri. Ask for a new one.
+
+# Chat line: someone came into the room.
+room-chat-joined = { $name } joined
+
+# Chat line: someone moved the room to another place in the episode.
+room-chat-jumped = { $name } jumped from { $from } to { $to }
+
+# Chat line: the room waits for people catching up after a jump.
+room-chat-paused-for-seeking = Paused for { $names } · catching up
+
+# Chat line: this device's player was moved to stay with the room.
+room-chat-corrected = Moved to stay with the room
+
+# Chat line: someone put on another episode for the room.
+room-chat-episode-changed = { $name } put on episode { $episode }
+
+# Chat line: someone who was behind caught up with the room.
+room-chat-caught-up = { $name } caught up with the room
+
+# Chat line on a device whose Play lost to someone's Pause pressed at the same moment.
+room-chat-already-paused = { $name } already paused
+
+# Chat line: someone made a new invite; the old link stopped working.
+room-chat-new-invite = { $name } made a new invite
+
+# Chat line: someone cancelled Up next for everyone.
+room-chat-up-next-cancelled = { $name } cancelled up next
+
+# Chat line on your own device: your name was taken, so the room knows you by this one.
+room-chat-renamed = You're { $name } in this room
+
+# Button that shows the room's column again after Hide room.
+room-show = Show room
+
+# The room's Skip opening button on the player: skips for everyone.
+room-skip-opening = Skip opening
+
+# Confirmation after Copy invite link.
+room-link-copied = Invite link copied
+
+# The starting screen's line on the device opening the room's episode.
+room-starting-episode = Starting episode { $episode }
+
+# A short length in minutes, on the banner before play.
+room-minutes = { $minutes } min
+
+# Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.
+room-names-and = { $names } and { $last }
+
+# Joins two names in a longer list: "Mika, Ren".
+room-names-comma = { $first }, { $rest }
+
+# Person menu item and accessibility action that hides someone's lines and reactions in this room.
+room-mute = Mute { $name }
+
+# Person menu item and accessibility action that shows a muted person's lines again.
+room-unmute = Unmute { $name }
+
+# Line in the conversation where a muted person's lines were.
+room-chat-muted = { $name } is muted
+
+# Line after the newest chat lines over the video, which opens the conversation.
+room-chat-more = { $count } more in chat
+
+# Spoken by a screen reader when a chat line arrives.
+room-chat-announce = { $name } says { $message }
+
+# End of the chat field while sending waits, after three messages in five seconds.
+room-chat-wait = Wait { $seconds } s
+
+# Spoken once when sending waits, for screen readers.
+room-chat-wait-spoken =
+    { $seconds ->
+        [one] Wait one second
+       *[other] Wait { $seconds } seconds
+    }
+
+# Spoken by a screen reader once, when 20 characters are left in the chat field.
+room-chat-characters-left =
+    { $count ->
+        [one] { $count } character left
+       *[other] { $count } characters left
+    }
+
+# A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+room-reacted-at = { $line } at { $time }
+
+# Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+room-tick-label = { $time } · { $names }
+
+# Two people named together, for a reaction made by both: "Ren and Mika".
+room-names-two = { $first } and { $second }
+
+# Three people named together.
+room-names-three = { $first }, { $second } and { $third }
+
+# More than three people named together: two names and how many others.
+room-names-others = { $first }, { $second } and { $count } others
+
+# Player panel, under the subtitled or dubbed switch in a room.
+room-version-own = Only your player switches. The room keeps playing.
+
+# The banner over the room when the episode has no name of its own: the episode and its length.
+room-banner-episode-plain = Episode { $episode } · { $length }
+
+# Menu item dimmed in a room, with this reason under it.
+room-mark-unavailable = Mark skip times after you leave the room.
+
+# Heading of the people list in the room, and its accessibility label.
+room-people = People in the room
+
+# State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+room-state-seeking = Seeking · { $seconds } s
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+room-error-unreachable-lead = Couldn't reach this room's relays.
+
+# Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+room-error-nobody-answered-lead = Nobody answered in this room.
+
+# Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+room-device-in-room = { $device } is in this room
+
+# Button on the phone's remote screen that leaves the room on the paired TV.
+room-leave-on-device = Leave the room on { $device }
+
+# Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+room-tv-join-from-phone = To join someone's room, open their invite on a paired phone and choose this TV.
+
+# Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+room-sources-found-line =
+    { $count ->
+        [one] One source has it. It plays for everyone in the room.
+       *[other] { $count } sources have it. Your pick plays for everyone in the room.
+    }
+
 # Button that shows the season before.
 seasonal-previous = Previous season
 
@@ -13923,6 +14742,28 @@ sources-add-demo = Add the demo
 
 # Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
 sources-order-all = Every source is tried in this order, whatever its kind.
+
+# Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+sources-choose-for = Choose a source for episode { $episode }
+
+# Line while the sources are searched for the episode.
+sources-looking = Looking through your sources…
+
+# Line over the list of sources that list the episode.
+sources-found =
+    { $count ->
+        [one] One source has it
+       *[other] { $count } sources have it
+    }
+
+# Line when no source lists the episode.
+sources-none-list = No source lists episode { $episode }. Sources come from plugins, which a plugin store adds.
+
+# Button that goes to the Sources page, when no source is set up.
+sources-open = Open sources
+
+# Accessibility label of the list of sources for the episode.
+sources-label = Sources for this episode
 
 # Short label for a joined store, on a row.
 stores-joined = Joined
