@@ -392,7 +392,9 @@ impl Room {
     /// Who the room waits for now, the first to start first.
     pub fn waited(&self, now: i64) -> Vec<Waited> {
         let Some(head) = &self.playhead else { return Vec::new() };
-        if head.wseq == 0 {
+        // A room nobody asked to play waits for no one: before Play it is Not started yet, and
+        // a paused room is someone's pause. The wait starts with Play.
+        if head.wseq == 0 || !head.play {
             return Vec::new();
         }
         let stall_by = match &self.wait_cause {
@@ -407,8 +409,11 @@ impl Room {
             .filter(|m| m.status.rdy != Some(head.wseq) && !head.carry.contains(&m.mid))
             .filter(|m| stall_by.as_ref().is_none_or(|by| *by == m.mid))
             .map(|m| {
+                // The member's own state first, as its row says it: someone opening the
+                // episode after a seek is loading, not seeking.
                 let reason = match m.status.s {
                     StateCode::Buffering => Reason::Buffering,
+                    StateCode::Loading => Reason::Loading,
                     _ if seeking => Reason::Seeking,
                     _ => Reason::Loading,
                 };
