@@ -230,12 +230,6 @@ extension PlayerModel {
             guard await roomWaited(30, { self.isPresented && self.hasPicture }) else { return false }
             if !paused { togglePause() }
         }
-        if scene == .ownwait {
-            // Your own player reports how it is doing, and the room takes that over the fake's
-            // pose: the player opens first, so the pose (you still loading) comes last and holds.
-            store.send(.play(id: 900_001, episode: "9"))
-            guard await roomWaited(30, { self.isPresented && self.hasPicture }) else { return false }
-        }
         let engineScene = RoomStage.scene(scene)
         // The fake blocks while its members act: off the main thread.
         let staged = await Task.detached { fake.stage(scene: engineScene) }.value
