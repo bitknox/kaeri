@@ -54,6 +54,9 @@ pub struct Member {
     /// Their identity key and its proof for `session`, passed on in sync answers.
     pub idpk: String,
     pub idsig: String,
+    /// The session and counter of the last of their own events taken as their word of
+    /// themselves; one from that session at or below it came late (see [`Room::receive`]).
+    said: (String, u64),
 }
 
 impl Member {
@@ -199,6 +202,7 @@ impl Room {
                 left_at: None,
                 idpk: String::new(),
                 idsig: String::new(),
+                said: (String::new(), 0),
             },
         );
         Self {
@@ -670,6 +674,15 @@ impl Room {
         if body.mid == self.me {
             return out;
         }
+        // A member's events come by several relays, each in its own time, so one said before
+        // another can arrive after it (the gate takes a counter it hasn't seen). Late, it still
+        // says what has an order of its own (a playhead write, the relay list, the key epoch)
+        // and what is an event in itself (a line, a request), but nothing of how they are or
+        // were: their state, coming or going, or an answer's roster and place.
+        let late = self
+            .members
+            .get(&body.mid)
+            .is_some_and(|m| m.said.0 == body.from && body.ctr <= m.said.1);
         if let Message::SyncAns { nonce, .. } = &body.m {
             self.answers.retain(|(n, _)| n != nonce);
         }
@@ -690,7 +703,7 @@ impl Room {
             if *epoch > self.epoch.0 && *epoch <= self.epoch.0 + SEQ_JUMP_LIMIT {
                 self.epoch = (*epoch, i64::MAX, String::new());
             }
-            for entry in roster {
+            for entry in roster.iter().filter(|_| !late) {
                 self.take_roster(entry, now, &mut out);
             }
             if let Some(head) = playhead.clone() {
@@ -709,6 +722,7 @@ impl Room {
                         new: Box::new(new),
                     });
                 }
+                let took = took && !late;
                 if *started && took {
                     self.before_play = false;
                 }
@@ -732,7 +746,7 @@ impl Room {
         }
         let known = self.members.contains_key(&body.mid);
         match &body.m {
-            Message::Hello { name, idpk, idsig, .. } => {
+            Message::Hello { name, idpk, idsig, .. } if !late => {
                 let back = self.members.get(&body.mid).is_some_and(|m| m.left_at.is_some());
                 let member = self.members.entry(body.mid.clone()).or_insert_with(|| Member {
                     mid: body.mid.clone(),
@@ -745,6 +759,7 @@ impl Room {
                     left_at: None,
                     idpk: String::new(),
                     idsig: String::new(),
+                    said: (String::new(), 0),
                 });
                 member.name.clone_from(name);
                 member.session.clone_from(&body.from);
@@ -770,16 +785,19 @@ impl Room {
         }
         let Some(member) = self.members.get_mut(&body.mid) else { return out };
         member.heard_at = now;
-        if member.status != body.st {
-            member.status = body.st.clone();
-            member.status_at = now;
-        }
-        if member.left_at.is_some() && !matches!(body.m, Message::Leave) {
-            member.left_at = None;
-            out.push(Happening::Joined { mid: body.mid.clone() });
+        if !late {
+            member.said = (body.from.clone(), body.ctr);
+            if member.status != body.st {
+                member.status = body.st.clone();
+                member.status_at = now;
+            }
+            if member.left_at.is_some() && !matches!(body.m, Message::Leave) {
+                member.left_at = None;
+                out.push(Happening::Joined { mid: body.mid.clone() });
+            }
         }
         match body.m {
-            Message::Leave => {
+            Message::Leave if !late => {
                 if let Some(m) = self.members.get_mut(&body.mid) {
                     m.left_at = Some(now);
                 }
@@ -838,6 +856,7 @@ impl Room {
             left_at: None,
             idpk: entry.idpk.clone(),
             idsig: entry.idsig.clone(),
+            said: (String::new(), 0),
         });
         if member.session.is_empty() && !entry.pk.is_empty() {
             member.session.clone_from(&entry.pk);

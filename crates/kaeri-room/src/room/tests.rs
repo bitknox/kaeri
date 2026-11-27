@@ -29,8 +29,16 @@ fn room(others: &[&str]) -> Room {
     room
 }
 
+/// A body from `mid`, its counter above every one before it, as a sender's are.
 fn body(mid: &str, m: Message, st: Status) -> Body {
-    Body { v: VERSION, from: format!("p{mid}"), mid: mid.into(), ctr: 1, t: 0, st, m }
+    static CTR: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
+    let ctr = CTR.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+    Body { v: VERSION, from: format!("p{mid}"), mid: mid.into(), ctr, t: 0, st, m }
+}
+
+/// A body with its counter given: what a member said, in the order they said it.
+fn numbered(mid: &str, m: Message, st: Status, ctr: u64) -> Body {
+    Body { ctr, ..body(mid, m, st) }
 }
 
 fn watching(rdy: Option<u64>) -> Status {
@@ -248,6 +256,44 @@ fn a_late_joiner_starts_at_the_answered_place() {
     assert_eq!(ren.position(13_100), Some(10.0));
     assert!(!ren.before_play());
     assert_eq!(ren.members().len(), 2);
+}
+
+#[test]
+fn a_members_older_word_coming_late_changes_nothing_of_theirs() {
+    // Their events come by several relays, each in its own time: a Status said before another
+    // can arrive after it, and a receiver takes it (it wasn't seen yet).
+    let n = 1_000_000;
+    let mut room = room(&["m"]);
+    room.receive(numbered("m", Message::Status, watching(Some(1)), n + 2), 100);
+    room.receive(numbered("m", Message::Status, loading(), n + 1), 200);
+    assert_eq!(room.member("m").unwrap().status.s, StateCode::Watching);
+    // Gone: something said before the Leave doesn't bring them back.
+    room.receive(numbered("m", Message::Leave, watching(Some(1)), n + 4), 300);
+    room.receive(numbered("m", Message::Status, watching(Some(1)), n + 3), 400);
+    assert!(room.member("m").unwrap().left_at.is_some());
+    // Back with something newer.
+    room.receive(numbered("m", Message::Status, watching(Some(1)), n + 5), 500);
+    assert!(room.member("m").unwrap().left_at.is_none());
+    // A restart is a new session, its counter from the start again: newer all the same.
+    room.receive(
+        Body { from: "pm-again".into(), ..numbered("m", Message::Status, loading(), 1) },
+        600,
+    );
+    assert_eq!(room.member("m").unwrap().status.s, StateCode::Loading);
+}
+
+#[test]
+fn an_older_answer_coming_late_keeps_the_newer_place() {
+    let mut mika = room(&[]);
+    start(&mut mika, 0);
+    mika.settle(3_000);
+    let older = mika.sync_answer("n1", 13_000);
+    let newer = mika.sync_answer("n2", 23_000);
+    let mut ren = Room::new("r", "Ren", "pr", 23_000);
+    ren.receive(numbered("a", newer, watching(Some(1)), 1_000_002), 23_100);
+    ren.receive(numbered("a", older, watching(Some(1)), 1_000_001), 23_200);
+    let at = ren.position(23_200).unwrap();
+    assert!(at > 19.0, "{at}");
 }
 
 /// Three relays, health bits per member (bit i: relay i works there).
