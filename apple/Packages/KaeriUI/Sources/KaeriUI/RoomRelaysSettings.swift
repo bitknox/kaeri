@@ -1,6 +1,6 @@
 // Settings ▸ Playback ▸ Watch together ▸ Relays: the relays new rooms use, with the spares a room
-// swaps in when its own stop answering. The list for new rooms takes adds and removes; the spares
-// are the engine's own and only shown.
+// swaps in when its own stop answering. The list for new rooms takes adds and removes (never the
+// last); a spare comes off with its ×. Restore the defaults puts the built-in ones back.
 
 import KaeriDesign
 import KaeriStore
@@ -94,7 +94,9 @@ struct RelaysPane: View {
             .padding(.top, 16)
             if let spares = room.relaySettings?.spares, !spares.isEmpty {
                 SettingsGroup(title: L.roomRelaysSpares, footnote: L.roomRelaysSparesLine) {
-                    ForEach(spares, id: \.self) { RelayRow(relay: $0) }
+                    ForEach(spares, id: \.self) { spare in
+                        RelayRow(relay: spare, removable: true) { room.removeSpare(spare) }
+                    }
                 }
                 .padding(.top, 20)
             }
@@ -183,7 +185,9 @@ struct PhoneRelaysPage: View {
             }
             if let spares = room.relaySettings?.spares, !spares.isEmpty {
                 Section {
-                    ForEach(spares, id: \.self) { PhoneRelayRow(relay: $0) }
+                    ForEach(spares, id: \.self) { spare in
+                        PhoneRelayRow(relay: spare, removable: true) { room.removeSpare(spare) }
+                    }
                 } header: {
                     PhoneSectionHeader(L.roomRelaysSpares)
                 } footer: {

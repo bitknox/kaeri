@@ -158,8 +158,9 @@ public final class RoomModel {
     /// What a Join or a Rejoin is waiting on: a failure is about it.
     private var joining: String?
     private var rejoining: String?
-    /// A room looked into from Watch together: its glimpse isn't an invitation.
+    /// A recent room looked into from Watch together: its glimpse isn't an invitation.
     private var lookingIn: String?
+    /// The invite looked into: only its glimpse or failure is answered.
     private var peeked: String?
 
     @ObservationIgnored public var send: @MainActor (Command) -> Void = { _ in }
@@ -504,6 +505,8 @@ public final class RoomModel {
     /// An invite link opened from outside the app: the room shows behind its banner first.
     public func open(invite link: String) {
         peeked = link
+        joinFailed = nil
+        joinFailure = nil
         send(.room(.peekInvite(invite: link)))
     }
 
@@ -515,8 +518,11 @@ public final class RoomModel {
         return relaySettings.chosen.isEmpty ? relaySettings.defaults : relaySettings.chosen
     }
 
-    /// The list for new rooms is the defaults.
-    public var relaysAreDefault: Bool { relaySettings?.chosen.isEmpty ?? true }
+    /// The list for new rooms and the spares are the defaults.
+    public var relaysAreDefault: Bool {
+        guard let relaySettings else { return true }
+        return relaySettings.chosen.isEmpty && relaySettings.spares == relaySettings.defaultSpares
+    }
 
     /// Asks the engine for Settings ▸ Relays.
     public func loadRelays() { send(.room(.loadRelays)) }
@@ -537,8 +543,21 @@ public final class RoomModel {
         chooseRelays(left)
     }
 
-    /// Restore the defaults: the list for new rooms goes back to the defaults.
-    public func restoreRelays() { chooseRelays([]) }
+    /// Takes a spare off; the engine keeps the rest in order.
+    public func removeSpare(_ address: String) {
+        guard let spares = relaySettings?.spares, spares.contains(address) else { return }
+        let left = spares.filter { $0 != address }
+        relaySettings?.spares = left
+        send(.room(.setSpareRelays(relays: left)))
+    }
+
+    /// Restore the defaults: the list for new rooms and the spares go back to the built-in ones.
+    public func restoreRelays() {
+        if relaySettings?.chosen.isEmpty == false { chooseRelays([]) }
+        guard let relaySettings, relaySettings.spares != relaySettings.defaultSpares else { return }
+        self.relaySettings?.spares = relaySettings.defaultSpares
+        send(.room(.setSpareRelays(relays: relaySettings.defaultSpares)))
+    }
 
     private func chooseRelays(_ list: [String]) {
         // The defaults again are no list of Settings' own.
@@ -647,27 +666,44 @@ public final class RoomModel {
         case .roomChatState(let state):
             chatHidden = state.hidden
         case .roomLeft(let why):
+            // Only the room this device is in, or the one it is joining, is left: a stray
+            // leave keeps an invite on screen.
+            guard view != nil || joining != nil || rejoining != nil else { return }
             left(why)
         case .roomStarted(let id, let episode, _, _):
             // The room plays: the player opens at its place, and the seat follows the room.
             shown = true
             send(.play(id: id, episode: episode))
         case .roomGlimpse(let glimpse):
-            if let room = glimpse.roomId, room == lookingIn {
+            if glimpse.invite == nil, let room = glimpse.roomId, room == lookingIn {
                 lookingIn = nil
                 return
             }
-            guard view == nil, let by = glimpse.by else { return }
+            // Only the invite this device is looking into becomes an invitation.
+            guard let link = glimpse.invite, link == peeked, view == nil, let by = glimpse.by else { return }
             let episode = glimpse.roomEpisode
             invitation = RoomInvitation(
                 by: by, title: episode?.title ?? "", id: episode?.id, episode: episode?.episode ?? "",
-                names: glimpse.members.map(\.name), full: glimpse.full, link: peeked)
+                names: glimpse.members.map(\.name), full: glimpse.full, link: link)
             members = glimpse.members
             lines = []
-        case .roomLookFailed(let roomId, _):
-            quiet.insert(roomId)
-            if rejoining == roomId { rejoining = nil }
-            recent = rows()
+        case .roomLookFailed(let roomId, _, let invite, let why):
+            if let invite {
+                // The invite looked into found nothing: Watch together says why, as a join
+                // failing would. Any other look's failure is not this device's.
+                guard invite == peeked else { return }
+                peeked = nil
+                invitation = nil
+                joinFailed = invite
+                joinText = invite
+                joinFailure = why.flatMap(RoomJoinFailure.init) ?? .unreachable
+            } else {
+                guard roomId == rejoining || roomId == lookingIn else { return }
+                quiet.insert(roomId)
+                if rejoining == roomId { rejoining = nil }
+                if lookingIn == roomId { lookingIn = nil }
+                recent = rows()
+            }
         case .roomRecent(let rooms):
             #if FIXTURES
             if stagedRecent { return }
@@ -691,13 +727,7 @@ public final class RoomModel {
     }
 
     private func left(_ why: RoomLeftWhy) {
-        let failed: RoomJoinFailure? = switch why {
-        case .left, .moved: nil
-        case .unreachable: .unreachable
-        case .full: .full
-        case .oldInvite: .oldInvite
-        case .failed(let reason): .failed(reason.text)
-        }
+        let failed = RoomJoinFailure(why)
         if let rejoining, failed != nil {
             quiet.insert(rejoining)
         } else if let joining, let failed {
@@ -742,6 +772,9 @@ public final class RoomModel {
 
     #if FIXTURES
     private var stagedRecent = false
+
+    /// A screenshot run's look into the invite `link`, which the fake room sends itself.
+    public func stage(peeking link: String) { peeked = link }
 
     /// A screenshot run's join of `link`, which the fake room sends itself.
     public func stage(joining link: String) {

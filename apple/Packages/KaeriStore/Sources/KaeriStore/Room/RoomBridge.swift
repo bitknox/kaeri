@@ -129,3 +129,16 @@ public enum RoomJoinFailure: Equatable, Sendable {
     case oldInvite
     case failed(String)
 }
+
+extension RoomJoinFailure {
+    /// What a join or look failing for `why` says; nil for leaving or moving, which aren't.
+    init?(_ why: RoomLeftWhy) {
+        switch why {
+        case .left, .moved: return nil
+        case .unreachable: self = .unreachable
+        case .full: self = .full
+        case .oldInvite: self = .oldInvite
+        case .failed(let reason): self = .failed(reason.text)
+        }
+    }
+}

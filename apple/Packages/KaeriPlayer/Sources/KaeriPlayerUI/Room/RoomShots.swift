@@ -244,6 +244,7 @@ extension PlayerModel {
             store.send(.play(id: 900_001, episode: "9"))
             guard await roomWaited(30, { self.isPresented && self.hasPicture }) else { return false }
             if !paused { togglePause() }
+            room.stage(peeking: fake.invite(by: "Mika")) // i18n-skip
         }
         let engineScene = RoomStage.scene(scene)
         // The fake blocks while its members act: off the main thread.
@@ -368,6 +369,7 @@ extension PlayerModel {
             // The link opened looks into the room without joining it.
             guard let fake = store.startFakeRoom() else { return false }
             RoomStage.fake = fake
+            room.stage(peeking: fake.invite(by: "Mika")) // i18n-skip
             _ = await Task.detached { fake.stage(scene: .invited) }.value
             guard await roomWaited(30, { room.invitation != nil }) else { return false }
         case .placeroom:

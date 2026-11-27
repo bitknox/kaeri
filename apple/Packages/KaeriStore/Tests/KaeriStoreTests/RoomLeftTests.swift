@@ -32,7 +32,7 @@ struct RoomLeftTests {
     @Test func anInviteThatFailsLeavesNoInvitation() {
         let room = RoomModel()
         room.open(invite: "kaeri://room#invite.example")
-        room.apply(.roomGlimpse(RoomGlimpse(by: "Ren")))
+        room.apply(.roomGlimpse(RoomGlimpse(by: "Ren", invite: "kaeri://room#invite.example")))
         #expect(room.invitation != nil)
         room.accept()
         room.apply(.roomLeft(why: .unreachable))

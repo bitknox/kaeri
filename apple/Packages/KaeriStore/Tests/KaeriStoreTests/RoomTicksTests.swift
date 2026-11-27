@@ -59,7 +59,8 @@ struct RoomTicksTests {
         let room = RoomModel()
         room.open(invite: "kaeri://room#invite.example")
         room.apply(.roomGlimpse(RoomGlimpse(
-            by: "Mika", roomEpisode: RoomEpisodeInfo(id: 900_001, episode: "9", title: "Stardust Wayfarer"))))
+            by: "Mika", roomEpisode: RoomEpisodeInfo(id: 900_001, episode: "9", title: "Stardust Wayfarer"),
+            invite: "kaeri://room#invite.example")))
         let status = room.status(now: 0)
         #expect(status.detail.contains("Stardust Wayfarer"), "the player's panel has no title above it")
         #expect(room.cardDetail(status) == room.episodeName("9"))
@@ -68,12 +69,15 @@ struct RoomTicksTests {
 
     // MARK: Settings ▸ Relays
 
-    private func relays(chosen: [String] = []) -> (RoomModel, () -> [Command]) {
+    private func relays(
+        chosen: [String] = [], spares: [String] = ["wss://spare-1.example", "wss://spare-2.example"]
+    ) -> (RoomModel, () -> [Command]) {
         let room = RoomModel()
         var sent: [Command] = []
         room.send = { sent.append($0) }
         room.apply(.roomRelays(RoomRelaySettings(
-            defaults: ["wss://one.example", "wss://two.example"], spares: ["wss://spare.example"], chosen: chosen)))
+            defaults: ["wss://one.example", "wss://two.example"], spares: spares,
+            defaultSpares: ["wss://spare-1.example", "wss://spare-2.example"], chosen: chosen)))
         return (room, { sent })
     }
 
@@ -110,5 +114,70 @@ struct RoomTicksTests {
         #expect(room.addRelay("wss://two.example"))
         #expect(sent() == [.room(.setRelays(relays: []))])
         #expect(room.relaysAreDefault)
+    }
+
+    @Test func aSpareComesOffAndRestorePutsTheBuiltInOnesBack() {
+        let (room, sent) = relays()
+        room.removeSpare("wss://spare-1.example")
+        #expect(room.relaySettings?.spares == ["wss://spare-2.example"])
+        #expect(!room.relaysAreDefault)
+        room.restoreRelays()
+        #expect(sent() == [
+            .room(.setSpareRelays(relays: ["wss://spare-2.example"])),
+            .room(.setSpareRelays(relays: ["wss://spare-1.example", "wss://spare-2.example"])),
+        ], "the list for new rooms was already the defaults")
+        #expect(room.relaysAreDefault)
+    }
+
+    @Test func restoreSetsBothListsBack() {
+        let (room, sent) = relays(chosen: ["wss://home.example"], spares: [])
+        room.restoreRelays()
+        #expect(sent() == [
+            .room(.setRelays(relays: [])),
+            .room(.setSpareRelays(relays: ["wss://spare-1.example", "wss://spare-2.example"])),
+        ])
+    }
+
+    // MARK: Looks
+
+    private let invite = "kaeri://room#invite.example"
+
+    @Test func onlyTheInviteLookedIntoBecomesAnInvitation() {
+        let room = RoomModel()
+        room.open(invite: invite)
+        room.apply(.roomGlimpse(RoomGlimpse(by: "Mika", invite: "kaeri://room#other.example")))
+        #expect(room.invitation == nil, "another look's glimpse")
+        room.apply(.roomGlimpse(RoomGlimpse(by: "Mika")))
+        #expect(room.invitation == nil, "a recent room's glimpse")
+        room.apply(.roomGlimpse(RoomGlimpse(by: "Mika", invite: invite)))
+        #expect(room.invitation?.by == "Mika")
+        #expect(room.invitation?.link == invite)
+    }
+
+    @Test func anInviteLookThatFailsSaysWhy() {
+        let room = RoomModel()
+        room.open(invite: invite)
+        room.apply(.roomLookFailed(roomId: "", reason: .roomLookOldInvite, invite: "kaeri://room#other.example", why: .oldInvite))
+        #expect(room.joinFailed == nil, "another look's failure")
+        room.apply(.roomLookFailed(roomId: "", reason: .roomLookOldInvite, invite: invite, why: .oldInvite))
+        #expect(room.joinFailed == invite)
+        #expect(room.joinFailure == .oldInvite)
+        #expect(room.invitation == nil)
+    }
+
+    @Test func aLookFailingNeverLeavesTheRoomYouAreIn() {
+        let room = joined()
+        room.open(invite: invite)
+        room.apply(.roomLookFailed(roomId: "", reason: .roomLookUnreachable, invite: invite, why: .unreachable))
+        room.apply(.roomLookFailed(roomId: "r9", reason: .roomLookNotKept, invite: nil, why: nil))
+        #expect(room.inRoom)
+    }
+
+    @Test func aLeaveWithNoRoomKeepsTheInvitation() {
+        let room = RoomModel()
+        room.open(invite: invite)
+        room.apply(.roomGlimpse(RoomGlimpse(by: "Mika", invite: invite)))
+        room.apply(.roomLeft(why: .unreachable))
+        #expect(room.invitation != nil, "nothing was joined, so nothing is left")
     }
 }
