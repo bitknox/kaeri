@@ -1326,7 +1326,12 @@ impl PlayerView {
                 );
             }
             A::TryAgain => {
-                self.ctx.hub.send(Command::Play { id, episode, from_start: false });
+                // In a room, the room's place stands, never this device's own resume point.
+                self.ctx.hub.send(if self.room.in_room() {
+                    room_play(id, episode)
+                } else {
+                    Command::Play { id, episode, from_start: false }
+                });
             }
             A::FixMatch => {
                 self.close();
@@ -3204,7 +3209,7 @@ impl PlayerView {
             return;
         }
         self.room_pending.replace(Some((id, episode.clone())));
-        self.ctx.hub.send(Command::Play { id, episode, from_start: false });
+        self.ctx.hub.send(room_play(id, episode));
     }
 
     /// Watch together: the room comes in around the player, from the episode playing. In a
@@ -3239,11 +3244,7 @@ impl PlayerView {
                     && self.title_id.get() == Some(*id)
                     && self.episode_line.borrow().0 == *episode;
                 if !same {
-                    self.ctx.hub.send(Command::Play {
-                        id: *id,
-                        episode: episode.clone(),
-                        from_start: false,
-                    });
+                    self.ctx.hub.send(room_play(*id, episode.clone()));
                 }
             }
             Event::RoomJoined(_) | Event::RoomState(_) => {
@@ -3345,7 +3346,7 @@ impl PlayerView {
                         .hub
                         .send(Command::SetProviderPreference { id, provider: Some(provider) });
                 }
-                self.ctx.hub.send(Command::Play { id, episode, from_start: false });
+                self.ctx.hub.send(room_play(id, episode));
             }
             // Sources and Search are in the main window: the player closes, keeping this
             // device's place in the room (Keep the room), so they show.
@@ -4712,9 +4713,24 @@ fn build_ui(ctx: &Rc<Ctx>, video: &gtk::Widget) -> Ui {
     }
 }
 
+/// A room's episode opens at the start: the room moves the player to its place from there, so
+/// this device's own resume point never shows in a room (Neon, the engine's second pass).
+fn room_play(id: AnilistId, episode: String) -> Command {
+    Command::Play { id, episode, from_start: true }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn a_rooms_episode_never_opens_at_the_resume_point() {
+        let id = AnilistId::new(900_001);
+        assert!(matches!(
+            room_play(id, "9".into()),
+            Command::Play { from_start: true, ref episode, .. } if episode == "9"
+        ));
+    }
 
     #[test]
     fn only_a_dub_is_marked_on_the_episode_line() {
