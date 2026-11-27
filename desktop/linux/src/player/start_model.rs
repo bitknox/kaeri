@@ -9,7 +9,7 @@ use kaeri_core::{ids::AnilistId, media::Translation};
 use kaeri_i18n::t;
 use kaeri_model::{
     Cause, Msg,
-    party::NoSourceWhy,
+    room::NoSourceWhy,
     starting::{HeldSources, SourceHold, SourceMiss, StartFailure, StartStep},
 };
 

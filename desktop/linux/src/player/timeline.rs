@@ -12,6 +12,7 @@ use adw::prelude::*;
 use gtk::gdk;
 use kaeri_i18n::t;
 use kaeri_model::{
+    room::RoomReactionMark,
     subtitle_lift::{SubtitleFrame, SubtitlePlacement, subtitle_lift},
     subtitle_style::{SubtitleStyle, mpv_subtitle_options},
 };
@@ -166,25 +167,63 @@ pub struct Marked {
     buffered: Rc<RefCell<Vec<(f64, f64)>>>,
     /// The stretch being marked, in seconds, drawn at half water until it is saved.
     provisional: Rc<Cell<Option<(f64, f64)>>>,
-    /// Where the party reacted, as ticks over the line, and the line's width the last time it
+    /// Where the room reacted, as ticks over the line, and the line's width the last time it
     /// was drawn.
-    reactions: Rc<RefCell<Vec<kaeri_model::party::PartyReactionMark>>>,
+    reactions: Rc<RefCell<Vec<RoomReactionMark>>>,
     drawn_width: Rc<Cell<f64>>,
 }
 
-/// The ticks of a [`Marked`], to hand to a callback.
-pub struct Ticks {
-    marks: gtk::DrawingArea,
-    reactions: Rc<RefCell<Vec<kaeri_model::party::PartyReactionMark>>>,
+/// A reaction tick on the seek bar: where, and who reacted there.
+#[derive(Debug, Clone, PartialEq)]
+pub struct Tick {
+    pub at: f64,
+    pub names: Vec<String>,
 }
 
-impl Ticks {
-    pub fn set_reactions(&self, marks: Vec<kaeri_model::party::PartyReactionMark>) {
-        if *self.reactions.borrow() != marks {
-            self.reactions.replace(marks);
-            self.marks.queue_draw();
+impl Tick {
+    /// The seek bar's label near it: "12:04 · Ren and Mika".
+    pub fn label(&self) -> String {
+        let (first, rest) =
+            self.names.split_first().map_or(("", &[][..]), |(f, r)| (f.as_str(), r));
+        let names = match rest {
+            [] => first.to_owned(),
+            [second] => t::party_names_two(first, second),
+            [second, third] => t::party_names_three(first, second, third),
+            [second, more @ ..] => t::party_names_others(first, second, more.len() as i64),
+        };
+        let total = self.at.max(0.0).round() as i64;
+        let (hours, minutes, seconds) = (total / 3600, total / 60 % 60, total % 60);
+        let time = if hours > 0 {
+            format!("{hours}:{minutes:02}:{seconds:02}") // i18n-skip
+        } else {
+            format!("{minutes}:{seconds:02}") // i18n-skip
+        };
+        t::party_tick_label(&time, &names)
+    }
+}
+
+/// The reactions' marks as ticks on a line `width` px wide for an episode `duration` long:
+/// marks within `near` px of the tick before them share it.
+pub fn ticks(marks: &[RoomReactionMark], duration: f64, width: f64, near: f64) -> Vec<Tick> {
+    if duration <= 0.0 || width <= 0.0 {
+        return Vec::new();
+    }
+    let mut sorted: Vec<&RoomReactionMark> = marks.iter().collect();
+    sorted.sort_by(|a, b| a.at.total_cmp(&b.at));
+    let mut out: Vec<Tick> = Vec::new();
+    for mark in sorted {
+        let joins =
+            out.last().is_some_and(|last| (mark.at - last.at) / duration * width <= near);
+        if joins {
+            let last = out.last_mut().expect("checked");
+            if !last.names.contains(&mark.from) {
+                last.names.push(mark.from.clone());
+            }
+        } else {
+            out.push(Tick { at: mark.at, names: vec![mark.from.clone()] });
         }
     }
+    out
 }
 
 impl Marked {
@@ -198,7 +237,7 @@ impl Marked {
         widget.add_overlay(&marks);
         let buffered: Rc<RefCell<Vec<(f64, f64)>>> = Rc::default();
         let provisional: Rc<Cell<Option<(f64, f64)>>> = Rc::default();
-        let reactions: Rc<RefCell<Vec<kaeri_model::party::PartyReactionMark>>> = Rc::default();
+        let reactions: Rc<RefCell<Vec<RoomReactionMark>>> = Rc::default();
         let drawn_width: Rc<Cell<f64>> = Rc::default();
         let thickness = Rc::new(Cell::new(LINE));
         let hovered = Rc::new(Cell::new(false));
@@ -278,12 +317,12 @@ impl Marked {
                     let _ = cr.paint();
                     let _ = cr.restore();
                 }
-                // The party's reactions: haze ticks 2 by 5 px, 3 px above the line, ticks within
+                // The room's reactions: haze ticks 2 by 5 px, 3 px above the line, ticks within
                 // 4 px of each other as one.
                 drawn_width.set(w);
                 if length > 0.0 {
                     rgba(HAZE, 1.0);
-                    for tick in crate::party::chat::ticks(&reactions.borrow(), length, w, 4.0) {
+                    for tick in ticks(&reactions.borrow(), length, w, 4.0) {
                         let tx = at(tick.at - adjustment.lower()).round();
                         cr.rectangle(tx - 1.0, cy - t - 3.0 - 5.0, 2.0, 5.0);
                         let _ = cr.fill();
@@ -355,9 +394,12 @@ impl Marked {
         }
     }
 
-    /// A handle that draws the same ticks, for a callback.
-    pub fn clone_handle(&self) -> Ticks {
-        Ticks { marks: self.marks.clone(), reactions: Rc::clone(&self.reactions) }
+    /// Where the room reacted: drawn as ticks over the line.
+    pub fn set_reactions(&self, marks: Vec<RoomReactionMark>) {
+        if *self.reactions.borrow() != marks {
+            self.reactions.replace(marks);
+            self.marks.queue_draw();
+        }
     }
 
     /// The tick within 6 px of `seconds` on a line `duration` long, as its label: "12:04 · Ren".
@@ -366,7 +408,7 @@ impl Marked {
         if duration <= 0.0 || width <= 0.0 {
             return None;
         }
-        crate::party::chat::ticks(&self.reactions.borrow(), duration, width, 4.0)
+        ticks(&self.reactions.borrow(), duration, width, 4.0)
             .into_iter()
             .find(|tick| (tick.at - seconds).abs() / duration * width <= 6.0)
             .map(|tick| tick.label())
@@ -617,6 +659,25 @@ pub fn style_subtitles(mpv: &Mpv, style: &SubtitleStyle, lift: f64) {
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn marks_within_four_pixels_share_one_tick() {
+        use super::{RoomReactionMark, ticks};
+        let mark = |at: f64, from: &str| RoomReactionMark {
+            at,
+            from: from.into(),
+            reaction: kaeri_model::room::Reaction::Laugh,
+        };
+        // 1440 s over 960 px: 1.5 s a pixel.
+        let marks =
+            [mark(724.0, "Ren"), mark(204.0, "Sol"), mark(726.0, "Mika"), mark(468.0, "Ren")];
+        let found = ticks(&marks, 1440.0, 960.0, 4.0);
+        assert_eq!(found.len(), 3);
+        assert_eq!(found[2].names, ["Ren", "Mika"]);
+        assert_eq!(found[2].label(), "12:04 \u{b7} Ren and Mika");
+        let apart = ticks(&marks, 1440.0, 960.0, 0.5);
+        assert_eq!(apart.len(), 4);
+    }
+
     use super::*;
 
     #[test]

@@ -1,8 +1,5 @@
-//! A party's episode that none of this device's sources found: the viewer is in the room with
-//! nothing playing. The alert says why and offers what fits: nothing to choose before the
-//! episode airs, Open sources when there are none, and Choose source otherwise, which lists
-//! what each source has for the episode, the one picked playing with the room. Not now stays in
-//! the room, and Leave watch party leaves it.
+//! Choose source: what each of this device's sources lists for an episode, loading in place;
+//! the one picked plays.
 
 use std::{cell::Cell, rc::Rc};
 
@@ -13,7 +10,6 @@ use kaeri_model::{
     command::Command,
     event::Event,
     notice::NoticeKind,
-    party::NoSourceWhy,
     starting::{ListingMiss, MissedListing, SourceHold},
 };
 
@@ -22,99 +18,17 @@ use crate::{
     window::{Ctx, Size},
 };
 
-/// The alert for an episode none of the sources has.
-pub fn open(ctx: &Rc<Ctx>, id: AnilistId, episode: &str, why: NoSourceWhy, reason: &str) {
-    let (heading, body) = words(ctx, id, episode, why, reason);
-    let dialog = adw::AlertDialog::new(Some(&heading), Some(&body));
-    dialog.add_responses(&[("later", &t::party_not_now()), ("leave", &t::party_leave())]);
-    dialog.set_close_response("later");
-    match why {
-        NoSourceWhy::NotAired => dialog.set_default_response(Some("later")),
-        NoSourceWhy::NoSources => {
-            dialog.add_response("providers", &t::party_open_sources());
-            dialog.set_response_appearance("providers", adw::ResponseAppearance::Suggested);
-            dialog.set_default_response(Some("providers"));
-        }
-        NoSourceWhy::NotFound | NoSourceWhy::NoConnection => {
-            dialog.add_response("choose", &t::player_choose_source());
-            dialog.set_response_appearance("choose", adw::ResponseAppearance::Suggested);
-            dialog.set_default_response(Some("choose"));
-        }
-    }
-    let episode = episode.to_owned();
-    dialog.connect_response(None, {
-        let ctx = Rc::downgrade(ctx);
-        move |_, response| {
-            let Some(ctx) = ctx.upgrade() else { return };
-            match response {
-                "leave" => ctx.hub.send(Command::PartyLeave),
-                "providers" => {
-                    let _ = WidgetExt::activate_action(
-                        &ctx.window,
-                        "win.go",
-                        Some(&"providers".to_variant()),
-                    );
-                }
-                "choose" => choose(&ctx, id, &episode),
-                _ => {}
-            }
-        }
-    });
-    close_on_leaving(ctx, dialog.upcast_ref());
-    dialog.present(Some(&ctx.window));
+/// An episode as the catalogue counts it. The engine names one by its number as text.
+pub fn number(episode: &str) -> i64 {
+    episode.trim().parse().unwrap_or(0)
 }
 
-/// The alert's heading and body, by why the episode has no source.
-fn words(
-    ctx: &Ctx,
-    id: AnilistId,
-    episode: &str,
-    why: NoSourceWhy,
-    reason: &str,
-) -> (String, String) {
-    let place = match ctx.hub.known.borrow().party.as_ref() {
-        Some(party) => t::party_in_room_idle(&party.room, &party.server),
-        None => t::party_in_room_idle_plain(),
-    };
-    let what = super::episode_of(ctx, id, episode);
-    match why {
-        // The schedule's own words lead: "Episode 6 airs Tuesday at 13:05", or the episode not
-        // out yet with when the next one is.
-        NoSourceWhy::NotAired => (
-            reason.trim_end_matches('.').to_owned(),
-            [place.as_str(), &t::party_nosource_unaired_plain()].join(" "),
-        ),
-        NoSourceWhy::NoSources => (
-            t::party_nosource_none_title(),
-            [place.as_str(), &t::party_nosource_none_detail(&what)].join(" "),
-        ),
-        NoSourceWhy::NotFound | NoSourceWhy::NoConnection => (
-            t::party_nosource_missing_title(),
-            [
-                place.as_str(),
-                &t::party_nosource_missing_detail(reason.trim_end_matches('.'), &what),
-            ]
-            .join(" "),
-        ),
+/// "Episode 7 of Stardust Wayfarer", or "Episode 7" before the title is known.
+fn episode_of(ctx: &Ctx, id: AnilistId, episode: &str) -> String {
+    match ctx.hub.entry(id) {
+        Some(entry) => t::party_form_episode_of(number(episode), &entry.title),
+        None => t::party_form_episode(number(episode)),
     }
-}
-
-/// Close `dialog` when the party ends.
-fn close_on_leaving(ctx: &Rc<Ctx>, dialog: &adw::Dialog) {
-    let weak = dialog.downgrade();
-    let listening = ctx.hub.listen(move |event| {
-        if matches!(event, Event::PartyLeft { .. })
-            && let Some(dialog) = weak.upgrade()
-        {
-            dialog.force_close();
-        }
-    });
-    let hub = Rc::downgrade(&ctx.hub);
-    dialog.connect_closed(move |_| {
-        if let Some(hub) = hub.upgrade() {
-            hub.forget(listening);
-        }
-    });
 }
 
 /// What each source lists for the episode, loading in place; the one picked plays with the
@@ -155,7 +69,7 @@ pub fn choose(ctx: &Rc<Ctx>, id: AnilistId, episode: &str) {
     column.set_margin_bottom(24);
     column.set_margin_start(18);
     column.set_margin_end(18);
-    let what = gtk::Label::new(Some(&super::episode_of(ctx, id, episode)));
+    let what = gtk::Label::new(Some(&episode_of(ctx, id, episode)));
     what.add_css_class("heading");
     what.set_xalign(0.0);
     what.set_wrap(true);
@@ -259,14 +173,10 @@ pub fn choose(ctx: &Rc<Ctx>, id: AnilistId, episode: &str) {
             hub.forget(listening);
         }
     });
-    close_on_leaving(ctx, &dialog);
     widgets::keep(&dialog, Rc::clone(&state));
     state.look();
     dialog.present(Some(&ctx.window));
 }
-
-#[cfg(feature = "fixtures")]
-pub use choose as rehearse_choose;
 
 impl Choose {
     fn look(&self) {
@@ -317,11 +227,17 @@ impl Choose {
             return;
         }
         if found.is_empty() {
-            self.line.set_label(&t::party_sources_none_listed(super::number(&self.episode)));
+            self.line.set_label(&t::party_sources_none_listed(number(&self.episode)));
             self.providers.set_visible(true);
             return;
         }
-        self.line.set_label(&t::room_sources_found_line(found.len() as i64));
+        // In a room the pick plays for the room; outside one, for this player or the TV.
+        let in_room = self.ctx.hub.known.borrow().room.is_some();
+        self.line.set_label(&if in_room {
+            t::room_sources_found_line(found.len() as i64)
+        } else {
+            t::player_sources_found_line(found.len() as i64)
+        });
         for candidate in found {
             let row = adw::ActionRow::builder()
                 .title(gtk::glib::markup_escape_text(&candidate.title))

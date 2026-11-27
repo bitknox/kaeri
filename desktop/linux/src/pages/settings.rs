@@ -50,7 +50,6 @@ enum Group {
     NewEpisodes,
     Torrents,
     Seeding,
-    WatchParty,
     Discord,
     Discussions,
     Updates,
@@ -73,7 +72,6 @@ impl Group {
             Self::NewEpisodes => t::settings_new_episodes(),
             Self::Torrents => t::torrents_title(),
             Self::Seeding => t::downloads_seeding_title(),
-            Self::WatchParty => t::party_title(),
             Self::Discord => t::settings_discord(),
             Self::Discussions => t::discussion_settings_group(),
             Self::Updates => t::updates_title(),
@@ -185,7 +183,6 @@ const PANES: [Pane; 13] = [
         name: "integrations",
         icon: "application-x-addon-symbolic", // i18n-skip
         groups: &[
-            (Group::WatchParty, &[K::Syncplay, K::SyncplayServer, K::SyncplayRoom]),
             (Group::Discord, &[K::Presence, K::PresenceTitle]),
             (Group::Discussions, &[K::EpisodeDiscussions, K::CommentImages]),
             (Group::Updates, &[K::UpdateCheck, K::UpdateBeta]),
@@ -212,7 +209,6 @@ pub fn pane_of(key: SettingKey) -> Option<&'static str> {
 /// The rows that only mean something while `switch` is on.
 fn follows(switch: SettingKey) -> Option<&'static [SettingKey]> {
     match switch {
-        K::Syncplay => Some(&[K::SyncplayServer, K::SyncplayRoom]),
         K::Presence => Some(&[K::PresenceTitle]),
         K::EpisodeDiscussions => Some(&[K::CommentImages]),
         K::AutoNext => Some(&[K::UpNextCountdown, K::PreloadMetered]),
@@ -671,7 +667,6 @@ impl Inner {
             }
             if name == "playback" && *title == Group::Player {
                 group.add(&self.clear_skips_row());
-                group.add(&self.hide_chat_row());
                 any = true;
             }
             if name == "downloads" && *title == Group::Files {
@@ -708,6 +703,9 @@ impl Inner {
             }
             if any {
                 page.add(&group);
+            }
+            if name == "playback" && *title == Group::Player {
+                page.add(&self.room_group());
             }
         }
         if name == "sources" {
@@ -799,12 +797,23 @@ impl Inner {
         widget
     }
 
-    /// Clear skip times you marked: the engine answers with a notice of how many it forgot.
-    /// Hide chat: this device stops showing chat and reactions, in the player and the lobby.
+    /// Watch together: Hide chat in rooms, and the relays new rooms use.
+    fn room_group(self: &Rc<Self>) -> adw::PreferencesGroup {
+        let group = adw::PreferencesGroup::builder()
+            .title(t::room_settings_group())
+            .description(t::room_settings_group_line())
+            .build();
+        group.add(&self.hide_chat_row());
+        group.add(&super::relays::row(&self.ctx));
+        group
+    }
+
+    /// Hide chat in rooms: this device stops showing chat and reactions over the video. The
+    /// room keeps it too, for the room this device is in.
     fn hide_chat_row(self: &Rc<Self>) -> adw::SwitchRow {
         let row = adw::SwitchRow::builder()
-            .title(t::settings_hide_chat())
-            .subtitle(t::settings_hide_chat_line())
+            .title(t::room_settings_hide_chat())
+            .subtitle(t::room_settings_hide_chat_line())
             .active(self.ctx.prefs.hide_chat())
             .build();
         let ctx = Rc::downgrade(&self.ctx);
@@ -813,10 +822,13 @@ impl Inner {
             move |row| {
                 if let Some(ctx) = ctx.upgrade() {
                     ctx.prefs.set_hide_chat(row.is_active());
+                    ctx.hub.send(kaeri_model::command::Command::Room(
+                        kaeri_model::room::RoomCommand::HideChat { hidden: row.is_active() },
+                    ));
                 }
             }
         });
-        // A party's Show chat turns it off too: read again each time the pane is shown.
+        // Read again each time the pane is shown, in case it changed elsewhere.
         row.connect_map(move |row| {
             if let Some(ctx) = ctx.upgrade()
                 && row.is_active() != ctx.prefs.hide_chat()
@@ -827,6 +839,7 @@ impl Inner {
         row
     }
 
+    /// Clear skip times you marked: the engine answers with a notice of how many it forgot.
     fn clear_skips_row(self: &Rc<Self>) -> adw::ActionRow {
         let row = adw::ActionRow::builder().title(t::settings_clear_skips()).build();
         let clear = gtk::Button::with_label(&t::player_skip_clear());
@@ -1907,7 +1920,7 @@ mod tests {
     fn title_language_sits_in_general_and_the_rows_that_follow_a_switch_share_its_pane() {
         assert_eq!(pane_of(K::Titles), Some("general"));
         assert_eq!(PANES[0].name, "general");
-        for switch in [K::Syncplay, K::Presence, K::AutoNext] {
+        for switch in [K::Presence, K::AutoNext] {
             for child in follows(switch).unwrap_or_default() {
                 assert_eq!(pane_of(*child), pane_of(switch));
             }
@@ -1935,7 +1948,7 @@ mod tests {
             children.contains(&K::UpNextCountdown) && children.contains(&K::PreloadMetered)
         );
         assert_eq!(follows_hint(K::AutoNext), Some(t::settings_preload_a11y_dimmed()));
-        assert!(follows_hint(K::Syncplay).is_none());
+        assert!(follows_hint(K::Presence).is_none());
         assert_eq!(preload_line(false), t::settings_preload_detail_metered());
         assert!(preload_line(true).ends_with(&t::settings_preload_torrents()));
         assert!(crate::catalog::is_switch(K::PreloadMetered));

@@ -41,6 +41,33 @@ pub fn install(display: &gtk::gdk::Display) {
     register_fonts();
 }
 
+/// The quieter text colour, for Pango markup that CSS can't reach: the lifted haze under high
+/// contrast, as `--haze` in style-hc.css.
+pub fn haze() -> &'static str {
+    if adw::StyleManager::default().is_high_contrast() {
+        "#B8BDD6" // i18n-skip
+    } else {
+        "#A3A9C4" // i18n-skip
+    }
+}
+
+/// Calls `redraw` when High Contrast turns on or off, while `owner` lives: for text whose
+/// colour is in Pango markup ([`haze`]), which CSS doesn't restyle.
+pub fn on_contrast_change(
+    owner: &impl gtk::prelude::IsA<gtk::Widget>,
+    redraw: impl Fn() + 'static,
+) {
+    use gtk::prelude::{ObjectExt, WidgetExt};
+    let manager = adw::StyleManager::default();
+    let id = manager.connect_high_contrast_notify(move |_| redraw());
+    let id = std::cell::Cell::new(Some(id));
+    owner.connect_destroy(move |_| {
+        if let Some(id) = id.take() {
+            adw::StyleManager::default().disconnect(id);
+        }
+    });
+}
+
 /// Zen Kaku Gothic New for the show titles. An installed copy is found by fontconfig on its own;
 /// a build run from the repository adds the copy in its assets.
 fn register_fonts() {

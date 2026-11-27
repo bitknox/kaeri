@@ -22,7 +22,6 @@ use kaeri_model::{
     event::Event,
     licensed::{LicensedView, TitleAvailability},
     local::{LocalEvent, LocalView},
-    party::{PartyForm, PartyMember, PartyView},
     private::{PrivateMode, PrivateTitle},
     servers::{ServerEvent, ServerRow},
     settings::{SettingKey, SettingRow, SettingsView},
@@ -95,24 +94,10 @@ pub struct Known {
     pub proxy: Option<ProxyStatus>,
     /// The update check's last word.
     pub update: Option<kaeri_model::updates::UpdateStatus>,
-    /// The watch party this device is in, while it is in one.
-    pub party: Option<PartyView>,
-    /// The party's members, this device's first, once the room has listed them.
-    pub party_members: Option<Vec<PartyMember>>,
-    /// The party's conversation as the engine last said it, in memory for the party only.
-    pub party_chat: kaeri_model::party::PartyConversation,
-    /// What this device may do in the conversation: chat on or off, the length, who is muted
-    /// and how long Send waits.
-    pub party_chat_state: Option<kaeri_model::party::PartyChatState>,
-    /// What the form that starts a party opens with, once the engine has said.
-    pub party_form: Option<PartyForm>,
-    /// The last ten rooms, newest first.
-    pub party_recent: Vec<kaeri_model::party::PartyRecentRoom>,
-    /// What a look into each room found, by server and room.
-    pub party_glimpses:
-        std::collections::HashMap<(String, String), kaeri_model::party::PartyGlimpse>,
-    /// The room finished the last episode that is out: the episode, and when the next airs.
-    pub party_last_out: Option<(String, Option<kaeri_model::Msg>)>,
+    /// The room this device is in, as the engine last said it, while it is in one.
+    pub room: Option<kaeri_model::room::RoomView>,
+    /// The room's members, once it has listed them.
+    pub room_members: Vec<kaeri_model::room::RoomMember>,
     /// How sync stands, as the engine last said it.
     pub sync_group: Option<kaeri_model::group::SyncStatus>,
     /// The profiles, empty for one person.
@@ -437,37 +422,15 @@ impl Known {
             Event::JobStarted { job, activity } => {
                 self.jobs.insert(*job, activity.clone());
             }
-            Event::PartyForm(form) => self.party_form = Some(form.clone()),
-            Event::PartyRecent(rooms) => self.party_recent = rooms.clone(),
-            Event::PartyGlimpse(glimpse) => {
-                self.party_glimpses
-                    .insert((glimpse.server.clone(), glimpse.room.clone()), glimpse.clone());
+            Event::RoomJoined(view) => {
+                self.room = Some(view.clone());
+                self.room_members.clear();
             }
-            Event::PartyLastOut { episode, airs } => {
-                self.party_last_out = Some((episode.clone(), airs.clone()));
-            }
-            Event::PartyStarted { .. } => self.party_last_out = None,
-            Event::PartyJoined(view) => {
-                // A room joined afresh lists its members afresh.
-                let same = self
-                    .party
-                    .as_ref()
-                    .is_some_and(|p| p.server == view.server && p.room == view.room);
-                if !same {
-                    self.party_members = None;
-                }
-                self.party = Some(view.clone());
-            }
-            Event::PartyState(view) => self.party = Some(view.clone()),
-            Event::PartyMembers(members) => self.party_members = Some(members.clone()),
-            Event::PartyChat(conversation) => self.party_chat = conversation.clone(),
-            Event::PartyChatState(state) => self.party_chat_state = Some(state.clone()),
-            Event::PartyLeft { .. } => {
-                self.party_last_out = None;
-                self.party = None;
-                self.party_members = None;
-                self.party_chat = Default::default();
-                self.party_chat_state = None;
+            Event::RoomState(view) => self.room = Some(view.clone()),
+            Event::RoomMembers(members) => self.room_members = members.clone(),
+            Event::RoomLeft { .. } => {
+                self.room = None;
+                self.room_members.clear();
             }
             Event::JobDone(job) => {
                 self.jobs.remove(job);

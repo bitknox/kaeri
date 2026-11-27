@@ -841,7 +841,7 @@ mod tests {
                     subtitles_off: false,
                     skip: None,
                 }),
-                party: None,
+                room: None,
                 rev: 0,
                 over: false,
                 reached: true,

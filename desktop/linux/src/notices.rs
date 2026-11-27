@@ -74,6 +74,12 @@ impl Notices {
     pub fn dismiss_each(&self) {
         let shown: Vec<adw::Toast> =
             self.shown.borrow_mut().drain(..).filter_map(|toast| toast.upgrade()).collect();
+        self.dismiss(shown);
+    }
+
+    /// Dismisses these notices, as [`Notices::dismiss_each`] does all of them: once none of the
+    /// overlay's toast animations can be running.
+    pub fn dismiss(&self, shown: Vec<adw::Toast>) {
         if shown.is_empty() {
             return;
         }
