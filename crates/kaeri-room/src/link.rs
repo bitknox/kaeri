@@ -35,12 +35,15 @@ pub enum Heard {
     Backdate { mid: Mid, ms: i64 },
     /// Testing only: this device's own player is in `s`, begun `ms_ago`, on `ep` (the room's
     /// when `None`), `behind` seconds behind the room. For scenes of the device's own states.
+    /// With `hold`, the pose stands against the device's own player's reports until the next
+    /// pose: the scene shows the state it poses whatever the app's player does.
     Pose {
         s: crate::wire::StateCode,
         ms_ago: i64,
         ep: Option<crate::wire::Ep>,
         behind: Option<f64>,
         ue: bool,
+        hold: bool,
     },
 }
 

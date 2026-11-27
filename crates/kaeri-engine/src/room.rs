@@ -582,6 +582,12 @@ struct Task {
     /// Whether the player last said it was paused: a room started from the player starts
     /// playing or paused as it is.
     player_paused: Option<bool>,
+    /// When the player said its pause changed with no cue behind it: a press is the viewer's
+    /// only then.
+    pressed_at: Option<i64>,
+    /// A scene holds this device's posed state against its own player's reports.
+    #[cfg(feature = "testing")]
+    held: bool,
     /// When this device wrote a stall wait: not again for a member who stalled twice in 10
     /// minutes.
     stall_writes: Vec<i64>,
@@ -656,6 +662,11 @@ impl Task {
     }
 
     fn set_status(&mut self, change: impl FnOnce(&mut Status)) {
+        // A scene's held pose stands against this device's own player (testing builds only).
+        #[cfg(feature = "testing")]
+        if self.held {
+            return;
+        }
         let before = self.status.clone();
         change(&mut self.status);
         if self.status.s != before.s {
@@ -1087,7 +1098,10 @@ impl Task {
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
         let wseq = self.room.playhead().map_or(0, |h| h.wseq);
+        // Before play the header says it ("Starting when Ren is ready"): nothing was paused,
+        // so the chat has no wait line.
         if let Some(first) = waited.first()
+            && !self.room.before_play()
             && now - first.since >= kaeri_room::room::WAIT_SHOWN_AFTER
             && self.said_wait != wseq
         {
@@ -1167,7 +1181,11 @@ impl Task {
             }
             Heard::Flushed => self.say(Event::RoomFlushed),
             Heard::Backdate { mid, ms } => self.room.backdate(&mid, ms),
-            Heard::Pose { s, ms_ago, ep, behind, ue } => {
+            Heard::Pose { s, ms_ago, ep, behind, ue, hold } => {
+                #[cfg(feature = "testing")]
+                {
+                    self.held = false;
+                }
                 let now = self.now();
                 let head = self.room.playhead().cloned();
                 let ep = ep.or_else(|| head.as_ref().map(|h| h.ep.clone()));
@@ -1190,6 +1208,12 @@ impl Task {
                 if self.joined {
                     self.send(Message::Status);
                 }
+                #[cfg(feature = "testing")]
+                {
+                    self.held = hold;
+                }
+                #[cfg(not(feature = "testing"))]
+                let _ = hold;
             }
         }
     }
@@ -1384,8 +1408,20 @@ impl Task {
                     });
                 }
             }
-            SeatReport::Sample { position, paused, speed } => {
-                self.status.pos = Some(position);
+            SeatReport::Sample { position, paused, speed, seeked, pressed } => {
+                if seeked {
+                    self.drift.viewer_seeked(self.now());
+                }
+                if pressed {
+                    self.pressed_at = Some(self.now());
+                }
+                #[cfg(feature = "testing")]
+                let held = self.held;
+                #[cfg(not(feature = "testing"))]
+                let held = false;
+                if !held {
+                    self.status.pos = Some(position);
+                }
                 self.player_paused = Some(paused);
                 // Away, a pause is the system's (a call, the lock screen): never the room's.
                 if self.status.bg {
@@ -1402,11 +1438,21 @@ impl Task {
                 self.follow(position, paused, speed);
                 // The viewer pressed play or pause on the player; a sample from before the
                 // player took the room's last cue is not a press.
-                match self.pause.sample(paused, self.now()) {
+                let sampled = self.pause.sample(paused, self.now());
+                let now = self.now();
+                let by_viewer = matches!(sampled, Sampled::Pressed(_))
+                    && self.pressed_at.take().is_some_and(|at| now - at <= PRESSED_FOR_MS);
+                match sampled {
                     Sampled::Same => {}
                     // The player never showed what it was told (its own file start unpaused it):
                     // tell it again, never take it as the viewer's.
                     Sampled::Again(paused) => self.cue(SeatCue::Pause(paused)),
+                    // Not the viewer's (the player's pause never changed by itself): a stale
+                    // or bursty sample. The player is told the room's state again.
+                    Sampled::Pressed(_) if !by_viewer => {
+                        self.pause.forget();
+                        self.cue_play();
+                    }
                     Sampled::Pressed(true) => {
                         self.last_pause_at = Some(self.now());
                         self.write(
@@ -1643,6 +1689,18 @@ impl Task {
 
     /// A command; `true` when the task is over.
     async fn on_command(&mut self, command: RoomCommand) -> bool {
+        // A held pose stands against the player opening and closing, never against what you
+        // choose yourself (testing builds only).
+        #[cfg(feature = "testing")]
+        if !matches!(
+            command,
+            RoomCommand::OpenPlayer
+                | RoomCommand::ClosePlayer
+                | RoomCommand::Say { .. }
+                | RoomCommand::React { .. }
+        ) {
+            self.held = false;
+        }
         match command {
             RoomCommand::Leave => {
                 self.send(Message::Leave);
@@ -2204,6 +2262,9 @@ async fn run(
         stall_since: None,
         no_source: false,
         player_paused: None,
+        pressed_at: None,
+        #[cfg(feature = "testing")]
+        held: false,
         opened_at: None,
         seek_from: None,
         stall_writes: Vec::new(),
@@ -2344,6 +2405,10 @@ struct PlayerPause {
     /// arrive just after.
     confirmed_at: Option<i64>,
 }
+
+/// A sample's press is the viewer's only this soon after the player said its pause changed by
+/// itself, ms.
+const PRESSED_FOR_MS: i64 = 3_000;
 
 /// After the player shows the told state, a contrary sample this soon is an older report
 /// arriving late, not a press.
