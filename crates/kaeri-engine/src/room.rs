@@ -588,6 +588,9 @@ struct Task {
     /// A scene holds this device's posed state against its own player's reports.
     #[cfg(feature = "testing")]
     held: bool,
+    /// How far behind the held pose says you are, kept as posed while the room plays on.
+    #[cfg(feature = "testing")]
+    held_behind: Option<f64>,
     /// When this device wrote a stall wait: not again for a member who stalled twice in 10
     /// minutes.
     stall_writes: Vec<i64>,
@@ -986,9 +989,24 @@ impl Task {
             .filter(|m| self.room.shown(m, now))
             .map(|m| {
                 let since = waited.iter().find(|w| w.mid == m.mid).map(|w| w.since);
-                member_of(&self.room, m, now, &self.muted, since)
+                let mut row = member_of(&self.room, m, now, &self.muted, since);
+                if row.you && row.behind_s.is_some() {
+                    row.behind_s = self.own_behind(now);
+                }
+                row
             })
             .collect()
+    }
+
+    /// How far your own player is behind the room: from its last sample, or as a held scene
+    /// posed it. The room's own record of you keeps no player clock to count from.
+    fn own_behind(&self, now: i64) -> Option<f32> {
+        #[cfg(feature = "testing")]
+        if let (true, Some(b)) = (self.held, self.held_behind) {
+            return Some(b as f32);
+        }
+        let pos = self.status.pos?;
+        Some((self.room.position(now)? - pos).max(0.0) as f32)
     }
 
     /// Tell the front end what changed.
@@ -1185,6 +1203,7 @@ impl Task {
                 #[cfg(feature = "testing")]
                 {
                     self.held = false;
+                    self.held_behind = None;
                 }
                 let now = self.now();
                 let head = self.room.playhead().cloned();
@@ -1211,6 +1230,7 @@ impl Task {
                 #[cfg(feature = "testing")]
                 {
                     self.held = hold;
+                    self.held_behind = behind.filter(|_| hold);
                 }
                 #[cfg(not(feature = "testing"))]
                 let _ = hold;
@@ -1700,6 +1720,7 @@ impl Task {
                 | RoomCommand::React { .. }
         ) {
             self.held = false;
+            self.held_behind = None;
         }
         match command {
             RoomCommand::Leave => {
@@ -2265,6 +2286,8 @@ async fn run(
         pressed_at: None,
         #[cfg(feature = "testing")]
         held: false,
+        #[cfg(feature = "testing")]
+        held_behind: None,
         opened_at: None,
         seek_from: None,
         stall_writes: Vec::new(),
