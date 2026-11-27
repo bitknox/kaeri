@@ -15,6 +15,7 @@ accepted = [
     "Unicode-3.0",
     "MPL-2.0",
     "CDLA-Permissive-2.0",
+    "CC0-1.0",
 ]
 ignore-dev-dependencies = true
 
