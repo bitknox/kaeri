@@ -189,6 +189,10 @@ final class MacPlayerClickTests: XCTestCase {
         wakeTheControls(app)
         click(app, "Picture in picture")
         XCTAssertTrue(waitFor { self.floatingWindow() != nil }, "no Picture in Picture window")
+        // The floating window is up before the main window has left full screen: until the Space
+        // has gone, the menu bar is hidden and a click at its place lands on the window going.
+        XCTAssertTrue(waitFor { !self.isFullScreen(app) }, "the window stayed full screen in Picture in Picture")
+        Thread.sleep(forTimeInterval: 1)
         returnFromPictureInPicture(app)
         // The picture comes back as it left, full screen.
         XCTAssertTrue(waitFor { self.isFullScreen(app) }, "the picture did not come back full screen")
