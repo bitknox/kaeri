@@ -5,6 +5,10 @@ import app.kaeri.engine.model.StatsFixture
 import app.kaeri.engine.ffi.playerStatsFixture
 
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.unit.dp
 import androidx.compose.foundation.Image
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.graphics.asImageBitmap
@@ -181,6 +185,21 @@ class PlayerShots {
     @Test fun phone_start_failed_no_sources() = starting("phone-start-failed-no-sources", StartingFixture.FAILED_NO_SOURCES, extra = 1_500)
     @Test fun phone_start_failed_not_aired() = starting("phone-start-failed-not-aired", StartingFixture.FAILED_NOT_AIRED, extra = 1_500)
 
+    /** A room's upright phone: the player in its 16:9 slot over the room, starting offline. */
+    @Test
+    @Config(sdk = [36], qualifiers = PHONE_PORTRAIT)
+    fun phone_start_offline_room_slot() = starting("phone-start-offline-room-slot", StartingFixture.OFFLINE, extra = 1_500, slot = ROOM_SLOT)
+
+    /** The same slot when the start failed: the most buttons the column holds. */
+    @Test
+    @Config(sdk = [36], qualifiers = PHONE_PORTRAIT)
+    fun phone_start_failed_room_slot() = starting("phone-start-failed-room-slot", StartingFixture.FAILED_UNREACHED, extra = 1_500, slot = ROOM_SLOT)
+
+    /** A slow start in the slot, its step and seconds counting. */
+    @Test
+    @Config(sdk = [36], qualifiers = PHONE_PORTRAIT)
+    fun phone_start_slow_room_slot() = starting("phone-start-slow-room-slot", StartingFixture.SLOW, extra = 500, slot = ROOM_SLOT)
+
     /** The starting screen (T2): the banner art under the dim, the indicator and its line, before the first frame. */
     @Test
     fun phone_player_starting() = shoot("phone-player-starting", picture = false) { model, _ ->
@@ -193,9 +212,9 @@ class PlayerShots {
     }
 
     /** The starting screen as the engine's made-up start in [state] leaves it [extra] ms after its last event. */
-    private fun starting(name: String, state: StartingFixture, extra: Long = 600, dark: Boolean = false) {
+    private fun starting(name: String, state: StartingFixture, extra: Long = 600, dark: Boolean = false, slot: androidx.compose.ui.unit.DpSize? = null) {
         val events = startingFixture(state)
-        shoot(name, picture = false, fixture = events) { model, _ ->
+        shoot(name, picture = false, fixture = events, slot = slot) { model, _ ->
             time = (events.lastOrNull()?.atMs ?: 0u).toLong() + extra
             model.poke()
             if (state.name.startsWith("FAILED")) check(model.failure != null) { "failed: presented=${model.isPresented} ep=${model.startingEpisode}" }
@@ -656,6 +675,8 @@ class PlayerShots {
         episode: String = "7",
         length: Double = 1442.0,
         fixture: List<FixtureEvent>? = null,
+        /** The player held in a box this size at the top, as a room's upright phone holds it. */
+        slot: androidx.compose.ui.unit.DpSize? = null,
         at: (PlayerModel, ScriptedMpv) -> Unit,
     ) {
         store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
@@ -685,9 +706,16 @@ class PlayerShots {
                     LocalNavigator provides androidx.compose.runtime.remember(nav) { Navigator(nav, Destination.Home) },
                     LocalInspectionMode provides true,
                 ) {
-                    PlayerScreen(model, video = { _, modifier, _ ->
-                        Image(still, contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier)
-                    })
+                    val screen = @androidx.compose.runtime.Composable {
+                        PlayerScreen(model, video = { _, modifier, _ ->
+                            Image(still, contentDescription = null, contentScale = ContentScale.Crop, modifier = modifier)
+                        })
+                    }
+                    if (slot == null) screen() else androidx.compose.foundation.layout.Box(
+                        androidx.compose.ui.Modifier.fillMaxSize().background(app.kaeri.design.ObiSilk.Ground),
+                    ) {
+                        androidx.compose.foundation.layout.Box(androidx.compose.ui.Modifier.size(slot)) { screen() }
+                    }
                     val target by store.discussion.target.collectAsState()
                     target?.let { DiscussionSheet(ENTRY, it.episode) { store.discussion.dismiss() } }
                 }
@@ -735,6 +763,9 @@ class PlayerShots {
 
         /** The same phone upright. */
         const val PHONE_PORTRAIT = "w412dp-h915dp-port-420dpi"
+
+        /** The room's video slot on an upright phone: the full width at 16:9. */
+        val ROOM_SLOT = androidx.compose.ui.unit.DpSize(412.dp, 232.dp)
 
         private val ENTRY = Entry(
             id = 900_001u, title = "Hoshikuzu no Tabibito", secondary = null, format = "TV", episodes = 13u, year = 2026u, score = null,
