@@ -192,9 +192,12 @@ impl Gate {
         if let Message::SyncAns { roster, .. } = &mut body.m {
             let mut kept = Vec::with_capacity(roster.len());
             for entry in roster.drain(..) {
+                // Only someone not bound here yet binds from another's word: a member's own
+                // Hello names their live session, and an answer may hold an older one.
                 if entry.mid == body.mid
                     || self.speaks_for(&entry.pk, &entry.mid)
-                    || self.bind(&entry.pk, &entry.mid, &entry.idpk, &entry.idsig)
+                    || (self.session_of(&entry.mid).is_none()
+                        && self.bind(&entry.pk, &entry.mid, &entry.idpk, &entry.idsig))
                 {
                     kept.push(entry);
                 }
@@ -379,6 +382,49 @@ mod tests {
         let Message::SyncAns { roster, .. } = &answer.m else { unreachable!() };
         assert_eq!(roster.len(), 1);
         assert!(gate.speaks_for(&ren_s.pubkey(), &ren.mid()));
+    }
+
+    #[test]
+    fn a_sync_answers_roster_never_rebinds_a_member_to_an_older_session() {
+        // Neon: Ren restarted with a new session; Mika's answer still named his old one, and
+        // binding it took the live session from him.
+        let keys = RoomKeys::new([1; 16]);
+        let mut gate = Gate::new(keys.room_id());
+        let (mika, mika_s) = (Identity::new(), Session::new());
+        gate.admit(&mut hello(&mika, &mika_s, &keys, 1), NOW).unwrap();
+        let (ren, old_s, new_s) = (Identity::new(), Session::new(), Session::new());
+        gate.admit(&mut hello(&ren, &new_s, &keys, 1), NOW).unwrap();
+        let stale = RosterEntry {
+            mid: ren.mid(),
+            name: "Ren".into(),
+            pk: old_s.pubkey(),
+            idpk: ren.pubkey(),
+            idsig: ren.prove(&old_s.pubkey(), &keys.room_id()),
+            st: Status::default(),
+            joined_ms_ago: 0,
+            gone: false,
+        };
+        let mut answer = body(
+            &mika_s,
+            &mika.mid(),
+            2,
+            Message::SyncAns {
+                nonce: "n".into(),
+                playhead: None,
+                relays: vec![],
+                relays_seq: 0,
+                epoch: 0,
+                now_pos: None,
+                playing_now: false,
+                started: false,
+                roster: vec![stale],
+            },
+        );
+        gate.admit(&mut answer, NOW).unwrap();
+        let Message::SyncAns { roster, .. } = &answer.m else { unreachable!() };
+        assert!(roster.is_empty(), "the stale entry is taken out");
+        assert!(gate.speaks_for(&new_s.pubkey(), &ren.mid()));
+        assert!(!gate.speaks_for(&old_s.pubkey(), &ren.mid()));
     }
 
     #[test]

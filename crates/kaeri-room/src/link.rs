@@ -103,11 +103,20 @@ pub fn relays_for_new_room(chosen: &[String], defaults: &[&str]) -> Vec<String> 
     }
 }
 
-/// Connect to the room with `secret` on `relays`.
-pub async fn open(secret: [u8; 16], relays: Vec<String>) -> Result<Link, Unreachable> {
+/// Connect to the room with `secret` on `relays`, or on `spares` when none of those answers.
+pub async fn open(
+    secret: [u8; 16],
+    relays: Vec<String>,
+    spares: Vec<String>,
+) -> Result<Link, Unreachable> {
     #[cfg(any(test, feature = "testing"))]
     if let Some(link) = crate::fake::open(secret, &relays) {
         return link;
     }
-    crate::pool::open(secret, relays).await
+    crate::pool::open_with(
+        secret,
+        relays,
+        crate::pool::Options { spares, ..Default::default() },
+    )
+    .await
 }

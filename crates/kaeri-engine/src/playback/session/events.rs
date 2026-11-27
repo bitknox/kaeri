@@ -209,6 +209,9 @@ impl Run<'_> {
         // When the room's first cue reached this player: before then, and just after, it is
         // still opening.
         let mut first_cue: Option<tokio::time::Instant> = None;
+        // The room came to a player already playing (Watch together from the player): it has no
+        // opening left to wait out.
+        let mut seated_playing = false;
         // When the player last reported a place in the file's last moments: a seek just after
         // is the file looping or restarting at its end, never the viewer's.
         let mut near_end: Option<tokio::time::Instant> = None;
@@ -446,6 +449,10 @@ impl Run<'_> {
                         None => {
                             seat = None;
                             self.in_party = false;
+                            // Nothing the room cued is waited on any more; a next room starts
+                            // afresh.
+                            (room_cue, cued_seek, cued_pause, first_cue) = (None, None, None, None);
+                            (viewer_seeked, viewer_pressed) = (false, false);
                         }
                     }
                     continue;
@@ -457,6 +464,7 @@ impl Run<'_> {
                     }
                     seat = settings.party.seat();
                     self.in_party = seat.is_some();
+                    seated_playing = ever_played;
                     if let Some(seat) = &seat {
                         seat.report(self.seat_playing(tracker.duration()));
                         seat_length = tracker.duration().is_some();
@@ -712,9 +720,10 @@ impl Run<'_> {
                             at.elapsed() < Duration::from_millis(CUED_FOR_MS)
                         });
                         let opened = ever_played
-                            && first_cue.is_some_and(|at| {
-                                at.elapsed() >= Duration::from_millis(OPENING_FOR_MS)
-                            });
+                            && (seated_playing
+                                || first_cue.is_some_and(|at| {
+                                    at.elapsed() >= Duration::from_millis(OPENING_FOR_MS)
+                                }));
                         let looped = near_end.is_some_and(|at| {
                             at.elapsed() < Duration::from_millis(LOOPED_WITHIN_MS)
                         });
@@ -1017,10 +1026,12 @@ impl Run<'_> {
                 // the room's Ready too.
                 // A frame at the room's seek target with no `seeking`: it landed quietly, and
                 // the viewer's next seek is theirs.
-                if let Some((to, at)) = cued_seek
+                // At once: a paused player says its new place once and then nothing. Should
+                // its `seeking` still follow, the seek it then reads as the viewer's goes toward
+                // the room's place, which is never taken for theirs.
+                if let Some((to, _)) = cued_seek
                     && matches!(event, PlaybackEvent::Progress { .. })
                     && !seeking
-                    && at.elapsed() >= Duration::from_secs(1)
                     && (tracker.position() - to).abs() <= 1.5
                 {
                     cued_seek = None;
@@ -1034,11 +1045,18 @@ impl Run<'_> {
                     room_cue = None;
                     seat.report(SeatReport::Ready { cue: Some(id) });
                 }
+                // The player's word of the state before a cued pause can still be on its way:
+                // while the cue is fresh, neither that word nor the cued one is the viewer's.
                 if let PlaybackEvent::Paused(p) = &event {
-                    let cued = cued_pause.take().is_some_and(|(want, at)| {
-                        want == *p && at.elapsed() < Duration::from_millis(CUED_FOR_MS)
-                    });
-                    viewer_pressed |= !cued;
+                    let fresh = cued_pause
+                        .filter(|(_, at)| at.elapsed() < Duration::from_millis(CUED_FOR_MS));
+                    if fresh.is_some_and(|(want, _)| want == *p) {
+                        cued_pause = None;
+                    }
+                    if fresh.is_none() {
+                        cued_pause = None;
+                        viewer_pressed = true;
+                    }
                 }
                 if due {
                     seat_sent = Some(now);

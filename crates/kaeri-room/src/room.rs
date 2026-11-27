@@ -681,18 +681,28 @@ impl Room {
             started,
             relays,
             relays_seq,
+            epoch,
             ..
         } = &body.m
         {
+            // A newcomer by a new invite takes the room's key epoch, so a New invite of its own
+            // goes past it. Any rekey heard at that seq wins over this word of it.
+            if *epoch > self.epoch.0 && *epoch <= self.epoch.0 + SEQ_JUMP_LIMIT {
+                self.epoch = (*epoch, i64::MAX, String::new());
+            }
             for entry in roster {
                 self.take_roster(entry, now, &mut out);
             }
             if let Some(head) = playhead.clone() {
-                let seq = head.seq;
+                let (seq, t, by) = (head.seq, head.t, head.by.clone());
                 let won = self.apply(head, now);
-                // Stale: the answer's playhead lost to a later write this device holds.
-                let took =
-                    won.is_some() || self.playhead.as_ref().is_some_and(|h| h.seq == seq);
+                // Stale: the answer's playhead lost to a write this device holds, a later one or
+                // one that won a tie. The same write as held here counts.
+                let took = won.is_some()
+                    || self
+                        .playhead
+                        .as_ref()
+                        .is_some_and(|h| h.seq == seq && h.t == t && h.by == by);
                 if let (Some(old), Some(new)) = (won, self.playhead.clone()) {
                     out.push(Happening::Playhead {
                         old: old.map(Box::new),
@@ -829,12 +839,13 @@ impl Room {
             idpk: entry.idpk.clone(),
             idsig: entry.idsig.clone(),
         });
-        if !entry.pk.is_empty() {
+        if member.session.is_empty() && !entry.pk.is_empty() {
             member.session.clone_from(&entry.pk);
             member.idpk.clone_from(&entry.idpk);
             member.idsig.clone_from(&entry.idsig);
         }
-        // Someone heard here already speaks for themselves: another's word of them may be older.
+        // Someone heard here already speaks for themselves: another's word of them may be older,
+        // their session and proof as much as their status.
         if !known {
             member.status = entry.st.clone();
             member.status_at = now;

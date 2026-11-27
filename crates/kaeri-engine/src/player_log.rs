@@ -756,6 +756,18 @@ fn private_in(event: &Event) -> Vec<String> {
         Event::RoomMembers(members) => {
             out.extend(members.iter().flat_map(|m| [m.id.clone(), m.name.clone()]));
         }
+        Event::RoomGlimpse(glimpse) => {
+            // An invite looked into holds its room's secret, as a joined room's link does.
+            out.extend(glimpse.invite.clone());
+            out.extend(glimpse.room_id.clone());
+            out.extend(glimpse.by.clone());
+            out.extend(glimpse.members.iter().flat_map(|m| [m.id.clone(), m.name.clone()]));
+            out.extend(glimpse.room_episode.as_ref().map(|e| e.title.clone()));
+        }
+        Event::RoomLookFailed { room_id, invite, .. } => {
+            out.push(room_id.clone());
+            out.extend(invite.clone());
+        }
         Event::RoomRecent(rooms) => {
             for room in rooms {
                 out.extend([room.room_id.clone(), room.title.clone()]);
@@ -1264,6 +1276,58 @@ mod tests {
             assert!(!text.contains(leak), "{leak} in {text}");
         }
         assert!(text.contains("── Playback 1 of 1 · Episode 8 · 14:22 ──"), "{text}");
+    }
+
+    #[test]
+    fn a_look_into_a_room_keeps_its_invite_and_names_out_of_the_log() {
+        use kaeri_model::room::{MemberState, RoomGlimpse, RoomMember};
+        let invite = "https://kaeri.app/room#v=3&k=SECRETKEYxyz123&n=Ada";
+        let log = PlayerLog::new();
+        log.remember(private_in(&Event::RoomGlimpse(RoomGlimpse {
+            room_id: None,
+            by: Some("Adalind".into()),
+            members: vec![RoomMember {
+                id: "fca4c70771adc78c".into(),
+                name: "Mikaela".into(),
+                you: false,
+                state: MemberState::Watching,
+                since_ms: None,
+                behind_s: None,
+                episode: None,
+                paused_room: false,
+                waited: false,
+                background: false,
+                muted: false,
+            }],
+            room_episode: None,
+            playing: false,
+            full: false,
+            invite: Some(invite.into()),
+        })));
+        log.remember(private_in(&Event::RoomLookFailed {
+            room_id: "0de7fe54cdf7984e".into(),
+            reason: kaeri_model::Msg::verbatim("x"),
+            invite: Some("https://kaeri.app/room#v=3&k=OTHERKEYabc789".into()),
+            why: None,
+        }));
+        log.begin("8", &[], T0);
+        line(&log, T0, &format!("peeked {invite} with Adalind and Mikaela (fca4c70771adc78c)"));
+        line(
+            &log,
+            T0,
+            "failed https://kaeri.app/room#v=3&k=OTHERKEYabc789 in 0de7fe54cdf7984e",
+        );
+        let text = log.text(&BugReport::default(), &utc(), T0);
+        for leak in [
+            "SECRETKEY",
+            "OTHERKEY",
+            "Adalind",
+            "Mikaela",
+            "fca4c70771adc78c",
+            "0de7fe54cdf7984e",
+        ] {
+            assert!(!text.contains(leak), "{leak} in {text}");
+        }
     }
 
     #[test]
