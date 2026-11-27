@@ -27,6 +27,10 @@ pub const SLOWDOWN_RATE: f64 = 0.95;
 pub const SETTLE_MS: i64 = 2_000;
 /// A seek this side asked for is looked for in the samples this long, ms.
 pub const EXPECT_SEEK_MS: i64 = 5_000;
+/// How many of the room's last places a player may still report as its own, late: a slow load
+/// applies the room's cues long after they were sent, and a player whose frame froze can say an
+/// old place again.
+pub const TOLD_KEPT: usize = 4;
 /// Behind past this many seconds...
 pub const BEHIND_SECONDS: f64 = 3.0;
 /// ...for this long, ms.
@@ -63,6 +67,9 @@ pub struct Drift {
     last: Option<Last>,
     /// A place the room told the player to go to, until when, and where the player was then.
     expect_seek: Option<(f64, i64, Option<f64>)>,
+    /// The room's last places for this file, newest last: a player reporting one of them is
+    /// late or stale, never the viewer.
+    told: Vec<f64>,
     settle_until: i64,
     slowed: bool,
     behind: bool,
@@ -82,9 +89,20 @@ impl Drift {
 
     /// The room told the player to seek to `to`: the jump that follows is the room's.
     pub fn cued_seek(&mut self, to: f64, now: i64) {
+        self.placed(to);
         let from = self.last.as_ref().map(|l| l.pos);
         self.expect_seek = Some((to, now + EXPECT_SEEK_MS, from));
         self.settle_until = now + SETTLE_MS;
+    }
+
+    /// The room was at `pos` for this file: its playhead landed there, or the player was opened
+    /// there.
+    pub fn placed(&mut self, pos: f64) {
+        self.told.retain(|&p| (p - pos).abs() > LANDED);
+        self.told.push(pos);
+        if self.told.len() > TOLD_KEPT {
+            self.told.remove(0);
+        }
     }
 
     /// A sample from the player, with the room's position and whether the room plays now.
@@ -117,7 +135,7 @@ impl Drift {
                 let told = self.expect_seek.is_some_and(|(to, _, from)| {
                     (pos - to).abs() <= LANDED
                         || from.is_some_and(|f| (pos - f).abs() <= LANDED)
-                });
+                }) || self.told.iter().any(|&p| (pos - p).abs() <= LANDED);
                 let rooms = room.is_some_and(|(room_pos, _)| (pos - room_pos).abs() <= LANDED);
                 if !told && !rooms {
                     out.push(Act::ViewerSeek(pos));
@@ -249,6 +267,51 @@ mod tests {
             drift.sample(40.0, true, 1.0, 900, paused_at(12.3)),
             vec![Act::ViewerSeek(40.0)]
         );
+    }
+
+    #[test]
+    fn the_rooms_old_places_reported_after_the_window_are_never_the_viewers_seek() {
+        // After play: the room was written at 0:12 and plays on. The player opens slowly, past
+        // the cue's window: its file start, then the place it was opened at, then a frozen frame
+        // saying 0:12 again.
+        let mut drift = Drift::default();
+        let playing_from_12 = |at: i64| Some((12.0 + at as f64 / 1000.0, true));
+        drift.placed(12.0);
+        drift.cued_seek(12.1, 100);
+        for (pos, at) in [(0.0, 6_500), (12.0, 6_700), (19.0, 7_000), (12.0, 7_500)] {
+            let acts = drift.sample(pos, false, 1.0, at, playing_from_12(at));
+            assert!(
+                !acts.iter().any(|a| matches!(a, Act::ViewerSeek(_))),
+                "{pos} at {at}: {acts:?}"
+            );
+        }
+        // Waiting: paused at 0:12, Mika sought to 0:35. Long after, the player says 0:12 again,
+        // then 0:35 where it is.
+        let mut drift = Drift::default();
+        let paused_at = |pos| Some((pos, false));
+        drift.placed(12.0);
+        drift.placed(35.0);
+        drift.cued_seek(35.0, 0);
+        for (pos, at) in [(35.0, 1_000), (35.0, 7_000), (12.0, 8_000), (35.0, 8_500)] {
+            assert!(
+                drift.sample(pos, true, 1.0, at, paused_at(35.0)).is_empty(),
+                "{pos} at {at}"
+            );
+        }
+        // The viewer's own seek somewhere new still counts.
+        assert_eq!(
+            drift.sample(50.0, true, 1.0, 9_000, paused_at(35.0)),
+            vec![Act::ViewerSeek(50.0)]
+        );
+    }
+
+    #[test]
+    fn only_the_last_few_places_are_kept() {
+        let mut drift = Drift::default();
+        for pos in [10.0, 20.0, 30.0, 40.0, 50.0, 20.0] {
+            drift.placed(pos);
+        }
+        assert_eq!(drift.told, vec![30.0, 40.0, 50.0, 20.0]);
     }
 
     #[test]
