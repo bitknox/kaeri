@@ -911,15 +911,21 @@ impl RoomTarget {
 }
 
 /// A relay address a room may use: `wss://`, or plain `ws://` only for `localhost` and `.local`
-/// (and the loopback address, for the test relay).
+/// (and the loopback address, for the test relay). The host has no whitespace and no empty label.
 pub fn valid_relay(url: &str) -> bool {
-    let host_of = |rest: &str| rest.split(['/', ':']).next().unwrap_or("").to_owned();
+    let host_of = |rest: &str| {
+        let host = rest.split(['/', ':']).next().unwrap_or("");
+        let fine =
+            !host.contains(char::is_whitespace) && host.split('.').all(|l| !l.is_empty());
+        fine.then(|| host.to_ascii_lowercase())
+    };
     if let Some(rest) = strip_prefix_ignore_case(url, "wss://") {
-        return !host_of(rest).is_empty();
+        return host_of(rest).is_some();
     }
     if let Some(rest) = strip_prefix_ignore_case(url, "ws://") {
-        let host = host_of(rest).to_ascii_lowercase();
-        return host == "localhost" || host == "127.0.0.1" || host.ends_with(".local");
+        return host_of(rest).is_some_and(|host| {
+            host == "localhost" || host == "127.0.0.1" || host.ends_with(".local")
+        });
     }
     false
 }
@@ -1113,6 +1119,11 @@ mod tests {
         assert!(valid_relay("ws://box.local"));
         assert!(!valid_relay("ws://relay.example"));
         assert!(!valid_relay("https://relay.example"));
+        assert!(!valid_relay("wss://a b"));
+        assert!(!valid_relay("wss://relay\t.example"));
+        assert!(!valid_relay("ws://.local"));
+        assert!(!valid_relay("wss://relay..example"));
+        assert!(!valid_relay("wss://.example"));
     }
 
     #[test]
