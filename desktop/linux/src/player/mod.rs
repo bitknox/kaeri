@@ -3403,18 +3403,28 @@ impl PlayerView {
             self.wake();
         }
         if shot == "room-morph" {
-            // The recording: the room comes in, goes full screen at 3 s and back at 7 s.
+            // The recording: the room comes in, goes full screen 3 s after it joined (which
+            // takes a few seconds on the fake relays) and back 4 s later.
             let (room, window) = (Rc::clone(&self.room), self.ctx.window.clone());
-            glib::timeout_add_local_once(Duration::from_secs(3), move || {
-                window.fullscreen();
-                window.set_default_size(1280, 720);
-                room.set_fullscreen(true);
-                let room = Rc::clone(&room);
-                glib::timeout_add_local_once(Duration::from_secs(4), move || {
-                    window.unfullscreen();
-                    window.set_default_size(1616, 767);
-                    room.set_fullscreen(false);
+            let mut waited = 0;
+            glib::timeout_add_local(Duration::from_millis(100), move || {
+                waited += 1;
+                if !room.in_room() && waited < 150 {
+                    return glib::ControlFlow::Continue;
+                }
+                let (room, window) = (Rc::clone(&room), window.clone());
+                glib::timeout_add_local_once(Duration::from_secs(3), move || {
+                    window.fullscreen();
+                    window.set_default_size(1280, 720);
+                    room.set_fullscreen(true);
+                    let room = Rc::clone(&room);
+                    glib::timeout_add_local_once(Duration::from_secs(4), move || {
+                        window.unfullscreen();
+                        window.set_default_size(1616, 767);
+                        room.set_fullscreen(false);
+                    });
                 });
+                glib::ControlFlow::Break
             });
         }
         if full {
