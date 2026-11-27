@@ -574,6 +574,11 @@ struct Task {
     /// None of this device's sources has the room's episode: closing the empty player or the
     /// source picker leaves it reading No source, not Player closed.
     no_source: bool,
+    /// Where the app was last told to open the player (RoomStarted's `at`): a player reporting
+    /// it late is never the viewer's seek.
+    opened_at: Option<f64>,
+    /// Where the room was just before this device's own write, for its Seeked line.
+    seek_from: Option<f64>,
     /// Whether the player last said it was paused: a room started from the player starts
     /// playing or paused as it is.
     player_paused: Option<bool>,
@@ -668,6 +673,7 @@ impl Task {
     fn write(&mut self, change: impl FnOnce(&mut Playhead), ep: Option<Ep>) {
         let now = self.now();
         let old = self.room.playhead().cloned();
+        self.seek_from = self.room.position(now);
         if let Some(head) = self.room.write(now, now, change, ep) {
             // Ready for a seek's wait the viewer made here: the player is already there.
             if head.wseq == head.seq
@@ -679,11 +685,18 @@ impl Task {
             }
             self.send(Message::Playhead(head.clone()));
             self.on_playhead(old, head);
+        } else {
+            self.seek_from = None;
         }
     }
 
     /// A playhead won: say it, and move the player.
     fn on_playhead(&mut self, old: Option<Playhead>, new: Playhead) {
+        // The room's place for this file: a player reporting it later is late, not the viewer.
+        if self.status.ep.as_ref() == Some(&new.ep) {
+            self.drift.placed(new.pos);
+        }
+        let seek_from = self.seek_from.take();
         let by = self.who(&new.by);
         let at = new.pos;
         let kind = match new.cause {
@@ -691,11 +704,13 @@ impl Task {
             Cause::Play => {
                 old.as_ref().filter(|o| !o.play).map(|_| RoomMessageKind::Resumed { by })
             }
-            Cause::Seek => Some(RoomMessageKind::Seeked {
-                by,
-                from: old.as_ref().map_or(0.0, |o| o.pos),
-                to: new.pos,
-            }),
+            Cause::Seek => {
+                // From where the room was, not where its last playhead was written; a seek that
+                // moved nothing is not one.
+                let from = seek_from.or(old.as_ref().map(|o| o.pos)).unwrap_or(0.0);
+                ((new.pos - from).abs() > kaeri_room::drift::LANDED)
+                    .then_some(RoomMessageKind::Seeked { by, from, to: new.pos })
+            }
             Cause::SkipOpening => Some(RoomMessageKind::SkippedOpening { by }),
             Cause::Episode if old.is_none() => {
                 Some(RoomMessageKind::Started { by, episode: new.ep.1.clone() })
@@ -1323,6 +1338,13 @@ impl Task {
                 });
                 self.pause.forget();
                 self.drift.reset();
+                if on_room {
+                    // The places this player may still report from before it opened.
+                    let placed = self.room.playhead().map(|h| h.pos).into_iter();
+                    for pos in placed.chain(self.opened_at) {
+                        self.drift.placed(pos);
+                    }
+                }
                 self.stall_since = None;
                 self.no_source = false;
                 self.cue_play();
@@ -1713,6 +1735,7 @@ impl Task {
                         s.rejoin = true;
                     });
                     let at = self.room.position(self.now());
+                    self.opened_at = at;
                     self.say(Event::RoomStarted {
                         id: AnilistId::new(head.ep.0),
                         episode: head.ep.1.clone(),
@@ -1962,6 +1985,7 @@ impl Task {
                 let at = (kind == RoomStartKind::Rejoin)
                     .then(|| self.room.position(self.now()))
                     .flatten();
+                self.opened_at = at;
                 self.say(Event::RoomStarted {
                     id: AnilistId::new(head.ep.0),
                     episode: head.ep.1.clone(),
@@ -2178,6 +2202,8 @@ async fn run(
         stall_since: None,
         no_source: false,
         player_paused: None,
+        opened_at: None,
+        seek_from: None,
         stall_writes: Vec::new(),
         last_pause_at: None,
         before_bg: None,

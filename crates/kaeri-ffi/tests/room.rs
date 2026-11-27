@@ -596,6 +596,74 @@ fn loads(event: &Event) -> Option<kaeri_model::playback::PlaybackId> {
 }
 
 #[test]
+fn a_player_reporting_the_rooms_places_late_or_stale_never_seeks() {
+    // Seen on a Windows VM, where mpv's frame freezes after a resize: the player opens at the
+    // room's place, reports it late and again long after, and the chat said "You jumped from
+    // 0:12 to 0:12" or "from 0:35 to 0:12". Neither is a seek.
+    for scene in [FfiRoomScene::WaitLoading, FfiRoomScene::Watching] {
+        let (_root, engine) = staged(scene);
+        let (view, members, read) = until(&engine, |_, _, r| {
+            r.iter().any(|e| matches!(e, Event::RoomStarted { at: Some(_), .. }))
+        });
+        let at = read
+            .iter()
+            .find_map(|e| match e {
+                Event::RoomStarted { at, .. } => *at,
+                _ => None,
+            })
+            .unwrap();
+        play_like_the_app(&engine, &read);
+        let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+            r.iter().any(|e| loads(e).is_some())
+        });
+        let playback = read.iter().find_map(loads).unwrap();
+        let property = |name: &str, json: String| {
+            let report = PlayerReport::Property { name: name.into(), json };
+            assert_eq!(engine.send(Command::PlayerReport { playback, report }), None);
+        };
+        assert_eq!(
+            engine.send(Command::PlayerReport { playback, report: PlayerReport::FileLoaded }),
+            None
+        );
+        property("duration", "1440.0".into());
+        let paused = !view.playing;
+        property("pause", paused.to_string());
+        // The file's own start, then the place it was opened at.
+        property("time-pos", "0.0".into());
+        thread::sleep(Duration::from_millis(300));
+        property("time-pos", format!("{at:.2}"));
+        // Where the room is now, a while (past the cue's window), then the frozen frame's old
+        // place, then the right one again.
+        let started = std::time::Instant::now();
+        let room_now = |view: &RoomView| {
+            let moved = if view.playing { started.elapsed().as_secs_f64() + 0.3 } else { 0.0 };
+            view.position.unwrap_or(at) + moved
+        };
+        for _ in 0..24 {
+            thread::sleep(Duration::from_millis(250));
+            property("time-pos", format!("{:.2}", room_now(&view)));
+        }
+        property("time-pos", format!("{at:.2}"));
+        thread::sleep(Duration::from_millis(300));
+        property("time-pos", format!("{:.2}", room_now(&view)));
+        thread::sleep(Duration::from_millis(500));
+        engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+        let (_, _, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+            r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+        });
+        let seeks: Vec<_> = read
+            .iter()
+            .chain(&later)
+            .filter(|e| {
+                matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::Seeked { .. }))
+            })
+            .collect();
+        assert!(seeks.is_empty(), "{scene:?}: {seeks:?}");
+        engine.shutdown();
+    }
+}
+
+#[test]
 fn the_wait_line_and_the_row_count_from_one_start() {
     let (_root, engine) = staged(FfiRoomScene::WaitLoading);
     let (view, members, _) = until(&engine, |v, m, _| {
