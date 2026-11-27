@@ -304,6 +304,9 @@ public sealed class Known
     /// <summary>An invite or recent room looked into and not joined yet.</summary>
     public RoomGlimpse? RoomGlimpse { get; private set; }
 
+    /// <summary>The look-in is done with: Not now, or another link tried, whose own answer comes next.</summary>
+    public void ForgetRoomGlimpse() => RoomGlimpse = null;
+
     /// <summary>Why looking into a recent room failed.</summary>
     public string? RoomLookFailure { get; private set; }
 
@@ -637,6 +640,8 @@ public sealed class Known
                     RoomMembers = [];
                     RoomChat = null;
                     RoomChatState = null;
+                    // A move offer is the old room's: it never asks over another.
+                    RoomMoveOffer = null;
                 }
                 Room = j.V1;
                 RoomGlimpse = null;
@@ -682,6 +687,7 @@ public sealed class Known
                 RoomChat = null;
                 RoomChatState = null;
                 RoomGlimpse = null;
+                RoomMoveOffer = null;
                 RoomLeftWhy = l.Why is global::Kaeri.Engine.Model.RoomLeftWhy.Left ? null : l.Why;
                 break;
             case Event.Update u:

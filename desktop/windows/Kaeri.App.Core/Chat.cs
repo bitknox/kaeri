@@ -15,6 +15,9 @@ public static class Chat
     /// <summary>Characters left at which the field's count shows.</summary>
     public const int CountFrom = 20;
 
+    /// <summary>The engine's longest message (CHAT_MAX_LENGTH), until the room's chat state says.</summary>
+    public const uint MaxLength = 500;
+
     /// <summary>The four reactions, in the order the buttons show them.</summary>
     public static readonly Reaction[] All = [Reaction.Laugh, Reaction.Gasp, Reaction.Clap, Reaction.Cry];
 

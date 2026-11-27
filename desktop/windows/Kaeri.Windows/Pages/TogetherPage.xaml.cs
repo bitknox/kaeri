@@ -92,6 +92,10 @@ public sealed partial class TogetherPage : Page
     void Join(string text)
     {
         failedLink = null;
+        // A link tried after a Rejoin is its own try: its failure shows here, not on the recent row.
+        rejoining = null;
+        // Another invite's look-in is not this one's: nothing shows until this link's answer.
+        ctx.Known.ForgetRoomGlimpse();
         if (KaeriFfiMethods.ParseRoomTarget(text.Trim()) is not { } target)
         {
             failedLink = text.Trim();
@@ -247,6 +251,7 @@ public sealed partial class TogetherPage : Page
             row.Children.Add(Ui.Label(RoomWords.NotNow, (_, _) =>
             {
                 ctx.Window.RoomInvite = null;
+                ctx.Known.ForgetRoomGlimpse();
                 Show();
             }));
             text.Children.Add(row);
@@ -261,10 +266,17 @@ public sealed partial class TogetherPage : Page
         var failed = failedLink is { } f && f == join.Text.Trim();
         Block("join-row", () => new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8 }, row =>
         {
+            // The field stays put, so typing keeps its focus, selection and IME composition;
+            // only the buttons after it change.
             if (join.Parent is Panel old && old != row)
                 old.Children.Remove(join);
-            row.Children.Clear();
-            row.Children.Add(join);
+            if (row.Children.Count == 0 || row.Children[0] != join)
+            {
+                row.Children.Remove(join);
+                row.Children.Insert(0, join);
+            }
+            while (row.Children.Count > 1)
+                row.Children.RemoveAt(1);
             if (failed)
                 row.Children.Add(Ui.Label(T.ActionTryAgain, (_, _) => Join(join.Text)));
             else
@@ -329,7 +341,8 @@ public sealed partial class TogetherPage : Page
 
     FrameworkElement RecentRow(RoomRecent room, bool first)
     {
-        var grid = new Grid { ColumnSpacing = 12, MinHeight = 56, MaxWidth = 820, HorizontalAlignment = HorizontalAlignment.Left, Width = 820 };
+        // The page column's width, so Rejoin sits at its right edge and never past it.
+        var grid = new Grid { ColumnSpacing = 12, MinHeight = 56 };
         if (!first)
         {
             grid.BorderBrush = Ui.Res<Brush>("FaintRuleBrush");
@@ -386,6 +399,18 @@ public sealed partial class TogetherPage : Page
 #if KAERI_TESTING
     /// <summary>A shot's: the link pasted into Join a room, as if typed.</summary>
     internal void ShotFill(string link) => join.Text = link;
+
+    /// <summary>A shot's: the link typed into Join a room a character at a time, the field focused.</summary>
+    internal async Task ShotType(string link)
+    {
+        join.Focus(FocusState.Keyboard);
+        foreach (var c in link)
+        {
+            join.Text += c;
+            join.SelectionStart = join.Text.Length;
+            await Task.Delay(60);
+        }
+    }
 #endif
 
     static TextBlock Section(string text)

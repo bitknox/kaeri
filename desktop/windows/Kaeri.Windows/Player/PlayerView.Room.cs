@@ -9,8 +9,10 @@ using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Automation;
 using Microsoft.UI.Xaml.Controls;
 using Microsoft.UI.Xaml.Documents;
+using Microsoft.UI.Xaml.Input;
 using Microsoft.UI.Xaml.Media;
 using Windows.Graphics;
+using Windows.System;
 using Windows.UI;
 
 namespace Kaeri.Windows.Player;
@@ -56,6 +58,36 @@ public sealed partial class PlayerView
 
     void SendRoom(RoomCommand command) => RoomSent?.Invoke(command);
 
+    /// <summary>The room's own surfaces: the column, the strip and the video area's panel.</summary>
+    bool InRoomUi(DependencyObject at) =>
+        at is not null && (roomColumn is not null && at == roomColumn || roomStrip is not null && at == roomStrip
+            || roomPanelLayer is not null && at == roomPanelLayer);
+
+    /// <summary>A key on a focused room control that the control takes: the arrows, Enter and Space.</summary>
+    bool RoomTakesKey(KeyboardAcceleratorInvokedEventArgs e)
+    {
+        if (XamlRoot is null || FocusManager.GetFocusedElement(XamlRoot) is not DependencyObject focused)
+            return false;
+        var inRoom = false;
+        for (var at = focused; at is not null && !inRoom; at = VisualTreeHelper.GetParent(at))
+            inRoom = InRoomUi(at);
+        return inRoom
+            && e.KeyboardAccelerator.Key is VirtualKey.Up or VirtualKey.Down
+                or VirtualKey.Left or VirtualKey.Right
+                or VirtualKey.Enter or VirtualKey.Space
+            && e.KeyboardAccelerator.Modifiers == VirtualKeyModifiers.None;
+    }
+
+    /// <summary>
+    /// Open sources or Search titles: the player closes as Keep the room closes it (the room
+    /// hears this device's player went) and the window goes to <paramref name="tag"/>.
+    /// </summary>
+    void LeavePlayerFor(string tag)
+    {
+        SendRoom(new RoomCommand.ClosePlayer());
+        RoomGo?.Invoke(tag);
+    }
+
     /// <summary>
     /// The room as it stands. The first call opens the room: with <paramref name="morph"/>, the
     /// player turns into the room (the window frame widens by the column on the system's curve and
@@ -68,6 +100,9 @@ public sealed partial class PlayerView
         roomChat = chat;
         if (opening)
             OpenRoom(morph);
+        // Kept the room and opened the player again: the counts tick again (Hide stopped them).
+        else if (roomTick is { IsEnabled: false })
+            roomTick.Start();
         RenderRoom();
     }
 
@@ -108,9 +143,12 @@ public sealed partial class PlayerView
             Slide(column, open: false, grown, () =>
             {
                 Root.Children.Remove(column);
+                // A new room's column may already stand in its place; its width is its own.
                 if (roomColumn == column)
+                {
                     roomColumn = null;
-                Root.ColumnDefinitions[1].Width = GridLength.Auto;
+                    Root.ColumnDefinitions[1].Width = GridLength.Auto;
+                }
             });
         }
         ShowRoomButton();
@@ -118,6 +156,8 @@ public sealed partial class PlayerView
 
     void OpenRoom(bool morph)
     {
+        // The last room's column has closed and the window has its size back before this one grows it.
+        FinishAnimation();
         discussion?.Close();
         var column = new RoomColumn();
         roomColumn = column;
@@ -196,7 +236,9 @@ public sealed partial class PlayerView
             roomPrint = print;
             roomChangedAt = scene.NowMs;
         }
-        roomColumn?.Show(scene, roomChat);
+        roomColumn?.Show(scene, roomChat, ctx?.Known.RoomChatState, ChatHidden);
+        if (scene.View.Link is { } link)
+            inviteRelink?.Invoke(link);
         roomStrip?.Show(scene);
         PlaceRoomStrip();
         if (roomPanel is { Kind: RoomPanelKind.SelfLoading })
@@ -257,6 +299,9 @@ public sealed partial class PlayerView
     /// </summary>
     void Slide(RoomColumn column, bool open, int grow, Action? done, bool morph = true)
     {
+        // A slide still running (Go along leaves and joins within its 450 ms) lands first, so
+        // this one starts from where the window and the column really are.
+        FinishAnimation();
         var window = ctx?.Window.AppWindow;
         var from = window is null ? default : new RectInt32(window.Position.X, window.Position.Y, window.Size.Width, window.Size.Height);
         RectInt32 To(double m)
@@ -310,22 +355,39 @@ public sealed partial class PlayerView
     /// <summary>Runs a step every frame for <paramref name="length"/>, with elapsed ms and the curve's value.</summary>
     void Animate(TimeSpan length, Func<double, double> curve, Action<double, double> step, Action? done)
     {
+        FinishAnimation();
         var clock = Stopwatch.StartNew();
         var total = Motion.Scaled(length).TotalMilliseconds;
         EventHandler<object>? frame = null;
+        void Land()
+        {
+            Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= frame;
+            if (animating == Land)
+                animating = null;
+            step(length.TotalMilliseconds, curve(1));
+            done?.Invoke();
+        }
         frame = (_, _) =>
         {
             var t = clock.Elapsed.TotalMilliseconds;
             var p = Math.Clamp(t / total, 0, 1);
-            step(t * length.TotalMilliseconds / Math.Max(1, total), curve(p));
             if (p >= 1)
-            {
-                Microsoft.UI.Xaml.Media.CompositionTarget.Rendering -= frame;
-                done?.Invoke();
-            }
+                Land();
+            else
+                step(t * length.TotalMilliseconds / Math.Max(1, total), curve(p));
         };
+        animating = Land;
         Microsoft.UI.Xaml.Media.CompositionTarget.Rendering += frame;
     }
+
+    /// <summary>The column's one animation running, which lands at its end when called.</summary>
+    Action? animating;
+
+    /// <summary>
+    /// Lands the running slide or full-screen change at its end at once, so only one ever drives
+    /// the column's width and the window's bounds.
+    /// </summary>
+    void FinishAnimation() => animating?.Invoke();
 
     // Full screen.
 
@@ -339,6 +401,8 @@ public sealed partial class PlayerView
     {
         if (roomColumn is not { } column || roomFull == on)
             return;
+        // F pressed twice quickly: the first change lands before the second reads the width.
+        FinishAnimation();
         roomFull = on;
         ShowRoomButton();
         var shift = column.RenderTransform as TranslateTransform ?? new TranslateTransform();
@@ -447,11 +511,21 @@ public sealed partial class PlayerView
     {
         if (ctx is not { } c || roomColumn is not { } column || roomScene?.View.Link is not { } link)
             return;
-        var flyout = RoomPopups.Invite(c, link, () => SendRoom(new RoomCommand.NewInvite()), () => _ = AskRoomMove(), moveHighlight);
+        var flyout = RoomPopups.Invite(c, link, () => SendRoom(new RoomCommand.NewInvite()), () => _ = AskRoomMove(), out var relink, moveHighlight);
         flyout.Opened += OnMenuOpened;
         flyout.Closed += OnMenuClosed;
+        // While it is open, the room's newest link replaces the one it opened with (New invite).
+        inviteRelink = relink;
+        flyout.Closed += (_, _) =>
+        {
+            if (inviteRelink == relink)
+                inviteRelink = null;
+        };
         flyout.ShowAt(column.InviteAnchor);
     }
+
+    /// <summary>The open Invite flyout's way to show the room's link after New invite.</summary>
+    Action<string>? inviteRelink;
 
     void ShowRoomDetails(bool editing = false)
     {
@@ -641,14 +715,14 @@ public sealed partial class PlayerView
                 at.Children.Add(looked);
                 var fix = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 10, Margin = new Thickness(0, 16, 0, 0) };
                 var open = new Button { Content = RoomWords.OpenSources, Style = (Style)Application.Current.Resources["AccentButtonStyle"], Height = 36 };
-                open.Click += (_, _) => RoomGo?.Invoke("sources");
+                open.Click += (_, _) => LeavePlayerFor("providers");
                 var search = new Button
                 {
                     Height = 36,
                     Content = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Children = { new FontIcon { Glyph = "", FontSize = 14 }, new TextBlock { Text = RoomWords.SearchTitles } } },
                 };
                 AutomationProperties.SetName(search, RoomWords.SearchTitles);
-                search.Click += (_, _) => RoomGo?.Invoke("search");
+                search.Click += (_, _) => LeavePlayerFor("search");
                 fix.Children.Add(open);
                 fix.Children.Add(search);
                 at.Children.Add(fix);

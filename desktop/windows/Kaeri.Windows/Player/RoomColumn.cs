@@ -38,7 +38,20 @@ sealed class RoomColumn : Grid
     readonly ScrollViewer peopleScroll;
     readonly StackPanel chat = new() { Spacing = 6, VerticalAlignment = VerticalAlignment.Bottom };
     readonly ScrollViewer chatScroll;
-    readonly TextBox entry = new() { PlaceholderText = RoomWords.SaySomething, MaxLength = 500, Height = 32, VerticalAlignment = VerticalAlignment.Center };
+    readonly TextBox entry = new() { PlaceholderText = RoomWords.SaySomething, MaxLength = (int)Chat.MaxLength, Height = 32, VerticalAlignment = VerticalAlignment.Center };
+    readonly TextBlock tail = new()
+    {
+        FontSize = 12,
+        HorizontalAlignment = HorizontalAlignment.Right,
+        VerticalAlignment = VerticalAlignment.Center,
+        Margin = new Thickness(0, 0, 10, 0),
+        IsHitTestVisible = false,
+        Visibility = Visibility.Collapsed,
+    };
+    readonly Grid foot;
+    /// <summary>What the room allows the chat now: its length and the wait before the next send.</summary>
+    RoomChatState? chatState;
+    bool joined;
     readonly Button send = new() { Content = RoomWords.Send, Height = 32, Padding = new Thickness(12, 0, 12, 0) };
     readonly Button inviteButton, detailsButton, leaveButton;
     readonly Dictionary<string, PersonRow> rows = [];
@@ -154,7 +167,7 @@ sealed class RoomColumn : Grid
         Children.Add(chatScroll);
         chat.SizeChanged += (_, _) => chatScroll.ChangeView(null, chatScroll.ScrollableHeight, null, true);
 
-        var foot = new Grid { ColumnSpacing = 8, Padding = new Thickness(0, 0, 0, 14) };
+        foot = new Grid { ColumnSpacing = 8, Padding = new Thickness(0, 0, 0, 14) };
         foot.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         foot.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
         AutomationProperties.SetName(entry, RoomWords.SaySomething);
@@ -166,7 +179,14 @@ sealed class RoomColumn : Grid
                 Send();
             }
         };
-        foot.Children.Add(entry);
+        // The field's end holds the characters left from 20, or the wait before the next send.
+        Typography.SetNumeralAlignment(tail, FontNumeralAlignment.Tabular);
+        tail.Foreground = Haze;
+        entry.TextChanged += (_, _) => ShowLimits();
+        var field = new Grid();
+        field.Children.Add(entry);
+        field.Children.Add(tail);
+        foot.Children.Add(field);
         send.Click += (_, _) => Send();
         Grid.SetColumn(send, 1);
         foot.Children.Add(send);
@@ -197,22 +217,49 @@ sealed class RoomColumn : Grid
     void Send()
     {
         var text = entry.Text.Trim();
-        if (text.Length == 0)
+        if (text.Length == 0 || (chatState?.WaitSeconds ?? 0) > 0)
             return;
         entry.Text = "";
         Said?.Invoke(text);
     }
 
     /// <summary>The room as it is now. Called on every change and once a second while anything counts.</summary>
-    public void Show(RoomScene scene, RoomConversation? conversation)
+    public void Show(RoomScene scene, RoomConversation? conversation, RoomChatState? state, bool chatHidden)
     {
         ShowLine(Rooms.Line(scene));
         ShowPeople(scene);
         ShowChat(conversation);
         // Before joining, the chat waits for the room.
-        var joined = scene.Invited is null;
-        entry.IsEnabled = send.IsEnabled = joined;
+        joined = scene.Invited is null;
         inviteButton.IsEnabled = detailsButton.IsEnabled = joined;
+        ShowChatState(state, chatHidden);
+    }
+
+    /// <summary>
+    /// Hide chat (the app's setting) takes the chat and its field away; the room and its people
+    /// stay. Otherwise the field takes the room's length, and Send waits while the room says to.
+    /// </summary>
+    public void ShowChatState(RoomChatState? state, bool chatHidden)
+    {
+        chatState = state;
+        var shown = chatHidden ? Visibility.Collapsed : Visibility.Visible;
+        if (chatScroll.Visibility != shown)
+            chatScroll.Visibility = foot.Visibility = shown;
+        ShowLimits();
+    }
+
+    void ShowLimits()
+    {
+        var max = chatState?.MaxLength ?? Chat.MaxLength;
+        if (entry.MaxLength != (int)max)
+            entry.MaxLength = (int)max;
+        var wait = chatState?.WaitSeconds ?? 0;
+        entry.IsEnabled = joined;
+        send.IsEnabled = joined && wait == 0;
+        var text = Chat.Tail(entry.Text, max, wait);
+        tail.Text = text ?? "";
+        tail.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
+        entry.Padding = new Thickness(10, 5, text is null ? 10 : 20 + text.Length * 7, 6);
     }
 
     void ShowLine(RoomLine line)
@@ -293,6 +340,9 @@ sealed class RoomColumn : Grid
                 people.Children.Insert(Math.Min(index, people.Children.Count), row.Element);
                 row.Enter(IsLoaded);
             }
+            // Back within the 4 s a leaving row holds: it stays, live, where it was.
+            if (!r.Left && row.Leaving)
+                row.Stay();
             row.Show(r);
             // Rows keep their place: a row that leaves holds its gap until it closes.
             index = people.Children.IndexOf(row.Element) + 1;
@@ -488,13 +538,35 @@ sealed class RoomColumn : Grid
         public async void Leave(Action gone)
         {
             Leaving = true;
+            var mine = ++leaves;
             await Task.Delay(Rooms.LeftRowHold);
-            // The row fades; the gap closes on standard, or at once with Reduce Motion.
-            Motion.FadeTo(Element, 0, Motion.FadeOutTime);
+            if (mine != leaves)
+                return;
+            // The row's contents fade while the row's height closes the gap on standard, or at
+            // once with Reduce Motion: two elements, so neither animation stops the other.
+            foreach (var part in Element.Children.OfType<FrameworkElement>())
+                Motion.FadeTo(part, 0, Motion.FadeOutTime);
             if (Motion.Enabled)
                 Motion.Height(Element, Element.ActualHeight, 0);
             await Task.Delay(Motion.Scaled(Motion.FadeOutTime));
+            if (mine != leaves)
+                return;
             gone();
+        }
+
+        /// <summary>Counts Leave and Stay, so a leave that a rejoin took back never closes the row.</summary>
+        int leaves;
+
+        /// <summary>Back before the row closed: the leave is called off and the row shows whole again.</summary>
+        public void Stay()
+        {
+            leaves++;
+            Leaving = false;
+            // Stops a closing height (the same height both ends), then the row's own 44 again.
+            Motion.Height(Element, 44, 44);
+            Element.Height = 44;
+            foreach (var part in Element.Children.OfType<FrameworkElement>())
+                Motion.FadeTo(part, 1, Motion.FadeInTime);
         }
     }
 }

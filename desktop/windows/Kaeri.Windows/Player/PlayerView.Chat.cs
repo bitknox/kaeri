@@ -75,6 +75,7 @@ public sealed partial class PlayerView
     void ChatReflect()
     {
         BuildReactions();
+        roomColumn?.ShowChatState(ctx?.Known.RoomChatState, ChatHidden);
         var live = ChatLive;
         // They fade in and out, as on the Mac, rather than cutting the title short in one frame.
         var reacting = live && !mini;

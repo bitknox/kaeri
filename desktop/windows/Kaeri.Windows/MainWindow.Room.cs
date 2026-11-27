@@ -254,7 +254,8 @@ public sealed partial class MainWindow
         "room-upnext" => FfiRoomScene.UpNext,
         "room-upnext-waiting" => FfiRoomScene.UpNextWaiting,
         "room-skip" => FfiRoomScene.SkippedOpening,
-        "room-chat" => FfiRoomScene.Chat,
+        "room-chat" or "room-chat-hidden" => FfiRoomScene.Chat,
+        "room-invite-new" => FfiRoomScene.Watching,
         "room-move-offer" => FfiRoomScene.MoveOffer,
         "room-move-after" => FfiRoomScene.MovedAway,
         "room-unreachable" => FfiRoomScene.Unreachable,
@@ -288,6 +289,9 @@ public sealed partial class MainWindow
             await RehearsePlace(state);
             return;
         }
+        // room-chat-hidden: Settings' Hide chat on, as the room opens.
+        if (state == "room-chat-hidden")
+            ChatSetting.Set(true);
         await Task.Delay(1500);
         ctx.Play(900001, "9", fromStart: true);
         for (var i = 0; i < 100 && !Player.Playing; i++)
@@ -326,6 +330,12 @@ public sealed partial class MainWindow
                 break;
             case "room-invite":
                 Player.ShotRoomInvite(false);
+                break;
+            case "room-invite-new":
+                // The flyout open, then New invite at 95 s: the 90 s frame has the old link, 105 s the new.
+                Player.ShotRoomInvite(false);
+                await AtUptime(95);
+                ctx.Send(new Command.Room(new RoomCommand.NewInvite()));
                 break;
             case "room-move-start":
                 Player.ShotRoomInvite(true);
@@ -372,6 +382,13 @@ public sealed partial class MainWindow
                 RoomInvite = link;
                 (ContentFrame.Content as Pages.TogetherPage)?.ShotFill(link);
                 await Task.Run(() => fake.Stage(FfiRoomScene.Unreachable));
+                break;
+            case "room-place-typing":
+                // Typed a key at a time: the field keeps the focus through every redraw.
+                // At 70 s, so the slow guest's window is up first.
+                await AtUptime(70);
+                if (ContentFrame.Content is Pages.TogetherPage typing)
+                    await typing.ShotType("https://kaeri.app/room#v=3&k=typed");
                 break;
             case "room-place-room":
                 await Task.Run(() => fake.Stage(FfiRoomScene.Watching));

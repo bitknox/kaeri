@@ -298,4 +298,40 @@ public class RoomTests
     }
 
     static (string, string) Pair(RoomLine line) => (line.Title, line.Detail);
+
+    static RoomMoveOffer Offer() => new("offer-1", "Mika", "Natsukaze Relay", "9", Now + 60_000);
+
+    [Fact]
+    public void AMoveOfferNeverOutlivesItsRoom()
+    {
+        var left = new Known();
+        left.Take(new Event.RoomJoined(View()));
+        left.Take(new Event.RoomMoveOffer(Offer()));
+        left.Take(new Event.RoomLeft(new RoomLeftWhy.Left()));
+        Assert.Null(left.RoomMoveOffer);
+
+        // Joining another room without leaving first (a Rejoin from the place) drops it too.
+        var other = new Known();
+        other.Take(new Event.RoomJoined(View()));
+        other.Take(new Event.RoomMoveOffer(Offer()));
+        other.Take(new Event.RoomJoined(View() with { RoomId = "another" }));
+        Assert.Null(other.RoomMoveOffer);
+
+        // The same room said again keeps the question open.
+        var same = new Known();
+        same.Take(new Event.RoomJoined(View()));
+        same.Take(new Event.RoomMoveOffer(Offer()));
+        same.Take(new Event.RoomJoined(View()));
+        Assert.NotNull(same.RoomMoveOffer);
+    }
+
+    [Fact]
+    public void ALookInIsForgottenOnNotNowAndWhenAnotherLinkIsTried()
+    {
+        var known = new Known();
+        known.Take(new Event.RoomGlimpse(new RoomGlimpse(By: "Mika", Members: [])));
+        Assert.NotNull(known.RoomGlimpse);
+        known.ForgetRoomGlimpse();
+        Assert.Null(known.RoomGlimpse);
+    }
 }

@@ -96,7 +96,7 @@ public sealed partial class PlayerView : UserControl
         click = DispatcherQueue.GetForCurrentThread().CreateTimer();
         click.Interval = TimeSpan.FromMilliseconds(GetDoubleClickTime());
         click.IsRepeating = false;
-        click.Tick += (_, _) => TogglePause();
+        click.Tick += (_, _) => PlayOrPause();
         flash = DispatcherQueue.GetForCurrentThread().CreateTimer();
         flash.Interval = TimeSpan.FromMilliseconds(1200);
         flash.IsRepeating = false;
@@ -114,6 +114,8 @@ public sealed partial class PlayerView : UserControl
         Unloaded += (_, _) =>
         {
             startTick?.Stop();
+            roomTick?.Stop();
+            FinishAnimation();
             EndStart();
         };
         tick = DispatcherQueue.GetForCurrentThread().CreateTimer();
@@ -184,7 +186,7 @@ public sealed partial class PlayerView : UserControl
         if (e.KeyStatus.WasKeyDown)
             return;
         ShowControls();
-        TogglePause();
+        PlayOrPause();
     }
 
     /// <summary>True while the player is on screen: from Open, and no longer once it starts fading away.</summary>
@@ -293,6 +295,8 @@ public sealed partial class PlayerView : UserControl
             return;
         closedByHost = false;
         verdictWait?.Stop();
+        // Kept the room: its counts wait for the player to open again (ShowRoom starts them).
+        roomTick?.Stop();
         // The next session's mpv starts at its normal speed.
         speed = 1;
         scrubbing = null;
@@ -1639,9 +1643,9 @@ public sealed partial class PlayerView : UserControl
             item.Click += (_, _) => act();
             menu.Items.Add(item);
         }
-        Add(paused ? T.ActionPlay : T.ActionPause, TogglePause, "Space");
+        Add(paused ? T.ActionPlay : T.ActionPause, PlayOrPause, "Space");
         if (skipShown && SkipCard.Content is string skip)
-            Add(skip, () => SendControl(new PlayerCommand.TakeSkip()), "S");
+            Add(skip, TakeSkip, "S");
         menu.Items.Add(new MenuFlyoutSeparator());
         Add(T.PlayerSubtitlesAndAudio, () => OpenMenu(TracksButton), "T");
         Add(T.PlayerEpisodes, () => OpenPanel(PanelTab.Episodes, keyboard: false), "E", EpisodesButton.IsEnabled);
@@ -1812,7 +1816,8 @@ public sealed partial class PlayerView : UserControl
         for (var at = source; at is not null; at = VisualTreeHelper.GetParent(at))
         {
             if (at == StatsLayer || at == Starting || at == StillLayer || at == Corner || at == ChatColumn || at == ChatFieldSlot
-                || discussion is not null && at == discussion)
+                || discussion is not null && at == discussion
+                || InRoomUi(at))
                 return true;
             if (at == VideoPanel || at == this)
                 return false;
@@ -1890,19 +1895,25 @@ public sealed partial class PlayerView : UserControl
         verdictWait.Start();
     }
 
-    void OnPlayPause(object sender, RoutedEventArgs e)
+    void OnPlayPause(object sender, RoutedEventArgs e) => PlayOrPause();
+
+    /// <summary>Play or pause from any press: during a wait or before play the room takes it.</summary>
+    void PlayOrPause()
     {
         if (!RoomTakesPlay())
             TogglePause();
     }
-    void OnBack10(object sender, RoutedEventArgs e) => SeekBy(-10, flash: false);
-    void OnForward10(object sender, RoutedEventArgs e) => SeekBy(10, flash: false);
-    void OnFullscreen(object sender, RoutedEventArgs e) => FullscreenRequested?.Invoke(null);
-    void OnSkip(object sender, RoutedEventArgs e)
+
+    /// <summary>Skip opening from any press: in a room it skips for everyone.</summary>
+    void TakeSkip()
     {
         if (!RoomTakesSkip())
             SendControl(new PlayerCommand.TakeSkip());
     }
+    void OnBack10(object sender, RoutedEventArgs e) => SeekBy(-10, flash: false);
+    void OnForward10(object sender, RoutedEventArgs e) => SeekBy(10, flash: false);
+    void OnFullscreen(object sender, RoutedEventArgs e) => FullscreenRequested?.Invoke(null);
+    void OnSkip(object sender, RoutedEventArgs e) => TakeSkip();
     void OnPlayNext(object sender, RoutedEventArgs e)
     {
         if (!RoomTakesNext(cancel: false))
@@ -2064,7 +2075,7 @@ public sealed partial class PlayerView : UserControl
         if (command is PlayerCommand.Step step)
             Step((int)step.V1);
         else if (command is PlayerCommand.TogglePause && Showing)
-            TogglePause();
+            PlayOrPause();
         else
             SendControl(command);
     }
@@ -2502,17 +2513,17 @@ public sealed partial class PlayerView : UserControl
         // The arrows and Enter move and pick in the panel while the keyboard is in it.
         if (PanelTakes(e))
             return;
+        // So do they, with Space, on the room's controls: Enter presses Leave or Carry on, and the
+        // arrows move in the Choosing list, not the volume.
+        if (RoomTakesKey(e))
+            return;
         e.Handled = true;
         if (show)
             ShowControls();
         act();
     }
 
-    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () =>
-    {
-        if (!RoomTakesPlay())
-            TogglePause();
-    });
+    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, PlayOrPause);
     void OnKeyBack10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(-10, flash: false));
     void OnKeyForward10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(10, flash: false));
     void OnKeyBack5(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => { if (!MarkingNudge(-1)) SeekBy(-5); }, show: false);
@@ -2611,7 +2622,7 @@ public sealed partial class PlayerView : UserControl
     {
         if (skipShown)
             ShowFlash(skipDone);
-        Send(new PlayerCommand.TakeSkip());
+        TakeSkip();
     }, show: false);
     void OnKeyNext(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(1));
     void OnKeyPrevious(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(-1));
@@ -2628,10 +2639,14 @@ public sealed partial class PlayerView : UserControl
             StallAnswer(new PlayerCommand.StallSwitch());
         else if (cornerCard == UndoCard)
             Undo();
-        else if (cornerCard == UpNextCard && !RoomLeads)
-            PlayNext(auto: false);
+        else if (cornerCard == UpNextCard)
+        {
+            // Return is Play now, the room's in a room as the card's own button is.
+            if (!RoomTakesNext(cancel: false))
+                PlayNext(auto: false);
+        }
         else if (cornerCard == SkipSlot)
-            SendControl(new PlayerCommand.TakeSkip());
+            TakeSkip();
     });
 
     /// <summary>Esc: cancel Up next or the stall prompt, then leave fullscreen, then close.</summary>
@@ -2649,14 +2664,19 @@ public sealed partial class PlayerView : UserControl
             ToggleMini();
         else if (skipPrompt is not null && cornerCard == promptCard)
             DismissPrompt();
-        else if (cornerCard == UpNextCard && !RoomLeads)
-            CancelNext();
+        else if (cornerCard == UpNextCard)
+        {
+            // Esc is Cancel, the room's in a room as the card's own button is.
+            if (!RoomTakesNext(cancel: true))
+                CancelNext();
+        }
         else if (cornerCard == StallCard)
             StallAnswer(new PlayerCommand.StallWait());
         else if (FullscreenOn?.Invoke() == true)
             FullscreenRequested?.Invoke(false);
         else
-            Close();
+            // In a room this asks Leave, Keep the room or Cancel, as the close button does.
+            CloseOrAsk();
     }, show: false);
 
     // Still watching?

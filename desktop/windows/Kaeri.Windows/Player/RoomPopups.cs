@@ -51,7 +51,7 @@ static class RoomPopups
     /// Invite: the link with Copy link, Share… and New invite, and under a rule, Move to a new
     /// room for someone already here.
     /// </summary>
-    public static Flyout Invite(Ctx ctx, string link, Action newInvite, Action move, bool moveHighlight = false)
+    public static Flyout Invite(Ctx ctx, string link, Action newInvite, Action move, out Action<string> relink, bool moveHighlight = false)
     {
         var body = new StackPanel { Spacing = 0 };
         body.Children.Add(Heading(RoomWords.Invite));
@@ -60,7 +60,17 @@ static class RoomPopups
         var row = new Grid { ColumnSpacing = 8, Margin = new Thickness(0, 10, 0, 0) };
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
         row.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
+        // The link as the room has it now: New invite gives the room another, and the field,
+        // Copy link and Share… take it while the flyout stays open.
+        var current = link;
         var box = new TextBox { Text = link, IsReadOnly = true, FontFamily = Mono, FontSize = 12 };
+        relink = latest =>
+        {
+            if (latest == current)
+                return;
+            current = latest;
+            box.Text = latest;
+        };
         AutomationProperties.SetName(box, RoomWords.Invite);
         row.Children.Add(box);
         var copyText = new TextBlock { Text = RoomWords.CopyLink };
@@ -73,7 +83,7 @@ static class RoomPopups
         var copied = 0;
         copy.Click += async (_, _) =>
         {
-            if (!Ui.TryCopy(link))
+            if (!Ui.TryCopy(current))
                 return;
             var mine = ++copied;
             copyText.Text = T.ActionCopied;
@@ -86,7 +96,7 @@ static class RoomPopups
         body.Children.Add(row);
         var more = new StackPanel { Orientation = Orientation.Horizontal, Spacing = 8, Margin = new Thickness(0, 6, 0, 0) };
         var share = new Button { Content = RoomWords.Share };
-        share.Click += (_, _) => InviteDialog.Share(ctx, link);
+        share.Click += (_, _) => InviteDialog.Share(ctx, current);
         var fresh = new Button { Content = RoomWords.NewInvite };
         fresh.Click += (_, _) => newInvite();
         more.Children.Add(share);
