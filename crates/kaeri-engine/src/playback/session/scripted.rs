@@ -2929,3 +2929,57 @@ async fn a_seek_the_room_cued_that_landed_quietly_never_swallows_the_viewers() {
         "{reports:?}"
     );
 }
+
+/// A short file looping (or restarting at its end) says `seeking` with no room cue behind it:
+/// never the viewer's seek (Android's paused scene, "You jumped from 0:12 to 0:07").
+#[tokio::test]
+async fn a_file_looping_at_its_end_is_never_the_viewers_seek() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), auto_next: false, ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(RUNTIME) };
+        window.send(at(100.0)).unwrap();
+        cues.send(SeatCue::Pause(false)).unwrap();
+        // Past the opening, playing to the file's end.
+        let mut pos = 100.0;
+        while pos < RUNTIME - 0.5 {
+            window.send(at(pos)).unwrap();
+            pos += 1.25;
+            tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        }
+        // It loops: back to the start, said as a seek.
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(at(0.1)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        for i in 1..6 {
+            window.send(at(0.1 + f64::from(i) * 0.25)).unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        }
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let mut reports = Vec::new();
+        while let Some(message) = room.recv().await {
+            if let SeatMessage::Report(report) = message {
+                let ended = matches!(report, SeatReport::Ended { .. });
+                reports.push(report);
+                if ended {
+                    break;
+                }
+            }
+        }
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    assert!(
+        !reports.iter().any(|r| matches!(r, SeatReport::Sample { seeked: true, .. })),
+        "{reports:?}"
+    );
+}

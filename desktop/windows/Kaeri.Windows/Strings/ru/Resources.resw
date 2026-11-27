@@ -614,23 +614,11 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Недостаточно свободного места, чтобы сохранить следующие эпизоды в загрузках. Освободите место, чтобы загрузить больше.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Совместный просмотр: сначала выберите сервер в настройке syncplay.server. Предлагаем {server}, управляется {operator}.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Совместный просмотр: сначала выберите сервер. Предлагаем {server}, управляется {operator}.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Совместные просмотры недоступны в этой версии Kaeri.</value>
   </data>
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>Совместный просмотр требует комнату. Сначала выберите её.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Совместный просмотр: связь с сервером потеряна. Пробуем снова.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>Совместный просмотр снова на связи.</value>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>Вы покинули совместный просмотр.</value>

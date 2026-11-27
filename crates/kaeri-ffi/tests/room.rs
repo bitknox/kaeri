@@ -413,15 +413,19 @@ fn an_episode_with_no_source_here_reads_no_source_in_the_room() {
     );
     engine.shutdown();
 
-    // With the picker open for it, the failed play leaves you Choosing.
+    // With the picker open for it (Android's you-choosing), the failed play leaves you Choosing
+    // and says no "No source" over the picker.
     let (_root, engine) = staged(FfiRoomScene::YouChoosing);
     let (view, members, read) =
         until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
     play_like_the_app(&engine, &read);
-    let (_, members, _) = until_from(&engine, (Some(view), members), |_, m, r| {
-        r.iter().any(|e| matches!(e, Event::RoomNoSource { .. })) && state(m, "Ada").is_some()
+    thread::sleep(Duration::from_millis(3_000));
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (_, members, read) = until_from(&engine, (Some(view), members), |_, m, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_))) && state(m, "Ada").is_some()
     });
     assert_eq!(state(&members, "Ada"), Some(MemberState::Choosing));
+    assert!(!read.iter().any(|e| matches!(e, Event::RoomNoSource { .. })), "{read:?}");
     engine.shutdown();
 }
 
@@ -737,8 +741,20 @@ fn your_held_behind_scene_keeps_its_posed_amount() {
     );
     property("duration", "1440.0".into());
     property("pause", "false".into());
-    for i in 0..12 {
+    // Android: a player that really plays, changes state and closes its picker as it opens.
+    engine.send(Command::Room(RoomCommand::ChoosingSource { open: false }));
+    engine.send(Command::Room(RoomCommand::OpenPlayer));
+    for i in 0..24 {
         property("time-pos", format!("{:.2}", i as f64 * 0.25));
+        match i {
+            6 => property("pause", "true".into()),
+            8 => property("pause", "false".into()),
+            12 => property("seeking", "true".into()),
+            13 => property("seeking", "false".into()),
+            16 => property("paused-for-cache", "true".into()),
+            17 => property("paused-for-cache", "false".into()),
+            _ => {}
+        }
         thread::sleep(Duration::from_millis(250));
     }
     engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
@@ -1058,5 +1074,52 @@ fn the_background_says_player_closed_once_and_the_foreground_comes_back() {
         m.iter().any(|m| m.you && !m.background && m.state != MemberState::PlayerClosed)
     });
     assert_ne!(state(&members, "Ada"), Some(MemberState::PlayerClosed));
+    engine.shutdown();
+}
+
+#[test]
+fn a_look_that_fails_never_leaves_the_room_youre_in() {
+    // Linux: a failed PeekInvite sent RoomLeft(Unreachable), and the apps tore down the room
+    // this device was in. A look fails as a look.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let room = Arc::clone(&engine).start_fake_room();
+    assert!(room.stage(FfiRoomScene::Watching));
+    let (view, members, _) = until(&engine, |v, _, _| v.link.is_some());
+    let link = view.link.clone().unwrap();
+
+    // Text that is no invite.
+    engine.send(Command::Room(RoomCommand::PeekInvite { invite: "hello".into() }));
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomLookFailed { .. }))
+    });
+    let failed = read.iter().find_map(|e| match e {
+        Event::RoomLookFailed { invite, why, .. } => Some((invite.clone(), why.clone())),
+        _ => None,
+    });
+    assert!(
+        matches!(&failed, Some((Some(i), Some(RoomLeftWhy::Failed { .. }))) if i == "hello"),
+        "{failed:?}"
+    );
+
+    // An invite whose relays don't answer.
+    room.unreachable(true);
+    engine.send(Command::Room(RoomCommand::PeekInvite { invite: link.clone() }));
+    let (_, _, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomLookFailed { .. }))
+    });
+    let failed = later.iter().find_map(|e| match e {
+        Event::RoomLookFailed { invite, why, room_id, .. } => {
+            Some((invite.clone(), why.clone(), room_id.clone()))
+        }
+        _ => None,
+    });
+    assert!(
+        matches!(&failed, Some((Some(i), Some(RoomLeftWhy::Unreachable), id)) if *i == link && !id.is_empty()),
+        "{failed:?}"
+    );
+    let left: Vec<_> =
+        read.iter().chain(&later).filter(|e| matches!(e, Event::RoomLeft { .. })).collect();
+    assert!(left.is_empty(), "{left:?}");
     engine.shutdown();
 }

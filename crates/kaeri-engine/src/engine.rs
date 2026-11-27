@@ -1250,6 +1250,14 @@ impl Actor {
     /// is said whole just before it, so that whatever the event brings up, the screen a
     /// finished episode drops back to among them, shows the title as it now stands.
     fn forward(&mut self, mut event: Event, played: Option<Played>) {
+        // A scene holds this device as Choosing: the app's real play finding no source is not
+        // said over the picker it shows (testing builds only).
+        #[cfg(all(feature = "room", feature = "testing"))]
+        if matches!(event, Event::RoomNoSource { .. })
+            && crate::room::held_choosing(&self.state)
+        {
+            return;
+        }
         // Named as the titles are shown now, before the record takes the names in.
         crate::title_language::retitle(&mut event, self.services.meta.titles().language());
         // Where the people the viewer follows stopped, on the episode rows; a table marked again

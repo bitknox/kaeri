@@ -542,23 +542,11 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Ruang kosong tidak cukup untuk menyimpan episode setelahnya. Kosongkan ruang untuk mengunduh lebih banyak.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Pilih server untuk nonton bareng dulu, sebagai syncplay.server. {server} dijalankan oleh {operator}.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Pilih server untuk nonton bareng dulu. {server} dijalankan oleh {operator}.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Nonton bareng tidak tersedia di versi Kaeri ini.</value>
   </data>
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>Untuk nonton bareng diperlukan ruangan. Pilih satu dulu.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Koneksi ke server nonton bareng terputus. Mencoba lagi.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>Kembali ke nonton bareng.</value>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>Keluar dari nonton bareng.</value>

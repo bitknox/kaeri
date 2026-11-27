@@ -564,23 +564,23 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Not enough free space to keep the next episodes downloaded. Free up some space to download more.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Choose a server for the watch party first, as syncplay.server. { $server } is run by { $operator }.
+# Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.
+room-look-unreachable = Couldn't reach this room's relays. Ask for a new invite.
 
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Choose a server for the watch party first. { $server } is run by { $operator }.
+# Why a look into a room found nothing: the pasted text is no room's invite.
+room-look-not-an-invite = That isn't a room's invite.
+
+# Why a look into a recent room found nothing: it's no longer in this device's recent rooms.
+room-look-not-kept = That room isn't kept any more.
+
+# Why a look into a room found nothing: the invite comes from an older version.
+room-look-old-invite = This invite is from an older version of Kaeri. Ask for a new one.
 
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watch parties aren't available in this version of Kaeri.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = A watch party needs a room to meet in. Choose one first.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Lost the watch party server. Trying again.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Back in the watch party.
 
 # Message when the person left a watch party.
 party-left = Left the watch party.

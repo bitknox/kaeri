@@ -539,23 +539,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Nicht genug freier Speicher, um die nächsten Folgen herunterzuladen. Gib Speicherplatz frei, um mehr herunterzuladen.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Wähle zuerst einen Server für die Watchparty als syncplay.server. { $server } wird von { $operator } betrieben.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Wähle zuerst einen Server für die Watchparty. { $server } wird von { $operator } betrieben.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watchpartys sind in dieser Version von Kaeri nicht verfügbar.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = Eine Watchparty braucht einen Raum zum Treffen. Wähle zuerst einen aus.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Verbindung zum Server der Watchparty verloren. Neuer Versuch läuft.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Wieder in der Watchparty.
 
 # Message when the person left a watch party.
 party-left = Du hast die Watchparty verlassen.

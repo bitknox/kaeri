@@ -555,23 +555,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Недостаточно свободного места, чтобы сохранить следующие эпизоды в загрузках. Освободите место, чтобы загрузить больше.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Совместный просмотр: сначала выберите сервер в настройке syncplay.server. Предлагаем { $server }, управляется { $operator }.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Совместный просмотр: сначала выберите сервер. Предлагаем { $server }, управляется { $operator }.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Совместные просмотры недоступны в этой версии Kaeri.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = Совместный просмотр требует комнату. Сначала выберите её.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Совместный просмотр: связь с сервером потеряна. Пробуем снова.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Совместный просмотр снова на связи.
 
 # Message when the person left a watch party.
 party-left = Вы покинули совместный просмотр.

@@ -71,6 +71,17 @@ type Episodes = std::sync::Arc<std::sync::Mutex<Option<(Ep, Option<Ep>)>>>;
 pub struct Running {
     control: mpsc::UnboundedSender<Control>,
     episodes: Episodes,
+    /// A scene holds this device as Choosing (testing builds only).
+    held: Held,
+}
+
+/// Whether a scene holds this device as Choosing, as the engine reads it.
+type Held = std::sync::Arc<std::sync::atomic::AtomicBool>;
+
+/// Whether a scene holds this device as Choosing: the app's real play finding no source is not
+/// said over the picker the scene shows (testing builds only; never in a product build).
+pub fn held_choosing(engine: &EngineState) -> bool {
+    going(engine).is_some_and(|r| r.held.load(std::sync::atomic::Ordering::Relaxed))
 }
 
 impl Running {
@@ -104,11 +115,10 @@ pub fn command(
         RoomCommand::Lobby { invite, name, pick, anyway } => {
             join(invite.as_deref(), name, pick, anyway, engine, services, tx);
         }
+        // A look never leaves the room this device is in: it fails as a look.
         RoomCommand::PeekInvite { invite } => match target(&invite) {
-            Ok(target) => peek(target, None, services, tx),
-            Err(why) => {
-                let _ = tx.send(Event::RoomLeft { why });
-            }
+            Ok(target) => peek(target, Look::Invite(invite), services, tx),
+            Err(why) => look_failed(Look::Invite(invite), String::new(), why, tx),
         },
         RoomCommand::Rejoin { room_id } => match recent(&room_id, services) {
             Some((target, name)) => {
@@ -117,7 +127,7 @@ pub fn command(
             None => gone(room_id, tx),
         },
         RoomCommand::LookIn { room_id } => match recent(&room_id, services) {
-            Some((target, _)) => peek(target, Some(room_id), services, tx),
+            Some((target, _)) => peek(target, Look::Recent(room_id), services, tx),
             None => gone(room_id, tx),
         },
         RoomCommand::LoadRecent => {
@@ -269,9 +279,7 @@ fn target(invite: &str) -> Result<Target, RoomLeftWhy> {
             };
             Ok(Target { secret: share.secret, relays, by: share.by, title: share.title })
         }
-        Ok(None) => {
-            Err(RoomLeftWhy::Failed { reason: Msg::verbatim("That isn't a room's invite.") })
-        }
+        Ok(None) => Err(RoomLeftWhy::Failed { reason: Msg::RoomLookNotAnInvite }),
         Err(OldInvite::SyncplayLink | OldInvite::Code) => Err(RoomLeftWhy::OldInvite),
     }
 }
@@ -303,8 +311,30 @@ fn recent(room_id: &str, services: &Services) -> Option<(Target, String)> {
 fn gone(room_id: String, tx: &Outbox) {
     let _ = tx.send(Event::RoomLookFailed {
         room_id,
-        reason: Msg::verbatim("That room isn't kept any more."),
+        reason: Msg::RoomLookNotKept,
+        invite: None,
+        why: None,
     });
+}
+
+/// What a look is into: an invite before joining it, or a recent room by its id.
+enum Look {
+    Invite(String),
+    Recent(String),
+}
+
+/// A look into a room found nothing.
+fn look_failed(look: Look, room_id: String, why: RoomLeftWhy, tx: &Outbox) {
+    let reason = match &why {
+        RoomLeftWhy::OldInvite => Msg::RoomLookOldInvite,
+        RoomLeftWhy::Failed { reason } => reason.clone(),
+        _ => Msg::RoomLookUnreachable,
+    };
+    let (room_id, invite) = match look {
+        Look::Invite(invite) => (room_id, Some(invite)),
+        Look::Recent(id) => (id, None),
+    };
+    let _ = tx.send(Event::RoomLookFailed { room_id, reason, invite, why: Some(why) });
 }
 
 fn join(
@@ -363,15 +393,17 @@ fn begin(
     let name = if name.trim().is_empty() { "kaeri".to_owned() } else { name };
     let (control, controls) = mpsc::unbounded_channel();
     let seats = services.party.open();
+    let held = Held::default();
     let env = Env {
         meta: services.meta.clone(),
         store: services.store.clone(),
         tx: tx.clone(),
         hidden: engine.config.effective().room.hide_chat,
+        held: held.clone(),
     };
     let episodes = Episodes::default();
     tokio::spawn(run(target, start, name, env, controls, seats, episodes.clone()));
-    engine.room = Some(Running { control, episodes });
+    engine.room = Some(Running { control, episodes, held });
 }
 
 #[derive(Clone)]
@@ -380,15 +412,23 @@ struct Env {
     store: kaeri_store::Store,
     tx: Outbox,
     hidden: bool,
+    /// Whether a scene holds this device as Choosing, for the engine to read.
+    #[cfg_attr(not(feature = "testing"), allow(dead_code))]
+    held: Held,
 }
 
 /// Look into a room without anyone seeing: an invite's, or a recent room's (`room_id`).
-fn peek(target: Target, room_id: Option<String>, services: &Services, tx: &Outbox) {
+fn peek(target: Target, look: Look, services: &Services, tx: &Outbox) {
     let tx = tx.clone();
     let meta = services.meta.clone();
+    let room_id = match &look {
+        Look::Recent(id) => Some(id.clone()),
+        Look::Invite(_) => None,
+    };
     tokio::spawn(async move {
         let Ok(mut link) = link::open(target.secret, target.relays.clone()).await else {
-            let _ = tx.send(Event::RoomLeft { why: RoomLeftWhy::Unreachable });
+            let id = RoomKeys::new(target.secret).room_id_hex();
+            look_failed(look, id, RoomLeftWhy::Unreachable, &tx);
             return;
         };
         let now = now_ms();
@@ -1237,6 +1277,8 @@ impl Task {
                 #[cfg(feature = "testing")]
                 {
                     self.held = hold;
+                    let choosing = hold && s == StateCode::Choosing;
+                    self.env.held.store(choosing, std::sync::atomic::Ordering::Relaxed);
                     self.held_behind = behind.filter(|_| hold);
                 }
                 #[cfg(not(feature = "testing"))]
@@ -1719,15 +1761,23 @@ impl Task {
         // A held pose stands against the player opening and closing, never against what you
         // choose yourself (testing builds only).
         #[cfg(feature = "testing")]
-        if !matches!(
+        // An app closes its picker or opens its player by itself as it plays; Choosing a source,
+        // Play, Carry on and the like are what you choose.
+        if matches!(
             command,
-            RoomCommand::OpenPlayer
-                | RoomCommand::ClosePlayer
-                | RoomCommand::Say { .. }
-                | RoomCommand::React { .. }
+            RoomCommand::Play { .. }
+                | RoomCommand::ChangeEpisode { .. }
+                | RoomCommand::CarryOn
+                | RoomCommand::DontWait
+                | RoomCommand::SkipOpening { .. }
+                | RoomCommand::CancelUpNext
+                | RoomCommand::PlayNextNow
+                | RoomCommand::ChoosingSource { open: true }
+                | RoomCommand::Leave
         ) {
             self.held = false;
             self.held_behind = None;
+            self.env.held.store(false, std::sync::atomic::Ordering::Relaxed);
         }
         match command {
             RoomCommand::Leave => {

@@ -539,23 +539,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Inte tillräckligt med ledigt utrymme för att hålla kommande avsnitt nedladdade. Frigör lite utrymme för att ladda ner fler.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Välj först en server för watch party, som syncplay.server. { $server } drivs av { $operator }.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Välj först en server för watch party. { $server } drivs av { $operator }.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watch partyn finns inte i den här versionen av Kaeri.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = En watch party behöver ett rum att träffas i. Välj ett först.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Servern för watch party tappades. Försöker igen.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Tillbaka i watch party.
 
 # Message when the person left a watch party.
 party-left = Lämnade watch party.

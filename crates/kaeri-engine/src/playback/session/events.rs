@@ -53,6 +53,10 @@ const CUED_FOR_MS: u64 = 10_000;
 /// A player is still opening until its first room cue has had this long: its own start seeks
 /// (to where it was told to open, or late) are never the viewer's.
 const OPENING_FOR_MS: u64 = 3_000;
+/// A seek this soon after a place within [`END_SECONDS`] of the file's end is its loop or restart.
+const LOOPED_WITHIN_MS: u64 = 2_000;
+/// The file's last moments, for [`LOOPED_WITHIN_MS`].
+const END_SECONDS: f64 = 1.5;
 
 /// How long a mid-episode stall lasts before the player offers another stream.
 const STALL_PROMPT: Duration = Duration::from_secs(8);
@@ -205,6 +209,9 @@ impl Run<'_> {
         // When the room's first cue reached this player: before then, and just after, it is
         // still opening.
         let mut first_cue: Option<tokio::time::Instant> = None;
+        // When the player last reported a place in the file's last moments: a seek just after
+        // is the file looping or restarting at its end, never the viewer's.
+        let mut near_end: Option<tokio::time::Instant> = None;
         let mut viewer_pressed = false;
         let mut waiting: Vec<kaeri_core::stream::Subtitle> = Vec::new();
         // Stats for nerds, open as the window left it.
@@ -708,7 +715,10 @@ impl Run<'_> {
                             && first_cue.is_some_and(|at| {
                                 at.elapsed() >= Duration::from_millis(OPENING_FOR_MS)
                             });
-                        viewer_seeked |= !cued && opened;
+                        let looped = near_end.is_some_and(|at| {
+                            at.elapsed() < Duration::from_millis(LOOPED_WITHIN_MS)
+                        });
+                        viewer_seeked |= !cued && opened && !looped;
                     }
                     // The seek landed: ready for the room's wait at its first frame there.
                     if !*now
@@ -820,6 +830,9 @@ impl Run<'_> {
                 // Our own `loadfile` ending the file it replaced; nothing to record.
                 PlaybackEvent::Replaced => continue,
                 PlaybackEvent::Progress { position, duration } => {
+                    if duration.is_some_and(|length| *position >= length - END_SECONDS) {
+                        near_end = Some(tokio::time::Instant::now());
+                    }
                     if let Some(next) = duration.and_then(|length| self.learn_length(length)) {
                         let _ = link.overlay(next).await;
                     }
