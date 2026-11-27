@@ -2984,6 +2984,9 @@ public enum L {
 
     public static var readerModeScrolled: String { string("reader-mode-scrolled", fallback: "Scroll") }
 
+    /// Reading mode value for a series read as whole pages one under another, chosen on another device or from the series details; the picker here doesn't offer it.
+    public static var readerModeVerticalPages: String { string("reader-mode-vertical-pages", fallback: "Vertical pages") }
+
     /// Under the reading mode picker for a guessed mode.
     public static var readerModeDetectedNote: String { string("reader-mode-detected-note", fallback: "Detected from the series details.") }
 
@@ -12819,6 +12822,17 @@ public enum L {
 
     /// Secondary action under it.
     public static var storeTurnOnWatching: String { string("store-turn-on-watching", fallback: "Turn on watching") }
+
+    /// Info title when every plugin in a store is for reading, and reading is off here.
+    public static func storeOtherMediumReading(store: String) -> String {
+        Self.format("store-other-medium-reading", fallback: "Every plugin in %1$@ is for reading", store)
+    }
+
+    /// Line under it.
+    public static var storeOtherMediumReadingLine: String { string("store-other-medium-reading-line", fallback: "Reading is off on this device, so none of them show in Your sources.") }
+
+    /// Secondary action under it.
+    public static var storeTurnOnReading: String { string("store-turn-on-reading", fallback: "Turn on reading") }
 
     /// Info title when a store has no plugins.
     public static func storeEmpty(store: String) -> String {

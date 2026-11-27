@@ -131,6 +131,9 @@ public final class CastModel {
     @ObservationIgnored var asked = false
     /// Open the controller when the next play starts on the TV.
     @ObservationIgnored var expandOnPlay = false
+    /// What runs once the TV plays the cast just asked for: the player it was asked from closes
+    /// then, so a cast that fails leaves the player where it was.
+    @ObservationIgnored var whenPlaying: (@MainActor () -> Void)?
     /// iPhone and iPad: the app is in the background, the cast's audio session runs, and the
     /// engine was told the app is away. See `scene(active:)`.
     @ObservationIgnored var inBackground = false
@@ -259,6 +262,8 @@ public final class CastModel {
         let after = stage
         if after == .playing { played = true }
         if after != before, after == .stopped || after == .failed { keepAwake(false) }
+        if after == .playing { playStarted() }
+        if after == .stopped || after == .failed { whenPlaying = nil }
         if let note = next.note, note != cardNote, !sessionNotes {
             // A cast from Play on TV holds no session, so its card carries the note: the TV plays
             // it in its own player. A held session says it itself.
@@ -352,19 +357,26 @@ public final class CastModel {
         return (card?.notice ?? (stage == .stopped ? .noticeCastLost(name: tvName) : .noticeCastRefused(name: tvName))).text
     }
 
-    /// What a failed or stopped card offers, the first in amber.
+    /// What a failed or stopped card offers, the first in amber: the spec's table, by the reason
+    /// the engine gave, whether or not the cast had played. Without a reason, a cast that stopped
+    /// offers another TV, and one that never started another source.
     public var actions: [CastAction] {
         switch stage {
         case .playing, .starting:
             return []
-        case .stopped:
-            return [.playHere, .chooseAnotherTV]
-        case .failed:
+        case .stopped, .failed:
             switch card?.notice {
-            case .noticeCastNeverFetches?: return [.tryAgain, .playHere]
-            case .noticeCastNotSameNetwork?: return [.playHere, .chooseAnotherTV]
-            case .noticeCastDeepLink?: return [.chooseSource]
-            default: return [.chooseSource, .playHere]
+            case .noticeCastVideoCodec?, .noticeCastAudioCodec?, .noticeCastContainer?, .noticeCastRefused?,
+                 .noticeCastSegment?:
+                return [.chooseSource, .playHere]
+            case .noticeCastNeverFetches?, .noticeCastLostStream?:
+                return [.tryAgain, .playHere]
+            case .noticeCastDeepLink?:
+                return [.chooseSource]
+            case .noticeCastNotSameNetwork?, .noticeCastLost?, .noticeCastNoDevice?:
+                return [.playHere, .chooseAnotherTV]
+            default:
+                return stage == .stopped ? [.playHere, .chooseAnotherTV] : [.chooseSource, .playHere]
             }
         }
     }
@@ -452,7 +464,21 @@ public final class CastModel {
         stop()
     }
 
+    /// Run `then` once the TV plays: at once if it already does. A cast that fails, ends or is
+    /// replaced first never runs it.
+    func handOffWhenPlaying(_ then: @escaping @MainActor () -> Void) {
+        whenPlaying = then
+        if active, stage == .playing { playStarted() }
+    }
+
+    private func playStarted() {
+        guard let then = whenPlaying else { return }
+        whenPlaying = nil
+        then()
+    }
+
     func end() {
+        whenPlaying = nil
         cards?.cancel()
         cards = nil
         session = nil

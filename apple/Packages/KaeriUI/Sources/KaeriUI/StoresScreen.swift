@@ -530,12 +530,19 @@ struct JoinStoreSheet: View {
             if case .store(let invited)? = store.stores.preview, invited.namesJoiner {
                 yourName.padding(.top, 14)
             }
-            Text(L.storesNotFromApp)
-                .font(.mac(12))
-                .macLineHeight(17)
-                .foregroundStyle(.haze)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 14)
+            // Who answers for the plugins, where the choice to join is made.
+            VStack(alignment: .leading, spacing: 6) {
+                Text(L.storesNotFromApp)
+                if case .store(let invited)? = store.stores.preview, let owner = invited.ownerLine {
+                    Text(owner)
+                }
+                Text(L.pluginRiskWarning)
+            }
+            .font(.mac(12))
+            .macLineHeight(17)
+            .foregroundStyle(.haze)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 14)
             HStack(spacing: 10) {
                 Spacer()
                 if working { ProgressView().controlSize(.small) }

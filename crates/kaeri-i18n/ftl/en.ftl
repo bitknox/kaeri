@@ -13390,6 +13390,15 @@ store-other-medium-line = Watching is off on this device, so none of them show i
 # Secondary action under it.
 store-turn-on-watching = Turn on watching
 
+# Info title when every plugin in a store is for reading, and reading is off here.
+store-other-medium-reading = Every plugin in { $store } is for reading
+
+# Line under it.
+store-other-medium-reading-line = Reading is off on this device, so none of them show in Your sources.
+
+# Secondary action under it.
+store-turn-on-reading = Turn on reading
+
 # Info title when a store has no plugins.
 store-empty = { $store } has no plugins yet
 

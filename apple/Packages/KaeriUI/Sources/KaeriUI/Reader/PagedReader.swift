@@ -169,14 +169,11 @@ struct PagedReader: View {
     // MARK: Turning
 
     private func tap(_ x: Double) {
-        let layout = model.choice(.tapLayout) ?? "edges"
         // While zoomed the zones are off: a tap anywhere only brings the chrome or puts it away.
         if zoom.zoomed { onTap(0.5); return }
-        if model.chromeShown || layout == "off" { onTap(x); return }
-        // Edges: the outer thirds turn. Halves: the outer 40 percent turn, and the middle band
-        // still brings the chrome up.
-        let edge = layout == "sides" ? 0.4 : 0.33
-        if x < edge || x > 1 - edge {
+        if (model.chromeShown && ReaderDevice.tapsHeldByChrome) || !model.tapsTurn { onTap(x); return }
+        // The outer thirds turn, and the middle band brings the chrome up.
+        if x < 0.33 || x > 0.67 {
             let leftSide = x < 0.5
             // Left is forward when the book runs right to left.
             turn(forward: leftSide == rtl, how: .turn)
@@ -351,7 +348,7 @@ struct ReaderEndPage: View {
     @Environment(\.dynamicTypeSize) private var type
 
     /// One more swipe opens the next chapter: in the paged reader and a novel, not a strip's foot.
-    private var swipes: Bool { held != nil || model.novel != nil || model.view?.mode != .strip }
+    private var swipes: Bool { held != nil || model.novel != nil || model.view?.mode.flows != true }
 
     // What the page shows: the held chapter's, or the open one's.
     private var view: ReaderView? { held?.view ?? model.view }
@@ -362,7 +359,7 @@ struct ReaderEndPage: View {
     /// A strip that could not flow into its next chapter ends here: that chapter, why, and Try
     /// again in place of Continue. Turned to pages, Continue opens it as any chapter opens.
     private var flowFailure: ReaderModel.FlowFailure? {
-        held == nil && model.view?.mode == .strip ? model.flowFailure : nil
+        held == nil && model.view?.mode.flows == true ? model.flowFailure : nil
     }
 
     private func previewFile(_ id: ChapterId) -> PageFile? {
@@ -550,7 +547,7 @@ struct ReaderEndPage: View {
             if held == nil, let chapterId = chapter?.id, !model.endSkipped(chapterId).isEmpty {
                 ReaderSkippedLine(count: model.endSkipped(chapterId).count, theme: theme) {
                     // The page only appears over the end page, so it fades in; a strip grows it in.
-                    let strip = model.view?.mode == .strip
+                    let strip = model.view?.mode.flows == true
                     withAnimation(endPaper ? nil : (strip ? .standard : .fadeIn)) { model.showEndCredits(chapterId) }
                 }
                 .padding(.top, 8)

@@ -92,6 +92,14 @@ struct EpisodeMetrics: Equatable {
     /// The room over and under the still where the text sits beside it.
     var besideRoom: CGFloat { (short - still.height) / 2 }
 
+    /// These metrics at a text size: past the default size the title, facts and synopsis outgrow
+    /// a fixed row, which then fits what it holds instead of cutting it at the still's height.
+    func fitting(_ size: DynamicTypeSize) -> EpisodeMetrics {
+        var metrics = self
+        if size > .large { metrics.fits = true }
+        return metrics
+    }
+
     /// The row's height: tall where the table has room kept for text and this row can show it.
     func height(room: Bool, protected: Bool) -> CGFloat {
         room && !protected ? tall : short

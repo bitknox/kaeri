@@ -933,6 +933,7 @@ struct EpisodeList: View {
     @Environment(Navigator.self) private var navigator
     /// The iPad's Reduce Motion; the Mac's reaches `navigator.motionReduced` through its shell.
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.dynamicTypeSize) private var typeSize
     @State private var unwatchedOnly = false
     /// The last title whose rows were on screen, and how tall they stood: another title's
     /// placeholders keep that room, so nothing below or beside them moves until its rows come.
@@ -965,7 +966,7 @@ struct EpisodeList: View {
         #if os(macOS)
         .mac(listWidth: listWidth ?? EpisodeMetrics.wideFrom)
         #else
-        .pad
+        EpisodeMetrics.pad.fitting(typeSize)
         #endif
     }
 

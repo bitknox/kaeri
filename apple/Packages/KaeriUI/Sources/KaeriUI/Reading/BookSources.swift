@@ -43,23 +43,24 @@ struct BookSourcesList: View {
                     }
                 }
             }
-            if let view, !view.folders.isEmpty {
+            if let view, !store.bookSources.folders.isEmpty {
                 let unsure = view.groups.filter { $0.work == nil && !$0.kept }.count
+                let folders = store.bookSources.folders
                 SettingsGroup(title: L.bookSourcesFolders) {
-                    ForEach(view.folders.filter { !$0.removed }, id: \.id) { folder in
+                    ForEach(folders, id: \.id) { folder in
                         BookSourceRow(title: folder.name, note: Self.folderLine(folder),
                                       noteColor: folder.scan == .missing ? .silk : .haze, open: nil) {
                             SourceTile(systemImage: "folder")
                         } trailing: {
                             HStack(spacing: 8) {
-                                if unsure > 0, folder.id == view.folders.first?.id {
+                                if unsure > 0, folder.id == folders.first?.id {
                                     Button(L.bookSourcesCheckMatches(n: unsure)) { matchesShown = true }
                                         .buttonStyle(SecondaryCapsuleStyle(height: 24, fontSize: 12))
                                         .fixedSize()
                                 }
                                 Menu {
                                     Button(L.bookSourcesScan) { store.bookSources.scan() }
-                                    Button(L.actionRemove, role: .destructive) { store.bookSources.removeFolder(folder.id) }
+                                    Button(L.actionRemove, role: .destructive) { store.removeBookFolder(folder) }
                                 } label: {
                                     Image(systemName: "ellipsis").foregroundStyle(.haze)
                                 }

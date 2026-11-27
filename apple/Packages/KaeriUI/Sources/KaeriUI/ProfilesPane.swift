@@ -95,7 +95,9 @@ struct ProfileSheet: View {
                 Toggle(L.profilesKids, isOn: $kids).tint(.amber).listRowBackground(Palette.raised)
                 #endif
             }
-            if let existing {
+            // The profile in use can't be deleted, so its sheet offers no Delete, as on the
+            // desktops: switching to another profile first lets it go.
+            if let existing, !existing.active {
                 SyncSection {
                     SyncChoice(title: L.profilesDelete, lineColor: .vermilion) { asking = true }
                         .foregroundStyle(.vermilion)

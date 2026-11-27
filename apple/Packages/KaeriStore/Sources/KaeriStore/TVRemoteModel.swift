@@ -240,7 +240,8 @@ public final class TVRemoteModel {
     }
 
     /// A Chromecast row chosen: cast what was asked to it. The card shows at once, starting, and
-    /// the player here, when it was asked from there, closes.
+    /// the player here, when it was asked from there, closes once the TV plays: a cast that
+    /// fails leaves the player where it was.
     public func choose(cast row: FfiCastRow) {
         if cast.link != nil {
             // The session holds the TV: the request moves there, and this sheet goes.
@@ -249,7 +250,9 @@ public final class TVRemoteModel {
             self.request = nil
             sheet = nil
             cast.connect(row, play: request)
-            if request?.fromPlayer == true { handedOff?() }
+            if request?.fromPlayer == true, cast.asked {
+                cast.handOffWhenPlaying { [weak self] in self?.handedOff?() }
+            }
             return
         }
         guard let request else { return }
@@ -259,7 +262,7 @@ public final class TVRemoteModel {
         guard cast.active else { return }
         self.request = nil
         sheet = .remote
-        if request.fromPlayer { handedOff?() }
+        if request.fromPlayer { cast.handOffWhenPlaying { [weak self] in self?.handedOff?() } }
     }
 
     /// Choose Another TV, from the cast's card: the picker, offering the episode from where the

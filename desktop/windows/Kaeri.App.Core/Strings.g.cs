@@ -9662,6 +9662,15 @@ public static partial class T
     /// <summary>Secondary action under it.</summary>
     public static string StoreTurnOnWatching => Get("StoreTurnOnWatching");
 
+    /// <summary>Info title when every plugin in a store is for reading, and reading is off here.</summary>
+    public static string StoreOtherMediumReading(string store) => Fill(Get("StoreOtherMediumReading"), ("store", store));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreOtherMediumReadingLine => Get("StoreOtherMediumReadingLine");
+
+    /// <summary>Secondary action under it.</summary>
+    public static string StoreTurnOnReading => Get("StoreTurnOnReading");
+
     /// <summary>Info title when a store has no plugins.</summary>
     public static string StoreEmpty(string store) => Fill(Get("StoreEmpty"), ("store", store));
 
@@ -15933,6 +15942,9 @@ public static partial class T
         ["StoreOtherMedium"] = "Every plugin in {store} is for watching",
         ["StoreOtherMediumLine"] = "Watching is off on this device, so none of them show in Your sources.",
         ["StoreTurnOnWatching"] = "Turn on watching",
+        ["StoreOtherMediumReading"] = "Every plugin in {store} is for reading",
+        ["StoreOtherMediumReadingLine"] = "Reading is off on this device, so none of them show in Your sources.",
+        ["StoreTurnOnReading"] = "Turn on reading",
         ["StoreEmpty"] = "{store} has no plugins yet",
         ["StoreEmptyLine"] = "You're a member, so new plugins show in Plugin stores when {owner} adds them.",
         ["StoreErrUnreachable"] = "Couldn't reach {host}",

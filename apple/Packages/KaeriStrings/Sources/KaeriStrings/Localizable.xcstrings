@@ -229917,6 +229917,18 @@
         }
       }
     },
+    "reader-mode-vertical-pages" : {
+      "comment" : "Reading mode value for a series read as whole pages one under another, chosen on another device or from the series details; the picker here doesn't offer it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Vertical pages"
+          }
+        }
+      }
+    },
     "reader-more-settings" : {
       "comment" : "",
       "extractionState" : "manual",
@@ -343523,6 +343535,30 @@
         }
       }
     },
+    "store-other-medium-reading" : {
+      "comment" : "Info title when every plugin in a store is for reading, and reading is off here. Argument 1: store (Text).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Every plugin in %1$@ is for reading"
+          }
+        }
+      }
+    },
+    "store-other-medium-reading-line" : {
+      "comment" : "Line under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reading is off on this device, so none of them show in Your sources."
+          }
+        }
+      }
+    },
     "store-plugin-changed" : {
       "comment" : "Error: a store changed a plugin after the person agreed to what was shown. Argument 1: store (Text). Argument 2: plugin (Text).",
       "extractionState" : "manual",
@@ -344023,6 +344059,18 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Không lưu được mã thông báo cho cửa hàng plugin này. %1$@"
+          }
+        }
+      }
+    },
+    "store-turn-on-reading" : {
+      "comment" : "Secondary action under it.",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Turn on reading"
           }
         }
       }

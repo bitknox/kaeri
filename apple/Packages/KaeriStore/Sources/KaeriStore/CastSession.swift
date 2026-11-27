@@ -111,6 +111,7 @@ extension CastModel {
             asked = false
             expandOnPlay = false
             if active { end() }
+            whenPlaying = nil
             settleWaiting()
             return
         }

@@ -619,6 +619,27 @@ struct PhoneDownloadRow: View {
     @State private var deleting = false
 
     var body: some View {
+        tappable
+            .accessibilityElement(children: .combine)
+            .listRowBackground(Palette.raised)
+            .modifier(PhoneDownloadRowActions(row: row, deleting: $deleting))
+    }
+
+    /// A finished download plays on a tap, as the Mac's and Android's rows do; the others keep
+    /// their actions on swipe.
+    @ViewBuilder
+    private var tappable: some View {
+        if row.state == .done {
+            Button { store.playDownload(row) } label: {
+                content.contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+        } else {
+            content
+        }
+    }
+
+    private var content: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(L.downloadsEpisodeName(episode: Int(episode: row.episode))).font(.ui(17)).foregroundStyle(.silk)
@@ -647,8 +668,21 @@ struct PhoneDownloadRow: View {
             }
         }
         .padding(.vertical, 4)
-        .accessibilityElement(children: .combine)
-        .listRowBackground(Palette.raised)
+    }
+
+    private var status: String {
+        PhoneDownloadRow.status(row, store: store)
+    }
+}
+
+/// A download row's swipes and its Delete question.
+private struct PhoneDownloadRowActions: ViewModifier {
+    @Environment(AppStore.self) private var store
+    let row: DownloadRow
+    @Binding var deleting: Bool
+
+    func body(content: Content) -> some View {
+        content
         // No full swipe: a file goes only by a tap on Delete, and Delete asks first.
         .swipeActions(edge: .trailing, allowsFullSwipe: false) {
             switch row.state {
@@ -677,8 +711,11 @@ struct PhoneDownloadRow: View {
             Text(L.downloadsDeleteOneDetail)
         }
     }
+}
 
-    private var status: String {
+extension PhoneDownloadRow {
+    @MainActor
+    static func status(_ row: DownloadRow, store: AppStore) -> String {
         switch row.state {
         case .done: L.downloadsCaptionDone
         case .active where row.total == 0: L.downloadsCaptionMetadata

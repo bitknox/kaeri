@@ -230,6 +230,13 @@ extension InvitedStore {
     public var runByLine: String {
         owners.isEmpty ? host : L.storesRunBy(owner: owners.formatted(.list(type: .and).locale(AirTime.locale)), host: host)
     }
+
+    /// Who answers for the store's plugins, said before Join: its owners, not the app. None for a
+    /// store that does not say who runs it, or one this device is in already.
+    public var ownerLine: String? {
+        guard !owners.isEmpty, !alreadyJoined else { return nil }
+        return L.storesJoinOwnerResponsible(owner: owners.formatted(.list(type: .and).locale(AirTime.locale)))
+    }
 }
 
 extension StoreRow {

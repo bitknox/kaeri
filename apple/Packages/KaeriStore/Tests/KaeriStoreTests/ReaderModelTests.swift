@@ -201,6 +201,36 @@ struct ReaderModelTests {
         #expect(model.modeOverridden)
     }
 
+    /// Taps turn at the sides by the engine's paged tap zones: an Off kept from before tap
+    /// zones stays off, and every other layout turns at the sides.
+    @Test func sideTapsFollowTheEnginesTapZones() {
+        let (model, _) = model()
+        model.open(work: "a:900301")
+        model.surfaceChanged(surface)
+        opened(model, session: 1)
+        #expect(model.tapsTurn)
+        func zones(_ layout: String) -> ReaderSettingsView {
+            ReaderSettingsView(medium: .manga, work: WorkId("a:900301"), rows: [
+                ReaderSettingRow(key: .tapPaged, value: .choice(name: layout), scope: .device,
+                                 detected: false, overridden: false, choices: []),
+            ])
+        }
+        model.apply(.settings(zones("off")))
+        #expect(!model.tapsTurn)
+        model.apply(.settings(zones("sides")))
+        #expect(model.tapsTurn)
+        model.apply(.settings(zones("l_shape")))
+        #expect(model.tapsTurn)
+    }
+
+    /// Vertical is laid out by the engine as a strip of whole pages, so it reads as one.
+    @Test func verticalFlowsAsAStripDoes() {
+        #expect(ReaderMode.vertical.flows)
+        #expect(ReaderMode.strip.flows)
+        #expect(!ReaderMode.paged.flows)
+        #expect(!ReaderMode.scrolled.flows)
+    }
+
     @Test func aFirstPageThatFailsFailsTheChapter() {
         let (model, _) = model()
         model.open(work: "a:900301")

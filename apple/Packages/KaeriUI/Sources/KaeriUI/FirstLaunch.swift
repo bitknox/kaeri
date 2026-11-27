@@ -257,10 +257,11 @@ struct FirstLaunch: View {
     /// Set up from another device: the code this device shows, and the way to a cloud folder.
     private var setup: some View {
         PairShowSheet(first: true, restore: restore, leave: { page = asks ? .join : .welcome }, finished: { finish(nil) },
-                      answeredPages: { answered in
-                          guard asks else { return }
+                      answeredPages: { answered, medium in
+                          guard asks else { finish(nil); return }
                           let left = [FirstRunPage.medium, .lists, .sources].filter { !answered.contains($0) }
-                          if answered.contains(.medium) { chosen = store.medium.answer }
+                          // The engine's answer may not be back yet: the one just given counts.
+                          if answered.contains(.medium) { chosen = medium ?? store.medium.answer }
                           switch left.first {
                           case nil: finish(nil)
                           case .medium?: page = .medium
@@ -401,9 +402,18 @@ struct FirstLaunch: View {
             }
             .fixedSize(horizontal: false, vertical: true)
         case .store(let invited)?:
-            Text(invited.name)
-                .font(.plat(mac: 13, touch: 15, weight: .semibold))
-                .foregroundStyle(.silk)
+            VStack(alignment: .leading, spacing: 4) {
+                Text(invited.name)
+                    .font(.plat(mac: 13, touch: 15, weight: .semibold))
+                    .foregroundStyle(.silk)
+                // Who answers for the plugins, said before Join.
+                if let owner = invited.ownerLine {
+                    Text(owner)
+                        .font(.plat(mac: 12, touch: 13))
+                        .foregroundStyle(.haze)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
         case nil:
             EmptyView()
         }

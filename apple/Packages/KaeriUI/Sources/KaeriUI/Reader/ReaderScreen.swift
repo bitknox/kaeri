@@ -26,8 +26,9 @@ public struct ReaderScreen: View {
     @State private var novelWeb = NovelWebSession()
     /// The held end page's opacity: 1 while it waits, faded to 0 once the next page has drawn.
     @State private var heldShown = 1.0
-    /// The reader holds the keyboard from the moment it shows, so its keys need no click first.
-    @FocusState private var holdsKeys: Bool
+    /// The reader holds the keyboard from the moment it shows, so its keys need no click first:
+    /// the page holds it, or one of the reader's own controls Tab moved to.
+    @FocusState private var focus: ReaderFocus?
 
     public init(model: ReaderModel, onClose: @escaping () -> Void) {
         self.model = model
@@ -57,7 +58,7 @@ public struct ReaderScreen: View {
                 content
                     .environment(\.readerHeld, model.held != nil)
                 heldEnd
-                ReaderChrome(model: model, theme: theme, mac: mac, size: size, onClose: close, groupHeight: $groupHeight)
+                ReaderChrome(model: model, theme: theme, mac: mac, size: size, onClose: close, groupHeight: $groupHeight, focus: $focus)
                 ReaderNotices(model: model, theme: theme, mac: mac, size: size, groupHeight: groupHeight)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
@@ -88,18 +89,30 @@ public struct ReaderScreen: View {
         // has not bound. Esc is the reader's own, on the view that holds the keys.
         .focusable()
         .focusEffectDisabled()
-        .focused($holdsKeys)
+        .focused($focus, equals: .page)
         .onExitCommand { escape() }
         .onKeyPress(phases: [.down, .repeat]) { press in
             take(press.key, press.modifiers, repeated: press.phase == .repeat) ? .handled : .ignored
         }
         // Tab stays in the book: the window under it is covered, and its controls aren't the
-        // reader's to reach.
-        .onKeyPress(keys: [.tab, Self.backTab], phases: [.down, .repeat]) { _ in .handled }
-        .onAppear { holdsKeys = true }
-        .onChange(of: model.sheet == nil) { _, closed in if closed { holdsKeys = true } }
-        .onChange(of: model.askingPage) { _, asking in if !asking { holdsKeys = true } }
-        .onChange(of: scenePhase) { _, phase in if phase == .active { holdsKeys = true } }
+        // reader's to reach. With Full Keyboard Access it goes round the reader's own controls
+        // and back to the page.
+        .onKeyPress(keys: [.tab, Self.backTab], phases: [.down, .repeat]) { press in
+            tabbed(back: press.key == Self.backTab || press.modifiers.contains(.shift))
+            return .handled
+        }
+        .onAppear { focus = .page }
+        .onChange(of: model.sheet == nil) { _, closed in if closed { focus = .page } }
+        .onChange(of: model.askingPage) { _, asking in if !asking { focus = .page } }
+        .onChange(of: scenePhase) { _, phase in if phase == .active { focus = .page } }
+        // The group going away takes the keyboard back to the page.
+        .onChange(of: ReaderChrome.shows(model)) { _, shows in
+            if !shows, focus?.inGroup == true { focus = .page }
+        }
+        // So does Try again opening the chapter, or the failure going.
+        .onChange(of: ReaderChrome.failed(model)) { _, failed in
+            if !failed, let on = focus, on != .page, !on.inGroup { focus = .page }
+        }
         #else
         // On iPad the reader holds the keyboard in a view of its own while nothing is over it.
         .background {
@@ -125,7 +138,7 @@ public struct ReaderScreen: View {
         case .closed, .opening:
             ReaderOpening(model: model, theme: theme, size: size, chooseSource: chooseSource, close: close)
         case .failed(let failure):
-            ReaderChapterFailed(model: model, theme: theme, failure: failure, chooseSource: chooseSource, close: close)
+            ReaderChapterFailed(model: model, theme: theme, failure: failure, chooseSource: chooseSource, close: close, focus: $focus)
         case .open:
             if model.novel != nil {
                 // The web view keeps the tap for as long as the reader is open, so it holds the
@@ -133,7 +146,7 @@ public struct ReaderScreen: View {
                 NovelReader(model: model, theme: theme, mac: mac, size: size, rtl: rtl, web: novelWeb) { [model] x in
                     Self.tap(model, x)
                 }
-            } else if model.view?.mode == .strip {
+            } else if model.view?.mode.flows == true {
                 StripReader(model: model, theme: theme, mac: mac, size: size, tone: tone) { tap(0.5) }
             } else {
                 PagedReader(model: model, theme: theme, size: size, scale: displayScale, tone: tone, paper: paper) { tap($0) }
@@ -228,10 +241,38 @@ public struct ReaderScreen: View {
         hideTask?.cancel()
         hideTask = Task {
             try? await Task.sleep(for: .seconds(2))
-            // A shot holding the scrubber keeps the group up under a still pointer.
-            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome, model.shotScrub == nil else { return }
+            // A shot holding the scrubber keeps the group up under a still pointer, and so does
+            // the keyboard on one of its controls.
+            guard !Task.isCancelled, model.sheet == nil, !model.pinChrome, model.shotScrub == nil,
+                  focus?.inGroup != true else { return }
             model.chromeShown = false
             NSCursor.setHiddenUntilMouseMoves(true)
+        }
+    }
+
+    /// Tab from the page or a control: the next of the reader's controls, round to the page.
+    /// Without Full Keyboard Access the page keeps the keyboard, as the Mac's Tab goes.
+    private func tabbed(back: Bool) {
+        let ring = [ReaderFocus.page] + tabStops
+        guard NSApp.isFullKeyboardAccessEnabled, ring.count > 1 else { focus = .page; return }
+        let at = ring.firstIndex(of: focus ?? .page) ?? 0
+        let next = ring[(at + (back ? ring.count - 1 : 1)) % ring.count]
+        if next.inGroup {
+            hideTask?.cancel()
+            model.chromeShown = true
+        }
+        focus = next
+    }
+
+    /// The controls on screen, in the order they read.
+    private var tabStops: [ReaderFocus] {
+        switch model.phase {
+        case .open:
+            (model.backToPage != nil ? [.backToPage] : []) + [.back, .chapters, .goToPage, .settings, .fullScreen]
+        case .failed:
+            [.chooseSource, .tryAgain, .close]
+        case .closed, .opening:
+            []
         }
     }
 
@@ -393,7 +434,7 @@ extension ReaderActions {
     /// Home and End: the first page or image, or the last one before the end page.
     @MainActor private static func edge(_ model: ReaderModel, first: Bool) {
         model.hideChrome()
-        if model.novel != nil || model.view?.mode == .strip {
+        if model.novel != nil || model.view?.mode.flows == true {
             model.requestJump(first ? 0 : max(model.position.count - 1, 0))
             return
         }
@@ -406,7 +447,7 @@ extension ReaderActions {
             let now = model.amount(.textSize) ?? 1
             let next = step == 0 ? 1 : min(3, max(0.5, now + Double(step) * 0.1))
             model.set(.textSize, .amount(value: next))
-        } else if model.view?.mode == .strip {
+        } else if model.view?.mode.flows == true {
             let now = model.amount(.stripWidth) ?? 0.6
             let next = step == 0 ? 0.6 : min(1, max(0.3, now + Double(step) * 0.1))
             model.set(.stripWidth, .amount(value: next))
@@ -458,7 +499,7 @@ struct ReaderOpening: View {
     /// The page's place as the opening holds it: the column of a strip, a page fitted to the
     /// screen otherwise. The first page fades in on the same plate.
     private var plate: CGSize {
-        if model.view?.mode == .strip { return CGSize(width: min(size.width, 720), height: size.height) }
+        if model.view?.mode.flows == true { return CGSize(width: min(size.width, 720), height: size.height) }
         let width = min(size.width, size.height * 0.7)
         return CGSize(width: width, height: min(size.height, width / 0.7))
     }
@@ -539,6 +580,19 @@ struct ReaderOpening: View {
     }
 }
 
+/// Where the reader's keyboard is: the page, or one of the controls Tab reaches.
+enum ReaderFocus: Hashable {
+    case page, backToPage, back, chapters, goToPage, settings, fullScreen, chooseSource, tryAgain, close
+
+    /// One of the group's controls, which goes away with the group.
+    var inGroup: Bool {
+        switch self {
+        case .backToPage, .back, .chapters, .goToPage, .settings, .fullScreen: true
+        case .page, .chooseSource, .tryAgain, .close: false
+        }
+    }
+}
+
 /// A chapter that would not open: the reason in plain words, Choose source as the one action,
 /// Try again and Close quiet under it.
 struct ReaderChapterFailed: View {
@@ -547,6 +601,7 @@ struct ReaderChapterFailed: View {
     let failure: ReadingFailure
     let chooseSource: () -> Void
     let close: () -> Void
+    var focus: FocusState<ReaderFocus?>.Binding
     @Environment(\.dynamicTypeSize) private var type
 
     var body: some View {
@@ -568,9 +623,12 @@ struct ReaderChapterFailed: View {
             Spacer(minLength: 32)
             Button(L.readerChooseSource, action: chooseSource)
                 .buttonStyle(ReaderAmberStyle(theme: theme))
+                .focused(focus, equals: .chooseSource)
             let quiet = Group {
                 Button(L.readerTryAgain) { model.retry(page: nil) }
+                    .focused(focus, equals: .tryAgain)
                 Button(L.readerClose, action: close)
+                    .focused(focus, equals: .close)
             }
             .buttonStyle(.plain)
             .font(.ui(15, weight: .semibold)).foregroundStyle(theme.silk)

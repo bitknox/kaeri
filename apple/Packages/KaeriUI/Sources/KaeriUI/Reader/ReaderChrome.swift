@@ -15,6 +15,8 @@ struct ReaderChrome: View {
     let onClose: () -> Void
     /// The group's height, for a novel's notice to clear it.
     @Binding var groupHeight: CGFloat
+    /// The control the keyboard is on, when Tab took it there.
+    var focus: FocusState<ReaderFocus?>.Binding
     @Environment(\.horizontalSizeClass) private var sizeClass
     @Environment(\.dynamicTypeSize) private var type
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -25,7 +27,7 @@ struct ReaderChrome: View {
     #endif
 
     private var wide: Bool { mac || sizeClass == .regular }
-    private var rtl: Bool { model.view?.direction == .rightToLeft && model.view?.mode != .strip && model.medium == .manga }
+    private var rtl: Bool { model.view?.direction == .rightToLeft && model.view?.mode.flows != true && model.medium == .manga }
     /// At the accessibility sizes the title and its line take a row of their own.
     private var big: Bool { type.isAccessibilitySize }
 
@@ -94,6 +96,7 @@ struct ReaderChrome: View {
                 if mac {
                     // Back to the window as it was before the book opened, as Esc goes.
                     button("chevron.backward", L.actionBack, action: onClose)
+                        .focused(focus, equals: .back)
                     chaptersButton
                 } else {
                     button("xmark", L.readerClose, action: onClose).accessibilitySortPriority(5)
@@ -108,6 +111,7 @@ struct ReaderChrome: View {
                 ) {
                     NSApp.keyWindow?.toggleFullScreen(nil)
                 }
+                .focused(focus, equals: .fullScreen)
                 .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { _ in fullScreen = true }
                 .onReceive(NotificationCenter.default.publisher(for: NSWindow.didExitFullScreenNotification)) { _ in fullScreen = false }
                 .onAppear { fullScreen = NSApp.keyWindow?.styleMask.contains(.fullScreen) ?? false }
@@ -143,6 +147,7 @@ struct ReaderChrome: View {
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
+            .focused(focus, equals: .backToPage)
             .accessibilitySortPriority(0.5)
             Spacer(minLength: 0)
         }
@@ -171,6 +176,7 @@ struct ReaderChrome: View {
             .contentShape(.rect)
         }
         .buttonStyle(.plain)
+        .focused(focus, equals: .goToPage)
         .accessibilityElement(children: .combine)
         .accessibilityHint(L.readerGoToPage)
         .accessibilitySortPriority(1)
@@ -184,6 +190,7 @@ struct ReaderChrome: View {
 
     private var chaptersButton: some View {
         button("list.bullet", L.readerChapters) { model.sheet = .chapters }
+            .focused(focus, equals: .chapters)
             .accessibilitySortPriority(3)
             .popover(isPresented: sheetBinding(.chapters), attachmentAnchor: .point(.top)) {
                 // A narrow iPad window shows it as a sheet, which takes the window's width.
@@ -207,6 +214,7 @@ struct ReaderChrome: View {
             .contentShape(.circle)
         }
         .buttonStyle(.plain)
+        .focused(focus, equals: .settings)
         .accessibilityLabel(L.readerSettingsOpen)
         .accessibilitySortPriority(2)
         .popover(isPresented: sheetBinding(.settings), attachmentAnchor: .point(.top)) {
@@ -252,7 +260,7 @@ struct ReaderChrome: View {
             if model.choice(.mode) == "scrolled" { return nil }
             return (index + 1, max(model.position.count, 1))
         }
-        if model.view?.mode == .strip { return (index + 1, max(model.position.count, 1)) }
+        if model.view?.mode.flows == true { return (index + 1, max(model.position.count, 1)) }
         // A credit page only shown has no number, and the count stays; one kept counts at once.
         let onCredit = model.shownCredit != nil && index == model.position.index
         if onCredit, model.keeping == nil { return (nil, max(model.pageCount, 1)) }
@@ -288,7 +296,7 @@ struct ReaderChrome: View {
             }
             return L.readerGroupLineNovel(chapter: chapter, page: index + 1, total: count)
         }
-        if model.view?.mode == .strip { return L.readerGroupLineStrip(chapter: chapter, image: index + 1, total: count) }
+        if model.view?.mode.flows == true { return L.readerGroupLineStrip(chapter: chapter, image: index + 1, total: count) }
         // A credit page shows in place of the number until it is kept: "Chapter 87 · credit page".
         if index == model.position.index, let place = model.creditPlace {
             if model.keeping?.credit.page == model.onCredit {
@@ -444,7 +452,7 @@ struct ReaderScrubber: View {
 
     /// "Page 8 of 38": pages as the chapter counts them, not leaves, so a spread is its first page.
     private func spoken(index: Int, count: Int) -> String {
-        if model.novel == nil, model.view?.mode != .strip {
+        if model.novel == nil, model.view?.mode.flows != true {
             let page = model.pageNumber(of: index)
             if let part = model.partStarting(atPage: page) { return L.readerPartStarts(part: Int(part), page: page) }
             if index == model.position.index, model.shownCredit != nil {
@@ -458,7 +466,7 @@ struct ReaderScrubber: View {
     /// The preview's number: "Page 25 · part 2" on the first page of a later part, and "Page 14 ·
     /// part 4 · part 3 missing" when the part before it is missing.
     private func previewLabel(index: Int) -> String {
-        guard model.novel == nil, model.view?.mode != .strip else { return "\(index + 1)" }
+        guard model.novel == nil, model.view?.mode.flows != true else { return "\(index + 1)" }
         let page = model.pageNumber(of: index)
         if let part = model.partStarting(atPage: page) {
             if let missing = model.partMissing(beforePage: page) {
@@ -623,7 +631,7 @@ struct ReaderNotices: View {
     /// Page 1's line: on page 1 while it holds, and again with the chrome there. A notice takes
     /// its place while one shows.
     private var creditLineShows: Bool {
-        guard model.novel == nil, model.view?.mode != .strip, model.notice == nil, model.onCredit == nil,
+        guard model.novel == nil, model.view?.mode.flows != true, model.notice == nil, model.onCredit == nil,
               model.current == 0, model.position.index == 0, !model.startSkipped.isEmpty else { return false }
         return model.creditLine || model.chromeShown
     }

@@ -13390,6 +13390,15 @@ store-other-medium-line = [Ŵàţçĥîñĝ îš öƒƒ öñ ţĥîš ðéṽî�
 # Secondary action under it.
 store-turn-on-watching = [Ţüŕñ öñ ŵàţçĥîñĝ~~~~~]
 
+# Info title when every plugin in a store is for reading, and reading is off here.
+store-other-medium-reading = [Éṽéŕý þļüĝîñ îñ { $store } îš ƒöŕ ŕéàðîñĝ~~~~~~~~~~~]
+
+# Line under it.
+store-other-medium-reading-line = [Ŕéàðîñĝ îš öƒƒ öñ ţĥîš ðéṽîçé, šö ñöñé öƒ ţĥéɱ šĥöŵ îñ Ýöüŕ šöüŕçéš.~~~~~~~~~~~~~~~~~~~~~]
+
+# Secondary action under it.
+store-turn-on-reading = [Ţüŕñ öñ ŕéàðîñĝ~~~~~]
+
 # Info title when a store has no plugins.
 store-empty = [{ $store } ĥàš ñö þļüĝîñš ýéţ~~~~~~~]
 

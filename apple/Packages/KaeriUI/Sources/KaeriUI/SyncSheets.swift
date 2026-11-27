@@ -758,8 +758,9 @@ struct PairShowSheet: View {
     var leave: (() -> Void)?
     /// First launch: the pairing is done and the flow ends.
     var finished: () -> Void = {}
-    /// First launch: the first-run pages the paired device had already answered.
-    var answeredPages: (Set<FirstRunPage>) -> Void = { _ in }
+    /// First launch: the first-run pages the paired device had already answered, and the
+    /// medium answered from it.
+    var answeredPages: (Set<FirstRunPage>, KaeriIsFor?) -> Void = { _, _ in }
     /// Whether the invite has been shown for a while without a device arriving.
     @State private var nothingYet = PrelaunchScene.named() == .joinNothing
     /// The invite ran out, which shows the code page's one new action.
@@ -770,7 +771,7 @@ struct PairShowSheet: View {
         Group {
             if case .paired(let device) = sync.pair {
                 if first, store.medium.choosable {
-                    FirstJoinPaired(device: device, done: finished, skip: answeredPages)
+                    FirstJoinPaired(device: device, skip: answeredPages)
                         .transition(.opacity)
                 } else {
                     PairedContent(device: device, first: first, done: { if first { finished() } else { dismiss() } })
