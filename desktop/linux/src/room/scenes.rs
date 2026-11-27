@@ -248,9 +248,9 @@ impl Staged {
             };
             self.run(|f| f.member_loads("Ren", secs));
         }
+        // The app looks at the invite itself (Room::peek); its relays never answer.
         if scene == S::Unreachable {
             self.run(|f| f.unreachable(true));
-            self.join();
             return true;
         }
         if matches!(scene, S::Invited | S::InvitedFull) {

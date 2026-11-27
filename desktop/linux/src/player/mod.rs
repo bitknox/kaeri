@@ -3342,6 +3342,7 @@ impl PlayerView {
             }
             // An invite this device only looked at went: nothing is left to show.
             Act::InviteGone if !self.room.in_room() && self.invite_alone.take() => self.close(),
+            Act::Notice(text) => self.ctx.toast(&text),
             _ => {}
         }
     }
@@ -3418,7 +3419,7 @@ impl PlayerView {
             if !joined {
                 tracing::warn!(shot, "the room's scene did not get the device in");
             }
-            if matches!(scene, Scene::Invited | Scene::InvitedFull) {
+            if matches!(scene, Scene::Invited | Scene::InvitedFull | Scene::Unreachable) {
                 me.room.peek(&staged.invite("Mika")); // i18n-skip
             }
             // The room counts in and the episode loads at its place before the frame is taken.

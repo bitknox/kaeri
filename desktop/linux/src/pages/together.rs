@@ -70,33 +70,43 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
                 page.rejoin_failed.replace(None);
             }
             Event::RoomLeft { why } => {
-                let joined = page.joining.take();
+                // A Rejoin that never got in. Join on an invite is a look, answered below.
                 let rejoined = page.rejoining.take();
                 let failed =
                     matches!(why, RoomLeftWhy::Unreachable | RoomLeftWhy::Failed { .. });
-                if failed && joined.is_some() {
-                    page.failed.replace(joined);
-                }
                 if failed && rejoined.is_some() {
                     page.rejoin_failed.replace(rejoined);
                 }
                 // A room left is a recent room now, or a newer one.
                 page.ctx.hub.send(Command::Room(RoomCommand::LoadRecent));
             }
-            Event::RoomLookFailed { room_id, .. } => {
-                if page.rejoining.borrow().as_deref() == Some(room_id.as_str()) {
-                    page.rejoining.replace(None);
-                    page.rejoin_failed.replace(Some(room_id.clone()));
+            // A look found nothing: shown only for the look waited on, the invite pasted here
+            // or the recent room's Rejoin.
+            Event::RoomLookFailed { invite: Some(invite), .. } => {
+                if page.joining.borrow().as_deref() != Some(invite.as_str()) {
+                    return;
                 }
+                let joined = page.joining.take();
+                page.failed.replace(joined);
+            }
+            Event::RoomLookFailed { room_id, invite: None, .. } => {
+                if page.rejoining.borrow().as_deref() != Some(room_id.as_str()) {
+                    return;
+                }
+                page.rejoining.replace(None);
+                page.rejoin_failed.replace(Some(room_id.clone()));
             }
             // A look into a recent room: who is there now. A failed Rejoin's row returns to
             // Rejoin on the next look-in.
             Event::RoomGlimpse(glimpse) => {
-                // The invite's look came back: it reached the room, so it didn't fail.
-                let Some(room_id) = &glimpse.room_id else {
-                    page.joining.replace(None);
+                // The pasted invite's look came back: it reached the room, so it didn't fail.
+                if let Some(invite) = &glimpse.invite {
+                    if page.joining.borrow().as_deref() == Some(invite.as_str()) {
+                        page.joining.replace(None);
+                    }
                     return;
-                };
+                }
+                let Some(room_id) = &glimpse.room_id else { return };
                 let names: Vec<&str> = glimpse
                     .members
                     .iter()
@@ -183,8 +193,8 @@ impl Page {
                 }
                 // Only an invite the room will look at waits for its answer; the window says
                 // what is wrong with any other.
-                if joins(&link) {
-                    self.joining.replace(Some(link.clone()));
+                if let Some(looked) = looks_into(&link) {
+                    self.joining.replace(Some(looked));
                 }
                 if self.failed.take().is_some() {
                     self.shown.replace(None);
@@ -226,9 +236,10 @@ impl Page {
     }
 }
 
-/// Whether `link` is an invite the window looks into, rather than one it turns away.
-fn joins(link: &str) -> bool {
-    kaeri_model::room::RoomTarget::parse(link).is_some_and(|t| t.old.is_none())
+/// The invite the window looks into for `link`, as the look names it; `None` for one it turns
+/// away.
+fn looks_into(link: &str) -> Option<String> {
+    kaeri_model::room::RoomTarget::parse(link).filter(|t| t.old.is_none()).map(|t| t.link)
 }
 
 /// What the place says: the room's line, its people and the failed invite.
@@ -278,11 +289,11 @@ fn when(at_s: i64, now_s: i64) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::joins;
+    use super::looks_into;
 
     #[test]
     fn only_a_room_invite_waits_for_an_answer() {
-        assert!(!joins("not a link"));
-        assert!(!joins("https://example.example/room"));
+        assert_eq!(looks_into("not a link"), None);
+        assert_eq!(looks_into("https://example.example/room"), None);
     }
 }

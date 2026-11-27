@@ -960,8 +960,7 @@ impl Shell {
                         s.ctx.toast(&kaeri_i18n::t::room_error_old_invite());
                     }
                     Some(target) => s.player.open_invite(&target.link),
-                    // The catalogue's only "not an invite" line is the terminal's.
-                    None => s.ctx.toast(&kaeri_i18n::t::tui_room_not_a_link()),
+                    None => s.ctx.toast(&kaeri_i18n::t::room_look_not_an_invite()),
                 }
             }),
         );

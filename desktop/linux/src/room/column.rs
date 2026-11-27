@@ -58,6 +58,8 @@ pub enum Act {
     /// The invite shown went without a room to show instead (Not now, or Close on its
     /// unreachable alert): the player has nothing to show for it.
     InviteGone,
+    /// Why a look at the invite shown found nothing, for the player to say as a notice.
+    Notice(String),
 }
 
 struct Row {

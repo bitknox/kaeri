@@ -74,6 +74,8 @@ pub struct Room {
     glimpse: RefCell<Option<(String, RoomGlimpse)>>,
     /// Whether the invite's look has come back; until then there is nothing to show of it.
     glimpse_heard: Cell<bool>,
+    /// Join the room was pressed on the invite shown, and the room isn't joined yet.
+    joining: Cell<bool>,
     offer: RefCell<Option<RoomMoveOffer>>,
     /// Your sources for the room's episode, for the Choose a source banner.
     sources: RefCell<Vec<(String, String, bool)>>,
@@ -170,6 +172,7 @@ impl Room {
             members: RefCell::default(),
             glimpse: RefCell::default(),
             glimpse_heard: Cell::new(false),
+            joining: Cell::new(false),
             offer: RefCell::default(),
             sources: RefCell::default(),
             source_count: Cell::new(0),
@@ -270,6 +273,7 @@ impl Room {
             Act::Join => {
                 let glimpse = self.glimpse.borrow().clone();
                 if let Some((invite, glimpse)) = glimpse {
+                    self.joining.set(true);
                     self.send(RoomCommand::Lobby {
                         invite: Some(invite),
                         name: None,
@@ -295,7 +299,11 @@ impl Room {
                 }
                 self.redraw();
             }
-            Act::PlayInRoom(_) | Act::OpenSources | Act::SearchTitles | Act::InviteGone => {}
+            Act::PlayInRoom(_)
+            | Act::OpenSources
+            | Act::SearchTitles
+            | Act::InviteGone
+            | Act::Notice(_) => {}
         }
         self.pass(a);
     }
@@ -305,6 +313,7 @@ impl Room {
         match event {
             Event::RoomJoined(view) | Event::RoomState(view) => {
                 if matches!(event, Event::RoomJoined(_)) {
+                    self.joining.set(false);
                     self.glimpse.replace(None);
                     self.members.replace(Vec::new());
                 }
@@ -320,9 +329,12 @@ impl Room {
             }
             Event::RoomGlimpse(glimpse) => {
                 let mut held = self.glimpse.borrow_mut();
-                // Only the invite this device opened shows as one; a look into a recent room
-                // (with its room id) is the place's.
-                if let Some((_, g)) = held.as_mut().filter(|_| glimpse.room_id.is_none()) {
+                // Only the look this device waits on shows: a slow answer for another invite,
+                // or a look into a recent room (the place's), never stands in for it.
+                if let Some((_, g)) = held
+                    .as_mut()
+                    .filter(|(invite, _)| glimpse.invite.as_deref() == Some(invite.as_str()))
+                {
                     *g = glimpse.clone();
                     drop(held);
                     self.glimpse_heard.set(true);
@@ -340,39 +352,38 @@ impl Room {
                     self.redraw();
                 }
             }
-            Event::RoomLeft { why } => {
-                // An invite opened here whose relays didn't answer: say so over where you were.
-                let invite = self.glimpse.borrow().as_ref().map(|(invite, _)| invite.clone());
-                if let (RoomLeftWhy::Unreachable, Some(invite)) = (why, invite.clone()) {
-                    let me = Rc::downgrade(self);
-                    dialogs::unreachable(&self.widget, move |again| {
-                        let Some(me) = me.upgrade() else { return };
-                        if again {
-                            me.peek(&invite);
-                        } else if !me.in_room() {
-                            me.pass(Act::InviteGone);
-                        }
-                    });
-                }
-                // The engine says a failed look at an invite as the room left (RoomLeft
-                // Unreachable). Still looking at the invite, the room you are in stays: only
-                // the invite goes.
-                if matches!(why, RoomLeftWhy::Unreachable)
-                    && invite.is_some()
-                    && !self.glimpse_heard.get()
-                    && self.engine_view.borrow().is_some()
-                {
-                    self.glimpse.replace(None);
-                    self.redraw();
+            Event::RoomLookFailed { invite: Some(invite), reason, why, .. } => {
+                let waited =
+                    self.glimpse.borrow().as_ref().is_some_and(|(held, _)| held == invite);
+                if !waited {
                     return;
                 }
+                // The look found nothing: the invite goes, and the room you are in stays.
+                self.glimpse.replace(None);
+                if matches!(why, None | Some(RoomLeftWhy::Unreachable)) {
+                    self.ask_again(invite.clone());
+                } else {
+                    self.pass(Act::Notice(crate::say::msg(reason)));
+                    self.after_invite();
+                }
+            }
+            Event::RoomLeft { why } => {
+                // Joining the invite shown here failed (no room was joined yet): its relays
+                // didn't answer, or the player says why.
+                if self.engine_view.borrow().is_none() && self.joining.take() {
+                    let invite = self.glimpse.take().map(|(invite, _)| invite);
+                    self.glimpse_heard.set(false);
+                    match (why, invite) {
+                        (RoomLeftWhy::Unreachable, Some(invite)) => self.ask_again(invite),
+                        _ => self.after_invite(),
+                    }
+                    return;
+                }
+                // Otherwise it is the room you are in that went; an invite you look at stays.
                 self.engine_view.replace(None);
                 self.members.replace(Vec::new());
                 self.offer.replace(None);
-                if !matches!(why, RoomLeftWhy::Left | RoomLeftWhy::Moved) {
-                    self.glimpse.replace(None);
-                }
-                if self.glimpse.borrow().is_some() {
+                if self.glimpse.borrow().is_some() && self.glimpse_heard.get() {
                     self.redraw();
                 } else {
                     self.clear();
@@ -385,6 +396,7 @@ impl Room {
     /// An invite opened here: the room shows as it is, with Join the room and Not now.
     pub fn peek(&self, invite: &str) {
         self.glimpse_heard.set(false);
+        self.joining.set(false);
         self.glimpse.replace(Some((
             invite.to_owned(),
             RoomGlimpse {
@@ -394,15 +406,31 @@ impl Room {
                 room_episode: None,
                 playing: false,
                 full: false,
+                invite: Some(invite.to_owned()),
             },
         )));
         self.send(RoomCommand::PeekInvite { invite: invite.to_owned() });
+    }
+
+    /// An invite whose relays didn't answer: an alert over where you were. Try again looks
+    /// again; Close lets the invite go.
+    fn ask_again(self: &Rc<Self>, invite: String) {
+        let me = Rc::downgrade(self);
+        dialogs::unreachable(&self.widget, move |again| {
+            let Some(me) = me.upgrade() else { return };
+            if again {
+                me.peek(&invite);
+            } else {
+                me.after_invite();
+            }
+        });
     }
 
     /// An invite shown here went (Not now, or Back before joining): the room you are in shows
     /// again, or, in none, the player has nothing to show for it.
     fn after_invite(self: &Rc<Self>) {
         self.glimpse_heard.set(false);
+        self.joining.set(false);
         if self.engine_view.borrow().is_none() {
             self.clear();
             self.pass(Act::InviteGone);
@@ -415,6 +443,7 @@ impl Room {
     pub fn drop_invite(self: &Rc<Self>) {
         if self.glimpse.borrow_mut().take().is_some() {
             self.glimpse_heard.set(false);
+            self.joining.set(false);
             if self.engine_view.borrow().is_none() {
                 self.clear();
             } else {
@@ -714,6 +743,7 @@ mod tests {
     use std::{cell::RefCell, rc::Rc};
 
     use kaeri_model::{
+        Msg,
         event::Event,
         room::{RoomGlimpse, RoomLeftWhy, RoomView as EngineView},
     };
@@ -745,8 +775,11 @@ mod tests {
             room_episode: None,
             playing: false,
             full: false,
+            invite: Some(INVITE.into()),
         }
     }
+
+    const INVITE: &str = "kaeri://room#k";
 
     fn joined() -> EngineView {
         EngineView { room_id: "r1".into(), ..EngineView::default() }
@@ -756,7 +789,7 @@ mod tests {
     fn an_empty_room_s_invite_still_shows() {
         run(|| {
             let (room, _, _window) = room();
-            room.peek("kaeri://room#k");
+            room.peek(INVITE);
             assert!(!room.in_room(), "nothing shows before the look comes back");
             room.heard(&Event::RoomGlimpse(empty_look()));
             assert!(room.in_room(), "the empty room shows, with Join the room");
@@ -767,7 +800,7 @@ mod tests {
     fn not_now_on_an_invite_alone_lets_the_player_go() {
         run(|| {
             let (room, passed, _window) = room();
-            room.peek("kaeri://room#k");
+            room.peek(INVITE);
             room.heard(&Event::RoomGlimpse(empty_look()));
             room.handle(Act::NotNow);
             assert!(!room.in_room());
@@ -779,7 +812,7 @@ mod tests {
     fn back_on_an_invite_leaves_no_room_behind() {
         run(|| {
             let (room, _, _window) = room();
-            room.peek("kaeri://room#k");
+            room.peek(INVITE);
             room.heard(&Event::RoomGlimpse(empty_look()));
             assert!(!room.joined());
             room.drop_invite();
@@ -787,17 +820,76 @@ mod tests {
         });
     }
 
+    fn look_failed(invite: &str) -> Event {
+        Event::RoomLookFailed {
+            room_id: String::new(),
+            reason: Msg::RoomLookUnreachable,
+            invite: Some(invite.into()),
+            why: Some(RoomLeftWhy::Unreachable),
+        }
+    }
+
     #[test]
     fn a_failed_look_at_an_invite_keeps_the_room_you_are_in() {
         run(|| {
+            let (room, passed, _window) = room();
+            room.heard(&Event::RoomJoined(joined()));
+            room.peek(INVITE);
+            room.heard(&look_failed(INVITE));
+            assert!(room.joined() && room.in_room());
+            // The invite went: its glimpse, coming late, shows nothing.
+            room.heard(&Event::RoomGlimpse(empty_look()));
+            assert!(room.glimpse.borrow().is_none());
+            assert!(passed.borrow().is_empty());
+        });
+    }
+
+    #[test]
+    fn only_the_look_waited_on_answers() {
+        run(|| {
+            let (room, _, _window) = room();
+            room.peek("kaeri://room#first");
+            room.peek(INVITE);
+            // The first invite's answers come late: neither stands in for this one.
+            let mut first = empty_look();
+            first.invite = Some("kaeri://room#first".into());
+            room.heard(&Event::RoomGlimpse(first));
+            room.heard(&look_failed("kaeri://room#first"));
+            assert!(!room.in_room() && room.glimpse.borrow().is_some());
+            // A recent room's look is the place's.
+            let mut recent = empty_look();
+            recent.invite = None;
+            recent.room_id = Some("r9".into());
+            room.heard(&Event::RoomGlimpse(recent));
+            assert!(!room.in_room());
+            room.heard(&Event::RoomGlimpse(empty_look()));
+            assert!(room.in_room());
+        });
+    }
+
+    #[test]
+    fn leaving_your_room_keeps_the_invite_you_look_at() {
+        run(|| {
             let (room, _, _window) = room();
             room.heard(&Event::RoomJoined(joined()));
-            room.peek("kaeri://room#other");
+            room.peek(INVITE);
+            room.heard(&Event::RoomGlimpse(empty_look()));
             room.heard(&Event::RoomLeft { why: RoomLeftWhy::Unreachable });
-            assert!(room.joined() && room.in_room());
-            // The room itself going still clears it.
-            room.heard(&Event::RoomLeft { why: RoomLeftWhy::Unreachable });
-            assert!(!room.joined() && !room.in_room());
+            assert!(!room.joined());
+            assert!(room.in_room(), "the invite still shows, with Join the room");
+        });
+    }
+
+    #[test]
+    fn a_join_that_fails_lets_the_invite_go() {
+        run(|| {
+            let (room, passed, _window) = room();
+            room.peek(INVITE);
+            room.heard(&Event::RoomGlimpse(empty_look()));
+            room.handle(Act::Join);
+            room.heard(&Event::RoomLeft { why: RoomLeftWhy::Full });
+            assert!(!room.in_room() && room.glimpse.borrow().is_none());
+            assert_eq!(*passed.borrow(), vec![Act::Join, Act::InviteGone]);
         });
     }
 
