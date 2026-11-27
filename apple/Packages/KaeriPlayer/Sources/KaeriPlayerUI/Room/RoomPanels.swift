@@ -185,25 +185,28 @@ struct RoomRelayEditor: View {
                 .onSubmit(add)
             Button(RoomCopy.add, action: add)
                 .buttonStyle(RoomButtonStyle(kind: .secondary, height: 28, size: 12, padding: 12))
-                .disabled(!adding.hasPrefix("wss://") || adding.count < 10)
+                .disabled(RoomRelays.address(adding) == nil)
         }
         .padding(.top, 8)
         Text(RoomCopy.settingsRelaysNote).font(.system(size: 12)).foregroundStyle(.haze).fixedSize(horizontal: false, vertical: true).padding(.top, 8)
         HStack {
             Spacer()
             Button(RoomCopy.done) {
-                room.setRelays(relays.map { $0.hasPrefix("wss://") ? $0 : "wss://\($0)" })
+                room.setRelays(relays.compactMap(RoomRelays.address))
                 room.popover = nil
             }
             .buttonStyle(RoomButtonStyle(kind: .primary, height: 28, size: 12, padding: 14))
         }
         .padding(.top, 8)
-        .onAppear { relays = (room.view?.relays ?? []).map(\.url).map { $0.replacingOccurrences(of: "wss://", with: "") } }
+        .onAppear { relays = (room.view?.relays ?? []).map(\.url).map(RoomRelays.shown) }
     }
 
+    /// Return adds as the button does, and only what the button would: `wss://`, or `ws://` on
+    /// this machine or its network.
     private func add() {
-        let relay = adding.replacingOccurrences(of: "wss://", with: "").trimmingCharacters(in: .whitespaces)
-        guard !relay.isEmpty, !relays.contains(relay) else { return }
+        guard let address = RoomRelays.address(adding) else { return }
+        let relay = RoomRelays.shown(address)
+        guard !relays.contains(relay) else { return }
         relays.append(relay)
         adding = "wss://"
     }
@@ -223,7 +226,8 @@ struct RoomLeaveDialog: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(touch ? 0.35 : 0.25).ignoresSafeArea().onTapGesture { room.leaving = nil }
+            // A question: a click or tap outside does nothing; Cancel, Esc or Back close it.
+            Color.black.opacity(touch ? 0.35 : 0.25).ignoresSafeArea().contentShape(.rect).onTapGesture {}
             VStack(spacing: 0) {
                 Text(RoomCopy.leaveTheRoom).font(.system(size: touch ? 17 : 15, weight: touch ? .semibold : .bold))
                 Text(ask == .close ? RoomCopy.othersKeepWatchingKeep : RoomCopy.othersKeepWatching)
@@ -343,7 +347,8 @@ struct RoomMoveDialog: View {
 
     var body: some View {
         ZStack {
-            Color.black.opacity(0.25).onTapGesture { room.moving = false }
+            // Move's list holds what was ticked: a click outside leaves it open.
+            Color.black.opacity(0.25).contentShape(.rect).onTapGesture {}
             VStack(spacing: 0) {
                 Text(RoomCopy.moveToNew).font(.system(size: 15, weight: .bold))
                 Text(RoomCopy.moveBody).font(.system(size: 13)).foregroundStyle(.haze).multilineTextAlignment(.center)
@@ -417,36 +422,61 @@ struct RoomQRCode: View {
 
 /// The room's Up next card, in the player's bottom trailing corner.
 struct RoomUpNextCard: View {
+    @Environment(AppStore.self) private var store
     let room: RoomModel
     let up: RoomUpNext
-    var art: Image?
+    let metrics: PlayerMetrics
 
+    /// The player's own Up Next card, worded for the room: its still, the episode, the count,
+    /// and Cancel and Play next now for everyone.
     var body: some View {
         RoomClock { now in
-            HStack(spacing: 12) {
-                RoundedRectangle(cornerRadius: 8).fill(Palette.artPlaceholder)
-                    .overlay { art?.resizable().aspectRatio(contentMode: .fill) }
-                    .frame(width: 96, height: 54)
-                    .clipShape(.rect(cornerRadius: 8))
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(RoomCopy.upNextForRoom).font(.system(size: 12)).foregroundStyle(.haze)
-                    Text(RoomCopy.upNextEpisode(up.episode.episode, up.episode.name))
-                        .font(.system(size: 14, weight: .semibold)).lineLimit(1)
-                    Text(Self.when(up, now: now))
-                        .font(.system(size: 12)).foregroundStyle(.haze).monospacedDigit()
+            VStack(alignment: .leading, spacing: 0) {
+                HStack(spacing: 12) {
+                    still(up.episode.bannerUrl ?? up.episode.coverUrl)
+                        .frame(width: metrics.still.width, height: metrics.still.height)
+                        .clipShape(.rect(cornerRadius: 6))
+                    VStack(alignment: .leading, spacing: metrics.touch ? 1 : 2) {
+                        Text(RoomCopy.upNextForRoom)
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundStyle(.haze)
+                        Text(RoomCopy.upNextEpisode(up.episode.episode, up.episode.name))
+                            .font(.system(size: metrics.body, weight: .semibold))
+                            .lineLimit(2)
+                    }
                 }
-                .frame(maxWidth: .infinity, alignment: .leading)
+                HStack(spacing: 8) {
+                    Text(Self.when(up, now: now))
+                        .font(.system(size: 13))
+                        .monospacedDigit()
+                        .foregroundStyle(.haze)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                    Button(RoomCopy.cancel) { room.cancelUpNext() }
+                        .buttonStyle(PillButtonStyle(kind: .secondary, metrics: metrics))
+                    Button(RoomCopy.playNextNow) { room.playNextNow() }
+                        .buttonStyle(PillButtonStyle(kind: .primary, metrics: metrics))
+                }
+                .padding(.top, metrics.touch ? 4 : 10)
             }
-            .padding(10)
-            .frame(width: 300)
-            .background(.ultraThinMaterial, in: .rect(cornerRadius: 16))
-            .background(Palette.glass.opacity(0.6), in: .rect(cornerRadius: 16))
-            .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
+            .padding(EdgeInsets(top: 12, leading: 12, bottom: metrics.touch ? 8 : 12, trailing: 12))
+            .frame(width: 320)
+            .overVideo(radius: metrics.cardRadius)
             .foregroundStyle(.silk)
-            .contextMenu {
-                Button(RoomCopy.cancel) { room.cancelUpNext() }
-                Button(RoomCopy.playNextNow) { room.playNextNow() }
-            }
+            .accessibilityElement(children: .contain)
+            .accessibilityLabel(RoomCopy.upNextForRoom)
+        }
+    }
+
+    @ViewBuilder
+    private func still(_ url: String?) -> some View {
+        let image = url.flatMap { store.artwork.image($0) }
+        ZStack {
+            CoverPlate(color: nil)
+            if let image { FilledArt(image: image).transition(.opacity) }
+        }
+        .animation(.fadeIn, value: image != nil)
+        .task(id: url) {
+            if let url { await store.artwork.show(url, maxPixelSize: 320) }
         }
     }
 

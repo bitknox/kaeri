@@ -133,6 +133,10 @@ public struct MacPlayerView: View {
     @ViewBuilder
     private var roomVideoLayer: some View {
         let room = store.room
+        if room.popover != nil {
+            // A click on the video closes Invite or Details, as one outside any card does.
+            Color.clear.contentShape(.rect).onTapGesture { room.popover = nil }
+        }
         if let panel = room.videoPanel {
             RoomMacVideoPanel(room: room, panel: panel)
                 .transition(.opacity)
@@ -151,14 +155,7 @@ public struct MacPlayerView: View {
                 .animation(.standard, value: visible)
                 .allowsHitTesting(stripShown)
         }
-        if room.inRoom, let up = room.view?.upNext, up.cancelledBy == nil {
-            RoomUpNextCard(room: room, up: up)
-                .padding(.trailing, 20)
-                .padding(.bottom, 68)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .transition(.opacity)
-        }
-        if room.inRoom, room.skipShown {
+        if room.inRoom, room.skipShown, room.view?.upNext.map({ $0.cancelledBy != nil }) ?? true {
             Button(RoomCopy.skipOpening) { room.skipOpening() }
                 .buttonStyle(RoomButtonStyle(kind: .glass, height: 36, size: 14, padding: 18))
                 .padding(.trailing, 20)
@@ -243,12 +240,16 @@ public struct MacPlayerView: View {
         .onChange(of: model.fullScreen) { _, on in fullScreen(on) }
         .onChange(of: visible, initial: true) { _, on in titleBar(on) }
         .onChange(of: window) { _, window in
-            if let window { opened(window) }
+            if let window {
+                opened(window)
+                // Opened in a window already full screen: no notification says so.
+                settledFull = window.styleMask.contains(.fullScreen)
+            }
             // Closing it stops the playback (`PlayerModel.hostWindow`).
             model.hostWindow = window
             if columnShown { roomColumn(true) }
         }
-        .onChange(of: model.backRequests) { back() }
+        .onChange(of: model.backRequests) { backAsking() }
         .onChange(of: model.menuRequests) {
             if model.requestedMenu == .episodes {
                 panel = nil
@@ -292,10 +293,14 @@ public struct MacPlayerView: View {
             withAnimation(.standard) { grown = true }
             store.room.playerShown = true
             store.room.closesPlayer = { back() }
+            model.asksBeforeStopping = { store.room.asksBeforeClosing() }
         }
         .onDisappear {
             store.room.playerShown = false
             store.room.closesPlayer = {}
+            model.asksBeforeStopping = { false }
+            stripTask?.cancel()
+            stripTask = nil
             // Back to browsing: the player stopped, or moved into Picture in Picture. The main
             // window is given back as it was.
             if let window { restore(window) }
@@ -368,7 +373,7 @@ public struct MacPlayerView: View {
             Button(L.tvPlayOnMenu) { model.playOnTV() }
         }
         if store.room.inRoom {
-            Button(L.menuSaySomething) { sayHello() }
+            if !store.room.chatOff { Button(L.menuSaySomething) { sayHello() } }
         } else if !store.room.active {
             Button(RoomCopy.columnTitle) { startRoom() }
         }
@@ -397,7 +402,7 @@ public struct MacPlayerView: View {
 
     /// Say something: the room's column opens with its field focused.
     private func sayHello() {
-        guard store.room.inRoom else { return }
+        guard store.room.inRoom, !store.room.chatOff else { return }
         store.room.shown = true
         store.room.chatAsked += 1
     }
@@ -437,8 +442,8 @@ public struct MacPlayerView: View {
             Color.clear.frame(width: model.fullScreen ? 0 : 60, height: 12)
             // In the window's title bar strip outside full screen, where each of the bar's
             // controls takes its clicks this way and the rest of the strip drags the window.
-            icon("chevron.backward", L.actionBack, lit: pointed == L.actionBack) { back() }
-                .titleBarControl(active: visible, pointed: { point(L.actionBack, $0) }) { back() }
+            icon("chevron.backward", L.actionBack, lit: pointed == L.actionBack) { backAsking() }
+                .titleBarControl(active: visible, pointed: { point(L.actionBack, $0) }) { backAsking() }
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(model.showTitle)
                     .font(.showTitle(size: 15))
@@ -455,7 +460,7 @@ public struct MacPlayerView: View {
             .overVideoText()
             .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 8) {
-                if store.room.inRoom {
+                if store.room.inRoom, !store.room.chatOff {
                     ReactionButtons(metrics: metrics)
                         .padding(2)
                         .background(.overVideo(0.62), in: .capsule)
@@ -777,6 +782,16 @@ public struct MacPlayerView: View {
         case .downArrow:
             model.stepVolume(by: -5)
         case .return:
+            // The room's own corner first: its Up next, then its Skip opening.
+            let room = store.room
+            if room.inRoom, let up = room.view?.upNext, up.cancelledBy == nil {
+                room.playNextNow()
+                return .handled
+            }
+            if room.inRoom, room.skipShown {
+                room.skipOpening()
+                return .handled
+            }
             switch model.corner {
             case .stall: model.switchSource()
             case .upNext: model.playNext()
@@ -784,7 +799,18 @@ public struct MacPlayerView: View {
             default: return .ignored
             }
         case .escape:
-            if sidePanel {
+            // In a room, Esc closes what is open over the player before the player itself: the
+            // question, Move's list, a popover, then the room's Up next.
+            let room = store.room
+            if room.leaving != nil {
+                room.leaving = nil
+            } else if room.moving {
+                room.moving = false
+            } else if room.popover != nil {
+                room.popover = nil
+            } else if room.inRoom, let up = room.view?.upNext, up.cancelledBy == nil {
+                room.cancelUpNext()
+            } else if sidePanel {
                 closeSidePanel()
             } else if panel != nil {
                 panel = nil
@@ -797,7 +823,7 @@ public struct MacPlayerView: View {
             } else if model.fullScreen {
                 model.fullScreen = false
             } else {
-                back()
+                backAsking()
             }
         case .delete:
             model.setSpeed(1)
@@ -818,12 +844,13 @@ public struct MacPlayerView: View {
             case "c" where !command && !option:
                 sayHello()
             case "i" where !command: model.toggleStats()
-            case "[" where command: back()
+            case "[" where command: backAsking()
             case "]": model.setSpeed(min(4, model.speed * 1.1))
             case "[": model.setSpeed(max(0.25, model.speed / 1.1))
             case ".":
                 guard command else { return .ignored }
-                model.viewerClosed()
+                // In a room ⌘. asks as ⌘W does: Leave, Keep the room or Cancel.
+                if !store.room.asksBeforeClosing() { model.viewerClosed() }
             default:
                 return .ignored
             }
@@ -905,6 +932,13 @@ public struct MacPlayerView: View {
     /// Back to where the play started: the video shrinks into the banner or card it grew out of,
     /// and the playback stops with its place saved. The way in reversed, so a full screen the
     /// player went into ends first, the system's way, as it began after the player grew.
+    /// Back as the person asks for it (the button, Esc, ⌘[): in a room it asks first, as ⌘W
+    /// does. Leave and Keep the room then close through `back()`.
+    private func backAsking() {
+        if store.room.asksBeforeClosing() { return }
+        back()
+    }
+
     private func back() {
         guard !leavingFullScreen, !model.returning else { return }
         PlayerModel.note(.info, "back from the player")

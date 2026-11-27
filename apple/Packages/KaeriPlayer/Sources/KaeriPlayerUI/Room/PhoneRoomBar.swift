@@ -31,7 +31,7 @@ public struct PhoneRoomBar: View {
                         Text(view.title).font(.showTitle(size: 14)).foregroundStyle(.silk).lineLimit(1)
                         if placement != .inline {
                             Text(status.title)
-                                .font(.system(size: 13))
+                                .font(.board(13))
                                 .foregroundStyle(waits ? .silk : .haze)
                                 .monospacedDigit()
                                 .lineLimit(1)
@@ -51,7 +51,7 @@ public struct PhoneRoomBar: View {
                     let playing = view.playing && !waits
                     Button { room.setPlaying(!playing) } label: {
                         Image(systemName: playing ? "pause.fill" : "play.fill")
-                            .font(.system(size: 20, weight: .semibold))
+                            .font(.board(20, weight: .semibold))
                             .foregroundStyle(.silk)
                             .frame(width: 44, height: 44)
                             .contentShape(.rect)

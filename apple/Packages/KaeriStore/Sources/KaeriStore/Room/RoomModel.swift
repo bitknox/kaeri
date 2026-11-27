@@ -84,6 +84,9 @@ public final class RoomModel {
     public internal(set) var lines: [RoomLine] = []
     /// The chat is off in Settings: no lines or field over the video.
     public internal(set) var chatHidden = false
+    /// Hide chat in rooms: lines, reactions and their ticks stay off the screen and the field is
+    /// gone; the people stay. The setting holds until the room says so itself.
+    public var chatOff: Bool { chatHidden || hidesChat }
     /// An invite opened and not joined yet.
     public internal(set) var invitation: RoomInvitation?
     /// Someone moved the room and ticked this member.
@@ -153,7 +156,16 @@ public final class RoomModel {
     @ObservationIgnored public var send: @MainActor (Command) -> Void = { _ in }
     @ObservationIgnored public var countSources: @MainActor () -> Int = { 0 }
     /// The player shows the room: ⌘W asks there.
-    @ObservationIgnored public var playerShown = false
+    @ObservationIgnored public var playerShown = false {
+        didSet {
+            guard !playerShown, let next = afterPlayer else { return }
+            afterPlayer = nil
+            next()
+        }
+    }
+    /// Where Open sources or Search titles goes once the player is gone: a page opened under a
+    /// player closing would be lost under it, or refused while a phone's cover still goes.
+    @ObservationIgnored private var afterPlayer: (@MainActor () -> Void)?
     /// Closes the player, for Leave and Keep the room from ⌘W.
     @ObservationIgnored public var closesPlayer: @MainActor () -> Void = {}
     /// Quits the app once the room is left on the way out (⌘Q's Leave).
@@ -224,10 +236,6 @@ public final class RoomModel {
         if case .reconnecting = view.connection {
             return RoomStatus(title: RoomCopy.reconnectingToRoom, detail: RoomCopy.noRelay, action: nil, waits: false)
         }
-        let down = view.relays.filter { !$0.healthy }.count
-        if down > 0 {
-            return RoomStatus(title: RoomCopy.watchingTogether, detail: RoomCopy.relaysDown(down, view.relays.count), action: nil, waits: false)
-        }
         if let me = you, me.state == .behind, let behind = me.behindS {
             return RoomStatus(title: RoomCopy.watchingTogether, detail: RoomCopy.youreBehind(Int(behind.rounded())), action: nil, waits: false)
         }
@@ -275,6 +283,11 @@ public final class RoomModel {
             return RoomStatus(
                 title: RoomCopy.paused(by: view.pausedByYou ? nil : view.pausedBy), detail: RoomCopy.at(Self.clock(view.position ?? 0)),
                 action: nil, waits: false)
+        }
+        // A relay down is said only when nothing else is: the room works on one of three.
+        let down = view.relays.filter { !$0.healthy }.count
+        if down > 0 {
+            return RoomStatus(title: RoomCopy.watchingTogether, detail: RoomCopy.relaysDown(down, view.relays.count), action: nil, waits: false)
         }
         return RoomStatus(
             title: RoomCopy.watchingTogether, detail: RoomCopy.episodeAt(view.episodeNumber, Self.clock(position(at: now))),
@@ -478,8 +491,20 @@ public final class RoomModel {
         send(.room(.peekInvite(invite: link)))
     }
 
-    public func openSources() { showSources() }
-    public func searchTitles() { showSearch(view?.title ?? "") }
+    /// No source's Open sources and Search titles: the player closes, you keep the room, and
+    /// the app's own page opens.
+    public func openSources() { closingPlayer { [weak self] in self?.showSources() } }
+    public func searchTitles() {
+        let title = view?.title ?? ""
+        closingPlayer { [weak self] in self?.showSearch(title) }
+    }
+
+    private func closingPlayer(then go: @escaping @MainActor () -> Void) {
+        guard playerShown else { return go() }
+        afterPlayer = go
+        if inRoom { act(.closePlayer) }
+        closesPlayer()
+    }
 
     /// Edit relays, for this room and everyone in it.
     public func setRelays(_ relays: [String]) { act(.editRelays(relays: relays)) }
@@ -544,6 +569,7 @@ public final class RoomModel {
             if hidesChat { act(.hideChat(hidden: true)) }
             invitation = nil
             peeked = nil
+            leftToQuit = false
             joining = nil
             rejoining = nil
             joinFailed = nil
@@ -630,6 +656,16 @@ public final class RoomModel {
         leaving = nil
         moving = false
         writing = false
+        // Nothing of this room carries into the next: its opening, its invitation, the sources
+        // listed for its episode, a line not sent, its chat setting.
+        invitation = nil
+        peeked = nil
+        skipTo = nil
+        choices = []
+        chosen = nil
+        asked = nil
+        draft = ""
+        chatHidden = false
         recent = rows()
     }
 

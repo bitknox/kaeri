@@ -79,16 +79,9 @@ struct RoomStrip: View {
                         .accessibilityLabel("\(member.name), \(room.word(member, now: now))")
                 }
                 if !rest.isEmpty {
-                    RoomMoreFace(label: "+\(rest.count)", disc: disc)
+                    RoomMoreFace(label: RoomCopy.moreFaces(rest.count), disc: disc, spoken: RoomCopy.moreFacesLabel(rest.count))
                 }
-                HStack(spacing: 0) {
-                    Text(status.title).fontWeight(.semibold)
-                    if status.waits, carry == nil, let since = room.view?.waiting.map(\.sinceMs).min() {
-                        Text(" · \(RoomModel.seconds(since: since, now: now)) s")
-                            .foregroundStyle(.haze)
-                            .monospacedDigit()
-                    }
-                }
+                Self.line(status, counting: carry == nil ? room.view?.waiting.map(\.sinceMs).min() : nil, now: now, size: size)
                 .font(.system(size: size))
                 .lineLimit(1)
                 .contentTransition(.opacity)
@@ -111,5 +104,18 @@ struct RoomStrip: View {
             .foregroundStyle(.silk)
             .animation(.fadeIn, value: carry)
         }
+    }
+
+    /// The room's line, and while it waits, how long: "Paused for Ren · 12 s", its seconds in
+    /// haze, from the catalogue's own words.
+    static func line(_ status: RoomStatus, counting since: Int64?, now: Int64, size: CGFloat) -> Text {
+        guard status.waits, let since else { return Text(status.title).fontWeight(.semibold) }
+        var text = AttributedString(RoomCopy.withSeconds(status.title, RoomModel.seconds(since: since, now: now)))
+        text.foregroundColor = Palette.haze
+        if let title = text.range(of: status.title) {
+            text[title].foregroundColor = Palette.silk
+            text[title].font = .system(size: size, weight: .semibold)
+        }
+        return Text(text).monospacedDigit()
     }
 }

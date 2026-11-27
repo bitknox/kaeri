@@ -27,7 +27,7 @@ struct RoomPlace: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 Text(RoomCopy.placeIntro)
-                    .font(.system(size: compact ? 15 : 14))
+                    .font(compact ? .ui(15) : .mac(14))
                     .foregroundStyle(.haze)
                     .frame(maxWidth: 640, alignment: .leading)
                     .fixedSize(horizontal: false, vertical: true)
@@ -58,19 +58,19 @@ struct RoomPlace: View {
         let failed = room.joinFailed != nil
         let height: CGFloat = compact ? 44 : 32
         return VStack(alignment: .leading, spacing: 8) {
-            Text(RoomCopy.joinARoom).font(.system(size: compact ? 17 : 15, weight: .semibold))
+            Text(RoomCopy.joinARoom).font(compact ? .ui(17, weight: .semibold) : .mac(15, weight: .semibold))
                 .accessibilityAddTraits(.isHeader)
             HStack(spacing: 8) {
                 HStack(spacing: 8) {
                     if room.joinText.isEmpty {
-                        Image(systemName: "doc.on.doc").font(.system(size: compact ? 15 : 13)).foregroundStyle(.haze)
+                        Image(systemName: "doc.on.doc").font(compact ? .ui(15) : .mac(13)).foregroundStyle(.haze)
                     }
                     TextField(
                     "", text: Binding(get: { room.joinText }, set: { room.joinText = $0 }),
                     prompt: Text(RoomCopy.inviteLink).foregroundStyle(.haze)
                 )
                     .textFieldStyle(.plain)
-                    .font(.system(size: compact ? 15 : 13, design: room.joinText.isEmpty ? .default : .monospaced))
+                    .font(compact ? .ui(15, design: room.joinText.isEmpty ? .default : .monospaced) : .mac(13, design: room.joinText.isEmpty ? .default : .monospaced))
                     .onSubmit { room.join() }
                 }
                 .padding(.horizontal, 12)
@@ -127,7 +127,7 @@ struct RoomPlace: View {
                     Text("\(Text(title).fontWeight(.semibold)) \(Text(hint).foregroundStyle(.haze))")
                 }
             }
-            .font(.system(size: compact ? 13 : size))
+            .font(compact ? .ui(13) : .mac(size))
             .fixedSize(horizontal: false, vertical: true)
         }
     }
@@ -137,8 +137,8 @@ struct RoomPlace: View {
     private func recent(_ room: RoomModel) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(RoomCopy.recentRooms).font(.system(size: compact ? 17 : 15, weight: .semibold))
-                Text(RoomCopy.lastTen).font(.system(size: 12)).foregroundStyle(.haze)
+                Text(RoomCopy.recentRooms).font(compact ? .ui(17, weight: .semibold) : .mac(15, weight: .semibold))
+                Text(RoomCopy.lastTen).font(.board(12)).foregroundStyle(.haze)
             }
             .accessibilityElement(children: .combine)
             .accessibilityAddTraits(.isHeader)
@@ -148,10 +148,10 @@ struct RoomPlace: View {
                     HStack(spacing: 12) {
                         RoomStill(id: recent.id, width: 64, height: 36, radius: 6)
                         VStack(alignment: .leading, spacing: 0) {
-                            Text(recent.title).font(.system(size: compact ? 15 : 13, weight: .semibold))
+                            Text(recent.title).font(compact ? .ui(15, weight: .semibold) : .mac(13, weight: .semibold))
                                 .fixedSize(horizontal: false, vertical: true)
                             Text(RoomCopy.withNames(recent.episode, recent.others, recent.lastAt))
-                                .font(.system(size: compact ? 13 : 12)).foregroundStyle(.haze)
+                                .font(compact ? .ui(13) : .mac(12)).foregroundStyle(.haze)
                                 .fixedSize(horizontal: false, vertical: true)
                             if recent.quiet, !compact {
                                 failure(RoomCopy.nobodyAnsweredLead, RoomCopy.nobodyAnsweredHint).padding(.top, 4)
@@ -190,20 +190,28 @@ struct RoomPlaceCard: View {
             layout {
                 RoomStill(id: room.view?.episodeId ?? room.invitation?.id, width: compact ? 120 : 192, height: compact ? 68 : 108)
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(RoomCopy.yourRoom).font(.system(size: 12, weight: .semibold)).foregroundStyle(.haze)
+                    // An invite opened isn't your room yet: its line says who invited you.
+                    if room.invitation == nil {
+                        Text(RoomCopy.yourRoom).font(.board(12, weight: .semibold)).foregroundStyle(.haze)
+                    }
                     Text(room.view?.title ?? room.invitation?.title ?? "").font(.showTitle(size: 18))
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(status.title).font(.system(size: 15, weight: .semibold)).padding(.top, 4)
-                    Text(status.detail).font(.system(size: 13)).foregroundStyle(.haze).monospacedDigit()
+                    Text(status.title).font(.board(15, weight: .semibold)).padding(.top, 4)
+                    Text(status.detail).font(.board(13)).foregroundStyle(.haze).monospacedDigit()
                     faces(now).padding(.top, 10)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 let stack = compact ? AnyLayout(HStackLayout(spacing: 8)) : AnyLayout(VStackLayout(spacing: 8))
+                let primary = RoomButtonStyle(kind: .primary, height: compact ? 44 : 32, size: compact ? 15 : 13, padding: 16, wide: compact)
+                let secondary = RoomButtonStyle(kind: .secondary, height: compact ? 44 : 32, size: compact ? 15 : 13, padding: 16, wide: compact)
                 stack {
-                    Button(RoomCopy.openThePlayer) { room.openPlayer() }
-                        .buttonStyle(RoomButtonStyle(kind: .primary, height: compact ? 44 : 32, size: compact ? 15 : 13, padding: 16, wide: compact))
-                    Button(RoomCopy.leaveDots) { asking = true }
-                        .buttonStyle(RoomButtonStyle(kind: .secondary, height: compact ? 44 : 32, size: compact ? 15 : 13, padding: 16, wide: compact))
+                    if case .join(let over) = status.action {
+                        Button(over ? RoomCopy.joinAnyway : RoomCopy.joinTheRoom) { room.accept() }.buttonStyle(primary)
+                        Button(RoomCopy.notNow) { room.notNow() }.buttonStyle(secondary)
+                    } else {
+                        Button(RoomCopy.openThePlayer) { room.openPlayer() }.buttonStyle(primary)
+                        Button(RoomCopy.leaveDots) { asking = true }.buttonStyle(secondary)
+                    }
                 }
                 .fixedSize(horizontal: !compact, vertical: true)
             }
@@ -234,7 +242,7 @@ struct RoomPlaceCard: View {
         return HStack(spacing: 6) {
             PersonFace(name: member.name, ring: ring(member, now), dim: look.dim, pauseBadge: look.pauseBadge, error: look.error, disc: 22)
             Text("\(member.you ? RoomCopy.you : member.name) \(Text(room.word(member, now: now)).foregroundStyle(.haze))")
-                .font(.system(size: 12))
+                .font(.board(12))
                 .lineLimit(1)
         }
     }

@@ -22,6 +22,9 @@ public struct PhonePlayerView: View {
     @State private var panelTab: PanelTab = .episodes
     /// The phone is held sideways: the room's reactions stand at the trailing edge.
     @State private var sideways = false
+    /// The sideways strip's 8 s after any change in the room, as on the Mac's full screen.
+    @State private var stripFresh = false
+    @State private var stripTask: Task<Void, Never>?
     /// Held upright in a room: the room's own chevron folds it, so the header's is hidden.
     @State private var roomUpright = false
     @GestureState private var drag: CGFloat = 0
@@ -60,6 +63,22 @@ public struct PhonePlayerView: View {
 
     public init(model: PlayerModel) {
         self.model = model
+    }
+
+    /// The strip over bare video shows while anyone isn't watching, for 8 s after any change,
+    /// and with the controls.
+    private var stripShown: Bool {
+        let room = store.room
+        return room.anyoneNotWatching || visible || stripFresh || room.view?.waiting.isEmpty == false
+    }
+
+    private func freshenStrip() {
+        stripTask?.cancel()
+        stripFresh = true
+        stripTask = Task {
+            try? await Task.sleep(for: .seconds(8))
+            if !Task.isCancelled { stripFresh = false }
+        }
     }
 
     private var visible: Bool {
@@ -131,7 +150,10 @@ public struct PhonePlayerView: View {
             store.room.playerShown = true
             store.room.closesPlayer = { [model] in model.viewerClosed() }
         }
+        .onChange(of: store.room.changedAt) { freshenStrip() }
         .onDisappear {
+            stripTask?.cancel()
+            stripTask = nil
             PhoneOrientation.room(false)
             store.room.playerShown = false
             store.room.closesPlayer = {}
@@ -154,13 +176,17 @@ public struct PhonePlayerView: View {
             }
         }
         if room.inRoom, !upright, sideways || !room.shown {
+            let shown = stripShown
             RoomStrip(room: room, disc: 26, touch: true)
                 .padding(.top, visible ? 76 : 14)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                .opacity(shown ? 1 : 0)
+                .animation(shown ? .fadeIn : .fadeOut, value: shown)
+                .allowsHitTesting(shown)
                 .animation(.standard, value: visible)
                 .transition(.opacity)
         }
-        if room.inRoom, sideways, room.writing {
+        if room.inRoom, sideways, room.writing, !room.chatOff {
             roomField
         }
         if room.inRoom, upright {
@@ -316,10 +342,10 @@ public struct PhonePlayerView: View {
         }
         .onChange(of: sheet) { _, open in if open != nil { episodesPanel = false } }
         .onChange(of: store.room.inRoom, initial: true) { _, inRoom in roomChanged(inRoom) }
-        .onChange(of: model.chatRequests) { if store.room.inRoom { store.room.writing = true } }
+        .onChange(of: model.chatRequests) { if store.room.inRoom, !store.room.chatOff { store.room.writing = true } }
         .background {
             // A hardware keyboard's C opens the room's field, as on the Mac (iPad).
-            if store.room.inRoom, !store.room.writing {
+            if store.room.inRoom, !store.room.writing, !store.room.chatOff {
                 Button(L.menuSaySomething) { model.requestChat() }
                     .keyboardShortcut("c", modifiers: [])
                     .frame(width: 0, height: 0)
@@ -388,7 +414,9 @@ public struct PhonePlayerView: View {
             HStack(spacing: 0) {
                 if store.room.inRoom {
                     // In a room: Chat opens the field (sideways; upright the room has its own).
-                    headerButton("bubble.left", L.roomChat) { store.room.writing = true }
+                    if !store.room.chatOff {
+                        headerButton("bubble.left", L.roomChat) { store.room.writing = true }
+                    }
                 } else if !store.room.active {
                     // Watch together: a room starts from this episode.
                     headerButton("person.2", RoomCopy.columnTitle) {
@@ -446,7 +474,7 @@ public struct PhonePlayerView: View {
     /// The four reactions in a column at the trailing edge, where the thumb rests.
     @ViewBuilder
     private var reactionColumn: some View {
-        if store.room.inRoom, sideways {
+        if store.room.inRoom, sideways, !store.room.chatOff {
             ReactionButtons(metrics: metrics, size: 44, glyph: 20, vertical: true)
                 .padding(.vertical, 2)
                 .background(.overVideo(0.62), in: .capsule)

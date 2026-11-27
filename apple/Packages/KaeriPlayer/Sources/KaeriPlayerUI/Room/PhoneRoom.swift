@@ -49,7 +49,11 @@ struct PhoneRoomUpright: View {
                 .defaultScrollAnchor(.bottom)
                 .scrollIndicators(.never)
                 .frame(maxHeight: .infinity)
-                field
+                if room.chatOff {
+                    Color.clear.frame(height: 16)
+                } else {
+                    field
+                }
             }
             .padding(.horizontal, 16)
             .padding(.top, 12)
@@ -131,7 +135,7 @@ struct PhoneRoomUpright: View {
             if !rest.isEmpty {
                 Button { everyone = true } label: {
                     VStack(spacing: 0) {
-                        RoomMoreFace(label: "+\(rest.count)", disc: 48)
+                        RoomMoreFace(label: RoomCopy.moreFaces(rest.count), disc: 48)
                         Text(RoomCopy.more).font(.system(size: 13, weight: .semibold)).padding(.top, 4)
                         Text(RoomFaces.moreWord(rest)).font(.system(size: 12)).foregroundStyle(.haze).multilineTextAlignment(.center)
                     }

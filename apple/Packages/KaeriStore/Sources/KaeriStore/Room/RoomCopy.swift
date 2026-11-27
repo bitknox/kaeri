@@ -30,6 +30,8 @@ public enum RoomCopy {
     public static var people: String { L.roomPeople }
     public static func faceLabel(_ name: String, _ state: String) -> String { L.roomFaceLabel(name: name, state: state) }
     public static func moreFaces(_ n: Int) -> String { L.roomMoreFaces(count: n) }
+    /// "Paused for Ren · 12 s": the line with how long it has waited.
+    public static func withSeconds(_ line: String, _ s: Int) -> String { L.roomLineWithSeconds(line: line, seconds: s) }
     public static func moreFacesLabel(_ n: Int) -> String { L.roomMoreFacesLabel(count: n) }
     public static var more: String { L.roomMore }
     public static func notWatching(_ n: Int) -> String { L.roomMoreNotWatching(count: n) }

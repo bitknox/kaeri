@@ -83,6 +83,11 @@ public struct RoomWindow: ViewModifier {
             .onChange(of: store.room.placeShown) { _, shown in
                 if shown { navigator.showTogether(store: store) }
             }
+            .onAppear {
+                // No source's ways out, to the app's own places.
+                store.room.showSources = { [navigator] in navigator.openProviders() }
+                store.room.showSearch = { [navigator, store] title in navigator.search(text: title, in: store) }
+            }
             #if os(macOS)
             .background { RoomCloseGuard(asks: { store.room.asksBeforeClosing() }) { _ in } }
             #endif

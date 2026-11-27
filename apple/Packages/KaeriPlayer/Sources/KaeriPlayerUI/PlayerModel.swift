@@ -913,6 +913,8 @@ public final class PlayerModel {
     }
     @ObservationIgnored private var hostWindowWatch: NSObjectProtocol?
     @ObservationIgnored private var stopKeyWatch: Any?
+    /// Whether ⌘W asks before it stops, as it does in a room.
+    @ObservationIgnored var asksBeforeStopping: @MainActor () -> Bool = { false }
 
     private func watchHostWindow() {
         if let hostWindowWatch { NotificationCenter.default.removeObserver(hostWindowWatch) }
@@ -940,6 +942,8 @@ public final class PlayerModel {
               event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
               event.charactersIgnoringModifiers?.lowercased() == "w"
         else { return false }
+        // In a room ⌘W asks first: Leave, Keep the room or Cancel, over the player.
+        if asksBeforeStopping() { return true }
         Self.note(.info, "⌘W stops the player")
         viewerClosed()
         return true

@@ -13,6 +13,7 @@ struct RoomColumn: View {
     /// The window's height: under 680 pt the list shows three rows and scrolls.
     var height: CGFloat = 720
     @FocusState private var fieldFocus: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     static let width: CGFloat = 336
 
@@ -23,16 +24,29 @@ struct RoomColumn: View {
                 line(now)
                 rows(now)
                 Rectangle().fill(Palette.faintRule).frame(height: 1)
-                RoomConversation(room: room, size: 13, lineHeight: 18, gap: 7)
-                    .padding(.top, 12)
-                    .padding(.bottom, 10)
-                    .frame(maxHeight: .infinity, alignment: .bottom)
-                field
+                // Scrolls once it is longer than the room left for it, the newest line at the
+                // bottom; the header and the field stay where they are.
+                ScrollView {
+                    RoomConversation(room: room, size: 13, lineHeight: 18, gap: 7)
+                        .padding(.top, 12)
+                        .padding(.bottom, 10)
+                }
+                .defaultScrollAnchor(.bottom)
+                .scrollIndicators(.never)
+                .frame(maxHeight: .infinity, alignment: .bottom)
+                // Hide chat in rooms: no field; the room's own lines still say what it does.
+                if !room.chatOff { field }
             }
             .padding(.horizontal, 16)
             .frame(maxHeight: .infinity)
             .background(Color(rgb: 0x1C2034), in: .rect(cornerRadius: 16))
             .overlay(RoundedRectangle(cornerRadius: 16).strokeBorder(Palette.glassEdge, lineWidth: 1))
+            .overlay {
+                // Invite and Details have nothing to lose: a click outside closes them.
+                if room.popover != nil {
+                    Color.clear.contentShape(.rect).onTapGesture { room.popover = nil }
+                }
+            }
             .overlay(alignment: .topTrailing) { popover }
             .clipShape(.rect(cornerRadius: 16))
             .padding(8)
@@ -113,7 +127,7 @@ struct RoomColumn: View {
             VStack(spacing: 2) {
                 ForEach(people) { member in
                     RoomRow(room: room, member: member, now: now)
-                        .transition(.opacity.combined(with: .offset(y: -8)))
+                        .transition(reduceMotion ? .opacity : .opacity.combined(with: .offset(y: -8)))
                 }
             }
             .padding(.bottom, 10)

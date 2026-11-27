@@ -98,10 +98,13 @@ public struct PersonFace: View {
 public struct RoomMoreFace: View {
     let label: String
     let disc: CGFloat
+    /// What VoiceOver says for it ("3 more people"); without it, the face is left to the list.
+    let spoken: String?
 
-    public init(label: String, disc: CGFloat) {
+    public init(label: String, disc: CGFloat, spoken: String? = nil) {
         self.label = label
         self.disc = disc
+        self.spoken = spoken
     }
 
     public var body: some View {
@@ -114,7 +117,9 @@ public struct RoomMoreFace: View {
             .background(Palette.raised, in: .circle)
             .overlay(Circle().strokeBorder(Palette.rule, lineWidth: 1))
             .frame(width: disc + 2 * (stroke + gap), height: disc + 2 * (stroke + gap))
-            .accessibilityHidden(true)
+            .accessibilityElement()
+            .accessibilityLabel(spoken ?? "")
+            .accessibilityHidden(spoken == nil)
     }
 }
 

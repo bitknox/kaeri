@@ -785,6 +785,7 @@ struct StallCardView: View {
 
 /// The one card in the bottom trailing corner: stall, then Undo, then Up Next, then Skip.
 struct CornerCard: View {
+    @Environment(AppStore.self) private var store
     let model: PlayerModel
     let metrics: PlayerMetrics
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -798,6 +799,20 @@ struct CornerCard: View {
     }
 
     var body: some View {
+        // In a room, Up next is the room's: it takes the corner after your own stall.
+        let roomNext = store.room.inRoom ? store.room.view?.upNext.flatMap { $0.cancelledBy == nil ? $0 : nil } : nil
+        ZStack(alignment: .bottomTrailing) {
+            if let roomNext, model.corner != .stall {
+                RoomUpNextCard(room: store.room, up: roomNext, metrics: metrics).transition(.opacity)
+            } else {
+                corner
+            }
+        }
+        .animation(.standard, value: roomNext != nil)
+    }
+
+    @ViewBuilder
+    private var corner: some View {
         ZStack(alignment: .bottomTrailing) {
             switch model.corner {
             case .stall: StallCardView(model: model, metrics: metrics).transition(.opacity)
