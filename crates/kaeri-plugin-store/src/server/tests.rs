@@ -29,6 +29,24 @@ async fn start() -> Running {
     start_under("").await
 }
 
+/// For a test that counts attempts up to a limit: the store counts in windows that start on the
+/// clock's own edges (failures every ten minutes, open joins and the address digest's secret every
+/// hour, which is a ten-minute edge too), and the store here reads the real clock. Attempts that
+/// straddle an edge are counted afresh, so the limit never comes. Less than 30 s from an edge,
+/// this waits it out.
+async fn clear_of_a_window_edge() {
+    use kaeri_store_core::store::{FAILURE_WINDOW_SECS, OPEN_JOIN_WINDOW_SECS};
+    let now = now();
+    let left = [FAILURE_WINDOW_SECS, OPEN_JOIN_WINDOW_SECS]
+        .into_iter()
+        .map(|secs| secs - now.rem_euclid(secs))
+        .min()
+        .unwrap_or(i64::MAX);
+    if left < 30 {
+        tokio::time::sleep(std::time::Duration::from_secs(left as u64 + 1)).await;
+    }
+}
+
 /// A store whose URL has `path` after the host, to exercise a reverse proxy that forwards with
 /// or without it.
 async fn start_under(path: &str) -> Running {
@@ -162,6 +180,7 @@ async fn an_invite_shows_who_runs_the_store_and_what_it_offers_before_it_is_spen
 
 #[tokio::test]
 async fn a_made_up_invite_previews_nothing_and_counts_as_a_failure() {
+    clear_of_a_window_edge().await;
     let running = start().await;
     let (owner_invite, _) = join_as_owner(&running).await;
     let made_up = Invite { code: "k3TzQe9WbA1xLr7uVn2c0g".into(), ..owner_invite };
@@ -749,6 +768,7 @@ async fn a_store_is_claimed_once_with_its_setup_code() {
 
 #[tokio::test]
 async fn failed_claims_are_limited_like_failed_invites() {
+    clear_of_a_window_edge().await;
     let running = start().await;
     let http = reqwest::Client::new();
     for _ in 0..kaeri_store_core::store::ALLOWED_FAILURES {
@@ -930,6 +950,7 @@ async fn an_invite_only_store_turns_an_open_link_away_and_its_invites_work_as_be
 
 #[tokio::test]
 async fn open_joins_from_one_address_are_limited() {
+    clear_of_a_window_edge().await;
     let running = start().await;
     let (_, owner) = join_as_owner(&running).await;
     let link = open_store(&running, &owner).await;
