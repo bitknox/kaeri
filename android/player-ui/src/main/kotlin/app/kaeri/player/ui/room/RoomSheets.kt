@@ -302,7 +302,7 @@ fun EditRelaysContent(view: RoomView, onDone: (List<String>) -> Unit, onChanged:
             singleLine = true,
             cursorBrush = SolidColor(ObiSilk.Silk),
         )
-        Tonal(c.ADD, enabled = RoomWords.relayAddable(typed, list)) { list.add(typed); typed = RELAY_FIELD }
+        Tonal(c.ADD, enabled = RoomWords.relayAddable(typed, list)) { list.add(typed.trim()); typed = RELAY_FIELD }
     }
     Text(c.RELAYS_SETTINGS, style = Body.copy(fontSize = 13.sp, lineHeight = 18.sp), modifier = Modifier.padding(top = 12.dp))
     Row(Modifier.padding(top = 16.dp).fillMaxWidth(), horizontalArrangement = Arrangement.End) {

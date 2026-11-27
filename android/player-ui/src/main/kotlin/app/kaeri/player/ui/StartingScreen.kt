@@ -108,6 +108,7 @@ import app.kaeri.player.StartTiming
 import app.kaeri.store.HeroArt
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigatorOrNull
+import app.kaeri.ui.leavingPlayer
 import app.kaeri.ui.openDownloads
 import app.kaeri.ui.openStores
 
@@ -407,11 +408,11 @@ private fun act(
         StartAction.TryAgain -> model.tryAgain()
         StartAction.Downloads -> {
             model.viewerClosed()
-            navigator?.openDownloads()
+            navigator?.leavingPlayer()?.openDownloads()
         }
         StartAction.AddStore -> {
             model.viewerClosed()
-            navigator?.openStores()
+            navigator?.leavingPlayer()?.openStores()
         }
         StartAction.FixMatch -> {
             val id = failure?.id ?: return

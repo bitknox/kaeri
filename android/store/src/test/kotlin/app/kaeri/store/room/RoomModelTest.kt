@@ -106,6 +106,27 @@ class RoomModelTest {
     }
 
     @Test
+    fun aJoinFromTheInviteScreensGlimpseIsTheRoomsOwn() {
+        // The invite screen draws through a glimpse model that hands its commands to the room's.
+        val sent = mutableListOf<RoomCommand>()
+        val room = RoomModel { sent += it }
+        val glimpse = RoomModel { room.send(it) }
+        glimpse.send(RoomCommand.Lobby(inviteA, null, null, false))
+        room.apply(Event.RoomLeft(RoomLeftWhy.Full))
+        assertEquals(RoomLeftWhy.Full, room.left.value)
+        assertEquals(1, sent.size)
+    }
+
+    @Test
+    fun aStartThatFailsIsAnAlert() {
+        // Watch together from the player starts the room through the room's model.
+        val room = RoomModel()
+        room.send(RoomCommand.Lobby(null, null, RoomEpisode(900001u, "9"), false))
+        room.apply(Event.RoomLeft(RoomLeftWhy.Unreachable))
+        assertEquals(RoomLeftWhy.Unreachable, room.left.value)
+    }
+
+    @Test
     fun aPastedLinkThatFailsStaysOnItsLine() {
         val room = RoomModel()
         room.joinLink("https://kaeri.app/r#v1.pasted")

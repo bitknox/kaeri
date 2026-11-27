@@ -162,7 +162,14 @@ fun TvRoot(
             // A room that dropped this TV, or that a phone handed it and could not be joined.
             val left by store.room.left.collectAsStateWithLifecycle()
             val roomView by store.room.view.collectAsStateWithLifecycle()
-            if (roomView == null) left?.let { why -> app.kaeri.tv.player.room.TvRoomLeftAlert(why) { store.room.dismissLeft() } }
+            val alerted = roomView == null && left != null
+            left?.takeIf { roomView == null }?.let { why -> app.kaeri.tv.player.room.TvRoomLeftAlert(why) { store.room.dismissLeft() } }
+            // Once the alert is gone, focus goes back to the page under it, as after a closed panel.
+            var hadAlert by remember { mutableStateOf(false) }
+            LaunchedEffect(alerted) {
+                if (!alerted && hadAlert && !player.isPresented) nav.focus.enter()
+                hadAlert = alerted
+            }
             EngineDown()
         }
     }

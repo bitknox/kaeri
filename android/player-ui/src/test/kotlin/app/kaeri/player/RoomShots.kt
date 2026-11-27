@@ -10,8 +10,11 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.v2.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performScrollTo
 import app.kaeri.design.KaeriTheme
 import app.kaeri.design.LocalRoomClock
 import app.kaeri.design.RoomClock
@@ -152,6 +155,11 @@ class RoomShots {
         /** The player's own room layout sideways, as a turned phone and a tablet draw it. */
         around: Boolean = false,
         hideChat: Boolean = false,
+        /** With [around]: held upright (a tablet in portrait), and the room opened beside the picture. */
+        upright: Boolean = false,
+        roomOpen: Boolean = false,
+        /** What happens on screen before the capture (a scroll). */
+        then: () -> Unit = {},
     ) {
         val store = AppStore(scope, clock = { 0L }, artworkWithoutEngine = FixtureArt::bytes)
         compose.runOnUiThread {
@@ -168,7 +176,8 @@ class RoomShots {
                         app.kaeri.player.ui.room.RoomAround(
                             store.room,
                             inRoom = true,
-                            sideways = true,
+                            sideways = !upright,
+                            roomOpen = roomOpen,
                             positionS = pos,
                             controls = controls,
                             player = { m -> Image(still, null, m, contentScale = ContentScale.Crop) },
@@ -188,6 +197,8 @@ class RoomShots {
             }
         }
         compose.mainClock.advanceTimeBy(1_000)
+        compose.waitForIdle()
+        then()
         compose.waitForIdle()
         val path = "${roborazziSystemPropertyOutputDirectory()}/room-$name.png"
         if (screen) captureScreenRoboImage(path) else compose.onRoot().captureRoboImage(path)
@@ -244,6 +255,20 @@ class RoomShots {
 
     @Test
     @Config(qualifiers = TABLET)
+    fun tablet_room_open() = shoot("tablet-room-open", view(), three, around = true, controls = false, roomOpen = true)
+
+    // A tablet held upright has the phone's upright room, until a tablet layout is drawn.
+    @Test
+    @Config(qualifiers = TABLET_PORTRAIT)
+    fun tablet_upright() = shoot("tablet-upright", view(), three, around = true, upright = true, controls = false)
+
+    // Sideways, Watch together in the chrome opens every room control beside the picture.
+    @Test
+    @Config(qualifiers = PlayerShots.PHONE_LANDSCAPE)
+    fun sideways_room_open() = shoot("sideways-room-open", view(), three, around = true, controls = false, roomOpen = true)
+
+    @Test
+    @Config(qualifiers = TABLET)
     fun tablet_paused_for_ren() = shoot("tablet-paused-for-ren", view(waitRen(6), playing = false), listOf(ada(), mika(), ren(MemberState.LOADING, 6)), around = true, controls = false)
 
     @Test
@@ -279,6 +304,18 @@ class RoomShots {
         listOf(mika(), ren()),
         invited = RoomInvited("https://kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe", "Mika", "Natsukaze Relay", "9", listOf("Mika", "Ren")),
         panel = { m -> InvitedPanel("Natsukaze Relay", "Episode 9 · The Long Leg", m) },
+    )
+
+    // The invite over a solo player held sideways: Join and Not now are a scroll away, not cut off.
+    @Test
+    @Config(qualifiers = PlayerShots.PHONE_LANDSCAPE)
+    fun invited_sideways() = shoot(
+        "invited-sideways",
+        view(),
+        listOf(mika(), ren()),
+        invited = RoomInvited("https://kaeri.app/r#v1.Q2m4xR9dK7tWbH3nPzL8sYe", "Mika", "Natsukaze Relay", "9", listOf("Mika", "Ren")),
+        panel = { m -> InvitedPanel("Natsukaze Relay", "Episode 9 · The Long Leg", m) },
+        then = { compose.onNodeWithText(app.kaeri.store.room.RoomCopy(compose.activity).JOIN).performScrollTo().assertIsDisplayed() },
     )
 
     @Test
@@ -420,5 +457,8 @@ class RoomShots {
     private companion object {
         /** A 10-inch tablet held sideways. */
         const val TABLET = "w1280dp-h800dp-land-xhdpi"
+
+        /** The same tablet held upright. */
+        const val TABLET_PORTRAIT = "w800dp-h1280dp-port-xhdpi"
     }
 }

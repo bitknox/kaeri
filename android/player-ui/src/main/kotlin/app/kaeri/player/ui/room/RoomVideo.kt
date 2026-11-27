@@ -76,7 +76,7 @@ fun RoomStrip(view: RoomView, members: List<RoomMember>, now: Long, disc: Dp, po
     val fs = if (disc >= 28.dp) 14.sp else 13.sp
     // Said when the words change, not each second a face's or the line's seconds tick.
     val words = (shown.map { c.spoken(if (it.you) c.YOU else it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
-    val spoken = remember(RoomWords.numberless(words)) { words }
+    val spoken = remember(RoomWords.numberless(words) + line.key) { words }
     Row(
         modifier
             .shadow(18.dp, CircleShape, ambientColor = Color.Black, spotColor = Color.Black)

@@ -84,6 +84,7 @@ import app.kaeri.tv.ui.AmberButton
 import app.kaeri.tv.ui.LocalAppStore
 import app.kaeri.tv.ui.TonalButton
 import app.kaeri.tv.ui.TvIcons
+import app.kaeri.tv.ui.panelFocus
 
 private fun Ring.face(): FaceRing = when (this) {
     Ring.Water -> FaceRing.Water
@@ -245,7 +246,7 @@ fun TvStrip(view: RoomView, members: List<RoomMember>, now: Long, positionS: Dou
     val disc = 32.dp
     // Said when the words change, not each second a face's or the line's seconds tick.
     val words = (shown.map { c.spoken(it.name, RoomWords.word(c, view, it, now)) } + line.title).joinToString(". ") // i18n-skip
-    val spoken = remember(RoomWords.numberless(words)) { words }
+    val spoken = remember(RoomWords.numberless(words) + line.key) { words }
     Row(
         Modifier.shadow(18.dp, CircleShape).height(disc + 16.dp).clip(CircleShape).background(ObiSilk.Raised)
             .border(1.dp, ObiSilk.Silk.copy(alpha = 0.10f), CircleShape).padding(horizontal = 10.dp),
@@ -363,7 +364,7 @@ private fun TvRail(
 private fun TvLineBlock(line: RoomLine) {
     // Said when its words change, not each second its clock or seconds tick.
     val words = line.title + ". " + line.detail // i18n-skip
-    val spoken = remember(RoomWords.numberless(words)) { words }
+    val spoken = remember(line.key) { words }
     Column(Modifier.padding(bottom = 14.dp).clearAndSetSemantics { contentDescription = spoken; liveRegion = LiveRegionMode.Polite }) {
         Text(line.title, fontSize = 20.sp, lineHeight = 26.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
         Text(line.detail, style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze).tabular())
@@ -435,7 +436,8 @@ fun TvRoomLeftAlert(why: app.kaeri.engine.model.RoomLeftWhy, onClose: () -> Unit
     LaunchedEffect(Unit) { runCatching { first.requestFocus() } }
     androidx.activity.compose.BackHandler(onBack = onClose)
     Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.55f)), contentAlignment = Alignment.Center) {
-        Column(Modifier.width(440.dp).clip(RoundedCornerShape(16.dp)).background(ObiSilk.RaisedHigh).padding(28.dp)) {
+        // The D-pad stays on Close while the alert shows; what is behind can't take focus.
+        Column(Modifier.panelFocus(title).width(440.dp).clip(RoundedCornerShape(16.dp)).background(ObiSilk.RaisedHigh).padding(28.dp)) {
             Text(title, fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Medium, color = ObiSilk.Silk)
             if (body.isNotBlank()) Text(body, fontSize = 16.sp, lineHeight = 22.sp, color = ObiSilk.Haze, modifier = Modifier.padding(top = 8.dp))
             Row(Modifier.padding(top = 24.dp)) {

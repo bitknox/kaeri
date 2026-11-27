@@ -22,7 +22,13 @@ const val CARRY_ON_AFTER_S = 20
 const val ROOM_SOFT_CAP = 10
 
 /** A line of the room: the bold words and the haze words under them. */
-data class RoomLine(val title: String, val detail: String)
+/**
+ * The room's line. [key] is what a live region is keyed on: its words. For the room's own line
+ * ([RoomWords.line]) that is the words without the numbers that tick (wait seconds, the clock
+ * while playing), plus the ones that don't (the episode, the relays up, the place while paused),
+ * so a screen reader hears a new episode or a seek while paused, and not each second.
+ */
+data class RoomLine(val title: String, val detail: String, val key: String = "$title. $detail") // i18n-skip
 
 /** The room's words from the catalogue (i18n/en/ui-room.ftl), read through [context]. */
 class RoomCopy(private val context: Context) {
@@ -270,18 +276,25 @@ object RoomWords {
      * host, or plain `ws://` only to `localhost`, `127.0.0.1` or a `.local` name.
      */
     fun validRelay(url: String): Boolean {
+        // An address has no spaces in it, and a name has something before ".local".
+        if (url.any(Char::isWhitespace)) return false
         fun host(rest: String) = rest.split('/', ':').first()
         if (url.startsWith("wss://", ignoreCase = true)) return host(url.substring(6)).isNotEmpty() // i18n-skip
         if (url.startsWith("ws://", ignoreCase = true)) { // i18n-skip
             val h = host(url.substring(5)).lowercase()
-            return h == "localhost" || h == "127.0.0.1" || h.endsWith(".local") // i18n-skip
+            return h == "localhost" || h == "127.0.0.1" || (h.endsWith(".local") && h.length > ".local".length && !h.startsWith(".")) // i18n-skip
         }
         return false
     }
 
-    /** Whether Add takes [typed]: a relay a room may use that the list doesn't have yet. */
-    fun relayAddable(typed: String, list: List<String>): Boolean =
-        validRelay(typed) && list.none { it.equals(typed, ignoreCase = true) }
+    /**
+     * Whether Add takes [typed]: a relay a room may use that the list doesn't have yet, read as Add
+     * saves it, without the spaces a paste brings at either end.
+     */
+    fun relayAddable(typed: String, list: List<String>): Boolean {
+        val url = typed.trim()
+        return validRelay(url) && list.none { it.trim().equals(url, ignoreCase = true) }
+    }
 
     /**
      * The words of [text] without its numbers: what a live region is keyed on, so a screen reader
@@ -297,6 +310,21 @@ object RoomWords {
 
     /** The room's line: what is happening, in words. [positionS] is the room's place. */
     fun line(c: RoomCopy, view: RoomView, members: List<RoomMember>, nowMs: Long, positionS: Double): RoomLine {
+        val line = lineWords(c, view, members, nowMs, positionS)
+        return line.copy(key = lineKey(line, view, positionS))
+    }
+
+    /**
+     * What the room's line is keyed on for a screen reader: its words without numbers, then the
+     * numbers that only change when something happens (the episode, the relays up, and the place
+     * while paused, so a seek is heard).
+     */
+    fun lineKey(line: RoomLine, view: RoomView, positionS: Double): String {
+        val still = listOf(view.episode?.episode ?: "", view.relays.count { it.healthy }.toString(), if (view.playing) "" else clock(positionS))
+        return (listOf(numberless("${line.title}. ${line.detail}")) + still).joinToString("|") // i18n-skip
+    }
+
+    private fun lineWords(c: RoomCopy, view: RoomView, members: List<RoomMember>, nowMs: Long, positionS: Double): RoomLine {
         val waits = shownWaits(view, nowMs)
         val names = waits.map { it.name }
         val s = waitSeconds(view, nowMs)

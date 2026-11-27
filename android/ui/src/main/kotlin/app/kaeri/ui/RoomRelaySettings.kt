@@ -1,5 +1,5 @@
 // Settings ▸ Playback ▸ Watch together ▸ Relays: the relays rooms you start use and your invites
-// carry, the spares a room swaps in, and the way back to the defaults. A room in progress keeps
+// carry, the spares a room swaps in (each list with its own Add), and the way back to the defaults. A room in progress keeps
 // its own list, edited in its Details.
 
 package app.kaeri.ui
@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -88,6 +89,8 @@ internal fun RoomRelaysScreen() {
         Column(
             Modifier
                 .fillMaxSize()
+                // The address field stays above the keyboard: the app draws edge to edge.
+                .imePadding()
                 .verticalScroll(rememberScrollState())
                 .padding(top = padding.calculateTopPadding() + 8.dp, bottom = 48.dp)
                 .padding(horizontal = 16.dp),
@@ -120,7 +123,7 @@ internal fun RoomRelaysContent(relays: RoomRelaySettings?) {
         footer = Strings.roomRelaysSparesLineShort(context),
         rows = relays.spares.map { url ->
             @Composable { place: Place -> RelayRow(place, url, removable = true) { room.setSpares(relays.spares - url) } }
-        },
+        } + listOf<@Composable (Place) -> Unit>({ place -> AddRelayRow(place, relays.spares) { room.setSpares(relays.spares + it) } }),
     )
     // Back to the built-in lists: there to press once either differs from them.
     val changed = relays.chosen.isNotEmpty() || relays.spares != relays.defaultSpares

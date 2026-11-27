@@ -7,6 +7,7 @@ package app.kaeri.player.ui.room
 
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -24,6 +25,7 @@ import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.union
 import androidx.compose.foundation.layout.ime
+import androidx.compose.foundation.layout.only
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -134,6 +136,8 @@ fun RoomUpright(
     onSubtitles: () -> Unit = {},
     onCopyLink: () -> Unit = {},
     opened: RoomOpen = RoomOpen.None,
+    /** Without the video's box: the room beside a sideways picture, which is the video. */
+    showVideo: Boolean = true,
     /** The Join screen with a TV driven from this phone: "Join on Living room" hands it the invite. */
     joinOnTv: Pair<String, () -> Unit>? = null,
     /**
@@ -156,10 +160,20 @@ fun RoomUpright(
     val hideChat by room.hideChat.collectAsStateWithLifecycle()
     val shown = view ?: return
 
-    Column(modifier.fillMaxSize().background(ObiSilk.Ground)) {
-        Box(Modifier.fillMaxWidth().background(Color.Black).statusBarsPadding().height(RoomVideoHeight)) {
-            video(Modifier.fillMaxSize())
-            panel?.invoke(Modifier.fillMaxSize())
+    // The Join screen has no chat to keep at the bottom, so it scrolls: over a sideways player a
+    // phone is too short for the still, the line, Join and the faces at once.
+    val joinScreen = invited != null
+    Column(
+        modifier.fillMaxSize().background(ObiSilk.Ground)
+            .then(if (joinScreen) Modifier.verticalScroll(androidx.compose.foundation.rememberScrollState()) else Modifier),
+    ) {
+        if (showVideo) {
+            Box(Modifier.fillMaxWidth().background(Color.Black).statusBarsPadding().height(RoomVideoHeight)) {
+                video(Modifier.fillMaxSize())
+                panel?.invoke(Modifier.fillMaxSize())
+            }
+        } else {
+            Spacer(Modifier.statusBarsPadding().height(8.dp))
         }
         RoomHeader(
             view = shown,
@@ -214,7 +228,7 @@ fun RoomUpright(
         }
         FacesRow(shown, members, now, Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp)) { open = RoomOpen.Everyone }
         HorizontalDivider(Modifier.padding(start = 16.dp, end = 16.dp, top = 14.dp), color = ObiSilk.FaintRule)
-        Box(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.BottomStart) {
+        Box(Modifier.then(if (joinScreen) Modifier else Modifier.weight(1f)).fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp), contentAlignment = Alignment.BottomStart) {
             if (inv != null) {
                 // No composer below it on the Join screen, so it clears the gesture bar itself.
                 Text(c.CHAT_OPENS, Modifier.navigationBarsPadding(), style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp, color = ObiSilk.Haze))
@@ -302,7 +316,7 @@ internal fun RoomMenu(
 @Composable
 fun RoomLineBlock(line: RoomLine, modifier: Modifier = Modifier, titleSize: Int = 22, titleLine: Int = 28) {
     val words = line.title + ". " + line.detail // i18n-skip
-    val spoken = remember(RoomWords.numberless(words)) { words }
+    val spoken = remember(line.key) { words }
     Column(modifier.fillMaxWidth().clearAndSetSemantics { contentDescription = spoken; liveRegion = LiveRegionMode.Polite }) {
         Text(line.title, style = TextStyle(fontSize = titleSize.sp, lineHeight = titleLine.sp, fontWeight = FontWeight.Medium), color = ObiSilk.Silk)
         Text(line.detail, style = TextStyle(fontSize = 14.sp, lineHeight = 20.sp).tabular(), color = ObiSilk.Haze)
@@ -482,6 +496,9 @@ fun RoomAround(
     onBack: () -> Unit = {},
     onSubtitles: () -> Unit = {},
     onCopyLink: () -> Unit = {},
+    /** Sideways, the room beside the picture: the chrome's Watch together button opens it. */
+    roomOpen: Boolean = false,
+    onRoomClose: () -> Unit = {},
 ) {
     val removed = rememberAnimationsRemoved()
     val upright = inRoom && !sideways
@@ -509,8 +526,43 @@ fun RoomAround(
             if (inRoom) panel?.invoke(Modifier.fillMaxSize())
         }
         if (inRoom && sideways) RoomStripOver(room, positionS, controls, Modifier.align(Alignment.TopCenter))
+        // Sideways, every room control is one tap away: Watch together in the chrome opens the
+        // upright room, less its video, at the end edge over the picture; Back or a tap on the
+        // picture closes it.
+        val side = inRoom && sideways && roomOpen
+        androidx.compose.animation.AnimatedVisibility(
+            side,
+            modifier = Modifier.fillMaxSize(),
+            enter = androidx.compose.animation.fadeIn(app.kaeri.design.Motion.fadeIn()),
+            exit = androidx.compose.animation.fadeOut(app.kaeri.design.Motion.fadeOut()),
+        ) {
+            androidx.activity.compose.BackHandler(onBack = onRoomClose)
+            Box(Modifier.fillMaxSize()) {
+                Box(
+                    Modifier.fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.4f))
+                        .clickable(interactionSource = null, indication = null, onClickLabel = null, onClick = onRoomClose),
+                )
+                RoomUpright(
+                    room,
+                    positionS,
+                    video = {},
+                    showVideo = false,
+                    onBack = onRoomClose,
+                    onSubtitles = onSubtitles,
+                    onCopyLink = onCopyLink,
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                        .width(minOf(RoomSideWidth, maxWidth * 0.5f))
+                        .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars.only(androidx.compose.foundation.layout.WindowInsetsSides.End))
+                        .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.displayCutout.only(androidx.compose.foundation.layout.WindowInsetsSides.End)),
+                )
+            }
+        }
     }
 }
+
+/** The room beside a sideways picture: as wide as an upright phone's room. */
+val RoomSideWidth = 412.dp
 
 /**
  * A room an invite opened, before joining, as its own upright screen over the app: the still,

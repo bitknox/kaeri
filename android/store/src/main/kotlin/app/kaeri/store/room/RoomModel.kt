@@ -213,6 +213,12 @@ class RoomModel(private val out: (RoomCommand) -> Unit = {}) {
                 _view.value = null
                 forgetRoom()
             }
+            // A join or a start from anywhere (the invite screen's glimpse, the player's Watch
+            // together) is this device's: a RoomLeft before RoomJoined is its failure.
+            is RoomCommand.Lobby -> {
+                joining = true
+                placeAsked = null
+            }
             else -> Unit
         }
         out(command)

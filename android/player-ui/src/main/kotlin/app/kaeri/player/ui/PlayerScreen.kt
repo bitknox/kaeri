@@ -121,6 +121,7 @@ import app.kaeri.player.SeekPreview
 import app.kaeri.store.HeroArt
 import app.kaeri.ui.ArtworkImage
 import app.kaeri.ui.LocalAppStore
+import app.kaeri.ui.leavingPlayer
 import app.kaeri.ui.openSources
 import app.kaeri.store.DiscussionKey
 import app.kaeri.store.PlayerDiscussion
@@ -195,7 +196,11 @@ fun PlayerScreen(
     val appRoom = LocalAppStore.current.room
     val roomed = appRoom.view.collectAsStateWithLifecycle().value != null
     // Upright in a room the status bar stays, above the room's video, as the board has it.
-    Immersive(hide = !(phone && roomed && LocalConfiguration.current.orientation != android.content.res.Configuration.ORIENTATION_LANDSCAPE))
+    val landscape = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+    // The room upright, phone or tablet; sideways the room opens beside the picture from the chrome.
+    Immersive(hide = !(roomed && !landscape))
+    var roomOpen by remember { mutableStateOf(false) }
+    LaunchedEffect(roomed, landscape) { if (!roomed || !landscape) roomOpen = false }
     KeepAwake(playing = model.hasPicture && !model.paused)
     // Landscape on a phone once the shared bounds have settled, so the turn never cuts into the grow,
     // and portrait again whenever the player stops being up, however it went: the viewer's close,
@@ -461,6 +466,8 @@ fun PlayerScreen(
             val roomId = model.titleId
             val roomEpisode = model.episode?.number
             val startRoom = if (!inRoom && roomId != null && roomEpisode != null) ({ store.startRoom(roomId, roomEpisode) }) else null
+            // Sideways in a room the same button opens the room beside the picture.
+            val openRoom = if (inRoom && landscape) ({ roomOpen = true }) else null
             // "Still watching?" is the only thing a screen reader reaches while it shows.
             AnimatedVisibility(
                 chromeVisible,
@@ -477,7 +484,7 @@ fun PlayerScreen(
                     preview = preview.takeIf { previewSource != null && !Device.power(context).lowPower },
                     onPlayOnTv = playOnTv,
                     discussion = discussion,
-                    onPeople = startRoom,
+                    onPeople = startRoom ?: openRoom,
                 )
             }
 
@@ -572,21 +579,23 @@ fun PlayerScreen(
         }
     }
 
-    // In a room on a phone, the player sits in the room: upright under the video's box, sideways
-    // full with the strip. Its place in the tree stays the same through a turn. A tablet has the
-    // full picture with the strip and the room's panels, as a phone held sideways does.
+    // In a room, the player sits in the room: upright under the video's box, sideways full with
+    // the strip and the room beside it on a tap. Its place in the tree stays the same through a
+    // turn. A tablet does as a phone does, until a tablet layout of its own is drawn.
     run {
         val room = LocalAppStore.current.room
         val roomView by room.view.collectAsStateWithLifecycle()
         val inRoom = roomView != null
-        val sideways = LocalConfiguration.current.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val sideways = landscape
         // The source sheet open in a room reads "Choosing a source" on this device's face.
         val choosing = inRoom && sheet == PlayerSheet.Sources
         LaunchedEffect(choosing) { if (inRoom) room.send(app.kaeri.engine.model.RoomCommand.ChoosingSource(choosing)) }
         app.kaeri.player.ui.room.RoomAround(
             room,
             inRoom = inRoom,
-            sideways = sideways || !phone,
+            sideways = sideways,
+            roomOpen = roomOpen,
+            onRoomClose = { roomOpen = false },
             positionS = model.position,
             controls = model.controlsVisible,
             player = playerBox,
@@ -597,8 +606,8 @@ fun PlayerScreen(
                 app.kaeri.player.ui.room.RoomPanel(
                     room,
                     m,
-                    onSources = { close(); navigator?.openSources() },
-                    onSearch = { close(); navigator?.go(app.kaeri.ui.Destination.Search) },
+                    onSources = { close(); navigator?.leavingPlayer()?.openSources() },
+                    onSearch = { close(); navigator?.leavingPlayer()?.go(app.kaeri.ui.Destination.Search) },
                 )
             },
             onBack = { still.freeze(surfaceView) { close() } },

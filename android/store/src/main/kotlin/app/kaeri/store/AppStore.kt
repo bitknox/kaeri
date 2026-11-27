@@ -1624,7 +1624,8 @@ class AppStore(
 
     /** Start a room watching [id] episode [episode]: from the player, the player becomes the room. */
     fun startRoom(id: AnilistId, episode: String) {
-        send(Command.Room(app.kaeri.engine.model.RoomCommand.Lobby(null, null, app.kaeri.engine.model.RoomEpisode(id, episode), false)))
+        // Through the room's model, so a start that fails comes back as its alert.
+        room.send(app.kaeri.engine.model.RoomCommand.Lobby(null, null, app.kaeri.engine.model.RoomEpisode(id, episode), false))
     }
 
     // Fixing a source match: the commands the match sheet sends, and the engine's answers to them.
