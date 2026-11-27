@@ -192,6 +192,8 @@ fun RoomUpright(
             view = shown,
             count = members.count { it.state != MemberState.LEFT },
             onBack = onBack,
+            // Beside a sideways picture, back closes the room's side, not the room to the bar.
+            backLabel = if (showVideo) c.CLOSE_TO_BAR else c.CLOSE,
             // Not joined yet: nothing in the room is yours to invite to, move or leave.
             onInvite = if (invited != null) null else { { open = RoomOpen.Invite } },
             onMore = if (invited != null) null else { { open = RoomOpen.Menu } },
@@ -265,11 +267,11 @@ fun RoomUpright(
 
 /** The header row, 64 dp: back, the show and "Episode 9 · 3 in the room", Invite, More. */
 @Composable
-internal fun RoomHeader(view: RoomView, count: Int, onBack: () -> Unit, onInvite: (() -> Unit)?, onMore: (() -> Unit)?, menu: @Composable () -> Unit) {
+internal fun RoomHeader(view: RoomView, count: Int, onBack: () -> Unit, onInvite: (() -> Unit)?, onMore: (() -> Unit)?, backLabel: String? = null, menu: @Composable () -> Unit) {
     val c = roomCopy()
     Row(Modifier.fillMaxWidth().height(64.dp).padding(horizontal = 4.dp), verticalAlignment = Alignment.CenterVertically) {
         IconButton(onClick = onBack, modifier = Modifier.size(48.dp)) {
-            Icon(RoomGlyphs.Back, contentDescription = c.CLOSE_TO_BAR, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
+            Icon(RoomGlyphs.Back, contentDescription = backLabel ?: c.CLOSE_TO_BAR, tint = ObiSilk.Silk, modifier = Modifier.size(24.dp))
         }
         Column(Modifier.weight(1f).padding(start = 4.dp)) {
             Text(view.roomEpisode?.title ?: view.name, style = ShowTitle.row.copy(lineHeight = 22.sp), color = ObiSilk.Silk, maxLines = 1, overflow = TextOverflow.Ellipsis)
