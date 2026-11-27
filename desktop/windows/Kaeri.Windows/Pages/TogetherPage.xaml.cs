@@ -21,10 +21,11 @@ public sealed partial class TogetherPage : Page
 {
     readonly Ctx ctx = Ctx.Current;
     readonly TextBox join = new() { PlaceholderText = T.RoomPlaceLink, Width = 320, FontFamily = new FontFamily("Cascadia Mono, Consolas") };
-    /// <summary>The recent room a Rejoin looked into, while its answer is awaited.</summary>
-    string? rejoining;
-    /// <summary>The link Join tried that failed: it stays in the field, and Try again is the only button.</summary>
+    /// <summary>What failed on this page and why, said when it failed.</summary>
+    readonly RoomPlace place = new(Ctx.Current.Known.Room is not null);
+    /// <summary>The field's text when its link failed: it stays, and Try again is the only button.</summary>
     string? failedLink;
+    int failuresShown;
 
     readonly StateHost recentState = new() { Placeholders = () => States.Rows(2, 64, 36, rowHeight: 56, spacing: 0), NeedsConnection = false };
     readonly StackPanel recentRows = new();
@@ -68,30 +69,28 @@ public sealed partial class TogetherPage : Page
 
     void Heard(IReadOnlyList<Event> batch)
     {
-        foreach (var e in batch)
-            if (e is Event.RoomJoined && rejoining is not null)
-                rejoining = null;
-        if (batch.Any(e => e is Event.RoomJoined or Event.RoomState or Event.RoomMembers or Event.RoomLeft
-            or Event.RoomRecent or Event.RoomGlimpse or Event.RoomLookFailed))
-        {
-            if (rejoining is null && batch.Any(e => e is Event.RoomLeft { Why: not RoomLeftWhy.Left and not RoomLeftWhy.Moved }))
-            {
-                // A join that failed: the invite it was for keeps its link here, and its look-in goes.
-                var link = ctx.Window.RoomInvite ?? join.Text.Trim();
-                failedLink = link.Length > 0 ? link : null;
-                ctx.Known.ForgetRoomGlimpse();
-            }
-            // The look waited on found nothing (another link's answer never gets this far): its link
-            // stays in the field, with why and Try again, also when it came from outside the app.
-            if (batch.Any(e => e is Event.RoomLookFailed) && ctx.Known.RoomLookFailure is not null
-                && ctx.Window.RoomInvite is { } looked)
-            {
-                if (KaeriFfiMethods.ParseRoomTarget(join.Text.Trim())?.Link != looked)
-                    join.Text = looked;
-                failedLink = join.Text.Trim();
-            }
+        var (touched, forget) = place.Take(batch, ctx.Known, ctx.Window.RoomInvite, join.Text);
+        if (forget)
+            ctx.Known.ForgetRoomGlimpse();
+        if (place.Failures != failuresShown)
+            ShowFailedLink();
+        if (touched)
             Show();
-        }
+    }
+
+    /// <summary>
+    /// A link that failed stays in the field as its link, with why and Try again. One opened from
+    /// outside the app, or written another way (kaeri://), takes the field as the link it is.
+    /// </summary>
+    void ShowFailedLink()
+    {
+        failuresShown = place.Failures;
+        if (place.FailedLink is not { } link)
+            return;
+        var typed = join.Text.Trim();
+        if (link != typed && KaeriFfiMethods.ParseRoomTarget(typed)?.Link != link)
+            join.Text = link;
+        failedLink = join.Text.Trim();
     }
 
     async Task PasteIntoJoin()
@@ -107,18 +106,20 @@ public sealed partial class TogetherPage : Page
     {
         failedLink = null;
         // A link tried after a Rejoin is its own try: its failure shows here, not on the recent row.
-        rejoining = null;
+        place.Try();
         // Another invite's look-in is not this one's: nothing shows until this link's answer.
         ctx.Window.RoomInvite = null;
         if (KaeriFfiMethods.ParseRoomTarget(text.Trim()) is not { } target)
         {
-            failedLink = text.Trim();
+            place.Refused(text.Trim(), T.RoomLookNotAnInvite);
+            ShowFailedLink();
             Show();
             return;
         }
         if (target.Old is not null)
         {
-            failedLink = text.Trim();
+            place.Refused(text.Trim(), T.RoomErrorOldInvite);
+            ShowFailedLink();
             Show();
             return;
         }
@@ -302,10 +303,7 @@ public sealed partial class TogetherPage : Page
         });
         if (failed)
         {
-            var (lead, then) = ctx.Known.RoomLookFailure is { } look ? RoomWords.LookLine(look)
-                : ctx.Known.RoomLeftWhy is { } left ? RoomWords.LeftLine(left)
-                : KaeriFfiMethods.ParseRoomTarget(join.Text.Trim()) is { Old: not null } ? (T.RoomErrorOldInvite, null)
-                : RoomWords.LeftLine(new Kaeri.Engine.Model.RoomLeftWhy.Unreachable());
+            var (lead, then) = place.FailedWhy;
             Block("join-failed", () => Failure(), b => SetFailure(b, lead, then));
         }
     }
@@ -374,12 +372,13 @@ public sealed partial class TogetherPage : Page
         var names = room.Names ?? [];
         var when = When(room.LastAt);
         text.Children.Add(Ui.Text(names.Length > 0 ? T.RoomRecentRow(RoomWords.N(room.Episode), Rooms.Names(names), when) : T.RoomRecentRowAlone(RoomWords.N(room.Episode), when), "HazeCaptionStyle", wrap: false));
-        var failed = rejoining == room.RoomId && ctx.Known.RoomLeftWhy is not null;
+        var failed = place.Rejoining == room.RoomId && place.RejoinFailed is not null;
         if (failed)
         {
             var why = new StackPanel { Margin = new Thickness(0, 4, 0, 0) };
             var said = Failure();
-            SetFailure(said, T.RoomErrorNobodyAnsweredLead, T.RoomErrorNobodyAnsweredLine);
+            var (lead, then) = place.RejoinFailed!.Value;
+            SetFailure(said, lead, then);
             why.Children.Add(said);
             text.Children.Add(why);
         }
@@ -387,7 +386,7 @@ public sealed partial class TogetherPage : Page
         grid.Children.Add(text);
         var rejoin = Ui.Label(failed ? T.ActionTryAgain : T.RoomRejoin, (_, _) =>
         {
-            rejoining = room.RoomId;
+            place.Rejoin(room.RoomId);
             ctx.Send(new Command.Room(new RoomCommand.Rejoin(room.RoomId)));
             Show();
         });

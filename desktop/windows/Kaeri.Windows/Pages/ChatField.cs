@@ -81,7 +81,7 @@ sealed class ChatField : Grid
         Children.Add(tail);
     }
 
-    static FrameworkElement? Find(DependencyObject root, string name)
+    internal static FrameworkElement? Find(DependencyObject root, string name)
     {
         for (var i = 0; i < VisualTreeHelper.GetChildrenCount(root); i++)
         {

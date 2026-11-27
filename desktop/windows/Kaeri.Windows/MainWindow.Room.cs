@@ -272,7 +272,7 @@ public sealed partial class MainWindow
         "room-upnext" => FfiRoomScene.UpNext,
         "room-upnext-waiting" => FfiRoomScene.UpNextWaiting,
         "room-skip" => FfiRoomScene.SkippedOpening,
-        "room-chat" or "room-chat-hidden" => FfiRoomScene.Chat,
+        "room-chat" or "room-chat-hidden" or "room-chat-tail" => FfiRoomScene.Chat,
         "room-invite-new" or "room-look-fail" => FfiRoomScene.Watching,
         "room-move-offer" => FfiRoomScene.MoveOffer,
         "room-move-after" => FfiRoomScene.MovedAway,
@@ -354,6 +354,11 @@ public sealed partial class MainWindow
                 Player.ShotRoomInvite(false);
                 await AtUptime(95);
                 ctx.Send(new Command.Room(new RoomCommand.NewInvite()));
+                break;
+            case "room-chat-tail":
+                // The field focused with 15 characters left at 85 s: the count shows, the clear button doesn't.
+                await AtUptime(85);
+                Player.ShotRoomChatType(string.Concat(Enumerable.Repeat("so close to the end now ", 21))[..485]);
                 break;
             case "room-look-fail":
                 // In the room, an invite opened at 97 s whose relays never answer: said over the video for 4 s,

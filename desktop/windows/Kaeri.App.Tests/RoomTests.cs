@@ -418,4 +418,93 @@ public class RoomTests
         Assert.Equal(("That isn't a room's invite.", null), RoomWords.LookLine(("That isn't a room's invite.", null)));
         Assert.Equal("Couldn't reach this room's relays. Ask for a new invite.", RoomWords.Look(("x", new RoomLeftWhy.Unreachable())));
     }
+
+    // The place: what failed and why, said when it failed.
+
+    static (RoomPlace Place, Known Known) Place(bool inRoom = false)
+    {
+        var known = new Known();
+        if (inRoom)
+            known.Take(new Event.RoomJoined(View()));
+        return (new RoomPlace(inRoom), known);
+    }
+
+    static (bool, bool) Hear(RoomPlace place, Known known, string? looking, string typed, params Event[] batch)
+    {
+        foreach (var e in batch)
+            known.Take(e);
+        return place.Take(batch, known, looking, typed);
+    }
+
+    [Fact]
+    public void AJoinThatFailsKeepsTheInvitesLinkEvenWhenTheFieldIsEmpty()
+    {
+        // Opened from outside the app (or written as kaeri://): the field holds nothing like it.
+        var (place, known) = Place();
+        known.LookInto(InviteA);
+        var (_, forget) = Hear(place, known, InviteA, "", new Event.RoomLeft(new RoomLeftWhy.Full()));
+        Assert.Equal(InviteA, place.FailedLink);
+        Assert.Equal(RoomWords.LeftLine(new RoomLeftWhy.Full()), place.FailedWhy);
+        Assert.Equal(1, place.Failures);
+        Assert.True(forget);
+    }
+
+    [Fact]
+    public void AnOldInviteSaysSoAfterAnEarlierRoomFailed()
+    {
+        var (place, known) = Place();
+        known.LookInto(InviteA);
+        Hear(place, known, InviteA, InviteA, new Event.RoomLeft(new RoomLeftWhy.Unreachable()));
+        place.Try();
+        place.Refused("kaeri://party?room=x", "This invite is from an older version.");
+        Assert.Equal(("This invite is from an older version.", null), place.FailedWhy);
+    }
+
+    [Fact]
+    public void AnotherLooksLateFailureNeverCountsAgainstTheField()
+    {
+        var (place, known) = Place();
+        known.LookInto(InviteB);
+        Hear(place, known, InviteB, InviteB, LookFailed(InviteB, new RoomLeftWhy.Unreachable()));
+        Assert.Equal(1, place.Failures);
+        Hear(place, known, InviteB, "typing another", LookFailed(InviteA, new RoomLeftWhy.Unreachable()));
+        Assert.Equal(1, place.Failures);
+        Assert.Equal(InviteB, place.FailedLink);
+    }
+
+    [Fact]
+    public void YourRoomEndingLeavesALookAlone()
+    {
+        var (place, known) = Place(inRoom: true);
+        known.LookInto(InviteB);
+        Hear(place, known, InviteB, InviteB, Glimpse(InviteB));
+        var (_, forget) = Hear(place, known, InviteB, InviteB, new Event.RoomLeft(new RoomLeftWhy.Unreachable()));
+        Assert.False(forget);
+        Assert.Null(place.FailedLink);
+        Assert.Equal(0, place.Failures);
+        Assert.NotNull(known.RoomGlimpse);
+
+        // Out of the room now: a join of that invite failing is the invite's.
+        Hear(place, known, InviteB, InviteB, new Event.RoomLeft(new RoomLeftWhy.Full()));
+        Assert.Equal(InviteB, place.FailedLink);
+    }
+
+    [Fact]
+    public void ARejoinOfARoomNoLongerKeptSaysSoOnItsRow()
+    {
+        var (place, known) = Place();
+        place.Rejoin("room-1");
+        Hear(place, known, null, "", new Event.RoomLookFailed(RoomId: "room-1", Reason: new Msg.RoomLookNotKept(), Invite: null, Why: null));
+        Assert.Equal(("That room isn't kept any more.", null), place.RejoinFailed);
+
+        // Another room's answer is not this row's.
+        place.Rejoin("room-2");
+        Hear(place, known, null, "", new Event.RoomLookFailed(RoomId: "room-1", Reason: new Msg.RoomLookNotKept(), Invite: null, Why: null));
+        Assert.Null(place.RejoinFailed);
+
+        // A Rejoin whose room never answers fails as a join.
+        Hear(place, known, null, "", new Event.RoomLeft(new RoomLeftWhy.Unreachable()));
+        Assert.Equal((T.RoomErrorNobodyAnsweredLead, T.RoomErrorNobodyAnsweredLine), place.RejoinFailed);
+        Assert.Null(place.FailedLink);
+    }
 }

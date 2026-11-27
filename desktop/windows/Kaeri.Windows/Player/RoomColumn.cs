@@ -183,6 +183,18 @@ sealed class RoomColumn : Grid
         Typography.SetNumeralAlignment(tail, FontNumeralAlignment.Tabular);
         tail.Foreground = Haze;
         entry.TextChanged += (_, _) => ShowLimits();
+        // The field's end holds the count and the wait, so the template's clear button stays out.
+        entry.Loaded += (_, _) =>
+        {
+            if (Kaeri.Windows.Pages.ChatField.Find(entry, "DeleteButton") is Button clear)
+            {
+                clear.Width = 0;
+                clear.MinWidth = 0;
+                clear.Opacity = 0;
+                clear.IsTabStop = false;
+                clear.IsHitTestVisible = false;
+            }
+        };
         var field = new Grid();
         field.Children.Add(entry);
         field.Children.Add(tail);
@@ -224,6 +236,16 @@ sealed class RoomColumn : Grid
     }
 
     /// <summary>The room as it is now. Called on every change and once a second while anything counts.</summary>
+#if KAERI_TESTING
+    /// <summary>For the shots: the chat field focused, holding <paramref name="text"/>.</summary>
+    internal void ShotType(string text)
+    {
+        entry.Focus(FocusState.Programmatic);
+        entry.Text = text;
+        entry.SelectionStart = text.Length;
+    }
+#endif
+
     public void Show(RoomScene scene, RoomConversation? conversation, RoomChatState? state, bool chatHidden)
     {
         ShowLine(Rooms.Line(scene));
@@ -260,7 +282,32 @@ sealed class RoomColumn : Grid
         tail.Text = text ?? "";
         tail.Visibility = text is null ? Visibility.Collapsed : Visibility.Visible;
         entry.Padding = new Thickness(10, 5, text is null ? 10 : 20 + text.Length * 7, 6);
+        // Said once to a screen reader: the count at 20 left, and a wait as it starts.
+        var left = Math.Max(0, (int)max - entry.Text.Length);
+        if (left <= Chat.CountFrom && entry.Text.Trim().Length > 0)
+        {
+            if (!toldLeft)
+                Tell(T.RoomChatCharactersLeft(left));
+            toldLeft = true;
+        }
+        else
+            toldLeft = false;
+        if (wait > 0)
+        {
+            if (!toldWait)
+                Tell(T.RoomChatWaitSpoken(wait));
+            toldWait = true;
+        }
+        else
+            toldWait = false;
     }
+
+    bool toldLeft;
+    bool toldWait;
+
+    void Tell(string text) =>
+        FrameworkElementAutomationPeer.FromElement(entry)?.RaiseNotificationEvent(
+            AutomationNotificationKind.Other, AutomationNotificationProcessing.ImportantMostRecent, text, "room-chat");
 
     void ShowLine(RoomLine line)
     {

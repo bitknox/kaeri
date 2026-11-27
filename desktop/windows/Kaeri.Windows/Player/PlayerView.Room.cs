@@ -555,8 +555,8 @@ public sealed partial class PlayerView
             if (roomUpNextShown)
             {
                 roomUpNextShown = false;
-                UpNextCard.Visibility = Visibility.Collapsed;
                 UpNextHead.Text = T.PlayerUpNext;
+                RoomUpNextToCorner();
             }
             return;
         }
@@ -569,11 +569,14 @@ public sealed partial class PlayerView
             ? RoomWords.PlaysInSeconds(Math.Max(0, (ends - scene.NowMs + 999) / 1000))
             : RoomWords.UpNextWaiting(Rooms.Names(next.WaitingFor ?? []));
         UpNextBar.Visibility = Visibility.Collapsed;
-        if (UpNextCard.Visibility != Visibility.Visible)
-        {
-            UpNextCard.Visibility = Visibility.Visible;
-            Motion.FadeIn(UpNextCard);
-        }
+        RoomUpNextToCorner();
+    }
+
+    /// <summary>The room's card takes the corner as the device's own does, so Enter and Esc reach it.</summary>
+    void RoomUpNextToCorner()
+    {
+        upNextShown = roomUpNextShown;
+        UpdateCorner();
     }
 
     bool roomUpNextShown;
@@ -813,6 +816,8 @@ public sealed partial class PlayerView
     }
 
     internal void ShotRoomClose() => CloseOrAsk();
+
+    internal void ShotRoomChatType(string text) => roomColumn?.ShotType(text);
 
     internal void ShotRoomMove() => _ = AskRoomMove();
 }
