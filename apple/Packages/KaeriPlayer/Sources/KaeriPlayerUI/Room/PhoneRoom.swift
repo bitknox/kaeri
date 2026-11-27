@@ -9,6 +9,13 @@ import KaeriStore
 import KaeriStrings
 import SwiftUI
 
+/// Whether a room scene of the Fixtures app runs. Scenes exist only in Fixtures builds.
+#if FIXTURES
+private var roomSceneRuns: Bool { RoomScene.current != nil }
+#else
+private let roomSceneRuns = false
+#endif
+
 /// Under the video, held upright: the title row, the room's line, the faces, the chat and its
 /// field.
 struct PhoneRoomUpright: View {
@@ -95,7 +102,7 @@ struct PhoneRoomUpright: View {
                 .accessibilityLabel(RoomCopy.more)
                 // A room scene's More is named once the scene is staged: a menu opened while
                 // the stream still opens closes as its picture comes.
-                .accessibilityIdentifier(RoomScene.current == nil || room.staged ? "room-more" : "room-more-staging")
+                .accessibilityIdentifier(!roomSceneRuns || room.staged ? "room-more" : "room-more-staging")
             }
         }
     }
