@@ -1561,6 +1561,12 @@ cloud-loopback-done = [Ýöü çàñ çļöšé ţĥîš ţàƀ àñð ĝö ƀà
 # The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
 sync-device-removed = [Ţĥîš ðéṽîçé ŵàš ŕéɱöṽéð ƒŕöɱ šýñç öñ àñöţĥéŕ ðéṽîçé. Ĵöîñ àĝàîñ ţö šýñç îţ.~~~~~~~~~~~~~~~~~~~~~~~]
 
+# Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.
+notice-profile-in-use = [{ $name }'š þŕöƒîļé îš îñ üšé. Šŵîţçĥ ţö àñöţĥéŕ þŕöƒîļé ţö ðéļéţé îţ.~~~~~~~~~~~~~~~~~~~~]
+
+# Alert when a profile could not be deleted. The reason comes from the system.
+notice-profile-not-deleted = [Çöüļðñ'ţ ðéļéţé { $name }'š þŕöƒîļé. { $reason }~~~~~~~~~~~]
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = [Šîĝñéð îñ ţö { $tracker }.~~~~~~]
 

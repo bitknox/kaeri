@@ -75,6 +75,8 @@ pub fn choices_for(key: Key, medium: Medium, screen: Screen) -> Vec<ReaderValue>
         Key::Mode => choices(&["paged", "vertical", "strip"]),
         Key::Direction => choices(&["rtl", "ltr"]),
         Key::Colour => choices(&["auto", "colour", "greys"]),
+        // An e-ink panel shows paper or its inverse; the tinted looks are for lit screens.
+        Key::Look if screen.eink.is_some() => choices(&["paper", "dark"]),
         Key::Look => choices(&["system", "paper", "light", "sepia", "dark"]),
         Key::Font => choices(&["serif", "sans"]),
         Key::Fit => choices(&["screen", "width", "height"]),
@@ -173,6 +175,8 @@ pub fn shown(key: Key, medium: Medium, screen: Screen) -> bool {
         | Key::PaperDim
         | Key::PaperVolume => screen.handheld && screen.eink.is_none(),
         Key::StripGap => screen.eink.is_none(),
+        // On e-ink a manga page is drawn as it is, on the panel's own paper.
+        Key::Look => screen.eink.is_none() || medium == Medium::Novel,
         Key::Colour => screen.eink != Some(EinkPanel::Grey),
         Key::Background => screen.eink.is_none(),
         Key::StripWidth => !screen.handheld,
@@ -753,6 +757,24 @@ mod tests {
         assert_eq!(layers.word(Key::ScreenMode), "standard");
         let grey = Screen { eink: Some(EinkPanel::Grey), ..kaleido };
         assert!(!keys(Medium::Manga, grey).contains(&Key::Colour));
+    }
+
+    /// E-ink offers the looks a panel can show, Paper and Dark, and only for novels: a manga
+    /// page is drawn as it is. A lit screen offers all five.
+    #[test]
+    fn eink_offers_paper_and_dark_for_novels_only() {
+        let phone = Screen { handheld: true, phone: true, ..Screen::default() };
+        let eink = Screen { eink: Some(EinkPanel::Grey), ..phone };
+        assert_eq!(choices_for(Key::Look, Medium::Novel, eink), choices(&["paper", "dark"]));
+        assert!(shown(Key::Look, Medium::Novel, eink));
+        assert!(!shown(Key::Look, Medium::Manga, eink));
+        assert_eq!(choices_for(Key::Look, Medium::Novel, phone).len(), 5);
+        assert!(shown(Key::Look, Medium::Manga, phone) == Key::Look.serves(Medium::Manga));
+        assert!(choices_for(Key::Look, Medium::Novel, eink).contains(&default_for(
+            Key::Look,
+            Medium::Novel,
+            eink
+        )));
     }
 
     #[test]

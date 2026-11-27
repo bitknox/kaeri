@@ -90,6 +90,7 @@ fn held(syncing: &SyncHub) -> std::sync::MutexGuard<'_, Vec<HeldServer>> {
 /// Forget every server held, as when this device leaves the group.
 pub fn forget_all(ctx: &Ctx) {
     held(&ctx.syncing).clear();
+    crate::handoff::forget_held(&ctx.syncing);
 }
 
 /// The servers held, for `SyncStatus::book_servers_to_add`.
@@ -115,8 +116,8 @@ fn offer(ctx: &Ctx, held: &HeldServer) -> Option<SyncBookServerOffer> {
 }
 
 /// The asking side: hold the servers that came, and say what the other device brought and which
-/// first-run pages that answers. `copied` are the trackers whose sign-ins were taken in this
-/// session.
+/// first-run pages that answers. Lists counts as answered when every tracker the other device
+/// is signed in to is signed in here or held to copy.
 pub(crate) fn take(ctx: &Ctx, tx: &Outbox, from: &Paired, gift: Option<SetupGift>) {
     let gift = gift.unwrap_or_default();
     {
@@ -141,8 +142,12 @@ pub(crate) fn take(ctx: &Ctx, tx: &Outbox, from: &Paired, gift: Option<SetupGift
         .filter_map(|h| offer(ctx, h))
         .collect();
     let medium = gift.medium.as_deref().and_then(KaeriIsFor::parse);
-    let signed_in_here =
-        |id: &str| ctx.sync.trackers.iter().any(|t| t.id() == id && t.is_authenticated());
+    // A sign-in held for Copy sign-ins counts: with the switch on, Continue takes it.
+    let held_here = crate::handoff::held_from(&ctx.syncing, &from.device);
+    let signed_in_here = |id: &str| {
+        held_here.iter().any(|h| h == id)
+            || ctx.sync.trackers.iter().any(|t| t.id() == id && t.is_authenticated())
+    };
     let lists =
         !gift.signed_in.is_empty() && gift.signed_in.iter().all(|id| signed_in_here(id));
     let setup = JoinedSetup {

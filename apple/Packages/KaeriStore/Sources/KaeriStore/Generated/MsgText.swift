@@ -176,6 +176,8 @@ extension Msg {
         case .partyServerUnreachable(let server): L.partyServerUnreachable(server: server)
         case .cloudLoopbackDone: L.cloudLoopbackDone
         case .syncDeviceRemoved: L.syncDeviceRemoved
+        case .noticeProfileInUse(let name): L.noticeProfileInUse(name: name)
+        case .noticeProfileNotDeleted(let name, let reason): L.noticeProfileNotDeleted(name: name, reason: reason)
         case .noticeSignedIn(let tracker): L.noticeSignedIn(tracker: tracker)
         case .noticeSignedInKeychain(let tracker): L.noticeSignedInKeychain(tracker: tracker)
         case .noticeSignedInFile(let tracker): L.noticeSignedInFile(tracker: tracker)

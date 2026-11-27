@@ -1561,6 +1561,12 @@ cloud-loopback-done = You can close this tab and go back to Kaeri.
 # The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
 sync-device-removed = This device was removed from sync on another device. Join again to sync it.
 
+# Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.
+notice-profile-in-use = { $name }'s profile is in use. Switch to another profile to delete it.
+
+# Alert when a profile could not be deleted. The reason comes from the system.
+notice-profile-not-deleted = Couldn't delete { $name }'s profile. { $reason }
+
 # Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 notice-signed-in = Signed in to { $tracker }.
 

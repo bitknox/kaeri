@@ -1548,6 +1548,56 @@ fn play_download(app: &App, episode: &str, path: &str) {
     });
 }
 
+/// A finished download of the finished fixture title's `episode`, its file at `path`, as the
+/// download queue leaves it.
+fn downloaded(app: &App, episode: &str, path: &str) {
+    std::fs::write(path, b"not really a video").unwrap();
+    let store = kaeri_store::Store::open(app.root.path().join("data/kaeri.db")).unwrap();
+    let row = store
+        .enqueue_download(FINISHED, episode, "Stardust Wayfarer", "magnet:?xt=urn:btih:00")
+        .unwrap();
+    store.finish_download(row.id, Some(path)).unwrap();
+}
+
+#[test]
+fn play_opens_a_downloaded_episode_from_disk() {
+    let provider = sources::provider().with_source_streams("release", two_servers());
+    let mut app = App::start(
+        ProviderRegistry::new(vec![provider.arc()]),
+        "[playback]\nauto_next = false\n",
+    );
+    let path = app.root.path().join("Stardust Wayfarer 12.mp4").display().to_string();
+    downloaded(&app, "12", &path);
+
+    // Play, as Home, the title page or Resume send it: the file, not a stream.
+    app.play(FINISHED, "12");
+    let load = app.load();
+    assert_eq!(load.url, path);
+    app.opened(load.playback, &[]);
+    app.tick(load.playback, 0, 60);
+    app.stop();
+    assert_eq!(app.history("12").last(), Some(&60.0), "it records as a streamed play does");
+
+    // Once the file is gone, the episode streams again.
+    std::fs::remove_file(&path).unwrap();
+    app.play(FINISHED, "12");
+    assert_ne!(app.load().url, path);
+    app.stop();
+
+    // A release picked by hand streams, download or not.
+    let other = app.root.path().join("Stardust Wayfarer 11.mp4").display().to_string();
+    downloaded(&app, "11", &other);
+    app.engine.send(Command::PlaySource {
+        id: FINISHED,
+        episode: "11".into(),
+        provider_id: sources::PROVIDER_ID.into(),
+        source_id: "release".into(),
+    });
+    assert_eq!(app.load().url, FAILING, "the release's own first server");
+    app.stop();
+    app.shutdown();
+}
+
 #[test]
 fn a_download_played_while_private_is_held_in_memory_as_any_private_play() {
     let mut app = App::fixtures("[playback]\nauto_next = false\n");

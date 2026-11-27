@@ -958,19 +958,11 @@ async fn persist_renewed_tokens(sync: &Sync) {
     }
 }
 
-/// A tracker's name as a person knows it. An id it has no name for is shown as it is.
-pub(crate) fn tracker_name(id: &str) -> String {
-    match id {
-        "anilist" => "AniList",
-        "mal" => "MyAnimeList",
-        "kitsu" => "Kitsu",
-        "mangaupdates" => "MangaUpdates",
-        "simkl" => "Simkl",
-        "trakt" => "Trakt",
-        other => other,
-    }
-    .to_owned()
-}
+/// A tracker's name as a person knows it: the apps' own [`tracker_name`], so the engine's
+/// notices and the account cards read the same.
+///
+/// [`tracker_name`]: kaeri_model::present::tracker_name
+pub(crate) use kaeri_model::present::tracker_name;
 
 /// A finished sign-in. A token kept in a file rather than the keychain is said, not hidden.
 fn signed_in(tracker_id: &str, token_in_file: bool) -> Notice {
@@ -1961,6 +1953,31 @@ mod tests {
     use kaeri_track::secret::Backend;
 
     use super::*;
+
+    #[test]
+    fn every_tracker_the_engine_builds_has_a_name_and_a_profile_token() {
+        // The trackers come from `build`'s `is_enabled("<id>")` checks, read from this file, so
+        // a new tracker can't ship reading as its bare id on an account card.
+        let source = include_str!("mod.rs");
+        let ids: Vec<&str> = source
+            .split("trackers.is_enabled(\"")
+            .skip(1)
+            .filter_map(|rest| rest.split_once('"').map(|(id, _)| id))
+            .collect();
+        assert!(ids.len() >= 6, "found the trackers: {ids:?}");
+        for id in ids {
+            assert_ne!(tracker_name(id), id, "{id} has no display name");
+            assert!(
+                crate::profile::TRACKER_TOKENS.contains(&id),
+                "{id} is not in profile::TRACKER_TOKENS"
+            );
+        }
+        for id in crate::profile::TRACKER_TOKENS {
+            if !crate::cloud::TOKEN_IDS.contains(&id) {
+                assert_ne!(tracker_name(id), id, "{id} has no display name");
+            }
+        }
+    }
 
     #[test]
     fn the_lists_next_episode_never_passes_a_known_count() {

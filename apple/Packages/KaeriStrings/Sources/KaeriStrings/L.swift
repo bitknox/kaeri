@@ -1934,6 +1934,16 @@ public enum L {
     /// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
     public static var syncDeviceRemoved: String { string("sync-device-removed", fallback: "This device was removed from sync on another device. Join again to sync it.") }
 
+    /// Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.
+    public static func noticeProfileInUse(name: String) -> String {
+        Self.format("notice-profile-in-use", fallback: "%1$@'s profile is in use. Switch to another profile to delete it.", name)
+    }
+
+    /// Alert when a profile could not be deleted. The reason comes from the system.
+    public static func noticeProfileNotDeleted(name: String, reason: String) -> String {
+        Self.format("notice-profile-not-deleted", fallback: "Couldn't delete %1$@'s profile. %2$@", name, reason)
+    }
+
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     public static func noticeSignedIn(tracker: String) -> String {
         Self.format("notice-signed-in", fallback: "Signed in to %1$@.", tracker)

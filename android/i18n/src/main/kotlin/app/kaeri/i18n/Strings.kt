@@ -1909,6 +1909,14 @@ object Strings {
     fun syncDeviceRemoved(context: Context): String =
         context.getString(R.string.sync_device_removed)
 
+    /** Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first. */
+    fun noticeProfileInUse(context: Context, name: String): String =
+        context.getString(R.string.notice_profile_in_use, name)
+
+    /** Alert when a profile could not be deleted. The reason comes from the system. */
+    fun noticeProfileNotDeleted(context: Context, name: String, reason: String): String =
+        context.getString(R.string.notice_profile_not_deleted, name, reason)
+
     /** Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList. */
     fun noticeSignedIn(context: Context, tracker: String): String =
         context.getString(R.string.notice_signed_in, tracker)

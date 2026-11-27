@@ -183,6 +183,8 @@ fun Msg.text(context: Context): String =
         is Msg.PartyServerUnreachable -> Strings.partyServerUnreachable(context, this.server)
         is Msg.CloudLoopbackDone -> Strings.cloudLoopbackDone(context)
         is Msg.SyncDeviceRemoved -> Strings.syncDeviceRemoved(context)
+        is Msg.NoticeProfileInUse -> Strings.noticeProfileInUse(context, this.name)
+        is Msg.NoticeProfileNotDeleted -> Strings.noticeProfileNotDeleted(context, this.name, this.reason)
         is Msg.NoticeSignedIn -> Strings.noticeSignedIn(context, this.tracker)
         is Msg.NoticeSignedInKeychain -> Strings.noticeSignedInKeychain(context, this.tracker)
         is Msg.NoticeSignedInFile -> Strings.noticeSignedInFile(context, this.tracker)
