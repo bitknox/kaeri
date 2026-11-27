@@ -319,3 +319,66 @@ fn one_members_trouble_never_evicts_a_relay_and_only_adds_one() {
     health(&mut room, "a", 0b111, 0);
     assert_eq!(room.relay_change(120_000, &spares), None);
 }
+
+#[test]
+fn before_play_and_while_paused_the_room_waits_for_no_one() {
+    // Nobody pressed Play: Ren still loading is a row, not a wait ("Not started yet").
+    let mut room = room(&["r"]);
+    let head = room
+        .write(
+            0,
+            0,
+            |h| {
+                h.play = false;
+                h.cause = Cause::Episode;
+            },
+            Some(ep()),
+        )
+        .unwrap();
+    room.set_status(watching(Some(head.wseq)), 0);
+    status(&mut room, "r", loading(), 10);
+    assert!(room.waited(5_000).is_empty());
+    assert_eq!(room.word(room.member("r").unwrap(), 5_000), Word::Loading);
+    // Play for everyone: now the room waits for Ren.
+    room.write(
+        6_000,
+        6_000,
+        |h| {
+            h.play = true;
+            h.cause = Cause::Play;
+        },
+        None,
+    )
+    .unwrap();
+    assert_eq!(room.waited(6_000).iter().map(|w| w.mid.as_str()).collect::<Vec<_>>(), ["r"]);
+}
+
+#[test]
+fn a_member_loading_after_a_seek_is_waited_for_as_loading_as_its_row_says() {
+    let mut room = room(&["r", "m"]);
+    let wseq = start(&mut room, 0);
+    status(&mut room, "m", watching(Some(wseq)), 0);
+    status(&mut room, "r", watching(Some(wseq)), 0);
+    room.settle(3_000);
+    room.write(
+        5_000,
+        5_000,
+        |h| {
+            h.pos = 35.0;
+            h.cause = Cause::Seek;
+        },
+        None,
+    )
+    .unwrap();
+    // Mika seeks; Ada (here) is on it. Ren's player still seeks: Seeking.
+    let wseq = room.playhead().unwrap().wseq;
+    room.set_status(watching(Some(wseq)), 5_000);
+    status(&mut room, "m", watching(Some(wseq)), 5_000);
+    let waited = room.waited(5_500);
+    assert_eq!((waited[0].mid.as_str(), waited[0].reason), ("r", Reason::Seeking));
+    // Ren's player reopens the episode: Loading, in the wait and on the row alike.
+    status(&mut room, "r", loading(), 6_000);
+    let waited = room.waited(6_500);
+    assert_eq!((waited[0].mid.as_str(), waited[0].reason), ("r", Reason::Loading));
+    assert_eq!(room.word(room.member("r").unwrap(), 6_500), Word::Loading);
+}
