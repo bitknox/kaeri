@@ -716,6 +716,42 @@ fn your_own_loading_scene_holds_against_your_players_reports() {
 }
 
 #[test]
+fn your_held_behind_scene_keeps_its_posed_amount() {
+    // Linux's self-behind read "You're 15 s behind" and "Behind · 15 s" where the pose says 4 s:
+    // the amount came from the app's just-opened player and the room playing on, not the pose.
+    let (_root, engine) = staged(FfiRoomScene::YouBehind);
+    let (view, members, read) =
+        until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    play_like_the_app(&engine, &read);
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| loads(e).is_some())
+    });
+    let playback = read.iter().find_map(loads).unwrap();
+    let property = |name: &str, json: String| {
+        let report = PlayerReport::Property { name: name.into(), json };
+        assert_eq!(engine.send(Command::PlayerReport { playback, report }), None);
+    };
+    assert_eq!(
+        engine.send(Command::PlayerReport { playback, report: PlayerReport::FileLoaded }),
+        None
+    );
+    property("duration", "1440.0".into());
+    property("pause", "false".into());
+    for i in 0..12 {
+        property("time-pos", format!("{:.2}", i as f64 * 0.25));
+        thread::sleep(Duration::from_millis(250));
+    }
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (_, members, _) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    let you = members.iter().find(|m| m.you).unwrap();
+    assert_eq!(you.state, MemberState::Behind, "{members:?}");
+    assert_eq!(you.behind_s, Some(4.0), "{members:?}");
+    engine.shutdown();
+}
+
+#[test]
 fn before_play_the_chat_says_no_wait() {
     // Apple's beforewait: "Paused for Ren · loading" before the room ever played. The board
     // has the header say it and no line in the chat.
