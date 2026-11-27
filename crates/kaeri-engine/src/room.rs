@@ -421,9 +421,9 @@ struct Env {
 fn peek(target: Target, look: Look, services: &Services, tx: &Outbox) {
     let tx = tx.clone();
     let meta = services.meta.clone();
-    let room_id = match &look {
-        Look::Recent(id) => Some(id.clone()),
-        Look::Invite(_) => None,
+    let (room_id, invite) = match &look {
+        Look::Recent(id) => (Some(id.clone()), None),
+        Look::Invite(invite) => (None, Some(invite.clone())),
     };
     tokio::spawn(async move {
         let Ok(mut link) = link::open(target.secret, target.relays.clone()).await else {
@@ -479,6 +479,7 @@ fn peek(target: Target, look: Look, services: &Services, tx: &Outbox) {
             members,
             room_episode,
             playing: room.playing(),
+            invite,
         }));
     });
 }

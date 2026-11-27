@@ -389,6 +389,11 @@ pub struct RoomGlimpse {
     /// [`ROOM_CAP`] people or more are there: "Join anyway".
     #[cfg_attr(feature = "ffi", uniffi(default))]
     pub full: bool,
+    /// The invite looked into, exactly as the look was asked for; `None` for a recent room. An
+    /// app shows a glimpse only for the look it is waiting on, so a slow answer for one invite
+    /// never stands in for another's.
+    #[cfg_attr(feature = "ffi", uniffi(default))]
+    pub invite: Option<String>,
 }
 
 /// A room kept on this device: the last ten, newest first. Rejoin works without asking anyone.

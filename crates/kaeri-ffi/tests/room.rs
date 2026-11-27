@@ -1123,3 +1123,25 @@ fn a_look_that_fails_never_leaves_the_room_youre_in() {
     assert!(left.is_empty(), "{left:?}");
     engine.shutdown();
 }
+
+#[test]
+fn a_glimpse_names_the_invite_it_answers() {
+    // Android's review: a slow answer for invite A must not stand in for invite B's, so the
+    // glimpse carries the invite it was asked for, as the look's failure does.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let room = Arc::clone(&engine).start_fake_room();
+    let invite = room.invite("Mika".into());
+    engine.send(Command::Room(RoomCommand::PeekInvite { invite: invite.clone() }));
+    // No room joined here: no view to wait from.
+    let (_, _, read) =
+        until_from(&engine, (Some(RoomView::default()), Vec::new()), |_, _, r| {
+            r.iter().any(|e| matches!(e, Event::RoomGlimpse(_)))
+        });
+    let glimpse = read.iter().find_map(|e| match e {
+        Event::RoomGlimpse(g) => Some(g.clone()),
+        _ => None,
+    });
+    assert_eq!(glimpse.and_then(|g| g.invite), Some(invite));
+    engine.shutdown();
+}
