@@ -187127,6 +187127,40 @@
         }
       }
     },
+    "player-sources-found-line" : {
+      "comment" : "Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting). Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One source has it. Choose it to play."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sources have it. Choose the one to play."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "player-speed" : {
       "comment" : "Button and menu for the playback speed.",
       "extractionState" : "manual",
@@ -258863,8 +258897,42 @@
         }
       }
     },
+    "room-line-still-buffering" : {
+      "comment" : "First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for. Argument 1: names (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is still buffering"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are still buffering"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "room-line-still-loading" : {
-      "comment" : "First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for. Argument 1: names (Text). Argument 2: count (Int).",
+      "comment" : "First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for. Argument 1: names (Text). Argument 2: count (Int).",
       "extractionState" : "manual",
       "localizations" : {
         "en" : {
@@ -258888,6 +258956,40 @@
                     "stringUnit" : {
                       "state" : "translated",
                       "value" : "%1$@ are still loading"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "room-line-still-seeking" : {
+      "comment" : "First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for. Argument 1: names (Text). Argument 2: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 2,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ is still seeking"
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$@ are still seeking"
                     }
                   }
                 }
@@ -260177,6 +260279,40 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Skip opening"
+          }
+        }
+      }
+    },
+    "room-sources-found-line" : {
+      "comment" : "Line above the list of sources that have the room's episode, in the Choose a source dialog in a room. Argument 1: count (Int).",
+      "extractionState" : "manual",
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "%#@count@"
+          },
+          "substitutions" : {
+            "count" : {
+              "argNum" : 1,
+              "formatSpecifier" : "lld",
+              "variations" : {
+                "plural" : {
+                  "one" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "One source has it. It plays for everyone in the room."
+                    }
+                  },
+                  "other" : {
+                    "stringUnit" : {
+                      "state" : "translated",
+                      "value" : "%1$lld sources have it. Your pick plays for everyone in the room."
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

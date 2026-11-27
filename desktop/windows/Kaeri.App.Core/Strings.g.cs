@@ -6211,6 +6211,9 @@ public static partial class T
     /// <summary>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</summary>
     public static string PlayerPanelLess => Get("PlayerPanelLess");
 
+    /// <summary>Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).</summary>
+    public static string PlayerSourcesFoundLine(long count) => Fill(GetPlural("PlayerSourcesFoundLine", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</summary>
     public static string PrivateMode => Get("PrivateMode");
 
@@ -8180,8 +8183,14 @@ public static partial class T
     /// <summary>Second line while the room waits for you: who waits, and for how many seconds so far.</summary>
     public static string RoomLineWaitingForYou(string names, long count, long seconds) => Fill(GetPlural("RoomLineWaitingForYou", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
-    /// <summary>First line once the room has waited as long as it will (20 seconds). `count` is how many people it waits for.</summary>
+    /// <summary>First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.</summary>
     public static string RoomLineStillLoading(string names, long count) => Fill(GetPlural("RoomLineStillLoading", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.</summary>
+    public static string RoomLineStillSeeking(string names, long count) => Fill(GetPlural("RoomLineStillSeeking", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.</summary>
+    public static string RoomLineStillBuffering(string names, long count) => Fill(GetPlural("RoomLineStillBuffering", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Second line once the room has waited as long as it will.</summary>
     public static string RoomLineWaited(long seconds) => Fill(Get("RoomLineWaited"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
@@ -8905,6 +8914,9 @@ public static partial class T
 
     /// <summary>Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.</summary>
     public static string RoomTvJoinFromPhone => Get("RoomTvJoinFromPhone");
+
+    /// <summary>Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.</summary>
+    public static string RoomSourcesFoundLine(long count) => Fill(GetPlural("RoomSourcesFoundLine", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
 
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
@@ -15478,6 +15490,8 @@ public static partial class T
         ["PartyVersionOwn"] = "Only your player switches. The room keeps playing.",
         ["PlayerPanelMore"] = "More",
         ["PlayerPanelLess"] = "Less",
+        ["PlayerSourcesFoundLine_one"] = "One source has it. Choose it to play.",
+        ["PlayerSourcesFoundLine_other"] = "{count} sources have it. Choose the one to play.",
         ["PrivateMode"] = "Private mode",
         ["PrivateModeDetail"] = "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.",
         ["PrivateModeLimits"] = "Your sources and watch parties still see what you open.",
@@ -16178,6 +16192,10 @@ public static partial class T
         ["RoomLineWaitingForYou_other"] = "{names} are waiting · {seconds} s",
         ["RoomLineStillLoading_one"] = "{names} is still loading",
         ["RoomLineStillLoading_other"] = "{names} are still loading",
+        ["RoomLineStillSeeking_one"] = "{names} is still seeking",
+        ["RoomLineStillSeeking_other"] = "{names} are still seeking",
+        ["RoomLineStillBuffering_one"] = "{names} is still buffering",
+        ["RoomLineStillBuffering_other"] = "{names} are still buffering",
         ["RoomLineWaited"] = "The room has waited {seconds} s",
         ["RoomLineCarriedOnOne"] = "{carrier} carried on · {name} joins when ready",
         ["RoomLineCarriedOnMany"] = "{carrier} carried on · they join when ready",
@@ -16429,6 +16447,8 @@ public static partial class T
         ["RoomDeviceInRoom"] = "{device} is in this room",
         ["RoomLeaveOnDevice"] = "Leave the room on {device}",
         ["RoomTvJoinFromPhone"] = "To join someone's room, open their invite on a paired phone and choose this TV.",
+        ["RoomSourcesFoundLine_one"] = "One source has it. It plays for everyone in the room.",
+        ["RoomSourcesFoundLine_other"] = "{count} sources have it. Your pick plays for everyone in the room.",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",

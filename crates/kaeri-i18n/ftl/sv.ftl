@@ -1766,13 +1766,6 @@ party-choose-a-source = Välj en källa
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Ingen källa listar avsnitt { $episode }. Källor kommer från tillägg, som du lägger till från en tilläggsbutik.
 
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] En källa har det. Den du väljer spelas med watch party.
-       *[other] { $count } källor har det. Den du väljer spelas med watch party.
-    }
-
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Spelaren kunde inte starta. Försök igen eller välj en annan källa.
 

@@ -405,31 +405,6 @@
       }
      },
      {
-      "key": "SYNCPLAY",
-      "value": "off",
-      "change": {
-       "@type": "Steps",
-       "back": false,
-       "forward": true
-      }
-     },
-     {
-      "key": "SYNCPLAY_SERVER",
-      "value": "",
-      "change": {
-       "@type": "Typed",
-       "text": ""
-      }
-     },
-     {
-      "key": "SYNCPLAY_ROOM",
-      "value": "unset — needed for parties",
-      "change": {
-       "@type": "Typed",
-       "text": ""
-      }
-     },
-     {
       "key": "UPDATE_CHECK",
       "value": "on",
       "change": {
@@ -7153,11 +7128,10 @@
    "waiting": null
   },
   {
-   "@type": "PartyRecent",
+   "@type": "RoomRecent",
    "v1": [
     {
-     "server": "syncplay.pl:8995",
-     "room": "kite-7qm4-xr9d",
+     "roomId": "66a02b74f19d17d5cf6d71faf7a6361e",
      "id": "900006",
      "title": "Summer Wind Relay",
      "episode": "8",
@@ -7169,8 +7143,7 @@
      "coverUrl": null
     },
     {
-     "server": "syncplay.pl:8995",
-     "room": "ember-2hv8-kd4p",
+     "roomId": "dd3c4950a2de2b5f42e1e1c9d8b3caf6",
      "id": "900001",
      "title": "Stardust Wayfarer",
      "episode": "3",
@@ -7181,8 +7154,7 @@
      "coverUrl": null
     },
     {
-     "server": "syncplay.pl:8995",
-     "room": "ember-9wz3-tn6c",
+     "roomId": "a3395757fb1d2b27a5cd84d99ace38bf",
      "id": "900005",
      "title": "The Steel Gardener",
      "episode": "1",
@@ -7191,16 +7163,6 @@
      "coverUrl": null
     }
    ]
-  },
-  {
-   "@type": "PartyForm",
-   "v1": {
-    "recentServers": [],
-    "suggestedServer": "syncplay.pl:8995",
-    "suggestedRunBy": "the Syncplay project",
-    "room": "heron-a7xq-xbaa",
-    "name": "kaeri"
-   }
   },
   {
    "@type": "JobStarted",

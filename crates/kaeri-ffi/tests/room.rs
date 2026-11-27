@@ -12,9 +12,10 @@ use kaeri_ffi::{FfiDirs, FfiEngine, FfiHost, FfiRoomScene, FfiStart, parse_room_
 use kaeri_model::{
     command::Command,
     event::Event,
+    hosted::{MpvValue, PlayerOp, PlayerReport},
     room::{
-        MemberState, OldInvite, RoomCommand, RoomConnection, RoomLeftWhy, RoomMember,
-        RoomMessageKind, RoomStartKind, RoomView,
+        MemberState, OldInvite, RoomCommand, RoomConnection, RoomEpisode, RoomLeftWhy,
+        RoomMember, RoomMessageKind, RoomStartKind, RoomView,
     },
 };
 
@@ -481,6 +482,116 @@ fn paused_waiting_and_before_play_scenes_open_the_player() {
             assert!(matches!(at, Some(Some(pos)) if pos > 0.5), "{scene:?}: {at:?}");
         }
         engine.shutdown();
+    }
+}
+
+#[test]
+fn a_room_started_from_a_playing_player_keeps_playing_and_says_no_resume() {
+    // The morph: the player becomes the room. It must never be paused for the room's start,
+    // and the room's start is no one's Resume.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let room = Arc::clone(&engine).start_fake_room();
+    let id = kaeri_core::ids::AnilistId::new(900_001);
+    engine.send(Command::Play { id, episode: "9".into(), from_start: false });
+    let read = before_the_room(&engine, |e| loads(e).is_some());
+    let playback = read.iter().find_map(loads).unwrap();
+    let report = {
+        let engine = Arc::clone(&engine);
+        move |report| assert_eq!(engine.send(Command::PlayerReport { playback, report }), None)
+    };
+    let property = move |name: &str, json: String| {
+        report(PlayerReport::Property { name: name.into(), json })
+    };
+    assert_eq!(
+        engine.send(Command::PlayerReport { playback, report: PlayerReport::FileLoaded }),
+        None
+    );
+    property("duration", "1440.0".into());
+    property("pause", "false".into());
+    let ticking = Arc::new(std::sync::atomic::AtomicBool::new(true));
+    let ticker = {
+        let ticking = Arc::clone(&ticking);
+        thread::spawn(move || {
+            let mut pos = 30.0;
+            while ticking.load(std::sync::atomic::Ordering::Relaxed) {
+                property("time-pos", format!("{pos:.2}"));
+                pos += 0.25;
+                thread::sleep(Duration::from_millis(250));
+            }
+        })
+    };
+    thread::sleep(Duration::from_millis(600));
+    engine.send(Command::Room(RoomCommand::Lobby {
+        invite: None,
+        name: Some("Ada".into()),
+        pick: Some(RoomEpisode { id, episode: "9".into() }),
+        anyway: false,
+    }));
+    let (view, members, mut read) = until(&engine, |v, _, _| v.room_episode.is_some());
+    thread::sleep(Duration::from_secs(3));
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (view, _, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    read.extend(later);
+    ticking.store(false, std::sync::atomic::Ordering::Relaxed);
+    ticker.join().unwrap();
+    assert!(view.playing, "{view:?}");
+    let said: Vec<_> = read
+        .iter()
+        .filter(|e| {
+            matches!(e, Event::RoomMessage(m) if matches!(
+                m.kind,
+                RoomMessageKind::Resumed { .. } | RoomMessageKind::Paused { .. }
+            ))
+        })
+        .collect();
+    assert!(said.is_empty(), "{said:?}");
+    let paused = read.iter().any(|e| {
+        matches!(e, Event::PlayerOps { ops, .. } if ops.iter().any(|op| matches!(
+            op,
+            PlayerOp::Set { property, value: MpvValue::Flag(true) } if property == "pause"
+        )))
+    });
+    assert!(!paused, "the player was paused for the room's start");
+    std::mem::forget(room);
+    engine.shutdown();
+}
+
+/// Events until one holds, before any room: [`until`] waits for a room's view.
+fn before_the_room(
+    engine: &Arc<FfiEngine>,
+    want: impl Fn(&Event) -> bool + Send + 'static,
+) -> Vec<Event> {
+    let engine = Arc::clone(engine);
+    let (tx, rx) = mpsc::channel();
+    thread::spawn(move || {
+        let mut read = Vec::new();
+        loop {
+            let batch = futures::executor::block_on(engine.next_events());
+            if batch.is_empty() {
+                return;
+            }
+            let found = batch.iter().any(&want);
+            read.extend(batch);
+            if found {
+                let _ = tx.send(read);
+                return;
+            }
+        }
+    });
+    rx.recv_timeout(PATIENCE).expect("the event in time")
+}
+
+fn loads(event: &Event) -> Option<kaeri_model::playback::PlaybackId> {
+    match event {
+        Event::PlayerOps { playback, ops }
+            if ops.iter().any(|op| matches!(op, PlayerOp::Load { .. })) =>
+        {
+            Some(*playback)
+        }
+        _ => None,
     }
 }
 
