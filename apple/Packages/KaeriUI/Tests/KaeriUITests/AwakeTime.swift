@@ -4,6 +4,8 @@
 // with seven issues in three KaeriStore suites, then KaeriUI with one. The suspending clock
 // stops while the Mac sleeps.
 
+import Foundation
+
 /// The main run loop turned for `seconds` of awake time, a little at a time.
 func runAwake(_ seconds: Double) {
     let end = SuspendingClock.now + .seconds(seconds)
