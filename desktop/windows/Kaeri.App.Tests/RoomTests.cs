@@ -83,6 +83,15 @@ public class RoomTests
     }
 
     [Fact]
+    public void TheRoomsPlaceTruncatesItsSecondsAsTheEngineDoes()
+    {
+        // 12.9 s is 0:12 everywhere: rounding it to 0:13 put the line a second off the other apps'.
+        Assert.Equal("0:12", Rooms.Clock(12.9));
+        Assert.Equal("0:00", Rooms.Clock(-1));
+        Assert.Equal("1:00:05", Rooms.Clock(3605.99));
+    }
+
+    [Fact]
     public void TheCapSaysWhyItWaitsWhenEveryoneWaitedForWaitsTheSameWay()
     {
         string Title(params PausedFor[] waiting) =>
