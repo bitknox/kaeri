@@ -7,7 +7,8 @@
 //! 3. `body.from` is the event's pubkey;
 //! 4. the session key is bound to `body.mid` by an identity proof, or the body is the Hello that
 //!    binds it (a newcomer's SyncReq is let through unbound);
-//! 5. `ctr` is above the last one seen from that session key;
+//! 5. `ctr` wasn't seen from that session key yet, and is less than [`CTR_WINDOW`] below the
+//!    highest that was;
 //! 6. `created_at` is within 120 s of the corrected clock.
 //!
 //! Each sender is also held to 60 events a minute.
@@ -35,6 +36,10 @@ pub const AGE_LIMIT_MS: i64 = 120_000;
 pub const BUCKETS: [usize; 5] = [512, 1024, 2048, 4096, 8192];
 /// Events one sender may get through in a minute.
 pub const SENDER_CAP: usize = 60;
+/// A counter this far below the highest seen from a session, or further, is a replay. Above
+/// that, one not seen yet is taken: a member's events reach us by several relays, each sending
+/// what waited under its own cap in its own time, so they can come out of order.
+pub const CTR_WINDOW: u64 = 64;
 
 /// The body as JSON, padded with a `_` filler field to the smallest bucket that holds it.
 pub fn pad(body: &Body) -> Vec<u8> {
@@ -103,10 +108,34 @@ pub struct Gate {
     ids: HashMap<Mid, String>,
     /// session → mid.
     sessions: HashMap<String, Mid>,
-    /// session → last ctr.
-    ctrs: HashMap<String, u64>,
+    /// session → the counters seen.
+    ctrs: HashMap<String, Ctrs>,
     /// session → arrival times in the last minute.
     rate: HashMap<String, VecDeque<i64>>,
+}
+
+/// The highest counter seen from a session, and which of the [`CTR_WINDOW`] at and below it were.
+#[derive(Debug, Default, Clone, Copy)]
+struct Ctrs {
+    top: u64,
+    /// Bit `i`: `top - i` was seen.
+    seen: u64,
+}
+
+impl Ctrs {
+    fn fresh(&self, ctr: u64) -> bool {
+        ctr > self.top
+            || (self.top - ctr < CTR_WINDOW && self.seen & (1 << (self.top - ctr)) == 0)
+    }
+
+    fn take(&mut self, ctr: u64) {
+        if ctr > self.top {
+            let up = ctr - self.top;
+            self.seen = if up < CTR_WINDOW { self.seen << up } else { 0 };
+            self.top = ctr;
+        }
+        self.seen |= 1 << (self.top - ctr);
+    }
 }
 
 impl Gate {
@@ -161,7 +190,7 @@ impl Gate {
         if times.len() >= SENDER_CAP {
             return Err(Dropped::Spam);
         }
-        if self.ctrs.get(&session).is_some_and(|last| body.ctr <= *last) {
+        if self.ctrs.get(&session).is_some_and(|c| !c.fresh(body.ctr)) {
             return Err(Dropped::Replayed);
         }
         match &body.m {
@@ -204,7 +233,7 @@ impl Gate {
             }
             *roster = kept;
         }
-        self.ctrs.insert(session.clone(), body.ctr);
+        self.ctrs.entry(session.clone()).or_default().take(body.ctr);
         self.rate.entry(session).or_default().push_back(now_ms);
         Ok(())
     }
@@ -296,6 +325,25 @@ mod tests {
     }
 
     #[test]
+    fn a_counter_that_comes_late_by_another_relay_is_taken_once() {
+        // CI: a line waiting on one relay arrived after a later Status had come by the other,
+        // and was dropped as a replay.
+        let keys = RoomKeys::new([1; 16]);
+        let mut gate = Gate::new(keys.room_id());
+        let (id, s) = (Identity::new(), Session::new());
+        assert_eq!(gate.admit(&mut hello(&id, &s, &keys, 1), NOW), Ok(()));
+        let mut beat = |ctr| gate.admit(&mut body(&s, &id.mid(), ctr, Message::Heartbeat), NOW);
+        assert_eq!(beat(100), Ok(()));
+        assert_eq!(beat(98), Ok(()), "late, never seen");
+        assert_eq!(beat(98), Err(Dropped::Replayed), "once");
+        assert_eq!(beat(100), Err(Dropped::Replayed));
+        assert_eq!(beat(100 - CTR_WINDOW), Err(Dropped::Replayed), "too far back to tell");
+        assert_eq!(beat(101), Ok(()));
+        assert_eq!(beat(99), Ok(()));
+        assert_eq!(beat(99), Err(Dropped::Replayed));
+    }
+
+    #[test]
     fn only_a_proved_session_speaks_for_a_mid() {
         let keys = RoomKeys::new([1; 16]);
         let mut gate = Gate::new(keys.room_id());
@@ -308,7 +356,7 @@ mod tests {
         assert_eq!(gate.admit(&mut ask, NOW), Ok(()));
         assert_eq!(gate.admit(&mut hello(&id, &s, &keys, 3), NOW), Ok(()));
         assert_eq!(gate.admit(&mut body(&s, &id.mid(), 4, Message::Heartbeat), NOW), Ok(()));
-        // Counters only rise.
+        // A counter is taken once.
         assert_eq!(
             gate.admit(&mut body(&s, &id.mid(), 4, Message::Heartbeat), NOW),
             Err(Dropped::Replayed)

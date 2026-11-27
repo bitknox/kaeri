@@ -197,8 +197,10 @@ async fn serve(stream: TcpStream, state: Arc<Mutex<State>>, mut hang: watch::Rec
     loop {
         tokio::select! {
             _ = hang.changed() => break,
+            // What a client sent before it went is still read, as a relay does, though a reply
+            // to it fails.
             out = rx.recv() => match out {
-                Some(text) => if write.send(Ws::text(text)).await.is_err() { break },
+                Some(text) => { let _ = write.send(Ws::text(text)).await; }
                 None => break,
             },
             frame = read.next() => match frame {

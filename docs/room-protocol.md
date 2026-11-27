@@ -57,7 +57,9 @@ both days' tags and send on the new day's from midnight.
 
 A receiver takes an event only when its signature is valid, the body opens under `K_msg`,
 `body.from` is the event's key, that key is bound to `body.mid` (or the body is the Hello that
-binds it), `ctr` rises, and `created_at` is within 120 s of the receiver's corrected clock.
+binds it), `ctr` wasn't seen from that key yet and is less than 64 below the highest that was
+(events come by several relays, each in its own time), and `created_at` is within 120 s of the
+receiver's corrected clock.
 
 **New invite** (anyone can press it) rotates the secret. The new one goes to every member present,
 sealed to each session key, inside one event on the old tag, and everyone moves. It stops links
