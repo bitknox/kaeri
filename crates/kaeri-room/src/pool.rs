@@ -56,6 +56,34 @@ pub const FLUSH_LIMIT_MS: i64 = 2_000;
 pub const JOIN_WAIT: Duration = Duration::from_secs(8);
 /// The subscription asks for what the relay still holds from this far back, seconds.
 pub const SINCE_S: i64 = 30;
+/// What was said while no relay was up waits this long for one, ms.
+pub const UNSENT_FOR_MS: i64 = 30_000;
+/// And this many at most, the oldest giving way.
+pub const UNSENT_CAP: usize = 32;
+
+/// Events that reached no relay: none was up. They go to the first that comes up, unless they
+/// are too old by then (a relay takes events only near its clock, and the room has moved on).
+struct Unsent<T = Event>(VecDeque<(T, i64)>);
+
+impl<T> Default for Unsent<T> {
+    fn default() -> Self {
+        Self(VecDeque::new())
+    }
+}
+
+impl<T> Unsent<T> {
+    fn push(&mut self, event: T, now: i64) {
+        if self.0.len() == UNSENT_CAP {
+            self.0.pop_front();
+        }
+        self.0.push_back((event, now));
+    }
+
+    /// Everything still fresh at `now`, oldest first; the queue is empty after.
+    fn take(&mut self, now: i64) -> Vec<T> {
+        self.0.drain(..).filter(|(_, at)| now - at < UNSENT_FOR_MS).map(|(e, _)| e).collect()
+    }
+}
 
 /// The local clock, epoch ms. Tests can swap it.
 pub type Now = Arc<dyn Fn() -> i64 + Send + Sync>;
@@ -75,15 +103,17 @@ struct Slot {
     open: bool,
     failures: u32,
     unusable: bool,
-    /// Our events awaiting their echo here: id → sent at.
-    awaiting: HashMap<String, i64>,
+    /// Our events awaiting their echo here: id → sent at, and the event, to send again should
+    /// the socket go down first.
+    awaiting: HashMap<String, (i64, Event)>,
     rtt: Option<u32>,
     /// Send times in the last minute.
     sent: VecDeque<i64>,
     quiet_until: i64,
     halved_until: i64,
-    /// Waiting for room under the cap.
-    queue: VecDeque<Event>,
+    /// Waiting for room under the cap, with when each was said. Kept over a reconnect (a
+    /// refresh drops none of it), and let go when older than [`UNSENT_FOR_MS`].
+    queue: VecDeque<(Event, i64)>,
 }
 
 impl Slot {
@@ -91,7 +121,7 @@ impl Slot {
         self.open
             && !self.unusable
             && self.failures < FAILURES_UNHEALTHY
-            && !self.awaiting.values().any(|at| now - at > ECHO_LIMIT_MS)
+            && !self.awaiting.values().any(|(at, _)| now - at > ECHO_LIMIT_MS)
     }
 
     fn room(&mut self, now: i64) -> bool {
@@ -107,13 +137,14 @@ impl Slot {
 
     fn put(&mut self, event: Event, now: i64) {
         self.sent.push_back(now);
-        self.awaiting.insert(event.id.to_hex(), now);
+        self.awaiting.insert(event.id.to_hex(), (now, event.clone()));
         self.handle.send(ToRelay::Send(Box::new(event)));
     }
 }
 
 struct Pool {
     now: Now,
+    unsent: Unsent<Event>,
     offset: Arc<AtomicI64>,
     keys: RoomKeys,
     old: Option<(RoomKeys, i64)>,
@@ -256,7 +287,7 @@ async fn run(
     // the slots stops their connections after it.
     let now = pool.local();
     for slot in &mut pool.slots {
-        while let Some(event) = slot.queue.pop_front() {
+        while let Some((event, _)) = slot.queue.pop_front() {
             slot.put(event, now);
         }
     }
@@ -287,6 +318,7 @@ impl Pool {
             seen: HashSet::new(),
             seen_order: VecDeque::new(),
             flushing: None,
+            unsent: Unsent::default(),
             tags: Vec::new(),
             told_up: None,
             told_relays: Vec::new(),
@@ -411,6 +443,12 @@ impl Pool {
         let event = envelope::build(&self.keys, &self.session, body, self.corrected());
         let heartbeat = matches!(body.m, Message::Heartbeat);
         let chat = matches!(body.m, Message::Chat { .. } | Message::React { .. });
+        // Said again once a relay is up (Status and SyncReq), or worth nothing late: not kept.
+        let keep =
+            !matches!(body.m, Message::Heartbeat | Message::Status | Message::SyncReq { .. });
+        if keep && !self.slots.iter().any(|s| s.open && !s.unusable) {
+            self.unsent.push(event.clone(), now);
+        }
         for slot in &mut self.slots {
             if !slot.open || slot.unusable {
                 continue;
@@ -422,7 +460,7 @@ impl Pool {
             if slot.room(now) {
                 slot.put(event.clone(), now);
             } else if !heartbeat {
-                slot.queue.push_back(event.clone());
+                slot.queue.push_back((event.clone(), now));
             }
         }
         vec![event.id.to_hex()]
@@ -475,12 +513,30 @@ impl Pool {
                 slot.open = true;
                 slot.failures = 0;
                 slot.awaiting.clear();
+                for event in self.unsent.take(now) {
+                    if slot.room(now) {
+                        slot.put(event, now);
+                    } else {
+                        slot.queue.push_back((event, now));
+                    }
+                }
             }
             FromRelay::Down { failures } => {
                 slot.open = false;
                 slot.failures = failures;
-                slot.awaiting.clear();
-                slot.queue.clear();
+                // What wasn't echoed may never have left (a refresh, a write that failed): it
+                // goes again once the relay is back, ahead of what waits under the cap. A copy
+                // that did arrive is heard once all the same: every event is deduped by its id.
+                let mut again: Vec<(Event, i64)> = slot
+                    .awaiting
+                    .drain()
+                    .filter(|(_, (at, _))| now - at < UNSENT_FOR_MS)
+                    .map(|(_, (at, event))| (event, at))
+                    .collect();
+                again.sort_by_key(|(_, at)| *at);
+                for item in again.into_iter().rev() {
+                    slot.queue.push_front(item);
+                }
             }
             FromRelay::Unusable(why) => {
                 tracing::info!(relay = %slot.url, %why, "room: relay unusable for this room");
@@ -513,7 +569,7 @@ impl Pool {
             }
             FromRelay::Event(event) => {
                 let id = event.id.to_hex();
-                if let Some(sent) = slot.awaiting.remove(&id) {
+                if let Some((sent, _)) = slot.awaiting.remove(&id) {
                     slot.rtt = Some((now - sent).max(0) as u32);
                 }
                 if self.remember(&id) {
@@ -549,8 +605,9 @@ impl Pool {
     fn on_tick(&mut self) {
         let now = self.local();
         for slot in &mut self.slots {
+            slot.queue.retain(|(_, at)| now - at < UNSENT_FOR_MS);
             while slot.open && !slot.queue.is_empty() && slot.room(now) {
-                let event = slot.queue.pop_front().expect("not empty");
+                let (event, _) = slot.queue.pop_front().expect("not empty");
                 slot.put(event, now);
             }
         }
@@ -592,5 +649,17 @@ mod tests {
         let spare = pool.slots[0].id;
         assert!(pool.on_report(spare, FromRelay::Up));
         assert!(pool.slots[0].open);
+    }
+
+    #[test]
+    fn what_waits_for_a_relay_is_kept_for_a_while_and_only_so_much() {
+        let mut unsent = Unsent::default();
+        for n in 0..UNSENT_CAP + 2 {
+            unsent.push(n, n as i64 * 1_000);
+        }
+        // The oldest two gave way; of the rest, those older than the limit are let go.
+        let now = 3_000 + UNSENT_FOR_MS;
+        assert_eq!(unsent.take(now), (4..UNSENT_CAP + 2).collect::<Vec<_>>());
+        assert!(unsent.take(now).is_empty(), "sent once");
     }
 }
