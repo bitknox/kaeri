@@ -382,3 +382,44 @@ fn a_member_loading_after_a_seek_is_waited_for_as_loading_as_its_row_says() {
     assert_eq!((waited[0].mid.as_str(), waited[0].reason), ("r", Reason::Loading));
     assert_eq!(room.word(room.member("r").unwrap(), 6_500), Word::Loading);
 }
+
+#[test]
+fn a_stale_sync_answer_never_rewinds_the_room() {
+    // Neon: Mika, not yet told of Ada's seek, answers a newcomer with the old playhead and its
+    // clock; Ada took that answer's place and rewound by minutes.
+    let mut ada = room(&[]);
+    start(&mut ada, 0);
+    ada.settle(3_000);
+    let stale = ada.sync_answer("n", 13_000);
+    ada.write(
+        14_000,
+        14_000,
+        |h| {
+            h.pos = 900.0;
+            h.cause = Cause::Seek;
+        },
+        None,
+    )
+    .unwrap();
+    ada.receive(body("m", stale, watching(Some(1))), 14_100);
+    assert_eq!(ada.position(14_100), Some(900.0));
+}
+
+#[test]
+fn a_sync_request_is_answered_in_turn_when_the_ones_before_stay_quiet() {
+    // Neon: only rank 0 answered; one unreachable member and a newcomer heard nothing.
+    let mut ada = room(&["m", "r"]);
+    let nonce = (0..)
+        .map(|i| format!("n{i}"))
+        .find(|n| ada.rank(n, 0) == 2)
+        .expect("a nonce that puts Ada last");
+    ada.will_answer(&nonce, 0);
+    assert!(ada.answers_due(0).is_empty());
+    assert!(ada.answers_due(799).is_empty());
+    assert_eq!(ada.answers_due(800), std::slice::from_ref(&nonce));
+    // Someone before Ada answered: she stays quiet.
+    ada.will_answer(&nonce, 1_000);
+    let answer = Room::new("m", "Mika", "pm", 0).sync_answer(&nonce, 1_100);
+    ada.receive(body("m", answer, watching(None)), 1_100);
+    assert!(ada.answers_due(2_000).is_empty());
+}

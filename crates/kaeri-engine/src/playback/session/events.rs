@@ -199,7 +199,7 @@ impl Run<'_> {
         let mut room_cue: Option<(u64, f64)> = None;
         // The room's own seek and pause, when last cued: the player's seek or pause that
         // follows is the room's. Any other is the viewer's, said with the next sample.
-        let mut cued_seek: Option<tokio::time::Instant> = None;
+        let mut cued_seek: Option<(f64, tokio::time::Instant)> = None;
         let mut cued_pause: Option<(bool, tokio::time::Instant)> = None;
         let mut viewer_seeked = false;
         // When the room's first cue reached this player: before then, and just after, it is
@@ -422,12 +422,15 @@ impl Run<'_> {
                                 room_cue = Some((*id, *to));
                             }
                             match &cue {
-                                SeatCue::Seek { .. } => {
-                                    cued_seek = Some(tokio::time::Instant::now());
+                                SeatCue::Seek { to, .. } => {
+                                    cued_seek = Some((*to, tokio::time::Instant::now()));
                                 }
-                                SeatCue::Pause(p) => {
+                                // A pause the player is already in says nothing back: nothing
+                                // to wait for.
+                                SeatCue::Pause(p) if tracker.is_paused() != *p => {
                                     cued_pause = Some((*p, tokio::time::Instant::now()));
                                 }
+                                SeatCue::Pause(_) => cued_pause = None,
                                 _ => {}
                             }
                             apply_cue(link, cue).await;
@@ -698,7 +701,7 @@ impl Run<'_> {
                     seeking = *now;
                     // A seek the room cued moments ago is the room's; any other, the viewer's.
                     if *now {
-                        let cued = cued_seek.take().is_some_and(|at| {
+                        let cued = cued_seek.take().is_some_and(|(_, at)| {
                             at.elapsed() < Duration::from_millis(CUED_FOR_MS)
                         });
                         let opened = ever_played
@@ -940,7 +943,8 @@ impl Run<'_> {
                 match action {
                     Action::OfferSkip { kind, to } => {
                         let to = skip_target(to, tracker.duration());
-                        if tracker.auto_skips_kind(kind) {
+                        // Personal auto-skip stays off in a room: its seek would move everyone.
+                        if tracker.auto_skips_kind(kind) && !self.in_party {
                             let from = tracker.position();
                             let _ = link.seek(to, true).await;
                             let _ = link.overlay(Overlay::Skipped { kind, from, to }).await;
@@ -998,6 +1002,16 @@ impl Run<'_> {
                 };
                 // An in-buffer seek can land without a `seeking` change: a frame at the target is
                 // the room's Ready too.
+                // A frame at the room's seek target with no `seeking`: it landed quietly, and
+                // the viewer's next seek is theirs.
+                if let Some((to, at)) = cued_seek
+                    && matches!(event, PlaybackEvent::Progress { .. })
+                    && !seeking
+                    && at.elapsed() >= Duration::from_secs(1)
+                    && (tracker.position() - to).abs() <= 1.5
+                {
+                    cued_seek = None;
+                }
                 if let Some((id, to)) = room_cue
                     && matches!(event, PlaybackEvent::Progress { .. })
                     && !seeking

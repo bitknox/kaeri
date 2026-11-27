@@ -492,6 +492,12 @@ fn word_state(word: Word) -> kaeri_model::room::MemberState {
     }
 }
 
+/// The position a Status says: the player's own while it is open (so the others can see how far
+/// behind it is), else where the room is.
+fn wire_pos(st: &Status, room: Option<f64>) -> Option<f64> {
+    st.pos.filter(|_| st.s.player_open()).or(room)
+}
+
 /// Local ms to epoch ms: the room's clock is the epoch already.
 fn member_of(
     room: &Room,
@@ -647,7 +653,7 @@ impl Task {
         st.age = (now - self.status_at).max(0) as u32;
         st.dg = [self.room.seq(), self.room.relays_seq(), self.room.epoch().0];
         st.play = self.room.playing();
-        st.pos = self.room.position(now).or(st.pos);
+        st.pos = wire_pos(&st, self.room.position(now));
         Body {
             v: wire::VERSION,
             from: self.session.clone(),
@@ -1112,6 +1118,7 @@ impl Task {
             self.up_next(now);
             self.stall(now);
             self.relays_check(now);
+            self.answer_due();
         }
         // Waits worth saying in the chat: past 1 s.
         let waited = self.room.waited(now);
@@ -1301,10 +1308,10 @@ impl Task {
                 self.say(Event::RoomChat(self.chat.conversation()));
             }
             Happening::SyncRequested { nonce, .. } => {
-                let now = self.now();
-                if self.joined && self.room.rank(&nonce, now) == 0 {
-                    let answer = self.room.sync_answer(&nonce, now);
-                    self.send(answer);
+                if self.joined {
+                    let now = self.now();
+                    self.room.will_answer(&nonce, now);
+                    self.answer_due();
                 }
             }
             Happening::Move { by, id, to } => {
@@ -1361,7 +1368,7 @@ impl Task {
                 };
                 if self.room.take_epoch(seq, t, &session) {
                     let _ = self.link.out.send(Out::Rekey(secret));
-                    self.target.secret = secret;
+                    self.reprove(secret);
                     let by = self.who(&by);
                     self.message(RoomMessageKind::NewInvite { by });
                 }
@@ -1847,7 +1854,7 @@ impl Task {
                 self.room.take_epoch(seq, body.t, &self.session.clone());
                 let _ = self.link.out.send(Out::Body(body));
                 let _ = self.link.out.send(Out::Rekey(secret));
-                self.target.secret = secret;
+                self.reprove(secret);
                 self.message(RoomMessageKind::NewInvite { by: kaeri_i18n::t::room_you() });
             }
             RoomCommand::MoveRoom { take } => return self.move_room(&take).await,
@@ -2079,6 +2086,25 @@ impl Task {
             }
         }
         false
+    }
+
+    /// A new invite's key: this device proves itself for the new room id and says Hello again,
+    /// so the others answer a newcomer by the new link with proofs it can check.
+    fn reprove(&mut self, secret: [u8; 16]) {
+        self.target.secret = secret;
+        self.link.room_id = RoomKeys::new(secret).room_id();
+        if self.joined {
+            self.hello();
+        }
+    }
+
+    /// Answer the sync requests whose turn has come here.
+    fn answer_due(&mut self) {
+        let now = self.now();
+        for nonce in self.room.answers_due(now) {
+            let answer = self.room.sync_answer(&nonce, now);
+            self.send(answer);
+        }
     }
 
     fn hello(&mut self) {
@@ -2577,6 +2603,68 @@ mod pause_tests {
         assert_eq!(pause.sample(true, 1_900), Sampled::Same);
         // A real play, later, is the viewer's.
         assert_eq!(pause.sample(false, 4_000), Sampled::Pressed(false));
+    }
+
+    #[test]
+    fn the_others_see_how_far_behind_your_player_is() {
+        // Neon: your Status said the room's clock as your place, so the others read Behind 0 s.
+        use kaeri_room::wire::{Body, Ep, Message, StateCode, Status, VERSION};
+        use std::collections::HashMap;
+        let ep = Ep(4242, "9".into());
+        let mut mika = kaeri_room::room::Room::new("m", "Mika", "pm", 0);
+        mika.write(
+            0,
+            0,
+            |h| {
+                h.play = true;
+                h.cause = kaeri_room::wire::Cause::Episode;
+            },
+            Some(ep.clone()),
+        );
+        let wseq = mika.playhead().unwrap().wseq;
+        mika.set_status(
+            Status {
+                s: StateCode::Watching,
+                ep: Some(ep.clone()),
+                rdy: Some(wseq),
+                ..Status::default()
+            },
+            0,
+        );
+        mika.settle(3_000);
+        // Ada's player is 6 s behind the room at 20 s.
+        let now = 23_000;
+        let room = mika.position(now);
+        assert_eq!(room, Some(20.0));
+        let mut st = Status {
+            s: StateCode::Behind,
+            ep: Some(ep),
+            pos: Some(14.0),
+            play: true,
+            ..Status::default()
+        };
+        st.pos = super::wire_pos(&st, room);
+        let hello = Message::Hello {
+            name: "Ada".into(),
+            app: "0.6".into(),
+            caps: vec![],
+            idpk: String::new(),
+            idsig: String::new(),
+        };
+        let body = |m| Body {
+            v: VERSION,
+            from: "pa".into(),
+            mid: "a".into(),
+            ctr: 1,
+            t: 0,
+            st: st.clone(),
+            m,
+        };
+        mika.receive(body(hello), now);
+        mika.receive(body(Message::Status), now);
+        let ada = mika.members().into_iter().find(|m| m.mid == "a").unwrap();
+        let row = super::member_of(&mika, ada, now, &HashMap::new(), None);
+        assert_eq!(row.behind_s, Some(6.0));
     }
 
     #[test]
