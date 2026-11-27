@@ -1,6 +1,6 @@
 # Run a plugin store with Docker
 
-The store's image, `ghcr.io/bitknox/kaeri-store:0.5`, runs on any machine with Docker: a VPS, a
+The store's image, `ghcr.io/bitknox/kaeri-store:0.6`, runs on any machine with Docker: a VPS, a
 NAS or a computer at home. It is built for x86-64 and 64-bit ARM, and keeps everything in one
 volume mounted at `/data`.
 
@@ -71,7 +71,7 @@ docker run -d --name kaeri-store --restart unless-stopped \
   -v kaeri-store:/data \
   -e KAERI_STORE_URL=https://plugins.example.com \
   -e KAERI_STORE_TRUST_PROXY=true \
-  ghcr.io/bitknox/kaeri-store:0.5
+  ghcr.io/bitknox/kaeri-store:0.6
 ```
 
 Point the proxy at `127.0.0.1:7878`. `KAERI_STORE_TRUST_PROXY` makes the store believe the
