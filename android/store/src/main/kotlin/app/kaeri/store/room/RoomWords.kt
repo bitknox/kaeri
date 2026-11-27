@@ -124,6 +124,18 @@ class RoomCopy(private val context: Context) {
     fun at(time: String) = Strings.roomLinePausedAt(x, time)
     fun pausedFor(names: String) = Strings.roomLinePausedFor(x, names)
     fun stillLoading(names: String, count: Int) = Strings.roomLineStillLoading(x, names, count)
+    fun stillSeeking(names: String, count: Int) = Strings.roomLineStillSeeking(x, names, count)
+    fun stillBuffering(names: String, count: Int) = Strings.roomLineStillBuffering(x, names, count)
+
+    /** "Ren is still loading", or seeking or buffering when that is why everyone waited for is. */
+    fun still(waits: List<app.kaeri.engine.model.PausedFor>): String {
+        val who = names(waits.map { it.name })
+        return when {
+            waits.all { it.reason == WaitReason.SEEKING } -> stillSeeking(who, waits.size)
+            waits.all { it.reason == WaitReason.BUFFERING } -> stillBuffering(who, waits.size)
+            else -> stillLoading(who, waits.size)
+        }
+    }
     fun startingWhen(names: String, count: Int) = Strings.roomLineStartingWhen(x, names, count)
     fun startingIn(n: Int) = Strings.roomLineStartingIn(x, n)
     fun waited(s: Int) = Strings.roomLineWaited(x, s)
@@ -274,14 +286,14 @@ object RoomWords {
         }
         if (view.beforePlay) {
             view.startsAtMs?.let { at -> return RoomLine(c.startingIn(((at - nowMs + 999) / 1000).toInt().coerceAtLeast(0)), c.EVERYONE_READY) }
-            if (waits.isNotEmpty() && carryShown(view, nowMs)) return RoomLine(c.stillLoading(c.names(names), names.size), c.waited(s))
+            if (waits.isNotEmpty() && carryShown(view, nowMs)) return RoomLine(c.still(waits), c.waited(s))
             if (waits.isNotEmpty()) return RoomLine(c.startingWhen(c.names(names), names.size), c.reasonFor(WaitReason.LOADING, s))
             return RoomLine(c.NOT_STARTED, c.PLAY_STARTS_IT)
         }
         view.upNext?.takeIf { it.cancelledBy == null }?.endsAtMs?.let { ends ->
             return RoomLine(c.upNextIn(((ends - nowMs + 999) / 1000).toInt().coerceAtLeast(0)), c.upNextFor(view.upNext!!.episode.episode))
         }
-        if (waits.isNotEmpty() && carryShown(view, nowMs)) return RoomLine(c.stillLoading(c.names(names), names.size), c.waited(s))
+        if (waits.isNotEmpty() && carryShown(view, nowMs)) return RoomLine(c.still(waits), c.waited(s))
         if (waits.isNotEmpty()) return RoomLine(c.pausedFor(c.names(names)), c.reasonFor(waits.first().reason, s))
         view.carriedOn?.takeIf { it.past.isNotEmpty() }?.let { return RoomLine(c.WATCH_TOGETHER, c.carriedOn(if (it.byYou) c.YOU else it.by, it.past)) }
         view.moved?.let { return RoomLine(c.movedAway(it.by), if (it.went.isEmpty()) c.episodeAt(ep, clock(positionS)) else c.wentAlong(it.went)) }

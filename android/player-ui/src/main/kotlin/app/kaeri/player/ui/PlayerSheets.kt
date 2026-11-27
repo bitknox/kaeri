@@ -8,6 +8,7 @@ package app.kaeri.player.ui
 import java.text.NumberFormat
 import androidx.annotation.StringRes
 import app.kaeri.i18n.R
+import app.kaeri.i18n.Strings
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.animation.AnimatedVisibility
@@ -435,17 +436,25 @@ private fun LazyListScope.sources(model: PlayerModel, onDismiss: () -> Unit) {
             }
         }
         choices.isEmpty() -> item(key = "none") { Note(stringResource(R.string.player_sheet_none)) }
-        else -> items(choices, key = { "${it.providerId}-${it.id}" }) { candidate ->
-            val detail = listOfNotNull(
-                candidate.providerName.ifEmpty { candidate.providerId },
-                candidate.quality?.let { "${it}p" }, // i18n-skip
-                candidate.size,
-                if (candidate.dubbed) stringResource(R.string.audio_dubbed) else null,
-                if (candidate.dualAudio) stringResource(R.string.player_dual_audio) else null,
-            ).joinToString(" · ").ifEmpty { null }
-            Choice(candidate.title, detail = detail, checked = false, radio = false) {
-                model.play(candidate)
-                onDismiss()
+        else -> {
+            // How many have it, and in a room that the pick plays for everyone there.
+            item(key = "found") {
+                val inRoom = app.kaeri.ui.LocalAppStore.current.room.view.collectAsStateWithLifecycle().value != null
+                val context = LocalContext.current
+                Note(if (inRoom) Strings.roomSourcesFoundLine(context, choices.size) else Strings.playerSourcesFoundLine(context, choices.size))
+            }
+            items(choices, key = { "${it.providerId}-${it.id}" }) { candidate ->
+                val detail = listOfNotNull(
+                    candidate.providerName.ifEmpty { candidate.providerId },
+                    candidate.quality?.let { "${it}p" }, // i18n-skip
+                    candidate.size,
+                    if (candidate.dubbed) stringResource(R.string.audio_dubbed) else null,
+                    if (candidate.dualAudio) stringResource(R.string.player_dual_audio) else null,
+                ).joinToString(" · ").ifEmpty { null }
+                Choice(candidate.title, detail = detail, checked = false, radio = false) {
+                    model.play(candidate)
+                    onDismiss()
+                }
             }
         }
     }
