@@ -107,7 +107,7 @@ fun RoomAlert(title: String, body: String, onRetry: (() -> Unit)?, onClose: () -
 
 /** Why the room dropped this device, when it didn't leave or go along: the alert to say so. */
 @Composable
-fun RoomLeftAlert(room: RoomModel, why: app.kaeri.engine.model.RoomLeftWhy) {
+fun RoomLeftAlert(room: RoomModel, why: app.kaeri.engine.model.RoomLeftWhy, onClose: () -> Unit = room::dismissLeft) {
     val c = roomCopy()
     val context = androidx.compose.ui.platform.LocalContext.current
     val (title, body) = when (why) {
@@ -117,7 +117,7 @@ fun RoomLeftAlert(room: RoomModel, why: app.kaeri.engine.model.RoomLeftWhy) {
         is app.kaeri.engine.model.RoomLeftWhy.Failed -> c.UNREACHABLE_TITLE to why.reason.text(context)
         else -> return
     }
-    RoomAlert(title, body, onRetry = null, onClose = room::dismissLeft)
+    RoomAlert(title, body, onRetry = null, onClose = onClose)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

@@ -355,6 +355,7 @@ internal fun PlaybackPane() {
             title = stringResource(R.string.together_title),
             rows = listOf(
                 { place -> SwitchRow(place, Strings.settingsHideChat(context), checked = hidden, note = Strings.settingsHideChatLine(context)) { store.room.setHideChat(context, it) } },
+                { place -> RoomRelaysRow(place) },
             ),
         )
     }

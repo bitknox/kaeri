@@ -114,6 +114,7 @@ internal fun NavGraphBuilder.settingsPages(actions: AppActions) {
         CompositionLocalProvider(LocalPageAnimation provides this) { SettingsScreen(pane, actions) }
     }
     bookSourcePages()
+    roomRelaysPage()
 }
 
 /** Settings at [pane], or at its list: one page at a time on a phone, list and pane on a tablet. */

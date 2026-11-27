@@ -76,6 +76,8 @@ class PlayerFrame(
             }
             BackHandler { room.notNow() }
             RoomInvitedScreen(room, inv, onClose = { room.notNow() }, joinOnTv = onTv)
+            // The look into it found nothing, whatever room this device is in: closing says no to the invite.
+            inv.failed?.let { why -> RoomLeftAlert(room, why, onClose = room::notNow) }
         }
         if (view == null) left?.let { why -> RoomLeftAlert(room, why) }
     }

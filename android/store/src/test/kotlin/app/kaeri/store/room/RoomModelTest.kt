@@ -1,10 +1,12 @@
 // The room model between rooms: nothing of a room you left or moved from carries into the next,
 // and a failure after an invite is an alert, not the Watch together line an earlier paste set up.
+// A look shows only for the look waited on, and never leaves the room this device is in.
 
 package app.kaeri.store.room
 
 import app.kaeri.engine.model.Event
 import app.kaeri.engine.model.MemberState
+import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.RoomChatBody
 import app.kaeri.engine.model.RoomChatLine
 import app.kaeri.engine.model.RoomChatState
@@ -12,9 +14,11 @@ import app.kaeri.engine.model.RoomCommand
 import app.kaeri.engine.model.RoomConnection
 import app.kaeri.engine.model.RoomConversation
 import app.kaeri.engine.model.RoomEpisode
+import app.kaeri.engine.model.RoomGlimpse
 import app.kaeri.engine.model.RoomLeftWhy
 import app.kaeri.engine.model.RoomMember
 import app.kaeri.engine.model.RoomMoveOffer
+import app.kaeri.engine.model.RoomRelaySettings
 import app.kaeri.engine.model.RoomTarget
 import app.kaeri.engine.model.RoomView
 import org.junit.Assert.assertEquals
@@ -108,5 +112,96 @@ class RoomModelTest {
         room.apply(Event.RoomLeft(RoomLeftWhy.Unreachable))
         assertEquals("https://kaeri.app/r#v1.pasted", room.joinFailed.value)
         assertNull(room.left.value)
+    }
+
+    private val inviteA = "https://kaeri.app/r#v1.invite-a"
+    private val inviteB = "https://kaeri.app/r#v1.invite-b"
+
+    private fun target(link: String) = RoomTarget(link = link, relays = emptyList(), by = "Mika", title = null, episode = null)
+
+    private fun glimpse(invite: String?, names: List<String>) = RoomGlimpse(
+        roomId = null,
+        by = "Mika",
+        members = names.map { RoomMember(it.lowercase(), it, you = false, state = MemberState.WATCHING) },
+        roomEpisode = null,
+        playing = true,
+        full = false,
+        invite = invite,
+    )
+
+    private fun lookFailed(roomId: String, invite: String?) =
+        Event.RoomLookFailed(roomId = roomId, reason = Msg.RoomLookUnreachable, invite = invite, why = RoomLeftWhy.Unreachable)
+
+    @Test
+    fun aSlowGlimpseNeverStandsInForANewerInvite() {
+        val room = RoomModel()
+        room.invitedBy(target(inviteA))
+        room.invitedBy(target(inviteB))
+        room.apply(Event.RoomGlimpse(glimpse(inviteA, listOf("Sora"))))
+        assertNull(room.invited.value?.glimpse)
+        room.apply(Event.RoomGlimpse(glimpse(inviteB, listOf("Ren"))))
+        assertEquals(listOf("Ren"), room.invited.value?.names)
+    }
+
+    @Test
+    fun aRecentRoomsGlimpseIsNoInvites() {
+        val room = RoomModel()
+        room.invitedBy(target(inviteA))
+        room.apply(Event.RoomGlimpse(glimpse(null, listOf("Sora"))))
+        assertNull(room.invited.value?.glimpse)
+    }
+
+    @Test
+    fun anInvitesFailedLookStaysWithTheInviteAndKeepsTheRoom() {
+        val room = RoomModel()
+        inUse(room, "room-a")
+        room.invitedBy(target(inviteB))
+        room.apply(lookFailed("room-b", inviteA))
+        assertNull(room.invited.value?.failed)
+        room.apply(lookFailed("room-b", inviteB))
+        assertEquals(RoomLeftWhy.Unreachable, room.invited.value?.failed)
+        assertEquals("room-a", room.view.value?.roomId)
+        assertEquals(listOf(mika), room.members.value)
+        assertNull(room.left.value)
+        room.notNow()
+        assertNull(room.invited.value)
+    }
+
+    @Test
+    fun aRoomNoLongerKeptFailsUnderItsRowOnlyWhenAsked() {
+        val room = RoomModel()
+        room.apply(lookFailed("room-a", null))
+        assertNull(room.rejoinFailed.value)
+        room.rejoin("room-b")
+        room.apply(lookFailed("room-a", null))
+        assertNull(room.rejoinFailed.value)
+        room.apply(lookFailed("room-b", null))
+        assertEquals("room-b", room.rejoinFailed.value)
+        assertNull(room.left.value)
+    }
+
+    @Test
+    fun aLeftWithNoRoomAndNoJoinIsNobodys() {
+        val room = RoomModel()
+        room.invitedBy(target(inviteA))
+        room.apply(Event.RoomLeft(RoomLeftWhy.Unreachable))
+        assertNull(room.left.value)
+        assertEquals(inviteA, room.invited.value?.invite)
+    }
+
+    @Test
+    fun relaySettingsComeAndGoBackToTheDefaults() {
+        val sent = mutableListOf<RoomCommand>()
+        val room = RoomModel { sent += it }
+        val defaults = listOf("wss://relay-1.example", "wss://relay-2.example")
+        val spares = listOf("wss://relay-3.example")
+        room.apply(Event.RoomRelays(RoomRelaySettings(defaults = defaults, spares = emptyList(), defaultSpares = spares, chosen = listOf("ws://box.local"))))
+        assertEquals(listOf("ws://box.local"), room.relays.value?.chosen)
+        room.setRelays(defaults)
+        room.restoreRelays()
+        assertEquals(
+            listOf<RoomCommand>(RoomCommand.SetRelays(emptyList()), RoomCommand.SetRelays(emptyList()), RoomCommand.SetSpareRelays(spares)),
+            sent,
+        )
     }
 }
