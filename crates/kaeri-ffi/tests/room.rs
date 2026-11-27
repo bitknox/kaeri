@@ -15,7 +15,7 @@ use kaeri_model::{
     hosted::{MpvValue, PlayerOp, PlayerReport},
     room::{
         MemberState, OldInvite, RoomCommand, RoomConnection, RoomEpisode, RoomLeftWhy,
-        RoomMember, RoomMessageKind, RoomStartKind, RoomView,
+        RoomMember, RoomMessageKind, RoomStartKind, RoomView, WaitReason,
     },
 };
 
@@ -676,6 +676,176 @@ fn a_player_reporting_the_rooms_places_late_or_stale_never_seeks() {
         assert!(seeks.is_empty(), "{scene:?}: {seeks:?}");
         engine.shutdown();
     }
+}
+
+#[test]
+fn your_own_loading_scene_holds_against_your_players_reports() {
+    // Apple's ownwait: the app's real player opened and reported Watching, or followed Mika's
+    // seek, and the scene showed "Watching together" or your row Seeking. The scene's pose holds.
+    let (_root, engine) = staged(FfiRoomScene::YouLoading);
+    let (view, members, read) =
+        until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    play_like_the_app(&engine, &read);
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| loads(e).is_some())
+    });
+    let playback = read.iter().find_map(loads).unwrap();
+    let property = |name: &str, json: String| {
+        let report = PlayerReport::Property { name: name.into(), json };
+        assert_eq!(engine.send(Command::PlayerReport { playback, report }), None);
+    };
+    assert_eq!(
+        engine.send(Command::PlayerReport { playback, report: PlayerReport::FileLoaded }),
+        None
+    );
+    property("duration", "1440.0".into());
+    property("pause", "true".into());
+    let at = view.position.unwrap_or(0.0);
+    for _ in 0..8 {
+        property("time-pos", format!("{at:.2}"));
+        thread::sleep(Duration::from_millis(250));
+    }
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (view, members, _) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    let you = view.waiting.iter().find(|w| w.you);
+    assert!(you.is_some_and(|w| w.reason == WaitReason::Loading), "{view:?}");
+    assert_eq!(state(&members, "Ada"), Some(MemberState::Loading), "{members:?}");
+    engine.shutdown();
+}
+
+#[test]
+fn before_play_the_chat_says_no_wait() {
+    // Apple's beforewait: "Paused for Ren · loading" before the room ever played. The board
+    // has the header say it and no line in the chat.
+    let (_root, engine) = staged(FfiRoomScene::BeforePlayWait);
+    let (view, members, read) =
+        until(&engine, |v, _, _| v.before_play && v.waiting.iter().any(|w| w.name == "Ren"));
+    thread::sleep(Duration::from_millis(1_500));
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (_, _, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    let waits: Vec<_> = read
+        .iter()
+        .chain(&later)
+        .filter(|e| {
+            matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::WaitingFor { .. }))
+        })
+        .collect();
+    assert!(waits.is_empty(), "{waits:?}");
+    engine.shutdown();
+}
+
+#[test]
+fn a_waiters_new_start_reaches_the_line_and_the_row_together() {
+    // Apple's iPad beforecap read "waited 22 s" over Ren's "Loading · 23 s". When a waiter's
+    // start moves, the view and the rows are told it again, with the same start.
+    let root = tempfile::tempdir().expect("a temporary directory");
+    let engine = engine(&root);
+    let room = Arc::clone(&engine).start_fake_room();
+    assert!(room.stage(FfiRoomScene::BeforePlayCap));
+    let (view, members, _) =
+        until(&engine, |v, _, _| v.waiting.iter().any(|w| w.name == "Ren"));
+    let before = view.waiting.iter().find(|w| w.name == "Ren").unwrap().since_ms;
+    room.member_loads("Ren".into(), 30.0);
+    let (view, members, _) = until_from(&engine, (Some(view), members), move |v, m, _| {
+        let line = v.waiting.iter().find(|w| w.name == "Ren").map(|w| w.since_ms);
+        let row = m.iter().find(|m| m.name == "Ren").and_then(|m| m.since_ms);
+        line.is_some_and(|l| before - l > 5_000) && row == line
+    });
+    let line = view.waiting.iter().find(|w| w.name == "Ren").unwrap().since_ms;
+    let row = members.iter().find(|m| m.name == "Ren").unwrap().since_ms;
+    assert_eq!(Some(line), row);
+    assert_eq!(view.carry_on_at_ms, Some(line + 20_000));
+    std::mem::forget(room);
+    engine.shutdown();
+}
+
+#[test]
+fn a_slow_decoders_bursty_positions_are_never_your_seek_or_pause() {
+    // Android at ca1fa1638, a phone emulator decoding in software: time-pos came in bursts and
+    // climbed to the room's place in steps, and each was "You jumped"; the watching scene also
+    // got "You paused" and "You resumed". Only the player's own seek or pause is the viewer's.
+    let (_root, engine) = staged(FfiRoomScene::Watching);
+    let (view, members, read) =
+        until(&engine, |_, _, r| r.iter().any(|e| matches!(e, Event::RoomStarted { .. })));
+    play_like_the_app(&engine, &read);
+    let (view, members, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| loads(e).is_some())
+    });
+    let playback = read.iter().find_map(loads).unwrap();
+    let property = |name: &str, json: String| {
+        let report = PlayerReport::Property { name: name.into(), json };
+        assert_eq!(engine.send(Command::PlayerReport { playback, report }), None);
+    };
+    assert_eq!(
+        engine.send(Command::PlayerReport { playback, report: PlayerReport::FileLoaded }),
+        None
+    );
+    property("duration", "1440.0".into());
+    property("pause", "false".into());
+    // Bursts: nothing for a while, then seconds at once, climbing in steps; the room's cues
+    // land late and the stale pause state with them.
+    for (pos, wait_ms) in [
+        (0.0, 300),
+        (2.0, 1_800),
+        (3.0, 200),
+        (7.0, 2_400),
+        (10.0, 200),
+        (19.0, 2_800),
+        (23.0, 300),
+        (26.0, 3_000),
+        (29.0, 300),
+        (31.0, 2_000),
+    ] {
+        property("time-pos", format!("{pos:.2}"));
+        thread::sleep(Duration::from_millis(wait_ms));
+    }
+    engine.send(Command::Room(RoomCommand::Say { text: "hi".into() }));
+    let (view, members, later) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| matches!(e, Event::RoomChat(_)))
+    });
+    let yours = |events: &mut dyn Iterator<Item = &Event>| -> Vec<RoomMessageKind> {
+        events
+            .filter_map(|e| match e {
+                Event::RoomMessage(m) => Some(m.kind.clone()),
+                _ => None,
+            })
+            .filter(|k| {
+                matches!(
+                    k,
+                    RoomMessageKind::Seeked { .. }
+                        | RoomMessageKind::Paused { .. }
+                        | RoomMessageKind::Resumed { .. }
+                )
+            })
+            .collect()
+    };
+    let said = yours(&mut read.iter().chain(&later));
+    assert!(said.is_empty(), "{said:?}");
+    // The room's catch-up seek lands as mpv says it (`seeking`); then the viewer's own seek,
+    // which the player says the same way, is still the room's.
+    property("seeking", "true".into());
+    property("seeking", "false".into());
+    thread::sleep(Duration::from_millis(300));
+    property("seeking", "true".into());
+    property("time-pos", "600.00".into());
+    property("seeking", "false".into());
+    property("time-pos", "600.30".into());
+    let (_, _, read) = until_from(&engine, (Some(view), members), |_, _, r| {
+        r.iter().any(|e| {
+            matches!(e, Event::RoomMessage(m) if matches!(m.kind, RoomMessageKind::Seeked { .. }))
+        })
+    });
+    assert!(
+        yours(&mut read.iter())
+            .iter()
+            .any(|k| matches!(k, RoomMessageKind::Seeked { to, .. } if *to > 590.0)),
+        "{read:?}"
+    );
+    engine.shutdown();
 }
 
 #[test]
