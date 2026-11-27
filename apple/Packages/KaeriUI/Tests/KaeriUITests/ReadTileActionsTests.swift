@@ -40,7 +40,7 @@ struct ReadTileActionsTests {
         window.orderFrontRegardless()
         defer { window.close() }
         // The grid sizes its columns from its width, then lays out the cover.
-        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+        runAwake(0.5)
         var names: [String] = []
         func walk(_ node: Any, depth: Int) {
             // Read by name: the protocol's accessors are optional, and Swift can't pick between

@@ -50,7 +50,7 @@ struct TooltipTests {
         let root = NSHostingView(rootView: Browsing(covered: covered))
         // Never ordered in: the views answer all the same.
         window.contentView = root
-        RunLoop.main.run(until: Date().addingTimeInterval(1))
+        runAwake(1)
         var views: [NSView] = []
         func collect(_ view: NSView) {
             views.append(view)

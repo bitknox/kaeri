@@ -71,8 +71,8 @@ final class TapWindow {
 
     /// Time for a gesture's change, or an animation, to land.
     func wait(_ seconds: Double) async throws {
-        let end = Date().addingTimeInterval(seconds)
-        while Date() < end { try await turn(0.02) }
+        let end = SuspendingClock.now + .seconds(seconds)
+        while SuspendingClock.now < end { try await turn(0.02) }
     }
 
     /// A key pressed and let go at the window, as the keyboard sends it.
@@ -98,7 +98,7 @@ final class TapWindow {
     }
 
     /// The run loop for a while, out of the async context it cannot be run from.
-    private static func spin(_ seconds: Double) { RunLoop.main.run(until: Date().addingTimeInterval(seconds)) }
+    private static func spin(_ seconds: Double) { runAwake(seconds) }
 }
 
 @MainActor

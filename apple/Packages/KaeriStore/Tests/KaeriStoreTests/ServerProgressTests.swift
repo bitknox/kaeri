@@ -35,9 +35,9 @@ struct ServerProgressTests {
     /// Waits for `condition` rather than for a fixed time, so a busy machine that runs the
     /// waiting line's timer late doesn't fail a test about what the line shows.
     private func eventually(_ condition: () -> Bool) async -> Bool {
-        let deadline = ContinuousClock.now + .seconds(3)
+        let deadline = SuspendingClock.now + .seconds(3)
         while !condition() {
-            if ContinuousClock.now > deadline { return false }
+            if SuspendingClock.now > deadline { return false }
             try? await Task.sleep(for: .milliseconds(10))
         }
         return true
