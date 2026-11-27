@@ -113,7 +113,7 @@ fun EpisodeReleasesSheet(id: app.kaeri.engine.core.AnilistId, title: String, epi
         Column(Modifier.verticalScroll(rememberScrollState()).padding(bottom = 24.dp)) {
             Column(Modifier.padding(horizontal = 16.dp).padding(bottom = 8.dp)) {
                 Text(stringResource(R.string.player_choose_source), style = MaterialTheme.typography.titleLarge, modifier = Modifier.semantics { heading() })
-                Text("$title · $episodeLine", style = ShowTitle.row, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis)
+                Text("$title · $episodeLine", style = ShowTitle.row, color = colors.onSurfaceVariant, maxLines = 2, overflow = TextOverflow.Ellipsis) // i18n-skip
             }
             candidates?.forEach { candidate ->
                 PickerLine(title = candidate.title, detail = releaseDetail(candidate), chosen = false) {
