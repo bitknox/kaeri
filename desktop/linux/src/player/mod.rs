@@ -3473,9 +3473,16 @@ impl PlayerView {
         }
         if let Some(open) = open {
             let room = Rc::clone(&self.room);
+            let me = self.me.clone();
             glib::timeout_add_local_once(Duration::from_millis(1500), move || {
                 if open == "toggle-off" {
                     room.toggle.set_active(false);
+                } else if open == "hide-chat" {
+                    // As the room's chat state says it with Hide chat in rooms on.
+                    if let Some(me) = me.upgrade() {
+                        me.room.set_chat_hidden(true);
+                        me.ui.marked.set_reactions(Vec::new());
+                    }
                 } else {
                     room.shot_open(open);
                 }

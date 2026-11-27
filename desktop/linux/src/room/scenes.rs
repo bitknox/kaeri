@@ -79,7 +79,7 @@ const STARTING_PLAY_AFTER: std::time::Duration = std::time::Duration::from_milli
 
 /// The room's shots: the scene each stages, what it opens over the room, and whether it is
 /// full screen.
-pub const SHOTS: [(&str, Scene, Option<&str>, bool); 46] = [
+pub const SHOTS: [(&str, Scene, Option<&str>, bool); 47] = [
     ("room-morph", Scene::Watching, None, false),
     ("room-watching", Scene::Chat, None, false),
     ("room-paused", Scene::Paused, None, false),
@@ -122,6 +122,7 @@ pub const SHOTS: [(&str, Scene, Option<&str>, bool); 46] = [
     ("room-move-offer", Scene::MoveOffer, None, false),
     ("room-move-after", Scene::MovedAway, None, false),
     ("room-toggle-off", Scene::Watching, Some("toggle-off"), false),
+    ("room-hide-chat", Scene::Watching, Some("hide-chat"), false),
     ("room-full-watching", Scene::Watching, None, true),
     ("room-full-wait", Scene::WaitLoading, None, true),
     ("room-full-cap", Scene::WaitCap, None, true),
