@@ -188,7 +188,7 @@ class PlayerShots {
     /** A room's upright phone: the player in its 16:9 slot over the room, starting offline. */
     @Test
     @Config(sdk = [36], qualifiers = PHONE_PORTRAIT)
-    fun phone_start_offline_room_slot() = starting("phone-start-offline-room-slot", StartingFixture.OFFLINE, extra = 1_500, slot = ROOM_SLOT)
+    fun phone_start_offline_room_slot() = starting("phone-start-offline-room-slot", StartingFixture.OFFLINE, extra = 4_000, slot = ROOM_SLOT, before = 8_000)
 
     /** The same slot when the start failed: the most buttons the column holds. */
     @Test
@@ -212,8 +212,9 @@ class PlayerShots {
     }
 
     /** The starting screen as the engine's made-up start in [state] leaves it [extra] ms after its last event. */
-    private fun starting(name: String, state: StartingFixture, extra: Long = 600, dark: Boolean = false, slot: androidx.compose.ui.unit.DpSize? = null) {
-        val events = startingFixture(state)
+    private fun starting(name: String, state: StartingFixture, extra: Long = 600, dark: Boolean = false, slot: androidx.compose.ui.unit.DpSize? = null, before: Long? = null) {
+        // [before]: only the events before that moment, so a start that recovers is shot while it waits.
+        val events = startingFixture(state).filter { before == null || it.atMs.toLong() < before }
         shoot(name, picture = false, fixture = events, slot = slot) { model, _ ->
             time = (events.lastOrNull()?.atMs ?: 0u).toLong() + extra
             model.poke()
