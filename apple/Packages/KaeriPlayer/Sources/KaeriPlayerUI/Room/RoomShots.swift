@@ -233,7 +233,10 @@ extension PlayerModel {
         let engineScene = RoomStage.scene(scene)
         // The fake blocks while its members act: off the main thread.
         let staged = await Task.detached { fake.stage(scene: engineScene) }.value
-        if !staged { print("KaeriDev: the fake room did not stage \(scene.rawValue)") }
+        if !staged {
+            print("KaeriDev: the fake room did not stage \(scene.rawValue)")
+            fflush(stdout)
+        }
         guard staged, await roomWaited(15, { room.active }) else { return false }
         if !RoomStage.beforePlay(scene) {
             RoomStage.tick(fake)
@@ -346,7 +349,9 @@ extension PlayerModel {
         let deadline = ContinuousClock.now + .seconds(seconds)
         while !condition() {
             guard ContinuousClock.now < deadline else {
+                // Flushed: the console is a file, and a shot that never gets ready is killed.
                 print("KaeriDev: the room's wait at RoomShots.swift:\(line) ran out")
+                fflush(stdout)
                 return false
             }
             try? await Task.sleep(for: .milliseconds(50))
