@@ -20,15 +20,9 @@ final class RoomFlows: XCTestCase {
         XCTAssertTrue(more.waitForExistence(timeout: 120), "the room did not come up with its More button")
         // Soon: the Fixtures episode is a minute long, and the room's scene starts 12 s in. A tap
         // before the room takes touches is lost, so it is tried again.
-        // An open menu hides what is behind it, More too, so it is tapped again only while it is
-        // still there to tap.
         let leave = app.descendants(matching: .any)
             .matching(NSPredicate(format: "label BEGINSWITH %@", "Leave the room")).firstMatch
-        var opened = false
-        for _ in 0..<4 where !opened {
-            if more.exists, more.isHittable { more.tap() }
-            opened = leave.waitForExistence(timeout: 3)
-        }
+        let opened = open(more, showing: leave)
         Thread.sleep(forTimeInterval: 1)
         let picture = XCTAttachment(screenshot: XCUIScreen.main.screenshot())
         picture.name = "\(Self.form)-room-menu"
@@ -49,17 +43,31 @@ final class RoomFlows: XCTestCase {
         XCTAssertTrue(more.waitForExistence(timeout: 120), "the room did not come up with its More button")
         let leave = app.descendants(matching: .any)
             .matching(NSPredicate(format: "label BEGINSWITH %@", "Leave the room")).firstMatch
-        var opened = false
-        for _ in 0..<4 where !opened {
-            if more.exists, more.isHittable { more.tap() }
-            opened = leave.waitForExistence(timeout: 3)
-        }
-        XCTAssertTrue(opened, "More did not open its menu")
+        XCTAssertTrue(open(more, showing: leave), "More did not open its menu")
         keep("\(Self.form)-\(scene)-open")
         // Past the event, which comes 12 s after the scene is up.
         Thread.sleep(forTimeInterval: 16)
         keep("\(Self.form)-\(scene)-after")
         XCTAssertTrue(leave.exists, "the menu closed during \(scene)")
+    }
+
+    /// Taps More until its menu shows. The tap goes to More's place on the screen through
+    /// SpringBoard: a tap on the app's own element then waits for the app to go idle, which it
+    /// doesn't while the menu is open over the playing room, so the wait outlasts the episode.
+    /// An open menu hides what is behind it, More too, so it is tapped again only while it is
+    /// still there to tap.
+    private func open(_ more: XCUIElement, showing leave: XCUIElement) -> Bool {
+        let screen = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+        for _ in 0..<4 {
+            if more.exists, more.isHittable {
+                let frame = more.frame
+                screen.coordinate(withNormalizedOffset: .zero)
+                    .withOffset(CGVector(dx: frame.midX, dy: frame.midY))
+                    .tap()
+            }
+            if leave.waitForExistence(timeout: 3) { return true }
+        }
+        return false
     }
 
     private func keep(_ name: String) {
