@@ -46,6 +46,11 @@ fn engine(root: &tempfile::TempDir) -> Arc<FfiEngine> {
         .expect("the engine starts")
 }
 
+/// An invite's key, `k=`: the rest of the link (the title, once it loads) can change under it.
+fn key_of(link: &str) -> &str {
+    link.split(['#', '&']).find(|p| p.starts_with("k=")).expect("an invite has a key")
+}
+
 /// Read `engine`'s events until `done` holds on one, keeping the last room view.
 fn until(
     engine: &Arc<FfiEngine>,
@@ -230,10 +235,12 @@ fn a_newcomer_by_a_new_invite_meets_everyone_already_there() {
         |e, _| matches!(e, Event::RoomMembers(m) if m.iter().any(|m| m.name == "Mika")),
     );
 
-    // Ada makes a new invite; Mika takes the new key.
+    // Ada makes a new invite; Mika takes the new key. CI: the title came into the old link
+    // just before, so a link merely different from the first was the old key's, and Ren came
+    // in by it to a room nobody was on any more.
     ada.send(Command::Room(RoomCommand::NewInvite));
     let (view, _) = until(&ada, move |_, v| {
-        v.is_some_and(|v| v.link.as_ref().is_some_and(|l| *l != first))
+        v.is_some_and(|v| v.link.as_ref().is_some_and(|l| key_of(l) != key_of(&first)))
     });
     let second = view.unwrap().link.unwrap();
     until(

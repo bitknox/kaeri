@@ -255,6 +255,25 @@ async fn restricted_after_auth_leaves_the_relay_unusable() {
 }
 
 #[tokio::test]
+async fn what_is_said_last_before_leaving_still_goes_out() {
+    // CI: a Leave sent with something else just ahead of it, the room closing behind them, was
+    // never sent: the pool stopped once it saw the room gone, with the Leave still unread.
+    let relays = start(1).await;
+    let mut ada = Member::new(SECRET, &relays).await;
+    let mut ren = Member::new(SECRET, &relays).await;
+    ada.hello();
+    ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Hello { .. })))
+        .await
+        .unwrap();
+    ada.say(Message::Status);
+    ada.say(Message::Leave);
+    drop(ada);
+    ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Leave)))
+        .await
+        .expect("the Leave goes out");
+}
+
+#[tokio::test]
 async fn a_hang_up_reconnects_and_resubscribes() {
     let relays = start(1).await;
     let mut ada = Member::new(SECRET, &relays).await;

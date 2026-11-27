@@ -283,8 +283,11 @@ async fn run(
             break;
         }
     }
-    // The room is closing: what waits under the cap (a Leave, usually) goes now, then dropping
-    // the slots stops their connections after it.
+    // The room is closing: what it said last (a Leave, usually) is still read, then what waits
+    // under the cap goes now, and dropping the slots stops their connections after it.
+    while let Ok(o) = out.try_recv() {
+        pool.on_out(o);
+    }
     let now = pool.local();
     for slot in &mut pool.slots {
         while let Some((event, _)) = slot.queue.pop_front() {
