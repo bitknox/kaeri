@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -66,6 +67,13 @@ internal fun RoomRelaysRow(place: Place) {
         Strings.roomRelays(context),
         relays?.let { Strings.roomSettingsRelaysCount(context, it.forNewRooms().size) },
         onClick = { navigator.open(ROOM_RELAYS_ROUTE) },
+        trailing = {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                val tint = MaterialTheme.colorScheme.onSurfaceVariant
+                Text(Strings.roomSettingsRelaysEdit(context), style = MaterialTheme.typography.bodyMedium, color = tint)
+                Icon(Icons.Chevron, contentDescription = null, tint = tint, modifier = Modifier.size(16.dp))
+            }
+        },
     )
 }
 

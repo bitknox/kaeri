@@ -123,6 +123,14 @@ class SettingsShots {
         store.apply(listOf(Event.RoomRelays(app.kaeri.engine.model.RoomRelaySettings(defaults = defaults, spares = spares, defaultSpares = spares, chosen = defaults + "wss://relay.home.example")))) // i18n-skip
     }
 
+    /** Playback's Watch together group, scrolled to: Hide chat and the Relays row with its count. */
+    @Test
+    @Config(qualifiers = PHONE)
+    fun phone_settings_watch_together() = shoot("phone-settings-watch-together", settingsRoute(SettingsPane.Playback), scrollTo = "Relays") { store -> // i18n-skip
+        val defaults = listOf("wss://relay-1.example", "wss://relay-2.example", "wss://relay-3.example") // i18n-skip
+        store.apply(listOf(Event.RoomRelays(app.kaeri.engine.model.RoomRelaySettings(defaults = defaults, spares = emptyList(), defaultSpares = emptyList(), chosen = emptyList()))))
+    }
+
     /** General: Title language and Show adult titles, under Titles, as the TV's General has them. */
     @Test
     @Config(qualifiers = PHONE)
@@ -605,6 +613,8 @@ class SettingsShots {
         fill: () -> Unit = {},
         /** What must be on screen before the capture. */
         check: () -> Unit = {},
+        /** A row below the fold to scroll to before an untapped capture. */
+        scrollTo: String? = null,
         then: (AppStore) -> Unit = {},
     ) {
         val recorded = Scene.named(scene)
@@ -628,6 +638,10 @@ class SettingsShots {
         compose.mainClock.advanceTimeBy(1_000)
         compose.waitForIdle()
         if (tap == null) {
+            scrollTo?.let {
+                compose.onAllNodesWithText(it)[0].performScrollTo()
+                compose.waitForIdle()
+            }
             if (screen) captureScreenRoboImage(file) else compose.onRoot().captureRoboImage(file)
             return
         }
