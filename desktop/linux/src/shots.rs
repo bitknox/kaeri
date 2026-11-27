@@ -24,7 +24,7 @@ const TITLE: u32 = 900_001;
 const PLAYING: (u32, &str) = (900_002, "4");
 
 /// Every shot by name, in the order a run takes them.
-pub const ALL: [&str; 123] = [
+pub const ALL: [&str; 125] = [
     "home",
     "welcome",
     "offline",
@@ -98,6 +98,8 @@ pub const ALL: [&str; 123] = [
     "settings-language",
     "settings-integrations",
     "settings-upscaling",
+    "settings-watch-together",
+    "settings-relays",
     "settings-accounts",
     "accounts-kitsu",
     "accounts-code",
@@ -1169,6 +1171,26 @@ fn stage(shell: &Rc<Shell>, shot: &str) -> f64 {
             upscaling(shell, "natural");
             2.0
         }
+        // Settings ▸ Playback scrolled to Watch together, and its Relays page.
+        "settings-watch-together" => {
+            close_dialogs(&shell.ctx.window);
+            shell.settings_pane("playback");
+            let window = shell.ctx.window.clone();
+            glib::timeout_add_local_once(Duration::from_millis(700), move || {
+                if let Some(row) =
+                    find_titled(window.upcast_ref(), &kaeri_i18n::t::room_relays())
+                {
+                    row.grab_focus();
+                }
+            });
+            2.0
+        }
+        "settings-relays" => {
+            close_dialogs(&shell.ctx.window);
+            shell.settings_pane("playback");
+            crate::pages::relays::push(&shell.ctx);
+            2.0
+        }
         "settings-accounts" => {
             shell.settings_pane("accounts");
             1.5
@@ -1781,6 +1803,11 @@ fn unstage(shell: &Rc<Shell>, shot: &str) {
         "show-settings" => {
             close_dialogs(&shell.ctx.window);
             let _ = WidgetExt::activate_action(&shell.ctx.window, "win.back", None);
+        }
+        "settings-relays" => {
+            if let Some(nav) = shell.ctx.nav() {
+                nav.pop();
+            }
         }
         "settings-upscaling" => {
             upscaling(shell, "off");
@@ -3220,6 +3247,23 @@ fn language_row(widget: &gtk::Widget) -> Option<adw::ComboRow> {
     let mut child = widget.first_child();
     while let Some(next) = child {
         if let Some(found) = language_row(&next) {
+            return Some(found);
+        }
+        child = next.next_sibling();
+    }
+    None
+}
+
+/// The first preferences row under `widget` titled `title`.
+fn find_titled(widget: &gtk::Widget, title: &str) -> Option<adw::PreferencesRow> {
+    if let Some(row) = widget.downcast_ref::<adw::PreferencesRow>()
+        && row.title() == title
+    {
+        return Some(row.clone());
+    }
+    let mut child = widget.first_child();
+    while let Some(next) = child {
+        if let Some(found) = find_titled(&next, title) {
             return Some(found);
         }
         child = next.next_sibling();

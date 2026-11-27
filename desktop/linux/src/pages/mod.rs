@@ -18,6 +18,7 @@ pub mod more_about;
 pub mod opened;
 pub mod plugin;
 pub mod providers;
+pub mod relays;
 pub mod report;
 pub mod search;
 pub mod search_filters;

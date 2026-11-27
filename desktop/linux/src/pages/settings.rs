@@ -667,7 +667,6 @@ impl Inner {
             }
             if name == "playback" && *title == Group::Player {
                 group.add(&self.clear_skips_row());
-                group.add(&self.hide_chat_row());
                 any = true;
             }
             if name == "downloads" && *title == Group::Files {
@@ -704,6 +703,9 @@ impl Inner {
             }
             if any {
                 page.add(&group);
+            }
+            if name == "playback" && *title == Group::Player {
+                page.add(&self.room_group());
             }
         }
         if name == "sources" {
@@ -795,7 +797,17 @@ impl Inner {
         widget
     }
 
-    /// Clear skip times you marked: the engine answers with a notice of how many it forgot.
+    /// Watch together: Hide chat in rooms, and the relays new rooms use.
+    fn room_group(self: &Rc<Self>) -> adw::PreferencesGroup {
+        let group = adw::PreferencesGroup::builder()
+            .title(t::room_settings_group())
+            .description(t::room_settings_group_line())
+            .build();
+        group.add(&self.hide_chat_row());
+        group.add(&super::relays::row(&self.ctx));
+        group
+    }
+
     /// Hide chat in rooms: this device stops showing chat and reactions over the video. The
     /// room keeps it too, for the room this device is in.
     fn hide_chat_row(self: &Rc<Self>) -> adw::SwitchRow {
@@ -827,6 +839,7 @@ impl Inner {
         row
     }
 
+    /// Clear skip times you marked: the engine answers with a notice of how many it forgot.
     fn clear_skips_row(self: &Rc<Self>) -> adw::ActionRow {
         let row = adw::ActionRow::builder().title(t::settings_clear_skips()).build();
         let clear = gtk::Button::with_label(&t::player_skip_clear());
