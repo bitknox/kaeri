@@ -119,7 +119,7 @@ database a newer version has used, so going back means restoring a backup.
 
 The `0.4` tag follows every 0.4.x release. A new minor version can change things, so it needs the
 tag changed by hand, after reading its release notes. To stay on one release, use a full version such as
-`ghcr.io/bitknox/kaeri-store:0.5.0` in the compose file.
+`ghcr.io/bitknox/kaeri-store:0.6.0` in the compose file.
 
 The store's admin page can tell you when a new release is out: open This store and choose Check
 for updates. The check runs in your browser and asks GitHub, not the store.
