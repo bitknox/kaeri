@@ -539,23 +539,11 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Sonraki bölümleri tutmak için yeterli boş alan yok. Daha fazla indirmek için biraz alan açın.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Önce birlikte izleme için bir sunucu seçin, syncplay.server olarak. { $server } sunucusu { $operator } tarafından işletiliyor.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Önce birlikte izleme için bir sunucu seçin. { $server } sunucusu { $operator } tarafından işletiliyor.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Birlikte izlemeler bu Kaeri sürümünde yok.
 
 # Message when a watch party was asked for with no room named.
 party-needs-room = Birlikte izleme için bir oda gerekli. Önce birini seçin.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Birlikte izleme sunucusuyla bağlantı koptu. Yeniden deneniyor.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Birlikte izlemeye yeniden bağlandı.
 
 # Message when the person left a watch party.
 party-left = Birlikte izlemeden ayrıldı.

@@ -377,6 +377,12 @@ mod fake {
         }
 
         /// Relay `index` refuses this device's events with `reason` (`rate-limited:`, `blocked:`).
+        /// None of this room's relays answers a link opened from now on (a look or a join):
+        /// "Couldn't reach this room's relays". The device already in it stays connected.
+        pub fn unreachable(&self, dead: bool) {
+            self.fake.unreachable(dead);
+        }
+
         pub fn relay_refuses(&self, index: u32, reason: String) {
             self.run(|f| f.relay_refuses(index as usize, &reason));
         }

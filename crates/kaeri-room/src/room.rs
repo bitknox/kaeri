@@ -29,6 +29,8 @@ pub const CARRY_ON_AFTER: i64 = 20_000;
 pub const START_COUNT: i64 = 3_000;
 /// Up next counts this long, in room seconds.
 pub const UP_NEXT_SECONDS: f64 = 10.0;
+/// Each place in a sync request's order answers this much later than the one before.
+pub const ANSWER_STEP_MS: i64 = 400;
 /// A seq this far above the current one is dropped.
 pub const SEQ_JUMP_LIMIT: u64 = 1000;
 /// Mid-episode stalls wait only in rooms this size or smaller.
@@ -164,6 +166,9 @@ pub struct Room {
     wait_cause: Option<(Cause, Mid)>,
     relays: Vec<String>,
     relays_seq: u64,
+    /// Sync requests this device answers when their time comes (`rank × 400 ms`), unless an
+    /// answer is heard first.
+    answers: Vec<(String, i64)>,
     /// The key epoch register: the winning rekey's `(seq, t, session)`.
     epoch: (u64, i64, String),
     /// Per room relay, since when more than half the present members have reported it unhealthy.
@@ -207,6 +212,7 @@ impl Room {
             wait_cause: None,
             relays: Vec::new(),
             relays_seq: 0,
+            answers: Vec::new(),
             epoch: (0, 0, String::new()),
             relay_bad_since: Vec::new(),
             few_relays_since: None,
@@ -664,6 +670,9 @@ impl Room {
         if body.mid == self.me {
             return out;
         }
+        if let Message::SyncAns { nonce, .. } = &body.m {
+            self.answers.retain(|(n, _)| n != nonce);
+        }
         if let Message::SyncAns {
             playhead,
             roster,
@@ -679,24 +688,30 @@ impl Room {
                 self.take_roster(entry, now, &mut out);
             }
             if let Some(head) = playhead.clone() {
+                let seq = head.seq;
                 let won = self.apply(head, now);
+                // Stale: the answer's playhead lost to a later write this device holds.
+                let took =
+                    won.is_some() || self.playhead.as_ref().is_some_and(|h| h.seq == seq);
                 if let (Some(old), Some(new)) = (won, self.playhead.clone()) {
                     out.push(Happening::Playhead {
                         old: old.map(Box::new),
                         new: Box::new(new),
                     });
                 }
-                if *started {
+                if *started && took {
                     self.before_play = false;
                 }
-                if let Some(pos) = now_pos {
+                // The answer's place counts only with its playhead: one that lost to what this
+                // device holds is from before a write it hasn't heard of yet.
+                if let Some(pos) = now_pos.filter(|_| took) {
                     if let Some(h) = self.playhead.as_mut() {
-                        h.pos = *pos;
+                        h.pos = pos;
                     }
                     if *playing_now {
                         self.before_play = false;
                         self.clear_at = Some(now);
-                        self.run = Some(Run { start: now, from: *pos });
+                        self.run = Some(Run { start: now, from: pos });
                     }
                 }
             }
@@ -819,10 +834,11 @@ impl Room {
             member.idpk.clone_from(&entry.idpk);
             member.idsig.clone_from(&entry.idsig);
         }
-        member.status = entry.st.clone();
-        member.status_at = now;
-        member.heard_at = now;
+        // Someone heard here already speaks for themselves: another's word of them may be older.
         if !known {
+            member.status = entry.st.clone();
+            member.status_at = now;
+            member.heard_at = now;
             out.push(Happening::Joined { mid: entry.mid.clone() });
         }
     }
@@ -868,6 +884,25 @@ impl Room {
             .collect();
         order.sort();
         order.iter().position(|(_, mid)| *mid == self.me).unwrap_or(order.len())
+    }
+
+    /// A sync request heard: this device answers it after `rank × 400 ms`, unless someone
+    /// earlier in the order answers first. A member who can't answer leaves it to the next.
+    pub fn will_answer(&mut self, nonce: &str, now: i64) {
+        // In the background, this device leaves answering to the others.
+        if self.my_status().bg {
+            return;
+        }
+        let due = now + self.rank(nonce, now) as i64 * ANSWER_STEP_MS;
+        self.answers.push((nonce.to_owned(), due));
+    }
+
+    /// The sync requests whose turn to answer has come here, taken.
+    pub fn answers_due(&mut self, now: i64) -> Vec<String> {
+        let (due, later) =
+            std::mem::take(&mut self.answers).into_iter().partition(|(_, at)| *at <= now);
+        self.answers = later;
+        due.into_iter().map(|(n, _)| n).collect()
     }
 
     /// Whether a stall here may start a wait: rooms of 5 or fewer.

@@ -590,23 +590,11 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Espace libre insuffisant pour garder les épisodes suivants téléchargés. Libérez de l'espace pour en télécharger davantage.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Choisissez d'abord un serveur pour le visionnage en groupe, dans syncplay.server. {server} est géré par {operator}.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Choisissez d'abord un serveur pour le visionnage en groupe. {server} est géré par {operator}.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Les visionnages en groupe ne sont pas disponibles dans cette version de Kaeri.</value>
   </data>
   <data name="PartyNeedsRoom" xml:space="preserve">
     <value>Un visionnage en groupe a besoin d'un salon où se retrouver. Choisissez-en un d'abord.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Connexion au serveur du visionnage en groupe perdue. Nouvelle tentative en cours.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>De retour dans le visionnage en groupe.</value>
   </data>
   <data name="PartyLeft" xml:space="preserve">
     <value>Vous avez quitté le visionnage en groupe.</value>

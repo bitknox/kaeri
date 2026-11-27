@@ -190,3 +190,71 @@ fn two_engines_meet_in_a_room_over_loopback_relays() {
     ren.shutdown();
     drop(relays);
 }
+
+#[test]
+fn a_newcomer_by_a_new_invite_meets_everyone_already_there() {
+    // Neon: after New invite, the members already there kept proofs made for the old room id,
+    // so a newcomer by the new link took none of them as bound and found itself alone.
+    let runtime = tokio::runtime::Runtime::new().unwrap();
+    let relays: Vec<FakeRelay> =
+        runtime.block_on(async { vec![FakeRelay::start().await, FakeRelay::start().await] });
+    let urls: Vec<String> = relays.iter().map(FakeRelay::url).collect();
+    let roots = [(); 3].map(|()| tempfile::tempdir().unwrap());
+    let (ada, mika, ren) = (engine(&roots[0]), engine(&roots[1]), engine(&roots[2]));
+    let pick = RoomEpisode { id: AnilistId::new(900_001), episode: "9".into() };
+
+    ada.send(Command::Room(RoomCommand::SetRelays { relays: urls.clone() }));
+    ada.send(Command::Room(RoomCommand::Lobby {
+        invite: None,
+        name: Some("Ada".into()),
+        pick: Some(pick),
+        anyway: false,
+    }));
+    let (view, _) = until(&ada, |e, v| {
+        matches!(e, Event::RoomJoined(_) | Event::RoomState(_))
+            && v.is_some_and(|v| v.link.is_some() && v.room_episode.is_some())
+    });
+    let first = view.unwrap().link.unwrap();
+    mika.send(Command::Room(RoomCommand::Lobby {
+        invite: Some(first.clone()),
+        name: Some("Mika".into()),
+        pick: None,
+        anyway: false,
+    }));
+    until(
+        &mika,
+        |e, _| matches!(e, Event::RoomMembers(m) if m.iter().any(|m| m.name == "Ada")),
+    );
+    until(
+        &ada,
+        |e, _| matches!(e, Event::RoomMembers(m) if m.iter().any(|m| m.name == "Mika")),
+    );
+
+    // Ada makes a new invite; Mika takes the new key.
+    ada.send(Command::Room(RoomCommand::NewInvite));
+    let (view, _) = until(&ada, move |_, v| {
+        v.is_some_and(|v| v.link.as_ref().is_some_and(|l| *l != first))
+    });
+    let second = view.unwrap().link.unwrap();
+    until(
+        &mika,
+        |e, _| matches!(e, Event::RoomMessage(m) if matches!(m.kind, kaeri_model::room::RoomMessageKind::NewInvite { .. })),
+    );
+    thread::sleep(Duration::from_millis(1_500));
+
+    // Ren comes in by the new link and meets both.
+    ren.send(Command::Room(RoomCommand::Lobby {
+        invite: Some(second),
+        name: Some("Ren".into()),
+        pick: None,
+        anyway: false,
+    }));
+    until(&ren, |e, _| {
+        matches!(e, Event::RoomMembers(m)
+            if m.iter().any(|m| m.name == "Ada") && m.iter().any(|m| m.name == "Mika"))
+    });
+    for engine in [ada, mika, ren] {
+        engine.shutdown();
+    }
+    drop(relays);
+}

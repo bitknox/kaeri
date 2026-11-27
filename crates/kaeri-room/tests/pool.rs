@@ -272,6 +272,22 @@ async fn a_hang_up_reconnects_and_resubscribes() {
 }
 
 #[tokio::test]
+async fn what_is_sent_right_after_a_refresh_still_goes_out() {
+    // Neon: back in the foreground, the Status and SyncReq sent right after Refresh were dropped
+    // as each relay reconnected.
+    let relays = start(3).await;
+    let mut ada = Member::new(SECRET, &relays).await;
+    let mut ren = Member::new(SECRET, &relays).await;
+    ada.hello();
+    ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Hello { .. })))
+        .await
+        .unwrap();
+    ada.link.out.send(Out::Refresh).unwrap();
+    ada.say(Message::Chat { id: "c3".into(), text: "foreground".into() });
+    ren.next(is_chat("foreground")).await.expect("sent after the refresh");
+}
+
+#[tokio::test]
 async fn no_relay_answers_and_the_join_says_so() {
     let dead = FakeRelay::start().await;
     dead.down(true);

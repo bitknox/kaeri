@@ -381,18 +381,18 @@
     </plurals>
     <!-- Toast when keep next found no room for another episode. -->
     <string name="notice_keep_next_full">Not enough free space to keep the next episodes downloaded. Free up some space to download more.</string>
-    <!-- Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps. -->
-    <string name="party_needs_server">Choose a server for the watch party first, as syncplay.server. %1$s is run by %2$s.</string>
-    <!-- Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it. -->
-    <string name="party_choose_server">Choose a server for the watch party first. %1$s is run by %2$s.</string>
+    <!-- Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on. -->
+    <string name="room_look_unreachable">Couldn\'t reach this room\'s relays. Ask for a new invite.</string>
+    <!-- Why a look into a room found nothing: the pasted text is no room's invite. -->
+    <string name="room_look_not_an_invite">That isn\'t a room\'s invite.</string>
+    <!-- Why a look into a recent room found nothing: it's no longer in this device's recent rooms. -->
+    <string name="room_look_not_kept">That room isn\'t kept any more.</string>
+    <!-- Why a look into a room found nothing: the invite comes from an older version. -->
+    <string name="room_look_old_invite">This invite is from an older version of Kaeri. Ask for a new one.</string>
     <!-- Toast when a watch party is asked for in a build without watch parties. -->
     <string name="notice_no_party">Watch parties aren\'t available in this version of Kaeri.</string>
     <!-- Message when a watch party was asked for with no room named. -->
     <string name="party_needs_room">A watch party needs a room to meet in. Choose one first.</string>
-    <!-- Message in a watch party when its server connection dropped and is retried. -->
-    <string name="party_server_lost">Lost the watch party server. Trying again.</string>
-    <!-- Message in a watch party when the connection came back. -->
-    <string name="party_rejoined">Back in the watch party.</string>
     <!-- Message when the person left a watch party. -->
     <string name="party_left">Left the watch party.</string>
     <!-- Message when a watch party's server could not be reached, in the lobby or when looking in. -->
