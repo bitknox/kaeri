@@ -2,11 +2,6 @@ party-status = Estado de la { -watch-party }
 party-members = Miembros
 party-choose-a-source = Elige una { -source }
 party-sources-none-listed = Ninguna { -source } tiene el episodio { $episode }. Las { -source-pl } vienen de { -plugin-pl } que agregas desde una { -plugin-store }.
-party-sources-found-line = { $count ->
-    [one] Una { -source } lo tiene. La que elijas se reproduce con la { -watch-party }.
-    [many] { $count } { -source-pl } lo tienen. La que elijas se reproduce con la { -watch-party }.
-   *[other] { $count } { -source-pl } lo tienen. La que elijas se reproduce con la { -watch-party }.
- }
 player-could-not-start = No se pudo iniciar el reproductor. Inténtalo de nuevo o elige otra { -source }.
 player-file-unreadable = No se pudo leer ese archivo. Prueba con otro.
 player-inhibit-reason = Reproduciendo un episodio

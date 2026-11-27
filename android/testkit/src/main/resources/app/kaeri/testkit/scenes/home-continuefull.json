@@ -405,31 +405,6 @@
       }
      },
      {
-      "key": "SYNCPLAY",
-      "value": "off",
-      "change": {
-       "@type": "Steps",
-       "back": false,
-       "forward": true
-      }
-     },
-     {
-      "key": "SYNCPLAY_SERVER",
-      "value": "",
-      "change": {
-       "@type": "Typed",
-       "text": ""
-      }
-     },
-     {
-      "key": "SYNCPLAY_ROOM",
-      "value": "unset — needed for parties",
-      "change": {
-       "@type": "Typed",
-       "text": ""
-      }
-     },
-     {
       "key": "UPDATE_CHECK",
       "value": "on",
       "change": {
@@ -26982,18 +26957,8 @@
    "waiting": null
   },
   {
-   "@type": "PartyRecent",
+   "@type": "RoomRecent",
    "v1": []
-  },
-  {
-   "@type": "PartyForm",
-   "v1": {
-    "recentServers": [],
-    "suggestedServer": "syncplay.pl:8995",
-    "suggestedRunBy": "the Syncplay project",
-    "room": "heron-a7xq-xbaa",
-    "name": "kaeri"
-   }
   },
   {
    "@type": "JobStarted",

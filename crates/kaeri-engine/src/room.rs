@@ -574,6 +574,9 @@ struct Task {
     /// None of this device's sources has the room's episode: closing the empty player or the
     /// source picker leaves it reading No source, not Player closed.
     no_source: bool,
+    /// Whether the player last said it was paused: a room started from the player starts
+    /// playing or paused as it is.
+    player_paused: Option<bool>,
     /// When this device wrote a stall wait: not again for a member who stalled twice in 10
     /// minutes.
     stall_writes: Vec<i64>,
@@ -782,7 +785,6 @@ impl Task {
         }
     }
 
-    /// Tell the player to play or pause with the room.
     /// The player closed without finishing: Player closed, unless this device has no source
     /// for the episode or its source picker is open, which the closed player doesn't change.
     fn close_player(&mut self) {
@@ -793,7 +795,13 @@ impl Task {
         });
     }
 
+    /// Tell the player to play or pause with the room. Before the room has a playhead (a
+    /// player handing over to a room it starts) there is nothing to follow yet: the player
+    /// stays as it is, and the room starts from it.
     fn cue_play(&mut self) {
+        if self.room.playhead().is_none() {
+            return;
+        }
         let paused = !self.room.playing();
         if self.pause.tell(paused, self.now()) {
             self.cue(SeatCue::Pause(paused));
@@ -1354,6 +1362,7 @@ impl Task {
             }
             SeatReport::Sample { position, paused, speed } => {
                 self.status.pos = Some(position);
+                self.player_paused = Some(paused);
                 // Away, a pause is the system's (a call, the lock screen): never the room's.
                 if self.status.bg {
                     return;
@@ -1990,7 +1999,7 @@ impl Task {
                 if on_it {
                     // Started from the player: it keeps playing, the player becomes the room.
                     let pos = self.status.pos.unwrap_or(0.0);
-                    let playing = self.pause.told() != Some(true);
+                    let playing = self.player_paused != Some(true);
                     self.write(
                         |h| {
                             h.cause = Cause::Play;
@@ -2168,6 +2177,7 @@ async fn run(
         drift: kaeri_room::drift::Drift::default(),
         stall_since: None,
         no_source: false,
+        player_paused: None,
         stall_writes: Vec::new(),
         last_pause_at: None,
         before_bg: None,
@@ -2322,6 +2332,7 @@ impl PlayerPause {
         true
     }
 
+    #[cfg(test)]
     fn told(&self) -> Option<bool> {
         self.told
     }

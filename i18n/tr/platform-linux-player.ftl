@@ -2,10 +2,6 @@ party-status = { -watch-party-cap } durumu
 party-members = Katılımcılar
 party-choose-a-source = Bir { -source } seçin
 party-sources-none-listed = Hiçbir { -source } { $episode }. bölümü listelemiyor. { -source-cap-pl }, bir { -plugin-store }ndan eklediğiniz { -plugin-pl }den gelir.
-party-sources-found-line = { $count ->
-    [one] Bir { -source } bu bölümü içeriyor. Seçtiğiniz { -watch-party } ile oynar.
-   *[other] { $count } { -source } bu bölümü içeriyor. Seçtiğiniz { -watch-party } ile oynar.
- }
 player-could-not-start = Oynatıcı başlatılamadı. Yeniden deneyin ya da başka bir { -source } seçin.
 player-file-unreadable = Bu dosya okunamadı. Başka bir dosya deneyin.
 player-inhibit-reason = Bir bölüm oynatılıyor

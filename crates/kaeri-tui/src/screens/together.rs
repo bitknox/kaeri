@@ -5,7 +5,7 @@
 use kaeri_i18n::t;
 use kaeri_model::room::{
     MemberState, Reaction, RoomChatBody, RoomChatLine, RoomConnection, RoomMember, RoomRecent,
-    RoomSources, RoomView,
+    RoomSources, RoomView, WaitReason,
 };
 use ratatui::{buffer::Buffer, layout::Rect, style::Modifier, widgets::Widget};
 
@@ -366,7 +366,7 @@ fn room_lines(app: &App, room: &RoomView) -> (Option<String>, Option<String>) {
         }
         if room.can_carry_on {
             return (
-                Some(t::room_line_still_loading(&names(&others), others.len() as i64)),
+                Some(still(room, &names(&others), others.len() as i64)),
                 Some(t::room_line_waited(seconds)),
             );
         }
@@ -665,6 +665,20 @@ fn render_chat(buf: &mut Buffer, app: &App, area: Rect) -> u16 {
     y - area.top()
 }
 
+/// The room's first line at the cap, by why it waits: seeking or buffering when everyone it
+/// waits for is, else loading.
+fn still(room: &RoomView, names: &str, count: i64) -> String {
+    let all =
+        |reason: WaitReason| room.waiting.iter().filter(|w| !w.you).all(|w| w.reason == reason);
+    if all(WaitReason::Seeking) {
+        t::room_line_still_seeking(names, count)
+    } else if all(WaitReason::Buffering) {
+        t::room_line_still_buffering(names, count)
+    } else {
+        t::room_line_still_loading(names, count)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -817,7 +831,11 @@ mod tests {
         assert_eq!(room_lines(&app, &view).0, None, "not before a second has passed");
         app.apply(Event::RoomState(waiting(now - 3_000)));
         let view = app.room.clone().unwrap();
-        assert_eq!(room_lines(&app, &view).0.as_deref(), Some("Paused for Ren · 4 s"));
+        assert_eq!(
+            room_lines(&app, &view).0.as_deref(),
+            Some("Paused for Ren · 4\u{a0}s"),
+            "no-break space"
+        );
     }
 
     /// A state to draw, by name.

@@ -889,3 +889,11 @@ player-panel-more = More
 # Player panel: button under a synopsis shown whole after More, that folds it back to three lines.
 # @max 16
 player-panel-less = Less
+
+# Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+# @arg count: int
+# @max 90
+player-sources-found-line = { $count ->
+    [one] One { -source } has it. Choose it to play.
+   *[other] { $count } { -source-pl } have it. Choose the one to play.
+}
