@@ -62,6 +62,8 @@ public enum PhoneSettingsPage: Hashable, Sendable {
     case tvs
     /// Sync with the devices in the group, and profiles.
     case devices, profiles
+    /// Watch together's relays for new rooms, and the spares.
+    case relays
     /// The titles marked Not interested, with Restore.
     case hiddenTitles
     case store(String)
@@ -77,6 +79,7 @@ public enum PhoneSettingsPage: Hashable, Sendable {
         switch name {
         case "general", "titles": .general
         case "playback": .playback
+        case "relays": .relays
         case "reading": .reading
         case "medium": .medium
         case "downloads": .downloads
@@ -127,6 +130,8 @@ struct SettingsScreen: View {
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
+        // Another pane closes the Relays page; Playback opens on its groups again.
+        .onChange(of: navigator.settingsPane) { navigator.settingsRelays = false }
     }
 
     @ViewBuilder
@@ -137,7 +142,7 @@ struct SettingsScreen: View {
             } else {
                 switch navigator.settingsPane {
             case .general: GeneralPane()
-            case .playback: PlaybackPane()
+            case .playback: if navigator.settingsRelays { RelaysPane() } else { PlaybackPane() }
             case .reading: ReadingPane()
             case .downloads: DownloadsPane()
             case .notifications: NotificationsPane()
@@ -247,7 +252,7 @@ struct SettingsResults: View {
         (L.settingsMarkOpening, .playback), (L.settingsCountsWatched, .playback),
         (L.settingsSpoiler, .playback), (L.playerUpscaling, .playback), (L.playerNightMode, .playback),
         (L.settingsPictureInPictureOnLeaveApple, .playback),
-        (L.settingsStartFullScreen, .playback), (L.settingsHideChat, .playback),
+        (L.settingsStartFullScreen, .playback), (L.roomSettingsHideChat, .playback), (L.roomRelays, .playback),
         (L.downloadsFolder, .downloads), (L.downloadsQuality, .downloads), (L.settingsMergeSubtitles, .downloads),
         (L.settingsKeepSeeding, .downloads), (L.settingsAfterDownload, .downloads), (L.settingsWatchedDownloads, .downloads),
         (L.settingsNewEpisodes, .notifications), (L.settingsSystemNotifications, .notifications),
@@ -582,8 +587,9 @@ struct PlaybackPane: View {
             SettingsRow(title: SettingKey.fullscreen.title) { SettingSwitch(key: .fullscreen) }
             #endif
         }
-        SettingsGroup(title: L.settingsGroupWatchParties) {
-            SettingsRow(title: L.settingsHideChat, note: L.settingsHideChatLine) { HideChatSwitch() }
+        SettingsGroup(title: L.roomSettingsGroup, footnote: L.roomSettingsGroupLine) {
+            SettingsRow(title: L.roomSettingsHideChat, note: L.roomSettingsHideChatLine) { HideChatSwitch() }
+            RelaysRow()
         }
         #if os(iOS)
         // The TVs paired to this iPad, beside the rest of how episodes play. The Mac keeps them
@@ -716,14 +722,14 @@ struct AdvancedPane: View {
     }
 }
 
-/// Hide chat: lines, reactions, ticks and the field stay off the video, in every party on this
+/// Hide chat: lines, reactions, ticks and the field stay off the video, in every room on this
 /// device.
 struct HideChatSwitch: View {
     @Environment(AppStore.self) private var store
 
     var body: some View {
         let room = store.room
-        Toggle(L.settingsHideChat, isOn: Binding(get: { room.hidesChat }, set: { room.hidesChat = $0 }))
+        Toggle(L.roomSettingsHideChat, isOn: Binding(get: { room.hidesChat }, set: { room.hidesChat = $0 }))
             .toggleStyle(.switch)
             .tint(.amber)
             .labelsHidden()

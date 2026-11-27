@@ -1,0 +1,114 @@
+// The room's reaction ticks on the seek bar, and Watch together's invite card naming its show once.
+
+@testable import KaeriStore
+import KaeriKit
+import Testing
+
+@MainActor
+struct RoomTicksTests {
+    private func joined() -> RoomModel {
+        let room = RoomModel()
+        room.apply(.roomJoined(RoomView(
+            roomId: "room-1", name: "Room", connection: .connected, playing: true, beforePlay: false,
+            waiting: [], canCarryOn: false, relays: [])))
+        return room
+    }
+
+    private func reacted(_ room: RoomModel, _ marks: [(Double, String)]) {
+        room.apply(.roomChat(RoomConversation(
+            lines: [], marks: marks.map { RoomReactionMark(at: $0.0, from: $0.1, reaction: .laugh) }, failed: nil)))
+    }
+
+    @Test func reactionsCloseTogetherShareATick() {
+        let room = joined()
+        reacted(room, [(31, "Mika"), (8, "Mika"), (8.3, "Ren"), (47, "Ren")])
+        // 60 s on a 600 pt line: 8 s and 8.3 s sit 3 pt apart.
+        let ticks = room.ticks(duration: 60, width: 600)
+        #expect(ticks.map(\.at) == [8, 31, 47])
+        #expect(ticks[0].names == ["Mika", "Ren"])
+        #expect(ticks[0].x == 80)
+    }
+
+    @Test func noTicksWithChatHiddenOrOutsideARoom() {
+        let room = joined()
+        reacted(room, [(8, "Mika")])
+        room.chatHidden = true
+        #expect(room.ticks(duration: 60, width: 600).isEmpty, "Hide chat takes the ticks off the seek bar")
+        room.chatHidden = false
+        room.apply(.roomLeft(why: .left))
+        #expect(room.marks.isEmpty)
+        #expect(room.ticks(duration: 60, width: 600).isEmpty)
+    }
+
+    @Test func aMarkPastTheEpisodeHasNoTick() {
+        let room = joined()
+        reacted(room, [(-1, "Mika"), (70, "Ren")])
+        #expect(room.ticks(duration: 60, width: 600).isEmpty)
+        #expect(room.ticks(duration: 0, width: 600).isEmpty)
+    }
+
+    @Test func theTickLabelNamesWhoReacted() {
+        #expect(RoomCopy.reactors(["Ren"]) == "Ren")
+        #expect(RoomCopy.reactors(["Ren", "Mika"]).contains("Mika"))
+        #expect(RoomCopy.reactors(["Ren", "Mika", "Sora", "Noa"]).contains("2"))
+        let tick = ReactionTick(at: 724, x: 0, names: ["Ren", "Mika"])
+        #expect(tick.label.hasPrefix("12:04"))
+    }
+
+    @Test func anInviteCardNamesItsShowOnce() {
+        let room = RoomModel()
+        room.open(invite: "kaeri://room#invite.example")
+        room.apply(.roomGlimpse(RoomGlimpse(
+            by: "Mika", roomEpisode: RoomEpisodeInfo(id: 900_001, episode: "9", title: "Stardust Wayfarer"))))
+        let status = room.status(now: 0)
+        #expect(status.detail.contains("Stardust Wayfarer"), "the player's panel has no title above it")
+        #expect(room.cardDetail(status) == room.episodeName("9"))
+        #expect(!room.cardDetail(status).contains("Stardust Wayfarer"))
+    }
+
+    // MARK: Settings ▸ Relays
+
+    private func relays(chosen: [String] = []) -> (RoomModel, () -> [Command]) {
+        let room = RoomModel()
+        var sent: [Command] = []
+        room.send = { sent.append($0) }
+        room.apply(.roomRelays(RoomRelaySettings(
+            defaults: ["wss://one.example", "wss://two.example"], spares: ["wss://spare.example"], chosen: chosen)))
+        return (room, { sent })
+    }
+
+    @Test func newRoomsUseTheDefaultsUntilSettingsHasAList() {
+        let (room, _) = relays()
+        #expect(room.newRoomRelays == ["wss://one.example", "wss://two.example"])
+        #expect(room.relaysAreDefault)
+        let (own, _) = relays(chosen: ["wss://home.example"])
+        #expect(own.newRoomRelays == ["wss://home.example"])
+        #expect(!own.relaysAreDefault)
+    }
+
+    @Test func addingARelaySendsTheWholeList() {
+        let (room, sent) = relays()
+        #expect(room.addRelay("relay.home.example"))
+        #expect(sent() == [.room(.setRelays(relays: ["wss://one.example", "wss://two.example", "wss://relay.home.example"]))])
+        #expect(!room.addRelay("ws://far.example"), "plain ws:// only on this machine or its network")
+        #expect(room.addRelay("wss://one.example"))
+        #expect(sent().count == 1, "one already listed is left as it is")
+    }
+
+    @Test func theLastRelayStaysAndRestoreSendsNoList() {
+        let (room, sent) = relays(chosen: ["wss://home.example", "wss://one.example"])
+        room.removeRelay("wss://home.example")
+        room.removeRelay("wss://one.example")
+        #expect(room.newRoomRelays == ["wss://one.example"])
+        room.restoreRelays()
+        #expect(sent() == [.room(.setRelays(relays: ["wss://one.example"])), .room(.setRelays(relays: []))])
+        #expect(room.relaysAreDefault)
+    }
+
+    @Test func listingTheDefaultsAgainIsNoListOfItsOwn() {
+        let (room, sent) = relays(chosen: ["wss://one.example"])
+        #expect(room.addRelay("wss://two.example"))
+        #expect(sent() == [.room(.setRelays(relays: []))])
+        #expect(room.relaysAreDefault)
+    }
+}

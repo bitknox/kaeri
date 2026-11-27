@@ -82,6 +82,10 @@ public final class RoomModel {
     public internal(set) var members: [RoomMember] = []
     /// The conversation, oldest first, without muted members' lines.
     public internal(set) var lines: [RoomLine] = []
+    /// Settings ▸ Relays: the list for new rooms and the spares, once the engine has said.
+    public internal(set) var relaySettings: RoomRelaySettings?
+    /// Where people reacted in this episode, for the seek bar's ticks (muted members' left out).
+    public internal(set) var marks: [RoomReactionMark] = []
     /// The chat is off in Settings: no lines or field over the video.
     public internal(set) var chatHidden = false
     /// Hide chat in rooms: lines, reactions and their ticks stay off the screen and the field is
@@ -360,6 +364,13 @@ public final class RoomModel {
     /// "Episode 9"
     public func episodeName(_ episode: String) -> String { RoomCopy.upNextEpisode(episode, nil) }
 
+    /// The detail line on Watch together's room card, whose title already names the show: an
+    /// invite says its episode there, not the show again.
+    public func cardDetail(_ status: RoomStatus) -> String {
+        guard let invitation, !invitation.over else { return status.detail }
+        return episodeName(invitation.episode)
+    }
+
     /// 12:04, 1:02:09. Whole seconds cut down, as the player's clock and the engine's room lines
     /// write them: 12.6 s is 0:12 in the header as in "Mika paused at 0:12".
     nonisolated public static func clock(_ seconds: Double) -> String {
@@ -496,6 +507,46 @@ public final class RoomModel {
         send(.room(.peekInvite(invite: link)))
     }
 
+    // MARK: Settings ▸ Relays
+
+    /// The relays new rooms use: Settings' own list, or the defaults while it has none.
+    public var newRoomRelays: [String] {
+        guard let relaySettings else { return [] }
+        return relaySettings.chosen.isEmpty ? relaySettings.defaults : relaySettings.chosen
+    }
+
+    /// The list for new rooms is the defaults.
+    public var relaysAreDefault: Bool { relaySettings?.chosen.isEmpty ?? true }
+
+    /// Asks the engine for Settings ▸ Relays.
+    public func loadRelays() { send(.room(.loadRelays)) }
+
+    /// Adds a relay to the list for new rooms when the room protocol takes the address; false
+    /// when it doesn't. One already listed is left as it is.
+    @discardableResult
+    public func addRelay(_ typed: String) -> Bool {
+        guard let address = RoomRelays.address(typed) else { return false }
+        if !newRoomRelays.contains(address) { chooseRelays(newRoomRelays + [address]) }
+        return true
+    }
+
+    /// Takes a relay off the list for new rooms; the last one stays, so a room always has one.
+    public func removeRelay(_ address: String) {
+        let left = newRoomRelays.filter { $0 != address }
+        guard !left.isEmpty, left.count < newRoomRelays.count else { return }
+        chooseRelays(left)
+    }
+
+    /// Restore the defaults: the list for new rooms goes back to the defaults.
+    public func restoreRelays() { chooseRelays([]) }
+
+    private func chooseRelays(_ list: [String]) {
+        // The defaults again are no list of Settings' own.
+        let chosen = list == relaySettings?.defaults ? [] : list
+        relaySettings?.chosen = chosen
+        send(.room(.setRelays(relays: chosen)))
+    }
+
     /// No source's Open sources and Search titles: the player closes, you keep the room, and
     /// the app's own page opens.
     public func openSources() { closingPlayer { [weak self] in self?.showSources() } }
@@ -588,8 +639,11 @@ public final class RoomModel {
             changed()
         case .roomMessage:
             changed()
+        case .roomRelays(let settings):
+            relaySettings = settings
         case .roomChat(let conversation):
             lines = conversation.lines.compactMap(RoomLine.init)
+            marks = conversation.marks
         case .roomChatState(let state):
             chatHidden = state.hidden
         case .roomLeft(let why):
@@ -656,6 +710,7 @@ public final class RoomModel {
         view = nil
         members = []
         lines = []
+        marks = []
         offer = nil
         popover = nil
         leaving = nil

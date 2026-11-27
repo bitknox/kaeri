@@ -197,7 +197,7 @@ struct RoomPlaceCard: View {
                     Text(room.view?.title ?? room.invitation?.title ?? "").font(.showTitle(size: 18))
                         .fixedSize(horizontal: false, vertical: true)
                     Text(status.title).font(.board(15, weight: .semibold)).padding(.top, 4)
-                    Text(status.detail).font(.board(13)).foregroundStyle(.haze).monospacedDigit()
+                    Text(room.cardDetail(status)).font(.board(13)).foregroundStyle(.haze).monospacedDigit()
                     faces(now).padding(.top, 10)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)

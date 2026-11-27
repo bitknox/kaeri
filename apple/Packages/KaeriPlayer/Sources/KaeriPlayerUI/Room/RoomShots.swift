@@ -112,6 +112,8 @@ public enum RoomScene: String, CaseIterable, Sendable {
     case placeinvite
     /// Watching with Hide chat in rooms on: Mika's line stays off the video, no field.
     case chatoff
+    /// Reactions as ticks on the seek bar, the pointer over Mika's and Ren's shared one.
+    case ticks
 
     public static let argument = "-KaeriRoom"
     /// The scene this run stages, if any.
@@ -204,7 +206,7 @@ enum RoomStage {
         case .placejoinfail: .unreachable
         case .placeinvite: .invited
         case .watching, .invite, .details, .editrelays, .leave, .cmdw, .quit, .skip, .movestart, .movepick, .full, .hidden,
-             .menu, .menuseek, .menusay, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail, .chatoff:
+             .menu, .menuseek, .menusay, .invitesheet, .sidewayswrite, .morph, .fullloop, .place, .placeroom, .placerecentfail, .chatoff, .ticks:
             .watching
         }
     }
@@ -290,6 +292,19 @@ extension PlayerModel {
             store.send(.room(.hideChat(hidden: true)))
             guard await roomWaited(10, { room.chatHidden }) else { return false }
             _ = await Task.detached { fake.memberSays(name: "Mika", message: "that bridge again") }.value // i18n-skip
+            try? await Task.sleep(for: .milliseconds(600))
+        case .ticks:
+            // Two reactions close together share a tick; each member reacts once per 2 s.
+            _ = await Task.detached {
+                fake.memberReacts(name: "Mika", reaction: .laugh, at: 8)
+                fake.memberReacts(name: "Ren", reaction: .gasp, at: 8.3)
+                try? await Task.sleep(for: .milliseconds(2200))
+                fake.memberReacts(name: "Mika", reaction: .clap, at: 31)
+                fake.memberReacts(name: "Ren", reaction: .laugh, at: 47)
+            }.value
+            guard await roomWaited(10, { room.marks.count >= 4 }) else { return false }
+            hold("room-shot", true)
+            hover(at: 8.2)
             try? await Task.sleep(for: .milliseconds(600))
         case .youchoosing:
             // The app's player plays the room's episode, which the fake's pose can't hold: choose

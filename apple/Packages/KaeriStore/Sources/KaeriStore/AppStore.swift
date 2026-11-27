@@ -1239,12 +1239,12 @@ public final class AppStore {
             onPlayback?(event)
 
         case .roomJoined, .roomState, .roomMembers, .roomMessage, .roomChat, .roomChatState, .roomLeft, .roomStarted,
-             .roomGlimpse, .roomLookFailed, .roomRecent, .roomMoveOffer, .roomMoveOfferGone:
+             .roomGlimpse, .roomLookFailed, .roomRecent, .roomMoveOffer, .roomMoveOfferGone, .roomRelays:
             room.apply(event)
         case .roomNoSource:
             // The room's view says no source; the player steps aside for its panel.
             onPlayback?(event)
-        case .roomReaction, .roomChatRefused, .roomLastOut, .roomFlushed, .roomRelays:
+        case .roomReaction, .roomChatRefused, .roomLastOut, .roomFlushed:
             // The chat's wait; reactions show as its lines.
             break
 

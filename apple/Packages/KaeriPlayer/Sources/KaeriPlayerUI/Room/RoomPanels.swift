@@ -493,3 +493,24 @@ struct RoomUpNextCard: View {
         return RoomCopy.playsForEveryoneIn(max(0, seconds))
     }
 }
+
+/// The room's reaction ticks on the seek line: 2 by 5 pt in haze, 3 pt above the line.
+struct ReactionTicks: View {
+    let ticks: [ReactionTick]
+    let lineHeight: CGFloat
+
+    var body: some View {
+        ZStack(alignment: .leading) {
+            ForEach(ticks.indices, id: \.self) { index in
+                Capsule()
+                    .fill(Palette.haze)
+                    .frame(width: 2, height: 5)
+                    .offset(x: ticks[index].x - 1, y: -(lineHeight / 2 + 3 + 2.5))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .leading)
+        .transition(.opacity)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
