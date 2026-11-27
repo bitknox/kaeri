@@ -53,6 +53,7 @@ extension PhoneSettingsPage {
         case .root: PhoneSettingsRoot()
         case .general: PhoneGeneralPage()
         case .playback: PhonePlaybackPage()
+        case .relays: PhoneRelaysPage()
         case .reading: PhoneReadingPage()
         case .medium: PhoneMediumPage()
         case .downloads: PhoneDownloadsPage()
@@ -451,14 +452,23 @@ struct PhonePlaybackPage: View {
             }
             Section {
                 Toggle(isOn: Binding(
-                    get: { store.party.chat.hidden }, set: { store.party.chat.hidden = $0 })
+                    get: { store.room.hidesChat }, set: { store.room.hidesChat = $0 })
                 ) {
-                    PhoneRowTitle(title: L.settingsHideChat, note: L.settingsHideChatLine)
+                    PhoneRowTitle(title: L.roomSettingsHideChat, note: L.roomSettingsHideChatLine)
                 }
                 .tint(.amber)
                 .listRowBackground(Palette.raised)
+                NavigationLink(value: PhoneSettingsPage.relays) {
+                    PhoneRowTitle(
+                        title: L.roomRelays,
+                        note: store.room.relaySettings.map { _ in L.roomSettingsRelaysCount(count: store.room.newRoomRelays.count) })
+                }
+                .listRowBackground(Palette.raised)
+                .task { if store.room.relaySettings == nil { store.room.loadRelays() } }
             } header: {
-                PhoneSectionHeader(L.settingsGroupWatchParties)
+                PhoneSectionHeader(L.roomSettingsGroup)
+            } footer: {
+                Text(L.roomSettingsGroupLine)
             }
         }
         .animation(reduceMotion ? nil : .standard, value: store.settings.skipFindPausedWords)

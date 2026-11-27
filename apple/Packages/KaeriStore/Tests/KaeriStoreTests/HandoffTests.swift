@@ -178,8 +178,8 @@ struct PlayingActivityTests {
         playing.update()
         let offered = try #require(playing.activity)
         offered.delegate?.userActivityWasContinued?(offered)
-        let deadline = ContinuousClock.now + .seconds(2)
-        while playback.continued == 0, ContinuousClock.now < deadline { try await Task.sleep(for: .milliseconds(5)) }
+        let deadline = SuspendingClock.now + .seconds(2)
+        while playback.continued == 0, SuspendingClock.now < deadline { try await Task.sleep(for: .milliseconds(5)) }
         #expect(playback.continued == 1)
     }
 }

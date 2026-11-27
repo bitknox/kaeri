@@ -23,8 +23,8 @@ struct MissingChecksTests {
     }
 
     private func wait(until done: () -> Bool) async {
-        let deadline = ContinuousClock.now + .seconds(2)
-        while !done(), ContinuousClock.now < deadline {
+        let deadline = SuspendingClock.now + .seconds(2)
+        while !done(), SuspendingClock.now < deadline {
             try? await Task.sleep(for: .milliseconds(5))
         }
     }

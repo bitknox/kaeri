@@ -25,7 +25,7 @@ struct SearchLayoutTests {
     /// Where the open panel's leading edge falls, in the window's points.
     private static var panelEdge: CGFloat { size.width - 340 }
 
-    private static func spin(_ seconds: Double) { RunLoop.main.run(until: Date().addingTimeInterval(seconds)) }
+    private static func spin(_ seconds: Double) { runAwake(seconds) }
 
     private func turn(_ seconds: Double = 0.02) async throws {
         Self.spin(seconds)
@@ -159,17 +159,17 @@ struct SearchLayoutTests {
         // Another search, unanswered. Under 600 ms the results stay; once it is overdue, the
         // placeholders take their place without a second wait of their own.
         store.searchLive(SearchQuery(genres: ["Mecha", "Drama"]))
-        let end = Date().addingTimeInterval(30)
+        let end = SuspendingClock.now + .seconds(30)
         while !store.search.overdue {
-            try #require(Date() < end, "waited for the search to be overdue")
+            try #require(SuspendingClock.now < end, "waited for the search to be overdue")
             window.layoutIfNeeded()
             window.displayIfNeeded()
             try await turn()
         }
         // The placeholders' crossfade, and no more: the list's own 600 ms would still show the
         // results before them.
-        let since = Date()
-        while Date().timeIntervalSince(since) < 0.45 {
+        let since = SuspendingClock.now
+        while SuspendingClock.now - since < .milliseconds(450) {
             window.layoutIfNeeded()
             window.displayIfNeeded()
             try await turn(0.01)

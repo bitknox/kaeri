@@ -10,8 +10,9 @@ import SwiftUI
 
 extension View {
     /// The player's VoiceOver behaviour, over either player view.
-    func playerAccessibility(_ model: PlayerModel) -> some View {
-        modifier(PlayerAccessibility(model: model))
+    /// `escape` is what Back does: in a room it asks, or keeps the room.
+    func playerAccessibility(_ model: PlayerModel, escape: @escaping @MainActor () -> Void) -> some View {
+        modifier(PlayerAccessibility(model: model, escape: escape))
     }
 }
 
@@ -19,6 +20,7 @@ struct PlayerAccessibility: ViewModifier {
     @Environment(\.accessibilityVoiceOverEnabled) private var voiceOver
     @Environment(\.accessibilitySwitchControlEnabled) private var switchControl
     let model: PlayerModel
+    let escape: @MainActor () -> Void
 
     func body(content: Content) -> some View {
         content
@@ -34,7 +36,8 @@ struct PlayerAccessibility: ViewModifier {
             #if os(iOS)
             .accessibilityAction(.magicTap) { model.togglePause() }
             #endif
-            .accessibilityAction(.escape) { model.viewerClosed() }
+            // In a room, VoiceOver's escape asks or keeps the room as Back does.
+            .accessibilityAction(.escape) { escape() }
             .onChange(of: model.upNextShown) { _, shown in
                 guard shown, let card = model.upNext else { return }
                 let episode = model.episode?.translation == .dub

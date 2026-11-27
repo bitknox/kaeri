@@ -151,6 +151,8 @@ public final class Navigator {
     var launchCalendarMine = false
     /// The Settings pane on screen, on the Mac and iPad.
     public var settingsPane: SettingsPane = .general
+    /// Playback's Relays page is up in place of the pane.
+    public var settingsRelays = false
     /// What Settings' own search field holds.
     public var settingsQuery = ""
     /// The iPhone's Settings sheet, open at a page when it is up.
@@ -256,6 +258,8 @@ public final class Navigator {
         launchScroll = route.scroll
         launchReadScroll = route.scroll
         if let genre = route.genre { launchSearch = SearchQuery(text: route.query ?? "", genres: [genre]) }
+        // Settings ▸ Playback ▸ Relays, for the shots.
+        if route.sheet == "relays" { settingsRelays = true }
         if route.sheet == "join" { invite = "https://plugins.hotaru.example/join/fixture#key" }
         if route.sheet == "show" { showSettings = route.title }
         if route.sheet == "about" { moreAbout = route.title }

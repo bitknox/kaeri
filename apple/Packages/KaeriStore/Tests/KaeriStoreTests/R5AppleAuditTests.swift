@@ -116,11 +116,11 @@ struct R5AppleAuditTests {
         let credit = CreditPage(page: 0, atEnd: false, file: file, fingerprint: 11)
         model.keepCredit(credit, chapter: "13")
         model.away = true
-        let deadline = ContinuousClock.now + .seconds(10)
+        let deadline = SuspendingClock.now + .seconds(10)
         func kept() -> Bool {
             sent.all.contains { if case .reader(.notACreditPage) = $0 { true } else { false } }
         }
-        while !kept(), ContinuousClock.now < deadline {
+        while !kept(), SuspendingClock.now < deadline {
             try await Task.sleep(for: .milliseconds(200))
         }
         #expect(kept(), "the keep waits for the app to come back, and is lost if it never does")

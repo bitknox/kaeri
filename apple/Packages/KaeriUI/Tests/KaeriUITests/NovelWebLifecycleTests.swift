@@ -49,8 +49,8 @@ struct NovelWebLifecycleTests {
     }
 
     private func spin(_ seconds: Double) async {
-        let end = Date().addingTimeInterval(seconds)
-        while Date() < end {
+        let end = SuspendingClock.now + .seconds(seconds)
+        while SuspendingClock.now < end {
             Self.pump()
             try? await Task.sleep(for: .milliseconds(1))
         }
@@ -60,8 +60,8 @@ struct NovelWebLifecycleTests {
     private static func pump() { RunLoop.main.run(until: Date().addingTimeInterval(0.01)) }
 
     private func until(_ seconds: Double, _ done: () -> Bool) async -> Bool {
-        let end = Date().addingTimeInterval(seconds)
-        while !done(), Date() < end { await spin(0.05) }
+        let end = SuspendingClock.now + .seconds(seconds)
+        while !done(), SuspendingClock.now < end { await spin(0.05) }
         return done()
     }
 

@@ -222,6 +222,21 @@ struct ClosingTests {
         #expect(!rig.model.stopKey(Self.key("w", .command), in: window))
     }
 
+    @Test func commandWInARoomAsksFirstAndKeepsPlaying() async throws {
+        let rig = Rig()
+        try await rig.opened()
+        let window = Self.window()
+        rig.model.hostWindow = window
+        var asked = 0
+        rig.model.asksBeforeStopping = { asked += 1; return true }
+        // The room asks Leave, Keep the room or Cancel over the player: the key is taken, and
+        // nothing stops until an answer closes it.
+        #expect(rig.model.stopKey(Self.key("w", .command), in: window))
+        #expect(asked == 1)
+        #expect(rig.model.isPresented)
+        #expect(!rig.reports.contains { $0.1 == .closed })
+    }
+
     @Test func commandWWhileThePictureFloatsIsTheMainWindows() async throws {
         let rig = Rig()
         try await rig.opened()

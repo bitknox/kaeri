@@ -138,8 +138,8 @@ struct ReaderHeldEndTests {
         model.openChapter(ChapterId("14"))
         #expect(model.held?.slow == false)
         // The main actor is shared with the other suites: wait for the cue rather than a set time.
-        let deadline = ContinuousClock.now + .seconds(3)
-        while model.held?.slow != true, ContinuousClock.now < deadline {
+        let deadline = SuspendingClock.now + .seconds(3)
+        while model.held?.slow != true, SuspendingClock.now < deadline {
             try await Task.sleep(for: .milliseconds(20))
         }
         #expect(model.held?.slow == true)

@@ -84,13 +84,7 @@ final class AppDelegate: NSObject {
         // Play on TV from the player: the TV picker over it, and the player closed once the TV
         // plays the episode.
         player.playOnTVHandler = { [weak store] request in store?.tv.offer(request) }
-        // What a watch party says goes over the video while the player is up.
-        store.party.playerUp = { [weak player] in player?.isPresented ?? false }
         store.playerSays = { [weak player] text, kind in player?.say(text, kind: kind) }
-        player.alertFilter = { [weak store] text in
-            guard let store, store.party.inParty else { return false }
-            return store.party.chat.isChatNotice(text, members: (store.party.members ?? []).map(\.name))
-        }
         #if os(iOS)
         // The playback's Live Activity, told what plays as Now Playing is, and its Play and Pause.
         player.onLiveActivity = { [weak store] playing in store?.playbackChanged(playing) }
@@ -341,13 +335,9 @@ final class AppDelegate: NSObject {
         if let scene = CastScene.named() {
             ready = await store.tv.cast.reached(scene, tv: store.tv) && ready
         }
-        // A screenshot of a watch party: the fake server's room, in the state named.
-        if let scene = PartyScene.named() {
+        // A screenshot of the room: its scene around a Fixtures episode.
+        if let scene = RoomScene.named() {
             ready = await player.stage(scene, store: store) && ready
-        }
-        // A screenshot of Watch together: the scene's recent rooms, and the state named.
-        if let scene = TogetherScene.named() {
-            ready = await store.party.stage(scene, store: store) && ready
         }
         // A screenshot of a missing episode: Check again pressed, and its answer in.
         ready = await store.stageCheckAgain() && ready
@@ -438,6 +428,8 @@ extension AppDelegate: NSApplicationDelegate {
     /// never the menu bar alone.
     func applicationDidFinishLaunching(_ notification: Notification) {
         DispatchQueue.main.async { [weak self] in self?.showMainWindowIfNone() }
+        // ⌘Q's Leave, asked over the player: the room is left, then the app quits.
+        store.room.quits = { NSApp.terminate(nil) }
     }
 
     /// The Dock icon clicked, or the app opened again from the Finder, with no window up: the
@@ -460,9 +452,23 @@ extension AppDelegate: NSApplicationDelegate {
         phases.windowsVisible(NSApp.occlusionState.contains(.visible))
     }
 
-    /// Quitting in a watch party leaves it: asked first, with Stay the default.
     func applicationShouldTerminate(_ sender: NSApplication) -> NSApplication.TerminateReply {
-        if store.party.asksBeforeQuitting() { return .terminateCancel }
+        // In a room, quitting leaves it: asked over the player as ⌘W is, or in an alert when the
+        // room is kept with the player closed. The others keep watching either way.
+        if store.room.asksBeforeQuitting() {
+            NSApp.activate()
+            return .terminateCancel
+        }
+        if store.room.asksInAlertBeforeQuitting {
+            let alert = NSAlert()
+            alert.messageText = RoomCopy.leaveTheRoom
+            alert.informativeText = RoomCopy.othersKeepWatching
+            alert.addButton(withTitle: RoomCopy.leave)
+            alert.addButton(withTitle: RoomCopy.cancel)
+            NSApp.activate()
+            guard alert.runModal() == .alertFirstButtonReturn else { return .terminateCancel }
+            store.room.leaveToQuit()
+        }
         if store.tv.cast.connected {
             // This Mac serves the episode: quitting ends it on the TV, so it asks first.
             let name = store.tv.cast.heldName

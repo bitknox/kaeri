@@ -24,8 +24,8 @@ struct CoverFocusTests {
     /// Waits on the main actor alone, so a stuck concurrency pool fails the test instead of
     /// hanging it.
     func settle(within: Duration = .seconds(30), _ done: () -> Bool) async {
-        let deadline = ContinuousClock.now + within
-        while !done(), ContinuousClock.now < deadline {
+        let deadline = SuspendingClock.now + within
+        while !done(), SuspendingClock.now < deadline {
             try? await Task.sleep(for: .milliseconds(20))
         }
     }
