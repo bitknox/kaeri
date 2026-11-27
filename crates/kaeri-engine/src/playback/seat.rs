@@ -49,8 +49,11 @@ pub enum SeatReport {
     /// from it and the id), and its length once known. Said again when the length becomes
     /// known.
     Playing { id: AnilistId, episode: String, name: String, duration: Option<f64> },
-    /// Where the player is.
-    Sample { position: f64, paused: bool, speed: f64 },
+    /// Where the player is. `seeked` when the player went through a seek since the last
+    /// sample that no cue asked for, and `pressed` when its pause changed that way: the
+    /// viewer's own. Only these make a jump or a pause the viewer's; a slow decoder's bursts
+    /// of positions never do.
+    Sample { position: f64, paused: bool, speed: f64, seeked: bool, pressed: bool },
     /// Playback is held waiting for data mid-episode (`true`), or plays again.
     Stalled(bool),
     /// The first frame after the room's seek `cue` (see [`SeatCue::Seek`]).
@@ -156,7 +159,13 @@ mod tests {
 
         let mut seat = hub.seat().expect("a party is going");
         let Some(SeatMessage::Seated(cues)) = party.recv().await else { panic!("no seat") };
-        seat.report(SeatReport::Sample { position: 1.0, paused: false, speed: 1.0 });
+        seat.report(SeatReport::Sample {
+            position: 1.0,
+            paused: false,
+            speed: 1.0,
+            seeked: false,
+            pressed: false,
+        });
         assert!(matches!(
             party.recv().await,
             Some(SeatMessage::Report(SeatReport::Sample { .. }))

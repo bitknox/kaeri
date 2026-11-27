@@ -488,8 +488,8 @@ fn connection_line(room: &RoomView) -> String {
         t::tui_room_relays_line(answering, total)
     };
     match room.latency_ms {
-        // i18n-skip: joins the line and the round trip
-        Some(ms) => format!("{line} · {}", t::room_relay_latency(i64::from(ms))),
+        // Joins the line and the round trip.
+        Some(ms) => format!("{line} · {}", t::room_relay_latency(i64::from(ms))), // i18n-skip
         None => line,
     }
 }

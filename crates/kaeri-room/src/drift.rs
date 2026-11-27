@@ -31,6 +31,8 @@ pub const EXPECT_SEEK_MS: i64 = 5_000;
 /// applies the room's cues long after they were sent, and a player whose frame froze can say an
 /// old place again.
 pub const TOLD_KEPT: usize = 4;
+/// A jump is the viewer's only this soon after the player said the viewer seeked, ms.
+pub const VIEWER_SEEK_MS: i64 = 5_000;
 /// Behind past this many seconds...
 pub const BEHIND_SECONDS: f64 = 3.0;
 /// ...for this long, ms.
@@ -70,6 +72,9 @@ pub struct Drift {
     /// The room's last places for this file, newest last: a player reporting one of them is
     /// late or stale, never the viewer.
     told: Vec<f64>,
+    /// When the player said the viewer seeked (a seek no cue asked for): a jump is the
+    /// viewer's only then, never a slow decoder's burst or a catch-up.
+    viewer_seek_at: Option<i64>,
     settle_until: i64,
     slowed: bool,
     behind: bool,
@@ -93,6 +98,11 @@ impl Drift {
         let from = self.last.as_ref().map(|l| l.pos);
         self.expect_seek = Some((to, now + EXPECT_SEEK_MS, from));
         self.settle_until = now + SETTLE_MS;
+    }
+
+    /// The player says the viewer seeked, at `now`: the jump that follows may be the viewer's.
+    pub fn viewer_seeked(&mut self, now: i64) {
+        self.viewer_seek_at = Some(now);
     }
 
     /// The room was at `pos` for this file: its playhead landed there, or the player was opened
@@ -137,7 +147,13 @@ impl Drift {
                         || from.is_some_and(|f| (pos - f).abs() <= LANDED)
                 }) || self.told.iter().any(|&p| (pos - p).abs() <= LANDED);
                 let rooms = room.is_some_and(|(room_pos, _)| (pos - room_pos).abs() <= LANDED);
-                if !told && !rooms {
+                // A player that lagged (a slow guest, a long gap between its samples) moved on
+                // from where it was by less than the time says: behind, never a seek.
+                let lagged =
+                    !last.paused && pos >= last.pos - LANDED && pos <= last.pos + played;
+                let viewers = self.viewer_seek_at.is_some_and(|at| now - at <= VIEWER_SEEK_MS);
+                if viewers && !told && !rooms && !lagged {
+                    self.viewer_seek_at = None;
                     out.push(Act::ViewerSeek(pos));
                     return out;
                 }
@@ -228,6 +244,8 @@ mod tests {
     fn the_viewers_own_seek_is_heard_and_the_rooms_is_not() {
         let mut drift = Drift::default();
         assert!(drift.sample(10.0, false, 1.0, 0, None).is_empty());
+        // The player said the viewer seeked (a seek no cue asked for).
+        drift.viewer_seeked(1_000);
         assert_eq!(drift.sample(60.0, false, 1.0, 1_000, None), vec![Act::ViewerSeek(60.0)]);
         // The room's seek, cued here, isn't the viewer's.
         drift.cued_seek(120.0, 2_000);
@@ -253,6 +271,7 @@ mod tests {
         }
         // Past the window, going back to 0:12 is the viewer's own seek, and the room's place
         // after it is not.
+        drift.viewer_seeked(9_000);
         assert_eq!(
             drift.sample(12.0, true, 1.0, 9_000, paused_at(35.0)),
             vec![Act::ViewerSeek(12.0)]
@@ -263,10 +282,88 @@ mod tests {
         assert!(drift.sample(0.0, true, 1.0, 0, paused_at(12.3)).is_empty());
         assert!(drift.sample(12.3, true, 1.0, 400, paused_at(12.3)).is_empty());
         // The viewer's own seek away from the room's place still counts.
+        drift.viewer_seeked(900);
         assert_eq!(
             drift.sample(40.0, true, 1.0, 900, paused_at(12.3)),
             vec![Act::ViewerSeek(40.0)]
         );
+    }
+
+    #[test]
+    fn a_slow_decoders_bursts_and_catch_up_are_never_the_viewers_seek() {
+        // Android, a phone emulator decoding in software: time-pos arrives in bursts, and the
+        // player climbs to the room's place in 2-6 s steps as it is moved up. Every step was
+        // said as "You jumped". Without the player saying the viewer seeked, none is.
+        let mut drift = Drift::default();
+        let room_at = |at: i64| Some((25.0 + at as f64 / 1000.0, true));
+        let mut acts = Vec::new();
+        // Opening at 0:00 while the room is at 0:25, then bursts: nothing, then 3 s at once.
+        for (pos, at) in [
+            (0.0, 0),
+            (2.0, 400),
+            (2.1, 2_400),
+            (3.0, 3_000),
+            (7.0, 3_200),
+            (10.0, 5_800),
+            (19.0, 6_000),
+            (23.0, 9_000),
+            (26.0, 9_100),
+            (29.0, 12_500),
+            (31.0, 12_600),
+            (36.0, 13_000),
+            (38.5, 13_500),
+            // Then it plays evenly, still 6 s behind.
+            (35.0, 16_000),
+            (37.0, 18_000),
+        ] {
+            acts.extend(drift.sample(pos, false, 1.0, at, room_at(at)));
+        }
+        assert!(!acts.iter().any(|a| matches!(a, Act::ViewerSeek(_))), "{acts:?}");
+        // Once it plays evenly it is moved up to the room; the room never follows it.
+        assert!(acts.iter().any(|a| matches!(a, Act::Seek(_))), "{acts:?}");
+        // The same steps while the room waits, paused at 0:35 (wait-loading, carried-on).
+        let mut drift = Drift::default();
+        drift.placed(35.0);
+        drift.cued_seek(35.0, 0);
+        let mut acts = Vec::new();
+        for (pos, at) in
+            [(17.0, 6_000), (23.0, 9_000), (26.0, 12_000), (29.0, 15_000), (31.0, 18_000)]
+        {
+            acts.extend(drift.sample(pos, false, 1.0, at, Some((35.0, false))));
+        }
+        assert!(!acts.iter().any(|a| matches!(a, Act::ViewerSeek(_))), "{acts:?}");
+        // The viewer's own seek, said by the player, still counts in the middle of it.
+        drift.viewer_seeked(18_500);
+        assert_eq!(
+            drift.sample(80.0, false, 1.0, 18_600, Some((35.0, false))),
+            vec![Act::ViewerSeek(80.0)]
+        );
+        // Once: the next jump without a new word from the player is not.
+        assert!(drift.sample(10.0, false, 1.0, 19_000, Some((35.0, false))).is_empty());
+    }
+
+    #[test]
+    fn a_lagging_player_after_a_carry_on_is_behind_not_the_viewers_seek() {
+        // Windows, a slow guest: Mika carried on at 0:35 and the room plays on. The player takes
+        // the carry-on, then its samples stall for 46 s and it reports 0:36 with the room at
+        // 1:22: "You jumped from 1:22 to 0:36" was said.
+        let mut drift = Drift::default();
+        let room_at = |at: i64| Some((35.0 + at as f64 / 1000.0, true));
+        drift.placed(35.0);
+        drift.cued_seek(35.0, 0);
+        assert!(drift.sample(35.0, false, 1.0, 200, room_at(200)).is_empty());
+        assert!(drift.sample(35.8, false, 1.0, 1_000, room_at(1_000)).is_empty());
+        let mut acts = drift.sample(36.4, false, 1.0, 47_000, room_at(47_000));
+        acts.extend(drift.sample(36.9, false, 1.0, 47_500, room_at(47_500)));
+        assert!(!acts.iter().any(|a| matches!(a, Act::ViewerSeek(_))), "{acts:?}");
+        // Playing again, it is moved up to the room instead, once settled.
+        let acts = drift.sample(39.4, false, 1.0, 50_000, room_at(50_000));
+        assert!(acts.iter().any(|a| matches!(a, Act::Seek(_))), "{acts:?}");
+        // A viewer's own seek back past where the player was still counts.
+        let mut drift = Drift::default();
+        assert!(drift.sample(80.0, false, 1.0, 0, None).is_empty());
+        drift.viewer_seeked(1_000);
+        assert_eq!(drift.sample(20.0, false, 1.0, 1_000, None), vec![Act::ViewerSeek(20.0)]);
     }
 
     #[test]
@@ -299,6 +396,7 @@ mod tests {
             );
         }
         // The viewer's own seek somewhere new still counts.
+        drift.viewer_seeked(9_000);
         assert_eq!(
             drift.sample(50.0, true, 1.0, 9_000, paused_at(35.0)),
             vec![Act::ViewerSeek(50.0)]
