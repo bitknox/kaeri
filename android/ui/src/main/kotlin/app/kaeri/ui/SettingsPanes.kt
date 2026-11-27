@@ -352,9 +352,10 @@ internal fun PlaybackPane() {
         val hidden by store.room.hideChat.collectAsStateWithLifecycle()
         LaunchedEffect(Unit) { store.room.loadHideChat(context) }
         SettingsGroup(
-            title = stringResource(R.string.together_title),
+            title = Strings.roomSettingsGroup(context),
+            footer = Strings.roomSettingsGroupLine(context),
             rows = listOf(
-                { place -> SwitchRow(place, Strings.settingsHideChat(context), checked = hidden, note = Strings.settingsHideChatLine(context)) { store.room.setHideChat(context, it) } },
+                { place -> SwitchRow(place, Strings.roomSettingsHideChat(context), checked = hidden, note = Strings.roomSettingsHideChatLine(context)) { store.room.setHideChat(context, it) } },
                 { place -> RoomRelaysRow(place) },
             ),
         )
