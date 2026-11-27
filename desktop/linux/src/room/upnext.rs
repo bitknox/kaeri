@@ -20,6 +20,8 @@ pub struct UpNext {
     art: RefCell<Option<Art>>,
     /// The art's url as last asked for.
     shown_art: RefCell<Option<String>>,
+    /// The episode last said to a screen reader, so each card is said once.
+    said: RefCell<Option<String>>,
     fader: crate::motion::Fader,
 }
 
@@ -67,6 +69,7 @@ impl UpNext {
             count,
             art: RefCell::default(),
             shown_art: RefCell::default(),
+            said: RefCell::default(),
             fader: crate::motion::Fader::always(),
         }
     }
@@ -81,14 +84,22 @@ impl UpNext {
     pub fn show(&self, view: Option<&RoomView>, now_ms: i64) {
         let up = view.and_then(|v| v.up_next.as_ref()).filter(|u| u.cancelled_by.is_none());
         let Some(up) = up else {
+            self.said.replace(None);
             self.fader.set(&self.widget, false);
             return;
         };
         let next = &up.episode;
-        self.episode.set_label(&match &next.name {
+        let episode = match &next.name {
             Some(name) => c::up_next_episode(&next.episode, name),
             None => c::up_next_episode_plain(&next.episode),
-        });
+        };
+        self.episode.set_label(&episode);
+        if self.said.borrow().as_deref() != Some(episode.as_str()) {
+            use gtk::AccessibleAnnouncementPriority as P;
+            self.widget.announce(&c::up_next_for_room(), P::Medium);
+            self.widget.announce(&episode, P::Medium);
+            self.said.replace(Some(episode));
+        }
         let count = match (up.ends_at_ms, up.waiting_for.first()) {
             (Some(ends), _) => c::plays_for_everyone_in(
                 ((ends - now_ms) as f64 / 1000.0).ceil().max(0.0) as i64,

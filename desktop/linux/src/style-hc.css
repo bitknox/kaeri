@@ -46,3 +46,10 @@ list.boxed-list, .boxed-list > row, .corner-card, popover > contents {
 .key-card { border-color: var(--edge); }
 .tag-pill { border: 1px solid var(--edge); }
 .chat-line, .chat-moment { background: black; border: 1px solid white; }
+
+/* The room: its surfaces take an edge and step apart from the column. */
+.room-column { box-shadow: inset 1px 0 0 var(--edge); }
+.room-people, .room-link { background: var(--raised-high); box-shadow: inset 0 0 0 1px var(--edge); }
+.room-strip, .room-upnext { box-shadow: inset 0 0 0 1px var(--edge); }
+.room-more-face { box-shadow: inset 0 0 0 1px var(--edge); }
+.room-banner { background: alpha(var(--ground), 0.92); }

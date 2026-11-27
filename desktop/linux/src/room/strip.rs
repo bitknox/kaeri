@@ -26,7 +26,12 @@ const FACES: usize = 4;
 pub struct Strip {
     pub widget: gtk::Box,
     faces: gtk::Box,
+    /// The faces shown, kept from tick to tick so a tooltip or focus on one stays.
+    shown: RefCell<Vec<FaceView>>,
+    more: gtk::Label,
     words: gtk::Label,
+    /// "· 6 s" while the room waits, in the quieter colour.
+    secs: gtk::Label,
     carry: gtk::Button,
     fader: crate::motion::Fader,
     key: RefCell<String>,
@@ -45,7 +50,16 @@ impl Strip {
         words.add_css_class("room-strip-words");
         words.add_css_class("numeric");
         words.set_margin_start(4);
-        words.set_margin_end(6);
+        let secs = gtk::Label::new(None);
+        secs.add_css_class("room-strip-words");
+        secs.add_css_class("room-strip-secs");
+        secs.add_css_class("numeric");
+        secs.set_margin_end(6);
+        secs.set_visible(false);
+        let more = gtk::Label::new(None);
+        more.add_css_class("room-more-face");
+        more.add_css_class("caption");
+        more.set_visible(false);
         let carry = gtk::Button::new();
         carry.add_css_class("pill");
         carry.add_css_class("suggested-action");
@@ -60,13 +74,18 @@ impl Strip {
         widget.set_margin_top(16);
         widget.set_margin_end(16);
         widget.append(&faces);
+        widget.append(&more);
         widget.append(&words);
+        widget.append(&secs);
         widget.append(&carry);
         widget.set_visible(false);
         Rc::new(Self {
             widget,
             faces,
+            shown: RefCell::default(),
+            more,
             words,
+            secs,
             carry,
             fader: crate::motion::Fader::always(),
             key: RefCell::default(),
@@ -92,41 +111,68 @@ impl Strip {
         self.refresh();
     }
 
+    /// Out of the room: no hold left running, and the next room starts afresh.
+    pub fn reset(&self) {
+        if let Some(old) = self.hold.borrow_mut().take() {
+            old.remove();
+        }
+        self.holding.set(false);
+        self.key.replace(String::new());
+        self.must.set(false);
+        self.on.set(false);
+        self.refresh();
+    }
+
     pub fn show(self: &Rc<Self>, view: &RoomView, moves: &Moves, now_ms: i64) {
         let line = words::line(view, moves, now_ms);
         let members = words::ordered(view);
-        while let Some(c) = self.faces.first_child() {
-            self.faces.remove(&c);
-        }
         let capped = members.len() > FACES;
-        for m in members.iter().take(if capped { FACES - 1 } else { FACES }) {
-            let face = FaceView::new(24);
+        let count = members.len().min(if capped { FACES - 1 } else { FACES });
+        // Only a change in how many faces show builds them again; a tick redraws them.
+        if self.shown.borrow().len() != count {
+            while let Some(c) = self.faces.first_child() {
+                self.faces.remove(&c);
+            }
+            let made: Vec<FaceView> = (0..count)
+                .map(|_| {
+                    let face = FaceView::new(24);
+                    face.widget.set_can_target(true);
+                    face.widget.set_accessible_role(gtk::AccessibleRole::Img);
+                    self.faces.append(&face.widget);
+                    face
+                })
+                .collect();
+            self.shown.replace(made);
+        }
+        for (face, m) in self.shown.borrow().iter().zip(&members) {
             let look = words::face(view, m, now_ms);
             face.show(&m.name, &look);
-            face.widget.set_can_target(true);
-            face.widget.set_tooltip_text(Some(&format!("{}, {}", m.name, look.word))); // i18n-skip
-            face.widget.update_property(&[gtk::accessible::Property::Label(&format!(
-                "{}, {}",
-                m.name, look.word
-            ))]); // i18n-skip
-            self.faces.append(&face.widget);
+            let label = kaeri_i18n::t::room_face_label(&m.name, &look.word);
+            if face.widget.tooltip_text().as_deref() != Some(label.as_str()) {
+                face.widget.set_tooltip_text(Some(&label));
+                face.widget.update_property(&[gtk::accessible::Property::Label(&label)]);
+            }
         }
+        self.more.set_visible(capped);
         if capped {
-            let more = gtk::Label::new(Some(&format!("+{}", members.len() - (FACES - 1)))); // i18n-skip
-            more.add_css_class("room-more-face");
-            more.add_css_class("caption");
-            self.faces.append(&more);
+            let rest = (members.len() - (FACES - 1)) as i64;
+            self.more.set_label(&kaeri_i18n::t::room_more_faces(rest));
+            self.more.update_property(&[gtk::accessible::Property::Label(
+                &kaeri_i18n::t::room_more_faces_label(rest),
+            )]);
         }
         // The line, with the seconds while it waits and nobody has carried on yet.
         let secs = view.waiting.first().map(|w| words::secs_since(w.since_ms, now_ms));
-        let text = match (&line.buttons, secs) {
-            (LineButtons::None, Some(s)) if line.holds => format!(
-                "{}  <span weight=\"normal\" foreground=\"#A3A9C4\">· {s}\u{a0}s</span>",
-                glib::markup_escape_text(&line.title)
-            ), // i18n-skip
-            _ => glib::markup_escape_text(&line.title).to_string(),
+        let (title, tail) = match (&line.buttons, secs) {
+            (LineButtons::None, Some(s)) if line.holds => split_seconds(
+                &line.title,
+                &kaeri_i18n::t::room_line_with_seconds(&line.title, s),
+            ),
+            _ => (line.title.clone(), String::new()),
         };
-        self.words.set_markup(&text);
+        self.words.set_label(&title);
+        self.secs.set_label(&tail);
+        self.secs.set_visible(!tail.is_empty());
         match &line.buttons {
             LineButtons::CarryOn(label) => {
                 self.carry.set_label(label);
@@ -151,6 +197,12 @@ impl Strip {
         self.refresh();
     }
 
+    /// Whether the strip is on: full screen in a room.
+    #[cfg(test)]
+    pub fn is_on(&self) -> bool {
+        self.on.get()
+    }
+
     fn hold_for_change(self: &Rc<Self>) {
         if let Some(old) = self.hold.borrow_mut().take() {
             old.remove();
@@ -171,5 +223,33 @@ impl Strip {
         let show =
             self.on.get() && (self.must.get() || self.holding.get() || self.controls.get());
         self.fader.set(&self.widget, show);
+    }
+}
+
+/// The line and its seconds, apart: the seconds show in the quieter colour. A language that
+/// puts the seconds first keeps the whole line in one.
+fn split_seconds(title: &str, with: &str) -> (String, String) {
+    match with.strip_prefix(title) {
+        Some(tail) if !tail.trim().is_empty() => {
+            (title.to_owned(), tail.trim_start().to_owned())
+        }
+        _ => (with.to_owned(), String::new()),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::split_seconds;
+
+    #[test]
+    fn the_seconds_come_apart_from_the_line() {
+        assert_eq!(
+            split_seconds("Waiting for Ren", "Waiting for Ren · 6 s"),
+            ("Waiting for Ren".to_owned(), "· 6 s".to_owned())
+        );
+        assert_eq!(
+            split_seconds("Wait", "6 s · Wait"),
+            ("6 s · Wait".to_owned(), String::new())
+        );
     }
 }

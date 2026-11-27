@@ -41,6 +41,16 @@ pub fn install(display: &gtk::gdk::Display) {
     register_fonts();
 }
 
+/// The quieter text colour, for Pango markup that CSS can't reach: the lifted haze under high
+/// contrast, as `--haze` in style-hc.css.
+pub fn haze() -> &'static str {
+    if adw::StyleManager::default().is_high_contrast() {
+        "#B8BDD6" // i18n-skip
+    } else {
+        "#A3A9C4" // i18n-skip
+    }
+}
+
 /// Zen Kaku Gothic New for the show titles. An installed copy is found by fontconfig on its own;
 /// a build run from the repository adds the copy in its assets.
 fn register_fonts() {

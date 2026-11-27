@@ -124,7 +124,7 @@ fn draw(area: &gtk::DrawingArea, cr: &cairo::Context, disc: f64, name: &str, loo
         name.chars().next().map(|c| c.to_uppercase().collect()).unwrap_or_default();
     let layout = area.create_pango_layout(Some(&initial));
     let mut font = pango::FontDescription::new();
-    font.set_family("Inter");
+    font.set_family("Inter"); // i18n-skip
     font.set_weight(pango::Weight::Semibold);
     font.set_absolute_size((disc * 0.42).round() * f64::from(pango::SCALE));
     layout.set_font_description(Some(&font));

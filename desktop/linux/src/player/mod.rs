@@ -244,6 +244,9 @@ pub struct PlayerView {
     /// The notices the player showed in a room (what members did, what they said): they go
     /// when the room is left, so none is still up in the next room or out of one.
     room_toasts: RefCell<Vec<glib::WeakRef<adw::Toast>>>,
+    /// An invite opened the player over the main window: when it goes unjoined, so does the
+    /// player.
+    invite_alone: Cell<bool>,
     stall_tick: RefCell<Option<glib::SourceId>>,
     /// The media controls on the session bus, once served.
     mpris: RefCell<Option<Rc<Mpris>>>,
@@ -529,6 +532,7 @@ impl PlayerView {
             mini_at: Cell::new(None),
             stall_since: Cell::new(None),
             room_toasts: RefCell::default(),
+            invite_alone: Cell::new(false),
             stall_tick: RefCell::default(),
             mpris: RefCell::default(),
             room,
@@ -744,6 +748,17 @@ impl PlayerView {
         self.wake();
     }
 
+    /// An invite opened here (pasted, or a link the system opened): the room shows in the
+    /// player as it is, with Join the room and Not now.
+    pub fn open_invite(&self, link: &str) {
+        let shell = self.shell();
+        self.invite_alone.set(shell.as_ref().is_some_and(|s| !s.is_player()));
+        if let Some(shell) = shell {
+            shell.show_player(true);
+        }
+        self.room.peek(link);
+    }
+
     /// The viewer closed the player: Esc, the back button, Alt+Left.
     pub fn close(&self) {
         if let Some(player) = &self.player {
@@ -755,7 +770,9 @@ impl PlayerView {
     /// Back, as the viewer closes the player: in a room, Leave the room? asks first, with Keep
     /// the room, which closes the player and keeps this device's place in it.
     pub fn close_asking(&self) {
-        if !self.room.in_room() {
+        // An invite only looked at goes with the player, as Not now: there is no room to leave.
+        if !self.room.joined() {
+            self.room.drop_invite();
             self.close();
             return;
         }
@@ -3219,9 +3236,20 @@ impl PlayerView {
                     });
                 }
             }
-            Event::RoomJoined(_) | Event::RoomState(_) => self.room_sources(),
+            Event::RoomJoined(_) | Event::RoomState(_) => {
+                if matches!(event, Event::RoomJoined(_)) {
+                    self.room.set_chat_hidden(self.ctx.prefs.hide_chat());
+                }
+                self.room_sources();
+            }
+            Event::RoomChatState(state) => self.room.set_chat_hidden(state.hidden),
+            // Hide chat in rooms hides the reactions' ticks too.
             Event::RoomChat(conversation) => {
-                self.ui.marked.set_reactions(conversation.marks.clone())
+                self.ui.marked.set_reactions(if self.room.chat_hidden() {
+                    Vec::new()
+                } else {
+                    conversation.marks.clone()
+                })
             }
             // A room that couldn't be joined, or ended on this device: why, as a notice.
             Event::RoomLeft { why } => {
@@ -3298,7 +3326,10 @@ impl PlayerView {
                 }
                 self.ctx.hub.send(Command::Play { id, episode, from_start: false });
             }
+            // Sources and Search are in the main window: the player closes, keeping this
+            // device's place in the room (Keep the room), so they show.
             Act::OpenSources => {
+                self.keep_room_and_close();
                 let _ = WidgetExt::activate_action(
                     window,
                     "win.go",
@@ -3306,10 +3337,20 @@ impl PlayerView {
                 );
             }
             Act::SearchTitles => {
+                self.keep_room_and_close();
                 let _ = WidgetExt::activate_action(window, "win.search", None);
             }
+            // An invite this device only looked at went: nothing is left to show.
+            Act::InviteGone if !self.room.in_room() && self.invite_alone.take() => self.close(),
             _ => {}
         }
+    }
+
+    fn keep_room_and_close(&self) {
+        if self.room.joined() {
+            self.ctx.hub.send(Command::Room(kaeri_model::room::RoomCommand::ClosePlayer));
+        }
+        self.close();
     }
 
     /// The controls as the room stands: in one, it moves on together, so no Next and no
@@ -3378,7 +3419,7 @@ impl PlayerView {
                 tracing::warn!(shot, "the room's scene did not get the device in");
             }
             if matches!(scene, Scene::Invited | Scene::InvitedFull) {
-                me.room.peek(&staged.invite("Mika"));
+                me.room.peek(&staged.invite("Mika")); // i18n-skip
             }
             // The room counts in and the episode loads at its place before the frame is taken.
             glib::timeout_add_local_once(Duration::from_secs(6), move || {
@@ -3623,7 +3664,7 @@ impl PlayerView {
                 } else if self.ctx.window.is_fullscreen() {
                     self.ctx.window.unfullscreen();
                 } else {
-                    self.close();
+                    self.close_asking();
                 }
             }
             _ => return false,

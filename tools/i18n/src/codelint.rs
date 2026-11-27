@@ -123,6 +123,7 @@ fn rules(platform: Platform) -> Rules {
                 "fixtures.rs",
                 "fixtures_reading.rs",
                 "fixture.rs",
+                "scenes.rs",
                 "panel_demo.rs",
             ]),
             patterns: Vec::new(),

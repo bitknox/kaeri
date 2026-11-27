@@ -26,6 +26,7 @@ fn small(label: &str) -> gtk::Button {
 pub struct Invite {
     pub popover: gtk::Popover,
     link: gtk::Label,
+    copy: gtk::Button,
 }
 
 impl Invite {
@@ -71,7 +72,13 @@ impl Invite {
             move |_| {
                 act(Act::CopyLink);
                 copy.set_label(&c::link_copied());
+                copy.announce(&c::link_copied(), gtk::AccessibleAnnouncementPriority::Medium);
             }
+        });
+        // Copied says so until the popover closes; it opens again on Copy link.
+        popover.connect_closed({
+            let copy = copy.clone();
+            move |_| copy.set_label(&c::copy_link())
         });
         renew.connect_clicked({
             let act = Rc::clone(&act);
@@ -84,12 +91,17 @@ impl Invite {
                 act(Act::MoveRoom);
             }
         });
-        Self { popover, link }
+        Self { popover, link, copy }
     }
 
     pub fn show(&self, view: &RoomView) {
         let link = view.link.as_deref().unwrap_or("");
-        self.link.set_label(link.trim_start_matches("https://"));
+        let shown = link.trim_start_matches("https://");
+        // A new invite is a new link: Copy link again.
+        if self.link.label() != shown {
+            self.link.set_label(shown);
+            self.copy.set_label(&c::copy_link());
+        }
     }
 }
 
@@ -100,6 +112,8 @@ pub struct Details {
     relays: gtk::ListBox,
     edit_list: gtk::ListBox,
     edited: Rc<RefCell<Vec<String>>>,
+    /// The relays as last drawn, so a tick of the room's clock doesn't rebuild the rows.
+    drawn: RefCell<Vec<(String, bool, Option<u32>)>>,
 }
 
 impl Details {
@@ -171,7 +185,15 @@ impl Details {
             let stack = stack.clone();
             move |_| stack.set_visible_child_name("edit")
         });
-        let me = Self { popover, stack, answering, relays, edit_list, edited };
+        let me = Self {
+            popover,
+            stack,
+            answering,
+            relays,
+            edit_list,
+            edited,
+            drawn: RefCell::default(),
+        };
         add.connect_clicked({
             let edited = Rc::clone(&me.edited);
             let list = me.edit_list.clone();
@@ -203,6 +225,19 @@ impl Details {
 
     pub fn show(&self, view: &RoomView) {
         self.answering.set_label(&c::relays_answering(view.relays_up(), view.relays.len()));
+        let drawn: Vec<_> =
+            view.relays.iter().map(|r| (r.url.clone(), r.healthy, r.rtt_ms)).collect();
+        if *self.drawn.borrow() != drawn {
+            self.draw_relays(view);
+            self.drawn.replace(drawn);
+        }
+        if !self.popover.is_visible() {
+            *self.edited.borrow_mut() = view.relays.iter().map(|r| r.url.clone()).collect();
+            fill_edit(&self.edit_list, &self.edited);
+        }
+    }
+
+    fn draw_relays(&self, view: &RoomView) {
         while let Some(child) = self.relays.first_child() {
             self.relays.remove(&child);
         }
@@ -239,10 +274,6 @@ impl Details {
             row.set_activatable(false);
             row.set_child(Some(&b));
             self.relays.append(&row);
-        }
-        if !self.popover.is_visible() {
-            *self.edited.borrow_mut() = view.relays.iter().map(|r| r.url.clone()).collect();
-            fill_edit(&self.edit_list, &self.edited);
         }
     }
 }

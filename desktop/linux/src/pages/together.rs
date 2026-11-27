@@ -92,7 +92,11 @@ pub fn build(ctx: &Rc<Ctx>) -> adw::NavigationPage {
             // A look into a recent room: who is there now. A failed Rejoin's row returns to
             // Rejoin on the next look-in.
             Event::RoomGlimpse(glimpse) => {
-                let Some(room_id) = &glimpse.room_id else { return };
+                // The invite's look came back: it reached the room, so it didn't fail.
+                let Some(room_id) = &glimpse.room_id else {
+                    page.joining.replace(None);
+                    return;
+                };
                 let names: Vec<&str> = glimpse
                     .members
                     .iter()
@@ -177,7 +181,11 @@ impl Page {
                 if link.is_empty() {
                     return;
                 }
-                self.joining.replace(Some(link.clone()));
+                // Only an invite the room will look at waits for its answer; the window says
+                // what is wrong with any other.
+                if joins(&link) {
+                    self.joining.replace(Some(link.clone()));
+                }
                 if self.failed.take().is_some() {
                     self.shown.replace(None);
                     self.refresh();
@@ -216,6 +224,11 @@ impl Page {
             }
         }
     }
+}
+
+/// Whether `link` is an invite the window looks into, rather than one it turns away.
+fn joins(link: &str) -> bool {
+    kaeri_model::room::RoomTarget::parse(link).is_some_and(|t| t.old.is_none())
 }
 
 /// What the place says: the room's line, its people and the failed invite.
@@ -261,4 +274,15 @@ fn when(at_s: i64, now_s: i64) -> String {
         "%-d %B" // i18n-skip
     };
     at.format(format).map(|s| s.to_string()).unwrap_or_default()
+}
+
+#[cfg(test)]
+mod tests {
+    use super::joins;
+
+    #[test]
+    fn only_a_room_invite_waits_for_an_answer() {
+        assert!(!joins("not a link"));
+        assert!(!joins("https://example.example/room"));
+    }
 }

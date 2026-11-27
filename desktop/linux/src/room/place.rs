@@ -144,8 +144,9 @@ pub fn build(
         why.append(&dot);
         let text = gtk::Label::new(None);
         text.set_markup(&format!(
-            "<b>{}</b> <span foreground=\"#A3A9C4\">{}</span>", // i18n-skip
+            "<b>{}</b> <span foreground=\"{}\">{}</span>", // i18n-skip
             gtk::glib::markup_escape_text(&c::unreachable()),
+            crate::style::haze(),
             gtk::glib::markup_escape_text(&c::unreachable_note()),
         ));
         text.set_wrap(true);

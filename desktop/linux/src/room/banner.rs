@@ -175,8 +175,12 @@ impl Banner {
                 let list = crate::widgets::boxed_list();
                 list.set_margin_top(14);
                 list.set_selection_mode(gtk::SelectionMode::Single);
-                for (i, (name, detail, picked)) in sources.iter().enumerate() {
-                    let r = adw::ActionRow::builder().title(name).subtitle(detail).build();
+                for (name, detail, picked) in sources {
+                    let r = adw::ActionRow::builder()
+                        .title(name)
+                        .subtitle(detail)
+                        .use_markup(false)
+                        .build();
                     if *picked {
                         r.add_suffix(&gtk::Image::from_icon_name("object-select-symbolic"));
                     }
@@ -184,12 +188,23 @@ impl Banner {
                     if *picked {
                         list.select_row(Some(&r));
                     }
-                    let _ = i;
                 }
                 self.body.append(&list);
                 let r = row();
-                let picked = sources.iter().position(|s| s.2).unwrap_or(0);
-                r.append(&button(&c::play_in_room(), true, Act::PlayInRoom(picked)));
+                // The row you picked plays; with none picked, the one pinned or the first.
+                let pinned = sources.iter().position(|s| s.2).unwrap_or(0);
+                let play = gtk::Button::with_label(&c::play_in_room());
+                play.add_css_class("pill");
+                play.add_css_class("suggested-action");
+                let act = Rc::clone(&self.act);
+                let rows = list.clone();
+                play.connect_clicked(move |_| {
+                    act(Act::PlayInRoom(picked_row(
+                        rows.selected_row().map(|r| r.index()),
+                        pinned,
+                    )))
+                });
+                r.append(&play);
                 r.append(&button(&c::not_now(), false, Act::NotNow));
                 self.body.append(&r);
             }
@@ -218,5 +233,22 @@ impl Banner {
             }
         }
         self.fader.set(&self.widget, true);
+    }
+}
+
+/// The source Play in the room plays: the selected row, or `pinned` with none selected.
+fn picked_row(selected: Option<i32>, pinned: usize) -> usize {
+    selected.and_then(|i| usize::try_from(i).ok()).unwrap_or(pinned)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::picked_row;
+
+    #[test]
+    fn play_in_the_room_plays_the_row_you_picked() {
+        assert_eq!(picked_row(Some(1), 0), 1);
+        assert_eq!(picked_row(None, 2), 2);
+        assert_eq!(picked_row(Some(-1), 0), 0);
     }
 }

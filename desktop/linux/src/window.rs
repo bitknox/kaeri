@@ -836,7 +836,7 @@ impl Shell {
 
     pub fn back(&self) {
         if self.top.visible_child_name().as_deref() == Some("player") {
-            self.player.close();
+            self.player.close_asking();
         } else if self.is_reader() {
             self.reader.back();
         } else if let Some(nav) = self.ctx.nav()
@@ -959,10 +959,7 @@ impl Shell {
                     Some(target) if target.old.is_some() => {
                         s.ctx.toast(&kaeri_i18n::t::room_error_old_invite());
                     }
-                    Some(target) => {
-                        s.show_player(true);
-                        s.player.room.peek(&target.link);
-                    }
+                    Some(target) => s.player.open_invite(&target.link),
                     // The catalogue's only "not an invite" line is the terminal's.
                     None => s.ctx.toast(&kaeri_i18n::t::tui_room_not_a_link()),
                 }
@@ -1808,8 +1805,7 @@ impl Shell {
             if target.old.is_some() {
                 self.ctx.toast(&kaeri_i18n::t::room_error_old_invite());
             } else {
-                self.show_player(true);
-                self.player.room.peek(&target.link);
+                self.player.open_invite(&target.link);
             }
             return;
         }

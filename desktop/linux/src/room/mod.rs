@@ -72,6 +72,8 @@ pub struct Room {
     engine_view: RefCell<Option<kaeri_model::room::RoomView>>,
     members: RefCell<Vec<RoomMember>>,
     glimpse: RefCell<Option<(String, RoomGlimpse)>>,
+    /// Whether the invite's look has come back; until then there is nothing to show of it.
+    glimpse_heard: Cell<bool>,
     offer: RefCell<Option<RoomMoveOffer>>,
     /// Your sources for the room's episode, for the Choose a source banner.
     sources: RefCell<Vec<(String, String, bool)>>,
@@ -82,6 +84,13 @@ pub struct Room {
     clock: RefCell<Rc<dyn Fn() -> i64>>,
     tick: RefCell<Option<glib::SourceId>>,
     fullscreen: Cell<bool>,
+    /// Bumped by every change of full screen, the morph and leaving: a timer or animation
+    /// started for an earlier one finds it changed and does nothing.
+    turn: Cell<u64>,
+    /// The column's fade for full screen, stopped by the next turn.
+    column_fade: RefCell<Option<adw::SpringAnimation>>,
+    /// Hide chat in rooms: no conversation, no field and no reaction ticks.
+    chat_hidden: Cell<bool>,
     act: RefCell<Option<column::ActFn>>,
     /// The player's own watch-together button, away while in a room.
     aside: RefCell<Vec<gtk::Widget>>,
@@ -160,6 +169,7 @@ impl Room {
             engine_view: RefCell::default(),
             members: RefCell::default(),
             glimpse: RefCell::default(),
+            glimpse_heard: Cell::new(false),
             offer: RefCell::default(),
             sources: RefCell::default(),
             source_count: Cell::new(0),
@@ -167,6 +177,9 @@ impl Room {
             clock: RefCell::new(Rc::new(wall_ms)),
             tick: RefCell::default(),
             fullscreen: Cell::new(false),
+            turn: Cell::new(0),
+            column_fade: RefCell::default(),
+            chat_hidden: Cell::new(false),
             act: RefCell::default(),
             aside: RefCell::default(),
         });
@@ -267,11 +280,7 @@ impl Room {
             }
             Act::NotNow => {
                 if self.glimpse.borrow_mut().take().is_some() {
-                    if self.engine_view.borrow().is_none() {
-                        self.clear();
-                    } else {
-                        self.redraw();
-                    }
+                    self.after_invite();
                     return;
                 }
                 self.send(RoomCommand::ChoosingSource { open: false });
@@ -286,7 +295,7 @@ impl Room {
                 }
                 self.redraw();
             }
-            Act::PlayInRoom(_) | Act::OpenSources | Act::SearchTitles => {}
+            Act::PlayInRoom(_) | Act::OpenSources | Act::SearchTitles | Act::InviteGone => {}
         }
         self.pass(a);
     }
@@ -316,6 +325,7 @@ impl Room {
                 if let Some((_, g)) = held.as_mut().filter(|_| glimpse.room_id.is_none()) {
                     *g = glimpse.clone();
                     drop(held);
+                    self.glimpse_heard.set(true);
                     self.redraw();
                 }
             }
@@ -333,13 +343,28 @@ impl Room {
             Event::RoomLeft { why } => {
                 // An invite opened here whose relays didn't answer: say so over where you were.
                 let invite = self.glimpse.borrow().as_ref().map(|(invite, _)| invite.clone());
-                if let (RoomLeftWhy::Unreachable, Some(invite)) = (why, invite) {
+                if let (RoomLeftWhy::Unreachable, Some(invite)) = (why, invite.clone()) {
                     let me = Rc::downgrade(self);
-                    dialogs::unreachable(&self.widget, move || {
-                        if let Some(me) = me.upgrade() {
+                    dialogs::unreachable(&self.widget, move |again| {
+                        let Some(me) = me.upgrade() else { return };
+                        if again {
                             me.peek(&invite);
+                        } else if !me.in_room() {
+                            me.pass(Act::InviteGone);
                         }
                     });
+                }
+                // The engine says a failed look at an invite as the room left (RoomLeft
+                // Unreachable). Still looking at the invite, the room you are in stays: only
+                // the invite goes.
+                if matches!(why, RoomLeftWhy::Unreachable)
+                    && invite.is_some()
+                    && !self.glimpse_heard.get()
+                    && self.engine_view.borrow().is_some()
+                {
+                    self.glimpse.replace(None);
+                    self.redraw();
+                    return;
                 }
                 self.engine_view.replace(None);
                 self.members.replace(Vec::new());
@@ -359,6 +384,7 @@ impl Room {
 
     /// An invite opened here: the room shows as it is, with Join the room and Not now.
     pub fn peek(&self, invite: &str) {
+        self.glimpse_heard.set(false);
         self.glimpse.replace(Some((
             invite.to_owned(),
             RoomGlimpse {
@@ -373,13 +399,41 @@ impl Room {
         self.send(RoomCommand::PeekInvite { invite: invite.to_owned() });
     }
 
+    /// An invite shown here went (Not now, or Back before joining): the room you are in shows
+    /// again, or, in none, the player has nothing to show for it.
+    fn after_invite(self: &Rc<Self>) {
+        self.glimpse_heard.set(false);
+        if self.engine_view.borrow().is_none() {
+            self.clear();
+            self.pass(Act::InviteGone);
+        } else {
+            self.redraw();
+        }
+    }
+
+    /// Back before joining an invite: it goes, as Not now.
+    pub fn drop_invite(self: &Rc<Self>) {
+        if self.glimpse.borrow_mut().take().is_some() {
+            self.glimpse_heard.set(false);
+            if self.engine_view.borrow().is_none() {
+                self.clear();
+            } else {
+                self.redraw();
+            }
+        }
+    }
+
+    /// Whether this device is in a room the engine joined, rather than looking at an invite.
+    pub fn joined(&self) -> bool {
+        self.engine_view.borrow().is_some()
+    }
+
     /// Draw the room again from what the engine said.
     fn redraw(self: &Rc<Self>) {
         let glimpse = self.glimpse.borrow().clone();
         let view = match (&glimpse, self.engine_view.borrow().as_ref()) {
-            (Some((_, g)), _) if g.room_episode.is_some() || !g.members.is_empty() => {
-                RoomView::from_glimpse(g)
-            }
+            // Once the look came back, even an empty room shows, with Join the room.
+            (Some((_, g)), _) if self.glimpse_heard.get() => RoomView::from_glimpse(g),
             (_, Some(v)) => RoomView::from_engine(v, &self.members.borrow()),
             _ => return,
         };
@@ -463,7 +517,10 @@ impl Room {
 
     /// Out of the room: the column goes and the player is the player again.
     pub fn clear(&self) {
+        self.next_turn();
         self.view.replace(None);
+        self.column.widget.set_opacity(1.0);
+        self.strip.reset();
         self.banner.show(&RoomView::default(), None);
         self.up_next.show(None, 0);
         self.column.show_conversation(&[]);
@@ -547,8 +604,14 @@ impl Room {
             let content = self.column.widget.clone();
             content.set_opacity(0.0);
             self.split.set_show_sidebar(true);
+            let me = Rc::downgrade(self);
+            let turn = self.next_turn();
             glib::timeout_add_local_once(CONTENT_DELAY, move || {
-                crate::motion::fade_in(&content);
+                if me.upgrade().is_some_and(|me| me.turn.get() == turn) {
+                    crate::motion::fade_in(&content);
+                } else {
+                    content.set_opacity(1.0);
+                }
             });
         }
         self.toggle.set_active(true);
@@ -562,6 +625,7 @@ impl Room {
             return;
         }
         let show = !on && self.toggle.is_active();
+        let turn = self.next_turn();
         if crate::motion::reduced() {
             let (split, strip) = (self.split.clone(), Rc::clone(&self.strip));
             crate::motion::ghost(&self.widget, &self.split, true, move || {
@@ -574,23 +638,52 @@ impl Room {
         if on {
             let anim =
                 crate::motion::standard(&column, 1.0, 0.0, crate::motion::opacity(&column));
-            let split = self.split.clone();
-            anim.connect_done(move |_| split.set_show_sidebar(false));
+            let me = Rc::downgrade(self);
+            anim.connect_done(move |_| {
+                if let Some(me) = me.upgrade().filter(|me| me.turn.get() == turn) {
+                    me.split.set_show_sidebar(false);
+                }
+            });
             anim.play();
-            let strip = Rc::clone(&self.strip);
+            self.column_fade.replace(Some(anim));
+            let me = Rc::downgrade(self);
             glib::timeout_add_local_once(Duration::from_millis(500), move || {
-                strip.set_on(true)
+                if let Some(me) = me.upgrade().filter(|me| me.turn.get() == turn) {
+                    me.strip.set_on(true);
+                }
             });
         } else {
             self.strip.set_on(false);
+            column.set_opacity(1.0);
             if show {
                 column.set_opacity(0.0);
                 self.split.set_show_sidebar(true);
                 let anim =
                     crate::motion::standard(&column, 0.0, 1.0, crate::motion::opacity(&column));
                 anim.play();
+                self.column_fade.replace(Some(anim));
             }
         }
+    }
+
+    /// A new turn of full screen or the morph: what an earlier one left running stands down.
+    fn next_turn(&self) -> u64 {
+        let turn = self.turn.get() + 1;
+        self.turn.set(turn);
+        if let Some(fade) = self.column_fade.take() {
+            fade.skip();
+        }
+        turn
+    }
+
+    /// Hide chat in rooms, from the setting or the room's chat state.
+    pub fn set_chat_hidden(&self, hidden: bool) {
+        self.chat_hidden.set(hidden);
+        self.column.set_chat_hidden(hidden);
+    }
+
+    pub fn chat_hidden(&self) -> bool {
+        self.chat_hidden.get()
     }
 
     /// The player's controls came up or left: the strip follows when nothing holds it.
@@ -613,5 +706,115 @@ impl Room {
             }
             _ => {}
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::{cell::RefCell, rc::Rc};
+
+    use kaeri_model::{
+        event::Event,
+        room::{RoomGlimpse, RoomLeftWhy, RoomView as EngineView},
+    };
+
+    use gtk::prelude::*;
+
+    use super::{Room, column::Act};
+    use crate::gtk_test::{pump, run};
+
+    /// A room in a window of its own, with the acts it passes to the player.
+    fn room() -> (Rc<Room>, Rc<RefCell<Vec<Act>>>, gtk::Window) {
+        let stage = gtk::Overlay::new();
+        let room = Room::new(&gtk::Box::new(gtk::Orientation::Vertical, 0), &stage);
+        let window = gtk::Window::new();
+        window.set_child(Some(&room.widget));
+        let passed: Rc<RefCell<Vec<Act>>> = Rc::default();
+        room.on_act({
+            let passed = Rc::clone(&passed);
+            move |a| passed.borrow_mut().push(a)
+        });
+        (room, passed, window)
+    }
+
+    fn empty_look() -> RoomGlimpse {
+        RoomGlimpse {
+            room_id: None,
+            by: None,
+            members: Vec::new(),
+            room_episode: None,
+            playing: false,
+            full: false,
+        }
+    }
+
+    fn joined() -> EngineView {
+        EngineView { room_id: "r1".into(), ..EngineView::default() }
+    }
+
+    #[test]
+    fn an_empty_room_s_invite_still_shows() {
+        run(|| {
+            let (room, _, _window) = room();
+            room.peek("kaeri://room#k");
+            assert!(!room.in_room(), "nothing shows before the look comes back");
+            room.heard(&Event::RoomGlimpse(empty_look()));
+            assert!(room.in_room(), "the empty room shows, with Join the room");
+        });
+    }
+
+    #[test]
+    fn not_now_on_an_invite_alone_lets_the_player_go() {
+        run(|| {
+            let (room, passed, _window) = room();
+            room.peek("kaeri://room#k");
+            room.heard(&Event::RoomGlimpse(empty_look()));
+            room.handle(Act::NotNow);
+            assert!(!room.in_room());
+            assert_eq!(*passed.borrow(), vec![Act::InviteGone]);
+        });
+    }
+
+    #[test]
+    fn back_on_an_invite_leaves_no_room_behind() {
+        run(|| {
+            let (room, _, _window) = room();
+            room.peek("kaeri://room#k");
+            room.heard(&Event::RoomGlimpse(empty_look()));
+            assert!(!room.joined());
+            room.drop_invite();
+            assert!(!room.in_room());
+        });
+    }
+
+    #[test]
+    fn a_failed_look_at_an_invite_keeps_the_room_you_are_in() {
+        run(|| {
+            let (room, _, _window) = room();
+            room.heard(&Event::RoomJoined(joined()));
+            room.peek("kaeri://room#other");
+            room.heard(&Event::RoomLeft { why: RoomLeftWhy::Unreachable });
+            assert!(room.joined() && room.in_room());
+            // The room itself going still clears it.
+            room.heard(&Event::RoomLeft { why: RoomLeftWhy::Unreachable });
+            assert!(!room.joined() && !room.in_room());
+        });
+    }
+
+    #[test]
+    fn leaving_full_screen_at_once_leaves_no_strip_behind() {
+        run(|| {
+            let (room, _, _window) = room();
+            room.heard(&Event::RoomJoined(joined()));
+            room.set_fullscreen(true);
+            room.set_fullscreen(false);
+            pump(800);
+            assert!(!room.strip.is_on());
+            room.set_fullscreen(true);
+            room.clear();
+            pump(800);
+            assert!(!room.strip.is_on());
+            assert!(!room.split.shows_sidebar());
+        });
     }
 }

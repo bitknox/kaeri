@@ -55,6 +55,9 @@ pub enum Act {
     PlayInRoom(usize),
     OpenSources,
     SearchTitles,
+    /// The invite shown went without a room to show instead (Not now, or Close on its
+    /// unreachable alert): the player has nothing to show for it.
+    InviteGone,
 }
 
 struct Row {
@@ -77,6 +80,8 @@ pub struct Column {
     conv: gtk::Box,
     conv_scroll: gtk::ScrolledWindow,
     entry: gtk::Entry,
+    /// The chat field: away with Hide chat in rooms.
+    field: gtk::Box,
     pub invite: gtk::MenuButton,
     pub details: gtk::MenuButton,
     invite_pop: super::popovers::Invite,
@@ -249,6 +254,7 @@ impl Column {
             conv,
             conv_scroll,
             entry,
+            field,
             invite,
             details,
             invite_pop,
@@ -377,10 +383,11 @@ impl Column {
             row.face.show(&m.name, &look);
             let name = if m.you {
                 format!(
-                    "{} <span weight=\"normal\" foreground=\"#A3A9C4\">{}</span>",
+                    "{} <span weight=\"normal\" foreground=\"{}\">{}</span>", // i18n-skip
                     glib::markup_escape_text(&m.name),
+                    crate::style::haze(),
                     glib::markup_escape_text(&c::you_tag())
-                ) // i18n-skip
+                )
             } else {
                 glib::markup_escape_text(&m.name).to_string()
             };
@@ -396,10 +403,9 @@ impl Column {
             row.trail.set_visible(trail.is_some());
             row.trail.set_label(trail.as_deref().unwrap_or(""));
             row.row.set_opacity(if m.state == MemberState::Left { 0.6 } else { 1.0 });
-            row.row.update_property(&[gtk::accessible::Property::Label(&format!(
-                "{}, {}",
-                m.name, look.word
-            ))]); // i18n-skip
+            row.row.update_property(&[gtk::accessible::Property::Label(
+                &kaeri_i18n::t::room_face_label(&m.name, &look.word),
+            )]);
         }
         let many = members.len() as i32 > ROWS;
         // Five whole rows, as tall as a row draws at this font, then the list scrolls.
@@ -413,6 +419,12 @@ impl Column {
         } else {
             gtk::PolicyType::Never
         });
+    }
+
+    /// Hide chat in rooms: the conversation and the field go; the people stay.
+    pub fn set_chat_hidden(&self, hidden: bool) {
+        self.conv_scroll.set_visible(!hidden);
+        self.field.set_visible(!hidden);
     }
 
     /// The conversation, newest last, scrolled to its end.
@@ -440,8 +452,9 @@ impl Column {
                     let text = glib::markup_escape_text(text);
                     label.set_markup(&if *you {
                         format!(
-                            "<span weight=\"600\" foreground=\"#A3A9C4\">{who}</span>  {text}"
-                        ) // i18n-skip
+                            "<span weight=\"600\" foreground=\"{}\">{who}</span>  {text}", // i18n-skip
+                            crate::style::haze()
+                        )
                     } else {
                         format!("<span weight=\"600\">{who}</span>  {text}") // i18n-skip
                     });
