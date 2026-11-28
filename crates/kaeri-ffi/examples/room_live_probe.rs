@@ -4,7 +4,7 @@
 //!
 //! ```text
 //! cargo run -p kaeri-ffi --features testing,room --example room_live_probe -- \
-//!     [--relays wss://a,wss://b] [--spares wss://c] [--report out.md] [--linger S] [--fake]
+//!     [--relays wss://a,wss://b] [--spares wss://c] [--report out.md] [--linger S] [--short] [--fake]
 //! ```
 //!
 //! Without `--relays` the room is on the built-in relays (the invite then names none), and
@@ -308,6 +308,8 @@ fn main() {
     });
     let report = arg("--report");
     // Idle this long once everyone is in, so a relay that stays bad is swapped for a spare.
+    // `--short`: Ada and Ren only, about 15 events, for trying a relay gently.
+    let brief = args.iter().any(|a| a == "--short");
     let linger: u64 = arg("--linger").and_then(|s| s.parse().ok()).unwrap_or(0);
 
     let log = Log::default();
@@ -371,7 +373,10 @@ fn main() {
         return;
     };
 
-    for (m, others) in [(&ren, vec![&ada]), (&mika, vec![&ada, &ren])] {
+    for (m, others) in [(&ren, vec![&ada]), (&mika, vec![&ada, &ren])]
+        .into_iter()
+        .take(if brief { 1 } else { 2 })
+    {
         let name = m.name;
         let mut waits: Vec<(&Member, Done)> = Vec::new();
         for o in &others {
@@ -394,6 +399,66 @@ fn main() {
             waits,
         );
         run.learn(name, began);
+    }
+
+    if brief {
+        for (m, other) in [(&ada, &ren), (&ren, &ada)] {
+            let text = format!("a line from {}", m.name);
+            run.step(
+                &format!("{} says a line", m.name),
+                || m.room(RoomCommand::Say { text: text.clone() }),
+                vec![(other, b(Box::new(said(m.name, text.clone()))))],
+            );
+        }
+        run.step(
+            "Ren: Don't wait for me; Ada plays",
+            || {
+                ren.room(RoomCommand::DontWait);
+                ada.room(RoomCommand::Play { play: true });
+            },
+            [&ada, &ren]
+                .into_iter()
+                .map(|m| {
+                    (
+                        m,
+                        b(Box::new(|_: &Event, v: Option<&RoomView>| {
+                            v.is_some_and(|v| v.playing)
+                        })),
+                    )
+                })
+                .collect(),
+        );
+        run.step(
+            "Ren pauses",
+            || ren.room(RoomCommand::Play { play: false }),
+            vec![(
+                &ada,
+                b(Box::new(|_: &Event, v: Option<&RoomView>| {
+                    v.is_some_and(|v| !v.playing && v.paused_by.as_deref() == Some("Ren"))
+                })),
+            )],
+        );
+        run.step(
+            "Ren leaves",
+            || ren.room(RoomCommand::Leave),
+            vec![(&ada, b(Box::new(gone("Ren"))))],
+        );
+        run.step(
+            "Ada leaves: the room closes",
+            || ada.room(RoomCommand::Leave),
+            vec![(
+                &ada,
+                b(Box::new(|e: &Event, _: Option<&RoomView>| {
+                    matches!(e, Event::RoomLeft { .. })
+                })),
+            )],
+        );
+        thread::sleep(Duration::from_secs(3));
+        finish(&run, &[&ada, &ren], &nip11, &shown, report.as_deref());
+        for m in [&ada, &ren, &mika, &kai] {
+            m.engine.shutdown();
+        }
+        return;
     }
 
     // A line from each.
