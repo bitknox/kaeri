@@ -13,11 +13,11 @@ use kaeri_core::ids::AnilistId;
 /// The relays a new room uses when Settings has none of its own: public relays run by others.
 /// Kaeri runs none of them.
 pub const DEFAULT_RELAYS: [&str; 3] =
-    ["wss://nos.lol", "wss://relay.damus.io", "wss://relay.primal.net"];
+    ["wss://relay.primal.net", "wss://relay.snort.social", "wss://nostr.data.haus"];
 
 /// The relays a room swaps in, in this order, when one of its own stops answering.
 pub const SPARE_RELAYS: [&str; 3] =
-    ["wss://nostr.mom", "wss://relay.nostr.net", "wss://offchain.pub"];
+    ["wss://relay.nostr.net", "wss://nos.lol", "wss://relay.ditto.pub"];
 
 /// Rooms work best with this many people or fewer. The cap is soft: a newcomer is warned and may
 /// join anyway.
