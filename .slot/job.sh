@@ -1,0 +1,1 @@
+android/scripts/engine.sh testing && android/scripts/fonts.sh && cd android && ./gradlew --console=plain -PKAERI_VERSION_CODE=6000003 -PKAERI_VERSION_NAME=0.6.0-train :app:assembleFixturesDebug :tv:assembleFixturesDebug
