@@ -30,6 +30,9 @@ pub const CONNECT_TIMEOUT: Duration = Duration::from_secs(8);
 pub const AUTH_RETRY_LIMIT: Duration = Duration::from_secs(60);
 /// The one subscription's id.
 pub const SUB: &str = "room";
+/// The debug log's target for what goes over the socket: every event sent and heard, and every
+/// answer, with the relay and this session's `pk8`. The live probe reads it.
+pub const WIRE: &str = "kaeri_room::wire";
 
 /// What the pool tells a relay.
 #[derive(Debug)]
@@ -170,9 +173,17 @@ async fn run(
         let ended = match connected {
             Ok(Ok((ws, _))) => {
                 failures = 0;
+                tracing::debug!(target: WIRE, relay = %conn.url, me = %conn.session.pk8(), "open");
                 conn.session_on(ws, &mut rx).await
             }
-            _ => Ended::Lost,
+            Ok(Err(why)) => {
+                tracing::debug!(target: WIRE, relay = %conn.url, me = %conn.session.pk8(), why = %why, "unreachable");
+                Ended::Lost
+            }
+            Err(_) => {
+                tracing::debug!(target: WIRE, relay = %conn.url, me = %conn.session.pk8(), why = "connect timed out", "unreachable");
+                Ended::Lost
+            }
         };
         match ended {
             Ended::Stop | Ended::Unusable => return,
@@ -210,6 +221,10 @@ type Socket = tokio_tungstenite::WebSocketStream<
 impl Conn {
     fn report(&self, report: FromRelay) {
         let _ = self.reports.send((self.i, report));
+    }
+
+    fn log_send(&self, event: &Event) {
+        tracing::debug!(target: WIRE, relay = %self.url, me = %self.session.pk8(), id = %event.id.to_hex(), "send");
     }
 
     fn announce(&mut self) {
@@ -253,6 +268,7 @@ impl Conn {
             }
         }
         for event in waiting {
+            self.log_send(&event);
             let text = json!(["EVENT", *event]).to_string();
             self.sent.insert(event.id.to_hex(), (*event, Instant::now()));
             if write.send(Ws::text(text)).await.is_err() {
@@ -287,6 +303,7 @@ impl Conn {
                         self.filter = Some(filter);
                     }
                     Some(ToRelay::Send(event)) => {
+                        self.log_send(&event);
                         out.push(json!(["EVENT", *event]).to_string());
                         self.sent.retain(|_, (_, at)| at.elapsed() < AUTH_RETRY_LIMIT);
                         self.sent.insert(event.id.to_hex(), (*event, Instant::now()));
@@ -306,7 +323,16 @@ impl Conn {
                                 return Ended::Lost;
                             }
                         }
-                        Some(Ok(Ws::Close(_)) | Err(_)) | None => return Ended::Lost,
+                        Some(Ok(Ws::Close(why))) => {
+                            let why = why.map(|f| format!("{} {}", f.code, f.reason)).unwrap_or_default();
+                            tracing::debug!(target: WIRE, relay = %self.url, me = %self.session.pk8(), %why, "lost");
+                            return Ended::Lost;
+                        }
+                        Some(Err(why)) => {
+                            tracing::debug!(target: WIRE, relay = %self.url, me = %self.session.pk8(), why = %why, "lost");
+                            return Ended::Lost;
+                        }
+                        None => return Ended::Lost,
                         Some(Ok(_)) => {}
                     }
                 }
@@ -337,16 +363,22 @@ impl Conn {
         let Ok(Value::Array(parts)) = serde_json::from_str::<Value>(text) else { return None };
         let word =
             |n: usize| parts.get(n).and_then(Value::as_str).unwrap_or_default().to_owned();
+        let me = self.session.pk8();
         match parts.first().and_then(Value::as_str) {
             Some("EVENT") => {
                 if let Some(event) =
                     parts.get(2).and_then(|e| serde_json::from_value::<Event>(e.clone()).ok())
                 {
+                    tracing::debug!(target: WIRE, relay = %self.url, %me, id = %event.id.to_hex(), "heard");
                     self.report(FromRelay::Event(Box::new(event)));
                 }
             }
             Some("EOSE") => self.announce(),
+            Some("NOTICE") => {
+                tracing::debug!(target: WIRE, relay = %self.url, %me, answer = %word(1), "notice");
+            }
             Some("AUTH") => {
+                tracing::debug!(target: WIRE, relay = %self.url, %me, "auth asked");
                 self.challenge = Some(word(1));
                 self.authed = false;
             }
@@ -354,6 +386,7 @@ impl Conn {
                 let id = word(1);
                 let accepted = parts.get(2).and_then(Value::as_bool).unwrap_or(false);
                 let message = word(3);
+                tracing::debug!(target: WIRE, relay = %self.url, %me, %id, accepted, answer = %message, "ok");
                 if self.auth_id.as_deref() == Some(id.as_str()) {
                     self.authed = accepted;
                     if accepted {
@@ -388,6 +421,7 @@ impl Conn {
             }
             Some("CLOSED") => {
                 let message = word(2);
+                tracing::debug!(target: WIRE, relay = %self.url, %me, answer = %message, "closed");
                 if message.starts_with("auth-required:") && !self.authed {
                     self.resubscribe_after_auth = true;
                     if self.auth_id.is_none() {

@@ -243,6 +243,31 @@ async fn auth_required_is_answered_and_the_event_sent_again() {
 }
 
 #[tokio::test]
+async fn a_relay_that_keeps_refusing_for_its_own_reasons_is_unhealthy() {
+    // Live: a spare took a new key's first few events, then refused the rest with a reason of
+    // its own ("Policy violated and pubkey is not in our web of trust."), no NIP-01 prefix, and
+    // went on counting as healthy, so the room never swapped it.
+    let relays = start(2).await;
+    let mut ada = Member::new(SECRET, &relays).await;
+    relays[0].refuse(Some("Policy violated and pubkey is not in our web of trust."), None);
+    for n in 0..2 {
+        ada.say(Message::Chat { id: format!("c{n}"), text: "a line".into() });
+    }
+    assert!(
+        ada.next(|h| matches!(h, Heard::Relays(list) if !list[0].healthy)).await.is_none(),
+        "one or two refusals are nothing yet"
+    );
+    ada.say(Message::Chat { id: "c2".into(), text: "a line".into() });
+    ada.next(|h| matches!(h, Heard::Relays(list) if !list[0].healthy && list[1].healthy))
+        .await
+        .expect("three in a row: unhealthy");
+    // It takes one again: healthy again.
+    relays[0].refuse(None, None);
+    ada.say(Message::Chat { id: "c3".into(), text: "a line".into() });
+    ada.next(|h| matches!(h, Heard::Relays(list) if list[0].healthy)).await.expect("healthy");
+}
+
+#[tokio::test]
 async fn restricted_after_auth_leaves_the_relay_unusable() {
     let relays = start(2).await;
     relays[0].require_auth(true);
@@ -271,6 +296,39 @@ async fn what_is_said_last_before_leaving_still_goes_out() {
     ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Leave)))
         .await
         .expect("the Leave goes out");
+}
+
+#[tokio::test]
+async fn a_leave_is_taken_by_a_relay_that_takes_events_a_moment_later() {
+    // Live: on the public relays no Leave ever arrived. The pool wrote it and closed the socket
+    // at once, and a relay that takes events a moment after they come drops those of a
+    // connection that is gone by then.
+    let relays = start(1).await;
+    relays[0].ingest_after(150);
+    let mut ada = Member::new(SECRET, &relays).await;
+    let mut ren = Member::new(SECRET, &relays).await;
+    ada.hello();
+    ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Hello { .. })))
+        .await
+        .unwrap();
+    ada.say(Message::Leave);
+    drop(ada);
+    ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Leave)))
+        .await
+        .expect("the Leave is taken before the socket closes");
+}
+
+#[tokio::test]
+async fn a_relay_kept_through_a_swap_is_not_asked_again() {
+    // Live: each swap to a spare sent the subscription to every relay again, and each kept
+    // relay sent everything of the last 30 s over again.
+    let relays = start(2).await;
+    let mut ada = Member::new(SECRET, &relays[..1]).await;
+    assert_eq!(relays[0].reqs(), 1);
+    ada.link.out.send(Out::Relays(urls(&relays))).unwrap();
+    ada.wait_up(2).await;
+    assert_eq!(relays[1].reqs(), 1, "the new relay is asked");
+    assert_eq!(relays[0].reqs(), 1, "the kept one isn't asked again");
 }
 
 #[tokio::test]

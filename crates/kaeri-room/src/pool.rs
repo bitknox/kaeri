@@ -10,9 +10,14 @@
 //!   again to the same relay.
 //! - **Health:** the socket is open and our own events come back. Unhealthy after an event not
 //!   echoed within 20 s (the timer runs only while one is awaited), a socket that failed 3 times
-//!   running, or `blocked:`/`restricted:`. An `invalid:` about time runs the clock check again.
+//!   running, three of our events refused running (but for `rate-limited:` and `duplicate:`;
+//!   until it takes one again), or `blocked:`/`restricted:`. An `invalid:` about time runs the
+//!   clock check again.
 //! - **Subscription:** `{"kinds":[23517], "#z":[tags], "since": now − 30}`, today's tag and the
-//!   other day's near midnight, and the previous epoch's for two minutes after a rekey.
+//!   other day's near midnight, and the previous epoch's for two minutes after a rekey. A relay
+//!   swap asks only the new relay: a kept one asked again sends the last 30 s over again.
+//! - **Closing:** what was said last goes out, and each relay answers or echoes it (2 s at
+//!   most) before its socket closes.
 
 use std::{
     collections::{HashMap, HashSet, VecDeque},
@@ -45,6 +50,10 @@ pub const CAP_BURST: usize = 6;
 pub const ECHO_LIMIT_MS: i64 = 20_000;
 /// A socket failing this many times running is unhealthy.
 pub const FAILURES_UNHEALTHY: u32 = 3;
+/// A relay refusing this many of our events running, for any reason but `rate-limited:` or
+/// `duplicate:`, is unhealthy until it takes one again: a web of trust, PoW or payment the room's
+/// fresh session keys never meet.
+pub const REFUSED_UNHEALTHY: u32 = 3;
 /// After `rate-limited:`: no heartbeats for this long, half the cap for the longer.
 pub const RATE_QUIET_MS: i64 = 60_000;
 pub const RATE_HALVED_MS: i64 = 600_000;
@@ -102,6 +111,8 @@ struct Slot {
     handle: RelayHandle,
     open: bool,
     failures: u32,
+    /// Our events refused here running (see [`REFUSED_UNHEALTHY`]).
+    refused: u32,
     unusable: bool,
     /// Our events awaiting their echo here: id → sent at, and the event, to send again should
     /// the socket go down first.
@@ -121,6 +132,7 @@ impl Slot {
         self.open
             && !self.unusable
             && self.failures < FAILURES_UNHEALTHY
+            && self.refused < REFUSED_UNHEALTHY
             && !self.awaiting.values().any(|(at, _)| now - at > ECHO_LIMIT_MS)
     }
 
@@ -272,7 +284,7 @@ async fn run(
             }
             Some(samples) = clock.recv() => {
                 if let Some(off) = clock::offset(&samples) {
-                    tracing::info!(offset_ms = off, "room: clock corrected from the relays");
+                    tracing::info!(offset_ms = off, me = %pool.session.pk8(), "room: clock corrected from the relays");
                     pool.offset.store(off, Ordering::Relaxed);
                     pool.subscribe();
                 }
@@ -284,7 +296,7 @@ async fn run(
         }
     }
     // The room is closing: what it said last (a Leave, usually) is still read, then what waits
-    // under the cap goes now, and dropping the slots stops their connections after it.
+    // under the cap goes now.
     while let Ok(o) = out.try_recv() {
         pool.on_out(o);
     }
@@ -294,6 +306,35 @@ async fn run(
             slot.put(event, now);
         }
     }
+    // Each relay answers it or echoes it before its socket closes, for up to the flush's limit:
+    // a public relay takes an event a moment after it comes, and never one whose connection is
+    // gone by then.
+    let mut pending: HashSet<(usize, String)> = pool
+        .slots
+        .iter()
+        .filter(|s| s.open && !s.unusable)
+        .flat_map(|s| s.awaiting.keys().map(|id| (s.id, id.clone())))
+        .collect();
+    let limit = tokio::time::sleep(Duration::from_millis(FLUSH_LIMIT_MS as u64));
+    tokio::pin!(limit);
+    while !pending.is_empty() {
+        tokio::select! {
+            () = &mut limit => break,
+            report = reports.recv() => {
+                let Some((slot, report)) = report else { break };
+                match &report {
+                    FromRelay::Ok { id, .. } => { pending.remove(&(slot, id.clone())); }
+                    FromRelay::Event(event) => { pending.remove(&(slot, event.id.to_hex())); }
+                    FromRelay::Down { .. } | FromRelay::Unusable(_) => {
+                        pending.retain(|(s, _)| *s != slot);
+                    }
+                    FromRelay::Up => {}
+                }
+                pool.on_report(slot, report);
+            }
+        }
+    }
+    // Dropping the slots stops their connections.
     pool.slots.clear();
 }
 
@@ -344,12 +385,18 @@ impl Pool {
         let mut old: Vec<Option<Slot>> =
             std::mem::take(&mut self.slots).into_iter().map(Some).collect();
         let mut slots = Vec::with_capacity(urls.len());
+        let mut fresh = HashSet::new();
         for (i, url) in urls.iter().enumerate() {
             let kept = old.get_mut(i).and_then(|s| s.take_if(|s| s.url == *url));
-            slots.push(kept.unwrap_or_else(|| self.slot(url)));
+            slots.push(kept.unwrap_or_else(|| {
+                let slot = self.slot(url);
+                fresh.insert(slot.id);
+                slot
+            }));
         }
         self.slots = slots;
-        self.subscribe();
+        // Only the new relays: a kept one asked again sends everything of the last 30 s again.
+        self.subscribe_where(|slot| fresh.contains(&slot.id));
         self.tell_relays();
     }
 
@@ -367,6 +414,7 @@ impl Pool {
             ),
             open: false,
             failures: 0,
+            refused: 0,
             unusable: false,
             awaiting: HashMap::new(),
             rtt: None,
@@ -406,11 +454,18 @@ impl Pool {
     }
 
     fn subscribe(&mut self) {
+        self.subscribe_where(|_| true);
+    }
+
+    /// Subscribe the relays `which` picks with today's filter. A new tag list goes to every relay
+    /// all the same.
+    fn subscribe_where(&mut self, which: impl Fn(&Slot) -> bool) {
         let tags = self.tags_now();
+        let changed = tags != self.tags;
         self.tags.clone_from(&tags);
         let since = self.corrected() / 1000 - SINCE_S;
         let filter = json!({"kinds": [KIND], "#z": tags, "since": since.max(0)});
-        for slot in &self.slots {
+        for slot in self.slots.iter().filter(|s| changed || which(s)) {
             slot.handle.send(ToRelay::Subscribe(filter.clone()));
         }
     }
@@ -450,6 +505,7 @@ impl Pool {
         let keep =
             !matches!(body.m, Message::Heartbeat | Message::Status | Message::SyncReq { .. });
         if keep && !self.slots.iter().any(|s| s.open && !s.unusable) {
+            tracing::debug!(target: relay::WIRE, me = %self.session.pk8(), id = %event.id.to_hex(), "kept: no relay up");
             self.unsent.push(event.clone(), now);
         }
         for slot in &mut self.slots {
@@ -463,6 +519,7 @@ impl Pool {
             if slot.room(now) {
                 slot.put(event.clone(), now);
             } else if !heartbeat {
+                tracing::debug!(target: relay::WIRE, relay = %slot.url, me = %self.session.pk8(), id = %event.id.to_hex(), "held: over the cap");
                 slot.queue.push_back((event.clone(), now));
             }
         }
@@ -511,6 +568,9 @@ impl Pool {
     fn on_report(&mut self, id: usize, report: FromRelay) -> bool {
         let now = self.local();
         let Some(slot) = self.slots.iter_mut().find(|s| s.id == id) else { return false };
+        if matches!(report, FromRelay::Up | FromRelay::Down { .. }) {
+            tracing::debug!(target: relay::WIRE, relay = %slot.url, me = %self.session.pk8(), report = ?report, "report");
+        }
         match report {
             FromRelay::Up => {
                 slot.open = true;
@@ -548,12 +608,18 @@ impl Pool {
             }
             FromRelay::Ok { id, accepted, message } => {
                 if accepted {
+                    slot.refused = 0;
                     if self.flushing.as_ref().is_some_and(|(ids, _)| ids.contains(&id)) {
                         self.flushing = None;
                         self.say(Heard::Flushed);
                     }
                 } else {
                     slot.awaiting.remove(&id);
+                    if !message.starts_with("rate-limited:")
+                        && !message.starts_with("duplicate:")
+                    {
+                        slot.refused += 1;
+                    }
                     if message.starts_with("rate-limited:") {
                         slot.quiet_until = now + RATE_QUIET_MS;
                         slot.halved_until = now + RATE_HALVED_MS;
@@ -592,14 +658,14 @@ impl Pool {
         let mut body = match envelope::open(&keys, event, now) {
             Ok(body) => body,
             Err(why) => {
-                tracing::debug!(?why, "room: event dropped");
+                tracing::debug!(?why, me = %self.session.pk8(), id = %event.id.to_hex(), "room: event dropped");
                 return;
             }
         };
         if body.from != self.session.pubkey()
             && let Err(why) = self.gate.admit(&mut body, now)
         {
-            tracing::debug!(?why, "room: event dropped");
+            tracing::debug!(?why, me = %self.session.pk8(), id = %event.id.to_hex(), "room: event dropped");
             return;
         }
         self.say(Heard::Body(Box::new(body)));
