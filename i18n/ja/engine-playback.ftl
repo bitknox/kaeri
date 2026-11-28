@@ -106,11 +106,4 @@ notice-episodes-queued-existing-stopped = { $count ->
    *[other] { $count }件のエピソードを追加しましたが、途中で停止しました。{ $existing }{ $reason }
  }
 notice-keep-next-full = この先のエピソードをダウンロードしたままにするための空き容量が足りません。さらにダウンロードするには、空き容量を確保してください。
-party-needs-server = 先に{ -watch-party }のサーバーを選んでください（syncplay.server）。{ $server }は{ $operator }が運営しています。
-party-choose-server = 先に{ -watch-party }のサーバーを選んでください。{ $server }は{ $operator }が運営しています。
 notice-no-party = このバージョンの{ -app-name }では{ -watch-party-cap-pl }は利用できません。
-party-needs-room = { -watch-party }に参加する部屋を、先に選んでください。
-party-server-lost = { -watch-party }のサーバーから切断されました。再接続しています。
-party-rejoined = { -watch-party }に戻りました。
-party-left = { -watch-party }から退出しました。
-party-server-unreachable = { $server }に接続できません。サーバーを確認するか、もう一度お試しください。

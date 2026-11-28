@@ -165,6 +165,7 @@ public sealed partial class SearchPage : Page
         base.OnNavigatedTo(e);
         // Heard from each visit's start, before anything is asked, until the frame moves on.
         ctx.Hear(this, Heard, settle.Stop);
+        ctx.Send(new Command.LoadRecentSearches());
         // Back to the search this page still shows: it stays as it was, and only takes an answer
         // that came while another page was up.
         if (opened && e.NavigationMode == NavigationMode.Back && SameOpening(e.Parameter, openedWith))
@@ -284,6 +285,8 @@ public sealed partial class SearchPage : Page
         // Surprise me picks from the filters, so it goes when words are typed; the rail shows with nothing asked.
         SurpriseHost.Visibility = query.Length == 0 ? Visibility.Visible : Visibility.Collapsed;
         var browsing = query.Length == 0 && !filters.Narrows() && filters.Sort is null;
+        browsingNow = browsing;
+        ShowRecent();
         if (browsing)
         {
             rail ??= new TrendingRail(period => Change(filters with { Sort = SearchSort.Trending, Period = period is TrendPeriod.Today ? null : period }, now: true));
@@ -336,6 +339,58 @@ public sealed partial class SearchPage : Page
         Show();
     }
 
+    // Recent searches, as the other apps keep them: the engine remembers each search run with
+    // Enter, and one whose results were opened while typing.
+
+    SearchQuery[] recents = [];
+    bool browsingNow;
+    const int RecentShown = 6;
+
+    /// <summary>The recent searches while nothing is asked, each a button that runs it again; its context menu removes it.</summary>
+    void ShowRecent()
+    {
+        var shown = browsingNow && recents.Length > 0;
+        RecentGroup.Visibility = shown ? Visibility.Visible : Visibility.Collapsed;
+        if (!shown)
+            return;
+        RecentRow.Children.Clear();
+        foreach (var recent in recents.Take(RecentShown))
+        {
+            var words = recent.Headline();
+            if (words.Length == 0)
+                continue;
+            var button = new Button
+            {
+                Content = new TextBlock { Text = words, MaxLines = 1, TextTrimming = TextTrimming.CharacterEllipsis, MaxWidth = 280 },
+                MinHeight = 32,
+            };
+            Microsoft.UI.Xaml.Automation.AutomationProperties.SetName(button, words);
+            button.Click += (_, _) => RunRecent(recent);
+            var remove = new MenuFlyoutItem { Text = T.SearchRecentRemove(words) };
+            remove.Click += (_, _) => ctx.Send(new Command.ForgetRecentSearch(recent));
+            button.ContextFlyout = new MenuFlyout { Items = { remove } };
+            RecentRow.Children.Add(button);
+        }
+    }
+
+    /// <summary>A recent search again: its words in the box and its filters set, searched at once.</summary>
+    void RunRecent(SearchQuery recent)
+    {
+        query = recent.Text?.Trim() ?? "";
+        filters = Searches.FiltersOf(recent);
+        if (box is not null)
+            box.Text = query;
+        Run();
+    }
+
+    protected override void OnNavigatedFrom(NavigationEventArgs e)
+    {
+        base.OnNavigatedFrom(e);
+        // A title opened from results found by typing: that search is kept among the recent ones.
+        if (e.SourcePageType == typeof(TitlePage) && asked is { } live && query.Length > 0)
+            ctx.Send(new Command.RememberSearch(live));
+    }
+
     /// <summary>
     /// The new ask's results are on their way: known ones show now; otherwise the results that
     /// show stay 600 ms before plates take their place, or plates come at once over nothing.
@@ -364,6 +419,11 @@ public sealed partial class SearchPage : Page
         rail?.Heard(batch);
         foreach (var e in batch)
         {
+            if (e is Event.RecentSearches said)
+            {
+                recents = said.V1;
+                ShowRecent();
+            }
             if (e is Event.Facets)
             {
                 BuildGenres();

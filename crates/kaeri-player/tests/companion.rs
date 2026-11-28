@@ -91,6 +91,8 @@ impl Player {
             // S is mpv's screenshot key whenever no skip is on offer, and a test presses it.
             .arg(format!("--screenshot-dir={}", dir.display()))
             .arg(format!("--input-ipc-server={}", socket.display()))
+            // A compositor that is restarting can't hold the socket back.
+            .args(kaeri_player::protocol::vo_clipboard_args())
             .arg(format!("--script={}", script_dir().display()))
             .args(extra);
         if let Some(file) = file {
@@ -971,6 +973,16 @@ async fn the_context_menu_gains_an_entry_without_losing_the_users() {
             titles(v) == ["kaeri"] && titles(&v[0]["submenu"]).iter().any(|t| t == "Sources")
         })
         .await;
+    // Startup's observers can bring more refreshes after the one that passes the check above. A
+    // refresh reads menu-data and writes it back as two calls, so a write of ours landing between
+    // them is overwritten. The script handles one event at a time, and mpv hands it observer
+    // events after the ones already queued, so two answers later every refresh is done. A
+    // `ready` from startup, read while polling above, would pass for the first answer.
+    while player.take_event("ready").is_some() {}
+    for _ in 0..2 {
+        player.message("hello", json!({})).await;
+        player.event("ready").await;
+    }
     // A user's own menu, written over ours: the script puts its entry back beside it.
     player.set("menu-data", json!([{"title": "Mine", "cmd": "ignore"}])).await;
     player.wait_property("menu-data", |v| titles(v) == ["Mine", "kaeri"]).await;

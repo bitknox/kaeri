@@ -149,9 +149,9 @@ pub struct EngineState {
     /// The episode discussion open, and the episodes whose threads were looked up: see
     /// [`crate::discussion`].
     pub discussion: crate::discussion::Discussions,
-    /// The watch party going, if one is: see [`crate::party`].
-    #[cfg(feature = "party")]
-    pub party: Option<crate::party::Running>,
+    /// The room going, if one is: see [`crate::room`].
+    #[cfg(feature = "room")]
+    pub room: Option<crate::room::Running>,
     /// Whether reading is in this build, the edition, and the medium: see [`crate::reading`].
     pub reading: crate::reading::ReadingState,
     /// The open reader session and the page worker: see [`crate::reading::session`].
@@ -214,8 +214,8 @@ impl EngineState {
             hover: Default::default(),
             rechecks: Default::default(),
             discussion: Default::default(),
-            #[cfg(feature = "party")]
-            party: None,
+            #[cfg(feature = "room")]
+            room: None,
             reading: Default::default(),
             reader: Default::default(),
         }

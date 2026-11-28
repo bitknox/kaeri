@@ -42,7 +42,7 @@ struct CastControlsTests {
         window.alphaValue = 0
         window.orderFrontRegardless()
         defer { window.close() }
-        RunLoop.main.run(until: Date().addingTimeInterval(0.5))
+        runAwake(0.5)
         var found: [Element] = []
         func walk(_ node: Any, depth: Int) {
             // Read by name: the protocol's accessors are optional, and Swift can't pick between

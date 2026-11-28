@@ -100,7 +100,7 @@ extension ReaderModel {
 
     /// The open chapter's credit pages brought back that sit before the leaf at `index`.
     public func revealedBefore(leaf index: Int) -> [CreditPage] {
-        guard let chapter = view?.chapter.id, view?.mode != .strip, novel == nil else { return [] }
+        guard let chapter = view?.chapter.id, view?.mode.flows != true, novel == nil else { return [] }
         return chapterCredits(chapter).filter { isRevealed($0, chapter: chapter) && creditLeaf($0) == index }
     }
 
@@ -158,7 +158,7 @@ extension ReaderModel {
     /// The marks on the scrubber: where each part after the first starts, and where a missing
     /// part would be.
     public var partTicks: [PartTick] {
-        guard let parts, view?.mode != .strip, novel == nil, !leaves.isEmpty else { return [] }
+        guard let parts, view?.mode.flows != true, novel == nil, !leaves.isEmpty else { return [] }
         var ticks: [PartTick] = []
         for part in parts.parts.dropFirst() {
             let page = Int(part.firstPage)
@@ -235,7 +235,7 @@ extension ReaderModel {
         guard let first = group.first else { return }
         for credit in group { revealed.insert(CreditKey(chapter: chapter, page: credit.page)) }
         endCreditLine()
-        if view?.mode != .strip { showCredit(first.page, leaf: creditLeaf(first), how: .turn) }
+        if view?.mode.flows != true { showCredit(first.page, leaf: creditLeaf(first), how: .turn) }
     }
 
     /// Show on the end page, or in a strip's marker: the pages skipped at the chapter's end come back.
@@ -244,7 +244,7 @@ extension ReaderModel {
         let group = endSkipped(chapter)
         guard let first = group.first else { return }
         for credit in group { revealed.insert(CreditKey(chapter: chapter, page: credit.page)) }
-        if view?.mode != .strip, chapter == view?.chapter.id { showCredit(first.page, leaf: creditLeaf(first), how: .turn) }
+        if view?.mode.flows != true, chapter == view?.chapter.id { showCredit(first.page, leaf: creditLeaf(first), how: .turn) }
     }
 
     /// A strip's line brought the pages it names back in place.
@@ -331,7 +331,7 @@ extension ReaderModel {
         failures = failures.filter { $0.key.chapter != chapter }
         revealed = revealed.filter { $0.chapter != chapter || $0.page != keep.credit.page }
         if chapter == view?.chapter.id {
-            if view?.mode == .strip {
+            if view?.mode.flows == true {
                 if let here = stripHere, here.image > anchor {
                     stripHere = StripPos(image: here.image + 1, offset: here.offset)
                 }
@@ -365,7 +365,7 @@ extension ReaderModel {
     /// The notice follows the credit page on screen: Skipped as a credit page with Not a credit
     /// page while one shows, gone when none does.
     private func sayCredit() {
-        if keeping != nil, view?.mode != .strip { return }
+        if keeping != nil, view?.mode.flows != true { return }
         if shownCredit != nil {
             guard notice?.local != .keepCredit else { return }
             noticeCount += 1
@@ -382,7 +382,7 @@ extension ReaderModel {
     /// Page 1 has drawn: the line names the credit pages skipped before it, once each time the
     /// chapter opens, and holds 4 seconds.
     func startCreditLine() {
-        guard let chapter = view?.chapter.id, view?.mode != .strip, novel == nil, current == 0, onCredit == nil,
+        guard let chapter = view?.chapter.id, view?.mode.flows != true, novel == nil, current == 0, onCredit == nil,
               creditLineFor != chapter, !startSkipped.isEmpty else { return }
         creditLineFor = chapter
         creditLine = true

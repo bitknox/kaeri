@@ -566,29 +566,8 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Sonraki bölümleri tutmak için yeterli boş alan yok. Daha fazla indirmek için biraz alan açın.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Önce birlikte izleme için bir sunucu seçin, syncplay.server olarak. {server} sunucusu {operator} tarafından işletiliyor.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Önce birlikte izleme için bir sunucu seçin. {server} sunucusu {operator} tarafından işletiliyor.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Birlikte izlemeler bu Kaeri sürümünde yok.</value>
-  </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>Birlikte izleme için bir oda gerekli. Önce birini seçin.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Birlikte izleme sunucusuyla bağlantı koptu. Yeniden deneniyor.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>Birlikte izlemeye yeniden bağlandı.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Birlikte izlemeden ayrıldı.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>{server} sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.</value>
   </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Bölüm {chapter}</value>

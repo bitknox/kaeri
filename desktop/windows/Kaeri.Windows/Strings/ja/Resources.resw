@@ -542,29 +542,8 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>この先のエピソードをダウンロードしたままにするための空き容量が足りません。さらにダウンロードするには、空き容量を確保してください。</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>先に同時視聴のサーバーを選んでください（syncplay.server）。{server}は{operator}が運営しています。</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>先に同時視聴のサーバーを選んでください。{server}は{operator}が運営しています。</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>このバージョンのKaeriでは同時視聴は利用できません。</value>
-  </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>同時視聴に参加する部屋を、先に選んでください。</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>同時視聴のサーバーから切断されました。再接続しています。</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>同時視聴に戻りました。</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>同時視聴から退出しました。</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>{server}に接続できません。サーバーを確認するか、もう一度お試しください。</value>
   </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>第{chapter}話</value>

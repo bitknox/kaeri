@@ -353,8 +353,8 @@ impl SearchPage {
         self.inner.capture_keys(on);
     }
 
-    /// Browse by `query`'s filters with nothing typed, as a screenshot asks.
-    #[cfg(feature = "fixtures")]
+    /// Browse by `query`'s filters with nothing typed: a Home shelf's View all, or a
+    /// screenshot.
     pub fn browse(&self, query: &SearchQuery) {
         self.focus();
         self.inner.entry.set_text("");

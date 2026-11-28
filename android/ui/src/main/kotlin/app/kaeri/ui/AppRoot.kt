@@ -250,6 +250,14 @@ interface PlayerSlot {
     /** The player itself, filling the screen. */
     @Composable
     fun Content()
+
+    /** The room's bar above the navigation bar, while this device is in a room with the player closed. */
+    @Composable
+    fun Bar() {}
+
+    /** Over every screen: a room invite's Join screen, and the alert when a room drops this device. */
+    @Composable
+    fun Over() {}
 }
 
 /** The player's route: outside the destinations' graphs, over whichever is on screen. */
@@ -349,6 +357,8 @@ fun AppRoot(
     player: PlayerSlot? = null,
     /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
     links: Flow<AppLink> = emptyFlow(),
+    /** The keyboard's shortcuts, as they are pressed (Ctrl+1 to a section, Ctrl+F to Search). */
+    shortcuts: Flow<KeyShortcut> = emptyFlow(),
     /** The destination on screen, each time it changes: where the Updated notification comes back to. */
     onSection: (Destination) -> Unit = {},
     /** Whether first launch's pages may show, until this device has been through them. */
@@ -366,6 +376,7 @@ fun AppRoot(
             startPage = startPage,
             player = player,
             links = links,
+            shortcuts = shortcuts,
             onSection = onSection,
             firstLaunch = firstLaunch,
         )
@@ -390,6 +401,8 @@ private fun AppRootFrame(
     player: PlayerSlot? = null,
     /** The links the system opens the app on, followed as they come: shortcuts, notifications. */
     links: Flow<AppLink> = emptyFlow(),
+    /** The keyboard's shortcuts, as they are pressed (Ctrl+1 to a section, Ctrl+F to Search). */
+    shortcuts: Flow<KeyShortcut> = emptyFlow(),
     /** The destination on screen, each time it changes: where the Updated notification comes back to. */
     onSection: (Destination) -> Unit = {},
     /** Whether first launch's pages may show, until this device has been through them. */
@@ -496,6 +509,21 @@ private fun AppRootFrame(
                 navigator.open(app.kaeri.ui.reading.BOOK_SOURCES_ROUTE)
             }
         }
+        // The reader closed for Open downloads or Series: the app goes there.
+        val readerExit by app.kaeri.reader.phone.ReaderLauncher.exit.collectAsStateWithLifecycle()
+        androidx.compose.runtime.LaunchedEffect(readerExit) {
+            val exit = readerExit ?: return@LaunchedEffect
+            when (exit) {
+                app.kaeri.reader.phone.ReaderExit.Downloads ->
+                    if (eink && Destination.Downloads in einkBarDestinations(answer, einkReader)) {
+                        navigator.go(Destination.Downloads)
+                    } else if (nav.currentBackStackEntry?.destination?.route != DOWNLOADS_ROUTE) {
+                        navigator.open(DOWNLOADS_ROUTE)
+                    }
+                is app.kaeri.reader.phone.ReaderExit.Series -> navigator.showSeries(exit.work, "reader")
+            }
+            app.kaeri.reader.phone.ReaderLauncher.exited(exit)
+        }
         // The player comes up over whatever is on screen, and goes back to it as it closes.
         if (player != null) {
             androidx.compose.runtime.LaunchedEffect(player.presented) {
@@ -504,40 +532,18 @@ private fun AppRootFrame(
                 if (!player.presented && there) nav.popBackStack()
             }
         }
-        // A link or a code opened a room: its lobby comes up over whatever is on screen.
-        // With a TV driven from this phone and no party here, the phone asks where to join first.
-        val linked by store.party.linked.collectAsStateWithLifecycle()
-        var tvChoice by remember { mutableStateOf<app.kaeri.engine.model.PartyTarget?>(null) }
-        androidx.compose.runtime.LaunchedEffect(linked) {
-            val target = linked ?: return@LaunchedEffect
-            store.party.tookLink()
-            val drivenTv = store.tv.card.value?.card?.takeIf { it.party == null }
-            if (drivenTv != null && store.party.view.value == null) tvChoice = target else navigator.open(LOBBY_ROUTE)
-        }
-        tvChoice?.let { target ->
-            val tvCard by store.tv.card.collectAsStateWithLifecycle()
-            PartyTvChoiceSheet(
-                target,
-                tvName = tvCard?.card?.tvName.orEmpty(),
-                onTv = {
-                    store.tv.send(app.kaeri.engine.ffi.FfiTvCommand.PartyJoin(target.server, target.room))
-                    store.closePartyLobby()
-                    tvChoice = null
-                },
-                onPhone = {
-                    tvChoice = null
-                    navigator.open(LOBBY_ROUTE)
-                },
-                onDismiss = {
-                    store.closePartyLobby()
-                    tvChoice = null
-                },
-            )
-        }
         val following by rememberUpdatedState(routed)
         androidx.compose.runtime.LaunchedEffect(links, navigator) {
             // A new link takes over from one still waiting to play.
             links.collectLatest { link -> navigator.follow(link, store, following) { searchOpening = true } }
+        }
+        // A shortcut acts on the pages, never under the player, which takes its own keys.
+        val shortcutAnswer by rememberUpdatedState(answer)
+        val shortcutsOff by rememberUpdatedState(onPlayer)
+        androidx.compose.runtime.LaunchedEffect(shortcuts, navigator) {
+            shortcuts.collect { key ->
+                if (!shortcutsOff) navigator.follow(key, shortcutAnswer, store, following) { searchOpening = true }
+            }
         }
         // First launch's pages stand over the app, which TalkBack then does not reach.
         var covered by remember { mutableStateOf(false) }
@@ -562,8 +568,8 @@ private fun AppRootFrame(
                     androidx.compose.foundation.layout.Column {
                         if (!onPlayer) TvNowPlayingBar()
                         if (!onPlayer) CastMiniSlot()
-                        // Watch together's bar, above the navigation bar while a party is on.
-                        if (!onPlayer) PartyBar(hidden = entry?.destination?.route == LOBBY_ROUTE)
+                        // The room's bar, in the same place, while a room is on and its player closed.
+                        if (!onPlayer) player?.Bar()
                         if (!wide && (!onPage || settingsTab != null) && !onPlayer && !sheets.barHidden) {
                             // On an e-ink panel the bar is words on paper, as the e-ink boards draw it.
                             if (eink) EinkTabBar(settingsTab ?: current ?: start, answer, einkReader, navigator::go) else PhoneBar(current ?: start, answer, navigator::go)
@@ -577,6 +583,7 @@ private fun AppRootFrame(
                         CompositionLocalProvider(
                             LocalSharedTransitions provides this,
                             LocalSharedTransitionsView provides androidx.compose.ui.platform.LocalView.current,
+                            LocalAnimationsRemoved provides removed,
                         ) {
                             NavHost(
                                 nav,
@@ -683,7 +690,7 @@ private fun AppRootFrame(
                                         // Watch together sits in Home's back stack, under its bar.
                                         if (destination == Destination.Home) {
                                             composable(TOGETHER_ROUTE) {
-                                                CompositionLocalProvider(LocalPageAnimation provides this) { TogetherScreen() }
+                                                CompositionLocalProvider(LocalPageAnimation provides this) { RoomPlaceScreen() }
                                             }
                                         }
                                     }
@@ -692,9 +699,6 @@ private fun AppRootFrame(
                                 providerPages(routed)
                                 storePages()
                                 downloadPages(routed)
-                                composable(LOBBY_ROUTE) {
-                                    CompositionLocalProvider(LocalPageAnimation provides this) { PartyLobbyScreen() }
-                                }
                             }
                         }
                     }
@@ -705,6 +709,8 @@ private fun AppRootFrame(
         app.kaeri.ui.reading.ReadingAppHost(start, firstLaunch, covered)
         MatchPickerHost()
         SurpriseHost()
+        // A room invite's Join screen and a room's alerts, over whatever is on screen.
+        player?.Over()
         EngineDown()
     }
 }

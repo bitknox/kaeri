@@ -8698,12 +8698,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "keys-action-play-party": {
-    "source": "11e321ee3797",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "keys-action-play-pause": {
     "source": "01c616b90d78",
     "state": "draft",
@@ -9082,12 +9076,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "keys-hint-leave-party": {
-    "source": "19bee21a859f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
   "keys-hint-list": {
     "source": "3d249bb48003",
     "state": "draft",
@@ -9219,12 +9207,6 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
-  },
-  "keys-hint-ready": {
-    "source": "9c13a2548d25",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "keys-hint-refresh": {
     "source": "7b7163270e57",
@@ -15214,12 +15196,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-choose-server": {
-    "source": "fb720f0cb925",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-choose-source": {
     "source": "44762908fde2",
     "state": "draft",
@@ -15442,12 +15418,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-joined": {
-    "source": "d20e1c043fde",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-joining": {
     "source": "6697577c5a3f",
     "state": "draft",
@@ -15510,12 +15480,6 @@
   },
   "party-leaving": {
     "source": "757c3a7cd6e6",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "party-left": {
-    "source": "ea3ce6454bda",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
@@ -15688,18 +15652,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-needs-room": {
-    "source": "04c05ee12036",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "party-needs-server": {
-    "source": "743b76505cad",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-next-joined-at": {
     "source": "c35190d6b42e",
     "state": "draft",
@@ -15726,12 +15678,6 @@
   },
   "party-no-source-lists": {
     "source": "4b4ce9084006",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "party-no-source-still-in": {
-    "source": "39d1974f4824",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
@@ -15952,12 +15898,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "party-rejoined": {
-    "source": "b9cddf56b027",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-room": {
     "source": "ca7d152bef51",
     "state": "draft",
@@ -16072,12 +16012,6 @@
     "by": "opus",
     "at": "2026-11-07"
   },
-  "party-server-lost": {
-    "source": "7be517418a8f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "party-server-public": {
     "source": "21ab64ccf178",
     "state": "draft",
@@ -16095,12 +16029,6 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
-  },
-  "party-server-unreachable": {
-    "source": "625c230a72d4",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "party-share": {
     "source": "313b0c2e009a",
@@ -16131,17 +16059,6 @@
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
-  },
-  "party-sources-found-line": {
-    "source": "07cb8e3aa15e",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-13",
-    "flags": [
-      "Machine draft (2026-11-13): the one form now shows the count, as it also stands for 1, 21, 31 and on here. A person reviews this translation before it is marked reviewed.",
-      "back-translation: 'запускает' means starts, where the English says plays with."
-    ],
-    "back": "one: { $count } { -source } contains the episode. The chosen { -source } starts the { -watch-party }. | few: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }. | many: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }. | other: { -source-cap-pl } with the episode: { $count }. The chosen { -source } starts the { -watch-party }."
   },
   "party-sources-label": {
     "source": "444a0b13c12b",
@@ -25777,24 +25694,6 @@
     "by": "haiku",
     "at": "2026-10-31"
   },
-  "settings-label-syncplay": {
-    "source": "4e6dadff177e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "settings-label-syncplay-room": {
-    "source": "fefe8db56b3b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "settings-label-syncplay-server": {
-    "source": "cd554effb8ae",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
   "settings-label-theme": {
     "source": "aab875d8cfcf",
     "state": "draft",
@@ -26169,24 +26068,6 @@
   },
   "settings-note-subtitles": {
     "source": "705d909a302f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "settings-note-syncplay": {
-    "source": "36c579ef9324",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "settings-note-syncplay-room": {
-    "source": "b47b63ed4687",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "settings-note-syncplay-server": {
-    "source": "7aca46d27d46",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
@@ -27945,12 +27826,6 @@
   },
   "settings-value-player-ui-mpv": {
     "source": "616724dccee2",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31"
-  },
-  "settings-value-room-unset": {
-    "source": "47f8e4245a22",
     "state": "draft",
     "by": "haiku",
     "at": "2026-10-31"
@@ -35760,12 +35635,6 @@
   },
   "tui-together-join-prompt": {
     "source": "cec2ffaab49c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
-  "tui-together-not-a-link": {
-    "source": "e1da7a068dba",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"

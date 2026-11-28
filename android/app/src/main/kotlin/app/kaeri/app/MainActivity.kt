@@ -60,6 +60,9 @@ import app.kaeri.store.traced
 import app.kaeri.ui.AppActions
 import app.kaeri.ui.AppLink
 import app.kaeri.ui.AppRoot
+import app.kaeri.ui.KeyShortcut
+import app.kaeri.ui.keyShortcut
+import app.kaeri.ui.keyShortcutGroup
 import app.kaeri.ui.NotificationActions
 import app.kaeri.ui.Destination
 import app.kaeri.ui.reading.LocalEinkLayout
@@ -181,6 +184,10 @@ class MainActivity : ComponentActivity() {
     private val links = Channel<AppLink>(Channel.BUFFERED)
     private val linkFlow = links.receiveAsFlow()
 
+    /** The keyboard's shortcuts, as they are pressed, for the frame to act on. */
+    private val shortcuts = Channel<KeyShortcut>(Channel.BUFFERED)
+    private val shortcutFlow = shortcuts.receiveAsFlow()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Out of the launch theme, whose window draws Android 11's splash screen. On a panel the
         // last run found to be e-ink, the window is paper from the start, so a cold start never
@@ -297,6 +304,7 @@ class MainActivity : ComponentActivity() {
                     startPage = page,
                     player = player,
                     links = linkFlow,
+                    shortcuts = shortcutFlow,
                     onSection = { section -> app.appUpdates?.section = section },
                     firstLaunch = firstLaunch,
                 ) }
@@ -309,7 +317,7 @@ class MainActivity : ComponentActivity() {
         app.googleDrive.showIn(this, googleSheet)
         // A restored activity, or one opened again from Recents, has its navigation already.
         val fresh = savedInstanceState == null && intent.flags and Intent.FLAG_ACTIVITY_LAUNCHED_FROM_HISTORY == 0
-        if (!signIn.handle(intent) && !(fresh && follow(intent)) && !invite(intent) && !party(intent) && !opened(intent)) remote(intent)
+        if (!signIn.handle(intent) && !(fresh && follow(intent)) && !invite(intent) && !roomInvite(intent) && !opened(intent)) remote(intent)
         keepDownloadsRunning()
         startUpdateActivities()
     }
@@ -419,11 +427,11 @@ class MainActivity : ComponentActivity() {
         return true
     }
 
-    /** A watch party invite, the https one or on kaeri://party, opens that room's lobby. */
-    private fun party(intent: Intent?): Boolean {
+    /** A room invite, the https one or on kaeri://room, opens that room's Join screen. */
+    private fun roomInvite(intent: Intent?): Boolean {
         val link = intent?.data?.toString() ?: return false
-        if (!app.store.followPartyLink(link)) return false
-        // Taken off the intent, so a recreated activity does not open the lobby again.
+        if (!app.store.followRoomLink(link)) return false
+        // Taken off the intent, so a recreated activity does not open the Join screen again.
         intent.data = null
         return true
     }
@@ -490,6 +498,23 @@ class MainActivity : ComponentActivity() {
         if (!drivingTv()) return super.onKeyDown(keyCode, event)
         app.store.tv.send(FfiTvCommand.Volume(step))
         return true
+    }
+
+    /**
+     * Ctrl with a number, F, comma or [ goes to a section, Search, Settings or back. The system
+     * asks here once per press, for a Ctrl key no screen took.
+     */
+    override fun onKeyShortcut(keyCode: Int, event: KeyEvent): Boolean {
+        val shortcut = keyShortcut(keyCode, event.isCtrlPressed, event.isAltPressed, event.isShiftPressed, event.isMetaPressed)
+            ?: return super.onKeyShortcut(keyCode, event)
+        shortcuts.trySend(shortcut)
+        return true
+    }
+
+    /** The shortcuts the system's Meta + / sheet lists. */
+    override fun onProvideKeyboardShortcuts(data: MutableList<android.view.KeyboardShortcutGroup>, menu: android.view.Menu?, deviceId: Int) {
+        super.onProvideKeyboardShortcuts(data, menu, deviceId)
+        data.add(keyShortcutGroup(this, getString(R.string.app_name), app.store.medium.answer))
     }
 
     /** The key-up of a volume press [onKeyDown] took, so the system does not also act on it. */
@@ -628,7 +653,7 @@ class MainActivity : ComponentActivity() {
         super.onNewIntent(intent)
         // The redirect a sign-in comes back with is the engine's, and is not kept as the
         // activity's intent.
-        if (signIn.handle(intent) || quietRule(intent) || follow(intent) || invite(intent) || party(intent) || opened(intent) || remote(intent)) return
+        if (signIn.handle(intent) || quietRule(intent) || follow(intent) || invite(intent) || roomInvite(intent) || opened(intent) || remote(intent)) return
         setIntent(intent)
     }
 

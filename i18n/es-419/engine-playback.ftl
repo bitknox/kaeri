@@ -122,11 +122,4 @@ notice-episodes-queued-existing-stopped = { $count ->
    *[other] Se añadieron { $count } episodios a la cola y luego se detuvo. { $existing } { $reason }
  }
 notice-keep-next-full = No hay suficiente espacio libre para mantener descargados los siguientes episodios. Libera espacio para descargar más.
-party-needs-server = Primero elige un servidor para la { -watch-party }, en el ajuste syncplay.server. { $server } es operado por { $operator }.
-party-choose-server = Primero elige un servidor para la { -watch-party }. { $server } es operado por { $operator }.
 notice-no-party = Las { -watch-party-pl } no están disponibles en esta versión de { -app-name }.
-party-needs-room = La { -watch-party } necesita una sala para reunirse. Elige una primero.
-party-server-lost = Se perdió el servidor de la { -watch-party }. Intentando de nuevo.
-party-rejoined = De vuelta en la { -watch-party }.
-party-left = Saliste de la { -watch-party }.
-party-server-unreachable = No se pudo conectar con { $server }. Revisa el servidor o inténtalo de nuevo.

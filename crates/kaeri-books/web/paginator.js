@@ -578,13 +578,14 @@
 
   var KEYS = { ArrowLeft: 1, ArrowRight: 1, ArrowUp: 1, ArrowDown: 1, PageUp: 1, PageDown: 1, ' ': 1, Home: 1, End: 1 };
 
-  // A turning key, turned here: what the host would have asked for.
-  function key(name) {
+  // A turning key, turned here: what the host would have asked for. Shift-Space goes back.
+  function key(name, shift) {
     var right = input.forward !== 'left';
     switch (name) {
       case 'ArrowRight': return right ? next('key') : prev('key');
       case 'ArrowLeft': return right ? prev('key') : next('key');
-      case 'ArrowDown': case 'PageDown': case ' ': return next('key');
+      case ' ': return shift ? prev('key') : next('key');
+      case 'ArrowDown': case 'PageDown': return next('key');
       case 'ArrowUp': case 'PageUp': return prev('key');
       case 'Home': return goTo(0, 'jump');
       case 'End': return goTo(state.pages - 1, 'jump');
@@ -594,9 +595,10 @@
 
   document.addEventListener('keydown', function (e) {
     if (!KEYS[e.key] || e.metaKey || e.ctrlKey || e.altKey) return;
+    // A key turned here is turned once: the browser's own scroll would add a second step.
+    if (state.ready && input.keys && !input.hold) { e.preventDefault(); key(e.key, e.shiftKey); return; }
     if (!state.scrolled) e.preventDefault();
-    if (state.ready && input.keys && !input.hold) { key(e.key); return; }
-    post({ type: 'key', key: e.key });
+    post({ type: 'key', key: e.key, shift: e.shiftKey });
   }, true);
 
   function setInput(how) {

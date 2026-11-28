@@ -96,7 +96,7 @@ public sealed partial class PlayerView : UserControl
         click = DispatcherQueue.GetForCurrentThread().CreateTimer();
         click.Interval = TimeSpan.FromMilliseconds(GetDoubleClickTime());
         click.IsRepeating = false;
-        click.Tick += (_, _) => TogglePause();
+        click.Tick += (_, _) => PlayOrPause();
         flash = DispatcherQueue.GetForCurrentThread().CreateTimer();
         flash.Interval = TimeSpan.FromMilliseconds(1200);
         flash.IsRepeating = false;
@@ -114,6 +114,8 @@ public sealed partial class PlayerView : UserControl
         Unloaded += (_, _) =>
         {
             startTick?.Stop();
+            roomTick?.Stop();
+            FinishAnimation();
             EndStart();
         };
         tick = DispatcherQueue.GetForCurrentThread().CreateTimer();
@@ -184,7 +186,7 @@ public sealed partial class PlayerView : UserControl
         if (e.KeyStatus.WasKeyDown)
             return;
         ShowControls();
-        TogglePause();
+        PlayOrPause();
     }
 
     /// <summary>True while the player is on screen: from Open, and no longer once it starts fading away.</summary>
@@ -258,6 +260,8 @@ public sealed partial class PlayerView : UserControl
         ShowControls();
         LiftSubtitles(animated: false);
         tick.Start();
+        // In a room, the player is the room: its column comes with it.
+        ctx?.Window.ShowRoomNow();
         ShowStats();
         ChatReflect();
         // Just made visible, the view has no layout yet and WinUI refuses it the focus, which
@@ -291,6 +295,8 @@ public sealed partial class PlayerView : UserControl
             return;
         closedByHost = false;
         verdictWait?.Stop();
+        // Kept the room: its counts wait for the player to open again (ShowRoom starts them).
+        roomTick?.Stop();
         // The next session's mpv starts at its normal speed.
         speed = 1;
         scrubbing = null;
@@ -457,11 +463,11 @@ public sealed partial class PlayerView : UserControl
                 case Event.PlayerSkipMark or Event.PlayerSkipPrompt or Event.PlayerSkipNotice:
                     HeardSkip(e);
                     break;
-                case Event.PartyJoined or Event.PartyLeft:
-                    ShowPartyButton();
+                case Event.RoomJoined or Event.RoomLeft:
+                    ShowRoomButton();
                     ChatHeard(e);
                     break;
-                case Event.PartyChat or Event.PartyChatState or Event.PartyReaction or Event.PartyChatRefused:
+                case Event.RoomChat or Event.RoomChatState or Event.RoomReaction or Event.RoomChatRefused:
                     ChatHeard(e);
                     break;
                 case Event.TitleDub td when td.Id == playingId:
@@ -638,7 +644,7 @@ public sealed partial class PlayerView : UserControl
         scrubbing = seconds;
         ShowClocks();
         ShowPlayed();
-        if (InParty || player is not { } p || duration <= 0)
+        if (RoomKnown || player is not { } p || duration <= 0)
             return;
         if (scrubSent is { } sent && Math.Abs(sent - seconds) < 0.5)
             return;
@@ -1637,9 +1643,9 @@ public sealed partial class PlayerView : UserControl
             item.Click += (_, _) => act();
             menu.Items.Add(item);
         }
-        Add(paused ? T.ActionPlay : T.ActionPause, TogglePause, "Space");
+        Add(paused ? T.ActionPlay : T.ActionPause, PlayOrPause, "Space");
         if (skipShown && SkipCard.Content is string skip)
-            Add(skip, () => SendControl(new PlayerCommand.TakeSkip()), "S");
+            Add(skip, TakeSkip, "S");
         menu.Items.Add(new MenuFlyoutSeparator());
         Add(T.PlayerSubtitlesAndAudio, () => OpenMenu(TracksButton), "T");
         Add(T.PlayerEpisodes, () => OpenPanel(PanelTab.Episodes, keyboard: false), "E", EpisodesButton.IsEnabled);
@@ -1667,39 +1673,28 @@ public sealed partial class PlayerView : UserControl
         if (TvButton.IsHitTestVisible)
             Add(T.TvPlayOn, () => OnPlayOnTv(TvButton, new RoutedEventArgs()));
         menu.Items.Add(new MenuFlyoutSeparator());
-        Add(T.PartyTitle, ShowParty);
+        Add(RoomWords.Title, ShowRoomColumn);
         if (ChatLive)
-            Add(T.PartyChatField, () => OpenChatField(), "C");
+            Add(RoomWords.SaySomething, () => OpenChatField(), "C");
         return menu;
     }
 
-    // Watch party.
+    // Watch together.
 
-    PartyPanel? partyPanel;
 
-    void OnParty(object sender, RoutedEventArgs e) => ShowParty();
-
-    /// <summary>The party's panel when in one; the form that starts one when not.</summary>
-    internal void ShowParty()
+    void OnRoomButton(object sender, RoutedEventArgs e)
     {
-        if (ctx is null)
-            return;
-        if (ctx.Known.Party is null)
-        {
-            ctx.Window.ShowParty(new PartyDialog.For.Playing());
-            return;
-        }
-        if (partyPanel is null)
-        {
-            partyPanel = new PartyPanel(ctx);
-            partyPanel.Flyout.Opened += OnMenuOpened;
-            partyPanel.Flyout.Closed += OnMenuClosed;
-            partyPanel.Flyout.Opened += (_, _) => ChatPopover(true);
-            partyPanel.Flyout.Closed += (_, _) => ChatPopover(false);
-        }
-        ShowControls();
-        partyPanel.Flyout.ShowAt(PartyButton);
+        if (InRoom)
+            ToggleRoomColumn();
+        else if (ctx?.Known.Room is not null)
+            ctx.Window.ShowRoomNow(morph: true);
+        else if (ctx is not null && playingId != 0 && playingEpisode is { Length: > 0 } episode)
+            // Watch together from the player: the player becomes the room.
+            ctx.Window.StartRoom(playingId, episode);
     }
+
+    /// <summary>The room: its column when in one, Watch together from this episode when not.</summary>
+    internal void ShowRoomColumn() => OnRoomButton(RoomButton, new RoutedEventArgs());
 
     /// <summary>Play on TV, in the big player only, once the engine gives a sender.</summary>
     void ShowTvButton()
@@ -1756,14 +1751,6 @@ public sealed partial class PlayerView : UserControl
         ToolTipService.SetToolTip(StatsClose, T.TooltipWithKey(T.ActionClose, "I"));
         ToolTipService.SetToolTip(UndoButton, T.TooltipWithKey(T.ActionUndo, "U"));
         MiniTip.Subtitle = T.PlayerMiniTip("P");
-    }
-
-    void ShowPartyButton()
-    {
-        var inParty = ctx?.Known.Party is not null;
-        PartyDot.Opacity = inParty ? 1 : 0;
-        ToolTipService.SetToolTip(PartyButton, T.PartyTitle);
-        AutomationProperties.SetName(PartyButton, T.PartyTitle);
     }
 
     void OnMenuClosed(object? sender, object e)
@@ -1829,7 +1816,8 @@ public sealed partial class PlayerView : UserControl
         for (var at = source; at is not null; at = VisualTreeHelper.GetParent(at))
         {
             if (at == StatsLayer || at == Starting || at == StillLayer || at == Corner || at == ChatColumn || at == ChatFieldSlot
-                || discussion is not null && at == discussion)
+                || discussion is not null && at == discussion
+                || InRoomUi(at))
                 return true;
             if (at == VideoPanel || at == this)
                 return false;
@@ -1839,7 +1827,7 @@ public sealed partial class PlayerView : UserControl
 
     // The controls.
 
-    void OnClose(object sender, RoutedEventArgs e) => Close();
+    void OnClose(object sender, RoutedEventArgs e) => CloseOrAsk();
 
     internal void Close()
     {
@@ -1907,13 +1895,35 @@ public sealed partial class PlayerView : UserControl
         verdictWait.Start();
     }
 
-    void OnPlayPause(object sender, RoutedEventArgs e) => TogglePause();
+    void OnPlayPause(object sender, RoutedEventArgs e) => PlayOrPause();
+
+    /// <summary>Play or pause from any press: during a wait or before play the room takes it.</summary>
+    void PlayOrPause()
+    {
+        if (!RoomTakesPlay())
+            TogglePause();
+    }
+
+    /// <summary>Skip opening from any press: in a room it skips for everyone.</summary>
+    void TakeSkip()
+    {
+        if (!RoomTakesSkip())
+            SendControl(new PlayerCommand.TakeSkip());
+    }
     void OnBack10(object sender, RoutedEventArgs e) => SeekBy(-10, flash: false);
     void OnForward10(object sender, RoutedEventArgs e) => SeekBy(10, flash: false);
     void OnFullscreen(object sender, RoutedEventArgs e) => FullscreenRequested?.Invoke(null);
-    void OnSkip(object sender, RoutedEventArgs e) => SendControl(new PlayerCommand.TakeSkip());
-    void OnPlayNext(object sender, RoutedEventArgs e) => PlayNext(auto: false);
-    void OnCancelNext(object sender, RoutedEventArgs e) => CancelNext();
+    void OnSkip(object sender, RoutedEventArgs e) => TakeSkip();
+    void OnPlayNext(object sender, RoutedEventArgs e)
+    {
+        if (!RoomTakesNext(cancel: false))
+            PlayNext(auto: false);
+    }
+    void OnCancelNext(object sender, RoutedEventArgs e)
+    {
+        if (!RoomTakesNext(cancel: true))
+            CancelNext();
+    }
 
     /// <summary>
     /// Up next as the engine hands it over: the card shows from where the ending starts (or near
@@ -1950,10 +1960,11 @@ public sealed partial class PlayerView : UserControl
     /// <summary>The thumbnail Up next shows, so the same one said again does not blank it.</summary>
     string? upNextStill;
 
-    bool InParty => ctx?.Known.Party is not null;
+    /// <summary>In a room, as the engine says: the room picks episodes and moves on together.</summary>
+    bool RoomKnown => ctx?.Known.Room is not null;
 
-    /// <summary>In a party whose room moves on at the end: everyone goes on together, so nobody's player plays the next episode itself.</summary>
-    bool RoomLeads => InParty && ctx?.Known.Party?.MovesOn == true;
+    /// <summary>In a room, everyone goes on together: Up next is the room's, and nobody's player plays the next episode itself.</summary>
+    bool RoomLeads => RoomKnown;
 
     /// <summary>A seek reached mpv, the viewer's or the engine's: a countdown it lands in or past starts again there.</summary>
     void Sought(double target)
@@ -1966,31 +1977,25 @@ public sealed partial class PlayerView : UserControl
     void ShowUpNext()
     {
         var card = upNext;
-        var leads = RoomLeads;
-        UpNextButtons.Visibility = leads ? Visibility.Collapsed : Visibility.Visible;
+        if (RoomLeads)
+        {
+            // The room's Up next, as the room counts it for everyone (ShowRoomUpNext).
+            UpNextButtons.Visibility = Visibility.Visible;
+            UpNextLine.Visibility = Visibility.Visible;
+            upNextShown = roomUpNextShown;
+            UpdateCorner();
+            return;
+        }
+        UpNextButtons.Visibility = Visibility.Visible;
         var shown = card is { Cancelled: false } && card.ShowsAt(duration) is { } at && Shown >= at;
         upNextShown = shown;
         UpdateCorner();
         if (!shown || card is null)
             return;
-        if (leads)
-        {
-            // The room moves on when the file ends, for everyone at once: the card says so and
-            // counts the last seconds of the file down.
-            var span = (double)Math.Max(10, card.Countdown);
-            var toEnd = duration - Shown;
-            var counting = duration > 0 && toEnd <= span;
-            UpNextBar.Visibility = counting ? Visibility.Visible : Visibility.Collapsed;
-            UpNextLine.Visibility = Visibility.Visible;
-            UpNextLine.Text = counting ? T.PartyNextLine((long)Math.Ceiling(Math.Max(0, toEnd))) : T.PartyNextOff;
-            if (counting)
-                UpNextFill.ScaleX = Math.Clamp(toEnd / span, 0, 1);
-            return;
-        }
         // With a screen reader running the card waits for a choice instead of counting down, and
         // so does it in a party the room doesn't move on: Play now picks the episode for the room.
         // On the time shown, so a seek on its way holds the line full rather than hiding it.
-        var left = DeviceWatch.ScreenReaderRunning() || InParty ? null : card.Remaining(Shown, duration);
+        var left = DeviceWatch.ScreenReaderRunning() || RoomKnown ? null : card.Remaining(Shown, duration);
         UpNextBar.Visibility = left is null ? Visibility.Collapsed : Visibility.Visible;
         UpNextLine.Visibility = UpNextBar.Visibility;
         if (left is { } l)
@@ -2010,13 +2015,6 @@ public sealed partial class PlayerView : UserControl
             return;
         if (upNext is not null)
             upNext.Played = true;
-        if (InParty)
-        {
-            // The room's pick, for everyone: the lobby has it.
-            if (upNext is { } card)
-                PlayInRoom(card.Number);
-            return;
-        }
         // The next play is a roll-on: its starting screen waits 600 ms.
         AskedRollOn();
         if (auto && upNext is not { Sought: true })
@@ -2033,26 +2031,22 @@ public sealed partial class PlayerView : UserControl
     }
 
     /// <summary>
-    /// Another episode, asked for in the player while in a party: the room's pick, as Play is
-    /// everywhere in a party, never a play of this device's own. The player gives way to the
-    /// lobby, where the room starts it once everyone is ready. The room's own episode is already
-    /// playing here.
+    /// Another episode, asked for in the player while in a room: the room changes episode for
+    /// everyone, never a play of this device's own. The room's own episode is already playing here.
     /// </summary>
     void PlayInRoom(string episode)
     {
         if (ctx is not { } c || playingId == 0 || episode == playingEpisode)
             return;
         still.Input();
-        c.Send(new Command.Play(playingId, episode, false));
-        Close();
-        c.Window.Go("together");
+        c.Send(new Command.Room(new RoomCommand.ChangeEpisode(playingId, episode)));
     }
 
     /// <summary>N and Shift+N, the media keys' Next and Previous: the next or previous episode in the player's list.</summary>
     void Step(int by)
     {
         ForgetRollOn();
-        if (!InParty)
+        if (!RoomKnown)
         {
             SendControl(new PlayerCommand.Step(by));
             return;
@@ -2069,7 +2063,7 @@ public sealed partial class PlayerView : UserControl
     void ChooseEpisode(string number)
     {
         ForgetRollOn();
-        if (InParty)
+        if (RoomKnown)
             PlayInRoom(number);
         else
             SendControl(new PlayerCommand.Choose(new PlayerChoice.Episode(number)));
@@ -2081,7 +2075,7 @@ public sealed partial class PlayerView : UserControl
         if (command is PlayerCommand.Step step)
             Step((int)step.V1);
         else if (command is PlayerCommand.TogglePause && Showing)
-            TogglePause();
+            PlayOrPause();
         else
             SendControl(command);
     }
@@ -2111,6 +2105,7 @@ public sealed partial class PlayerView : UserControl
         var name = on ? T.PlayerExitFullscreen : T.PlayerFullscreen;
         AutomationProperties.SetName(FullscreenButton, name);
         ToolTipService.SetToolTip(FullscreenButton, T.TooltipWithKey(name, "F"));
+        RoomFullscreen(on);
     }
 
     /// <summary>A time said in words for a screen reader: "12 minutes 4 seconds".</summary>
@@ -2518,13 +2513,17 @@ public sealed partial class PlayerView : UserControl
         // The arrows and Enter move and pick in the panel while the keyboard is in it.
         if (PanelTakes(e))
             return;
+        // So do they, with Space, on the room's controls: Enter presses Leave or Carry on, and the
+        // arrows move in the Choosing list, not the volume.
+        if (RoomTakesKey(e))
+            return;
         e.Handled = true;
         if (show)
             ShowControls();
         act();
     }
 
-    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, TogglePause);
+    void OnKeyPause(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, PlayOrPause);
     void OnKeyBack10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(-10, flash: false));
     void OnKeyForward10(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => SeekBy(10, flash: false));
     void OnKeyBack5(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => { if (!MarkingNudge(-1)) SeekBy(-5); }, show: false);
@@ -2623,12 +2622,12 @@ public sealed partial class PlayerView : UserControl
     {
         if (skipShown)
             ShowFlash(skipDone);
-        Send(new PlayerCommand.TakeSkip());
+        TakeSkip();
     }, show: false);
     void OnKeyNext(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(1));
     void OnKeyPrevious(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => Step(-1));
     void OnKeyMini(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () => ToggleMini());
-    void OnKeyClose(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, Close, show: false);
+    void OnKeyClose(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, CloseOrAsk, show: false);
 
     void OnKeyEnter(KeyboardAccelerator s, KeyboardAcceleratorInvokedEventArgs e) => Key(e, () =>
     {
@@ -2640,10 +2639,14 @@ public sealed partial class PlayerView : UserControl
             StallAnswer(new PlayerCommand.StallSwitch());
         else if (cornerCard == UndoCard)
             Undo();
-        else if (cornerCard == UpNextCard && !RoomLeads)
-            PlayNext(auto: false);
+        else if (cornerCard == UpNextCard)
+        {
+            // Return is Play now, the room's in a room as the card's own button is.
+            if (!RoomTakesNext(cancel: false))
+                PlayNext(auto: false);
+        }
         else if (cornerCard == SkipSlot)
-            SendControl(new PlayerCommand.TakeSkip());
+            TakeSkip();
     });
 
     /// <summary>Esc: cancel Up next or the stall prompt, then leave fullscreen, then close.</summary>
@@ -2661,14 +2664,19 @@ public sealed partial class PlayerView : UserControl
             ToggleMini();
         else if (skipPrompt is not null && cornerCard == promptCard)
             DismissPrompt();
-        else if (cornerCard == UpNextCard && !RoomLeads)
-            CancelNext();
+        else if (cornerCard == UpNextCard)
+        {
+            // Esc is Cancel, the room's in a room as the card's own button is.
+            if (!RoomTakesNext(cancel: true))
+                CancelNext();
+        }
         else if (cornerCard == StallCard)
             StallAnswer(new PlayerCommand.StallWait());
         else if (FullscreenOn?.Invoke() == true)
             FullscreenRequested?.Invoke(false);
         else
-            Close();
+            // In a room this asks Leave, Keep the room or Cancel, as the close button does.
+            CloseOrAsk();
     }, show: false);
 
     // Still watching?
@@ -2676,6 +2684,12 @@ public sealed partial class PlayerView : UserControl
     /// <summary>The new episode has its first picture: pause and ask when nobody has been here for a run of them.</summary>
     void FirstPicture()
     {
+        // Play here from a cast: on from where the TV was, rather than the last place history kept.
+        if (ctx?.Known.StartAt is { } at && at.Is(playingId, playingEpisode))
+        {
+            ctx.Known.StartAt = null;
+            SendControl(new PlayerCommand.SeekTo(at.Position));
+        }
         if (still.FirstPicture())
             AskStillWatching();
 #if KAERI_TESTING

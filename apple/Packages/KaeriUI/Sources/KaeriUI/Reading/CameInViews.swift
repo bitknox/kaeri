@@ -324,7 +324,10 @@ struct StoreCameIn: View {
             case .installed(let done):
                 CameInNote(kind: .found, title: L.storeInstalled(count: Int(done.installed)))
             case .empty(.otherMedium(let report)):
-                CameInNote(kind: .info, title: L.storeOtherMedium(store: report.name), line: L.storeOtherMediumLine)
+                // Every plugin is for the medium that is off here: reading's words when that is reading.
+                CameInNote(kind: .info,
+                           title: report.otherIsReading ? L.storeOtherMediumReading(store: report.name) : L.storeOtherMedium(store: report.name),
+                           line: report.otherIsReading ? L.storeOtherMediumReadingLine : L.storeOtherMediumLine)
             case .empty(.emptyStore(let report)):
                 CameInNote(kind: .info, title: L.storeEmpty(store: report.name),
                            line: L.storeEmptyLine(owner: report.owner ?? report.name))
@@ -394,10 +397,10 @@ struct StoreCameIn: View {
                 Button(L.storeInstallAllReading) { store.cameIn.installAll(store: report.store) }
                     .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: font))
                     .keyboardShortcut(.defaultAction)
-            case .empty(.otherMedium):
+            case .empty(.otherMedium(let report)):
                 Button(L.actionDone, action: done)
                     .buttonStyle(SecondaryCapsuleStyle(height: height, raisedSurface: true, fontSize: font))
-                Button(L.storeTurnOnWatching) { store.medium.choose(.both) }
+                Button(report.otherIsReading ? L.storeTurnOnReading : L.storeTurnOnWatching) { store.medium.choose(.both) }
                     .buttonStyle(PrimaryCapsuleStyle(height: height, fontSize: font))
                     .keyboardShortcut(.defaultAction)
             default:

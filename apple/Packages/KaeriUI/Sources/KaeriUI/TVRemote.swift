@@ -109,11 +109,13 @@ struct TVAccessory: ViewModifier {
     @Environment(AppStore.self) private var store
     @Environment(\.playerUp) private var playerUp
     @Environment(Navigator.self) private var navigator
+    @Environment(\.roomBar) private var roomBarView
 
-    /// The party's bar, away from Watch together itself.
-    private var partyBar: Bool {
-        store.party.inParty && !playerUp && !store.party.lobbyShown && !store.party.placeShown
-            && navigator.section != .together
+    /// The room you are in, folded into the bar while its player is closed: away from Watch
+    /// together, whose room card shows it already (its section, or the page pushed on Home).
+    private var roomBar: Bool {
+        roomBarView != nil && store.room.inRoom && !playerUp && navigator.section != .together
+            && !store.room.placeShown
     }
 
     @State private var anchor = CastMiniAnchor()
@@ -121,21 +123,20 @@ struct TVAccessory: ViewModifier {
 
     func body(content: Content) -> some View {
         if #available(iOS 26.1, *) {
-            // The TV's bar wins: what plays on the TV is the louder thing. Otherwise the party
-            // you are in, while its lobby and the player are away. A cast's mini grows into its
-            // controller.
+            // The TV's bar wins: what plays on the TV is the louder thing. Otherwise the room
+            // you are in, while its player is closed. A cast's mini grows into its controller.
             let mini = store.tv.cast.miniShown && !playerUp
             let tv = !mini && store.tv.connected != nil && store.tv.now != nil
             content
-                .tabViewBottomAccessory(isEnabled: mini || tv || partyBar) {
+                .tabViewBottomAccessory(isEnabled: mini || tv || roomBar) {
                     if mini {
                         CastMini()
                             .background(CastMiniProbe(anchor: anchor))
                             .environment(drawer)
                     } else if tv {
                         TVNowPlayingBar()
-                    } else {
-                        PartyBar()
+                    } else if let roomBarView {
+                        roomBarView
                     }
                 }
                 .modifier(CastAccessoryCover(anchor: anchor, drawer: drawer))

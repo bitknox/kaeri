@@ -475,7 +475,7 @@ fun TitleScreen(id: AnilistId, actions: AppActions) {
             if (list == null) {
                 0f
             } else {
-                (barRanges[list] ?: TitleBarFillRange.overBanner(PhoneBannerHeight, PhoneBannerParallax))
+                (barRanges[list] ?: TitleBarFillRange.overBanner(PhoneBannerHeight, if (instantBar) 0f else PhoneBannerParallax))
                     .fill(list.firstVisibleItemIndex, list.firstVisibleItemScrollOffset.toFloat(), density, instantBar)
             }
         }
@@ -1083,8 +1083,10 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
     // The top bar is solid once the banner has gone up from under it, or with no banner, once the
     // header has passed under it.
     val barRanges = LocalTitleBarRanges.current
+    // Remove animations turns the banner's parallax off (native-ux, Reduce Motion).
+    val parallax = if (LocalAnimationsRemoved.current) 0f else PhoneBannerParallax
     SideEffect {
-        barRanges?.set(list, if (art == HeroArt.Compact) TitleBarFillRange.compact(headerTop) else TitleBarFillRange.overBanner(PhoneBannerHeight, PhoneBannerParallax))
+        barRanges?.set(list, if (art == HeroArt.Compact) TitleBarFillRange.compact(headerTop) else TitleBarFillRange.overBanner(PhoneBannerHeight, parallax))
     }
     Box {
         if (art != HeroArt.Compact) {
@@ -1096,9 +1098,10 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
                     .fillMaxWidth()
                     .height(inset + PhoneBannerHeight)
                     // The banner scrolls at half the page's speed (T1's parallax), read as the
-                    // layer draws, so a scroll never recomposes the head.
+                    // layer draws, so a scroll never recomposes the head. Remove animations turns
+                    // the parallax off: the banner scrolls with the page.
                     .graphicsLayer {
-                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * PhoneBannerParallax
+                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * parallax
                     }
                     // The player grows out of the banner and closes back into it (T2, T3); only
                     // the page on screen takes part, not one waiting off screen.
@@ -1110,7 +1113,7 @@ private fun TitleHead(entry: Entry, episodes: List<EpisodeRow>?, list: LazyListS
                     .fillMaxWidth()
                     .height(inset + PhoneBannerHeight)
                     .graphicsLayer {
-                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * PhoneBannerParallax
+                        translationY = (if (list.firstVisibleItemIndex == 0) list.firstVisibleItemScrollOffset else 0) * parallax
                     },
             )
         }

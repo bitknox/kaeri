@@ -94,6 +94,8 @@ public sealed record Options(
                 // A change AniList kept refusing until it stopped being sent, which the scene
                 // reads from the environment, for the one-time notice's shots.
                 case "--dropped": Environment.SetEnvironmentVariable("KAERI_FIXTURES_DROPPED", "1"); break;
+                // Every fade and ease this many times slower, for a motion run shot a second apart.
+                case "--motion-scale": Environment.SetEnvironmentVariable("KAERI_MOTION_SCALE", value); break;
 #endif
                 case "--size":
                     if (value.Split('x') is [var w, var h] && int.TryParse(w, out var wi) && int.TryParse(h, out var hi))

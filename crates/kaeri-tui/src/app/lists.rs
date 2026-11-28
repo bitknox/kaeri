@@ -709,7 +709,7 @@ impl App {
             Section::Library => Command::LoadLibrary(self.library_segment),
             Section::Together => {
                 self.content = ContentList::Empty;
-                return Some(Command::Party(kaeri_model::party::PartyCommand::LoadRecent));
+                return Some(Command::Room(kaeri_model::room::RoomCommand::LoadRecent));
             }
             // Sections with nothing to fetch yet render their own placeholder.
             _ => {

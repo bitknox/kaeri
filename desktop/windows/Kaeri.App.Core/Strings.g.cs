@@ -543,29 +543,23 @@ public static partial class T
     /// <summary>Toast when keep next found no room for another episode.</summary>
     public static string NoticeKeepNextFull => Get("NoticeKeepNextFull");
 
-    /// <summary>Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.</summary>
-    public static string PartyNeedsServer(string server, string @operator) => Fill(Get("PartyNeedsServer"), ("server", server), ("operator", @operator));
+    /// <summary>Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.</summary>
+    public static string RoomLookUnreachable => Get("RoomLookUnreachable");
 
-    /// <summary>Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.</summary>
-    public static string PartyChooseServer(string server, string @operator) => Fill(Get("PartyChooseServer"), ("server", server), ("operator", @operator));
+    /// <summary>Why a look into a room found nothing: the pasted text is no room's invite.</summary>
+    public static string RoomLookNotAnInvite => Get("RoomLookNotAnInvite");
+
+    /// <summary>Why a look into a recent room found nothing: it's no longer in this device's recent rooms.</summary>
+    public static string RoomLookNotKept => Get("RoomLookNotKept");
+
+    /// <summary>Why a look into a room found nothing: the invite comes from an older version.</summary>
+    public static string RoomLookOldInvite => Get("RoomLookOldInvite");
+
+    /// <summary>Why a room couldn't start: it has no episode yet. Shown where the room would open.</summary>
+    public static string RoomNeedsEpisode => Get("RoomNeedsEpisode");
 
     /// <summary>Toast when a watch party is asked for in a build without watch parties.</summary>
     public static string NoticeNoParty => Get("NoticeNoParty");
-
-    /// <summary>Message when a watch party was asked for with no room named.</summary>
-    public static string PartyNeedsRoom => Get("PartyNeedsRoom");
-
-    /// <summary>Message in a watch party when its server connection dropped and is retried.</summary>
-    public static string PartyServerLost => Get("PartyServerLost");
-
-    /// <summary>Message in a watch party when the connection came back.</summary>
-    public static string PartyRejoined => Get("PartyRejoined");
-
-    /// <summary>Message when the person left a watch party.</summary>
-    public static string PartyLeft => Get("PartyLeft");
-
-    /// <summary>Message when a watch party's server could not be reached, in the lobby or when looking in.</summary>
-    public static string PartyServerUnreachable(string server) => Fill(Get("PartyServerUnreachable"), ("server", server));
 
     /// <summary>Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.</summary>
     public static string ReadingNextChapter(string chapter) => Fill(Get("ReadingNextChapter"), ("chapter", chapter));
@@ -1439,6 +1433,12 @@ public static partial class T
 
     /// <summary>The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.</summary>
     public static string SyncDeviceRemoved => Get("SyncDeviceRemoved");
+
+    /// <summary>Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.</summary>
+    public static string NoticeProfileInUse(string name) => Fill(Get("NoticeProfileInUse"), ("name", name));
+
+    /// <summary>Alert when a profile could not be deleted. The reason comes from the system.</summary>
+    public static string NoticeProfileNotDeleted(string name, string reason) => Fill(Get("NoticeProfileNotDeleted"), ("name", name), ("reason", reason));
 
     /// <summary>Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.</summary>
     public static string NoticeSignedIn(string tracker) => Fill(Get("NoticeSignedIn"), ("tracker", tracker));
@@ -3542,6 +3542,9 @@ public static partial class T
 
     /// <summary>Muted bar in place of a spoiler in a comment, until it is opened.</summary>
     public static string DiscussionSpoiler => Get("DiscussionSpoiler");
+
+    /// <summary>Screen reader action on text with hidden spoilers: opens all of them at once.</summary>
+    public static string DiscussionShowSpoilers => Get("DiscussionShowSpoilers");
 
     /// <summary>Line in place of an image in a comment. It opens the image in the browser.</summary>
     public static string DiscussionImage => Get("DiscussionImage");
@@ -6211,6 +6214,9 @@ public static partial class T
     /// <summary>Player panel: button under a synopsis shown whole after More, that folds it back to three lines.</summary>
     public static string PlayerPanelLess => Get("PlayerPanelLess");
 
+    /// <summary>Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).</summary>
+    public static string PlayerSourcesFoundLine(long count) => Fill(GetPlural("PlayerSourcesFoundLine", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.</summary>
     public static string PrivateMode => Get("PrivateMode");
 
@@ -8165,6 +8171,756 @@ public static partial class T
     /// <summary>Notification, new chapter: the action that opens the reader on the chapter.</summary>
     public static string NotifChapterRead => Get("NotifChapterRead");
 
+    /// <summary>First line while the room plays and nobody holds it.</summary>
+    public static string RoomLineWatching => Get("RoomLineWatching");
+
+    /// <summary>Second line while the room plays: the room's episode and its place in it.</summary>
+    public static string RoomLineWatchingDetail(string episode, string at) => Fill(Get("RoomLineWatchingDetail"), ("episode", episode), ("at", at));
+
+    /// <summary>First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.</summary>
+    public static string RoomLinePausedFor(string names) => Fill(Get("RoomLinePausedFor"), ("names", names));
+
+    /// <summary>First line on your own device while the room waits for you.</summary>
+    public static string RoomLinePausedForYou => Get("RoomLinePausedForYou");
+
+    /// <summary>Second line while the room waits for you: who waits, and for how many seconds so far.</summary>
+    public static string RoomLineWaitingForYou(string names, long count, long seconds) => Fill(GetPlural("RoomLineWaitingForYou", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.</summary>
+    public static string RoomLineStillLoading(string names, long count) => Fill(GetPlural("RoomLineStillLoading", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.</summary>
+    public static string RoomLineStillSeeking(string names, long count) => Fill(GetPlural("RoomLineStillSeeking", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.</summary>
+    public static string RoomLineStillBuffering(string names, long count) => Fill(GetPlural("RoomLineStillBuffering", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line once the room has waited as long as it will.</summary>
+    public static string RoomLineWaited(long seconds) => Fill(Get("RoomLineWaited"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line after someone pressed Carry on, when the room waited for one person.</summary>
+    public static string RoomLineCarriedOnOne(string carrier, string name) => Fill(Get("RoomLineCarriedOnOne"), ("carrier", carrier), ("name", name));
+
+    /// <summary>Second line after someone pressed Carry on, when the room waited for more than one person.</summary>
+    public static string RoomLineCarriedOnMany(string carrier) => Fill(Get("RoomLineCarriedOnMany"), ("carrier", carrier));
+
+    /// <summary>First line while the room is paused by someone.</summary>
+    public static string RoomLinePausedBy(string name) => Fill(Get("RoomLinePausedBy"), ("name", name));
+
+    /// <summary>First line while the room is paused by you.</summary>
+    public static string RoomLineYouPaused => Get("RoomLineYouPaused");
+
+    /// <summary>Second line while the room is paused: the place it paused at.</summary>
+    public static string RoomLinePausedAt(string at) => Fill(Get("RoomLinePausedAt"), ("at", at));
+
+    /// <summary>Second line while one of the room's relays is not answering.</summary>
+    public static string RoomLineRelaysDown(long count, long total) => Fill(GetPlural("RoomLineRelaysDown", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First line when your own device lost every relay.</summary>
+    public static string RoomLineReconnecting => Get("RoomLineReconnecting");
+
+    /// <summary>Second line when your own device lost every relay.</summary>
+    public static string RoomLineReconnectingDetail => Get("RoomLineReconnectingDetail");
+
+    /// <summary>Second line when your own player is behind the room.</summary>
+    public static string RoomLineYouBehind(long seconds) => Fill(Get("RoomLineYouBehind"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.</summary>
+    public static string RoomLineWithSeconds(string line, long seconds) => Fill(Get("RoomLineWithSeconds"), ("line", line), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Stands for the people the room waits for when there are more than two, inside "Paused for …".</summary>
+    public static string RoomNamesPeople(long count) => Fill(GetPlural("RoomNamesPeople", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>State word: in step with the room and playing.</summary>
+    public static string RoomStateWatching => Get("RoomStateWatching");
+
+    /// <summary>State word before play: this person's first frame is ready.</summary>
+    public static string RoomStateReady => Get("RoomStateReady");
+
+    /// <summary>State word: the room is paused and this person paused it.</summary>
+    public static string RoomStatePausedIt => Get("RoomStatePausedIt");
+
+    /// <summary>State word: the room is paused; this person was watching.</summary>
+    public static string RoomStatePaused => Get("RoomStatePaused");
+
+    /// <summary>State word: the slowest player, holding the room back, with the gap in seconds.</summary>
+    public static string RoomStateBehind(long seconds) => Fill(Get("RoomStateBehind"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.</summary>
+    public static string RoomStateLoading(long seconds) => Fill(Get("RoomStateLoading"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.</summary>
+    public static string RoomStateBuffering(long seconds) => Fill(Get("RoomStateBuffering"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>State word: this person plays another episode than the room's.</summary>
+    public static string RoomStateOtherEpisode(string episode) => Fill(Get("RoomStateOtherEpisode"), ("episode", episode));
+
+    /// <summary>State word: this person is picking which source to play from.</summary>
+    public static string RoomStateChoosing => Get("RoomStateChoosing");
+
+    /// <summary>State word: none of this person's sources lists the room's episode.</summary>
+    public static string RoomStateNoSource(string episode) => Fill(Get("RoomStateNoSource"), ("episode", episode));
+
+    /// <summary>State word: this person is in the room with the player closed.</summary>
+    public static string RoomStatePlayerClosed => Get("RoomStatePlayerClosed");
+
+    /// <summary>State word: this person's device stopped answering.</summary>
+    public static string RoomStateReconnecting => Get("RoomStateReconnecting");
+
+    /// <summary>State word: this person left the room. The row stays dimmed for a moment.</summary>
+    public static string RoomStateLeft => Get("RoomStateLeft");
+
+    /// <summary>State word: you muted this person. Shown alone or after the state word with room-state-and-muted.</summary>
+    public static string RoomStateMuted => Get("RoomStateMuted");
+
+    /// <summary>A state word followed by Muted, for a person you muted.</summary>
+    public static string RoomStateAndMuted(string state) => Fill(Get("RoomStateAndMuted"), ("state", state));
+
+    /// <summary>Marker after your own name in the people list.</summary>
+    public static string RoomYouMarker => Get("RoomYouMarker");
+
+    /// <summary>Your own name under your face on a phone and in the place's room card.</summary>
+    public static string RoomYou => Get("RoomYou");
+
+    /// <summary>You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.</summary>
+    public static string RoomYouInList => Get("RoomYouInList");
+
+    /// <summary>Accessibility label of a face in the full screen strip: the name and the state word.</summary>
+    public static string RoomFaceLabel(string name, string state) => Fill(Get("RoomFaceLabel"), ("name", name), ("state", state));
+
+    /// <summary>The last face in a row of faces, standing for the people not shown.</summary>
+    public static string RoomMoreFaces(long count) => Fill(Get("RoomMoreFaces"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Accessibility label of the last face, which opens the full people list.</summary>
+    public static string RoomMoreFacesLabel(long count) => Fill(GetPlural("RoomMoreFacesLabel", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Name under the last face on a phone and the TV: it opens everyone.</summary>
+    public static string RoomMore => Get("RoomMore");
+
+    /// <summary>State under the last face: how many of the hidden people are not watching.</summary>
+    public static string RoomMoreNotWatching(long count) => Fill(Get("RoomMoreNotWatching"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>State under the last face when everyone hidden is watching.</summary>
+    public static string RoomMoreAllWatching => Get("RoomMoreAllWatching");
+
+    /// <summary>Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.</summary>
+    public static string RoomWaitLoading(long seconds) => Fill(Get("RoomWaitLoading"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Reason in the waiting capsule, after Paused for, lower case: their player stalled.</summary>
+    public static string RoomWaitBuffering(long seconds) => Fill(Get("RoomWaitBuffering"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button once the room has waited 20 seconds for one person.</summary>
+    public static string RoomCarryOnWithout(string name) => Fill(Get("RoomCarryOnWithout"), ("name", name));
+
+    /// <summary>Button once the room has waited 20 seconds for more than one person.</summary>
+    public static string RoomCarryOnWithoutThem => Get("RoomCarryOnWithoutThem");
+
+    /// <summary>Capsule over the video after someone pressed Carry on.</summary>
+    public static string RoomCarryingOnWithout(string names) => Fill(Get("RoomCarryingOnWithout"), ("names", names));
+
+    /// <summary>Second part of the capsule after Carry on, when the room waited for one person.</summary>
+    public static string RoomJoinsAtPlace(string name) => Fill(Get("RoomJoinsAtPlace"), ("name", name));
+
+    /// <summary>Second part of the capsule after Carry on, when the room waited for more than one person.</summary>
+    public static string RoomJoinAtPlaceMany => Get("RoomJoinAtPlaceMany");
+
+    /// <summary>Line on your own starting screen while the room waits for you, with the seconds so far.</summary>
+    public static string RoomPausedUntilStart(long seconds) => Fill(Get("RoomPausedUntilStart"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button on your own starting screen that lets the room carry on without you.</summary>
+    public static string RoomDontWait => Get("RoomDontWait");
+
+    /// <summary>First line before anyone pressed Play.</summary>
+    public static string RoomLineNotStarted => Get("RoomLineNotStarted");
+
+    /// <summary>Second line before anyone pressed Play.</summary>
+    public static string RoomLinePlayStarts => Get("RoomLinePlayStarts");
+
+    /// <summary>First line after Play, while the room waits for people still loading.</summary>
+    public static string RoomLineStartingWhen(string names, long count) => Fill(GetPlural("RoomLineStartingWhen", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>First line counting down once everyone is ready.</summary>
+    public static string RoomLineStartingIn(long seconds) => Fill(Get("RoomLineStartingIn"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line when everyone is ready.</summary>
+    public static string RoomLineEveryoneReady => Get("RoomLineEveryoneReady");
+
+    /// <summary>Button once the room has waited 20 seconds before play, for one person.</summary>
+    public static string RoomStartWithout(string name) => Fill(Get("RoomStartWithout"), ("name", name));
+
+    /// <summary>Button once the room has waited 20 seconds before play, for more than one person.</summary>
+    public static string RoomStartWithoutThem => Get("RoomStartWithoutThem");
+
+    /// <summary>Small heading over the episode in the video area before play.</summary>
+    public static string RoomUpInRoom => Get("RoomUpInRoom");
+
+    /// <summary>Small heading over the episode in the video area when you opened an invite.</summary>
+    public static string RoomRoomIsWatching => Get("RoomRoomIsWatching");
+
+    /// <summary>Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.</summary>
+    public static string RoomBannerEpisode(string episode, string title, string length) => Fill(Get("RoomBannerEpisode"), ("episode", episode), ("title", title), ("length", length));
+
+    /// <summary>Line under the episode before play: one of your sources has it.</summary>
+    public static string RoomPlaysFromSources => Get("RoomPlaysFromSources");
+
+    /// <summary>Button that starts the episode for everyone in the room.</summary>
+    public static string RoomPlayForEveryone => Get("RoomPlayForEveryone");
+
+    /// <summary>Line beside Play for everyone.</summary>
+    public static string RoomAnyoneCanStart => Get("RoomAnyoneCanStart");
+
+    /// <summary>Label of the Play for everyone button after it was pressed.</summary>
+    public static string RoomPlaying => Get("RoomPlaying");
+
+    /// <summary>Line beside the button after Play was pressed, on a desktop.</summary>
+    public static string RoomWaitingFirstFrames => Get("RoomWaitingFirstFrames");
+
+    /// <summary>Line under the play button after Play was pressed, on a phone.</summary>
+    public static string RoomWaitingFirstFramesShort => Get("RoomWaitingFirstFramesShort");
+
+    /// <summary>First line of the room when an invite link opened it.</summary>
+    public static string RoomInvitedBy(string name) => Fill(Get("RoomInvitedBy"), ("name", name));
+
+    /// <summary>Second line when an invite link opened the room: the show and the episode.</summary>
+    public static string RoomInvitedDetail(string title, string episode) => Fill(Get("RoomInvitedDetail"), ("title", title), ("episode", episode));
+
+    /// <summary>Second line when an invite link opened a room with 10 or more people in it.</summary>
+    public static string RoomInvitedOver(long count) => Fill(Get("RoomInvitedOver"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button that joins the room from an invite.</summary>
+    public static string RoomJoin => Get("RoomJoin");
+
+    /// <summary>Button that joins a room with 10 or more people in it.</summary>
+    public static string RoomJoinAnyway => Get("RoomJoinAnyway");
+
+    /// <summary>Heading over the list of sources for the room's episode.</summary>
+    public static string RoomChooseSource(string episode) => Fill(Get("RoomChooseSource"), ("episode", episode));
+
+    /// <summary>Line under it.</summary>
+    public static string RoomChooseSourceLine => Get("RoomChooseSourceLine");
+
+    /// <summary>Button that plays the chosen source at the room's place.</summary>
+    public static string RoomPlayInRoom => Get("RoomPlayInRoom");
+
+    /// <summary>Heading when none of your sources has the room's episode.</summary>
+    public static string RoomNoSourceTitle(string episode) => Fill(Get("RoomNoSourceTitle"), ("episode", episode));
+
+    /// <summary>Line under it on a desktop: how many sources were looked in.</summary>
+    public static string RoomNoSourceLine(long count) => Fill(GetPlural("RoomNoSourceLine", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under it on a phone.</summary>
+    public static string RoomNoSourceLineShort => Get("RoomNoSourceLineShort");
+
+    /// <summary>Button that opens your sources.</summary>
+    public static string RoomOpenSources => Get("RoomOpenSources");
+
+    /// <summary>Button that searches titles in your sources.</summary>
+    public static string RoomSearchTitles => Get("RoomSearchTitles");
+
+    /// <summary>Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.</summary>
+    public static string RoomHeaderLine(string episode, long count) => Fill(Get("RoomHeaderLine"), ("episode", episode), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button and accessibility label that opens the invite.</summary>
+    public static string RoomInvite => Get("RoomInvite");
+
+    /// <summary>Button and accessibility label that opens the room's details.</summary>
+    public static string RoomDetails => Get("RoomDetails");
+
+    /// <summary>Accessibility label of the More button on a phone.</summary>
+    public static string RoomMoreActions => Get("RoomMoreActions");
+
+    /// <summary>Accessibility label of the player's button that hides the room column.</summary>
+    public static string RoomHide => Get("RoomHide");
+
+    /// <summary>Accessibility label of the chevron on a phone that folds the room into the bar over the tabs.</summary>
+    public static string RoomFold => Get("RoomFold");
+
+    /// <summary>Accessibility label of the player's button that opens the chat in full screen.</summary>
+    public static string RoomChat => Get("RoomChat");
+
+    /// <summary>Line in the invite: anyone with the link can join.</summary>
+    public static string RoomInviteAnyone => Get("RoomInviteAnyone");
+
+    /// <summary>Line after it on a desktop: the link carries the key.</summary>
+    public static string RoomInviteKey => Get("RoomInviteKey");
+
+    /// <summary>Line after it on a phone.</summary>
+    public static string RoomInviteKeyShort => Get("RoomInviteKeyShort");
+
+    /// <summary>Accessibility label of the invite's QR code.</summary>
+    public static string RoomInviteQr => Get("RoomInviteQr");
+
+    /// <summary>Line beside the QR code.</summary>
+    public static string RoomInviteQrLine => Get("RoomInviteQrLine");
+
+    /// <summary>Button that copies the invite link.</summary>
+    public static string RoomCopyLink => Get("RoomCopyLink");
+
+    /// <summary>Button that opens the system's share sheet with the invite link.</summary>
+    public static string RoomShare => Get("RoomShare");
+
+    /// <summary>Menu item on a phone that copies the invite link.</summary>
+    public static string RoomCopyInviteLink => Get("RoomCopyInviteLink");
+
+    /// <summary>Button that makes a new invite link and stops the old one.</summary>
+    public static string RoomNewInvite => Get("RoomNewInvite");
+
+    /// <summary>Line under New invite on a desktop.</summary>
+    public static string RoomNewInviteLine => Get("RoomNewInviteLine");
+
+    /// <summary>Short line beside New invite on a phone.</summary>
+    public static string RoomNewInviteShort => Get("RoomNewInviteShort");
+
+    /// <summary>Button in the invite and menu item on a phone that opens the move.</summary>
+    public static string RoomMoveOpen => Get("RoomMoveOpen");
+
+    /// <summary>Line under the button in the invite.</summary>
+    public static string RoomMoveOpenLine => Get("RoomMoveOpenLine");
+
+    /// <summary>Title of the move dialog and sheet.</summary>
+    public static string RoomMoveTitle => Get("RoomMoveTitle");
+
+    /// <summary>Line under the title.</summary>
+    public static string RoomMoveBody => Get("RoomMoveBody");
+
+    /// <summary>Note under your own row: you always go.</summary>
+    public static string RoomMoveAlwaysGoes => Get("RoomMoveAlwaysGoes");
+
+    /// <summary>Note under a person you muted, who starts unticked.</summary>
+    public static string RoomMoveMuted => Get("RoomMoveMuted");
+
+    /// <summary>Line under the list.</summary>
+    public static string RoomMoveFoot(string at) => Fill(Get("RoomMoveFoot"), ("at", at));
+
+    /// <summary>Button that moves, counting the others ticked.</summary>
+    public static string RoomMoveWith(long count) => Fill(GetPlural("RoomMoveWith", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>The offer to someone ticked, in a notice or alert, as one sentence pair.</summary>
+    public static string RoomMoveOffer(string name) => Fill(Get("RoomMoveOffer"), ("name", name));
+
+    /// <summary>First line of the room while the offer waits for an answer.</summary>
+    public static string RoomLineMoved(string name) => Fill(Get("RoomLineMoved"), ("name", name));
+
+    /// <summary>Second line with the offer: who else is asked, and the place the episode carries on from.</summary>
+    public static string RoomLineMovedDetail(string names, long count, string at) => Fill(GetPlural("RoomLineMovedDetail", count), ("names", names), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("at", at));
+
+    /// <summary>Second line with the offer when nobody else is asked.</summary>
+    public static string RoomLineMovedDetailAlone(string at) => Fill(Get("RoomLineMovedDetailAlone"), ("at", at));
+
+    /// <summary>Button that goes along to the new room.</summary>
+    public static string RoomGoAlong => Get("RoomGoAlong");
+
+    /// <summary>Short button that stays in this room, in a notice.</summary>
+    public static string RoomStay => Get("RoomStay");
+
+    /// <summary>First line of the old room for someone who stayed.</summary>
+    public static string RoomLineMovedAway(string name) => Fill(Get("RoomLineMovedAway"), ("name", name));
+
+    /// <summary>Second line of the old room: who went along.</summary>
+    public static string RoomLineWentAlong(string names) => Fill(Get("RoomLineWentAlong"), ("names", names));
+
+    /// <summary>Label of the encryption row.</summary>
+    public static string RoomDetailsEncryption => Get("RoomDetailsEncryption");
+
+    /// <summary>Value of the encryption row.</summary>
+    public static string RoomDetailsEndToEnd => Get("RoomDetailsEndToEnd");
+
+    /// <summary>Label of the relays row, and the title of the relays page in Settings.</summary>
+    public static string RoomRelays => Get("RoomRelays");
+
+    /// <summary>Value of the relays row when all answer.</summary>
+    public static string RoomRelaysAnswering(long count) => Fill(Get("RoomRelaysAnswering"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Value of the relays row when some don't answer.</summary>
+    public static string RoomRelaysAnsweringOf(long count, long total) => Fill(Get("RoomRelaysAnsweringOf"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)), ("total", total.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>State of a relay that doesn't answer.</summary>
+    public static string RoomRelayNotAnswering => Get("RoomRelayNotAnswering");
+
+    /// <summary>Round trip time of a relay.</summary>
+    public static string RoomRelayLatency(long ms) => Fill(Get("RoomRelayLatency"), ("ms", ms.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line under the relays in Details.</summary>
+    public static string RoomDetailsRelaysLine => Get("RoomDetailsRelaysLine");
+
+    /// <summary>Button in Details that edits the room's relays.</summary>
+    public static string RoomEditRelays => Get("RoomEditRelays");
+
+    /// <summary>Title of the room's relay editor.</summary>
+    public static string RoomEditRelaysTitle => Get("RoomEditRelaysTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string RoomEditRelaysLine => Get("RoomEditRelaysLine");
+
+    /// <summary>Accessibility label of the button that removes a relay. `relay` is its address.</summary>
+    public static string RoomRelayRemove(string relay) => Fill(Get("RoomRelayRemove"), ("relay", relay));
+
+    /// <summary>Button that adds the address typed beside it.</summary>
+    public static string RoomRelayAdd => Get("RoomRelayAdd");
+
+    /// <summary>Line under the room's relay editor.</summary>
+    public static string RoomEditRelaysSettings => Get("RoomEditRelaysSettings");
+
+    /// <summary>Heading of the group in Settings › Playback.</summary>
+    public static string RoomSettingsGroup => Get("RoomSettingsGroup");
+
+    /// <summary>Switch that hides chat in every room on this device.</summary>
+    public static string RoomSettingsHideChat => Get("RoomSettingsHideChat");
+
+    /// <summary>Line under it.</summary>
+    public static string RoomSettingsHideChatLine => Get("RoomSettingsHideChatLine");
+
+    /// <summary>Line under the Relays row: how many relays new rooms use.</summary>
+    public static string RoomSettingsRelaysCount(long count) => Fill(GetPlural("RoomSettingsRelaysCount", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Button at the end of the Relays row.</summary>
+    public static string RoomSettingsRelaysEdit => Get("RoomSettingsRelaysEdit");
+
+    /// <summary>Line under the group.</summary>
+    public static string RoomSettingsGroupLine => Get("RoomSettingsGroupLine");
+
+    /// <summary>Line at the top of the Relays page on a desktop.</summary>
+    public static string RoomRelaysIntro => Get("RoomRelaysIntro");
+
+    /// <summary>Line at the top of the Relays page on a phone.</summary>
+    public static string RoomRelaysIntroShort => Get("RoomRelaysIntroShort");
+
+    /// <summary>Heading of the list of relays for new rooms.</summary>
+    public static string RoomRelaysNewRooms => Get("RoomRelaysNewRooms");
+
+    /// <summary>Line under the list for new rooms.</summary>
+    public static string RoomRelaysNewRoomsLine => Get("RoomRelaysNewRoomsLine");
+
+    /// <summary>Heading of the list of spare relays.</summary>
+    public static string RoomRelaysSpares => Get("RoomRelaysSpares");
+
+    /// <summary>Line under the spares on a desktop.</summary>
+    public static string RoomRelaysSparesLine => Get("RoomRelaysSparesLine");
+
+    /// <summary>Line under the spares on a phone.</summary>
+    public static string RoomRelaysSparesLineShort => Get("RoomRelaysSparesLineShort");
+
+    /// <summary>Button that puts the default relays and spares back.</summary>
+    public static string RoomRelaysRestore => Get("RoomRelaysRestore");
+
+    /// <summary>Button in the room column's header that leaves, on the place's room card, with the dialog after it.</summary>
+    public static string RoomLeaveEllipsis => Get("RoomLeaveEllipsis");
+
+    /// <summary>Menu item on an iPhone that leaves, asking first.</summary>
+    public static string RoomLeaveMenu => Get("RoomLeaveMenu");
+
+    /// <summary>Menu item on Android that leaves, asking first.</summary>
+    public static string RoomLeaveMenuPlain => Get("RoomLeaveMenuPlain");
+
+    /// <summary>Title of the confirmation before leaving.</summary>
+    public static string RoomLeaveTitle => Get("RoomLeaveTitle");
+
+    /// <summary>Line under it.</summary>
+    public static string RoomLeaveLine => Get("RoomLeaveLine");
+
+    /// <summary>Line under it when closing the window on a Mac, which offers Keep the room.</summary>
+    public static string RoomLeaveLineKeep => Get("RoomLeaveLineKeep");
+
+    /// <summary>Button in the confirmation on closing the window: close the player and stay in the room.</summary>
+    public static string RoomKeep => Get("RoomKeep");
+
+    /// <summary>Button in the TV's confirmation that goes back to the room.</summary>
+    public static string RoomKeepWatching => Get("RoomKeepWatching");
+
+    /// <summary>Small heading of the up next card.</summary>
+    public static string RoomUpNext => Get("RoomUpNext");
+
+    /// <summary>Line on the card naming the next episode.</summary>
+    public static string RoomUpNextEpisode(string episode, string title) => Fill(Get("RoomUpNextEpisode"), ("episode", episode), ("title", title));
+
+    /// <summary>Line on the card naming the next episode when it has no title.</summary>
+    public static string RoomUpNextEpisodePlain(string episode) => Fill(Get("RoomUpNextEpisodePlain"), ("episode", episode));
+
+    /// <summary>Line on the card counting down for everyone.</summary>
+    public static string RoomUpNextCount(long seconds) => Fill(Get("RoomUpNextCount"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line on the card while your file ended sooner and the room waits for someone's longer file.</summary>
+    public static string RoomUpNextWaiting(string name) => Fill(Get("RoomUpNextWaiting"), ("name", name));
+
+    /// <summary>Button on the card that moves the room on at once.</summary>
+    public static string RoomPlayNextNow => Get("RoomPlayNextNow");
+
+    /// <summary>First line of the room while up next counts down.</summary>
+    public static string RoomLineUpNext(long seconds) => Fill(Get("RoomLineUpNext"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Second line while up next counts down.</summary>
+    public static string RoomLineUpNextDetail(string episode) => Fill(Get("RoomLineUpNextDetail"), ("episode", episode));
+
+    /// <summary>Placeholder of the chat field.</summary>
+    public static string RoomChatField => Get("RoomChatField");
+
+    /// <summary>Button and accessibility label that sends a chat line.</summary>
+    public static string RoomChatSend => Get("RoomChatSend");
+
+    /// <summary>Accessibility label of the button beside the chat field that opens the reactions.</summary>
+    public static string RoomReact => Get("RoomReact");
+
+    /// <summary>Line in the chat of a room opened from an invite, before joining.</summary>
+    public static string RoomChatOpens => Get("RoomChatOpens");
+
+    /// <summary>Line under a chat line that didn't reach any relay.</summary>
+    public static string RoomChatNotSent => Get("RoomChatNotSent");
+
+    /// <summary>Chat line: someone started the room.</summary>
+    public static string RoomChatStarted(string name, string episode) => Fill(Get("RoomChatStarted"), ("name", name), ("episode", episode));
+
+    /// <summary>Chat line: you started the room.</summary>
+    public static string RoomChatYouStarted(string episode) => Fill(Get("RoomChatYouStarted"), ("episode", episode));
+
+    /// <summary>Chat line: someone paused, at a place in the episode.</summary>
+    public static string RoomChatPaused(string name, string at) => Fill(Get("RoomChatPaused"), ("name", name), ("at", at));
+
+    /// <summary>Chat line: you paused.</summary>
+    public static string RoomChatYouPaused(string at) => Fill(Get("RoomChatYouPaused"), ("at", at));
+
+    /// <summary>Chat line: someone played after a pause.</summary>
+    public static string RoomChatResumed(string name) => Fill(Get("RoomChatResumed"), ("name", name));
+
+    /// <summary>Chat line: the room waits for people whose player is opening the episode.</summary>
+    public static string RoomChatPausedForLoading(string names) => Fill(Get("RoomChatPausedForLoading"), ("names", names));
+
+    /// <summary>Chat line: the room waits for people whose player stalled.</summary>
+    public static string RoomChatPausedForBuffering(string names) => Fill(Get("RoomChatPausedForBuffering"), ("names", names));
+
+    /// <summary>Chat line on your own device: the room waits for you.</summary>
+    public static string RoomChatPausedForYou => Get("RoomChatPausedForYou");
+
+    /// <summary>Chat line: someone pressed Carry on.</summary>
+    public static string RoomChatCarriedOn(string carrier, string names) => Fill(Get("RoomChatCarriedOn"), ("carrier", carrier), ("names", names));
+
+    /// <summary>Chat line: someone's first frame landed and they joined at the room's place.</summary>
+    public static string RoomChatJoinedAt(string name, string at) => Fill(Get("RoomChatJoinedAt"), ("name", name), ("at", at));
+
+    /// <summary>Chat line: someone left the room.</summary>
+    public static string RoomChatLeft(string name) => Fill(Get("RoomChatLeft"), ("name", name));
+
+    /// <summary>Chat line: someone moved to a new room.</summary>
+    public static string RoomChatMoved(string name) => Fill(Get("RoomChatMoved"), ("name", name));
+
+    /// <summary>Chat line in the old room: someone went along to the new room.</summary>
+    public static string RoomChatWent(string name) => Fill(Get("RoomChatWent"), ("name", name));
+
+    /// <summary>Chat line: up next moved the room on.</summary>
+    public static string RoomChatUpNext(string episode) => Fill(Get("RoomChatUpNext"), ("episode", episode));
+
+    /// <summary>Chat line: someone skipped the opening for the room.</summary>
+    public static string RoomChatSkippedOpening(string name) => Fill(Get("RoomChatSkippedOpening"), ("name", name));
+
+    /// <summary>Label of the laugh reaction button.</summary>
+    public static string RoomReactLaugh => Get("RoomReactLaugh");
+
+    /// <summary>Label of the gasp reaction button.</summary>
+    public static string RoomReactGasp => Get("RoomReactGasp");
+
+    /// <summary>Label of the clap reaction button.</summary>
+    public static string RoomReactClap => Get("RoomReactClap");
+
+    /// <summary>Label of the cry reaction button.</summary>
+    public static string RoomReactCry => Get("RoomReactCry");
+
+    /// <summary>Chat line: someone laughed, at a place in the episode.</summary>
+    public static string RoomReactedLaugh(string name, string at) => Fill(Get("RoomReactedLaugh"), ("name", name), ("at", at));
+
+    /// <summary>Chat line: someone gasped, at a place in the episode.</summary>
+    public static string RoomReactedGasp(string name, string at) => Fill(Get("RoomReactedGasp"), ("name", name), ("at", at));
+
+    /// <summary>Chat line: someone clapped, at a place in the episode.</summary>
+    public static string RoomReactedClap(string name, string at) => Fill(Get("RoomReactedClap"), ("name", name), ("at", at));
+
+    /// <summary>Chat line: someone cried, at a place in the episode.</summary>
+    public static string RoomReactedCry(string name, string at) => Fill(Get("RoomReactedCry"), ("name", name), ("at", at));
+
+    /// <summary>Line under the video on the TV rail: what the remote's buttons do.</summary>
+    public static string RoomTvKeys => Get("RoomTvKeys");
+
+    /// <summary>Line under the chat on the TV rail: chat is read-only there.</summary>
+    public static string RoomTvWriteFromPhone => Get("RoomTvWriteFromPhone");
+
+    /// <summary>Line under the place's heading.</summary>
+    public static string RoomPlaceLine => Get("RoomPlaceLine");
+
+    /// <summary>Small heading of the card for the room you are in.</summary>
+    public static string RoomPlaceYours => Get("RoomPlaceYours");
+
+    /// <summary>Button on the card that opens the room's player.</summary>
+    public static string RoomOpenPlayer => Get("RoomOpenPlayer");
+
+    /// <summary>Heading of the field that joins a room.</summary>
+    public static string RoomPlaceJoin => Get("RoomPlaceJoin");
+
+    /// <summary>Placeholder of the field that takes an invite link.</summary>
+    public static string RoomPlaceLink => Get("RoomPlaceLink");
+
+    /// <summary>Button that pastes the clipboard into the field.</summary>
+    public static string RoomPlacePaste => Get("RoomPlacePaste");
+
+    /// <summary>Heading of the list of recent rooms.</summary>
+    public static string RoomRecent => Get("RoomRecent");
+
+    /// <summary>Line beside the heading.</summary>
+    public static string RoomRecentNote => Get("RoomRecentNote");
+
+    /// <summary>Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.</summary>
+    public static string RoomRecentRow(string episode, string names, string when) => Fill(Get("RoomRecentRow"), ("episode", episode), ("names", names), ("when", when));
+
+    /// <summary>Line of a recent room where you were alone.</summary>
+    public static string RoomRecentRowAlone(string episode, string when) => Fill(Get("RoomRecentRowAlone"), ("episode", episode), ("when", when));
+
+    /// <summary>Button on a recent room that joins it again.</summary>
+    public static string RoomRejoin => Get("RoomRejoin");
+
+    /// <summary>Title of the alert when none of an invite's relays answers, and the bold start of the line in the place.</summary>
+    public static string RoomErrorUnreachableTitle => Get("RoomErrorUnreachableTitle");
+
+    /// <summary>Line under it, and the next sentence in the place.</summary>
+    public static string RoomErrorAskNewInvite => Get("RoomErrorAskNewInvite");
+
+    /// <summary>The same error in one line, where there is no room for a title.</summary>
+    public static string RoomErrorUnreachable => Get("RoomErrorUnreachable");
+
+    /// <summary>Line after it in the place: what was tried.</summary>
+    public static string RoomErrorTried(long seconds) => Fill(Get("RoomErrorTried"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Title of the alert when a recent room has nobody answering, such as after a new invite.</summary>
+    public static string RoomErrorNobodyAnswered => Get("RoomErrorNobodyAnswered");
+
+    /// <summary>Line under it.</summary>
+    public static string RoomErrorNobodyAnsweredLine => Get("RoomErrorNobodyAnsweredLine");
+
+    /// <summary>Notice when the room already has 10 people and you can't join.</summary>
+    public static string RoomErrorFull => Get("RoomErrorFull");
+
+    /// <summary>Notice when an invite link or code is from an older version.</summary>
+    public static string RoomErrorOldInvite => Get("RoomErrorOldInvite");
+
+    /// <summary>Chat line: someone came into the room.</summary>
+    public static string RoomChatJoined(string name) => Fill(Get("RoomChatJoined"), ("name", name));
+
+    /// <summary>Chat line: someone moved the room to another place in the episode.</summary>
+    public static string RoomChatJumped(string name, string from, string to) => Fill(Get("RoomChatJumped"), ("name", name), ("from", from), ("to", to));
+
+    /// <summary>Chat line: the room waits for people catching up after a jump.</summary>
+    public static string RoomChatPausedForSeeking(string names) => Fill(Get("RoomChatPausedForSeeking"), ("names", names));
+
+    /// <summary>Chat line: this device's player was moved to stay with the room.</summary>
+    public static string RoomChatCorrected => Get("RoomChatCorrected");
+
+    /// <summary>Chat line: someone put on another episode for the room.</summary>
+    public static string RoomChatEpisodeChanged(string name, string episode) => Fill(Get("RoomChatEpisodeChanged"), ("name", name), ("episode", episode));
+
+    /// <summary>Chat line: someone who was behind caught up with the room.</summary>
+    public static string RoomChatCaughtUp(string name) => Fill(Get("RoomChatCaughtUp"), ("name", name));
+
+    /// <summary>Chat line on a device whose Play lost to someone's Pause pressed at the same moment.</summary>
+    public static string RoomChatAlreadyPaused(string name) => Fill(Get("RoomChatAlreadyPaused"), ("name", name));
+
+    /// <summary>Chat line: someone made a new invite; the old link stopped working.</summary>
+    public static string RoomChatNewInvite(string name) => Fill(Get("RoomChatNewInvite"), ("name", name));
+
+    /// <summary>Chat line: someone cancelled Up next for everyone.</summary>
+    public static string RoomChatUpNextCancelled(string name) => Fill(Get("RoomChatUpNextCancelled"), ("name", name));
+
+    /// <summary>Chat line on your own device: your name was taken, so the room knows you by this one.</summary>
+    public static string RoomChatRenamed(string name) => Fill(Get("RoomChatRenamed"), ("name", name));
+
+    /// <summary>Button that shows the room's column again after Hide room.</summary>
+    public static string RoomShow => Get("RoomShow");
+
+    /// <summary>The room's Skip opening button on the player: skips for everyone.</summary>
+    public static string RoomSkipOpening => Get("RoomSkipOpening");
+
+    /// <summary>Confirmation after Copy invite link.</summary>
+    public static string RoomLinkCopied => Get("RoomLinkCopied");
+
+    /// <summary>The starting screen's line on the device opening the room's episode.</summary>
+    public static string RoomStartingEpisode(string episode) => Fill(Get("RoomStartingEpisode"), ("episode", episode));
+
+    /// <summary>A short length in minutes, on the banner before play.</summary>
+    public static string RoomMinutes(long minutes) => Fill(Get("RoomMinutes"), ("minutes", minutes.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.</summary>
+    public static string RoomNamesAnd(string names, string last) => Fill(Get("RoomNamesAnd"), ("names", names), ("last", last));
+
+    /// <summary>Joins two names in a longer list: "Mika, Ren".</summary>
+    public static string RoomNamesComma(string first, string rest) => Fill(Get("RoomNamesComma"), ("first", first), ("rest", rest));
+
+    /// <summary>Person menu item and accessibility action that hides someone's lines and reactions in this room.</summary>
+    public static string RoomMute(string name) => Fill(Get("RoomMute"), ("name", name));
+
+    /// <summary>Person menu item and accessibility action that shows a muted person's lines again.</summary>
+    public static string RoomUnmute(string name) => Fill(Get("RoomUnmute"), ("name", name));
+
+    /// <summary>Line in the conversation where a muted person's lines were.</summary>
+    public static string RoomChatMuted(string name) => Fill(Get("RoomChatMuted"), ("name", name));
+
+    /// <summary>Line after the newest chat lines over the video, which opens the conversation.</summary>
+    public static string RoomChatMore(long count) => Fill(Get("RoomChatMore"), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken by a screen reader when a chat line arrives.</summary>
+    public static string RoomChatAnnounce(string name, string message) => Fill(Get("RoomChatAnnounce"), ("name", name), ("message", message));
+
+    /// <summary>End of the chat field while sending waits, after three messages in five seconds.</summary>
+    public static string RoomChatWait(long seconds) => Fill(Get("RoomChatWait"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken once when sending waits, for screen readers.</summary>
+    public static string RoomChatWaitSpoken(long seconds) => Fill(GetPlural("RoomChatWaitSpoken", seconds), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Spoken by a screen reader once, when 20 characters are left in the chat field.</summary>
+    public static string RoomChatCharactersLeft(long count) => Fill(GetPlural("RoomChatCharactersLeft", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.</summary>
+    public static string RoomReactedAt(string line, string time) => Fill(Get("RoomReactedAt"), ("line", line), ("time", time));
+
+    /// <summary>Label on the seek bar when pointing near a reaction tick: the moment and who reacted.</summary>
+    public static string RoomTickLabel(string time, string names) => Fill(Get("RoomTickLabel"), ("time", time), ("names", names));
+
+    /// <summary>Two people named together, for a reaction made by both: "Ren and Mika".</summary>
+    public static string RoomNamesTwo(string first, string second) => Fill(Get("RoomNamesTwo"), ("first", first), ("second", second));
+
+    /// <summary>Three people named together.</summary>
+    public static string RoomNamesThree(string first, string second, string third) => Fill(Get("RoomNamesThree"), ("first", first), ("second", second), ("third", third));
+
+    /// <summary>More than three people named together: two names and how many others.</summary>
+    public static string RoomNamesOthers(string first, string second, long count) => Fill(Get("RoomNamesOthers"), ("first", first), ("second", second), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Player panel, under the subtitled or dubbed switch in a room.</summary>
+    public static string RoomVersionOwn => Get("RoomVersionOwn");
+
+    /// <summary>The banner over the room when the episode has no name of its own: the episode and its length.</summary>
+    public static string RoomBannerEpisodePlain(string episode, string length) => Fill(Get("RoomBannerEpisodePlain"), ("episode", episode), ("length", length));
+
+    /// <summary>Menu item dimmed in a room, with this reason under it.</summary>
+    public static string RoomMarkUnavailable => Get("RoomMarkUnavailable");
+
+    /// <summary>Heading of the people list in the room, and its accessibility label.</summary>
+    public static string RoomPeople => Get("RoomPeople");
+
+    /// <summary>State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.</summary>
+    public static string RoomStateSeeking(long seconds) => Fill(Get("RoomStateSeeking"), ("seconds", seconds.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.</summary>
+    public static string RoomErrorUnreachableLead => Get("RoomErrorUnreachableLead");
+
+    /// <summary>Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.</summary>
+    public static string RoomErrorNobodyAnsweredLead => Get("RoomErrorNobodyAnsweredLead");
+
+    /// <summary>Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.</summary>
+    public static string RoomDeviceInRoom(string device) => Fill(Get("RoomDeviceInRoom"), ("device", device));
+
+    /// <summary>Button on the phone's remote screen that leaves the room on the paired TV.</summary>
+    public static string RoomLeaveOnDevice(string device) => Fill(Get("RoomLeaveOnDevice"), ("device", device));
+
+    /// <summary>Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.</summary>
+    public static string RoomTvJoinFromPhone => Get("RoomTvJoinFromPhone");
+
+    /// <summary>Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.</summary>
+    public static string RoomSourcesFoundLine(long count) => Fill(GetPlural("RoomSourcesFoundLine", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
     /// <summary>Button that shows the season before.</summary>
     public static string SeasonalPrevious => Get("SeasonalPrevious");
 
@@ -9656,6 +10412,15 @@ public static partial class T
     /// <summary>Secondary action under it.</summary>
     public static string StoreTurnOnWatching => Get("StoreTurnOnWatching");
 
+    /// <summary>Info title when every plugin in a store is for reading, and reading is off here.</summary>
+    public static string StoreOtherMediumReading(string store) => Fill(Get("StoreOtherMediumReading"), ("store", store));
+
+    /// <summary>Line under it.</summary>
+    public static string StoreOtherMediumReadingLine => Get("StoreOtherMediumReadingLine");
+
+    /// <summary>Secondary action under it.</summary>
+    public static string StoreTurnOnReading => Get("StoreTurnOnReading");
+
     /// <summary>Info title when a store has no plugins.</summary>
     public static string StoreEmpty(string store) => Fill(Get("StoreEmpty"), ("store", store));
 
@@ -10129,6 +10894,24 @@ public static partial class T
 
     /// <summary>Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.</summary>
     public static string SourcesOrderAll => Get("SourcesOrderAll");
+
+    /// <summary>Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.</summary>
+    public static string SourcesChooseFor(string episode) => Fill(Get("SourcesChooseFor"), ("episode", episode));
+
+    /// <summary>Line while the sources are searched for the episode.</summary>
+    public static string SourcesLooking => Get("SourcesLooking");
+
+    /// <summary>Line over the list of sources that list the episode.</summary>
+    public static string SourcesFound(long count) => Fill(GetPlural("SourcesFound", count), ("count", count.ToString("N0", System.Globalization.CultureInfo.CurrentCulture)));
+
+    /// <summary>Line when no source lists the episode.</summary>
+    public static string SourcesNoneList(string episode) => Fill(Get("SourcesNoneList"), ("episode", episode));
+
+    /// <summary>Button that goes to the Sources page, when no source is set up.</summary>
+    public static string SourcesOpen => Get("SourcesOpen");
+
+    /// <summary>Accessibility label of the list of sources for the episode.</summary>
+    public static string SourcesLabel => Get("SourcesLabel");
 
     /// <summary>Short label for a joined store, on a row.</summary>
     public static string StoresJoined => Get("StoresJoined");
@@ -12744,14 +13527,12 @@ public static partial class T
         ["NoticeEpisodesQueuedExistingStopped_one"] = "Queued one episode, then it stopped. {existing} {reason}",
         ["NoticeEpisodesQueuedExistingStopped_other"] = "Queued {count} episodes, then it stopped. {existing} {reason}",
         ["NoticeKeepNextFull"] = "Not enough free space to keep the next episodes downloaded. Free up some space to download more.",
-        ["PartyNeedsServer"] = "Choose a server for the watch party first, as syncplay.server. {server} is run by {operator}.",
-        ["PartyChooseServer"] = "Choose a server for the watch party first. {server} is run by {operator}.",
+        ["RoomLookUnreachable"] = "Couldn't reach this room's relays. Ask for a new invite.",
+        ["RoomLookNotAnInvite"] = "That isn't a room's invite.",
+        ["RoomLookNotKept"] = "That room isn't kept any more.",
+        ["RoomLookOldInvite"] = "This invite is from an older version of Kaeri. Ask for a new one.",
+        ["RoomNeedsEpisode"] = "Choose an episode for the room first.",
         ["NoticeNoParty"] = "Watch parties aren't available in this version of Kaeri.",
-        ["PartyNeedsRoom"] = "A watch party needs a room to meet in. Choose one first.",
-        ["PartyServerLost"] = "Lost the watch party server. Trying again.",
-        ["PartyRejoined"] = "Back in the watch party.",
-        ["PartyLeft"] = "Left the watch party.",
-        ["PartyServerUnreachable"] = "Couldn't reach {server}. Check the server, or try again.",
         ["ReadingNextChapter"] = "Chapter {chapter}",
         ["ReadingUsuallyMondays"] = "Usually Mondays",
         ["ReadingUsuallyTuesdays"] = "Usually Tuesdays",
@@ -13068,6 +13849,8 @@ public static partial class T
         ["StoresReadyDemoStays"] = "{store} is ready. The demo stays last in Your sources.",
         ["CloudLoopbackDone"] = "You can close this tab and go back to Kaeri.",
         ["SyncDeviceRemoved"] = "This device was removed from sync on another device. Join again to sync it.",
+        ["NoticeProfileInUse"] = "{name}'s profile is in use. Switch to another profile to delete it.",
+        ["NoticeProfileNotDeleted"] = "Couldn't delete {name}'s profile. {reason}",
         ["NoticeSignedIn"] = "Signed in to {tracker}.",
         ["NoticeSignedInKeychain"] = "Signed in to {tracker}. The token is in the OS keychain.",
         ["NoticeSignedInFile"] = "Signed in to {tracker}. No keychain is available, so the token is in a private file on this device.",
@@ -13796,6 +14579,7 @@ public static partial class T
         ["DiscussionMoreReplies_one"] = "One more reply",
         ["DiscussionMoreReplies_other"] = "{count} more replies",
         ["DiscussionSpoiler"] = "Spoiler",
+        ["DiscussionShowSpoilers"] = "Show spoilers",
         ["DiscussionImage"] = "Image",
         ["DiscussionVideo"] = "Video",
         ["DiscussionAddComment"] = "Add a comment",
@@ -14719,6 +15503,8 @@ public static partial class T
         ["PartyVersionOwn"] = "Only your player switches. The room keeps playing.",
         ["PlayerPanelMore"] = "More",
         ["PlayerPanelLess"] = "Less",
+        ["PlayerSourcesFoundLine_one"] = "One source has it. Choose it to play.",
+        ["PlayerSourcesFoundLine_other"] = "{count} sources have it. Choose the one to play.",
         ["PrivateMode"] = "Private mode",
         ["PrivateModeDetail"] = "Nothing you watch or read is saved or synced until you turn it off or quit Kaeri.",
         ["PrivateModeLimits"] = "Your sources and watch parties still see what you open.",
@@ -15411,6 +16197,271 @@ public static partial class T
         ["NotifChaptersNew_other"] = "{count} new chapters",
         ["NotifChapterHidden"] = "New chapter",
         ["NotifChapterRead"] = "Read",
+        ["RoomLineWatching"] = "Watching together",
+        ["RoomLineWatchingDetail"] = "Episode {episode} · {at}",
+        ["RoomLinePausedFor"] = "Paused for {names}",
+        ["RoomLinePausedForYou"] = "Paused for you",
+        ["RoomLineWaitingForYou_one"] = "{names} is waiting · {seconds} s",
+        ["RoomLineWaitingForYou_other"] = "{names} are waiting · {seconds} s",
+        ["RoomLineStillLoading_one"] = "{names} is still loading",
+        ["RoomLineStillLoading_other"] = "{names} are still loading",
+        ["RoomLineStillSeeking_one"] = "{names} is still seeking",
+        ["RoomLineStillSeeking_other"] = "{names} are still seeking",
+        ["RoomLineStillBuffering_one"] = "{names} is still buffering",
+        ["RoomLineStillBuffering_other"] = "{names} are still buffering",
+        ["RoomLineWaited"] = "The room has waited {seconds} s",
+        ["RoomLineCarriedOnOne"] = "{carrier} carried on · {name} joins when ready",
+        ["RoomLineCarriedOnMany"] = "{carrier} carried on · they join when ready",
+        ["RoomLinePausedBy"] = "{name} paused",
+        ["RoomLineYouPaused"] = "You paused",
+        ["RoomLinePausedAt"] = "at {at}",
+        ["RoomLineRelaysDown_one"] = "{count} of {total} relays isn't answering · the room carries on",
+        ["RoomLineRelaysDown_other"] = "{count} of {total} relays aren't answering · the room carries on",
+        ["RoomLineReconnecting"] = "Reconnecting to the room",
+        ["RoomLineReconnectingDetail"] = "No relay is answering · your episode keeps playing",
+        ["RoomLineYouBehind"] = "You're {seconds} s behind · catching up",
+        ["RoomLineWithSeconds"] = "{line} · {seconds} s",
+        ["RoomNamesPeople_one"] = "{count} person",
+        ["RoomNamesPeople_other"] = "{count} people",
+        ["RoomStateWatching"] = "Watching",
+        ["RoomStateReady"] = "Ready",
+        ["RoomStatePausedIt"] = "Paused it",
+        ["RoomStatePaused"] = "Paused",
+        ["RoomStateBehind"] = "Behind · {seconds} s",
+        ["RoomStateLoading"] = "Loading · {seconds} s",
+        ["RoomStateBuffering"] = "Buffering · {seconds} s",
+        ["RoomStateOtherEpisode"] = "On episode {episode}",
+        ["RoomStateChoosing"] = "Choosing a source",
+        ["RoomStateNoSource"] = "No source for episode {episode}",
+        ["RoomStatePlayerClosed"] = "Player closed",
+        ["RoomStateReconnecting"] = "Reconnecting",
+        ["RoomStateLeft"] = "Left",
+        ["RoomStateMuted"] = "Muted",
+        ["RoomStateAndMuted"] = "{state} · Muted",
+        ["RoomYouMarker"] = "(you)",
+        ["RoomYou"] = "You",
+        ["RoomYouInList"] = "you",
+        ["RoomFaceLabel"] = "{name}, {state}",
+        ["RoomMoreFaces"] = "+{count}",
+        ["RoomMoreFacesLabel_one"] = "{count} more person",
+        ["RoomMoreFacesLabel_other"] = "{count} more people",
+        ["RoomMore"] = "More",
+        ["RoomMoreNotWatching"] = "{count} not watching",
+        ["RoomMoreAllWatching"] = "All watching",
+        ["RoomWaitLoading"] = "loading · {seconds} s",
+        ["RoomWaitBuffering"] = "buffering · {seconds} s",
+        ["RoomCarryOnWithout"] = "Carry on without {name}",
+        ["RoomCarryOnWithoutThem"] = "Carry on without them",
+        ["RoomCarryingOnWithout"] = "Carrying on without {names}",
+        ["RoomJoinsAtPlace"] = "{name} joins at the room's place",
+        ["RoomJoinAtPlaceMany"] = "They join at the room's place",
+        ["RoomPausedUntilStart"] = "The room is paused until this starts · {seconds} s",
+        ["RoomDontWait"] = "Don't wait for me",
+        ["RoomLineNotStarted"] = "Not started yet",
+        ["RoomLinePlayStarts"] = "Play starts it for everyone",
+        ["RoomLineStartingWhen_one"] = "Starting when {names} is ready",
+        ["RoomLineStartingWhen_other"] = "Starting when {names} are ready",
+        ["RoomLineStartingIn"] = "Starting in {seconds}",
+        ["RoomLineEveryoneReady"] = "Everyone is ready",
+        ["RoomStartWithout"] = "Start without {name}",
+        ["RoomStartWithoutThem"] = "Start without them",
+        ["RoomUpInRoom"] = "Up in the room",
+        ["RoomRoomIsWatching"] = "The room is watching",
+        ["RoomBannerEpisode"] = "Episode {episode} · {title} · {length}",
+        ["RoomPlaysFromSources"] = "Plays from your sources",
+        ["RoomPlayForEveryone"] = "Play for everyone",
+        ["RoomAnyoneCanStart"] = "Anyone in the room can start it",
+        ["RoomPlaying"] = "Playing…",
+        ["RoomWaitingFirstFrames"] = "Waiting for everyone's first frame",
+        ["RoomWaitingFirstFramesShort"] = "Waiting for first frames",
+        ["RoomInvitedBy"] = "{name} invited you",
+        ["RoomInvitedDetail"] = "{title} · Episode {episode}",
+        ["RoomInvitedOver"] = "{count} people are here already · rooms work best with 10 or fewer",
+        ["RoomJoin"] = "Join the room",
+        ["RoomJoinAnyway"] = "Join anyway",
+        ["RoomChooseSource"] = "Choose a source for episode {episode}",
+        ["RoomChooseSourceLine"] = "The room keeps watching; you join at its place.",
+        ["RoomPlayInRoom"] = "Play in the room",
+        ["RoomNoSourceTitle"] = "None of your sources has episode {episode}",
+        ["RoomNoSourceLine_one"] = "Kaeri looked in your one source. You stay in the room and the chat while the others watch.",
+        ["RoomNoSourceLine_other"] = "Kaeri looked in your {count} sources. You stay in the room and the chat while the others watch.",
+        ["RoomNoSourceLineShort"] = "You stay in the room and the chat.",
+        ["RoomOpenSources"] = "Open sources",
+        ["RoomSearchTitles"] = "Search titles",
+        ["RoomHeaderLine"] = "Episode {episode} · {count} in the room",
+        ["RoomInvite"] = "Invite",
+        ["RoomDetails"] = "Details",
+        ["RoomMoreActions"] = "More",
+        ["RoomHide"] = "Hide room",
+        ["RoomFold"] = "Close the room to the bar",
+        ["RoomChat"] = "Chat",
+        ["RoomInviteAnyone"] = "Anyone with this link can join.",
+        ["RoomInviteKey"] = "The link carries the room's key, so only people who have it can read the room.",
+        ["RoomInviteKeyShort"] = "Only people with the link can read the room.",
+        ["RoomInviteQr"] = "Invite as a QR code",
+        ["RoomInviteQrLine"] = "Someone beside you can scan this with their camera.",
+        ["RoomCopyLink"] = "Copy link",
+        ["RoomShare"] = "Share…",
+        ["RoomCopyInviteLink"] = "Copy invite link",
+        ["RoomNewInvite"] = "New invite",
+        ["RoomNewInviteLine"] = "New invite stops the old link working. Everyone in the room moves to the new one.",
+        ["RoomNewInviteShort"] = "Stops the old link",
+        ["RoomMoveOpen"] = "Move to a new room…",
+        ["RoomMoveOpenLine"] = "For someone already here: start a new room and pick who comes along.",
+        ["RoomMoveTitle"] = "Move to a new room",
+        ["RoomMoveBody"] = "Everyone you tick is asked to go along. Nobody moves without saying yes, and anyone not ticked stays in this room.",
+        ["RoomMoveAlwaysGoes"] = "Always goes",
+        ["RoomMoveMuted"] = "Muted, so not ticked",
+        ["RoomMoveFoot"] = "The new room picks up at {at} with a new key. Its link reaches only the people ticked.",
+        ["RoomMoveWith_one"] = "Move with {count} other",
+        ["RoomMoveWith_other"] = "Move with {count} others",
+        ["RoomMoveOffer"] = "{name} moved the room. Go along?",
+        ["RoomLineMoved"] = "{name} moved the room",
+        ["RoomLineMovedDetail_one"] = "Go along? {names} is asked too. The episode carries on from {at}.",
+        ["RoomLineMovedDetail_other"] = "Go along? {names} are asked too. The episode carries on from {at}.",
+        ["RoomLineMovedDetailAlone"] = "Go along? The episode carries on from {at}.",
+        ["RoomGoAlong"] = "Go along",
+        ["RoomStay"] = "Stay",
+        ["RoomLineMovedAway"] = "{name} moved to a new room",
+        ["RoomLineWentAlong"] = "{names} went along · this room carries on",
+        ["RoomDetailsEncryption"] = "Encryption",
+        ["RoomDetailsEndToEnd"] = "End to end",
+        ["RoomRelays"] = "Relays",
+        ["RoomRelaysAnswering"] = "{count} answering",
+        ["RoomRelaysAnsweringOf"] = "{count} of {total} answering",
+        ["RoomRelayNotAnswering"] = "Not answering",
+        ["RoomRelayLatency"] = "{ms} ms",
+        ["RoomDetailsRelaysLine"] = "Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. If one stops answering, the room swaps in a spare.",
+        ["RoomEditRelays"] = "Edit relays…",
+        ["RoomEditRelaysTitle"] = "Edit relays",
+        ["RoomEditRelaysLine"] = "Changes this room's relays for everyone in it. New invites carry the list.",
+        ["RoomRelayRemove"] = "Remove {relay}",
+        ["RoomRelayAdd"] = "Add",
+        ["RoomEditRelaysSettings"] = "Settings › Playback › Relays sets the list for new rooms.",
+        ["RoomSettingsGroup"] = "Watch together",
+        ["RoomSettingsHideChat"] = "Hide chat in rooms",
+        ["RoomSettingsHideChatLine"] = "Chat lines, reactions and their ticks on the seek bar stay off the video, and the chat field is gone. The people list still shows who is in the room.",
+        ["RoomSettingsRelaysCount_one"] = "{count} public relay run by others",
+        ["RoomSettingsRelaysCount_other"] = "{count} public relays run by others",
+        ["RoomSettingsRelaysEdit"] = "Edit",
+        ["RoomSettingsGroupLine"] = "Each of you plays the episode from your own sources; relays only carry the room's messages, sealed so they can't read them.",
+        ["RoomRelaysIntro"] = "Rooms you start use these relays, and your invites carry them. Relays pass the room's messages along and can't read them. These are public relays run by others; Kaeri doesn't run any of them. A room's own list is in its Details.",
+        ["RoomRelaysIntroShort"] = "Rooms you start use these relays, and your invites carry them. They can't read the room. These are public relays run by others.",
+        ["RoomRelaysNewRooms"] = "For new rooms",
+        ["RoomRelaysNewRoomsLine"] = "Kaeri sends every room event to all of them. Plain ws:// works only for localhost and .local addresses.",
+        ["RoomRelaysSpares"] = "Spares",
+        ["RoomRelaysSparesLine"] = "When a room has fewer than two relays answering, it swaps in the first spare that answers.",
+        ["RoomRelaysSparesLineShort"] = "Used when a room has fewer than two relays answering.",
+        ["RoomRelaysRestore"] = "Restore the defaults",
+        ["RoomLeaveEllipsis"] = "Leave…",
+        ["RoomLeaveMenu"] = "Leave the room…",
+        ["RoomLeaveMenuPlain"] = "Leave the room",
+        ["RoomLeaveTitle"] = "Leave the room?",
+        ["RoomLeaveLine"] = "The others keep watching.",
+        ["RoomLeaveLineKeep"] = "The others keep watching. Keep the room closes the player and keeps your place.",
+        ["RoomKeep"] = "Keep the room",
+        ["RoomKeepWatching"] = "Keep watching",
+        ["RoomUpNext"] = "Up next for the room",
+        ["RoomUpNextEpisode"] = "Episode {episode} · {title}",
+        ["RoomUpNextEpisodePlain"] = "Episode {episode}",
+        ["RoomUpNextCount"] = "Plays for everyone in {seconds} s",
+        ["RoomUpNextWaiting"] = "Waiting for {name} to finish",
+        ["RoomPlayNextNow"] = "Play next now",
+        ["RoomLineUpNext"] = "Up next in {seconds} s",
+        ["RoomLineUpNextDetail"] = "Episode {episode} plays for everyone",
+        ["RoomChatField"] = "Say something",
+        ["RoomChatSend"] = "Send",
+        ["RoomReact"] = "React",
+        ["RoomChatOpens"] = "The chat opens when you join",
+        ["RoomChatNotSent"] = "Couldn't send",
+        ["RoomChatStarted"] = "{name} started the room · Episode {episode}",
+        ["RoomChatYouStarted"] = "You started the room · Episode {episode}",
+        ["RoomChatPaused"] = "{name} paused at {at}",
+        ["RoomChatYouPaused"] = "You paused at {at}",
+        ["RoomChatResumed"] = "{name} resumed",
+        ["RoomChatPausedForLoading"] = "Paused for {names} · loading",
+        ["RoomChatPausedForBuffering"] = "Paused for {names} · buffering",
+        ["RoomChatPausedForYou"] = "Paused for you · loading",
+        ["RoomChatCarriedOn"] = "{carrier} carried on without {names}",
+        ["RoomChatJoinedAt"] = "{name} joined at {at}",
+        ["RoomChatLeft"] = "{name} left",
+        ["RoomChatMoved"] = "{name} moved to a new room",
+        ["RoomChatWent"] = "{name} went to the new room",
+        ["RoomChatUpNext"] = "Up next: episode {episode} for everyone",
+        ["RoomChatSkippedOpening"] = "{name} skipped the opening",
+        ["RoomReactLaugh"] = "Laugh",
+        ["RoomReactGasp"] = "Gasp",
+        ["RoomReactClap"] = "Clap",
+        ["RoomReactCry"] = "Cry",
+        ["RoomReactedLaugh"] = "{name} laughed at {at}",
+        ["RoomReactedGasp"] = "{name} gasped at {at}",
+        ["RoomReactedClap"] = "{name} clapped at {at}",
+        ["RoomReactedCry"] = "{name} cried at {at}",
+        ["RoomTvKeys"] = "OK for the controls · Back closes the room",
+        ["RoomTvWriteFromPhone"] = "Write from your phone",
+        ["RoomPlaceLine"] = "Each of you plays the episode from your own sources; the room keeps you in step. Start a room from any episode with Watch together, in the player or on its page.",
+        ["RoomPlaceYours"] = "Your room",
+        ["RoomOpenPlayer"] = "Open the player",
+        ["RoomPlaceJoin"] = "Join a room",
+        ["RoomPlaceLink"] = "Invite link",
+        ["RoomPlacePaste"] = "Paste",
+        ["RoomRecent"] = "Recent rooms",
+        ["RoomRecentNote"] = "The last ten, kept on this device",
+        ["RoomRecentRow"] = "Episode {episode} · with {names} · {when}",
+        ["RoomRecentRowAlone"] = "Episode {episode} · {when}",
+        ["RoomRejoin"] = "Rejoin",
+        ["RoomErrorUnreachableTitle"] = "Couldn't reach this room's relays",
+        ["RoomErrorAskNewInvite"] = "Ask for a new invite.",
+        ["RoomErrorUnreachable"] = "Couldn't reach this room's relays. Ask for a new invite.",
+        ["RoomErrorTried"] = "Kaeri tried the link's relays and your spares, {seconds} s each.",
+        ["RoomErrorNobodyAnswered"] = "Nobody answered in this room",
+        ["RoomErrorNobodyAnsweredLine"] = "If someone made a new invite, the old one stopped working. Ask them for the new link.",
+        ["RoomErrorFull"] = "This room is full",
+        ["RoomErrorOldInvite"] = "This invite is from an older version of Kaeri. Ask for a new one.",
+        ["RoomChatJoined"] = "{name} joined",
+        ["RoomChatJumped"] = "{name} jumped from {from} to {to}",
+        ["RoomChatPausedForSeeking"] = "Paused for {names} · catching up",
+        ["RoomChatCorrected"] = "Moved to stay with the room",
+        ["RoomChatEpisodeChanged"] = "{name} put on episode {episode}",
+        ["RoomChatCaughtUp"] = "{name} caught up with the room",
+        ["RoomChatAlreadyPaused"] = "{name} already paused",
+        ["RoomChatNewInvite"] = "{name} made a new invite",
+        ["RoomChatUpNextCancelled"] = "{name} cancelled up next",
+        ["RoomChatRenamed"] = "You're {name} in this room",
+        ["RoomShow"] = "Show room",
+        ["RoomSkipOpening"] = "Skip opening",
+        ["RoomLinkCopied"] = "Invite link copied",
+        ["RoomStartingEpisode"] = "Starting episode {episode}",
+        ["RoomMinutes"] = "{minutes} min",
+        ["RoomNamesAnd"] = "{names} and {last}",
+        ["RoomNamesComma"] = "{first}, {rest}",
+        ["RoomMute"] = "Mute {name}",
+        ["RoomUnmute"] = "Unmute {name}",
+        ["RoomChatMuted"] = "{name} is muted",
+        ["RoomChatMore"] = "{count} more in chat",
+        ["RoomChatAnnounce"] = "{name} says {message}",
+        ["RoomChatWait"] = "Wait {seconds} s",
+        ["RoomChatWaitSpoken_one"] = "Wait one second",
+        ["RoomChatWaitSpoken_other"] = "Wait {seconds} seconds",
+        ["RoomChatCharactersLeft_one"] = "{count} character left",
+        ["RoomChatCharactersLeft_other"] = "{count} characters left",
+        ["RoomReactedAt"] = "{line} at {time}",
+        ["RoomTickLabel"] = "{time} · {names}",
+        ["RoomNamesTwo"] = "{first} and {second}",
+        ["RoomNamesThree"] = "{first}, {second} and {third}",
+        ["RoomNamesOthers"] = "{first}, {second} and {count} others",
+        ["RoomVersionOwn"] = "Only your player switches. The room keeps playing.",
+        ["RoomBannerEpisodePlain"] = "Episode {episode} · {length}",
+        ["RoomMarkUnavailable"] = "Mark skip times after you leave the room.",
+        ["RoomPeople"] = "People in the room",
+        ["RoomStateSeeking"] = "Seeking · {seconds} s",
+        ["RoomErrorUnreachableLead"] = "Couldn't reach this room's relays.",
+        ["RoomErrorNobodyAnsweredLead"] = "Nobody answered in this room.",
+        ["RoomDeviceInRoom"] = "{device} is in this room",
+        ["RoomLeaveOnDevice"] = "Leave the room on {device}",
+        ["RoomTvJoinFromPhone"] = "To join someone's room, open their invite on a paired phone and choose this TV.",
+        ["RoomSourcesFoundLine_one"] = "One source has it. It plays for everyone in the room.",
+        ["RoomSourcesFoundLine_other"] = "{count} sources have it. Your pick plays for everyone in the room.",
         ["SeasonalPrevious"] = "Previous season",
         ["SeasonalNext"] = "Next season",
         ["SeasonalLoading"] = "Loading this season",
@@ -15925,6 +16976,9 @@ public static partial class T
         ["StoreOtherMedium"] = "Every plugin in {store} is for watching",
         ["StoreOtherMediumLine"] = "Watching is off on this device, so none of them show in Your sources.",
         ["StoreTurnOnWatching"] = "Turn on watching",
+        ["StoreOtherMediumReading"] = "Every plugin in {store} is for reading",
+        ["StoreOtherMediumReadingLine"] = "Reading is off on this device, so none of them show in Your sources.",
+        ["StoreTurnOnReading"] = "Turn on reading",
         ["StoreEmpty"] = "{store} has no plugins yet",
         ["StoreEmptyLine"] = "You're a member, so new plugins show in Plugin stores when {owner} adds them.",
         ["StoreErrUnreachable"] = "Couldn't reach {host}",
@@ -16095,6 +17149,13 @@ public static partial class T
         ["SourcesSectionCatalogues"] = "Open catalogues",
         ["SourcesAddDemo"] = "Add the demo",
         ["SourcesOrderAll"] = "Every source is tried in this order, whatever its kind.",
+        ["SourcesChooseFor"] = "Choose a source for episode {episode}",
+        ["SourcesLooking"] = "Looking through your sources…",
+        ["SourcesFound_one"] = "One source has it",
+        ["SourcesFound_other"] = "{count} sources have it",
+        ["SourcesNoneList"] = "No source lists episode {episode}. Sources come from plugins, which a plugin store adds.",
+        ["SourcesOpen"] = "Open sources",
+        ["SourcesLabel"] = "Sources for this episode",
         ["StoresJoined"] = "Joined",
         ["StoresEmptyTitle"] = "No plugin stores yet",
         ["StoresEmptyDetail"] = "Plugin stores hold signed plugins and give each device its own token. Join one with the invite link its owner sends you.",

@@ -326,13 +326,20 @@ final class MacPlayerClickTests: XCTestCase {
 
     /// The largest window's place among the app's and its frame, read from one snapshot: a
     /// window that closes while they are read, as one does going in and out of full screen and
-    /// Picture in Picture, cannot fail the read.
+    /// Picture in Picture, cannot fail the read. Picture in Picture's stage is never it: the
+    /// stage keeps the frame the main window had when the picture left, the whole screen when
+    /// that was full screen, while the main window itself is out of full screen.
     private func largestWindow(_ app: XCUIApplication) -> (Int, CGRect)? {
         let windows = (try? app.snapshot())?.children.filter { $0.elementType == .window } ?? []
         let area = { (frame: CGRect) in frame.width * frame.height }
-        return windows.enumerated().max { area($0.element.frame) < area($1.element.frame) }
+        return windows.enumerated()
+            .filter { $0.element.identifier != Self.pictureInPictureStage }
+            .max { area($0.element.frame) < area($1.element.frame) }
             .map { ($0.offset, $0.element.frame) }
     }
+
+    /// The borderless window Picture in Picture's layer sits in (`PictureInPicture.setStage`).
+    private static let pictureInPictureStage = "picture-in-picture-stage"
 
     /// Whether the app's main window fills its screen, as a full-screen window does: below the
     /// camera housing, where a screen has one.
@@ -359,10 +366,18 @@ final class MacPlayerClickTests: XCTestCase {
         return nil
     }
 
-    /// Window › Picture in Picture, clicked in the menu bar.
+    /// Window › Picture in Picture, clicked in the menu bar, once the menu bar is in view: from
+    /// full screen the main window leaves it with the picture, and the menu bar shows once the
+    /// window is out. The menu's title is clicked where it is, as a pointer does: XCTest's own
+    /// check of what is under it asks the accessibility tree, where Picture in Picture's stage,
+    /// at the whole screen when the picture left full screen, sits under the menu bar too.
     private func returnFromPictureInPicture(_ app: XCUIApplication) {
+        XCTAssertTrue(waitFor { !self.isFullScreen(app) }, "the window stayed full screen in Picture in Picture")
         let window = app.menuBars.menuBarItems["Window"]
-        window.click()
+        XCTAssertTrue(waitFor { window.exists && window.frame.minY >= 0 && window.frame.height > 0 }, "no menu bar")
+        // The menu bar slides in as the Space changes.
+        Thread.sleep(forTimeInterval: 1)
+        window.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5)).click()
         let item = window.menuItems["Picture in Picture"]
         XCTAssertTrue(item.waitForExistence(timeout: 5))
         item.click()

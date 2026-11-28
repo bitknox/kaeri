@@ -28,9 +28,9 @@ pub enum Field {
     KitsuPassword,
     /// An invite link being pasted.
     JoinLink,
-    /// A watch party's link or code.
-    PartyLink,
-    /// What is said to the party.
+    /// A room's invite link being pasted.
+    RoomLink,
+    /// What is said to the room.
     Say,
     /// Who an invite is for.
     InviteName,
@@ -65,7 +65,7 @@ impl Field {
         Self::KitsuUser,
         Self::KitsuPassword,
         Self::JoinLink,
-        Self::PartyLink,
+        Self::RoomLink,
         Self::Say,
         Self::InviteName,
         Self::DeviceLabel,
@@ -188,7 +188,7 @@ impl App {
             Some(Overlay::KitsuUsername) => Field::KitsuUser,
             Some(Overlay::KitsuPassword) => Field::KitsuPassword,
             Some(Overlay::JoinStore) => Field::JoinLink,
-            Some(Overlay::JoinParty) => Field::PartyLink,
+            Some(Overlay::JoinRoom) => Field::RoomLink,
             Some(Overlay::Say) => Field::Say,
             Some(Overlay::InviteName) => Field::InviteName,
             Some(Overlay::StoreConfirm) if self.naming_device() => Field::DeviceLabel,
@@ -244,7 +244,7 @@ impl App {
         }
         // An invite link is a one-time credential; a dismissed prompt forgets it.
         self.field_mut(Field::JoinLink).clear();
-        self.field_mut(Field::PartyLink).clear();
+        self.field_mut(Field::RoomLink).clear();
         self.field_mut(Field::Say).clear();
         self.field_mut(Field::InviteName).clear();
         self.field_mut(Field::DeviceLabel).clear();

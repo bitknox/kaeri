@@ -55,8 +55,6 @@ pub fn run(
             find_opened(link, query, job, engine, services, tx)
         }
         OpenedCommand::Play { link, id, episode, title } => {
-            #[cfg(feature = "party")]
-            crate::party::join_by_default(engine, services, tx);
             crate::playback::start::play_opened(
                 link, id, episode, title, job, engine, services, tx,
             )

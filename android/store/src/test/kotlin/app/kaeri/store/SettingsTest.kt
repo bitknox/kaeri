@@ -98,7 +98,7 @@ class SettingsTest {
             SettingKey.ASK_WAS_OPENING, SettingKey.FIND_SKIP_TIMES, SettingKey.SHARE_SKIP_TIMES, SettingKey.SKIP_FILLER,
             SettingKey.MARK_CHAPTERS, SettingKey.SKIP_BUTTON, SettingKey.FULLSCREEN, SettingKey.NIGHT_MODE, SettingKey.MERGE_SUBTITLES,
             SettingKey.KEEP_SEEDING, SettingKey.PRESENCE, SettingKey.PRESENCE_TITLE, SettingKey.PRESENCE_RICH, SettingKey.TORRENTS,
-            SettingKey.SYNCPLAY, SettingKey.UPDATE_CHECK, SettingKey.UPDATE_BETA, SettingKey.SPOILER_PROTECTION,
+            SettingKey.UPDATE_CHECK, SettingKey.UPDATE_BETA, SettingKey.SPOILER_PROTECTION,
             SettingKey.PICTURE_IN_PICTURE_ON_LEAVE, SettingKey.DOWNLOADS_ON_CELLULAR, SettingKey.CHAPTER_DOWNLOADS_ON_CELLULAR,
             SettingKey.KEEP_CHAPTERS_READY, SettingKey.DELETE_AFTER_READING, SettingKey.SHOW_VOLUMES, SettingKey.OPDS_FEED,
             SettingKey.SERIES_CHOICES_FOLLOW, SettingKey.LOOK_FOLLOWS, SettingKey.CHAPTER_NOTIFICATIONS, SettingKey.DOWNLOADS_FINISHED,

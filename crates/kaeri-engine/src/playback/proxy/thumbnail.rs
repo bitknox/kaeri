@@ -507,6 +507,24 @@ mod tests {
         next_id: u64,
     }
 
+    /// `--clipboard-backends=vo` where this mpv has the option (0.40 on), as
+    /// `kaeri_player::protocol::vo_clipboard_args` says, which this build may not have: mpv's
+    /// clipboard connects to the Wayland compositor before it opens its IPC socket, so one
+    /// that is restarting held the socket back past the wait below.
+    #[cfg(unix)]
+    fn vo_clipboard_args() -> Vec<String> {
+        let listed = std::process::Command::new("mpv")
+            .args(["--no-config", "--list-options"])
+            .stderr(std::process::Stdio::null())
+            .output()
+            .map(|out| String::from_utf8_lossy(&out.stdout).into_owned())
+            .unwrap_or_default();
+        let knows = listed
+            .lines()
+            .any(|line| line.split_whitespace().next() == Some("--clipboard-backends"));
+        if knows { vec!["--clipboard-backends=vo".to_owned()] } else { Vec::new() }
+    }
+
     #[cfg(unix)]
     impl Ipc {
         async fn connect(path: &std::path::Path) -> Self {
@@ -552,6 +570,7 @@ mod tests {
         let dir = tempfile::tempdir().unwrap();
         let encoded = tokio::process::Command::new("mpv")
             .args(["--no-config", "--really-quiet", "--no-audio"])
+            .args(vo_clipboard_args())
             .arg("av://lavfi:testsrc2=size=320x180:rate=24:duration=60")
             .args(["--of=hls", "--ofopts=hls_time=4,hls_playlist_type=vod"])
             // MPEG-2 repeats its sequence header at every keyframe, so each segment decodes
@@ -610,6 +629,7 @@ mod tests {
             .args(["--ofopts=update=1", "--demuxer-lavf-o-append=http_multiple=0"])
             .arg(format!("--o={}", thumb.display()))
             .arg(format!("--input-ipc-server={}", ipc_path.display()))
+            .args(vo_clipboard_args())
             .args(["--", server.thumbnail_url()])
             .kill_on_drop(true)
             .spawn()

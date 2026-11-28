@@ -123,6 +123,9 @@ struct KaeriApp: App {
             .continuesHandoff()
             .hostsPlayer(delegate.player, over: PlayerCoverSheets())
             .environment(\.playerUp, delegate.player.isPresented)
+            #if os(iOS)
+            .environment(\.roomBar, AnyView(PhoneRoomBar()))
+            #endif
             .environment(delegate.store)
             .environment(delegate.navigator)
             #if os(macOS)

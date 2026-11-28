@@ -337,7 +337,10 @@ class KaeriApp : Application(), PlayerHost, NewEpisodesHost, WidgetHost {
         Flavour.castSession(this, store, scope)?.let { store.cast.sessions = it }
         store.cast.setDevice(if (resources.configuration.smallestScreenWidthDp >= 600) "tablet" else "phone") // i18n-skip
         store.cast.handedOff = { player.viewerClosed() }
-        store.cast.playHere = { id, episode -> store.send(Command.Play(id, episode, false)) }
+        // From the TV's position, not the last one history kept, which can be 10 s behind.
+        store.cast.playHere = { id, episode, at ->
+            if (at != null) store.play(id, episode, at) else store.send(Command.Play(id, episode, false))
+        }
         // While a TV is held, the engine sends every play there.
         store.cast.sendPlay = { id, episode, fromStart -> store.send(Command.Play(id, episode, fromStart)) }
         castKeeper = CastKeeper(this, store.cast, scope)

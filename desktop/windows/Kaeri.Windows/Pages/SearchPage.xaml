@@ -111,6 +111,11 @@
           <TextBlock x:Name="PausedLine" Text="{x:Bind s:T.SearchRateLimitEnter}" Style="{StaticResource HazeBodyStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
           <!-- What the engine says about the list, such as filters it could not apply. -->
           <TextBlock x:Name="CaptionLine" Style="{StaticResource HazeCaptionStyle}" TextWrapping="WrapWholeWords" Visibility="Collapsed" />
+          <!-- With nothing asked: the searches made lately, newest first, each to run again. -->
+          <StackPanel x:Name="RecentGroup" Spacing="8" Visibility="Collapsed">
+            <TextBlock Text="{x:Bind s:T.SearchRecent}" Style="{StaticResource SectionTitleStyle}" AutomationProperties.HeadingLevel="Level2" />
+            <p:WrapRow x:Name="RecentRow" Gap="8" />
+          </StackPanel>
           <ContentControl x:Name="RailHost" />
           <TextBlock x:Name="Section" Style="{StaticResource SectionTitleStyle}" Visibility="Collapsed" />
           <local:StateHost x:Name="State">

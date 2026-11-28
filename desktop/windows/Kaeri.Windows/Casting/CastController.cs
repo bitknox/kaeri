@@ -48,6 +48,11 @@ sealed class CastController : Grid
     readonly StackPanel upNext = new() { Spacing = 8, Margin = new Thickness(0, 20, 0, 0), Visibility = Visibility.Collapsed };
     readonly TextBlock upNextLine = new() { Style = Ui.Res<Style>("BodyStrongTextBlockStyle") };
     readonly TextBlock upNextEpisode = new() { Style = Ui.Res<Style>("HazeBodyStyle"), TextTrimming = TextTrimming.CharacterEllipsis };
+    // The corner card's other two: Skip opening or ending while the TV offers it, and the note an
+    // automatic skip leaves with Undo, as in the player.
+    readonly Button skipOffer = CastParts.Text("", accent: true);
+    readonly StackPanel skipped = new() { Orientation = Orientation.Horizontal, Spacing = 12, Margin = new Thickness(0, 20, 0, 0), Visibility = Visibility.Collapsed };
+    readonly TextBlock skippedLine = new() { Style = Ui.Res<Style>("BodyStrongTextBlockStyle"), VerticalAlignment = VerticalAlignment.Center };
     readonly StackPanel rows = new() { Spacing = 4, Margin = new Thickness(0, 20, 0, 0) };
     readonly Grid subtitlesRow, audioRow;
     readonly DropDownButton subtitles = new() { MinHeight = 32, MinWidth = 140 };
@@ -150,6 +155,19 @@ sealed class CastController : Grid
         upNext.Children.Add(upNextButtons);
         AutomationProperties.SetLiveSetting(upNextLine, AutomationLiveSetting.Polite);
         side.Children.Add(upNext);
+
+        // Skip and the Undo note, in the same corner while Up next is not up.
+        skipOffer.Margin = new Thickness(0, 20, 0, 0);
+        skipOffer.HorizontalAlignment = HorizontalAlignment.Left;
+        skipOffer.Visibility = Visibility.Collapsed;
+        skipOffer.Click += (_, _) => tv.SessionCommand(new FfiTvCommand.Skip());
+        side.Children.Add(skipOffer);
+        var undo = CastParts.Text(T.ActionUndo);
+        undo.Click += (_, _) => tv.CastUndoSkip();
+        AutomationProperties.SetLiveSetting(skippedLine, AutomationLiveSetting.Polite);
+        skipped.Children.Add(skippedLine);
+        skipped.Children.Add(undo);
+        side.Children.Add(skipped);
 
         // Subtitles, audio and the TV's volume.
         subtitlesRow = Row(T.PlayerSubtitles, subtitles);
@@ -325,13 +343,33 @@ sealed class CastController : Grid
             if (upNextEpisode.Text != nextEpisode)
                 upNextEpisode.Text = nextEpisode;
         }
+        // Otherwise the Undo note of an automatic skip, else Skip while the TV offers one.
+        var undone = live && next is null ? card?.Undo : null;
+        Set(skipped, undone is not null);
+        if (undone is not null)
+        {
+            var skippedSaid = TvWords.CastSkipped(undone);
+            if (skippedLine.Text != skippedSaid)
+                skippedLine.Text = skippedSaid;
+        }
+        var offer = live && next is null && undone is null ? card?.Card.Now?.Skip : null;
+        Set(skipOffer, offer is not null);
+        if (offer is not null)
+        {
+            var words = TvWords.SkipOffered(offer);
+            if (skipOffer.Content as string != words)
+            {
+                skipOffer.Content = words;
+                AutomationProperties.SetName(skipOffer, words);
+            }
+        }
 
         Opacity(rows, live ? 1 : 0.38);
         var now = card?.Card.Now;
         Tracks(now, live);
         Volume(view, live);
 
-        Footer(CastFooter.For(line), turned);
+        Footer(CastFooter.For(line, drawn.Notice), turned);
         first.Live(footerDrawn!.FirstLive && (first.Action is not (CastAction.PlayHere or CastAction.ChooseSource) || tv.SessionPlay is not null));
         second.Live(second.Action is not (CastAction.PlayHere or CastAction.ChooseSource) || tv.SessionPlay is not null);
 
@@ -395,7 +433,10 @@ sealed class CastController : Grid
         void Change()
         {
             first.Set(want.First, want.FirstAccent);
-            second.Set(want.Second, accented: false);
+            // A reason with one way on leaves the second place out.
+            if (want.Second is { } then)
+                second.Set(then, accented: false);
+            Set(second.Root, want.Second is not null);
         }
         if (turned && footer.ActualWidth > 0)
             Crossfade.Swap(footer, Change);
@@ -422,6 +463,9 @@ sealed class CastController : Grid
                 break;
             case CastAction.ChooseAnother:
                 act.ChooseAnother();
+                break;
+            case CastAction.TryAgain:
+                act.TryAgain();
                 break;
             case CastAction.ChooseSource:
                 act.ChooseSource();
@@ -565,6 +609,7 @@ sealed class CastActions
     public required Action Stop { get; init; }
     public required Action ChooseAnother { get; init; }
     public required Action ChooseSource { get; init; }
+    public required Action TryAgain { get; init; }
 }
 
 /// <summary>

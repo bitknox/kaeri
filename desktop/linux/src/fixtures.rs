@@ -42,120 +42,24 @@ pub fn active() -> bool {
     ACTIVE.load(std::sync::atomic::Ordering::Relaxed)
 }
 
-/// The engine's runtime, for the scene's party server to run on.
+/// The engine's runtime, for the room's fake relays to run on.
 static RUNTIME: std::sync::OnceLock<tokio::runtime::Handle> = std::sync::OnceLock::new();
 
 /// Where the fake AniList serves its art, `http://…/art/`, for shots that draw covers of their own.
 pub static ART_BASE: std::sync::OnceLock<String> = std::sync::OnceLock::new();
 
-/// Keep `handle`, the engine's runtime, for [`FakeParty::start`].
+/// The engine's runtime, for the room's fake relays.
+pub fn runtime() -> Option<tokio::runtime::Handle> {
+    RUNTIME.get().cloned()
+}
+
+/// Keep `handle`, the engine's runtime, for the room's fake relays.
 pub fn keep_runtime(handle: tokio::runtime::Handle) {
     ACTIVE.store(true, std::sync::atomic::Ordering::Relaxed);
     let _ = RUNTIME.set(handle);
 }
 
-/// A Syncplay server on loopback with members the scene plays, so a party can be joined,
-/// steered and left with nothing on the network.
-pub struct FakeParty {
-    server: kaeri_party::fake::FakeServer,
-    members:
-        std::cell::RefCell<std::collections::HashMap<String, kaeri_party::fake::FakeMember>>,
-}
-
-impl FakeParty {
-    /// A server that takes every member, or refuses each with `refuse`.
-    pub fn start(refuse: Option<&str>) -> Option<Self> {
-        use kaeri_party::fake::{FakeOptions, FakeServer};
-        let handle = RUNTIME.get()?;
-        let options =
-            FakeOptions { refuse: refuse.map(str::to_owned), ..FakeOptions::default() };
-        let server = handle
-            .block_on(handle.spawn(FakeServer::start(options)))
-            .ok()?
-            .inspect_err(
-                |e| tracing::warn!(error = %e, "the scene's party server did not start"),
-            )
-            .ok()?;
-        Some(Self { server, members: Default::default() })
-    }
-
-    /// Where to join it, as `host:port`.
-    pub fn server(&self) -> String {
-        self.server.address()
-    }
-
-    fn with(&self, act: impl FnOnce(&kaeri_party::fake::FakeServer)) {
-        let Some(handle) = RUNTIME.get() else { return };
-        let _entered = handle.enter();
-        act(&self.server);
-    }
-
-    fn member(&self, name: &str, act: impl FnOnce(&kaeri_party::fake::FakeMember)) {
-        let Some(handle) = RUNTIME.get() else { return };
-        let _entered = handle.enter();
-        if let Some(member) = self.members.borrow().get(name) {
-            act(member);
-        }
-    }
-
-    /// `name` comes into `room`.
-    pub fn add(&self, room: &str, name: &str) {
-        let mut member = None;
-        self.with(|server| member = Some(server.member(room, name)));
-        if let Some(member) = member {
-            self.members.borrow_mut().insert(name.to_owned(), member);
-        }
-    }
-
-    /// The member opens `file`, `duration` seconds long.
-    pub fn opens(&self, name: &str, file: &str, duration: f64) {
-        self.member(name, |m| m.open(file, duration));
-    }
-
-    /// The member sets the room's playlist: the current episode, then the next.
-    pub fn playlist(&self, name: &str, files: &[&str]) {
-        self.member(name, |m| {
-            m.set_playlist(files);
-            m.set_index(0);
-        });
-    }
-
-    pub fn ready(&self, name: &str, ready: bool) {
-        self.member(name, |m| m.ready(ready));
-    }
-
-    pub fn says(&self, name: &str, message: &str) {
-        self.member(name, |m| m.chat(message));
-    }
-
-    /// The member reacts `at` seconds into the episode.
-    pub fn reacts(&self, name: &str, reaction: kaeri_party::Reaction, at: f64) {
-        self.member(name, |m| m.chat(&kaeri_party::reaction::encode(reaction, at)));
-    }
-
-    /// The server turns chat on or off, and says how long a line may be to members who join
-    /// after this.
-    pub fn set_chat(&self, on: bool, max_length: Option<u32>) {
-        self.with(|server| server.set_chat(on, max_length));
-    }
-
-    /// The server takes chat and sends it to no one, so a sender's line never comes back.
-    pub fn swallow_chat(&self, swallow: bool) {
-        self.with(|server| server.swallow_chat(swallow));
-    }
-
-    /// The server goes away, as one lost does: every connection dropped and none taken.
-    pub fn go_down(&self, down: bool) {
-        self.with(|server| {
-            server.set_down(down);
-            if down {
-                server.drop_connections();
-            }
-        });
-    }
-}
-
-/// An address that takes a connection and never answers, for the form waiting on a room.
+/// An address that takes a connection and never answers, for scenes that wait on a server.
 pub fn silent_server() -> Option<(std::net::TcpListener, String)> {
     let listener = std::net::TcpListener::bind("127.0.0.1:0").ok()?;
     let address = listener.local_addr().ok()?.to_string();

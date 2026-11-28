@@ -69,9 +69,9 @@ struct TitleMoreItems: View {
             .disabled(unwatched.isEmpty)
         Divider()
         let action = TitleAction(entry, episodes: store.titles.episodes[entry.id])
-        // The episode Play would play, with a party: Start a party with it (Watch together).
-        Button(L.partyOpen) {
-            store.party.start(PartyEpisode(id: entry.id, episode: String(action.episode)))
+        // The episode Play would play, in a room: Watch together starts one with it.
+        Button(RoomCopy.columnTitle) {
+            store.room.start(id: entry.id, episode: String(action.episode))
         }
         .disabled(!action.playable || store.titles.unlisted(entry.id))
         Button(L.titlePlayTrailer) { navigator.playTrailer(entry, store: store) }

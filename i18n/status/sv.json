@@ -9481,16 +9481,6 @@
     "by": "agent",
     "at": "2026-11-01"
   },
-  "keys-action-play-party": {
-    "source": "11e321ee3797",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "flags": [
-      "context: The article \"en\" depends on the gender of the kept English term { -watch-party }; cannot verify."
-    ],
-    "back": "Play in a { -watch-party }"
-  },
   "keys-action-play-pause": {
     "source": "01c616b90d78",
     "state": "draft",
@@ -9929,12 +9919,6 @@
     "at": "2026-10-31",
     "back": "Keys"
   },
-  "keys-hint-leave-party": {
-    "source": "19bee21a859f",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
   "keys-hint-list": {
     "source": "3d249bb48003",
     "state": "draft",
@@ -10084,12 +10068,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Rate"
-  },
-  "keys-hint-ready": {
-    "source": "9c13a2548d25",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "keys-hint-refresh": {
     "source": "7b7163270e57",
@@ -16603,13 +16581,6 @@
     "at": "2026-10-31",
     "back": "Choose a { -source }"
   },
-  "party-choose-server": {
-    "source": "fb720f0cb925",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Choose a server for { -watch-party } first. { $server } is run by { $operator }."
-  },
   "party-choose-source": {
     "source": "44762908fde2",
     "state": "draft",
@@ -16862,13 +16833,6 @@
     "at": "2026-10-31",
     "back": "Join the { -watch-party }?"
   },
-  "party-joined": {
-    "source": "d20e1c043fde",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Joined { -watch-party }, room { $room } on { $server }."
-  },
   "party-joining": {
     "source": "6697577c5a3f",
     "state": "draft",
@@ -16942,13 +16906,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Leaving…"
-  },
-  "party-left": {
-    "source": "ea3ce6454bda",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Left the { -watch-party }."
   },
   "party-left-note": {
     "source": "c35339b3c7a6",
@@ -17132,20 +17089,6 @@
     "at": "2026-10-31",
     "back": "A { -watch-party } needs a connection. You are offline."
   },
-  "party-needs-room": {
-    "source": "04c05ee12036",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "A { -watch-party } needs a room to meet in. Choose one first."
-  },
-  "party-needs-server": {
-    "source": "743b76505cad",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Choose a server for { -watch-party } first, such as syncplay.server. { $server } is run by { $operator }."
-  },
   "party-next-joined-at": {
     "source": "c35190d6b42e",
     "state": "draft",
@@ -17176,13 +17119,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which a { -plugin-store } adds."
-  },
-  "party-no-source-still-in": {
-    "source": "39d1974f4824",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "{ $reason } You are still in { -watch-party }."
   },
   "party-nosource-missing-detail": {
     "source": "71204e7d5fba",
@@ -17417,13 +17353,6 @@
     "at": "2026-10-31",
     "back": "Servers used earlier"
   },
-  "party-rejoined": {
-    "source": "b9cddf56b027",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Back in the { -watch-party }."
-  },
   "party-room": {
     "source": "ca7d152bef51",
     "state": "draft",
@@ -17542,13 +17471,6 @@
     "by": "opus",
     "at": "2026-11-07"
   },
-  "party-server-lost": {
-    "source": "7be517418a8f",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "The server for { -watch-party } was lost. Trying again."
-  },
   "party-server-public": {
     "source": "21ab64ccf178",
     "state": "draft",
@@ -17569,12 +17491,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "No server of your own? { $server } is a public server, run by { $operator }."
-  },
-  "party-server-unreachable": {
-    "source": "625c230a72d4",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
   },
   "party-share": {
     "source": "313b0c2e009a",
@@ -17610,13 +17526,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "One { -source } has it / { $count } { -source-pl } have it"
-  },
-  "party-sources-found-line": {
-    "source": "07cb8e3aa15e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "One { -source } has it. The one you choose is played with { -watch-party }. / { $count } { -source-pl } have it. The one you choose is played with { -watch-party }."
   },
   "party-sources-label": {
     "source": "444a0b13c12b",
@@ -27680,27 +27589,6 @@
     "at": "2026-10-31",
     "back": "Swap A and B"
   },
-  "settings-label-syncplay": {
-    "source": "4e6dadff177e",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Syncplay { -watch-party-pl }"
-  },
-  "settings-label-syncplay-room": {
-    "source": "fefe8db56b3b",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Syncplay room"
-  },
-  "settings-label-syncplay-server": {
-    "source": "cd554effb8ae",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Syncplay server"
-  },
   "settings-label-theme": {
     "source": "aab875d8cfcf",
     "state": "draft",
@@ -28129,27 +28017,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Press Enter to type a language code. There are too many values to browse."
-  },
-  "settings-note-syncplay": {
-    "source": "36c579ef9324",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Press { $key } to play an episode in the room below. When it is on, all playback goes there."
-  },
-  "settings-note-syncplay-room": {
-    "source": "b47b63ed4687",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Press Enter to type a friend's room. Leave empty to start one nobody can guess."
-  },
-  "settings-note-syncplay-server": {
-    "source": "7aca46d27d46",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Press Enter to type host:port. There is no server until you choose one."
   },
   "settings-note-titles": {
     "source": "93262c4de80a",
@@ -30096,13 +29963,6 @@
     "by": "haiku",
     "at": "2026-10-31",
     "back": "Your mpv configuration"
-  },
-  "settings-value-room-unset": {
-    "source": "47f8e4245a22",
-    "state": "draft",
-    "by": "haiku",
-    "at": "2026-10-31",
-    "back": "Not set (needed for { -watch-party-pl })"
   },
   "settings-value-seed-ratio": {
     "source": "7163ca369708",
@@ -38758,12 +38618,6 @@
   },
   "tui-together-join-prompt": {
     "source": "cec2ffaab49c",
-    "state": "draft",
-    "by": "agent",
-    "at": "2026-11-01"
-  },
-  "tui-together-not-a-link": {
-    "source": "e1da7a068dba",
     "state": "draft",
     "by": "agent",
     "at": "2026-11-01"

@@ -282,11 +282,8 @@ extension SettingKey {
         case .chapterNotifications: L.settingsChapterNotifications
         case .downloadsFinished: L.settingsDownloadsFinished
         case .openAt: L.settingsOpenAt
-        case .syncplay: L.settingsSyncplay
         case .castTvs: L.castTvsLabel
         case .torrentsWhileCasting: L.castTorrentsLabel
-        case .syncplayServer: L.settingsSyncplayServer
-        case .syncplayRoom: L.settingsSyncplayRoom
         case .presence: L.settingsDiscordPresence
         case .presenceTitle: L.settingsPresenceTitle
         case .presenceRich: L.settingsPresenceRich

@@ -248,8 +248,16 @@ fun AppStore.joinStop() {
 }
 
 /**
- * The join page's Continue: what the switches left on comes over from the paired device. Sign-ins
- * switched off are withdrawn, the servers on are added, and the stores on are joined; returns the
+ * The setup summary's answer to its Copy sign-ins switch. The engine holds the setup's tracker
+ * sign-ins until this comes: with Trackers it signs in with them, without it drops them.
+ */
+internal fun copiedOnContinue(signIns: Boolean): List<SyncCopy> =
+    if (signIns) listOf(SyncCopy.Trackers) else emptyList()
+
+/**
+ * The join page's Continue: what the switches left on comes over from the paired device. The
+ * setup's tracker sign-ins are kept or dropped as the Copy sign-ins switch says, the servers on are
+ * added, and the stores on are joined; returns the
  * stores asked for now, by name, whose answers the page waits on.
  */
 fun AppStore.joinContinue(signIns: Boolean, stores: List<app.kaeri.engine.model.SyncStoreOffer>, servers: List<String>): Set<String> {
@@ -262,7 +270,7 @@ fun AppStore.joinContinue(signIns: Boolean, stores: List<app.kaeri.engine.model.
         return asking
     }
     if (first) {
-        if (!signIns) copyNoSignIns(setup.device)
+        copySignIns(setup.device, copiedOnContinue(signIns))
         addBookServersFrom(setup.device, servers)
     }
     val addresses = stores.filter { it.name in asking }.map { it.address }

@@ -539,9 +539,11 @@ private fun Block(commentId: Int, index: Int, block: CommentBlock, view: Discuss
         }
         return
     }
+    val speech = SpoilerSpeech(stringResource(R.string.discussion_spoiler))
     val text = buildAnnotatedString {
         block.spans.forEachIndexed { spanIndex, span ->
             val key = "$commentId/$index/$spanIndex"
+            if (span.spoiler && revealed[key] != true) speech.bar() else speech.plain(span.text)
             val style = SpanStyle(
                 fontWeight = if (span.bold) FontWeight.SemiBold else null,
                 fontStyle = if (span.italic) FontStyle.Italic else null,
@@ -560,13 +562,17 @@ private fun Block(commentId: Int, index: Int, block: CommentBlock, view: Discuss
             }
         }
     }
+    // TalkBack reads a closed bar as "Spoiler", never its words, and has an action to open them.
+    val spoken = Modifier.spoilerSpeech(speech, stringResource(R.string.discussion_show_spoilers)) {
+        block.spans.forEachIndexed { spanIndex, span -> if (span.spoiler) revealed["$commentId/$index/$spanIndex"] = true }
+    }
     if (block.quote) {
         Row(Modifier.fillMaxWidth().heightIn(min = 22.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
             Box(Modifier.width(1.dp).fillMaxHeight().background(ObiSilk.Rule))
-            Text(text, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant)
+            Text(text, style = MaterialTheme.typography.bodyMedium, color = colors.onSurfaceVariant, modifier = spoken)
         }
     } else {
-        Text(text, style = MaterialTheme.typography.bodyLarge)
+        Text(text, style = MaterialTheme.typography.bodyLarge, modifier = spoken)
     }
 }
 

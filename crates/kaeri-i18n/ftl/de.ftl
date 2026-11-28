@@ -539,29 +539,8 @@ notice-episodes-queued-existing-stopped =
 # Toast when keep next found no room for another episode.
 notice-keep-next-full = Nicht genug freier Speicher, um die nächsten Folgen herunterzuladen. Gib Speicherplatz frei, um mehr herunterzuladen.
 
-# Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-party-needs-server = Wähle zuerst einen Server für die Watchparty als syncplay.server. { $server } wird von { $operator } betrieben.
-
-# Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-party-choose-server = Wähle zuerst einen Server für die Watchparty. { $server } wird von { $operator } betrieben.
-
 # Toast when a watch party is asked for in a build without watch parties.
 notice-no-party = Watchpartys sind in dieser Version von Kaeri nicht verfügbar.
-
-# Message when a watch party was asked for with no room named.
-party-needs-room = Eine Watchparty braucht einen Raum zum Treffen. Wähle zuerst einen aus.
-
-# Message in a watch party when its server connection dropped and is retried.
-party-server-lost = Verbindung zum Server der Watchparty verloren. Neuer Versuch läuft.
-
-# Message in a watch party when the connection came back.
-party-rejoined = Wieder in der Watchparty.
-
-# Message when the person left a watch party.
-party-left = Du hast die Watchparty verlassen.
-
-# Message when a watch party's server could not be reached, in the lobby or when looking in.
-party-server-unreachable = { $server } ist nicht erreichbar. Prüfe den Server oder versuche es erneut.
 
 # Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
 reading-next-chapter = Kapitel { $chapter }
@@ -1765,13 +1744,6 @@ party-choose-a-source = Eine Quelle wählen
 
 # Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 party-sources-none-listed = Keine Quelle listet Episode { $episode } auf. Quellen stammen von Plugins, die du aus einem Plugin-Store hinzufügst.
-
-# Line above the list of sources that have the watch party's episode.
-party-sources-found-line =
-    { $count ->
-        [one] Eine Quelle hat sie. Die gewählte spielt mit der Watchparty ab.
-       *[other] { $count } Quellen haben sie. Die gewählte spielt mit der Watchparty ab.
-    }
 
 # Notice when the player could not start, or could not be reached to add a track.
 player-could-not-start = Der Player konnte nicht starten. Versuch es noch einmal oder wähle eine andere Quelle.
@@ -3151,9 +3123,6 @@ keys-action-toggle-demo = Demo entfernen oder hinzufügen
 keys-action-download-range = Einen Bereich von Folgen herunterladen
 
 # Action label in the help overlay and the command palette.
-keys-action-play-party = In einer Watchparty abspielen
-
-# Action label in the help overlay and the command palette.
 keys-action-toggle-watched = Gesehen-Status umschalten
 
 # Action label in the help overlay and the command palette.
@@ -3553,24 +3522,18 @@ nav-rail-collapsed = Schmal
 nav-rail-hidden = Ausgeblendet
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-ready = Bereit
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-copy-link = Link kopieren
-
-# Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-keys-hint-leave-party = Verlassen
 
 # Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 keys-hint-say = Sagen
 
-# Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+# Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 keys-hint-mute = Stummschalten
 
-# Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+# Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 keys-hint-unmute = Laut schalten
 
-# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+# Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 keys-hint-hide-chat = Chat aus
 
 # Status line hint beside a key: turns Hide chat off again. Keep it to a word or two.
@@ -4309,9 +4272,6 @@ settings-value-player-ui-mpv = Deine mpv-Einrichtung
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Im Torrent-Cache aufbewahrt
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Nicht gesetzt (nötig für Watchpartys)
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 settings-value-seed-ratio = Bis Verhältnis { $ratio }
 
@@ -4413,15 +4373,6 @@ settings-label-keep-seeding = Seeding fortsetzen
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = Nach jedem Download
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay-Watchpartys
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Syncplay-Server
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Syncplay-Raum
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Nach Updates suchen
@@ -4530,15 +4481,6 @@ settings-note-keep-seeding = Standardmäßig aus, um Upload zu sparen. Schalte e
 
 # Note under the after each download row.
 settings-note-download-hook = Drücke Enter, um einen Befehl einzugeben. Er läuft nach jedem fertigen Download.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-settings-note-syncplay = Drücke { $key }, um eine Episode im unten eingestellten Raum abzuspielen. Solange sie an ist, läuft jede Wiedergabe dort.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Drücke Enter, um host:port einzugeben. Es gibt keinen Server, bis du einen wählst.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Drücke Enter, um einen Raum einzugeben, den dir jemand gegeben hat. Leer lassen startet einen Raum, den niemand erraten kann.
 
 # Note under the check for updates row.
 settings-note-update-check = Eine zwischengespeicherte Anfrage pro Tag, beim Start.
@@ -5640,12 +5582,6 @@ hint-open-stores = Gehe zu Quellen und drücke Enter, um die Plugin-Stores zu ö
 # What the terminal says beside the notice that Kitsu signs in from the Accounts screen.
 hint-kitsu-credentials = Drücke Enter in der Zeile, um deine Zugangsdaten einzugeben.
 
-# Toast when a { -watch-party } is joined.
-party-joined = Du bist der Watchparty in Raum { $room } auf { $server } beigetreten.
-
-# Toast when the party's episode has no { -source } here. The reason says why.
-party-no-source-still-in = { $reason } Du bleibst in der Watchparty.
-
 # Status line while the { -source-pl } are rebuilt after a change.
 status-reloading-sources = Quellen werden neu geladen…
 
@@ -5654,15 +5590,6 @@ pin-unavailable = { $name } ist für diesen Titel angeheftet, aber nicht verfüg
 
 # Name of the Together section in the terminal's rail, on the key 0.
 tui-together-section = Gemeinsam
-
-# Prompt of the Join line in the Together section.
-tui-together-join-prompt = Link oder Code
-
-# Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
-tui-together-chat-hidden-line = Zeilen und Reaktionen bleiben in jeder Party vom Player fern.
-
-# Toast when what was typed in the Together section's Join line is neither a link nor a code.
-tui-together-not-a-link = Das ist kein Watchparty-Link und kein Code.
 
 # Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
 tui-together-recent-alone = Folge { $episode } · { $when }

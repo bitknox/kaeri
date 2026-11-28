@@ -136,7 +136,10 @@ pub enum SyncCommand {
     /// session between the two, whichever side opens it; with `address` (`host:port`) this
     /// device opens one now. `device` `None` asks the next device this one pairs with, in the
     /// pairing itself. An empty `copy` withdraws what was asked. Answered with
-    /// `Event::SyncSignInsCopied` when the answer comes, then `Event::SyncStatus`.
+    /// `Event::SyncSignInsCopied` when the answer comes, then `Event::SyncStatus`. Also the
+    /// answer to a setup's Copy sign-ins switch (`AskSetupFrom`): with `device` set, `Trackers`
+    /// in `copy` keeps and signs in with the tracker sign-ins held from that device, said with
+    /// `Event::SyncSignInsCopied` at once, and a `copy` without it drops them.
     CopySignIns { device: Option<String>, copy: Vec<SyncCopy>, address: Option<String> },
     /// Move the group to another folder, keeping the group, its keys and its recovery key, or
     /// with `None` stop using a folder and keep syncing nearby. The new folder must be empty or
@@ -190,8 +193,9 @@ pub enum SyncCommand {
     /// pair, in the pairing itself) for its setup. It hands over an invite to every plugin store
     /// it is a member of, each book server with its sign-in, its answer to Watch, read, or both,
     /// and what it is signed in to, all sealed for this device inside the paired link. Nothing
-    /// is joined or added until the person says: `JoinStoresFrom` and `AddBookServersFrom`.
-    /// Answered with `Event::SetupFrom`, then `Event::SyncStatus`.
+    /// is joined, added or signed in to until the person says: `JoinStoresFrom`,
+    /// `AddBookServersFrom` and `CopySignIns`, which the setup's tracker sign-ins wait for in
+    /// memory. Answered with `Event::SetupFrom`, then `Event::SyncStatus`.
     AskSetupFrom { device: Option<String>, address: Option<String> },
     /// Add book servers `device` handed over (`SyncStatus::book_servers_to_add`), their sign-ins
     /// going to this device's secure store. `servers` are offer ids; empty adds every one held

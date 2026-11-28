@@ -185,6 +185,10 @@ extension AppStore {
         accounts.started("kitsu", job: send(.connectKitsu(username: username, password: password)))
     }
 
+    public func connectMangaUpdates(username: String, password: String) {
+        accounts.started("mangaupdates", job: send(.reading(.connectMangaUpdates(username: username, password: password))))
+    }
+
     public func disconnect(_ tracker: String) {
         send(.disconnect(tracker: tracker))
     }
@@ -379,6 +383,16 @@ extension AppStore {
     public func playDownload(_ row: DownloadRow) {
         guard let path = row.path else { return }
         send(.playLocal(id: row.anilistId, episode: row.episode, title: row.title, path: path))
+    }
+
+    /// Remove a book folder, with Undo for as long as the engine keeps it.
+    public func removeBookFolder(_ folder: BookFolderRow) {
+        bookSources.removeFolder(folder.id)
+        notices.post(
+            Notice(kind: .info, text: L.sourcesRemoved(name: folder.name), hint: nil),
+            action: NoticeButton(title: L.actionUndo) { [weak self] in
+                self?.bookSources.restoreFolder(folder.id)
+            })
     }
 
     /// Queue a failed download again: the engine retries it in place.

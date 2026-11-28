@@ -18,16 +18,19 @@ public struct PhoneOrientation: Equatable, Sendable {
     public var player = false
     /// The reader is open.
     public var reader = false
+    /// The player is in a room: it opens upright, and turning it is full screen (the room board).
+    public var room = false
 
-    public init(player: Bool = false, reader: Bool = false) {
+    public init(player: Bool = false, reader: Bool = false, room: Bool = false) {
         self.player = player
         self.reader = reader
+        self.room = room
     }
 
     /// Portrait with nothing over the app (native-ux, iPhone). The player's landscape wins over
     /// the reader under it.
     public var allowed: Allowed {
-        if player { return .landscape }
+        if player { return room ? .either : .landscape }
         if reader { return .either }
         return .portrait
     }
@@ -52,6 +55,20 @@ extension PhoneOrientation {
     /// The player came up or went.
     public static func player(_ on: Bool) {
         change { $0.player = on }
+    }
+
+    /// Whether a room turns the screen upright as it opens. Sideways screenshots turn it off.
+    public static var opensUpright = true
+
+    /// The player went into a room or left it. Into one, the screen turns upright once, then
+    /// follows the sensor.
+    public static func room(_ on: Bool) {
+        let entering = on && !now.room && now.player && opensUpright
+        change { $0.room = on }
+        guard entering, UIDevice.current.userInterfaceIdiom == .phone,
+              let scene = UIApplication.shared.connectedScenes.compactMap({ $0 as? UIWindowScene }).first
+        else { return }
+        scene.requestGeometryUpdate(.iOS(interfaceOrientations: .portrait)) { _ in }
     }
 
     /// The reader opened or closed.

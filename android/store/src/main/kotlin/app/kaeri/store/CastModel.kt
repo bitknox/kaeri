@@ -255,10 +255,10 @@ class CastModel(
     val lastItem: StateFlow<CastItem?> = _lastItem.asStateFlow()
 
     /**
-     * Plays an episode on this device: Play here, once the cast has stopped. The app sends the
-     * engine its play, which resumes where the TV left off.
+     * Plays an episode on this device: Play here, once the cast has stopped, from the TV's
+     * position when it came back (null: where the engine kept it in history).
      */
-    var playHere: ((AnilistId, String) -> Unit)? = null
+    var playHere: ((AnilistId, String, Double?) -> Unit)? = null
 
     /** Sends the engine a play, which goes to the held TV while one is held. */
     var sendPlay: ((id: AnilistId, episode: String, fromStart: Boolean) -> Unit)? = null
@@ -788,14 +788,14 @@ class CastModel(
             val from = source.playHere()
             end()
             val id = from?.id ?: shown?.request?.id ?: return
-            playHere?.invoke(id, from?.episode ?: shown?.request?.episode ?: return)
+            playHere?.invoke(id, from?.episode ?: shown?.request?.episode ?: return, from?.position?.takeIf { it > 0.0 })
             return
         }
         shown ?: return
-        link?.playHere()
+        val at = link?.playHere()
         val now = shown.cast.card.now
         end()
-        playHere?.invoke(now?.id ?: shown.request.id, now?.episode ?: shown.request.episode)
+        playHere?.invoke(now?.id ?: shown.request.id, now?.episode ?: shown.request.episode, at?.takeIf { it > 0.0 })
     }
 
     /** Stop casting: the receiver quits on the TV, the card and the bar go. */

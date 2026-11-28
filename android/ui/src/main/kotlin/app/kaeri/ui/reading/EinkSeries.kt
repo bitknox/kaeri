@@ -38,6 +38,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.ReadOnlyComposable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -88,6 +89,7 @@ import app.kaeri.engine.core.Medium
 import app.kaeri.engine.model.ChapterDownloadState
 import app.kaeri.engine.model.ChapterReadState
 import app.kaeri.engine.model.ChapterRow
+import app.kaeri.engine.model.VolumeGroup
 import app.kaeri.engine.model.DownloadPick
 import app.kaeri.engine.model.Msg
 import app.kaeri.engine.model.ReadingFailure
@@ -419,7 +421,8 @@ private fun SeriesButtons(
                 statusMenu()
             }
             Box {
-                EinkOutlinedButton(Strings.seriesDownload(context), { if (!choosing && chapters?.volumes?.hasDownloads() == true) onDownload() })
+                // As on the phone: nothing left to download, or choosing, leaves it unpressable.
+                EinkOutlinedButton(Strings.seriesDownload(context), onDownload, enabled = !choosing && chapters?.volumes?.hasDownloads() == true)
                 downloadMenu()
             }
         }
@@ -453,6 +456,20 @@ private fun SeriesChapters(
     val rows = if (newestFirst) all.reversed() else all
     var page by rememberSaveable(series.work) { mutableIntStateOf(0) }
     LaunchedEffect(newestFirst) { page = 0 }
+    // Choose chapters opens on the page with the reader's place, as the phone centres it, and
+    // leaving it goes back to the page it left. Kept out of state: the pager reads it in the frame
+    // choosing starts or ends, so the panel paints the right page once.
+    val choosing = chosen != null
+    val held = remember { intArrayOf(if (choosing) 1 else 0, -1) }
+    val starting = choosing && held[0] == 0
+    val ending = !choosing && held[0] == 1
+    val focus = if (starting) choosingFocus(chapters?.volumes.orEmpty(), rows, chosen.orEmpty()) else null
+    val back = if (ending) held[1].takeIf { it >= 0 } else null
+    SideEffect {
+        if (starting) held[1] = page
+        if (ending) held[1] = -1
+        held[0] = if (choosing) 1 else 0
+    }
     Column(modifier.fillMaxWidth()) {
         ChaptersHead(series, chapters, newestFirst, onOrder, choosing = chosen != null, canChoose = chapters != null && all.isNotEmpty(), onChoose)
         when {
@@ -480,7 +497,7 @@ private fun SeriesChapters(
             )
         }
         if (rows.isNotEmpty()) {
-            ChapterPages(series, rows, page, { page = it }, chosen, onChosen, onOpen, onLong, Modifier.weight(1f))
+            ChapterPages(series, rows, page, focus, back, { page = it }, chosen, onChosen, onOpen, onLong, Modifier.weight(1f))
         }
     }
 }
@@ -547,6 +564,10 @@ private fun ChapterPages(
     series: SeriesView,
     rows: List<ChapterRow>,
     page: Int,
+    /** The chapter whose page to show instead of [page], in the frame Choose chapters starts. */
+    focus: ChapterId?,
+    /** The page to show instead of [page], in the frame Choose chapters ends. */
+    back: Int?,
     onPage: (Int) -> Unit,
     chosen: Set<ChapterId>?,
     onChosen: (Set<ChapterId>) -> Unit,
@@ -560,7 +581,13 @@ private fun ChapterPages(
         // The pager has its row and 8 dp above it, and 12 dp under it above the navigation.
         val perColumn = ((maxHeight - EinkSizes.PagerRow - 8.dp - PagerFoot) / rowHeight).toInt().coerceAtLeast(1)
         val pages = rows.chunked(perColumn * columns)
-        val shown = page.coerceIn(0, pages.size - 1)
+        val wanted = when {
+            focus != null -> pageHolding(rows, focus, perColumn * columns) ?: page
+            back != null -> back
+            else -> page
+        }
+        val shown = wanted.coerceIn(0, pages.size - 1)
+        if (shown != page) SideEffect { onPage(shown) }
         Column(Modifier.fillMaxSize()) {
             Row(Modifier.fillMaxWidth().height(rowHeight * perColumn)) {
                 val onPage = pages[shown].chunked(perColumn)
@@ -719,3 +746,13 @@ private fun ChooseBox(ticked: Boolean, modifier: Modifier = Modifier) {
     }
 }
 
+/**
+ * The chapter Choose chapters opens on: the reader's place when [rows] list it, else the first
+ * chapter it ticked.
+ */
+internal fun choosingFocus(volumes: List<VolumeGroup>, rows: List<ChapterRow>, chosen: Set<ChapterId>): ChapterId? =
+    volumes.readerPlace()?.takeIf { id -> rows.any { it.id == id } } ?: rows.firstOrNull { it.id in chosen }?.id
+
+/** The page, of [perPage] rows, that holds [id] in [rows]; null when it is not there. */
+internal fun pageHolding(rows: List<ChapterRow>, id: ChapterId, perPage: Int): Int? =
+    rows.indexOfFirst { it.id == id }.takeIf { it >= 0 && perPage > 0 }?.let { it / perPage }

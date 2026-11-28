@@ -57,9 +57,6 @@ pub fn label(key: SettingKey) -> String {
         K::MergeSubtitles => t::settings_label_merge_subtitles(),
         K::KeepSeeding => t::settings_label_keep_seeding(),
         K::DownloadHook => t::settings_label_download_hook(),
-        K::Syncplay => t::settings_label_syncplay(),
-        K::SyncplayServer => t::settings_label_syncplay_server(),
-        K::SyncplayRoom => t::settings_label_syncplay_room(),
         K::UpdateCheck => t::settings_label_update_check(),
         K::UpdateBeta => t::updates_beta(),
         K::Presence => t::settings_label_presence(),
@@ -182,7 +179,6 @@ pub fn is_switch(key: SettingKey) -> bool {
             | K::Presence
             | K::PresenceTitle
             | K::Torrents
-            | K::Syncplay
             | K::UpdateCheck
             | K::UpdateBeta
             | K::SpoilerProtection

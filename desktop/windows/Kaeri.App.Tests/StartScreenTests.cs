@@ -23,6 +23,27 @@ public class StartScreenTests
     static IEnumerable<StartAction> Actions(StartFrame frame) => frame.Buttons.Select(b => b.Action);
 
     [Fact]
+    public void TheSubDubSwitchShowsTheVersionInForceUntilAStreamIsFound()
+    {
+        var start = Start();
+        start.Configured = Translation.Dub;
+        Assert.Equal(Translation.Dub, start.Frame(TimeSpan.Zero).Translation);
+        Found(start, "Alpha", Ms(300));
+        Assert.Equal(Translation.Sub, start.Frame(Ms(900)).Translation);
+    }
+
+    [Fact]
+    public void AShowsOwnVersionWinsOverTheSessions()
+    {
+        static ShowSettingsView Sheet(SettingValue? own, string value) => new(900_001,
+            Rows: [new ShowSettingRow(ShowSettingKey.Translation, Own: own, Value: value, Default: "sub")],
+            Remembered: []);
+        Assert.Equal(Translation.Dub, StartScreen.InForce(null, Sheet(new SettingValue.Str("dub"), "dub")));
+        Assert.Null(StartScreen.InForce(null, Sheet(null, "sub")));
+        Assert.Null(StartScreen.InForce(null, null));
+    }
+
+    [Fact]
     public void ANewerStepWaitsOutTheHoldAndOnlyTheLatestShows()
     {
         var start = Start();

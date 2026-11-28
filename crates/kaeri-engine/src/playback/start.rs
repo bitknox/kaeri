@@ -86,7 +86,8 @@ pub(crate) fn opener_for(
     opener(engine.config.effective(), &services.paths, &services.player_theme, hosted)
 }
 
-/// Play an episode from whichever source the resolution ladder chooses, staged for Now Playing
+/// Play an episode from its finished download, or else from whichever source the resolution
+/// ladder chooses, staged for Now Playing
 /// as the engine's record of the titles names it, which the front end is told: where it was
 /// left, or from the beginning when `from_start`. Refused, with nothing staged, where this build
 /// has no player to open.
@@ -104,8 +105,13 @@ pub fn play(
     };
     let billing = named(id, &episode, engine);
     let start = if from_start { Start::Beginning } else { Start::Resume };
+    // In a room, an episode with no source here is the room's No source, not a toast.
+    #[cfg(feature = "room")]
+    let in_room = crate::room::is_going(engine);
+    #[cfg(not(feature = "room"))]
+    let in_room = false;
     let staged = play_staged(
-        id, episode, None, start, false, false, billing, opener, job, engine, services, tx,
+        id, episode, None, start, in_room, false, billing, opener, job, engine, services, tx,
     );
     let _ = tx.send(staged);
 }
@@ -457,8 +463,8 @@ impl Start {
 }
 
 /// Play an episode staged for Now Playing as `billing` says, its title and its episode's own
-/// name, from the release `pick` names or whichever the resolution ladder chooses, and from where
-/// `start` says. Returns what it was staged as.
+/// name, from the release `pick` names, its finished download, or whichever the resolution
+/// ladder chooses, and from where `start` says. Returns what it was staged as.
 #[allow(clippy::too_many_arguments)]
 fn play_staged(
     id: AnilistId,
@@ -478,7 +484,25 @@ fn play_staged(
     services: &Services,
     tx: &Outbox,
 ) -> Event {
+    // A finished download plays from disk, offline too: unless a release was picked by hand,
+    // the party plays, or the play goes to a TV.
+    if pick.is_none()
+        && !party
+        && !casting(engine, services)
+        && let Some(path) = downloaded(services, id, &episode)
+    {
+        let billing = (title, episode_title);
+        return play_file(
+            id, episode, path, start, follows, billing, opener, job, engine, services, tx,
+        );
+    }
     let Services { paths, sync, prefetch, store, .. } = services;
+    // In a room, never this device's own resume point: the room's place, or the start.
+    #[cfg(feature = "room")]
+    let start = match (start, crate::room::opens_at(id, &episode, engine)) {
+        (Start::Resume, Some(at)) => at.map_or(Start::Beginning, Start::At),
+        (start, _) => start,
+    };
     let played = engine.next_playback(id, &episode);
     let told = follows || table_told(id, engine);
     // Where the episode opens, for the starting screen to say it resumes there. Not for a play
@@ -548,41 +572,6 @@ fn play_staged(
     staged
 }
 
-/// Play an episode with the watch party, which the caller has joined: staged and played as any
-/// play is, with a seat at the party. An episode none of the sources has leaves the viewer in
-/// the room with nothing playing, and says so with [`Event::PartyNoSource`].
-pub fn play_party(
-    id: AnilistId,
-    episode: String,
-    job: Option<JobGuard>,
-    engine: &mut EngineState,
-    services: &Services,
-    tx: &Outbox,
-) {
-    let Some(opener) = opener_for(engine, services) else {
-        return playback::refuse(job, tx);
-    };
-    let billing = named(id, &episode, engine);
-    // From the start: the room opens an episode at 0:00 and brings a member who joins late to
-    // its own position. This device's resume point would put it ahead of the room, and near the
-    // end of a file it ended at once and moved the whole room on.
-    let staged = play_staged(
-        id,
-        episode,
-        None,
-        Start::Beginning,
-        true,
-        false,
-        billing,
-        opener,
-        job,
-        engine,
-        services,
-        tx,
-    );
-    let _ = tx.send(staged);
-}
-
 /// Play a downloaded episode from disk, in the full playback session all the same.
 #[allow(clippy::too_many_arguments)]
 pub fn play_local(
@@ -598,22 +587,84 @@ pub fn play_local(
     let Some(opener) = opener_for(engine, services) else {
         return playback::refuse(job, tx);
     };
+    // Named by the download it plays: the Downloads screen says what its rows are called.
+    let billing = (title, engine.cache.episode_title(id, &episode));
+    let staged = play_file(
+        id,
+        episode,
+        path,
+        Start::Resume,
+        false,
+        billing,
+        opener,
+        job,
+        engine,
+        services,
+        tx,
+    );
+    let _ = tx.send(staged);
+}
+
+/// The file a finished download of `episode` of `id` left on disk, if it is still there.
+fn downloaded(services: &Services, id: AnilistId, episode: &str) -> Option<String> {
+    let download = services.store.download_for(id, episode).ok().flatten()?;
+    if download.state != kaeri_store::DownloadState::Done {
+        return None;
+    }
+    let path = download.path?;
+    std::path::Path::new(&path).exists().then_some(path)
+}
+
+/// Whether plays go to a TV now, which a file on this device's disk does not reach.
+fn casting(engine: &EngineState, services: &Services) -> bool {
+    #[cfg(feature = "cast")]
+    {
+        engine.casting.is_some()
+            || services.casts.casting()
+            || services.casts.session_device().is_some()
+    }
+    #[cfg(not(feature = "cast"))]
+    {
+        let _ = (engine, services);
+        false
+    }
+}
+
+/// Play the file at `path`, a downloaded episode, staged as `billing` says and from where
+/// `start` says: the playback session a streamed play has, without the lookup. Returns what it
+/// was staged as.
+#[allow(clippy::too_many_arguments)]
+fn play_file(
+    id: AnilistId,
+    episode: String,
+    path: String,
+    start: Start,
+    // Led to by a playback of the same title, whose player has the title's table.
+    follows: bool,
+    (title, episode_title): (String, Option<String>),
+    opener: Arc<dyn PlayerOpener>,
+    job: Option<JobGuard>,
+    engine: &mut EngineState,
+    services: &Services,
+    tx: &Outbox,
+) -> Event {
     let Services { paths, http, store, sync, .. } = services;
     let played = engine.next_playback(id, &episode);
-    let told = table_told(id, engine);
+    let told = follows || table_told(id, engine);
     let for_show = play_config(engine, store, id);
     let hints =
         engine.cache.hints(id, &episode, for_show.playback.skip_filler, PlayKind::Staged);
-    // Named by the download it plays: the Downloads screen says what its rows are called.
-    let episode_title = engine.cache.episode_title(id, &episode);
-    let resume = resume_of(services, id, &episode);
+    let resume = match start {
+        Start::Resume => resume_of(services, id, &episode),
+        Start::Beginning => None,
+        Start::At(at) => Some(at),
+    };
     let private = services.privacy.holds_show(played.id);
     let staged =
         stage(&played, title.clone(), episode_title, resume, opener.as_ref(), engine, private);
     if !told {
         say_table(id, engine, tx);
     }
-    let _ = tx.send(staged);
     let switches = engine.switches.open(played.serial);
     let EngineState { player_tx, finding, skipping, beginning, .. } = engine;
     // Nothing to find: it opens at once, and a Stop is its session's from the start.
@@ -684,6 +735,7 @@ pub fn play_local(
         handoff.complete().await;
         playback::play(vec![stream], context, store, http, machine, settings, tx, prx).await;
     });
+    staged
 }
 
 /// Write the shaders out for a playback, on the blocking pool rather than on the engine's own
@@ -1018,7 +1070,7 @@ fn spawn_playback(
                 // In a party the dialog says why, and a toast would say it twice.
                 // The kind comes as the lookup decided it.
                 if party {
-                    let _ = tx.send(Event::PartyNoSource {
+                    let _ = tx.send(Event::RoomNoSource {
                         id,
                         episode: episode.clone(),
                         why: reason.why,
@@ -1051,7 +1103,7 @@ fn spawn_playback(
                     held_back: starting.held_back(),
                 };
                 if party {
-                    let _ = tx.send(Event::PartyNoSource {
+                    let _ = tx.send(Event::RoomNoSource {
                         id,
                         episode: episode.clone(),
                         why: reason.why,
@@ -1237,7 +1289,7 @@ impl Lookup for Onward {
                 Ok(streams)
             }
             Ok(_) => Err(kaeri_model::starting::StartFailure {
-                why: kaeri_model::party::NoSourceWhy::NotFound,
+                why: kaeri_model::room::NoSourceWhy::NotFound,
                 text: crate::playback::resolve::explained(kaeri_model::Cause::NoSources),
                 asked: self.starting.asked(),
                 unreached: Vec::new(),

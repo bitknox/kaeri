@@ -224,10 +224,18 @@ public final class PlayerModel {
     public internal(set) var skipTimesOpen = false
     /// The edge the review's arrow keys move: Tab changes it.
     public var markEdge: SkipEdge = .start
-    /// Marking is off while a watch party plays: the app sets it from the party's state.
+    /// Marking is off while a room plays: the app sets it from the room's state.
     public var marksBlocked = false
-    /// Whether a watch party is joined, which the menus' Say Something… needs.
-    public var inParty = false
+    /// Whether this device is in a room, which the menus' Say Something… needs.
+    public var inRoom = false
+    /// Hide chat in rooms, or the room's own: Say Something… is dimmed.
+    public var roomChatOff = false
+    /// In a room the opening's skip is the room's: it skips for everyone and the chat says who.
+    @ObservationIgnored public var skipsWithRoom: (@MainActor (Double) -> Void)?
+    /// The room draws its own Skip opening (the Mac's, over the room's column edge).
+    public var roomDrawsSkip = false
+    /// Where the room's Skip opening goes, while in one and the opening's offer stands.
+    public var roomSkip: Double? { inRoom && skip?.kind == .opening ? skip?.to : nil }
     /// Counts the asks to open the chat field (Playback › Say Something…).
     public private(set) var chatRequests = 0
     public func requestChat() { chatRequests += 1 }
@@ -250,7 +258,7 @@ public final class PlayerModel {
     /// The player closed before a frame: waiting for the engine to say whether it failed.
     @ObservationIgnored private var verdictPending = false
     /// A party play found no source: the party's sheet says so, and the player closes.
-    @ObservationIgnored private var partySaysWhy = false
+    @ObservationIgnored private var roomSaysWhy = false
     /// "Still watching?": the episodes rolled on in a row with nobody there, which pauses.
     public private(set) var stillWatching = false
     /// Skips the viewer has taken, for the haptic that answers each (T4).
@@ -402,7 +410,7 @@ public final class PlayerModel {
         let asked: (id: AnilistId, episode: String, again: Bool)
         switch command {
         case .play(let id, let episode, let fromStart): asked = (id, episode, fromStart)
-        case .playSource(let id, let episode, _, _), .playLocal(let id, let episode, _, _), .playParty(let id, let episode, _, _, _):
+        case .playSource(let id, let episode, _, _), .playLocal(let id, let episode, _, _):
             asked = (id, episode, true)
         default: return false
         }
@@ -472,7 +480,7 @@ public final class PlayerModel {
             choosingSource = false
             sourceChoices = nil
             verdictPending = false
-            partySaysWhy = false
+            roomSaysWhy = false
             // A play staged anew, as the episode started again in the other version is when
             // nothing played yet: no switch of it is on its way.
             versionSwitch = nil
@@ -496,7 +504,13 @@ public final class PlayerModel {
                 // Not when the viewer sought into the ending: someone was there.
                 rollPending = !(upNext?.sought ?? false)
                 rolledOn(at: time.now())
-            } else if backend == nil, ending == .failed, isPresented, !partySaysWhy, let episode = startingEpisode {
+            } else if backend == nil, ending == .failed, isPresented, roomSaysWhy {
+                // The room's panel over the video says why and offers the sources: the player
+                // stays up under it rather than vanish. Only a room says why (the no-source
+                // events are the room's), and on a phone this comes before the player's view, so
+                // before the view says the player is in a room.
+                verdictPending = false
+            } else if backend == nil, ending == .failed, isPresented, !roomSaysWhy, let episode = startingEpisode {
                 // It never played: no stream was found, or none showed a frame. Say so where the
                 // viewer is looking, with another source to choose, rather than vanish.
                 verdictPending = false
@@ -507,10 +521,12 @@ public final class PlayerModel {
                 verdictPending = false
                 dismiss()
             }
-        case .partyNoSource:
-            // The party's own sheet says why nothing plays and offers its sources: the player's
-            // failure would say it twice, under it.
-            partySaysWhy = true
+        case .roomNoSource:
+            // The room's panel over the video says why nothing plays and offers the sources: the
+            // player's failure would say it twice, under it. Said after the failure, it takes
+            // the failure's place.
+            roomSaysWhy = true
+            if failure != nil { failure = nil }
         case .sourcesProgress(let id, let episode, let rows):
             if panelReleases?.id == id, panelReleases?.episode == episode {
                 panelReleases?.progressed(rows, at: time.now())
@@ -801,6 +817,11 @@ public final class PlayerModel {
                         }
                     } catch {
                         Self.note(.warn, "mpv refused \(Self.describe(item)): \(AppLog.redacting("\(error)"))")
+                        #if FIXTURES
+                        if ProcessInfo.processInfo.environment["KAERI_ROOM_TRACE"] == "1" {
+                            print("trace: mpv refused \(Self.describe(item)): \(error)")
+                        }
+                        #endif
                         // A change the viewer asked for that mpv refused says so; the periodic
                         // sampling stays quiet.
                         switch item {
@@ -894,6 +915,8 @@ public final class PlayerModel {
     }
     @ObservationIgnored private var hostWindowWatch: NSObjectProtocol?
     @ObservationIgnored private var stopKeyWatch: Any?
+    /// Whether ⌘W asks before it stops, as it does in a room.
+    @ObservationIgnored var asksBeforeStopping: @MainActor () -> Bool = { false }
 
     private func watchHostWindow() {
         if let hostWindowWatch { NotificationCenter.default.removeObserver(hostWindowWatch) }
@@ -921,6 +944,8 @@ public final class PlayerModel {
               event.modifierFlags.intersection(.deviceIndependentFlagsMask) == .command,
               event.charactersIgnoringModifiers?.lowercased() == "w"
         else { return false }
+        // In a room ⌘W asks first: Leave, Keep the room or Cancel, over the player.
+        if asksBeforeStopping() { return true }
         Self.note(.info, "⌘W stops the player")
         viewerClosed()
         return true
@@ -1579,7 +1604,7 @@ public final class PlayerModel {
         if let prompt = skipPrompt, prompt.prompt.isCard { return .prompt }
         if undo != nil { return .undo }
         if upNextShown { return .upNext }
-        if skip != nil { return .skip }
+        if skip != nil, !(roomDrawsSkip && roomSkip != nil) { return .skip }
         return nil
     }
 
@@ -2016,6 +2041,12 @@ public final class PlayerModel {
 
     public func takeSkip() {
         input()
+        if let to = roomSkip, let room = skipsWithRoom {
+            skipsTaken += 1
+            skip = nil
+            room(to)
+            return
+        }
         sought()
         skipsTaken += 1
         skip = nil

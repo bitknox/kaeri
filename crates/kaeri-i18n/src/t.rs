@@ -885,44 +885,34 @@ pub fn notice_keep_next_full() -> String {
     text("notice-keep-next-full", &[])
 }
 
-/// Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-pub fn party_needs_server(server: &str, operator: &str) -> String {
-    text("party-needs-server", &[("server", Arg::Text(server)), ("operator", Arg::Text(operator))])
+/// Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.
+pub fn room_look_unreachable() -> String {
+    text("room-look-unreachable", &[])
 }
 
-/// Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-pub fn party_choose_server(server: &str, operator: &str) -> String {
-    text("party-choose-server", &[("server", Arg::Text(server)), ("operator", Arg::Text(operator))])
+/// Why a look into a room found nothing: the pasted text is no room's invite.
+pub fn room_look_not_an_invite() -> String {
+    text("room-look-not-an-invite", &[])
+}
+
+/// Why a look into a recent room found nothing: it's no longer in this device's recent rooms.
+pub fn room_look_not_kept() -> String {
+    text("room-look-not-kept", &[])
+}
+
+/// Why a look into a room found nothing: the invite comes from an older version.
+pub fn room_look_old_invite() -> String {
+    text("room-look-old-invite", &[])
+}
+
+/// Why a room couldn't start: it has no episode yet. Shown where the room would open.
+pub fn room_needs_episode() -> String {
+    text("room-needs-episode", &[])
 }
 
 /// Toast when a watch party is asked for in a build without watch parties.
 pub fn notice_no_party() -> String {
     text("notice-no-party", &[])
-}
-
-/// Message when a watch party was asked for with no room named.
-pub fn party_needs_room() -> String {
-    text("party-needs-room", &[])
-}
-
-/// Message in a watch party when its server connection dropped and is retried.
-pub fn party_server_lost() -> String {
-    text("party-server-lost", &[])
-}
-
-/// Message in a watch party when the connection came back.
-pub fn party_rejoined() -> String {
-    text("party-rejoined", &[])
-}
-
-/// Message when the person left a watch party.
-pub fn party_left() -> String {
-    text("party-left", &[])
-}
-
-/// Message when a watch party's server could not be reached, in the lobby or when looking in.
-pub fn party_server_unreachable(server: &str) -> String {
-    text("party-server-unreachable", &[("server", Arg::Text(server))])
 }
 
 /// Under a cover: the chapter that is next to read. The chapter is its number, such as 44 or 10.5.
@@ -2380,6 +2370,16 @@ pub fn sync_device_removed() -> String {
     text("sync-device-removed", &[])
 }
 
+/// Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.
+pub fn notice_profile_in_use(name: &str) -> String {
+    text("notice-profile-in-use", &[("name", Arg::Text(name))])
+}
+
+/// Alert when a profile could not be deleted. The reason comes from the system.
+pub fn notice_profile_not_deleted(name: &str, reason: &str) -> String {
+    text("notice-profile-not-deleted", &[("name", Arg::Text(name)), ("reason", Arg::Text(reason))])
+}
+
 /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
 pub fn notice_signed_in(tracker: &str) -> String {
     text("notice-signed-in", &[("tracker", Arg::Text(tracker))])
@@ -2913,11 +2913,6 @@ pub fn party_choose_a_source() -> String {
 /// Line when no source lists the watch party's episode. A plugin store adds plugins, which add sources.
 pub fn party_sources_none_listed(episode: i64) -> String {
     text("party-sources-none-listed", &[("episode", Arg::Plain(episode))])
-}
-
-/// Line above the list of sources that have the watch party's episode.
-pub fn party_sources_found_line(count: i64) -> String {
-    text("party-sources-found-line", &[("count", Arg::Int(count))])
 }
 
 /// Notice when the player could not start, or could not be reached to add a track.
@@ -5213,8 +5208,8 @@ pub fn keys_action_download_range() -> String {
 }
 
 /// Action label in the help overlay and the command palette.
-pub fn keys_action_play_party() -> String {
-    text("keys-action-play-party", &[])
+pub fn keys_action_start_room() -> String {
+    text("keys-action-start-room", &[])
 }
 
 /// Action label in the help overlay and the command palette.
@@ -5883,18 +5878,23 @@ pub fn nav_rail_hidden() -> String {
 }
 
 /// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-pub fn keys_hint_ready() -> String {
-    text("keys-hint-ready", &[])
-}
-
-/// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
 pub fn keys_hint_copy_link() -> String {
     text("keys-hint-copy-link", &[])
 }
 
 /// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
-pub fn keys_hint_leave_party() -> String {
-    text("keys-hint-leave-party", &[])
+pub fn keys_hint_leave_room() -> String {
+    text("keys-hint-leave-room", &[])
+}
+
+/// Status line hint beside a key, in a room the others wait in: play on without those it waits for. Keep it to a word or two.
+pub fn keys_hint_carry_on() -> String {
+    text("keys-hint-carry-on", &[])
+}
+
+/// Status line hint beside a key, on a recent room: take it off the list. Keep it to a word or two.
+pub fn keys_hint_forget_room() -> String {
+    text("keys-hint-forget-room", &[])
 }
 
 /// Status line hint beside a key, saying what that key does here. Keep it to a word or two.
@@ -5902,17 +5902,17 @@ pub fn keys_hint_say() -> String {
     text("keys-hint-say", &[])
 }
 
-/// Status line hint beside a key, on a watch party member's row: hide their lines and reactions for the party. Keep it to a word or two.
+/// Status line hint beside a key, on a room member's row: hide their lines and reactions on this device. Keep it to a word or two.
 pub fn keys_hint_mute() -> String {
     text("keys-hint-mute", &[])
 }
 
-/// Status line hint beside a key, on a muted watch party member's row: show their lines again. Keep it to a word or two.
+/// Status line hint beside a key, on a muted room member's row: show their lines again. Keep it to a word or two.
 pub fn keys_hint_unmute() -> String {
     text("keys-hint-unmute", &[])
 }
 
-/// Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every watch party. Keep it to a word or two.
+/// Status line hint beside a key: turns Hide chat on, which keeps chat lines and reactions off the screen in every room. Keep it to a word or two.
 pub fn keys_hint_hide_chat() -> String {
     text("keys-hint-hide-chat", &[])
 }
@@ -7110,11 +7110,6 @@ pub fn settings_value_download_dir_default() -> String {
     text("settings-value-download-dir-default", &[])
 }
 
-/// Value of the Syncplay room setting when no room is set.
-pub fn settings_value_room_unset() -> String {
-    text("settings-value-room-unset", &[])
-}
-
 /// Value of the seeding ratio setting: seed until the ratio is reached.
 pub fn settings_value_seed_ratio(ratio: &str) -> String {
     text("settings-value-seed-ratio", &[("ratio", Arg::Text(ratio))])
@@ -7283,21 +7278,6 @@ pub fn settings_label_keep_seeding() -> String {
 /// Settings row: a command run when a download finishes.
 pub fn settings_label_download_hook() -> String {
     text("settings-label-download-hook", &[])
-}
-
-/// Settings row: Syncplay { -watch-party-pl }.
-pub fn settings_label_syncplay() -> String {
-    text("settings-label-syncplay", &[])
-}
-
-/// Settings row: the Syncplay server.
-pub fn settings_label_syncplay_server() -> String {
-    text("settings-label-syncplay-server", &[])
-}
-
-/// Settings row: the Syncplay room.
-pub fn settings_label_syncplay_room() -> String {
-    text("settings-label-syncplay-room", &[])
 }
 
 /// Settings row: whether the app checks for a new version.
@@ -7478,21 +7458,6 @@ pub fn settings_note_keep_seeding() -> String {
 /// Note under the after each download row.
 pub fn settings_note_download_hook() -> String {
     text("settings-note-download-hook", &[])
-}
-
-/// Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-pub fn settings_note_syncplay(key: &str) -> String {
-    text("settings-note-syncplay", &[("key", Arg::Text(key))])
-}
-
-/// Note under the Syncplay server row.
-pub fn settings_note_syncplay_server() -> String {
-    text("settings-note-syncplay-server", &[])
-}
-
-/// Note under the Syncplay room row.
-pub fn settings_note_syncplay_room() -> String {
-    text("settings-note-syncplay-room", &[])
 }
 
 /// Note under the check for updates row.
@@ -9425,16 +9390,6 @@ pub fn hint_kitsu_credentials() -> String {
     text("hint-kitsu-credentials", &[])
 }
 
-/// Toast when a { -watch-party } is joined.
-pub fn party_joined(room: &str, server: &str) -> String {
-    text("party-joined", &[("room", Arg::Text(room)), ("server", Arg::Text(server))])
-}
-
-/// Toast when the party's episode has no { -source } here. The reason says why.
-pub fn party_no_source_still_in(reason: &str) -> String {
-    text("party-no-source-still-in", &[("reason", Arg::Text(reason))])
-}
-
 /// Status line while the { -source-pl } are rebuilt after a change.
 pub fn status_reloading_sources() -> String {
     text("status-reloading-sources", &[])
@@ -9450,7 +9405,7 @@ pub fn tui_together_section() -> String {
     text("tui-together-section", &[])
 }
 
-/// Prompt of the Join line in the Together section.
+/// Prompt of the Join line in the Together section: what to paste there.
 pub fn tui_together_join_prompt() -> String {
     text("tui-together-join-prompt", &[])
 }
@@ -9458,11 +9413,6 @@ pub fn tui_together_join_prompt() -> String {
 /// Line under "Chat is hidden" in the Together section's conversation, while Hide chat is on.
 pub fn tui_together_chat_hidden_line() -> String {
     text("tui-together-chat-hidden-line", &[])
-}
-
-/// Toast when what was typed in the Together section's Join line is neither a link nor a code.
-pub fn tui_together_not_a_link() -> String {
-    text("tui-together-not-a-link", &[])
 }
 
 /// Second line of a recent room nobody else was in. The time is already formatted, such as Tuesday.
@@ -9493,6 +9443,61 @@ pub fn report_player_log_saved_to(path: &str) -> String {
 /// That row when the file could not be written. Folder is where it was to go, such as ~/.cache/kaeri/logs.
 pub fn report_player_log_failed_here(folder: &str) -> String {
     text("report-player-log-failed-here", &[("folder", Arg::Text(folder))])
+}
+
+/// Toast when this terminal is in a room, said away from the Together section. The key is the one that goes to Together, as the key map draws it.
+pub fn tui_room_joined(key: &str) -> String {
+    text("tui-room-joined", &[("key", Arg::Text(key))])
+}
+
+/// Toast when what was pasted in the Together section's Join line isn't a room's invite link.
+pub fn tui_room_not_a_link() -> String {
+    text("tui-room-not-a-link", &[])
+}
+
+/// Toast when the room behind an invite already has 10 people or more. The key is Enter's, as the key map draws it; the Join line then reads Join anyway.
+pub fn tui_room_full(key: &str) -> String {
+    text("tui-room-full", &[("key", Arg::Text(key))])
+}
+
+/// Line in the field that takes an invite link.
+pub fn tui_room_join_line() -> String {
+    text("tui-room-join-line", &[])
+}
+
+/// Line under the Together section's conversation and in the field for saying something. States who can read the chat.
+pub fn tui_room_chat_privacy() -> String {
+    text("tui-room-chat-privacy", &[])
+}
+
+/// The conversation's only line while Hide chat is on, and a toast when the field is asked for then.
+pub fn tui_room_chat_hidden() -> String {
+    text("tui-room-chat-hidden", &[])
+}
+
+/// Toast when a message was sent too soon after the last ones.
+pub fn tui_room_chat_wait(seconds: i64) -> String {
+    text("tui-room-chat-wait", &[("seconds", Arg::Int(seconds))])
+}
+
+/// A muted person's line in the conversation, in place of what they said.
+pub fn tui_room_muted_line(name: &str) -> String {
+    text("tui-room-muted-line", &[("name", Arg::Text(name))])
+}
+
+/// Line in the Together section when this terminal isn't in a room. The key is the one that starts a room, as the key map draws it.
+pub fn tui_room_start_line(key: &str) -> String {
+    text("tui-room-start-line", &[("key", Arg::Text(key))])
+}
+
+/// Line in place of the recent rooms when none are kept yet.
+pub fn tui_room_recent_empty() -> String {
+    text("tui-room-recent-empty", &[])
+}
+
+/// The room's connection, under its title: the room's messages are sealed end to end, and how many of its relays answer.
+pub fn tui_room_relays_line(count: i64, total: i64) -> String {
+    text("tui-room-relays-line", &[("count", Arg::Int(count)), ("total", Arg::Int(total))])
 }
 
 /// Title of the about page.
@@ -11003,6 +11008,11 @@ pub fn discussion_more_replies(count: i64) -> String {
 /// Muted bar in place of a spoiler in a comment, until it is opened.
 pub fn discussion_spoiler() -> String {
     text("discussion-spoiler", &[])
+}
+
+/// Screen reader action on text with hidden spoilers: opens all of them at once.
+pub fn discussion_show_spoilers() -> String {
+    text("discussion-show-spoilers", &[])
 }
 
 /// Line in place of an image in a comment. It opens the image in the browser.
@@ -15472,6 +15482,11 @@ pub fn player_panel_less() -> String {
     text("player-panel-less", &[])
 }
 
+/// Line above the list of sources that have the episode, in the Choose a source dialog outside a room (the player, casting).
+pub fn player_sources_found_line(count: i64) -> String {
+    text("player-sources-found-line", &[("count", Arg::Int(count))])
+}
+
 /// The private mode switch: under the account card on phones, first in Settings › Accounts on the desktops and the TV, and a check item in the Linux main menu.
 pub fn private_mode() -> String {
     text("private-mode", &[])
@@ -18730,6 +18745,1256 @@ pub fn notif_chapter_read() -> String {
     text("notif-chapter-read", &[])
 }
 
+/// First line while the room plays and nobody holds it.
+pub fn room_line_watching() -> String {
+    text("room-line-watching", &[])
+}
+
+/// Second line while the room plays: the room's episode and its place in it.
+pub fn room_line_watching_detail(episode: &str, at: &str) -> String {
+    text("room-line-watching-detail", &[("episode", Arg::Text(episode)), ("at", Arg::Text(at))])
+}
+
+/// First line while the room waits for people whose player is opening the episode or stalled. `names` is one name, two joined, or room-names-people.
+pub fn room_line_paused_for(names: &str) -> String {
+    text("room-line-paused-for", &[("names", Arg::Text(names))])
+}
+
+/// First line on your own device while the room waits for you.
+pub fn room_line_paused_for_you() -> String {
+    text("room-line-paused-for-you", &[])
+}
+
+/// Second line while the room waits for you: who waits, and for how many seconds so far.
+pub fn room_line_waiting_for_you(names: &str, count: i64, seconds: i64) -> String {
+    text("room-line-waiting-for-you", &[("names", Arg::Text(names)), ("count", Arg::Int(count)), ("seconds", Arg::Int(seconds))])
+}
+
+/// First line once the room has waited as long as it will (20 seconds), when it waits for anyone opening the episode, or for people with different reasons (room-line-still-seeking and room-line-still-buffering are the others). `count` is how many people it waits for.
+pub fn room_line_still_loading(names: &str, count: i64) -> String {
+    text("room-line-still-loading", &[("names", Arg::Text(names)), ("count", Arg::Int(count))])
+}
+
+/// First line once the room has waited as long as it will, when everyone it waits for is still moving to the room's new place after a seek. `count` is how many people it waits for.
+pub fn room_line_still_seeking(names: &str, count: i64) -> String {
+    text("room-line-still-seeking", &[("names", Arg::Text(names)), ("count", Arg::Int(count))])
+}
+
+/// First line once the room has waited as long as it will, when everyone it waits for stalled mid-episode. `count` is how many people it waits for.
+pub fn room_line_still_buffering(names: &str, count: i64) -> String {
+    text("room-line-still-buffering", &[("names", Arg::Text(names)), ("count", Arg::Int(count))])
+}
+
+/// Second line once the room has waited as long as it will.
+pub fn room_line_waited(seconds: i64) -> String {
+    text("room-line-waited", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Second line after someone pressed Carry on, when the room waited for one person.
+pub fn room_line_carried_on_one(carrier: &str, name: &str) -> String {
+    text("room-line-carried-on-one", &[("carrier", Arg::Text(carrier)), ("name", Arg::Text(name))])
+}
+
+/// Second line after someone pressed Carry on, when the room waited for more than one person.
+pub fn room_line_carried_on_many(carrier: &str) -> String {
+    text("room-line-carried-on-many", &[("carrier", Arg::Text(carrier))])
+}
+
+/// First line while the room is paused by someone.
+pub fn room_line_paused_by(name: &str) -> String {
+    text("room-line-paused-by", &[("name", Arg::Text(name))])
+}
+
+/// First line while the room is paused by you.
+pub fn room_line_you_paused() -> String {
+    text("room-line-you-paused", &[])
+}
+
+/// Second line while the room is paused: the place it paused at.
+pub fn room_line_paused_at(at: &str) -> String {
+    text("room-line-paused-at", &[("at", Arg::Text(at))])
+}
+
+/// Second line while one of the room's relays is not answering.
+pub fn room_line_relays_down(count: i64, total: i64) -> String {
+    text("room-line-relays-down", &[("count", Arg::Int(count)), ("total", Arg::Int(total))])
+}
+
+/// First line when your own device lost every relay.
+pub fn room_line_reconnecting() -> String {
+    text("room-line-reconnecting", &[])
+}
+
+/// Second line when your own device lost every relay.
+pub fn room_line_reconnecting_detail() -> String {
+    text("room-line-reconnecting-detail", &[])
+}
+
+/// Second line when your own player is behind the room.
+pub fn room_line_you_behind(seconds: i64) -> String {
+    text("room-line-you-behind", &[("seconds", Arg::Int(seconds))])
+}
+
+/// The room's line in the full screen strip, with the seconds the room has waited. `line` is one of the room's first lines.
+pub fn room_line_with_seconds(line: &str, seconds: i64) -> String {
+    text("room-line-with-seconds", &[("line", Arg::Text(line)), ("seconds", Arg::Int(seconds))])
+}
+
+/// Stands for the people the room waits for when there are more than two, inside "Paused for …".
+pub fn room_names_people(count: i64) -> String {
+    text("room-names-people", &[("count", Arg::Int(count))])
+}
+
+/// State word: in step with the room and playing.
+pub fn room_state_watching() -> String {
+    text("room-state-watching", &[])
+}
+
+/// State word before play: this person's first frame is ready.
+pub fn room_state_ready() -> String {
+    text("room-state-ready", &[])
+}
+
+/// State word: the room is paused and this person paused it.
+pub fn room_state_paused_it() -> String {
+    text("room-state-paused-it", &[])
+}
+
+/// State word: the room is paused; this person was watching.
+pub fn room_state_paused() -> String {
+    text("room-state-paused", &[])
+}
+
+/// State word: the slowest player, holding the room back, with the gap in seconds.
+pub fn room_state_behind(seconds: i64) -> String {
+    text("room-state-behind", &[("seconds", Arg::Int(seconds))])
+}
+
+/// State word: the player is opening the episode and the room waits, with the seconds so far. Also the room's second line while it waits for one loading person.
+pub fn room_state_loading(seconds: i64) -> String {
+    text("room-state-loading", &[("seconds", Arg::Int(seconds))])
+}
+
+/// State word: the player stalled mid-episode, with the seconds so far. Also the room's second line while it waits for one buffering person.
+pub fn room_state_buffering(seconds: i64) -> String {
+    text("room-state-buffering", &[("seconds", Arg::Int(seconds))])
+}
+
+/// State word: this person plays another episode than the room's.
+pub fn room_state_other_episode(episode: &str) -> String {
+    text("room-state-other-episode", &[("episode", Arg::Text(episode))])
+}
+
+/// State word: this person is picking which source to play from.
+pub fn room_state_choosing() -> String {
+    text("room-state-choosing", &[])
+}
+
+/// State word: none of this person's sources lists the room's episode.
+pub fn room_state_no_source(episode: &str) -> String {
+    text("room-state-no-source", &[("episode", Arg::Text(episode))])
+}
+
+/// State word: this person is in the room with the player closed.
+pub fn room_state_player_closed() -> String {
+    text("room-state-player-closed", &[])
+}
+
+/// State word: this person's device stopped answering.
+pub fn room_state_reconnecting() -> String {
+    text("room-state-reconnecting", &[])
+}
+
+/// State word: this person left the room. The row stays dimmed for a moment.
+pub fn room_state_left() -> String {
+    text("room-state-left", &[])
+}
+
+/// State word: you muted this person. Shown alone or after the state word with room-state-and-muted.
+pub fn room_state_muted() -> String {
+    text("room-state-muted", &[])
+}
+
+/// A state word followed by Muted, for a person you muted.
+pub fn room_state_and_muted(state: &str) -> String {
+    text("room-state-and-muted", &[("state", Arg::Text(state))])
+}
+
+/// Marker after your own name in the people list.
+pub fn room_you_marker() -> String {
+    text("room-you-marker", &[])
+}
+
+/// Your own name under your face on a phone and in the place's room card.
+pub fn room_you() -> String {
+    text("room-you", &[])
+}
+
+/// You, inside a list of names mid-sentence: "Paused for Ren and you", "Mika carried on without you". Lowercase where the language writes it so.
+pub fn room_you_in_list() -> String {
+    text("room-you-in-list", &[])
+}
+
+/// Accessibility label of a face in the full screen strip: the name and the state word.
+pub fn room_face_label(name: &str, state: &str) -> String {
+    text("room-face-label", &[("name", Arg::Text(name)), ("state", Arg::Text(state))])
+}
+
+/// The last face in a row of faces, standing for the people not shown.
+pub fn room_more_faces(count: i64) -> String {
+    text("room-more-faces", &[("count", Arg::Int(count))])
+}
+
+/// Accessibility label of the last face, which opens the full people list.
+pub fn room_more_faces_label(count: i64) -> String {
+    text("room-more-faces-label", &[("count", Arg::Int(count))])
+}
+
+/// Name under the last face on a phone and the TV: it opens everyone.
+pub fn room_more() -> String {
+    text("room-more", &[])
+}
+
+/// State under the last face: how many of the hidden people are not watching.
+pub fn room_more_not_watching(count: i64) -> String {
+    text("room-more-not-watching", &[("count", Arg::Int(count))])
+}
+
+/// State under the last face when everyone hidden is watching.
+pub fn room_more_all_watching() -> String {
+    text("room-more-all-watching", &[])
+}
+
+/// Reason in the waiting capsule, after Paused for, lower case: their player is opening the episode.
+pub fn room_wait_loading(seconds: i64) -> String {
+    text("room-wait-loading", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Reason in the waiting capsule, after Paused for, lower case: their player stalled.
+pub fn room_wait_buffering(seconds: i64) -> String {
+    text("room-wait-buffering", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Button once the room has waited 20 seconds for one person.
+pub fn room_carry_on_without(name: &str) -> String {
+    text("room-carry-on-without", &[("name", Arg::Text(name))])
+}
+
+/// Button once the room has waited 20 seconds for more than one person.
+pub fn room_carry_on_without_them() -> String {
+    text("room-carry-on-without-them", &[])
+}
+
+/// Capsule over the video after someone pressed Carry on.
+pub fn room_carrying_on_without(names: &str) -> String {
+    text("room-carrying-on-without", &[("names", Arg::Text(names))])
+}
+
+/// Second part of the capsule after Carry on, when the room waited for one person.
+pub fn room_joins_at_place(name: &str) -> String {
+    text("room-joins-at-place", &[("name", Arg::Text(name))])
+}
+
+/// Second part of the capsule after Carry on, when the room waited for more than one person.
+pub fn room_join_at_place_many() -> String {
+    text("room-join-at-place-many", &[])
+}
+
+/// Line on your own starting screen while the room waits for you, with the seconds so far.
+pub fn room_paused_until_start(seconds: i64) -> String {
+    text("room-paused-until-start", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Button on your own starting screen that lets the room carry on without you.
+pub fn room_dont_wait() -> String {
+    text("room-dont-wait", &[])
+}
+
+/// First line before anyone pressed Play.
+pub fn room_line_not_started() -> String {
+    text("room-line-not-started", &[])
+}
+
+/// Second line before anyone pressed Play.
+pub fn room_line_play_starts() -> String {
+    text("room-line-play-starts", &[])
+}
+
+/// First line after Play, while the room waits for people still loading.
+pub fn room_line_starting_when(names: &str, count: i64) -> String {
+    text("room-line-starting-when", &[("names", Arg::Text(names)), ("count", Arg::Int(count))])
+}
+
+/// First line counting down once everyone is ready.
+pub fn room_line_starting_in(seconds: i64) -> String {
+    text("room-line-starting-in", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Second line when everyone is ready.
+pub fn room_line_everyone_ready() -> String {
+    text("room-line-everyone-ready", &[])
+}
+
+/// Button once the room has waited 20 seconds before play, for one person.
+pub fn room_start_without(name: &str) -> String {
+    text("room-start-without", &[("name", Arg::Text(name))])
+}
+
+/// Button once the room has waited 20 seconds before play, for more than one person.
+pub fn room_start_without_them() -> String {
+    text("room-start-without-them", &[])
+}
+
+/// Small heading over the episode in the video area before play.
+pub fn room_up_in_room() -> String {
+    text("room-up-in-room", &[])
+}
+
+/// Small heading over the episode in the video area when you opened an invite.
+pub fn room_room_is_watching() -> String {
+    text("room-room-is-watching", &[])
+}
+
+/// Line under the show's title in the video area: episode number, episode title and length. The length is already formatted, such as 24 min.
+pub fn room_banner_episode(episode: &str, title: &str, length: &str) -> String {
+    text("room-banner-episode", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title)), ("length", Arg::Text(length))])
+}
+
+/// Line under the episode before play: one of your sources has it.
+pub fn room_plays_from_sources() -> String {
+    text("room-plays-from-sources", &[])
+}
+
+/// Button that starts the episode for everyone in the room.
+pub fn room_play_for_everyone() -> String {
+    text("room-play-for-everyone", &[])
+}
+
+/// Line beside Play for everyone.
+pub fn room_anyone_can_start() -> String {
+    text("room-anyone-can-start", &[])
+}
+
+/// Label of the Play for everyone button after it was pressed.
+pub fn room_playing() -> String {
+    text("room-playing", &[])
+}
+
+/// Line beside the button after Play was pressed, on a desktop.
+pub fn room_waiting_first_frames() -> String {
+    text("room-waiting-first-frames", &[])
+}
+
+/// Line under the play button after Play was pressed, on a phone.
+pub fn room_waiting_first_frames_short() -> String {
+    text("room-waiting-first-frames-short", &[])
+}
+
+/// First line of the room when an invite link opened it.
+pub fn room_invited_by(name: &str) -> String {
+    text("room-invited-by", &[("name", Arg::Text(name))])
+}
+
+/// Second line when an invite link opened the room: the show and the episode.
+pub fn room_invited_detail(title: &str, episode: &str) -> String {
+    text("room-invited-detail", &[("title", Arg::Text(title)), ("episode", Arg::Text(episode))])
+}
+
+/// Second line when an invite link opened a room with 10 or more people in it.
+pub fn room_invited_over(count: i64) -> String {
+    text("room-invited-over", &[("count", Arg::Int(count))])
+}
+
+/// Button that joins the room from an invite.
+pub fn room_join() -> String {
+    text("room-join", &[])
+}
+
+/// Button that joins a room with 10 or more people in it.
+pub fn room_join_anyway() -> String {
+    text("room-join-anyway", &[])
+}
+
+/// Heading over the list of sources for the room's episode.
+pub fn room_choose_source(episode: &str) -> String {
+    text("room-choose-source", &[("episode", Arg::Text(episode))])
+}
+
+/// Line under it.
+pub fn room_choose_source_line() -> String {
+    text("room-choose-source-line", &[])
+}
+
+/// Button that plays the chosen source at the room's place.
+pub fn room_play_in_room() -> String {
+    text("room-play-in-room", &[])
+}
+
+/// Heading when none of your sources has the room's episode.
+pub fn room_no_source_title(episode: &str) -> String {
+    text("room-no-source-title", &[("episode", Arg::Text(episode))])
+}
+
+/// Line under it on a desktop: how many sources were looked in.
+pub fn room_no_source_line(count: i64) -> String {
+    text("room-no-source-line", &[("count", Arg::Int(count))])
+}
+
+/// Line under it on a phone.
+pub fn room_no_source_line_short() -> String {
+    text("room-no-source-line-short", &[])
+}
+
+/// Button that opens your sources.
+pub fn room_open_sources() -> String {
+    text("room-open-sources", &[])
+}
+
+/// Button that searches titles in your sources.
+pub fn room_search_titles() -> String {
+    text("room-search-titles", &[])
+}
+
+/// Line under the show's title on a phone and in the Linux header bar: the episode and how many people are in the room.
+pub fn room_header_line(episode: &str, count: i64) -> String {
+    text("room-header-line", &[("episode", Arg::Text(episode)), ("count", Arg::Int(count))])
+}
+
+/// Button and accessibility label that opens the invite.
+pub fn room_invite() -> String {
+    text("room-invite", &[])
+}
+
+/// Button and accessibility label that opens the room's details.
+pub fn room_details() -> String {
+    text("room-details", &[])
+}
+
+/// Accessibility label of the More button on a phone.
+pub fn room_more_actions() -> String {
+    text("room-more-actions", &[])
+}
+
+/// Accessibility label of the player's button that hides the room column.
+pub fn room_hide() -> String {
+    text("room-hide", &[])
+}
+
+/// Accessibility label of the chevron on a phone that folds the room into the bar over the tabs.
+pub fn room_fold() -> String {
+    text("room-fold", &[])
+}
+
+/// Accessibility label of the player's button that opens the chat in full screen.
+pub fn room_chat() -> String {
+    text("room-chat", &[])
+}
+
+/// Line in the invite: anyone with the link can join.
+pub fn room_invite_anyone() -> String {
+    text("room-invite-anyone", &[])
+}
+
+/// Line after it on a desktop: the link carries the key.
+pub fn room_invite_key() -> String {
+    text("room-invite-key", &[])
+}
+
+/// Line after it on a phone.
+pub fn room_invite_key_short() -> String {
+    text("room-invite-key-short", &[])
+}
+
+/// Accessibility label of the invite's QR code.
+pub fn room_invite_qr() -> String {
+    text("room-invite-qr", &[])
+}
+
+/// Line beside the QR code.
+pub fn room_invite_qr_line() -> String {
+    text("room-invite-qr-line", &[])
+}
+
+/// Button that copies the invite link.
+pub fn room_copy_link() -> String {
+    text("room-copy-link", &[])
+}
+
+/// Button that opens the system's share sheet with the invite link.
+pub fn room_share() -> String {
+    text("room-share", &[])
+}
+
+/// Menu item on a phone that copies the invite link.
+pub fn room_copy_invite_link() -> String {
+    text("room-copy-invite-link", &[])
+}
+
+/// Button that makes a new invite link and stops the old one.
+pub fn room_new_invite() -> String {
+    text("room-new-invite", &[])
+}
+
+/// Line under New invite on a desktop.
+pub fn room_new_invite_line() -> String {
+    text("room-new-invite-line", &[])
+}
+
+/// Short line beside New invite on a phone.
+pub fn room_new_invite_short() -> String {
+    text("room-new-invite-short", &[])
+}
+
+/// Button in the invite and menu item on a phone that opens the move.
+pub fn room_move_open() -> String {
+    text("room-move-open", &[])
+}
+
+/// Line under the button in the invite.
+pub fn room_move_open_line() -> String {
+    text("room-move-open-line", &[])
+}
+
+/// Title of the move dialog and sheet.
+pub fn room_move_title() -> String {
+    text("room-move-title", &[])
+}
+
+/// Line under the title.
+pub fn room_move_body() -> String {
+    text("room-move-body", &[])
+}
+
+/// Note under your own row: you always go.
+pub fn room_move_always_goes() -> String {
+    text("room-move-always-goes", &[])
+}
+
+/// Note under a person you muted, who starts unticked.
+pub fn room_move_muted() -> String {
+    text("room-move-muted", &[])
+}
+
+/// Line under the list.
+pub fn room_move_foot(at: &str) -> String {
+    text("room-move-foot", &[("at", Arg::Text(at))])
+}
+
+/// Button that moves, counting the others ticked.
+pub fn room_move_with(count: i64) -> String {
+    text("room-move-with", &[("count", Arg::Int(count))])
+}
+
+/// The offer to someone ticked, in a notice or alert, as one sentence pair.
+pub fn room_move_offer(name: &str) -> String {
+    text("room-move-offer", &[("name", Arg::Text(name))])
+}
+
+/// First line of the room while the offer waits for an answer.
+pub fn room_line_moved(name: &str) -> String {
+    text("room-line-moved", &[("name", Arg::Text(name))])
+}
+
+/// Second line with the offer: who else is asked, and the place the episode carries on from.
+pub fn room_line_moved_detail(names: &str, count: i64, at: &str) -> String {
+    text("room-line-moved-detail", &[("names", Arg::Text(names)), ("count", Arg::Int(count)), ("at", Arg::Text(at))])
+}
+
+/// Second line with the offer when nobody else is asked.
+pub fn room_line_moved_detail_alone(at: &str) -> String {
+    text("room-line-moved-detail-alone", &[("at", Arg::Text(at))])
+}
+
+/// Button that goes along to the new room.
+pub fn room_go_along() -> String {
+    text("room-go-along", &[])
+}
+
+/// Short button that stays in this room, in a notice.
+pub fn room_stay() -> String {
+    text("room-stay", &[])
+}
+
+/// First line of the old room for someone who stayed.
+pub fn room_line_moved_away(name: &str) -> String {
+    text("room-line-moved-away", &[("name", Arg::Text(name))])
+}
+
+/// Second line of the old room: who went along.
+pub fn room_line_went_along(names: &str) -> String {
+    text("room-line-went-along", &[("names", Arg::Text(names))])
+}
+
+/// Label of the encryption row.
+pub fn room_details_encryption() -> String {
+    text("room-details-encryption", &[])
+}
+
+/// Value of the encryption row.
+pub fn room_details_end_to_end() -> String {
+    text("room-details-end-to-end", &[])
+}
+
+/// Label of the relays row, and the title of the relays page in Settings.
+pub fn room_relays() -> String {
+    text("room-relays", &[])
+}
+
+/// Value of the relays row when all answer.
+pub fn room_relays_answering(count: i64) -> String {
+    text("room-relays-answering", &[("count", Arg::Int(count))])
+}
+
+/// Value of the relays row when some don't answer.
+pub fn room_relays_answering_of(count: i64, total: i64) -> String {
+    text("room-relays-answering-of", &[("count", Arg::Int(count)), ("total", Arg::Int(total))])
+}
+
+/// State of a relay that doesn't answer.
+pub fn room_relay_not_answering() -> String {
+    text("room-relay-not-answering", &[])
+}
+
+/// Round trip time of a relay.
+pub fn room_relay_latency(ms: i64) -> String {
+    text("room-relay-latency", &[("ms", Arg::Int(ms))])
+}
+
+/// Line under the relays in Details.
+pub fn room_details_relays_line() -> String {
+    text("room-details-relays-line", &[])
+}
+
+/// Button in Details that edits the room's relays.
+pub fn room_edit_relays() -> String {
+    text("room-edit-relays", &[])
+}
+
+/// Title of the room's relay editor.
+pub fn room_edit_relays_title() -> String {
+    text("room-edit-relays-title", &[])
+}
+
+/// Line under it.
+pub fn room_edit_relays_line() -> String {
+    text("room-edit-relays-line", &[])
+}
+
+/// Accessibility label of the button that removes a relay. `relay` is its address.
+pub fn room_relay_remove(relay: &str) -> String {
+    text("room-relay-remove", &[("relay", Arg::Text(relay))])
+}
+
+/// Button that adds the address typed beside it.
+pub fn room_relay_add() -> String {
+    text("room-relay-add", &[])
+}
+
+/// Line under the room's relay editor.
+pub fn room_edit_relays_settings() -> String {
+    text("room-edit-relays-settings", &[])
+}
+
+/// Heading of the group in Settings › Playback.
+pub fn room_settings_group() -> String {
+    text("room-settings-group", &[])
+}
+
+/// Switch that hides chat in every room on this device.
+pub fn room_settings_hide_chat() -> String {
+    text("room-settings-hide-chat", &[])
+}
+
+/// Line under it.
+pub fn room_settings_hide_chat_line() -> String {
+    text("room-settings-hide-chat-line", &[])
+}
+
+/// Line under the Relays row: how many relays new rooms use.
+pub fn room_settings_relays_count(count: i64) -> String {
+    text("room-settings-relays-count", &[("count", Arg::Int(count))])
+}
+
+/// Button at the end of the Relays row.
+pub fn room_settings_relays_edit() -> String {
+    text("room-settings-relays-edit", &[])
+}
+
+/// Line under the group.
+pub fn room_settings_group_line() -> String {
+    text("room-settings-group-line", &[])
+}
+
+/// Line at the top of the Relays page on a desktop.
+pub fn room_relays_intro() -> String {
+    text("room-relays-intro", &[])
+}
+
+/// Line at the top of the Relays page on a phone.
+pub fn room_relays_intro_short() -> String {
+    text("room-relays-intro-short", &[])
+}
+
+/// Heading of the list of relays for new rooms.
+pub fn room_relays_new_rooms() -> String {
+    text("room-relays-new-rooms", &[])
+}
+
+/// Line under the list for new rooms.
+pub fn room_relays_new_rooms_line() -> String {
+    text("room-relays-new-rooms-line", &[])
+}
+
+/// Heading of the list of spare relays.
+pub fn room_relays_spares() -> String {
+    text("room-relays-spares", &[])
+}
+
+/// Line under the spares on a desktop.
+pub fn room_relays_spares_line() -> String {
+    text("room-relays-spares-line", &[])
+}
+
+/// Line under the spares on a phone.
+pub fn room_relays_spares_line_short() -> String {
+    text("room-relays-spares-line-short", &[])
+}
+
+/// Button that puts the default relays and spares back.
+pub fn room_relays_restore() -> String {
+    text("room-relays-restore", &[])
+}
+
+/// Button in the room column's header that leaves, on the place's room card, with the dialog after it.
+pub fn room_leave_ellipsis() -> String {
+    text("room-leave-ellipsis", &[])
+}
+
+/// Menu item on an iPhone that leaves, asking first.
+pub fn room_leave_menu() -> String {
+    text("room-leave-menu", &[])
+}
+
+/// Menu item on Android that leaves, asking first.
+pub fn room_leave_menu_plain() -> String {
+    text("room-leave-menu-plain", &[])
+}
+
+/// Title of the confirmation before leaving.
+pub fn room_leave_title() -> String {
+    text("room-leave-title", &[])
+}
+
+/// Line under it.
+pub fn room_leave_line() -> String {
+    text("room-leave-line", &[])
+}
+
+/// Line under it when closing the window on a Mac, which offers Keep the room.
+pub fn room_leave_line_keep() -> String {
+    text("room-leave-line-keep", &[])
+}
+
+/// Button in the confirmation on closing the window: close the player and stay in the room.
+pub fn room_keep() -> String {
+    text("room-keep", &[])
+}
+
+/// Button in the TV's confirmation that goes back to the room.
+pub fn room_keep_watching() -> String {
+    text("room-keep-watching", &[])
+}
+
+/// Small heading of the up next card.
+pub fn room_up_next() -> String {
+    text("room-up-next", &[])
+}
+
+/// Line on the card naming the next episode.
+pub fn room_up_next_episode(episode: &str, title: &str) -> String {
+    text("room-up-next-episode", &[("episode", Arg::Text(episode)), ("title", Arg::Text(title))])
+}
+
+/// Line on the card naming the next episode when it has no title.
+pub fn room_up_next_episode_plain(episode: &str) -> String {
+    text("room-up-next-episode-plain", &[("episode", Arg::Text(episode))])
+}
+
+/// Line on the card counting down for everyone.
+pub fn room_up_next_count(seconds: i64) -> String {
+    text("room-up-next-count", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Line on the card while your file ended sooner and the room waits for someone's longer file.
+pub fn room_up_next_waiting(name: &str) -> String {
+    text("room-up-next-waiting", &[("name", Arg::Text(name))])
+}
+
+/// Button on the card that moves the room on at once.
+pub fn room_play_next_now() -> String {
+    text("room-play-next-now", &[])
+}
+
+/// First line of the room while up next counts down.
+pub fn room_line_up_next(seconds: i64) -> String {
+    text("room-line-up-next", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Second line while up next counts down.
+pub fn room_line_up_next_detail(episode: &str) -> String {
+    text("room-line-up-next-detail", &[("episode", Arg::Text(episode))])
+}
+
+/// Placeholder of the chat field.
+pub fn room_chat_field() -> String {
+    text("room-chat-field", &[])
+}
+
+/// Button and accessibility label that sends a chat line.
+pub fn room_chat_send() -> String {
+    text("room-chat-send", &[])
+}
+
+/// Accessibility label of the button beside the chat field that opens the reactions.
+pub fn room_react() -> String {
+    text("room-react", &[])
+}
+
+/// Line in the chat of a room opened from an invite, before joining.
+pub fn room_chat_opens() -> String {
+    text("room-chat-opens", &[])
+}
+
+/// Line under a chat line that didn't reach any relay.
+pub fn room_chat_not_sent() -> String {
+    text("room-chat-not-sent", &[])
+}
+
+/// Chat line: someone started the room.
+pub fn room_chat_started(name: &str, episode: &str) -> String {
+    text("room-chat-started", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
+}
+
+/// Chat line: you started the room.
+pub fn room_chat_you_started(episode: &str) -> String {
+    text("room-chat-you-started", &[("episode", Arg::Text(episode))])
+}
+
+/// Chat line: someone paused, at a place in the episode.
+pub fn room_chat_paused(name: &str, at: &str) -> String {
+    text("room-chat-paused", &[("name", Arg::Text(name)), ("at", Arg::Text(at))])
+}
+
+/// Chat line: you paused.
+pub fn room_chat_you_paused(at: &str) -> String {
+    text("room-chat-you-paused", &[("at", Arg::Text(at))])
+}
+
+/// Chat line: someone played after a pause.
+pub fn room_chat_resumed(name: &str) -> String {
+    text("room-chat-resumed", &[("name", Arg::Text(name))])
+}
+
+/// Chat line: the room waits for people whose player is opening the episode.
+pub fn room_chat_paused_for_loading(names: &str) -> String {
+    text("room-chat-paused-for-loading", &[("names", Arg::Text(names))])
+}
+
+/// Chat line: the room waits for people whose player stalled.
+pub fn room_chat_paused_for_buffering(names: &str) -> String {
+    text("room-chat-paused-for-buffering", &[("names", Arg::Text(names))])
+}
+
+/// Chat line on your own device: the room waits for you.
+pub fn room_chat_paused_for_you() -> String {
+    text("room-chat-paused-for-you", &[])
+}
+
+/// Chat line: someone pressed Carry on.
+pub fn room_chat_carried_on(carrier: &str, names: &str) -> String {
+    text("room-chat-carried-on", &[("carrier", Arg::Text(carrier)), ("names", Arg::Text(names))])
+}
+
+/// Chat line: someone's first frame landed and they joined at the room's place.
+pub fn room_chat_joined_at(name: &str, at: &str) -> String {
+    text("room-chat-joined-at", &[("name", Arg::Text(name)), ("at", Arg::Text(at))])
+}
+
+/// Chat line: someone left the room.
+pub fn room_chat_left(name: &str) -> String {
+    text("room-chat-left", &[("name", Arg::Text(name))])
+}
+
+/// Chat line: someone moved to a new room.
+pub fn room_chat_moved(name: &str) -> String {
+    text("room-chat-moved", &[("name", Arg::Text(name))])
+}
+
+/// Chat line in the old room: someone went along to the new room.
+pub fn room_chat_went(name: &str) -> String {
+    text("room-chat-went", &[("name", Arg::Text(name))])
+}
+
+/// Chat line: up next moved the room on.
+pub fn room_chat_up_next(episode: &str) -> String {
+    text("room-chat-up-next", &[("episode", Arg::Text(episode))])
+}
+
+/// Chat line: someone skipped the opening for the room.
+pub fn room_chat_skipped_opening(name: &str) -> String {
+    text("room-chat-skipped-opening", &[("name", Arg::Text(name))])
+}
+
+/// Label of the laugh reaction button.
+pub fn room_react_laugh() -> String {
+    text("room-react-laugh", &[])
+}
+
+/// Label of the gasp reaction button.
+pub fn room_react_gasp() -> String {
+    text("room-react-gasp", &[])
+}
+
+/// Label of the clap reaction button.
+pub fn room_react_clap() -> String {
+    text("room-react-clap", &[])
+}
+
+/// Label of the cry reaction button.
+pub fn room_react_cry() -> String {
+    text("room-react-cry", &[])
+}
+
+/// Chat line: someone laughed, at a place in the episode.
+pub fn room_reacted_laugh(name: &str, at: &str) -> String {
+    text("room-reacted-laugh", &[("name", Arg::Text(name)), ("at", Arg::Text(at))])
+}
+
+/// Chat line: someone gasped, at a place in the episode.
+pub fn room_reacted_gasp(name: &str, at: &str) -> String {
+    text("room-reacted-gasp", &[("name", Arg::Text(name)), ("at", Arg::Text(at))])
+}
+
+/// Chat line: someone clapped, at a place in the episode.
+pub fn room_reacted_clap(name: &str, at: &str) -> String {
+    text("room-reacted-clap", &[("name", Arg::Text(name)), ("at", Arg::Text(at))])
+}
+
+/// Chat line: someone cried, at a place in the episode.
+pub fn room_reacted_cry(name: &str, at: &str) -> String {
+    text("room-reacted-cry", &[("name", Arg::Text(name)), ("at", Arg::Text(at))])
+}
+
+/// Line under the video on the TV rail: what the remote's buttons do.
+pub fn room_tv_keys() -> String {
+    text("room-tv-keys", &[])
+}
+
+/// Line under the chat on the TV rail: chat is read-only there.
+pub fn room_tv_write_from_phone() -> String {
+    text("room-tv-write-from-phone", &[])
+}
+
+/// Line under the place's heading.
+pub fn room_place_line() -> String {
+    text("room-place-line", &[])
+}
+
+/// Small heading of the card for the room you are in.
+pub fn room_place_yours() -> String {
+    text("room-place-yours", &[])
+}
+
+/// Button on the card that opens the room's player.
+pub fn room_open_player() -> String {
+    text("room-open-player", &[])
+}
+
+/// Heading of the field that joins a room.
+pub fn room_place_join() -> String {
+    text("room-place-join", &[])
+}
+
+/// Placeholder of the field that takes an invite link.
+pub fn room_place_link() -> String {
+    text("room-place-link", &[])
+}
+
+/// Button that pastes the clipboard into the field.
+pub fn room_place_paste() -> String {
+    text("room-place-paste", &[])
+}
+
+/// Heading of the list of recent rooms.
+pub fn room_recent() -> String {
+    text("room-recent", &[])
+}
+
+/// Line beside the heading.
+pub fn room_recent_note() -> String {
+    text("room-recent-note", &[])
+}
+
+/// Line of a recent room: the episode, who was there, and when, already formatted, such as Tuesday or 19:25.
+pub fn room_recent_row(episode: &str, names: &str, when: &str) -> String {
+    text("room-recent-row", &[("episode", Arg::Text(episode)), ("names", Arg::Text(names)), ("when", Arg::Text(when))])
+}
+
+/// Line of a recent room where you were alone.
+pub fn room_recent_row_alone(episode: &str, when: &str) -> String {
+    text("room-recent-row-alone", &[("episode", Arg::Text(episode)), ("when", Arg::Text(when))])
+}
+
+/// Button on a recent room that joins it again.
+pub fn room_rejoin() -> String {
+    text("room-rejoin", &[])
+}
+
+/// Title of the alert when none of an invite's relays answers, and the bold start of the line in the place.
+pub fn room_error_unreachable_title() -> String {
+    text("room-error-unreachable-title", &[])
+}
+
+/// Line under it, and the next sentence in the place.
+pub fn room_error_ask_new_invite() -> String {
+    text("room-error-ask-new-invite", &[])
+}
+
+/// The same error in one line, where there is no room for a title.
+pub fn room_error_unreachable() -> String {
+    text("room-error-unreachable", &[])
+}
+
+/// Line after it in the place: what was tried.
+pub fn room_error_tried(seconds: i64) -> String {
+    text("room-error-tried", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Title of the alert when a recent room has nobody answering, such as after a new invite.
+pub fn room_error_nobody_answered() -> String {
+    text("room-error-nobody-answered", &[])
+}
+
+/// Line under it.
+pub fn room_error_nobody_answered_line() -> String {
+    text("room-error-nobody-answered-line", &[])
+}
+
+/// Notice when the room already has 10 people and you can't join.
+pub fn room_error_full() -> String {
+    text("room-error-full", &[])
+}
+
+/// Notice when an invite link or code is from an older version.
+pub fn room_error_old_invite() -> String {
+    text("room-error-old-invite", &[])
+}
+
+/// Chat line: someone came into the room.
+pub fn room_chat_joined(name: &str) -> String {
+    text("room-chat-joined", &[("name", Arg::Text(name))])
+}
+
+/// Chat line: someone moved the room to another place in the episode.
+pub fn room_chat_jumped(name: &str, from: &str, to: &str) -> String {
+    text("room-chat-jumped", &[("name", Arg::Text(name)), ("from", Arg::Text(from)), ("to", Arg::Text(to))])
+}
+
+/// Chat line: the room waits for people catching up after a jump.
+pub fn room_chat_paused_for_seeking(names: &str) -> String {
+    text("room-chat-paused-for-seeking", &[("names", Arg::Text(names))])
+}
+
+/// Chat line: this device's player was moved to stay with the room.
+pub fn room_chat_corrected() -> String {
+    text("room-chat-corrected", &[])
+}
+
+/// Chat line: someone put on another episode for the room.
+pub fn room_chat_episode_changed(name: &str, episode: &str) -> String {
+    text("room-chat-episode-changed", &[("name", Arg::Text(name)), ("episode", Arg::Text(episode))])
+}
+
+/// Chat line: someone who was behind caught up with the room.
+pub fn room_chat_caught_up(name: &str) -> String {
+    text("room-chat-caught-up", &[("name", Arg::Text(name))])
+}
+
+/// Chat line on a device whose Play lost to someone's Pause pressed at the same moment.
+pub fn room_chat_already_paused(name: &str) -> String {
+    text("room-chat-already-paused", &[("name", Arg::Text(name))])
+}
+
+/// Chat line: someone made a new invite; the old link stopped working.
+pub fn room_chat_new_invite(name: &str) -> String {
+    text("room-chat-new-invite", &[("name", Arg::Text(name))])
+}
+
+/// Chat line: someone cancelled Up next for everyone.
+pub fn room_chat_up_next_cancelled(name: &str) -> String {
+    text("room-chat-up-next-cancelled", &[("name", Arg::Text(name))])
+}
+
+/// Chat line on your own device: your name was taken, so the room knows you by this one.
+pub fn room_chat_renamed(name: &str) -> String {
+    text("room-chat-renamed", &[("name", Arg::Text(name))])
+}
+
+/// Button that shows the room's column again after Hide room.
+pub fn room_show() -> String {
+    text("room-show", &[])
+}
+
+/// The room's Skip opening button on the player: skips for everyone.
+pub fn room_skip_opening() -> String {
+    text("room-skip-opening", &[])
+}
+
+/// Confirmation after Copy invite link.
+pub fn room_link_copied() -> String {
+    text("room-link-copied", &[])
+}
+
+/// The starting screen's line on the device opening the room's episode.
+pub fn room_starting_episode(episode: &str) -> String {
+    text("room-starting-episode", &[("episode", Arg::Text(episode))])
+}
+
+/// A short length in minutes, on the banner before play.
+pub fn room_minutes(minutes: i64) -> String {
+    text("room-minutes", &[("minutes", Arg::Int(minutes))])
+}
+
+/// Joins the last name to the ones before it: "Mika, Ren and Sol". `names` is the ones before, already joined with room-names-comma.
+pub fn room_names_and(names: &str, last: &str) -> String {
+    text("room-names-and", &[("names", Arg::Text(names)), ("last", Arg::Text(last))])
+}
+
+/// Joins two names in a longer list: "Mika, Ren".
+pub fn room_names_comma(first: &str, rest: &str) -> String {
+    text("room-names-comma", &[("first", Arg::Text(first)), ("rest", Arg::Text(rest))])
+}
+
+/// Person menu item and accessibility action that hides someone's lines and reactions in this room.
+pub fn room_mute(name: &str) -> String {
+    text("room-mute", &[("name", Arg::Text(name))])
+}
+
+/// Person menu item and accessibility action that shows a muted person's lines again.
+pub fn room_unmute(name: &str) -> String {
+    text("room-unmute", &[("name", Arg::Text(name))])
+}
+
+/// Line in the conversation where a muted person's lines were.
+pub fn room_chat_muted(name: &str) -> String {
+    text("room-chat-muted", &[("name", Arg::Text(name))])
+}
+
+/// Line after the newest chat lines over the video, which opens the conversation.
+pub fn room_chat_more(count: i64) -> String {
+    text("room-chat-more", &[("count", Arg::Int(count))])
+}
+
+/// Spoken by a screen reader when a chat line arrives.
+pub fn room_chat_announce(name: &str, message: &str) -> String {
+    text("room-chat-announce", &[("name", Arg::Text(name)), ("message", Arg::Text(message))])
+}
+
+/// End of the chat field while sending waits, after three messages in five seconds.
+pub fn room_chat_wait(seconds: i64) -> String {
+    text("room-chat-wait", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken once when sending waits, for screen readers.
+pub fn room_chat_wait_spoken(seconds: i64) -> String {
+    text("room-chat-wait-spoken", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Spoken by a screen reader once, when 20 characters are left in the chat field.
+pub fn room_chat_characters_left(count: i64) -> String {
+    text("room-chat-characters-left", &[("count", Arg::Int(count))])
+}
+
+/// A reaction line with the moment in the episode it was made at, such as "Ren and Mika laughed at 12:04". The time is minutes and seconds.
+pub fn room_reacted_at(line: &str, time: &str) -> String {
+    text("room-reacted-at", &[("line", Arg::Text(line)), ("time", Arg::Text(time))])
+}
+
+/// Label on the seek bar when pointing near a reaction tick: the moment and who reacted.
+pub fn room_tick_label(time: &str, names: &str) -> String {
+    text("room-tick-label", &[("time", Arg::Text(time)), ("names", Arg::Text(names))])
+}
+
+/// Two people named together, for a reaction made by both: "Ren and Mika".
+pub fn room_names_two(first: &str, second: &str) -> String {
+    text("room-names-two", &[("first", Arg::Text(first)), ("second", Arg::Text(second))])
+}
+
+/// Three people named together.
+pub fn room_names_three(first: &str, second: &str, third: &str) -> String {
+    text("room-names-three", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("third", Arg::Text(third))])
+}
+
+/// More than three people named together: two names and how many others.
+pub fn room_names_others(first: &str, second: &str, count: i64) -> String {
+    text("room-names-others", &[("first", Arg::Text(first)), ("second", Arg::Text(second)), ("count", Arg::Int(count))])
+}
+
+/// Player panel, under the subtitled or dubbed switch in a room.
+pub fn room_version_own() -> String {
+    text("room-version-own", &[])
+}
+
+/// The banner over the room when the episode has no name of its own: the episode and its length.
+pub fn room_banner_episode_plain(episode: &str, length: &str) -> String {
+    text("room-banner-episode-plain", &[("episode", Arg::Text(episode)), ("length", Arg::Text(length))])
+}
+
+/// Menu item dimmed in a room, with this reason under it.
+pub fn room_mark_unavailable() -> String {
+    text("room-mark-unavailable", &[])
+}
+
+/// Heading of the people list in the room, and its accessibility label.
+pub fn room_people() -> String {
+    text("room-people", &[])
+}
+
+/// State word: the player is moving to the room's new place after someone sought, with the seconds so far. Also the room's second line while it waits for one seeking person.
+pub fn room_state_seeking(seconds: i64) -> String {
+    text("room-state-seeking", &[("seconds", Arg::Int(seconds))])
+}
+
+/// Bold start of the failure line in the room's place, followed by the hint (room-error-ask-new-invite). With its full stop: room-error-unreachable-title is the same words as an alert's title.
+pub fn room_error_unreachable_lead() -> String {
+    text("room-error-unreachable-lead", &[])
+}
+
+/// Bold start of the failure line in the room's place, followed by the hint (room-error-nobody-answered-line). With its full stop: room-error-nobody-answered is the same words as an alert's title.
+pub fn room_error_nobody_answered_lead() -> String {
+    text("room-error-nobody-answered-lead", &[])
+}
+
+/// Line on a phone when its paired TV is in the room. The device is its name, such as Living room TV.
+pub fn room_device_in_room(device: &str) -> String {
+    text("room-device-in-room", &[("device", Arg::Text(device))])
+}
+
+/// Button on the phone's remote screen that leaves the room on the paired TV.
+pub fn room_leave_on_device(device: &str) -> String {
+    text("room-leave-on-device", &[("device", Arg::Text(device))])
+}
+
+/// Line on the TV: joining someone's room goes through a paired phone, as the TV can't open links.
+pub fn room_tv_join_from_phone() -> String {
+    text("room-tv-join-from-phone", &[])
+}
+
+/// Line above the list of sources that have the room's episode, in the Choose a source dialog in a room.
+pub fn room_sources_found_line(count: i64) -> String {
+    text("room-sources-found-line", &[("count", Arg::Int(count))])
+}
+
 /// Button that shows the season before.
 pub fn seasonal_previous() -> String {
     text("seasonal-previous", &[])
@@ -21215,6 +22480,21 @@ pub fn store_turn_on_watching() -> String {
     text("store-turn-on-watching", &[])
 }
 
+/// Info title when every plugin in a store is for reading, and reading is off here.
+pub fn store_other_medium_reading(store: &str) -> String {
+    text("store-other-medium-reading", &[("store", Arg::Text(store))])
+}
+
+/// Line under it.
+pub fn store_other_medium_reading_line() -> String {
+    text("store-other-medium-reading-line", &[])
+}
+
+/// Secondary action under it.
+pub fn store_turn_on_reading() -> String {
+    text("store-turn-on-reading", &[])
+}
+
 /// Info title when a store has no plugins.
 pub fn store_empty(store: &str) -> String {
     text("store-empty", &[("store", Arg::Text(store))])
@@ -22003,6 +23283,36 @@ pub fn sources_add_demo() -> String {
 /// Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
 pub fn sources_order_all() -> String {
     text("sources-order-all", &[])
+}
+
+/// Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+pub fn sources_choose_for(episode: &str) -> String {
+    text("sources-choose-for", &[("episode", Arg::Text(episode))])
+}
+
+/// Line while the sources are searched for the episode.
+pub fn sources_looking() -> String {
+    text("sources-looking", &[])
+}
+
+/// Line over the list of sources that list the episode.
+pub fn sources_found(count: i64) -> String {
+    text("sources-found", &[("count", Arg::Int(count))])
+}
+
+/// Line when no source lists the episode.
+pub fn sources_none_list(episode: &str) -> String {
+    text("sources-none-list", &[("episode", Arg::Text(episode))])
+}
+
+/// Button that goes to the Sources page, when no source is set up.
+pub fn sources_open() -> String {
+    text("sources-open", &[])
+}
+
+/// Accessibility label of the list of sources for the episode.
+pub fn sources_label() -> String {
+    text("sources-label", &[])
 }
 
 /// Short label for a joined store, on a row.

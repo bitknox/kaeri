@@ -271,6 +271,26 @@ public class CastPainterTests
     }
 
     [Fact]
+    public void ACastThatEndedOffersWhatTheSpecsTableGivesItsReason()
+    {
+        static (CastAction, CastAction?) Pair(CastLine line, Msg notice)
+        {
+            var footer = CastFooter.For(line, notice);
+            Assert.True(footer.FirstAccent);
+            return (footer.First, footer.Second);
+        }
+        Assert.Equal((CastAction.ChooseSource, CastAction.PlayHere), Pair(CastLine.Failed, new Msg.NoticeCastVideoCodec("Living room", "AV1")));
+        Assert.Equal((CastAction.ChooseSource, CastAction.PlayHere), Pair(CastLine.Failed, new Msg.NoticeCastSegment("Living room")));
+        Assert.Equal((CastAction.TryAgain, CastAction.PlayHere), Pair(CastLine.Failed, new Msg.NoticeCastNeverFetches("Living room")));
+        Assert.Equal((CastAction.TryAgain, CastAction.PlayHere), Pair(CastLine.Failed, new Msg.NoticeCastLostStream("Living room")));
+        Assert.Equal((CastAction.ChooseSource, null), Pair(CastLine.Failed, new Msg.NoticeCastDeepLink()));
+        Assert.Equal((CastAction.PlayHere, CastAction.ChooseAnother), Pair(CastLine.Failed, new Msg.NoticeCastNotSameNetwork("Living room")));
+        Assert.Equal((CastAction.PlayHere, CastAction.ChooseAnother), Pair(CastLine.Failed, new Msg.NoticeCastNoDevice()));
+        Assert.Equal((CastAction.PlayHere, CastAction.ChooseAnother), Pair(CastLine.Stopped, new Msg.NoticeCastLost("Living room")));
+        Assert.Equal("Try again", CastFooter.Words(CastAction.TryAgain));
+    }
+
+    [Fact]
     public void TheButtonSaysReconnectingWhileTheTvComesBack()
     {
         var painter = Painter();

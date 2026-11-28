@@ -1095,10 +1095,10 @@ impl Page {
             ));
             self.tv_button.set_action_name(Some("win.play-on-tv"));
         }
-        // A party plays the episode the primary action would.
+        // Watch together: a room starts from the episode the primary action would play.
         if item.button.is_some() && asked.is_none() {
             first.append(
-                Some(&t::party_open()),
+                Some(&t::together_people_button()),
                 Some(&format!("win.watch-together((uint32 {id}, '{}'))", item.episode)), // i18n-skip
             );
         }

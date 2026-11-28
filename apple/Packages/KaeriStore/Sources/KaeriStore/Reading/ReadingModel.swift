@@ -296,10 +296,6 @@ public final class ReadingModel {
         send?(.reading(.resolveConflict(work: work, tracker: tracker, keepLocal: keepLocal)))
     }
 
-    public func connectMangaUpdates(username: String, password: String) {
-        send?(.reading(.connectMangaUpdates(username: username, password: password)))
-    }
-
     public func download(_ work: String, _ pick: DownloadPick) {
         send?(.reading(.download(work: work, pick: pick)))
         send?(.reading(.loadChapters(work: work, edition: chapters[work]?.edition?.sourceId)))
@@ -572,13 +568,19 @@ public final class BookSourcesModel {
 
     public var isEmpty: Bool {
         guard let view else { return true }
-        return view.folders.isEmpty && view.servers.isEmpty && view.plugins.isEmpty
+        return folders.isEmpty && view.servers.isEmpty && view.plugins.isEmpty
     }
 
     /// Folders, servers and book plugins, all told.
     public var count: Int {
         guard let view else { return 0 }
-        return view.folders.count + view.servers.count + view.plugins.count
+        return folders.count + view.servers.count + view.plugins.count
+    }
+
+    /// The folders, without one just removed: the engine keeps that one a few seconds for
+    /// Undo, out of sight.
+    public var folders: [BookFolderRow] {
+        view?.folders.filter { !$0.removed } ?? []
     }
 
     public func load() { send?(.bookSources(.load)) }

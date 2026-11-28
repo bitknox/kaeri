@@ -20,7 +20,7 @@
 
 use kaeri_model::{
     Msg,
-    party::NoSourceWhy,
+    room::NoSourceWhy,
     starting::{StartFailure, StartStep},
 };
 use std::sync::Arc;

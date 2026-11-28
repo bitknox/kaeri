@@ -1,5 +1,6 @@
-// Fit to Window (Cmd-0) undoes a pinch in every way of reading manga: the page on screen, a
-// spread and pages one under another share the paged zoom, the long strip has its own.
+// Fit to Window (Cmd-0) undoes a pinch in every way of reading manga: the page on screen and a
+// spread share the paged zoom; the long strip and pages one under another, which flow as it
+// does, have the strip's.
 
 import KaeriKit
 @testable import KaeriStore
@@ -20,18 +21,18 @@ struct FitEveryModeTests {
     }
 
     @Test func fitAsksThePagesToUndoTheirPinch() {
-        for mode in [ReaderMode.paged, .vertical] {
-            let model = model(mode)
-            ReaderActions.zoom(model, 0)
-            #expect(model.pageZoomAsked?.step == 0, "\(mode)")
-            #expect(model.stripFitAsked == 0, "\(mode)")
-        }
+        let model = model(.paged)
+        ReaderActions.zoom(model, 0)
+        #expect(model.pageZoomAsked?.step == 0)
+        #expect(model.stripFitAsked == 0)
     }
 
     @Test func fitAsksTheStripToUndoItsPinch() {
-        let model = model(.strip)
-        ReaderActions.zoom(model, 0)
-        #expect(model.stripFitAsked == 1)
-        #expect(model.pageZoomAsked == nil)
+        for mode in [ReaderMode.strip, .vertical] {
+            let model = model(mode)
+            ReaderActions.zoom(model, 0)
+            #expect(model.stripFitAsked == 1, "\(mode)")
+            #expect(model.pageZoomAsked == nil, "\(mode)")
+        }
     }
 }

@@ -318,9 +318,6 @@ settings-value-player-ui-mpv = Your mpv setup
 # Value of the download folder setting when no folder is set.
 settings-value-download-dir-default = Kept with the torrent cache
 
-# Value of the Syncplay room setting when no room is set.
-settings-value-room-unset = Not set (needed for { -watch-party-pl })
-
 # Value of the seeding ratio setting: seed until the ratio is reached.
 # @arg ratio: text
 settings-value-seed-ratio = Until ratio { $ratio }
@@ -431,15 +428,6 @@ settings-label-keep-seeding = Keep seeding
 
 # Settings row: a command run when a download finishes.
 settings-label-download-hook = After each download
-
-# Settings row: Syncplay { -watch-party-pl }.
-settings-label-syncplay = Syncplay { -watch-party-pl }
-
-# Settings row: the Syncplay server.
-settings-label-syncplay-server = Syncplay server
-
-# Settings row: the Syncplay room.
-settings-label-syncplay-room = Syncplay room
 
 # Settings row: whether the app checks for a new version.
 settings-label-update-check = Check for updates
@@ -553,16 +541,6 @@ settings-note-keep-seeding = Off by default to save upload; turn it on to give b
 
 # Note under the after each download row.
 settings-note-download-hook = Press Enter to type a command. It runs after each finished download.
-
-# Note under the Syncplay row. The key is the one that plays a single episode in a { -watch-party }.
-# @arg key: text
-settings-note-syncplay = Press { $key } to play one episode in the room set below. While on, every play goes there.
-
-# Note under the Syncplay server row.
-settings-note-syncplay-server = Press Enter to type host:port. There is no server until you choose one.
-
-# Note under the Syncplay room row.
-settings-note-syncplay-room = Press Enter to type a friend's room. Leave it empty to start one nobody can guess.
 
 # Note under the check for updates row.
 settings-note-update-check = One cached request a day, made at startup.

@@ -42,17 +42,12 @@ impl CloseChoice {
     }
 }
 
-/// Called when Hide chat changes.
-type Watcher = Box<dyn Fn(bool)>;
-
 pub struct Prefs {
     file: PathBuf,
     keys: RefCell<glib::KeyFile>,
     /// Where the engine's `config.toml` is, for the one setting this app writes there itself:
     /// the language.
     config: Option<Paths>,
-    /// What follows Hide chat, called with the new value when Settings changes it.
-    chat_watchers: RefCell<Vec<Watcher>>,
 }
 
 const GROUP: &str = "window";
@@ -62,7 +57,7 @@ impl Prefs {
     pub fn open(file: PathBuf) -> Self {
         let keys = glib::KeyFile::new();
         let _ = keys.load_from_file(&file, glib::KeyFileFlags::NONE);
-        Self { file, keys: RefCell::new(keys), config: None, chat_watchers: RefCell::default() }
+        Self { file, keys: RefCell::new(keys), config: None }
     }
 
     /// These preferences, with the engine's config files named, so the language can be read and
@@ -128,7 +123,7 @@ impl Prefs {
         self.save();
     }
 
-    /// Whether chat is hidden in every watch party on this device: its lines, reactions, ticks
+    /// Whether chat is hidden in every room on this device: its lines, reactions, ticks
     /// and field. Settings › Playback.
     pub fn hide_chat(&self) -> bool {
         self.keys.borrow().boolean("party", "hide-chat").unwrap_or(false)
@@ -140,14 +135,6 @@ impl Prefs {
         }
         self.keys.borrow().set_boolean("party", "hide-chat", hidden);
         self.save();
-        for watcher in self.chat_watchers.borrow().iter() {
-            watcher(hidden);
-        }
-    }
-
-    /// Call `watcher` with the new value whenever Hide chat changes.
-    pub fn watch_hide_chat(&self, watcher: impl Fn(bool) + 'static) {
-        self.chat_watchers.borrow_mut().push(Box::new(watcher));
     }
 
     /// Whether first launch has been shown or passed over, so it never shows again.

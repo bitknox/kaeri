@@ -9,10 +9,7 @@ use kaeri_model::{
 };
 
 use super::{App, Field, info};
-use crate::{
-    keymap::Action,
-    nav::{Focus, Overlay, Section, StageView},
-};
+use crate::nav::{Focus, Overlay, Section, StageView};
 
 /// One row of the Settings screen, as the terminal shows it: the row the config makes, under its
 /// heading, with the terminal's note.
@@ -180,10 +177,6 @@ impl App {
             // The privacy dial; saying so is the point of the row.
             S::KeepSeeding => t::settings_note_keep_seeding(),
             S::DownloadHook => t::settings_note_download_hook(),
-            // `y` is the ordinary way in; this toggle sends *every* play there.
-            S::Syncplay => t::settings_note_syncplay(&self.key_for(Action::PlayParty)),
-            S::SyncplayServer => t::settings_note_syncplay_server(),
-            S::SyncplayRoom => t::settings_note_syncplay_room(),
             S::UpdateCheck => t::settings_note_update_check(),
             S::UpdateBeta => t::updates_beta_detail(),
             // Enabling it without a client id is a no-op, and a toggle that appears to work
@@ -275,6 +268,10 @@ impl App {
             | S::FollowSystemCaptions => return None,
             S::SaveCrashReports => t::settings_crash_save_detail(),
             S::AskAfterCrash => t::settings_crash_ask_detail(),
+            // The rows of the old watch party, which the terminal no longer draws: see
+            // `drop_unnamed`. Unreachable once the model drops them too.
+            #[allow(unreachable_patterns)]
+            _ => return None,
         })
     }
 
@@ -315,7 +312,7 @@ impl App {
         use kaeri_core::config::ThemeMode;
         let refused = view.refused.filter(|key| *key != SettingKey::SourceOrder);
         let repaint = view.theme != self.settings.theme || refused == Some(SettingKey::Theme);
-        self.settings = view;
+        self.settings = drop_unnamed(view);
         if repaint {
             self.palette = crate::theme::Palette::of(match self.settings.theme {
                 ThemeMode::Immersive => crate::theme::Variant::Immersive,
@@ -359,9 +356,6 @@ fn label_text(key: SettingKey) -> String {
         S::MergeSubtitles => t::settings_label_merge_subtitles(),
         S::KeepSeeding => t::settings_label_keep_seeding(),
         S::DownloadHook => t::settings_label_download_hook(),
-        S::Syncplay => t::settings_label_syncplay(),
-        S::SyncplayServer => t::settings_label_syncplay_server(),
-        S::SyncplayRoom => t::settings_label_syncplay_room(),
         S::UpdateCheck => t::settings_label_update_check(),
         S::UpdateBeta => t::updates_beta(),
         S::Presence => t::settings_label_presence(),
@@ -424,7 +418,17 @@ fn label_text(key: SettingKey) -> String {
         S::FollowSystemCaptions => t::settings_system_captions(),
         S::SaveCrashReports => t::settings_crash_save(),
         S::AskAfterCrash => t::settings_crash_ask(),
+        // The old watch party's rows have no name here and are not drawn: see `drop_unnamed`.
+        #[allow(unreachable_patterns)]
+        _ => String::new(),
     }
+}
+
+/// The settings without the rows the terminal has no name for: the old watch party's, which
+/// the room replaced. The engine still sends them until its config moves to the room.
+pub(super) fn drop_unnamed(mut view: SettingsView) -> SettingsView {
+    view.rows.retain(|row| !label_text(row.key).is_empty());
+    view
 }
 
 /// A heading's name for the model's category. A category the catalogue does not know stays as
@@ -491,8 +495,7 @@ fn known_value(key: SettingKey, raw: &str) -> String {
         (S::DownloadDir, KEPT_WITH_CACHE) => t::settings_value_download_dir_default(),
         (S::DownloadHook, "configured") => t::settings_value_configured(), // i18n-skip
         (S::DownloadHook | S::TorrentProxy, "none") => t::settings_value_none(), // i18n-skip
-        (S::SyncplayRoom, "unset — needed for parties") => t::settings_value_room_unset(), // i18n-skip
-        (S::UploadLimit, "unlimited") => t::settings_value_unlimited(), // i18n-skip
+        (S::UploadLimit, "unlimited") => t::settings_value_unlimited(),    // i18n-skip
         _ => String::new(),
     };
     if !known.is_empty() {

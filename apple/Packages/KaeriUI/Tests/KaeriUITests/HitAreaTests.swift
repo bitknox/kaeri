@@ -63,7 +63,7 @@ private final class ClickWindow {
         try await Task.sleep(for: .milliseconds(1))
     }
 
-    private static func run(_ seconds: Double) { RunLoop.main.run(until: Date().addingTimeInterval(seconds)) }
+    private static func run(_ seconds: Double) { runAwake(seconds) }
 }
 
 @MainActor

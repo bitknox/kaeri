@@ -64,6 +64,7 @@ sealed class CastLayer
         {
             Collapse = Collapse,
             OpenShow = OpenShow,
+            TryAgain = tv.CastAgain,
             PlayHere = PlayHere,
             Stop = () =>
             {

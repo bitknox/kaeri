@@ -82,6 +82,9 @@ import app.kaeri.tv.ui.TonalButton
 import app.kaeri.tv.ui.entryFocus
 import app.kaeri.tv.ui.focusSoon
 import app.kaeri.store.plainReason
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import app.kaeri.store.Wording
 
 /** The line under every Join. */
 
@@ -163,7 +166,9 @@ fun JoinStoreScreen(onDone: (joined: Boolean) -> Unit, cancelLabel: String? = nu
         Modifier
             .fillMaxSize()
             .background(ObiSilk.Ground)
-            .padding(start = Canvas.Keyline, end = Canvas.SafeX, top = 72.dp),
+            // A store's preview with its notices can run past the screen: focus on Join scrolls it in.
+            .verticalScroll(rememberScrollState())
+            .padding(start = Canvas.Keyline, end = Canvas.SafeX, top = 72.dp, bottom = 27.dp),
         verticalArrangement = Arrangement.spacedBy(20.dp),
     ) {
         Text(title, style = MaterialTheme.typography.titleLarge, color = ObiSilk.Silk, modifier = Modifier.semantics { heading() })
@@ -376,6 +381,17 @@ private fun Preview(invited: InvitedStore, onJoin: () -> Unit, onCancel: () -> U
             Text(stringResource(R.string.stores_join_your_name_detail), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze, modifier = Modifier.widthIn(max = 640.dp))
         }
     }
+    // Where the choice to join is made: what a plugin is, who answers for this store's, and that
+    // they don't come from the app.
+    if (!invited.alreadyJoined) {
+        val context = LocalContext.current
+        val owner = if (invited.owners.isEmpty()) invited.name else Wording.list(invited.owners)
+        Column(verticalArrangement = Arrangement.spacedBy(6.dp), modifier = Modifier.widthIn(max = 720.dp)) {
+            Text(stringResource(R.string.plugin_risk_warning), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+            Text(Strings.storesJoinOwnerResponsible(context, owner), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+            Text(stringResource(R.string.stores_not_from_app), style = MaterialTheme.typography.bodyMedium, color = ObiSilk.Haze)
+        }
+    }
     Column(Modifier.entryFocus(join)) {
         Row(horizontalArrangement = Arrangement.spacedBy(16.dp)) {
             if (invited.alreadyJoined) {
@@ -498,7 +514,7 @@ private fun JoinedResult(
                                 val busy = store.stores.isWorking(working, StoresModel.Work.Install(list.store, plugin.id))
                                 TvPluginRow(plugin, installed = installed, busy = busy, onInstall = {
                                     store.installPlugin(list.store, plugin.id)
-                                    store.cameIn.installedOne(plugin.id)
+                                    store.cameIn.installingOne(plugin.id)
                                 }, then = doneFocus, first = installFocus.takeIf { plugin.id == firstToInstall })
                             }
                         }

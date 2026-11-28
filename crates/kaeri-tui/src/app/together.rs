@@ -1,14 +1,16 @@
-//! Together: the watch party this terminal is in, a line to join another, and the last rooms.
+//! Together: the room this terminal is in, a line to join another by its invite link, and the
+//! last rooms.
 
 use kaeri_i18n::t;
 use kaeri_model::{
     command::Command,
-    party::{
-        PartyChatRefusal, PartyCommand, PartyMember, PartyRecentRoom, PartyTarget, Reaction,
+    room::{
+        Reaction, RoomChatRefusal, RoomCommand, RoomConversation, RoomLeftWhy, RoomMember,
+        RoomRecent, RoomTarget, RoomView,
     },
 };
 
-use super::{App, Field, alert, info};
+use super::{App, Field, alert, info, say};
 use crate::{
     keymap::Action,
     nav::{Focus, Overlay, Section, StageView},
@@ -22,20 +24,20 @@ impl App {
             && matches!(self.nav.current(), StageView::Section(Section::Together))
     }
 
-    /// The rows the cursor walks: the party's other members, the Join line, then the recent
+    /// The rows the cursor walks: the room's other members, the Join line, then the recent
     /// rooms.
     pub(super) fn together_rows(&self) -> usize {
-        self.others().count() + 1 + self.party_recent.len()
+        self.others().count() + 1 + self.room_recent.len()
     }
 
-    /// The party's members other than this device's, in the order the rows list them. They are
+    /// The room's members other than this device, in the order the rows list them. They are
     /// rows so `M` can mute one.
-    pub fn others(&self) -> impl Iterator<Item = &PartyMember> {
-        self.party_members.iter().filter(|m| !m.you && self.party.is_some())
+    pub fn others(&self) -> impl Iterator<Item = &RoomMember> {
+        self.room_members.iter().filter(|m| !m.you && self.room.is_some())
     }
 
     /// The other member under the cursor.
-    pub fn selected_member(&self) -> Option<&PartyMember> {
+    pub fn selected_member(&self) -> Option<&RoomMember> {
         self.others().nth(self.cursors.together.selected)
     }
 
@@ -45,139 +47,170 @@ impl App {
     }
 
     /// The recent room under the cursor; `None` on the Join line or a member.
-    pub fn selected_room(&self) -> Option<&PartyRecentRoom> {
-        self.party_recent.get(self.cursors.together.selected.checked_sub(self.join_row() + 1)?)
-    }
-
-    /// Whether this member's lines and reactions are muted for the party.
-    pub fn is_muted(&self, name: &str) -> bool {
-        self.party_chat_state.as_ref().is_some_and(|s| s.muted.iter().any(|m| m == name))
+    pub fn selected_room(&self) -> Option<&RoomRecent> {
+        self.room_recent.get(self.cursors.together.selected.checked_sub(self.join_row() + 1)?)
     }
 
     /// Whether Hide chat is on.
     pub fn chat_hidden(&self) -> bool {
-        self.party_chat_state.as_ref().is_some_and(|s| s.hidden)
+        self.room_chat_state.as_ref().is_some_and(|s| s.hidden)
+    }
+
+    /// What `s` does in the room now, when it does anything: Carry on once it is offered, Play
+    /// for everyone before play, or Don't wait for me while the room waits for this device.
+    pub fn room_go(&self) -> Option<RoomGo> {
+        let room = self.room.as_ref()?;
+        if room.can_carry_on {
+            Some(RoomGo::CarryOn)
+        } else if room.can_dont_wait {
+            Some(RoomGo::DontWait)
+        } else if room.before_play && room.starts_at_ms.is_none() {
+            Some(RoomGo::PlayForEveryone)
+        } else {
+            None
+        }
     }
 
     /// The keys of the section. `Some` when one was taken, with what it asks of the engine.
     ///
     /// The section reads the keys the rest of the app already has for its own screens, the way
-    /// Downloads does: `r` ready, `c` copy the link, `s` start, `x` leave. They are matched
-    /// before the title commands, which would otherwise answer that nothing is selected.
+    /// Downloads does: `c` copy the link, `r` a new invite, `s` carry on or play, `x` leave or
+    /// forget a recent room. They are matched before the title commands, which would otherwise
+    /// answer that nothing is selected.
     pub(super) fn together_key(&mut self, action: Action) -> Option<Option<Command>> {
         if !self.in_together_stage() {
             return None;
         }
-        let party = self.party.is_some();
+        let in_room = self.room.is_some();
         Some(match action {
             Action::Open => self.open_together_row(),
-            Action::Refresh if party => self.party_toggle_ready(),
-            Action::ClearCompleted if party => self.party_copy_link(),
-            Action::ShowSources if party => self.party_start(),
-            Action::HideFromContinue if party => Some(Command::PartyLeave),
-            Action::FixMapping if party => self.open_say(),
-            Action::MarkAllPrevious if party => self.party_mute(),
-            Action::ToggleSynopsis if party => {
-                Some(Command::Party(PartyCommand::HideChat { hidden: !self.chat_hidden() }))
+            Action::HideFromContinue if self.selected_room().is_some() => self.forget_room(),
+            Action::Refresh if in_room => Some(Command::Room(RoomCommand::NewInvite)),
+            Action::ClearCompleted if in_room => self.room_copy_link(),
+            Action::ShowSources if in_room => self.room_go().map(|go| {
+                Command::Room(match go {
+                    RoomGo::CarryOn => RoomCommand::CarryOn,
+                    RoomGo::DontWait => RoomCommand::DontWait,
+                    RoomGo::PlayForEveryone => RoomCommand::Play { play: true },
+                })
+            }),
+            Action::HideFromContinue if in_room => {
+                self.nav.open_overlay(Overlay::LeaveRoom);
+                None
+            }
+            Action::FixMapping if in_room => self.open_say(),
+            Action::MarkAllPrevious if in_room => self.room_mute(),
+            Action::ToggleSynopsis if in_room => {
+                Some(Command::Room(RoomCommand::HideChat { hidden: !self.chat_hidden() }))
             }
             _ => return None,
         })
     }
 
-    /// Enter: the Join line asks for a link or code; a recent room is joined again. A member's
-    /// row opens nothing.
+    /// Enter: the Join line asks for an invite link, or joins a full room anyway once it said
+    /// so; a recent room is joined again. A member's row opens nothing.
     fn open_together_row(&mut self) -> Option<Command> {
         if self.selected_member().is_some() {
             return None;
         }
         match self.selected_room() {
             None => {
-                self.field_mut(Field::PartyLink).clear();
-                self.nav.open_overlay(Overlay::JoinParty);
+                if let Some(invite) = self.room_full.take() {
+                    self.room_joining = Some(invite.clone());
+                    return Some(Command::Room(RoomCommand::Lobby {
+                        invite: Some(invite),
+                        name: None,
+                        pick: None,
+                        anyway: true,
+                    }));
+                }
+                self.field_mut(Field::RoomLink).clear();
+                self.nav.open_overlay(Overlay::JoinRoom);
                 None
             }
-            Some(room) => {
-                if self.party.as_ref().is_some_and(|p| p.room == room.room) {
+            Some(recent) => {
+                if self.room.as_ref().is_some_and(|r| r.room_id == recent.room_id) {
                     return None;
                 }
-                let (server, room) = (room.server.clone(), room.room.clone());
-                Some(Command::Party(PartyCommand::Lobby {
-                    server,
-                    room,
-                    name: None,
-                    pick: None,
-                }))
+                let room_id = recent.room_id.clone();
+                Some(Command::Room(RoomCommand::Rejoin { room_id }))
             }
         }
     }
 
-    /// Enter on a typed link or code: the lobby it names.
-    pub(super) fn submit_party_link(&mut self) -> Option<Command> {
+    /// Enter on a pasted link: the room it is the invite to.
+    pub(super) fn submit_room_link(&mut self) -> Option<Command> {
         let text: String =
-            self.text(Field::PartyLink).chars().filter(|c| !c.is_whitespace()).collect();
+            self.text(Field::RoomLink).chars().filter(|c| !c.is_whitespace()).collect();
         if text.is_empty() {
             return None;
         }
-        let Some(target) = PartyTarget::parse(&text) else {
-            self.push_toast(alert(t::tui_together_not_a_link()));
+        let Some(target) = RoomTarget::parse(&text) else {
+            self.push_toast(alert(t::tui_room_not_a_link()));
             return None;
         };
+        if target.old.is_some() {
+            self.push_toast(alert(t::room_error_old_invite()));
+            return None;
+        }
         self.nav.close_overlay();
-        self.field_mut(Field::PartyLink).clear();
-        Some(Command::Party(PartyCommand::Lobby {
-            server: target.server,
-            room: target.room,
-            name: None,
-            pick: None,
-        }))
+        self.field_mut(Field::RoomLink).clear();
+        Some(self.join_room(target.link))
     }
 
-    /// `r`: ready, or not ready.
-    fn party_toggle_ready(&mut self) -> Option<Command> {
-        let ready = !self.party.as_ref()?.ready;
-        Some(Command::PartyReady { ready })
+    /// Join the room `invite` leads to.
+    pub fn join_room(&mut self, invite: String) -> Command {
+        self.room_full = None;
+        self.room_joining = Some(invite.clone());
+        Command::Room(RoomCommand::Lobby {
+            invite: Some(invite),
+            name: None,
+            pick: None,
+            anyway: false,
+        })
+    }
+
+    /// `x` on a recent room: off the list here, and off the device.
+    fn forget_room(&mut self) -> Option<Command> {
+        let room_id = self.selected_room()?.room_id.clone();
+        self.room_recent.retain(|r| r.room_id != room_id);
+        self.keep_together_cursor();
+        Some(Command::Room(RoomCommand::ForgetRoom { room_id }))
+    }
+
+    /// Enter in the Leave question: out of the room. What plays goes on as a private session.
+    pub(super) fn confirm_leave_room(&mut self) -> Option<Command> {
+        self.nav.close_overlay();
+        self.room.as_ref()?;
+        Some(Command::Room(RoomCommand::Leave))
     }
 
     /// `c`: the invite link to the terminal's clipboard.
-    fn party_copy_link(&mut self) -> Option<Command> {
-        let link =
-            self.party.as_ref().and_then(|p| p.link.clone().or_else(|| p.invite.clone()))?;
+    fn room_copy_link(&mut self) -> Option<Command> {
+        let link = self.room.as_ref().and_then(|r| r.link.clone())?;
         self.clipboard = Some(link);
-        self.push_toast(info(t::party_copy_invite()));
+        self.push_toast(info(t::room_link_copied()));
         None
     }
 
-    /// `s`: start now, for whoever may.
-    fn party_start(&mut self) -> Option<Command> {
-        if self.party.as_ref()?.can_start_anyway {
-            return Some(Command::Party(PartyCommand::StartAnyway));
-        }
-        None
+    /// `M` on a member's row: mute them on this device, or unmute them.
+    fn room_mute(&mut self) -> Option<Command> {
+        let member = self.selected_member()?;
+        let (id, muted) = (member.id.clone(), !member.muted);
+        Some(Command::Room(RoomCommand::Mute { id, muted }))
     }
 
-    /// `M` on a member's row: mute them for the party, or unmute them.
-    fn party_mute(&mut self) -> Option<Command> {
-        let name = self.selected_member()?.name.clone();
-        let muted = !self.is_muted(&name);
-        Some(Command::Party(PartyCommand::Mute { name, muted }))
-    }
-
-    /// `m`: the field for saying something, unless the room's server has no chat or Hide chat
-    /// is on.
+    /// `m`: the field for saying something, unless Hide chat is on.
     fn open_say(&mut self) -> Option<Command> {
-        if self.party_chat_state.as_ref().is_some_and(|s| !s.allowed) {
-            self.push_toast(info(t::party_chat_off()));
-            return None;
-        }
         if self.chat_hidden() {
-            self.push_toast(info(t::party_chat_hidden()));
+            self.push_toast(info(t::tui_room_chat_hidden()));
             return None;
         }
         self.nav.open_overlay(Overlay::Say);
         None
     }
 
-    /// Enter in the Say field: the line goes to the party and the field stays open for the
+    /// Enter in the Say field: the line goes to the room and the field stays open for the
     /// next. A typed `*laughs*`, `*gasps*`, `*claps*` or `*cries*` is the reaction.
     pub(super) fn submit_say(&mut self) -> Option<Command> {
         let text = self.text(Field::Say).trim().to_owned();
@@ -192,21 +225,18 @@ impl App {
             "*cries*" => Some(Reaction::Cry),
             _ => None,
         };
-        Some(Command::Party(match reaction {
-            Some(reaction) => PartyCommand::React { reaction },
-            None => PartyCommand::Say { text },
+        Some(Command::Room(match reaction {
+            Some(reaction) => RoomCommand::React { reaction },
+            None => RoomCommand::Say { text },
         }))
     }
 
-    /// The conversation changed. A line the server never echoed comes back into the field,
-    /// once, when the field is open and empty.
-    pub(super) fn set_party_chat(
-        &mut self,
-        conversation: kaeri_model::party::PartyConversation,
-    ) {
+    /// The conversation changed. A line no relay echoed comes back into the field, once, when
+    /// the field is open and empty.
+    pub(super) fn set_room_chat(&mut self, conversation: RoomConversation) {
         let failed = conversation.failed.clone();
-        let fresh = failed != self.party_chat.failed;
-        self.party_chat = conversation;
+        let fresh = failed != self.room_chat.failed;
+        self.room_chat = conversation;
         if let Some(text) = failed
             && fresh
             && self.nav.overlay() == Some(&Overlay::Say)
@@ -217,39 +247,76 @@ impl App {
     }
 
     /// The engine turned a line or a reaction down.
-    pub(super) fn chat_refused(&mut self, refusal: PartyChatRefusal) {
+    pub(super) fn chat_refused(&mut self, refusal: RoomChatRefusal) {
         match refusal {
-            PartyChatRefusal::Off => self.push_toast(info(t::party_chat_off())),
-            PartyChatRefusal::Wait { seconds } => {
-                self.push_toast(info(t::party_chat_wait(i64::from(seconds))));
+            RoomChatRefusal::Wait { seconds } => {
+                self.push_toast(info(t::tui_room_chat_wait(i64::from(seconds))));
             }
-            PartyChatRefusal::NotPlaying => {}
+            RoomChatRefusal::NotPlaying => {}
         }
     }
 
-    /// Take the lobby's word for how the party stands.
-    pub(super) fn set_party(&mut self, view: kaeri_model::party::PartyView) {
-        self.party = Some(view);
+    /// In a room: said once, wherever the terminal is, since a room started from a title page
+    /// shows on Together.
+    pub(super) fn room_joined(&mut self, view: RoomView) {
+        self.room_joining = None;
+        self.room_full = None;
+        if self.nav.section() != Section::Together {
+            let key = self.key_for(Action::JumpSection(10));
+            self.push_toast(info(t::tui_room_joined(&key)));
+        }
+        self.set_room(view);
     }
 
-    /// The party is over.
-    pub(super) fn end_party(&mut self) {
-        self.party = None;
-        self.party_members.clear();
+    /// Take the engine's word for how the room stands.
+    pub(super) fn set_room(&mut self, view: RoomView) {
+        self.room = Some(view);
+    }
+
+    /// Out of the room, and why, when it wasn't on purpose.
+    pub(super) fn room_left(&mut self, why: RoomLeftWhy) {
+        let joining = self.room_joining.take();
+        // Moved: the new room's `RoomJoined` follows.
+        if why == RoomLeftWhy::Moved {
+            return;
+        }
+        self.end_room();
+        let said = match why {
+            RoomLeftWhy::Left | RoomLeftWhy::Moved => return,
+            RoomLeftWhy::Unreachable => t::room_error_unreachable(),
+            RoomLeftWhy::Full => {
+                self.room_full = joining;
+                t::tui_room_full(&self.key_for(Action::Open))
+            }
+            RoomLeftWhy::OldInvite => t::room_error_old_invite(),
+            RoomLeftWhy::Failed { reason } => say(&reason),
+        };
+        self.push_toast(alert(said));
+    }
+
+    /// The room is over here: everything kept for it goes.
+    fn end_room(&mut self) {
+        self.room = None;
+        self.room_members.clear();
+        self.room_chat = Default::default();
+        self.room_chat_state = None;
+        if self.nav.overlay() == Some(&Overlay::LeaveRoom)
+            || self.nav.overlay() == Some(&Overlay::Say)
+        {
+            self.nav.close_overlay();
+        }
         self.keep_together_cursor();
-        self.party_chat = Default::default();
-        self.party_chat_state = None;
     }
 
     /// The last rooms arrived: keep the cursor on a row that exists.
-    pub(super) fn set_recent_rooms(&mut self, rooms: Vec<PartyRecentRoom>) {
-        self.party_recent = rooms;
+    pub(super) fn set_recent_rooms(&mut self, rooms: Vec<RoomRecent>) {
+        self.room_recent = rooms;
         self.keep_together_cursor();
     }
 
     /// The members changed: keep the cursor on a row that exists.
-    pub(super) fn set_party_members(&mut self, members: Vec<PartyMember>) {
-        self.party_members = members;
+    pub(super) fn set_room_members(&mut self, members: Vec<RoomMember>) {
+        self.room_members = members;
         self.keep_together_cursor();
     }
 
@@ -259,6 +326,14 @@ impl App {
     }
 }
 
+/// What `s` does in a room, as [`App::room_go`] finds it.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum RoomGo {
+    CarryOn,
+    DontWait,
+    PlayForEveryone,
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -266,43 +341,34 @@ mod tests {
     use kaeri_core::ids::AnilistId;
     use kaeri_model::{
         event::Event,
-        party::{PartyConnection, PartyMember, PartyView},
+        room::{MemberState, RoomChatState, RoomConnection, RoomShare},
     };
 
-    fn view(can_start_anyway: bool) -> PartyView {
-        PartyView {
-            server: "party.example:8999".into(),
-            room: "kite-7qm4-xr9d".into(),
+    /// A real invite, as another device would have made it.
+    fn invite() -> String {
+        RoomShare {
+            secret: [7; 16],
+            relays: Vec::new(),
+            by: Some("Mika".into()),
+            title: Some("Natsukaze Relay".into()),
+            episode: Some("9".into()),
+        }
+        .https_link()
+    }
+
+    fn view() -> RoomView {
+        RoomView {
+            room_id: "room-1".into(),
             name: "Ada".into(),
-            connection: PartyConnection::Connected,
-            encrypted: true,
-            ready: false,
-            episode: None,
-            invite: None,
-            motd: None,
-            latency_ms: None,
-            room_episode: None,
-            next_episode: None,
-            starter: None,
-            starter_present: false,
-            can_start_anyway,
-            code: Some("kite-7qm4-xr9d".into()),
-            link: Some(
-                "https://kaeri.app/party#s=party.example%3A8999&r=kite-7qm4-xr9d".into(),
-            ),
-            playing: false,
-            starting_in: None,
-            sources: None,
-            guesses: Vec::new(),
-            looking: false,
-            moves_on: false,
+            connection: RoomConnection::Connected,
+            link: Some(invite()),
+            ..Default::default()
         }
     }
 
-    fn room(name: &str) -> PartyRecentRoom {
-        PartyRecentRoom {
-            server: "party.example:8999".into(),
-            room: name.into(),
+    fn recent(room_id: &str) -> RoomRecent {
+        RoomRecent {
+            room_id: room_id.into(),
             id: AnilistId::new(104_321),
             title: "Natsukaze Relay".into(),
             episode: "8".into(),
@@ -312,108 +378,205 @@ mod tests {
         }
     }
 
-    #[test]
-    fn zero_is_the_tenth_section_and_asks_for_the_rooms() {
-        let mut a = app();
-        assert_eq!(a.key_for(Action::JumpSection(10)), "0");
-        let task = a.handle(Action::JumpSection(10), 5);
-        assert_eq!(a.nav.section(), Section::Together);
-        assert_eq!(task, Some(Command::Party(PartyCommand::LoadRecent)));
-    }
-
-    #[test]
-    fn a_typed_code_or_link_joins_its_lobby_and_anything_else_is_refused() {
-        let mut a = app();
-        a.handle(Action::JumpSection(10), 5);
-        a.nav.focus_stage();
-        a.handle(Action::Open, 5);
-        assert_eq!(a.nav.overlay(), Some(&Overlay::JoinParty));
-
-        for ch in "nonsense".chars() {
-            a.type_char(ch);
+    fn member(id: &str, you: bool, muted: bool) -> RoomMember {
+        RoomMember {
+            id: id.into(),
+            name: id.into(),
+            you,
+            state: MemberState::Watching,
+            since_ms: None,
+            behind_s: None,
+            episode: None,
+            paused_room: false,
+            waited: false,
+            background: false,
+            muted,
         }
-        assert_eq!(a.handle(Action::Open, 5), None);
-        assert_eq!(a.nav.overlay(), Some(&Overlay::JoinParty), "kept, to be corrected");
-
-        a.dismiss_field();
-        a.handle(Action::Open, 5);
-        a.paste("https://kaeri.app/party#s=party.example%3A8999&r=kite-7qm4-xr9d&e=9");
-        let task = a.handle(Action::Open, 5);
-        assert_eq!(
-            task,
-            Some(Command::Party(PartyCommand::Lobby {
-                server: "party.example:8999".into(),
-                room: "kite-7qm4-xr9d".into(),
-                name: None,
-                pick: None,
-            }))
-        );
-        assert!(a.nav.overlay().is_none());
-        assert!(a.text(Field::PartyLink).is_empty(), "the spent link is not kept");
     }
 
-    #[test]
-    fn a_recent_room_is_joined_again_from_its_row() {
-        let mut a = app();
-        a.handle(Action::JumpSection(10), 5);
-        a.nav.focus_stage();
-        a.apply(Event::PartyRecent(vec![room("kite-7qm4-xr9d"), room("ember-2hv8-kd4p")]));
-        a.handle(Action::Down, 5);
-        a.handle(Action::Down, 5);
-        assert_eq!(a.selected_room().map(|r| r.room.as_str()), Some("ember-2hv8-kd4p"));
-        let task = a.handle(Action::Open, 5);
-        assert!(matches!(
-            task,
-            Some(Command::Party(PartyCommand::Lobby { room, .. })) if room == "ember-2hv8-kd4p"
-        ));
+    fn chat_state(hidden: bool) -> RoomChatState {
+        RoomChatState {
+            max_length: 500,
+            muted: Vec::new(),
+            wait_seconds: 0,
+            react_wait_seconds: 0,
+            hidden,
+        }
     }
 
-    #[test]
-    fn the_partys_keys_work_only_in_a_party_and_start_only_for_who_may() {
+    fn in_room() -> App {
         let mut a = app();
-        a.handle(Action::JumpSection(10), 5);
-        a.nav.focus_stage();
-        assert_eq!(a.handle(Action::HideFromContinue, 5), None);
-        assert!(a.take_clipboard().is_none());
-
-        a.apply(Event::PartyJoined(view(false)));
-        a.apply(Event::PartyMembers(vec![PartyMember {
-            name: "Ada".into(),
-            ready: Some(false),
-            file: None,
-            duration: None,
-            file_matches: None,
-            you: true,
-        }]));
-        assert_eq!(a.handle(Action::Refresh, 5), Some(Command::PartyReady { ready: true }));
-        assert_eq!(a.handle(Action::ShowSources, 5), None, "not the starter");
-        assert_eq!(a.handle(Action::ClearCompleted, 5), None);
-        assert_eq!(
-            a.take_clipboard().as_deref(),
-            Some("https://kaeri.app/party#s=party.example%3A8999&r=kite-7qm4-xr9d")
-        );
-
-        a.apply(Event::PartyState(view(true)));
-        assert_eq!(
-            a.handle(Action::ShowSources, 5),
-            Some(Command::Party(PartyCommand::StartAnyway))
-        );
-        assert_eq!(a.handle(Action::HideFromContinue, 5), Some(Command::PartyLeave));
-        a.apply(Event::PartyLeft { reason: None });
-        assert!(a.party.is_none() && a.party_members.is_empty());
-    }
-
-    fn in_party() -> App {
-        let mut a = app();
-        a.apply(Event::PartyJoined(view(false)));
+        a.apply(Event::RoomJoined(view()));
         a.handle(Action::JumpSection(10), 5);
         a.nav.focus_stage();
         a
     }
 
     #[test]
+    fn the_rooms_episode_starting_plays_it_here() {
+        // Neon: the engine leaves the player to the front end, and the terminal ignored
+        // RoomStarted, so its room stayed Loading. Then it opened at this device's own resume
+        // point: a room before play is at the start, and the room moves a player only from there.
+        for at in [None, Some(12.0)] {
+            let mut a = app();
+            a.take_commands();
+            a.apply(Event::RoomStarted {
+                id: AnilistId::new(900_001),
+                episode: "9".into(),
+                kind: kaeri_model::room::RoomStartKind::Rejoin,
+                at,
+            });
+            assert_eq!(
+                a.take_commands(),
+                [Command::Play {
+                    id: AnilistId::new(900_001),
+                    episode: "9".into(),
+                    from_start: true
+                }],
+                "{at:?}"
+            );
+        }
+    }
+
+    #[test]
+    fn zero_is_the_tenth_section_and_asks_for_the_rooms() {
+        let mut a = app();
+        assert_eq!(a.key_for(Action::JumpSection(10)), "0");
+        let task = a.handle(Action::JumpSection(10), 5);
+        assert_eq!(a.nav.section(), Section::Together);
+        assert_eq!(task, Some(Command::Room(RoomCommand::LoadRecent)));
+    }
+
+    #[test]
+    fn a_pasted_invite_joins_its_room_and_anything_else_is_refused() {
+        let mut a = app();
+        a.handle(Action::JumpSection(10), 5);
+        a.nav.focus_stage();
+        a.handle(Action::Open, 5);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::JoinRoom));
+
+        for ch in "nonsense".chars() {
+            a.type_char(ch);
+        }
+        assert_eq!(a.handle(Action::Open, 5), None);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::JoinRoom), "kept, to be corrected");
+
+        // An old room's link can't be joined: said, and kept to be replaced.
+        a.dismiss_field();
+        a.handle(Action::Open, 5);
+        a.paste("https://kaeri.app/party#s=room.example%3A8999&r=kite-7qm4-xr9d");
+        assert_eq!(a.handle(Action::Open, 5), None);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::JoinRoom));
+
+        a.dismiss_field();
+        a.handle(Action::Open, 5);
+        a.paste(&invite());
+        let task = a.handle(Action::Open, 5);
+        assert_eq!(
+            task,
+            Some(Command::Room(RoomCommand::Lobby {
+                invite: Some(invite()),
+                name: None,
+                pick: None,
+                anyway: false,
+            }))
+        );
+        assert!(a.nav.overlay().is_none());
+        assert!(a.text(Field::RoomLink).is_empty(), "the spent link is not kept");
+    }
+
+    #[test]
+    fn a_full_room_offers_join_anyway_on_the_join_line() {
+        let mut a = app();
+        a.handle(Action::JumpSection(10), 5);
+        a.nav.focus_stage();
+        a.handle(Action::Open, 5);
+        a.paste(&invite());
+        a.handle(Action::Open, 5);
+        a.apply(Event::RoomLeft { why: RoomLeftWhy::Full });
+        assert_eq!(a.room_full.as_deref(), Some(invite().as_str()));
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::Room(RoomCommand::Lobby {
+                invite: Some(invite()),
+                name: None,
+                pick: None,
+                anyway: true,
+            }))
+        );
+        assert!(a.room_full.is_none(), "asked once");
+    }
+
+    #[test]
+    fn a_recent_room_is_joined_again_from_its_row_and_x_forgets_it() {
+        let mut a = app();
+        a.handle(Action::JumpSection(10), 5);
+        a.nav.focus_stage();
+        a.apply(Event::RoomRecent(vec![recent("room-1"), recent("room-2")]));
+        a.handle(Action::Down, 5);
+        a.handle(Action::Down, 5);
+        assert_eq!(a.selected_room().map(|r| r.room_id.as_str()), Some("room-2"));
+        assert_eq!(
+            a.handle(Action::Open, 5),
+            Some(Command::Room(RoomCommand::Rejoin { room_id: "room-2".into() }))
+        );
+        assert_eq!(
+            a.handle(Action::HideFromContinue, 5),
+            Some(Command::Room(RoomCommand::ForgetRoom { room_id: "room-2".into() }))
+        );
+        assert_eq!(a.room_recent.len(), 1);
+        assert_eq!(a.selected_room().map(|r| r.room_id.as_str()), Some("room-1"));
+    }
+
+    #[test]
+    fn the_rooms_keys_work_only_in_a_room() {
+        let mut a = app();
+        a.handle(Action::JumpSection(10), 5);
+        a.nav.focus_stage();
+        assert_eq!(a.handle(Action::HideFromContinue, 5), None);
+        assert_eq!(
+            a.handle(Action::Refresh, 5),
+            Some(Command::Room(RoomCommand::LoadRecent)),
+            "outside a room, r reloads the rooms"
+        );
+        assert_eq!(a.handle(Action::ClearCompleted, 5), None);
+        assert!(a.take_clipboard().is_none());
+
+        a.apply(Event::RoomJoined(view()));
+        a.apply(Event::RoomMembers(vec![member("Ada", true, false)]));
+        assert_eq!(a.handle(Action::ClearCompleted, 5), None);
+        assert_eq!(a.take_clipboard(), Some(invite()));
+        assert_eq!(a.handle(Action::Refresh, 5), Some(Command::Room(RoomCommand::NewInvite)));
+        assert_eq!(a.handle(Action::ShowSources, 5), None, "nothing to carry on from");
+
+        // Leaving is asked first.
+        assert_eq!(a.handle(Action::HideFromContinue, 5), None);
+        assert_eq!(a.nav.overlay(), Some(&Overlay::LeaveRoom));
+        assert_eq!(a.handle(Action::Open, 5), Some(Command::Room(RoomCommand::Leave)));
+        a.apply(Event::RoomLeft { why: RoomLeftWhy::Left });
+        assert!(a.room.is_none() && a.room_members.is_empty());
+    }
+
+    #[test]
+    fn s_plays_for_everyone_before_play_and_carries_on_once_offered() {
+        let mut a = in_room();
+        a.apply(Event::RoomState(RoomView { before_play: true, ..view() }));
+        assert_eq!(
+            a.handle(Action::ShowSources, 5),
+            Some(Command::Room(RoomCommand::Play { play: true }))
+        );
+        a.apply(Event::RoomState(RoomView { playing: true, can_carry_on: true, ..view() }));
+        assert_eq!(a.handle(Action::ShowSources, 5), Some(Command::Room(RoomCommand::CarryOn)));
+        a.apply(Event::RoomState(RoomView { can_dont_wait: true, ..view() }));
+        assert_eq!(
+            a.handle(Action::ShowSources, 5),
+            Some(Command::Room(RoomCommand::DontWait))
+        );
+    }
+
+    #[test]
     fn m_opens_the_say_field_and_enter_sends_and_keeps_it_open() {
-        let mut a = in_party();
+        let mut a = in_room();
         a.handle(Action::FixMapping, 5);
         assert_eq!(a.nav.overlay(), Some(&Overlay::Say));
         for ch in "ok starting".chars() {
@@ -421,7 +584,7 @@ mod tests {
         }
         assert_eq!(
             a.handle(Action::Open, 5),
-            Some(Command::Party(PartyCommand::Say { text: "ok starting".into() }))
+            Some(Command::Room(RoomCommand::Say { text: "ok starting".into() }))
         );
         assert_eq!(a.nav.overlay(), Some(&Overlay::Say), "the field stays for the next line");
         assert!(a.text(Field::Say).is_empty());
@@ -429,64 +592,25 @@ mod tests {
 
     #[test]
     fn a_typed_reaction_word_is_the_reaction() {
-        use kaeri_model::party::Reaction;
-        let mut a = in_party();
+        let mut a = in_room();
         a.handle(Action::FixMapping, 5);
         for ch in "*laughs*".chars() {
             a.type_char(ch);
         }
         assert_eq!(
             a.handle(Action::Open, 5),
-            Some(Command::Party(PartyCommand::React { reaction: Reaction::Laugh }))
+            Some(Command::Room(RoomCommand::React { reaction: Reaction::Laugh }))
         );
     }
 
     #[test]
-    fn a_server_without_chat_says_so_instead_of_opening_the_field() {
-        use kaeri_model::party::PartyChatState;
-        let mut a = in_party();
-        a.apply(Event::PartyChatState(PartyChatState {
-            allowed: false,
-            max_length: 150,
-            muted: Vec::new(),
-            wait_seconds: 0,
-            react_wait_seconds: 0,
-            hidden: false,
-        }));
-        a.handle(Action::FixMapping, 5);
-        assert_eq!(a.nav.overlay(), None);
-    }
-
-    fn member(name: &str, you: bool) -> PartyMember {
-        PartyMember {
-            name: name.into(),
-            ready: Some(false),
-            file: None,
-            duration: None,
-            file_matches: None,
-            you,
-        }
-    }
-
-    fn chat_state(muted: &[&str], hidden: bool) -> kaeri_model::party::PartyChatState {
-        kaeri_model::party::PartyChatState {
-            allowed: true,
-            max_length: 150,
-            muted: muted.iter().map(|m| (*m).to_owned()).collect(),
-            wait_seconds: 0,
-            react_wait_seconds: 0,
-            hidden,
-        }
-    }
-
-    #[test]
     fn the_cursor_walks_the_other_members_then_join_and_shift_m_mutes_the_one_under_it() {
-        let mut a = in_party();
-        a.apply(Event::PartyRecent(vec![room("ember-2hv8-kd4p")]));
-        a.apply(Event::PartyMembers(vec![
-            member("Ada", true),
-            member("Mika", false),
-            member("Ren", false),
+        let mut a = in_room();
+        a.apply(Event::RoomRecent(vec![recent("room-2")]));
+        a.apply(Event::RoomMembers(vec![
+            member("Ada", true, false),
+            member("Mika", false, false),
+            member("Ren", false, false),
         ]));
         assert_eq!(a.together_rows(), 4, "Mika, Ren, Join, one room");
         assert_eq!(a.selected_member().map(|m| m.name.as_str()), Some("Mika"));
@@ -495,35 +619,39 @@ mod tests {
         a.handle(Action::Down, 5);
         assert_eq!(
             a.handle(Action::MarkAllPrevious, 5),
-            Some(Command::Party(PartyCommand::Mute { name: "Ren".into(), muted: true }))
+            Some(Command::Room(RoomCommand::Mute { id: "Ren".into(), muted: true }))
         );
-        a.apply(Event::PartyChatState(chat_state(&["Ren"], false)));
+        a.apply(Event::RoomMembers(vec![
+            member("Ada", true, false),
+            member("Mika", false, false),
+            member("Ren", false, true),
+        ]));
         assert_eq!(
             a.handle(Action::MarkAllPrevious, 5),
-            Some(Command::Party(PartyCommand::Mute { name: "Ren".into(), muted: false }))
+            Some(Command::Room(RoomCommand::Mute { id: "Ren".into(), muted: false }))
         );
         a.handle(Action::Down, 5);
         assert_eq!(a.handle(Action::MarkAllPrevious, 5), None, "the Join line has no member");
         a.handle(Action::Down, 5);
-        assert_eq!(a.selected_room().map(|r| r.room.as_str()), Some("ember-2hv8-kd4p"));
+        assert_eq!(a.selected_room().map(|r| r.room_id.as_str()), Some("room-2"));
 
         // Someone leaves: the cursor stays on a row that exists.
-        a.apply(Event::PartyMembers(vec![member("Ada", true)]));
+        a.apply(Event::RoomMembers(vec![member("Ada", true, false)]));
         assert_eq!(a.cursors.together.selected, 1);
-        assert_eq!(a.selected_room().map(|r| r.room.as_str()), Some("ember-2hv8-kd4p"));
+        assert_eq!(a.selected_room().map(|r| r.room_id.as_str()), Some("room-2"));
     }
 
     #[test]
     fn i_turns_hide_chat_over_and_m_says_chat_is_hidden_while_it_is_on() {
-        let mut a = in_party();
+        let mut a = in_room();
         assert_eq!(
             a.handle(Action::ToggleSynopsis, 5),
-            Some(Command::Party(PartyCommand::HideChat { hidden: true }))
+            Some(Command::Room(RoomCommand::HideChat { hidden: true }))
         );
-        a.apply(Event::PartyChatState(chat_state(&[], true)));
+        a.apply(Event::RoomChatState(chat_state(true)));
         assert_eq!(
             a.handle(Action::ToggleSynopsis, 5),
-            Some(Command::Party(PartyCommand::HideChat { hidden: false }))
+            Some(Command::Room(RoomCommand::HideChat { hidden: false }))
         );
         a.handle(Action::FixMapping, 5);
         assert_eq!(a.nav.overlay(), None, "no field while chat is hidden");
@@ -531,15 +659,15 @@ mod tests {
 
     #[test]
     fn a_line_that_never_came_back_returns_to_the_open_field_and_leaving_forgets_the_chat() {
-        use kaeri_model::party::PartyConversation;
-        let mut a = in_party();
+        let mut a = in_room();
         a.handle(Action::FixMapping, 5);
-        a.apply(Event::PartyChat(PartyConversation {
+        a.apply(Event::RoomChat(RoomConversation {
             failed: Some("anyone there".into()),
             ..Default::default()
         }));
         assert_eq!(a.text(Field::Say), "anyone there");
-        a.apply(Event::PartyLeft { reason: None });
-        assert!(a.party_chat.failed.is_none() && a.party_chat.lines.is_empty());
+        a.apply(Event::RoomLeft { why: RoomLeftWhy::Left });
+        assert!(a.room_chat.failed.is_none() && a.room_chat.lines.is_empty());
+        assert_eq!(a.nav.overlay(), None, "the Say line goes with the room");
     }
 }

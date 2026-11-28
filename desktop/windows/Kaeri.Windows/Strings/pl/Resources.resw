@@ -614,29 +614,8 @@
   <data name="NoticeKeepNextFull" xml:space="preserve">
     <value>Za mało wolnego miejsca, by zachować pobrane kolejne odcinki. Zwolnij trochę miejsca, aby pobrać więcej.</value>
   </data>
-  <data name="PartyNeedsServer" xml:space="preserve">
-    <value>Najpierw wybierz serwer, zanim rozpoczniesz wspólne oglądanie (syncplay.server). {server} jest prowadzony przez {operator}.</value>
-  </data>
-  <data name="PartyChooseServer" xml:space="preserve">
-    <value>Najpierw wybierz serwer, zanim rozpoczniesz wspólne oglądanie. {server} jest prowadzony przez {operator}.</value>
-  </data>
   <data name="NoticeNoParty" xml:space="preserve">
     <value>Wspólne oglądania nie są dostępne w tej wersji Kaeri.</value>
-  </data>
-  <data name="PartyNeedsRoom" xml:space="preserve">
-    <value>Wspólne oglądanie wymaga pokoju, w którym można się spotkać. Najpierw wybierz pokój.</value>
-  </data>
-  <data name="PartyServerLost" xml:space="preserve">
-    <value>Połączenie z serwerem zostało utracone. Trwa ponowna próba.</value>
-  </data>
-  <data name="PartyRejoined" xml:space="preserve">
-    <value>Ponownie połączono. Wspólne oglądanie trwa.</value>
-  </data>
-  <data name="PartyLeft" xml:space="preserve">
-    <value>Opuszczono wspólne oglądanie.</value>
-  </data>
-  <data name="PartyServerUnreachable" xml:space="preserve">
-    <value>Nie można połączyć się z {server}. Sprawdź serwer lub spróbuj ponownie.</value>
   </data>
   <data name="ReadingNextChapter" xml:space="preserve">
     <value>Rozdział {chapter}</value>

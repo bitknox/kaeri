@@ -161,8 +161,11 @@ struct ArtworkTests {
         // A view stays on screen and asks once: its art does not stay a plate once the retry succeeds.
         let slept = Slept()
         let asked = Box(0)
+        // The store's clock stands still, so each wait is the whole backoff step. On the real
+        // clock a Mac that slept between a failure and its retry took the sleep off the wait.
+        let start = ContinuousClock.now
         let artwork = ArtworkStore(
-            now: { ContinuousClock.now },
+            now: { start },
             sleep: { wait in slept.add(wait); try await Task.sleep(for: .milliseconds(1)) },
             cache: KeptCache()
         ) { _ in asked.value += 1; return true }
@@ -443,12 +446,14 @@ final class Box<Value> {
 /// held to a low quality of service, a task waits seconds for a thread, and a 5 s limit failed
 /// ten correct tests at once. `within` is therefore only a guard against a wait that can never
 /// end (a lost callback), so that it fails instead of hanging; it is far above any scheduling
-/// delay and says nothing about speed.
+/// delay and says nothing about speed. The deadline is on the suspending clock: the continuous
+/// clock runs on while the Mac sleeps, and a run that slept through a wait (27 November, on
+/// battery) failed with seven issues in three suites at once. Every test deadline loop does the same.
 @MainActor
 func waitFor(_ done: () -> Bool, within: Duration = .seconds(120)) async throws {
-    let deadline = ContinuousClock.now + within
+    let deadline = SuspendingClock.now + within
     while !done() {
-        try #require(ContinuousClock.now < deadline, "waited \(within)")
+        try #require(SuspendingClock.now < deadline, "waited \(within)")
         try await Task.sleep(for: .milliseconds(10))
     }
 }

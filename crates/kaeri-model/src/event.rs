@@ -16,14 +16,14 @@ use crate::{
     jobs::JobId,
     notice::Notice,
     notifications::{NewEpisode, UpcomingNotices},
-    party::{
-        NoSourceWhy, PartyChatRefusal, PartyChatState, PartyConversation, PartyForm,
-        PartyGlimpse, PartyMember, PartyMessage, PartyReaction, PartyRecentRoom,
-        PartyStartKind, PartyView,
-    },
     playback::{Ending, PlaybackId, SkipKind, TimeRange, TimelineMark},
     progress::{EpisodeProgress, TitleProgress},
     remote::FrontIntent,
+    room::{
+        NoSourceWhy, RoomChatRefusal, RoomChatState, RoomConversation, RoomGlimpse,
+        RoomLeftWhy, RoomMember, RoomMessage, RoomMoveOffer, RoomReaction, RoomRecent,
+        RoomRelaySettings, RoomStartKind, RoomView,
+    },
     search::{BrowseRail, SearchFacets, SearchQuery},
     settings::SettingsView,
     show::ShowSettingsView,
@@ -813,68 +813,74 @@ pub enum Event {
     /// field, a key, a volume step, or a pairing code to show or hide. Sent only on a TV that
     /// started its remote, and never by the engine itself, which has no screen to act on.
     Remote(FrontIntent),
-    /// What the form that starts a party opens with, for
-    /// [`Command::LoadPartyForm`](crate::command::Command::LoadPartyForm).
-    PartyForm(PartyForm),
-    /// In a party's room: the form becomes the party panel. Followed by
-    /// [`Event::PartyMembers`], and [`Event::PartyState`] as the party changes.
-    PartyJoined(PartyView),
-    /// The party as it stands, after any change: ready, the episode and its invite link, the
-    /// connection lost and made again, the round trip.
-    PartyState(PartyView),
-    /// Who is in the room, this device's member first.
-    PartyMembers(Vec<PartyMember>),
-    /// What the room said: someone joining, leaving, pausing, resuming or jumping, a
-    /// correction to stay with the room, everyone ready, or chat. Already shown on the player
-    /// as a notice; this is for a party panel.
-    PartyMessage(PartyMessage),
-    /// The party's conversation, whole, after every change: a line, a reaction, a mute, a send
-    /// that was never echoed. Nothing is kept past the party.
-    PartyChat(PartyConversation),
-    /// What this device may do in the conversation: whether the server has chat on, how long a
-    /// message may be, who is muted and how long Send waits.
-    PartyChatState(PartyChatState),
-    /// A reaction for the moment on the video, from any member but a muted one.
-    PartyReaction(PartyReaction),
-    /// A send that was not made, and why.
-    PartyChatRefused(PartyChatRefusal),
-    /// The party is over: left on purpose with `None`, or for the reason given, worded for the
-    /// user ("party.example:8999 refused the party: …"). What is playing goes on as a private
-    /// session.
-    PartyLeft {
-        reason: Option<Msg>,
+    /// In a room: Watch together becomes the room. Followed by [`Event::RoomMembers`], and
+    /// [`Event::RoomState`] as the room changes.
+    RoomJoined(RoomView),
+    /// The room as it stands, after any change.
+    RoomState(RoomView),
+    /// Who is in the room, this device first.
+    RoomMembers(Vec<RoomMember>),
+    /// What the room said; already a line in [`Event::RoomChat`] and a notice on the player.
+    RoomMessage(RoomMessage),
+    /// The room's conversation, whole, after every change.
+    RoomChat(RoomConversation),
+    RoomChatState(RoomChatState),
+    /// A reaction for the moment on the video, from anyone but a muted member.
+    RoomReaction(RoomReaction),
+    RoomChatRefused(RoomChatRefusal),
+    /// This device is out of the room. What is playing goes on as a private session.
+    RoomLeft {
+        why: RoomLeftWhy,
     },
-    /// The party's episode has no source here: this device is in the room without playing,
-    /// for the dialog that says why and offers what fits, Choose source among it. It carries
-    /// the lookup's own words, and no [`Event::Toast`] says them a second time.
-    PartyNoSource {
+    /// The room's episode has no source here: still in the room, "No source for episode 9".
+    RoomNoSource {
         id: AnilistId,
         episode: String,
         why: NoSourceWhy,
         reason: Msg,
     },
-    /// The room starts or moves on: the player opens.
-    PartyStarted {
+    /// The room starts, moves on, or this device comes in at its place: the player opens.
+    RoomStarted {
         id: AnilistId,
         episode: String,
-        kind: PartyStartKind,
+        kind: RoomStartKind,
+        /// Where to open it, in seconds; `None` at the start.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        at: Option<f64>,
     },
-    /// What a look into a room found.
-    PartyGlimpse(PartyGlimpse),
-    /// A look into a room failed.
-    PartyLookFailed {
-        server: String,
-        room: String,
+    /// What a look into a room, or an invite's, found.
+    RoomGlimpse(RoomGlimpse),
+    /// A look into a room found nothing. Never [`Event::RoomLeft`]: the room this device is
+    /// in, if any, carries on.
+    RoomLookFailed {
+        /// The room looked into; for an invite, its room's id (empty when the text is no invite).
+        room_id: String,
         reason: Msg,
+        /// The invite looked into, as given; `None` for a recent room.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        invite: Option<String>,
+        /// Why, as a join failing would say it.
+        #[cfg_attr(feature = "ffi", uniffi(default))]
+        why: Option<RoomLeftWhy>,
     },
     /// The last ten rooms, newest first.
-    PartyRecent(Vec<PartyRecentRoom>),
+    RoomRecent(Vec<RoomRecent>),
     /// The room finished the last episode that is out.
-    PartyLastOut {
+    RoomLastOut {
         episode: String,
         #[cfg_attr(feature = "ffi", uniffi(default))]
         airs: Option<Msg>,
     },
+    /// Someone moved the room and ticked this device.
+    RoomMoveOffer(RoomMoveOffer),
+    /// The offer was answered, expired, or this device left the room.
+    RoomMoveOfferGone {
+        id: String,
+    },
+    /// The background status reached a relay, or 2 s passed: end the background task.
+    RoomFlushed,
+    /// Settings ▸ Relays.
+    RoomRelays(RoomRelaySettings),
 }
 
 impl Event {

@@ -319,15 +319,21 @@ sealed class Ctx
     /// <summary>Back to Your sources from the page of a source that was just removed.</summary>
     public void LeaveRemoved() => Window.LeaveRemoved();
 
+    /// <summary>Play here from a cast: the episode here, moved to where the TV was once its first frame shows.</summary>
+    public void PlayAt(uint id, string episode, double? at)
+    {
+        Play(id, episode);
+        Known.StartAt = StartAt.From(id, episode, at);
+    }
+
     /// <summary>
     /// Plays an episode from where it was left, or from its start with <paramref name="fromStart"/>.
-    /// In a party the engine picks it for the room instead, and the lobby shows the pick.
+    /// In a room the engine plays it for the room.
     /// </summary>
     public void Play(uint id, string episode, bool fromStart = false)
     {
+        Known.StartAt = null;
         Send(new Command.Play(id, episode, fromStart));
-        if (Known.Party is not null && !Window.PlayerUp)
-            Window.Go("together");
     }
 
     public void Search(string query) => Window.ShowSearch(query);

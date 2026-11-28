@@ -1,0 +1,41 @@
+[package]
+name = "kaeri-room"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+description = "The room: watching together over end-to-end encrypted Nostr rooms, with no host"
+publish = false
+
+[lib]
+doctest = false
+
+# The protocol, its sync rules and its transport, nothing else: no engine, no player. See
+# docs/room-protocol.md.
+[features]
+# `fake`: an in-process room with scripted members, for tests and the apps' Fixtures builds.
+# Never in an app's release build.
+testing = []
+
+[dependencies]
+# Keys, events, signatures and NIP-44 only: never nostr-sdk (its pool fights our caps and health).
+nostr = { version = "=0.45.7", default-features = false, features = ["std", "os-rng", "nip44"] }
+base64 = "0.22"
+# The same libsecp256k1 nostr links, for checking identity proofs.
+secp256k1 = { version = "0.30", default-features = false, features = ["std"] }
+getrandom = "0.3"
+hmac = "0.13"
+sha2 = "0.11"
+# The relay pool's sockets: rustls on ring, as the rest of the app.
+tokio-tungstenite = { version = "0.30", default-features = false, features = ["connect", "handshake", "stream", "__rustls-tls"] }
+rustls = { version = "0.23.46", default-features = false, features = ["ring", "std", "logging", "tls12"] }
+webpki-roots = "1"
+reqwest.workspace = true
+futures.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+tokio.workspace = true
+tracing.workspace = true
+
+[lints]
+workspace = true

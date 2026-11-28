@@ -142,12 +142,14 @@ impl App {
         Some(self.begin_playback(id, episode))
     }
 
-    /// The episode Enter would play, with the watch party set up in the settings: played here,
-    /// kept with the room. Now Playing comes up with the engine's `PlaybackStaged`, which only
-    /// a party joined sends: one refused, for want of a server, leaves the screen as it was.
-    pub(super) fn play_party(&mut self) -> Option<Command> {
-        let (id, episode) = match self.nav.current() {
-            StageView::Episodes(id) => {
+    /// A new room watching an episode: the one playing, from Now Playing, which keeps playing
+    /// from where it is; otherwise the one Enter would play here. The room comes up on
+    /// Together with the engine's `RoomJoined`.
+    pub(super) fn start_room(&mut self) -> Option<Command> {
+        let playing = self.playing.as_ref().and_then(|p| Some((p.id?, p.episode.clone())));
+        let (id, episode) = match (self.nav.current(), playing) {
+            (StageView::NowPlaying, Some(playing)) => playing,
+            (StageView::Episodes(id), _) => {
                 (*id, self.episodes.get(self.cursors.episodes.selected)?.number.clone())
             }
             _ => {
@@ -156,7 +158,12 @@ impl App {
                 (entry.id, episode)
             }
         };
-        Some(Command::play_party(id, episode))
+        Some(Command::Room(kaeri_model::room::RoomCommand::Lobby {
+            invite: None,
+            name: None,
+            pick: Some(kaeri_model::room::RoomEpisode { id, episode }),
+            anyway: false,
+        }))
     }
 
     /// Step to an adjacent episode of what is playing, from whichever view is up.
@@ -674,7 +681,7 @@ mod tests {
             "the ending's work is the engine's, and no save waits"
         );
         // Nor kept here: what is in effect is the engine's to say, in `Settings`.
-        assert_eq!(a.settings, SettingsView::default());
+        assert_eq!(a.settings, super::super::settings::drop_unnamed(SettingsView::default()));
     }
 
     #[test]

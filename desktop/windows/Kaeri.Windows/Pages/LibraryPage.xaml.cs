@@ -72,7 +72,13 @@ public sealed partial class LibraryPage : Page
     {
         var signedIn = ctx.Known.Anilist is not null;
         SignedOut.Visibility = signedIn ? Visibility.Collapsed : Visibility.Visible;
-        Bar.Visibility = signedIn ? Visibility.Visible : Visibility.Collapsed;
+        // Signed out, the Shows or Reading switch stays while this device does both, as on the
+        // Mac: the reading lists need no AniList. The lists and the order wait for a sign-in.
+        var scope = !signedIn && ctx.Known.Medium.Both;
+        Bar.Visibility = signedIn || scope ? Visibility.Visible : Visibility.Collapsed;
+        Lists.Visibility = OrderButton.Visibility = signedIn ? Visibility.Visible : Visibility.Collapsed;
+        Microsoft.UI.Xaml.Controls.Grid.SetRow(SignedOut, scope ? 2 : 1);
+        Microsoft.UI.Xaml.Controls.Grid.SetRowSpan(SignedOut, scope ? 1 : 2);
         Scroll.Visibility = signedIn ? Visibility.Visible : Visibility.Collapsed;
         if (!signedIn)
             return;

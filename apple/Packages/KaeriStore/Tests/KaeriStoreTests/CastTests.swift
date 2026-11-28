@@ -129,6 +129,65 @@ struct CastTests {
         }
     }
 
+    /// The player a cast was asked from closes once the TV plays, and never for a cast that
+    /// failed first.
+    @Test func thePlayerHandsOffOnlyOnceTheTvPlays() async throws {
+        let (model, session) = casting()
+        var handed = 0
+        model.handOffWhenPlaying { handed += 1 }
+        #expect(handed == 0, "still starting")
+        play(session)
+        try await waitFor { model.stage == .playing }
+        #expect(handed == 1)
+        session.change { $0.position = 500 }
+        try await Task.sleep(for: .milliseconds(50))
+        #expect(handed == 1, "once")
+
+        let (failing, failed) = casting()
+        var closed = false
+        failing.handOffWhenPlaying { closed = true }
+        failed.change {
+            $0.notice = .noticeCastRefused(name: "Living room")
+            $0.over = true
+        }
+        try await waitFor { failing.stage == .failed }
+        #expect(!closed)
+    }
+
+    /// The actions follow the reason, not whether the cast had played: the spec's table.
+    @Test func theActionsFollowTheReasonBeforeAndAfterTheFirstFrame() async throws {
+        let failed: [(Msg, [CastAction])] = [
+            (.noticeCastLostStream(name: "Living room"), [.tryAgain, .playHere]),
+            (.noticeCastLost(name: "Living room"), [.playHere, .chooseAnotherTV]),
+            (.noticeCastNoDevice, [.playHere, .chooseAnotherTV]),
+        ]
+        for (notice, actions) in failed {
+            let (model, session) = casting()
+            session.change {
+                $0.notice = notice
+                $0.over = true
+            }
+            try await waitFor { model.stage == .failed }
+            #expect(model.actions == actions, "\(notice)")
+        }
+        let stopped: [(Msg, [CastAction])] = [
+            (.noticeCastSegment(name: "Living room"), [.chooseSource, .playHere]),
+            (.noticeCastLostStream(name: "Living room"), [.tryAgain, .playHere]),
+        ]
+        for (notice, actions) in stopped {
+            let (model, session) = casting()
+            play(session)
+            try await waitFor { model.stage == .playing }
+            model.expanded = true
+            session.change {
+                $0.notice = notice
+                $0.over = true
+            }
+            try await waitFor { model.stage == .stopped }
+            #expect(model.actions == actions, "\(notice)")
+        }
+    }
+
     @Test func aTvThatDropsOffStopsTheCastAndPlayHereCarriesOn() async throws {
         let (model, session) = casting()
         var played: (AnilistId, String, Double?)?

@@ -633,6 +633,19 @@ private fun FilterRow(query: SearchQuery, phone: Boolean, rowScroll: LazyListSta
                     }
                 }
             }
+            item(key = "available") {
+                // The common filters' last, as the spec's row has it; the Filters sheet keeps it too.
+                val choices = listOf<Available?>(null, Available.PLAYS_HERE, Available.ON_YOUR_SERVICES)
+                val names = listOf(stringResource(R.string.search_available_all), stringResource(R.string.search_available_here), stringResource(R.string.search_available_services))
+                MenuChip(words.available.label, selected = words.available.set, phone = phone, describe = words.available.spoken, modifier = slot()) { close ->
+                    choices.forEachIndexed { index, each ->
+                        Choice(names[index], each == query.available) {
+                            close()
+                            store.editSearch { it.copy(available = each) }
+                        }
+                    }
+                }
+            }
             if (!phone) {
                 item(key = "filters") {
                     val count = query.advancedCount()
@@ -924,7 +937,7 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, 
         placeholders = {
             PosterGrid(grid, gridState) {
                 resultsHeader(query, searching, status.livePaused, phone)
-                items(9, contentType = { "placeholder" }) { PosterPlaceholder() }
+                items(9, contentType = { "placeholder" }) { PosterPlaceholder(list = app.kaeri.ui.reading.listInsteadOfGrid()) }
             }
         },
     ) { list ->
@@ -934,12 +947,12 @@ private fun SearchResults(query: SearchQuery, overdue: Boolean, phone: Boolean, 
                 is ListState.Loaded -> {
                     val entries = list.ids.mapNotNull { titles[it] }
                     items(entries, key = { it.id.toLong() }, contentType = { "poster" }) {
-                        PosterCell(it, itemMotion(), from = "search", detail = searchDetail(LocalContext.current, it), onOpen = store::rememberSearch, detailLines = 2, count = it.countLineNow(), narrow = phone)
+                        PosterCell(it, itemMotion(), from = "search", detail = searchDetail(LocalContext.current, it), onOpen = store::rememberSearch, detailLines = 2, count = it.countLineNow(), narrow = phone, list = app.kaeri.ui.reading.listInsteadOfGrid())
                     }
                     if (status.hasNext) {
                         items(3, key = { "more-$it" }, contentType = { "placeholder" }) { index ->
                             if (index == 0) LaunchedEffect(status.pages) { store.searchMore() }
-                            PosterPlaceholder()
+                            PosterPlaceholder(list = app.kaeri.ui.reading.listInsteadOfGrid())
                         }
                     }
                 }

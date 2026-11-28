@@ -9,7 +9,7 @@ use kaeri_core::{ids::AnilistId, media::Translation};
 use kaeri_i18n::t;
 use kaeri_model::{
     Cause, Msg,
-    party::NoSourceWhy,
+    room::NoSourceWhy,
     starting::{HeldSources, SourceHold, SourceMiss, StartFailure, StartStep},
 };
 
@@ -128,8 +128,9 @@ pub struct Frame {
     /// A buffering percentage, when mpv gives one.
     pub percent: Option<u32>,
     pub rows: Vec<Row>,
-    /// The translation the Details switch shows, when it is known.
-    pub translation: Option<Translation>,
+    /// The translation the Details switch shows: the one the source found plays, and until a
+    /// source is found (or when the start failed) the one this start looks for.
+    pub translation: Translation,
     pub details_open: bool,
 }
 
@@ -192,6 +193,9 @@ pub struct Start {
     peers: Option<u32>,
     finding_peers: Option<Option<String>>,
     found: Option<(Option<String>, Translation)>,
+    /// The translation this start looks for: the configured one, or the one picked on this
+    /// screen.
+    wanted: Translation,
     stream: Option<(u32, u32)>,
     no_video: bool,
     percent: Option<u32>,
@@ -225,6 +229,7 @@ impl Start {
             peers: None,
             finding_peers: None,
             found: None,
+            wanted: Translation::Sub,
             stream: None,
             no_video: false,
             percent: None,
@@ -233,6 +238,29 @@ impl Start {
             details_open: false,
             announced_slow: false,
         }
+    }
+
+    /// The start, looking for `translation` until a source is found.
+    pub fn with_translation(mut self, translation: Translation) -> Self {
+        self.wanted = translation;
+        self
+    }
+
+    /// The translation the switch shows: the found source's, or the one looked for.
+    pub fn translation(&self) -> Translation {
+        self.found.as_ref().map_or(self.wanted, |(_, translation)| *translation)
+    }
+
+    /// Whether a source was found and the start has not failed: the playback is under way and
+    /// hears a change of translation itself. Before that, or after a failure, a change starts
+    /// the play again with the other translation.
+    pub fn found_live(&self) -> bool {
+        self.found.is_some() && self.failure.is_none()
+    }
+
+    /// Whether this start plays from the beginning rather than resuming.
+    pub fn plays_from_beginning(&self) -> bool {
+        self.from_beginning
     }
 
     /// Whether the start resumes where the episode was left: the slot for Play from the
@@ -608,7 +636,7 @@ impl Start {
             failure,
             percent: self.percent.filter(|_| self.shown.phase == Phase::Buffering),
             rows: self.rows(at),
-            translation: self.found.as_ref().map(|(_, translation)| *translation),
+            translation: self.translation(),
             details_open: self.details_open,
         }
     }
@@ -1029,6 +1057,45 @@ mod tests {
             ms(2_300),
         );
         assert_eq!(s.frame(ms(21_000)).step, "Still waiting for Brook");
+    }
+
+    #[test]
+    fn the_translation_switch_shows_from_the_first_step_and_after_a_failure() {
+        let mut s = Start::new(AnilistId::new(1), "7", None).with_translation(Translation::Dub);
+        assert_eq!(s.frame(ms(100)).translation, Translation::Dub);
+        assert!(!s.found_live(), "no playback hears a switch before a source is found");
+
+        ask(&mut s, "Brook", 1, 2, ms(700));
+        s.step(
+            &S::Found {
+                count: 1,
+                source: Some("Brook".into()),
+                quality: None,
+                translation: Translation::Sub,
+            },
+            Some(&Msg::StartOpeningStream),
+            ms(1_300),
+        );
+        assert_eq!(s.frame(ms(1_500)).translation, Translation::Sub, "the found source's");
+        assert!(s.found_live());
+
+        let mut s = Start::new(AnilistId::new(1), "7", None).with_translation(Translation::Dub);
+        s.fail(StartFailure {
+            why: NoSourceWhy::NotFound,
+            text: Msg::NoticeReason {
+                reason: Cause::NoSourceHasEpisode {
+                    episode: "7".into(),
+                    detail: String::new(),
+                },
+            },
+            asked: vec!["Alpha".into()],
+            unreached: Vec::new(),
+            held_back: Vec::new(),
+        });
+        let f = s.frame(ms(5_000));
+        assert!(f.failure.is_some());
+        assert_eq!(f.translation, Translation::Dub, "still offered after a failure");
+        assert!(!s.found_live());
     }
 
     #[test]

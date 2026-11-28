@@ -161,7 +161,7 @@ fun FollowingRow(people: List<FollowedEntry>, onOpen: () -> Unit, modifier: Modi
             pressedContainerColor = ObiSilk.Silk,
             pressedContentColor = ObiSilk.Ground,
         ),
-        scale = ClickableSurfaceDefaults.scale(focusedScale = FOCUSED_SCALE),
+        scale = ClickableSurfaceDefaults.scale(focusedScale = app.kaeri.tv.ui.focusedScale(FOCUSED_SCALE)),
     ) {
         Row(
             Modifier.heightIn(min = 56.dp).padding(start = 12.dp, end = 22.dp).clearAndSetSemantics {},

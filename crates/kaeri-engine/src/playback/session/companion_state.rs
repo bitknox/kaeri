@@ -68,7 +68,8 @@ impl Run<'_> {
         let overlays = [
             Overlay::Episode(episode),
             Overlay::Next {
-                card: self.next_up(),
+                // In a room the room's own Up next card shows, never the player's.
+                card: self.next_up().filter(|_| !self.in_party),
                 still: self.next_still(),
                 countdown: self.settings.up_next_countdown,
             },
@@ -87,7 +88,8 @@ impl Run<'_> {
     /// Only when the episode will roll on by itself: fetching ahead for a viewer who stops at
     /// the end would be a search, and for a torrent a download, nobody asked for.
     pub(super) fn maybe_prefetch(&mut self, position: f64, duration: Option<f64>) {
-        if self.prefetch_sent || !self.settings.auto_next || self.cancel_next {
+        // In a room the room's Up next decides what comes next, for everyone.
+        if self.prefetch_sent || !self.settings.auto_next || self.cancel_next || self.in_party {
             return;
         }
         let Some(next) = &self.next else { return };
@@ -159,6 +161,10 @@ impl Run<'_> {
     /// The Up Next card as it stands now, with the next episode's still by URL, when an episode
     /// follows.
     pub(super) fn up_next(&self) -> Option<Overlay> {
+        // In a room the room's own Up next card shows, never the player's.
+        if self.in_party {
+            return None;
+        }
         let card = self.next_up()?;
         Some(Overlay::Next {
             card: Some(card),
@@ -180,7 +186,7 @@ impl Run<'_> {
             label: next.label(),
             title: next.title.clone(),
             at: ending,
-            auto: self.settings.auto_next && !self.cancel_next,
+            auto: self.settings.auto_next && !self.cancel_next && !self.in_party,
             thumbnail: self.still.clone(),
         })
     }

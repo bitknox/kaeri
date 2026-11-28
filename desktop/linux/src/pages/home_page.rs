@@ -1354,7 +1354,7 @@ impl Shelf {
         match link {
             Some((text, dest)) => {
                 self.all_label.set_label(&text);
-                self.all.set_action_target_value(Some(&dest.to_variant()));
+                dest.set_on(&self.all);
                 self.all.set_visible(true);
             }
             None => self.all.set_visible(false),
@@ -1591,11 +1591,7 @@ mod spot_row {
 }
 
 /// A heading row for a section built whole: its title, words beside it, and View all.
-fn heading_row(
-    title: &str,
-    aside: Option<&str>,
-    all: Option<(String, &'static str)>,
-) -> gtk::Box {
+fn heading_row(title: &str, aside: Option<&str>, all: Option<(String, Goes)>) -> gtk::Box {
     let head = gtk::Box::new(gtk::Orientation::Horizontal, 10);
     let label = gtk::Label::new(Some(title));
     label.add_css_class("home-heading");
@@ -1614,7 +1610,7 @@ fn heading_row(
     if let Some((text, dest)) = all {
         let (button, label) = view_all_button();
         label.set_label(&text);
-        button.set_action_target_value(Some(&dest.to_variant()));
+        dest.set_on(&button);
         head.append(&button);
     }
     head
@@ -1639,15 +1635,37 @@ fn view_all_button() -> (gtk::Button, gtk::Label) {
     (button, label)
 }
 
-fn link(kind: SectionKind, link: &HomeLink) -> (String, &'static str) {
+/// A section's View all: its words, and where it goes, as a `win.go` place or, for a Browse
+/// shelf, `win.browse` with the shelf's whole query, so Search opens on it.
+fn link(kind: SectionKind, link: &HomeLink) -> (String, Goes) {
+    let go = |dest: &str| Goes { action: "win.go", target: dest.to_owned() };
     match link {
-        HomeLink::Watching => (t::home_view_all(), "library"),
-        HomeLink::SeasonalView => (t::home_seasonal(), "seasonal"),
-        HomeLink::CalendarView => (t::home_full_calendar(), "calendar"),
-        HomeLink::Browse { .. } if kind == SectionKind::MoreGenre => {
-            (t::home_search(), "search")
+        HomeLink::Watching => (t::home_view_all(), go("library")),
+        HomeLink::SeasonalView => (t::home_seasonal(), go("seasonal")),
+        HomeLink::CalendarView => (t::home_full_calendar(), go("calendar")),
+        HomeLink::Browse { query } => {
+            let words = if kind == SectionKind::MoreGenre {
+                t::home_search()
+            } else {
+                t::home_view_all()
+            };
+            let target = serde_json::to_string(query).unwrap_or_default();
+            (words, Goes { action: "win.browse", target })
         }
-        HomeLink::Browse { .. } => (t::home_view_all(), "search"),
+    }
+}
+
+/// Where a View all goes: an action and its target.
+#[derive(Debug, Clone, PartialEq)]
+struct Goes {
+    action: &'static str,
+    target: String,
+}
+
+impl Goes {
+    fn set_on(&self, button: &gtk::Button) {
+        button.set_action_target_value(Some(&self.target.to_variant()));
+        button.set_action_name(Some(self.action));
     }
 }
 
@@ -1879,7 +1897,24 @@ fn continue_from(
 
 #[cfg(test)]
 mod window_tests {
-    use super::day_window;
+
+    #[test]
+    fn a_browse_shelf_s_view_all_carries_its_query_to_search() {
+        let query = kaeri_model::search::SearchQuery {
+            genres: vec!["Mystery".into()],
+            ..Default::default()
+        };
+        let (_, goes) =
+            link(SectionKind::MoreGenre, &HomeLink::Browse { query: query.clone() });
+        assert_eq!(goes.action, "win.browse");
+        let back: kaeri_model::search::SearchQuery =
+            serde_json::from_str(&goes.target).expect("the query as JSON");
+        assert_eq!(back, query);
+        let (_, goes) = link(SectionKind::MoreGenre, &HomeLink::CalendarView);
+        assert_eq!(goes, Goes { action: "win.go", target: "calendar".into() });
+    }
+
+    use super::{Goes, HomeLink, SectionKind, day_window, link};
 
     #[test]
     fn today_shows_the_window_around_now() {

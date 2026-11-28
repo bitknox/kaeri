@@ -13,7 +13,9 @@ import app.kaeri.engine.model.FolderReport
 import app.kaeri.engine.model.NothingCameIn
 import app.kaeri.engine.model.PluginsInstalled
 import app.kaeri.engine.model.ServerFound
+import app.kaeri.engine.model.StorePluginStatus
 import app.kaeri.engine.model.StoreReport
+import app.kaeri.engine.model.StoreRow
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -79,8 +81,14 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
 
     private val _installedHere = MutableStateFlow<Set<String>>(emptySet())
 
-    /** Plugins installed one by one from the store form, for its notice. */
+    /**
+     * Plugins installed one by one from the store form, for its notice: only once the store's row
+     * says Installed, so an install that fails is never counted or shown as done.
+     */
     val installedHere: StateFlow<Set<String>> = _installedHere.asStateFlow()
+
+    /** Installs asked from the store form that haven't landed yet. */
+    private var installing: Set<String> = emptySet()
 
     private val _notice = MutableStateFlow<Notice?>(null)
 
@@ -179,9 +187,21 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
         waiting.begin()
     }
 
-    /** A plugin installed from the store form, one by one. */
-    fun installedOne(plugin: String) {
-        _installedHere.value += plugin
+    /** An install asked from the store form, one by one: it counts once the store says it landed. */
+    fun installingOne(plugin: String) {
+        installing = installing + plugin
+    }
+
+    /** The stores' rows as they are now: asked installs that landed move to [installedHere]. */
+    internal fun storesNow(rows: List<StoreRow>) {
+        if (installing.isEmpty()) return
+        val landed = rows.flatMap { it.plugins }
+            .filter { it.id in installing && it.status == StorePluginStatus.Installed }
+            .map { it.id }
+            .toSet()
+        if (landed.isEmpty()) return
+        installing = installing - landed
+        _installedHere.value += landed
     }
 
     /** Install every plugin a joined store offers for reading. */
@@ -211,6 +231,7 @@ class CameInModel(scope: CoroutineScope, private val send: (Command) -> Unit) {
         _user.value = ""
         _password.value = ""
         _installedHere.value = emptySet()
+        installing = emptySet()
     }
 
     internal fun apply(answer: CameIn) {

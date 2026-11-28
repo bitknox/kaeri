@@ -696,6 +696,22 @@ struct PhoneEpisodeRow: View {
         if row.isUnaired(), let airs = row.airsDate {
             PhoneUnairedRow(entry: entry, row: row, airs: airs)
                 .accessibilityRotorEntry(id: row.number, in: rotor)
+        } else if let link = store.licensed.episodeLink(entry.id, number) {
+            // On a service they use: the row opens the service, and says so with the glyph, as
+            // the iPad's and the Mac's do.
+            Button {
+                store.openService(entry.id, link: ServiceLink(service: link.service, url: link.url, notes: nil), episode: number)
+            } label: {
+                label(current: current, external: true)
+            }
+            .buttonStyle(.plain)
+            .episodeElement(row, value: spoken(current: current), hint: [L.licensedOpensOutside, hint].compactMap { $0 }.joined(separator: ". ")) {
+                EpisodeMenu(entry: entry, number: number, row: row)
+            }
+            .accessibilityRotorEntry(id: row.number, in: rotor)
+            .contextMenu {
+                EpisodeMenu(entry: entry, number: number, row: row)
+            }
         } else if row.metadataOnly || row.unsourced {
             // One no source has: nothing to play, so a tap offers what can be done, adding a
             // source among it, rather than playing.
@@ -742,11 +758,11 @@ struct PhoneEpisodeRow: View {
         return room ? row.description : nil
     }
 
-    private func label(current: Bool) -> some View {
+    private func label(current: Bool, external: Bool = false) -> some View {
         EpisodeRowLabel(
             entry: entry, row: row, metrics: .phone, room: room, hidden: hidden, current: current,
             numberColumn: false, asked: navigator.synopsisIsShown(entry.id, row.number),
-            marks: marked ? row.followed : nil
+            external: external, marks: marked ? row.followed : nil
         )
         .opacity(row.unsourced ? 0.55 : 1)
         // The row Go to episode landed keeps the selection fill until another lands.

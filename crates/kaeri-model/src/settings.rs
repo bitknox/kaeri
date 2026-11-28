@@ -88,9 +88,6 @@ pub enum SettingKey {
     SeedHours,
     UploadLimit,
     TokenStorage,
-    Syncplay,
-    SyncplayServer,
-    SyncplayRoom,
     UpdateCheck,
     /// Whether the update check follows the beta channel. Off by default.
     UpdateBeta,
@@ -231,7 +228,7 @@ impl SettingKey {
     /// The Settings screen's rows, in display order. Grouped by [`Self::category`] — the
     /// renderer draws a heading each time the category changes, so rows of one category must
     /// be contiguous here.
-    pub const ROWS: [Self; 52] = [
+    pub const ROWS: [Self; 49] = [
         Self::Theme,
         Self::Motion,
         Self::Titles,
@@ -277,9 +274,6 @@ impl SettingKey {
         Self::PresenceTitle,
         Self::PresenceRich,
         Self::TokenStorage,
-        Self::Syncplay,
-        Self::SyncplayServer,
-        Self::SyncplayRoom,
         Self::UpdateCheck,
         Self::UpdateBeta,
         Self::SaveCrashReports,
@@ -391,9 +385,6 @@ impl SettingKey {
             Self::SeedRatio => (&["providers", "torrent", "seeding"], "ratio"),
             Self::SeedHours => (&["providers", "torrent", "seeding"], "hours"),
             Self::UploadLimit => (&["providers", "torrent", "seeding"], "upload_limit_kib"),
-            Self::Syncplay => (&["syncplay"], "enabled"),
-            Self::SyncplayServer => (&["syncplay"], "server"),
-            Self::SyncplayRoom => (&["syncplay"], "room"),
             Self::UpdateCheck => (&["updates"], "check"),
             Self::UpdateBeta => (&["updates"], "beta"),
             Self::SourceOrder => (&["providers"], "order"),
@@ -446,8 +437,6 @@ impl SettingKey {
             Self::Subtitles
                 | Self::DownloadDir
                 | Self::DownloadHook
-                | Self::SyncplayServer
-                | Self::SyncplayRoom
                 | Self::MpvOptions
                 | Self::OpdsPassword
                 | Self::OpdsPort
@@ -506,9 +495,6 @@ impl SettingKey {
                 to.providers.torrent.seeding.upload_limit_kib =
                     from.providers.torrent.seeding.upload_limit_kib;
             }
-            Self::Syncplay => to.syncplay.enabled = from.syncplay.enabled,
-            Self::SyncplayServer => to.syncplay.server.clone_from(&from.syncplay.server),
-            Self::SyncplayRoom => to.syncplay.room.clone_from(&from.syncplay.room),
             Self::UpdateCheck => to.updates.check = from.updates.check,
             Self::UpdateBeta => to.updates.beta = from.updates.beta,
             Self::AdultTitles => to.meta.adult = from.meta.adult,
@@ -678,9 +664,6 @@ impl SettingKey {
             | Self::PresenceTitle
             | Self::PresenceRich
             | Self::TokenStorage
-            | Self::Syncplay
-            | Self::SyncplayServer
-            | Self::SyncplayRoom
             | Self::UpdateCheck
             | Self::UpdateBeta
             | Self::EpisodeDiscussions
@@ -725,9 +708,6 @@ impl SettingKey {
             Self::MergeSubtitles => "merge subtitles in",
             Self::KeepSeeding => "keep seeding",
             Self::DownloadHook => "after each download",
-            Self::Syncplay => "syncplay parties",
-            Self::SyncplayServer => "syncplay server",
-            Self::SyncplayRoom => "syncplay room",
             Self::UpdateCheck => "check for updates",
             Self::UpdateBeta => "beta updates",
             Self::Presence => "discord presence",
@@ -1086,7 +1066,6 @@ pub fn step(
         SettingKey::NightMode => V::Bool(!playback.night_mode),
         SettingKey::MergeSubtitles => V::Bool(!effective.downloads.merge_subtitles),
         SettingKey::KeepSeeding => V::Bool(!effective.downloads.keep_seeding),
-        SettingKey::Syncplay => V::Bool(!effective.syncplay.enabled),
         SettingKey::UpdateCheck => V::Bool(!effective.updates.check),
         SettingKey::UpdateBeta => V::Bool(!effective.updates.beta),
         SettingKey::SkipOpening => V::Bool(!playback.skip_opening),
@@ -1225,8 +1204,6 @@ pub fn step(
         SettingKey::Subtitles
         | SettingKey::DownloadDir
         | SettingKey::DownloadHook
-        | SettingKey::SyncplayServer
-        | SettingKey::SyncplayRoom
         | SettingKey::OpdsPassword
         | SettingKey::OpdsPort
         | SettingKey::TorrentProxy
@@ -1329,11 +1306,6 @@ pub fn put(config: &mut Config, key: SettingKey, value: &SettingValue) -> bool {
             let Ok(kib) = u32::try_from(*kib) else { return false };
             seeding.upload_limit_kib = kib;
         }
-        (SettingKey::Syncplay, V::Bool(on)) => config.syncplay.enabled = *on,
-        (SettingKey::SyncplayServer, V::Str(server)) => {
-            config.syncplay.server.clone_from(server);
-        }
-        (SettingKey::SyncplayRoom, V::Str(room)) => config.syncplay.room = Some(room.clone()),
         (SettingKey::UpdateCheck, V::Bool(on)) => config.updates.check = *on,
         (SettingKey::UpdateBeta, V::Bool(on)) => config.updates.beta = *on,
         (SettingKey::SourceOrder, V::Strings(order)) => {
@@ -1570,13 +1542,6 @@ pub(crate) fn value(effective: &Config, saved: &Config, key: SettingKey) -> Stri
         SettingKey::DownloadHook => {
             if effective.downloads.on_complete.is_some() { "configured" } else { "none" }.into()
         }
-        SettingKey::Syncplay => on_off(effective.syncplay.enabled),
-        SettingKey::SyncplayServer => effective.syncplay.server.clone(),
-        SettingKey::SyncplayRoom => effective
-            .syncplay
-            .room
-            .clone()
-            .unwrap_or_else(|| "unset — needed for parties".into()),
         SettingKey::UpdateCheck => on_off(effective.updates.check),
         SettingKey::UpdateBeta => on_off(effective.updates.beta),
         SettingKey::Presence => on_off(effective.presence.enabled),
@@ -1751,7 +1716,6 @@ fn two_state(effective: &Config, saved: &Config, key: SettingKey) -> Option<bool
         S::PresenceTitle => c.presence.show_title,
         S::PresenceRich => c.presence.rich,
         S::Torrents => c.providers.torrent.enabled,
-        S::Syncplay => c.syncplay.enabled,
         S::UpdateCheck => c.updates.check,
         S::UpdateBeta => c.updates.beta,
         S::SpoilerProtection => c.playback.spoiler_protection,
@@ -1835,8 +1799,6 @@ fn text(effective: &Config, key: SettingKey) -> String {
         SettingKey::Subtitles => effective.playback.subtitle_language.clone(),
         SettingKey::DownloadDir => effective.downloads.directory.clone().unwrap_or_default(),
         SettingKey::DownloadHook => effective.downloads.on_complete.clone().unwrap_or_default(),
-        SettingKey::SyncplayServer => effective.syncplay.server.clone(),
-        SettingKey::SyncplayRoom => effective.syncplay.room.clone().unwrap_or_default(),
         // Typing a new password starts empty: the old one is not shown.
         SettingKey::OpdsPort => effective
             .reading

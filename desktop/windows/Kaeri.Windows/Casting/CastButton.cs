@@ -75,19 +75,22 @@ sealed class CastButton : Grid
     public void Update()
     {
         var state = tv.Available ? tv.Button : CastButtonState.Hidden;
+        var announce = false;
         if (shown != state)
         {
             var was = shown;
             shown = state;
             button.Visibility = state == CastButtonState.Hidden ? Visibility.Collapsed : Visibility.Visible;
             glyph.Show(state);
-            if (state is CastButtonState.Connecting or CastButtonState.Connected && was is not null)
-                Announce();
+            announce = state is CastButtonState.Connecting or CastButtonState.Connected && was is not null;
         }
         var who = state == CastButtonState.Connected && !tv.SessionHeld ? tv.ConnectedTv?.Name ?? "" : tv.SessionName;
         var name = CastPainter.ButtonName(state, who, tv.SessionHeld && (tv.Rejoining || tv.Painter.Reconnecting));
         if (ToolTipService.GetToolTip(button) as string != name)
             CastParts.Name(button, name);
+        // Said once named, so it says the new state rather than the one before.
+        if (announce)
+            Announce();
         if (open)
             Draw();
     }

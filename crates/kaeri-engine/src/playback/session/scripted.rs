@@ -836,9 +836,11 @@ async fn at_a_party(
     let settings = PlaySettings { party: hub.clone(), ..settings() };
     let driving = async {
         let Some(SeatMessage::Seated(cues)) = party.recv().await else { panic!("no seat") };
-        for cue in
-            [SeatCue::Pause(true), SeatCue::Seek(42.0), SeatCue::Notice("Mika paused".into())]
-        {
+        for cue in [
+            SeatCue::Pause(true),
+            SeatCue::Seek { to: 42.0, cue: None },
+            SeatCue::Notice("Mika paused".into()),
+        ] {
             cues.send(cue).unwrap();
         }
         let asked = |calls: &[Call]| {
@@ -1944,7 +1946,7 @@ impl crate::playback::further::Lookup for Onward {
         self.asks.lock().unwrap().push((passed, skipped.map(str::to_owned)));
         self.more.lock().unwrap().take().filter(|more| !more.is_empty()).ok_or_else(|| {
             kaeri_model::starting::StartFailure {
-                why: kaeri_model::party::NoSourceWhy::NotFound,
+                why: kaeri_model::room::NoSourceWhy::NotFound,
                 text: kaeri_model::Msg::verbatim("No source has episode 1."),
                 asked: vec!["kodama".into()],
                 unreached: Vec::new(),
@@ -2751,4 +2753,394 @@ async fn the_other_version_that_shows_no_frame_goes_back_to_the_one_playing() {
     assert_eq!(*text, kaeri_model::Msg::PlayerPanelDubFailed { episode: "1".into() });
     assert_eq!(last_menus(&calls).translation.current, "sub");
     assert!(toasts(&events).is_empty(), "{:?}", toasts(&events));
+}
+
+/// The room's cues wait for the file: a pause or a seek sent to a player that hasn't loaded its
+/// file fails there ("That didn't work"), and the file's own start would undo it.
+#[tokio::test]
+async fn the_rooms_cues_wait_until_the_file_has_loaded() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![Vec::new()]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let paused =
+        |calls: &[Call]| calls.contains(&Call::Set { property: "pause", value: json!(true) });
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        cues.send(SeatCue::Pause(true)).unwrap();
+        cues.send(SeatCue::Seek { to: 35.0, cue: None }).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(200)).await;
+        assert!(!paused(&rig.opener.calls()), "{:#?}", rig.opener.calls());
+        let window = rig.opener.window().expect("a window is open");
+        window.send(PlaybackEvent::Loaded).unwrap();
+        for _ in 0..200 {
+            if paused(&rig.opener.calls()) {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        let calls = rig.opener.calls();
+        assert!(paused(&calls), "{calls:#?}");
+        assert!(calls.contains(&Call::Seek { seconds: 35.0, absolute: true }), "{calls:#?}");
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+    };
+    let _ = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+}
+
+/// The room hears when its seek has landed (Ready with the wait's cue, at the first frame there)
+/// and when the player stalls mid-episode and plays again.
+#[tokio::test]
+async fn the_room_hears_ready_for_its_seek_and_a_stall() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        window
+            .send(PlaybackEvent::Progress { position: 1.0, duration: Some(RUNTIME) })
+            .unwrap();
+        cues.send(SeatCue::Seek { to: 35.0, cue: Some(7) }).unwrap();
+        for _ in 0..200 {
+            if rig.opener.calls().contains(&Call::Seek { seconds: 35.0, absolute: true }) {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        window.send(PlaybackEvent::Buffering(true)).unwrap();
+        window.send(PlaybackEvent::Buffering(false)).unwrap();
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let mut reports = Vec::new();
+        while let Some(message) = room.recv().await {
+            if let SeatMessage::Report(report) = message {
+                let ended = matches!(report, SeatReport::Ended { .. });
+                reports.push(report);
+                if ended {
+                    break;
+                }
+            }
+        }
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    let ready = reports.iter().position(|r| *r == SeatReport::Ready { cue: Some(7) });
+    let stalled = reports.iter().position(|r| *r == SeatReport::Stalled(true));
+    let again = reports.iter().position(|r| *r == SeatReport::Stalled(false));
+    assert!(ready.is_some() && stalled > ready && again > stalled, "{reports:?}");
+}
+
+/// In a room, personal auto-skip stays off: the skip would be taken for the viewer's own seek
+/// and move everyone past the opening.
+#[tokio::test]
+async fn in_a_room_personal_auto_skip_stays_off() {
+    use crate::playback::seat::{PartyHub, SeatMessage};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[("Opening", 0.0), ("Part A", 30.0)])]);
+    let settings = PlaySettings { party: hub.clone(), auto_skip: true, ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        for position in [1.0, 2.0, 3.0, 4.0, 5.0] {
+            window.send(PlaybackEvent::Progress { position, duration: Some(RUNTIME) }).unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        }
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        drop(cues);
+    };
+    let _ = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    let calls = rig.opener.calls();
+    assert!(!calls.iter().any(|c| matches!(c, Call::Seek { .. })), "{calls:#?}");
+}
+
+/// A room's seek that lands without the player saying it is seeking (inside what it holds)
+/// leaves nothing armed: the viewer's own seek after it is still theirs.
+#[tokio::test]
+async fn a_seek_the_room_cued_that_landed_quietly_never_swallows_the_viewers() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(RUNTIME) };
+        window.send(at(1.0)).unwrap();
+        cues.send(SeatCue::Seek { to: 35.0, cue: Some(7) }).unwrap();
+        for _ in 0..200 {
+            if rig.opener.calls().contains(&Call::Seek { seconds: 35.0, absolute: true }) {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        // Landed in what it held: no `seeking`, just the new place.
+        let mut pos = 35.0;
+        for _ in 0..14 {
+            window.send(at(pos)).unwrap();
+            pos += 0.25;
+            tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        }
+        // The viewer's own seek, said by the player.
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(at(60.0)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        for i in 1..6 {
+            window.send(at(60.0 + f64::from(i) * 0.25)).unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        }
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let mut reports = Vec::new();
+        while let Some(message) = room.recv().await {
+            if let SeatMessage::Report(report) = message {
+                let ended = matches!(report, SeatReport::Ended { .. });
+                reports.push(report);
+                if ended {
+                    break;
+                }
+            }
+        }
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    assert!(
+        reports.iter().any(|r| matches!(r, SeatReport::Sample { seeked: true, .. })),
+        "{reports:?}"
+    );
+}
+
+/// A short file looping (or restarting at its end) says `seeking` with no room cue behind it:
+/// never the viewer's seek (Android's paused scene, "You jumped from 0:12 to 0:07").
+#[tokio::test]
+async fn a_file_looping_at_its_end_is_never_the_viewers_seek() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), auto_next: false, ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(RUNTIME) };
+        window.send(at(100.0)).unwrap();
+        cues.send(SeatCue::Pause(false)).unwrap();
+        // Past the opening, playing to the file's end.
+        let mut pos = 100.0;
+        while pos < RUNTIME - 0.5 {
+            window.send(at(pos)).unwrap();
+            pos += 1.25;
+            tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        }
+        // It loops: back to the start, said as a seek.
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(at(0.1)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        for i in 1..6 {
+            window.send(at(0.1 + f64::from(i) * 0.25)).unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(250)).await;
+        }
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let mut reports = Vec::new();
+        while let Some(message) = room.recv().await {
+            if let SeatMessage::Report(report) = message {
+                let ended = matches!(report, SeatReport::Ended { .. });
+                reports.push(report);
+                if ended {
+                    break;
+                }
+            }
+        }
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    assert!(
+        !reports.iter().any(|r| matches!(r, SeatReport::Sample { seeked: true, .. })),
+        "{reports:?}"
+    );
+}
+
+/// Reports of `room` until the playback ends.
+async fn reports_until_ended(
+    room: &mut tokio::sync::mpsc::UnboundedReceiver<crate::playback::seat::SeatMessage>,
+) -> Vec<crate::playback::seat::SeatReport> {
+    use crate::playback::seat::{SeatMessage, SeatReport};
+    let mut reports = Vec::new();
+    while let Some(message) = room.recv().await {
+        if let SeatMessage::Report(report) = message {
+            let ended = matches!(report, SeatReport::Ended { .. });
+            reports.push(report);
+            if ended {
+                break;
+            }
+        }
+    }
+    reports
+}
+
+/// Neon: a room's seek that lands at once in what a paused player holds says no `seeking` and
+/// no further place, so the cue stayed armed and took the viewer's own seek for the room's.
+#[tokio::test]
+async fn a_seek_the_room_cued_that_landed_while_paused_never_swallows_the_viewers() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(RUNTIME) };
+        for position in [1.0, 1.25, 1.5] {
+            window.send(at(position)).unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+        cues.send(SeatCue::Pause(true)).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(100)).await;
+        window.send(PlaybackEvent::Paused(true)).unwrap();
+        cues.send(SeatCue::Seek { to: 35.0, cue: None }).unwrap();
+        for _ in 0..200 {
+            if rig.opener.calls().contains(&Call::Seek { seconds: 35.0, absolute: true }) {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        // Landed in what it held, paused: one place, then nothing.
+        window.send(at(35.0)).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(3_500)).await;
+        // The viewer's own seek, still paused.
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(at(60.0)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(1_200)).await;
+        window.send(at(60.0)).unwrap();
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let reports = reports_until_ended(&mut room).await;
+        drop(cues);
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    assert!(
+        reports.iter().any(|r| matches!(r, SeatReport::Sample { seeked: true, .. })),
+        "{reports:?}"
+    );
+}
+
+/// Neon: a pause the room cued, with the player's word of the play before it still on its way,
+/// took both for the viewer's presses.
+#[tokio::test]
+async fn a_late_word_of_the_play_before_a_cued_pause_is_never_the_viewers_press() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let mut room = hub.open();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let driving = async {
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(RUNTIME) };
+        for position in [1.0, 1.25, 1.5] {
+            window.send(at(position)).unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+        cues.send(SeatCue::Pause(true)).unwrap();
+        for _ in 0..200 {
+            let pause = Call::Set { property: "pause", value: json!(true) };
+            if rig.opener.calls().contains(&pause) {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        window.send(PlaybackEvent::Paused(false)).unwrap();
+        window.send(PlaybackEvent::Paused(true)).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let reports = reports_until_ended(&mut room).await;
+        drop(cues);
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    assert!(
+        !reports.iter().any(|r| matches!(r, SeatReport::Sample { pressed: true, .. })),
+        "{reports:?}"
+    );
+}
+
+/// Neon: a room started from a player a minute into the episode took the viewer's seek in its
+/// first 3 s for the player's own opening.
+#[tokio::test]
+async fn a_room_started_from_a_playing_player_takes_the_viewers_seek_at_once() {
+    use crate::playback::seat::{PartyHub, SeatCue, SeatMessage, SeatReport};
+
+    let hub = PartyHub::default();
+    let rig = Rig::new(vec![opening(&[])]);
+    let settings = PlaySettings { party: hub.clone(), ..settings() };
+    let driving = async {
+        for _ in 0..200 {
+            if rig.opener.window().is_some() {
+                break;
+            }
+            tokio::time::sleep(std::time::Duration::from_millis(10)).await;
+        }
+        let window = rig.opener.window().expect("a window is open");
+        let at = |position| PlaybackEvent::Progress { position, duration: Some(RUNTIME) };
+        for position in [60.0, 60.25, 60.5] {
+            window.send(at(position)).unwrap();
+            tokio::time::sleep(std::time::Duration::from_millis(50)).await;
+        }
+        // Watch together, from here.
+        let mut room = hub.open();
+        let Some(SeatMessage::Seated(cues)) = room.recv().await else { panic!("no seat") };
+        cues.send(SeatCue::Pause(false)).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(300)).await;
+        window.send(PlaybackEvent::Seeking(true)).unwrap();
+        window.send(at(55.0)).unwrap();
+        window.send(PlaybackEvent::Seeking(false)).unwrap();
+        tokio::time::sleep(std::time::Duration::from_millis(1_200)).await;
+        window.send(at(56.0)).unwrap();
+        window.send(PlaybackEvent::Ended { complete: false }).unwrap();
+        let reports = reports_until_ended(&mut room).await;
+        drop(cues);
+        reports
+    };
+    let (_, reports) = tokio::join!(
+        rig.play(stream(StreamKind::Mp4), context("1", Some("2")), settings),
+        driving
+    );
+    assert!(
+        reports.iter().any(|r| matches!(r, SeatReport::Sample { seeked: true, .. })),
+        "{reports:?}"
+    );
 }

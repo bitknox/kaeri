@@ -76,16 +76,6 @@ sealed interface Page {
         override val memory: FocusMemory = FocusMemory()
     }
 
-    /** TVPartyLobby: the room this TV is in or was asked to join, with its QR code and code. */
-    data class Lobby(override val key: String) : Page {
-        override val memory: FocusMemory = FocusMemory()
-    }
-
-    /** TVPartyPick: what the party starts on, from what this TV is watching. */
-    data class PartyPick(override val key: String) : Page {
-        override val memory: FocusMemory = FocusMemory()
-    }
-
     /** TVTorrents: the torrent proxy's form, over Settings › Sources. */
     data class Torrents(override val key: String) : Page {
         override val memory: FocusMemory = FocusMemory()
@@ -273,20 +263,6 @@ class TvNavigator(start: Destination = Destination.Home) {
     fun openSignIn(tracker: String) {
         opened += 1
         pages += Page.SignIn(tracker, "sign-in/$tracker/$opened")
-    }
-
-    /** The party's lobby, once: a second open leaves the one on top. */
-    fun openLobby() {
-        if (pages.lastOrNull() is Page.Lobby) return
-        pages.filter { it is Page.PartyPick }.forEach { forget(it.key) }
-        pages.removeAll { it is Page.PartyPick }
-        opened += 1
-        pages += Page.Lobby("lobby/$opened")
-    }
-
-    fun openPartyPick() {
-        opened += 1
-        pages += Page.PartyPick("party-pick/$opened")
     }
 
     /** Close the top page; false when there was none. */

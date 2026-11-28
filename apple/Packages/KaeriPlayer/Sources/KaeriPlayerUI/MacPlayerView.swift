@@ -44,16 +44,24 @@ public struct MacPlayerView: View {
     @State private var landedEpisode: String?
     /// The episode whose row has the keyboard's focus in the Episodes panel.
     @State private var focusedEpisode: String?
-    /// The watch party's popover on the people button.
-    @State private var partyOpen = false
+    /// The room's column has faded in at its place (the player-to-room morph).
+    @State private var columnIn = false
+    /// The full screen strip's 8 s after any change.
+    @State private var stripFresh = false
+    @State private var stripTask: Task<Void, Never>?
+    /// Full screen has settled: the column has folded away and the strip holds the room.
+    @State private var settledFull = false
+    /// How much the room's column grew the window by, to give back.
+    @State private var grewBy: CGFloat = 0
     /// Where the panels over the video are, which take the scroll wheel from the player.
     @State private var wheelStops: [CGRect] = []
     @FocusState private var focused: Bool
-    /// The chat field above the control row, opened with C.
-    @State private var fielding = false
-    @FocusState private var fieldFocus: Bool
     @Environment(AppStore.self) private var store
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.accessibilityReduceMotion) private var systemReduceMotion
+    /// Reduce Motion, or `KAERI_REDUCE_MOTION=1` for a recording of its variant.
+    private var reduceMotion: Bool {
+        systemReduceMotion || ProcessInfo.processInfo.environment["KAERI_REDUCE_MOTION"] == "1"
+    }
     @Environment(\.playerZoom) private var zoom
     private let metrics = PlayerMetrics.mac
 
@@ -64,14 +72,14 @@ public struct MacPlayerView: View {
     }
 
     private var visible: Bool {
-        (model.controlsVisible || panel != nil || partyOpen || overBar) && !model.stillWatching && model.failure == nil
+        (model.controlsVisible || panel != nil || overBar) && !model.stillWatching && model.failure == nil
             && !curtain && !leavingFullScreen && !model.returning && !sidePanel
     }
 
     /// Whether the pointer may hide over the video (PlayerPointer).
     private var pointerIdle: Bool {
         PlayerPointer.idle(
-            controlsShown: model.controlsVisible || panel != nil || partyOpen || overBar || sidePanel,
+            controlsShown: model.controlsVisible || panel != nil || overBar || sidePanel,
             loading: curtain, failed: model.failure != nil, askingStillWatching: model.stillWatching)
     }
 
@@ -82,7 +90,105 @@ public struct MacPlayerView: View {
         model.starting != nil || (!model.hasPicture && !model.holding) || model.holdsCurtain || model.startingHeld
     }
 
+    /// The room's column is beside the video: in a room (or its invitation) and shown. In full
+    /// screen it folds away once the system's zoom settles.
+    private var columnShown: Bool {
+        store.room.active && store.room.shown && !model.returning
+    }
+
     public var body: some View {
+        HStack(spacing: 0) {
+            playerArea
+                .overlay { roomVideoLayer }
+            if columnShown {
+                RoomColumn(room: store.room, height: height)
+                    .opacity(columnIn && !settledFull ? 1 : 0)
+                    .offset(x: settledFull && !reduceMotion ? 24 : 0)
+                    .frame(width: settledFull ? 0 : RoomColumn.width, alignment: .leading)
+                    .clipped()
+                    .animation(reduceMotion ? .fadeIn : .standard, value: settledFull)
+                    .transition(.identity)
+            }
+        }
+        .overlay { roomDialogs }
+        .background(Color(rgb: 0x0B0D18))
+        .ignoresSafeArea()
+        .onChange(of: columnShown) { _, shown in roomColumn(shown) }
+        .onChange(of: store.room.changedAt) { freshenStrip() }
+        .onChange(of: store.room.chatOff, initial: true) { _, off in model.roomChatOff = off }
+        .animation(.fadeIn, value: store.room.leaving)
+        .animation(.fadeIn, value: store.room.moving)
+        .animation(.fadeIn, value: store.room.videoPanel)
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
+            guard let window, (note.object as? NSWindow) === window else { return }
+            settledFull = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSWindow.willExitFullScreenNotification)) { note in
+            guard let window, (note.object as? NSWindow) === window else { return }
+            settledFull = false
+        }
+    }
+
+    /// Over the video: the room's panel when your player has nothing to show, the full screen
+    /// strip, and the room's Up next card.
+    @ViewBuilder
+    private var roomVideoLayer: some View {
+        let room = store.room
+        if let panel = room.videoPanel {
+            RoomMacVideoPanel(room: room, panel: panel)
+                .transition(.opacity)
+                .overlay(alignment: .topLeading) {
+                    // The window's own buttons sit on the banner, as on the player's top bar.
+                    Color.clear.frame(height: 52)
+                }
+        }
+        if room.popoverClosesOutside {
+            // A click on the video, or on the room's panel over it, closes Invite or Details, as
+            // one outside any card does. Edit relays keeps its edits until Done or Esc.
+            Color.clear.contentShape(.rect).onTapGesture { room.popover = nil }
+        }
+        if room.inRoom, settledFull || !room.shown {
+            RoomStrip(room: room)
+                .padding(.trailing, 16)
+                .padding(.top, (visible ? 60 : 16) + topInset)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing)
+                .opacity(stripShown ? 1 : 0)
+                .animation(stripShown ? .fadeIn : .fadeOut, value: stripShown)
+                .animation(.standard, value: visible)
+                .allowsHitTesting(stripShown)
+        }
+        if room.inRoom, room.skipShown, room.view?.upNext.map({ $0.cancelledBy != nil }) ?? true, !cornerTaken {
+            Button(RoomCopy.skipOpening) { room.skipOpening() }
+                .buttonStyle(RoomButtonStyle(kind: .glass, height: 36, size: 14, padding: 18))
+                .padding(.trailing, 20)
+                .padding(.bottom, 68)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
+                .transition(.opacity)
+        }
+    }
+
+    /// The player's corner holds a stall, a found-times question or Undo: the room's Skip opening
+    /// waits, as the player's own Skip does.
+    private var cornerTaken: Bool { ReturnKey.cornerTaken(model.corner) }
+
+    /// The strip shows while anyone isn't watching, for 8 s after any change, and with the
+    /// controls (decision 8).
+    private var stripShown: Bool {
+        store.room.anyoneNotWatching || visible || stripFresh || store.room.view?.waiting.isEmpty == false
+    }
+
+    @ViewBuilder
+    private var roomDialogs: some View {
+        let room = store.room
+        if let ask = room.leaving {
+            RoomLeaveDialog(room: room, ask: ask)
+        }
+        if room.moving {
+            RoomMoveDialog(room: room)
+        }
+    }
+
+    var playerArea: some View {
         ZStack {
             Color.black
             PlayerPicture(model: model)
@@ -131,7 +237,7 @@ public struct MacPlayerView: View {
         // Hidden with the controls, and shown again on any way out (PlayerPointer).
         .modifier(IdlePointer(idle: pointerIdle, window: window))
         .contextMenu { contextMenu }
-        .playerAccessibility(model)
+        .playerAccessibility(model, escape: backAsking)
         .focusable()
         .focusEffectDisabled()
         .focused($focused)
@@ -140,11 +246,16 @@ public struct MacPlayerView: View {
         .onChange(of: model.fullScreen) { _, on in fullScreen(on) }
         .onChange(of: visible, initial: true) { _, on in titleBar(on) }
         .onChange(of: window) { _, window in
-            if let window { opened(window) }
+            if let window {
+                opened(window)
+                // Opened in a window already full screen: no notification says so.
+                settledFull = window.styleMask.contains(.fullScreen)
+            }
             // Closing it stops the playback (`PlayerModel.hostWindow`).
             model.hostWindow = window
+            if columnShown { roomColumn(true) }
         }
-        .onChange(of: model.backRequests) { back() }
+        .onChange(of: model.backRequests) { backAsking() }
         .onChange(of: model.menuRequests) {
             if model.requestedMenu == .episodes {
                 panel = nil
@@ -158,25 +269,9 @@ public struct MacPlayerView: View {
             pointedEpisode = nil
             focusedEpisode = nil
         }
-        .onChange(of: store.party.panelRequests) {
-            panel = nil
-            sidePanel = false
-            partyOpen = store.party.inParty
-        }
-        // The party is over: its popover goes with it.
-        .onChange(of: store.party.inParty) { _, inParty in if !inParty { partyOpen = false; fielding = false } }
-        // The popover has the conversation's own field: the bar's goes, and the draft stays.
-        .onChange(of: partyOpen) { _, open in
-            if open, fielding {
-                fielding = false
-                model.hold("chat", false)
-            }
-        }
-        .animation(.fadeIn, value: fielding)
-        .onChange(of: store.party.inParty, initial: true) { _, inParty in
-            model.marksBlocked = inParty
-            model.inParty = inParty
-        }
+        .onChange(of: store.room.inRoom, initial: true) { _, inRoom in roomChanged(inRoom) }
+        // The opening's skip is the room's: its button stands where the player's would.
+        .onChange(of: model.roomSkip, initial: true) { _, to in roomSkipChanged(to) }
         .onChange(of: model.chatRequests) { sayHello() }
         .onReceive(NotificationCenter.default.publisher(for: NSWindow.didEnterFullScreenNotification)) { note in
             guard let window, (note.object as? NSWindow) === window else { return }
@@ -202,8 +297,16 @@ public struct MacPlayerView: View {
         .onAppear {
             // From the banner's frame to the window's, on the standard spring.
             withAnimation(.standard) { grown = true }
+            store.room.playerShown = true
+            store.room.closesPlayer = { back() }
+            model.asksBeforeStopping = { store.room.asksBeforeClosing() }
         }
         .onDisappear {
+            store.room.playerShown = false
+            store.room.closesPlayer = {}
+            model.asksBeforeStopping = { false }
+            stripTask?.cancel()
+            stripTask = nil
             // Back to browsing: the player stopped, or moved into Picture in Picture. The main
             // window is given back as it was.
             if let window { restore(window) }
@@ -222,18 +325,6 @@ public struct MacPlayerView: View {
             .padding(.leading, 20)
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
             .animation(.standard, value: model.resume)
-        PartyColumn(model: model, metrics: metrics, covered: partyOpen) { people() }
-            .padding(.top, 60 + topInset)
-            .padding(.leading, 20)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        if store.party.inParty, store.party.chat.shown {
-            ReactionMomentView(metrics: metrics)
-                .padding(.trailing, 16)
-                .padding(.bottom, model.corner == nil ? 72 : metrics.cornerInset.bottom + 88)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottomTrailing)
-                .animation(.standard, value: model.corner == nil)
-                .allowsHitTesting(false)
-        }
         SkipMarkLayer(model: model, metrics: metrics, layout: .bar)
         // Stats for nerds stays up while the controls hide, below where the top bar's capsule
         // is, under the menus that hang from it.
@@ -287,10 +378,45 @@ public struct MacPlayerView: View {
         if model.playOnTVAvailable {
             Button(L.tvPlayOnMenu) { model.playOnTV() }
         }
-        Button(L.partyOpen) { people() }
-        if store.party.inParty, store.party.chat.shown {
-            Button(L.menuSaySomething) { sayHello() }
+        if store.room.inRoom {
+            if !store.room.chatOff { Button(L.menuSaySomething) { sayHello() } }
+        } else if !store.room.active {
+            Button(RoomCopy.columnTitle) { startRoom() }
         }
+    }
+
+    /// In a room or out of one: marking is off, and the opening's skip is the room's.
+    private func roomChanged(_ inRoom: Bool) {
+        model.marksBlocked = inRoom
+        model.inRoom = inRoom
+        model.roomDrawsSkip = true
+        if !inRoom {
+            // Out of the room, its strip is done: nothing of it times out later.
+            stripTask?.cancel()
+            stripTask = nil
+            stripFresh = false
+        }
+        let room = store.room
+        if inRoom {
+            model.skipsWithRoom = { to in
+                room.skipTo = to
+                room.skipOpening()
+            }
+        } else {
+            model.skipsWithRoom = nil
+            room.skipTo = nil
+        }
+    }
+
+    private func roomSkipChanged(_ to: Double?) {
+        if store.room.inRoom { store.room.skipTo = to }
+    }
+
+    /// Say something: the room's column opens with its field focused.
+    private func sayHello() {
+        guard store.room.inRoom, !store.room.chatOff else { return }
+        store.room.shown = true
+        store.room.chatAsked += 1
     }
 
     // MARK: Chrome
@@ -316,7 +442,6 @@ public struct MacPlayerView: View {
                 header
                     .padding(.top, topInset)
                 Spacer(minLength: 0)
-                chatField
                 controlRow
                     .onHover { overBar = $0 }
             }
@@ -329,8 +454,8 @@ public struct MacPlayerView: View {
             Color.clear.frame(width: model.fullScreen ? 0 : 60, height: 12)
             // In the window's title bar strip outside full screen, where each of the bar's
             // controls takes its clicks this way and the rest of the strip drags the window.
-            icon("chevron.backward", L.actionBack, lit: pointed == L.actionBack) { back() }
-                .titleBarControl(active: visible, pointed: { point(L.actionBack, $0) }) { back() }
+            icon("chevron.backward", L.actionBack, lit: pointed == L.actionBack) { backAsking() }
+                .titleBarControl(active: visible, pointed: { point(L.actionBack, $0) }) { backAsking() }
             HStack(alignment: .firstTextBaseline, spacing: 10) {
                 Text(model.showTitle)
                     .font(.showTitle(size: 15))
@@ -347,7 +472,7 @@ public struct MacPlayerView: View {
             .overVideoText()
             .frame(maxWidth: .infinity, alignment: .leading)
             HStack(spacing: 8) {
-                if store.party.inParty, store.party.chat.shown {
+                if store.room.inRoom, !store.room.chatOff {
                     ReactionButtons(metrics: metrics)
                         .padding(2)
                         .background(.overVideo(0.62), in: .capsule)
@@ -363,7 +488,7 @@ public struct MacPlayerView: View {
                 .background(.overVideo(0.62), in: .capsule)
                 .overlay(Capsule().strokeBorder(Palette.glassOverArtEdge, lineWidth: 1))
             }
-            .animation(.fadeIn, value: store.party.inParty && store.party.chat.shown)
+            .animation(.fadeIn, value: store.room.inRoom)
         }
         .padding(.leading, 20)
         .padding(.trailing, 16)
@@ -474,13 +599,11 @@ public struct MacPlayerView: View {
         // Episodes is the side panel's (player panel board).
         if which == .episodes {
             panel = nil
-            partyOpen = false
             if sidePanel { closeSidePanel() } else { openSidePanel() }
             return
         }
         panel = panel == which ? nil : which
         sidePanel = false
-        partyOpen = false
         model.poke()
     }
 
@@ -499,72 +622,38 @@ public struct MacPlayerView: View {
 
     /// The people button: the party's popover while in one, the form that starts one otherwise
     /// (a sheet over the player, as from a title).
-    private var partyButton: some View {
-        let inParty = store.party.inParty
-        return capsuleButton(PartyButton.symbol(inParty: inParty), PartyButton.label(inParty: inParty), on: partyOpen) { people() }
-            .popover(isPresented: $partyOpen, arrowEdge: .bottom) {
-                PartyPanel(metrics: metrics)
-                    .environment(store)
-                    .preferredColorScheme(.dark)
-            }
-    }
-
-    /// C: the chat field opens above the control row, or says why it can't.
-    private func sayHello() {
-        guard store.party.inParty, !store.party.chat.hidden else { return }
-        guard store.party.chat.allowed else {
-            model.say(L.partyChatOff)
-            return
-        }
-        fielding = true
-        fieldFocus = true
-        model.hold("chat", true)
-    }
-
-    /// The field above the control row: 480 by 32, 16 from the leading edge.
     @ViewBuilder
-    private var chatField: some View {
-        let chat = store.party.chat
-        if fielding, store.party.inParty, chat.shown {
-            ChatTextField(
-                text: Binding(get: { chat.draft }, set: { chat.draft = $0 }), placeholder: L.partyChatField, style: .overVideo, limit: chat.maxLength,
-                remaining: chat.remaining,
-                waitLabel: chat.wait > 0 ? L.partyChatWait(seconds: chat.wait) : nil,
-                waitSpoken: chat.wait > 0 ? L.partyChatWaitSpoken(seconds: chat.wait) : nil,
-                focus: $fieldFocus
-            ) { chat.submit() }
-            .frame(width: 480)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.leading, 16)
-            .padding(.bottom, 6)
-            .transition(.opacity)
-            .onKeyPress(.escape) {
-                closeField()
-                return .handled
+    private var partyButton: some View {
+        let room = store.room
+        if room.active {
+            // In a room: the side button hides the column (the strip takes over) or shows it.
+            capsuleButton("sidebar.right", room.shown ? RoomCopy.hideRoom : RoomCopy.showRoom, on: room.shown && !settledFull) {
+                if settledFull { model.fullScreen = false } else { room.shown.toggle() }
+                model.poke()
             }
-            .onChange(of: visible) { _, up in if !up, chat.draft.isEmpty { closeField() } }
-            .onChange(of: chat.draft.isEmpty) { _, empty in model.hold("chat", !empty) }
-            .accessibilityElement(children: .contain)
-            .onAppear { fieldFocus = true }
-        }
-    }
-
-    private func closeField() {
-        fielding = false
-        model.hold("chat", false)
-        focused = true
-    }
-
-    private func people() {
-        panel = nil
-        sidePanel = false
-        if store.party.inParty {
-            partyOpen.toggle()
         } else {
-            store.party.open(.playing)
+            roomStartButton
         }
+    }
+
+    /// Watch together: this window turns into the room (the morph).
+    private var roomStartButton: some View {
+        capsuleButton("person.2", RoomCopy.columnTitle, on: false) {
+            panel = nil
+            sidePanel = false
+            startRoom()
+        }
+    }
+
+    private func startRoom() {
+        if let id = model.starting?.id ?? model.staged?.id { store.room.start(id: id, episode: model.episode?.number ?? model.startingEpisode ?? "") }
         model.poke()
     }
+
+
+
+
+
 
     @ViewBuilder
     private func panelLayer(_ which: Panel) -> some View {
@@ -691,6 +780,12 @@ public struct MacPlayerView: View {
         let command = press.modifiers.contains(.command)
         let option = press.modifiers.contains(.option)
         if model.skipMark != nil || model.skipTimesOpen, let result = markKey(press, shift: shift) { return result }
+        let room = store.room
+        if room.holdsKeys {
+            // A question or popover over the player has the keys: Esc closes it, Return is its
+            // own button's, and nothing plays, seeks or skips behind it.
+            guard press.key == .escape else { return .ignored }
+        }
         switch press.key {
         case .space:
             model.togglePause()
@@ -705,14 +800,29 @@ public struct MacPlayerView: View {
         case .downArrow:
             model.stepVolume(by: -5)
         case .return:
-            switch model.corner {
-            case .stall: model.switchSource()
+            // The corner's order: a stall, a found-times question or Undo before the room's Up
+            // next and Skip opening, then the player's own.
+            let up = room.inRoom && room.view?.upNext.map { $0.cancelledBy == nil } == true
+            switch ReturnKey.action(corner: model.corner, roomUpNext: up, roomSkip: room.inRoom && room.skipShown) {
+            case .switchSource: model.switchSource()
+            case .roomUpNext: room.playNextNow()
+            case .roomSkip: room.skipOpening()
             case .upNext: model.playNext()
             case .skip: model.takeSkip()
-            default: return .ignored
+            case .none: return .ignored
             }
         case .escape:
-            if sidePanel {
+            // In a room, Esc closes what is open over the player before the player itself: the
+            // question, Move's list, a popover, then the room's Up next.
+            if room.leaving != nil {
+                room.leaving = nil
+            } else if room.moving {
+                room.moving = false
+            } else if room.popover != nil {
+                room.popover = nil
+            } else if room.inRoom, let up = room.view?.upNext, up.cancelledBy == nil {
+                room.cancelUpNext()
+            } else if sidePanel {
                 closeSidePanel()
             } else if panel != nil {
                 panel = nil
@@ -725,7 +835,7 @@ public struct MacPlayerView: View {
             } else if model.fullScreen {
                 model.fullScreen = false
             } else {
-                back()
+                backAsking()
             }
         case .delete:
             model.setSpeed(1)
@@ -746,12 +856,13 @@ public struct MacPlayerView: View {
             case "c" where !command && !option:
                 sayHello()
             case "i" where !command: model.toggleStats()
-            case "[" where command: back()
+            case "[" where command: backAsking()
             case "]": model.setSpeed(min(4, model.speed * 1.1))
             case "[": model.setSpeed(max(0.25, model.speed / 1.1))
             case ".":
                 guard command else { return .ignored }
-                model.viewerClosed()
+                // In a room ⌘. asks as ⌘W does: Leave, Keep the room or Cancel.
+                if !store.room.asksBeforeClosing() { model.viewerClosed() }
             default:
                 return .ignored
             }
@@ -816,6 +927,13 @@ public struct MacPlayerView: View {
         for kind in [NSWindow.ButtonType.closeButton, .miniaturizeButton, .zoomButton] {
             window.standardWindowButton(kind)?.alphaValue = 1
         }
+        if grewBy != 0, !window.styleMask.contains(.fullScreen) {
+            var frame = window.frame
+            frame.size.width -= grewBy
+            frame.origin.x += grewBy / 2
+            window.setFrame(frame, display: true, animate: false)
+            grewBy = 0
+        }
         guard let saved else { return }
         saved.restore(window)
         self.saved = nil
@@ -826,6 +944,13 @@ public struct MacPlayerView: View {
     /// Back to where the play started: the video shrinks into the banner or card it grew out of,
     /// and the playback stops with its place saved. The way in reversed, so a full screen the
     /// player went into ends first, the system's way, as it began after the player grew.
+    /// Back as the person asks for it (the button, Esc, ⌘[): in a room it asks first, as ⌘W
+    /// does. Leave and Keep the room then close through `back()`.
+    private func backAsking() {
+        if store.room.asksBeforeClosing() { return }
+        back()
+    }
+
     private func back() {
         guard !leavingFullScreen, !model.returning else { return }
         PlayerModel.note(.info, "back from the player")
@@ -889,6 +1014,52 @@ public struct MacPlayerView: View {
         DispatchQueue.main.async { [weak window, model] in
             guard let window, model.fullScreen == on, window.styleMask.contains(.fullScreen) != on else { return }
             window.toggleFullScreen(nil)
+        }
+    }
+
+    /// The room's column comes in or goes. The window grows by the column's width, centred,
+    /// when the screen has room; otherwise it stays inside the screen and the video shrinks
+    /// (decision 9). The frame moves on the system's window animation and the column's contents
+    /// fade in from 120 ms. Under Reduce Motion the frame takes its size at once and the room
+    /// crossfades in over the player, so the picture never goes empty.
+    private func roomColumn(_ shown: Bool) {
+        guard let window, !window.styleMask.contains(.fullScreen) else {
+            columnIn = shown
+            return
+        }
+        var frame = window.frame
+        if shown {
+            guard grewBy == 0 else {
+                columnIn = true
+                return
+            }
+            let room = window.screen?.visibleFrame ?? frame
+            let width = min(frame.width + RoomColumn.width, room.width)
+            let grow = width - frame.width
+            frame.origin.x = min(max(frame.origin.x - grow / 2, room.minX), room.maxX - width)
+            frame.size.width = width
+            grewBy = grow
+            columnIn = false
+            window.setFrame(frame, display: true, animate: !reduceMotion)
+            withAnimation(reduceMotion ? .fadeIn : .fadeIn.delay(0.12)) { columnIn = true }
+        } else {
+            columnIn = false
+            guard grewBy != 0 else { return }
+            frame.size.width -= grewBy
+            frame.origin.x += grewBy / 2
+            grewBy = 0
+            window.setFrame(frame, display: true, animate: !reduceMotion)
+        }
+    }
+
+    /// Any change in the room: the strip shows for 8 s.
+    private func freshenStrip() {
+        guard store.room.inRoom else { return }
+        stripTask?.cancel()
+        stripFresh = true
+        stripTask = Task {
+            try? await Task.sleep(for: .seconds(8))
+            if !Task.isCancelled { stripFresh = false }
         }
     }
 

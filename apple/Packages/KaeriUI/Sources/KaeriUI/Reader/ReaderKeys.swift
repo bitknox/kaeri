@@ -25,9 +25,9 @@ struct ReaderKeyContext: Equatable {
 }
 
 extension ReaderKeyContext {
-    /// A novel turns its pages, whatever mode its chapter had; Vertical turns them too.
+    /// A novel turns its pages, whatever mode its chapter had; Vertical flows as a strip does.
     init(novel: Bool, mode: ReaderMode?, direction: ReadDirection?) {
-        self.init(strip: !novel && mode == .strip, rtl: direction == .rightToLeft)
+        self.init(strip: !novel && mode?.flows == true, rtl: direction == .rightToLeft)
     }
 }
 

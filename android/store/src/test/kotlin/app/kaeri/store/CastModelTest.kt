@@ -202,7 +202,7 @@ class CastModelTest {
         val link = ScriptedLink(card(loading = false))
         val cast = model(link)
         var played: Pair<AnilistId, String>? = null
-        cast.playHere = { id, episode -> played = id to episode }
+        cast.playHere = { id, episode, _ -> played = id to episode }
         cast.cast(row, request)
         cast.playHere()
         assertTrue(link.playedHere)

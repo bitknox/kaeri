@@ -21,8 +21,8 @@ fn fold_words() -> Vec<String> {
 const FOLD_WORDS: i64 = 40;
 
 /// The reaction's glyph, by the name the companion draws it under.
-fn glyph(reaction: kaeri_model::party::Reaction) -> &'static str {
-    use kaeri_model::party::Reaction;
+fn glyph(reaction: kaeri_model::room::Reaction) -> &'static str {
+    use kaeri_model::room::Reaction;
     match reaction {
         Reaction::Laugh => "laugh",
         Reaction::Gasp => "gasp",

@@ -323,7 +323,7 @@ pub enum Overlay {
     /// as it did before.
     ChatLine { who: String, you: bool, text: String, notice: String },
     /// A party member's reaction, for its moment bottom trailing.
-    Reaction { who: String, reaction: kaeri_model::party::Reaction },
+    Reaction { who: String, reaction: kaeri_model::room::Reaction },
     /// Hide chat was turned on: the column and the moments leave the video.
     ChatCleared,
     /// The stream has been held waiting for data this long, mid-episode.

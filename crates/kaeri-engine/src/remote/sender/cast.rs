@@ -728,7 +728,7 @@ impl CastSession {
                 phase_line: None,
                 screen: Screen::Player,
                 now,
-                party: None,
+                room: None,
                 rev: self.hub.rev(),
                 over,
                 reached: view.connected || status.is_some(),

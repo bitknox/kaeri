@@ -2,9 +2,6 @@ party-status = Status { -watch-party }
 party-members = Anggota
 party-choose-a-source = Pilih { -source }
 party-sources-none-listed = Tidak ada { -source } dengan episode { $episode }. { -source-cap-pl } berasal dari { -plugin-pl } yang Anda tambahkan dari { -plugin-store }.
-party-sources-found-line = { $count ->
-   *[other] { $count } { -source } memilikinya. Yang Anda pilih akan diputar dalam { -watch-party }.
- }
 player-could-not-start = Pemutar tidak bisa dimulai. Coba lagi, atau pilih { -source } lain.
 player-file-unreadable = Tidak dapat membaca berkas itu. Coba berkas lain.
 player-inhibit-reason = Memutar episode

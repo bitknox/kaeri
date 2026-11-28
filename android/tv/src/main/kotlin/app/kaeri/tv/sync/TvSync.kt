@@ -352,13 +352,8 @@ private fun CloudPicker(store: AppStore, memory: FocusMemory, first: Modifier, n
                 modifier = (if (index == 0) first else Modifier).remembered(memory, "picker/${kind.name}"),
             )
         }
-        TvListRow(
-            stringResource(R.string.cloud_webdav),
-            onClick = {},
-            supporting = stringResource(R.string.cloud_webdav_line),
-            icon = SyncIcons.Server,
-            modifier = Modifier.remembered(memory, "picker/webdav"),
-        )
+        // No WebDAV row: a WebDAV folder is set up on a phone or computer, as the footnote says,
+        // and the TV has nothing to do with one picked here.
         Footnote(stringResource(R.string.tv_cloud_pick_foot))
         if (status == null) Box(Modifier.size(1.dp))
     }
@@ -749,7 +744,7 @@ private fun ProfileTile(profile: app.kaeri.engine.model.ProfileView, modifier: M
             focusedContainerColor = ObiSilk.Silk,
             focusedContentColor = ObiSilk.Ground,
         ),
-        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = 1.06f),
+        scale = androidx.tv.material3.ClickableSurfaceDefaults.scale(focusedScale = app.kaeri.tv.ui.focusedScale(1.06f)),
     ) {
         Column(
             Modifier.padding(24.dp).semantics { contentDescription = Strings.profilesAvatarDesc(context, profile.name) },

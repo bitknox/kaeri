@@ -46,6 +46,8 @@ internal data class FilterRowState(
     val season: RowPill,
     val format: RowPill,
     val status: RowPill,
+    /** Where the results can be watched: all, plays here, or on your services. */
+    val available: RowPill,
     val sheetCount: Int,
     val sheetSpoken: String,
 )
@@ -115,6 +117,15 @@ internal fun filterRowState(context: Context, query: SearchQuery, phone: Boolean
         },
     )
 
+    val available = pill(
+        Strings.searchAvailable(context),
+        when (query.available) {
+            null -> null
+            app.kaeri.engine.model.Available.PLAYS_HERE -> Strings.searchAvailableHere(context)
+            app.kaeri.engine.model.Available.ON_YOUR_SERVICES -> Strings.searchAvailableServices(context)
+        },
+    )
+
     val sheetCount = query.advancedCount().toInt()
     return FilterRowState(
         clearAll = query.active().isNotEmpty(),
@@ -124,6 +135,7 @@ internal fun filterRowState(context: Context, query: SearchQuery, phone: Boolean
         season = season,
         format = format,
         status = status,
+        available = available,
         sheetCount = sheetCount,
         sheetSpoken = if (sheetCount > 0) Strings.searchPillAllSet(context, sheetCount) else Strings.filtersButton(context),
     )

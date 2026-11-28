@@ -15,6 +15,18 @@ public class SyncTests
         new(true, syncing, "Study PC", new SyncFolderView(kind, "Dropbox", null), [], Now - 120, null, [], [], clouds, problem);
 
     [Fact]
+    public void ContinueOnASetupTakesTheHeldSignInsOnlyWithCopySignInsOn()
+    {
+        var on = Assert.IsType<SyncCommand.CopySignIns>(SyncWords.SetupSignIns("b", copy: true));
+        Assert.Equal("b", on.Device);
+        Assert.IsType<SyncCopy.Trackers>(Assert.Single(on.Copy));
+        Assert.Null(on.Address);
+        var off = Assert.IsType<SyncCommand.CopySignIns>(SyncWords.SetupSignIns("b", copy: false));
+        Assert.Equal("b", off.Device);
+        Assert.Empty(off.Copy);
+    }
+
+    [Fact]
     public void RecoveryKeysReadInGroupsOfFourUpperCase()
     {
         Assert.Equal(new[] { "ABCD", "EFGH", "JKLM", "NPQR", "STUV", "WXYZ" }, SyncWords.KeyGroups("abcd-efgh jklm\nnpqr stuv wxyz"));

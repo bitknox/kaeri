@@ -7,17 +7,23 @@ using Microsoft.UI.Xaml.Controls;
 namespace Kaeri.Windows.Pages;
 
 /// <summary>
-/// Kitsu's sign-in: an email or user name and a password, sent once for a token
-/// (<c>ConnectKitsu</c>). Kitsu has no browser sign-in for apps, so this is the only way in. The
-/// form stays up with a ring while the engine asks Kitsu, closes once signed in, and says under
-/// the fields why it did not work, with the name typed still there to correct.
+/// Kitsu's sign-in, and MangaUpdates' in Accounts: a name and a password, sent once for a token
+/// (<c>ConnectKitsu</c>, or the reading engine's <c>ConnectMangaUpdates</c>). Neither has a
+/// browser sign-in for apps, so this is the only way in. The form stays up with a ring while the
+/// engine asks the tracker, closes once signed in, and says under the fields why it did not work,
+/// with the name typed still there to correct.
 /// </summary>
 static class KitsuDialog
 {
-    public static async void Show(Ctx ctx, XamlRoot root)
+    public static async void Show(Ctx ctx, XamlRoot root, string tracker = "kitsu")
     {
-        var kitsu = KaeriFfiMethods.TrackerName("kitsu");
-        var user = new TextBox { Header = T.AccountsUserOrEmail, InputScope = Scope(Microsoft.UI.Xaml.Input.InputScopeNameValue.EmailSmtpAddress) };
+        var kitsu = KaeriFfiMethods.TrackerName(tracker);
+        // MangaUpdates signs in with a user name; its sign-in runs without a job of its own, so
+        // the form waits for the account or the alert rather than for the job's end.
+        var manga = tracker == "mangaupdates";
+        var user = manga
+            ? new TextBox { Header = T.AccountsUsername }
+            : new TextBox { Header = T.AccountsUserOrEmail, InputScope = Scope(Microsoft.UI.Xaml.Input.InputScopeNameValue.EmailSmtpAddress) };
         var password = new PasswordBox { Header = T.AccountsPassword };
         var ring = new ProgressRing { Width = 16, Height = 16, HorizontalAlignment = HorizontalAlignment.Left, Visibility = Visibility.Collapsed };
         var problem = Ui.Text("", "HazeCaptionStyle");
@@ -57,7 +63,9 @@ static class KitsuDialog
             refusal = null;
             problem.Text = "";
             Working(true);
-            job = ctx.Send(new Command.ConnectKitsu(user.Text.Trim(), password.Password));
+            job = manga
+                ? ctx.Send(new Command.Reading(new ReadingCommand.ConnectMangaUpdates(user.Text.Trim(), password.Password)))
+                : ctx.Send(new Command.ConnectKitsu(user.Text.Trim(), password.Password));
             password.Password = "";
             // No job means the engine has gone: nothing will answer.
             if (job is null)
@@ -69,15 +77,20 @@ static class KitsuDialog
             {
                 switch (e)
                 {
-                    case Event.Sync { V1: { Tracker: "kitsu", Connected: true } }:
+                    case Event.Sync { V1: { Connected: true } sync } when sync.Tracker == tracker:
                         dialog.Hide();
                         return;
+                    case Event.Toast { V1.Kind: NoticeKind.Alert } toast when working && manga:
+                        Working(false);
+                        problem.Text = toast.V1.Msg?.Text() ?? "";
+                        password.Focus(FocusState.Programmatic);
+                        break;
                     case Event.Toast { V1.Kind: NoticeKind.Alert } toast when working:
                         refusal = toast.V1.Msg?.Text();
                         break;
-                    case Event.JobDone done when working && job is { } mine && done.V1 == mine:
+                    case Event.JobDone done when working && !manga && job is { } mine && done.V1 == mine:
                         Working(false);
-                        if (ctx.Known.Sync.GetValueOrDefault("kitsu") is { Connected: true })
+                        if (ctx.Known.Sync.GetValueOrDefault(tracker) is { Connected: true })
                         {
                             dialog.Hide();
                             return;

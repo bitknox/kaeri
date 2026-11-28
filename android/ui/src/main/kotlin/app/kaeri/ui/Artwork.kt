@@ -132,7 +132,7 @@ fun CoverArt(entry: Entry, width: Dp, modifier: Modifier = Modifier) {
 internal val ArtEdge = app.kaeri.design.ObiSilk.Silk.copy(alpha = 0.08f)
 
 /**
- * A card's wide art, for Continue, the spotlight, the party lobby and Watch together: the banner,
+ * A card's wide art, for Continue, the spotlight, the room and Watch together: the banner,
  * else the still of an episode already seen (the engine sends it with the title), else the cover
  * filling the frame ([CoverFill]), else, with no cover at all, a plate in the cover's colour with
  * the title on it. Every frame stays one wide picture, never a portrait cover beside an empty slab.

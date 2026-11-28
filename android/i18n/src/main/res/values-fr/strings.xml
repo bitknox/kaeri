@@ -203,14 +203,7 @@
         <item quantity="other">%1$,d épisodes ajoutés à la file, puis l\'ajout s\'est arrêté. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Espace libre insuffisant pour garder les épisodes suivants téléchargés. Libérez de l\'espace pour en télécharger davantage.</string>
-    <string name="party_needs_server">Choisissez d\'abord un serveur pour le visionnage en groupe, dans syncplay.server. %1$s est géré par %2$s.</string>
-    <string name="party_choose_server">Choisissez d\'abord un serveur pour le visionnage en groupe. %1$s est géré par %2$s.</string>
     <string name="notice_no_party">Les visionnages en groupe ne sont pas disponibles dans cette version de Kaeri.</string>
-    <string name="party_needs_room">Un visionnage en groupe a besoin d\'un salon où se retrouver. Choisissez-en un d\'abord.</string>
-    <string name="party_server_lost">Connexion au serveur du visionnage en groupe perdue. Nouvelle tentative en cours.</string>
-    <string name="party_rejoined">De retour dans le visionnage en groupe.</string>
-    <string name="party_left">Vous avez quitté le visionnage en groupe.</string>
-    <string name="party_server_unreachable">Impossible de joindre %1$s. Vérifiez le serveur ou réessayez.</string>
     <string name="reading_next_chapter">Chapitre %1$s</string>
     <string name="reading_usually_mondays">En général le lundi</string>
     <string name="reading_usually_tuesdays">En général le mardi</string>

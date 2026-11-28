@@ -203,14 +203,7 @@
         <item quantity="other">%1$,d episódios foram adicionados à fila, e então a busca parou. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Não há espaço livre suficiente para manter os próximos episódios baixados. Libere espaço para baixar mais.</string>
-    <string name="party_needs_server">Escolha primeiro um servidor para a sessão em grupo, em syncplay.server. %1$s é mantido por %2$s.</string>
-    <string name="party_choose_server">Escolha primeiro um servidor para a sessão em grupo. %1$s é mantido por %2$s.</string>
     <string name="notice_no_party">Sessões em grupo não estão disponíveis nesta versão do Kaeri.</string>
-    <string name="party_needs_room">Uma sessão em grupo precisa de uma sala. Escolha uma antes.</string>
-    <string name="party_server_lost">A conexão com o servidor da sessão em grupo caiu. Tentando de novo.</string>
-    <string name="party_rejoined">De volta à sessão em grupo.</string>
-    <string name="party_left">Você saiu da sessão em grupo.</string>
-    <string name="party_server_unreachable">Não foi possível acessar %1$s. Verifique o servidor ou tente de novo.</string>
     <string name="reading_next_chapter">Capítulo %1$s</string>
     <string name="reading_usually_mondays">Geralmente às segundas</string>
     <string name="reading_usually_tuesdays">Geralmente às terças</string>

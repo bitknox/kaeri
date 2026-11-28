@@ -555,3 +555,32 @@ sources-add-demo = Add the demo
 
 # Line under the sources page's list when a source is dragged: first-party sources are tried in this order too.
 sources-order-all = Every { -source } is tried in this order, whatever its kind.
+
+## The list of sources for one episode (a start that failed, a cast): asked for by Windows
+
+# Title of the dialog once it lists what each { -source } has for an episode. The episode is its label, such as 5 or 5.5.
+# @arg episode: text
+sources-choose-for = Choose a { -source } for episode { $episode }
+
+# Line while the sources are searched for the episode.
+# @max 60
+sources-looking = Looking through your { -source-pl }…
+
+# Line over the list of sources that list the episode.
+# @arg count: int
+sources-found = { $count ->
+    [one] One { -source } has it
+   *[other] { $count } { -source-pl } have it
+ }
+
+# Line when no source lists the episode.
+# @arg episode: text
+sources-none-list = No { -source } lists episode { $episode }. { -source-cap-pl } come from { -plugin-pl }, which a { -plugin-store } adds.
+
+# Button that goes to the Sources page, when no source is set up.
+# @max 24
+sources-open = Open { -source-pl }
+
+# Accessibility label of the list of sources for the episode.
+sources-label = { -source-cap-pl } for this episode
+

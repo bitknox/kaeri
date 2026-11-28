@@ -106,11 +106,4 @@ notice-episodes-queued-existing-stopped = { $count ->
    *[other] { $count } episode masuk antrean, lalu berhenti. { $existing } { $reason }
  }
 notice-keep-next-full = Ruang kosong tidak cukup untuk menyimpan episode setelahnya. Kosongkan ruang untuk mengunduh lebih banyak.
-party-needs-server = Pilih server untuk { -watch-party } dulu, sebagai syncplay.server. { $server } dijalankan oleh { $operator }.
-party-choose-server = Pilih server untuk { -watch-party } dulu. { $server } dijalankan oleh { $operator }.
 notice-no-party = { -watch-party-cap-pl } tidak tersedia di versi { -app-name } ini.
-party-needs-room = Untuk { -watch-party } diperlukan ruangan. Pilih satu dulu.
-party-server-lost = Koneksi ke server { -watch-party } terputus. Mencoba lagi.
-party-rejoined = Kembali ke { -watch-party }.
-party-left = Keluar dari { -watch-party }.
-party-server-unreachable = Tidak bisa menjangkau { $server }. Periksa servernya, atau coba lagi.

@@ -208,6 +208,16 @@ store-other-medium-line = Watching is off on this { -device }, so none of them s
 # Secondary action under it.
 store-turn-on-watching = Turn on watching
 
+# Info title when every plugin in a store is for reading, and reading is off here.
+# @arg store: text
+store-other-medium-reading = Every { -plugin } in { $store } is for reading
+
+# Line under it.
+store-other-medium-reading-line = Reading is off on this { -device }, so none of them show in Your { -source-pl }.
+
+# Secondary action under it.
+store-turn-on-reading = Turn on reading
+
 # Info title when a store has no plugins.
 # @arg store: text
 store-empty = { $store } has no { -plugin-pl } yet

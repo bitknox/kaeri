@@ -325,26 +325,26 @@ pub enum Msg {
     NoticeEpisodesQueuedExistingStopped { count: i64, existing: Cause, reason: Cause },
     /// Toast when keep next found no room for another episode.
     NoticeKeepNextFull,
-    /// Message when a watch party was asked for with no server chosen. The names are a suggested server and who runs it. Terminal only: the engine never sends it to the apps.
-    PartyNeedsServer { server: String, operator: String },
-    /// Message when an app asked for a watch party with no server chosen. The names are a suggested server and who runs it.
-    PartyChooseServer { server: String, operator: String },
+    /// Why a look into a room (an invite before joining, or a recent room) found nothing. Shown where the look's answer would be; the room this device is in carries on.
+    RoomLookUnreachable,
+    /// Why a look into a room found nothing: the pasted text is no room's invite.
+    RoomLookNotAnInvite,
+    /// Why a look into a recent room found nothing: it's no longer in this device's recent rooms.
+    RoomLookNotKept,
+    /// Why a look into a room found nothing: the invite comes from an older version.
+    RoomLookOldInvite,
+    /// Why a room couldn't start: it has no episode yet. Shown where the room would open.
+    RoomNeedsEpisode,
     /// Toast when a watch party is asked for in a build without watch parties.
     NoticeNoParty,
-    /// Message when a watch party was asked for with no room named.
-    PartyNeedsRoom,
-    /// Message in a watch party when its server connection dropped and is retried.
-    PartyServerLost,
-    /// Message in a watch party when the connection came back.
-    PartyRejoined,
-    /// Message when the person left a watch party.
-    PartyLeft,
-    /// Message when a watch party's server could not be reached, in the lobby or when looking in.
-    PartyServerUnreachable { server: String },
     /// The page the browser shows after signing in to a cloud drive on a computer (Windows, Linux or the terminal), once Kaeri has caught the sign-in. The person goes back to the app by themselves.
     CloudLoopbackDone,
     /// The error line under Sync on a device that another of the person's devices removed from sync. Joining again, with a code or the recovery key, or setting sync up again adds it as a new device.
     SyncDeviceRemoved,
+    /// Alert when the person tries to delete the profile in use, which is refused. Another profile has to be entered first.
+    NoticeProfileInUse { name: String },
+    /// Alert when a profile could not be deleted. The reason comes from the system.
+    NoticeProfileNotDeleted { name: String, reason: String },
     /// Toast after a tracker sign-in succeeded. The tracker is its name, such as AniList.
     NoticeSignedIn { tracker: String },
     /// Toast after a sign-in succeeded and the token went into the system keychain.
@@ -646,16 +646,16 @@ impl Msg {
             Self::NoticeEpisodesQueuedStopped { .. } => "notice-episodes-queued-stopped",
             Self::NoticeEpisodesQueuedExistingStopped { .. } => "notice-episodes-queued-existing-stopped",
             Self::NoticeKeepNextFull => "notice-keep-next-full",
-            Self::PartyNeedsServer { .. } => "party-needs-server",
-            Self::PartyChooseServer { .. } => "party-choose-server",
+            Self::RoomLookUnreachable => "room-look-unreachable",
+            Self::RoomLookNotAnInvite => "room-look-not-an-invite",
+            Self::RoomLookNotKept => "room-look-not-kept",
+            Self::RoomLookOldInvite => "room-look-old-invite",
+            Self::RoomNeedsEpisode => "room-needs-episode",
             Self::NoticeNoParty => "notice-no-party",
-            Self::PartyNeedsRoom => "party-needs-room",
-            Self::PartyServerLost => "party-server-lost",
-            Self::PartyRejoined => "party-rejoined",
-            Self::PartyLeft => "party-left",
-            Self::PartyServerUnreachable { .. } => "party-server-unreachable",
             Self::CloudLoopbackDone => "cloud-loopback-done",
             Self::SyncDeviceRemoved => "sync-device-removed",
+            Self::NoticeProfileInUse { .. } => "notice-profile-in-use",
+            Self::NoticeProfileNotDeleted { .. } => "notice-profile-not-deleted",
             Self::NoticeSignedIn { .. } => "notice-signed-in",
             Self::NoticeSignedInKeychain { .. } => "notice-signed-in-keychain",
             Self::NoticeSignedInFile { .. } => "notice-signed-in-file",
@@ -888,16 +888,16 @@ impl Msg {
             Self::NoticeEpisodesQueuedStopped { count, reason } => vec![("count", Value::Int(*count)), ("reason", Value::Cause(reason.clone()))],
             Self::NoticeEpisodesQueuedExistingStopped { count, existing, reason } => vec![("count", Value::Int(*count)), ("existing", Value::Cause(existing.clone())), ("reason", Value::Cause(reason.clone()))],
             Self::NoticeKeepNextFull => Vec::new(),
-            Self::PartyNeedsServer { server, operator } => vec![("server", Value::Text(server.clone())), ("operator", Value::Text(operator.clone()))],
-            Self::PartyChooseServer { server, operator } => vec![("server", Value::Text(server.clone())), ("operator", Value::Text(operator.clone()))],
+            Self::RoomLookUnreachable => Vec::new(),
+            Self::RoomLookNotAnInvite => Vec::new(),
+            Self::RoomLookNotKept => Vec::new(),
+            Self::RoomLookOldInvite => Vec::new(),
+            Self::RoomNeedsEpisode => Vec::new(),
             Self::NoticeNoParty => Vec::new(),
-            Self::PartyNeedsRoom => Vec::new(),
-            Self::PartyServerLost => Vec::new(),
-            Self::PartyRejoined => Vec::new(),
-            Self::PartyLeft => Vec::new(),
-            Self::PartyServerUnreachable { server } => vec![("server", Value::Text(server.clone()))],
             Self::CloudLoopbackDone => Vec::new(),
             Self::SyncDeviceRemoved => Vec::new(),
+            Self::NoticeProfileInUse { name } => vec![("name", Value::Text(name.clone()))],
+            Self::NoticeProfileNotDeleted { name, reason } => vec![("name", Value::Text(name.clone())), ("reason", Value::Text(reason.clone()))],
             Self::NoticeSignedIn { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInKeychain { tracker } => vec![("tracker", Value::Text(tracker.clone()))],
             Self::NoticeSignedInFile { tracker } => vec![("tracker", Value::Text(tracker.clone()))],

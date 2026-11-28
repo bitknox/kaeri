@@ -195,14 +195,7 @@
         <item quantity="other">%1$,d bölüm kuyruğa eklendi, sonra durdu. %2$s %3$s</item>
     </plurals>
     <string name="notice_keep_next_full">Sonraki bölümleri tutmak için yeterli boş alan yok. Daha fazla indirmek için biraz alan açın.</string>
-    <string name="party_needs_server">Önce birlikte izleme için bir sunucu seçin, syncplay.server olarak. %1$s sunucusu %2$s tarafından işletiliyor.</string>
-    <string name="party_choose_server">Önce birlikte izleme için bir sunucu seçin. %1$s sunucusu %2$s tarafından işletiliyor.</string>
     <string name="notice_no_party">Birlikte izlemeler bu Kaeri sürümünde yok.</string>
-    <string name="party_needs_room">Birlikte izleme için bir oda gerekli. Önce birini seçin.</string>
-    <string name="party_server_lost">Birlikte izleme sunucusuyla bağlantı koptu. Yeniden deneniyor.</string>
-    <string name="party_rejoined">Birlikte izlemeye yeniden bağlandı.</string>
-    <string name="party_left">Birlikte izlemeden ayrıldı.</string>
-    <string name="party_server_unreachable">%1$s sunucusuna ulaşılamadı. Sunucuyu kontrol edin ya da yeniden deneyin.</string>
     <string name="reading_next_chapter">Bölüm %1$s</string>
     <string name="reading_usually_mondays">Genelde pazartesi</string>
     <string name="reading_usually_tuesdays">Genelde salı</string>

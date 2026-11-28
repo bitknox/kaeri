@@ -24,7 +24,7 @@ struct AppSheets: ViewModifier {
             // Play on TV: the picker and the now-playing card.
             .modifier(TVRemoteSheets())
             // Watch parties: the form, an episode no source has, and their links.
-            .modifier(PartySheets())
+            .modifier(RoomWindow())
             // An episode's discussion: a sheet, a side panel or a window.
             .modifier(DiscussionSheets())
             .modifier(FirstLaunchPresenter())
@@ -170,4 +170,16 @@ struct ShowItem: Identifiable {
 struct InviteItem: Identifiable {
     let link: String
     var id: String { link }
+}
+
+/// The sheets the player's own buttons open over its cover on iPhone and iPad: Play on TV's and
+/// the discussion's.
+public struct PlayerCoverSheets: ViewModifier {
+    public init() {}
+
+    public func body(content: Content) -> some View {
+        content
+            .modifier(TVRemoteSheets(overPlayer: true))
+            .modifier(DiscussionSheets(overPlayer: true))
+    }
 }

@@ -173,6 +173,34 @@ fun Modifier.stillFade(fade: StillFade): Modifier {
 }
 
 /**
+ * The opacity of something drawn while [shown], easing to 1 or 0 on [spec]. With Remove
+ * animations it still fades, at full speed, as [KeptFade] does: a swap of two surfaces keeps both
+ * drawn rather than cutting from one to the other.
+ */
+@Composable
+fun animateKeptAlpha(shown: Boolean, spec: FiniteAnimationSpec<Float> = Motion.fadeIn()): Float {
+    val removed = rememberAnimationsRemoved()
+    val alpha = remember { Animatable(if (shown) 1f else 0f) }
+    LaunchedEffect(shown) {
+        val target = if (shown) 1f else 0f
+        if (removed) atFullSpeed { alpha.animateTo(target, spec) } else alpha.animateTo(target, spec)
+    }
+    return alpha.value
+}
+
+/**
+ * [value] while [live], and the last value it had while live once it isn't: what a surface that
+ * is fading out keeps drawing, so its fade never runs through empty.
+ */
+@Composable
+fun <T> keptWhile(live: Boolean, value: T): T {
+    val last = remember { arrayOfNulls<Any?>(1).also { it[0] = value } }
+    if (live) last[0] = value
+    @Suppress("UNCHECKED_CAST")
+    return last[0] as T
+}
+
+/**
  * Shows [content] while [value] is there, fading in on [Motion.fadeIn] and out on
  * [Motion.fadeOut]. With Remove animations the fades still run, at full speed, as an overlay that
  * only appears keeps its fade (native-ux, Reduce Motion). While it fades out, [content] is drawn

@@ -87,7 +87,7 @@ extension ReaderModel {
                 notice = nil
                 requestJump(0)
                 try? await Task.sleep(for: .milliseconds(600))
-                if view?.mode == .strip {
+                if view?.mode.flows == true {
                     requestTurn(forward: false)
                 } else {
                     stageCreditLine()
@@ -98,7 +98,7 @@ extension ReaderModel {
                 notice = nil
                 requestJump(0)
                 try? await Task.sleep(for: .milliseconds(600))
-                if view?.mode == .strip, let chapter = view?.chapter.id {
+                if view?.mode.flows == true, let chapter = view?.chapter.id {
                     reveal(startSkipped, chapter: chapter)
                     try? await Task.sleep(for: .milliseconds(300))
                     requestTurn(forward: false)
@@ -155,7 +155,7 @@ extension ReaderModel {
             case "end", "endskip":
                 notice = nil
                 requestJump(max(leaves.count - 1, 0))
-                if view?.mode == .strip {
+                if view?.mode.flows == true {
                     try? await Task.sleep(for: .milliseconds(700))
                     requestTurn(forward: true)
                 }
@@ -221,7 +221,7 @@ extension ReaderModel {
             // Large text, so the scene's short first document runs to enough pages for a jump.
             set(.textSize, .amount(value: 2.4))
             try? await Task.sleep(for: .milliseconds(1200))
-        } else if view?.mode != .strip {
+        } else if view?.mode.flows != true {
             set(.pageLayout, .choice(name: "single"))
             try? await Task.sleep(for: .milliseconds(800))
         }
@@ -245,13 +245,13 @@ extension ReaderModel {
             (1500, { $0.requestJump($0.position.index + 1) }),
             (300, { $0.chromeShown = true }),
             // A strip's turn scrolls on within its last image: the jump stops one short of it.
-            (1700, { $0.requestJump(min($0.position.index + 10, $0.position.count - ($0.view?.mode == .strip ? 2 : 1))) }),
+            (1700, { $0.requestJump(min($0.position.index + 10, $0.position.count - ($0.view?.mode.flows == true ? 2 : 1))) }),
             (300, { $0.chromeShown = true }),
             (2700, { $0.requestTurn(forward: true) }),
             (500, { $0.chromeShown = true }),
             // A strip's turn can stay within a tall image; it goes once the scroll is on the next.
-            (800, { if $0.view?.mode == .strip { $0.requestTurn(forward: true) } }),
-            (800, { if $0.view?.mode == .strip { $0.requestTurn(forward: true) } }),
+            (800, { if $0.view?.mode.flows == true { $0.requestTurn(forward: true) } }),
+            (800, { if $0.view?.mode.flows == true { $0.requestTurn(forward: true) } }),
             (400, { $0.chromeShown = true }),
             (1000, { if $0.novel != nil { $0.set(.textSize, .amount(value: 1.8)) } }),
             (1200, { $0.chromeShown = true }),
@@ -292,7 +292,7 @@ extension ReaderModel {
         }
         let dir = FileManager.default.temporaryDirectory.appending(path: "kaeri-reader-shot", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let strip = view?.mode == .strip
+        let strip = view?.mode.flows == true
         let url = dir.appending(path: strip ? "credit-strip.png" : "credit.png")
         drawCredit(strip: strip, to: url)
         let file = PageFile(
@@ -383,7 +383,7 @@ extension ReaderModel {
             ReaderSettingRow(key: .look, value: .choice(name: "light"), scope: .medium, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .fit, value: .choice(name: "screen"), scope: .medium, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .cropBorders, value: .toggle(on: true), scope: .medium, detected: false, overridden: false, choices: []),
-            ReaderSettingRow(key: .tapLayout, value: .choice(name: "edges"), scope: .device, detected: false, overridden: false, choices: []),
+            ReaderSettingRow(key: .tapPaged, value: .choice(name: "sides"), scope: .device, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .pageLayout, value: .choice(name: "auto"), scope: .medium, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .paperMode, value: .toggle(on: false), scope: .device, detected: false, overridden: false, choices: []),
             ReaderSettingRow(key: .greyscalePages, value: .toggle(on: false), scope: .device, detected: false, overridden: false, choices: []),

@@ -766,7 +766,15 @@ impl StartView {
         self.stack.set_opacity(1.0);
     }
 
+    /// In a room, a failed start is the room's to say (No source, Choose a source over the
+    /// picture): the column's words and buttons go, the art stays behind the room's banner.
+    pub fn quiet(&self, on: bool) {
+        self.column.set_opacity(if on { 0.0 } else { 1.0 });
+        self.column.set_can_target(!on);
+    }
+
     pub fn begin(&self, show: &str, episode_line: &str, demo: bool, resumes: bool) {
+        self.quiet(false);
         self.title.set_label(show);
         self.episode.set_label(episode_line);
         self.credit.set_visible(demo);
@@ -922,20 +930,16 @@ impl StartView {
         }
         self.first.set(false);
 
-        // Details: rows when there are any, and the translation switch once it is known.
+        // Details: rows when there are any, and the translation switch from the first step, so a
+        // start that finds nothing in one translation can try the other.
         let can_open = frame.buttons.iter().any(|b| b.action == Action::Details);
         self.open_details(details_open && can_open);
         self.fill_rows(&frame.rows);
-        match frame.translation {
-            Some(translation) => {
-                self.quiet.set(true);
-                self.language.set_visible(true);
-                self.sub.set_active(translation == Translation::Sub);
-                self.dub.set_active(translation == Translation::Dub);
-                self.quiet.set(false);
-            }
-            None => self.language.set_visible(false),
-        }
+        self.quiet.set(true);
+        self.language.set_visible(true);
+        self.sub.set_active(frame.translation == Translation::Sub);
+        self.dub.set_active(frame.translation == Translation::Dub);
+        self.quiet.set(false);
     }
 
     /// Details opens under the row and closes again, fading; the column above stays put.

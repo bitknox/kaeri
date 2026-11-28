@@ -1,14 +1,11 @@
 hint-stop-playback = { $key }キーで再生を停止してください。
 hint-open-stores = { -source-cap-pl }に移動して、Enterキーで{ -plugin-store-pl }を開いてください。
 hint-kitsu-credentials = その行でEnterキーを押し、認証情報を入力してください。
-party-joined = ルーム { $room }（{ $server }）の{ -watch-party }に参加しました。
-party-no-source-still-in = { $reason } { -watch-party }には引き続き参加しています。
 status-reloading-sources = { -source-pl }を再読み込みしています…
 pin-unavailable = この作品に固定されている{ -source }の{ $name }は利用できません。ほかの{ -source-pl }を試します。
 tui-together-section = { -watch-together-cap }
 tui-together-join-prompt = リンクまたはコード
 tui-together-chat-hidden-line = すべてのパーティで、チャットとリアクションはプレーヤーに表示されません。
-tui-together-not-a-link = { -watch-party }のリンクまたはコードではありません。
 tui-together-recent-alone = エピソード { $episode } · { $when }
 tui-medium-read-change = { $key }を押すと、{ -app-name }の用途を変更できます。
 tui-medium-settings-hint = { $key }で変更

@@ -228,7 +228,7 @@ public final class ReaderModel {
 
     private func holdEnd(to id: ChapterId) {
         dropHeld()
-        guard phase == .open, novel == nil, let view, view.mode != .strip,
+        guard phase == .open, novel == nil, let view, !view.mode.flows,
               leaves.indices.contains(current), leaves[current].endPage else { return }
         let tick = bump()
         held = HeldEnd(
@@ -292,7 +292,7 @@ public final class ReaderModel {
     /// The pages Go to page counts: the novel's pages and the strip's images as the reader
     /// places them, and the chapter's pages otherwise.
     public var goToPageTotal: Int {
-        novel != nil || view?.mode == .strip ? max(position.count, 1) : max(pageCount, 1)
+        novel != nil || view?.mode.flows == true ? max(position.count, 1) : max(pageCount, 1)
     }
 
     /// The page typed into Go to page, when it is one there is.
@@ -309,7 +309,7 @@ public final class ReaderModel {
     public func goToPage(typed: String) -> Bool {
         guard let page = goToPageTarget(typed) else { return false }
         askingPage = false
-        requestJump(novel != nil || view?.mode == .strip ? page - 1 : leaf(ofPage: page))
+        requestJump(novel != nil || view?.mode.flows == true ? page - 1 : leaf(ofPage: page))
         return true
     }
     /// The window the book is open in has the keys, or no window of the app does. Another of the
@@ -566,7 +566,7 @@ public final class ReaderModel {
         // A turn off the credit page keeps a page waiting on its Undo, and the line on page 1 goes.
         leftCredit()
         if leaf != 0 { endCreditLine() }
-        if how == .jump, leaf != current, view?.mode != .strip { ring = current }
+        if how == .jump, leaf != current, view?.mode.flows != true { ring = current }
         // A strip's scroll report from before the jump would read as a turn after it.
         if how == .jump { dropHeldStrip() }
         if leaf != current { heldPage = nil }
@@ -686,7 +686,7 @@ public final class ReaderModel {
     /// last image has not landed is never passed, since opening the next chapter counts this one
     /// as read.
     public func flowOn() {
-        guard session != 0, flowing == nil, flowFailure == nil, view?.mode == .strip, stripEndIn,
+        guard session != 0, flowing == nil, flowFailure == nil, view?.mode.flows == true, stripEndIn,
               let next = endNext else { return }
         flow(into: next, .reader(.openChapter(session: session, chapter: next.id)))
     }
@@ -759,7 +759,7 @@ public final class ReaderModel {
     /// Try again on the end page of a strip that could not flow on: the strip flows into that
     /// chapter again. The engine's session is on it already, so it is asked for again there.
     public func retryFlow() {
-        guard session != 0, flowing == nil, view?.mode == .strip, let failed = flowFailure else { return }
+        guard session != 0, flowing == nil, view?.mode.flows == true, let failed = flowFailure else { return }
         flowFailure = nil
         flow(into: failed.next, .reader(.retry(session: session, chapter: failed.next.id, page: nil)))
     }
@@ -889,6 +889,14 @@ public final class ReaderModel {
         return nil
     }
 
+    /// Whether a tap at the page's sides turns it: the engine's tap zones for this reading
+    /// (paged, or a scrolled novel's), read as Sides, the outer thirds, unless they are Off.
+    public var tapsTurn: Bool {
+        let scrolling = medium == .novel && choice(.mode) == "scrolled"
+        guard let layout = choice(scrolling ? .tapScroll : .tapPaged) else { return !scrolling }
+        return layout != "off"
+    }
+
     public func amount(_ key: ReaderSettingKey) -> Double? {
         if case .amount(let value)? = row(key)?.value { return value }
         return nil
@@ -999,7 +1007,7 @@ public final class ReaderModel {
             asked = nil
             aim = nil
             // A strip that flowed on keeps the chapters above; any other open starts clean.
-            if flowing != opened.chapter.id || opened.mode != .strip {
+            if flowing != opened.chapter.id || !opened.mode.flows {
                 trail = StripTrail()
                 inTrail = nil
                 // A chapter opened again skips its credit pages again.
@@ -1038,7 +1046,7 @@ public final class ReaderModel {
             if let settings = opened.settings { self.settings = settings }
             send?(.reader(.loadSettings(medium: opened.medium, work: opened.work)))
             stripHere = nil
-            if opened.mode == .strip { stripRestore = opened.start.strip }
+            if opened.mode.flows { stripRestore = opened.start.strip }
         case .leaves(let session, let chapter, let leaves):
             guard session == self.session else { return }
             // The credit pages and parts come again after every layout.
@@ -1050,7 +1058,7 @@ public final class ReaderModel {
             // shapes differ from the guess: a strip keeps the place it is at, under the same
             // image, rather than move with the heights above it.
             let again = !self.leaves.isEmpty && chapter == view?.chapter.id && novel == nil
-            let relaid = again && view?.mode == .strip
+            let relaid = again && view?.mode.flows == true
             // Pages laid out again, as when the screen turns between single pages and spreads:
             // the page on screen stays, in whichever leaf holds it now, and so does the ring's.
             let paged = again && view?.mode == .paged && keepPage == nil
@@ -1146,7 +1154,7 @@ public final class ReaderModel {
                 let followed = Self.following(open, view)
                 // The page on screen stays on screen in the other mode.
                 if followed.mode != open.mode, let page = pageOnScreen(open.mode) {
-                    if followed.mode == .strip {
+                    if followed.mode.flows {
                         stripRestore = StripPos(image: page, offset: 0)
                     } else {
                         keepPage = page
@@ -1224,7 +1232,7 @@ public final class ReaderModel {
 
     /// The chapter's last page, before its end page; in a strip, the top of its last image.
     private func showEnd(of leaves: [Leaf]) {
-        if view?.mode == .strip, novel == nil {
+        if view?.mode.flows == true, novel == nil {
             let images = leaves.filter { !$0.endPage }.reduce(0) { $0 + $1.parts.count }
             stripRestore = StripPos(image: UInt32(max(images - 1, 0)), offset: 0)
             return
@@ -1268,7 +1276,7 @@ public final class ReaderModel {
         }
         guard let page = place.page else { return }
         // A place by page alone, in a strip: the top of the image that holds the page.
-        if view?.mode == .strip, novel == nil {
+        if view?.mode.flows == true, novel == nil {
             let parts = leaves.filter { !$0.endPage }.flatMap(\.parts)
             let image = parts.firstIndex { $0.page >= page } ?? Int(page)
             stripRestore = StripPos(image: UInt32(image), offset: 0)
@@ -1470,4 +1478,10 @@ extension ReadingFailure {
         if case .offline = self { return L.sendFailedOffline }
         return words
     }
+}
+
+extension ReaderMode {
+    /// Pages run one under another rather than turning: a strip, and Vertical, which the engine
+    /// lays out as a strip of whole pages.
+    public var flows: Bool { self == .strip || self == .vertical }
 }

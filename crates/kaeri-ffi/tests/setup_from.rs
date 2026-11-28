@@ -16,7 +16,8 @@ use kaeri_model::{
     came_in::CameIn,
     command::Command,
     event::Event,
-    group::{FirstRunPage, SyncCommand, SyncStatus},
+    group::{FirstRunPage, JoinedSetup, SyncCommand, SyncCopy, SyncStatus},
+    stores::Secret,
 };
 use tokio::{
     io::{AsyncReadExt, AsyncWriteExt},
@@ -58,6 +59,25 @@ impl App {
         let start = FfiStart { reading: true, ..FfiStart::default() };
         let engine =
             FfiEngine::start_testing(dirs, Arc::new(Quiet), start).expect("the engine starts");
+        Self::over(engine, root)
+    }
+
+    /// The engine as the fixture apps start it, whose trackers are the test kit's fakes.
+    fn fixtures() -> Self {
+        let root = tempfile::tempdir().expect("a temporary directory");
+        let dir = |name: &str| root.path().join(name).display().to_string();
+        let dirs = FfiDirs { config: dir("config"), data: dir("data"), cache: dir("cache") };
+        let engine = FfiEngine::start_scene(
+            dirs,
+            Arc::new(Quiet),
+            kaeri_ffi::FfiScene::Fresh,
+            FfiStart { reading: true, ..FfiStart::default() },
+        )
+        .expect("the engine starts");
+        Self::over(engine, root)
+    }
+
+    fn over(engine: Arc<FfiEngine>, root: tempfile::TempDir) -> Self {
         let (tx, events) = mpsc::channel();
         let reader = Arc::clone(&engine);
         thread::spawn(move || {
@@ -237,4 +257,97 @@ fn a_new_device_paired_with_one_set_up_gets_its_book_server_and_its_answer() {
     assert_eq!(on_tablet.id, added.id);
     assert_eq!(on_tablet.libraries, 1);
     tablet.status_where("nothing left to add", |s| s.book_servers_to_add.is_empty());
+}
+
+/// Whether `event` says Kitsu is signed in on this device.
+fn kitsu_signed_in(event: &Event) -> bool {
+    matches!(event, Event::Sync(state) if state.tracker == "kitsu" && state.connected)
+}
+
+/// A phone signed in to the fake Kitsu, and a tablet that asked it for its setup and paired with
+/// it. The tablet's events up to the setup are checked: Kitsu is not signed in before the person
+/// has seen the Copy sign-ins switch.
+fn a_tablet_shown_a_phone_setup_with_kitsu() -> (App, App, JoinedSetup) {
+    use kaeri_testkit::anilist::kitsu;
+
+    let mut phone = App::fixtures();
+    phone.engine.send(Command::ConnectKitsu {
+        username: kitsu::EMAIL.into(),
+        password: Secret(kitsu::PASSWORD.into()),
+    });
+    phone.until("Kitsu signed in on the phone", |event| kitsu_signed_in(event).then_some(()));
+
+    let mut tablet = App::fixtures();
+    tablet
+        .engine
+        .send(Command::SyncGroup(SyncCommand::AskSetupFrom { device: None, address: None }));
+    pair(&mut tablet, "Kitchen iPad", &mut phone, "Kim's phone");
+    let setup = tablet.until("the setup", |event| {
+        assert!(!kitsu_signed_in(event), "signed in before the switch was shown");
+        assert!(
+            !matches!(event, Event::SyncSignInsCopied { trackers, .. } if !trackers.is_empty()),
+            "sign-ins copied before the switch was shown: {event:?}"
+        );
+        match event {
+            Event::SetupFrom(setup) => Some(setup.clone()),
+            _ => None,
+        }
+    });
+    assert_eq!(setup.signed_in, ["kitsu"]);
+    assert!(setup.answered.contains(&FirstRunPage::Lists), "held sign-ins answer Lists");
+    (phone, tablet, setup)
+}
+
+#[test]
+fn copy_sign_ins_left_on_signs_the_new_device_in_on_continue() {
+    let (_phone, mut tablet, setup) = a_tablet_shown_a_phone_setup_with_kitsu();
+    tablet.engine.send(Command::SyncGroup(SyncCommand::CopySignIns {
+        device: Some(setup.device.clone()),
+        copy: vec![SyncCopy::Trackers],
+        address: None,
+    }));
+    // Signed in first, then said.
+    let mut signed_in = false;
+    let copied = tablet.until("the sign-ins copied", |event| {
+        signed_in |= kitsu_signed_in(event);
+        match event {
+            Event::SyncSignInsCopied { device, trackers, .. } => {
+                Some((device.clone(), trackers.clone()))
+            }
+            _ => None,
+        }
+    });
+    assert_eq!(copied, (setup.device.clone(), vec!["kitsu".to_owned()]));
+    assert!(signed_in, "Kitsu signed in on the tablet");
+    let status = tablet.status_where("the phone in the group", |s| s.devices.len() == 2);
+    assert!(
+        status.devices.iter().all(|d| d.asked.is_empty()),
+        "the held ones are not asked again"
+    );
+}
+
+#[test]
+fn copy_sign_ins_switched_off_leaves_the_new_device_signed_out() {
+    let (_phone, mut tablet, setup) = a_tablet_shown_a_phone_setup_with_kitsu();
+    tablet.engine.send(Command::SyncGroup(SyncCommand::CopySignIns {
+        device: Some(setup.device.clone()),
+        copy: Vec::new(),
+        address: None,
+    }));
+    tablet.status_where("the answer taken", |_| true);
+    // Signing out of a tracker it never signed in to says every tracker's state.
+    tablet.engine.send(Command::Disconnect { tracker: "trakt".into() });
+    let kitsu = tablet.until("Kitsu's state", |event| match event {
+        Event::Sync(state) if state.tracker == "kitsu" => Some(state.connected),
+        _ => None,
+    });
+    assert!(!kitsu, "signed in with the switch off");
+    // Nor later, as sessions with the phone go on.
+    let quiet = Instant::now() + Duration::from_secs(5);
+    while let Ok(event) =
+        tablet.events.recv_timeout(quiet.saturating_duration_since(Instant::now()))
+    {
+        assert!(!kitsu_signed_in(&event), "signed in with the switch off: {event:?}");
+        assert!(!matches!(event, Event::SyncSignInsCopied { .. }), "copied: {event:?}");
+    }
 }

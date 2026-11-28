@@ -733,8 +733,8 @@ public sealed partial class MainWindow : Window
                 await Task.Delay(2000);
                 Notice(NoticeKind.Info, new Msg.NoticeSignInNotWaiting("AniList")); // i18n-skip
             });
-        if (options.Show?.StartsWith("party-", StringComparison.Ordinal) == true)
-            RehearseParty(options.Show);
+        if (options.Show?.StartsWith("room-", StringComparison.Ordinal) == true)
+            RehearseRoom(options.Show);
         if (options.Show?.StartsWith("tv-", StringComparison.Ordinal) == true)
             RehearseTv(options.Show);
         if (options.Show?.StartsWith("cast-", StringComparison.Ordinal) == true)
@@ -851,7 +851,7 @@ public sealed partial class MainWindow : Window
 
     void Heard(IReadOnlyList<Event> batch)
     {
-        PartyHeard(batch);
+        RoomHeard(batch);
         foreach (var e in batch)
         {
             // --play: Home's spotlight, the title Continue leads with, once the engine has it. Before
@@ -1403,7 +1403,7 @@ public sealed partial class MainWindow : Window
         else
             Nav.SelectedItem = null;
         selecting = false;
-        UpdatePartyBar();
+        UpdateRoomBar();
         if (!Player.Showing)
             FocusPage();
     }
@@ -1667,7 +1667,7 @@ public sealed partial class MainWindow : Window
         KeepPlaceNow();
         if (closing)
             return;
-        if (AskLeavingParty())
+        if (AskLeavingRoom())
         {
             args.Cancel = true;
             return;
@@ -1963,9 +1963,9 @@ public sealed partial class MainWindow : Window
             await new OpenedDialog(ctx, Root.XamlRoot, opened.Input).ShowAsync();
             return;
         }
-        if (link is Link.Party party)
+        if (link is Link.Room room)
         {
-            OpenPartyInvite(party.Text);
+            OpenRoomInvite(room.Text);
             return;
         }
         if (link is Link.Invite invite)

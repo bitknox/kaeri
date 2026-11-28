@@ -224,12 +224,11 @@ becomes one engine `Command` or one request to the TV front end (`RemoteCommand:
 | Track | `{"name":"track","kind":"subtitle","id":2}` | `PlayerCommand::ChooseTrack` |
 | Search text | `{"name":"text","text":"harbour","submit":false}` | front end sets the focused field |
 | Navigate | `{"name":"navigate","key":"down"}` | front end moves focus |
-| Join a watch party | `{"name":"party_join","server":"syncplay.pl:8995","room":"kite-7qm4-xr9d"}` | `PartyCommand::Lobby` |
-| Ready in the party | `{"name":"party_ready","ready":true}` | `Command::PartyReady` |
-| Start the party anyway | `{"name":"party_start"}` | `PartyCommand::StartAnyway` |
-| Leave the party | `{"name":"party_leave"}` | `Command::PartyLeave` |
-| Say something in the party's chat as the TV | `{"name":"party_chat","text":"back in 2"}` | `PartyCommand::Say` |
-| Mute or unmute a member on the TV | `{"name":"party_mute","member":"Ren","muted":true}` | `PartyCommand::Mute` |
+| Join a room | `{"name":"room_join","invite":"https://kaeri.app/room#v=3&k=…"}` | `RoomCommand::Lobby` |
+| Leave the room | `{"name":"room_leave"}` | `RoomCommand::Leave` |
+| Carry on without whoever the room waits for | `{"name":"room_carry_on"}` | `RoomCommand::CarryOn` |
+| Say something in the room's chat as the TV | `{"name":"room_chat","text":"back in 2"}` | `RoomCommand::Say` |
+| Mute or unmute someone on the TV | `{"name":"room_mute","member":"<their id>","muted":true}` | `RoomCommand::Mute` |
 
 The model's own enums are not put on the wire for three reasons. The model has no serde, and its
 shape follows the engine, while the wire has to stay readable by a TV a release older than the
@@ -286,18 +285,19 @@ loses nothing:
 }
 ```
 
-When the TV is in a watch party the state has a `party` object: `room`, and when known `code`,
-`link` (the https invite a phone can share), `title`, `episode`, `ready` and `playing`. It also
-has, each left out when empty, `messages` (the last 20 lines of the conversation without the
-muted members', the newest last), `members` (the other members' names, for Mute), `muted`,
-`chat_off` (the room's server has chat turned off) and `chat_max` (the longest message, 0 for
-150). A line has `from`, `you` when the TV said it, and either `text`, or `reaction` (`laughs`,
-`gasps`, `claps` or `cries`) with `at` seconds and `with`, the others who reacted at the same
-moment. The TV's engine keeps the conversation in memory for the party only. A TV from before
-chat answers the two chat commands with `rejected: unsupported`.
+When the TV is in a room the state has a `room` object: when known `link` (the https invite a
+phone can share; it holds the room's secret), `title` and `episode`, and `playing`. It also has,
+each left out when empty, `waiting` (the names the room waits for), `can_carry_on`, `messages`
+(the last 20 lines of the conversation without the muted people's, the newest last), `members`
+(the others in the room, each `id` and `name`, for Mute), `muted` (their ids) and `chat_max`. A
+line has `from` (empty for the room's own lines), `you` when the TV said it, and either `text`,
+or `reaction` (`laughs`, `gasps`, `claps` or `cries`) with `at` seconds and `with`, the others
+who reacted at the same moment. The TV's engine keeps the conversation in memory for the room
+only.
 
-The phone reads the invite itself (`parse_party_target`) and sends the server and room; party
-commands need nothing playing.
+The phone hands the TV the invite link it holds: the TV has no other way into a room. Room
+commands need nothing playing. A TV from before the room answers them with
+`rejected: unsupported`.
 
 `screen` is one of `home`, `search` (with its `query`), `title` (with its `id`), `player`,
 `settings` and `other`. The TV front end reports it.

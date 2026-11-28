@@ -45,6 +45,10 @@ discussion-more-replies = { $count ->
 # @max 16
 discussion-spoiler = Spoiler
 
+# Screen reader action on text with hidden spoilers: opens all of them at once.
+# @max 32
+discussion-show-spoilers = Show spoilers
+
 # Line in place of an image in a comment. It opens the image in the browser.
 # @max 16
 discussion-image = Image

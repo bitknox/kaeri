@@ -92,11 +92,7 @@ import app.kaeri.ui.pixels
 @Composable
 fun CornerCard(model: PlayerModel, chromeVisible: Boolean, throughGround: () -> Float, modifier: Modifier = Modifier) {
     val corner = model.corner
-    val shown = when (corner) {
-        Corner.Skip -> !chromeVisible
-        null -> false
-        else -> true
-    }
+    val shown = cornerShown(corner, chromeVisible, model.assisted)
     AnimatedContent(
         if (shown) corner else null,
         modifier = modifier.graphicsLayer { alpha = 1f - throughGround() },
@@ -115,6 +111,16 @@ fun CornerCard(model: PlayerModel, chromeVisible: Boolean, throughGround: () -> 
             null -> Box(Modifier.size(1.dp))
         }
     }
+}
+
+/**
+ * Whether the corner draws [corner]. Skip hides under the controls, except while a screen reader or
+ * Switch Access runs: the controls then never hide, and the card is the only way to skip.
+ */
+internal fun cornerShown(corner: Corner?, chromeVisible: Boolean, assisted: Boolean): Boolean = when (corner) {
+    Corner.Skip -> !chromeVisible || assisted
+    null -> false
+    else -> true
 }
 
 /** "Skip opening": a 40 dp surfaceContainer pill in a 48 dp target, dimming 8 s after the segment starts. */
@@ -184,9 +190,9 @@ private fun UpNextCard(model: PlayerModel) {
     val haptics = LocalHapticFeedback.current
     val countdown = model.countdown
     val upNextTitle = stringResource(R.string.player_up_next)
-    // In a watch party the room moves on together: "Everyone moves on in 8 s", and no Cancel or Play now.
-    val party by app.kaeri.ui.LocalAppStore.current.party.view.collectAsStateWithLifecycle()
-    val together = party != null
+    // In a room the room's line counts down to Up next for everyone, so this card stays away.
+    val inRoom by app.kaeri.ui.LocalAppStore.current.room.view.collectAsStateWithLifecycle()
+    if (inRoom != null) return
     Column(
         Modifier
             .width(336.dp)
@@ -220,16 +226,16 @@ private fun UpNextCard(model: PlayerModel) {
         Row(Modifier.padding(top = 4.dp).height(48.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             Text(
                 countdown?.let {
-                    if (together) Strings.partyNextLine(LocalContext.current, it.first.toInt()) else stringResource(R.string.player_plays_in, it.first.toInt())
+                    stringResource(R.string.player_plays_in, it.first.toInt())
                 }.orEmpty(),
                 style = MaterialTheme.typography.bodyMedium.tabular(),
                 color = ObiSilk.Haze,
                 modifier = Modifier.weight(1f),
             )
-            if (!together) TextButton(onClick = model::cancelNext, modifier = Modifier.minimumInteractiveComponentSize().height(40.dp), contentPadding = PaddingValues(horizontal = 12.dp)) {
+            TextButton(onClick = model::cancelNext, modifier = Modifier.minimumInteractiveComponentSize().height(40.dp), contentPadding = PaddingValues(horizontal = 12.dp)) {
                 Text(stringResource(R.string.action_cancel), style = MaterialTheme.typography.labelLarge, color = ObiSilk.Silk)
             }
-            if (!together) Button(
+            Button(
                 onClick = {
                     haptics.performHapticFeedback(HapticFeedbackType.ContextClick)
                     model.playNext()

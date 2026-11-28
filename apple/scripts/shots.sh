@@ -25,7 +25,8 @@
 # send=<preparing|waiting|failed> on a series' Send to e-reader sheet (sheet=send, work=<id>; sheet=stopped asks where you stopped), feed=<on|off> the Mac Reading settings' OPDS feed pane told as if it were (settings+pane=reading+sheet=feed), never switched on,
 # party=<form|joining|refused|invite|panel|ready|sync|chat|chatline|chatbusy|chatreact|chatfield|chatkeys|chatwait|chatoff|chatfail|chatpanel|chatmute|chathidden|chatshort|lost|left|nosource|choose|missed|unaired|quit>, a
 # watch party on the testing engine's fake Syncplay server (PartyScene; the player's on the playing
-# scene: playing:party=panel), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|held|stuck|cards|synopsis|all>, the invented rows of `Showcase`
+# scene: playing:party=panel), room=<scene>, the room board's frames around the playing episode
+# (RoomScene in KaeriPlayerUI/Room/RoomShots.swift: playing:room=wait), showcase=<sources|stores|downloads|invite|pale|messages|proxy|checking|unsaved|held|stuck|cards|synopsis|all>, the invented rows of `Showcase`
 # (pale: 900001's page with a long title on a near-white banner; proxy: torrents through a saved proxy,
 # which sheet=proxy edits, and checking or unsaved its check under way or failed), and watched=<id>:<episodes>,
 # episodes marked watched as the shot starts (900006:8 is caught up),
@@ -192,6 +193,8 @@ arguments() {
       send=*) printf '%s\n' -KaeriSend "${screen#send=}" ;;
       feed=*) printf '%s\n' -KaeriFeed "${screen#feed=}" ;;
       party=*) printf '%s\n' -KaeriParty "${screen#party=}" ;;
+      room=place*) printf '%s\n' -KaeriSection together -KaeriRoom "${screen#room=}" ;;
+      room=*) printf '%s\n' -KaeriRoom "${screen#room=}" ;;
       together=*) printf '%s\n' -KaeriSection together -KaeriTogether "${screen#together=}" ;;
       showcase=*) printf '%s\n' -KaeriShowcase "${screen#showcase=}" ;;
       watched=*) printf '%s\n' -KaeriWatched "${screen#watched=}" ;;
@@ -329,6 +332,8 @@ for shot in "${shots[@]}"; do
   while IFS= read -r arg; do args+=("$arg"); done < <(arguments "$shot")
   # shellcheck disable=SC2206
   [[ -z "${KAERI_LAUNCH_ARGS:-}" ]] || args+=(${KAERI_LAUNCH_ARGS})
+  # A scene that turns the screen itself (a room opens upright) turns it back for a sideways shot.
+  [[ "$orientation" == portrait ]] || args+=(-KaeriLandscape)
   xcrun simctl terminate "$udid" app.kaeri.fixtures 2>/dev/null || true
   # Attached to the app's console, which ends when the app is terminated: the app's output
   # reaches a file this way, where --stdout leaves it empty.
@@ -357,6 +362,8 @@ for shot in "${shots[@]}"; do
   sleep "$(echo "0.5 + ${KAERI_SHOT_WAIT:-0}" | bc)"
   xcrun simctl io "$udid" screenshot --type=png "$out/$prefix-$(name "$shot").png" >/dev/null
   echo "shots.sh: wrote $out/$prefix-$(name "$shot").png"
+  # KAERI_SHOT_CONSOLE=1 keeps each shot's console beside it, for a scene's traces.
+  [[ -z "${KAERI_SHOT_CONSOLE:-}" ]] || cp "$log" "$out/$prefix-$(name "$shot").log"
   xcrun simctl terminate "$udid" app.kaeri.fixtures 2>/dev/null || true
   wait
   rm -f "$log"

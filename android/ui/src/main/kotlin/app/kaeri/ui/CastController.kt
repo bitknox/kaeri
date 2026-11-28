@@ -1003,21 +1003,19 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
             val playHere = stringResource(R.string.cast_play_here)
             val stop = stringResource(R.string.cast_stop)
             val another = stringResource(R.string.tv_choose_another)
-            val actions = when {
+            val tryAgain = stringResource(R.string.action_try_again)
+            val chooseSource = stringResource(R.string.player_choose_source)
+            val actions = when (notice) {
                 // Play here waits for Casting stopped while the TV reconnects; Stop casting stays.
-                notice == null -> listOf(CastAction(playHere, primary = false, enabled = !reconnecting, cast::playHere), CastAction(stop, primary = false, enabled = true, cast::disconnect))
-                notice is Msg.NoticeCastNeverFetches -> listOf(
-                    CastAction(stringResource(R.string.action_try_again), primary = true, enabled = true, cast::tryAgain),
-                    CastAction(playHere, primary = false, enabled = true, cast::playHere),
-                )
-                notice is Msg.NoticeCastNotSameNetwork || notice is Msg.NoticeCastLost || notice is Msg.NoticeCastNoDevice || notice is Msg.NoticeCastStoppedElsewhere -> listOf(
-                    CastAction(playHere, primary = true, enabled = true, cast::playHere),
-                    CastAction(another, primary = false, enabled = true, cast::chooseAnother),
-                )
-                else -> listOfNotNull(
-                    entry?.let { CastAction(stringResource(R.string.player_choose_source), primary = true, enabled = true) { choosingSource = true } },
-                    CastAction(playHere, primary = false, enabled = true, cast::playHere).takeIf { notice !is Msg.NoticeCastDeepLink },
-                )
+                null -> listOf(CastAction(playHere, primary = false, enabled = !reconnecting, cast::playHere), CastAction(stop, primary = false, enabled = true, cast::disconnect))
+                else -> castFailureActions(notice).mapIndexedNotNull { place, kind ->
+                    when (kind) {
+                        CastFailureAction.TRY_AGAIN -> CastAction(tryAgain, primary = place == 0, enabled = true, cast::tryAgain)
+                        CastFailureAction.PLAY_HERE -> CastAction(playHere, primary = place == 0, enabled = true, cast::playHere)
+                        CastFailureAction.CHOOSE_ANOTHER -> CastAction(another, primary = place == 0, enabled = true, cast::chooseAnother)
+                        CastFailureAction.CHOOSE_SOURCE -> entry?.let { CastAction(chooseSource, primary = place == 0, enabled = true) { choosingSource = true } }
+                    }
+                }
             }
             val reduced = app.kaeri.design.rememberAnimationsRemoved()
             Row(Modifier.fillMaxWidth().padding(top = 16.dp, bottom = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -1058,7 +1056,23 @@ private fun CastController(cast: CastModel, shown: CastShown, scope: AnimatedVis
             if (LocalSnackbars.current.host.currentSnackbarData != null) Spacer(Modifier.height(80.dp))
         }
     }
-    if (choosingSource && entry != null) SourcePickerSheet(entry) { choosingSource = false }
+    // The episode's own releases, not the title's preference: the pick plays, and so casts to the
+    // TV the session holds.
+    if (choosingSource && entry != null) {
+        EpisodeReleasesSheet(now.id, entry.showTitle, Strings.castEpisode(context, now.episode), now.episode) { choosingSource = false }
+    }
+}
+
+/** What a failed or stopped cast's footer offers. */
+internal enum class CastFailureAction { TRY_AGAIN, CHOOSE_SOURCE, PLAY_HERE, CHOOSE_ANOTHER }
+
+/** The spec's table of a cast notice's two actions, the first one primary (docs/native-ux.md). */
+internal fun castFailureActions(notice: Msg): List<CastFailureAction> = when (notice) {
+    is Msg.NoticeCastNeverFetches, is Msg.NoticeCastLostStream -> listOf(CastFailureAction.TRY_AGAIN, CastFailureAction.PLAY_HERE)
+    is Msg.NoticeCastNotSameNetwork, is Msg.NoticeCastLost, is Msg.NoticeCastNoDevice, is Msg.NoticeCastStoppedElsewhere ->
+        listOf(CastFailureAction.PLAY_HERE, CastFailureAction.CHOOSE_ANOTHER)
+    is Msg.NoticeCastDeepLink -> listOf(CastFailureAction.CHOOSE_SOURCE)
+    else -> listOf(CastFailureAction.CHOOSE_SOURCE, CastFailureAction.PLAY_HERE)
 }
 
 /** The Up next card the controller last showed, kept out of the snapshot for it to leave with. */

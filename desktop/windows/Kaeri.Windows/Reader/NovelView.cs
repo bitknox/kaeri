@@ -212,6 +212,7 @@ sealed class NovelView : Grid
 
     /// <summary>
     /// What the reader itself needs from inside the page: the keys that leave or go full screen,
+    /// ] and [ for the next and previous chapter,
     /// Tab, which brings the chrome up and goes into it, pointer movement for the group, and the
     /// wheel, which turns pages. The paginator handles
     /// the turning keys.
@@ -223,7 +224,7 @@ sealed class NovelView : Grid
           var post = function (m) { try { window.chrome.webview.postMessage(JSON.stringify(m)); } catch (e) {} };
           document.addEventListener('keydown', function (e) {
             var k = e.key;
-            if (k === 'Escape' || k === 'F11' || (k === 'Tab' && !e.ctrlKey && !e.altKey) || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0'))) {
+            if (k === 'Escape' || k === 'F11' || (k === 'Tab' && !e.ctrlKey && !e.altKey) || (e.altKey && k === 'ArrowLeft') || (e.ctrlKey && (k === '+' || k === '-' || k === '=' || k === '0')) || ((k === '[' || k === ']') && !e.ctrlKey && !e.altKey)) {
               e.preventDefault();
               post({ type: 'hostkey', key: k, alt: e.altKey, ctrl: e.ctrlKey, shift: e.shiftKey });
             }
@@ -682,19 +683,35 @@ sealed class NovelView : Grid
         owner.ToggleChrome();
     }
 
+    /// <summary>The fraction of the width at each side a tap or click turns on.</summary>
+    double Edge => TapEdges.Novel(Reader.Settings?.TapZones, Reader.View?.Mode == ReaderMode.Scrolled);
+
+    /// <summary>
+    /// A click on the end page, which lies over the page in XAML: its edges turn as the page's
+    /// do, forward to the next chapter and back to the page, and the middle shows or hides the
+    /// controls.
+    /// </summary>
+    public void EndTap(double x)
+    {
+        if (TapEdges.EndPage(x, Edge, Rtl) is { } forward)
+            Turn(forward, "turn");
+        else
+            owner.ToggleChrome();
+    }
+
     string? inputSent;
 
     /// <summary>
     /// How the page turns itself on a tap or a key, in one message (the paginator's input): the
-    /// tap layout's edges, the side forward is on, the turning keys, and hold while the chrome,
-    /// the end page or a footnote is up, when every tap and key comes to the reader instead.
+    /// tap zones' edges, the side forward is on, the turning keys, and hold while the end page or
+    /// a footnote is up, or the chrome after a touch, when every tap and key comes to the reader
+    /// instead. With the mouse a click on an edge turns whether the chrome shows or not.
     /// </summary>
     public void SyncInput()
     {
-        var layout = Reader.Choice(ReaderSettingKey.TapLayout) ?? "edges";
-        var edge = layout switch { "off" => "0", "sides" => "0.5", _ => "0.33" };
+        var edge = Edge.ToString("0.###", System.Globalization.CultureInfo.InvariantCulture);
         var forward = book?.Progression == ReadDirection.RightToLeft ? "left" : "right";
-        var hold = owner.ChromeShown || EndShown || NoteShown ? "true" : "false";
+        var hold = owner.ChromeShown && owner.TouchInput || EndShown || NoteShown ? "true" : "false";
         var how = $"{{edge: {edge}, forward: '{forward}', keys: true, hold: {hold}}}";
         if (how == inputSent)
             return;

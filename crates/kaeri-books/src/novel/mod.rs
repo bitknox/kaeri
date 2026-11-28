@@ -125,6 +125,21 @@ mod tests {
         assert!(rules >= 2, "the horizontal and vertical paged rules count columns");
     }
 
+    /// Shift-Space turns back, and a key the paginator turns itself is kept from the browser,
+    /// whose own scroll in a scrolled novel was a second step. No JavaScript runs in the tests,
+    /// so this reads the handler.
+    #[test]
+    fn shift_space_turns_back_and_a_key_turned_here_moves_once() {
+        assert!(PAGINATOR.contains("case ' ': return shift ? prev('key') : next('key');"));
+        let handler =
+            PAGINATOR.split("addEventListener('keydown'").nth(1).expect("the handler");
+        let handler = &handler[..handler.find("});").expect("its end")];
+        assert!(
+            handler.contains("{ e.preventDefault(); key(e.key, e.shiftKey); return; }"),
+            "{handler}"
+        );
+    }
+
     #[test]
     fn the_policy_blocks_scripts_and_names_both_origins() {
         let p = csp();

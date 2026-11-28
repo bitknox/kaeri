@@ -141,7 +141,14 @@ public sealed partial class DownloadsPage : Page
         if (room is { } left)
             Meter.Value = Math.Min(1, (double)used / (used + left));
         var running = rows.Any(r => r.State is DownloadState.Active or DownloadState.Queued);
-        PauseAll.IsEnabled = running;
+        // Resume all in Pause all's place once nothing runs and something is paused, as the tray
+        // has it; neither while nothing runs or waits.
+        resumeAll = !running && rows.Any(r => r.State is DownloadState.Paused);
+        var allWords = resumeAll ? T.DownloadsResumeAll : T.DownloadsPauseAll;
+        if (PauseAll.Content as string != allWords)
+            PauseAll.Content = allWords;
+        PauseAll.Visibility = running || resumeAll ? Visibility.Visible : Visibility.Collapsed;
+        PauseAll.IsEnabled = true;
         ClearDone.IsEnabled = rows.Any(r => r.State == DownloadState.Done);
 
         var wanted = new List<UIElement>();
@@ -491,7 +498,16 @@ public sealed partial class DownloadsPage : Page
         }
     }
 
-    void OnPauseAll(object sender, RoutedEventArgs e) => ctx.PauseAllDownloads();
+    /// <summary>Whether the button stands for Resume all now.</summary>
+    bool resumeAll;
+
+    void OnPauseAll(object sender, RoutedEventArgs e)
+    {
+        if (resumeAll)
+            ctx.ResumeAllDownloads();
+        else
+            ctx.PauseAllDownloads();
+    }
 
     void OnClearCompleted(object sender, RoutedEventArgs e) => ctx.Send(new Command.DownloadClearCompleted());
 

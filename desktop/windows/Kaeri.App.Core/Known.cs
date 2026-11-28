@@ -73,6 +73,13 @@ public sealed class Known
     /// <summary>Play the demo was pressed and the player has not opened yet: the starting screen is the demo's.</summary>
     public bool DemoPlay { get; set; }
 
+    /// <summary>
+    /// Where a play sent here should start, when the engine's own resume is not it: Play here from
+    /// a cast, at the TV's playhead. The player moves there at its first frame; any other play
+    /// staged first gives the place up.
+    /// </summary>
+    public StartAt? StartAt { get; set; }
+
     /// <summary>The last alert the engine raised, which a bug report can start from.</summary>
     public BugError? LastError { get; set; }
 
@@ -289,40 +296,52 @@ public sealed class Known
     /// <summary>What the update check last said, or null before it has said anything.</summary>
     public UpdateStatus? Update { get; private set; }
 
-    /// <summary>The watch party this device is in, or null when it is in none.</summary>
-    public PartyView? Party { get; private set; }
+    /// <summary>The room this device is in, or null when it is in none.</summary>
+    public RoomView? Room { get; private set; }
 
-    /// <summary>The party's members, this device's first, once the room has listed them.</summary>
-    public PartyMember[]? PartyMembers { get; private set; }
+    /// <summary>The room's members, once it has listed them.</summary>
+    public RoomMember[] RoomMembers { get; private set; } = [];
 
-    /// <summary>What the form that starts a party opens with, once the engine has said.</summary>
-    public PartyForm? PartyForm { get; set; }
+    /// <summary>The room's conversation as the engine last sent it, whole.</summary>
+    public RoomConversation? RoomChat { get; private set; }
+
+    /// <summary>What this device may do in the room's chat now.</summary>
+    public RoomChatState? RoomChatState { get; private set; }
+
+    /// <summary>An invite or recent room looked into and not joined yet.</summary>
+    public RoomGlimpse? RoomGlimpse { get; private set; }
+
+    /// <summary>The look-in is done with: Not now, or another link tried, whose own answer comes next.</summary>
+    public void ForgetRoomGlimpse() => RoomGlimpse = null;
+
+    /// <summary>The invite this device is looking into now; only its answer shows.</summary>
+    public string? RoomLooking { get; private set; }
+
+    /// <summary>Look into <paramref name="invite"/> (or stop looking, with null): any other look's answer is someone else's.</summary>
+    public void LookInto(string? invite)
+    {
+        RoomLooking = invite;
+        RoomGlimpse = null;
+        RoomLookFailure = null;
+    }
+
+    /// <summary>Why the look into <see cref="RoomLooking"/> found nothing: the engine's own words, and its join reason when it has one.</summary>
+    public (string Reason, RoomLeftWhy? Why)? RoomLookFailure { get; private set; }
 
     /// <summary>The last ten rooms, kept on this device, newest first.</summary>
-    public PartyRecentRoom[] PartyRecent { get; private set; } = [];
+    public RoomRecent[] RoomRecent { get; private set; } = [];
 
-    /// <summary>Whether the engine has sent the last rooms yet, even as none.</summary>
-    public bool PartyRecentLoaded { get; private set; }
+    /// <summary>Whether the engine has sent the recent rooms yet, even as none.</summary>
+    public bool RoomRecentLoaded { get; private set; }
 
-    /// <summary>What looking into a room found, or why it could not, for the room that was opened last.</summary>
-    public PartyGlimpse? PartyGlimpse { get; private set; }
+    /// <summary>Someone moved the room and asked this device along; gone once answered or expired.</summary>
+    public RoomMoveOffer? RoomMoveOffer { get; private set; }
 
-    public string? PartyLookFailure { get; private set; }
+    /// <summary>Why the last room ended, for the place to say (null after a plain Leave).</summary>
+    public RoomLeftWhy? RoomLeftWhy { get; private set; }
 
-    /// <summary>
-    /// A room opened from an invite, a code or Rejoin, looked into and not joined yet: the lobby
-    /// shows what it watches and who is there, with Join. Null once joined or let go.
-    /// </summary>
-    public (string Server, string Room)? PartyLooking { get; set; }
-
-    /// <summary>The room finished its last episode out (and when the next airs): Ready would replay it. Gone when the room moves on.</summary>
-    public Event.PartyLastOut? PartyLastOut { get; private set; }
-
-    /// <summary>The party's conversation as the engine last sent it, whole: lines, reaction marks and a lost send.</summary>
-    public PartyConversation? PartyChat { get; private set; }
-
-    /// <summary>What this device may do in the conversation now, once the room's server has said.</summary>
-    public PartyChatState? PartyChatState { get; private set; }
+    /// <summary>The relays Settings sets for new rooms, once loaded.</summary>
+    public RoomRelaySettings? RoomRelays { get; private set; }
 
     /// <summary>The AniList account, when signed in.</summary>
     /// <summary>The engine's jobs running now, for the title bar's status.</summary>
@@ -497,6 +516,9 @@ public sealed class Known
             case Event.CalendarWindow w:
                 CalendarAnchor = w.Anchor;
                 break;
+            case Event.PlaybackStaged staged when StartAt is { } at && !at.Is(staged.Id, staged.Episode):
+                StartAt = null;
+                break;
             case Event.Settings s:
                 Settings = s.V1;
                 break;
@@ -633,59 +655,66 @@ public sealed class Known
             case Event.Connectivity c:
                 Offline = c.Offline;
                 break;
-            case Event.PartyForm f:
-                PartyForm = f.V1;
-                break;
-            case Event.PartyJoined j:
-                // A room joined afresh lists its members afresh.
-                if (Party is null || Party.Server != j.V1.Server || Party.Room != j.V1.Room)
+            case Event.RoomJoined j:
+                if (Room is null || Room.RoomId != j.V1.RoomId)
                 {
-                    PartyMembers = null;
-                    PartyChat = null;
-                    PartyChatState = null;
+                    RoomMembers = [];
+                    RoomChat = null;
+                    RoomChatState = null;
+                    // A move offer is the old room's: it never asks over another.
+                    RoomMoveOffer = null;
+                    // In another room now, so the look that led here is done. The same room said
+                    // again leaves a look opened from inside it waiting for its answer.
+                    RoomLooking = null;
+                    RoomGlimpse = null;
+                    RoomLookFailure = null;
                 }
-                Party = j.V1;
-                if (PartyLooking is { } looked && looked.Server == j.V1.Server && looked.Room == j.V1.Room)
-                    PartyLooking = null;
+                Room = j.V1;
+                RoomLeftWhy = null;
                 break;
-            case Event.PartyState p:
-                if (Party?.RoomEpisode is { } before && p.V1.RoomEpisode is { } after && (before.Episode != after.Episode || before.Id != after.Id))
-                    PartyLastOut = null;
-                Party = p.V1;
+            case Event.RoomState r:
+                Room = r.V1;
                 break;
-            case Event.PartyLastOut last:
-                PartyLastOut = last;
+            case Event.RoomMembers m:
+                RoomMembers = m.V1;
                 break;
-            case Event.PartyStarted:
-                PartyLastOut = null;
+            case Event.RoomChat c:
+                RoomChat = c.V1;
                 break;
-            case Event.PartyMembers m:
-                PartyMembers = m.V1;
+            case Event.RoomChatState c:
+                RoomChatState = c.V1;
                 break;
-            case Event.PartyRecent r:
-                PartyRecent = r.V1;
-                PartyRecentLoaded = true;
+            // A slow answer to an earlier look never stands in for the one waited on.
+            case Event.RoomGlimpse g when RoomLooking is not null && g.V1.Invite == RoomLooking:
+                RoomGlimpse = g.V1;
+                RoomLookFailure = null;
+                RoomLeftWhy = null;
                 break;
-            case Event.PartyGlimpse g:
-                PartyGlimpse = g.V1;
-                PartyLookFailure = null;
+            case Event.RoomLookFailed f when RoomLooking is not null && f.Invite == RoomLooking:
+                RoomGlimpse = null;
+                RoomLookFailure = (f.Reason.Text(), f.Why);
                 break;
-            case Event.PartyLookFailed f:
-                PartyGlimpse = null;
-                PartyLookFailure = f.Reason.Text();
+            case Event.RoomRecent r:
+                RoomRecent = r.V1;
+                RoomRecentLoaded = true;
                 break;
-            case Event.PartyLeft:
-                Party = null;
-                PartyLastOut = null;
-                PartyMembers = null;
-                PartyChat = null;
-                PartyChatState = null;
+            case Event.RoomMoveOffer o:
+                RoomMoveOffer = o.V1;
                 break;
-            case Event.PartyChat c:
-                PartyChat = c.V1;
+            case Event.RoomMoveOfferGone g when RoomMoveOffer?.Id == g.Id:
+                RoomMoveOffer = null;
                 break;
-            case Event.PartyChatState c:
-                PartyChatState = c.V1;
+            case Event.RoomRelays r:
+                RoomRelays = r.V1;
+                break;
+            case Event.RoomLeft l:
+                // The room this device is in, or a join that failed: a look is never left.
+                Room = null;
+                RoomMembers = [];
+                RoomChat = null;
+                RoomChatState = null;
+                RoomMoveOffer = null;
+                RoomLeftWhy = l.Why is global::Kaeri.Engine.Model.RoomLeftWhy.Left ? null : l.Why;
                 break;
             case Event.Update u:
                 // A check that found nothing new leaves a release found before on offer only
@@ -771,4 +800,13 @@ public sealed class Known
     /// <summary>A setting's row as it stands.</summary>
     public SettingRow? Setting(SettingKey key) =>
         Settings is { } view ? view.Rows.Concat(view.NativeRows).FirstOrDefault(r => r.Key == key) : null;
+}
+
+/// <summary>A play's own start: <paramref name="Position"/> seconds into <paramref name="Episode"/> of <paramref name="Id"/>.</summary>
+public sealed record StartAt(uint Id, string Episode, double Position)
+{
+    public bool Is(uint id, string episode) => Id == id && Episode == episode;
+
+    /// <summary>The place for Play here from a cast: the TV's playhead, when it was past the first 5 s.</summary>
+    public static StartAt? From(uint id, string episode, double? at) => at is { } s && s >= 5 ? new(id, episode, s) : null;
 }

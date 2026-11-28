@@ -75,19 +75,19 @@
                 <category android:name="android.intent.category.BROWSABLE" />
                 <data android:scheme="https" android:host="kaeri.app" android:pathPrefix="/auth/anilist" />
             </intent-filter>
-            <!-- Watch party invites open the room's lobby: https://kaeri.app/party#..., a
-                 verified App Link like the sign-in's, and the same on kaeri://party. -->
+            <!-- Room invites open the room's Join screen: https://kaeri.app/room#..., a
+                 verified App Link like the sign-in's, and the same on kaeri://room. -->
             <intent-filter android:autoVerify="true">
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="https" android:host="kaeri.app" android:path="/party" />
+                <data android:scheme="https" android:host="kaeri.app" android:path="/room" />
             </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />
                 <category android:name="android.intent.category.BROWSABLE" />
-                <data android:scheme="kaeri" android:host="party" />
+                <data android:scheme="kaeri" android:host="room" />
             </intent-filter>
             <!-- Plugin store invites, which open the join sheet with the link in it:
                  kaeri://join?link=<the store's https invite>, and the store's own

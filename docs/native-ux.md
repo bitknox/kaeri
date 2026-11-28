@@ -24,7 +24,7 @@ Later decisions win where they disagree with this text:
 
 ## Interaction model
 
-One SwiftUI app with three shapes: a split view on Mac, the same split view on iPad that collapses as its window narrows, and a tab bar on iPhone. The sections are the canvas's: Home, Calendar, Seasonal, Search, Library, Downloads, Watch together, then Providers and Plugin stores under Sources, then Accounts. Watch together is a place of its own, with Start a party and Join side by side, the last ten rooms, and a lobby before anything plays. Its behaviour is in `docs/party-protocol.md`; the terminal calls it Together.
+One SwiftUI app with three shapes: a split view on Mac, the same split view on iPad that collapses as its window narrows, and a tab bar on iPhone. The sections are the canvas's: Home, Calendar, Seasonal, Search, Library, Downloads, Watch together, then Providers and Plugin stores under Sources, then Accounts. Watch together is a place of its own: the room you're in on top, Join a room with an invite link, and the last ten rooms. A room starts from an episode, in the player or on a title's page, and the player becomes the room. Its behaviour is in `docs/room-protocol.md`; the terminal calls it Together.
 
 ### Mac
 
@@ -50,11 +50,11 @@ One SwiftUI app with three shapes: a split view on Mac, the same split view on i
 
 ### iPhone
 
-- Five tabs: Home, Calendar, Seasonal, Library and Search (`Tab(role: .search)`, with its field at the bottom). Downloads is Library's first row. Accounts, Sources, Plugin stores and Settings open as a sheet from the account button on Home, Read, Updates and Library. Watch together is a people button in Home's toolbar, before the account button, and not a sixth tab; while the phone is in a party a bar above the tabs shows it. On iPad it is a sidebar item that the floating tab bar leaves out, so it keeps five tabs.
+- Five tabs: Home, Calendar, Seasonal, Library and Search (`Tab(role: .search)`, with its field at the bottom). Downloads is Library's first row. Accounts, Sources, Plugin stores and Settings open as a sheet from the account button on Home, Read, Updates and Library. Watch together is a people button in Home's toolbar, before the account button, and not a sixth tab; while the phone is in a room a bar above the tabs shows it. On iPad it is a sidebar item that the floating tab bar leaves out, so it keeps five tabs.
 - The tab bar minimises on scroll and the large title collapses, both the system's (T6).
 - The main action sits low. When a title page's Resume button scrolls away, a Resume capsule fades into the bottom toolbar. Sheets open at the medium detent with their action at the bottom.
 - Long press opens `contextMenu(menuItems:preview:)` with the banner as the preview. Pull to refresh (`refreshable`) works on Home, Calendar, Seasonal, Library (where it also syncs) and Downloads, and its spinner lasts until the engine's job ends, at most 15 s.
-- The app runs in portrait. The player rotates to landscape when it opens (T2). The reader follows the phone's sensor in portrait and landscape while it is open, and keeps the current orientation while the system's rotation lock is on. The rest of the app stays portrait, and closing the reader returns it to portrait.
+- The app runs in portrait. The player rotates to landscape when it opens (T2). The one exception is the room: on a phone the room opens upright, with the video on top and the room under it. Turning the phone is full screen, and with the rotation lock on the full screen button turns the player to landscape. The reader follows the phone's sensor in portrait and landscape while it is open, and keeps the current orientation while the system's rotation lock is on. The rest of the app stays portrait, and closing the reader returns it to portrait.
 
 Swipe actions on iPhone and iPad:
 
@@ -70,11 +70,11 @@ Home's cards and posters have no swipe actions, as they sit in rows that scroll 
 
 A surface with nothing to lose closes on a click or tap outside it, as well as on Esc, Back or its own Done. A surface that holds what the person typed, or asks a question they have to answer, stays open until one of its buttons, Esc or Back closes it, as the sections above and below say. Once the person has typed or changed something, a surface stops closing on a click outside. The rule is the same on every platform with a pointer: Mac, iPad with a pointer, Windows, Linux, and Android with a mouse.
 
-Nothing to lose: More about this show, Messages, the show's own settings and the source picker (each change applies as it is made), a sign-in code (closing it leaves the wait running), Keyboard Shortcuts, controller help, About, the trailer, an invite link to share, popovers such as running jobs and the party panel, and the hover card, which closes as it always has.
+Nothing to lose: More about this show, Messages, the show's own settings and the source picker (each change applies as it is made), a sign-in code (closing it leaves the wait running), Keyboard Shortcuts, controller help, About, the trailer, an invite link to share, popovers such as running jobs and the room's Invite and Details, and the hover card, which closes as it always has.
 
-Holds input: the torrent sheet and the proxy form, Kitsu sign-in, joining a plugin store, a new invite, publishing a store, the watch party form, the match picker's search, a comment being written, and the invite field on first launch. Where the platform's sheet closes on a tap outside (iPhone, iPad, Android), it does so only until the person types or changes something.
+Holds input: the torrent sheet and the proxy form, Kitsu sign-in, joining a plugin store, a new invite, publishing a store, Move to a new room's list, the match picker's search, a comment being written, and the invite field on first launch. Where the platform's sheet closes on a tap outside (iPhone, iPad, Android), it does so only until the person types or changes something.
 
-Asks a question: confirmations (leave, remove, delete, reset, update a plugin, allow installs), sync conflicts, the no-source question in a watch party, and first launch. A click outside does nothing.
+Asks a question: confirmations (leave, remove, delete, reset, update a plugin, allow installs), sync conflicts, Go along in a room, and first launch. A click outside does nothing.
 
 How each platform does it:
 
@@ -115,7 +115,7 @@ Bare-letter keys work only in the player window, and in lists only while no text
 | Settings | ⌘, | 9 |
 | Quit | ⌘Q | Q, Ctrl-C |
 
-Not interested (on a discovery card, the hover card and the spotlight's More menu), Set Status, Rate, Episodes, Sources, Source for This Title, Fix Match, Download, Download Range, Watch Order, Recommendations, Play Trailer, Open on AniList, Play in a Watch Party, Mark All Previous as Watched and Clear Finished Downloads are menu items without shortcuts.
+Not interested (on a discovery card, the hover card and the spotlight's More menu), Set Status, Rate, Episodes, Sources, Source for This Title, Fix Match, Download, Download Range, Watch Order, Recommendations, Play Trailer, Open on AniList, Watch Together, Mark All Previous as Watched and Clear Finished Downloads are menu items without shortcuts.
 
 ### Player window
 
@@ -952,9 +952,9 @@ The Compose app keeps every rule above and changes only the means: Material 3 wi
 | Torrents | The same rules as iPhone: foreground only, Torrents on mobile data off by default |
 | Text size, TalkBack, keyboard | Font scale in `sp` with the same caps; `semantics` with `contentDescription`, `stateDescription`, `customActions` and `heading()`; `onPreviewKeyEvent` with the same keys, and `onProvideKeyboardShortcuts` for Meta + / |
 | Episode list on phones | An "Episodes" heading in the section style, with the dub line beside it as secondary words. The watched summary has its line to itself. A 1 dp faint rule ends every row, 16 dp under its text. The follower's picture sits on the still's top end corner, so the title gets the full 224 dp, and filler joins the facts line ("E8 · 24 min · Filler"). While a row's details load it keeps the tall room, 182 dp, so nothing jumps. Once they are known it fits them: 114 dp with no synopsis, else the synopsis's own lines up to three, resized in the same fade the text arrives in. Tablets keep the beside row |
-| Cards with no banner | Continue cards, the spotlight, the party lobby and Watch together show the banner, else the seen still, else the cover cropped around its upper third. A crop may enlarge the cover 1.6 times on frames up to 300 dp wide and 1.33 times on wider ones. A cover too small for that shows blurred behind itself, and a title with no cover shows a plate in its colour with the title. A still that lands late fades in over the cover |
+| Cards with no banner | Continue cards, the spotlight, the room before play and Watch together show the banner, else the seen still, else the cover cropped around its upper third. A crop may enlarge the cover 1.6 times on frames up to 300 dp wide and 1.33 times on wider ones. A cover too small for that shows blurred behind itself, and a title with no cover shows a plate in its colour with the title. A still that lands late fades in over the cover |
 | Glass chrome | No glass. Bars and capsules are solid Raised, with tonal elevation off |
-| Orientation on phones | Under 600 dp at its smallest the app holds `SCREEN_ORIENTATION_PORTRAIT`. The player asks for `SENSOR_LANDSCAPE`. The reader asks for `FULL_USER`, which follows the sensor and honours the rotation lock, and asks for portrait again as it closes. Its pages lay out again for the new size: spreads, the strip and novels each fit landscape |
+| Orientation on phones | Under 600 dp at its smallest the app holds `SCREEN_ORIENTATION_PORTRAIT`. The player asks for `SENSOR_LANDSCAPE`, except in a room, which opens in portrait and follows the sensor to full screen (`FULL_USER`); its full screen button asks for `SENSOR_LANDSCAPE` under the rotation lock. The reader asks for `FULL_USER`, which follows the sensor and honours the rotation lock, and asks for portrait again as it closes. Its pages lay out again for the new size: spreads, the strip and novels each fit landscape |
 
 ## Decisions for you
 

@@ -64,9 +64,11 @@ struct ReaderKeysTests {
         #expect(ReaderKeys.arrow(forward: true, in: strip) == nil)
     }
 
-    @Test func verticalPagesAndANovelTurnOnTheArrows() {
-        #expect(press(.rightArrow, in: vertical) == .page(forward: true))
-        #expect(press(.leftArrow, in: vertical) == .page(forward: false))
+    @Test func verticalFlowsAsAStripAndANovelTurnsOnTheArrows() {
+        // Vertical pages flow one under another, as a strip does, so the sideways arrows are
+        // left alone.
+        #expect(press(.rightArrow, in: vertical) == nil)
+        #expect(press(.leftArrow, in: vertical) == nil)
         #expect(press(.rightArrow, in: novel) == .page(forward: true))
         // A novel's chapter can carry a strip's mode; it still turns pages.
         #expect(ReaderKeyContext(novel: true, mode: .strip, direction: .leftToRight).strip == false)

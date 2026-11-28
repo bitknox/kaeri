@@ -199,9 +199,9 @@ struct SourceList: View {
                     // the ones that answered said.
                     let episode = model.startingEpisode ?? ""
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(PartyWords.noneLists(model.sourceMisses, episode: episode)).foregroundStyle(.haze)
+                        Text(SourceWords.noneLists(model.sourceMisses, episode: episode)).foregroundStyle(.haze)
                         ForEach(model.sourceMisses, id: \.name) { missed in
-                            Text(PartyWords.missed(missed, episode: episode)).foregroundStyle(.silk)
+                            Text(SourceWords.missed(missed, episode: episode)).foregroundStyle(.silk)
                         }
                     }
                     .font(.system(size: 13))
@@ -239,7 +239,7 @@ struct SourceList: View {
         if let label = candidate.label { parts.append(label) }
         if let size = candidate.size { parts.append(size) }
         if candidate.dubbed { parts.append(L.playerReleaseDub) } else if candidate.dualAudio { parts.append(L.playerReleaseDualAudio) }
-        parts.append(PartyWords.sourceName(candidate))
+        parts.append(SourceWords.sourceName(candidate))
         return parts.joined(separator: " · ")
     }
 }
@@ -406,10 +406,10 @@ struct SeekLine: View {
         }
     }
 
-    /// The ticks of the party's reactions on a line `width` wide.
+
+    /// The ticks of the room's reactions on a line `width` wide.
     private func reactionTicks(duration: Double, width: Double) -> [ReactionTick] {
-        guard let chat = store?.party.chat, store?.party.inParty == true, chat.shown else { return [] }
-        return chat.ticks(duration: duration, width: width)
+        store?.room.ticks(duration: duration, width: width) ?? []
     }
 
     /// While scrubbing, the opening or ending under the thumb, or none: a change is a mark crossed.
@@ -445,7 +445,7 @@ struct SeekLine: View {
 struct ScrubBubble: View {
     let model: PlayerModel
     let time: Double
-    /// "12:04 · Ren and Mika", when the pointer is over a reaction's tick.
+    /// "12:04 · Ren and Mika", when the pointer is over a room's reaction tick.
     var tick: String?
 
     static let width: CGFloat = 220
@@ -664,16 +664,6 @@ struct UpNextCardView: View {
                         .padding(.top, 10)
                         .accessibilityLabel(L.playerCountdownLabel(episode: card.next.number))
                 }
-                if store.party.inParty, store.party.party?.movesOn == true {
-                    // In a party the room moves on together: no Cancel, no Play now.
-                    Text(countdown.map { L.partyNextLine(seconds: $0.seconds) } ?? L.partyNextOff)
-                        .font(.system(size: 13))
-                        .monospacedDigit()
-                        .foregroundStyle(.haze)
-                        .contentTransition(.numericText(countsDown: true))
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.top, metrics.touch ? 4 : 10)
-                } else {
                 HStack(spacing: 8) {
                     Text(countdown.map { L.playerPlaysIn(seconds: $0.seconds) } ?? "")
                         .font(.system(size: 13))
@@ -689,7 +679,6 @@ struct UpNextCardView: View {
                         .sensoryFeedback(.impact(weight: .light), trigger: card.played) { _, played in played }
                 }
                 .padding(.top, metrics.touch ? 4 : 10)
-                }
             }
             .padding(EdgeInsets(top: 12, leading: 12, bottom: metrics.touch ? 8 : 12, trailing: 12))
             .frame(width: 320)
@@ -812,6 +801,7 @@ struct StallCardView: View {
 
 /// The one card in the bottom trailing corner: stall, then Undo, then Up Next, then Skip.
 struct CornerCard: View {
+    @Environment(AppStore.self) private var store
     let model: PlayerModel
     let metrics: PlayerMetrics
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -825,6 +815,20 @@ struct CornerCard: View {
     }
 
     var body: some View {
+        // In a room, Up next is the room's: it takes the corner after your own stall.
+        let roomNext = store.room.inRoom ? store.room.view?.upNext.flatMap { $0.cancelledBy == nil ? $0 : nil } : nil
+        ZStack(alignment: .bottomTrailing) {
+            if let roomNext, model.corner != .stall {
+                RoomUpNextCard(room: store.room, up: roomNext, metrics: metrics).transition(.opacity)
+            } else {
+                corner
+            }
+        }
+        .animation(.standard, value: roomNext != nil)
+    }
+
+    @ViewBuilder
+    private var corner: some View {
         ZStack(alignment: .bottomTrailing) {
             switch model.corner {
             case .stall: StallCardView(model: model, metrics: metrics).transition(.opacity)

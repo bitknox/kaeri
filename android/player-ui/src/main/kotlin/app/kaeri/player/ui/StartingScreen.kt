@@ -108,11 +108,18 @@ import app.kaeri.player.StartTiming
 import app.kaeri.store.HeroArt
 import app.kaeri.ui.LocalAppStore
 import app.kaeri.ui.LocalNavigatorOrNull
+import app.kaeri.ui.leavingPlayer
 import app.kaeri.ui.openDownloads
 import app.kaeri.ui.openStores
 
 /** The column's width on the board: centred in the window, its content leading-aligned. */
 private val COLUMN = 520.dp
+
+/**
+ * A video rect shorter than this holds the compact column: the room's upright slot on a phone, where
+ * the room's own header under it already names the title and episode.
+ */
+private val COMPACT_UNDER = 300.dp
 
 /**
  * The starting screen, in the player at full size: the ground, the title's wide art cropped to the
@@ -139,7 +146,8 @@ internal fun StartingLayer(model: PlayerModel, rect: VideoRect, art: Boolean, on
         if (filled > 0f) {
             Box(Modifier.offset(rect.x, rect.y).size(rect.width, rect.height).graphicsLayer { alpha = filled }) {
                 StartingArt(wide, Modifier.fillMaxSize())
-                StartingColumn(model, reduced, onChooseSource, Modifier.fillMaxSize())
+                val compact = rect.height < COMPACT_UNDER
+                StartingColumn(model, reduced, compact, onChooseSource, Modifier.fillMaxSize().then(if (compact) Modifier.padding(horizontal = 16.dp) else Modifier))
             }
         }
     }
@@ -185,7 +193,7 @@ private val DetailStyle
     ).tabular()
 
 @Composable
-private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource: () -> Unit, modifier: Modifier) {
+private fun StartingColumn(model: PlayerModel, reduced: Boolean, compact: Boolean, onChooseSource: () -> Unit, modifier: Modifier) {
     val context = LocalContext.current
     val failure = model.failure
     val progress = failure?.trail ?: model.progress
@@ -197,20 +205,21 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource:
     StartColumn(
         width = COLUMN,
         open = fraction,
-        top = 24.dp,
-        bottom = 24.dp,
+        top = if (compact) 12.dp else 24.dp,
+        bottom = if (compact) 12.dp else 24.dp,
         modifier = modifier,
         details = { DetailsList(model, progress, failure, now) },
     ) {
         Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.Start) {
-            Text(
+            // Compact, the title and episode are the room's header's, just under the slot.
+            if (!compact) Text(
                 model.showTitle,
                 style = ShowTitle.page.copy(shadow = Shadow(Color.Black.copy(alpha = 0.7f), Offset(0f, 1f), 1f)),
                 color = ObiSilk.Silk,
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
+            if (!compact) Text(
                 model.episodeLine(context),
                 style = DetailStyle.copy(fontSize = 14.sp),
                 color = ObiSilk.Haze,
@@ -219,7 +228,7 @@ private fun StartingColumn(model: PlayerModel, reduced: Boolean, onChooseSource:
                 modifier = Modifier.padding(top = 6.dp),
             )
             // Kaeri's line keeps its room through a failure, so the column does not close up.
-            Box(Modifier.padding(top = 14.dp).alpha(if (failure == null) 1f else 0f)) {
+            Box(Modifier.padding(top = if (compact) 0.dp else 14.dp).alpha(if (failure == null) 1f else 0f)) {
                 KaeriLoaderLine(progress?.determinate(now).takeIf { failure == null }, reduced)
             }
             val said = startingWords(context, model, progress, failure, now)
@@ -399,11 +408,11 @@ private fun act(
         StartAction.TryAgain -> model.tryAgain()
         StartAction.Downloads -> {
             model.viewerClosed()
-            navigator?.openDownloads()
+            navigator?.leavingPlayer()?.openDownloads()
         }
         StartAction.AddStore -> {
             model.viewerClosed()
-            navigator?.openStores()
+            navigator?.leavingPlayer()?.openStores()
         }
         StartAction.FixMatch -> {
             val id = failure?.id ?: return
@@ -420,24 +429,24 @@ private fun act(
 private fun DetailsList(model: PlayerModel, progress: StartProgress?, failure: PlaybackFailure?, now: Long) {
     val context = LocalContext.current
     val shown = failure?.trail?.let { trail -> trail.details(context, failure.endedAt) } ?: progress?.details(context, now).orEmpty()
+    // Unknown until the streams are found: then neither shows as chosen.
     val translation = progress?.translation() ?: failure?.trail?.translation()
     Column(Modifier.fillMaxWidth().verticalScroll(rememberScrollState()).padding(top = 6.dp)) {
         for (row in shown) DetailsRow(row, model)
-        if (translation != null) {
+        // From the first step, and after a failure: the other translation is often the way out.
+        if (progress != null || failure != null) {
             Box(Modifier.fillMaxWidth().padding(vertical = 6.dp).height(1.dp).background(ObiSilk.Silk.copy(alpha = 0.10f)))
             Row(Modifier.fillMaxWidth().heightIn(min = 52.dp), verticalAlignment = Alignment.CenterVertically) {
                 Spacer(Modifier.width(16.dp + 12.dp))
                 Text(Strings.playerStartTranslation(context), style = DetailStyle, color = ObiSilk.Haze, modifier = Modifier.weight(1f))
-                // The other translation restarts the player behind this screen, so it can be asked
-                // for once the player has opened a stream; before that it shows what was found.
-                val can = model.menus != null && failure == null
+                // The other translation restarts the player behind this screen once it has opened
+                // a stream; before that, and after a failure, it asks for the episode again in it.
                 SingleChoiceSegmentedButtonRow {
                     for ((index, option) in listOf(Translation.SUB, Translation.DUB).withIndex()) {
                         SegmentedButton(
                             selected = translation == option,
                             onClick = { if (translation != option) model.chooseTranslation(option) },
                             shape = SegmentedButtonDefaults.itemShape(index, 2),
-                            enabled = can || translation == option,
                             modifier = Modifier.height(40.dp),
                             label = { Text(if (option == Translation.SUB) Strings.audioSubbed(context) else Strings.audioDubbed(context)) },
                         )

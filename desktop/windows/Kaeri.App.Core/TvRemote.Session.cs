@@ -148,7 +148,9 @@ public sealed partial class TvRemote
             pendingPlay = null;
             PlayOnTv?.Invoke(play);
         }
-        if (handingOff is { } handed && view.Item?.Id == handed.Id)
+        // The player closes only once the TV plays: while the TV still loads, a cast that fails
+        // leaves the player where it was (native-ux, Casting from the player).
+        if (handingOff is { } handed && view.Item is { Loading: false } playing && playing.Id == handed.Id)
         {
             handingOff = null;
             HandedOff?.Invoke();

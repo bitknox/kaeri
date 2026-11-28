@@ -26,7 +26,7 @@ struct ReaderSettingsSheet: View {
     @State private var contentHeight: CGFloat = 560
 
     private var novel: Bool { model.medium == .novel }
-    private var strip: Bool { model.view?.mode == .strip }
+    private var strip: Bool { model.view?.mode.flows == true }
     private var popover: Bool { mac || ReaderDevice.isPad }
     /// At the accessibility sizes a row of chips becomes a list with a check.
     private var big: Bool { type.isAccessibilitySize }
@@ -209,7 +209,10 @@ struct ReaderSettingsSheet: View {
     /// The row's value: "Auto · Right to left" while guessed, the choice otherwise.
     private var modeValue: String {
         let guessed = model.choice(.mode) == "strip" ? L.readerModeStrip
+            : model.choice(.mode) == "vertical" ? L.readerModeVerticalPages
             : (model.choice(.direction) == "ltr" ? L.readerModeLtr : L.readerModeRtl)
+        // Vertical, chosen on another device, is none of the picker's four: it says so.
+        if model.modeOverridden, model.choice(.mode) == "vertical" { return L.readerModeVerticalPages }
         switch currentMode {
         case .auto: return L.readerModeAuto(mode: guessed)
         case .rightToLeft: return L.readerModeRtl
@@ -314,10 +317,7 @@ struct ReaderSettingsSheet: View {
                 if show(L.readerSpreads), !novel {
                     segments(L.readerSpreads, [(L.readerSpreadsSplit, "split"), (L.readerSpreadsRotate, "rotate"), (L.readerSpreadsWhole, "whole")], .spreads)
                 }
-                if show(L.readerTapZones) {
-                    segments(L.readerTapZones, [(L.readerTapEdges, "edges"), (L.readerTapSides, "sides"), (L.readerTapOff, "off")], .tapLayout)
-                }
-                if show(L.readerStripGap), !novel, model.view?.mode == .strip {
+                if show(L.readerStripGap), !novel, model.view?.mode.flows == true {
                     chips(L.readerStripGap, [(L.readerGapNone, "none"), (L.readerGapSmall, "small")], gap) { gap = $0 }
                 }
                 if show(L.readerKeyStep), mac {
@@ -334,8 +334,8 @@ struct ReaderSettingsSheet: View {
     /// The rows under More settings and whether this reader has each, for saying when a search
     /// finds none.
     private var moreRows: [(name: String, here: Bool)] {
-        [(L.readerPageLayout, !novel), (L.readerSpreads, !novel), (L.readerTapZones, true),
-         (L.readerStripGap, !novel && model.view?.mode == .strip), (L.readerKeyStep, mac),
+        [(L.readerPageLayout, !novel), (L.readerSpreads, !novel),
+         (L.readerStripGap, !novel && model.view?.mode.flows == true), (L.readerKeyStep, mac),
          (L.readerVolumeKeys, model.row(.volumeKeysTurn) != nil)]
     }
 
@@ -475,6 +475,16 @@ enum ReaderDevice {
         #endif
     }
 
+    /// While the controls are up a touch only puts them away, so a finger reaching for them
+    /// can't turn the page. A Mac's click is aimed: it turns at the sides whatever is up.
+    static var tapsHeldByChrome: Bool {
+        #if os(macOS)
+        false
+        #else
+        true
+        #endif
+    }
+
     static var isPad: Bool {
         #if os(iOS)
         UIDevice.current.userInterfaceIdiom == .pad
@@ -566,7 +576,7 @@ struct ReaderChaptersSheet: View {
 
     private var pages: some View {
         // The strip reads down whatever the series' direction, so its pages run as it does.
-        let strip = model.view?.mode == .strip
+        let strip = model.view?.mode.flows == true
         let rtl = model.view?.direction == .rightToLeft && !strip
         let columns = popover
             ? Array(repeating: GridItem(.fixed(84), spacing: 10), count: 5)
@@ -731,7 +741,7 @@ struct ReaderChaptersSheet: View {
         // The open chapter's row says the page on screen: the list was made when the reader opened.
         if row.id == model.view?.chapter.id, !rowRead(row), let view = model.view, view.medium != .novel,
            !model.leaves.isEmpty {
-            let strip = view.mode == .strip
+            let strip = view.mode.flows
             let page = strip ? model.position.index + 1 : model.pageNumber(of: model.current)
             let total = strip ? model.position.count : model.pageCount
             return L.readerChapterInProgress(page: page, total: total)
