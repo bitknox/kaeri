@@ -121,7 +121,8 @@ new rooms; a room's Details ▸ Edit relays changes that room's list for everyon
   public relay takes an event a moment after it comes, and drops it if the socket is gone.
 - A relay is swapped for the first spare only when more than half the members present have found
   it unhealthy for 60 s. A device with fewer than two healthy relays may add a spare, never remove
-  one.
+  one. Any change to the list, a device's own or one it hears, starts both minutes again, so one
+  swap doesn't set off another from reports about the old list.
 - AUTH (NIP-42) is answered with the session key.
 - The clock is checked against each relay's HTTP `Date`; the median offset applies when two
   relays agree within 5 s and it is over 30 s.

@@ -344,6 +344,39 @@ fn a_relay_the_majority_cant_reach_for_a_minute_is_swapped_for_a_spare() {
 }
 
 #[test]
+fn a_swap_heard_from_another_member_starts_the_minute_again() {
+    // Ren swapped the dead relay first. The reports Ada holds still describe the old list, so
+    // her own minute, already up, must not swap the fresh spare straight out for the next one.
+    let spares = ["wss://spare.example".to_owned(), "wss://next.example".to_owned()];
+    let mut room = relayed(&["r", "s"]);
+    for now in [0, 59_000] {
+        health(&mut room, "a", 0b011, now);
+        health(&mut room, "r", 0b011, now);
+        health(&mut room, "s", 0b011, now);
+        assert_eq!(room.relay_change(now, &spares), None);
+    }
+    let swapped: Vec<String> = vec![
+        "wss://one.example".into(),
+        "wss://two.example".into(),
+        "wss://spare.example".into(),
+    ];
+    room.set_relays(swapped.clone(), 2);
+    assert_eq!(room.relay_change(60_000, &spares), None, "the old reports don't count");
+    assert_eq!(room.relay_change(119_000, &spares), None);
+    // Still unhealthy for everyone a minute after the change: then it goes too.
+    let changed = room.relay_change(120_000, &spares).unwrap();
+    assert_eq!(changed[2], "wss://next.example");
+    // The same for adding one: a minute with too few relays before the change doesn't carry.
+    let mut room = relayed(&["r", "s"]);
+    health(&mut room, "a", 0b001, 0);
+    health(&mut room, "r", 0b111, 0);
+    health(&mut room, "s", 0b111, 0);
+    assert_eq!(room.relay_change(0, &spares), None);
+    room.set_relays(swapped, 2);
+    assert_eq!(room.relay_change(60_000, &spares), None);
+}
+
+#[test]
 fn one_members_trouble_never_evicts_a_relay_and_only_adds_one() {
     let spares = ["wss://spare.example".to_owned()];
     let mut room = relayed(&["r", "s"]);

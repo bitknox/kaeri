@@ -178,6 +178,9 @@ pub struct Room {
     relay_bad_since: Vec<Option<i64>>,
     /// Since when this device has had fewer than two healthy room relays.
     few_relays_since: Option<i64>,
+    /// The relay list the two timers above were started for. Any change to the list, this
+    /// device's or a member's, starts them again.
+    relays_judged: Vec<String>,
 }
 
 /// A relay reported unhealthy by a majority this long is swapped out, ms.
@@ -220,6 +223,7 @@ impl Room {
             epoch: (0, 0, String::new()),
             relay_bad_since: Vec::new(),
             few_relays_since: None,
+            relays_judged: Vec::new(),
         }
     }
 
@@ -228,11 +232,17 @@ impl Room {
     /// unhealthy for 60 s is replaced by the first spare not in the list. A device with fewer
     /// than two healthy room relays for 60 s may add the first spare, up to four, removing
     /// nothing. Members who haven't reported health yet (`ok == 0`) aren't counted. `None`:
-    /// leave the list.
+    /// leave the list. The minute starts again whenever the list changes: until then the reports
+    /// still describe the old list, and another member's swap is not a reason to swap again.
     pub fn relay_change(&mut self, now: i64, spares: &[String]) -> Option<Vec<String>> {
         let list = self.relays.clone();
         if list.is_empty() {
             return None;
+        }
+        if self.relays_judged != list {
+            self.relays_judged.clone_from(&list);
+            self.relay_bad_since.clear();
+            self.few_relays_since = None;
         }
         self.relay_bad_since.resize(list.len(), None);
         let reports: Vec<u8> =
