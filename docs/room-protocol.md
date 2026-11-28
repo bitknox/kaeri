@@ -114,7 +114,11 @@ new rooms; a room's Details ▸ Edit relays changes that room's list for everyon
 `ws://` works only for `localhost` and `.local`.
 
 - A relay is healthy when its socket is open and the device's own events come back on its
-  subscription. Every status carries a bit per relay.
+  subscription, and it hasn't refused three of them running (for any reason but `rate-limited:`
+  or `duplicate:`: a web of trust or PoW the fresh session keys never meet). Every status carries
+  a bit per relay.
+- Leaving waits up to 2 s for each relay to answer or echo the last events before closing: a
+  public relay takes an event a moment after it comes, and drops it if the socket is gone.
 - A relay is swapped for the first spare only when more than half the members present have found
   it unhealthy for 60 s. A device with fewer than two healthy relays may add a spare, never remove
   one.

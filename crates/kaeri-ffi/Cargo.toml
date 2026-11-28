@@ -121,6 +121,14 @@ serde_json.workspace = true
 tempfile = "3"
 # The day the widgets' record calls today, in the zone the engine reads it in.
 jiff.workspace = true
+# The live room probe asks each relay for its NIP-11 page.
+reqwest.workspace = true
+tracing-subscriber.workspace = true
+
+# A room on the real public relays: opt-in, never run by CI.
+[[example]]
+name = "room_live_probe"
+required-features = ["testing", "room"]
 
 [lints]
 workspace = true

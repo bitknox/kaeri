@@ -56,6 +56,10 @@ struct State {
     no_echo: bool,
     /// Drop every event silently (no fan-out, but OK true).
     black_hole: bool,
+    /// Take events this long after they arrive, ms.
+    ingest_ms: u64,
+    /// Subscriptions asked for, `REQ`s, all connections together.
+    reqs: usize,
 }
 
 /// A running fake relay. Dropping it stops it.
@@ -152,6 +156,17 @@ impl FakeRelay {
         self.lock().black_hole = on;
     }
 
+    /// Take each event `ms` after it arrives, as a public relay's ingester does: one from a
+    /// connection that closed in the meantime is never taken.
+    pub fn ingest_after(&self, ms: u64) {
+        self.lock().ingest_ms = ms;
+    }
+
+    /// How many subscriptions were asked for (`REQ`s), on every connection.
+    pub fn reqs(&self) -> usize {
+        self.lock().reqs
+    }
+
     /// Every event the relay took, in order: what a relay operator sees.
     pub fn events(&self) -> Vec<Event> {
         self.lock().seen.iter().map(|(e, _)| e.clone()).collect()
@@ -204,7 +219,18 @@ async fn serve(stream: TcpStream, state: Arc<Mutex<State>>, mut hang: watch::Rec
                 None => break,
             },
             frame = read.next() => match frame {
-                Some(Ok(Ws::Text(text))) => take(id, text.as_str(), &state),
+                Some(Ok(Ws::Text(text))) => {
+                    let later = state.lock().unwrap_or_else(PoisonError::into_inner).ingest_ms;
+                    if later > 0 && text.as_str().starts_with("[\"EVENT\"") {
+                        let state = Arc::clone(&state);
+                        tokio::spawn(async move {
+                            tokio::time::sleep(std::time::Duration::from_millis(later)).await;
+                            take(id, text.as_str(), &state);
+                        });
+                    } else {
+                        take(id, text.as_str(), &state);
+                    }
+                }
                 Some(Ok(Ws::Ping(p))) => { let _ = write.send(Ws::Pong(p)).await; }
                 Some(Ok(Ws::Close(_)) | Err(_)) | None => break,
                 Some(Ok(_)) => {}
@@ -329,6 +355,8 @@ fn take(id: u64, text: &str, state: &Arc<Mutex<State>>) {
             }
         }
         Some("REQ") => {
+            s.reqs += 1;
+            let Some(conn) = s.conns.get(&id) else { return };
             let Some(sub) = parts.get(1).and_then(Value::as_str).map(str::to_owned) else {
                 return;
             };
