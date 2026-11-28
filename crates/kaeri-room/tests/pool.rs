@@ -218,15 +218,19 @@ async fn the_send_cap_drops_heartbeats_and_holds_changes() {
     let relays = start(1).await;
     let mut ada = Member::new(SECRET, &relays).await;
     ada.hello();
-    for _ in 0..10 {
+    for _ in 0..pool::CAP_BURST + 4 {
         ada.say(Message::Heartbeat);
     }
     tokio::time::sleep(Duration::from_millis(500)).await;
-    // Six in ten seconds: the Hello and five heartbeats; the rest dropped.
-    assert_eq!(relays[0].events().len(), 6);
+    // A burst's worth in ten seconds: the Hello and the heartbeats that fit; the rest dropped.
+    assert_eq!(relays[0].events().len(), pool::CAP_BURST);
     ada.say(Message::Status);
     tokio::time::sleep(Duration::from_millis(500)).await;
-    assert_eq!(relays[0].events().len(), 6, "a change waits for room under the cap");
+    assert_eq!(
+        relays[0].events().len(),
+        pool::CAP_BURST,
+        "a change waits for room under the cap"
+    );
 }
 
 #[tokio::test]
@@ -400,13 +404,21 @@ async fn what_waits_under_the_cap_survives_a_refresh() {
     ren.next(|h| matches!(h, Heard::Body(b) if matches!(b.m, Message::Hello { .. })))
         .await
         .unwrap();
-    for n in 0..pool::CAP_BURST {
+    // The Hello and the burst fill the cap; the burst is echoed, so the refresh doesn't send it
+    // again (doing that as well would run into the minute's cap, which only frees after 60 s).
+    let last = pool::CAP_BURST - 2;
+    for n in 0..=last {
         ada.say(Message::Chat { id: format!("b{n}"), text: format!("burst {n}") });
     }
-    ada.say(Message::Chat { id: "c5".into(), text: "over the cap".into() });
+    let tail = format!("burst {last}");
+    let is_tail = |h: &Heard| matches!(h, Heard::Body(b) if matches!(&b.m, Message::Chat { text, .. } if *text == tail));
+    timeout(Duration::from_secs(10), async { while ren.next(&is_tail).await.is_none() {} })
+        .await
+        .expect("the burst fits under the cap");
+    tokio::time::sleep(Duration::from_millis(300)).await;
+    ada.say(Message::Chat { id: "over".into(), text: "over the cap".into() });
     ada.link.out.send(Out::Refresh).unwrap();
-    // The burst goes again too (none of it was echoed before the refresh), so the line waits
-    // for room under the cap once more.
+    // The line waits for room under the cap through the refresh.
     timeout(Duration::from_secs(30), async {
         while ren.next(is_chat("over the cap")).await.is_none() {}
     })

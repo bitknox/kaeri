@@ -98,7 +98,7 @@ schema for it. `crates/kaeri-room/src/wire.rs` is the exact form.
 | Status changes | At once, changes within 500 ms folded into one; Buffering only after 1.5 s of stall |
 | Chat and reactions | 3 messages in 5 s; one reaction per 2 s |
 | Sync answers | At most one per joiner across the room |
-| Per device per relay | 20 events a minute, bursts of 6 in 10 s: heartbeats drop first |
+| Per device per relay | 20 events a minute, bursts of 12 in 10 s: heartbeats drop first |
 
 Steady state is 4 events a minute per member. A `rate-limited:` refusal stops heartbeats to that
 relay for 60 s and halves its cap for 10 minutes, and a refused event is never sent again to the
@@ -107,8 +107,8 @@ same relay. Receivers drop more than 60 events a minute from one member.
 ## Relays
 
 Three per room, all read and written. One is enough to work; two is the target. The built-in set
-is `wss://nos.lol`, `wss://relay.damus.io` and `wss://relay.primal.net`, with spares
-`wss://nostr.mom`, `wss://relay.nostr.net` and `wss://offchain.pub`. None of them is Kaeri's;
+is `wss://relay.primal.net`, `wss://relay.snort.social` and `wss://nostr.data.haus`, with spares
+`wss://relay.nostr.net`, `wss://nos.lol` and `wss://relay.ditto.pub`. None of them is Kaeri's;
 Settings calls them "public relays run by others". Settings ▸ Playback ▸ Relays sets the list for
 new rooms; a room's Details ▸ Edit relays changes that room's list for everyone in it. Plain
 `ws://` works only for `localhost` and `.local`.
@@ -121,7 +121,8 @@ new rooms; a room's Details ▸ Edit relays changes that room's list for everyon
   public relay takes an event a moment after it comes, and drops it if the socket is gone.
 - A relay is swapped for the first spare only when more than half the members present have found
   it unhealthy for 60 s. A device with fewer than two healthy relays may add a spare, never remove
-  one.
+  one. Any change to the list, a device's own or one it hears, starts both minutes again, so one
+  swap doesn't set off another from reports about the old list.
 - AUTH (NIP-42) is answered with the session key.
 - The clock is checked against each relay's HTTP `Date`; the median offset applies when two
   relays agree within 5 s and it is over 30 s.

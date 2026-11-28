@@ -4,7 +4,7 @@
 //!
 //! - **Dedupe:** the last 4096 event ids. The first copy is used, so delays come from the fastest
 //!   relay.
-//! - **Caps:** 20 events a minute and 6 in 10 s per relay. Over it, heartbeats are dropped first
+//! - **Caps:** 20 events a minute and 12 in 10 s per relay. Over it, heartbeats are dropped first
 //!   and anything else waits. `rate-limited:` stops heartbeats to that relay for 60 s and halves
 //!   its cap for 10 minutes; changes still go to it, chat doesn't. A refused event is never sent
 //!   again to the same relay.
@@ -45,7 +45,7 @@ use crate::{
 pub const DEDUPE: usize = 4096;
 /// Per relay: events a minute, and a burst in 10 s.
 pub const CAP_MINUTE: usize = 20;
-pub const CAP_BURST: usize = 6;
+pub const CAP_BURST: usize = 12;
 /// Our own event not back within this: the relay is unhealthy.
 pub const ECHO_LIMIT_MS: i64 = 20_000;
 /// A socket failing this many times running is unhealthy.
